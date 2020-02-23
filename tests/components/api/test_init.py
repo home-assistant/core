@@ -36,7 +36,7 @@ async def test_api_list_state_entities(hass, mock_api_client):
 async def test_api_get_state(hass, mock_api_client):
     """Test if the debug interface allows us to get a state."""
     hass.states.async_set("hello.world", "nice", {"attr": 1})
-    resp = await mock_api_client.get(const.URL_API_STATES_ENTITY.format("hello.world"))
+    resp = await mock_api_client.get("/api/states/hello.world")
     assert resp.status == 200
     json = await resp.json()
 
@@ -51,9 +51,7 @@ async def test_api_get_state(hass, mock_api_client):
 
 async def test_api_get_non_existing_state(hass, mock_api_client):
     """Test if the debug interface allows us to get a state."""
-    resp = await mock_api_client.get(
-        const.URL_API_STATES_ENTITY.format("does_not_exist")
-    )
+    resp = await mock_api_client.get("/api/states/does_not_exist")
     assert resp.status == 404
 
 
@@ -62,8 +60,7 @@ async def test_api_state_change(hass, mock_api_client):
     hass.states.async_set("test.test", "not_to_be_set")
 
     await mock_api_client.post(
-        const.URL_API_STATES_ENTITY.format("test.test"),
-        json={"state": "debug_state_change2"},
+        "/api/states/test.test", json={"state": "debug_state_change2"}
     )
 
     assert hass.states.get("test.test").state == "debug_state_change2"
@@ -75,8 +72,7 @@ async def test_api_state_change_of_non_existing_entity(hass, mock_api_client):
     new_state = "debug_state_change"
 
     resp = await mock_api_client.post(
-        const.URL_API_STATES_ENTITY.format("test_entity.that_does_not_exist"),
-        json={"state": new_state},
+        "/api/states/test_entity.that_does_not_exist", json={"state": new_state}
     )
 
     assert resp.status == 201
@@ -88,7 +84,7 @@ async def test_api_state_change_of_non_existing_entity(hass, mock_api_client):
 async def test_api_state_change_with_bad_data(hass, mock_api_client):
     """Test if API sends appropriate error if we omit state."""
     resp = await mock_api_client.post(
-        const.URL_API_STATES_ENTITY.format("test_entity.that_does_not_exist"), json={}
+        "/api/states/test_entity.that_does_not_exist", json={}
     )
 
     assert resp.status == 400
@@ -98,15 +94,13 @@ async def test_api_state_change_with_bad_data(hass, mock_api_client):
 async def test_api_state_change_to_zero_value(hass, mock_api_client):
     """Test if changing a state to a zero value is possible."""
     resp = await mock_api_client.post(
-        const.URL_API_STATES_ENTITY.format("test_entity.with_zero_state"),
-        json={"state": 0},
+        "/api/states/test_entity.with_zero_state", json={"state": 0}
     )
 
     assert resp.status == 201
 
     resp = await mock_api_client.post(
-        const.URL_API_STATES_ENTITY.format("test_entity.with_zero_state"),
-        json={"state": 0.0},
+        "/api/states/test_entity.with_zero_state", json={"state": 0.0}
     )
 
     assert resp.status == 200
@@ -126,15 +120,12 @@ async def test_api_state_change_push(hass, mock_api_client):
 
     hass.bus.async_listen(const.EVENT_STATE_CHANGED, event_listener)
 
-    await mock_api_client.post(
-        const.URL_API_STATES_ENTITY.format("test.test"), json={"state": "not_to_be_set"}
-    )
+    await mock_api_client.post("/api/states/test.test", json={"state": "not_to_be_set"})
     await hass.async_block_till_done()
     assert len(events) == 0
 
     await mock_api_client.post(
-        const.URL_API_STATES_ENTITY.format("test.test"),
-        json={"state": "not_to_be_set", "force_update": True},
+        "/api/states/test.test", json={"state": "not_to_be_set", "force_update": True}
     )
     await hass.async_block_till_done()
     assert len(events) == 1
@@ -152,7 +143,7 @@ async def test_api_fire_event_with_no_data(hass, mock_api_client):
 
     hass.bus.async_listen_once("test.event_no_data", listener)
 
-    await mock_api_client.post(const.URL_API_EVENTS_EVENT.format("test.event_no_data"))
+    await mock_api_client.post("/api/events/test.event_no_data")
     await hass.async_block_till_done()
 
     assert len(test_value) == 1
@@ -174,9 +165,7 @@ async def test_api_fire_event_with_data(hass, mock_api_client):
 
     hass.bus.async_listen_once("test_event_with_data", listener)
 
-    await mock_api_client.post(
-        const.URL_API_EVENTS_EVENT.format("test_event_with_data"), json={"test": 1}
-    )
+    await mock_api_client.post("/api/events/test_event_with_data", json={"test": 1})
 
     await hass.async_block_till_done()
 
@@ -196,8 +185,7 @@ async def test_api_fire_event_with_invalid_json(hass, mock_api_client):
     hass.bus.async_listen_once("test_event_bad_data", listener)
 
     resp = await mock_api_client.post(
-        const.URL_API_EVENTS_EVENT.format("test_event_bad_data"),
-        data=json.dumps("not an object"),
+        "/api/events/test_event_bad_data", data=json.dumps("not an object")
     )
 
     await hass.async_block_till_done()
@@ -207,8 +195,7 @@ async def test_api_fire_event_with_invalid_json(hass, mock_api_client):
 
     # Try now with valid but unusable JSON
     resp = await mock_api_client.post(
-        const.URL_API_EVENTS_EVENT.format("test_event_bad_data"),
-        data=json.dumps([1, 2, 3]),
+        "/api/events/test_event_bad_data", data=json.dumps([1, 2, 3])
     )
 
     await hass.async_block_till_done()
@@ -272,9 +259,7 @@ async def test_api_call_service_no_data(hass, mock_api_client):
 
     hass.services.async_register("test_domain", "test_service", listener)
 
-    await mock_api_client.post(
-        const.URL_API_SERVICES_SERVICE.format("test_domain", "test_service")
-    )
+    await mock_api_client.post("/api/services/test_domain/test_service")
     await hass.async_block_till_done()
     assert len(test_value) == 1
 
@@ -295,8 +280,7 @@ async def test_api_call_service_with_data(hass, mock_api_client):
     hass.services.async_register("test_domain", "test_service", listener)
 
     await mock_api_client.post(
-        const.URL_API_SERVICES_SERVICE.format("test_domain", "test_service"),
-        json={"test": 1},
+        "/api/services/test_domain/test_service", json={"test": 1}
     )
 
     await hass.async_block_till_done()
@@ -348,7 +332,7 @@ async def test_stream_with_restricted(hass, mock_api_client):
     listen_count = _listen_count(hass)
 
     resp = await mock_api_client.get(
-        "{}?restrict=test_event1,test_event3".format(const.URL_API_STREAM)
+        f"{const.URL_API_STREAM}?restrict=test_event1,test_event3"
     )
     assert resp.status == 200
     assert listen_count + 1 == _listen_count(hass)
@@ -403,7 +387,7 @@ async def test_api_error_log(hass, aiohttp_client, hass_access_token, hass_admin
     ) as mock_file:
         resp = await client.get(
             const.URL_API_ERROR_LOG,
-            headers={"Authorization": "Bearer {}".format(hass_access_token)},
+            headers={"Authorization": f"Bearer {hass_access_token}"},
         )
 
     assert len(mock_file.mock_calls) == 1
@@ -415,7 +399,7 @@ async def test_api_error_log(hass, aiohttp_client, hass_access_token, hass_admin
     hass_admin_user.groups = []
     resp = await client.get(
         const.URL_API_ERROR_LOG,
-        headers={"Authorization": "Bearer {}".format(hass_access_token)},
+        headers={"Authorization": f"Bearer {hass_access_token}"},
     )
     assert resp.status == 401
 
@@ -432,8 +416,8 @@ async def test_api_fire_event_context(hass, mock_api_client, hass_access_token):
     hass.bus.async_listen("test.event", listener)
 
     await mock_api_client.post(
-        const.URL_API_EVENTS_EVENT.format("test.event"),
-        headers={"authorization": "Bearer {}".format(hass_access_token)},
+        "/api/events/test.event",
+        headers={"authorization": f"Bearer {hass_access_token}"},
     )
     await hass.async_block_till_done()
 
@@ -449,7 +433,7 @@ async def test_api_call_service_context(hass, mock_api_client, hass_access_token
 
     await mock_api_client.post(
         "/api/services/test_domain/test_service",
-        headers={"authorization": "Bearer {}".format(hass_access_token)},
+        headers={"authorization": f"Bearer {hass_access_token}"},
     )
     await hass.async_block_till_done()
 
@@ -464,7 +448,7 @@ async def test_api_set_state_context(hass, mock_api_client, hass_access_token):
     await mock_api_client.post(
         "/api/states/light.kitchen",
         json={"state": "on"},
-        headers={"authorization": "Bearer {}".format(hass_access_token)},
+        headers={"authorization": f"Bearer {hass_access_token}"},
     )
 
     refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
@@ -542,9 +526,7 @@ async def test_rendering_template_legacy_user(
 
 async def test_api_call_service_not_found(hass, mock_api_client):
     """Test if the API fails 400 if unknown service."""
-    resp = await mock_api_client.post(
-        const.URL_API_SERVICES_SERVICE.format("test_domain", "test_service")
-    )
+    resp = await mock_api_client.post("/api/services/test_domain/test_service")
     assert resp.status == 400
 
 
@@ -562,7 +544,6 @@ async def test_api_call_service_bad_data(hass, mock_api_client):
     )
 
     resp = await mock_api_client.post(
-        const.URL_API_SERVICES_SERVICE.format("test_domain", "test_service"),
-        json={"hello": 5},
+        "/api/services/test_domain/test_service", json={"hello": 5}
     )
     assert resp.status == 400
