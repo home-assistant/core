@@ -53,7 +53,7 @@ CLOUD_API_SCHEMA = vol.Schema(
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_GEOGRAPHIES, default=[]): vol.All(
             cv.ensure_list,
-            [vol.Any(GEOGRAPHY_COORDINATES_SCHEMA, GEOGRAPHY_PLACE_SCHEMA]
+            [vol.Any(GEOGRAPHY_COORDINATES_SCHEMA, GEOGRAPHY_PLACE_SCHEMA)]
         ),
         vol.Optional(CONF_SHOW_ON_MAP, default=True): cv.boolean,
     }
