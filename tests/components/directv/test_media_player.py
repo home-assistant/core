@@ -175,7 +175,7 @@ def platforms(hass, dtv_side_effect, mock_now):
                 "name": "Client DVR",
                 "host": IP_ADDRESS,
                 "port": DEFAULT_PORT,
-                "device": "1",
+                "device": "2CA17D1CD30X",
             },
         ]
     }
@@ -429,10 +429,10 @@ async def test_unique_id(hass, platforms):
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
     main = entity_registry.async_get(MAIN_ENTITY_ID)
-    assert main.unique_id == "028877455858-0"
+    assert main.unique_id == "028877455858"
 
     client = entity_registry.async_get(CLIENT_ENTITY_ID)
-    assert client.unique_id == "028877455858-1"
+    assert client.unique_id == "2CA17D1CD30X"
 
 
 async def test_supported_features(hass, platforms):
