@@ -99,6 +99,7 @@ class StatisticsSensor(Entity):
         self.total = self.min = self.max = None
         self.min_age = self.max_age = None
         self.change = self.average_change = self.change_rate = None
+        self._update_listener = None
         self._next_purge = dt_util.utcnow()
 
     async def async_added_to_hass(self):
@@ -285,20 +286,21 @@ class StatisticsSensor(Entity):
             next_to_purge_timestamp is not None
             and (next_to_purge_timestamp - self._next_purge).total_seconds() > 1
         ):
-            self._next_purge = next_to_purge_timestamp
-            _LOGGER.debug(
-                "%s: scheduling update at %s", self.entity_id, self._next_purge
-            )
+            if self._update_listener:
+                self._update_listener()
+                self._update_listener = None
 
             @callback
             def _scheduled_update(now):
                 """Timer callback for sensor update."""
                 _LOGGER.debug("%s: executing scheduled update", self.entity_id)
                 self.async_schedule_update_ha_state(True)
+                self._update_listener = None
 
-            async_track_point_in_utc_time(
+            self._update_listener = async_track_point_in_utc_time(
                 self.hass, _scheduled_update, next_to_purge_timestamp
             )
+            self._next_purge = next_to_purge_timestamp
 
     async def _async_initialize_from_database(self):
         """Initialize the list of states from the database.
