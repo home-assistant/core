@@ -182,7 +182,7 @@ class DirecTvDevice(MediaPlayerDevice):
 
         if device != "0":
             self._unique_id = device
-        elsif version_info:
+        elif version_info:
             self._unique_id = "".join(version_info.get("receiverId").split())
      
         if self._is_client:
