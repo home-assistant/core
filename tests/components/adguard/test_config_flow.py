@@ -40,11 +40,9 @@ async def test_show_authenticate_form(hass):
 async def test_connection_error(hass, aioclient_mock):
     """Test we show user form on AdGuard Home connection error."""
     aioclient_mock.get(
-        "{}://{}:{}/control/status".format(
-            "https" if FIXTURE_USER_INPUT[CONF_SSL] else "http",
-            FIXTURE_USER_INPUT[CONF_HOST],
-            FIXTURE_USER_INPUT[CONF_PORT],
-        ),
+        f"{'https' if FIXTURE_USER_INPUT[CONF_SSL] else 'http'}"
+        f"://{FIXTURE_USER_INPUT[CONF_HOST]}"
+        f":{FIXTURE_USER_INPUT[CONF_PORT]}/control/status",
         exc=aiohttp.ClientError,
     )
 
@@ -60,11 +58,9 @@ async def test_connection_error(hass, aioclient_mock):
 async def test_full_flow_implementation(hass, aioclient_mock):
     """Test registering an integration and finishing flow works."""
     aioclient_mock.get(
-        "{}://{}:{}/control/status".format(
-            "https" if FIXTURE_USER_INPUT[CONF_SSL] else "http",
-            FIXTURE_USER_INPUT[CONF_HOST],
-            FIXTURE_USER_INPUT[CONF_PORT],
-        ),
+        f"{'https' if FIXTURE_USER_INPUT[CONF_SSL] else 'http'}"
+        f"://{FIXTURE_USER_INPUT[CONF_HOST]}"
+        f":{FIXTURE_USER_INPUT[CONF_PORT]}/control/status",
         json={"version": "v0.99.0"},
         headers={"Content-Type": "application/json"},
     )
@@ -244,11 +240,9 @@ async def test_hassio_connection_error(hass, aioclient_mock):
 async def test_outdated_adguard_version(hass, aioclient_mock):
     """Test we show abort when connecting with unsupported AdGuard version."""
     aioclient_mock.get(
-        "{}://{}:{}/control/status".format(
-            "https" if FIXTURE_USER_INPUT[CONF_SSL] else "http",
-            FIXTURE_USER_INPUT[CONF_HOST],
-            FIXTURE_USER_INPUT[CONF_PORT],
-        ),
+        f"{'https' if FIXTURE_USER_INPUT[CONF_SSL] else 'http'}"
+        f"://{FIXTURE_USER_INPUT[CONF_HOST]}"
+        f":{FIXTURE_USER_INPUT[CONF_PORT]}/control/status",
         json={"version": "v0.98.0"},
         headers={"Content-Type": "application/json"},
     )

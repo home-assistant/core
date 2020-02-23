@@ -30,7 +30,6 @@ from .const import (
     CONF_APP_KEY,
     DATA_CLIENT,
     DOMAIN,
-    TOPIC_UPDATE,
     TYPE_BINARY_SENSOR,
     TYPE_SENSOR,
 )
@@ -378,7 +377,9 @@ class AmbientStation:
             if data != self.stations[mac_address][ATTR_LAST_DATA]:
                 _LOGGER.debug("New data received: %s", data)
                 self.stations[mac_address][ATTR_LAST_DATA] = data
-                async_dispatcher_send(self._hass, TOPIC_UPDATE.format(mac_address))
+                async_dispatcher_send(
+                    self._hass, f"ambient_station_data_update_{mac_address}"
+                )
 
             _LOGGER.debug("Resetting watchdog")
             self._watchdog_listener()
@@ -518,7 +519,7 @@ class AmbientWeatherEntity(Entity):
             self.async_schedule_update_ha_state(True)
 
         self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_UPDATE.format(self._mac_address), update
+            self.hass, f"ambient_station_data_update_{self._mac_address}", update
         )
 
     async def async_will_remove_from_hass(self):
