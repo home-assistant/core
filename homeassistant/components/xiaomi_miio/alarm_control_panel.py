@@ -12,37 +12,46 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
-AlarmControlPanel, PLATFORM_SCHEMA, SUPPORT_ALARM_ARM_AWAY
+    AlarmControlPanel,
+    PLATFORM_SCHEMA,
+    SUPPORT_ALARM_ARM_AWAY,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN,
-                                 STATE_ALARM_ARMED_AWAY, STATE_ALARM_DISARMED,
-                                 STATE_ALARM_ARMING)
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_HOST,
+    CONF_TOKEN,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_ARMING,
+)
 
-from miio import (Device, DeviceException, gateway)
+from miio import Device, DeviceException, gateway
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Xiaomi Gateway Alarm'
-DATA_KEY = 'alarm_control_panel.xiaomi_gateway'
+DEFAULT_NAME = "Xiaomi Gateway Alarm"
+DATA_KEY = "alarm_control_panel.xiaomi_gateway"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
-REQUIREMENTS = ['python-miio==0.4.8']
+REQUIREMENTS = ["python-miio==0.4.8"]
 
-ATTR_MODEL = 'model'
-ATTR_FIRMWARE_VERSION = 'firmware_version'
-ATTR_HARDWARE_VERSION = 'hardware_version'
+ATTR_MODEL = "model"
+ATTR_FIRMWARE_VERSION = "firmware_version"
+ATTR_HARDWARE_VERSION = "hardware_version"
 
-XIAOMI_STATE_ARMED_VALUE = 'on'
-XIAOMI_STATE_DISARMED_VALUE = 'off'
-XIAOMI_STATE_ARMING_VALUE = 'oning'
-XIAOMI_SUCCESS = ['ok']
+XIAOMI_STATE_ARMED_VALUE = "on"
+XIAOMI_STATE_DISARMED_VALUE = "off"
+XIAOMI_STATE_ARMING_VALUE = "oning"
+XIAOMI_SUCCESS = ["ok"]
 
 
 # pylint: disable=unused-argument
@@ -59,10 +68,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         miio_device = Device(host, token)
         device_info = miio_device.info()
         model = device_info.model
-        _LOGGER.info("%s %s %s detected",
-                     model,
-                     device_info.firmware_version,
-                     device_info.hardware_version)
+        _LOGGER.info(
+            "%s %s %s detected",
+            model,
+            device_info.firmware_version,
+            device_info.hardware_version,
+        )
 
         gateway_device = gateway.Gateway(miio_device)
         device = XiaomiGatewayAlarm(gateway_device, config, device_info)
@@ -82,15 +93,16 @@ class XiaomiGatewayAlarm(AlarmControlPanel):
         self._name = config.get(CONF_NAME)
         self._skip_update = False
         self._model = device_info.model
-        self._unique_id = "{}-{}-alarm".format(device_info.model,
-                                               device_info.mac_address)
-        self._icon = 'mdi:shield-home'
+        self._unique_id = "{}-{}-alarm".format(
+            device_info.model, device_info.mac_address
+        )
+        self._icon = "mdi:shield-home"
         self._available = None
         self._state = None
         self._state_attrs = {
             ATTR_MODEL: self._model,
             ATTR_FIRMWARE_VERSION: device_info.firmware_version,
-            ATTR_HARDWARE_VERSION: device_info.hardware_version
+            ATTR_HARDWARE_VERSION: device_info.hardware_version,
         }
 
     @property
@@ -136,8 +148,7 @@ class XiaomiGatewayAlarm(AlarmControlPanel):
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a device command handling error messages."""
         try:
-            result = await self.hass.async_add_job(
-                partial(func, *args, **kwargs))
+            result = await self.hass.async_add_job(partial(func, *args, **kwargs))
 
             _LOGGER.info("Response received from miio device: %s", result)
 
@@ -149,12 +160,14 @@ class XiaomiGatewayAlarm(AlarmControlPanel):
     async def async_alarm_arm_away(self, code=None):
         """Turn on."""
         result = await self._try_command(
-            "Turning the alarm on failed.", self._gateway.alarm.on)
+            "Turning the alarm on failed.", self._gateway.alarm.on
+        )
 
     async def async_alarm_disarm(self, code=None):
         """Turn off."""
         result = await self._try_command(
-            "Turning the alarm off failed.", self._gateway.alarm.off)
+            "Turning the alarm off failed.", self._gateway.alarm.off
+        )
 
     async def async_update(self):
         """Fetch state from the device."""
@@ -180,7 +193,11 @@ class XiaomiGatewayAlarm(AlarmControlPanel):
             else:
                 _LOGGER.warning(
                     "New state (%s) doesn't match expected values: %s/%s/%s",
-                    state, XIAOMI_STATE_ARMED_VALUE, XIAOMI_STATE_DISARMED_VALUE, XIAOMI_STATE_PENDING_VALUE)
+                    state,
+                    XIAOMI_STATE_ARMED_VALUE,
+                    XIAOMI_STATE_DISARMED_VALUE,
+                    XIAOMI_STATE_PENDING_VALUE,
+                )
                 self._state = None
 
             _LOGGER.debug("State value: %s", self._state)
