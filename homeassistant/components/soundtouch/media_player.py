@@ -448,7 +448,7 @@ class SoundTouchDevice(MediaPlayerDevice):
         )
 
     def _get_instance_by_ip(self, ip_address):
-        """Search and return a SoundTouchDevice instace by it's IP address."""
+        """Search and return a SoundTouchDevice instance by it's IP address."""
         for instance in self.hass.data[DATA_SOUNDTOUCH]:
             if instance and instance.config["host"] == ip_address:
                 return instance
