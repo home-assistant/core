@@ -21,7 +21,6 @@ from .const import (
     CONF_DESCRIPTION,
     LOGGER,
     METHOD_LEGACY,
-    METHOD_WEBSOCKET,
     RESULT_AUTH_MISSING,
     RESULT_NOT_SUCCESSFUL,
     RESULT_NOT_SUPPORTED,
@@ -35,22 +34,28 @@ class SamsungTVBridge(ABC):
     """The Base Bridge abstract class."""
 
     @staticmethod
-    def get_bridge(config):
+    def get_bridge(method, host, port=None, token=None):
         """Get Bridge instance."""
-        if config:
-            if config[CONF_METHOD] == METHOD_LEGACY:
-                return SamsungTVLegacyBridge(config)
-            if config[CONF_METHOD] == METHOD_WEBSOCKET:
-                return SamsungTVWSBridge(config)
-        return None
+        if method == METHOD_LEGACY:
+            return SamsungTVLegacyBridge(method, host, port)
+        return SamsungTVWSBridge(method, host, port, token)
 
-    def __init__(self, config):
+    def __init__(self, method, host, port, token):
         """Initialize Bridge."""
         self.port = None
-        self.token = None
-        self.config = config
-        self.method = config[CONF_METHOD]
-        self.host = config[CONF_HOST]
+        self.token = token
+        self.method = method
+        self.host = host
+        self.config = {
+            CONF_NAME: VALUE_CONF_NAME,
+            CONF_DESCRIPTION: VALUE_CONF_NAME,
+            CONF_ID: VALUE_CONF_ID,
+            CONF_METHOD: method,
+            CONF_PORT: port,
+            CONF_HOST: host,
+            CONF_TIMEOUT: 1,
+            CONF_TOKEN: token,
+        }
         self._remote = None
         self._callback = None
 
@@ -64,14 +69,10 @@ class SamsungTVBridge(ABC):
 
     def is_on(self):
         """Tells if the TV is on."""
-        if self._remote is not None:
-            # Close the current remote connection
-            self._remote.close()
-            self._remote = None
+        self.close_remote()
 
         try:
-            self._get_remote()
-            return self._remote is not None
+            return self._get_remote() is not None
         except (
             UnhandledResponse,
             AccessDenied,
@@ -118,10 +119,12 @@ class SamsungTVBridge(ABC):
     def close_remote(self):
         """Close remote object."""
         try:
-            self._get_remote().close()
+            if self._remote is not None:
+                # Close the current remote connection
+                self._remote.close()
             self._remote = None
         except OSError:
-            LOGGER.debug("Could not establish connection.")
+            LOGGER.debug("Could not establish connection")
 
     def _notify_callback(self):
         """Notify access denied callback."""
@@ -132,15 +135,12 @@ class SamsungTVBridge(ABC):
 class SamsungTVLegacyBridge(SamsungTVBridge):
     """The Bridge for Legacy TVs."""
 
-    def __init__(self, config):
+    def __init__(self, method, host, port):
         """Initialize Bridge."""
-        super().__init__(config)
-        self.port = 55000
+        super().__init__(method, host, port, None)
 
     def try_connect(self, port):
         """Try to connect to the Legacy TV."""
-        if port is not None and port != self.port:
-            return RESULT_NOT_SUCCESSFUL
         config = {
             CONF_NAME: VALUE_CONF_NAME,
             CONF_DESCRIPTION: VALUE_CONF_NAME,
@@ -188,7 +188,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
 def _hide_token(config):
     if config[CONF_TOKEN]:
         copy = config.copy()
-        copy[CONF_TOKEN] = "XXXXX"
+        copy[CONF_TOKEN] = "*****"
         return copy
     return config
 
@@ -196,10 +196,9 @@ def _hide_token(config):
 class SamsungTVWSBridge(SamsungTVBridge):
     """The Bridge for WebSocket TVs."""
 
-    def __init__(self, config):
+    def __init__(self, method, host, port, token=None):
         """Initialize Bridge."""
-        super().__init__(config)
-        self.config = config
+        super().__init__(method, host, port, token)
 
     def try_connect(self, port):
         """Try to connect to the Websocket TV."""
@@ -208,7 +207,6 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 continue
             config = {
                 CONF_NAME: VALUE_CONF_NAME,
-                CONF_DESCRIPTION: VALUE_CONF_NAME,
                 CONF_HOST: self.host,
                 CONF_METHOD: self.method,
                 CONF_PORT: self.port,

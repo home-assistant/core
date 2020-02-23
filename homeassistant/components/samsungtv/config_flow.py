@@ -84,11 +84,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _try_connect(self):
         """Try to connect and check auth."""
         for method in SUPPORTED_METHODS:
-            config = {
-                CONF_METHOD: method,
-                CONF_HOST: self._host,
-            }
-            self._bridge = SamsungTVBridge.get_bridge(config)
+            self._bridge = SamsungTVBridge.get_bridge(method, self._host)
             result = self._bridge.try_connect(self._port)
             if result != RESULT_NOT_SUCCESSFUL:
                 return result

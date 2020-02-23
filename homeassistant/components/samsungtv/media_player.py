@@ -25,7 +25,6 @@ from homeassistant.const import (
     CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
-    CONF_TIMEOUT,
     CONF_TOKEN,
     STATE_OFF,
     STATE_ON,
@@ -35,16 +34,7 @@ from homeassistant.helpers.script import Script
 from homeassistant.util import dt as dt_util
 
 from .bridge import SamsungTVBridge
-from .const import (
-    CONF_DESCRIPTION,
-    CONF_MANUFACTURER,
-    CONF_MODEL,
-    CONF_ON_ACTION,
-    DOMAIN,
-    LOGGER,
-    VALUE_CONF_ID,
-    VALUE_CONF_NAME,
-)
+from .const import CONF_MANUFACTURER, CONF_MODEL, CONF_ON_ACTION, DOMAIN, LOGGER
 
 KEY_PRESS_TIMEOUT = 1.2
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
@@ -103,18 +93,13 @@ class SamsungTVDevice(MediaPlayerDevice):
         # Mark the end of a shutdown command (need to wait 15 seconds before
         # sending the next command to avoid turning the TV back ON).
         self._end_of_power_off = None
-        # Generate a configuration for the Samsung library
-        config = {
-            CONF_NAME: VALUE_CONF_NAME,
-            CONF_DESCRIPTION: VALUE_CONF_NAME,
-            CONF_ID: VALUE_CONF_ID,
-            CONF_METHOD: config_entry.data[CONF_METHOD],
-            CONF_PORT: config_entry.data.get(CONF_PORT),
-            CONF_HOST: config_entry.data[CONF_HOST],
-            CONF_TIMEOUT: 1,
-            CONF_TOKEN: config_entry.data[CONF_TOKEN],
-        }
-        self._bridge = SamsungTVBridge.get_bridge(config)
+        # Initialize bridge
+        self._bridge = SamsungTVBridge.get_bridge(
+            config_entry.data[CONF_METHOD],
+            config_entry.data[CONF_HOST],
+            config_entry.data[CONF_PORT],
+            config_entry.data[CONF_TOKEN],
+        )
         self._bridge.register_reauth_callback(self.access_denied)
 
     def access_denied(self):

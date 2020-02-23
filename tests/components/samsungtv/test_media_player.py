@@ -424,7 +424,7 @@ async def test_turn_off_os_error(hass, remote, caplog):
     assert await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
-    assert "Could not establish connection." in caplog.text
+    assert "Could not establish connection" in caplog.text
 
 
 async def test_volume_up(hass, remote):

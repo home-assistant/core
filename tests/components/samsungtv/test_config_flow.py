@@ -36,22 +36,12 @@ MOCK_SSDP_DATA_NOPREFIX = {
     ATTR_UPNP_UDN: "fake2_uuid",
 }
 
-AUTODETECT_WEBSOCKET = {
-    "name": "HomeAssistant",
-    "description": "HomeAssistant",
-    "id": "ha.component.samsung",
-    "method": "websocket",
-    "port": 8001,
-    "host": "fake_host",
-    "timeout": 31,
-    "token": None,
-}
 AUTODETECT_LEGACY = {
     "name": "HomeAssistant",
     "description": "HomeAssistant",
     "id": "ha.component.samsung",
     "method": "legacy",
-    "port": 55000,
+    "port": None,
     "host": "fake_host",
     "timeout": 31,
 }

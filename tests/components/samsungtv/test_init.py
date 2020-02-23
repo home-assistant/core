@@ -14,7 +14,6 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     CONF_HOST,
     CONF_NAME,
-    CONF_PORT,
     SERVICE_VOLUME_UP,
 )
 from homeassistant.setup import async_setup_component
@@ -25,7 +24,6 @@ MOCK_CONFIG = {
         {
             CONF_HOST: "fake_host",
             CONF_NAME: "fake_name",
-            CONF_PORT: 55000,
             CONF_ON_ACTION: [{"delay": "00:00:01"}],
         }
     ]
@@ -35,7 +33,7 @@ REMOTE_CALL = {
     "description": "HomeAssistant",
     "id": "ha.component.samsung",
     "method": "legacy",
-    "port": MOCK_CONFIG[SAMSUNGTV_DOMAIN][0][CONF_PORT],
+    "port": None,
     "host": MOCK_CONFIG[SAMSUNGTV_DOMAIN][0][CONF_HOST],
     "timeout": 1,
     "token": None,
