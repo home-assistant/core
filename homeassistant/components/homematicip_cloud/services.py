@@ -131,40 +131,35 @@ async def async_setup_services(hass: HomeAssistantType) -> None:
         elif service_name == SERVICE_SET_ACTIVE_CLIMATE_PROFILE:
             await _set_active_climate_profile(hass, service)
 
-    async_register_admin_service(
-        hass=hass,
+    hass.services.async_register(
         domain=HMIPC_DOMAIN,
         service=SERVICE_ACTIVATE_ECO_MODE_WITH_DURATION,
         service_func=async_call_hmipc_service,
         schema=SCHEMA_ACTIVATE_ECO_MODE_WITH_DURATION,
     )
 
-    async_register_admin_service(
-        hass=hass,
+    hass.services.async_register(
         domain=HMIPC_DOMAIN,
         service=SERVICE_ACTIVATE_ECO_MODE_WITH_PERIOD,
         service_func=async_call_hmipc_service,
         schema=SCHEMA_ACTIVATE_ECO_MODE_WITH_PERIOD,
     )
 
-    async_register_admin_service(
-        hass=hass,
+    hass.services.async_register(
         domain=HMIPC_DOMAIN,
         service=SERVICE_ACTIVATE_VACATION,
         service_func=async_call_hmipc_service,
         schema=SCHEMA_ACTIVATE_VACATION,
     )
 
-    async_register_admin_service(
-        hass=hass,
+    hass.services.async_register(
         domain=HMIPC_DOMAIN,
         service=SERVICE_DEACTIVATE_ECO_MODE,
         service_func=async_call_hmipc_service,
         schema=SCHEMA_DEACTIVATE_ECO_MODE,
     )
 
-    async_register_admin_service(
-        hass=hass,
+    hass.services.async_register(
         domain=HMIPC_DOMAIN,
         service=SERVICE_DEACTIVATE_VACATION,
         service_func=async_call_hmipc_service,
