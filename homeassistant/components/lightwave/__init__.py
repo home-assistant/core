@@ -86,7 +86,7 @@ async def async_setup(hass, config):
         lwlink.set_trv_proxy(proxy_ip, proxy_port)
 
         platforms = [CLIMATE_DOMAIN, SENSOR_DOMAIN]
-        for ent in entities:
+        for platform in platforms:
             hass.async_create_task(async_load_platform(hass, platform, DOMAIN, trvs, config))
 
     return True
