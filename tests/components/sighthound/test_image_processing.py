@@ -99,9 +99,9 @@ async def test_process_image(hass, mock_image, mock_detections):
 
 async def test_save_image(hass, mock_image, mock_detections):
     """Save a processed image."""
-    VALID_CONFIG_SAVE_FILE = deepcopy(VALID_CONFIG)
-    VALID_CONFIG_SAVE_FILE[ip.DOMAIN].update({sh.CONF_SAVE_FILE_FOLDER: TEST_DIR})
-    await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+    valid_config_save_file = deepcopy(VALID_CONFIG)
+    valid_config_save_file[ip.DOMAIN].update({sh.CONF_SAVE_FILE_FOLDER: TEST_DIR})
+    await async_setup_component(hass, ip.DOMAIN, valid_config_save_file)
     assert hass.states.get(VALID_ENTITY_ID)
 
     with patch(
