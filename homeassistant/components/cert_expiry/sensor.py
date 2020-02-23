@@ -75,7 +75,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         pass
 
     async_add_entities(
-        [SSLCertificate(hass, entry.title, hostname, port, days, error)], False,
+        [SSLCertificate(hass, hostname, port, days, error)], False,
     )
     return True
 
@@ -83,7 +83,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class SSLCertificate(Entity):
     """Implementation of the certificate expiry sensor."""
 
-    def __init__(self, hass, sensor_name, server_name, server_port, days, error):
+    def __init__(self, hass, server_name, server_port, days, error):
         """Initialize the sensor."""
         self.hass = hass
         self.server_name = server_name
