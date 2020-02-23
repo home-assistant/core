@@ -8,8 +8,8 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    TIME_HOURS,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -67,10 +67,20 @@ SENSOR_TYPES = {
     "max_temp": ["Max Temp.", TEMP_CELSIUS, "mdi:thermometer", None],
     "windangle": ["Angle", "", "mdi:compass", None],
     "windangle_value": ["Angle Value", "º", "mdi:compass", None],
-    "windstrength": ["Wind Strength", f"km/{TIME_HOURS}", "mdi:weather-windy", None],
+    "windstrength": [
+        "Wind Strength",
+        SPEED_KILOMETERS_PER_HOUR,
+        "mdi:weather-windy",
+        None,
+    ],
     "gustangle": ["Gust Angle", "", "mdi:compass", None],
     "gustangle_value": ["Gust Angle Value", "º", "mdi:compass", None],
-    "guststrength": ["Gust Strength", f"km/{TIME_HOURS}", "mdi:weather-windy", None],
+    "guststrength": [
+        "Gust Strength",
+        SPEED_KILOMETERS_PER_HOUR,
+        "mdi:weather-windy",
+        None,
+    ],
     "reachable": ["Reachability", "", "mdi:signal", None],
     "rf_status": ["Radio", "", "mdi:signal", None],
     "rf_status_lvl": ["Radio_lvl", "", "mdi:signal", None],

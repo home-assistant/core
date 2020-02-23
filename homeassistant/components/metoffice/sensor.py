@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
@@ -64,9 +65,9 @@ SENSOR_TYPES = {
     "weather": ["Weather", None],
     "temperature": ["Temperature", TEMP_CELSIUS],
     "feels_like_temperature": ["Feels Like Temperature", TEMP_CELSIUS],
-    "wind_speed": ["Wind Speed", "mph"],
+    "wind_speed": ["Wind Speed", SPEED_MILES_PER_HOUR],
     "wind_direction": ["Wind Direction", None],
-    "wind_gust": ["Wind Gust", "mph"],
+    "wind_gust": ["Wind Gust", SPEED_MILES_PER_HOUR],
     "visibility": ["Visibility", None],
     "visibility_distance": ["Visibility Distance", "km"],
     "uv": ["UV", None],

@@ -13,7 +13,7 @@ from withings_api.common import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_SECONDS
+from homeassistant.const import SPEED_METERS_PER_SECOND, TIME_SECONDS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.entity import Entity
@@ -188,7 +188,7 @@ WITHINGS_ATTRIBUTES = [
         const.MEAS_PWV,
         MeasureType.PULSE_WAVE_VELOCITY,
         "Pulse Wave Velocity",
-        const.UOM_METERS_PER_SECOND,
+        SPEED_METERS_PER_SECOND,
         None,
     ),
     WithingsSleepStateAttribute(

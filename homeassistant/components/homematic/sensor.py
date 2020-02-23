@@ -8,7 +8,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_WATT_HOUR,
     POWER_WATT,
-    TIME_HOURS,
+    SPEED_KILOMETERS_PER_HOUR,
 )
 
 from .const import ATTR_DISCOVER_DEVICES
@@ -48,7 +48,7 @@ HM_UNIT_HA_CAST = {
     "LOWEST_ILLUMINATION": "lx",
     "HIGHEST_ILLUMINATION": "lx",
     "RAIN_COUNTER": "mm",
-    "WIND_SPEED": f"km/{TIME_HOURS}",
+    "WIND_SPEED": SPEED_KILOMETERS_PER_HOUR,
     "WIND_DIRECTION": "°",
     "WIND_DIRECTION_RANGE": "°",
     "SUNSHINEDURATION": "#",

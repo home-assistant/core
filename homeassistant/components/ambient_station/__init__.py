@@ -12,6 +12,7 @@ from homeassistant.const import (
     ATTR_NAME,
     CONF_API_KEY,
     EVENT_HOMEASSISTANT_STOP,
+    SPEED_MILES_PER_HOUR,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -167,7 +168,7 @@ SENSOR_TYPES = {
     TYPE_HUMIDITY: ("Humidity", "%", TYPE_SENSOR, "humidity"),
     TYPE_HUMIDITYIN: ("Humidity In", "%", TYPE_SENSOR, "humidity"),
     TYPE_LASTRAIN: ("Last Rain", None, TYPE_SENSOR, "timestamp"),
-    TYPE_MAXDAILYGUST: ("Max Gust", "mph", TYPE_SENSOR, None),
+    TYPE_MAXDAILYGUST: ("Max Gust", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
     TYPE_MONTHLYRAININ: ("Monthly Rain", "in", TYPE_SENSOR, None),
     TYPE_RELAY10: ("Relay 10", None, TYPE_BINARY_SENSOR, "connectivity"),
     TYPE_RELAY1: ("Relay 1", None, TYPE_BINARY_SENSOR, "connectivity"),
@@ -218,12 +219,12 @@ SENSOR_TYPES = {
     TYPE_WEEKLYRAININ: ("Weekly Rain", "in", TYPE_SENSOR, None),
     TYPE_WINDDIR: ("Wind Dir", "°", TYPE_SENSOR, None),
     TYPE_WINDDIR_AVG10M: ("Wind Dir Avg 10m", "°", TYPE_SENSOR, None),
-    TYPE_WINDDIR_AVG2M: ("Wind Dir Avg 2m", "mph", TYPE_SENSOR, None),
+    TYPE_WINDDIR_AVG2M: ("Wind Dir Avg 2m", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
     TYPE_WINDGUSTDIR: ("Gust Dir", "°", TYPE_SENSOR, None),
-    TYPE_WINDGUSTMPH: ("Wind Gust", "mph", TYPE_SENSOR, None),
-    TYPE_WINDSPDMPH_AVG10M: ("Wind Avg 10m", "mph", TYPE_SENSOR, None),
-    TYPE_WINDSPDMPH_AVG2M: ("Wind Avg 2m", "mph", TYPE_SENSOR, None),
-    TYPE_WINDSPEEDMPH: ("Wind Speed", "mph", TYPE_SENSOR, None),
+    TYPE_WINDGUSTMPH: ("Wind Gust", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
+    TYPE_WINDSPDMPH_AVG10M: ("Wind Avg 10m", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
+    TYPE_WINDSPDMPH_AVG2M: ("Wind Avg 2m", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
+    TYPE_WINDSPEEDMPH: ("Wind Speed", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
     TYPE_YEARLYRAININ: ("Yearly Rain", "in", TYPE_SENSOR, None),
 }
 

@@ -389,6 +389,11 @@ MASS_POUNDS: str = "lb"
 # UV Index units
 UNIT_UV_INDEX: str = "UV index"
 
+# Speed units
+SPEED_METERS_PER_SECOND = f"{LENGTH_METERS}/{TIME_SECONDS}"
+SPEED_KILOMETERS_PER_HOUR = f"{LENGTH_KILOMETERS}/{TIME_HOURS}"
+SPEED_MILES_PER_HOUR = "mph"
+
 # Data units
 DATA_BITS = "bit"
 DATA_KILOBITS = "kbit"
