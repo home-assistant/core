@@ -2,15 +2,14 @@
 from datetime import timedelta
 import logging
 
-from august.activity import ActivityType
+from august.activity import ActivityType, DoorOperationActivity
 from august.lock import LockStatus
 from august.util import update_lock_detail_from_activity
 
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import ATTR_BATTERY_LEVEL
-from homeassistant.util import dt
 
-from . import DATA_AUGUST
+from . import DATA_AUGUST, DOMAIN, find_linked_doorsense_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,27 +42,49 @@ class AugustLock(LockDevice):
 
     async def async_lock(self, **kwargs):
         """Lock the device."""
-        update_start_time_utc = dt.utcnow()
-        lock_status = await self.hass.async_add_executor_job(
-            self._data.lock, self._lock.device_id
-        )
-        self._update_lock_status(lock_status, update_start_time_utc)
+        await self._call_lock_operation(self._data.lock)
 
     async def async_unlock(self, **kwargs):
         """Unlock the device."""
-        update_start_time_utc = dt.utcnow()
-        lock_status = await self.hass.async_add_executor_job(
-            self._data.unlock, self._lock.device_id
-        )
-        self._update_lock_status(lock_status, update_start_time_utc)
+        await self._call_lock_operation(self._data.unlock)
 
-    def _update_lock_status(self, lock_status, update_start_time_utc):
+    async def _linked_doorsense_entity_id(self):
+        if self._data.lock_has_doorsense(self._lock.device_id):
+            entity_registry = (
+                await self.hass.helpers.entity_registry.async_get_registry()
+            )
+            return entity_registry.async_get_entity_id(
+                "binary_sensor",
+                DOMAIN,
+                find_linked_doorsense_unique_id(self._lock.device_id),
+            )
+        return None
+
+    async def _call_lock_operation(self, lock_operation):
+        activities = await self.hass.async_add_executor_job(
+            lock_operation, self._lock.device_id
+        )
+        for lock_activity in activities:
+            update_lock_detail_from_activity(self._lock_detail, lock_activity)
+            if isinstance(lock_activity, DoorOperationActivity):
+                linked_doorsense_entity_id = await self._linked_doorsense_entity_id()
+                if linked_doorsense_entity_id is not None:
+                    await self.hass.helpers.entity_component.async_update_entity(
+                        linked_doorsense_entity_id
+                    )
+
+        if self._update_lock_status_from_detail():
+            self.schedule_update_ha_state()
+
+    def _update_lock_status_from_detail(self):
+        lock_status = self._lock_detail.lock_status
         if self._lock_status != lock_status:
             self._lock_status = lock_status
-            self._data.update_lock_status(
-                self._lock.device_id, lock_status, update_start_time_utc
+            self._available = (
+                lock_status is not None and lock_status != LockStatus.UNKNOWN
             )
-            self.schedule_update_ha_state()
+            return True
+        return False
 
     async def async_update(self):
         """Get the latest state of the sensor and update activity."""
@@ -76,10 +97,7 @@ class AugustLock(LockDevice):
             self._changed_by = lock_activity.operated_by
             update_lock_detail_from_activity(self._lock_detail, lock_activity)
 
-        self._lock_status = self._lock_detail.lock_status
-        self._available = (
-            self._lock_status is not None and self._lock_status != LockStatus.UNKNOWN
-        )
+        self._update_lock_status_from_detail()
 
     @property
     def name(self):
