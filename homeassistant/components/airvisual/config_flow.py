@@ -45,6 +45,11 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
+    async def _async_set_unique_id(self, unique_id):
+        """Set the unique ID of the config flow and abort if it already exists."""
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured()
+
     @callback
     async def _show_form(self, errors=None):
         """Show the form to the user."""
@@ -54,8 +59,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
-        await self.async_set_unique_id(import_config[CONF_API_KEY])
-        self._abort_if_unique_id_configured()
+        await self._async_set_unique_id(import_config[CONF_API_KEY])
 
         data = {**import_config}
         if not data.get(CONF_GEOGRAPHIES):
@@ -76,8 +80,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not user_input:
             return await self._show_form()
 
-        await self.async_set_unique_id(user_input[CONF_API_KEY])
-        self._abort_if_unique_id_configured()
+        await self._async_set_unique_id(user_input[CONF_API_KEY])
 
         websession = aiohttp_client.async_get_clientsession(self.hass)
 
