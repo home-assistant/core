@@ -39,17 +39,6 @@ SERVICE_DUMP_HAP_CONFIG = "dump_hap_config"
 SERVICE_RESET_ENERGY_COUNTER = "reset_energy_counter"
 SERVICE_SET_ACTIVE_CLIMATE_PROFILE = "set_active_climate_profile"
 
-HMIPC_SERVICES2 = {
-    SERVICE_ACTIVATE_ECO_MODE_WITH_DURATION: "_async_activate_eco_mode_with_duration",
-    SERVICE_ACTIVATE_ECO_MODE_WITH_PERIOD: "_async_activate_eco_mode_with_period",
-    SERVICE_ACTIVATE_VACATION: "_async_activate_vacation",
-    SERVICE_DEACTIVATE_ECO_MODE: "SERVICE_DEACTIVATE_ECO_MODE",
-    SERVICE_DEACTIVATE_VACATION: "_async_deactivate_vacation",
-    SERVICE_DUMP_HAP_CONFIG: "_async_dump_hap_config",
-    SERVICE_RESET_ENERGY_COUNTER: "_async_reset_energy_counter",
-    SERVICE_SET_ACTIVE_CLIMATE_PROFILE: "_set_active_climate_profile",
-}
-
 HMIPC_SERVICES = [
     SERVICE_ACTIVATE_ECO_MODE_WITH_DURATION,
     SERVICE_ACTIVATE_ECO_MODE_WITH_PERIOD,
