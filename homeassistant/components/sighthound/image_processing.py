@@ -1,7 +1,7 @@
 """Person detection using Sighthound cloud service."""
 import io
 import logging
-import os
+from pathlib import Path
 
 from PIL import Image, ImageDraw
 import simplehound.core as hound
@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     save_file_folder = config.get(CONF_SAVE_FILE_FOLDER)
     if save_file_folder:
-        save_file_folder = os.path.join(save_file_folder, "")  # If no trailing / add it
+        save_file_folder = Path(save_file_folder)
 
     entities = []
     for camera in config[CONF_SOURCE]:
@@ -79,8 +79,7 @@ class SighthoundEntity(ImageProcessingEntity):
         self._state = None
         self._image_width = None
         self._image_height = None
-        if save_file_folder:
-            self._save_file_folder = save_file_folder
+        self._save_file_folder = save_file_folder
 
     def process_image(self, image):
         """Process an image."""
@@ -93,7 +92,7 @@ class SighthoundEntity(ImageProcessingEntity):
         self._image_height = metadata["image_height"]
         for person in people:
             self.fire_person_detected_event(person)
-        if hasattr(self, "_save_file_folder") and self._state > 0:
+        if self._save_file_folder and self._state > 0:
             self.save_image(image, people, self._save_file_folder)
 
     def fire_person_detected_event(self, person):
@@ -118,7 +117,7 @@ class SighthoundEntity(ImageProcessingEntity):
                 person["boundingBox"], self._image_width, self._image_height
             )
             draw_box(draw, box, self._image_width, self._image_height)
-        latest_save_path = directory + "{}_latest.jpg".format(self._name)
+        latest_save_path = directory / f"{self._name}_latest.jpg"
         img.save(latest_save_path)
 
     @property
