@@ -23,7 +23,7 @@ from tests.components.august.mocks import (
 
 def test_get_lock_name():
     """Get the lock name from August data."""
-    data = MockAugustComponentData(last_lock_status_update_timestamp=1)
+    data = MockAugustComponentData()
     lock = _mock_august_lock()
     data.set_mocked_locks([lock])
     assert data.get_lock_name("mocklockid1") == "mocklockid1 Name"
@@ -61,18 +61,18 @@ def test_lock_throws_august_api_http_error():
     )
 
 
-def test_inoperative_locks_are_filtered_out():
+async def test_inoperative_locks_are_filtered_out(hass):
     """Ensure inoperative locks do not get setup."""
-    august_operative_lock = _mock_operative_august_lock_detail("oplockid1")
+    august_operative_lock = await _mock_operative_august_lock_detail(hass)
     data = _create_august_data_with_lock_details(
-        [august_operative_lock, _mock_inoperative_august_lock_detail("inoplockid1")]
+        [august_operative_lock, await _mock_inoperative_august_lock_detail(hass)]
     )
 
     assert len(data.locks) == 1
-    assert data.locks[0].device_id == "oplockid1"
+    assert data.locks[0].device_id == "A6697750D607098BAE8D6BAA11EF8063"
 
 
-def test_lock_has_doorsense():
+async def test_lock_has_doorsense():
     """Check to see if a lock has doorsense."""
     data = _create_august_data_with_lock_details(
         [

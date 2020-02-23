@@ -6,6 +6,8 @@ import logging
 
 from august.api import Api, AugustApiHTTPError
 from august.authenticator import AuthenticationState, Authenticator, ValidationResult
+from august.doorbell import Doorbell
+from august.lock import Lock
 from requests import RequestException, Session
 import voluptuous as vol
 
@@ -36,6 +38,7 @@ NOTIFICATION_TITLE = "August Setup"
 
 AUGUST_CONFIG_FILE = ".august.conf"
 
+DEFAULT_NAME = "August"
 DATA_AUGUST = "august"
 DOMAIN = "august"
 DEFAULT_ENTITY_NAMESPACE = "august"
@@ -75,7 +78,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-AUGUST_COMPONENTS = ["camera", "binary_sensor", "lock"]
+AUGUST_COMPONENTS = ["camera", "binary_sensor", "lock", "sensor"]
 
 
 def request_configuration(hass, config, api, authenticator, token_refresh_lock):
@@ -218,6 +221,7 @@ class AugustData:
         # We check the locks right away so we can
         # remove inoperative ones
         self._update_locks_detail()
+        self._update_doorbells_detail()
 
         self._filter_inoperative_locks()
 
@@ -293,6 +297,14 @@ class AugustData:
                 ]
 
         _LOGGER.debug("Completed retrieving device activities")
+
+    async def async_get_device_detail(self, device):
+        """Return the detail for a device."""
+        if isinstance(device, Lock):
+            return await self.async_get_lock_detail(device.device_id)
+        if isinstance(device, Doorbell):
+            return await self.async_get_doorbell_detail(device.device_id)
+        raise ValueError
 
     async def async_get_doorbell_detail(self, device_id):
         """Return doorbell detail."""

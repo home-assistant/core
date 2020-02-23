@@ -5,9 +5,9 @@ import requests
 
 from homeassistant.components.camera import Camera
 
-from . import DATA_AUGUST, DEFAULT_TIMEOUT
+from . import DATA_AUGUST, DEFAULT_NAME, DEFAULT_TIMEOUT
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=5)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -29,9 +29,11 @@ class AugustCamera(Camera):
         super().__init__()
         self._data = data
         self._doorbell = doorbell
+        self._doorbell_detail = None
         self._timeout = timeout
         self._image_url = None
         self._image_content = None
+        self._firmware_version = None
 
     @property
     def name(self):
@@ -51,7 +53,7 @@ class AugustCamera(Camera):
     @property
     def brand(self):
         """Return the camera brand."""
-        return "August"
+        return DEFAULT_NAME
 
     @property
     def model(self):
@@ -60,15 +62,30 @@ class AugustCamera(Camera):
 
     async def async_camera_image(self):
         """Return bytes of camera image."""
-        latest = await self._data.async_get_doorbell_detail(self._doorbell.device_id)
+        self._doorbell_detail = await self._data.async_get_doorbell_detail(
+            self._doorbell.device_id
+        )
 
-        if self._image_url is not latest.image_url:
-            self._image_url = latest.image_url
+        if self._doorbell_detail is None:
+            return None
+
+        if self._image_url is not self._doorbell_detail.image_url:
+            self._image_url = self._doorbell_detail.image_url
             self._image_content = await self.hass.async_add_executor_job(
                 self._camera_image
             )
-
         return self._image_content
+
+    async def async_update(self):
+        """Update camera data."""
+        self._doorbell_detail = await self._data.async_get_doorbell_detail(
+            self._doorbell.device_id
+        )
+
+        if self._doorbell_detail is None:
+            return None
+
+        self._firmware_version = self._doorbell_detail.firmware_version
 
     def _camera_image(self):
         """Return bytes of camera image via http get."""
