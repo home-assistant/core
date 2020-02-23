@@ -3,9 +3,9 @@
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    SERVICE_LOCK,
     SERVICE_UNLOCK,
     STATE_LOCKED,
-    STATE_ON,
     STATE_UNLOCKED,
 )
 
@@ -15,13 +15,13 @@ from tests.components.august.mocks import (
 )
 
 
-async def test_one_lock_unlock_happy_path(hass):
+async def test_one_lock_operation(hass):
     """Test creation of a lock with doorsense and bridge."""
     lock_one = await _mock_lock_from_fixture(
         hass, "get_lock.online_with_doorsense.json"
     )
     lock_details = [lock_one]
-    await _create_august_with_devices(hass, lock_details=lock_details)
+    await _create_august_with_devices(hass, lock_details)
 
     lock_abc_name = hass.states.get("lock.abc_name")
 
@@ -42,5 +42,9 @@ async def test_one_lock_unlock_happy_path(hass):
     assert lock_abc_name.attributes.get("battery_level") == 92
     assert lock_abc_name.attributes.get("friendly_name") == "ABC Name"
 
-    binary_sensor_abc_name = hass.states.get("binary_sensor.abc_name_open")
-    assert binary_sensor_abc_name.state == STATE_ON
+    assert await hass.services.async_call(
+        LOCK_DOMAIN, SERVICE_LOCK, data, blocking=True
+    )
+
+    lock_abc_name = hass.states.get("lock.abc_name")
+    assert lock_abc_name.state == STATE_LOCKED
