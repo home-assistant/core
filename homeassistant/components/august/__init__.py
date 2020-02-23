@@ -40,18 +40,20 @@ DATA_AUGUST = "august"
 DOMAIN = "august"
 DEFAULT_ENTITY_NAMESPACE = "august"
 
-# Limit battery and hardware updates to 1800 seconds
+# Limit battery, online, and hardware updates to 1800 seconds
 # in order to reduce the number of api requests and
 # avoid hitting rate limits
 MIN_TIME_BETWEEN_LOCK_DETAIL_UPDATES = timedelta(seconds=1800)
 
 # Doorbells need to update more frequently than locks
-# since we get an image from the doorbell api
-MIN_TIME_BETWEEN_DOORBELL_STATUS_UPDATES = timedelta(seconds=20)
+# since we get an image from the doorbell api. Once
+# py-august 0.18.0 is released doorbell status updates
+# can be reduced in the same was as locks have been
+MIN_TIME_BETWEEN_DOORBELL_DETAIL_UPDATES = timedelta(seconds=20)
 
 # Activity needs to be checked more frequently as the
 # doorbell motion and rings are included here
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
+MIN_TIME_BETWEEN_ACTIVITY_UPDATES = timedelta(seconds=10)
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=10)
 
@@ -265,7 +267,7 @@ class AugustData:
         activities = await self.async_get_device_activities(device_id, *activity_types)
         return next(iter(activities or []), None)
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    @Throttle(MIN_TIME_BETWEEN_ACTIVITY_UPDATES)
     async def _async_update_device_activities(self, limit=ACTIVITY_FETCH_LIMIT):
         """Update data object with latest from August API."""
 
@@ -292,77 +294,32 @@ class AugustData:
 
         _LOGGER.debug("Completed retrieving device activities")
 
-    async def async_get_doorbell_detail(self, doorbell_id):
+    async def async_get_doorbell_detail(self, device_id):
         """Return doorbell detail."""
-        await self._async_update_doorbells()
-        return self._doorbell_detail_by_id.get(doorbell_id)
+        await self._async_update_doorbells_detail()
+        return self._doorbell_detail_by_id.get(device_id)
 
-    @Throttle(MIN_TIME_BETWEEN_DOORBELL_STATUS_UPDATES)
-    async def _async_update_doorbells(self):
-        await self._hass.async_add_executor_job(self._update_doorbells)
+    @Throttle(MIN_TIME_BETWEEN_DOORBELL_DETAIL_UPDATES)
+    async def _async_update_doorbells_detail(self):
+        await self._hass.async_add_executor_job(self._update_doorbells_detail)
 
-    def _update_doorbells(self):
-        detail_by_id = {}
+    def _update_doorbells_detail(self):
+        self._doorbell_detail_by_id = self._update_device_detail(
+            "doorbell", self._doorbells, self._api.get_doorbell_detail
+        )
 
-        _LOGGER.debug("Start retrieving doorbell details")
-        for doorbell in self._doorbells:
-            _LOGGER.debug("Updating doorbell status for %s", doorbell.device_name)
-            try:
-                detail_by_id[doorbell.device_id] = self._api.get_doorbell_detail(
-                    self._access_token, doorbell.device_id
-                )
-            except RequestException as ex:
-                _LOGGER.error(
-                    "Request error trying to retrieve doorbell status for %s. %s",
-                    doorbell.device_name,
-                    ex,
-                )
-                detail_by_id[doorbell.device_id] = None
-            except Exception:
-                detail_by_id[doorbell.device_id] = None
-                raise
-
-        _LOGGER.debug("Completed retrieving doorbell details")
-        self._doorbell_detail_by_id = detail_by_id
-
-    def update_door_state(self, lock_id, door_state, update_start_time_utc):
-        """Set the door status and last status update time.
-
-        This is called when newer activity is detected on the activity feed
-        in order to keep the internal data in sync
-        """
-        # When syncing the door state became available via py-august, this
-        # function caused to be actively used.  It will be again as we will
-        # update the door state from lock/unlock operations as the august api
-        # does report the door state on lock/unlock, however py-august does not
-        # expose this to us yet.
-        self._lock_detail_by_id[lock_id].door_state = door_state
-        self._lock_detail_by_id[lock_id].door_state_datetime = update_start_time_utc
-        return True
-
-    def update_lock_status(self, lock_id, lock_status, update_start_time_utc):
-        """Set the lock status and last status update time.
-
-        This is used when the lock, unlock apis are called
-        or newer activity is detected on the activity feed
-        in order to keep the internal data in sync
-        """
-        self._lock_detail_by_id[lock_id].lock_status = lock_status
-        self._lock_detail_by_id[lock_id].lock_status_datetime = update_start_time_utc
-        return True
-
-    def lock_has_doorsense(self, lock_id):
+    def lock_has_doorsense(self, device_id):
         """Determine if a lock has doorsense installed and can tell when the door is open or closed."""
         # We do not update here since this is not expected
         # to change until restart
-        if self._lock_detail_by_id[lock_id] is None:
+        if self._lock_detail_by_id[device_id] is None:
             return False
-        return self._lock_detail_by_id[lock_id].doorsense
+        return self._lock_detail_by_id[device_id].doorsense
 
-    async def async_get_lock_detail(self, lock_id):
+    async def async_get_lock_detail(self, device_id):
         """Return lock detail."""
         await self._async_update_locks_detail()
-        return self._lock_detail_by_id[lock_id]
+        return self._lock_detail_by_id[device_id]
 
     def get_lock_name(self, device_id):
         """Return lock name as August has it stored."""
@@ -375,34 +332,39 @@ class AugustData:
         await self._hass.async_add_executor_job(self._update_locks_detail)
 
     def _update_locks_detail(self):
+        self._lock_detail_by_id = self._update_device_detail(
+            "lock", self._locks, self._api.get_lock_detail
+        )
+
+    def _update_device_detail(self, device_type, devices, api_call):
         detail_by_id = {}
 
-        _LOGGER.debug("Start retrieving locks detail")
-        for lock in self._locks:
+        _LOGGER.debug("Start retrieving %s detail", device_type)
+        for device in devices:
+            device_id = device.device_id
             try:
-                detail_by_id[lock.device_id] = self._api.get_lock_detail(
-                    self._access_token, lock.device_id
-                )
+                detail_by_id[device_id] = api_call(self._access_token, device_id)
             except RequestException as ex:
                 _LOGGER.error(
-                    "Request error trying to retrieve door details for %s. %s",
-                    lock.device_name,
+                    "Request error trying to retrieve %s details for %s. %s",
+                    device_type,
+                    device.device_name,
                     ex,
                 )
-                detail_by_id[lock.device_id] = None
+                detail_by_id[device_id] = None
             except Exception:
-                detail_by_id[lock.device_id] = None
+                detail_by_id[device_id] = None
                 raise
 
-        _LOGGER.debug("Completed retrieving locks detail")
-        self._lock_detail_by_id = detail_by_id
+        _LOGGER.debug("Completed retrieving %s detail", device_type)
+        return detail_by_id
 
     def lock(self, device_id):
         """Lock the device."""
         return _call_api_operation_that_requires_bridge(
             self.get_lock_name(device_id),
             "lock",
-            self._api.lock,
+            self._api.lock_return_activities,
             self._access_token,
             device_id,
         )
@@ -412,7 +374,7 @@ class AugustData:
         return _call_api_operation_that_requires_bridge(
             self.get_lock_name(device_id),
             "unlock",
-            self._api.unlock,
+            self._api.unlock_return_activities,
             self._access_token,
             device_id,
         )
