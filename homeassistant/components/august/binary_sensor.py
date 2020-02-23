@@ -93,21 +93,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices, True)
 
 
-class AugustBinarySensor(BinarySensorDevice):
-    """Representation of an August binary sensor."""
-
-    @property
-    def available(self):
-        """Return the availability of this sensor."""
-        return self._available
-
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on."""
-        return self._state
-
-
-class AugustDoorBinarySensor(AugustBinarySensor):
+class AugustDoorBinarySensor(BinarySensorDevice):
     """Representation of an August Door binary sensor."""
 
     def __init__(self, data, sensor_type, door):
@@ -118,6 +104,16 @@ class AugustDoorBinarySensor(AugustBinarySensor):
         self._state = None
         self._available = False
         self._firmware_version = None
+
+    @property
+    def available(self):
+        """Return the availability of this sensor."""
+        return self._available
+
+    @property
+    def is_on(self):
+        """Return true if the binary sensor is on."""
+        return self._state
 
     @property
     def device_class(self):
@@ -140,7 +136,6 @@ class AugustDoorBinarySensor(AugustBinarySensor):
             update_lock_detail_from_activity(detail, door_activity)
 
         lock_door_state = None
-        self._available = False
         if detail is not None:
             lock_door_state = detail.door_state
             self._firmware_version = detail.firmware_version
@@ -154,7 +149,7 @@ class AugustDoorBinarySensor(AugustBinarySensor):
         return f"{self._door.device_id}_open"
 
 
-class AugustDoorbellBinarySensor(AugustBinarySensor):
+class AugustDoorbellBinarySensor(BinarySensorDevice):
     """Representation of an August binary sensor."""
 
     def __init__(self, data, sensor_type, doorbell):
@@ -165,6 +160,16 @@ class AugustDoorbellBinarySensor(AugustBinarySensor):
         self._state = None
         self._available = False
         self._firmware_version = None
+
+    @property
+    def available(self):
+        """Return the availability of this sensor."""
+        return self._available
+
+    @property
+    def is_on(self):
+        """Return true if the binary sensor is on."""
+        return self._state
 
     @property
     def device_class(self):
