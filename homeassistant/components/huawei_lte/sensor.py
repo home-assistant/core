@@ -17,7 +17,9 @@ from .const import (
     DOMAIN,
     KEY_DEVICE_INFORMATION,
     KEY_DEVICE_SIGNAL,
+    KEY_MONITORING_MONTH_STATISTICS,
     KEY_MONITORING_TRAFFIC_STATISTICS,
+    SENSOR_KEYS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -117,6 +119,15 @@ SENSOR_META = {
         and "mdi:signal-cellular-2"
         or "mdi:signal-cellular-3",
     ),
+    KEY_MONITORING_MONTH_STATISTICS: dict(
+        exclude=re.compile(r"^month(duration|lastcleartime)$", re.IGNORECASE)
+    ),
+    (KEY_MONITORING_MONTH_STATISTICS, "CurrentMonthDownload"): dict(
+        name="Current month download", unit=DATA_BYTES, icon="mdi:download"
+    ),
+    (KEY_MONITORING_MONTH_STATISTICS, "CurrentMonthUpload"): dict(
+        name="Current month upload", unit=DATA_BYTES, icon="mdi:upload"
+    ),
     KEY_MONITORING_TRAFFIC_STATISTICS: dict(
         exclude=re.compile(r"^showtraffic$", re.IGNORECASE)
     ),
@@ -145,11 +156,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up from config entry."""
     router = hass.data[DOMAIN].routers[config_entry.data[CONF_URL]]
     sensors = []
-    for key in (
-        KEY_DEVICE_INFORMATION,
-        KEY_DEVICE_SIGNAL,
-        KEY_MONITORING_TRAFFIC_STATISTICS,
-    ):
+    for key in SENSOR_KEYS:
         items = router.data.get(key)
         if not items:
             continue
