@@ -20,10 +20,8 @@ DEFAULT_RTSP_PORT = "554"
 
 DATA_FFMPEG = "ffmpeg"
 
-
 EZVIZ_DATA = "ezviz"
 ENTITIES = "entities"
-
 
 CAMERA_SCHEMA = vol.Schema(
     {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
@@ -38,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, disc_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ezviz IP Cameras."""
 
     conf_cameras = config[CONF_CAMERAS]
@@ -53,7 +51,7 @@ def setup_platform(hass, config, add_entities, disc_info=None):
 
     except PyEzvizError as exp:
         _LOGGER.error(exp)
-        return None
+        return
 
     # now, let's build the HASS devices
     camera_entities = []
@@ -72,8 +70,8 @@ def setup_platform(hass, config, add_entities, disc_info=None):
             local_rtsp_port = camera["local_rtsp_port"]
 
         if camera_serial in conf_cameras:
-            camera_username = conf_cameras[camera_serial]["username"]
-            camera_password = conf_cameras[camera_serial]["password"]
+            camera_username = conf_cameras[camera_serial][CONF_USERNAME]
+            camera_password = conf_cameras[camera_serial][CONF_PASSWORD]
             camera_rtsp_stream = f"rtsp://{camera_username}:{camera_password}@{camera['local_ip']}:{local_rtsp_port}"
             _LOGGER.debug(
                 "Camera %s source stream: %s", camera["serial"], camera_rtsp_stream
@@ -81,9 +79,7 @@ def setup_platform(hass, config, add_entities, disc_info=None):
 
         else:
             _LOGGER.info(
-                "I found a camera (%s) but it is not configured. Please configure it if you wish to see the appropriate stream. Conf cameras: %s",
-                camera_serial,
-                conf_cameras,
+                "Found camera with serial %s without configuration. Add it to configuration.yaml to see the camera stream"
             )
 
         camera["username"] = camera_username
@@ -150,8 +146,6 @@ class HassEzvizCamera(Camera):
     async def async_added_to_hass(self):
         """Subscribe to ffmpeg and add camera to list."""
         self._ffmpeg = self.hass.data[DATA_FFMPEG]
-        entities = self.hass.data.setdefault(EZVIZ_DATA, {}).setdefault(ENTITIES, [])
-        entities.append(self)
 
     @property
     def should_poll(self) -> bool:
@@ -165,19 +159,27 @@ class HassEzvizCamera(Camera):
     def device_state_attributes(self):
         """Return the Ezviz-specific camera state attributes."""
         return {
-            "serial": self._serial,
-            "name": self._name,
+            # device is connected & working
             "status": self._status,
-            "device_sub_category": self._device_sub_category,
+            # if privacy == true, the device closed the lid or did a 180° tilt
             "privacy": self._privacy,
+            # is the camera listening ?
             "audio": self._audio,
+            # infrared led on ?
             "ir_led": self._ir_led,
+            # state led on  ?
             "state_led": self._state_led,
+            # if true, the camera will move automatically to follow movements
             "follow_move": self._follow_move,
+            # if true, if some movement is detected, the app is notified
             "alarm_notify": self._alarm_notify,
+            # if true, if some movement is detected, the camera makes some sound
             "alarm_sound_mod": self._alarm_sound_mod,
+            # are the camera's stored videos/images encrypted?
             "encrypted": self._encrypted,
+            # camera's local ip on local network
             "local_ip": self._local_ip,
+            # from 1 to 9, the higher is the sensibility, the more it will detect small movemements
             "detection_sensibility": self._detection_sensibility,
         }
 
