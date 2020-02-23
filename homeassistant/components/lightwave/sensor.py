@@ -67,13 +67,6 @@ class LightwaveBattery(Entity):
         """Return the state of the sensor."""
         return self._unit_of_measurement
 
-    @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        return {
-            "device_type": "LightwaveRF TRV",
-        }
-
     def update(self):
         """Communicate with a Lightwave RTF Proxy to get state."""
         battery = None
