@@ -43,7 +43,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     @callback
     def schedule_import(_):
         """Schedule delayed import after HA is fully started."""
-        import_time = dt_util.utcnow() + timedelta(seconds=30)
+        import_time = dt_util.utcnow() + timedelta(seconds=10)
         async_track_point_in_utc_time(hass, do_import, import_time)
 
     @callback
