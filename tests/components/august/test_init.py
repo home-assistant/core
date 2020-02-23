@@ -128,7 +128,6 @@ def _create_august_data_with_lock_details(lock_details):
     authenticator = _mock_august_authenticator()
     token_refresh_lock = MagicMock()
     api = MagicMock()
-    api.get_lock_status = MagicMock(return_value=(MagicMock(), MagicMock()))
     api.get_lock_detail = MagicMock(side_effect=lock_details)
     api.get_operable_locks = MagicMock(return_value=locks)
     api.get_doorbells = MagicMock(return_value=[])

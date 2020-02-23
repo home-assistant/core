@@ -26,6 +26,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
+    STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
@@ -199,14 +200,17 @@ class AFSAPIDevice(MediaPlayerDevice):
         if not self._max_volume:
             self._max_volume = int(await fs_device.get_volume_steps() or 1) - 1
 
-        status = await fs_device.get_play_status()
-        self._state = {
-            "playing": STATE_PLAYING,
-            "paused": STATE_PAUSED,
-            "stopped": STATE_OFF,
-            "unknown": STATE_UNKNOWN,
-            None: STATE_OFF,
-        }.get(status, STATE_UNKNOWN)
+        if await fs_device.get_power():
+            status = await fs_device.get_play_status()
+            self._state = {
+                "playing": STATE_PLAYING,
+                "paused": STATE_PAUSED,
+                "stopped": STATE_IDLE,
+                "unknown": STATE_UNKNOWN,
+                None: STATE_IDLE,
+            }.get(status, STATE_UNKNOWN)
+        else:
+            self._state = STATE_OFF
 
         if self._state != STATE_OFF:
             info_name = await fs_device.get_play_name()

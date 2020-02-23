@@ -1,16 +1,82 @@
 """Mocks for the august component."""
 import datetime
+import json
+import os
 from unittest.mock import MagicMock, PropertyMock
 
+from asynctest import mock
 from august.activity import Activity
 from august.api import Api
+from august.authenticator import AuthenticationState
+from august.doorbell import Doorbell, DoorbellDetail
 from august.exceptions import AugustApiHTTPError
-from august.lock import Lock, LockDetail
+from august.lock import Lock, LockDetail, LockStatus
 
-from homeassistant.components.august import AugustData
+from homeassistant.components.august import (
+    CONF_LOGIN_METHOD,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    DOMAIN,
+    AugustData,
+)
 from homeassistant.components.august.binary_sensor import AugustDoorBinarySensor
-from homeassistant.components.august.lock import AugustLock
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
+
+from tests.common import load_fixture
+
+
+def _mock_get_config():
+    """Return a default august config."""
+    return {
+        DOMAIN: {
+            CONF_LOGIN_METHOD: "email",
+            CONF_USERNAME: "mocked_username",
+            CONF_PASSWORD: "mocked_password",
+        }
+    }
+
+
+@mock.patch("homeassistant.components.august.Api")
+@mock.patch("homeassistant.components.august.Authenticator.authenticate")
+async def _mock_setup_august(hass, api_mocks_callback, authenticate_mock, api_mock):
+    """Set up august integration."""
+    authenticate_mock.side_effect = MagicMock(
+        return_value=_mock_august_authentication("original_token", 1234)
+    )
+    api_mocks_callback(api_mock)
+    assert await async_setup_component(hass, DOMAIN, _mock_get_config())
+    await hass.async_block_till_done()
+    return True
+
+
+async def _create_august_with_devices(hass, lock_details=[], doorbell_details=[]):
+    locks = []
+    doorbells = []
+    for lock in lock_details:
+        if isinstance(lock, LockDetail):
+            locks.append(_mock_august_lock(lock.device_id))
+    for doorbell in doorbell_details:
+        if isinstance(lock, DoorbellDetail):
+            doorbells.append(_mock_august_doorbell(doorbell.device_id))
+
+    def api_mocks_callback(api):
+        def get_lock_detail_side_effect(access_token, device_id):
+            for lock in lock_details:
+                if isinstance(lock, LockDetail) and lock.device_id == device_id:
+                    return lock
+
+        api_instance = MagicMock()
+        api_instance.get_lock_detail.side_effect = get_lock_detail_side_effect
+        api_instance.get_operable_locks.return_value = locks
+        api_instance.get_doorbells.return_value = doorbells
+        api_instance.lock.return_value = LockStatus.LOCKED
+        api_instance.unlock.return_value = LockStatus.UNLOCKED
+        api.return_value = api_instance
+
+    await _mock_setup_august(hass, api_mocks_callback)
+
+    return True
 
 
 class MockAugustApiFailing(Api):
@@ -59,21 +125,6 @@ class MockAugustComponentDoorBinarySensor(AugustDoorBinarySensor):
         self.last_update_door_state = {}
         self.last_update_door_state["door_state"] = door_state
         self.last_update_door_state["activity_start_time_utc"] = activity_start_time_utc
-
-
-class MockAugustComponentLock(AugustLock):
-    """A mock for august component AugustLock class."""
-
-    def _update_lock_status(self, lock_status, activity_start_time_utc):
-        """Mock updating the lock status."""
-        self._data.set_last_lock_status_update_time_utc(
-            self._lock.device_id, activity_start_time_utc
-        )
-        self.last_update_lock_status = {}
-        self.last_update_lock_status["lock_status"] = lock_status
-        self.last_update_lock_status[
-            "activity_start_time_utc"
-        ] = activity_start_time_utc
 
 
 class MockAugustComponentData(AugustData):
@@ -143,6 +194,9 @@ def _mock_august_authenticator():
 
 def _mock_august_authentication(token_text, token_timestamp):
     authentication = MagicMock(name="august.authentication")
+    type(authentication).state = PropertyMock(
+        return_value=AuthenticationState.AUTHENTICATED
+    )
     type(authentication).access_token = PropertyMock(return_value=token_text)
     type(authentication).access_token_expires = PropertyMock(
         return_value=token_timestamp
@@ -152,6 +206,31 @@ def _mock_august_authentication(token_text, token_timestamp):
 
 def _mock_august_lock(lockid="mocklockid1", houseid="mockhouseid1"):
     return Lock(lockid, _mock_august_lock_data(lockid=lockid, houseid=houseid))
+
+
+def _mock_august_doorbell(deviceid="mockdeviceid1", houseid="mockhouseid1"):
+    return Doorbell(
+        deviceid, _mock_august_doorbell_data(device=deviceid, houseid=houseid)
+    )
+
+
+def _mock_august_doorbell_data(deviceid="mockdeviceid1", houseid="mockhouseid1"):
+    return {
+        "_id": deviceid,
+        "DeviceID": deviceid,
+        "DeviceName": deviceid + " Name",
+        "HouseID": houseid,
+        "UserType": "owner",
+        "SerialNumber": "mockserial",
+        "battery": 90,
+        "currentFirmwareVersion": "mockfirmware",
+        "Bridge": {
+            "_id": "bridgeid1",
+            "firmwareVersion": "mockfirm",
+            "operative": True,
+        },
+        "LockStatus": {"doorState": "open"},
+    }
 
 
 def _mock_august_lock_data(lockid="mocklockid1", houseid="mockhouseid1"):
@@ -187,6 +266,18 @@ def _mock_inoperative_august_lock_detail(lockid):
 def _mock_doorsense_enabled_august_lock_detail(lockid):
     doorsense_lock_detail_data = _mock_august_lock_data(lockid=lockid)
     return LockDetail(doorsense_lock_detail_data)
+
+
+async def _mock_lock_from_fixture(hass, path):
+    json_dict = await _load_json_fixture(hass, path)
+    return LockDetail(json_dict)
+
+
+async def _load_json_fixture(hass, path):
+    fixture = await hass.async_add_executor_job(
+        load_fixture, os.path.join("august", path)
+    )
+    return json.loads(fixture)
 
 
 def _mock_doorsense_missing_august_lock_detail(lockid):

@@ -138,7 +138,7 @@ aio_georss_gdacs==0.3
 aioambient==1.0.2
 
 # homeassistant.components.asuswrt
-aioasuswrt==1.1.22
+aioasuswrt==1.2.2
 
 # homeassistant.components.automatic
 aioautomatic==0.6.5
@@ -343,7 +343,7 @@ bravia-tv==1.0
 broadlink==0.12.0
 
 # homeassistant.components.brother
-brother==0.1.4
+brother==0.1.6
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
@@ -456,7 +456,7 @@ dsmr_parser==0.18
 dweepy==0.3.0
 
 # homeassistant.components.dynalite
-dynalite_devices==0.1.17
+dynalite_devices==0.1.22
 
 # homeassistant.components.rainforest_eagle
 eagle200_reader==0.2.1
@@ -489,7 +489,7 @@ enocean==0.50
 enturclient==0.2.1
 
 # homeassistant.components.environment_canada
-env_canada==0.0.34
+env_canada==0.0.35
 
 # homeassistant.components.envirophat
 # envirophat==0.0.6
@@ -683,7 +683,7 @@ hole==0.5.0
 holidays==0.10.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200220.0
+home-assistant-frontend==20200220.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.8
@@ -1075,7 +1075,7 @@ pushover_complete==1.1.1
 pwmled==1.5.0
 
 # homeassistant.components.august
-py-august==0.14.0
+py-august==0.17.0
 
 # homeassistant.components.canary
 py-canary==0.5.0

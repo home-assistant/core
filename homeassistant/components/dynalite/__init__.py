@@ -1,24 +1,75 @@
 """Support for the Dynalite networks."""
-from dynalite_devices_lib import BRIDGE_CONFIG_SCHEMA
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 
 # Loading the config flow file will register the flow
 from .bridge import DynaliteBridge
-from .config_flow import configured_hosts
-from .const import CONF_BRIDGES, DATA_CONFIGS, DOMAIN, LOGGER
+from .const import (
+    CONF_ACTIVE,
+    CONF_AREA,
+    CONF_AUTO_DISCOVER,
+    CONF_BRIDGES,
+    CONF_CHANNEL,
+    CONF_DEFAULT,
+    CONF_FADE,
+    CONF_NAME,
+    CONF_POLLTIMER,
+    CONF_PORT,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    DOMAIN,
+    LOGGER,
+)
+
+
+def num_string(value):
+    """Test if value is a string of digits, aka an integer."""
+    new_value = str(value)
+    if new_value.isdigit():
+        return new_value
+    raise vol.Invalid("Not a string with numbers")
+
+
+CHANNEL_DATA_SCHEMA = vol.Schema(
+    {vol.Optional(CONF_NAME): cv.string, vol.Optional(CONF_FADE): vol.Coerce(float)}
+)
+
+CHANNEL_SCHEMA = vol.Schema({num_string: CHANNEL_DATA_SCHEMA})
+
+AREA_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Optional(CONF_FADE): vol.Coerce(float),
+        vol.Optional(CONF_CHANNEL): CHANNEL_SCHEMA,
+    },
+)
+
+AREA_SCHEMA = vol.Schema({num_string: vol.Any(AREA_DATA_SCHEMA, None)})
+
+PLATFORM_DEFAULTS_SCHEMA = vol.Schema({vol.Optional(CONF_FADE): vol.Coerce(float)})
+
+
+BRIDGE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Optional(CONF_AUTO_DISCOVER, default=False): vol.Coerce(bool),
+        vol.Optional(CONF_POLLTIMER, default=1.0): vol.Coerce(float),
+        vol.Optional(CONF_AREA): AREA_SCHEMA,
+        vol.Optional(CONF_DEFAULT): PLATFORM_DEFAULTS_SCHEMA,
+        vol.Optional(CONF_ACTIVE, default=False): vol.Coerce(bool),
+    }
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_BRIDGES): vol.All(
-                    cv.ensure_list, [BRIDGE_CONFIG_SCHEMA]
-                )
-            }
+            {vol.Optional(CONF_BRIDGES): vol.All(cv.ensure_list, [BRIDGE_SCHEMA])}
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -35,9 +86,6 @@ async def async_setup(hass, config):
         conf = {}
 
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_CONFIGS] = {}
-
-    configured = configured_hosts(hass)
 
     # User has configured bridges
     if CONF_BRIDGES not in conf:
@@ -47,20 +95,13 @@ async def async_setup(hass, config):
 
     for bridge_conf in bridges:
         host = bridge_conf[CONF_HOST]
-        LOGGER.debug("async_setup host=%s conf=%s", host, bridge_conf)
-
-        # Store config in hass.data so the config entry can find it
-        hass.data[DOMAIN][DATA_CONFIGS][host] = bridge_conf
-
-        if host in configured:
-            LOGGER.debug("async_setup host=%s already configured", host)
-            continue
+        LOGGER.debug("Starting config entry flow host=%s conf=%s", host, bridge_conf)
 
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": config_entries.SOURCE_IMPORT},
-                data={CONF_HOST: bridge_conf[CONF_HOST]},
+                data=bridge_conf,
             )
         )
 
@@ -69,25 +110,29 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up a bridge from a config entry."""
-    LOGGER.debug("__init async_setup_entry %s", entry.data)
-    host = entry.data[CONF_HOST]
-    config = hass.data[DOMAIN][DATA_CONFIGS].get(host)
+    LOGGER.debug("Setting up entry %s", entry.data)
 
-    if config is None:
-        LOGGER.error("__init async_setup_entry empty config for host %s", host)
-        return False
-
-    bridge = DynaliteBridge(hass, entry)
+    bridge = DynaliteBridge(hass, entry.data)
 
     if not await bridge.async_setup():
-        LOGGER.error("bridge.async_setup failed")
+        LOGGER.error("Could not set up bridge for entry %s", entry.data)
         return False
+
+    if not await bridge.try_connection():
+        LOGGER.errot("Could not connect with entry %s", entry)
+        raise ConfigEntryNotReady
+
     hass.data[DOMAIN][entry.entry_id] = bridge
+
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(entry, "light")
+    )
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    LOGGER.error("async_unload_entry %s", entry.data)
-    bridge = hass.data[DOMAIN].pop(entry.entry_id)
-    return await bridge.async_reset()
+    LOGGER.debug("Unloading entry %s", entry.data)
+    hass.data[DOMAIN].pop(entry.entry_id)
+    result = await hass.config_entries.async_forward_entry_unload(entry, "light")
+    return result
