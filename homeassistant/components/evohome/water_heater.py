@@ -9,7 +9,7 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import PRECISION_TENTHS, PRECISION_WHOLE, STATE_OFF, STATE_ON
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from homeassistant.util.dt import parse_datetime
+import homeassistant.util.dt as dt_util
 
 from . import EvoChild
 from .const import DOMAIN, EVO_FOLLOW, EVO_PERMOVER
@@ -90,17 +90,17 @@ class EvoDHW(EvoChild, WaterHeaterDevice):
             await self._evo_broker.call_client_api(self._evo_device.set_dhw_auto())
         else:
             await self._update_schedule()
-            until = parse_datetime(str(self.setpoints.get("next_sp_from")))
+            until = dt_util.parse_datetime(str(self.setpoints.get("next_sp_from")))
 
             if operation_mode == STATE_ON:
                 # TODO: until dt from aware to evo naive/local
                 await self._evo_broker.call_client_api(
-                    self._evo_device.set_dhw_on(until=until)
+                    self._evo_device.set_dhw_on(until=dt_util.as_utc(until))
                 )
             else:  # STATE_OFF
                 # TODO: until dt from aware to evo naive/local
                 await self._evo_broker.call_client_api(
-                    self._evo_device.set_dhw_off(until=until)
+                    self._evo_device.set_dhw_off(until=dt_util.as_utc(until))
                 )
 
     async def async_turn_away_mode_on(self):
