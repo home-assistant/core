@@ -85,7 +85,7 @@ async def async_setup(hass, config):
         hass.data[LIGHTWAVE_TRV_PROXY_PORT] = proxy_port
         lwlink.set_trv_proxy(proxy_ip, proxy_port)
 
-        entities = [CLIMATE_DOMAIN, SENSOR_DOMAIN]
+        platforms = [CLIMATE_DOMAIN, SENSOR_DOMAIN]
         for ent in entities:
             hass.async_create_task(async_load_platform(hass, ent, DOMAIN, trvs, config))
 
