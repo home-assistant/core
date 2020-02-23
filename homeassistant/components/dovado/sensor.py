@@ -85,7 +85,7 @@ class DovadoSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._data.name, SENSORS[self._sensor][1])
+        return f"{self._data.name} {SENSORS[self._sensor][1]}"
 
     @property
     def state(self):

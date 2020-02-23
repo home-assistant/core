@@ -89,7 +89,7 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
         if self._device.environmental_state:
             temperature_kelvin = self._device.environmental_state.temperature
             if temperature_kelvin != 0:
-                self._current_temp = float("{0:.1f}".format(temperature_kelvin - 273))
+                self._current_temp = float(f"{(temperature_kelvin - 273):.1f}")
         return self._current_temp
 
     @property
