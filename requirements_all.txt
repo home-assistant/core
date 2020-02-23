@@ -489,7 +489,7 @@ enocean==0.50
 enturclient==0.2.1
 
 # homeassistant.components.environment_canada
-env_canada==0.0.34
+env_canada==0.0.35
 
 # homeassistant.components.envirophat
 # envirophat==0.0.6
