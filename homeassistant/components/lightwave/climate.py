@@ -76,7 +76,7 @@ class LightwaveTrv(ClimateDevice):
         (temp, targ, battery, trv_output) = self._lwlink.read_trv_status(self._serial)
         if temp:
             self._current_temperature = temp
-        if targ is not None:
+        if targ:
             if self._inhibit == 0:
                 self._target_temperature = targ
                 if targ == 0:
