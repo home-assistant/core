@@ -127,9 +127,9 @@ class AugustBatterySensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(
-            self._device.device_name, SENSOR_TYPES_BATTERY[self._sensor_type]["name"],
-        )
+        device_name = self._device.device_name
+        sensor_name = SENSOR_TYPES_BATTERY[self._sensor_type]["name"]
+        return f"{device_name} {sensor_name}"
 
     async def async_update(self):
         """Get the latest state of the sensor."""
