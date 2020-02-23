@@ -51,7 +51,7 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
     )
 
     with patch(
-        "homeassistant.components.netatmo.async_setup_entry", return_value=True
+        "homeassistant.components.NEW_DOMAIN.async_setup_entry", return_value=True
     ) as mock_setup:
         await hass.config_entries.flow.async_configure(result["flow_id"])
 
