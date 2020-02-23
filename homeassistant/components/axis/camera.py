@@ -32,8 +32,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         CONF_NAME: config_entry.data[CONF_NAME],
         CONF_USERNAME: config_entry.data[CONF_USERNAME],
         CONF_PASSWORD: config_entry.data[CONF_PASSWORD],
-        CONF_MJPEG_URL: f"http://{config_entry.data[CONF_HOST]}:{config_entry.data[CONF_PORT]}/axis-cgi/mjpg/video.cgi",
-        CONF_STILL_IMAGE_URL: f"http://{config_entry.data[CONF_HOST]}:{config_entry.data[CONF_PORT]}/axis-cgi/jpg/image.cgi",
+        CONF_MJPEG_URL: (
+            f"http://{config_entry.data[CONF_HOST]}"
+            f":{config_entry.data[CONF_PORT]}/axis-cgi/mjpg/video.cgi"
+        ),
+        CONF_STILL_IMAGE_URL: (
+            f"http://{config_entry.data[CONF_HOST]}"
+            f":{config_entry.data[CONF_PORT]}/axis-cgi/jpg/image.cgi"
+        ),
         CONF_AUTHENTICATION: HTTP_DIGEST_AUTHENTICATION,
     }
     async_add_entities([AxisCamera(config, device)])

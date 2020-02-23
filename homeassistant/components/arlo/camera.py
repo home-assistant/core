@@ -81,7 +81,10 @@ class ArloCam(Camera):
 
         video = self._camera.last_video
         if not video:
-            error_msg = f"Video not found for {self.name}. Is it older than {self._camera.min_days_vdo_cache} days?"
+            error_msg = (
+                f"Video not found for {self.name}. "
+                f"Is it older than {self._camera.min_days_vdo_cache} days?"
+            )
             _LOGGER.error(error_msg)
             return
 
