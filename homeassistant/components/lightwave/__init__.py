@@ -87,6 +87,8 @@ async def async_setup(hass, config):
 
         platforms = [CLIMATE_DOMAIN, SENSOR_DOMAIN]
         for platform in platforms:
-            hass.async_create_task(async_load_platform(hass, platform, DOMAIN, trvs, config))
+            hass.async_create_task(
+                async_load_platform(hass, platform, DOMAIN, trvs, config)
+            )
 
     return True
