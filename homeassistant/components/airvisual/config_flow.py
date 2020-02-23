@@ -1,6 +1,4 @@
 """Define a config flow manager for AirVisual."""
-from collections import OrderedDict
-
 from pyairvisual import Client
 from pyairvisual.errors import InvalidKeyError
 import voluptuous as vol
@@ -35,29 +33,30 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @property
     def cloud_api_schema(self):
         """Return the data schema for the cloud API."""
-        schema = OrderedDict()
-        schema[vol.Required(CONF_API_KEY)] = str
-        schema[
-            vol.Required(CONF_LATITUDE, default=self.hass.config.latitude)
-        ] = cv.latitude
-        schema[
-            vol.Required(CONF_LONGITUDE, default=self.hass.config.longitude)
-        ] = cv.longitude
-        schema[vol.Optional(CONF_SHOW_ON_MAP, default=True)] = bool
-
-        return schema
+        return vol.Schema(
+            {
+                vol.Required(CONF_API_KEY): str,
+                vol.Required(
+                    CONF_LATITUDE, default=self.hass.config.latitude
+                ): cv.latitude,
+                vol.Required(
+                    CONF_LONGITUDE, default=self.hass.config.longitude
+                ): cv.longitude,
+            }
+        )
 
     @callback
     async def _show_form(self, errors=None):
         """Show the form to the user."""
         return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(self.cloud_api_schema),
-            errors=errors or {},
+            step_id="user", data_schema=self.cloud_api_schema, errors=errors or {},
         )
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
+        await self.async_set_unique_id(import_config[CONF_API_KEY])
+        self._abort_if_unique_id_configured()
+
         data = {**import_config}
         if not data.get(CONF_GEOGRAPHIES):
             data[CONF_GEOGRAPHIES] = [
@@ -77,8 +76,8 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not user_input:
             return await self._show_form()
 
-        if user_input[CONF_API_KEY] in configured_instances(self.hass):
-            return await self._show_form(errors={CONF_API_KEY: "identifier_exists"})
+        await self.async_set_unique_id(user_input[CONF_API_KEY])
+        self._abort_if_unique_id_configured()
 
         websession = aiohttp_client.async_get_clientsession(self.hass)
 
@@ -99,6 +98,6 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_LONGITUDE: user_input[CONF_LONGITUDE],
                     }
                 ],
-                CONF_SHOW_ON_MAP: user_input[CONF_SHOW_ON_MAP],
+                CONF_SHOW_ON_MAP: True,
             },
         )

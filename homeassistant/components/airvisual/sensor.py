@@ -202,5 +202,5 @@ class AirVisualSensor(Entity):
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect dispatcher listener when removed."""
         for cancel in self._async_unsub_dispatcher_connects:
-            self._async_unsub_dispatcher_connects.remove(cancel)
             cancel()
+        self._async_unsub_dispatcher_connects = []
