@@ -1,4 +1,5 @@
 """Tests for the Sighthound integration."""
+from copy import deepcopy
 import os
 from unittest.mock import patch
 
@@ -98,7 +99,8 @@ async def test_process_image(hass, mock_image, mock_detections):
 
 async def test_save_image(hass, mock_image, mock_detections):
     """Save a processed image."""
-    VALID_CONFIG_SAVE_FILE = VALID_CONFIG.copy()
+    VALID_CONFIG_SAVE_FILE = deepcopy(VALID_CONFIG)  # this fails
+    # VALID_CONFIG_SAVE_FILE = VALID_CONFIG.copy()  # this passes
     VALID_CONFIG_SAVE_FILE[ip.DOMAIN].update({sh.CONF_SAVE_FILE_FOLDER: TEST_DIR})
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
     assert hass.states.get(VALID_ENTITY_ID)

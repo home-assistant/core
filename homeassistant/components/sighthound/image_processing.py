@@ -109,7 +109,8 @@ class SighthoundEntity(ImageProcessingEntity):
 
     def save_image(self, image, people, directory):
         """Save a timestamped image with bounding boxes around targets."""
-        img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
+        img = Image.open(io.BytesIO(bytearray(image)))
+        # img = img.convert("RGB") # TODO add a patch
         draw = ImageDraw.Draw(img)
 
         for person in people:
