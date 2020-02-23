@@ -386,6 +386,8 @@ AREA_SQUARE_METERS = f"{LENGTH_METERS}²"
 # Mass units
 MASS_GRAMS: str = "g"
 MASS_KILOGRAMS: str = "kg"
+MASS_MILLIGRAMS = "mg"
+MASS_MICROGRAMS = "µg"
 
 MASS_OUNCES: str = "oz"
 MASS_POUNDS: str = "lb"
