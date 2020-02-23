@@ -37,24 +37,23 @@ DATA_LISTENER = "listener"
 
 CONF_NODE_ID = "node_id"
 
-GEOGRAPHY_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Inclusive(CONF_CITY, "city"): cv.string,
-            vol.Inclusive(CONF_STATE, "city"): cv.string,
-            vol.Inclusive(CONF_COUNTRY, "city"): cv.string,
-            vol.Inclusive(CONF_LATITUDE, "coords"): cv.latitude,
-            vol.Inclusive(CONF_LONGITUDE, "coords"): cv.longitude,
-        },
-        cv.has_at_least_one_key(CONF_CITY, CONF_LATITUDE),
-    )
-)
+GEOGRAPHY_COORDINATES_SCHEMA = vol.Schema({
+    vol.Required(CONF_LATITUDE): cv.latitude,
+    vol.Required(CONF_LONGITUDE): cv.longitude,
+})
+
+GEOGRAPHY_PLACE_SCHEMA = vol.Schema({
+    vol.Required(CONF_CITY): cv.string,
+    vol.Required(CONF_STATE): cv.string,
+    vol.Required(CONF_COUNTRY): cv.string,
+})
 
 CLOUD_API_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_GEOGRAPHIES, default=[]): vol.All(
-            cv.ensure_list, [GEOGRAPHY_SCHEMA]
+            cv.ensure_list,
+            [vol.Any(GEOGRAPHY_COORDINATES_SCHEMA, GEOGRAPHY_PLACE_SCHEMA]
         ),
         vol.Optional(CONF_SHOW_ON_MAP, default=True): cv.boolean,
     }
@@ -65,7 +64,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: CLOUD_API_SCHEMA}, extra=vol.ALLOW_EXTRA,)
 
 @callback
 def async_get_geography_id(geography_dict):
-    """Generate a unique ID from a geography_dict dict."""
+    """Generate a unique ID from a geography dict."""
     if CONF_CITY in geography_dict:
         return ",".join(
             (
