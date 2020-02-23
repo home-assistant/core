@@ -6,6 +6,7 @@ from unittest import mock
 import aiohomekit
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
+import asynctest
 import pytest
 
 from homeassistant.components.homekit_controller import config_flow
@@ -13,13 +14,6 @@ from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
 
 from tests.common import MockConfigEntry
 from tests.components.homekit_controller.common import Accessory, setup_platform
-
-
-def succeed(retval=None):
-    """Mock a successful coroutine return value."""
-    future = Future()
-    future.set_result(retval)
-    return future
 
 
 def fail(exception):
@@ -79,16 +73,17 @@ def _setup_flow_handler(hass, pairing=None):
     flow.hass = hass
     flow.context = {}
 
-    finish_pairing = mock.Mock()
-    finish_pairing.return_value = succeed(pairing)
+    finish_pairing = asynctest.CoroutineMock(return_value=pairing)
 
     discovery = mock.Mock()
     discovery.device_id = "00:00:00:00:00:00"
-    discovery.start_pairing.return_value = succeed(finish_pairing)
+    discovery.start_pairing = asynctest.CoroutineMock(return_value=finish_pairing)
 
     flow.controller = mock.Mock()
     flow.controller.pairings = {}
-    flow.controller.find_ip_by_device_id.return_value = succeed(discovery)
+    flow.controller.find_ip_by_device_id = asynctest.CoroutineMock(
+        return_value=discovery
+    )
 
     return flow
 
@@ -128,12 +123,14 @@ async def test_discovery_works(hass):
 
     flow = _setup_flow_handler(hass)
 
-    finish_pairing = mock.Mock()
+    finish_pairing = asynctest.CoroutineMock()
 
     discovery = mock.Mock()
-    discovery.start_pairing.return_value = succeed(finish_pairing)
+    discovery.start_pairing = asynctest.CoroutineMock(return_value=finish_pairing)
 
-    flow.controller.find_ip_by_device_id.return_value = succeed(discovery)
+    flow.controller.find_ip_by_device_id = asynctest.CoroutineMock(
+        return_value=discovery
+    )
 
     # Device is discovered
     result = await flow.async_step_zeroconf(discovery_info)
@@ -153,8 +150,8 @@ async def test_discovery_works(hass):
 
     pairing = mock.Mock(pairing_data={"AccessoryPairingID": "00:00:00:00:00:00"})
 
-    pairing.list_accessories_and_characteristics.return_value = succeed(
-        [
+    pairing.list_accessories_and_characteristics = asynctest.CoroutineMock(
+        return_value=[
             {
                 "aid": 1,
                 "services": [
@@ -169,7 +166,7 @@ async def test_discovery_works(hass):
         ]
     )
 
-    finish_pairing.return_value = succeed(pairing)
+    finish_pairing.return_value = pairing
 
     # Pairing doesn't error error and pairing results
     flow.controller.pairings = {"00:00:00:00:00:00": pairing}
@@ -190,12 +187,14 @@ async def test_discovery_works_upper_case(hass):
 
     flow = _setup_flow_handler(hass)
 
-    finish_pairing = mock.Mock()
+    finish_pairing = asynctest.CoroutineMock()
 
     discovery = mock.Mock()
-    discovery.start_pairing.return_value = succeed(finish_pairing)
+    discovery.start_pairing = asynctest.CoroutineMock(return_value=finish_pairing)
 
-    flow.controller.find_ip_by_device_id.return_value = succeed(discovery)
+    flow.controller.find_ip_by_device_id = asynctest.CoroutineMock(
+        return_value=discovery
+    )
 
     # Device is discovered
     result = await flow.async_step_zeroconf(discovery_info)
@@ -215,8 +214,8 @@ async def test_discovery_works_upper_case(hass):
 
     pairing = mock.Mock(pairing_data={"AccessoryPairingID": "00:00:00:00:00:00"})
 
-    pairing.list_accessories_and_characteristics.return_value = succeed(
-        [
+    pairing.list_accessories_and_characteristics = asynctest.CoroutineMock(
+        return_value=[
             {
                 "aid": 1,
                 "services": [
@@ -231,7 +230,7 @@ async def test_discovery_works_upper_case(hass):
         ]
     )
 
-    finish_pairing.return_value = succeed(pairing)
+    finish_pairing.return_value = pairing
 
     flow.controller.pairings = {"00:00:00:00:00:00": pairing}
     result = await flow.async_step_pair({"pairing_code": "111-22-333"})
@@ -251,12 +250,14 @@ async def test_discovery_works_missing_csharp(hass):
 
     flow = _setup_flow_handler(hass)
 
-    finish_pairing = mock.Mock()
+    finish_pairing = asynctest.CoroutineMock()
 
     discovery = mock.Mock()
-    discovery.start_pairing.return_value = succeed(finish_pairing)
+    discovery.start_pairing = asynctest.CoroutineMock(return_value=finish_pairing)
 
-    flow.controller.find_ip_by_device_id.return_value = succeed(discovery)
+    flow.controller.find_ip_by_device_id = asynctest.CoroutineMock(
+        return_value=discovery
+    )
 
     # Device is discovered
     result = await flow.async_step_zeroconf(discovery_info)
@@ -276,8 +277,8 @@ async def test_discovery_works_missing_csharp(hass):
 
     pairing = mock.Mock(pairing_data={"AccessoryPairingID": "00:00:00:00:00:00"})
 
-    pairing.list_accessories_and_characteristics.return_value = succeed(
-        [
+    pairing.list_accessories_and_characteristics = asynctest.CoroutineMock(
+        return_value=[
             {
                 "aid": 1,
                 "services": [
@@ -292,7 +293,7 @@ async def test_discovery_works_missing_csharp(hass):
         ]
     )
 
-    finish_pairing.return_value = succeed(pairing)
+    finish_pairing.return_value = pairing
 
     flow.controller.pairings = {"00:00:00:00:00:00": pairing}
 
@@ -466,7 +467,9 @@ async def test_pair_abort_errors_on_start(hass, exception, expected):
     discovery = mock.Mock()
     discovery.start_pairing.return_value = fail(exception("error"))
 
-    flow.controller.find_ip_by_device_id.return_value = succeed(discovery)
+    flow.controller.find_ip_by_device_id = asynctest.CoroutineMock(
+        return_value=discovery
+    )
 
     # Device is discovered
     result = await flow.async_step_zeroconf(discovery_info)
@@ -504,7 +507,9 @@ async def test_pair_form_errors_on_start(hass, exception, expected):
     discovery = mock.Mock()
     discovery.start_pairing.return_value = fail(exception("error"))
 
-    flow.controller.find_ip_by_device_id.return_value = succeed(discovery)
+    flow.controller.find_ip_by_device_id = asynctest.CoroutineMock(
+        return_value=discovery
+    )
 
     # Device is discovered
     result = await flow.async_step_zeroconf(discovery_info)
@@ -539,13 +544,15 @@ async def test_pair_abort_errors_on_finish(hass, exception, expected):
 
     flow = _setup_flow_handler(hass)
 
-    finish_pairing = mock.Mock()
+    finish_pairing = asynctest.CoroutineMock()
     finish_pairing.return_value = fail(exception("error"))
 
     discovery = mock.Mock()
-    discovery.start_pairing.return_value = succeed(finish_pairing)
+    discovery.start_pairing = asynctest.CoroutineMock(return_value=finish_pairing)
 
-    flow.controller.find_ip_by_device_id.return_value = succeed(discovery)
+    flow.controller.find_ip_by_device_id = asynctest.CoroutineMock(
+        return_value=discovery
+    )
 
     # Device is discovered
     result = await flow.async_step_zeroconf(discovery_info)
@@ -586,13 +593,15 @@ async def test_pair_form_errors_on_finish(hass, exception, expected):
 
     flow = _setup_flow_handler(hass)
 
-    finish_pairing = mock.Mock()
+    finish_pairing = asynctest.CoroutineMock()
     finish_pairing.return_value = fail(exception("error"))
 
     discovery = mock.Mock()
-    discovery.start_pairing.return_value = succeed(finish_pairing)
+    discovery.start_pairing = asynctest.CoroutineMock(return_value=finish_pairing)
 
-    flow.controller.find_ip_by_device_id.return_value = succeed(discovery)
+    flow.controller.find_ip_by_device_id = asynctest.CoroutineMock(
+        return_value=discovery
+    )
 
     # Device is discovered
     result = await flow.async_step_zeroconf(discovery_info)
@@ -634,8 +643,8 @@ async def test_import_works(hass):
 
     pairing = mock.Mock(pairing_data={"AccessoryPairingID": "00:00:00:00:00:00"})
 
-    pairing.list_accessories_and_characteristics.return_value = succeed(
-        [
+    pairing.list_accessories_and_characteristics = asynctest.CoroutineMock(
+        return_value=[
             {
                 "aid": 1,
                 "services": [
@@ -703,8 +712,8 @@ async def test_user_works(hass):
     }
 
     pairing = mock.Mock(pairing_data={"AccessoryPairingID": "00:00:00:00:00:00"})
-    pairing.list_accessories_and_characteristics.return_value = succeed(
-        [
+    pairing.list_accessories_and_characteristics = asynctest.CoroutineMock(
+        return_value=[
             {
                 "aid": 1,
                 "services": [
@@ -721,16 +730,18 @@ async def test_user_works(hass):
 
     flow = _setup_flow_handler(hass)
 
-    finish_pairing = mock.Mock()
-    finish_pairing.return_value = succeed(pairing)
+    finish_pairing = asynctest.CoroutineMock()
+    finish_pairing.return_value = pairing
 
     discovery = mock.Mock()
     discovery.info = discovery_info
-    discovery.start_pairing.return_value = succeed(finish_pairing)
+    discovery.start_pairing = asynctest.CoroutineMock(return_value=finish_pairing)
 
     flow.controller.pairings = {"00:00:00:00:00:00": pairing}
-    flow.controller.discover_ip.return_value = succeed([discovery])
-    flow.controller.find_ip_by_device_id.return_value = succeed(discovery)
+    flow.controller.discover_ip = asynctest.CoroutineMock(return_value=[discovery])
+    flow.controller.find_ip_by_device_id = asynctest.CoroutineMock(
+        return_value=discovery
+    )
 
     result = await flow.async_step_user()
     assert result["type"] == "form"
@@ -750,7 +761,7 @@ async def test_user_no_devices(hass):
     """Test user initiated pairing where no devices discovered."""
     flow = _setup_flow_handler(hass)
 
-    flow.controller.discover_ip.return_value = succeed([])
+    flow.controller.discover_ip = asynctest.CoroutineMock(return_value=[])
     result = await flow.async_step_user()
 
     assert result["type"] == "abort"
@@ -774,7 +785,7 @@ async def test_user_no_unpaired_devices(hass):
     discovery = mock.Mock()
     discovery.info = discovery_info
 
-    flow.controller.discover_ip.return_value = succeed([discovery])
+    flow.controller.discover_ip = asynctest.CoroutineMock(return_value=[discovery])
     result = await flow.async_step_user()
 
     assert result["type"] == "abort"
@@ -952,8 +963,8 @@ async def test_unignore_works(hass):
     }
 
     pairing = mock.Mock(pairing_data={"AccessoryPairingID": "00:00:00:00:00:00"})
-    pairing.list_accessories_and_characteristics.return_value = succeed(
-        [
+    pairing.list_accessories_and_characteristics = asynctest.CoroutineMock(
+        return_value=[
             {
                 "aid": 1,
                 "services": [
@@ -968,21 +979,23 @@ async def test_unignore_works(hass):
         ]
     )
 
-    finish_pairing = mock.Mock()
+    finish_pairing = asynctest.CoroutineMock()
 
     discovery = mock.Mock()
     discovery.device_id = "00:00:00:00:00:00"
     discovery.info = discovery_info
-    discovery.start_pairing.return_value = succeed(finish_pairing)
+    discovery.start_pairing = asynctest.CoroutineMock(return_value=finish_pairing)
 
-    finish_pairing.return_value = succeed(pairing)
+    finish_pairing.return_value = pairing
 
     flow = _setup_flow_handler(hass)
 
     flow.controller.pairings = {"00:00:00:00:00:00": pairing}
-    flow.controller.discover_ip.return_value = succeed([discovery])
+    flow.controller.discover_ip = asynctest.CoroutineMock(return_value=[discovery])
 
-    flow.controller.find_ip_by_device_id.return_value = succeed(discovery)
+    flow.controller.find_ip_by_device_id = asynctest.CoroutineMock(
+        return_value=discovery
+    )
 
     result = await flow.async_step_unignore({"unique_id": "00:00:00:00:00:00"})
     assert result["type"] == "form"
@@ -1026,7 +1039,7 @@ async def test_unignore_ignores_missing_devices(hass):
     discovery.info = discovery_info
 
     flow = _setup_flow_handler(hass)
-    flow.controller.discover_ip.return_value = succeed([discovery])
+    flow.controller.discover_ip = asynctest.CoroutineMock(return_value=[discovery])
 
     result = await flow.async_step_unignore({"unique_id": "00:00:00:00:00:01"})
     assert result["type"] == "abort"
