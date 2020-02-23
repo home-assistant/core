@@ -8,13 +8,14 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Coroutine
+import logging
 
 from zigpy.exceptions import ZigbeeException
 import zigpy.zcl.clusters.security as security
 
 from homeassistant.core import callback
 
-from .. import registries
+from .. import registries, typing as zha_typing
 from ..const import (
     SIGNAL_ATTR_UPDATED,
     WARNING_DEVICE_MODE_EMERGENCY,
@@ -25,10 +26,143 @@ from ..const import (
 )
 from .base import ChannelStatus, ZigbeeChannel
 
+IAS_ACE_ARM = 0x0000  # ("arm", (t.enum8, t.CharacterString, t.uint8_t), False),
+IAS_ACE_BYPASS = 0x0001  # ("bypass", (t.LVList(t.uint8_t), t.CharacterString), False),
+IAS_ACE_EMERGENCY = 0x0002  # ("emergency", (), False),
+IAS_ACE_FIRE = 0x0003  # ("fire", (), False),
+IAS_ACE_PANIC = 0x0004  # ("panic", (), False),
+IAS_ACE_GET_ZONE_ID_MAP = 0x0005  # ("get_zone_id_map", (), False),
+IAS_ACE_GET_ZONE_INFO = 0x0006  # ("get_zone_info", (t.uint8_t,), False),
+IAS_ACE_GET_PANEL_STATUS = 0x0007  # ("get_panel_status", (), False),
+IAS_ACE_GET_BYPASSED_ZONE_LIST = 0x0008  # ("get_bypassed_zone_list", (), False),
+IAS_ACE_GET_ZONE_STATUS = (
+    0x0009  # ("get_zone_status", (t.uint8_t, t.uint8_t, t.Bool, t.bitmap16), False)
+)
 
+DISARM = 0x00
+ARM_DAY_HOME_ONLY = 0x01
+ARM_NIGHT_SLEEP_ONLY = 0x02
+ARM_ALL_ZONES = 0x03
+
+ARM_MODES = {
+    DISARM: "Disarm",
+    ARM_DAY_HOME_ONLY: "Arm Day/Home Zones Only",
+    ARM_NIGHT_SLEEP_ONLY: "Arm Night/Sleep Zones Only",
+    ARM_ALL_ZONES: "Arm All Zones",
+}
+
+ALL_ZONES_DISARMED = 0x00
+DAY_HOME_ZONES_ARMED = 0x01
+NIGHT_SLEEP_ZONES_ARMED = 0x02
+ALL_ZONES_ARMED = 0x03
+INVALID_ARM_DISARM_CODE = 0x04
+NOT_READY_TO_ARM = 0x05
+ALREADY_DISARMED = 0x06
+
+_LOGGER = logging.getLogger(__name__)
+
+
+@registries.CHANNEL_ONLY_CLUSTERS.register(security.IasAce.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(security.IasAce.cluster_id)
 class IasAce(ZigbeeChannel):
     """IAS Ancillary Control Equipment channel."""
+
+    def __init__(
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
+    ) -> None:
+        """Initialize IAS Ancillary Control Equipment channel."""
+        super().__init__(cluster, ch_pool)
+        self.command_map = {
+            IAS_ACE_ARM: self.arm,
+            IAS_ACE_BYPASS: self.bypass,
+            IAS_ACE_EMERGENCY: self.emergency,
+            IAS_ACE_FIRE: self.fire,
+            IAS_ACE_PANIC: self.panic,
+            IAS_ACE_GET_ZONE_ID_MAP: self.get_zone_id_map,
+            IAS_ACE_GET_ZONE_INFO: self.get_zone_info,
+            IAS_ACE_GET_PANEL_STATUS: self.get_panel_status,
+            IAS_ACE_GET_BYPASSED_ZONE_LIST: self.get_bypassed_zone_list,
+            IAS_ACE_GET_ZONE_STATUS: self.get_zone_status,
+        }
+        self.armed_state = 0x00  # where do we store this to handle restarts
+        self.panel_code = "1234"  # need to figure out how to handle this ( > 1 code, multi users etc.)
+
+    @callback
+    def cluster_command(self, tsn, command_id, args):
+        """Handle commands received to this cluster."""
+        self.command_map[command_id](*args)
+
+    def arm(self, arm_mode, code, zone_id):
+        """Handle the IAS ACE arm command."""
+        self.zha_send_event(
+            self._cluster.server_commands.get(IAS_ACE_ARM)[0],
+            {
+                "arm_mode": arm_mode,
+                "arm_mode_description": ARM_MODES[arm_mode],
+                "code": code,
+                "zone_id": zone_id,
+            },
+        )
+
+        if code != self.panel_code:
+            self.warning("Invalid code supplied to IAS ACE")
+            response = self.arm_response(INVALID_ARM_DISARM_CODE)
+        else:
+            if arm_mode == DISARM:
+                if self.armed_state == 0x00:
+                    self.warning("IAS ACE already disarmed")
+                    response = self.arm_response(ALREADY_DISARMED)
+                else:
+                    self.warning("Disarming all IAS ACE zones")
+                    self.armed_state = 0x00
+                    response = self.arm_response(ALL_ZONES_DISARMED)
+            elif arm_mode == ARM_ALL_ZONES:
+                self.warning("Arming all IAS ACE zones")
+                self.armed_state = ALL_ZONES_ARMED
+                response = self.arm_response(ALL_ZONES_ARMED)
+
+        asyncio.create_task(response)
+
+    def bypass(self, zone_list, code):
+        """Handle the IAS ACE bypass command."""
+        self.zha_send_event(
+            self._cluster.server_commands.get(IAS_ACE_BYPASS)[0],
+            {"zone_list": zone_list, "code": code},
+        )
+
+    def emergency(self):
+        """Handle the IAS ACE emergency command."""
+        self.zha_send_event(self._cluster.server_commands.get(IAS_ACE_EMERGENCY)[0], {})
+
+    def fire(self):
+        """Handle the IAS ACE fire command."""
+        self.zha_send_event(self._cluster.server_commands.get(IAS_ACE_FIRE)[0], {})
+
+    def panic(self):
+        """Handle the IAS ACE panic command."""
+        self.zha_send_event(self._cluster.server_commands.get(IAS_ACE_PANIC)[0], {})
+
+    def get_zone_id_map(self):
+        """Handle the IAS ACE zone id map command."""
+
+    def get_zone_info(self, zone_id):
+        """Handle the IAS ACE zone info command."""
+
+    def get_panel_status(self):
+        """Handle the IAS ACE panel status command."""
+        self.zha_send_event(
+            self._cluster.server_commands.get(IAS_ACE_GET_PANEL_STATUS)[0], {}
+        )
+        response = self.panel_status_response(self.armed_state, 0x00, 0x00, 0x00)
+        asyncio.create_task(response)
+
+    def get_bypassed_zone_list(self):
+        """Handle the IAS ACE bypassed zone list command."""
+
+    def get_zone_status(
+        self, starting_zone_id, max_zone_ids, zone_status_mask_flag, zone_status_mask
+    ):
+        """Handle the IAS ACE zone status command."""
 
 
 @registries.CHANNEL_ONLY_CLUSTERS.register(security.IasWd.cluster_id)
