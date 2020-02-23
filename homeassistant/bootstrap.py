@@ -1,5 +1,6 @@
 """Provide methods to bootstrap a Home Assistant instance."""
 import asyncio
+import contextlib
 import logging
 import logging.handlers
 import os
@@ -7,17 +8,19 @@ import sys
 from time import monotonic
 from typing import Any, Dict, Optional, Set
 
+from async_timeout import timeout
 import voluptuous as vol
 
 from homeassistant import config as conf_util, config_entries, core, loader
 from homeassistant.components import http
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_HOMEASSISTANT_STOP,
     REQUIRED_NEXT_PYTHON_DATE,
     REQUIRED_NEXT_PYTHON_VER,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.setup import async_setup_component
+from homeassistant.setup import DATA_SETUP, async_setup_component
 from homeassistant.util.logging import AsyncHandler
 from homeassistant.util.package import async_get_user_site, is_virtual_env
 from homeassistant.util.yaml import clear_secret_cache
@@ -80,8 +83,7 @@ async def async_setup_hass(
             config_dict = await conf_util.async_hass_config_yaml(hass)
         except HomeAssistantError as err:
             _LOGGER.error(
-                "Failed to parse configuration.yaml: %s. Falling back to safe mode",
-                err,
+                "Failed to parse configuration.yaml: %s. Activating safe mode", err,
             )
         else:
             if not is_virtual_env():
@@ -93,8 +95,33 @@ async def async_setup_hass(
         finally:
             clear_secret_cache()
 
-    if safe_mode or config_dict is None or not basic_setup_success:
+    if config_dict is None:
+        safe_mode = True
+
+    elif not basic_setup_success:
+        _LOGGER.warning("Unable to set up core integrations. Activating safe mode")
+        safe_mode = True
+
+    elif (
+        "frontend" in hass.data.get(DATA_SETUP, {})
+        and "frontend" not in hass.config.components
+    ):
+        _LOGGER.warning("Detected that frontend did not load. Activating safe mode")
+        # Ask integrations to shut down. It's messy but we can't
+        # do a clean stop without knowing what is broken
+        hass.async_track_tasks()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP, {})
+        with contextlib.suppress(asyncio.TimeoutError):
+            async with timeout(10):
+                await hass.async_block_till_done()
+
+        safe_mode = True
+        hass = core.HomeAssistant()
+        hass.config.config_dir = config_dir
+
+    if safe_mode:
         _LOGGER.info("Starting in safe mode")
+        hass.config.safe_mode = True
 
         http_conf = (await http.async_get_last_config(hass)) or {}
 
@@ -283,7 +310,7 @@ def _get_domains(hass: core.HomeAssistant, config: Dict[str, Any]) -> Set[str]:
     domains = set(key.split(" ")[0] for key in config.keys() if key != core.DOMAIN)
 
     # Add config entry domains
-    if "safe_mode" not in config:
+    if not hass.config.safe_mode:
         domains.update(hass.config_entries.async_domains())
 
     # Make sure the Hass.io component is loaded

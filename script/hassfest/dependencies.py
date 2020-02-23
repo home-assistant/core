@@ -103,8 +103,6 @@ ALLOWED_USED_COMPONENTS = {
     "homeassistant",
     "system_log",
     "person",
-    # Discovery
-    "discovery",
     # Other
     "mjpeg",  # base class, has no reqs or component to load.
     "stream",  # Stream cannot install on all systems, can be imported without reqs.

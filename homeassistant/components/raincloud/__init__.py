@@ -11,6 +11,8 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
+    TIME_DAYS,
+    TIME_MINUTES,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
@@ -60,9 +62,9 @@ UNIT_OF_MEASUREMENT_MAP = {
     "is_watering": "",
     "manual_watering": "",
     "next_cycle": "",
-    "rain_delay": "days",
+    "rain_delay": TIME_DAYS,
     "status": "",
-    "watering_time": "min",
+    "watering_time": TIME_MINUTES,
 }
 
 BINARY_SENSORS = ["is_watering", "status"]

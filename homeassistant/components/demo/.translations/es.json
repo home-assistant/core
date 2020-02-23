@@ -1,5 +1,22 @@
 {
     "config": {
         "title": "Demo"
+    },
+    "options": {
+        "step": {
+            "options_1": {
+                "data": {
+                    "bool": "Booleano opcional",
+                    "int": "Entrada num\u00e9rica"
+                }
+            },
+            "options_2": {
+                "data": {
+                    "multi": "Multiselecci\u00f3n",
+                    "select": "Selecciona una opci\u00f3n",
+                    "string": "Valor de cadena"
+                }
+            }
+        }
     }
 }

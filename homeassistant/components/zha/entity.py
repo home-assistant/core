@@ -44,7 +44,6 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
         self._zha_device = zha_device
         self.cluster_channels = {}
         self._available = False
-        self._component = kwargs["component"]
         self._unsubs = []
         self.remove_future = None
         for channel in channels:

@@ -45,7 +45,7 @@ async def test_cover(m1, hass, zha_device_joined_restored, zigpy_cover_device):
         return 100
 
     with patch(
-        "homeassistant.components.zha.core.channels.ZigbeeChannel.get_attribute_value",
+        "homeassistant.components.zha.core.channels.base.ZigbeeChannel.get_attribute_value",
         new=MagicMock(side_effect=get_chan_attr),
     ) as get_attr_mock:
         # load up cover domain

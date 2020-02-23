@@ -250,7 +250,8 @@ async def test_setup_hass(
     log_no_color = Mock()
 
     with patch(
-        "homeassistant.config.async_hass_config_yaml", return_value={"browser": {}}
+        "homeassistant.config.async_hass_config_yaml",
+        return_value={"browser": {}, "frontend": {}},
     ):
         hass = await bootstrap.async_setup_hass(
             config_dir=get_test_config_dir(),
@@ -263,6 +264,7 @@ async def test_setup_hass(
         )
 
     assert "browser" in hass.config.components
+    assert "safe_mode" not in hass.config.components
 
     assert len(mock_enable_logging.mock_calls) == 1
     assert mock_enable_logging.mock_calls[0][1] == (
@@ -377,6 +379,36 @@ async def test_setup_hass_invalid_core_config(
             log_rotate_days=10,
             log_file="",
             log_no_color=False,
+            skip_pip=True,
+            safe_mode=False,
+        )
+
+    assert "safe_mode" in hass.config.components
+
+
+async def test_setup_safe_mode_if_no_frontend(
+    mock_enable_logging,
+    mock_is_virtual_env,
+    mock_mount_local_lib_path,
+    mock_ensure_config_exists,
+    mock_process_ha_config_upgrade,
+):
+    """Test we setup safe mode if frontend didn't load."""
+    verbose = Mock()
+    log_rotate_days = Mock()
+    log_file = Mock()
+    log_no_color = Mock()
+
+    with patch(
+        "homeassistant.config.async_hass_config_yaml",
+        return_value={"map": {}, "person": {"invalid": True}},
+    ):
+        hass = await bootstrap.async_setup_hass(
+            config_dir=get_test_config_dir(),
+            verbose=verbose,
+            log_rotate_days=log_rotate_days,
+            log_file=log_file,
+            log_no_color=log_no_color,
             skip_pip=True,
             safe_mode=False,
         )

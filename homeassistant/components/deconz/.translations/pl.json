@@ -108,7 +108,8 @@
                     "allow_clip_sensor": "Zezwalaj na czujniki deCONZ CLIP",
                     "allow_deconz_groups": "Zezwalaj na grupy \u015bwiate\u0142 deCONZ"
                 },
-                "description": "Skonfiguruj widoczno\u015b\u0107 typ\u00f3w urz\u0105dze\u0144 deCONZ"
+                "description": "Skonfiguruj widoczno\u015b\u0107 typ\u00f3w urz\u0105dze\u0144 deCONZ",
+                "title": "Opcje deCONZ"
             }
         }
     }

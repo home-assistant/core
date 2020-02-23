@@ -12,21 +12,18 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
     CONF_SITE_ID,
+    CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
     CONTROLLER_ID,
-    DEFAULT_ALLOW_BANDWIDTH_SENSORS,
-    DEFAULT_DETECTION_TIME,
-    DEFAULT_TRACK_CLIENTS,
-    DEFAULT_TRACK_DEVICES,
-    DEFAULT_TRACK_WIRED_CLIENTS,
     DOMAIN,
     LOGGER,
 )
@@ -185,33 +182,30 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
             self.options.update(user_input)
             return await self.async_step_statistics_sensors()
 
+        controller = get_controller_from_config_entry(self.hass, self.config_entry)
+
+        ssid_filter = {wlan: wlan for wlan in controller.api.wlans}
+
         return self.async_show_form(
             step_id="device_tracker",
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_TRACK_CLIENTS,
-                        default=self.config_entry.options.get(
-                            CONF_TRACK_CLIENTS, DEFAULT_TRACK_CLIENTS
-                        ),
+                        CONF_TRACK_CLIENTS, default=controller.option_track_clients,
                     ): bool,
                     vol.Optional(
                         CONF_TRACK_WIRED_CLIENTS,
-                        default=self.config_entry.options.get(
-                            CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
-                        ),
+                        default=controller.option_track_wired_clients,
                     ): bool,
                     vol.Optional(
-                        CONF_TRACK_DEVICES,
-                        default=self.config_entry.options.get(
-                            CONF_TRACK_DEVICES, DEFAULT_TRACK_DEVICES
-                        ),
+                        CONF_TRACK_DEVICES, default=controller.option_track_devices,
                     ): bool,
+                    vol.Optional(
+                        CONF_SSID_FILTER, default=controller.option_ssid_filter
+                    ): cv.multi_select(ssid_filter),
                     vol.Optional(
                         CONF_DETECTION_TIME,
-                        default=self.config_entry.options.get(
-                            CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME
-                        ),
+                        default=int(controller.option_detection_time.total_seconds()),
                     ): int,
                 }
             ),
@@ -223,16 +217,15 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
             self.options.update(user_input)
             return await self._update_options()
 
+        controller = get_controller_from_config_entry(self.hass, self.config_entry)
+
         return self.async_show_form(
             step_id="statistics_sensors",
             data_schema=vol.Schema(
                 {
                     vol.Optional(
                         CONF_ALLOW_BANDWIDTH_SENSORS,
-                        default=self.config_entry.options.get(
-                            CONF_ALLOW_BANDWIDTH_SENSORS,
-                            DEFAULT_ALLOW_BANDWIDTH_SENSORS,
-                        ),
+                        default=controller.option_allow_bandwidth_sensors,
                     ): bool
                 }
             ),

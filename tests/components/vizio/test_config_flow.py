@@ -25,8 +25,8 @@ from .const import (
     HOST,
     HOST2,
     MOCK_IMPORT_VALID_TV_CONFIG,
-    MOCK_INVALID_TV_CONFIG,
     MOCK_SPEAKER_CONFIG,
+    MOCK_TV_CONFIG_NO_TOKEN,
     MOCK_USER_VALID_TV_CONFIG,
     MOCK_ZEROCONF_SERVICE_INFO,
     NAME,
@@ -219,7 +219,7 @@ async def test_user_error_on_tv_needs_token(
 ) -> None:
     """Test when config fails custom validation for non null access token when device_class = tv during user setup."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_INVALID_TV_CONFIG
+        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_TV_CONFIG_NO_TOKEN
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

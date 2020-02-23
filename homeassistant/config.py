@@ -89,7 +89,7 @@ scene: !include {SCENE_CONFIG_PATH}
 """
 DEFAULT_SECRETS = """
 # Use this file to store secrets like usernames and passwords.
-# Learn more at https://home-assistant.io/docs/configuration/secrets/
+# Learn more at https://www.home-assistant.io/docs/configuration/secrets/
 some_password: welcome
 """
 TTS_PRE_92 = """

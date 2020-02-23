@@ -15,6 +15,15 @@ from .helper import (
 )
 
 
+async def test_hmip_load_all_supported_devices(hass, default_mock_hap_factory):
+    """Ensure that all supported devices could be loaded."""
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=None, test_groups=None
+    )
+
+    assert len(mock_hap.hmip_device_by_entity_id) == 183
+
+
 async def test_hmip_remove_device(hass, default_mock_hap_factory):
     """Test Remove of hmip device."""
     entity_id = "light.treppe"

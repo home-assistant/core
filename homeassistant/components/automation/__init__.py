@@ -72,9 +72,7 @@ AutomationActionType = Callable[[HomeAssistant, TemplateVarsType], Awaitable[Non
 def _platform_validator(config):
     """Validate it is a valid platform."""
     try:
-        platform = importlib.import_module(
-            ".{}".format(config[CONF_PLATFORM]), __name__
-        )
+        platform = importlib.import_module(f".{config[CONF_PLATFORM]}", __name__)
     except ImportError:
         raise vol.Invalid("Invalid platform specified") from None
 
@@ -221,7 +219,7 @@ async def async_setup(hass, config):
         await _async_process_config(hass, conf, component)
 
     async_register_admin_service(
-        hass, DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({}),
+        hass, DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
     )
 
     return True
@@ -456,9 +454,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         info = {"name": self._name}
 
         for conf in self._trigger_config:
-            platform = importlib.import_module(
-                ".{}".format(conf[CONF_PLATFORM]), __name__
-            )
+            platform = importlib.import_module(f".{conf[CONF_PLATFORM]}", __name__)
 
             remove = await platform.async_attach_trigger(
                 self.hass, conf, self.async_trigger, info

@@ -372,3 +372,17 @@ async def test_turn_on_off_toggle_schema(hass, hass_read_only_user):
                     context=ha.Context(user_id=hass_read_only_user.id),
                     blocking=True,
                 )
+
+
+async def test_not_allowing_recursion(hass, caplog):
+    """Test we do not allow recursion."""
+    await async_setup_component(hass, "homeassistant", {})
+
+    for service in SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE:
+        await hass.services.async_call(
+            ha.DOMAIN, service, {"entity_id": "homeassistant.light"}, blocking=True,
+        )
+        assert (
+            f"Called service homeassistant.{service} with invalid entity IDs homeassistant.light"
+            in caplog.text
+        ), service

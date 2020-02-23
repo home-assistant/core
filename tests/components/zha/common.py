@@ -63,6 +63,7 @@ class FakeDevice:
     def __init__(self, app, ieee, manufacturer, model, node_desc=None):
         """Init fake device."""
         self._application = app
+        self.application = app
         self.ieee = zigpy.types.EUI64.convert(ieee)
         self.nwk = 0xB79C
         self.zdo = Mock()
@@ -72,6 +73,7 @@ class FakeDevice:
         self.last_seen = time.time()
         self.status = 2
         self.initializing = False
+        self.skip_configuration = False
         self.manufacturer = manufacturer
         self.model = model
         self.node_desc = zigpy.zdo.types.NodeDescriptor()

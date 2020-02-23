@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_NAME,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    TIME_SECONDS,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -33,7 +34,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 SENSOR_TYPES = {
     "weather": ["Condition", None],
     "temperature": ["Temperature", None],
-    "wind_speed": ["Wind speed", "m/s"],
+    "wind_speed": ["Wind speed", f"m/{TIME_SECONDS}"],
     "wind_bearing": ["Wind bearing", "°"],
     "humidity": ["Humidity", "%"],
     "pressure": ["Pressure", "mbar"],
