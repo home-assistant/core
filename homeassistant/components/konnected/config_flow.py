@@ -270,6 +270,10 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
+            description_placeholders={
+                "host": self.data.get(CONF_HOST, "Unknown"),
+                "port": self.data.get(CONF_PORT, "Unknown"),
+            },
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST, default=self.data.get(CONF_HOST)): str,
@@ -556,7 +560,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         }
                     ),
                     description_placeholders={
-                        "zone": "Zone {self.active_cfg}"
+                        "zone": f"Zone {self.active_cfg}"
                         if len(self.active_cfg) < 3
                         else self.active_cfg.upper
                     },
@@ -594,7 +598,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     }
                 ),
                 description_placeholders={
-                    "zone": "Zone {self.active_cfg}"
+                    "zone": f"Zone {self.active_cfg}"
                     if len(self.active_cfg) < 3
                     else self.active_cfg.upper()
                 },
@@ -624,7 +628,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         }
                     ),
                     description_placeholders={
-                        "zone": "Zone {self.active_cfg}"
+                        "zone": f"Zone {self.active_cfg}"
                         if len(self.active_cfg) < 3
                         else self.active_cfg.upper()
                     },
@@ -671,7 +675,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     }
                 ),
                 description_placeholders={
-                    "zone": "Zone {self.active_cfg}"
+                    "zone": f"Zone {self.active_cfg}"
                     if len(self.active_cfg) < 3
                     else self.active_cfg.upper()
                 },
@@ -710,7 +714,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         }
                     ),
                     description_placeholders={
-                        "zone": "Zone {self.active_cfg}"
+                        "zone": f"Zone {self.active_cfg}"
                         if len(self.active_cfg) < 3
                         else self.active_cfg.upper()
                     },
