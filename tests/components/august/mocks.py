@@ -50,7 +50,9 @@ async def _mock_setup_august(hass, api_instance, authenticate_mock, api_mock):
     return True
 
 
-async def _create_august_with_devices(hass, devices, api_call_side_effects={}):
+async def _create_august_with_devices(hass, devices, api_call_side_effects=None):
+    if api_call_side_effects is None:
+        api_call_side_effects = {}
     device_data = {
         "doorbells": [],
         "locks": [],
