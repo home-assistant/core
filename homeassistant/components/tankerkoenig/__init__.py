@@ -1,6 +1,5 @@
 """Ask tankerkoenig.de for petrol price information."""
 from datetime import timedelta
-from functools import partial
 import logging
 
 import pytankerkoenig
@@ -14,6 +13,7 @@ from homeassistant.const import (
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
 )
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
@@ -67,16 +67,17 @@ async def async_setup(hass, config):
 
     _LOGGER.debug("Setting up integration")
 
-    tankerkoenig = await hass.async_add_executor_job(
-        partial(TankerkoenigData, hass, conf)
-    )
+    tankerkoenig = TankerkoenigData(hass, conf)
 
     latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
     longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
     radius = conf[CONF_RADIUS]
     additional_stations = conf[CONF_STATIONS]
 
-    if not tankerkoenig.setup(latitude, longitude, radius, additional_stations):
+    setup_ok = await hass.async_add_executor_job(
+        tankerkoenig.setup, latitude, longitude, radius, additional_stations
+    )
+    if not setup_ok:
         _LOGGER.error("Could not setup integration")
         return False
 
@@ -104,6 +105,7 @@ class TankerkoenigData:
         self.stations = {}
         self.fuel_types = conf[CONF_FUEL_TYPES]
         self.update_interval = conf[CONF_SCAN_INTERVAL]
+        self._hass = hass
 
     def setup(self, latitude, longitude, radius, additional_stations):
         """Set up the tankerkoenig API.
@@ -167,25 +169,27 @@ class TankerkoenigData:
     async def fetch_data(self):
         """Get the latest data from tankerkoenig.de."""
         _LOGGER.debug("Fetching new data from tankerkoenig.de")
-        station_id_list = list(self.stations.keys())
-        data = pytankerkoenig.getPriceList(self._api_key, station_id_list)
+        station_ids = list(self.stations)
+        data = await self._hass.async_add_executor_job(
+            pytankerkoenig.getPriceList, self._api_key, station_ids
+        )
 
         if data["ok"]:
             _LOGGER.debug("Received data: %s", data)
-            if "prices" not in data.keys():
+            if "prices" not in data:
                 _LOGGER.error("Did not receive price information from tankerkoenig.de")
-                raise LookupError("No prices in data")
+                raise TankerkoenigError("No prices in data")
         else:
             _LOGGER.error(
                 "Error fetching data from tankerkoenig.de: %s", data["message"]
             )
-            raise LookupError(data["message"])
+            raise TankerkoenigError(data["message"])
         return data["prices"]
 
     def add_station(self, station: dict):
         """Add fuel station to the entity list."""
         station_id = station["id"]
-        if station_id in self.stations.keys():
+        if station_id in self.stations:
             _LOGGER.warning(
                 "Sensor for station with id %s was already created", station_id
             )
@@ -193,3 +197,7 @@ class TankerkoenigData:
 
         self.stations[station_id] = station
         _LOGGER.debug("add_station called for station: %s", station)
+
+
+class TankerkoenigError(HomeAssistantError):
+    """An error occurred while contacting tankerkoenig.de."""

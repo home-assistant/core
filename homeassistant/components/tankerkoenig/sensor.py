@@ -2,14 +2,7 @@
 
 import logging
 
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    STATE_CLOSED,
-    STATE_OPEN,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -33,7 +26,7 @@ ICON = "mdi:gas-station"
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the tankerkoenig sensors."""
 
-    if not discovery_info:
+    if discovery_info is None:
         return
 
     tankerkoenig = hass.data[DOMAIN]
@@ -53,11 +46,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         update_interval=tankerkoenig.update_interval,
     )
 
-    station_list = discovery_info.values()
-    entity_list = []
-    for station in station_list:
+    # Fetch initial data so we have data when entities subscribe
+    await coordinator.async_refresh()
+
+    stations = discovery_info.values()
+    entities = []
+    for station in stations:
         for fuel in tankerkoenig.fuel_types:
-            if fuel not in station.keys():
+            if fuel not in station:
                 _LOGGER.warning(
                     "Station %s does not offer %s fuel", station["id"], fuel
                 )
@@ -65,18 +61,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             sensor = FuelPriceSensor(
                 fuel, station, coordinator, f"{NAME}_{station['name']}_{fuel}"
             )
-            _LOGGER.debug("Added sensor %s", sensor.name)
-            entity_list.append(sensor)
+            entities.append(sensor)
+    _LOGGER.debug("Added sensors %s", entities)
 
-    # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_refresh()
-    async_add_entities(entity_list)
+    async_add_entities(entities)
 
 
 class FuelPriceSensor(Entity):
     """Contains prices for fuel in a given station."""
 
-    def __init__(self, fuel_type, station, coordinator, name=NAME):
+    def __init__(self, fuel_type, station, coordinator, name):
         """Initialize the sensor."""
         self._station = station
         self._station_id = station["id"]
@@ -85,7 +79,6 @@ class FuelPriceSensor(Entity):
         self._name = name
         self._latitude = station["lat"]
         self._longitude = station["lng"]
-        self._is_open = STATE_OPEN if station["isOpen"] else STATE_CLOSED
         self._city = station["place"]
         self._house_number = station["houseNumber"]
         self._postcode = station["postCode"]
@@ -122,10 +115,6 @@ class FuelPriceSensor(Entity):
     def device_state_attributes(self):
         """Return the attributes of the device."""
         data = self._coordinator.data[self._station_id]
-        if data is None or "status" not in data.keys():
-            self._is_open = STATE_UNKNOWN
-        else:
-            self._is_open = STATE_OPEN if data["status"] == "open" else STATE_CLOSED
 
         attrs = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
@@ -138,8 +127,9 @@ class FuelPriceSensor(Entity):
             ATTR_CITY: self._city,
             ATTR_LATITUDE: self._latitude,
             ATTR_LONGITUDE: self._longitude,
-            ATTR_IS_OPEN: self._is_open,
         }
+        if data is not None and "status" in data:
+            attrs[ATTR_IS_OPEN] = data["status"] == "open"
         return attrs
 
     @property
