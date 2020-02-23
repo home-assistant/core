@@ -331,6 +331,7 @@ class SimpliSafeWebsocket:
     def __init__(self, hass, websocket):
         """Initialize."""
         self._hass = hass
+        self._unsub_websocket_reconnect_call_later = None
         self._websocket = websocket
         self._websocket_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
         self._websocket_reconnect_underway = False
@@ -341,6 +342,10 @@ class SimpliSafeWebsocket:
         """Attempt to connect to the websocket (retrying later on fail)."""
         self._websocket_reconnect_underway = True
 
+        if self._unsub_websocket_reconnect_call_later:
+            self._unsub_websocket_reconnect_call_later()
+            self._unsub_websocket_reconnect_call_later = None
+
         try:
             await self._websocket.async_connect()
         except WebsocketError as err:
@@ -348,10 +353,10 @@ class SimpliSafeWebsocket:
             self._websocket_reconnect_delay = min(
                 2 * self._websocket_reconnect_delay, 480
             )
-            async_call_later(
+            self._unsub_websocket_reconnect_call_later = async_call_later(
                 self._hass,
                 self._websocket_reconnect_delay,
-                self.async_websocket_connect,
+                self._async_attempt_websocket_connect,
             )
         else:
             self._websocket_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
