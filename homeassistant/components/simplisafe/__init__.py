@@ -3,7 +3,7 @@ import asyncio
 import logging
 
 from simplipy import API
-from simplipy.errors import InvalidCredentialsError, SimplipyError, WebsocketError
+from simplipy.errors import InvalidCredentialsError, SimplipyError
 from simplipy.websocket import (
     EVENT_CAMERA_MOTION_DETECTED,
     EVENT_DOORBELL_DETECTED,
@@ -34,7 +34,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_call_later, async_track_time_interval
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import (
     async_register_admin_service,
     verify_domain_control,
@@ -68,7 +68,6 @@ EVENT_SIMPLISAFE_EVENT = "SIMPLISAFE_EVENT"
 EVENT_SIMPLISAFE_NOTIFICATION = "SIMPLISAFE_NOTIFICATION"
 
 DEFAULT_SOCKET_MIN_RETRY = 15
-DEFAULT_WATCHDOG_SECONDS = 5 * 60
 
 WEBSOCKET_EVENTS_REQUIRING_SERIAL = [EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED]
 WEBSOCKET_EVENTS_TO_TRIGGER_HASS_EVENT = [
@@ -331,56 +330,16 @@ class SimpliSafeWebsocket:
     def __init__(self, hass, websocket):
         """Initialize."""
         self._hass = hass
-        self._unsub_reconnect_call_later = None
-        self._unsub_watchdog_call_later = None
         self._websocket = websocket
-        self._websocket_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
-        self._websocket_reconnect_underway = False
         self.last_events = {}
 
-    async def _async_attempt_websocket_connect(self):
-        """Attempt to connect to the websocket (retrying later on fail)."""
-        self._websocket_reconnect_underway = True
-
-        if self._unsub_reconnect_call_later:
-            self._unsub_reconnect_call_later()
-            self._unsub_reconnect_call_later = None
-
-        try:
-            await self._websocket.async_connect()
-        except WebsocketError as err:
-            _LOGGER.error("Error with the websocket connection: %s", err)
-            self._websocket_reconnect_delay = min(
-                2 * self._websocket_reconnect_delay, 480
-            )
-            self._unsub_reconnect_call_later = async_call_later(
-                self._hass,
-                self._websocket_reconnect_delay,
-                self._async_attempt_websocket_connect,
-            )
-        else:
-            self._websocket_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
-            self._websocket_reconnect_underway = False
-
-    async def _async_websocket_reconnect(self, event_time):
-        """Forcibly disconnect from and reconnect to the websocket."""
-        _LOGGER.debug("Websocket watchdog expired; forcing socket reconnection")
-        await self.async_websocket_disconnect()
-        await self._async_attempt_websocket_connect()
-
-    def _on_connect(self):
+    @staticmethod
+    def _on_connect():
         """Define a handler to fire when the websocket is connected."""
-        if self._unsub_watchdog_call_later:
-            self._unsub_watchdog_call_later()
-            self._unsub_watchdog_call_later = None
-
         _LOGGER.info("Connected to websocket")
-        _LOGGER.debug("Websocket watchdog starting")
-        self._unsub_watchdog_call_later = async_call_later(
-            self._hass, DEFAULT_WATCHDOG_SECONDS, self._async_websocket_reconnect
-        )
 
-    def _on_disconnect(self):
+    @staticmethod
+    def _on_disconnect():
         """Define a handler to fire when the websocket is disconnected."""
         _LOGGER.info("Disconnected from websocket")
 
@@ -389,13 +348,6 @@ class SimpliSafeWebsocket:
         _LOGGER.debug("New websocket event: %s", event)
         self.last_events[event.system_id] = event
         async_dispatcher_send(self._hass, TOPIC_UPDATE.format(event.system_id))
-
-        _LOGGER.debug("Resetting websocket watchdog")
-        self._unsub_watchdog_call_later()
-        self._unsub_watchdog_call_later = async_call_later(
-            self._hass, DEFAULT_WATCHDOG_SECONDS, self._async_websocket_reconnect
-        )
-        self._websocket_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
 
         if event.event_type not in WEBSOCKET_EVENTS_TO_TRIGGER_HASS_EVENT:
             return
@@ -421,18 +373,11 @@ class SimpliSafeWebsocket:
 
     async def async_websocket_connect(self):
         """Register handlers and connect to the websocket."""
-        if self._websocket_reconnect_underway:
-            return
-
         self._websocket.on_connect(self._on_connect)
         self._websocket.on_disconnect(self._on_disconnect)
         self._websocket.on_event(self._on_event)
 
-        await self._async_attempt_websocket_connect()
-
-    async def async_websocket_disconnect(self):
-        """Disconnect from the websocket."""
-        await self._websocket.async_disconnect()
+        await self._websocket.async_connect()
 
 
 class SimpliSafe:
