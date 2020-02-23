@@ -30,9 +30,6 @@ async def test_user(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
 
-#    assert result["step_id"] == CONF_TRUSTED_DEVICE
-
-
 async def test_import(hass):
     """Test import step."""
     # import with username and password
@@ -42,9 +39,6 @@ async def test_import(hass):
         data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-
-
-#   assert result["step_id"] == "trusted_device"
 
 
 async def test_abort_if_already_setup(hass):
