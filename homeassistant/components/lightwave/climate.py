@@ -57,6 +57,7 @@ class LightwaveTrv(ClimateDevice):
         self._lwlink = lwlink
         self._battery = None
         self._serial = serial
+        # inhibit used to prevent race condition on update.  If non zero, skip next update cycle.
         self._inhibit = 0
 
     @property
