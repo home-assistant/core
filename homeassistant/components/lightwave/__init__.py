@@ -81,8 +81,6 @@ async def async_setup(hass, config):
     if trv:
         proxy_ip = trv[CONF_PROXY_IP]
         proxy_port = trv[CONF_PROXY_PORT]
-        hass.data[LIGHTWAVE_TRV_PROXY] = proxy_ip
-        hass.data[LIGHTWAVE_TRV_PROXY_PORT] = proxy_port
         lwlink.set_trv_proxy(proxy_ip, proxy_port)
 
         platforms = [CLIMATE_DOMAIN, SENSOR_DOMAIN]

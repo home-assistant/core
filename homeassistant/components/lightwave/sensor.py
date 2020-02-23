@@ -4,7 +4,7 @@ import logging
 from homeassistant.const import CONF_NAME, DEVICE_CLASS_BATTERY
 from homeassistant.helpers.entity import Entity
 
-from . import CONF_SERIAL, LIGHTWAVE_LINK, LIGHTWAVE_TRV_PROXY, LIGHTWAVE_TRV_PROXY_PORT
+from . import CONF_SERIAL, LIGHTWAVE_LINK
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,17 +17,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     batt = []
 
     lwlink = hass.data[LIGHTWAVE_LINK]
-    trv_proxy_ip = hass.data[LIGHTWAVE_TRV_PROXY]
-    trv_proxy_port = hass.data[LIGHTWAVE_TRV_PROXY_PORT]
 
     for device_id, device_config in discovery_info.items():
         name = device_config[CONF_NAME]
         serial = device_config[CONF_SERIAL]
-        batt.append(
-            LightwaveBattery(
-                name, device_id, lwlink, serial, trv_proxy_ip, trv_proxy_port
-            )
-        )
+        batt.append(LightwaveBattery(name, device_id, lwlink, serial))
 
     async_add_entities(batt)
 
@@ -35,7 +29,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class LightwaveBattery(Entity):
     """Lightwave TRV Battery."""
 
-    def __init__(self, name, device_id, lwlink, serial, trv_proxy_ip, trv_proxy_port):
+    def __init__(self, name, device_id, lwlink, serial):
         """Initialize the Lightwave Trv battery sensor."""
         self._name = name
         self._device_id = device_id
@@ -44,8 +38,6 @@ class LightwaveBattery(Entity):
         self._serial = serial
         self._device_class = DEVICE_CLASS_BATTERY
         self._unit_of_measurement = "%"
-        self._proxy_ip = trv_proxy_ip
-        self._proxy_port = trv_proxy_port
 
     @property
     def device_class(self):

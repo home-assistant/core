@@ -17,7 +17,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 
-from . import CONF_SERIAL, LIGHTWAVE_LINK, LIGHTWAVE_TRV_PROXY, LIGHTWAVE_TRV_PROXY_PORT
+from . import CONF_SERIAL, LIGHTWAVE_LINK
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,15 +29,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     trv = []
     lwlink = hass.data[LIGHTWAVE_LINK]
-    trv_proxy_ip = hass.data[LIGHTWAVE_TRV_PROXY]
-    trv_proxy_port = hass.data[LIGHTWAVE_TRV_PROXY_PORT]
 
     for device_id, device_config in discovery_info.items():
         name = device_config[CONF_NAME]
         serial = device_config[CONF_SERIAL]
-        trv.append(
-            LightwaveTrv(name, device_id, lwlink, serial, trv_proxy_ip, trv_proxy_port)
-        )
+        trv.append(LightwaveTrv(name, device_id, lwlink, serial))
 
     async_add_entities(trv)
 
@@ -45,7 +41,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class LightwaveTrv(ClimateDevice):
     """Representation of a LightWaveRF TRV."""
 
-    def __init__(self, name, device_id, lwlink, serial, trv_proxy_ip, trv_proxy_port):
+    def __init__(self, name, device_id, lwlink, serial):
         """Initialize LightwaveTrv entity."""
         self._name = name
         self._device_id = device_id
@@ -61,8 +57,6 @@ class LightwaveTrv(ClimateDevice):
         self._lwlink = lwlink
         self._battery = None
         self._serial = serial
-        self._proxy_ip = trv_proxy_ip
-        self._proxy_port = trv_proxy_port
         self._inhibit = 0
 
     @property
