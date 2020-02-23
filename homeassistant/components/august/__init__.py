@@ -102,8 +102,7 @@ def request_configuration(hass, config, api, authenticator, token_refresh_lock):
     _CONFIGURING[DOMAIN] = configurator.request_config(
         NOTIFICATION_TITLE,
         august_configuration_callback,
-        description="Please check your {} ({}) and enter the verification "
-        "code below".format(login_method, username),
+        description=f"Please check your {login_method} ({username}) and enter the verification code below",
         submit_caption="Verify",
         fields=[
             {"id": "verification_code", "name": "Verification code", "type": "string"}
@@ -121,9 +120,7 @@ def setup_august(hass, config, api, authenticator, token_refresh_lock):
         _LOGGER.error("Unable to connect to August service: %s", str(ex))
 
         hass.components.persistent_notification.create(
-            "Error: {}<br />"
-            "You will need to restart hass after fixing."
-            "".format(ex),
+            "Error: {ex}<br />You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )

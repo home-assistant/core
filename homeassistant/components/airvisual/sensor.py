@@ -185,7 +185,7 @@ class AirVisualSensor(Entity):
     @property
     def name(self):
         """Return the name."""
-        return "{0} {1}".format(SENSOR_LOCALES[self._locale], self._name)
+        return f"{SENSOR_LOCALES[self._locale]} {self._name}"
 
     @property
     def state(self):
