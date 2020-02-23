@@ -159,8 +159,6 @@ class HassEzvizCamera(Camera):
     def device_state_attributes(self):
         """Return the Ezviz-specific camera state attributes."""
         return {
-            # device is connected & working
-            "status": self._status,
             # if privacy == true, the device closed the lid or did a 180° tilt
             "privacy": self._privacy,
             # is the camera listening ?
@@ -179,7 +177,7 @@ class HassEzvizCamera(Camera):
             "encrypted": self._encrypted,
             # camera's local ip on local network
             "local_ip": self._local_ip,
-            # from 1 to 9, the higher is the sensibility, the more it will detect small movemements
+            # from 1 to 9, the higher is the sensibility, the more it will detect small movements
             "detection_sensibility": self._detection_sensibility,
         }
 
