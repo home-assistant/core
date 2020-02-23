@@ -80,7 +80,7 @@ async def test_dataSet1(hass):
     """Test derivative sensor state."""
     await setup_tests(
         hass,
-        {"unit_time": "s"},
+        {"unit_time": TIME_SECONDS},
         times=[20, 30, 40, 50],
         values=[10, 30, 5, 0],
         expected_state=-0.5,
@@ -90,7 +90,11 @@ async def test_dataSet1(hass):
 async def test_dataSet2(hass):
     """Test derivative sensor state."""
     await setup_tests(
-        hass, {"unit_time": "s"}, times=[20, 30], values=[5, 0], expected_state=-0.5
+        hass,
+        {"unit_time": TIME_SECONDS},
+        times=[20, 30],
+        values=[5, 0],
+        expected_state=-0.5,
     )
 
 
@@ -110,14 +114,22 @@ async def test_dataSet3(hass):
 async def test_dataSet4(hass):
     """Test derivative sensor state."""
     await setup_tests(
-        hass, {"unit_time": "s"}, times=[20, 30], values=[5, 5], expected_state=0
+        hass,
+        {"unit_time": TIME_SECONDS},
+        times=[20, 30],
+        values=[5, 5],
+        expected_state=0,
     )
 
 
 async def test_dataSet5(hass):
     """Test derivative sensor state."""
     await setup_tests(
-        hass, {"unit_time": "s"}, times=[20, 30], values=[10, -10], expected_state=-2
+        hass,
+        {"unit_time": TIME_SECONDS},
+        times=[20, 30],
+        values=[10, -10],
+        expected_state=-2,
     )
 
 
@@ -208,7 +220,7 @@ async def test_suffix(hass):
             "source": "sensor.bytes_per_second",
             "round": 2,
             "unit_prefix": "k",
-            "unit_time": "s",
+            "unit_time": TIME_SECONDS,
         }
     }
 

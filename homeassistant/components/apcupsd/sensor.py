@@ -6,7 +6,13 @@ import voluptuous as vol
 
 from homeassistant.components import apcupsd
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_RESOURCES, POWER_WATT, TEMP_CELSIUS, TIME_MINUTES
+from homeassistant.const import (
+    CONF_RESOURCES,
+    POWER_WATT,
+    TEMP_CELSIUS,
+    TIME_MINUTES,
+    TIME_SECONDS,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -85,7 +91,7 @@ SENSOR_TYPES = {
 SPECIFIC_UNITS = {"ITEMP": TEMP_CELSIUS}
 INFERRED_UNITS = {
     " Minutes": TIME_MINUTES,
-    " Seconds": "sec",
+    " Seconds": TIME_SECONDS,
     " Percent": "%",
     " Volts": "V",
     " Ampere": "A",
