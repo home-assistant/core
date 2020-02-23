@@ -184,7 +184,7 @@ class DirecTvDevice(MediaPlayerDevice):
             self._unique_id = device
         elif version_info:
             self._unique_id = "".join(version_info.get("receiverId").split())
-     
+
         if self._is_client:
             _LOGGER.debug("Created DirecTV client %s for device %s", self._name, device)
         else:
