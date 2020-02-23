@@ -20,7 +20,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import PRECISION_TENTHS
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from homeassistant.util.dt import parse_datetime
+import homeassistant.util.dt as dt_util
 
 from . import (
     ATTR_DURATION_DAYS,
@@ -169,23 +169,25 @@ class EvoZone(EvoChild, EvoClimateDevice):
             )
             return
 
-        # otherwise it is SVC_SET_ZONE_OVERRIDE  # TODO: bug here?
-        temperature = round(data[ATTR_ZONE_TEMP] * self.precision) / self.precision
+        # otherwise it is SVC_SET_ZONE_OVERRIDE
+        temperature = data[ATTR_ZONE_TEMP]  # TODO below
+        # precision = self._evo_device.setpointCapabilities["valueResolution"]
+        # temperature = data[ATTR_ZONE_TEMP] // self.precision * self.precision
         temperature = max(min(temperature, self.max_temp), self.min_temp)
 
         if ATTR_DURATION_UNTIL in data:
             duration = data[ATTR_DURATION_UNTIL]
             if duration.total_seconds() == 0:
                 await self._update_schedule()
-                until = parse_datetime(str(self.setpoints.get("next_sp_from")))
+                until = dt_util.parse_datetime(str(self.setpoints.get("next_sp_from")))
             else:
-                until = dt.now() + data[ATTR_DURATION_UNTIL]
+                until = dt_util.now() + data[ATTR_DURATION_UNTIL]
         else:
             until = None  # indefinitely
 
         # TODO: until dt from aware to evo naive/local
         await self._evo_broker.call_client_api(
-            self._evo_device.set_temperature(temperature, until=until)
+            self._evo_device.set_temperature(temperature, until=dt_util.as_utc(until))
         )
 
     @property
@@ -245,13 +247,13 @@ class EvoZone(EvoChild, EvoClimateDevice):
         if until is None:
             if self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
                 await self._update_schedule()
-                until = parse_datetime(str(self.setpoints.get("next_sp_from")))
+                until = dt_util.parse_datetime(str(self.setpoints.get("next_sp_from")))
             elif self._evo_device.setpointStatus["setpointMode"] == EVO_TEMPOVER:
-                until = parse_datetime(self._evo_device.setpointStatus["until"])
+                until = dt_util.parse_datetime(self._evo_device.setpointStatus["until"])
 
         # TODO: until dt from aware to evo naive/local
         await self._evo_broker.call_client_api(
-            self._evo_device.set_temperature(temperature, until=until)
+            self._evo_device.set_temperature(temperature, until=dt_util.as_utc(until))
         )
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
@@ -295,13 +297,13 @@ class EvoZone(EvoChild, EvoClimateDevice):
 
         if evo_preset_mode == EVO_TEMPOVER:
             await self._update_schedule()
-            until = parse_datetime(str(self.setpoints.get("next_sp_from")))
+            until = dt_util.parse_datetime(str(self.setpoints.get("next_sp_from")))
         else:  # EVO_PERMOVER
             until = None
 
         # TODO: until dt from aware to evo naive/local
         await self._evo_broker.call_client_api(
-            self._evo_device.set_temperature(temperature, until=until)
+            self._evo_device.set_temperature(temperature, until=dt_util.as_utc(until))
         )
 
     async def async_update(self) -> None:
@@ -349,11 +351,11 @@ class EvoController(EvoClimateDevice):
             mode = EVO_RESET
 
         if ATTR_DURATION_DAYS in data:
-            until = dt.combine(dt.now().date(), dt.min.time())
+            until = dt.combine(dt_util.now().date(), dt.min.time())
             until += data[ATTR_DURATION_DAYS]
 
         elif ATTR_DURATION_HOURS in data:
-            until = dt.now() + data[ATTR_DURATION_HOURS]
+            until = dt_util.now() + data[ATTR_DURATION_HOURS]
 
         else:
             until = None
