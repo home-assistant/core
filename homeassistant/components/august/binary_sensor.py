@@ -187,4 +187,7 @@ class AugustDoorbellBinarySensor(BinarySensorDevice):
     @property
     def unique_id(self) -> str:
         """Get the unique id of the doorbell sensor."""
-        return f"{self._doorbell.device_id}_{SENSOR_TYPES_DOORBELL[self._sensor_type][SENSOR_NAME].lower()}"
+        return (
+            f"{self._doorbell.device_id}_"
+            f"{SENSOR_TYPES_DOORBELL[self._sensor_type][SENSOR_NAME].lower()}"
+        )

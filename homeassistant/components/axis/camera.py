@@ -64,7 +64,11 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
 
     async def stream_source(self):
         """Return the stream source."""
-        return f"rtsp://{self.device.config_entry.data[CONF_USERNAME]}:{self.device.config_entry.data[CONF_PASSWORD]}@{self.device.host}/axis-media/media.amp?videocodec=h264"
+        return (
+            f"rtsp://{self.device.config_entry.data[CONF_USERNAME]}´"
+            f":{self.device.config_entry.data[CONF_PASSWORD]}"
+            f"@{self.device.host}/axis-media/media.amp?videocodec=h264"
+        )
 
     def _new_address(self):
         """Set new device address for video stream."""

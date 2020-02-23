@@ -139,7 +139,10 @@ class ArloSensor(Entity):
                 video = self._data.last_video
                 self._state = video.created_at_pretty("%m-%d-%Y %H:%M:%S")
             except (AttributeError, IndexError):
-                error_msg = f"Video not found for {self.name}. Older than {self._data.min_days_vdo_cache} days?"
+                error_msg = (
+                    f"Video not found for {self.name}. "
+                    f"Older than {self._data.min_days_vdo_cache} days?"
+                )
                 _LOGGER.debug(error_msg)
                 self._state = None
 

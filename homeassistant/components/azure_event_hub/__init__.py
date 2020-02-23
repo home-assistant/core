@@ -47,7 +47,10 @@ async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
     """Activate Azure EH component."""
     config = yaml_config[DOMAIN]
 
-    event_hub_address = f"amqps://{config[CONF_EVENT_HUB_NAMESPACE]}.servicebus.windows.net/{config[CONF_EVENT_HUB_INSTANCE_NAME]}"
+    event_hub_address = (
+        f"amqps://{config[CONF_EVENT_HUB_NAMESPACE]}"
+        f".servicebus.windows.net/{config[CONF_EVENT_HUB_INSTANCE_NAME]}"
+    )
     entities_filter = config[CONF_FILTER]
 
     client = EventHubClientAsync(

@@ -88,7 +88,9 @@ def request_configuration(hass, config, atv, credentials):
         try:
             await atv.airplay.finish_authentication(pin)
             hass.components.persistent_notification.async_create(
-                f"Authentication succeeded!<br /><br />Add the following to credentials: in your apple_tv configuration:<br /><br />{credentials}",
+                f"Authentication succeeded!<br /><br />"
+                f"Add the following to credentials: "
+                f"in your apple_tv configuration:<br /><br />{credentials}",
                 title=NOTIFICATION_AUTH_TITLE,
                 notification_id=NOTIFICATION_AUTH_ID,
             )
