@@ -31,9 +31,6 @@ SUPPORT_MONOPRICE = (
 )
 
 
-DATA_MONOPRICE = "monoprice"
-
-
 MEDIA_PLAYER_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.comp_entity_ids})
 
 
@@ -59,16 +56,16 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
 
     sources = _get_sources(config_entry.data.get(CONF_SOURCES))
 
-    hass.data[DATA_MONOPRICE] = []
+    hass.data[DOMAIN] = []
     for i in range(1, 4):
         for j in range(1, 7):
             zone_id = (i * 10) + j
             _LOGGER.info("Adding zone %d for port %s", zone_id, port)
-            hass.data[DATA_MONOPRICE].append(
+            hass.data[DOMAIN].append(
                 MonopriceZone(monoprice, sources, config_entry.entry_id, zone_id)
             )
 
-    async_add_devices(hass.data[DATA_MONOPRICE], True)
+    async_add_devices(hass.data[DOMAIN], True)
 
     def service_handle(service):
         """Handle for services."""
@@ -76,12 +73,10 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
 
         if entity_ids:
             devices = [
-                device
-                for device in hass.data[DATA_MONOPRICE]
-                if device.entity_id in entity_ids
+                device for device in hass.data[DOMAIN] if device.entity_id in entity_ids
             ]
         else:
-            devices = hass.data[DATA_MONOPRICE]
+            devices = hass.data[DOMAIN]
 
         for device in devices:
             if service.service == SERVICE_SNAPSHOT:
@@ -134,6 +129,10 @@ class MonopriceZone(MediaPlayerDevice):
         else:
             self._source = None
         return True
+
+    async def async_will_remove_from_hass(self):
+        """Remove zone from list."""
+        self.hass.data[DOMAIN].remove(self)
 
     @property
     def entity_registry_enabled_default(self):
