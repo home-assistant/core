@@ -37,23 +37,27 @@ DATA_LISTENER = "listener"
 
 CONF_NODE_ID = "node_id"
 
-GEOGRAPHY_COORDINATES_SCHEMA = vol.Schema({
-    vol.Required(CONF_LATITUDE): cv.latitude,
-    vol.Required(CONF_LONGITUDE): cv.longitude,
-})
+GEOGRAPHY_COORDINATES_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_LATITUDE): cv.latitude,
+        vol.Required(CONF_LONGITUDE): cv.longitude,
+    }
+)
 
-GEOGRAPHY_PLACE_SCHEMA = vol.Schema({
-    vol.Required(CONF_CITY): cv.string,
-    vol.Required(CONF_STATE): cv.string,
-    vol.Required(CONF_COUNTRY): cv.string,
-})
+GEOGRAPHY_PLACE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_CITY): cv.string,
+        vol.Required(CONF_STATE): cv.string,
+        vol.Required(CONF_COUNTRY): cv.string,
+    }
+)
 
 CLOUD_API_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_GEOGRAPHIES, default=[]): vol.All(
             cv.ensure_list,
-            [vol.Any(GEOGRAPHY_COORDINATES_SCHEMA, GEOGRAPHY_PLACE_SCHEMA)]
+            [vol.Any(GEOGRAPHY_COORDINATES_SCHEMA, GEOGRAPHY_PLACE_SCHEMA)],
         ),
         vol.Optional(CONF_SHOW_ON_MAP, default=True): cv.boolean,
     }
