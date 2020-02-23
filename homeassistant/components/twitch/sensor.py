@@ -1,4 +1,5 @@
 """Support for the Twitch stream status."""
+import copy
 import logging
 
 from requests.exceptions import HTTPError
@@ -96,7 +97,7 @@ class TwitchSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attr = self._statistics
+        attr = copy.deepcopy(self._statistics)
 
         if self._oauth_enabled:
             attr.update(self._subscription)
