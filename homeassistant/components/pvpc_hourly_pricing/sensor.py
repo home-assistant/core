@@ -149,6 +149,8 @@ class ElecPriceSensor(RestoreEntity):
         self._timeout = timeout
         self._num_retries = 0
         self._state = None
+        self._state_available = False
+        self._data_source_available = True
         self._attributes = None
         self._current_prices: Dict[datetime, float] = {}
 
@@ -224,6 +226,11 @@ class ElecPriceSensor(RestoreEntity):
         return ICON
 
     @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._state_available
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
@@ -257,7 +264,9 @@ class ElecPriceSensor(RestoreEntity):
         # set current price
         try:
             self._state = self._current_prices[utc_time]
+            self._state_available = True
         except KeyError:  # pragma: no cover
+            self._state_available = False
             return False
 
         # generate sensor attributes
@@ -295,14 +304,16 @@ class ElecPriceSensor(RestoreEntity):
         else:  # pragma: no cover
             # If no prices present, download and schedule a future state update
             self._state = None
-            _LOGGER.warning(
-                "[%s]: Downloading prices as there are no valid ones", self.entity_id,
-            )
-            async_track_point_in_time(
-                self.hass,
-                self.async_update,
-                dt_util.now() + timedelta(seconds=self._timeout),
-            )
+            if self._data_source_available:
+                _LOGGER.warning(
+                    "[%s]: Downloading prices as there are no valid ones",
+                    self.entity_id,
+                )
+                async_track_point_in_time(
+                    self.hass,
+                    self.async_update,
+                    dt_util.now() + timedelta(seconds=self._timeout),
+                )
             await self.async_update_prices()
 
     async def _download_official_data(self, day: date) -> Optional[str]:
@@ -324,14 +335,18 @@ class ElecPriceSensor(RestoreEntity):
         """Update electricity prices from the ESIOS API."""
         localized_now = dt_util.utcnow().astimezone(_REFERENCE_TZ)
         text = await self._download_official_data(localized_now.date())
-        if text is None:  # pragma: no cover
+        if text is None and self._data_source_available:  # pragma: no cover
             self._num_retries += 1
-            if self._num_retries > 3:
+            if self._num_retries > 2:
                 _LOGGER.error("Bad data update")
+                self._data_source_available = False
                 return
 
-            f_log = _LOGGER.warning if self._num_retries > 1 else _LOGGER.info
-            f_log("Bad update, will try again in %d s", 3 * self._timeout)
+            _LOGGER.warning(
+                "Bad update[retry:%d], will try again in %d s",
+                self._num_retries,
+                3 * self._timeout,
+            )
             async_track_point_in_time(
                 self.hass,
                 self.async_update_prices,
@@ -343,6 +358,7 @@ class ElecPriceSensor(RestoreEntity):
         prices = extract_prices_for_tariff(text, tariff_number)
         self._num_retries = 0
         self._current_prices.update(prices)
+        self._data_source_available = True
 
         # At evening, it is possible to retrieve next day prices
         if localized_now.hour >= 20:
