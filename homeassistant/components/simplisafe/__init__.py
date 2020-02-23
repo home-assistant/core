@@ -331,20 +331,20 @@ class SimpliSafeWebsocket:
     def __init__(self, hass, websocket):
         """Initialize."""
         self._hass = hass
-        self._unsub_websocket_reconnect_call_later = None
+        self._unsub_reconnect_call_later = None
+        self._unsub_watchdog_call_later = None
         self._websocket = websocket
         self._websocket_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
         self._websocket_reconnect_underway = False
-        self._websocket_watchdog_listener = None
         self.last_events = {}
 
     async def _async_attempt_websocket_connect(self):
         """Attempt to connect to the websocket (retrying later on fail)."""
         self._websocket_reconnect_underway = True
 
-        if self._unsub_websocket_reconnect_call_later:
-            self._unsub_websocket_reconnect_call_later()
-            self._unsub_websocket_reconnect_call_later = None
+        if self._unsub_reconnect_call_later:
+            self._unsub_reconnect_call_later()
+            self._unsub_reconnect_call_later = None
 
         try:
             await self._websocket.async_connect()
@@ -353,7 +353,7 @@ class SimpliSafeWebsocket:
             self._websocket_reconnect_delay = min(
                 2 * self._websocket_reconnect_delay, 480
             )
-            self._unsub_websocket_reconnect_call_later = async_call_later(
+            self._unsub_reconnect_call_later = async_call_later(
                 self._hass,
                 self._websocket_reconnect_delay,
                 self._async_attempt_websocket_connect,
@@ -370,16 +370,17 @@ class SimpliSafeWebsocket:
 
     def _on_connect(self):
         """Define a handler to fire when the websocket is connected."""
+        if self._unsub_watchdog_call_later:
+            self._unsub_watchdog_call_later()
+            self._unsub_watchdog_call_later = None
+
         _LOGGER.info("Connected to websocket")
         _LOGGER.debug("Websocket watchdog starting")
-        if self._websocket_watchdog_listener is not None:
-            self._websocket_watchdog_listener()
-        self._websocket_watchdog_listener = async_call_later(
+        self._unsub_watchdog_call_later = async_call_later(
             self._hass, DEFAULT_WATCHDOG_SECONDS, self._async_websocket_reconnect
         )
 
-    @staticmethod
-    def _on_disconnect():
+    def _on_disconnect(self):
         """Define a handler to fire when the websocket is disconnected."""
         _LOGGER.info("Disconnected from websocket")
 
@@ -390,8 +391,8 @@ class SimpliSafeWebsocket:
         async_dispatcher_send(self._hass, TOPIC_UPDATE.format(event.system_id))
 
         _LOGGER.debug("Resetting websocket watchdog")
-        self._websocket_watchdog_listener()
-        self._websocket_watchdog_listener = async_call_later(
+        self._unsub_watchdog_call_later()
+        self._unsub_watchdog_call_later = async_call_later(
             self._hass, DEFAULT_WATCHDOG_SECONDS, self._async_websocket_reconnect
         )
         self._websocket_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
