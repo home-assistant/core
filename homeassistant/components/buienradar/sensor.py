@@ -27,6 +27,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    IRRADIATION_WATTS_PER_SQUARE_METER,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     TIME_HOURS,
@@ -77,7 +78,7 @@ SENSOR_TYPES = {
     "visibility": ["Visibility", "km", None],
     "windgust": ["Wind gust", SPEED_KILOMETERS_PER_HOUR, "mdi:weather-windy"],
     "precipitation": ["Precipitation", f"mm/{TIME_HOURS}", "mdi:weather-pouring"],
-    "irradiance": ["Irradiance", "W/m2", "mdi:sunglasses"],
+    "irradiance": ["Irradiance", IRRADIATION_WATTS_PER_SQUARE_METER, "mdi:sunglasses"],
     "precipitation_forecast_average": [
         "Precipitation forecast average",
         f"mm/{TIME_HOURS}",

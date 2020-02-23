@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
+    IRRADIATION_WATTS_PER_SQUARE_METER,
     LENGTH_FEET,
     LENGTH_INCHES,
     LENGTH_KILOMETERS,
@@ -423,7 +424,10 @@ SENSOR_TYPES = {
         "Station ID", "station_id", "mdi:home"
     ),
     "solarradiation": WUCurrentConditionsSensorConfig(
-        "Solar Radiation", "solarradiation", "mdi:weather-sunny", "w/m2"
+        "Solar Radiation",
+        "solarradiation",
+        "mdi:weather-sunny",
+        IRRADIATION_WATTS_PER_SQUARE_METER,
     ),
     "temperature_string": WUCurrentConditionsSensorConfig(
         "Temperature Summary", "temperature_string", "mdi:thermometer"
