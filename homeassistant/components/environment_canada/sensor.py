@@ -23,7 +23,6 @@ SCAN_INTERVAL = timedelta(minutes=10)
 
 ATTR_UPDATED = "updated"
 ATTR_STATION = "station"
-ATTR_DETAIL = "alert detail"
 ATTR_TIME = "alert time"
 
 CONF_ATTRIBUTION = "Data provided by Environment Canada"
@@ -122,10 +121,7 @@ class ECSensor(Entity):
         if isinstance(value, list):
             self._state = " | ".join([str(s.get("title")) for s in value])[:255]
             self._attr.update(
-                {
-                    ATTR_DETAIL: " | ".join([str(s.get("detail")) for s in value]),
-                    ATTR_TIME: " | ".join([str(s.get("date")) for s in value]),
-                }
+                {ATTR_TIME: " | ".join([str(s.get("date")) for s in value])}
             )
         elif self.sensor_type == "tendency":
             self._state = str(value).capitalize()
