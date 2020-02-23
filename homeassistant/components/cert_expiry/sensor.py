@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     EVENT_HOMEASSISTANT_START,
+    TIME_DAYS,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -85,7 +86,7 @@ class SSLCertificate(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return "days"
+        return TIME_DAYS
 
     @property
     def state(self):

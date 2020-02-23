@@ -9,6 +9,9 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TEMPERATURE_UNIT,
     EVENT_HOMEASSISTANT_STOP,
+    TIME_HOURS,
+    TIME_MINUTES,
+    TIME_SECONDS,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -40,10 +43,6 @@ SENSOR_TYPE_VOLTAGE = "voltage_sensor"
 
 TEMPERATURE_UNIT_CELSIUS = "C"
 
-TIME_UNIT_SECOND = "s"
-TIME_UNIT_MINUTE = "min"
-TIME_UNIT_HOUR = "h"
-
 TEMPERATURE_SENSOR_SCHEMA = vol.Schema(
     {vol.Required(CONF_NUMBER): vol.Range(1, 8), vol.Required(CONF_NAME): cv.string}
 )
@@ -69,8 +68,8 @@ PULSE_COUNTER_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_COUNTED_QUANTITY): cv.string,
         vol.Optional(CONF_COUNTED_QUANTITY_PER_PULSE, default=1.0): vol.Coerce(float),
-        vol.Optional(CONF_TIME_UNIT, default=TIME_UNIT_SECOND): vol.Any(
-            TIME_UNIT_SECOND, TIME_UNIT_MINUTE, TIME_UNIT_HOUR
+        vol.Optional(CONF_TIME_UNIT, default=TIME_SECONDS): vol.Any(
+            TIME_SECONDS, TIME_MINUTES, TIME_HOURS
         ),
     }
 )

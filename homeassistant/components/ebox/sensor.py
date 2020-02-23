@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     DATA_GIGABITS,
+    TIME_DAYS,
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -26,7 +27,6 @@ from homeassistant.util import Throttle
 _LOGGER = logging.getLogger(__name__)
 
 PRICE = "CAD"
-DAYS = "days"
 PERCENT = "%"
 
 DEFAULT_NAME = "EBox"
@@ -39,7 +39,7 @@ SENSOR_TYPES = {
     "usage": ["Usage", PERCENT, "mdi:percent"],
     "balance": ["Balance", PRICE, "mdi:square-inc-cash"],
     "limit": ["Data limit", DATA_GIGABITS, "mdi:download"],
-    "days_left": ["Days left", DAYS, "mdi:calendar-today"],
+    "days_left": ["Days left", TIME_DAYS, "mdi:calendar-today"],
     "before_offpeak_download": [
         "Download before offpeak",
         DATA_GIGABITS,

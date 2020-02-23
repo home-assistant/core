@@ -32,6 +32,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     POWER_WATT,
     TEMP_CELSIUS,
+    TIME_HOURS,
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -332,7 +333,7 @@ class HomematicipWindspeedSensor(HomematicipGenericDevice):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
-        return "km/h"
+        return f"km/{TIME_HOURS}"
 
     @property
     def device_state_attributes(self) -> Dict[str, Any]:

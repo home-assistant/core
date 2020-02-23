@@ -11,7 +11,12 @@ import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_UNIT_SYSTEM
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    CONF_UNIT_SYSTEM,
+    TIME_MILLISECONDS,
+    TIME_MINUTES,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -48,14 +53,14 @@ FITBIT_RESOURCES_LIST = {
     "activities/elevation": ["Elevation", "", "walk"],
     "activities/floors": ["Floors", "floors", "walk"],
     "activities/heart": ["Resting Heart Rate", "bpm", "heart-pulse"],
-    "activities/minutesFairlyActive": ["Minutes Fairly Active", "minutes", "walk"],
-    "activities/minutesLightlyActive": ["Minutes Lightly Active", "minutes", "walk"],
+    "activities/minutesFairlyActive": ["Minutes Fairly Active", TIME_MINUTES, "walk"],
+    "activities/minutesLightlyActive": ["Minutes Lightly Active", TIME_MINUTES, "walk"],
     "activities/minutesSedentary": [
         "Minutes Sedentary",
-        "minutes",
+        TIME_MINUTES,
         "seat-recline-normal",
     ],
-    "activities/minutesVeryActive": ["Minutes Very Active", "minutes", "run"],
+    "activities/minutesVeryActive": ["Minutes Very Active", TIME_MINUTES, "run"],
     "activities/steps": ["Steps", "steps", "walk"],
     "activities/tracker/activityCalories": ["Tracker Activity Calories", "cal", "fire"],
     "activities/tracker/calories": ["Tracker Calories", "cal", "fire"],
@@ -64,22 +69,22 @@ FITBIT_RESOURCES_LIST = {
     "activities/tracker/floors": ["Tracker Floors", "floors", "walk"],
     "activities/tracker/minutesFairlyActive": [
         "Tracker Minutes Fairly Active",
-        "minutes",
+        TIME_MINUTES,
         "walk",
     ],
     "activities/tracker/minutesLightlyActive": [
         "Tracker Minutes Lightly Active",
-        "minutes",
+        TIME_MINUTES,
         "walk",
     ],
     "activities/tracker/minutesSedentary": [
         "Tracker Minutes Sedentary",
-        "minutes",
+        TIME_MINUTES,
         "seat-recline-normal",
     ],
     "activities/tracker/minutesVeryActive": [
         "Tracker Minutes Very Active",
-        "minutes",
+        TIME_MINUTES,
         "run",
     ],
     "activities/tracker/steps": ["Tracker Steps", "steps", "walk"],
@@ -89,17 +94,21 @@ FITBIT_RESOURCES_LIST = {
     "devices/battery": ["Battery", None, None],
     "sleep/awakeningsCount": ["Awakenings Count", "times awaken", "sleep"],
     "sleep/efficiency": ["Sleep Efficiency", "%", "sleep"],
-    "sleep/minutesAfterWakeup": ["Minutes After Wakeup", "minutes", "sleep"],
-    "sleep/minutesAsleep": ["Sleep Minutes Asleep", "minutes", "sleep"],
-    "sleep/minutesAwake": ["Sleep Minutes Awake", "minutes", "sleep"],
-    "sleep/minutesToFallAsleep": ["Sleep Minutes to Fall Asleep", "minutes", "sleep"],
+    "sleep/minutesAfterWakeup": ["Minutes After Wakeup", TIME_MINUTES, "sleep"],
+    "sleep/minutesAsleep": ["Sleep Minutes Asleep", TIME_MINUTES, "sleep"],
+    "sleep/minutesAwake": ["Sleep Minutes Awake", TIME_MINUTES, "sleep"],
+    "sleep/minutesToFallAsleep": [
+        "Sleep Minutes to Fall Asleep",
+        TIME_MINUTES,
+        "sleep",
+    ],
     "sleep/startTime": ["Sleep Start Time", None, "clock"],
-    "sleep/timeInBed": ["Sleep Time in Bed", "minutes", "hotel"],
+    "sleep/timeInBed": ["Sleep Time in Bed", TIME_MINUTES, "hotel"],
 }
 
 FITBIT_MEASUREMENTS = {
     "en_US": {
-        "duration": "ms",
+        "duration": TIME_MILLISECONDS,
         "distance": "mi",
         "elevation": "ft",
         "height": "in",
@@ -110,7 +119,7 @@ FITBIT_MEASUREMENTS = {
         "battery": "",
     },
     "en_GB": {
-        "duration": "milliseconds",
+        "duration": TIME_MILLISECONDS,
         "distance": "kilometers",
         "elevation": "meters",
         "height": "centimeters",
@@ -121,7 +130,7 @@ FITBIT_MEASUREMENTS = {
         "battery": "",
     },
     "metric": {
-        "duration": "milliseconds",
+        "duration": TIME_MILLISECONDS,
         "distance": "kilometers",
         "elevation": "meters",
         "height": "centimeters",

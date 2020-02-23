@@ -3,6 +3,7 @@ import logging
 
 import zigpy.zcl.clusters.smartenergy as smartenergy
 
+from homeassistant.const import TIME_HOURS, TIME_SECONDS
 from homeassistant.core import callback
 
 from .. import registries, typing as zha_typing
@@ -76,18 +77,18 @@ class Metering(AttributeListeningChannel):
 
     unit_of_measure_map = {
         0x00: "kW",
-        0x01: "m³/h",
-        0x02: "ft³/h",
-        0x03: "ccf/h",
-        0x04: "US gal/h",
-        0x05: "IMP gal/h",
-        0x06: "BTU/h",
-        0x07: "l/h",
+        0x01: f"m³/{TIME_HOURS}",
+        0x02: f"ft³/{TIME_HOURS}",
+        0x03: f"ccf/{TIME_HOURS}",
+        0x04: f"US gal/{TIME_HOURS}",
+        0x05: f"IMP gal/{TIME_HOURS}",
+        0x06: f"BTU/{TIME_HOURS}",
+        0x07: f"l/{TIME_HOURS}",
         0x08: "kPa",
         0x09: "kPa",
-        0x0A: "mcf/h",
+        0x0A: f"mcf/{TIME_HOURS}",
         0x0B: "unitless",
-        0x0C: "MJ/s",
+        0x0C: f"MJ/{TIME_SECONDS}",
     }
 
     def __init__(
