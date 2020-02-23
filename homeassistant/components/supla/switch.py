@@ -34,5 +34,5 @@ class SuplaSwitch(SuplaChannel, SwitchDevice):
         """Return true if switch is on."""
         state = self.channel_data.get("state")
         if state:
-            return state.get("on")
+            return state["on"]
         return False
