@@ -9,6 +9,7 @@ from homeassistant.const import (
     ENERGY_WATT_HOUR,
     POWER_WATT,
     SPEED_KILOMETERS_PER_HOUR,
+    VOLUME_CUBIC_METERS,
 )
 
 from .const import ATTR_DISCOVER_DEVICES
@@ -39,8 +40,8 @@ HM_UNIT_HA_CAST = {
     "CURRENT": "mA",
     "VOLTAGE": "V",
     "ENERGY_COUNTER": ENERGY_WATT_HOUR,
-    "GAS_POWER": "m3",
-    "GAS_ENERGY_COUNTER": "m3",
+    "GAS_POWER": VOLUME_CUBIC_METERS,
+    "GAS_ENERGY_COUNTER": VOLUME_CUBIC_METERS,
     "LUX": "lx",
     "ILLUMINATION": "lx",
     "CURRENT_ILLUMINATION": "lx",

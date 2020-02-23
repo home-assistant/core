@@ -375,9 +375,13 @@ PRESSURE_PSI: str = "psi"
 # Volume units
 VOLUME_LITERS: str = "L"
 VOLUME_MILLILITERS: str = "mL"
+VOLUME_CUBIC_METERS = f"{LENGTH_METERS}³"
 
 VOLUME_GALLONS: str = "gal"
 VOLUME_FLUID_OUNCE: str = "fl. oz."
+
+# Area units
+AREA_SQUARE_METERS = f"{LENGTH_METERS}²"
 
 # Mass units
 MASS_GRAMS: str = "g"
