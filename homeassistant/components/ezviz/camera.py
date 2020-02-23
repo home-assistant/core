@@ -79,7 +79,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         else:
             _LOGGER.info(
-                "Found camera with serial %s without configuration. Add it to configuration.yaml to see the camera stream"
+                "Found camera with serial %s without configuration. Add it to configuration.yaml to see the camera stream",
+                camera_serial,
             )
 
         camera["username"] = camera_username
