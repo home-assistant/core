@@ -53,3 +53,13 @@ async def test_config_flow(hass):
     # Check parsing was ok by ensuring that EV is better tariff than default one
     min_price_electric_car_tariff = state.attributes["min price"]
     assert min_price_electric_car_tariff < min_price_normal_tariff
+
+    # Check abort when configuring another with same name
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_NAME: "test", ATTR_TARIFF: "normal"}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
