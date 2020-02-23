@@ -12,7 +12,7 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 
-TEST_DIR = os.path.join(os.path.dirname(__file__))
+TEST_DIR = os.path.dirname(__file__)
 
 VALID_CONFIG = {
     ip.DOMAIN: {
