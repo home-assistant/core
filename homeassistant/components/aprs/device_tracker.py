@@ -58,8 +58,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def make_filter(callsigns: list) -> str:
     """Make a server-side filter from a list of callsigns."""
     call_filter = ""
-    for cs in callsigns:
-        call_filter += f" b/{cs.upper()}"
+    for sign in callsigns:
+        call_filter += f" b/{sign.upper()}"
     return call_filter
 
 
