@@ -78,7 +78,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         raise PlatformNotReady
     except ValidationFailure as err:
         error = err
-        pass
 
     async_add_entities(
         [SSLCertificate(hass, hostname, port, days, error)], False,
@@ -96,13 +95,11 @@ class SSLCertificate(Entity):
         self.server_port = server_port
         display_port = f":{server_port}" if server_port != DEFAULT_PORT else ""
         self._name = f"Cert Expiry ({self.server_name}{display_port})"
-        self._available = False
+        self._available = True
         self._error = error
-        self._state = None
+        self._state = days
         self._valid = False
-        if days is not None:
-            self._state = days
-            self._available = True
+        if error is None:
             self._valid = True
 
     @property
