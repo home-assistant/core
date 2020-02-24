@@ -89,6 +89,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         AUTH: api.ConfigEntryNetatmoAuth(hass, entry, implementation)
     }
 
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
+
     webhook_id = secrets.token_hex()
     data = hass.data[DOMAIN][entry.entry_id]
 
@@ -104,14 +109,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     else:
         webhook_url = hass.components.webhook.async_generate_url(data[CONF_WEBHOOK_ID])
 
+    _LOGGER.error("Adding webhook...")
     webhook_register(hass, DOMAIN, "Netatmo", webhook_id, handle_webhook)
     data[AUTH].addwebhook(webhook_url)
-    _LOGGER.debug("Netatmo webhook url: %s", webhook_url)
-
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    _LOGGER.error("Netatmo webhook url: %s", webhook_url)
 
     return True
 
