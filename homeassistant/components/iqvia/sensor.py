@@ -145,10 +145,20 @@ class IndexSensor(IQVIAEntity):
             data = self._iqvia.data[TYPE_DISEASE_INDEX].get("Location")
 
         if not data:
+            _LOGGER.info("The IQVIA didn't return data for %s; trying later", self.name)
             return
 
         key = self._type.split("_")[-1].title()
-        [period] = [p for p in data["periods"] if p["Type"] == key]
+
+        try:
+            [period] = [p for p in data["periods"] if p["Type"] == key]
+        except ValueError:
+            # This can occur when IQVIA's sometimes-flaky API doesn't return any period
+            # data. We log an INFO-level message so as to not spam the logs with
+            # warnings the user can't do anything about:
+            _LOGGER.info("The IQVIA didn't return data for %s; trying later", self.name)
+            return
+
         [rating] = [
             i["label"]
             for i in RATING_MAPPING
