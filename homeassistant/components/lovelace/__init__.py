@@ -5,13 +5,20 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import frontend
-from homeassistant.const import CONF_FILENAME, CONF_ICON, CONF_TYPE, CONF_URL
+from homeassistant.const import CONF_FILENAME, CONF_ICON
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import sanitize_filename, slugify
 
 from . import dashboard, resources, websocket
-from .const import CONF_RESOURCES, DOMAIN, LOVELACE_CONFIG_FILE, MODE_STORAGE, MODE_YAML
+from .const import (
+    CONF_RESOURCES,
+    DOMAIN,
+    LOVELACE_CONFIG_FILE,
+    MODE_STORAGE,
+    MODE_YAML,
+    RESOURCE_SCHEMA,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,12 +45,6 @@ YAML_DASHBOARD_SCHEMA = DASHBOARD_BASE_SCHEMA.extend(
         vol.Required(CONF_FILENAME): vol.All(cv.string, sanitize_filename),
     }
 )
-
-RESOURCE_FIELDS = {
-    CONF_TYPE: vol.In(["js", "css", "module", "html"]),
-    CONF_URL: cv.string,
-}
-RESOURCE_SCHEMA = vol.Schema(RESOURCE_FIELDS)
 
 
 def url_slug(value: Any) -> str:

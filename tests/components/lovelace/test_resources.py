@@ -89,3 +89,25 @@ async def test_storage_resources_import(hass, hass_ws_client, hass_storage):
         "resources"
         not in hass_storage[dashboard.CONFIG_STORAGE_KEY_DEFAULT]["data"]["config"]
     )
+
+
+async def test_storage_resources_import_invalid(hass, hass_ws_client, hass_storage):
+    """Test importing resources from storage config."""
+    assert await async_setup_component(hass, "lovelace", {})
+    hass_storage[dashboard.CONFIG_STORAGE_KEY_DEFAULT] = {
+        "key": "lovelace",
+        "version": 1,
+        "data": {"config": {"resources": [{"invalid": "resource"}]}},
+    }
+
+    client = await hass_ws_client(hass)
+
+    # Fetch data
+    await client.send_json({"id": 5, "type": "lovelace/resources"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == []
+    assert (
+        "resources"
+        in hass_storage[dashboard.CONFIG_STORAGE_KEY_DEFAULT]["data"]["config"]
+    )
