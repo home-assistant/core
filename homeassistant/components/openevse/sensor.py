@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_MONITORED_VARIABLES,
     ENERGY_KILO_WATT_HOUR,
     TEMP_CELSIUS,
+    TIME_MINUTES,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -19,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
     "status": ["Charging Status", None],
-    "charge_time": ["Charge Time Elapsed", "minutes"],
+    "charge_time": ["Charge Time Elapsed", TIME_MINUTES],
     "ambient_temp": ["Ambient Temperature", TEMP_CELSIUS],
     "ir_temp": ["IR Temperature", TEMP_CELSIUS],
     "rtc_temp": ["RTC Temperature", TEMP_CELSIUS],

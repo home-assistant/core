@@ -489,7 +489,7 @@ enocean==0.50
 enturclient==0.2.1
 
 # homeassistant.components.environment_canada
-env_canada==0.0.34
+env_canada==0.0.35
 
 # homeassistant.components.envirophat
 # envirophat==0.0.6
@@ -644,7 +644,7 @@ ha-ffmpeg==2.0
 ha-philipsjs==0.0.8
 
 # homeassistant.components.plugwise
-haanna==0.14.1
+haanna==0.14.3
 
 # homeassistant.components.habitica
 habitipy==0.2.0
@@ -1287,7 +1287,7 @@ pyheos==0.6.0
 pyhik==0.2.5
 
 # homeassistant.components.hive
-pyhiveapi==0.2.19.3
+pyhiveapi==0.2.20.1
 
 # homeassistant.components.homematic
 pyhomematic==0.1.65

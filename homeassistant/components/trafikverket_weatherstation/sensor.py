@@ -17,6 +17,7 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
+    TIME_SECONDS,
     UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -72,7 +73,13 @@ SENSOR_TYPES = {
         "mdi:flag-triangle",
         None,
     ],
-    "wind_speed": ["Wind speed", "m/s", "windforce", "mdi:weather-windy", None],
+    "wind_speed": [
+        "Wind speed",
+        f"m/{TIME_SECONDS}",
+        "windforce",
+        "mdi:weather-windy",
+        None,
+    ],
     "humidity": [
         "Humidity",
         UNIT_PERCENTAGE,

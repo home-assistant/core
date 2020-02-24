@@ -15,6 +15,7 @@ import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.dsmr.sensor import DerivativeDSMREntity
+from homeassistant.const import TIME_HOURS
 
 from tests.common import assert_setup_component
 
@@ -140,7 +141,7 @@ async def test_derivative():
         abs(entity.state - 0.033) < 0.00001
     ), "state should be hourly usage calculated from first and second update"
 
-    assert entity.unit_of_measurement == "m3/h"
+    assert entity.unit_of_measurement == f"m3/{TIME_HOURS}"
 
 
 async def test_v4_meter(hass, mock_connection_factory):
@@ -240,9 +241,7 @@ async def test_belgian_meter_low(hass, mock_connection_factory):
 
     config = {"platform": "dsmr", "dsmr_version": "5B"}
 
-    telegram = {
-        ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0002", "unit": ""}]),
-    }
+    telegram = {ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0002", "unit": ""}])}
 
     with assert_setup_component(1):
         await async_setup_component(hass, "sensor", {"sensor": config})

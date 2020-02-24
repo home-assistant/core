@@ -12,6 +12,7 @@ from homeassistant.const import (
     STATE_OFF,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    TIME_HOURS,
     UNIT_PERCENTAGE,
 )
 from homeassistant.helpers import discovery
@@ -128,7 +129,7 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
         assert sensor.state is None
-        assert sensor.unit_of_measurement == "hours"
+        assert sensor.unit_of_measurement == TIME_HOURS
         assert sensor.name == "Device_name Filter Life"
         assert sensor.entity_id == "sensor.dyson_1"
         sensor.on_message("message")
@@ -140,7 +141,7 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
         assert sensor.state == 100
-        assert sensor.unit_of_measurement == "hours"
+        assert sensor.unit_of_measurement == TIME_HOURS
         assert sensor.name == "Device_name Filter Life"
         assert sensor.entity_id == "sensor.dyson_1"
         sensor.on_message("message")

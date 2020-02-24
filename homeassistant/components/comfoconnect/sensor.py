@@ -31,6 +31,8 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     POWER_WATT,
     TEMP_CELSIUS,
+    TIME_DAYS,
+    TIME_HOURS,
     UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
@@ -157,14 +159,14 @@ SENSOR_TYPES = {
     ATTR_AIR_FLOW_SUPPLY: {
         ATTR_DEVICE_CLASS: None,
         ATTR_LABEL: "Supply airflow",
-        ATTR_UNIT: "m³/h",
+        ATTR_UNIT: f"m³/{TIME_HOURS}",
         ATTR_ICON: "mdi:fan",
         ATTR_ID: SENSOR_FAN_SUPPLY_FLOW,
     },
     ATTR_AIR_FLOW_EXHAUST: {
         ATTR_DEVICE_CLASS: None,
         ATTR_LABEL: "Exhaust airflow",
-        ATTR_UNIT: "m³/h",
+        ATTR_UNIT: f"m³/{TIME_HOURS}",
         ATTR_ICON: "mdi:fan",
         ATTR_ID: SENSOR_FAN_EXHAUST_FLOW,
     },
@@ -178,7 +180,7 @@ SENSOR_TYPES = {
     ATTR_DAYS_TO_REPLACE_FILTER: {
         ATTR_DEVICE_CLASS: None,
         ATTR_LABEL: "Days to replace filter",
-        ATTR_UNIT: "days",
+        ATTR_UNIT: TIME_DAYS,
         ATTR_ICON: "mdi:calendar",
         ATTR_ID: SENSOR_DAYS_TO_REPLACE_FILTER,
     },

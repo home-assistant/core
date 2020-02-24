@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONTENT_TYPE_JSON,
     TEMP_CELSIUS,
+    TIME_SECONDS,
     UNIT_PERCENTAGE,
 )
 from homeassistant.helpers import discovery
@@ -78,8 +79,14 @@ SENSOR_TYPES = {
         UNIT_PERCENTAGE,
         "mdi:file-percent",
     ],
-    "Time Remaining": ["job", "progress", "printTimeLeft", "seconds", "mdi:clock-end"],
-    "Time Elapsed": ["job", "progress", "printTime", "seconds", "mdi:clock-start"],
+    "Time Remaining": [
+        "job",
+        "progress",
+        "printTimeLeft",
+        TIME_SECONDS,
+        "mdi:clock-end",
+    ],
+    "Time Elapsed": ["job", "progress", "printTime", TIME_SECONDS, "mdi:clock-start"],
 }
 
 SENSOR_SCHEMA = vol.Schema(

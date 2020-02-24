@@ -1,5 +1,5 @@
 """Constants for Brother integration."""
-from homeassistant.const import UNIT_PERCENTAGE
+from homeassistant.const import TIME_DAYS, UNIT_PERCENTAGE
 
 ATTR_BELT_UNIT_REMAINING_LIFE = "belt_unit_remaining_life"
 ATTR_BLACK_INK_REMAINING = "black_ink_remaining"
@@ -30,7 +30,6 @@ ATTR_YELLOW_TONER_REMAINING = "yellow_toner_remaining"
 DOMAIN = "brother"
 
 UNIT_PAGES = "p"
-UNIT_DAYS = "days"
 
 PRINTER_TYPES = ["laser", "ink"]
 
@@ -128,6 +127,6 @@ SENSOR_TYPES = {
     ATTR_UPTIME: {
         ATTR_ICON: "mdi:timer",
         ATTR_LABEL: ATTR_UPTIME.title(),
-        ATTR_UNIT: UNIT_DAYS,
+        ATTR_UNIT: TIME_DAYS,
     },
 }

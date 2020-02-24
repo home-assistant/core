@@ -42,8 +42,6 @@ async def test_list_entities(hass, client):
             "entity_id": "test_domain.name",
             "name": "Hello World",
             "icon": None,
-            "original_name": None,
-            "original_icon": None,
             "platform": "test_platform",
         },
         {
@@ -53,8 +51,6 @@ async def test_list_entities(hass, client):
             "entity_id": "test_domain.no_name",
             "name": None,
             "icon": None,
-            "original_name": None,
-            "original_icon": None,
             "platform": "test_platform",
         },
     ]
@@ -94,6 +90,8 @@ async def test_get_entity(hass, client):
         "icon": None,
         "original_name": None,
         "original_icon": None,
+        "capabilities": None,
+        "unique_id": "1234",
     }
 
     await client.send_json(
@@ -115,6 +113,8 @@ async def test_get_entity(hass, client):
         "icon": None,
         "original_name": None,
         "original_icon": None,
+        "capabilities": None,
+        "unique_id": "6789",
     }
 
 
@@ -165,6 +165,8 @@ async def test_update_entity(hass, client):
         "icon": "icon:after update",
         "original_name": None,
         "original_icon": None,
+        "capabilities": None,
+        "unique_id": "1234",
     }
 
     state = hass.states.get("test_domain.world")
@@ -208,6 +210,8 @@ async def test_update_entity(hass, client):
         "icon": "icon:after update",
         "original_name": None,
         "original_icon": None,
+        "capabilities": None,
+        "unique_id": "1234",
     }
 
 
@@ -254,6 +258,8 @@ async def test_update_entity_no_changes(hass, client):
         "icon": None,
         "original_name": None,
         "original_icon": None,
+        "capabilities": None,
+        "unique_id": "1234",
     }
 
     state = hass.states.get("test_domain.world")
@@ -329,6 +335,8 @@ async def test_update_entity_id(hass, client):
         "icon": None,
         "original_name": None,
         "original_icon": None,
+        "capabilities": None,
+        "unique_id": "1234",
     }
 
     assert hass.states.get("test_domain.world") is None

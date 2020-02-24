@@ -70,14 +70,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     for door in data.locks:
         if not data.lock_has_doorsense(door.device_id):
-            _LOGGER.debug(
-                "Not adding sensor class door for lock %s ", door.device_name,
-            )
+            _LOGGER.debug("Not adding sensor class door for lock %s ", door.device_name)
             continue
 
-        _LOGGER.debug(
-            "Adding sensor class door for %s", door.device_name,
-        )
+        _LOGGER.debug("Adding sensor class door for %s", door.device_name)
         devices.append(AugustDoorBinarySensor(data, "door_open", door))
 
     for doorbell in data.doorbells:
@@ -121,7 +117,7 @@ class AugustDoorBinarySensor(BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the binary sensor."""
-        return "{} Open".format(self._door.device_name)
+        return f"{self._door.device_name} Open"
 
     async def async_update(self):
         """Get the latest state of the sensor and update activity."""
@@ -175,10 +171,7 @@ class AugustDoorbellBinarySensor(BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the binary sensor."""
-        return "{} {}".format(
-            self._doorbell.device_name,
-            SENSOR_TYPES_DOORBELL[self._sensor_type][SENSOR_NAME],
-        )
+        return f"{self._doorbell.device_name} {SENSOR_TYPES_DOORBELL[self._sensor_type][SENSOR_NAME]}"
 
     async def async_update(self):
         """Get the latest state of the sensor."""
@@ -194,7 +187,7 @@ class AugustDoorbellBinarySensor(BinarySensorDevice):
     @property
     def unique_id(self) -> str:
         """Get the unique id of the doorbell sensor."""
-        return "{:s}_{:s}".format(
-            self._doorbell.device_id,
-            SENSOR_TYPES_DOORBELL[self._sensor_type][SENSOR_NAME].lower(),
+        return (
+            f"{self._doorbell.device_id}_"
+            f"{SENSOR_TYPES_DOORBELL[self._sensor_type][SENSOR_NAME].lower()}"
         )

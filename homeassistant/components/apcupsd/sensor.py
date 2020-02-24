@@ -10,6 +10,8 @@ from homeassistant.const import (
     CONF_RESOURCES,
     POWER_WATT,
     TEMP_CELSIUS,
+    TIME_MINUTES,
+    TIME_SECONDS,
     UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
@@ -89,8 +91,8 @@ SENSOR_TYPES = {
 
 SPECIFIC_UNITS = {"ITEMP": TEMP_CELSIUS}
 INFERRED_UNITS = {
-    " Minutes": "min",
-    " Seconds": "sec",
+    " Minutes": TIME_MINUTES,
+    " Seconds": TIME_SECONDS,
     " Percent": UNIT_PERCENTAGE,
     " Volts": "V",
     " Ampere": "A",

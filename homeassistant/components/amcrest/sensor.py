@@ -45,7 +45,7 @@ class AmcrestSensor(Entity):
 
     def __init__(self, name, device, sensor_type):
         """Initialize a sensor for Amcrest camera."""
-        self._name = "{} {}".format(name, SENSORS[sensor_type][0])
+        self._name = f"{name} {SENSORS[sensor_type][0]}"
         self._signal_name = name
         self._api = device.api
         self._sensor_type = sensor_type
@@ -98,15 +98,21 @@ class AmcrestSensor(Entity):
             elif self._sensor_type == SENSOR_SDCARD:
                 storage = self._api.storage_all
                 try:
-                    self._attrs["Total"] = "{:.2f} {}".format(*storage["total"])
+                    self._attrs[
+                        "Total"
+                    ] = f"{storage['total'][0]:.2f} {storage['total'][1]}"
                 except ValueError:
-                    self._attrs["Total"] = "{} {}".format(*storage["total"])
+                    self._attrs[
+                        "Total"
+                    ] = f"{storage['total'][0]} {storage['total'][1]}"
                 try:
-                    self._attrs["Used"] = "{:.2f} {}".format(*storage["used"])
+                    self._attrs[
+                        "Used"
+                    ] = f"{storage['used'][0]:.2f} {storage['used'][1]}"
                 except ValueError:
-                    self._attrs["Used"] = "{} {}".format(*storage["used"])
+                    self._attrs["Used"] = f"{storage['used'][0]} {storage['used'][1]}"
                 try:
-                    self._state = "{:.2f}".format(storage["used_percent"])
+                    self._state = f"{storage['used_percent']:.2f}"
                 except ValueError:
                     self._state = storage["used_percent"]
         except AmcrestError as error:

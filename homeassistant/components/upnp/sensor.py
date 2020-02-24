@@ -1,6 +1,7 @@
 """Support for UPnP/IGD Sensors."""
 import logging
 
+from homeassistant.const import TIME_SECONDS
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -192,7 +193,7 @@ class PerSecondUPnPIGDSensor(UpnpSensor):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity, if any."""
-        return f"{self.unit}/s"
+        return f"{self.unit}/{TIME_SECONDS}"
 
     def _is_overflowed(self, new_value) -> bool:
         """Check if value has overflowed."""

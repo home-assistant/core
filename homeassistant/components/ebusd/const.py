@@ -1,8 +1,12 @@
 """Constants for ebus component."""
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, PRESSURE_BAR, TEMP_CELSIUS
+from homeassistant.const import (
+    ENERGY_KILO_WATT_HOUR,
+    PRESSURE_BAR,
+    TEMP_CELSIUS,
+    TIME_SECONDS,
+)
 
 DOMAIN = "ebusd"
-TIME_SECONDS = "seconds"
 
 #  SensorTypes from ebusdpy module :
 #  0='decimal', 1='time-schedule', 2='switch', 3='string', 4='value;status'

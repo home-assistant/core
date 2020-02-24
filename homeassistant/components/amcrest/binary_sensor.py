@@ -54,7 +54,7 @@ class AmcrestBinarySensor(BinarySensorDevice):
 
     def __init__(self, name, device, sensor_type):
         """Initialize entity."""
-        self._name = "{} {}".format(name, BINARY_SENSORS[sensor_type][0])
+        self._name = f"{name} {BINARY_SENSORS[sensor_type][0]}"
         self._signal_name = name
         self._api = device.api
         self._sensor_type = sensor_type
