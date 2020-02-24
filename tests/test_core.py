@@ -1206,3 +1206,27 @@ async def test_async_functions_with_callback(hass):
 
     await hass.services.async_call("test_domain", "test_service", blocking=True)
     assert len(runs) == 3
+
+
+def test_valid_entity_id():
+    """Test valid entity ID."""
+    for invalid in [
+        "light_.kitchen",
+        "Light.kitchen",
+        "_light.kitchen",
+        "light._kitchen",
+        "light.kitchen_yo_",
+        "light.Kitchen",
+        "lightkitchen",
+        ".kitchen",
+        "light.",
+    ]:
+        assert not ha.valid_entity_id(invalid), invalid
+
+    for valid in [
+        "light.kitchen",
+        "input_boolean.hello_world_0123",
+        "light.something_yoo",
+        "a.a",
+    ]:
+        assert ha.valid_entity_id(valid), valid

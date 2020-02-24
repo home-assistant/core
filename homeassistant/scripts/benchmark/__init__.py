@@ -185,3 +185,12 @@ def _logbook_filtering(hass, last_changed, last_updated):
     list(logbook.humanify(None, yield_events(event)))
 
     return timer() - start
+
+
+@benchmark
+async def valid_entity_id(hass):
+    """Run valid entity ID a million times."""
+    start = timer()
+    for _ in range(10 ** 6):
+        core.valid_entity_id("light.kitchen")
+    return timer() - start
