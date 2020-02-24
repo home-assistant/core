@@ -346,6 +346,9 @@ numpy==1.18.1
 # homeassistant.components.google
 oauth2client==4.0.0
 
+# homeassistant.components.http
+orjson==2.5.0
+
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
 paho-mqtt==1.5.0
