@@ -1,5 +1,4 @@
 """Support for the Twitch stream status."""
-import copy
 import logging
 
 from requests.exceptions import HTTPError
