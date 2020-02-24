@@ -6,9 +6,6 @@ from life360 import Life360Error
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import CONF_SCAN_INTERVAL
-from homeassistant.components.device_tracker.const import (
-    ENTITY_ID_FORMAT as DT_ENTITY_ID_FORMAT,
-)
 from homeassistant.components.zone import async_active_zone
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
@@ -179,15 +176,14 @@ class Life360Scanner:
             overdue = now - most_recent_update > self._max_update_wait
             if overdue and not reported and now - self._started > EVENT_DELAY:
                 self._hass.bus.fire(
-                    EVENT_UPDATE_OVERDUE,
-                    {ATTR_ENTITY_ID: DT_ENTITY_ID_FORMAT.format(dev_id)},
+                    EVENT_UPDATE_OVERDUE, {ATTR_ENTITY_ID: f"device_tracker.{dev_id}"}
                 )
                 reported = True
             elif not overdue and reported:
                 self._hass.bus.fire(
                     EVENT_UPDATE_RESTORED,
                     {
-                        ATTR_ENTITY_ID: DT_ENTITY_ID_FORMAT.format(dev_id),
+                        ATTR_ENTITY_ID: f"device_tracker.{dev_id}",
                         ATTR_WAIT: str(last_seen - (prev_seen or self._started)).split(
                             "."
                         )[0],

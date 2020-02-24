@@ -187,13 +187,13 @@ class DeconzGateway:
     @callback
     def async_signal_new_device(self, device_type) -> str:
         """Gateway specific event to signal new device."""
-        NEW_DEVICE = {
+        new_device = {
             NEW_GROUP: f"deconz_new_group_{self.bridgeid}",
             NEW_LIGHT: f"deconz_new_light_{self.bridgeid}",
             NEW_SCENE: f"deconz_new_scene_{self.bridgeid}",
             NEW_SENSOR: f"deconz_new_sensor_{self.bridgeid}",
         }
-        return NEW_DEVICE[device_type]
+        return new_device[device_type]
 
     @property
     def signal_remove_entity(self) -> str:
