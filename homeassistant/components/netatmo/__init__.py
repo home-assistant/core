@@ -132,7 +132,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     data = hass.data[DOMAIN][entry.entry_id]
 
     webhook_unregister(hass, data[CONF_WEBHOOK_ID])
-    data[AUTH].dropwebhook()
+    await hass.async_add_job(data[AUTH].dropwebhook())
 
     return unload_ok
 
