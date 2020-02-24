@@ -1220,6 +1220,8 @@ def test_valid_entity_id():
         "lightkitchen",
         ".kitchen",
         "light.",
+        ".light.kitchen",
+        "light.kitchen.",
     ]:
         assert not ha.valid_entity_id(invalid), invalid
 
