@@ -1,5 +1,6 @@
 """Support for Homekit device discovery."""
 import logging
+import os
 
 import aiohomekit
 from aiohomekit.model.characteristics import CharacteristicsTypes
@@ -226,6 +227,16 @@ async def async_setup(hass, config):
 
     hass.data[CONTROLLER] = aiohomekit.Controller()
     hass.data[KNOWN_DEVICES] = {}
+
+    dothomekit_dir = os.path.join(hass.config.path(), ".homekit")
+    if os.path.exists(dothomekit_dir):
+        _LOGGER.warning(
+            (
+                "Legacy homekit_controller state found in %s. Support for reading "
+                "the folder is deprecated and will be removed in a future release."
+            ),
+            dothomekit_dir,
+        )
 
     return True
 
