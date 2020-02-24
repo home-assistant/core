@@ -471,7 +471,7 @@
                                         {
                                             "cards": [
                                                 {
-                                                    "color": "var(--primary-background-color)",
+                                                    "color": "white",
                                                     "color_type": "icon",
                                                     "entity": "sensor.ais_player_mode",
                                                     "icon": "mdi:heart",
@@ -494,7 +494,7 @@
                                                     "type": "ais-button"
                                                 },
                                                 {
-                                                    "color": "var(--primary-background-color)",
+                                                    "color": "white",
                                                     "color_type": "icon",
                                                     "entity": "sensor.ais_player_mode",
                                                     "icon": "mdi:bookmark",
@@ -517,7 +517,7 @@
                                                     "type": "ais-button"
                                                 },
                                                 {
-                                                    "color": "var(--primary-background-color)",
+                                                    "color": "white",
                                                     "color_type": "icon",
                                                     "entity": "sensor.ais_player_mode",
                                                     "icon": "mdi:newspaper",
@@ -540,7 +540,7 @@
                                                     "type": "ais-button"
                                                 },
                                                 {
-                                                    "color": "var(--primary-background-color)",
+                                                    "color": "white",
                                                     "color_type": "icon",
                                                     "entity": "sensor.ais_player_mode",
                                                     "icon": "mdi:folder",
@@ -568,7 +568,7 @@
                                         {
                                             "cards": [
                                                 {
-                                                    "color": "var(--primary-background-color)",
+                                                    "color": "white",
                                                     "color_type": "icon",
                                                     "entity": "sensor.ais_player_mode",
                                                     "icon": "mdi:radio",
@@ -591,7 +591,7 @@
                                                     "type": "ais-button"
                                                 },
                                                 {
-                                                    "color": "var(--primary-background-color)",
+                                                    "color": "white",
                                                     "color_type": "icon",
                                                     "entity": "sensor.ais_player_mode",
                                                     "icon": "mdi:podcast",
@@ -614,7 +614,7 @@
                                                     "type": "ais-button"
                                                 },
                                                 {
-                                                    "color": "var(--primary-background-color)",
+                                                    "color": "white",
                                                     "color_type": "icon",
                                                     "entity": "sensor.ais_player_mode",
                                                     "icon": "mdi:audiobook",
@@ -637,7 +637,7 @@
                                                     "type": "ais-button"
                                                 },
                                                 {
-                                                    "color": "var(--primary-background-color)",
+                                                    "color": "white",
                                                     "color_type": "icon",
                                                     "entity": "sensor.ais_player_mode",
                                                     "icon": "mdi:music",
@@ -675,7 +675,7 @@
                                             {
                                                 "cards": [
                                                     {
-                                                        "color": "var(--primary-background-color)",
+                                                        "color": "white",
                                                         "color_type": "icon",
                                                         "entity": "input_select.ais_music_service",
                                                         "icon": "mdi:youtube",
@@ -695,7 +695,7 @@
                                                         "type": "ais-button"
                                                     },
                                                     {
-                                                        "color": "var(--primary-background-color)",
+                                                        "color": "white",
                                                         "color_type": "icon",
                                                         "entity": "input_select.ais_music_service",
                                                         "icon": "mdi:spotify",

@@ -556,9 +556,9 @@ class LocalData:
                         "path": G_LOCAL_FILES_ROOT + "/dysk-wewnętrzny",
                     },
                     {
-                        "name": "Dyski zewnętrzne",
-                        "icon": "sd",
-                        "path": G_LOCAL_FILES_ROOT + "/dyski-zewnętrzne",
+                        "name": "Dyski wymienne",
+                        "icon": "usb-flash-drive-outline",
+                        "path": G_LOCAL_FILES_ROOT + "/dyski-wymienne",
                     },
                     {
                         "name": "Dyski zdalne",

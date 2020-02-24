@@ -94,9 +94,6 @@ class WebSocketHandler:
         try:
             self._to_write.put_nowait(message)
         except asyncio.QueueFull:
-            self._logger.error(
-                "Client exceeded max pending messages [2]: %s", MAX_PENDING_MSG
-            )
             self._cancel()
 
     @callback

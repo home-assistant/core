@@ -9,6 +9,7 @@ import logging
 import os
 import re
 import subprocess
+import platform
 
 import pyinotify
 
@@ -30,6 +31,34 @@ def get_device_info(pathname):
             return d
 
     return None
+
+
+def mount_external_drives():
+    if platform.machine() == "x86_64":
+        # local test
+        try:
+            os.system("rm /data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/*")
+            dirs = os.listdir("/media/andrzej/")
+            for i in range(0, len(dirs)):
+                os.symlink(
+                    "/media/andrzej/" + dirs[i],
+                    "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/dysk_"
+                    + str(i + 1),
+                )
+        except Exception:
+            pass
+    else:
+        try:
+            os.system("rm /data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/*")
+            dirs = os.listdir("/mnt/media_rw/")
+            for i in range(0, len(dirs)):
+                os.symlink(
+                    "/mnt/media_rw/" + dirs[i],
+                    "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/dysk_"
+                    + str(i + 1),
+                )
+        except Exception:
+            pass
 
 
 def prepare_usb_device(hass, device_info):
@@ -75,6 +104,9 @@ def prepare_usb_device(hass, device_info):
                 )
             )
 
+    else:
+        mount_external_drives()
+
 
 def remove_usb_device(hass, device_info):
     # stop service and remove device from dict
@@ -92,6 +124,8 @@ def remove_usb_device(hass, device_info):
                 "ais_ai_service", "say_it", {"text": "Zatrzymano serwis zigbee"}
             )
         )
+    else:
+        mount_external_drives()
 
 
 @asyncio.coroutine
