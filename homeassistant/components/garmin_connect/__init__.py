@@ -86,6 +86,8 @@ class GarminConnectData:
         """Initialize."""
         self.client = client
         self.data = None
+        self._activity_data = None
+        self._body_composition_data = None
 
     @Throttle(MIN_SCAN_INTERVAL)
     async def async_update(self):
@@ -93,16 +95,52 @@ class GarminConnectData:
         today = date.today()
 
         try:
-            self.data = self.client.get_stats(today.isoformat())
+            self._activity_data = self.client.get_stats(today.isoformat())
         except (
             GarminConnectAuthenticationError,
             GarminConnectTooManyRequestsError,
         ) as err:
-            _LOGGER.error("Error occurred during Garmin Connect get stats: %s", err)
+            _LOGGER.error(
+                "Error occurred during Garmin Connect get activity data: %s", err
+            )
             return
         except (GarminConnectConnectionError) as err:
-            _LOGGER.error("Error occurred during Garmin Connect get stats: %s", err)
+            _LOGGER.error(
+                "Error occurred during Garmin Connect get activity data: %s", err
+            )
             return
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.error("Unknown error occurred during Garmin Connect get stats")
+            _LOGGER.error(
+                "Unknown error occurred during Garmin Connect get activity data"
+            )
             return
+
+        try:
+            self._activity_data = self.client.get_body_composition(today.isoformat())[
+                "totalAverage"
+            ]
+        except (
+            GarminConnectAuthenticationError,
+            GarminConnectTooManyRequestsError,
+        ) as err:
+            _LOGGER.error(
+                "Error occurred during Garmin Connect get body composition data: %s",
+                err,
+            )
+            return
+        except (GarminConnectConnectionError) as err:
+            _LOGGER.error(
+                "Error occurred during Garmin Connect get body composition data: %s",
+                err,
+            )
+            return
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.error(
+                "Unknown error occurred during Garmin Connect get body composition data"
+            )
+            return
+
+        self.data = {
+            **self._activity_data,
+            **self._body_composition_data,
+        }
