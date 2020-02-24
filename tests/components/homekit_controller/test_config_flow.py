@@ -146,15 +146,21 @@ def get_device_discovery_info(device, upper_case_props=False, missing_csharp=Fal
 def setup_mock_accessory(controller):
     """Add a bridge accessory to a test controller."""
     bridge = Accessories()
-    bridge.add_accessory(
-        Accessory(
-            name="Koogeek-LS1-20833F",
-            manufacturer="Koogeek",
-            model="LS1",
-            serial_number="12345",
-            firmware_revision="1.1",
-        )
+
+    accessory = Accessory(
+        name="Koogeek-LS1-20833F",
+        manufacturer="Koogeek",
+        model="LS1",
+        serial_number="12345",
+        firmware_revision="1.1",
     )
+
+    service = accessory.add_service(ServicesTypes.LIGHTBULB)
+    on_char = service.add_char(CharacteristicsTypes.ON)
+    on_char.value = 0
+
+    bridge.add_accessory(accessory)
+
     return controller.add_device(bridge)
 
 
