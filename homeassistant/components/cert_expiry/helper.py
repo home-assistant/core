@@ -22,16 +22,16 @@ async def get_cert_time_to_expiry(hass, hostname, port):
     """Return the certificate's time to expiry in days."""
     try:
         cert = await hass.async_add_executor_job(get_cert, hostname, port)
-    except socket.gaierror as err:
-        raise TemporaryFailure(f"Cannot resolve hostname: {hostname}") from err
-    except socket.timeout as err:
+    except socket.gaierror:
+        raise TemporaryFailure(f"Cannot resolve hostname: {hostname}", "resolve_failed")
+    except socket.timeout:
         raise TemporaryFailure(
-            f"Connection timeout with server: {hostname}:{port}"
-        ) from err
-    except ConnectionRefusedError as err:
+            f"Connection timeout with server: {hostname}:{port}", "connection_timeout"
+        )
+    except ConnectionRefusedError:
         raise TemporaryFailure(
-            f"Connection refused by server: {hostname}:{port}"
-        ) from err
+            f"Connection refused by server: {hostname}:{port}", "connection_refused"
+        )
     except ssl.CertificateError as err:
         raise ValidationFailure(err.verify_message)
     except ssl.SSLError as err:

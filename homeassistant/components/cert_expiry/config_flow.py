@@ -1,6 +1,5 @@
 """Config flow for the Cert Expiry platform."""
 import logging
-import socket
 
 import voluptuous as vol
 
@@ -34,13 +33,8 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return True
         except TemporaryFailure as err:
-            cause = type(err.__cause__)
-            if cause is socket.gaierror:
-                self._errors[CONF_HOST] = "resolve_failed"
-            elif cause is socket.timeout:
-                self._errors[CONF_HOST] = "connection_timeout"
-            elif cause is ConnectionRefusedError:
-                self._errors[CONF_HOST] = "connection_refused"
+            cause = err.args[1]
+            self._errors[CONF_HOST] = cause
         except ValidationFailure:
             return True
         return False

@@ -72,7 +72,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     try:
         days = await get_cert_time_to_expiry(hass, hostname, port)
     except TemporaryFailure as err:
-        _LOGGER.error(err)
+        _LOGGER.error(err.args[0])
         raise PlatformNotReady
     except ValidationFailure as err:
         error = err
@@ -136,7 +136,7 @@ class SSLCertificate(Entity):
                 self.hass, self.server_name, self.server_port
             )
         except TemporaryFailure as err:
-            _LOGGER.error(err)
+            _LOGGER.error(err.args[0])
             self._available = False
             return
         except ValidationFailure as err:
