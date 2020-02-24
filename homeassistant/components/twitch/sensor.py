@@ -97,7 +97,7 @@ class TwitchSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attr = copy.deepcopy(self._statistics)
+        attr = dict(self._statistics)
 
         if self._oauth_enabled:
             attr.update(self._subscription)
