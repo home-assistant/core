@@ -134,21 +134,17 @@ class IndexSensor(IQVIAEntity):
     async def async_update(self):
         """Update the sensor."""
         if not self._iqvia.data:
-            # This can occur when IQVIA's sometimes-flaky API doesn't return any period
-            # data. We log an INFO-level message so as to not spam the logs with
-            # warnings the user can't do anything about:
             _LOGGER.info("The IQVIA didn't return data for %s; trying later", self.name)
             return
 
-        data = {}
-        if self._type in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW):
-            data = self._iqvia.data[TYPE_ALLERGY_INDEX].get("Location")
-        elif self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW):
-            data = self._iqvia.data[TYPE_ASTHMA_INDEX].get("Location")
-        elif self._type == TYPE_DISEASE_TODAY:
-            data = self._iqvia.data[TYPE_DISEASE_INDEX].get("Location")
-
-        if not data:
+        try:
+            if self._type in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW):
+                data = self._iqvia.data[TYPE_ALLERGY_INDEX].get("Location")
+            elif self._type in (TYPE_ASTHMA_TODAY, TYPE_ASTHMA_TOMORROW):
+                data = self._iqvia.data[TYPE_ASTHMA_INDEX].get("Location")
+            elif self._type == TYPE_DISEASE_TODAY:
+                data = self._iqvia.data[TYPE_DISEASE_INDEX].get("Location")
+        except KeyError:
             _LOGGER.info("The IQVIA didn't return data for %s; trying later", self.name)
             return
 
