@@ -55,13 +55,10 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             if await self._test_connection(user_input):
-                title = host + (f":{port}" if port != DEFAULT_PORT else "")
+                title_port = f":{port}" if port != DEFAULT_PORT else ""
+                title = f"{host}{title_port}"
                 return self.async_create_entry(
-                    title=title,
-                    data={
-                        CONF_HOST: user_input[CONF_HOST],
-                        CONF_PORT: user_input.get(CONF_PORT, DEFAULT_PORT),
-                    },
+                    title=title, data={CONF_HOST: host, CONF_PORT: port},
                 )
             if (  # pylint: disable=no-member
                 self.context["source"] == config_entries.SOURCE_IMPORT

@@ -17,8 +17,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers.event import async_call_later
 
 from .const import DEFAULT_PORT, DOMAIN
 from .errors import TemporaryFailure, ValidationFailure
@@ -46,8 +45,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     @callback
     def schedule_import(_):
         """Schedule delayed import after HA is fully started."""
-        import_time = dt_util.utcnow() + timedelta(seconds=10)
-        async_track_point_in_utc_time(hass, do_import, import_time)
+        async_call_later(hass, 10, do_import)
 
     @callback
     def do_import(_):
@@ -80,7 +78,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         error = err
 
     async_add_entities(
-        [SSLCertificate(hass, hostname, port, days, error)], False,
+        [SSLCertificate(hostname, port, days, error)], False,
     )
     return True
 
@@ -88,9 +86,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class SSLCertificate(Entity):
     """Implementation of the certificate expiry sensor."""
 
-    def __init__(self, hass, server_name, server_port, days, error):
+    def __init__(self, server_name, server_port, days, error):
         """Initialize the sensor."""
-        self.hass = hass
         self.server_name = server_name
         self.server_port = server_port
         display_port = f":{server_port}" if server_port != DEFAULT_PORT else ""
@@ -141,8 +138,6 @@ class SSLCertificate(Entity):
         except TemporaryFailure as err:
             _LOGGER.error(err)
             self._available = False
-            self._error = err
-            self._valid = False
             return
         except ValidationFailure as err:
             _LOGGER.error(
@@ -158,8 +153,6 @@ class SSLCertificate(Entity):
                 "Unknown error checking %s:%s", self.server_name, self.server_port
             )
             self._available = False
-            self._error = "Unknown"
-            self._valid = False
             return
 
         self._available = True
