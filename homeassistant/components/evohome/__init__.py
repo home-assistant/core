@@ -629,7 +629,7 @@ class EvoChild(EvoDevice):
         """
 
         def _dt_evo_to_aware(dt_naive: dt, utc_offset: timedelta) -> dt:
-            dt_aware = dt_naive.replace(tzinfo=dt_util.UTC) + utc_offset
+            dt_aware = dt_naive.replace(tzinfo=dt_util.UTC) - utc_offset
             return dt_util.as_local(dt_aware)
 
         if not self._schedule["DailySchedules"]:
