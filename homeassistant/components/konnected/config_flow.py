@@ -32,6 +32,7 @@ from homeassistant.helpers import config_validation as cv
 from .const import (
     CONF_ACTIVATION,
     CONF_BLINK,
+    CONF_DEFAULT_OPTIONS,
     CONF_DISCOVERY,
     CONF_INVERSE,
     CONF_MODEL,
@@ -138,7 +139,6 @@ OPTIONS_SCHEMA = vol.Schema(
     extra=vol.REMOVE_EXTRA,
 )
 
-CONF_DEFAULT_OPTIONS = "default_options"
 CONFIG_ENTRY_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ID): cv.matches_regex("[0-9a-f]{12}"),

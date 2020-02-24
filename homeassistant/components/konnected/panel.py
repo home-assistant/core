@@ -28,6 +28,7 @@ from .const import (
     CONF_ACTIVATION,
     CONF_API_HOST,
     CONF_BLINK,
+    CONF_DEFAULT_OPTIONS,
     CONF_DHT_SENSORS,
     CONF_DISCOVERY,
     CONF_DS18B20_SENSORS,
@@ -64,7 +65,9 @@ class AlarmPanel:
         self.hass = hass
         self.config_entry = config_entry
         self.config = config_entry.data
-        self.options = config_entry.options
+        self.options = config_entry.options or config_entry.data.get(
+            CONF_DEFAULT_OPTIONS, {}
+        )
         self.host = self.config.get(CONF_HOST)
         self.port = self.config.get(CONF_PORT)
         self.client = None
