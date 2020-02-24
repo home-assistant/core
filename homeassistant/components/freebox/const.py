@@ -8,8 +8,6 @@ from homeassistant.const import (
 )
 
 DOMAIN = "freebox"
-TRACKER_UPDATE = f"{DOMAIN}_tracker_update"
-SENSOR_UPDATE = f"{DOMAIN}_sensor_update"
 
 APP_DESC = {
     "app_id": "hass",
@@ -53,4 +51,25 @@ TEMPERATURE_SENSOR_TEMPLATE = {
     SENSOR_UNIT: TEMP_CELSIUS,
     SENSOR_ICON: "mdi:thermometer",
     SENSOR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+}
+
+# Icons
+DEVICE_ICONS = {
+    "freebox_delta": "mdi:television-guide",
+    "freebox_hd": "mdi:television-guide",
+    "freebox_mini": "mdi:television-guide",
+    "freebox_player": "mdi:television-guide",
+    "ip_camera": "mdi:cctv",
+    "ip_phone": "mdi:phone-voip",
+    "laptop": "mdi:laptop",
+    "multimedia_device": "mdi:play-network",
+    "nas": "mdi:nas",
+    "networking_device": "mdi:network",
+    "printer": "mdi:printer",
+    "router": "mdi:router-wireless",
+    "smartphone": "mdi:cellphone",
+    "tablet": "mdi:tablet",
+    "television": "mdi:television",
+    "vg_console": "mdi:gamepad-variant",
+    "workstation": "mdi:desktop-tower-monitor",
 }

@@ -60,15 +60,16 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Freebox component."""
-    fbx = FreeboxRouter(hass, entry)
+    router = FreeboxRouter(hass, entry)
 
     try:
-        await fbx.setup()
+        await router.setup()
     except HttpRequestError:
         _LOGGER.exception("Failed to connect to Freebox")
         return False
 
-    hass.data[DOMAIN] = fbx
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.unique_id] = router
 
     for platform in PLATFORMS:
         hass.async_create_task(
@@ -76,17 +77,17 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         )
 
     # Services
-    async def async_freebox_reboot(call):
+    async def async_reboot(call):
         """Handle reboot service call."""
-        await fbx.reboot()
+        await router.reboot()
 
-    hass.services.async_register(DOMAIN, "reboot", async_freebox_reboot)
+    hass.services.async_register(DOMAIN, "reboot", async_reboot)
 
-    async def close_fbx(event):
+    async def async_close_connection(event):
         """Close Freebox connection on HA Stop."""
-        await fbx.close()
+        await router.close()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_fbx)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_close_connection)
 
     return True
 

@@ -9,32 +9,47 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
+    CONNECTION_SENSORS,
     DOMAIN,
     SENSOR_DEVICE_CLASS,
     SENSOR_ICON,
     SENSOR_NAME,
     SENSOR_UNIT,
-    SENSOR_UPDATE,
+    TEMPERATURE_SENSOR_TEMPLATE,
 )
+from .router import FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up the platform."""
-    pass
 
 
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the sensors."""
-    fbx = hass.data[DOMAIN]
-
+    router = hass.data[DOMAIN][entry.unique_id]
     entities = []
 
-    for sensor in fbx.sensors.values():
-        entities.append(sensor)
+    # System sensors
+    syst_datas: Dict[str, any] = await router.system.get_config()
+    temperature_datas = {item["id"]: item for item in syst_datas["sensors"]}
+    # According to the doc it is only temperature sensors in celsius degree.
+    # Name and id of the sensors may vary under Freebox devices.
+
+    for sensor_key, sensor_attrs in temperature_datas.items():
+        entities.append(
+            FreeboxSensor(
+                router,
+                sensor_key,
+                {
+                    **TEMPERATURE_SENSOR_TEMPLATE,
+                    **{SENSOR_NAME: f"Freebox {sensor_attrs['name']}"},
+                },
+            )
+        )
+
+    # Connection sensors
+    for sensor_key, sensor_attrs in CONNECTION_SENSORS.items():
+        entities.append(FreeboxSensor(router, sensor_key, sensor_attrs))
 
     async_add_entities(entities)
 
@@ -42,23 +57,30 @@ async def async_setup_entry(
 class FreeboxSensor(Entity):
     """Representation of a Freebox sensor."""
 
-    def __init__(self, fbx_router, sensor: Dict[str, any]):
+    def __init__(self, router: FreeboxRouter, sensor_type: str, sensor: Dict[str, any]):
         """Initialize a Freebox sensor."""
         self._state = None
-        self._router = fbx_router
+        self._router = router
+        self._sensor_type = sensor_type
         self._name = sensor[SENSOR_NAME]
         self._unit = sensor[SENSOR_UNIT]
         self._icon = sensor[SENSOR_ICON]
         self._device_class = sensor[SENSOR_DEVICE_CLASS]
         self._unique_id = f"{self._router.mac} {self._name}"
-        self._unsub_dispatcher = None
 
-    def update_state(self, state: any) -> None:
+        self._unsub_dispatcher = None
+        _LOGGER.error("ADDED_SENSOR : %s", self.name)
+
+        self.update()
+
+    def update(self) -> None:
         """Update the Freebox sensor."""
+        state = self._router.sensors[self._sensor_type]
         if self._unit == DATA_RATE_KILOBYTES_PER_SECOND:
             self._state = round(state / 1000, 2)
         else:
             self._state = state
+        _LOGGER.error("UPDATED_SENSOR : %s", self.name)
 
     @property
     def unique_id(self) -> str:
@@ -100,10 +122,14 @@ class FreeboxSensor(Entity):
         """No polling needed."""
         return False
 
+    async def async_on_demand_update(self):
+        """Update state."""
+        self.async_schedule_update_ha_state(True)
+
     async def async_added_to_hass(self):
         """Register state update callback."""
         self._unsub_dispatcher = async_dispatcher_connect(
-            self.hass, SENSOR_UPDATE, self.async_write_ha_state
+            self.hass, self._router.signal_sensor_update, self.async_on_demand_update
         )
 
     async def async_will_remove_from_hass(self):
