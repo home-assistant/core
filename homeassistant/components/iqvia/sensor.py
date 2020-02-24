@@ -135,7 +135,7 @@ class IndexSensor(IQVIAEntity):
         """Update the sensor."""
         if not self._iqvia.data:
             _LOGGER.warning(
-                "The IQVIA didn't return data for %s; trying again later", self.name
+                "IQVIA didn't return data for %s; trying again later", self.name
             )
             return
 
@@ -148,7 +148,7 @@ class IndexSensor(IQVIAEntity):
                 data = self._iqvia.data[TYPE_DISEASE_INDEX].get("Location")
         except KeyError:
             _LOGGER.warning(
-                "The IQVIA didn't return data for %s; trying again later", self.name
+                "IQVIA didn't return data for %s; trying again later", self.name
             )
             return
 
@@ -158,7 +158,7 @@ class IndexSensor(IQVIAEntity):
             [period] = [p for p in data["periods"] if p["Type"] == key]
         except ValueError:
             _LOGGER.warning(
-                "The IQVIA didn't return data for %s; trying again later", self.name
+                "IQVIA didn't return data for %s; trying again later", self.name
             )
             return
 
