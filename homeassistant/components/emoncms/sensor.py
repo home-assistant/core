@@ -64,9 +64,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_id(sensorid, feedtag, feedname, feedid, feeduserid):
     """Return unique identifier for feed / sensor."""
-    return "emoncms{}_{}_{}_{}_{}".format(
-        sensorid, feedtag, feedname, feedid, feeduserid
-    )
+    return f"emoncms{sensorid}_{feedtag}_{feedname}_{feedid}_{feeduserid}"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -134,7 +132,7 @@ class EmonCmsSensor(Entity):
             # ID if there's only one.
             id_for_name = "" if str(sensorid) == "1" else sensorid
             # Use the feed name assigned in EmonCMS or fall back to the feed ID
-            feed_name = elem.get("name") or "Feed {}".format(elem["id"])
+            feed_name = elem.get("name") or f"Feed {elem['id']}"
             self._name = f"EmonCMS{id_for_name} {feed_name}"
         else:
             self._name = name

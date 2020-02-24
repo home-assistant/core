@@ -257,9 +257,7 @@ class ElkEntity(Entity):
             uid_start = f"elkm1m_{self._prefix}"
         else:
             uid_start = "elkm1"
-        self._unique_id = "{uid_start}_{name}".format(
-            uid_start=uid_start, name=self._element.default_name("_")
-        ).lower()
+        self._unique_id = f"{uid_start}_{self._element.default_name('_')}".lower()
 
     @property
     def name(self):

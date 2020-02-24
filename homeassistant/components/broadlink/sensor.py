@@ -67,7 +67,7 @@ class BroadlinkSensor(Entity):
 
     def __init__(self, name, broadlink_data, sensor_type):
         """Initialize the sensor."""
-        self._name = "{} {}".format(name, SENSOR_TYPES[sensor_type][0])
+        self._name = f"{name} {SENSOR_TYPES[sensor_type][0]}"
         self._state = None
         self._is_available = False
         self._type = sensor_type
