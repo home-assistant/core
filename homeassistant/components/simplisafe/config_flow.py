@@ -1,6 +1,4 @@
 """Config flow to configure the SimpliSafe component."""
-from collections import OrderedDict
-
 from simplipy import API
 from simplipy.errors import SimplipyError
 import voluptuous as vol
@@ -21,8 +19,7 @@ def configured_instances(hass):
     )
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class SimpliSafeFlowHandler(config_entries.ConfigFlow):
+class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a SimpliSafe config flow."""
 
     VERSION = 1
@@ -30,16 +27,19 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow):
 
     def __init__(self):
         """Initialize the config flow."""
-        self.data_schema = OrderedDict()
-        self.data_schema[vol.Required(CONF_USERNAME)] = str
-        self.data_schema[vol.Required(CONF_PASSWORD)] = str
-        self.data_schema[vol.Optional(CONF_CODE)] = str
+        self.data_schema = vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): str,
+                vol.Required(CONF_PASSWORD): str,
+                vol.Optional(CONF_CODE): str,
+            }
+        )
 
     async def _show_form(self, errors=None):
         """Show the form to the user."""
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(self.data_schema),
+            data_schema=self.data_schema,
             errors=errors if errors else {},
         )
 
@@ -49,12 +49,11 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
-
         if not user_input:
             return await self._show_form()
 
-        if user_input[CONF_USERNAME] in configured_instances(self.hass):
-            return await self._show_form({CONF_USERNAME: "identifier_exists"})
+        await self.async_set_unique_id(user_input[CONF_USERNAME])
+        self._abort_if_unique_id_configured()
 
         username = user_input[CONF_USERNAME]
         websession = aiohttp_client.async_get_clientsession(self.hass)
@@ -64,7 +63,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow):
                 username, user_input[CONF_PASSWORD], websession
             )
         except SimplipyError:
-            return await self._show_form({"base": "invalid_credentials"})
+            return await self._show_form(errors={"base": "invalid_credentials"})
 
         return self.async_create_entry(
             title=user_input[CONF_USERNAME],
