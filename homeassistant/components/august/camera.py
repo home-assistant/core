@@ -5,14 +5,14 @@ import requests
 
 from homeassistant.components.camera import Camera
 
-from . import DATA_AUGUST, DEFAULT_NAME, DEFAULT_TIMEOUT
+from .const import DEFAULT_NAME, DEFAULT_TIMEOUT, DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up August cameras."""
-    data = hass.data[DATA_AUGUST]
+    data = hass.data[DOMAIN][config_entry.entry_id]
     devices = []
 
     for doorbell in data.doorbells:
@@ -65,7 +65,6 @@ class AugustCamera(Camera):
         self._doorbell_detail = await self._data.async_get_doorbell_detail(
             self._doorbell.device_id
         )
-
         if self._doorbell_detail is None:
             return None
 
@@ -96,3 +95,13 @@ class AugustCamera(Camera):
     def unique_id(self) -> str:
         """Get the unique id of the camera."""
         return f"{self._doorbell.device_id:s}_camera"
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        return {
+            "identifiers": {(DOMAIN, self._doorbell.device_id)},
+            "name": self._doorbell.device_name + " Camera",
+            "manufacturer": DEFAULT_NAME,
+            "sw_version": self._firmware_version,
+        }

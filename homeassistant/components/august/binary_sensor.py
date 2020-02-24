@@ -13,7 +13,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice,
 )
 
-from . import DATA_AUGUST
+from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,9 +68,9 @@ SENSOR_TYPES_DOORBELL = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the August binary sensors."""
-    data = hass.data[DATA_AUGUST]
+    data = hass.data[DOMAIN][config_entry.entry_id]
     devices = []
 
     for door in data.locks:
@@ -148,6 +148,16 @@ class AugustDoorBinarySensor(BinarySensorDevice):
         """Get the unique of the door open binary sensor."""
         return f"{self._door.device_id}_open"
 
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        return {
+            "identifiers": {(DOMAIN, self._door.device_id)},
+            "name": self._door.device_name,
+            "manufacturer": DEFAULT_NAME,
+            "sw_version": self._firmware_version,
+        }
+
 
 class AugustDoorbellBinarySensor(BinarySensorDevice):
     """Representation of an August binary sensor."""
@@ -209,3 +219,13 @@ class AugustDoorbellBinarySensor(BinarySensorDevice):
             f"{self._doorbell.device_id}_"
             f"{SENSOR_TYPES_DOORBELL[self._sensor_type][SENSOR_NAME].lower()}"
         )
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        return {
+            "identifiers": {(DOMAIN, self._doorbell.device_id)},
+            "name": self._doorbell.device_name,
+            "manufacturer": "August",
+            "sw_version": self._firmware_version,
+        }

@@ -12,6 +12,7 @@ FLOWS = [
     "almond",
     "ambiclimate",
     "ambient_station",
+    "august",
     "axis",
     "brother",
     "cast",
