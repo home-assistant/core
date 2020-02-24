@@ -38,7 +38,7 @@ async def handle_webhook(hass, webhook_id, request):
     except ValueError:
         return None
 
-    _LOGGER.error("Got webhook data: %s", data)
+    _LOGGER.debug("Got webhook data: %s", data)
     published_data = {
         ATTR_EVENT_TYPE: data.get(ATTR_EVENT_TYPE),
         ATTR_HOME_NAME: data.get(ATTR_HOME_NAME),
@@ -67,8 +67,8 @@ async def handle_webhook(hass, webhook_id, request):
         published_data[ATTR_SNAPSHOT_URL] = data.get(ATTR_SNAPSHOT_URL)
         hass.bus.async_fire(EVENT_BUS_ANIMAL, published_data)
     elif data.get(ATTR_EVENT_TYPE) == EVENT_VEHICLE:
-        hass.bus.async_fire(EVENT_BUS_VEHICLE, published_data)
         published_data[ATTR_VIGNETTE_URL] = data.get(ATTR_VIGNETTE_URL)
         published_data[ATTR_SNAPSHOT_URL] = data.get(ATTR_SNAPSHOT_URL)
+        hass.bus.async_fire(EVENT_BUS_VEHICLE, published_data)
     else:
         hass.bus.async_fire(EVENT_BUS_OTHER, data)
