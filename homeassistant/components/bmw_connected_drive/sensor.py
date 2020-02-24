@@ -15,8 +15,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import DOMAIN as BMW_DOMAIN
+from .const import ATTRIBUTION
 
-ATTRIBUTION = "Data provided by BMW Connected Drive"
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_TO_HA_METRIC = {

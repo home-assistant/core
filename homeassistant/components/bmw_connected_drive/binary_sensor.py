@@ -7,8 +7,7 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import ATTR_ATTRIBUTION, LENGTH_KILOMETERS
 
 from . import DOMAIN as BMW_DOMAIN
-
-ATTRIBUTION = "Data provided by BMW Connected Drive"
+from .const import ATTRIBUTION
 
 _LOGGER = logging.getLogger(__name__)
 
