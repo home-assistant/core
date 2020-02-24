@@ -161,6 +161,9 @@ aioftp==0.12.0
 # homeassistant.components.harmony
 aioharmony==0.1.13
 
+# homeassistant.components.homekit_controller
+aiohomekit[IP]==0.2.10
+
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
 aiohttp_cors==0.7.0
@@ -687,9 +690,6 @@ home-assistant-frontend==20200220.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.8
-
-# homeassistant.components.homekit_controller
-homekit[IP]==0.15.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.10.17

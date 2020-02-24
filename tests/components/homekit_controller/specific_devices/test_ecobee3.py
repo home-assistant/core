@@ -6,7 +6,7 @@ https://github.com/home-assistant/home-assistant/issues/15336
 
 from unittest import mock
 
-from homekit import AccessoryDisconnectedError
+from aiohomekit import AccessoryDisconnectedError
 
 from homeassistant.components.climate.const import (
     SUPPORT_TARGET_HUMIDITY,

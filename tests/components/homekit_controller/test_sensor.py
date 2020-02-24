@@ -1,5 +1,8 @@
 """Basic checks for HomeKit sensor."""
-from tests.components.homekit_controller.common import FakeService, setup_test_component
+from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.services import ServicesTypes
+
+from tests.components.homekit_controller.common import setup_test_component
 
 TEMPERATURE = ("temperature", "temperature.current")
 HUMIDITY = ("humidity", "relative-humidity.current")
@@ -10,57 +13,49 @@ CHARGING_STATE = ("battery", "charging-state")
 LO_BATT = ("battery", "status-lo-batt")
 
 
-def create_temperature_sensor_service():
+def create_temperature_sensor_service(accessory):
     """Define temperature characteristics."""
-    service = FakeService("public.hap.service.sensor.temperature")
+    service = accessory.add_service(ServicesTypes.TEMPERATURE_SENSOR)
 
-    cur_state = service.add_characteristic("temperature.current")
+    cur_state = service.add_char(CharacteristicsTypes.TEMPERATURE_CURRENT)
     cur_state.value = 0
 
-    return service
 
-
-def create_humidity_sensor_service():
+def create_humidity_sensor_service(accessory):
     """Define humidity characteristics."""
-    service = FakeService("public.hap.service.sensor.humidity")
+    service = accessory.add_service(ServicesTypes.HUMIDITY_SENSOR)
 
-    cur_state = service.add_characteristic("relative-humidity.current")
+    cur_state = service.add_char(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT)
     cur_state.value = 0
 
-    return service
 
-
-def create_light_level_sensor_service():
+def create_light_level_sensor_service(accessory):
     """Define light level characteristics."""
-    service = FakeService("public.hap.service.sensor.light")
+    service = accessory.add_service(ServicesTypes.LIGHT_SENSOR)
 
-    cur_state = service.add_characteristic("light-level.current")
+    cur_state = service.add_char(CharacteristicsTypes.LIGHT_LEVEL_CURRENT)
     cur_state.value = 0
 
-    return service
 
-
-def create_carbon_dioxide_level_sensor_service():
+def create_carbon_dioxide_level_sensor_service(accessory):
     """Define carbon dioxide level characteristics."""
-    service = FakeService("public.hap.service.sensor.carbon-dioxide")
+    service = accessory.add_service(ServicesTypes.CARBON_DIOXIDE_SENSOR)
 
-    cur_state = service.add_characteristic("carbon-dioxide.level")
+    cur_state = service.add_char(CharacteristicsTypes.CARBON_DIOXIDE_LEVEL)
     cur_state.value = 0
 
-    return service
 
-
-def create_battery_level_sensor():
+def create_battery_level_sensor(accessory):
     """Define battery level characteristics."""
-    service = FakeService("public.hap.service.battery")
+    service = accessory.add_service(ServicesTypes.BATTERY_SERVICE)
 
-    cur_state = service.add_characteristic("battery-level")
+    cur_state = service.add_char(CharacteristicsTypes.BATTERY_LEVEL)
     cur_state.value = 100
 
-    low_battery = service.add_characteristic("status-lo-batt")
+    low_battery = service.add_char(CharacteristicsTypes.STATUS_LO_BATT)
     low_battery.value = 0
 
-    charging_state = service.add_characteristic("charging-state")
+    charging_state = service.add_char(CharacteristicsTypes.CHARGING_STATE)
     charging_state.value = 0
 
     return service
@@ -68,8 +63,9 @@ def create_battery_level_sensor():
 
 async def test_temperature_sensor_read_state(hass, utcnow):
     """Test reading the state of a HomeKit temperature sensor accessory."""
-    sensor = create_temperature_sensor_service()
-    helper = await setup_test_component(hass, [sensor], suffix="temperature")
+    helper = await setup_test_component(
+        hass, create_temperature_sensor_service, suffix="temperature"
+    )
 
     helper.characteristics[TEMPERATURE].value = 10
     state = await helper.poll_and_get_state()
@@ -82,8 +78,9 @@ async def test_temperature_sensor_read_state(hass, utcnow):
 
 async def test_humidity_sensor_read_state(hass, utcnow):
     """Test reading the state of a HomeKit humidity sensor accessory."""
-    sensor = create_humidity_sensor_service()
-    helper = await setup_test_component(hass, [sensor], suffix="humidity")
+    helper = await setup_test_component(
+        hass, create_humidity_sensor_service, suffix="humidity"
+    )
 
     helper.characteristics[HUMIDITY].value = 10
     state = await helper.poll_and_get_state()
@@ -96,8 +93,9 @@ async def test_humidity_sensor_read_state(hass, utcnow):
 
 async def test_light_level_sensor_read_state(hass, utcnow):
     """Test reading the state of a HomeKit temperature sensor accessory."""
-    sensor = create_light_level_sensor_service()
-    helper = await setup_test_component(hass, [sensor], suffix="light_level")
+    helper = await setup_test_component(
+        hass, create_light_level_sensor_service, suffix="light_level"
+    )
 
     helper.characteristics[LIGHT_LEVEL].value = 10
     state = await helper.poll_and_get_state()
@@ -110,8 +108,9 @@ async def test_light_level_sensor_read_state(hass, utcnow):
 
 async def test_carbon_dioxide_level_sensor_read_state(hass, utcnow):
     """Test reading the state of a HomeKit carbon dioxide sensor accessory."""
-    sensor = create_carbon_dioxide_level_sensor_service()
-    helper = await setup_test_component(hass, [sensor], suffix="co2")
+    helper = await setup_test_component(
+        hass, create_carbon_dioxide_level_sensor_service, suffix="co2"
+    )
 
     helper.characteristics[CARBON_DIOXIDE_LEVEL].value = 10
     state = await helper.poll_and_get_state()
@@ -124,8 +123,9 @@ async def test_carbon_dioxide_level_sensor_read_state(hass, utcnow):
 
 async def test_battery_level_sensor(hass, utcnow):
     """Test reading the state of a HomeKit battery level sensor."""
-    sensor = create_battery_level_sensor()
-    helper = await setup_test_component(hass, [sensor], suffix="battery")
+    helper = await setup_test_component(
+        hass, create_battery_level_sensor, suffix="battery"
+    )
 
     helper.characteristics[BATTERY_LEVEL].value = 100
     state = await helper.poll_and_get_state()
@@ -140,8 +140,9 @@ async def test_battery_level_sensor(hass, utcnow):
 
 async def test_battery_charging(hass, utcnow):
     """Test reading the state of a HomeKit battery's charging state."""
-    sensor = create_battery_level_sensor()
-    helper = await setup_test_component(hass, [sensor], suffix="battery")
+    helper = await setup_test_component(
+        hass, create_battery_level_sensor, suffix="battery"
+    )
 
     helper.characteristics[BATTERY_LEVEL].value = 0
     helper.characteristics[CHARGING_STATE].value = 1
@@ -155,8 +156,9 @@ async def test_battery_charging(hass, utcnow):
 
 async def test_battery_low(hass, utcnow):
     """Test reading the state of a HomeKit battery's low state."""
-    sensor = create_battery_level_sensor()
-    helper = await setup_test_component(hass, [sensor], suffix="battery")
+    helper = await setup_test_component(
+        hass, create_battery_level_sensor, suffix="battery"
+    )
 
     helper.characteristics[LO_BATT].value = 0
     helper.characteristics[BATTERY_LEVEL].value = 1

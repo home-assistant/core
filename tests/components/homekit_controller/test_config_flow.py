@@ -2,40 +2,39 @@
 import json
 from unittest import mock
 
-import homekit
+import aiohomekit
+from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.services import ServicesTypes
+import asynctest
 import pytest
 
 from homeassistant.components.homekit_controller import config_flow
 from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
 
 from tests.common import MockConfigEntry
-from tests.components.homekit_controller.common import (
-    Accessory,
-    FakeService,
-    setup_platform,
-)
+from tests.components.homekit_controller.common import Accessory, setup_platform
 
 PAIRING_START_FORM_ERRORS = [
-    (homekit.BusyError, "busy_error"),
-    (homekit.MaxTriesError, "max_tries_error"),
+    (aiohomekit.BusyError, "busy_error"),
+    (aiohomekit.MaxTriesError, "max_tries_error"),
     (KeyError, "pairing_failed"),
 ]
 
 PAIRING_START_ABORT_ERRORS = [
-    (homekit.AccessoryNotFoundError, "accessory_not_found_error"),
-    (homekit.UnavailableError, "already_paired"),
+    (aiohomekit.AccessoryNotFoundError, "accessory_not_found_error"),
+    (aiohomekit.UnavailableError, "already_paired"),
 ]
 
 PAIRING_FINISH_FORM_ERRORS = [
-    (homekit.exceptions.MalformedPinError, "authentication_error"),
-    (homekit.MaxPeersError, "max_peers_error"),
-    (homekit.AuthenticationError, "authentication_error"),
-    (homekit.UnknownError, "unknown_error"),
+    (aiohomekit.exceptions.MalformedPinError, "authentication_error"),
+    (aiohomekit.MaxPeersError, "max_peers_error"),
+    (aiohomekit.AuthenticationError, "authentication_error"),
+    (aiohomekit.UnknownError, "unknown_error"),
     (KeyError, "pairing_failed"),
 ]
 
 PAIRING_FINISH_ABORT_ERRORS = [
-    (homekit.AccessoryNotFoundError, "accessory_not_found_error")
+    (aiohomekit.AccessoryNotFoundError, "accessory_not_found_error")
 ]
 
 INVALID_PAIRING_CODES = [
@@ -60,13 +59,22 @@ VALID_PAIRING_CODES = [
 ]
 
 
-def _setup_flow_handler(hass):
+def _setup_flow_handler(hass, pairing=None):
     flow = config_flow.HomekitControllerFlowHandler()
     flow.hass = hass
     flow.context = {}
 
+    finish_pairing = asynctest.CoroutineMock(return_value=pairing)
+
+    discovery = mock.Mock()
+    discovery.device_id = "00:00:00:00:00:00"
+    discovery.start_pairing = asynctest.CoroutineMock(return_value=finish_pairing)
+
     flow.controller = mock.Mock()
     flow.controller.pairings = {}
+    flow.controller.find_ip_by_device_id = asynctest.CoroutineMock(
+        return_value=discovery
+    )
 
     return flow
 
@@ -81,7 +89,7 @@ async def _setup_flow_zeroconf(hass, discovery_info):
 @pytest.mark.parametrize("pairing_code", INVALID_PAIRING_CODES)
 def test_invalid_pairing_codes(pairing_code):
     """Test ensure_pin_format raises for an invalid pin code."""
-    with pytest.raises(homekit.exceptions.MalformedPinError):
+    with pytest.raises(aiohomekit.exceptions.MalformedPinError):
         config_flow.ensure_pin_format(pairing_code)
 
 
@@ -106,6 +114,15 @@ async def test_discovery_works(hass):
 
     flow = _setup_flow_handler(hass)
 
+    finish_pairing = asynctest.CoroutineMock()
+
+    discovery = mock.Mock()
+    discovery.start_pairing = asynctest.CoroutineMock(return_value=finish_pairing)
+
+    flow.controller.find_ip_by_device_id = asynctest.CoroutineMock(
+        return_value=discovery
+    )
+
     # Device is discovered
     result = await flow.async_step_zeroconf(discovery_info)
     assert result["type"] == "form"
@@ -120,21 +137,27 @@ async def test_discovery_works(hass):
     result = await flow.async_step_pair({})
     assert result["type"] == "form"
     assert result["step_id"] == "pair"
-    assert flow.controller.start_pairing.call_count == 1
+    assert discovery.start_pairing.call_count == 1
 
     pairing = mock.Mock(pairing_data={"AccessoryPairingID": "00:00:00:00:00:00"})
 
-    pairing.list_accessories_and_characteristics.return_value = [
-        {
-            "aid": 1,
-            "services": [
-                {
-                    "characteristics": [{"type": "23", "value": "Koogeek-LS1-20833F"}],
-                    "type": "3e",
-                }
-            ],
-        }
-    ]
+    pairing.list_accessories_and_characteristics = asynctest.CoroutineMock(
+        return_value=[
+            {
+                "aid": 1,
+                "services": [
+                    {
+                        "characteristics": [
+                            {"type": "23", "value": "Koogeek-LS1-20833F"}
+                        ],
+                        "type": "3e",
+                    }
+                ],
+            }
+        ]
+    )
+
+    finish_pairing.return_value = pairing
 
     # Pairing doesn't error error and pairing results
     flow.controller.pairings = {"00:00:00:00:00:00": pairing}
@@ -155,6 +178,15 @@ async def test_discovery_works_upper_case(hass):
 
     flow = _setup_flow_handler(hass)
 
+    finish_pairing = asynctest.CoroutineMock()
+
+    discovery = mock.Mock()
+    discovery.start_pairing = asynctest.CoroutineMock(return_value=finish_pairing)
+
+    flow.controller.find_ip_by_device_id = asynctest.CoroutineMock(
+        return_value=discovery
+    )
+
     # Device is discovered
     result = await flow.async_step_zeroconf(discovery_info)
     assert result["type"] == "form"
@@ -169,21 +201,27 @@ async def test_discovery_works_upper_case(hass):
     result = await flow.async_step_pair({})
     assert result["type"] == "form"
     assert result["step_id"] == "pair"
-    assert flow.controller.start_pairing.call_count == 1
+    assert discovery.start_pairing.call_count == 1
 
     pairing = mock.Mock(pairing_data={"AccessoryPairingID": "00:00:00:00:00:00"})
 
-    pairing.list_accessories_and_characteristics.return_value = [
-        {
-            "aid": 1,
-            "services": [
-                {
-                    "characteristics": [{"type": "23", "value": "Koogeek-LS1-20833F"}],
-                    "type": "3e",
-                }
-            ],
-        }
-    ]
+    pairing.list_accessories_and_characteristics = asynctest.CoroutineMock(
+        return_value=[
+            {
+                "aid": 1,
+                "services": [
+                    {
+                        "characteristics": [
+                            {"type": "23", "value": "Koogeek-LS1-20833F"}
+                        ],
+                        "type": "3e",
+                    }
+                ],
+            }
+        ]
+    )
+
+    finish_pairing.return_value = pairing
 
     flow.controller.pairings = {"00:00:00:00:00:00": pairing}
     result = await flow.async_step_pair({"pairing_code": "111-22-333"})
@@ -203,6 +241,15 @@ async def test_discovery_works_missing_csharp(hass):
 
     flow = _setup_flow_handler(hass)
 
+    finish_pairing = asynctest.CoroutineMock()
+
+    discovery = mock.Mock()
+    discovery.start_pairing = asynctest.CoroutineMock(return_value=finish_pairing)
+
+    flow.controller.find_ip_by_device_id = asynctest.CoroutineMock(
+        return_value=discovery
+    )
+
     # Device is discovered
     result = await flow.async_step_zeroconf(discovery_info)
     assert result["type"] == "form"
@@ -217,21 +264,27 @@ async def test_discovery_works_missing_csharp(hass):
     result = await flow.async_step_pair({})
     assert result["type"] == "form"
     assert result["step_id"] == "pair"
-    assert flow.controller.start_pairing.call_count == 1
+    assert discovery.start_pairing.call_count == 1
 
     pairing = mock.Mock(pairing_data={"AccessoryPairingID": "00:00:00:00:00:00"})
 
-    pairing.list_accessories_and_characteristics.return_value = [
-        {
-            "aid": 1,
-            "services": [
-                {
-                    "characteristics": [{"type": "23", "value": "Koogeek-LS1-20833F"}],
-                    "type": "3e",
-                }
-            ],
-        }
-    ]
+    pairing.list_accessories_and_characteristics = asynctest.CoroutineMock(
+        return_value=[
+            {
+                "aid": 1,
+                "services": [
+                    {
+                        "characteristics": [
+                            {"type": "23", "value": "Koogeek-LS1-20833F"}
+                        ],
+                        "type": "3e",
+                    }
+                ],
+            }
+        ]
+    )
+
+    finish_pairing.return_value = pairing
 
     flow.controller.pairings = {"00:00:00:00:00:00": pairing}
 
@@ -390,39 +443,6 @@ async def test_discovery_already_configured_config_change(hass):
     assert conn.async_refresh_entity_map.call_args == mock.call(2)
 
 
-async def test_pair_unable_to_pair(hass):
-    """Pairing completed without exception, but didn't create a pairing."""
-    discovery_info = {
-        "name": "TestDevice",
-        "host": "127.0.0.1",
-        "port": 8080,
-        "properties": {"md": "TestDevice", "id": "00:00:00:00:00:00", "c#": 1, "sf": 1},
-    }
-
-    flow = _setup_flow_handler(hass)
-
-    # Device is discovered
-    result = await flow.async_step_zeroconf(discovery_info)
-    assert result["type"] == "form"
-    assert result["step_id"] == "pair"
-    assert flow.context == {
-        "hkid": "00:00:00:00:00:00",
-        "title_placeholders": {"name": "TestDevice"},
-        "unique_id": "00:00:00:00:00:00",
-    }
-
-    # User initiates pairing - device enters pairing mode and displays code
-    result = await flow.async_step_pair({})
-    assert result["type"] == "form"
-    assert result["step_id"] == "pair"
-    assert flow.controller.start_pairing.call_count == 1
-
-    # Pairing doesn't error but no pairing object is generated
-    result = await flow.async_step_pair({"pairing_code": "111-22-333"})
-    assert result["type"] == "form"
-    assert result["errors"]["pairing_code"] == "unable_to_pair"
-
-
 @pytest.mark.parametrize("exception,expected", PAIRING_START_ABORT_ERRORS)
 async def test_pair_abort_errors_on_start(hass, exception, expected):
     """Test various pairing errors."""
@@ -435,6 +455,13 @@ async def test_pair_abort_errors_on_start(hass, exception, expected):
 
     flow = _setup_flow_handler(hass)
 
+    discovery = mock.Mock()
+    discovery.start_pairing = asynctest.CoroutineMock(side_effect=exception("error"))
+
+    flow.controller.find_ip_by_device_id = asynctest.CoroutineMock(
+        return_value=discovery
+    )
+
     # Device is discovered
     result = await flow.async_step_zeroconf(discovery_info)
     assert result["type"] == "form"
@@ -446,10 +473,7 @@ async def test_pair_abort_errors_on_start(hass, exception, expected):
     }
 
     # User initiates pairing - device refuses to enter pairing mode
-    with mock.patch.object(flow.controller, "start_pairing") as start_pairing:
-        start_pairing.side_effect = exception("error")
-        result = await flow.async_step_pair({})
-
+    result = await flow.async_step_pair({})
     assert result["type"] == "abort"
     assert result["reason"] == expected
     assert flow.context == {
@@ -471,6 +495,13 @@ async def test_pair_form_errors_on_start(hass, exception, expected):
 
     flow = _setup_flow_handler(hass)
 
+    discovery = mock.Mock()
+    discovery.start_pairing = asynctest.CoroutineMock(side_effect=exception("error"))
+
+    flow.controller.find_ip_by_device_id = asynctest.CoroutineMock(
+        return_value=discovery
+    )
+
     # Device is discovered
     result = await flow.async_step_zeroconf(discovery_info)
     assert result["type"] == "form"
@@ -482,10 +513,7 @@ async def test_pair_form_errors_on_start(hass, exception, expected):
     }
 
     # User initiates pairing - device refuses to enter pairing mode
-    with mock.patch.object(flow.controller, "start_pairing") as start_pairing:
-        start_pairing.side_effect = exception("error")
-        result = await flow.async_step_pair({})
-
+    result = await flow.async_step_pair({})
     assert result["type"] == "form"
     assert result["errors"]["pairing_code"] == expected
     assert flow.context == {
@@ -507,6 +535,15 @@ async def test_pair_abort_errors_on_finish(hass, exception, expected):
 
     flow = _setup_flow_handler(hass)
 
+    finish_pairing = asynctest.CoroutineMock(side_effect=exception("error"))
+
+    discovery = mock.Mock()
+    discovery.start_pairing = asynctest.CoroutineMock(return_value=finish_pairing)
+
+    flow.controller.find_ip_by_device_id = asynctest.CoroutineMock(
+        return_value=discovery
+    )
+
     # Device is discovered
     result = await flow.async_step_zeroconf(discovery_info)
     assert result["type"] == "form"
@@ -521,10 +558,9 @@ async def test_pair_abort_errors_on_finish(hass, exception, expected):
     result = await flow.async_step_pair({})
     assert result["type"] == "form"
     assert result["step_id"] == "pair"
-    assert flow.controller.start_pairing.call_count == 1
+    assert discovery.start_pairing.call_count == 1
 
     # User submits code - pairing fails but can be retried
-    flow.finish_pairing.side_effect = exception("error")
     result = await flow.async_step_pair({"pairing_code": "111-22-333"})
     assert result["type"] == "abort"
     assert result["reason"] == expected
@@ -547,6 +583,15 @@ async def test_pair_form_errors_on_finish(hass, exception, expected):
 
     flow = _setup_flow_handler(hass)
 
+    finish_pairing = asynctest.CoroutineMock(side_effect=exception("error"))
+
+    discovery = mock.Mock()
+    discovery.start_pairing = asynctest.CoroutineMock(return_value=finish_pairing)
+
+    flow.controller.find_ip_by_device_id = asynctest.CoroutineMock(
+        return_value=discovery
+    )
+
     # Device is discovered
     result = await flow.async_step_zeroconf(discovery_info)
     assert result["type"] == "form"
@@ -561,10 +606,9 @@ async def test_pair_form_errors_on_finish(hass, exception, expected):
     result = await flow.async_step_pair({})
     assert result["type"] == "form"
     assert result["step_id"] == "pair"
-    assert flow.controller.start_pairing.call_count == 1
+    assert discovery.start_pairing.call_count == 1
 
     # User submits code - pairing fails but can be retried
-    flow.finish_pairing.side_effect = exception("error")
     result = await flow.async_step_pair({"pairing_code": "111-22-333"})
     assert result["type"] == "form"
     assert result["errors"]["pairing_code"] == expected
@@ -588,17 +632,21 @@ async def test_import_works(hass):
 
     pairing = mock.Mock(pairing_data={"AccessoryPairingID": "00:00:00:00:00:00"})
 
-    pairing.list_accessories_and_characteristics.return_value = [
-        {
-            "aid": 1,
-            "services": [
-                {
-                    "characteristics": [{"type": "23", "value": "Koogeek-LS1-20833F"}],
-                    "type": "3e",
-                }
-            ],
-        }
-    ]
+    pairing.list_accessories_and_characteristics = asynctest.CoroutineMock(
+        return_value=[
+            {
+                "aid": 1,
+                "services": [
+                    {
+                        "characteristics": [
+                            {"type": "23", "value": "Koogeek-LS1-20833F"}
+                        ],
+                        "type": "3e",
+                    }
+                ],
+            }
+        ]
+    )
 
     flow = _setup_flow_handler(hass)
 
@@ -653,22 +701,35 @@ async def test_user_works(hass):
     }
 
     pairing = mock.Mock(pairing_data={"AccessoryPairingID": "00:00:00:00:00:00"})
-    pairing.list_accessories_and_characteristics.return_value = [
-        {
-            "aid": 1,
-            "services": [
-                {
-                    "characteristics": [{"type": "23", "value": "Koogeek-LS1-20833F"}],
-                    "type": "3e",
-                }
-            ],
-        }
-    ]
+    pairing.list_accessories_and_characteristics = asynctest.CoroutineMock(
+        return_value=[
+            {
+                "aid": 1,
+                "services": [
+                    {
+                        "characteristics": [
+                            {"type": "23", "value": "Koogeek-LS1-20833F"}
+                        ],
+                        "type": "3e",
+                    }
+                ],
+            }
+        ]
+    )
 
     flow = _setup_flow_handler(hass)
 
+    finish_pairing = asynctest.CoroutineMock(return_value=pairing)
+
+    discovery = mock.Mock()
+    discovery.info = discovery_info
+    discovery.start_pairing = asynctest.CoroutineMock(return_value=finish_pairing)
+
     flow.controller.pairings = {"00:00:00:00:00:00": pairing}
-    flow.controller.discover.return_value = [discovery_info]
+    flow.controller.discover_ip = asynctest.CoroutineMock(return_value=[discovery])
+    flow.controller.find_ip_by_device_id = asynctest.CoroutineMock(
+        return_value=discovery
+    )
 
     result = await flow.async_step_user()
     assert result["type"] == "form"
@@ -688,7 +749,7 @@ async def test_user_no_devices(hass):
     """Test user initiated pairing where no devices discovered."""
     flow = _setup_flow_handler(hass)
 
-    flow.controller.discover.return_value = []
+    flow.controller.discover_ip = asynctest.CoroutineMock(return_value=[])
     result = await flow.async_step_user()
 
     assert result["type"] == "abort"
@@ -709,7 +770,10 @@ async def test_user_no_unpaired_devices(hass):
         "sf": 0,
     }
 
-    flow.controller.discover.return_value = [discovery_info]
+    discovery = mock.Mock()
+    discovery.info = discovery_info
+
+    flow.controller.discover_ip = asynctest.CoroutineMock(return_value=[discovery])
     result = await flow.async_step_user()
 
     assert result["type"] == "abort"
@@ -718,12 +782,10 @@ async def test_user_no_unpaired_devices(hass):
 
 async def test_parse_new_homekit_json(hass):
     """Test migrating recent .homekit/pairings.json files."""
-    service = FakeService("public.hap.service.lightbulb")
-    on_char = service.add_characteristic("on")
-    on_char.value = 1
-
     accessory = Accessory("TestDevice", "example.com", "Test", "0001", "0.1")
-    accessory.services.append(service)
+    service = accessory.add_service(ServicesTypes.LIGHTBULB)
+    on_char = service.add_char(CharacteristicsTypes.ON)
+    on_char.value = 0
 
     fake_controller = await setup_platform(hass)
     pairing = fake_controller.add([accessory])
@@ -766,12 +828,10 @@ async def test_parse_new_homekit_json(hass):
 
 async def test_parse_old_homekit_json(hass):
     """Test migrating original .homekit/hk-00:00:00:00:00:00 files."""
-    service = FakeService("public.hap.service.lightbulb")
-    on_char = service.add_characteristic("on")
-    on_char.value = 1
-
     accessory = Accessory("TestDevice", "example.com", "Test", "0001", "0.1")
-    accessory.services.append(service)
+    service = accessory.add_service(ServicesTypes.LIGHTBULB)
+    on_char = service.add_char(CharacteristicsTypes.ON)
+    on_char.value = 0
 
     fake_controller = await setup_platform(hass)
     pairing = fake_controller.add([accessory])
@@ -818,12 +878,10 @@ async def test_parse_old_homekit_json(hass):
 
 async def test_parse_overlapping_homekit_json(hass):
     """Test migrating .homekit/pairings.json files when hk- exists too."""
-    service = FakeService("public.hap.service.lightbulb")
-    on_char = service.add_characteristic("on")
-    on_char.value = 1
-
     accessory = Accessory("TestDevice", "example.com", "Test", "0001", "0.1")
-    accessory.services.append(service)
+    service = accessory.add_service(ServicesTypes.LIGHTBULB)
+    on_char = service.add_char(CharacteristicsTypes.ON)
+    on_char.value = 0
 
     fake_controller = await setup_platform(hass)
     pairing = fake_controller.add([accessory])
@@ -857,7 +915,6 @@ async def test_parse_overlapping_homekit_json(hass):
     pairing_cls_imp = (
         "homeassistant.components.homekit_controller.config_flow.IpPairing"
     )
-
     with mock.patch(pairing_cls_imp) as pairing_cls:
         pairing_cls.return_value = pairing
         with mock.patch("builtins.open", side_effect=side_effects):
@@ -894,22 +951,39 @@ async def test_unignore_works(hass):
     }
 
     pairing = mock.Mock(pairing_data={"AccessoryPairingID": "00:00:00:00:00:00"})
-    pairing.list_accessories_and_characteristics.return_value = [
-        {
-            "aid": 1,
-            "services": [
-                {
-                    "characteristics": [{"type": "23", "value": "Koogeek-LS1-20833F"}],
-                    "type": "3e",
-                }
-            ],
-        }
-    ]
+    pairing.list_accessories_and_characteristics = asynctest.CoroutineMock(
+        return_value=[
+            {
+                "aid": 1,
+                "services": [
+                    {
+                        "characteristics": [
+                            {"type": "23", "value": "Koogeek-LS1-20833F"}
+                        ],
+                        "type": "3e",
+                    }
+                ],
+            }
+        ]
+    )
+
+    finish_pairing = asynctest.CoroutineMock()
+
+    discovery = mock.Mock()
+    discovery.device_id = "00:00:00:00:00:00"
+    discovery.info = discovery_info
+    discovery.start_pairing = asynctest.CoroutineMock(return_value=finish_pairing)
+
+    finish_pairing.return_value = pairing
 
     flow = _setup_flow_handler(hass)
 
     flow.controller.pairings = {"00:00:00:00:00:00": pairing}
-    flow.controller.discover.return_value = [discovery_info]
+    flow.controller.discover_ip = asynctest.CoroutineMock(return_value=[discovery])
+
+    flow.controller.find_ip_by_device_id = asynctest.CoroutineMock(
+        return_value=discovery
+    )
 
     result = await flow.async_step_unignore({"unique_id": "00:00:00:00:00:00"})
     assert result["type"] == "form"
@@ -924,7 +998,6 @@ async def test_unignore_works(hass):
     result = await flow.async_step_pair({})
     assert result["type"] == "form"
     assert result["step_id"] == "pair"
-    assert flow.controller.start_pairing.call_count == 1
 
     # Pairing finalized
     result = await flow.async_step_pair({"pairing_code": "111-22-333"})
@@ -949,8 +1022,12 @@ async def test_unignore_ignores_missing_devices(hass):
         "sf": 1,
     }
 
+    discovery = mock.Mock()
+    discovery.device_id = "00:00:00:00:00:00"
+    discovery.info = discovery_info
+
     flow = _setup_flow_handler(hass)
-    flow.controller.discover.return_value = [discovery_info]
+    flow.controller.discover_ip = asynctest.CoroutineMock(return_value=[discovery])
 
     result = await flow.async_step_unignore({"unique_id": "00:00:00:00:00:01"})
     assert result["type"] == "abort"
