@@ -83,7 +83,7 @@ async def test_user_with_bad_cert(hass):
 
 async def test_import_host_only(hass):
     """Test import with host only."""
-    with asyncpatch(GET_CERT_TIME_METHOD, return_value=1):
+    with asyncpatch(GET_CERT_TIME_METHOD):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "import"}, data={CONF_HOST: HOST}
         )
@@ -106,7 +106,7 @@ async def test_import_host_only(hass):
 
 async def test_import_host_and_port(hass):
     """Test import with host and port."""
-    with asyncpatch(GET_CERT_TIME_METHOD, return_value=1):
+    with asyncpatch(GET_CERT_TIME_METHOD):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": "import"},
@@ -154,7 +154,7 @@ async def test_import_non_default_port(hass):
 
 async def test_import_with_name(hass):
     """Test import with name (deprecated)."""
-    with asyncpatch(GET_CERT_TIME_METHOD, return_value=1):
+    with asyncpatch(GET_CERT_TIME_METHOD):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": "import"},
