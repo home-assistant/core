@@ -1723,7 +1723,7 @@ pyzabbix==0.7.4
 pyzbar==0.1.7
 
 # homeassistant.components.qnap
-qnapstats==0.2.7
+qnapstats==0.3.0
 
 # homeassistant.components.quantum_gateway
 quantum-gateway==0.0.5
