@@ -294,7 +294,7 @@ async def test_load_unload_entry(hass, geofency_client, webhook_id):
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
     device_name = slugify(GPS_ENTER_HOME["device"])
-    state_1 = hass.states.get(f"device_tracker.{device_name}").state
+    state_1 = hass.states.get(f"device_tracker.{device_name}")
     assert STATE_HOME == state_1.state
 
     assert len(hass.data[DOMAIN]["devices"]) == 1
@@ -307,7 +307,7 @@ async def test_load_unload_entry(hass, geofency_client, webhook_id):
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state_2 = hass.states.get(f"device_tracker.{device_name}").state
+    state_2 = hass.states.get(f"device_tracker.{device_name}")
     assert state_2 is not None
     assert state_1 is not state_2
 
