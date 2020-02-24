@@ -1214,12 +1214,10 @@ def test_valid_entity_id():
         "_light.kitchen",
         ".kitchen",
         ".light.kitchen",
-        "1.a",
-        "1light.kitchen",
         "light_.kitchen",
         "light._kitchen",
         "light.",
-        "light.1kitchen",
+        "light.kitchen__ceiling",
         "light.kitchen_yo_",
         "light.kitchen.",
         "Light.kitchen",
@@ -1229,8 +1227,12 @@ def test_valid_entity_id():
         assert not ha.valid_entity_id(invalid), invalid
 
     for valid in [
+        "1.a",
+        "1light.kitchen",
+        "a.1",
         "a.a",
         "input_boolean.hello_world_0123",
+        "light.1kitchen",
         "light.kitchen",
         "light.something_yoo",
     ]:
