@@ -7,10 +7,10 @@ from aiohomekit.model import Accessories, Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 import asynctest
+from asynctest import patch
 import pytest
 
 from homeassistant.components.homekit_controller import config_flow
-from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
 
 from tests.common import MockConfigEntry
 from tests.components.homekit_controller.common import setup_platform
@@ -185,9 +185,7 @@ async def test_discovery_works(hass, controller, upper_case_props, missing_cshar
     }
 
     # User initiates pairing - device enters pairing mode and displays code
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=None
-    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] == "form"
     assert result["step_id"] == "pair"
 
@@ -250,7 +248,7 @@ async def test_discovery_ignored_model(hass, controller):
 
 
 async def test_discovery_invalid_config_entry(hass, controller):
-    """There is already a config entry for the pairing id but its invalid."""
+    """There is already a config entry for the pairing id but it's invalid."""
     MockConfigEntry(
         domain="homekit_controller",
         data={"AccessoryPairingID": "00:00:00:00:00:00"},
@@ -280,11 +278,11 @@ async def test_discovery_invalid_config_entry(hass, controller):
 
 async def test_discovery_already_configured(hass, controller):
     """Already configured."""
-    await setup_platform(hass)
-
-    conn = mock.Mock()
-    conn.config_num = 1
-    hass.data[KNOWN_DEVICES]["00:00:00:00:00:00"] = conn
+    MockConfigEntry(
+        domain="homekit_controller",
+        data={"AccessoryPairingID": "00:00:00:00:00:00"},
+        unique_id="00:00:00:00:00:00",
+    ).add_to_hass(hass)
 
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
@@ -298,36 +296,6 @@ async def test_discovery_already_configured(hass, controller):
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-
-    assert conn.async_config_num_changed.call_count == 0
-
-
-async def test_discovery_already_configured_config_change(hass, controller):
-    """Already configured."""
-    await setup_platform(hass)
-
-    conn = mock.Mock()
-    conn.config_num = 1
-    hass.data[KNOWN_DEVICES]["00:00:00:00:00:00"] = conn
-
-    device = setup_mock_accessory(controller)
-    discovery_info = get_device_discovery_info(device)
-
-    # Set device as already paired
-    discovery_info["properties"]["sf"] = 0x00
-
-    # Set device as having a different entity map to the one cached
-    discovery_info["properties"]["c#"] = 2
-
-    # Device is discovered
-    result = await hass.config_entries.flow.async_init(
-        "homekit_controller", context={"source": "zeroconf"}, data=discovery_info
-    )
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
-
-    assert conn.async_refresh_entity_map.call_args == mock.call(2)
 
 
 @pytest.mark.parametrize("exception,expected", PAIRING_START_ABORT_ERRORS)
@@ -344,10 +312,8 @@ async def test_pair_abort_errors_on_start(hass, controller, exception, expected)
 
     # User initiates pairing - device refuses to enter pairing mode
     test_exc = exception("error")
-    with asynctest.patch.object(device, "start_pairing", side_effect=test_exc):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=None
-        )
+    with patch.object(device, "start_pairing", side_effect=test_exc):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] == "abort"
     assert result["reason"] == expected
 
@@ -373,10 +339,8 @@ async def test_pair_form_errors_on_start(hass, controller, exception, expected):
 
     # User initiates pairing - device refuses to enter pairing mode
     test_exc = exception("error")
-    with asynctest.patch.object(device, "start_pairing", side_effect=test_exc):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=None
-        )
+    with patch.object(device, "start_pairing", side_effect=test_exc):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] == "form"
     assert result["errors"]["pairing_code"] == expected
 
@@ -409,10 +373,8 @@ async def test_pair_abort_errors_on_finish(hass, controller, exception, expected
     # User initiates pairing - this triggers the device to show a pairing code
     # and then HA to show a pairing form
     finish_pairing = asynctest.CoroutineMock(side_effect=exception("error"))
-    with asynctest.patch.object(device, "start_pairing", return_value=finish_pairing):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=None
-        )
+    with patch.object(device, "start_pairing", return_value=finish_pairing):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] == "form"
     assert get_flow_context(hass, result) == {
@@ -451,10 +413,8 @@ async def test_pair_form_errors_on_finish(hass, controller, exception, expected)
     # User initiates pairing - this triggers the device to show a pairing code
     # and then HA to show a pairing form
     finish_pairing = asynctest.CoroutineMock(side_effect=exception("error"))
-    with asynctest.patch.object(device, "start_pairing", return_value=finish_pairing):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=None
-        )
+    with patch.object(device, "start_pairing", return_value=finish_pairing):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] == "form"
     assert get_flow_context(hass, result) == {
@@ -485,7 +445,7 @@ async def test_user_works(hass, controller):
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller", context={"source": "user"}, data=None
+        "homekit_controller", context={"source": "user"}
     )
 
     assert result["type"] == "form"
@@ -515,7 +475,7 @@ async def test_user_works(hass, controller):
 async def test_user_no_devices(hass, controller):
     """Test user initiated pairing where no devices discovered."""
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller", context={"source": "user"}, data=None
+        "homekit_controller", context={"source": "user"}
     )
     assert result["type"] == "abort"
     assert result["reason"] == "no_devices"
@@ -531,7 +491,7 @@ async def test_user_no_unpaired_devices(hass, controller):
 
     # Device discovery is requested
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller", context={"source": "user"}, data=None
+        "homekit_controller", context={"source": "user"}
     )
 
     assert result["type"] == "abort"
@@ -712,9 +672,7 @@ async def test_unignore_works(hass, controller):
     }
 
     # User initiates pairing by clicking on 'configure' - device enters pairing mode and displays code
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=None
-    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] == "form"
     assert result["step_id"] == "pair"
 

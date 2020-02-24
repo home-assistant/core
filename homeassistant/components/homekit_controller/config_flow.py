@@ -209,7 +209,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         if not paired and existing:
             await self.hass.config_entries.async_remove(existing.entry_id)
 
-        # Set unique-id and error if out if its already configured
+        # Set unique-id and error out if its already configured
         await self.async_set_unique_id(normalize_hkid(hkid))
         self._abort_if_unique_id_configured()
 
