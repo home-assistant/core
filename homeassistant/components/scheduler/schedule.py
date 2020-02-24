@@ -196,7 +196,7 @@ class Schedule:
 
     @property
     def state(self) -> str:
-        """Return the current state of the schdule."""
+        """Return the current state of the schedule."""
         if self.expired:
             return STATE_EXPIRED
         if self.is_on:

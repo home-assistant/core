@@ -4,6 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/scheduler",
   "requirements": [],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@home-assistant/core"]
 }
 
