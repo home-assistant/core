@@ -4,17 +4,11 @@ from regenmaschine.errors import RainMachineError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_IP_ADDRESS,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
-    CONF_SSL,
-)
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
-from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SSL, DOMAIN
+from .const import DEFAULT_PORT, DOMAIN
 
 
 @callback
@@ -74,15 +68,6 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
         except RainMachineError:
             return await self._show_form({CONF_PASSWORD: "invalid_credentials"})
-
-        # Since the config entry doesn't allow for configuration of SSL, make
-        # sure it's set:
-        if user_input.get(CONF_SSL) is None:
-            user_input[CONF_SSL] = DEFAULT_SSL
-
-        # Timedeltas are easily serializable, so store the seconds instead:
-        scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        user_input[CONF_SCAN_INTERVAL] = scan_interval.seconds
 
         # Unfortunately, RainMachine doesn't provide a way to refresh the
         # access token without using the IP address and password, so we have to

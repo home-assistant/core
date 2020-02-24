@@ -34,8 +34,6 @@ from .const import (
     DATA_ZONES,
     DATA_ZONES_DETAILS,
     DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
-    DEFAULT_SSL,
     DOMAIN,
     PROGRAM_UPDATE_TOPIC,
     SENSOR_UPDATE_TOPIC,
@@ -54,6 +52,8 @@ CONF_ZONE_RUN_TIME = "zone_run_time"
 
 DEFAULT_ATTRIBUTION = "Data provided by Green Electronics LLC"
 DEFAULT_ICON = "mdi:water"
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
+DEFAULT_SSL = True
 DEFAULT_ZONE_RUN = 60 * 10
 
 SERVICE_ALTER_PROGRAM = vol.Schema({vol.Required(CONF_PROGRAM_ID): cv.positive_int})
@@ -85,8 +85,10 @@ CONTROLLER_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
-        vol.Optional(CONF_ZONE_RUN_TIME): cv.positive_int,
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
+            cv.time_period, lambda value: value.total_seconds()
+        ),
+        vol.Optional(CONF_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN): cv.positive_int,
     }
 )
 
@@ -153,7 +155,7 @@ async def async_setup_entry(hass, config_entry):
         rainmachine = RainMachine(
             hass,
             controller,
-            config_entry.data.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN),
+            config_entry.data[CONF_ZONE_RUN_TIME],
             config_entry.data[CONF_SCAN_INTERVAL],
         )
 
