@@ -103,6 +103,7 @@ homeassistant/components/eq3btsmart/* @rytilahti
 homeassistant/components/esphome/* @OttoWinter
 homeassistant/components/essent/* @TheLastProject
 homeassistant/components/evohome/* @zxdavb
+homeassistant/components/ezviz/* @baqs
 homeassistant/components/fastdotcom/* @rohankapoorcom
 homeassistant/components/file/* @fabaff
 homeassistant/components/filter/* @dgomes
