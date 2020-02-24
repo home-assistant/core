@@ -12,7 +12,10 @@ import voluptuous as vol
 from homeassistant.const import ATTR_ENTITY_ID
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import comp_entity_ids
-from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.service import (
+    async_register_admin_service,
+    verify_domain_control,
+)
 from homeassistant.helpers.typing import HomeAssistantType, ServiceCallType
 
 from .const import DOMAIN as HMIPC_DOMAIN
@@ -110,6 +113,7 @@ async def async_setup_services(hass: HomeAssistantType) -> None:
     if hass.services.async_services().get(HMIPC_DOMAIN):
         return
 
+    @verify_domain_control(hass, HMIPC_DOMAIN)
     async def async_call_hmipc_service(service: ServiceCallType):
         """Call correct HomematicIP Cloud service."""
         service_name = service.service
@@ -166,8 +170,7 @@ async def async_setup_services(hass: HomeAssistantType) -> None:
         schema=SCHEMA_DEACTIVATE_VACATION,
     )
 
-    async_register_admin_service(
-        hass=hass,
+    hass.services.async_register(
         domain=HMIPC_DOMAIN,
         service=SERVICE_SET_ACTIVE_CLIMATE_PROFILE,
         service_func=async_call_hmipc_service,
