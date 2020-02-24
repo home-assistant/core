@@ -10,31 +10,9 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Get all devices and add them to hass."""
-    devices = hass.data[DOMAIN]["mprm"].binary_switch_devices
-
-    devices_list = []
-    for device in devices:
-        if (
-            get_sub_device_uid_from_element_uid([*device.binary_switch_property][0])
-            is None
-        ):
-            # Normal binary switch device with one binary switch
-            devices_list.append(
-                DevoloSwitch(hass=hass, device_instance=device, sub_uid=None)
-            )
-        else:
-            # Device with more than one binary switch
-            for i in range(1, len(device.binary_switch_property) + 1):
-                devices_list.append(
-                    DevoloSwitch(hass=hass, device_instance=device, sub_uid=i)
-                )
-    add_entities(devices_list, False)
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -75,12 +53,24 @@ class DevoloSwitch(SwitchDevice):
             consumption_property = (
                 "devolo.Meter:" + self._device_instance.uid + "#" + str(sub_uid)
             )
+            self._unique_id = (
+                get_device_uid_from_element_uid(binary_switch) + "_" + str(sub_uid)
+            )
         else:
             binary_switch = "devolo.BinarySwitch:" + self._device_instance.uid
             consumption_property = "devolo.Meter:" + self._device_instance.uid
-        self._unique_id = get_device_uid_from_element_uid(binary_switch)
+            self._unique_id = get_device_uid_from_element_uid(binary_switch)
         self._mprm = hass.data[DOMAIN]["homecontrol"]
         self._name = self._device_instance.itemName
+        self._available = self._mprm.is_online(self._device_instance.uid)
+        try:
+            self._brand = self._device_instance.brand
+            self._model = self._device_instance.name
+        except AttributeError:
+            self._brand = None
+            self._model = None
+        print(self.name)
+        print(self._mprm.is_online(self._device_instance.uid))
         self._binary_switch_property = self._device_instance.binary_switch_property.get(
             binary_switch
         )
@@ -108,6 +98,8 @@ class DevoloSwitch(SwitchDevice):
                 (DOMAIN, self.unique_id)
             },
             "name": self.name,
+            "manufacturer": self._brand,
+            "model": self._model,
         }
 
     @property
@@ -135,6 +127,11 @@ class DevoloSwitch(SwitchDevice):
         """Return the current consumption."""
         return self._consumption
 
+    @property
+    def available(self):
+        """Return the online state."""
+        return self._available
+
     def turn_on(self, **kwargs):
         """Switch on the device."""
         self._is_on = True
@@ -153,6 +150,10 @@ class DevoloSwitch(SwitchDevice):
             self._consumption = self._device_instance.consumption_property[
                 message[0]
             ].current
+        elif message[0].startswith("hdm"):
+            print(self.name)
+            print(self._mprm.is_online(self._device_instance.uid))
+            self._available = self._mprm.is_online(self._device_instance.uid)
         else:
             _LOGGER.debug("No valid message received")
             _LOGGER.debug(message)

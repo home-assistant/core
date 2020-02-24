@@ -24,7 +24,6 @@ SERVER_CONFIG_SCHEMA = vol.Schema(
         {
             vol.Optional("mydevolo", default=DEFAULT_MYDEVOLO): cv.string,
             vol.Optional("mprm", default=DEFAULT_MPRM): cv.string,
-            vol.Required("gateway"): cv.string,
             vol.Required(CONF_PASSWORD): cv.string,
             vol.Required(CONF_USERNAME): cv.string,
         }
@@ -32,41 +31,30 @@ SERVER_CONFIG_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: SERVER_CONFIG_SCHEMA}, extra=vol.ALLOW_EXTRA)
-SUPPORTED_PLATFORMS = [ha_switch.DOMAIN]
-
-SERVER_CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        {
-            vol.Optional("mydevolo", default=DEFAULT_MYDEVOLO): cv.string,
-            vol.Optional("mprm", default=DEFAULT_MPRM): cv.string,
-            vol.Required("gateway"): cv.string,
-            vol.Required(CONF_PASSWORD): cv.string,
-            vol.Required(CONF_USERNAME): cv.string,
-        }
-    )
-)
-CONFIG_SCHEMA = vol.Schema({DOMAIN: SERVER_CONFIG_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Get all devices and add them to hass."""
-    print(
-        "###############################################################################################################"
-    )
+    mydevolo = Mydevolo()
+    try:
+        mydevolo.url = config.get(DOMAIN).get("mydevolo")
+        mydevolo.mprm = config.get(DOMAIN).get("mprm")
+    except AttributeError:
+        mydevolo.url = "https://www.mydevolo.com"
+        mydevolo.mprm = "https://homecontrol.mydevolo.com"
     return True
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up the devolo account from a config entry."""
     conf = entry.data
-
     hass.data.setdefault(DOMAIN, {})
 
     try:
-        mydevolo = Mydevolo()
+        mydevolo = Mydevolo.get_instance()
         mydevolo.user = conf.get(CONF_USERNAME)
         mydevolo.password = conf.get(CONF_PASSWORD)
-        mydevolo.url = conf.get("mydevolo")
+        # mydevolo.url = conf.get("mydevolo")
     except (WrongCredentialsError, WrongUrlError):
         return False
 
@@ -75,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     # TODO: Handle more than one gateway
     gateway_id = mydevolo.gateway_ids[0]
-    mprm_url = conf.get("mprm")
+    mprm_url = mydevolo.mprm
 
     try:
         hass.data[DOMAIN]["homecontrol"] = HomeControl(
