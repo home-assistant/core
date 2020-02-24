@@ -1,7 +1,7 @@
 """Support for Homekit lights."""
 import logging
 
-from homekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,

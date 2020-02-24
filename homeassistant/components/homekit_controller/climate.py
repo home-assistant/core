@@ -1,7 +1,7 @@
 """Support for Homekit climate devices."""
 import logging
 
-from homekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.climate import (
     DEFAULT_MAX_HUMIDITY,

@@ -1,5 +1,5 @@
 """Support for Homekit sensors."""
-from homekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.const import DEVICE_CLASS_BATTERY, TEMP_CELSIUS
 from homeassistant.core import callback

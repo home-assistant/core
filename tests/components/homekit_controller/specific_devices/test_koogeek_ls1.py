@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest import mock
 
-from homekit.exceptions import AccessoryDisconnectedError, EncryptionError
+from aiohomekit.exceptions import AccessoryDisconnectedError, EncryptionError
 import pytest
 
 from homeassistant.components.light import SUPPORT_BRIGHTNESS, SUPPORT_COLOR
