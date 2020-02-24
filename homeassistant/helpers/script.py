@@ -362,6 +362,7 @@ class _ScriptRun(_ScriptRunBase):
         finally:
             if not self._stop.is_set():
                 self._changed()
+            self._script.last_action = None
             self._script._runs.remove(self)  # pylint: disable=protected-access
             self._stopped.set()
 
@@ -372,9 +373,10 @@ class _ScriptRun(_ScriptRunBase):
 
     async def _async_delay_step(self):
         """Handle delay."""
-        await asyncio.wait(
-            {self._stop.wait()}, timeout=self._prep_delay_step().total_seconds()
-        )
+        timeout = self._prep_delay_step().total_seconds()
+        if not self._stop.is_set():
+            self._changed()
+        await asyncio.wait({self._stop.wait()}, timeout=timeout)
 
     async def _async_wait_template_step(self):
         """Handle a wait template."""
@@ -382,13 +384,14 @@ class _ScriptRun(_ScriptRunBase):
         @callback
         def async_script_wait(entity_id, from_s, to_s):
             """Handle script after template condition is true."""
-            nonlocal done
             done.set()
 
         unsub = self._prep_wait_template_step(async_script_wait)
         if not unsub:
             return
 
+        if not self._stop.is_set():
+            self._changed()
         try:
             timeout = self._action[CONF_TIMEOUT].total_seconds()
         except KeyError:
@@ -615,10 +618,6 @@ class Script:
         if self._change_listener:
             self._hass.async_add_job(self._change_listener)
 
-    def set_logger(self, logger):
-        """Set logger used by script helper."""
-        self._logger = logger
-
     @property
     def is_running(self) -> bool:
         """Return true if script is on."""
@@ -693,6 +692,7 @@ class Script:
         if self.is_running:
             if self._if_running == IF_RUNNING_IGNORE:
                 self._log("Skipping script")
+                return
 
             if self._if_running == IF_RUNNING_ERROR:
                 self._raise("Already running")
