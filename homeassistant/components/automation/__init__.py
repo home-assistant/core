@@ -393,10 +393,8 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
 
         try:
             await self.action_script.async_run(variables, trigger_context)
-        except Exception as err:  # pylint: disable=broad-except
-            self.action_script.async_log_exception(
-                _LOGGER, f"Error while executing automation {self.entity_id}", err
-            )
+        except Exception:  # pylint: disable=broad-except
+            pass
 
         self._last_triggered = utcnow()
         await self.async_update_ha_state()
@@ -504,7 +502,9 @@ async def _async_process_config(hass, config, component):
             hidden = config_block[CONF_HIDE_ENTITY]
             initial_state = config_block.get(CONF_INITIAL_STATE)
 
-            action_script = script.Script(hass, config_block.get(CONF_ACTION, {}), name)
+            action_script = script.Script(
+                hass, config_block.get(CONF_ACTION, {}), name, logger=_LOGGER
+            )
 
             if CONF_CONDITION in config_block:
                 cond_func = await _async_process_if(hass, config, config_block)
