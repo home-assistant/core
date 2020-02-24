@@ -39,7 +39,7 @@ class TestFeedreaderComponent(unittest.TestCase):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
         # Delete any previously stored data
-        data_file = self.hass.config.path("{}.pickle".format("feedreader"))
+        data_file = self.hass.config.path(f"{feedreader.DOMAIN}.pickle")
         if exists(data_file):
             remove(data_file)
 
@@ -85,7 +85,7 @@ class TestFeedreaderComponent(unittest.TestCase):
         # Loading raw data from fixture and plug in to data object as URL
         # works since the third-party feedparser library accepts a URL
         # as well as the actual data.
-        data_file = self.hass.config.path("{}.pickle".format(feedreader.DOMAIN))
+        data_file = self.hass.config.path(f"{feedreader.DOMAIN}.pickle")
         storage = StoredData(data_file)
         with patch(
             "homeassistant.components.feedreader.track_time_interval"
@@ -179,7 +179,7 @@ class TestFeedreaderComponent(unittest.TestCase):
     @mock.patch("feedparser.parse", return_value=None)
     def test_feed_parsing_failed(self, mock_parse):
         """Test feed where parsing fails."""
-        data_file = self.hass.config.path("{}.pickle".format(feedreader.DOMAIN))
+        data_file = self.hass.config.path(f"{feedreader.DOMAIN}.pickle")
         storage = StoredData(data_file)
         manager = FeedManager(
             "FEED DATA", DEFAULT_SCAN_INTERVAL, DEFAULT_MAX_ENTRIES, self.hass, storage
