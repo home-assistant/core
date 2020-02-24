@@ -110,7 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         webhook_url = hass.components.webhook.async_generate_url(data[CONF_WEBHOOK_ID])
 
     webhook_register(hass, DOMAIN, "Netatmo", webhook_id, handle_webhook)
-    await hass.async_add_job(data[AUTH].addwebhook, webhook_url)
+    await hass.async_add_executor_job(data[AUTH].addwebhook, webhook_url)
     _LOGGER.info("Netatmo webhook url: %s", webhook_url)
 
     return True
@@ -132,7 +132,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     data = hass.data[DOMAIN][entry.entry_id]
 
     webhook_unregister(hass, data[CONF_WEBHOOK_ID])
-    await hass.async_add_job(data[AUTH].dropwebhook())
+    await hass.async_add_executor_job(data[AUTH].dropwebhook())
 
     return unload_ok
 
