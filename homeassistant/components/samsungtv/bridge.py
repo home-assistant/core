@@ -64,7 +64,7 @@ class SamsungTVBridge(ABC):
         self._callback = func
 
     @abstractmethod
-    def try_connect(self, port):
+    def try_connect(self):
         """Try to connect to the TV."""
 
     def is_on(self):
@@ -137,9 +137,9 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
 
     def __init__(self, method, host, port):
         """Initialize Bridge."""
-        super().__init__(method, host, port, None)
+        super().__init__(method, host, None, None)
 
-    def try_connect(self, port):
+    def try_connect(self):
         """Try to connect to the Legacy TV."""
         config = {
             CONF_NAME: VALUE_CONF_NAME,
@@ -147,7 +147,6 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             CONF_ID: VALUE_CONF_ID,
             CONF_HOST: self.host,
             CONF_METHOD: self.method,
-            CONF_PORT: self.port,
             # We need this high timeout because waiting for auth popup is just an open socket
             CONF_TIMEOUT: 31,
         }
@@ -200,11 +199,9 @@ class SamsungTVWSBridge(SamsungTVBridge):
         """Initialize Bridge."""
         super().__init__(method, host, port, token)
 
-    def try_connect(self, port):
+    def try_connect(self):
         """Try to connect to the Websocket TV."""
         for self.port in (8002, 8001):
-            if port is not None and port != self.port:
-                continue
             config = {
                 CONF_NAME: VALUE_CONF_NAME,
                 CONF_HOST: self.host,

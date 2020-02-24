@@ -27,7 +27,7 @@ CONFIG_SCHEMA = vol.Schema(
                     {
                         vol.Required(CONF_HOST): cv.string,
                         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                        vol.Optional(CONF_PORT): cv.port,
+                        vol.Optional(CONF_PORT): cv.deprecated,
                         vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
                     }
                 )
