@@ -1211,24 +1211,27 @@ async def test_async_functions_with_callback(hass):
 def test_valid_entity_id():
     """Test valid entity ID."""
     for invalid in [
-        "light_.kitchen",
-        "Light.kitchen",
         "_light.kitchen",
+        ".kitchen",
+        ".light.kitchen",
+        "1.a",
+        "1light.kitchen",
+        "light_.kitchen",
         "light._kitchen",
+        "light.",
+        "light.1kitchen",
         "light.kitchen_yo_",
+        "light.kitchen.",
+        "Light.kitchen",
         "light.Kitchen",
         "lightkitchen",
-        ".kitchen",
-        "light.",
-        ".light.kitchen",
-        "light.kitchen.",
     ]:
         assert not ha.valid_entity_id(invalid), invalid
 
     for valid in [
-        "light.kitchen",
-        "input_boolean.hello_world_0123",
-        "light.something_yoo",
         "a.a",
+        "input_boolean.hello_world_0123",
+        "light.kitchen",
+        "light.something_yoo",
     ]:
         assert ha.valid_entity_id(valid), valid
