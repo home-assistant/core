@@ -177,8 +177,11 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if entry.data[CONF_NAME] != import_config[CONF_NAME]:
                     updated_name[CONF_NAME] = import_config[CONF_NAME]
 
-                if entry.data[CONF_VOLUME_STEP] != import_config[CONF_VOLUME_STEP]:
-                    updated_options[CONF_VOLUME_STEP] = import_config[CONF_VOLUME_STEP]
+                import_volume_step = import_config.get(
+                    CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP
+                )
+                if entry.data.get(CONF_VOLUME_STEP) != import_volume_step:
+                    updated_options[CONF_VOLUME_STEP] = import_volume_step
 
                 if updated_options or updated_name:
                     new_data = entry.data.copy()
