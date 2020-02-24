@@ -116,29 +116,27 @@ class StatisticsSensor(Entity):
         self.change = self.average_change = self.change_rate = None
         self._update_listener = None
         self._debounced_updater = debounced_updater
+        self._debounced_updater.function = self._async_debounced_update
+
+    async def _async_debounced_update(self):
+        """
+        Debounced call to update entity.
+
+        To process stats just once (in the end) when a burst of samples is received.
+        """
+        await self.async_update_ha_state(True)
 
     async def async_added_to_hass(self):
         """Register callbacks."""
 
-        async def _async_debounced_update():
-            """
-            Debounced call to update entity.
-
-            To process stats just once (in the end) when a burst of samples is received.
-            """
-            await self.async_update_ha_state(True)
-
-        self._debounced_updater.function = _async_debounced_update
-
-        @callback
-        def async_stats_sensor_state_listener(entity, old_state, new_state):
+        async def async_stats_sensor_state_listener(entity, old_state, new_state):
             """Handle the sensor state changes."""
             self._unit_of_measurement = new_state.attributes.get(
                 ATTR_UNIT_OF_MEASUREMENT
             )
 
             self._add_state_to_queue(new_state)
-            self.hass.async_create_task(self._debounced_updater.async_call())
+            await self._debounced_updater.async_call()
 
         @callback
         def async_stats_sensor_startup(event):
@@ -314,12 +312,11 @@ class StatisticsSensor(Entity):
                 self._update_listener()
                 self._update_listener = None
 
-            @callback
-            def _scheduled_update(now):
+            async def _scheduled_update(now):
                 """Timer callback for sensor update."""
                 _LOGGER.debug("%s: executing scheduled update", self.entity_id)
-                self.hass.async_create_task(self._debounced_updater.async_call())
                 self._update_listener = None
+                await self._debounced_updater.async_call()
 
             self._update_listener = async_track_point_in_utc_time(
                 self.hass, _scheduled_update, next_to_purge_timestamp
