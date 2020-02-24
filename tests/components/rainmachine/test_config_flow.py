@@ -5,6 +5,7 @@ from regenmaschine.errors import RainMachineError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.rainmachine import DOMAIN, config_flow
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
@@ -25,12 +26,33 @@ async def test_duplicate_error(hass):
         CONF_SSL: True,
     }
 
-    MockConfigEntry(domain=DOMAIN, data=conf).add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN, unique_id="192.168.1.100", data=conf).add_to_hass(
+        hass
+    )
     flow = config_flow.RainMachineFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_user(user_input=conf)
-    assert result["errors"] == {CONF_IP_ADDRESS: "identifier_exists"}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=conf
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_get_configured_instances(hass):
+    """Test retrieving all configured instances."""
+    conf = {
+        CONF_IP_ADDRESS: "192.168.1.100",
+        CONF_PASSWORD: "password",
+        CONF_PORT: 8080,
+        CONF_SSL: True,
+    }
+
+    MockConfigEntry(domain=DOMAIN, unique_id="192.168.1.100", data=conf).add_to_hass(
+        hass
+    )
+
+    assert len(config_flow.configured_instances(hass)) == 1
 
 
 async def test_invalid_password(hass):
@@ -44,6 +66,7 @@ async def test_invalid_password(hass):
 
     flow = config_flow.RainMachineFlowHandler()
     flow.hass = hass
+    flow.context = {"source": SOURCE_USER}
 
     with patch(
         "homeassistant.components.rainmachine.config_flow.login",
@@ -57,6 +80,7 @@ async def test_show_form(hass):
     """Test that the form is served with no input."""
     flow = config_flow.RainMachineFlowHandler()
     flow.hass = hass
+    flow.context = {"source": SOURCE_USER}
 
     result = await flow.async_step_user(user_input=None)
 
@@ -75,6 +99,7 @@ async def test_step_import(hass):
 
     flow = config_flow.RainMachineFlowHandler()
     flow.hass = hass
+    flow.context = {"source": SOURCE_USER}
 
     with patch(
         "homeassistant.components.rainmachine.config_flow.login",
@@ -104,6 +129,7 @@ async def test_step_user(hass):
 
     flow = config_flow.RainMachineFlowHandler()
     flow.hass = hass
+    flow.context = {"source": SOURCE_USER}
 
     with patch(
         "homeassistant.components.rainmachine.config_flow.login",
