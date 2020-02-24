@@ -1,4 +1,4 @@
-"""Config flow to configure the iCloud integration."""
+"""Config flow to configure the devolo home control integration."""
 import logging
 
 import voluptuous as vol
@@ -27,14 +27,7 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Optional("mPRM", default="https://mprm-test.devolo.net"): str,
-                    vol.Optional(
-                        "mydevolo", default="https://dcloud-test.devolo.net/"
-                    ): str,
-                }
+                {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
             ),
             errors=errors or {},
         )
@@ -52,7 +45,5 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data={
                 CONF_PASSWORD: user_input.get(CONF_PASSWORD),
                 CONF_USERNAME: user_input.get(CONF_USERNAME),
-                "mydevolo": user_input.get("mydevolo"),
-                "mprm": user_input.get("mPRM"),
             },
         )
