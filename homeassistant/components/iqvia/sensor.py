@@ -134,7 +134,9 @@ class IndexSensor(IQVIAEntity):
     async def async_update(self):
         """Update the sensor."""
         if not self._iqvia.data:
-            _LOGGER.info("The IQVIA didn't return data for %s; trying later", self.name)
+            _LOGGER.warning(
+                "The IQVIA didn't return data for %s; trying again later", self.name
+            )
             return
 
         try:
@@ -145,7 +147,9 @@ class IndexSensor(IQVIAEntity):
             elif self._type == TYPE_DISEASE_TODAY:
                 data = self._iqvia.data[TYPE_DISEASE_INDEX].get("Location")
         except KeyError:
-            _LOGGER.info("The IQVIA didn't return data for %s; trying later", self.name)
+            _LOGGER.warning(
+                "The IQVIA didn't return data for %s; trying again later", self.name
+            )
             return
 
         key = self._type.split("_")[-1].title()
@@ -153,7 +157,9 @@ class IndexSensor(IQVIAEntity):
         try:
             [period] = [p for p in data["periods"] if p["Type"] == key]
         except ValueError:
-            _LOGGER.info("The IQVIA didn't return data for %s; trying later", self.name)
+            _LOGGER.warning(
+                "The IQVIA didn't return data for %s; trying again later", self.name
+            )
             return
 
         [rating] = [
