@@ -68,6 +68,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     hostname = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
 
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(entry, unique_id=f"{hostname}:{port}")
+
     try:
         days = await get_cert_time_to_expiry(hass, hostname, port)
     except TemporaryFailure as err:
