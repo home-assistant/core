@@ -104,7 +104,7 @@ def split_entity_id(entity_id: str) -> List[str]:
     return entity_id.split(".", 1)
 
 
-VALID_ENTITY_ID = re.compile(r"[0-9a-z][a-z_]+[0-9a-z]\.[0-9a-z][0-9a-z_]+[0-9a-z]")
+VALID_ENTITY_ID = re.compile(r"^(?![_\d])[\da-z_]+(?<!_)\.(?![_\d])[\da-z_]+(?<!_)$")
 
 
 def valid_entity_id(entity_id: str) -> bool:
