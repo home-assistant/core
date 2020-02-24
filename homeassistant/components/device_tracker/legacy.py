@@ -181,7 +181,7 @@ class DeviceTracker:
             return
 
         # Guard from calling see on entity registry entities.
-        entity_id = f"DOMAIN.{dev_id}"
+        entity_id = f"{DOMAIN}.{dev_id}"
         if registry.async_is_registered(entity_id):
             LOGGER.error(
                 "The see service is not supported for this entity %s", entity_id
@@ -307,7 +307,7 @@ class Device(RestoreEntity):
     ) -> None:
         """Initialize a device."""
         self.hass = hass
-        self.entity_id = f"DOMAIN.{dev_id}"
+        self.entity_id = f"{DOMAIN}.{dev_id}"
 
         # Timedelta object how long we consider a device home if it is not
         # detected anymore.
