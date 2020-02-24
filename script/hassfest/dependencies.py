@@ -133,8 +133,6 @@ IGNORE_VIOLATIONS = {
     # These should be extracted to external package
     "pvoutput",
     "dwd_weather_warnings",
-    # Should be rewritten to use own data fetcher
-    "scrape",
 }
 
 
