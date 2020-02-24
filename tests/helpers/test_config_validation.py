@@ -464,7 +464,7 @@ def test_time():
 def test_datetime():
     """Test date time validation."""
     schema = vol.Schema(cv.datetime)
-    for value in [date.today(), "Wrong DateTime", "2016-11-23"]:
+    for value in [date.today(), "Wrong DateTime"]:
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 

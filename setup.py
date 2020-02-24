@@ -38,6 +38,7 @@ REQUIRES = [
     "attrs==19.3.0",
     "bcrypt==3.1.7",
     "certifi>=2019.11.28",
+    "ciso8601==2.1.3",
     "importlib-metadata==1.5.0",
     "jinja2>=2.10.3",
     "PyJWT==1.7.1",
