@@ -44,9 +44,7 @@ DEFAULT_TIMEOUT = 5
 
 SCAN_INTERVAL = timedelta(minutes=2)
 
-CODE_STORAGE_KEY = "broadlink_{}_codes"
 CODE_STORAGE_VERSION = 1
-FLAG_STORAGE_KEY = "broadlink_{}_flags"
 FLAG_STORAGE_VERSION = 1
 FLAG_SAVE_DELAY = 15
 
@@ -96,8 +94,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     api = broadlink.rm((host, DEFAULT_PORT), mac_addr, None)
     api.timeout = timeout
-    code_storage = Store(hass, CODE_STORAGE_VERSION, CODE_STORAGE_KEY.format(unique_id))
-    flag_storage = Store(hass, FLAG_STORAGE_VERSION, FLAG_STORAGE_KEY.format(unique_id))
+    code_storage = Store(hass, CODE_STORAGE_VERSION, f"broadlink_{unique_id}_codes")
+    flag_storage = Store(hass, FLAG_STORAGE_VERSION, f"broadlink_{unique_id}_flags")
     remote = BroadlinkRemote(name, unique_id, api, code_storage, flag_storage)
 
     connected, loaded = (False, False)

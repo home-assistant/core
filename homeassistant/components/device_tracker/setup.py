@@ -109,9 +109,7 @@ async def async_extract_config(hass, config):
             legacy.append(platform)
         else:
             raise ValueError(
-                "Unable to determine type for {}: {}".format(
-                    platform.name, platform.type
-                )
+                f"Unable to determine type for {platform.name}: {platform.type}"
             )
 
     return legacy

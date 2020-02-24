@@ -45,7 +45,6 @@ from .const import (
     DEFAULT_CONSIDER_HOME,
     DEFAULT_TRACK_NEW,
     DOMAIN,
-    ENTITY_ID_FORMAT,
     LOGGER,
     SOURCE_TYPE_GPS,
 )
@@ -182,7 +181,7 @@ class DeviceTracker:
             return
 
         # Guard from calling see on entity registry entities.
-        entity_id = ENTITY_ID_FORMAT.format(dev_id)
+        entity_id = f"{DOMAIN}.{dev_id}"
         if registry.async_is_registered(entity_id):
             LOGGER.error(
                 "The see service is not supported for this entity %s", entity_id
@@ -308,7 +307,7 @@ class Device(RestoreEntity):
     ) -> None:
         """Initialize a device."""
         self.hass = hass
-        self.entity_id = ENTITY_ID_FORMAT.format(dev_id)
+        self.entity_id = f"{DOMAIN}.{dev_id}"
 
         # Timedelta object how long we consider a device home if it is not
         # detected anymore.
@@ -579,5 +578,7 @@ def get_gravatar_for_email(email: str):
     Async friendly.
     """
 
-    url = "https://www.gravatar.com/avatar/{}.jpg?s=80&d=wavatar"
-    return url.format(hashlib.md5(email.encode("utf-8").lower()).hexdigest())
+    return (
+        f"https://www.gravatar.com/avatar/"
+        f"{hashlib.md5(email.encode('utf-8').lower()).hexdigest()}.jpg?s=80&d=wavatar"
+    )
