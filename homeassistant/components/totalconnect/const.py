@@ -1,1 +1,3 @@
+"""TotalConnect constants."""
+
 DOMAIN = "totalconnect"
