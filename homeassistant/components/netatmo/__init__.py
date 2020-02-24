@@ -109,10 +109,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     else:
         webhook_url = hass.components.webhook.async_generate_url(data[CONF_WEBHOOK_ID])
 
-    _LOGGER.error("Adding webhook...")
     webhook_register(hass, DOMAIN, "Netatmo", webhook_id, handle_webhook)
     data[AUTH].addwebhook(webhook_url)
-    _LOGGER.error("Netatmo webhook url: %s", webhook_url)
+    _LOGGER.debug("Netatmo webhook url: %s", webhook_url)
 
     return True
 
