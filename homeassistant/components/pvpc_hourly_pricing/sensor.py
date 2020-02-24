@@ -103,7 +103,7 @@ async def async_setup_entry(
     )
 
 
-def extract_prices_for_tariff(xml_data: str, tariff: int = 2) -> Dict[datetime, float]:
+def extract_prices_for_tariff(xml_data: dict, tariff: int = 2) -> Dict[datetime, float]:
     """
     PVPC xml data extractor.
 
@@ -114,7 +114,7 @@ def extract_prices_for_tariff(xml_data: str, tariff: int = 2) -> Dict[datetime, 
 
     Prices are referenced with datetimes in UTC.
     """
-    data = xmltodict.parse(xml_data)["PVPCDesgloseHorario"]
+    data = xml_data["PVPCDesgloseHorario"]
 
     str_horiz = data["Horizonte"]["@v"]
     ts_init: datetime = next(map(parse, str_horiz.split("/")))
@@ -246,6 +246,7 @@ class ElecPriceSensor(RestoreEntity):
         def _local(dt_utc: datetime) -> datetime:
             return dt_utc.astimezone(self.hass.config.time_zone)
 
+        attributes = {ATTR_ATTRIBUTION: _ATTRIBUTION, ATTR_TARIFF: self._tariff}
         utc_time = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
         actual_time = _local(utc_time)
         if len(self._current_prices) > 25 and actual_time.hour < 20:
@@ -265,16 +266,16 @@ class ElecPriceSensor(RestoreEntity):
         try:
             self._state = self._current_prices[utc_time]
             self._state_available = True
-        except KeyError:  # pragma: no cover
+        except KeyError:
             self._state_available = False
+            self._attributes = attributes
             return False
 
         # generate sensor attributes
         prices_sorted = dict(sorted(self._current_prices.items(), key=lambda x: x[1]))
-        attributes = {ATTR_ATTRIBUTION: _ATTRIBUTION, ATTR_TARIFF: self._tariff}
-        attributes["min price"] = min(self._current_prices.values())
-        attributes["min price at"] = _local(next(iter(prices_sorted))).hour
-        attributes["next best at"] = list(
+        attributes["min_price"] = min(self._current_prices.values())
+        attributes["min_price_at"] = _local(next(iter(prices_sorted))).hour
+        attributes["next_best_at"] = list(
             map(
                 lambda x: _local(x).hour,
                 filter(lambda x: x >= utc_time, prices_sorted.keys()),
@@ -283,9 +284,9 @@ class ElecPriceSensor(RestoreEntity):
         for ts_utc, price_h in self._current_prices.items():
             ts_local = _local(ts_utc)
             if ts_local.day > actual_time.day:
-                attr_key = f"price next day {ts_local.hour:02d}h"
+                attr_key = f"price_next_day_{ts_local.hour:02d}h"
             else:
-                attr_key = f"price {ts_local.hour:02d}h"
+                attr_key = f"price_{ts_local.hour:02d}h"
             if attr_key in attributes:  # DST change with duplicated hour :)
                 attr_key += "_d"
             attributes[attr_key] = price_h
@@ -301,9 +302,11 @@ class ElecPriceSensor(RestoreEntity):
 
         if self._process_state_and_attributes():
             await self.async_update_ha_state()
-        else:  # pragma: no cover
+        else:
             # If no prices present, download and schedule a future state update
-            self._state = None
+            self._state_available = False
+            self.async_schedule_update_ha_state()
+
             if self._data_source_available:
                 _LOGGER.warning(
                     "[%s]: Downloading prices as there are no valid ones",
@@ -316,7 +319,7 @@ class ElecPriceSensor(RestoreEntity):
                 )
             await self.async_update_prices()
 
-    async def _download_official_data(self, day: date) -> Optional[str]:
+    async def _download_official_data(self, day: date) -> dict:
         """Make GET request to 'api.esios.ree.es' to retrieve hourly prices."""
         url = _RESOURCE.format(day=day)
         try:
@@ -324,21 +327,27 @@ class ElecPriceSensor(RestoreEntity):
                 resp = await self._websession.get(url)
                 if resp.status < 400:
                     text = await resp.text()
-                    return text
+                    return xmltodict.parse(text)
         except asyncio.TimeoutError:  # pragma: no cover
-            _LOGGER.warning("Timeout error requesting data from '%s'", url)
+            if self._data_source_available:
+                _LOGGER.warning("Timeout error requesting data from '%s'", url)
         except aiohttp.ClientError:  # pragma: no cover
-            _LOGGER.error("Client error in '%s'", url)
-        return None  # pragma: no cover
+            if self._data_source_available:
+                _LOGGER.error("Client error in '%s'", url)
+        except xmltodict.expat.ExpatError:
+            _LOGGER.debug("Bad try on getting prices for %s", day)
+        return {}
 
-    async def async_update_prices(self, *args):
+    async def async_update_prices(self, *_args):
         """Update electricity prices from the ESIOS API."""
         localized_now = dt_util.utcnow().astimezone(_REFERENCE_TZ)
-        text = await self._download_official_data(localized_now.date())
-        if text is None and self._data_source_available:  # pragma: no cover
+        data = await self._download_official_data(localized_now.date())
+        if not data and self._data_source_available:
             self._num_retries += 1
             if self._num_retries > 2:
-                _LOGGER.error("Bad data update")
+                _LOGGER.error(
+                    "Repeated bad data update, mark component as unavailable source"
+                )
                 self._data_source_available = False
                 return
 
@@ -354,21 +363,32 @@ class ElecPriceSensor(RestoreEntity):
             )
             return
 
+        if not data:
+            _LOGGER.debug(
+                "Data source unavailable since %s",
+                self.hass.states.get(self.entity_id).last_changed,
+            )
+            return
+
         tariff_number = TARIFFS.index(self._tariff) + 1
-        prices = extract_prices_for_tariff(text, tariff_number)
+        prices = extract_prices_for_tariff(data, tariff_number)
         self._num_retries = 0
         self._current_prices.update(prices)
-        self._data_source_available = True
+        if not self._data_source_available:
+            self._data_source_available = True
+            _LOGGER.warning(
+                "Component has recovered data access. Was unavailable since %s",
+                self.hass.states.get(self.entity_id).last_changed,
+            )
+            self.async_schedule_update_ha_state(True)
 
         # At evening, it is possible to retrieve next day prices
         if localized_now.hour >= 20:
-            try:
-                next_day = (localized_now + timedelta(days=1)).date()
-                text_next_day = await self._download_official_data(next_day)
-                prices_fut = extract_prices_for_tariff(text_next_day, tariff_number)
+            next_day = (localized_now + timedelta(days=1)).date()
+            data_next_day = await self._download_official_data(next_day)
+            if data_next_day:
+                prices_fut = extract_prices_for_tariff(data_next_day, tariff_number)
                 self._current_prices.update(prices_fut)
-            except xmltodict.expat.ExpatError:  # pragma: no cover
-                _LOGGER.debug("Bad try on getting future prices")
 
         _LOGGER.debug(
             "Download done for %s, now with %d prices from %s UTC",
