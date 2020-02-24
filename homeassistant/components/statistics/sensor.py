@@ -18,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
@@ -71,9 +72,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     sampling_size = config.get(CONF_SAMPLING_SIZE)
     max_age = config.get(CONF_MAX_AGE, None)
     precision = config.get(CONF_PRECISION)
+    debounced_updater = Debouncer(hass, _LOGGER, cooldown=0.01, immediate=False)
 
     async_add_entities(
-        [StatisticsSensor(entity_id, name, sampling_size, max_age, precision)], True
+        [
+            StatisticsSensor(
+                entity_id, name, sampling_size, max_age, precision, debounced_updater
+            )
+        ],
+        True,
     )
 
     return True
@@ -82,7 +89,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class StatisticsSensor(Entity):
     """Representation of a Statistics sensor."""
 
-    def __init__(self, entity_id, name, sampling_size, max_age, precision):
+    def __init__(
+        self,
+        entity_id,
+        name,
+        sampling_size,
+        max_age,
+        precision,
+        debounced_updater: Debouncer,
+    ):
         """Initialize the Statistics sensor."""
         self._entity_id = entity_id
         self.is_binary = self._entity_id.split(".")[0] == "binary_sensor"
@@ -100,9 +115,20 @@ class StatisticsSensor(Entity):
         self.min_age = self.max_age = None
         self.change = self.average_change = self.change_rate = None
         self._update_listener = None
+        self._debounced_updater = debounced_updater
 
     async def async_added_to_hass(self):
         """Register callbacks."""
+
+        async def _async_debounced_update():
+            """
+            Debounced call to update entity.
+
+            To process stats just once (in the end) when a burst of samples is received.
+            """
+            await self.async_update_ha_state(True)
+
+        self._debounced_updater.function = _async_debounced_update
 
         @callback
         def async_stats_sensor_state_listener(entity, old_state, new_state):
@@ -112,8 +138,7 @@ class StatisticsSensor(Entity):
             )
 
             self._add_state_to_queue(new_state)
-
-            self.async_schedule_update_ha_state(True)
+            self.hass.async_create_task(self._debounced_updater.async_call())
 
         @callback
         def async_stats_sensor_startup(event):
@@ -293,7 +318,7 @@ class StatisticsSensor(Entity):
             def _scheduled_update(now):
                 """Timer callback for sensor update."""
                 _LOGGER.debug("%s: executing scheduled update", self.entity_id)
-                self.async_schedule_update_ha_state(True)
+                self.hass.async_create_task(self._debounced_updater.async_call())
                 self._update_listener = None
 
             self._update_listener = async_track_point_in_utc_time(
