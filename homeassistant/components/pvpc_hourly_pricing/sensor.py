@@ -243,8 +243,8 @@ class ElecPriceSensor(RestoreEntity):
         with the main timezone in Spain, but they are stored with UTC datetimes.
         """
 
-        def _local(ts: datetime) -> datetime:
-            return ts.astimezone(self.hass.config.time_zone)
+        def _local(dt_utc: datetime) -> datetime:
+            return dt_utc.astimezone(self.hass.config.time_zone)
 
         utc_time = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
         actual_time = _local(utc_time)
