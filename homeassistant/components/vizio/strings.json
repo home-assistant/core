@@ -3,7 +3,7 @@
         "title": "Vizio SmartCast",
         "step": {
             "user": {
-                "title": "Setup Vizio SmartCast device",
+                "title": "Setup Vizio SmartCast Device",
                 "description": "All fields are required except Access Token. If you choose not to provide an Access Token, and your Device Type is 'tv', you will go through a pairing process with your device so an Access Token can be retrieved.\n\nTo go through the pairing process, before clicking Submit, ensure your TV is powered on and connected to the network. You also need to be able to see the screen.",
                 "data": {
                     "name": "Name",
