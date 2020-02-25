@@ -69,7 +69,6 @@ class FreeboxSensor(Entity):
         self._unique_id = f"{self._router.mac} {self._name}"
 
         self._unsub_dispatcher = None
-        _LOGGER.error("ADDED_SENSOR : %s", self.name)
 
         self.update()
 
@@ -80,7 +79,6 @@ class FreeboxSensor(Entity):
             self._state = round(state / 1000, 2)
         else:
             self._state = state
-        _LOGGER.error("UPDATED_SENSOR : %s", self.name)
 
     @property
     def unique_id(self) -> str:

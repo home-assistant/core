@@ -66,7 +66,6 @@ class FreeboxDevice(ScannerEntity):
         self._attrs = {}
 
         self._unsub_dispatcher = None
-        _LOGGER.error("ADDED_DEVICE : %s", self.name)
 
         self.update()
 
@@ -87,8 +86,6 @@ class FreeboxDevice(ScannerEntity):
         else:
             # router
             self._attrs = device["attrs"]
-
-        _LOGGER.error("UPDATED_DEVICE : %s", self.name)
 
     @property
     def unique_id(self) -> str:

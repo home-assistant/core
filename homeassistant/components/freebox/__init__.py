@@ -103,8 +103,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        fbx = hass.data[DOMAIN]
-        await fbx.close()
+        router = hass.data[DOMAIN][entry.unique_id]
+        await router.close()
         hass.data.pop(DOMAIN)
 
     return unload_ok

@@ -31,7 +31,6 @@ class FreeboxWifiSwitch(SwitchDevice):
         self._state = None
         self._router = router
         self._unique_id = f"{self._router.mac} {self._name}"
-        _LOGGER.error("ADDED_SWITCH : %s", self.name)
 
     @property
     def unique_id(self) -> str:
@@ -76,4 +75,3 @@ class FreeboxWifiSwitch(SwitchDevice):
         datas = await self._router.wifi.get_global_config()
         active = datas["enabled"]
         self._state = bool(active)
-        _LOGGER.error("UPDATED_SWITCH : %s", self.name)

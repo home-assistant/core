@@ -87,7 +87,6 @@ class FreeboxRouter:
 
     async def update_devices(self) -> None:
         """Update Freebox devices."""
-        _LOGGER.warning("ROUTER_UPDATE_DEVICES")
         new_device = False
         fbx_devices: Dict[str, any] = await self._api.lan.get_hosts_list()
 
@@ -105,10 +104,11 @@ class FreeboxRouter:
 
         for fbx_device in fbx_devices:
             device_mac = fbx_device["l2ident"]["id"]
-            self._devices[device_mac] = fbx_device
 
             if self._devices.get(device_mac) is None:
                 new_device = True
+
+            self._devices[device_mac] = fbx_device
 
         async_dispatcher_send(self.hass, self.signal_device_update)
 
@@ -117,8 +117,6 @@ class FreeboxRouter:
 
     async def update_sensors(self) -> None:
         """Update Freebox sensors."""
-        _LOGGER.warning("ROUTER_UPDATE_SENSORS")
-
         # System sensors
         syst_datas: Dict[str, any] = await self._api.system.get_config()
         temperature_datas = {item["id"]: item for item in syst_datas["sensors"]}
