@@ -28,10 +28,7 @@ from .const import (
     HOST,
     HOST2,
     MOCK_IMPORT_VALID_TV_CONFIG,
-<<<<<<< HEAD
-=======
     MOCK_PIN_CONFIG,
->>>>>>> support pairing through config flow
     MOCK_SPEAKER_CONFIG,
     MOCK_TV_CONFIG_NO_TOKEN,
     MOCK_USER_VALID_TV_CONFIG,
