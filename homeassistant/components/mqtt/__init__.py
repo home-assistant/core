@@ -1272,13 +1272,23 @@ async def websocket_remove_device(hass, connection, msg):
     dev_registry = await get_dev_reg(hass)
 
     device = dev_registry.async_get(device_id)
+    if not device:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Device not found"
+        )
+        return
+
     for config_entry in device.config_entries:
         config_entry = hass.config_entries.async_get_entry(config_entry)
         # Only delete the device if it belongs to an MQTT device entry
         if config_entry.domain == DOMAIN:
             dev_registry.async_remove_device(device_id)
             connection.send_message(websocket_api.result_message(msg["id"]))
-            break
+            return
+
+    connection.send_error(
+        msg["id"], websocket_api.const.ERR_NOT_FOUND, "Non MQTT device"
+    )
 
 
 @websocket_api.async_response

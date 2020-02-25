@@ -7,7 +7,7 @@ from unittest import mock
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import mqtt
+from homeassistant.components import mqtt, websocket_api
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import (
     ATTR_DOMAIN,
@@ -17,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -906,7 +907,30 @@ async def test_mqtt_ws_remove_discovered_device_twice(
     assert response["success"]
 
     await client.send_json(
+        {"id": 6, "type": "mqtt/device/remove", "device_id": device_entry.id}
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == websocket_api.const.ERR_NOT_FOUND
+
+
+async def test_mqtt_ws_remove_non_mqtt_device(
+    hass, device_reg, hass_ws_client, mqtt_mock
+):
+    """Test MQTT websocket device removal of device belonging to other domain."""
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    assert device_entry is not None
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
         {"id": 5, "type": "mqtt/device/remove", "device_id": device_entry.id}
     )
     response = await client.receive_json()
     assert not response["success"]
+    assert response["error"]["code"] == websocket_api.const.ERR_NOT_FOUND
