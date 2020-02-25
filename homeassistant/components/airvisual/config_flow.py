@@ -16,14 +16,6 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from .const import CONF_GEOGRAPHIES, DOMAIN
 
 
-@callback
-def configured_instances(hass):
-    """Return a set of configured AirVisual instances."""
-    return set(
-        entry.data[CONF_API_KEY] for entry in hass.config_entries.async_entries(DOMAIN)
-    )
-
-
 class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a AirVisual config flow."""
 

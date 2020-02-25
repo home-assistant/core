@@ -20,7 +20,6 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
-from .config_flow import configured_instances
 from .const import (
     CONF_CITY,
     CONF_COUNTRY,
@@ -93,9 +92,6 @@ async def async_setup(hass, config):
 
     conf = config[DOMAIN]
 
-    if conf[CONF_API_KEY] in configured_instances(hass):
-        return True
-
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
@@ -107,6 +103,11 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up AirVisual as config entry."""
+    if not config_entry.unique_id:
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=config_entry.data[CONF_API_KEY]
+        )
+
     websession = aiohttp_client.async_get_clientsession(hass)
 
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = AirVisualData(

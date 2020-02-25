@@ -30,15 +30,6 @@ async def test_duplicate_error(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_get_configured_instances(hass):
-    """Test retrieving all configured instances."""
-    conf = {CONF_API_KEY: "abcde12345"}
-
-    MockConfigEntry(domain=DOMAIN, unique_id="abcde12345", data=conf).add_to_hass(hass)
-
-    assert len(config_flow.configured_instances(hass)) == 1
-
-
 async def test_invalid_api_key(hass):
     """Test that invalid credentials throws an error."""
     conf = {CONF_API_KEY: "abcde12345"}
