@@ -5,7 +5,6 @@ import os
 import re
 
 import aiohomekit
-from aiohomekit import Controller
 from aiohomekit.controller.ip import IpPairing
 import voluptuous as vol
 
@@ -59,7 +58,7 @@ def normalize_hkid(hkid):
 def find_existing_host(hass, serial):
     """Return a set of the configured hosts."""
     for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.data["AccessoryPairingID"] == serial:
+        if entry.data.get("AccessoryPairingID") == serial:
             return entry
 
 
@@ -89,7 +88,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         self.model = None
         self.hkid = None
         self.devices = {}
-        self.controller = Controller()
+        self.controller = aiohomekit.Controller()
         self.finish_pairing = None
 
     async def async_step_user(self, user_input=None):
@@ -203,6 +202,14 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
         _LOGGER.debug("Discovered device %s (%s - %s)", name, model, hkid)
 
+        # Device isn't paired with us or anyone else.
+        # But we have a 'complete' config entry for it - that is probably
+        # invalid. Remove it automatically.
+        existing = find_existing_host(self.hass, hkid)
+        if not paired and existing:
+            await self.hass.config_entries.async_remove(existing.entry_id)
+
+        # Set unique-id and error out if it's already configured
         await self.async_set_unique_id(normalize_hkid(hkid))
         self._abort_if_unique_id_configured()
 
@@ -230,13 +237,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         if model in HOMEKIT_IGNORE:
             return self.async_abort(reason="ignored_model")
 
-        # Device isn't paired with us or anyone else.
-        # But we have a 'complete' config entry for it - that is probably
-        # invalid. Remove it automatically.
-        existing = find_existing_host(self.hass, hkid)
-        if existing:
-            await self.hass.config_entries.async_remove(existing.entry_id)
-
         self.model = model
         self.hkid = hkid
 
@@ -249,17 +249,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         """Migrate a legacy pairing to config entries."""
 
         hkid = discovery_props["id"]
-
-        existing = find_existing_host(self.hass, hkid)
-        if existing:
-            _LOGGER.info(
-                (
-                    "Legacy configuration for homekit accessory %s"
-                    "not loaded as already migrated"
-                ),
-                hkid,
-            )
-            return self.async_abort(reason="already_configured")
 
         _LOGGER.info(
             (
