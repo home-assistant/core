@@ -349,7 +349,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_pairing_complete(
         self, user_input: Dict[str, Any] = None
     ) -> Dict[str, Any]:
-        """Complete non-import config flow by displaying final message to show user access token."""
+        """Complete non-import config flow by displaying final message to confirm pairing."""
         return await self._pairing_complete("pairing_complete")
 
     async def async_step_pairing_complete_import(
