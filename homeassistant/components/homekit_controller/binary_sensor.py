@@ -5,6 +5,7 @@ from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OCCUPANCY,
     DEVICE_CLASS_OPENING,
     DEVICE_CLASS_SMOKE,
     BinarySensorDevice,
@@ -94,10 +95,37 @@ class HomeKitSmokeSensor(HomeKitEntity, BinarySensorDevice):
         return self._state == 1
 
 
+class HomeKitOccupancySensor(HomeKitEntity, BinarySensorDevice):
+    """Representation of a Homekit smoke sensor."""
+
+    def __init__(self, *args):
+        """Initialise the entity."""
+        super().__init__(*args)
+        self._state = None
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this sensor."""
+        return DEVICE_CLASS_OCCUPANCY
+
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity is tracking."""
+        return [CharacteristicsTypes.OCCUPANCY_DETECTED]
+
+    def _update_occupancy_detected(self, value):
+        self._state = value
+
+    @property
+    def is_on(self):
+        """Return true if smoke is currently detected."""
+        return self._state == 1
+
+
 ENTITY_TYPES = {
     "motion": HomeKitMotionSensor,
     "contact": HomeKitContactSensor,
     "smoke": HomeKitSmokeSensor,
+    "occupancy": HomeKitOccupancySensor,
 }
 
 
