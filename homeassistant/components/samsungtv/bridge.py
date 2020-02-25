@@ -48,8 +48,6 @@ class SamsungTVBridge(ABC):
         self.host = host
         self.config = {
             CONF_NAME: VALUE_CONF_NAME,
-            CONF_DESCRIPTION: VALUE_CONF_NAME,
-            CONF_ID: VALUE_CONF_ID,
             CONF_METHOD: method,
             CONF_PORT: port,
             CONF_HOST: host,
@@ -138,6 +136,8 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
     def __init__(self, method, host, port):
         """Initialize Bridge."""
         super().__init__(method, host, None, None)
+        self.config[CONF_DESCRIPTION] = VALUE_CONF_NAME
+        self.config[CONF_ID] = VALUE_CONF_ID
 
     def try_connect(self):
         """Try to connect to the Legacy TV."""
@@ -147,6 +147,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             CONF_ID: VALUE_CONF_ID,
             CONF_HOST: self.host,
             CONF_METHOD: self.method,
+            CONF_PORT: None,
             # We need this high timeout because waiting for auth popup is just an open socket
             CONF_TIMEOUT: 31,
         }
