@@ -146,15 +146,14 @@ PLATFORM_SCHEMA_BASIC = (
 
 
 async def async_setup_entity_basic(
-    config, async_add_entities, config_entry, discovery_hash=None
+    config, async_add_entities, config_entry, discovery_data=None
 ):
     """Set up a MQTT Light."""
     config.setdefault(CONF_STATE_VALUE_TEMPLATE, config.get(CONF_VALUE_TEMPLATE))
 
-    async_add_entities([MqttLight(config, config_entry, discovery_hash)])
+    async_add_entities([MqttLight(config, config_entry, discovery_data)])
 
 
-# pylint: disable=too-many-ancestors
 class MqttLight(
     MqttAttributes,
     MqttAvailability,
@@ -165,7 +164,7 @@ class MqttLight(
 ):
     """Representation of a MQTT light."""
 
-    def __init__(self, config, config_entry, discovery_hash):
+    def __init__(self, config, config_entry, discovery_data):
         """Initialize MQTT light."""
         self._state = False
         self._sub_state = None
@@ -195,7 +194,7 @@ class MqttLight(
 
         MqttAttributes.__init__(self, config)
         MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_hash, self.discovery_update)
+        MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
         MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
 
     async def async_added_to_hass(self):
@@ -536,6 +535,7 @@ class MqttLight(
         )
         await MqttAttributes.async_will_remove_from_hass(self)
         await MqttAvailability.async_will_remove_from_hass(self)
+        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
 
     @property
     def brightness(self):

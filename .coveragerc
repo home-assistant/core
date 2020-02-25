@@ -217,6 +217,7 @@ omit =
     homeassistant/components/eufy/*
     homeassistant/components/everlights/light.py
     homeassistant/components/evohome/*
+    homeassistant/components/ezviz/*
     homeassistant/components/familyhub/camera.py
     homeassistant/components/fastdotcom/*
     homeassistant/components/ffmpeg/camera.py
@@ -479,6 +480,7 @@ omit =
     homeassistant/components/nissan_leaf/*
     homeassistant/components/nmap_tracker/device_tracker.py
     homeassistant/components/nmbs/sensor.py
+    homeassistant/components/notion/__init__.py
     homeassistant/components/notion/binary_sensor.py
     homeassistant/components/notion/sensor.py
     homeassistant/components/noaa_tides/sensor.py

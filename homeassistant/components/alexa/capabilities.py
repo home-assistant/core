@@ -227,7 +227,6 @@ class AlexaCapability:
         """Return properties serialized for an API response."""
         for prop in self.properties_supported():
             prop_name = prop["name"]
-            # pylint: disable=assignment-from-no-return
             prop_value = self.get_property(prop_name)
             if prop_value is not None:
                 result = {

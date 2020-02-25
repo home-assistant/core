@@ -21,8 +21,8 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     PRESSURE_HPA,
+    SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
-    TIME_SECONDS,
     UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -43,8 +43,8 @@ SENSOR_TYPES = {
     "symbol": ["Symbol", None, None],
     "precipitation": ["Precipitation", "mm", None],
     "temperature": ["Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE],
-    "windSpeed": ["Wind speed", f"m/{TIME_SECONDS}", None],
-    "windGust": ["Wind gust", f"m/{TIME_SECONDS}", None],
+    "windSpeed": ["Wind speed", SPEED_METERS_PER_SECOND, None],
+    "windGust": ["Wind gust", SPEED_METERS_PER_SECOND, None],
     "pressure": ["Pressure", PRESSURE_HPA, DEVICE_CLASS_PRESSURE],
     "windDirection": ["Wind direction", "°", None],
     "humidity": ["Humidity", UNIT_PERCENTAGE, DEVICE_CLASS_HUMIDITY],

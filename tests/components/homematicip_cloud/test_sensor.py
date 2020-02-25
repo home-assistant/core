@@ -20,12 +20,12 @@ from homeassistant.components.homematicip_cloud.sensor import (
     ATTR_TEMPERATURE_OFFSET,
     ATTR_WIND_DIRECTION,
     ATTR_WIND_DIRECTION_VARIATION,
-    TIME_HOURS,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     POWER_WATT,
+    SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     UNIT_PERCENTAGE,
 )
@@ -290,7 +290,7 @@ async def test_hmip_windspeed_sensor(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == "2.6"
-    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == f"km/{TIME_HOURS}"
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == SPEED_KILOMETERS_PER_HOUR
     await async_manipulate_test_data(hass, hmip_device, "windSpeed", 9.4)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "9.4"

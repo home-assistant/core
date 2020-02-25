@@ -1,7 +1,7 @@
 """Support for Homekit motion sensors."""
 import logging
 
-from homekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_SMOKE,

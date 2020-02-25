@@ -31,16 +31,18 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
+from .const import (
+    ATTR_MEDIA_CURRENTLY_RECORDING,
+    ATTR_MEDIA_RATING,
+    ATTR_MEDIA_RECORDED,
+    ATTR_MEDIA_START_TIME,
+    DATA_DIRECTV,
+    DEFAULT_DEVICE,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_MEDIA_CURRENTLY_RECORDING = "media_currently_recording"
-ATTR_MEDIA_RATING = "media_rating"
-ATTR_MEDIA_RECORDED = "media_recorded"
-ATTR_MEDIA_START_TIME = "media_start_time"
-
-DEFAULT_DEVICE = "0"
-DEFAULT_NAME = "DirecTV Receiver"
-DEFAULT_PORT = 8080
 
 SUPPORT_DTV = (
     SUPPORT_PAUSE
@@ -61,8 +63,6 @@ SUPPORT_DTV_CLIENT = (
     | SUPPORT_PREVIOUS_TRACK
     | SUPPORT_PLAY
 )
-
-DATA_DIRECTV = "data_directv"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -97,7 +97,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     elif discovery_info:
         host = discovery_info.get("host")
-        name = "DirecTV_{}".format(discovery_info.get("serial", ""))
+        name = f"DirecTV_{discovery_info.get('serial', '')}"
 
         # Attempt to discover additional RVU units
         _LOGGER.debug("Doing discovery of DirecTV devices on %s", host)
@@ -219,9 +219,7 @@ class DirecTvDevice(MediaPlayerDevice):
                 else:
                     # If an error is received then only set to unavailable if
                     # this started at least 1 minute ago.
-                    log_message = "{}: Invalid status {} received".format(
-                        self.entity_id, self._current["status"]["code"]
-                    )
+                    log_message = f"{self.entity_id}: Invalid status {self._current['status']['code']} received"
                     if self._check_state_available():
                         _LOGGER.debug(log_message)
                     else:
@@ -370,7 +368,7 @@ class DirecTvDevice(MediaPlayerDevice):
         if self._is_standby:
             return None
 
-        return "{} ({})".format(self._current["callsign"], self._current["major"])
+        return f"{self._current['callsign']} ({self._current['major']})"
 
     @property
     def source(self):

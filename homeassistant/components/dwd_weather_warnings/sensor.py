@@ -175,12 +175,7 @@ class DwdWeatherWarningsAPI:
 
     def __init__(self, region_name):
         """Initialize the data object."""
-        resource = "{}{}{}?{}".format(
-            "https://",
-            "www.dwd.de",
-            "/DWD/warnungen/warnapp_landkreise/json/warnings.json",
-            "jsonp=loadWarnings",
-        )
+        resource = "https://www.dwd.de/DWD/warnungen/warnapp_landkreise/json/warnings.json?jsonp=loadWarnings"
 
         # a User-Agent is necessary for this rest api endpoint (#29496)
         headers = {"User-Agent": HA_USER_AGENT}

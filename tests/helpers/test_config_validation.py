@@ -464,7 +464,7 @@ def test_time():
 def test_datetime():
     """Test date time validation."""
     schema = vol.Schema(cv.datetime)
-    for value in [date.today(), "Wrong DateTime", "2016-11-23"]:
+    for value in [date.today(), "Wrong DateTime"]:
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
@@ -987,3 +987,36 @@ def test_uuid4_hex(caplog):
     _hex = uuid.uuid4().hex
     assert schema(_hex) == _hex
     assert schema(_hex.upper()) == _hex
+
+
+def test_key_value_schemas():
+    """Test key value schemas."""
+    schema = vol.Schema(
+        cv.key_value_schemas(
+            "mode",
+            {
+                "number": vol.Schema({"mode": "number", "data": int}),
+                "string": vol.Schema({"mode": "string", "data": str}),
+            },
+        )
+    )
+
+    with pytest.raises(vol.Invalid) as excinfo:
+        schema(True)
+        assert str(excinfo.value) == "Expected a dictionary"
+
+    for mode in None, "invalid":
+        with pytest.raises(vol.Invalid) as excinfo:
+            schema({"mode": mode})
+        assert str(excinfo.value) == f"Unexpected key {mode}. Expected number, string"
+
+    with pytest.raises(vol.Invalid) as excinfo:
+        schema({"mode": "number", "data": "string-value"})
+    assert str(excinfo.value) == "expected int for dictionary value @ data['data']"
+
+    with pytest.raises(vol.Invalid) as excinfo:
+        schema({"mode": "string", "data": 1})
+    assert str(excinfo.value) == "expected str for dictionary value @ data['data']"
+
+    for mode, data in (("number", 1), ("string", "hello")):
+        schema({"mode": mode, "data": data})

@@ -1,7 +1,7 @@
 """Support for Homekit fans."""
 import logging
 
-from homekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,

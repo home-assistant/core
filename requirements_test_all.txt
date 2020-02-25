@@ -47,7 +47,7 @@ aio_geojson_nsw_rfs_incidents==0.3
 aio_georss_gdacs==0.3
 
 # homeassistant.components.ambient_station
-aioambient==1.0.2
+aioambient==1.0.4
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.2.2
@@ -60,6 +60,9 @@ aiobotocore==0.11.1
 
 # homeassistant.components.esphome
 aioesphomeapi==2.6.1
+
+# homeassistant.components.homekit_controller
+aiohomekit[IP]==0.2.11
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -258,9 +261,6 @@ home-assistant-frontend==20200220.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.8
-
-# homeassistant.components.homekit_controller
-homekit[IP]==0.15.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.10.17
