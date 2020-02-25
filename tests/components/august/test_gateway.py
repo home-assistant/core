@@ -32,7 +32,7 @@ async def _patched_refresh_access_token(
     )
     august_gateway = AugustGateway(hass)
     mocked_config = _mock_get_config()
-    august_gateway.setup(mocked_config[DOMAIN])
+    august_gateway.async_setup(mocked_config[DOMAIN])
     august_gateway.authenticate()
 
     should_refresh_mock.return_value = False
