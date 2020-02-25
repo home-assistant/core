@@ -181,16 +181,14 @@ def request_app_setup(hass, config, add_entities, config_path, discovery_info=No
 
     start_url = f"{hass.config.api.base_url}{FITBIT_AUTH_CALLBACK_PATH}"
 
-    description = """Please create a Fitbit developer app at
+    description = f"""Please create a Fitbit developer app at
                        https://dev.fitbit.com/apps/new.
                        For the OAuth 2.0 Application Type choose Personal.
-                       Set the Callback URL to {}.
+                       Set the Callback URL to {start_url}.
                        They will provide you a Client ID and secret.
-                       These need to be saved into the file located at: {}.
+                       These need to be saved into the file located at: {config_path}.
                        Then come back here and hit the below button.
-                       """.format(
-        start_url, config_path
-    )
+                       """
 
     submit = "I have saved my Client ID and Client Secret into fitbit.conf."
 
@@ -308,9 +306,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             config_file.get(ATTR_CLIENT_ID), config_file.get(ATTR_CLIENT_SECRET)
         )
 
-        redirect_uri = "{}{}".format(
-            hass.config.api.base_url, FITBIT_AUTH_CALLBACK_PATH
-        )
+        redirect_uri = f"{hass.config.api.base_url}{FITBIT_AUTH_CALLBACK_PATH}"
 
         fitbit_auth_start_url, _ = oauth.authorize_token_url(
             redirect_uri=redirect_uri,
@@ -355,26 +351,20 @@ class FitbitAuthCallbackView(HomeAssistantView):
 
         result = None
         if data.get("code") is not None:
-            redirect_uri = "{}{}".format(
-                hass.config.api.base_url, FITBIT_AUTH_CALLBACK_PATH
-            )
+            redirect_uri = f"{hass.config.api.base_url}{FITBIT_AUTH_CALLBACK_PATH}"
 
             try:
                 result = self.oauth.fetch_access_token(data.get("code"), redirect_uri)
             except MissingTokenError as error:
                 _LOGGER.error("Missing token: %s", error)
-                response_message = """Something went wrong when
+                response_message = f"""Something went wrong when
                 attempting authenticating with Fitbit. The error
-                encountered was {}. Please try again!""".format(
-                    error
-                )
+                encountered was {error}. Please try again!"""
             except MismatchingStateError as error:
                 _LOGGER.error("Mismatched state, CSRF error: %s", error)
-                response_message = """Something went wrong when
+                response_message = f"""Something went wrong when
                 attempting authenticating with Fitbit. The error
-                encountered was {}. Please try again!""".format(
-                    error
-                )
+                encountered was {error}. Please try again!"""
         else:
             _LOGGER.error("Unknown error when authing")
             response_message = """Something went wrong when
@@ -389,10 +379,8 @@ class FitbitAuthCallbackView(HomeAssistantView):
                 An unknown error occurred. Please try again!
                 """
 
-        html_response = """<html><head><title>Fitbit Auth</title></head>
-        <body><h1>{}</h1></body></html>""".format(
-            response_message
-        )
+        html_response = f"""<html><head><title>Fitbit Auth</title></head>
+        <body><h1>{response_message}</h1></body></html>"""
 
         if result:
             config_contents = {
@@ -424,7 +412,7 @@ class FitbitSensor(Entity):
         self.extra = extra
         self._name = FITBIT_RESOURCES_LIST[self.resource_type][0]
         if self.extra:
-            self._name = "{0} Battery".format(self.extra.get("deviceVersion"))
+            self._name = f"{self.extra.get('deviceVersion')} Battery"
         unit_type = FITBIT_RESOURCES_LIST[self.resource_type][1]
         if unit_type == "":
             split_resource = self.resource_type.split("/")
@@ -460,7 +448,7 @@ class FitbitSensor(Entity):
         if self.resource_type == "devices/battery" and self.extra:
             battery_level = BATTERY_LEVELS[self.extra.get("battery")]
             return icon_for_battery_level(battery_level=battery_level, charging=None)
-        return "mdi:{}".format(FITBIT_RESOURCES_LIST[self.resource_type][2])
+        return f"mdi:{FITBIT_RESOURCES_LIST[self.resource_type][2]}"
 
     @property
     def device_state_attributes(self):
@@ -513,7 +501,7 @@ class FitbitSensor(Entity):
                     self._state = raw_state
                 else:
                     try:
-                        self._state = "{0:,}".format(int(raw_state))
+                        self._state = f"{int(raw_state):,}"
                     except TypeError:
                         self._state = raw_state
 

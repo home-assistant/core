@@ -101,7 +101,7 @@ class FoobotSensor(Entity):
         """Initialize the sensor."""
         self._uuid = device["uuid"]
         self.foobot_data = data
-        self._name = "Foobot {} {}".format(device["name"], SENSOR_TYPES[sensor_type][0])
+        self._name = f"Foobot {device['name']} {SENSOR_TYPES[sensor_type][0]}"
         self.type = sensor_type
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
 
