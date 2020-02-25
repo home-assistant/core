@@ -117,4 +117,16 @@ class IamMeter(Entity):
     @property
     def should_poll(self):
         """Poll needed."""
-        return True
+        return False
+
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        self.coordinator.async_add_listener(self.async_write_ha_state)
+
+    async def async_will_remove_from_hass(self):
+        """When entity will be removed from hass."""
+        self.coordinator.async_remove_listener(self.async_write_ha_state)
+
+    async def async_update(self):
+        """Update the entity."""
+        await self.coordinator.async_request_refresh()
