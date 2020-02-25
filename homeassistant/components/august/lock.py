@@ -9,16 +9,16 @@ from august.util import update_lock_detail_from_activity
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import ATTR_BATTERY_LEVEL
 
-from . import DATA_AUGUST
+from .const import DATA_AUGUST, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up August locks."""
-    data = hass.data[DATA_AUGUST]
+    data = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
     devices = []
 
     for lock in data.locks:
@@ -39,6 +39,7 @@ class AugustLock(LockDevice):
         self._lock_detail = None
         self._changed_by = None
         self._available = False
+        self._firmware_version = None
 
     async def async_lock(self, **kwargs):
         """Lock the device."""
@@ -59,12 +60,18 @@ class AugustLock(LockDevice):
             self.schedule_update_ha_state()
 
     def _update_lock_status_from_detail(self):
-        lock_status = self._lock_detail.lock_status
-        if self._lock_status != lock_status:
-            self._lock_status = lock_status
+        detail = self._lock_detail
+        lock_status = None
+        self._available = False
+
+        if detail is not None:
+            lock_status = detail.lock_status
             self._available = (
                 lock_status is not None and lock_status != LockStatus.UNKNOWN
             )
+
+        if self._lock_status != lock_status:
+            self._lock_status = lock_status
             return True
         return False
 
@@ -77,7 +84,11 @@ class AugustLock(LockDevice):
 
         if lock_activity is not None:
             self._changed_by = lock_activity.operated_by
-            update_lock_detail_from_activity(self._lock_detail, lock_activity)
+            if self._lock_detail is not None:
+                update_lock_detail_from_activity(self._lock_detail, lock_activity)
+
+        if self._lock_detail is not None:
+            self._firmware_version = self._lock_detail.firmware_version
 
         self._update_lock_status_from_detail()
 
@@ -94,7 +105,8 @@ class AugustLock(LockDevice):
     @property
     def is_locked(self):
         """Return true if device is on."""
-
+        if self._lock_status is None or self._lock_status is LockStatus.UNKNOWN:
+            return None
         return self._lock_status is LockStatus.LOCKED
 
     @property
@@ -114,6 +126,16 @@ class AugustLock(LockDevice):
             attributes["keypad_battery_level"] = self._lock_detail.keypad.battery_level
 
         return attributes
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        return {
+            "identifiers": {(DOMAIN, self._lock.device_id)},
+            "name": self._lock.device_name,
+            "manufacturer": DEFAULT_NAME,
+            "sw_version": self._firmware_version,
+        }
 
     @property
     def unique_id(self) -> str:
