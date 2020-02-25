@@ -6,6 +6,8 @@ import os
 import tempfile
 from typing import Any, Dict, List, Optional, Type, Union
 
+import orjson
+
 from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +30,7 @@ def load_json(
     """
     try:
         with open(filename, encoding="utf-8") as fdesc:
-            return json.loads(fdesc.read())  # type: ignore
+            return orjson.loads(fdesc.read())  # type: ignore
     except FileNotFoundError:
         # This is not a fatal error
         _LOGGER.debug("JSON file not found: %s", filename)
@@ -97,7 +99,7 @@ def find_paths_unserializable_data(bad_data: Any) -> List[str]:
         obj, obj_path = to_process.popleft()
 
         try:
-            json.dumps(obj)
+            orjson.dumps(obj)
             continue
         except TypeError:
             pass
@@ -106,7 +108,7 @@ def find_paths_unserializable_data(bad_data: Any) -> List[str]:
             for key, value in obj.items():
                 try:
                     # Is key valid?
-                    json.dumps({key: None})
+                    orjson.dumps({key: None})
                 except TypeError:
                     invalid.append(f"{obj_path}<key: {key}>")
                 else:

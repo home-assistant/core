@@ -9,6 +9,7 @@ from aiohttp import web
 from aiohttp.hdrs import CONTENT_TYPE, USER_AGENT
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPGatewayTimeout
 import async_timeout
+import orjson
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, callback
@@ -67,6 +68,7 @@ def async_create_clientsession(
         loop=hass.loop,
         connector=connector,
         headers={USER_AGENT: SERVER_SOFTWARE},
+        json_serialize=lambda x: orjson.dumps(x).decode(),
         **kwargs,
     )
 
