@@ -4,6 +4,8 @@ import logging
 from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OPENING,
     DEVICE_CLASS_SMOKE,
     BinarySensorDevice,
 )
@@ -32,7 +34,7 @@ class HomeKitMotionSensor(HomeKitEntity, BinarySensorDevice):
     @property
     def device_class(self):
         """Define this binary_sensor as a motion sensor."""
-        return "motion"
+        return DEVICE_CLASS_MOTION
 
     @property
     def is_on(self):
@@ -54,6 +56,11 @@ class HomeKitContactSensor(HomeKitEntity, BinarySensorDevice):
 
     def _update_contact_state(self, value):
         self._state = value
+
+    @property
+    def device_class(self):
+        """Define this binary_sensor as a opening sensor."""
+        return DEVICE_CLASS_OPENING
 
     @property
     def is_on(self):
