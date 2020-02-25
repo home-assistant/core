@@ -2,6 +2,7 @@
 import unittest
 
 from homeassistant.components.bayesian import binary_sensor as bayesian
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
@@ -47,6 +48,35 @@ class TestBayesianBinarySensor(unittest.TestCase):
         state = self.hass.states.get("binary_sensor.test_binary")
         assert state.attributes.get("observations")[0]["prob_given_true"] == 0.8
         assert state.attributes.get("observations")[0]["prob_given_false"] == 0.4
+
+    def test_unknown_state_does_not_influence_probability(self):
+        """Test that an unknown state does not change the output probability."""
+
+        config = {
+            "binary_sensor": {
+                "name": "Test_Binary",
+                "platform": "bayesian",
+                "observations": [
+                    {
+                        "platform": "state",
+                        "entity_id": "sensor.test_monitored",
+                        "to_state": "off",
+                        "prob_given_true": 0.8,
+                        "prob_given_false": 0.4,
+                    }
+                ],
+                "prior": 0.2,
+                "probability_threshold": 0.32,
+            }
+        }
+
+        self.hass.states.set("sensor.test_monitored", STATE_UNKNOWN)
+        self.hass.block_till_done()
+
+        assert setup_component(self.hass, "binary_sensor", config)
+
+        state = self.hass.states.get("binary_sensor.test_binary")
+        assert state.attributes.get("observations") == [None]
 
     def test_sensor_numeric_state(self):
         """Test sensor on numeric state platform observations."""
@@ -132,6 +162,60 @@ class TestBayesianBinarySensor(unittest.TestCase):
                         "platform": "state",
                         "entity_id": "sensor.test_monitored",
                         "to_state": "off",
+                        "prob_given_true": 0.8,
+                        "prob_given_false": 0.4,
+                    }
+                ],
+                "prior": 0.2,
+                "probability_threshold": 0.32,
+            }
+        }
+
+        assert setup_component(self.hass, "binary_sensor", config)
+
+        self.hass.states.set("sensor.test_monitored", "on")
+
+        state = self.hass.states.get("binary_sensor.test_binary")
+
+        assert [None] == state.attributes.get("observations")
+        assert 0.2 == state.attributes.get("probability")
+
+        assert state.state == "off"
+
+        self.hass.states.set("sensor.test_monitored", "off")
+        self.hass.block_till_done()
+        self.hass.states.set("sensor.test_monitored", "on")
+        self.hass.block_till_done()
+        self.hass.states.set("sensor.test_monitored", "off")
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("binary_sensor.test_binary")
+        assert state.attributes.get("observations")[0]["prob_given_true"] == 0.8
+        assert state.attributes.get("observations")[0]["prob_given_false"] == 0.4
+        assert round(abs(0.33 - state.attributes.get("probability")), 7) == 0
+
+        assert state.state == "on"
+
+        self.hass.states.set("sensor.test_monitored", "off")
+        self.hass.block_till_done()
+        self.hass.states.set("sensor.test_monitored", "on")
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("binary_sensor.test_binary")
+        assert round(abs(0.2 - state.attributes.get("probability")), 7) == 0
+
+        assert state.state == "off"
+
+    def test_sensor_value_template(self):
+        """Test sensor on template platform observations."""
+        config = {
+            "binary_sensor": {
+                "name": "Test_Binary",
+                "platform": "bayesian",
+                "observations": [
+                    {
+                        "platform": "template",
+                        "value_template": "{{states('sensor.test_monitored') == 'off'}}",
                         "prob_given_true": 0.8,
                         "prob_given_false": 0.4,
                     }
