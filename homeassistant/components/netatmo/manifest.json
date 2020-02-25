@@ -5,6 +5,9 @@
   "requirements": [
     "pyatmo==3.2.5"
   ],
+  "after_dependencies": [
+    "cloud"
+  ],
   "dependencies": [
     "webhook"
   ],
