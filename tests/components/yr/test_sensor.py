@@ -3,7 +3,7 @@ from datetime import datetime
 from unittest.mock import patch
 
 from homeassistant.bootstrap import async_setup_component
-from homeassistant.const import TIME_SECONDS
+from homeassistant.const import SPEED_METERS_PER_SECOND
 import homeassistant.util.dt as dt_util
 
 from tests.common import assert_setup_component, load_fixture
@@ -71,7 +71,7 @@ async def test_custom_setup(hass, aioclient_mock):
     assert state.state == "0.0"
 
     state = hass.states.get("sensor.yr_wind_speed")
-    assert state.attributes.get("unit_of_measurement") == f"m/{TIME_SECONDS}"
+    assert state.attributes.get("unit_of_measurement") == SPEED_METERS_PER_SECOND
     assert state.state == "3.5"
 
 
@@ -117,5 +117,5 @@ async def test_forecast_setup(hass, aioclient_mock):
     assert state.state == "0.0"
 
     state = hass.states.get("sensor.yr_wind_speed")
-    assert state.attributes.get("unit_of_measurement") == f"m/{TIME_SECONDS}"
+    assert state.attributes.get("unit_of_measurement") == SPEED_METERS_PER_SECOND
     assert state.state == "3.6"

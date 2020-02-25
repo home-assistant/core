@@ -1,7 +1,11 @@
 """Support for Homekit sensors."""
 from aiohomekit.model.characteristics import CharacteristicsTypes
 
-from homeassistant.const import DEVICE_CLASS_BATTERY, TEMP_CELSIUS
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    DEVICE_CLASS_BATTERY,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import callback
 
 from . import KNOWN_DEVICES, HomeKitEntity
@@ -13,7 +17,6 @@ CO2_ICON = "mdi:periodic-table-co2"
 
 UNIT_PERCENT = "%"
 UNIT_LUX = "lux"
-UNIT_CO2 = "ppm"
 
 
 class HomeKitHumiditySensor(HomeKitEntity):
@@ -149,7 +152,7 @@ class HomeKitCarbonDioxideSensor(HomeKitEntity):
     @property
     def unit_of_measurement(self):
         """Return units for the sensor."""
-        return UNIT_CO2
+        return CONCENTRATION_PARTS_PER_MILLION
 
     def _update_carbon_dioxide_level(self, value):
         self._state = value

@@ -14,6 +14,8 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_UNIT_SYSTEM,
+    MASS_KILOGRAMS,
+    MASS_MILLIGRAMS,
     TIME_MILLISECONDS,
     TIME_MINUTES,
 )
@@ -115,7 +117,7 @@ FITBIT_MEASUREMENTS = {
         "weight": "lbs",
         "body": "in",
         "liquids": "fl. oz.",
-        "blood glucose": "mg/dL",
+        "blood glucose": f"{MASS_MILLIGRAMS}/dL",
         "battery": "",
     },
     "en_GB": {
@@ -134,7 +136,7 @@ FITBIT_MEASUREMENTS = {
         "distance": "kilometers",
         "elevation": "meters",
         "height": "centimeters",
-        "weight": "kilograms",
+        "weight": MASS_KILOGRAMS,
         "body": "centimeters",
         "liquids": "milliliters",
         "blood glucose": "mmol/L",

@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT, VOLUME_CUBIC_METERS
 from homeassistant.helpers.entity import Entity
 
 from . import DATA_SMAPPEE
@@ -43,8 +43,20 @@ SENSOR_TYPES = {
         ENERGY_KILO_WATT_HOUR,
         "consumption",
     ],
-    "water_sensor_1": ["Water Sensor 1", "mdi:water", "water", "m3", "value1"],
-    "water_sensor_2": ["Water Sensor 2", "mdi:water", "water", "m3", "value2"],
+    "water_sensor_1": [
+        "Water Sensor 1",
+        "mdi:water",
+        "water",
+        VOLUME_CUBIC_METERS,
+        "value1",
+    ],
+    "water_sensor_2": [
+        "Water Sensor 2",
+        "mdi:water",
+        "water",
+        VOLUME_CUBIC_METERS,
+        "value2",
+    ],
     "water_sensor_temperature": [
         "Water Sensor Temperature",
         "mdi:temperature-celsius",

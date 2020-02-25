@@ -10,8 +10,10 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_LOCATION,
     ATTR_NAME,
+    CONCENTRATION_PARTS_PER_MILLION,
     CONF_API_KEY,
     EVENT_HOMEASSISTANT_STOP,
+    SPEED_MILES_PER_HOUR,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -147,7 +149,7 @@ SENSOR_TYPES = {
     TYPE_BATT8: ("Battery 8", None, TYPE_BINARY_SENSOR, "battery"),
     TYPE_BATT9: ("Battery 9", None, TYPE_BINARY_SENSOR, "battery"),
     TYPE_BATTOUT: ("Battery", None, TYPE_BINARY_SENSOR, "battery"),
-    TYPE_CO2: ("co2", "ppm", TYPE_SENSOR, None),
+    TYPE_CO2: ("co2", CONCENTRATION_PARTS_PER_MILLION, TYPE_SENSOR, None),
     TYPE_DAILYRAININ: ("Daily Rain", "in", TYPE_SENSOR, None),
     TYPE_DEWPOINT: ("Dew Point", "°F", TYPE_SENSOR, "temperature"),
     TYPE_EVENTRAININ: ("Event Rain", "in", TYPE_SENSOR, None),
@@ -166,7 +168,7 @@ SENSOR_TYPES = {
     TYPE_HUMIDITY: ("Humidity", "%", TYPE_SENSOR, "humidity"),
     TYPE_HUMIDITYIN: ("Humidity In", "%", TYPE_SENSOR, "humidity"),
     TYPE_LASTRAIN: ("Last Rain", None, TYPE_SENSOR, "timestamp"),
-    TYPE_MAXDAILYGUST: ("Max Gust", "mph", TYPE_SENSOR, None),
+    TYPE_MAXDAILYGUST: ("Max Gust", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
     TYPE_MONTHLYRAININ: ("Monthly Rain", "in", TYPE_SENSOR, None),
     TYPE_RELAY10: ("Relay 10", None, TYPE_BINARY_SENSOR, "connectivity"),
     TYPE_RELAY1: ("Relay 1", None, TYPE_BINARY_SENSOR, "connectivity"),
@@ -217,12 +219,12 @@ SENSOR_TYPES = {
     TYPE_WEEKLYRAININ: ("Weekly Rain", "in", TYPE_SENSOR, None),
     TYPE_WINDDIR: ("Wind Dir", "°", TYPE_SENSOR, None),
     TYPE_WINDDIR_AVG10M: ("Wind Dir Avg 10m", "°", TYPE_SENSOR, None),
-    TYPE_WINDDIR_AVG2M: ("Wind Dir Avg 2m", "mph", TYPE_SENSOR, None),
+    TYPE_WINDDIR_AVG2M: ("Wind Dir Avg 2m", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
     TYPE_WINDGUSTDIR: ("Gust Dir", "°", TYPE_SENSOR, None),
-    TYPE_WINDGUSTMPH: ("Wind Gust", "mph", TYPE_SENSOR, None),
-    TYPE_WINDSPDMPH_AVG10M: ("Wind Avg 10m", "mph", TYPE_SENSOR, None),
-    TYPE_WINDSPDMPH_AVG2M: ("Wind Avg 2m", "mph", TYPE_SENSOR, None),
-    TYPE_WINDSPEEDMPH: ("Wind Speed", "mph", TYPE_SENSOR, None),
+    TYPE_WINDGUSTMPH: ("Wind Gust", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
+    TYPE_WINDSPDMPH_AVG10M: ("Wind Avg 10m", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
+    TYPE_WINDSPDMPH_AVG2M: ("Wind Avg 2m", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
+    TYPE_WINDSPEEDMPH: ("Wind Speed", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
     TYPE_YEARLYRAININ: ("Yearly Rain", "in", TYPE_SENSOR, None),
 }
 
