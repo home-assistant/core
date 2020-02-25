@@ -16,8 +16,8 @@ from homeassistant.const import (
     CONF_NAME,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
-    TIME_SECONDS,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -74,7 +74,7 @@ SENSOR_TYPES = {
     ],
     "wind_speed": [
         "Wind speed",
-        f"m/{TIME_SECONDS}",
+        SPEED_METERS_PER_SECOND,
         "windforce",
         "mdi:weather-windy",
         None,

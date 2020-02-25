@@ -10,6 +10,9 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_TIME,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
     CONF_TOKEN,
     CONF_USERNAME,
     TEMP_CELSIUS,
@@ -32,11 +35,19 @@ ATTR_FOOBOT_INDEX = "index"
 
 SENSOR_TYPES = {
     "time": [ATTR_TIME, TIME_SECONDS],
-    "pm": [ATTR_PM2_5, "µg/m3", "mdi:cloud"],
+    "pm": [ATTR_PM2_5, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, "mdi:cloud"],
     "tmp": [ATTR_TEMPERATURE, TEMP_CELSIUS, "mdi:thermometer"],
     "hum": [ATTR_HUMIDITY, "%", "mdi:water-percent"],
-    "co2": [ATTR_CARBON_DIOXIDE, "ppm", "mdi:periodic-table-co2"],
-    "voc": [ATTR_VOLATILE_ORGANIC_COMPOUNDS, "ppb", "mdi:cloud"],
+    "co2": [
+        ATTR_CARBON_DIOXIDE,
+        CONCENTRATION_PARTS_PER_MILLION,
+        "mdi:periodic-table-co2",
+    ],
+    "voc": [
+        ATTR_VOLATILE_ORGANIC_COMPOUNDS,
+        CONCENTRATION_PARTS_PER_BILLION,
+        "mdi:cloud",
+    ],
     "allpollu": [ATTR_FOOBOT_INDEX, "%", "mdi:percent"],
 }
 
