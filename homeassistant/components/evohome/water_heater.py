@@ -94,13 +94,15 @@ class EvoDHW(EvoChild, WaterHeaterDevice):
 
             if operation_mode == STATE_ON:
                 # TODO: until dt from aware to evo naive/local
+                until = dt_util.as_utc(until) if until else None
                 await self._evo_broker.call_client_api(
-                    self._evo_device.set_dhw_on(until=dt_util.as_utc(until))
+                    self._evo_device.set_dhw_on(until=until)
                 )
             else:  # STATE_OFF
                 # TODO: until dt from aware to evo naive/local
+                until = dt_util.as_utc(until) if until else None
                 await self._evo_broker.call_client_api(
-                    self._evo_device.set_dhw_off(until=dt_util.as_utc(until))
+                    self._evo_device.set_dhw_off(until=until)
                 )
 
     async def async_turn_away_mode_on(self):

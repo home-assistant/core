@@ -170,10 +170,7 @@ class EvoZone(EvoChild, EvoClimateDevice):
             return
 
         # otherwise it is SVC_SET_ZONE_OVERRIDE
-        temperature = data[ATTR_ZONE_TEMP]  # TODO below
-        # precision = self._evo_device.setpointCapabilities["valueResolution"]
-        # temperature = data[ATTR_ZONE_TEMP] // self.precision * self.precision
-        temperature = max(min(temperature, self.max_temp), self.min_temp)
+        temperature = max(min(data[ATTR_ZONE_TEMP], self.max_temp), self.min_temp)
 
         if ATTR_DURATION_UNTIL in data:
             duration = data[ATTR_DURATION_UNTIL]
@@ -185,9 +182,9 @@ class EvoZone(EvoChild, EvoClimateDevice):
         else:
             until = None  # indefinitely
 
-        # TODO: until dt from aware to evo naive/local
+        until = dt_util.as_utc(until) if until else None
         await self._evo_broker.call_client_api(
-            self._evo_device.set_temperature(temperature, until=dt_util.as_utc(until))
+            self._evo_device.set_temperature(temperature, until=until)
         )
 
     @property
@@ -251,9 +248,9 @@ class EvoZone(EvoChild, EvoClimateDevice):
             elif self._evo_device.setpointStatus["setpointMode"] == EVO_TEMPOVER:
                 until = dt_util.parse_datetime(self._evo_device.setpointStatus["until"])
 
-        # TODO: until dt from aware to evo naive/local
+        until = dt_util.as_utc(until) if until else None
         await self._evo_broker.call_client_api(
-            self._evo_device.set_temperature(temperature, until=dt_util.as_utc(until))
+            self._evo_device.set_temperature(temperature, until=until)
         )
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
@@ -274,7 +271,6 @@ class EvoZone(EvoChild, EvoClimateDevice):
         and 'Away', Zones to (by default) 12C.
         """
         if hvac_mode == HVAC_MODE_OFF:
-            # TODO: until dt from aware to evo naive/local ???
             await self._evo_broker.call_client_api(
                 self._evo_device.set_temperature(self.min_temp, until=None)
             )
@@ -301,9 +297,9 @@ class EvoZone(EvoChild, EvoClimateDevice):
         else:  # EVO_PERMOVER
             until = None
 
-        # TODO: until dt from aware to evo naive/local
+        until = dt_util.as_utc(until) if until else None
         await self._evo_broker.call_client_api(
-            self._evo_device.set_temperature(temperature, until=dt_util.as_utc(until))
+            self._evo_device.set_temperature(temperature, until=until)
         )
 
     async def async_update(self) -> None:
@@ -360,13 +356,14 @@ class EvoController(EvoClimateDevice):
         else:
             until = None
 
+        until = dt_util.as_utc(until) if until else None
         await self._set_tcs_mode(mode, until=until)
 
     async def _set_tcs_mode(self, mode: str, until: Optional[dt] = None) -> None:
         """Set a Controller to any of its native EVO_* operating modes."""
-        # TODO: until dt from aware to evo naive/local ???
+        until = dt_util.as_utc(until) if until else None
         await self._evo_broker.call_client_api(
-            self._evo_tcs.set_status(mode, until=dt_util.as_utc(until))
+            self._evo_tcs.set_status(mode, until=until)
         )
 
     @property
