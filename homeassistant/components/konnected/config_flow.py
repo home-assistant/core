@@ -181,7 +181,7 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except (CannotConnect, KeyError):
             raise CannotConnect
         else:
-            self.data[CONF_MODEL] = status.get("name", KONN_MODEL)
+            self.data[CONF_MODEL] = status.get("model", KONN_MODEL)
             self.data[CONF_ACCESS_TOKEN] = "".join(
                 random.choices(f"{string.ascii_uppercase}{string.digits}", k=20)
             )
@@ -291,7 +291,7 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 self.data[CONF_ID] = status["mac"].replace(":", "")
-                self.data[CONF_MODEL] = status.get("name", KONN_MODEL)
+                self.data[CONF_MODEL] = status.get("model", KONN_MODEL)
 
                 # save off our discovered host info
                 KonnectedFlowHandler.discovered_hosts[self.data[CONF_ID]] = {

@@ -34,7 +34,7 @@ async def test_flow_works(hass, mock_panel):
 
     mock_panel.get_status.return_value = {
         "mac": "11:22:33:44:55:66",
-        "name": "Konnected",
+        "model": "Konnected",
     }
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"port": 1234, "host": "1.2.3.4"}
@@ -71,7 +71,7 @@ async def test_pro_flow_works(hass, mock_panel):
 
     mock_panel.get_status.return_value = {
         "mac": "11:22:33:44:55:66",
-        "name": "Konnected Pro",
+        "model": "Konnected Pro",
     }
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"port": 1234, "host": "1.2.3.4"}
@@ -102,7 +102,7 @@ async def test_ssdp(hass, mock_panel):
     """Test a panel being discovered."""
     mock_panel.get_status.return_value = {
         "mac": "11:22:33:44:55:66",
-        "name": "Konnected",
+        "model": "Konnected",
     }
 
     result = await hass.config_entries.flow.async_init(
@@ -129,7 +129,7 @@ async def test_import_no_host_user_finish(hass, mock_panel):
     """Test importing a panel with no host info."""
     mock_panel.get_status.return_value = {
         "mac": "aa:bb:cc:dd:ee:ff",
-        "name": "Konnected Pro",
+        "model": "Konnected Pro",
     }
 
     result = await hass.config_entries.flow.async_init(
@@ -195,7 +195,7 @@ async def test_import_ssdp_host_user_finish(hass, mock_panel):
     """Test importing a panel with no host info which ssdp discovers."""
     mock_panel.get_status.return_value = {
         "mac": "11:22:33:44:55:66",
-        "name": "Konnected Pro",
+        "model": "Konnected Pro",
     }
 
     result = await hass.config_entries.flow.async_init(
@@ -272,7 +272,7 @@ async def test_ssdp_already_configured(hass, mock_panel):
     ).add_to_hass(hass)
     mock_panel.get_status.return_value = {
         "mac": "11:22:33:44:55:66",
-        "name": "Konnected Pro",
+        "model": "Konnected Pro",
     }
 
     result = await hass.config_entries.flow.async_init(
@@ -348,7 +348,7 @@ async def test_ssdp_host_update(hass, mock_panel):
     ).add_to_hass(hass)
     mock_panel.get_status.return_value = {
         "mac": "11:22:33:44:55:66",
-        "name": "Konnected Pro",
+        "model": "Konnected Pro",
     }
 
     result = await hass.config_entries.flow.async_init(
@@ -372,7 +372,7 @@ async def test_import_existing_config(hass, mock_panel):
     """Test importing a host with an existing config file."""
     mock_panel.get_status.return_value = {
         "mac": "11:22:33:44:55:66",
-        "name": "Konnected Pro",
+        "model": "Konnected Pro",
     }
 
     result = await hass.config_entries.flow.async_init(
@@ -485,7 +485,7 @@ async def test_import_existing_config_entry(hass, mock_panel):
 
     mock_panel.get_status.return_value = {
         "mac": "11:22:33:44:55:66",
-        "name": "Konnected Pro",
+        "model": "Konnected Pro",
     }
 
     # utilize a global access token this time
@@ -545,7 +545,7 @@ async def test_import_pin_config(hass, mock_panel):
     """Test importing a host with an existing config file that specifies pin configs."""
     mock_panel.get_status.return_value = {
         "mac": "11:22:33:44:55:66",
-        "name": "Konnected Pro",
+        "model": "Konnected Pro",
     }
 
     result = await hass.config_entries.flow.async_init(
