@@ -8,7 +8,6 @@ import logging
 
 from typing import List
 
-from pytouchline import PyTouchline
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
@@ -43,13 +42,12 @@ PRESET_MODES = [
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string,})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Touchline devices."""
+    from pytouchline import PyTouchline
 
     host = config[CONF_HOST]
     py_touchline = PyTouchline()
@@ -97,7 +95,6 @@ class Touchline(ClimateDevice):
     @property
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode.
-
         Need to be one of HVAC_MODE_*.
         """
         return HVAC_MODE_HEAT
@@ -105,7 +102,6 @@ class Touchline(ClimateDevice):
     @property
     def hvac_modes(self) -> List[str]:
         """Return the list of available hvac operation modes.
-
         Need to be a subset of HVAC_MODES.
         """
         return [HVAC_MODE_HEAT]
@@ -187,6 +183,7 @@ class Touchline(ClimateDevice):
             mode = 2
         else:
             mode = 0
+
         return mode
 
     @staticmethod
@@ -200,6 +197,7 @@ class Touchline(ClimateDevice):
             week_program = 3
         else:
             week_program = 0
+
         return week_program
 
     @staticmethod
@@ -219,4 +217,5 @@ class Touchline(ClimateDevice):
             preset_mode = PRESET_P3
         else:
             preset_mode = None
+
         return preset_mode
