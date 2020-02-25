@@ -187,7 +187,8 @@ async def test_host_already_configured(hass, api):
         DOMAIN, context={"source": "user"}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_ENTRY)
+        result["flow_id"], user_input=MOCK_ENTRY
+    )
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
