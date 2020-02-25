@@ -30,8 +30,7 @@ from .const import (
     DOMAIN,
     LOGIN_METHODS,
     MIN_TIME_BETWEEN_ACTIVITY_UPDATES,
-    MIN_TIME_BETWEEN_DOORBELL_DETAIL_UPDATES,
-    MIN_TIME_BETWEEN_LOCK_DETAIL_UPDATES,
+    MIN_TIME_BETWEEN_DETAIL_UPDATES,
     VERIFICATION_CODE_KEY,
 )
 from .exceptions import InvalidAuth, RequireValidation
@@ -296,7 +295,7 @@ class AugustData:
         await self._async_update_doorbells_detail()
         return self._doorbell_detail_by_id.get(device_id)
 
-    @Throttle(MIN_TIME_BETWEEN_DOORBELL_DETAIL_UPDATES)
+    @Throttle(MIN_TIME_BETWEEN_DETAIL_UPDATES)
     async def _async_update_doorbells_detail(self):
         await self._hass.async_add_executor_job(self._update_doorbells_detail)
 
@@ -324,7 +323,7 @@ class AugustData:
             if lock.device_id == device_id:
                 return lock.device_name
 
-    @Throttle(MIN_TIME_BETWEEN_LOCK_DETAIL_UPDATES)
+    @Throttle(MIN_TIME_BETWEEN_DETAIL_UPDATES)
     async def _async_update_locks_detail(self):
         await self._hass.async_add_executor_job(self._update_locks_detail)
 
