@@ -1,20 +1,20 @@
 """The tests for Cover device actions."""
 import pytest
 
+import homeassistant.components.automation as automation
 from homeassistant.components.cover import DOMAIN
 from homeassistant.const import CONF_PLATFORM
-from homeassistant.setup import async_setup_component
-import homeassistant.components.automation as automation
 from homeassistant.helpers import device_registry
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
     assert_lists_same,
+    async_get_device_automation_capabilities,
+    async_get_device_automations,
     async_mock_service,
     mock_device_registry,
     mock_registry,
-    async_get_device_automations,
-    async_get_device_automation_capabilities,
 )
 
 
@@ -66,12 +66,6 @@ async def test_get_actions(hass, device_reg, entity_reg):
             "device_id": device_entry.id,
             "entity_id": ent.entity_id,
         },
-        {
-            "domain": DOMAIN,
-            "type": "toggle",
-            "device_id": device_entry.id,
-            "entity_id": ent.entity_id,
-        },
     ]
     actions = await async_get_device_automations(hass, "action", device_entry.id)
     assert_lists_same(actions, expected_actions)
@@ -110,12 +104,6 @@ async def test_get_actions_set_pos(hass, device_reg, entity_reg):
         {
             "domain": DOMAIN,
             "type": "stop",
-            "device_id": device_entry.id,
-            "entity_id": ent.entity_id,
-        },
-        {
-            "domain": DOMAIN,
-            "type": "toggle",
             "device_id": device_entry.id,
             "entity_id": ent.entity_id,
         },
@@ -168,12 +156,6 @@ async def test_get_actions_set_tilt_pos(hass, device_reg, entity_reg):
         },
         {
             "domain": DOMAIN,
-            "type": "toggle",
-            "device_id": device_entry.id,
-            "entity_id": ent.entity_id,
-        },
-        {
-            "domain": DOMAIN,
             "type": "open_tilt",
             "device_id": device_entry.id,
             "entity_id": ent.entity_id,
@@ -187,12 +169,6 @@ async def test_get_actions_set_tilt_pos(hass, device_reg, entity_reg):
         {
             "domain": DOMAIN,
             "type": "stop_tilt",
-            "device_id": device_entry.id,
-            "entity_id": ent.entity_id,
-        },
-        {
-            "domain": DOMAIN,
-            "type": "toggle_tilt",
             "device_id": device_entry.id,
             "entity_id": ent.entity_id,
         },
@@ -226,7 +202,7 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
 
     actions = await async_get_device_automations(hass, "action", device_entry.id)
-    assert len(actions) == 4
+    assert len(actions) == 3
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
             hass, "action", action
@@ -265,7 +241,7 @@ async def test_get_action_capabilities_set_pos(hass, device_reg, entity_reg):
         ]
     }
     actions = await async_get_device_automations(hass, "action", device_entry.id)
-    assert len(actions) == 5
+    assert len(actions) == 4
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
             hass, "action", action
@@ -307,7 +283,7 @@ async def test_get_action_capabilities_set_tilt_pos(hass, device_reg, entity_reg
         ]
     }
     actions = await async_get_device_automations(hass, "action", device_entry.id)
-    assert len(actions) == 9
+    assert len(actions) == 7
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
             hass, "action", action
@@ -356,15 +332,6 @@ async def test_action(hass):
                         "type": "stop",
                     },
                 },
-                {
-                    "trigger": {"platform": "event", "event_type": "test_event_toggle"},
-                    "action": {
-                        "domain": DOMAIN,
-                        "device_id": "abcdefgh",
-                        "entity_id": "cover.entity",
-                        "type": "toggle",
-                    },
-                },
             ]
         },
     )
@@ -372,32 +339,143 @@ async def test_action(hass):
     open_calls = async_mock_service(hass, "cover", "open_cover")
     close_calls = async_mock_service(hass, "cover", "close_cover")
     stop_calls = async_mock_service(hass, "cover", "stop_cover")
-    toggle_calls = async_mock_service(hass, "cover", "toggle")
 
     hass.bus.async_fire("test_event_open")
     await hass.async_block_till_done()
     assert len(open_calls) == 1
     assert len(close_calls) == 0
     assert len(stop_calls) == 0
-    assert len(toggle_calls) == 0
 
     hass.bus.async_fire("test_event_close")
     await hass.async_block_till_done()
     assert len(open_calls) == 1
     assert len(close_calls) == 1
     assert len(stop_calls) == 0
-    assert len(toggle_calls) == 0
 
     hass.bus.async_fire("test_event_stop")
     await hass.async_block_till_done()
     assert len(open_calls) == 1
     assert len(close_calls) == 1
     assert len(stop_calls) == 1
-    assert len(toggle_calls) == 0
 
-    hass.bus.async_fire("test_event_toggle")
+
+async def test_action_tilt(hass):
+    """Test for cover tilt actions."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event_open"},
+                    "action": {
+                        "domain": DOMAIN,
+                        "device_id": "abcdefgh",
+                        "entity_id": "cover.entity",
+                        "type": "open_tilt",
+                    },
+                },
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event_close"},
+                    "action": {
+                        "domain": DOMAIN,
+                        "device_id": "abcdefgh",
+                        "entity_id": "cover.entity",
+                        "type": "close_tilt",
+                    },
+                },
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event_stop"},
+                    "action": {
+                        "domain": DOMAIN,
+                        "device_id": "abcdefgh",
+                        "entity_id": "cover.entity",
+                        "type": "stop_tilt",
+                    },
+                },
+            ]
+        },
+    )
+
+    open_calls = async_mock_service(hass, "cover", "open_cover_tilt")
+    close_calls = async_mock_service(hass, "cover", "close_cover_tilt")
+    stop_calls = async_mock_service(hass, "cover", "stop_cover_tilt")
+
+    hass.bus.async_fire("test_event_open")
+    await hass.async_block_till_done()
+    assert len(open_calls) == 1
+    assert len(close_calls) == 0
+    assert len(stop_calls) == 0
+
+    hass.bus.async_fire("test_event_close")
+    await hass.async_block_till_done()
+    assert len(open_calls) == 1
+    assert len(close_calls) == 1
+    assert len(stop_calls) == 0
+
+    hass.bus.async_fire("test_event_stop")
     await hass.async_block_till_done()
     assert len(open_calls) == 1
     assert len(close_calls) == 1
     assert len(stop_calls) == 1
-    assert len(toggle_calls) == 1
+
+
+async def test_action_set_position(hass):
+    """Test for cover set position actions."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event_set_pos",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "device_id": "abcdefgh",
+                        "entity_id": "cover.entity",
+                        "type": "set_position",
+                        "position": 25,
+                    },
+                },
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event_set_tilt_pos",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "device_id": "abcdefgh",
+                        "entity_id": "cover.entity",
+                        "type": "set_tilt_position",
+                        "position": 75,
+                    },
+                },
+            ]
+        },
+    )
+
+    cover_pos_calls = async_mock_service(hass, "cover", "set_cover_position")
+    tilt_pos_calls = async_mock_service(hass, "cover", "set_cover_tilt_position")
+
+    hass.bus.async_fire("test_event_set_pos")
+    await hass.async_block_till_done()
+    assert len(cover_pos_calls) == 1
+    assert cover_pos_calls[0].data["position"] == 25
+    assert len(tilt_pos_calls) == 0
+
+    hass.bus.async_fire("test_event_set_tilt_pos")
+    await hass.async_block_till_done()
+    assert len(cover_pos_calls) == 1
+    assert len(tilt_pos_calls) == 1
+    assert tilt_pos_calls[0].data["tilt_position"] == 75

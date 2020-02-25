@@ -17,8 +17,6 @@ from homeassistant.const import (
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
     SERVICE_STOP_COVER_TILT,
-    SERVICE_TOGGLE,
-    SERVICE_TOGGLE_COVER_TILT,
 )
 from homeassistant.core import HomeAssistant, Context
 from homeassistant.helpers import entity_registry
@@ -37,16 +35,7 @@ from . import (
     SUPPORT_STOP_TILT,
 )
 
-CMD_ACTION_TYPES = {
-    "open",
-    "close",
-    "toggle",
-    "stop",
-    "open_tilt",
-    "close_tilt",
-    "toggle_tilt",
-    "stop_tilt",
-}
+CMD_ACTION_TYPES = {"open", "close", "stop", "open_tilt", "close_tilt", "stop_tilt"}
 POSITION_ACTION_TYPES = {"set_position", "set_tilt_position"}
 
 CMD_ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
@@ -102,15 +91,6 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
                     CONF_TYPE: "close",
                 }
             )
-        if supported_features & SUPPORT_CLOSE and supported_features & SUPPORT_OPEN:
-            actions.append(
-                {
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "toggle",
-                }
-            )
         if supported_features & SUPPORT_STOP:
             actions.append(
                 {
@@ -136,18 +116,6 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
                     CONF_DOMAIN: DOMAIN,
                     CONF_ENTITY_ID: entry.entity_id,
                     CONF_TYPE: "close_tilt",
-                }
-            )
-        if (
-            supported_features & SUPPORT_CLOSE_TILT
-            and supported_features & SUPPORT_OPEN_TILT
-        ):
-            actions.append(
-                {
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "toggle_tilt",
                 }
             )
         if supported_features & SUPPORT_STOP_TILT:
@@ -209,16 +177,12 @@ async def async_call_action_from_config(
         service = SERVICE_OPEN_COVER
     elif config[CONF_TYPE] == "close":
         service = SERVICE_CLOSE_COVER
-    elif config[CONF_TYPE] == "toggle":
-        service = SERVICE_TOGGLE
     elif config[CONF_TYPE] == "stop":
         service = SERVICE_STOP_COVER
     elif config[CONF_TYPE] == "open_tilt":
         service = SERVICE_OPEN_COVER_TILT
     elif config[CONF_TYPE] == "close_tilt":
         service = SERVICE_CLOSE_COVER_TILT
-    elif config[CONF_TYPE] == "toggle_tilt":
-        service = SERVICE_TOGGLE_COVER_TILT
     elif config[CONF_TYPE] == "stop_tilt":
         service = SERVICE_STOP_COVER_TILT
     elif config[CONF_TYPE] == "set_position":
