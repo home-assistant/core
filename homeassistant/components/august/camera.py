@@ -5,14 +5,14 @@ import requests
 
 from homeassistant.components.camera import Camera
 
-from . import DATA_AUGUST, DEFAULT_TIMEOUT
+from .const import DATA_AUGUST, DEFAULT_NAME, DEFAULT_TIMEOUT, DOMAIN
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=5)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up August cameras."""
-    data = hass.data[DATA_AUGUST]
+    data = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
     devices = []
 
     for doorbell in data.doorbells:
@@ -29,9 +29,11 @@ class AugustCamera(Camera):
         super().__init__()
         self._data = data
         self._doorbell = doorbell
+        self._doorbell_detail = None
         self._timeout = timeout
         self._image_url = None
         self._image_content = None
+        self._firmware_version = None
 
     @property
     def name(self):
@@ -51,7 +53,7 @@ class AugustCamera(Camera):
     @property
     def brand(self):
         """Return the camera brand."""
-        return "August"
+        return DEFAULT_NAME
 
     @property
     def model(self):
@@ -60,15 +62,29 @@ class AugustCamera(Camera):
 
     async def async_camera_image(self):
         """Return bytes of camera image."""
-        latest = await self._data.async_get_doorbell_detail(self._doorbell.device_id)
+        self._doorbell_detail = await self._data.async_get_doorbell_detail(
+            self._doorbell.device_id
+        )
+        if self._doorbell_detail is None:
+            return None
 
-        if self._image_url is not latest.image_url:
-            self._image_url = latest.image_url
+        if self._image_url is not self._doorbell_detail.image_url:
+            self._image_url = self._doorbell_detail.image_url
             self._image_content = await self.hass.async_add_executor_job(
                 self._camera_image
             )
-
         return self._image_content
+
+    async def async_update(self):
+        """Update camera data."""
+        self._doorbell_detail = await self._data.async_get_doorbell_detail(
+            self._doorbell.device_id
+        )
+
+        if self._doorbell_detail is None:
+            return None
+
+        self._firmware_version = self._doorbell_detail.firmware_version
 
     def _camera_image(self):
         """Return bytes of camera image via http get."""
@@ -79,3 +95,13 @@ class AugustCamera(Camera):
     def unique_id(self) -> str:
         """Get the unique id of the camera."""
         return f"{self._doorbell.device_id:s}_camera"
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        return {
+            "identifiers": {(DOMAIN, self._doorbell.device_id)},
+            "name": self._doorbell.device_name + " Camera",
+            "manufacturer": DEFAULT_NAME,
+            "sw_version": self._firmware_version,
+        }

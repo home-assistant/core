@@ -1,0 +1,42 @@
+"""Constants for August devices."""
+
+from datetime import timedelta
+
+DEFAULT_TIMEOUT = 10
+
+CONF_ACCESS_TOKEN_CACHE_FILE = "access_token_cache_file"
+CONF_LOGIN_METHOD = "login_method"
+CONF_INSTALL_ID = "install_id"
+
+VERIFICATION_CODE_KEY = "verification_code"
+
+NOTIFICATION_ID = "august_notification"
+NOTIFICATION_TITLE = "August"
+
+DEFAULT_AUGUST_CONFIG_FILE = ".august.conf"
+
+DATA_AUGUST = "data_august"
+
+DEFAULT_NAME = "August"
+DOMAIN = "august"
+
+# Limit battery, online, and hardware updates to 1800 seconds
+# in order to reduce the number of api requests and
+# avoid hitting rate limits
+MIN_TIME_BETWEEN_LOCK_DETAIL_UPDATES = timedelta(seconds=1800)
+
+# Doorbells need to update more frequently than locks
+# since we get an image from the doorbell api. Once
+# py-august 0.18.0 is released doorbell status updates
+# can be reduced in the same was as locks have been
+MIN_TIME_BETWEEN_DOORBELL_DETAIL_UPDATES = timedelta(seconds=20)
+
+# Activity needs to be checked more frequently as the
+# doorbell motion and rings are included here
+MIN_TIME_BETWEEN_ACTIVITY_UPDATES = timedelta(seconds=10)
+
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=10)
+
+LOGIN_METHODS = ["phone", "email"]
+
+AUGUST_COMPONENTS = ["camera", "binary_sensor", "lock", "sensor"]

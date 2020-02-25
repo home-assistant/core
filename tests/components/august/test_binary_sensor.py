@@ -9,6 +9,7 @@ from homeassistant.const import (
     SERVICE_UNLOCK,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 
 from tests.components.august.mocks import (
@@ -69,3 +70,21 @@ async def test_create_doorbell(hass):
         "binary_sensor.k98gidt45gul_name_ding"
     )
     assert binary_sensor_k98gidt45gul_name_ding.state == STATE_OFF
+
+
+async def test_create_doorbell_offline(hass):
+    """Test creation of a doorbell that is offline."""
+    doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.offline.json")
+    doorbell_details = [doorbell_one]
+    await _create_august_with_devices(hass, doorbell_details)
+
+    binary_sensor_tmt100_name_motion = hass.states.get(
+        "binary_sensor.tmt100_name_motion"
+    )
+    assert binary_sensor_tmt100_name_motion.state == STATE_UNAVAILABLE
+    binary_sensor_tmt100_name_online = hass.states.get(
+        "binary_sensor.tmt100_name_online"
+    )
+    assert binary_sensor_tmt100_name_online.state == STATE_OFF
+    binary_sensor_tmt100_name_ding = hass.states.get("binary_sensor.tmt100_name_ding")
+    assert binary_sensor_tmt100_name_ding.state == STATE_UNAVAILABLE
