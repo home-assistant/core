@@ -62,7 +62,7 @@ ALREADY_DISARMED = 0x06
 _LOGGER = logging.getLogger(__name__)
 
 
-@registries.CHANNEL_ONLY_CLUSTERS.register(security.IasAce.cluster_id)
+@registries.ALARM_CONTROL_PANEL_CLUSTERS.register(security.IasAce.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(security.IasAce.cluster_id)
 class IasAce(ZigbeeChannel):
     """IAS Ancillary Control Equipment channel."""
@@ -90,6 +90,9 @@ class IasAce(ZigbeeChannel):
     @callback
     def cluster_command(self, tsn, command_id, args):
         """Handle commands received to this cluster."""
+        self.warning(
+            "received command %s", self._cluster.server_commands.get(command_id)[0]
+        )
         self.command_map[command_id](*args)
 
     def arm(self, arm_mode, code, zone_id):

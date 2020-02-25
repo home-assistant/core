@@ -13,6 +13,7 @@ import zigpy_xbee.zigbee.application
 import zigpy_zigate.zigbee.application
 import zigpy_znp.zigbee.application
 
+from homeassistant.components.alarm_control_panel import DOMAIN as ALARM
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.climate import DOMAIN as CLIMATE
 from homeassistant.components.cover import DOMAIN as COVER
@@ -83,6 +84,7 @@ CHANNEL_ELECTRICAL_MEASUREMENT = "electrical_measurement"
 CHANNEL_EVENT_RELAY = "event_relay"
 CHANNEL_FAN = "fan"
 CHANNEL_HUMIDITY = "humidity"
+CHANNEL_IAS_ACE = "ias_ace"
 CHANNEL_IAS_WD = "ias_wd"
 CHANNEL_IDENTIFY = "identify"
 CHANNEL_ILLUMINANCE = "illuminance"
@@ -106,6 +108,7 @@ CLUSTER_TYPE_IN = "in"
 CLUSTER_TYPE_OUT = "out"
 
 PLATFORMS = (
+    ALARM,
     BINARY_SENSOR,
     CLIMATE,
     COVER,

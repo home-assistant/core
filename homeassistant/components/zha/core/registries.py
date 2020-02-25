@@ -9,6 +9,7 @@ import zigpy.profiles.zha
 import zigpy.profiles.zll
 import zigpy.zcl as zcl
 
+from homeassistant.components.alarm_control_panel import DOMAIN as ALARM
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.climate import DOMAIN as CLIMATE
 from homeassistant.components.cover import DOMAIN as COVER
@@ -85,6 +86,11 @@ SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {
     zcl.clusters.general.OnOff.cluster_id: BINARY_SENSOR
 }
 
+SWITCH_CLUSTERS = SetRegistry()
+ALARM_CONTROL_PANEL_CLUSTERS = SetRegistry()
+BINARY_SENSOR_CLUSTERS = SetRegistry()
+BINARY_SENSOR_CLUSTERS.add(SMARTTHINGS_ACCELERATION_CLUSTER)
+
 BINDABLE_CLUSTERS = SetRegistry()
 CHANNEL_ONLY_CLUSTERS = SetRegistry()
 
@@ -104,6 +110,7 @@ DEVICE_CLASS = {
         zigpy.profiles.zha.DeviceType.ON_OFF_PLUG_IN_UNIT: SWITCH,
         zigpy.profiles.zha.DeviceType.SHADE: COVER,
         zigpy.profiles.zha.DeviceType.SMART_PLUG: SWITCH,
+        zigpy.profiles.zha.DeviceType.IAS_ANCILLARY_CONTROL: ALARM,
     },
     zigpy.profiles.zll.PROFILE_ID: {
         zigpy.profiles.zll.DeviceType.COLOR_LIGHT: LIGHT,
@@ -118,6 +125,43 @@ DEVICE_CLASS = {
 DEVICE_CLASS = collections.defaultdict(dict, DEVICE_CLASS)
 
 CLIENT_CHANNELS_REGISTRY = DictRegistry()
+
+RADIO_TYPES = {
+    RadioType.deconz.name: {
+        ZHA_GW_RADIO: zigpy_deconz.api.Deconz,
+        CONTROLLER: zigpy_deconz.zigbee.application.ControllerApplication,
+        ZHA_GW_RADIO_DESCRIPTION: "Deconz",
+    },
+    RadioType.ezsp.name: {
+        ZHA_GW_RADIO: bellows.ezsp.EZSP,
+        CONTROLLER: bellows.zigbee.application.ControllerApplication,
+        ZHA_GW_RADIO_DESCRIPTION: "EZSP",
+    },
+    RadioType.ti_cc.name: {
+        ZHA_GW_RADIO: zigpy_cc.api.API,
+        CONTROLLER: zigpy_cc.zigbee.application.ControllerApplication,
+        ZHA_GW_RADIO_DESCRIPTION: "TI CC",
+    },
+    RadioType.xbee.name: {
+        ZHA_GW_RADIO: zigpy_xbee.api.XBee,
+        CONTROLLER: zigpy_xbee.zigbee.application.ControllerApplication,
+        ZHA_GW_RADIO_DESCRIPTION: "XBee",
+    },
+    RadioType.zigate.name: {
+        ZHA_GW_RADIO: zigpy_zigate.api.ZiGate,
+        CONTROLLER: zigpy_zigate.zigbee.application.ControllerApplication,
+        ZHA_GW_RADIO_DESCRIPTION: "ZiGate",
+    },
+}
+
+COMPONENT_CLUSTERS = {
+    BINARY_SENSOR: BINARY_SENSOR_CLUSTERS,
+    DEVICE_TRACKER: DEVICE_TRACKER_CLUSTERS,
+    LIGHT: LIGHT_CLUSTERS,
+    SWITCH: SWITCH_CLUSTERS,
+    ALARM: ALARM_CONTROL_PANEL_CLUSTERS,
+}
+
 ZIGBEE_CHANNEL_REGISTRY = DictRegistry()
 
 
