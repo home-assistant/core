@@ -106,7 +106,7 @@ async def test_flow_works(hass, api):
         transmission.DOMAIN, context={"source": "user"}, data=MOCK_ENTRY
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["title"] == NAME
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
