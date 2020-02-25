@@ -90,7 +90,7 @@ class EvoDHW(EvoChild, WaterHeaterDevice):
             await self._evo_broker.call_client_api(self._evo_device.set_dhw_auto())
         else:
             await self._update_schedule()
-            until = dt_util.parse_datetime(str(self.setpoints.get("next_sp_from")))
+            until = dt_util.parse_datetime(self.setpoints.get("next_sp_from", ""))
             until = dt_util.as_utc(until) if until else None
 
             if operation_mode == STATE_ON:
