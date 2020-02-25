@@ -7,7 +7,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT
 from homeassistant.helpers import aiohttp_client
 
-from .const import DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_PORT, DOMAIN  # pylint: disable=unused-import
 
 
 class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
