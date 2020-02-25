@@ -49,7 +49,7 @@ def add_entities(router, async_add_entities, tracked):
         new_tracked.append(tracked[mac])
 
     if new_tracked:
-        async_add_entities(new_tracked)
+        async_add_entities(new_tracked, True)
 
 
 class FreeboxDevice(ScannerEntity):
@@ -66,8 +66,6 @@ class FreeboxDevice(ScannerEntity):
         self._attrs = {}
 
         self._unsub_dispatcher = None
-
-        self.update()
 
     def update(self) -> None:
         """Update the Freebox device."""

@@ -51,7 +51,7 @@ async def async_setup_entry(
     for sensor_key, sensor_attrs in CONNECTION_SENSORS.items():
         entities.append(FreeboxSensor(router, sensor_key, sensor_attrs))
 
-    async_add_entities(entities)
+    async_add_entities(entities, True)
 
 
 class FreeboxSensor(Entity):
@@ -69,8 +69,6 @@ class FreeboxSensor(Entity):
         self._unique_id = f"{self._router.mac} {self._name}"
 
         self._unsub_dispatcher = None
-
-        self.update()
 
     def update(self) -> None:
         """Update the Freebox sensor."""
