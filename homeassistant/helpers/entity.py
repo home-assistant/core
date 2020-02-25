@@ -542,6 +542,7 @@ class Entity(ABC):
         data = event.data
         if data["action"] == "remove" and data["entity_id"] == self.entity_id:
             await self.async_removed_from_registry()
+            await self.async_remove()
 
         if (
             data["action"] != "update"
