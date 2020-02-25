@@ -3,6 +3,7 @@ from datetime import datetime
 import json
 import logging
 
+import mujson
 from sqlalchemy import (
     Boolean,
     Column,
@@ -63,13 +64,13 @@ class Events(Base):  # type: ignore
         try:
             return Event(
                 self.event_type,
-                json.loads(self.event_data),
+                mujson.loads(self.event_data),
                 EventOrigin(self.origin),
                 _process_timestamp(self.time_fired),
                 context=context,
             )
         except ValueError:
-            # When json.loads fails
+            # When mujson.loads fails
             _LOGGER.exception("Error converting to event: %s", self)
             return None
 
@@ -133,7 +134,7 @@ class States(Base):  # type: ignore
             return State(
                 self.entity_id,
                 self.state,
-                json.loads(self.attributes),
+                mujson.loads(self.attributes),
                 _process_timestamp(self.last_changed),
                 _process_timestamp(self.last_updated),
                 context=context,
@@ -142,7 +143,7 @@ class States(Base):  # type: ignore
                 temp_invalid_id_bypass=True,
             )
         except ValueError:
-            # When json.loads fails
+            # When mujson.loads fails
             _LOGGER.exception("Error converting row to state: %s", self)
             return None
 

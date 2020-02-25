@@ -9,6 +9,7 @@ from aiohttp import web
 from aiohttp.hdrs import CONTENT_TYPE, USER_AGENT
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPGatewayTimeout
 import async_timeout
+import mujson
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, callback
@@ -61,12 +62,18 @@ def async_create_clientsession(
 
     This method must be run in the event loop.
     """
+
+    def json_dumps_str(obj: Any) -> Any:
+        res = mujson.dumps(obj)
+        return res if isinstance(res, str) else res.decode()
+
     connector = _async_get_connector(hass, verify_ssl)
 
     clientsession = aiohttp.ClientSession(
         loop=hass.loop,
         connector=connector,
         headers={USER_AGENT: SERVER_SOFTWARE},
+        json_serialize=json_dumps_str,
         **kwargs,
     )
 
