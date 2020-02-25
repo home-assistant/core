@@ -3,6 +3,7 @@ import logging
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
@@ -20,8 +21,13 @@ SENSOR_TYPES = {
         None,
         DEVICE_CLASS_TEMPERATURE,
     ],
-    "com.fibaro.smokeSensor": ["Smoke", "ppm", "mdi:fire", None],
-    "CO2": ["CO2", "ppm", "mdi:cloud", None],
+    "com.fibaro.smokeSensor": [
+        "Smoke",
+        CONCENTRATION_PARTS_PER_MILLION,
+        "mdi:fire",
+        None,
+    ],
+    "CO2": ["CO2", CONCENTRATION_PARTS_PER_MILLION, "mdi:cloud", None],
     "com.fibaro.humiditySensor": ["Humidity", "%", None, DEVICE_CLASS_HUMIDITY],
     "com.fibaro.lightSensor": ["Light", "lx", None, DEVICE_CLASS_ILLUMINANCE],
 }

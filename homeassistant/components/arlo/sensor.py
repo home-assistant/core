@@ -6,6 +6,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    CONCENTRATION_PARTS_PER_MILLION,
     CONF_MONITORED_CONDITIONS,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
@@ -30,7 +31,7 @@ SENSOR_TYPES = {
     "signal_strength": ["Signal Strength", None, "signal"],
     "temperature": ["Temperature", TEMP_CELSIUS, "thermometer"],
     "humidity": ["Humidity", "%", "water-percent"],
-    "air_quality": ["Air Quality", "ppm", "biohazard"],
+    "air_quality": ["Air Quality", CONCENTRATION_PARTS_PER_MILLION, "biohazard"],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

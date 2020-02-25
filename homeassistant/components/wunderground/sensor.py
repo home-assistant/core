@@ -17,10 +17,13 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
+    IRRADIATION_WATTS_PER_SQUARE_METER,
     LENGTH_FEET,
     LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
+    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -421,7 +424,10 @@ SENSOR_TYPES = {
         "Station ID", "station_id", "mdi:home"
     ),
     "solarradiation": WUCurrentConditionsSensorConfig(
-        "Solar Radiation", "solarradiation", "mdi:weather-sunny", "w/m2"
+        "Solar Radiation",
+        "solarradiation",
+        "mdi:weather-sunny",
+        IRRADIATION_WATTS_PER_SQUARE_METER,
     ),
     "temperature_string": WUCurrentConditionsSensorConfig(
         "Temperature Summary", "temperature_string", "mdi:thermometer"
@@ -455,16 +461,16 @@ SENSOR_TYPES = {
         "Wind Direction", "wind_dir", "mdi:weather-windy"
     ),
     "wind_gust_kph": WUCurrentConditionsSensorConfig(
-        "Wind Gust", "wind_gust_kph", "mdi:weather-windy", "kph"
+        "Wind Gust", "wind_gust_kph", "mdi:weather-windy", SPEED_KILOMETERS_PER_HOUR
     ),
     "wind_gust_mph": WUCurrentConditionsSensorConfig(
-        "Wind Gust", "wind_gust_mph", "mdi:weather-windy", "mph"
+        "Wind Gust", "wind_gust_mph", "mdi:weather-windy", SPEED_MILES_PER_HOUR
     ),
     "wind_kph": WUCurrentConditionsSensorConfig(
-        "Wind Speed", "wind_kph", "mdi:weather-windy", "kph"
+        "Wind Speed", "wind_kph", "mdi:weather-windy", SPEED_KILOMETERS_PER_HOUR
     ),
     "wind_mph": WUCurrentConditionsSensorConfig(
-        "Wind Speed", "wind_mph", "mdi:weather-windy", "mph"
+        "Wind Speed", "wind_mph", "mdi:weather-windy", SPEED_MILES_PER_HOUR
     ),
     "wind_string": WUCurrentConditionsSensorConfig(
         "Wind Summary", "wind_string", "mdi:weather-windy"
@@ -738,52 +744,132 @@ SENSOR_TYPES = {
         device_class="temperature",
     ),
     "wind_gust_1d_kph": WUDailySimpleForecastSensorConfig(
-        "Max. Wind Today", 0, "maxwind", "kph", "kph", "mdi:weather-windy"
+        "Max. Wind Today",
+        0,
+        "maxwind",
+        SPEED_KILOMETERS_PER_HOUR,
+        SPEED_KILOMETERS_PER_HOUR,
+        "mdi:weather-windy",
     ),
     "wind_gust_2d_kph": WUDailySimpleForecastSensorConfig(
-        "Max. Wind Tomorrow", 1, "maxwind", "kph", "kph", "mdi:weather-windy"
+        "Max. Wind Tomorrow",
+        1,
+        "maxwind",
+        SPEED_KILOMETERS_PER_HOUR,
+        SPEED_KILOMETERS_PER_HOUR,
+        "mdi:weather-windy",
     ),
     "wind_gust_3d_kph": WUDailySimpleForecastSensorConfig(
-        "Max. Wind in 3 Days", 2, "maxwind", "kph", "kph", "mdi:weather-windy"
+        "Max. Wind in 3 Days",
+        2,
+        "maxwind",
+        SPEED_KILOMETERS_PER_HOUR,
+        SPEED_KILOMETERS_PER_HOUR,
+        "mdi:weather-windy",
     ),
     "wind_gust_4d_kph": WUDailySimpleForecastSensorConfig(
-        "Max. Wind in 4 Days", 3, "maxwind", "kph", "kph", "mdi:weather-windy"
+        "Max. Wind in 4 Days",
+        3,
+        "maxwind",
+        SPEED_KILOMETERS_PER_HOUR,
+        SPEED_KILOMETERS_PER_HOUR,
+        "mdi:weather-windy",
     ),
     "wind_gust_1d_mph": WUDailySimpleForecastSensorConfig(
-        "Max. Wind Today", 0, "maxwind", "mph", "mph", "mdi:weather-windy"
+        "Max. Wind Today",
+        0,
+        "maxwind",
+        SPEED_MILES_PER_HOUR,
+        SPEED_MILES_PER_HOUR,
+        "mdi:weather-windy",
     ),
     "wind_gust_2d_mph": WUDailySimpleForecastSensorConfig(
-        "Max. Wind Tomorrow", 1, "maxwind", "mph", "mph", "mdi:weather-windy"
+        "Max. Wind Tomorrow",
+        1,
+        "maxwind",
+        SPEED_MILES_PER_HOUR,
+        SPEED_MILES_PER_HOUR,
+        "mdi:weather-windy",
     ),
     "wind_gust_3d_mph": WUDailySimpleForecastSensorConfig(
-        "Max. Wind in 3 Days", 2, "maxwind", "mph", "mph", "mdi:weather-windy"
+        "Max. Wind in 3 Days",
+        2,
+        "maxwind",
+        SPEED_MILES_PER_HOUR,
+        SPEED_MILES_PER_HOUR,
+        "mdi:weather-windy",
     ),
     "wind_gust_4d_mph": WUDailySimpleForecastSensorConfig(
-        "Max. Wind in 4 Days", 3, "maxwind", "mph", "mph", "mdi:weather-windy"
+        "Max. Wind in 4 Days",
+        3,
+        "maxwind",
+        SPEED_MILES_PER_HOUR,
+        SPEED_MILES_PER_HOUR,
+        "mdi:weather-windy",
     ),
     "wind_1d_kph": WUDailySimpleForecastSensorConfig(
-        "Avg. Wind Today", 0, "avewind", "kph", "kph", "mdi:weather-windy"
+        "Avg. Wind Today",
+        0,
+        "avewind",
+        SPEED_KILOMETERS_PER_HOUR,
+        SPEED_KILOMETERS_PER_HOUR,
+        "mdi:weather-windy",
     ),
     "wind_2d_kph": WUDailySimpleForecastSensorConfig(
-        "Avg. Wind Tomorrow", 1, "avewind", "kph", "kph", "mdi:weather-windy"
+        "Avg. Wind Tomorrow",
+        1,
+        "avewind",
+        SPEED_KILOMETERS_PER_HOUR,
+        SPEED_KILOMETERS_PER_HOUR,
+        "mdi:weather-windy",
     ),
     "wind_3d_kph": WUDailySimpleForecastSensorConfig(
-        "Avg. Wind in 3 Days", 2, "avewind", "kph", "kph", "mdi:weather-windy"
+        "Avg. Wind in 3 Days",
+        2,
+        "avewind",
+        SPEED_KILOMETERS_PER_HOUR,
+        SPEED_KILOMETERS_PER_HOUR,
+        "mdi:weather-windy",
     ),
     "wind_4d_kph": WUDailySimpleForecastSensorConfig(
-        "Avg. Wind in 4 Days", 3, "avewind", "kph", "kph", "mdi:weather-windy"
+        "Avg. Wind in 4 Days",
+        3,
+        "avewind",
+        SPEED_KILOMETERS_PER_HOUR,
+        SPEED_KILOMETERS_PER_HOUR,
+        "mdi:weather-windy",
     ),
     "wind_1d_mph": WUDailySimpleForecastSensorConfig(
-        "Avg. Wind Today", 0, "avewind", "mph", "mph", "mdi:weather-windy"
+        "Avg. Wind Today",
+        0,
+        "avewind",
+        SPEED_MILES_PER_HOUR,
+        SPEED_MILES_PER_HOUR,
+        "mdi:weather-windy",
     ),
     "wind_2d_mph": WUDailySimpleForecastSensorConfig(
-        "Avg. Wind Tomorrow", 1, "avewind", "mph", "mph", "mdi:weather-windy"
+        "Avg. Wind Tomorrow",
+        1,
+        "avewind",
+        SPEED_MILES_PER_HOUR,
+        SPEED_MILES_PER_HOUR,
+        "mdi:weather-windy",
     ),
     "wind_3d_mph": WUDailySimpleForecastSensorConfig(
-        "Avg. Wind in 3 Days", 2, "avewind", "mph", "mph", "mdi:weather-windy"
+        "Avg. Wind in 3 Days",
+        2,
+        "avewind",
+        SPEED_MILES_PER_HOUR,
+        SPEED_MILES_PER_HOUR,
+        "mdi:weather-windy",
     ),
     "wind_4d_mph": WUDailySimpleForecastSensorConfig(
-        "Avg. Wind in 4 Days", 3, "avewind", "mph", "mph", "mdi:weather-windy"
+        "Avg. Wind in 4 Days",
+        3,
+        "avewind",
+        SPEED_MILES_PER_HOUR,
+        SPEED_MILES_PER_HOUR,
+        "mdi:weather-windy",
     ),
     "precip_1d_mm": WUDailySimpleForecastSensorConfig(
         "Precipitation Intensity Today", 0, "qpf_allday", "mm", "mm", "mdi:umbrella"
