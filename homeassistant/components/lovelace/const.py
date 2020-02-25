@@ -14,26 +14,12 @@ MODE_STORAGE = "storage"
 LOVELACE_CONFIG_FILE = "ui-lovelace.yaml"
 CONF_RESOURCES = "resources"
 CONF_URL_PATH = "url_path"
-CONF_TYPE_WS = "res_type"
-
-RESOURCE_TYPES = ["js", "css", "module", "html"]
 
 RESOURCE_FIELDS = {
-    CONF_TYPE: vol.In(RESOURCE_TYPES),
+    CONF_TYPE: vol.In(["js", "css", "module", "html"]),
     CONF_URL: cv.string,
 }
-
 RESOURCE_SCHEMA = vol.Schema(RESOURCE_FIELDS)
-
-RESOURCE_CREATE_FIELDS = {
-    vol.Required(CONF_TYPE_WS): vol.In(RESOURCE_TYPES),
-    vol.Required(CONF_URL): cv.string,
-}
-
-RESOURCE_UPDATE_FIELDS = {
-    vol.Optional(CONF_TYPE_WS): vol.In(RESOURCE_TYPES),
-    vol.Optional(CONF_URL): cv.string,
-}
 
 
 class ConfigNotFound(HomeAssistantError):
