@@ -19,15 +19,20 @@ def mock_api():
     return api
 
 
-async def test_get_configured_instances(hass):
-    """Test retrieving all configured instances."""
+async def test_duplicate_error(hass):
+    """Test that errors are shown when duplicates are added."""
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
     MockConfigEntry(domain=DOMAIN, unique_id="user@email.com", data=conf).add_to_hass(
         hass
     )
 
-    assert len(config_flow.configured_instances(hass)) == 1
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=conf
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_invalid_credentials(hass):
