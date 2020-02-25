@@ -62,6 +62,7 @@ def test_setup_params(hass):
         "cool",
         "auto",
         "dry",
+        "moist",
         "fan_only",
     ]
 
