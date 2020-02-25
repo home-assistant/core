@@ -7,7 +7,12 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 from .const import DEFAULT_PORT, DOMAIN  # pylint: disable=unused-import
-from .errors import TemporaryFailure, ValidationFailure
+from .errors import (
+    ConnectionRefused,
+    ConnectionTimeout,
+    ResolveFailed,
+    ValidationFailure,
+)
 from .helper import get_cert_time_to_expiry
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,9 +37,12 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input.get(CONF_PORT, DEFAULT_PORT),
             )
             return True
-        except TemporaryFailure as err:
-            cause = err.args[1]
-            self._errors[CONF_HOST] = cause
+        except ResolveFailed:
+            self._errors[CONF_HOST] = "resolve_failed"
+        except ConnectionTimeout:
+            self._errors[CONF_HOST] = "connection_timeout"
+        except ConnectionRefused:
+            self._errors[CONF_HOST] = "connection_refused"
         except ValidationFailure:
             return True
         return False

@@ -72,7 +72,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     try:
         days = await get_cert_time_to_expiry(hass, hostname, port)
     except TemporaryFailure as err:
-        _LOGGER.error(err.args[0])
+        _LOGGER.error(err)
         raise PlatformNotReady
     except ValidationFailure as err:
         error = err

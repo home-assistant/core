@@ -12,3 +12,15 @@ class TemporaryFailure(CertExpiryException):
 
 class ValidationFailure(CertExpiryException):
     """Certificate validation failure has occurred."""
+
+
+class ResolveFailed(TemporaryFailure):
+    """Name resolution failed."""
+
+
+class ConnectionTimeout(TemporaryFailure):
+    """Network connection timed out."""
+
+
+class ConnectionRefused(TemporaryFailure):
+    """Network connection refused."""

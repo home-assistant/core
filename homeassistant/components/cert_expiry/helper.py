@@ -4,7 +4,12 @@ import socket
 import ssl
 
 from .const import TIMEOUT
-from .errors import TemporaryFailure, ValidationFailure
+from .errors import (
+    ConnectionRefused,
+    ConnectionTimeout,
+    ResolveFailed,
+    ValidationFailure,
+)
 
 
 def get_cert(host, port):
@@ -23,15 +28,11 @@ async def get_cert_time_to_expiry(hass, hostname, port):
     try:
         cert = await hass.async_add_executor_job(get_cert, hostname, port)
     except socket.gaierror:
-        raise TemporaryFailure(f"Cannot resolve hostname: {hostname}", "resolve_failed")
+        raise ResolveFailed(f"Cannot resolve hostname: {hostname}")
     except socket.timeout:
-        raise TemporaryFailure(
-            f"Connection timeout with server: {hostname}:{port}", "connection_timeout"
-        )
+        raise ConnectionTimeout(f"Connection timeout with server: {hostname}:{port}")
     except ConnectionRefusedError:
-        raise TemporaryFailure(
-            f"Connection refused by server: {hostname}:{port}", "connection_refused"
-        )
+        raise ConnectionRefused(f"Connection refused by server: {hostname}:{port}")
     except ssl.CertificateError as err:
         raise ValidationFailure(err.verify_message)
     except ssl.SSLError as err:
