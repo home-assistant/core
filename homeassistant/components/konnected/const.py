@@ -4,6 +4,7 @@ DOMAIN = "konnected"
 
 CONF_ACTIVATION = "activation"
 CONF_API_HOST = "api_host"
+CONF_DEFAULT_OPTIONS = "default_options"
 CONF_MOMENTARY = "momentary"
 CONF_PAUSE = "pause"
 CONF_POLL_INTERVAL = "poll_interval"
