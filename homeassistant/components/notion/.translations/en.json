@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "This username is already in use."
+        },
         "error": {
             "identifier_exists": "Username already registered",
             "invalid_credentials": "Invalid username or password",

@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Ta nazwa u\u017cytkownika jest ju\u017c w u\u017cyciu."
+        },
         "error": {
             "identifier_exists": "Nazwa u\u017cytkownika jest ju\u017c zarejestrowana.",
             "invalid_credentials": "Nieprawid\u0142owa nazwa u\u017cytkownika lub has\u0142o",

@@ -33,7 +33,6 @@
         "abort": {
             "not_konn_panel": "Not a recognized Konnected.io device"
         },
-        "error": {},
         "step": {
             "options_binary": {
                 "data": {
