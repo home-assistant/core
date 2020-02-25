@@ -322,18 +322,9 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         the connection.
         """
         if user_input is None:
-            # abort config flow if one is already started
-            entry = await self.async_set_unique_id(self.data[CONF_ID])
-            if entry and (
-                entry.data[CONF_HOST] != self.data[CONF_HOST]
-                or entry.data[CONF_PORT] != self.data[CONF_PORT]
-            ):
-                # update an existing config entry if host info changes
-                entry_data = copy.deepcopy(entry.data)
-                entry_data.update(self.data)
-                self.hass.config_entries.async_update_entry(entry, data=entry_data)
-
-            self._abort_if_unique_id_configured()
+            # abort and update an existing config entry if host info changes
+            await self.async_set_unique_id(self.data[CONF_ID])
+            self._abort_if_unique_id_configured(updates=self.data)
             return self.async_show_form(
                 step_id="confirm",
                 description_placeholders={
