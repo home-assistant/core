@@ -505,8 +505,11 @@ async def test_parse_new_homekit_json(hass):
     on_char = service.add_char(CharacteristicsTypes.ON)
     on_char.value = 0
 
+    accessories = Accessories()
+    accessories.add_accessory(accessory)
+
     fake_controller = await setup_platform(hass)
-    pairing = fake_controller.add([accessory])
+    pairing = await fake_controller.add_paired_device(accessories, "00:00:00:00:00:00")
     pairing.pairing_data = {"AccessoryPairingID": "00:00:00:00:00:00"}
 
     mock_path = mock.Mock()
@@ -551,8 +554,11 @@ async def test_parse_old_homekit_json(hass):
     on_char = service.add_char(CharacteristicsTypes.ON)
     on_char.value = 0
 
+    accessories = Accessories()
+    accessories.add_accessory(accessory)
+
     fake_controller = await setup_platform(hass)
-    pairing = fake_controller.add([accessory])
+    pairing = await fake_controller.add_paired_device(accessories, "00:00:00:00:00:00")
     pairing.pairing_data = {"AccessoryPairingID": "00:00:00:00:00:00"}
 
     mock_path = mock.Mock()
@@ -601,8 +607,11 @@ async def test_parse_overlapping_homekit_json(hass):
     on_char = service.add_char(CharacteristicsTypes.ON)
     on_char.value = 0
 
+    accessories = Accessories()
+    accessories.add_accessory(accessory)
+
     fake_controller = await setup_platform(hass)
-    pairing = fake_controller.add([accessory])
+    pairing = await fake_controller.add_paired_device(accessories)
     pairing.pairing_data = {"AccessoryPairingID": "00:00:00:00:00:00"}
 
     mock_listdir = mock.Mock()
