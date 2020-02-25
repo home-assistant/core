@@ -129,8 +129,10 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             session=async_get_clientsession(self.hass, False),
         )
 
-        if await self.async_set_unique_id(unique_id=unique_id, raise_on_progress=True):
-            return self.async_abort(reason="already_setup_with_diff_host_and_name")
+        # Set unique ID and abort if unique ID is already configured on an entry or a flow
+        # with the unique ID is already in progress
+        await self.async_set_unique_id(unique_id=unique_id, raise_on_progress=True)
+        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(title=input_dict[CONF_NAME], data=input_dict)
 
