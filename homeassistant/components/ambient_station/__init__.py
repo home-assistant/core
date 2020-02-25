@@ -25,7 +25,6 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
 
-from .config_flow import configured_instances
 from .const import (
     ATTR_LAST_DATA,
     ATTR_MONITORED_CONDITIONS,
@@ -254,9 +253,6 @@ async def async_setup(hass, config):
     # Store config for use during entry setup:
     hass.data[DOMAIN][DATA_CONFIG] = conf
 
-    if conf[CONF_APP_KEY] in configured_instances(hass):
-        return True
-
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
@@ -270,6 +266,11 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up the Ambient PWS as config entry."""
+    if not config_entry.unique_id:
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=config_entry.data[CONF_APP_KEY]
+        )
+
     session = aiohttp_client.async_get_clientsession(hass)
 
     try:
