@@ -959,9 +959,6 @@ openwebifpy==3.1.1
 # homeassistant.components.luci
 openwrt-luci-rpc==1.1.2
 
-# homeassistant.components.http
-orjson==2.5.0
-
 # homeassistant.components.oru
 oru==0.1.11
 
