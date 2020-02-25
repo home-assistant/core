@@ -228,8 +228,11 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         )
         return False
 
-    _LOGGER.debug("Config = %s", loc_config[GWS][0][TCS][0])
-    _LOGGER.debug("tz_info = %s", loc_config["locationInfo"]["timeZone"])
+    if _LOGGER.isEnabledFor(logging.DEBUG):
+        _config = {"locationInfo": {"timeZone": None}, GWS: [{TCS: None}]}
+        _config["locationInfo"]["timeZone"] = loc_config["locationInfo"]["timeZone"]
+        _config[GWS][0][TCS] = loc_config[GWS][0][TCS]
+        _LOGGER.debug("Config = %s", _config)
 
     client_v1 = evohomeasync.EvohomeClient(
         client_v2.username,
@@ -485,9 +488,7 @@ class EvoBroker:
         else:
             async_dispatcher_send(self.hass, DOMAIN)
 
-            _LOGGER.debug("Status = %s", status[GWS][0][TCS][0])
-            # TODO: also update utc offset...
-            # self.tcs_utc_offset = self.client.locations[loc_idx].timeZone[UTC_OFFSET]
+            _LOGGER.debug("Status = %s", status)
 
         if access_token != self.client.access_token:
             await self.save_auth_tokens()
