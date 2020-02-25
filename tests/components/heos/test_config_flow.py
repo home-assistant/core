@@ -36,14 +36,11 @@ async def test_cannot_connect_shows_error_form(hass, controller):
     result = await hass.config_entries.flow.async_init(
         heos.DOMAIN, context={"source": "user"}, data={CONF_HOST: "127.0.0.1"}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_HOST: "127.0.0.1"}
-    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
     assert result["errors"][CONF_HOST] == "connection_failure"
-    assert controller.connect.call_count == 2
-    assert controller.disconnect.call_count == 2
+    assert controller.connect.call_count == 1
+    assert controller.disconnect.call_count == 1
     controller.connect.reset_mock()
     controller.disconnect.reset_mock()
 
@@ -52,15 +49,12 @@ async def test_create_entry_when_host_valid(hass, controller):
     """Test result type is create entry when host is valid."""
     data = {CONF_HOST: "127.0.0.1"}
     result = await hass.config_entries.flow.async_init(
-        heos.DOMAIN, context={"source": "user"}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=data
+        heos.DOMAIN, context={"source": "user"}, data=data
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "Controller (127.0.0.1)"
     assert result["data"] == data
-    assert controller.connect.call_count == 2
+    assert controller.connect.call_count == 1
     assert controller.disconnect.call_count == 1
 
 
@@ -69,10 +63,7 @@ async def test_create_entry_when_friendly_name_valid(hass, controller):
     hass.data[DATA_DISCOVERED_HOSTS] = {"Office (127.0.0.1)": "127.0.0.1"}
     data = {CONF_HOST: "Office (127.0.0.1)"}
     result = await hass.config_entries.flow.async_init(
-        heos.DOMAIN, context={"source": "user"}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=data
+        heos.DOMAIN, context={"source": "user"}, data=data
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "Controller (127.0.0.1)"

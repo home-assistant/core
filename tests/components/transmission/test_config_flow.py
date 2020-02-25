@@ -102,11 +102,11 @@ async def test_flow_works(hass, api):
     assert result["data"][CONF_PORT] == PORT
 
     # test with all provided
-    result = await hass.config_entries.flow.async_init(
-        transmission.DOMAIN, context={"source": "user"}, data=MOCK_ENTRY
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_ENTRY
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
