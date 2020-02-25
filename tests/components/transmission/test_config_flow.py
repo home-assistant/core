@@ -90,7 +90,9 @@ async def test_flow_works(hass, api):
 
     # test with required fields only
     result = await hass.config_entries.flow.async_init(
-        transmission.DOMAIN, context={"source": "user"}, data={CONF_NAME: NAME, CONF_HOST: HOST, CONF_PORT: PORT}
+        transmission.DOMAIN,
+        context={"source": "user"},
+        data={CONF_NAME: NAME, CONF_HOST: HOST, CONF_PORT: PORT},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
