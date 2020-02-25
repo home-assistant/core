@@ -3,6 +3,7 @@ from datetime import datetime
 import json
 import logging
 
+import orjson
 from sqlalchemy import (
     Boolean,
     Column,
@@ -63,7 +64,7 @@ class Events(Base):  # type: ignore
         try:
             return Event(
                 self.event_type,
-                json.loads(self.event_data),
+                orjson.loads(self.event_data),
                 EventOrigin(self.origin),
                 _process_timestamp(self.time_fired),
                 context=context,
@@ -133,7 +134,7 @@ class States(Base):  # type: ignore
             return State(
                 self.entity_id,
                 self.state,
-                json.loads(self.attributes),
+                orjson.loads(self.attributes),
                 _process_timestamp(self.last_changed),
                 _process_timestamp(self.last_updated),
                 context=context,
