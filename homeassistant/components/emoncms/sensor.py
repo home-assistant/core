@@ -108,7 +108,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         unit = elem.get("unit")
         if unit:
-            unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
+            unit_of_measurement = unit
+else:
+    unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
 
         sensors.append(
             EmonCmsSensor(
