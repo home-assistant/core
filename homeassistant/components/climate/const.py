@@ -16,8 +16,11 @@ HVAC_MODE_HEAT_COOL = "heat_cool"
 # other related mechanism. User is not able to adjust the temperature
 HVAC_MODE_AUTO = "auto"
 
-# Device is in Dry/Humidity mode
+# Device is in Dry mode
 HVAC_MODE_DRY = "dry"
+
+# Device is in Humidity mode
+HVAC_MODE_MOIST = "moist"
 
 # Only the fan is on, not fan and another mode like cool
 HVAC_MODE_FAN_ONLY = "fan_only"
@@ -29,6 +32,7 @@ HVAC_MODES = [
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_AUTO,
     HVAC_MODE_DRY,
+    HVAC_MODE_MOIST,
     HVAC_MODE_FAN_ONLY,
 ]
 
@@ -80,6 +84,7 @@ CURRENT_HVAC_OFF = "off"
 CURRENT_HVAC_HEAT = "heating"
 CURRENT_HVAC_COOL = "cooling"
 CURRENT_HVAC_DRY = "drying"
+CURRENT_HVAC_MOIST = "moisting"
 CURRENT_HVAC_IDLE = "idle"
 CURRENT_HVAC_FAN = "fan"
 
