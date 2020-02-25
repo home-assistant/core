@@ -4,10 +4,9 @@ from urllib.parse import urlparse
 from pyheos import HeosError
 
 from homeassistant import data_entry_flow
-from homeassistant.components import ssdp
+from homeassistant.components import heos, ssdp
 from homeassistant.components.heos.config_flow import HeosFlowHandler
 from homeassistant.components.heos.const import DATA_DISCOVERED_HOSTS
-from homeassistant.components import heos
 from homeassistant.const import CONF_HOST
 
 
@@ -38,7 +37,8 @@ async def test_cannot_connect_shows_error_form(hass, controller):
         heos.DOMAIN, context={"source": "user"}, data={CONF_HOST: "127.0.0.1"}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_HOST: "127.0.0.1"})
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.1"}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
     assert result["errors"][CONF_HOST] == "connection_failure"
@@ -55,7 +55,8 @@ async def test_create_entry_when_host_valid(hass, controller):
         heos.DOMAIN, context={"source": "user"}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=data)
+        result["flow_id"], user_input=data
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "Controller (127.0.0.1)"
     assert result["data"] == data
@@ -71,7 +72,8 @@ async def test_create_entry_when_friendly_name_valid(hass, controller):
         heos.DOMAIN, context={"source": "user"}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=data)
+        result["flow_id"], user_input=data
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "Controller (127.0.0.1)"
     assert result["data"] == {CONF_HOST: "127.0.0.1"}
@@ -104,7 +106,7 @@ async def test_discovery_shows_create_form(hass, controller, discovery_data):
 
 
 async def test_disovery_flow_aborts_already_setup(
-        hass, controller, discovery_data, config_entry
+    hass, controller, discovery_data, config_entry
 ):
     """Test discovery flow aborts when entry already setup."""
     config_entry.add_to_hass(hass)

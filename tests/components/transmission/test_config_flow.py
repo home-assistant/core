@@ -51,7 +51,7 @@ def mock_transmission_api():
 def mock_api_authentication_error():
     """Mock an api."""
     with patch(
-            "transmissionrpc.Client", side_effect=TransmissionError("401: Unauthorized")
+        "transmissionrpc.Client", side_effect=TransmissionError("401: Unauthorized")
     ):
         yield
 
@@ -60,8 +60,8 @@ def mock_api_authentication_error():
 def mock_api_connection_error():
     """Mock an api."""
     with patch(
-            "transmissionrpc.Client",
-            side_effect=TransmissionError("111: Connection refused"),
+        "transmissionrpc.Client",
+        side_effect=TransmissionError("111: Connection refused"),
     ):
         yield
 
@@ -103,7 +103,8 @@ async def test_flow_works(hass, api):
 
     # test with all provided
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_ENTRY)
+        result["flow_id"], user_input=MOCK_ENTRY
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == NAME
@@ -207,7 +208,8 @@ async def test_name_already_configured(hass, api):
         DOMAIN, context={"source": "user"}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=mock_entry)
+        result["flow_id"], user_input=mock_entry
+    )
 
     assert result["type"] == "form"
     assert result["errors"] == {CONF_NAME: "name_exists"}
