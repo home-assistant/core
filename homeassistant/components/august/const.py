@@ -15,6 +15,8 @@ NOTIFICATION_TITLE = "August"
 
 DEFAULT_AUGUST_CONFIG_FILE = ".august.conf"
 
+DATA_AUGUST = "data_august"
+
 DEFAULT_NAME = "August"
 DOMAIN = "august"
 

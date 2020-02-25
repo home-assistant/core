@@ -8,6 +8,7 @@ from august.authenticator import AuthenticationState, Authenticator
 from requests import RequestException, Session
 
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
+from homeassistant.core import callback
 
 from .const import (
     CONF_ACCESS_TOKEN_CACHE_FILE,
@@ -26,10 +27,7 @@ class AugustGateway:
 
     def __init__(self, hass):
         """Init the connection."""
-        try:
-            self._api_http_session = Session()
-        except RequestException as ex:
-            _LOGGER.warning("Creating HTTP session failed with: %s", str(ex))
+        self._api_http_session = Session()
         self._token_refresh_lock = asyncio.Lock()
         self._hass = hass
         self._config = None
@@ -68,30 +66,31 @@ class AugustGateway:
             CONF_ACCESS_TOKEN_CACHE_FILE: self._config[CONF_ACCESS_TOKEN_CACHE_FILE],
         }
 
-    def setup(self, conf):
+    @callback
+    def async_setup(self, conf):
         """Create the api and authenticator objects."""
-        if not conf.get(VERIFICATION_CODE_KEY):
-            if conf.get(CONF_ACCESS_TOKEN_CACHE_FILE) is None:
-                conf[
-                    CONF_ACCESS_TOKEN_CACHE_FILE
-                ] = f".{conf[CONF_USERNAME]}{DEFAULT_AUGUST_CONFIG_FILE}"
-            self._config = conf
+        if conf.get(VERIFICATION_CODE_KEY):
+            return
+        if conf.get(CONF_ACCESS_TOKEN_CACHE_FILE) is None:
+            conf[
+                CONF_ACCESS_TOKEN_CACHE_FILE
+            ] = f".{conf[CONF_USERNAME]}{DEFAULT_AUGUST_CONFIG_FILE}"
+        self._config = conf
 
-            self._api = Api(
-                timeout=self._config.get(CONF_TIMEOUT),
-                http_session=self._api_http_session,
-            )
+        self._api = Api(
+            timeout=self._config.get(CONF_TIMEOUT), http_session=self._api_http_session,
+        )
 
-            self._authenticator = Authenticator(
-                self._api,
-                self._config[CONF_LOGIN_METHOD],
-                self._config[CONF_USERNAME],
-                self._config[CONF_PASSWORD],
-                install_id=self._config.get(CONF_INSTALL_ID),
-                access_token_cache_file=self._hass.config.path(
-                    self._config[CONF_ACCESS_TOKEN_CACHE_FILE]
-                ),
-            )
+        self._authenticator = Authenticator(
+            self._api,
+            self._config[CONF_LOGIN_METHOD],
+            self._config[CONF_USERNAME],
+            self._config[CONF_PASSWORD],
+            install_id=self._config.get(CONF_INSTALL_ID),
+            access_token_cache_file=self._hass.config.path(
+                self._config[CONF_ACCESS_TOKEN_CACHE_FILE]
+            ),
+        )
 
     def authenticate(self):
         """Authenticate with the details provided to setup."""

@@ -87,7 +87,7 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._august_gateway = AugustGateway(self.hass)
         errors = {}
         if user_input is not None:
-            self._august_gateway.setup(user_input)
+            self._august_gateway.async_setup(user_input)
 
             try:
                 info = await async_validate_input(

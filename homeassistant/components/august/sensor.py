@@ -5,7 +5,7 @@ import logging
 from homeassistant.components.sensor import DEVICE_CLASS_BATTERY
 from homeassistant.helpers.entity import Entity
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DATA_AUGUST, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ SENSOR_TYPES_BATTERY = {
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the August sensors."""
-    data = hass.data[DOMAIN][config_entry.entry_id]
+    data = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
     devices = []
 
     batteries = {

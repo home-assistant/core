@@ -5,14 +5,14 @@ import requests
 
 from homeassistant.components.camera import Camera
 
-from .const import DEFAULT_NAME, DEFAULT_TIMEOUT, DOMAIN
+from .const import DATA_AUGUST, DEFAULT_NAME, DEFAULT_TIMEOUT, DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up August cameras."""
-    data = hass.data[DOMAIN][config_entry.entry_id]
+    data = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
     devices = []
 
     for doorbell in data.doorbells:

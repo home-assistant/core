@@ -13,7 +13,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice,
 )
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DATA_AUGUST, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,7 +70,7 @@ SENSOR_TYPES_DOORBELL = {
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the August binary sensors."""
-    data = hass.data[DOMAIN][config_entry.entry_id]
+    data = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
     devices = []
 
     for door in data.locks:
