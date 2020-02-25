@@ -77,8 +77,8 @@ async def async_setup(hass, config):
         )
 
     trv = config[DOMAIN][CONF_TRV]
-    trvs = trv[CONF_TRVS]
     if trv:
+        trvs = trv[CONF_TRVS]
         proxy_ip = trv[CONF_PROXY_IP]
         proxy_port = trv[CONF_PROXY_PORT]
         lwlink.set_trv_proxy(proxy_ip, proxy_port)
