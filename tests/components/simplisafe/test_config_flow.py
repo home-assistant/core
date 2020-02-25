@@ -2,6 +2,8 @@
 import json
 from unittest.mock import MagicMock, PropertyMock, mock_open, patch
 
+from simplipy.errors import SimplipyError
+
 from homeassistant import data_entry_flow
 from homeassistant.components.simplisafe import DOMAIN, config_flow
 from homeassistant.config_entries import SOURCE_USER
@@ -17,22 +19,6 @@ def mock_api():
     return api
 
 
-async def test_duplicate_error(hass):
-    """Test that errors are shown when duplicates are added."""
-    conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
-
-    MockConfigEntry(domain=DOMAIN, unique_id="user@email.com", data=conf).add_to_hass(
-        hass
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=conf
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
-
-
 async def test_get_configured_instances(hass):
     """Test retrieving all configured instances."""
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
@@ -46,8 +32,6 @@ async def test_get_configured_instances(hass):
 
 async def test_invalid_credentials(hass):
     """Test that invalid credentials throws an error."""
-    from simplipy.errors import SimplipyError
-
     conf = {CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"}
 
     flow = config_flow.SimpliSafeFlowHandler()
