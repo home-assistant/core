@@ -228,12 +228,12 @@ async def async_setup(hass, config):
     hass.data[CONTROLLER] = aiohomekit.Controller()
     hass.data[KNOWN_DEVICES] = {}
 
-    dothomekit_dir = os.path.join(hass.config.path(), ".homekit")
+    dothomekit_dir = hass.config.path(".homekit")
     if os.path.exists(dothomekit_dir):
         _LOGGER.warning(
             (
                 "Legacy homekit_controller state found in %s. Support for reading "
-                "the folder is deprecated and will be removed in a future release."
+                "the folder is deprecated and will be removed in 0.108.0."
             ),
             dothomekit_dir,
         )
