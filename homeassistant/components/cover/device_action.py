@@ -1,14 +1,14 @@
 """Provides device automations for Cover."""
-from typing import Optional, List
+from typing import List, Optional
 import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    CONF_DOMAIN,
-    CONF_TYPE,
     CONF_DEVICE_ID,
+    CONF_DOMAIN,
     CONF_ENTITY_ID,
+    CONF_TYPE,
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
@@ -18,9 +18,10 @@ from homeassistant.const import (
     SERVICE_STOP_COVER,
     SERVICE_STOP_COVER_TILT,
 )
-from homeassistant.core import HomeAssistant, Context
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
+
 from . import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
