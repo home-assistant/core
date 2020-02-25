@@ -24,7 +24,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import verify_domain_control
 
-from .config_flow import configured_instances
 from .const import (
     DATA_CLIENT,
     DATA_PROGRAMS,
@@ -118,9 +117,6 @@ async def async_setup(hass, config):
     conf = config[DOMAIN]
 
     for controller in conf[CONF_CONTROLLERS]:
-        if controller[CONF_IP_ADDRESS] in configured_instances(hass):
-            continue
-
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}, data=controller
@@ -132,6 +128,11 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up RainMachine as config entry."""
+    if not config_entry.unique_id:
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=config_entry.data[CONF_IP_ADDRESS]
+        )
+
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
     websession = aiohttp_client.async_get_clientsession(hass)
