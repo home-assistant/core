@@ -1,7 +1,7 @@
 """Represent the Freebox router and its devices and sensors."""
 from datetime import datetime, timedelta
 import logging
-import os
+from pathlib import Path
 from typing import Dict
 
 from aiofreepybox import Freepybox
@@ -57,16 +57,7 @@ class FreeboxRouter:
 
     async def setup(self) -> None:
         """Set up a Freebox router."""
-        freebox_dir = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
-
-        if not os.path.exists(freebox_dir.path):
-            await self.hass.async_add_executor_job(os.makedirs, freebox_dir.path)
-
-        token_file = self.hass.config.path(
-            f"{freebox_dir.path}/{slugify(self._host)}.conf"
-        )
-
-        self._api = Freepybox(APP_DESC, token_file, API_VERSION)
+        self._api = await get_api(self.hass, self._host)
 
         await self._api.open(self._host, self._port)
 
@@ -219,3 +210,13 @@ class FreeboxRouter:
     def wifi(self) -> Wifi:
         """Return the wifi."""
         return self._api.wifi
+
+
+async def get_api(hass: HomeAssistantType, host: str) -> Freepybox:
+    """Get the Freebox API."""
+    freebox_path = Path(hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY).path)
+    freebox_path.mkdir(exist_ok=True)
+
+    token_file = Path(f"{freebox_path}/{slugify(host)}.conf")
+
+    return Freepybox(APP_DESC, token_file, API_VERSION)

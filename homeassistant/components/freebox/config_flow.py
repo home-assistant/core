@@ -1,17 +1,14 @@
 """Config flow to configure the Freebox integration."""
 import logging
-import os
 
-from aiofreepybox import Freepybox
 from aiofreepybox.exceptions import AuthorizationError, HttpRequestError
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.util import slugify
 
-from .const import API_VERSION, APP_DESC, STORAGE_KEY, STORAGE_VERSION
 from .const import DOMAIN  # pylint: disable=unused-import
+from .router import get_api
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,19 +65,7 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """
         errors = {}
 
-        if user_input is None:
-            return self.async_show_form(step_id="link")
-
-        freebox_dir = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
-
-        if not os.path.exists(freebox_dir.path):
-            await self.hass.async_add_executor_job(os.makedirs, freebox_dir.path)
-
-        token_file = self.hass.config.path(
-            f"{freebox_dir.path}/{slugify(self._host)}.conf"
-        )
-
-        fbx = Freepybox(APP_DESC, token_file, API_VERSION)
+        fbx = await get_api(self.hass, self._host)
         try:
             # Open connection and check authentication
             await fbx.open(self._host, self._port)
