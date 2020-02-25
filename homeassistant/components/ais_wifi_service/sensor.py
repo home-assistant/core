@@ -3,6 +3,7 @@ import logging
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -15,8 +16,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a wifi sensor"""
     sensors = []
     network = entry.data.get("networks", "net")
-    ssid = network.split(';')[0]
-    srn = 'ais_wifi_' + ssid
+    ssid = network.split(";")[0]
+    srn = "ais_wifi_" + ssid
     name = ssid
     # remove if exists
     # if hass.states.get('sensor.ais_wifi_service_current_network_info') is not None:
@@ -24,7 +25,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     #     await hass.async_block_till_done()
 
     # add new
-    sensors.append(WifiSensor(srn, name, 'mdi:wifi'))
+    sensors.append(WifiSensor(srn, name, "mdi:wifi"))
     async_add_entities(sensors, True)
 
 
@@ -56,7 +57,7 @@ class WifiSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return 'MB'
+        return "MB"
 
     @property
     def should_poll(self):
@@ -75,6 +76,7 @@ class WifiSensor(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
+
         @callback
         def update():
             """Update the state."""

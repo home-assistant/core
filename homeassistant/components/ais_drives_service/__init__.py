@@ -8,10 +8,10 @@ https://www.ai-speaker.com
 import asyncio
 import logging
 import os
-import signal
 import json
 import mimetypes
 import subprocess
+import platform
 import time
 from homeassistant.components import ais_cloud
 from homeassistant.components.ais_dom import ais_global
@@ -21,8 +21,12 @@ aisCloud = ais_cloud.AisCloudWS()
 
 DOMAIN = "ais_drives_service"
 G_LOCAL_FILES_ROOT = "/data/data/pl.sviete.dom/files/home/dom"
-G_CLOUD_PREFIX = "dyski-zdalne:"
-G_RCLONE_CONF_FILE = "/data/data/pl.sviete.dom/files/home/dom/rclone.conf"
+G_CLOUD_FILES_ROOT = G_LOCAL_FILES_ROOT + "/dyski-zdalne"
+
+# run the rclone gui
+# rclone rcd --rc-web-gui --rc-user=admin --rc-pass=pass --rc-addr :5572 --config dom/rclone.conf
+G_RCLONE_OLD_CONF_FILE = "/data/data/pl.sviete.dom/files/home/dom/rclone.conf"
+G_RCLONE_CONF_FILE = "/data/data/pl.sviete.dom/files/home/AIS/.dom/rclone.conf"
 G_RCLONE_CONF = "--config=" + G_RCLONE_CONF_FILE
 G_RCLONE_URL_TO_STREAM = "http://127.0.0.1:8080/"
 G_DRIVE_CLIENT_ID = None
@@ -64,10 +68,6 @@ def async_setup(hass, config):
     def browse_path(call):
         data.browse_path(call)
 
-    def refresh_files(call):
-        _LOGGER.info("refresh_files")
-        data.refresh_files(call)
-
     def sync_locations(call):
         _LOGGER.info("sync_locations")
         data.sync_locations(call)
@@ -100,8 +100,18 @@ def async_setup(hass, config):
         _LOGGER.info("remote_delete_item")
         data.remote_delete_item(True)
 
+    def rclone_mount_drive(call):
+        _LOGGER.info("rclone_mount_drive")
+        if "name" in call.data:
+            data.rclone_mount_drive(call.data["name"])
+
+    def rclone_mount_drives(call):
+        _LOGGER.info("rclone_mount_drives")
+        data.rclone_mount_drives()
+
+    hass.services.async_register(DOMAIN, "rclone_mount_drives", rclone_mount_drives)
+    hass.services.async_register(DOMAIN, "rclone_mount_drive", rclone_mount_drive)
     hass.services.async_register(DOMAIN, "browse_path", browse_path)
-    hass.services.async_register(DOMAIN, "refresh_files", refresh_files)
     hass.services.async_register(DOMAIN, "sync_locations", sync_locations)
     hass.services.async_register(DOMAIN, "play_next", play_next)
     hass.services.async_register(DOMAIN, "play_prev", play_prev)
@@ -121,9 +131,7 @@ async def async_setup_entry(hass, config_entry):
         hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
     )
     if ais_global.G_AIS_START_IS_DONE:
-        hass.async_create_task(
-            hass.services.async_call(DOMAIN, "browse_path", {"path": G_CLOUD_PREFIX})
-        )
+        hass.async_create_task(hass.services.async_call(DOMAIN, "rclone_mount_drives"))
     return True
 
 
@@ -159,9 +167,24 @@ def get_remotes_types_by_name(remote_name):
     return drive_type
 
 
+def fix_rclone_config_permissions():
+    # fix permissions
+    uid = str(os.getuid())
+    gid = str(os.getgid())
+    fix_rclone_cmd = 'su -c "chown ' + uid + ":" + gid + " " + G_RCLONE_CONF_FILE + '"'
+    try:
+        ret = subprocess.check_output(fix_rclone_cmd, shell=True)  # nosec
+    except Exception as e:
+        _LOGGER.error("Nie można uzyskać uprwanień do konfiguracji dysków: " + str(e))
+
+
 def rclone_get_remotes_long():
     global G_RCLONE_REMOTES_LONG
     G_RCLONE_REMOTES_LONG = []
+
+    #
+    fix_rclone_config_permissions()
+    #
     rclone_cmd = ["rclone", "listremotes", "--long", G_RCLONE_CONF]
     proc = subprocess.run(
         rclone_cmd, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -184,7 +207,9 @@ def rclone_get_remotes_long():
 def rclone_get_auth_url(drive_name, drive_type):
     import pexpect
 
-    # code, icon = DRIVES_TYPES[drive_type]
+    #
+    fix_rclone_config_permissions()
+
     rclone_cmd = (
         "rclone config create "
         + drive_name
@@ -215,6 +240,9 @@ def rclone_set_auth_gdrive(drive_name, code):
     try:
         import pexpect
 
+        #
+        fix_rclone_config_permissions()
+        #
         rclone_cmd = "rclone config " + G_RCLONE_CONF
         child = pexpect.spawn(rclone_cmd)
         # Current remotes:
@@ -283,6 +311,9 @@ def rclone_set_auth_mega(drive_name, user, passwd):
     try:
         import pexpect
 
+        #
+        fix_rclone_config_permissions()
+        #
         rclone_cmd = "rclone config " + G_RCLONE_CONF
         child = pexpect.spawn(rclone_cmd)
         # Current remotes:
@@ -336,6 +367,9 @@ def rclone_set_auth_ftp(drive_name, host, port, user_name, password):
     try:
         import pexpect
 
+        #
+        fix_rclone_config_permissions()
+        #
         if len(password) == 0:
             password = "guest"
         rclone_cmd = "rclone config " + G_RCLONE_CONF
@@ -429,11 +463,11 @@ def file_tags_extract(path):
     try:
         id3 = mutagen.id3.ID3(path)
         open(G_COVER_FILE, "wb").write(id3.getall("APIC")[0].data)
-    except mutagen.id3.ID3NoHeaderError:
+    except Exception:
         try:
             flac = mutagen.flac.FLAC(path)
             open(G_COVER_FILE, "wb").write(flac.pictures[0].data)
-        except mutagen.flac.FLACNoHeaderError:
+        except Exception:
             try:
                 mp4 = mutagen.mp4.MP4(path)
                 open(G_COVER_FILE, "wb").write(mp4["covr"][0])
@@ -464,9 +498,6 @@ class LocalData:
 
     def say(self, text):
         self.hass.services.call("ais_ai_service", "say_it", {"text": text})
-
-    def refresh_files(self, call):
-        pass
 
     def play_file(self, say):
         mime_type = mimetypes.MimeTypes().guess_type(self.current_path)[0]
@@ -525,14 +556,14 @@ class LocalData:
                         "path": G_LOCAL_FILES_ROOT + "/dysk-wewnętrzny",
                     },
                     {
-                        "name": "Dyski zewnętrzne",
-                        "icon": "sd",
-                        "path": G_LOCAL_FILES_ROOT + "/dyski-zewnętrzne",
+                        "name": "Dyski wymienne",
+                        "icon": "usb-flash-drive-outline",
+                        "path": G_LOCAL_FILES_ROOT + "/dyski-wymienne",
                     },
                     {
                         "name": "Dyski zdalne",
-                        "icon": "onedrive",
-                        "path": G_CLOUD_PREFIX,
+                        "icon": "server-network",
+                        "path": G_LOCAL_FILES_ROOT + "/dyski-zdalne",
                     },
                 ]
             },
@@ -582,79 +613,6 @@ class LocalData:
                 {"path": self.file_path, "seek_position": self.seek_position},
             )
 
-    def display_current_remotes(self, remotes):
-        items_info = [
-            {"name": ".", "icon": "", "path": G_LOCAL_FILES_ROOT},
-            {"name": "..", "icon": "", "path": ".."},
-        ]
-        for i in remotes:
-            if i["type"] == "drive":
-                icon = "folder-google-drive"
-            elif i["type"] == "ftp":
-                icon = "nas"
-            else:
-                icon = "onedrive"
-            items_info.append(
-                {
-                    "name": i["name"],
-                    "icon": icon,
-                    "path": self.current_path + i["name"] + ":/",
-                }
-            )
-        self.hass.states.set(
-            "sensor.ais_drives", self.current_path, {"files": items_info}
-        )
-
-    # browse files on cloud folder
-    def display_current_remote_items(self, say):
-        items_info = [
-            {"name": ".", "icon": "", "path": G_LOCAL_FILES_ROOT},
-            {"name": "..", "icon": "", "path": ".."},
-        ]
-
-        if self.current_path.endswith(":"):
-            for remote in G_RCLONE_REMOTES_LONG:
-                if "dyski-zdalne:" + remote["name"] + ":/" == self.current_path:
-                    if remote["type"] == "drive":
-                        items_info.append(
-                            {
-                                "name": ais_global.G_DRIVE_SHARED_WITH_ME,
-                                "icon": "account-supervisor-circle",
-                                "path": self.current_path
-                                + ais_global.G_DRIVE_SHARED_WITH_ME,
-                            }
-                        )
-                        break
-        for item in self.folders_json:
-            path = self.current_path + "/" + item["Path"]
-
-            l_icon = "file-outline"
-            if item["IsDir"]:
-                l_icon = "folder-google-drive"
-            else:
-                if "MimeType" in item:
-                    if item["MimeType"].startswith("text/"):
-                        l_icon = "file-document-outline"
-                    elif item["MimeType"].startswith("audio/"):
-                        l_icon = "music-circle"
-                    elif item["MimeType"].startswith("video/"):
-                        l_icon = "file-video-outline"
-            items_info.append({"name": item["Path"][:50], "icon": l_icon, "path": path})
-        self.hass.states.set(
-            "sensor.ais_drives", self.current_path, {"files": items_info}
-        )
-        if say:
-            jlen = len(self.folders_json)
-            self.say(get_pozycji_variety(jlen))
-
-        # call from bookmarks now (since we have files from folder) we need to play the file
-        if self.file_path is not None:
-            self.hass.services.call(
-                "ais_drives_service",
-                "browse_path",
-                {"path": self.file_path, "seek_position": self.seek_position},
-            )
-
     def get_icon(self, entry):
         if entry.is_dir():
             return "folder"
@@ -671,6 +629,8 @@ class LocalData:
         self.file_path = None
         self.seek_position = 0
         say = True
+        if "say" in call.data:
+            say = call.data["say"]
         if "file_path" in call.data:
             self.file_path = call.data["file_path"]
             say = False
@@ -683,47 +643,15 @@ class LocalData:
         if len(path.strip()) == 0:
             self.say("Wybierz pozycję do przeglądania")
         if path == "..":
-            # check if this is cloud drive
-            if self.is_rclone_path(self.current_path):
-                if self.current_path == G_CLOUD_PREFIX:
-                    self.current_path = G_LOCAL_FILES_ROOT
-                elif self.current_path.endswith("://") or self.current_path.endswith(
-                    ":/"
-                ):
-                    self.current_path = G_CLOUD_PREFIX
-                elif self.current_path.count("/") == 0:
-                    k = self.current_path.rfind(":")
-                    self.current_path = self.current_path[: k + 1]
-                else:
-                    if self.rclone_is_dir(self.current_path):
-                        k = self.current_path.rfind("/")
-                        self.current_path = self.current_path[:k]
-                    else:
-                        k = self.current_path.rfind("/")
-                        self.current_path = self.current_path[:k]
-                        if self.current_path.count("/") > 0:
-                            k = self.current_path.rfind("/")
-                            self.current_path = self.current_path[:k]
-                        else:
-                            k = self.current_path.rfind(":")
-                            self.current_path = self.current_path[: k + 1]
-
-            # local drive
-            else:
-                if os.path.isfile(self.current_path):
-                    k = self.current_path.rfind(
-                        "/" + os.path.basename(self.current_path)
-                    )
-                    self.current_path = self.current_path[:k]
+            # up on drive
+            if os.path.isfile(self.current_path):
                 k = self.current_path.rfind("/" + os.path.basename(self.current_path))
                 self.current_path = self.current_path[:k]
+            k = self.current_path.rfind("/" + os.path.basename(self.current_path))
+            self.current_path = self.current_path[:k]
+
         else:
             self.current_path = path
-
-        if self.current_path.startswith(G_CLOUD_PREFIX):
-            self.rclone_browse(self.current_path, say)
-            self.selected_item_idx = 0
-            return
 
         if self.current_path == G_LOCAL_FILES_ROOT:
             self.display_root_items(say)
@@ -738,212 +666,69 @@ class LocalData:
             # file was selected, check mimetype and play if possible
             self.play_file(say)
 
-    def is_rclone_path(self, path):
-        if path.startswith(G_CLOUD_PREFIX):
-            return True
-        return False
-
-    def rclone_fix_permissions(self):
-        command = 'su -c "chmod -R 777 /sdcard/rclone"'
-        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
-        # process.wait()
-
-    def rclone_append_listremotes(self):
+    # mount drives
+    def rclone_mount_drives(self):
         remotes = rclone_get_remotes_long()
-        self.display_current_remotes(remotes)
-        if len(remotes) == 0:
-            self.say(
-                "Nie masz żadnych dysków zdalnych. "
-                "Dodaj połączenie do dysku zdalnego za pomocą konfiguratora w aplikacji."
+        for r in remotes:
+            self.hass.services.call(
+                "ais_drives_service", "rclone_mount_drive", {"name": r["name"]}
             )
-        else:
-            self.say(
-                "Mamy "
-                + get_pozycji_variety(len(remotes))
-                + " Wybierz dysk który mam przeglądać."
-            )
-
-    def rclone_browse_folder(self, path, say):
-        if ais_global.G_DRIVE_SHARED_WITH_ME in path:
-            if ais_global.G_DRIVE_SHARED_WITH_ME + "/" in path:
-                path = path.replace(ais_global.G_DRIVE_SHARED_WITH_ME + "/", "")
-            else:
-                path = path.replace(ais_global.G_DRIVE_SHARED_WITH_ME, "")
-            rclone_cmd = [
-                "rclone",
-                "lsjson",
-                path,
-                G_RCLONE_CONF,
-                "--drive-formats=txt",
-                "--drive-shared-with-me",
-            ]
-        else:
-            rclone_cmd = [
-                "rclone",
-                "lsjson",
-                path,
-                G_RCLONE_CONF,
-                "--drive-formats=txt",
-            ]
-        proc = subprocess.run(
-            rclone_cmd, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-
-        #  will wait for the process to complete and then we are going to return the output
-        if "" != proc.stderr:
-            self.say("Nie można pobrać zawartości folderu " + path + " " + proc.stderr)
-        else:
-            self.folders_json = json.loads(proc.stdout)
-            self.display_current_remote_items(say)
-
-    def rclone_copy_and_read(self, path, item_path):
-        # clear .temp files
-        files = os.listdir(G_LOCAL_FILES_ROOT + "/.temp/")
-        for file in files:
-            os.remove(os.path.join(G_LOCAL_FILES_ROOT + "/.temp/", file))
-
-        if ais_global.G_DRIVE_SHARED_WITH_ME in path:
-            rclone_cmd = [
-                "rclone",
-                "copy",
-                path.replace(ais_global.G_DRIVE_SHARED_WITH_ME, ""),
-                G_LOCAL_FILES_ROOT + "/.temp/",
-                G_RCLONE_CONF,
-                "--drive-formats=txt",
-                "--drive-shared-with-me",
-            ]
-        else:
-            rclone_cmd = [
-                "rclone",
-                "copy",
-                path,
-                G_LOCAL_FILES_ROOT + "/.temp/",
-                G_RCLONE_CONF,
-                "--drive-formats=txt",
-            ]
-        proc = subprocess.run(
-            rclone_cmd, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-
-        if "" != proc.stderr:
-            self.say("Nie udało się pobrać pliku " + proc.stderr)
-        else:
-            try:
-                with open(G_LOCAL_FILES_ROOT + "/.temp/" + item_path) as file:
-                    self.say(file.read())
-            except Exception as e:
-                self.say("Nie udało się otworzyć pliku ")
-
-    def rclone_play_the_stream(self):
-        _audio_info = {
-            "NAME": os.path.basename(self.rclone_url_to_stream),
-            "MEDIA_SOURCE": ais_global.G_AN_LOCAL,
-            "ALBUM_NAME": os.path.basename(os.path.dirname(self.current_path)),
-            "media_content_id": self.rclone_url_to_stream,
-            "lookup_url": self.current_path,
-            "media_position_ms": self.seek_position,
-        }
-        _audio_info = json.dumps(_audio_info)
-        # to set the stream image and title
         self.hass.services.call(
-            "media_player",
-            "play_media",
-            {
-                "entity_id": "media_player.wbudowany_glosnik",
-                "media_content_type": "ais_content_info",
-                "media_content_id": _audio_info,
-            },
-        )
-        # seek position
-        self.seek_position = 0
-
-    def check_kill_process(self, pstring):
-        for line in os.popen("ps ax | grep " + pstring + " | grep -v grep"):
-            fields = line.split()
-            pid = fields[0]
-            os.kill(int(pid), signal.SIGKILL)
-
-    def rclone_serve_and_play_the_stream(self, path, item_path):
-        # serve and play
-        if ais_global.G_DRIVE_SHARED_WITH_ME in path:
-            path = path.replace(ais_global.G_DRIVE_SHARED_WITH_ME, "")
-        rclone_cmd = (
-            "rclone serve http '" + path + "' " + G_RCLONE_CONF + " --addr=:8080"
+            "ais_drives_service",
+            "browse_path",
+            {"path": G_LOCAL_FILES_ROOT, "say": False},
         )
 
-        self.rclone_url_to_stream = G_RCLONE_URL_TO_STREAM + str(item_path)
-        import pexpect
+    def rclone_mount_drive(self, name):
+        remotes = rclone_get_remotes_long()
+        # get uid and gid
+        uid = str(os.getuid())
+        gid = str(os.getgid())
+        drive_exist = False
+        for r in remotes:
+            if name == r["name"]:
+                drive_exist = True
 
-        try:
-            if self.rclone_pexpect_stream is not None:
-                self.rclone_pexpect_stream.kill(0)
-                self.check_kill_process("rclone")
-            self.rclone_pexpect_stream = pexpect.spawn(rclone_cmd)
-            # Current remotes:
-            self.rclone_pexpect_stream.expect(
-                ["Serving on", "Failed to", pexpect.EOF], timeout=10
-            )
-            _LOGGER.info(str(self.rclone_pexpect_stream.before, "utf-8"))
-            if self.rclone_pexpect_stream == 0:
-                _LOGGER.info("Serving stream")
-            elif self.rclone_pexpect_stream == 1:
-                _LOGGER.info("Problem, kill rclone")
-                self.rclone_pexpect_stream.kill(0)
-                self.check_kill_process("rclone")
-            elif self.rclone_pexpect_stream == 2:
-                _LOGGER.info("EOF")
-            self.rclone_play_the_stream()
-        except Exception as e:
-            _LOGGER.info("Rclone: " + str(e))
+        if drive_exist:
+            if platform.machine() == "x86_64":
+                # to suport local test
+                rclone_cmd_mount = (
+                    "rclone mount "
+                    + name
+                    + ":/ /data/data/pl.sviete.dom/dom_cloud_drives/"
+                    + name
+                    + " --uid "
+                    + uid
+                    + " --gid "
+                    + gid
+                    + " "
+                    + G_RCLONE_CONF
+                )
 
-    def rclone_is_dir(self, path):
-        # check if path is dir or file
-        for item in self.folders_json:
-            if path.endswith(item["Path"]):
-                return item["IsDir"]
-        return True
-
-    def rclone_browse(self, path, say):
-        if path == G_CLOUD_PREFIX:
-            self.rclone_append_listremotes()
-            return
-        is_dir = None
-        mime_type = ""
-        item_name = ""
-        item_path = ""
-        # check what was selected file or folder
-        for item in self.folders_json:
-            # now check if item is a dictionary
-            if path.endswith(item["Path"]):
-                item_path = item["Path"]
-                is_dir = item["IsDir"]
-                item_name = item["Name"]
-                if "MimeType" in item:
-                    mime_type = item["MimeType"]
-                break
-        if is_dir is None:
-            is_dir = True
-        if is_dir:
-            # browse the cloud drive
-            path = path.replace(G_CLOUD_PREFIX, "", 1)
-            self.say("Pobieram")
-            self.rclone_browse_folder(path, say)
-        else:
-            self.dispalay_current_path()
-            # file was selected, check the MimeType
-            # "MimeType audio/mp3" and "text/plain" are supported
-            path = path.replace(G_CLOUD_PREFIX, "")
-            if mime_type is None:
-                mime_type = ""
-            if mime_type.startswith("audio/") or mime_type.startswith("video/"):
-                # StreamTask().execute(fileItem);
-                self.say("Pobieram i odtwarzam: " + str(item_name))
-                self.rclone_serve_and_play_the_stream(path, item_path)
-            elif mime_type.startswith("text/"):
-                self.say("Pobieram i czytam: " + str(item_name))
-                self.rclone_copy_and_read(path, item_path)
             else:
-                self.say("Jeszcze nie obsługuję plików typu: " + str(mime_type))
+                #
+                fix_rclone_config_permissions()
+                # prepare mount command
+                rclone_cmd_mount = (
+                    'su -mm -c "export PATH=$PATH:/data/data/pl.sviete.dom/files/usr/bin/; rclone mount '
+                    + name
+                    + ":/ /data/data/pl.sviete.dom/dom_cloud_drives/"
+                    + name
+                    + " --allow-other"
+                    + " --uid "
+                    + uid
+                    + " --gid "
+                    + gid
+                    + " "
+                    + G_RCLONE_CONF
+                    + '"'
+                )
+            os.system("mkdir -p /data/data/pl.sviete.dom/dom_cloud_drives/" + name)
+            os.system("fusermount -u /data/data/pl.sviete.dom/dom_cloud_drives/" + name)
+            os.system(rclone_cmd_mount)
+
+        else:
+            self.say("Nie masz dodanego dysku zdalnego o nazwie " + name)
 
     def sync_locations(self, call):
         if "source_path" not in call.data:
@@ -976,6 +761,9 @@ class LocalData:
             "--stats=0",
             G_RCLONE_CONF,
         ]
+        #
+        fix_rclone_config_permissions()
+        #
         proc = subprocess.run(
             rclone_cmd, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
@@ -1124,6 +912,16 @@ class LocalData:
         def load():
             self.display_root_items(False)
             global G_DRIVE_SECRET, G_DRIVE_CLIENT_ID
+
+            # version 0.105 config migration - to allow backup to AIS cloud
+            if os.path.isfile(G_RCLONE_OLD_CONF_FILE):
+                if not os.path.isfile(G_RCLONE_CONF_FILE):
+                    subprocess.call(
+                        "mv %s %s" % (G_RCLONE_OLD_CONF_FILE, G_RCLONE_CONF_FILE),
+                        shell=True,
+                    )
+
+            # set client and secret
             try:
                 ws_resp = aisCloud.key("gdrive_client_id")
                 json_ws_resp = ws_resp.json()

@@ -4,8 +4,6 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-from pywemo import discovery
-import requests
 
 from homeassistant import util
 from homeassistant.components.light import (
@@ -19,10 +17,10 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     Light,
 )
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 
-from . import SUBSCRIPTION_REGISTRY
+from .const import DOMAIN as WEMO_DOMAIN
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
@@ -34,29 +32,29 @@ SUPPORT_WEMO = (
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up discovered WeMo switches."""
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up WeMo lights."""
 
-    if discovery_info is not None:
-        location = discovery_info["ssdp_description"]
-        mac = discovery_info["mac_address"]
-
-        try:
-            device = discovery.device_from_description(location, mac)
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.Timeout,
-        ) as err:
-            _LOGGER.error("Unable to access %s (%s)", location, err)
-            raise PlatformNotReady
-
+    async def _discovered_wemo(device):
+        """Handle a discovered Wemo device."""
         if device.model_name == "Dimmer":
-            add_entities([WemoDimmer(device)])
+            async_add_entities([WemoDimmer(device)])
         else:
-            setup_bridge(device, add_entities)
+            await hass.async_add_executor_job(
+                setup_bridge, hass, device, async_add_entities
+            )
+
+    async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.light", _discovered_wemo)
+
+    await asyncio.gather(
+        *[
+            _discovered_wemo(device)
+            for device in hass.data[WEMO_DOMAIN]["pending"].pop("light")
+        ]
+    )
 
 
-def setup_bridge(bridge, add_entities):
+def setup_bridge(hass, bridge, async_add_entities):
     """Set up a WeMo link."""
     lights = {}
 
@@ -73,7 +71,7 @@ def setup_bridge(bridge, add_entities):
                 new_lights.append(lights[light_id])
 
         if new_lights:
-            add_entities(new_lights)
+            hass.add_job(async_add_entities, new_lights)
 
     update_lights()
 
@@ -109,6 +107,16 @@ class WemoLight(Light):
     def name(self):
         """Return the name of the light."""
         return self._name
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "name": self.wemo.name,
+            "identifiers": {(WEMO_DOMAIN, self.wemo.uniqueID)},
+            "model": type(self.wemo).__name__,
+            "manufacturer": "Belkin",
+        }
 
     @property
     def brightness(self):
@@ -235,7 +243,7 @@ class WemoDimmer(Light):
         # Define inside async context so we know our event loop
         self._update_lock = asyncio.Lock()
 
-        registry = SUBSCRIPTION_REGISTRY
+        registry = self.hass.data[WEMO_DOMAIN]["registry"]
         await self.hass.async_add_executor_job(registry.register, self.wemo)
         registry.on(self.wemo, None, self._subscription_callback)
 

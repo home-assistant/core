@@ -22,7 +22,7 @@ ENTITY_OTHER_SWITCH_NUMBER = 2
 
 @pytest.fixture
 def calls(hass):
-    """Track calls to a mock serivce."""
+    """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
@@ -54,7 +54,7 @@ def mock_lj(hass):
         mock_lj.on_switch_pressed.side_effect = on_switch_pressed
         mock_lj.on_switch_released.side_effect = on_switch_released
 
-        config = {"litejet": {"port": "/tmp/this_will_be_mocked"}}
+        config = {"litejet": {"port": "/dev/serial/by-id/mock-litejet"}}
         assert hass.loop.run_until_complete(
             setup.async_setup_component(hass, litejet.DOMAIN, config)
         )

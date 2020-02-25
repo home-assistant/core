@@ -8,10 +8,15 @@ import logging
 import socket
 import subprocess
 import voluptuous as vol
+from zeroconf import NonUniqueNameException
 
 from homeassistant.components.ais_dom import ais_global
 from homeassistant import util
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, __version__
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP,
+    __version__,
+    EVENT_HOMEASSISTANT_START,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,20 +72,6 @@ def setup(hass, config):
         "gate_id": gate_id,
     }
 
-    # HASS
-    hass_info = ServiceInfo(
-        "_home-assistant._tcp.local.",
-        host_name + "._home-assistant._tcp.local.",
-        ip,
-        80,
-        0,
-        0,
-        params,
-        host_name + ".local.",
-    )
-
-    zero_config.register_service(hass_info)
-
     # HTTP
     http_info = ServiceInfo(
         "_http._tcp.local.",
@@ -92,16 +83,6 @@ def setup(hass, config):
         params,
         host_name + ".local.",
     )
-
-    zero_config.register_service(http_info)
-
-    # MQTT is moved to the android
-    # mqtt_info = ServiceInfo("_mqtt._tcp.local.",
-    #                         host_name + "._mqtt._tcp.local.",
-    #                         ip, 1883, 0, 0,
-    #                         params, host_name + ".local.")
-    #
-    # zero_config.register_service(mqtt_info)
 
     # FTP
     ftp_info = ServiceInfo(
@@ -115,13 +96,25 @@ def setup(hass, config):
         host_name + ".local.",
     )
 
-    zero_config.register_service(ftp_info)
+    def zeroconf_hass_start(_event):
+        """Expose Home Assistant on zeroconf when it starts.
+
+        Wait till started or otherwise HTTP is not up and running.
+        """
+        _LOGGER.info("Starting Zeroconf broadcast")
+        try:
+            zero_config.register_service(http_info)
+            zero_config.register_service(ftp_info)
+        except NonUniqueNameException:
+            _LOGGER.error(
+                "Home Assistant instance with identical name present in the local network"
+            )
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, zeroconf_hass_start)
 
     def stop_zeroconf(event):
         """Stop Zeroconf."""
-        zero_config.unregister_service(hass_info)
         zero_config.unregister_service(http_info)
-        # zero_config.unregister_service(mqtt_info)
         zero_config.unregister_service(ftp_info)
         zero_config.close()
 

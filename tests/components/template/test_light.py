@@ -4,7 +4,7 @@ import logging
 import pytest
 
 from homeassistant import setup
-from homeassistant.components.light import ATTR_BRIGHTNESS
+from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import callback
 
@@ -581,6 +581,98 @@ class TestTemplateLight:
         state = self.hass.states.get("light.test_template_light")
         assert state is not None
         assert state.attributes.get("brightness") == expected_level
+
+    @pytest.mark.parametrize(
+        "expected_temp,template",
+        [(500, "{{500}}"), (None, "{{501}}"), (None, "{{x - 12}}")],
+    )
+    def test_temperature_template(self, expected_temp, template):
+        """Test the template for the temperature."""
+        with assert_setup_component(1, "light"):
+            assert setup.setup_component(
+                self.hass,
+                "light",
+                {
+                    "light": {
+                        "platform": "template",
+                        "lights": {
+                            "test_template_light": {
+                                "value_template": "{{ 1 == 1 }}",
+                                "turn_on": {
+                                    "service": "light.turn_on",
+                                    "entity_id": "light.test_state",
+                                },
+                                "turn_off": {
+                                    "service": "light.turn_off",
+                                    "entity_id": "light.test_state",
+                                },
+                                "set_temperature": {
+                                    "service": "light.turn_on",
+                                    "data_template": {
+                                        "entity_id": "light.test_state",
+                                        "color_temp": "{{color_temp}}",
+                                    },
+                                },
+                                "temperature_template": template,
+                            }
+                        },
+                    }
+                },
+            )
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("light.test_template_light")
+        assert state is not None
+        assert state.attributes.get("color_temp") == expected_temp
+
+    def test_temperature_action_no_template(self):
+        """Test setting temperature with optimistic template."""
+        assert setup.setup_component(
+            self.hass,
+            "light",
+            {
+                "light": {
+                    "platform": "template",
+                    "lights": {
+                        "test_template_light": {
+                            "value_template": "{{1 == 1}}",
+                            "turn_on": {
+                                "service": "light.turn_on",
+                                "entity_id": "light.test_state",
+                            },
+                            "turn_off": {
+                                "service": "light.turn_off",
+                                "entity_id": "light.test_state",
+                            },
+                            "set_temperature": {
+                                "service": "test.automation",
+                                "data_template": {
+                                    "entity_id": "test.test_state",
+                                    "color_temp": "{{color_temp}}",
+                                },
+                            },
+                        }
+                    },
+                }
+            },
+        )
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("light.test_template_light")
+        assert state.attributes.get("color_template") is None
+
+        common.turn_on(self.hass, "light.test_template_light", **{ATTR_COLOR_TEMP: 345})
+        self.hass.block_till_done()
+        assert len(self.calls) == 1
+        assert self.calls[0].data["color_temp"] == "345"
+
+        state = self.hass.states.get("light.test_template_light")
+        _LOGGER.info(str(state.attributes))
+        assert state is not None
+        assert state.attributes.get("color_temp") == 345
 
     def test_friendly_name(self):
         """Test the accessibility of the friendly_name attribute."""

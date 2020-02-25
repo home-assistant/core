@@ -1,14 +1,15 @@
 """Config flow to configure TAURON component."""
 
+import logging
+
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
-import logging
-from . import TauronAmiplusSensor
 
-from .const import DOMAIN, CONF_METER_ID
+from . import TauronAmiplusSensor
+from .const import CONF_METER_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,13 +60,10 @@ class AisTauronFlowHandler(config_entries.ConfigFlow):
             try:
                 # Test the connection
                 test = TauronAmiplusSensor(
-                    "Test",
                     user_input[CONF_USERNAME],
                     user_input[CONF_PASSWORD],
                     user_input[CONF_METER_ID],
                     "zone",
-                    1,
-                    None,
                 )
                 _LOGGER.info("AIS TAURON " + str(test.mode))
                 if test.mode is not None:

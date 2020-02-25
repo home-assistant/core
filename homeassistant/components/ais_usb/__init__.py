@@ -9,6 +9,7 @@ import logging
 import os
 import re
 import subprocess
+import platform
 
 import pyinotify
 
@@ -30,6 +31,34 @@ def get_device_info(pathname):
             return d
 
     return None
+
+
+def mount_external_drives():
+    if platform.machine() == "x86_64":
+        # local test
+        try:
+            os.system("rm /data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/*")
+            dirs = os.listdir("/media/andrzej/")
+            for i in range(0, len(dirs)):
+                os.symlink(
+                    "/media/andrzej/" + dirs[i],
+                    "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/dysk_"
+                    + str(i + 1),
+                )
+        except Exception:
+            pass
+    else:
+        try:
+            os.system("rm /data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/*")
+            dirs = os.listdir("/mnt/media_rw/")
+            for i in range(0, len(dirs)):
+                os.symlink(
+                    "/mnt/media_rw/" + dirs[i],
+                    "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/dysk_"
+                    + str(i + 1),
+                )
+        except Exception:
+            pass
 
 
 def prepare_usb_device(hass, device_info):
@@ -75,6 +104,9 @@ def prepare_usb_device(hass, device_info):
                 )
             )
 
+    else:
+        mount_external_drives()
+
 
 def remove_usb_device(hass, device_info):
     # stop service and remove device from dict
@@ -92,6 +124,8 @@ def remove_usb_device(hass, device_info):
                 "ais_ai_service", "say_it", {"text": "Zatrzymano serwis zigbee"}
             )
         )
+    else:
+        mount_external_drives()
 
 
 @asyncio.coroutine
@@ -150,6 +184,13 @@ async def async_setup(hass, config):
     # wdd = wm.add_watch("/dev/bus", mask, rec=True, exclude_filter=excl)
     wdd = wm.add_watch("/dev/bus", mask, rec=True)
 
+    async def stop_devices(call):
+        # remove zigbee service on start - to prevent pm2 for restarting when usb is not connected
+        os.system("pm2 stop zigbee")
+        os.system("pm2 delete zigbee")
+        os.system("pm2 save")
+        #
+
     async def lsusb(call):
         # check if the call was from scheduler or service / web app
         devices = _lsusb()
@@ -158,6 +199,7 @@ async def async_setup(hass, config):
                 # USB zigbee dongle
                 prepare_usb_device(hass, device)
 
+    hass.services.async_register(DOMAIN, "stop_devices", stop_devices)
     hass.services.async_register(DOMAIN, "lsusb", lsusb)
     return True
 

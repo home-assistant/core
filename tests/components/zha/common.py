@@ -78,7 +78,7 @@ def patch_cluster(cluster):
 class FakeDevice:
     """Fake device for mocking zigpy."""
 
-    def __init__(self, ieee, manufacturer, model):
+    def __init__(self, ieee, manufacturer, model, node_desc=None):
         """Init fake device."""
         self._application = APPLICATION
         self.ieee = zigpy.types.EUI64.convert(ieee)
@@ -95,6 +95,9 @@ class FakeDevice:
         self.node_desc = zigpy.zdo.types.NodeDescriptor()
         self.add_to_group = CoroutineMock()
         self.remove_from_group = CoroutineMock()
+        if node_desc is None:
+            node_desc = b"\x02@\x807\x10\x7fd\x00\x00*d\x00\x00"
+        self.node_desc = zigpy.zdo.types.NodeDescriptor.deserialize(node_desc)[0]
 
 
 def make_device(endpoints, ieee, manufacturer, model):

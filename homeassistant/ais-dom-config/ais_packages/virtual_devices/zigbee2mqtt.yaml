@@ -72,7 +72,6 @@ automation:
   # Automation to start timer when enable join is turned on
   - id: zigbee_join_enabled
     alias: Zigbee Tryb Parowania
-    hide_entity: true
     trigger:
       platform: state
       entity_id: switch.zigbee_tryb_parowania
@@ -83,7 +82,6 @@ automation:
   # Automation to stop timer when switch turned off and turn off switch when timer finished
   - id: zigbee_join_disabled
     alias: Zigbee Wyłączenie trybu parowania
-    hide_entity: true
     trigger:
       - platform: event
         event_type: timer.finished

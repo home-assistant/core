@@ -7,7 +7,7 @@
                   "title": "Remote disks"
              },
             "drive_name": {
-                "description": "Select the provider and provide the disk name\n\n ![AIS logo](/static/icons/favicon-100x100.png)",
+                "description": "Select the provider and provide the disk name\n(disk name cannot contain spaces or special characters)\n\n ![AIS logo](/static/icons/favicon-100x100.png)",
                 "title": "Disk name",
                 "data": {
                     "type": "Service",
@@ -41,9 +41,10 @@
             }
         },
         "error": {
-          "identifier_exists": "Name already registered",
-          "token_error": "Bad token",
-          "rclone_error": "Connection error"
+            "identifier_exists": "Name already registered",
+            "drive_name_error": "Drive name cannot contain spaces or special characters",
+            "token_error": "Bad token",
+            "rclone_error": "Connection error"
         }
     }
 }

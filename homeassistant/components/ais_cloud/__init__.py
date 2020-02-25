@@ -193,6 +193,9 @@ def async_setup(hass, config):
 
     def state_changed(state_event):
         """ Called on state change """
+        if ais_global.G_AIS_START_IS_DONE is False:
+            return
+
         entity_id = state_event.data.get("entity_id")
         if entity_id == "input_select.assistant_voice":
             # old_voice = state_event.data["old_state"].state
@@ -489,70 +492,34 @@ class AisColudData:
             # ----- RADIO ----
             # ----------------
             ws_resp = self.cloud.audio_type(ais_global.G_AN_RADIO)
-            if ws_resp is None:
-                json_ws_resp = self.cache.audio_type(ais_global.G_AN_RADIO)
-            else:
-                try:
-                    json_ws_resp = ws_resp.json()
-                    self.cache.store_audio_type(ais_global.G_AN_RADIO, json_ws_resp)
-                    types = [ais_global.G_EMPTY_OPTION]
-                    for item in json_ws_resp["data"]:
-                        types.append(item)
-                    # populate list with all stations from selected type
-                    self.hass.services.call(
-                        "input_select",
-                        "set_options",
-                        {"entity_id": "input_select.radio_type", "options": types},
-                    )
-                except:
-                    _LOGGER.error("RADIO WS resp " + str(ws_resp))
+            try:
+                json_ws_resp = ws_resp.json()
+                self.cache.store_audio_type(ais_global.G_AN_RADIO, json_ws_resp)
+                types = [ais_global.G_EMPTY_OPTION]
+            except Exception as e:
+                _LOGGER.error("RADIO WS resp " + str(ws_resp) + " " + str(e))
 
             # ----------------
             # --- PODCASTS ---
             # ----------------
             ws_resp = self.cloud.audio_type(ais_global.G_AN_PODCAST)
-            if ws_resp is None:
-                json_ws_resp = self.cache.audio_type(ais_global.G_AN_PODCAST)
-            else:
-                try:
-                    json_ws_resp = ws_resp.json()
-                    self.cache.store_audio_type(ais_global.G_AN_PODCAST, json_ws_resp)
-                    types = [ais_global.G_EMPTY_OPTION]
-                    for item in json_ws_resp["data"]:
-                        types.append(item)
-                    # populate list with all podcast from selected type
-                    self.hass.services.call(
-                        "input_select",
-                        "set_options",
-                        {"entity_id": "input_select.podcast_type", "options": types},
-                    )
-                except:
-                    _LOGGER.error("PODCASTS WS resp " + str(ws_resp))
+            try:
+                json_ws_resp = ws_resp.json()
+                self.cache.store_audio_type(ais_global.G_AN_PODCAST, json_ws_resp)
+                types = [ais_global.G_EMPTY_OPTION]
+            except Exception as e:
+                _LOGGER.error("PODCASTS WS resp " + str(ws_resp) + " " + str(e))
 
             # ----------------
             # ----- NEWS -----
             # ----------------
             ws_resp = self.cloud.audio_type(ais_global.G_AN_NEWS)
-            if ws_resp is None:
-                json_ws_resp = self.cache.audio_type(ais_global.G_AN_NEWS)
-            else:
-                try:
-                    json_ws_resp = ws_resp.json()
-                    self.cache.store_audio_type(ais_global.G_AN_NEWS, json_ws_resp)
-                    types = [ais_global.G_EMPTY_OPTION]
-                    for item in json_ws_resp["data"]:
-                        types.append(item)
-                    # populate list with all news types from selected type
-                    self.hass.services.call(
-                        "input_select",
-                        "set_options",
-                        {
-                            "entity_id": "input_select.rss_news_category",
-                            "options": types,
-                        },
-                    )
-                except:
-                    _LOGGER.error("NEWS WS resp " + str(ws_resp))
+            try:
+                json_ws_resp = ws_resp.json()
+                self.cache.store_audio_type(ais_global.G_AN_NEWS, json_ws_resp)
+                types = [ais_global.G_EMPTY_OPTION]
+            except Exception as e:
+                _LOGGER.error("NEWS WS resp " + str(ws_resp) + " " + str(e))
 
         yield from self.hass.async_add_job(load)
 
@@ -1592,7 +1559,10 @@ class AisColudData:
             call, 1, None, info_text + " bieżącą konfigurację", None, None
         )
         try:
-            ret = subprocess.check_output("rm " + home_dir + "backup.zip", shell=True)
+
+            ret = subprocess.check_output(
+                "rm " + home_dir + "backup.zip", shell=True  # nosec
+            )
         except Exception as e:
             pass
         try:
@@ -1607,7 +1577,7 @@ class AisColudData:
                 + "backup.zip "
                 + home_dir
                 + "AIS/.",
-                shell=True,
+                shell=True,  # nosec
             )
         except Exception as e:
             # try again - sqllite problems
@@ -1623,7 +1593,7 @@ class AisColudData:
                     + "backup.zip "
                     + home_dir
                     + "AIS/.",
-                    shell=True,
+                    shell=True,  # nosec
                 )
             except Exception as e:
                 self.get_backup_info(call, 0, str(e))
@@ -1677,7 +1647,7 @@ class AisColudData:
                 + home_dir
                 + "backup.zip "
                 + "-y",
-                shell=True,
+                shell=True,  # nosec
             )
         except Exception as e:
             self.get_backup_info(call, 0, None, None, str(e), None)
@@ -1686,11 +1656,14 @@ class AisColudData:
         self.get_backup_info(call, 1, None, None, None, "Podmieniam konfigurację ")
         try:
             ret = subprocess.check_output(
-                "cp -fa " + home_dir + "AIS_BACKUP/. " + home_dir + "AIS", shell=True
+                "cp -fa " + home_dir + "AIS_BACKUP/. " + home_dir + "AIS",
+                shell=True,  # nosec
             )
-            ret = subprocess.check_output("rm " + home_dir + "backup.zip", shell=True)
             ret = subprocess.check_output(
-                "rm -rf " + home_dir + "AIS_BACKUP", shell=True
+                "rm " + home_dir + "backup.zip", shell=True  # nosec
+            )
+            ret = subprocess.check_output(
+                "rm -rf " + home_dir + "AIS_BACKUP", shell=True  # nosec
             )
 
         except Exception as e:

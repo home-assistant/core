@@ -1,7 +1,7 @@
 """The tests for the person component."""
 import logging
-from unittest.mock import patch
 
+from asynctest import patch
 import pytest
 
 from homeassistant.components import person
@@ -753,7 +753,7 @@ async def test_reload(hass, hass_admin_user):
                 {"name": "Person 3", "id": "id-3"},
             ]
         },
-    ), patch("homeassistant.config.find_config_file", return_value=""):
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_RELOAD,
@@ -773,3 +773,15 @@ async def test_reload(hass, hass_admin_user):
     assert state_2 is None
     assert state_3 is not None
     assert state_3.name == "Person 3"
+
+
+async def test_person_storage_fixing_device_trackers(storage_collection):
+    """Test None device trackers become lists."""
+    with patch.object(
+        storage_collection.store,
+        "async_load",
+        return_value={"items": [{"id": "bla", "name": "bla", "device_trackers": None}]},
+    ):
+        await storage_collection.async_load()
+
+    assert storage_collection.data["bla"]["device_trackers"] == []

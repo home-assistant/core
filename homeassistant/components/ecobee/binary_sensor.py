@@ -7,11 +7,6 @@ from homeassistant.components.binary_sensor import (
 from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up ecobee binary sensors."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up ecobee binary (occupancy) sensors."""
     data = hass.data[DOMAIN]

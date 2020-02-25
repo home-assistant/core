@@ -19,7 +19,7 @@ TYPE_GENERATION_MONTHLY = "generation_monthly"
 TYPE_GENERATION_YEARLY = "generation_yearly"
 TARIFF_G12 = "G12"
 SENSOR_TYPES = {
-    # TYPE_ZONE: ("Strefa", "mdi:counter", timedelta(minutes=1), None),
+    TYPE_ZONE: [timedelta(hours=1), "kWh", "sum", ("generation", "OZEValue"), "Strefa"],
     TYPE_CONSUMPTION_DAILY: [
         timedelta(hours=1),
         "kWh",

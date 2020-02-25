@@ -1,6 +1,5 @@
 """Provide methods to bootstrap a Home Assistant instance."""
 import asyncio
-from collections import OrderedDict
 import logging
 import logging.handlers
 import os
@@ -11,6 +10,7 @@ from typing import Any, Dict, Optional, Set
 import voluptuous as vol
 
 from homeassistant import config as conf_util, config_entries, core, loader
+from homeassistant.components import http
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_CLOSE,
     REQUIRED_NEXT_PYTHON_DATE,
@@ -42,16 +42,67 @@ STAGE_1_INTEGRATIONS = {
 }
 
 
+async def async_setup_hass(
+    *,
+    config_dir: str,
+    verbose: bool,
+    log_rotate_days: int,
+    log_file: str,
+    log_no_color: bool,
+    skip_pip: bool,
+    safe_mode: bool,
+) -> Optional[core.HomeAssistant]:
+    """Set up Home Assistant."""
+    hass = core.HomeAssistant()
+    hass.config.config_dir = config_dir
+
+    async_enable_logging(hass, verbose, log_rotate_days, log_file, log_no_color)
+
+    hass.config.skip_pip = skip_pip
+    if skip_pip:
+        _LOGGER.warning(
+            "Skipping pip installation of required modules. This may cause issues"
+        )
+
+    if not await conf_util.async_ensure_config_exists(hass):
+        _LOGGER.error("Error getting configuration path")
+        return None
+
+    _LOGGER.info("Config directory: %s", config_dir)
+
+    config_dict = None
+
+    if not safe_mode:
+        await hass.async_add_executor_job(conf_util.process_ha_config_upgrade, hass)
+
+        try:
+            config_dict = await conf_util.async_hass_config_yaml(hass)
+        except HomeAssistantError as err:
+            _LOGGER.error(
+                "Failed to parse configuration.yaml: %s. Falling back to safe mode", err
+            )
+        else:
+            if not is_virtual_env():
+                await async_mount_local_lib_path(config_dir)
+
+            await async_from_config_dict(config_dict, hass)
+        finally:
+            clear_secret_cache()
+
+    if safe_mode or config_dict is None:
+        _LOGGER.info("Starting in AIS dom safe mode")
+        # pure AIS dom config in safe_mode
+        ais_conf = await conf_util.async_ais_config_yaml(hass)
+        ais_conf["safe_mode"] = {}
+        await async_from_config_dict(ais_conf, hass)
+        # http_conf = (await http.async_get_last_config(hass)) or {}
+        # await async_from_config_dict({"safe_mode": {}, "http": http_conf}, hass)
+
+    return hass
+
+
 async def async_from_config_dict(
-    config: Dict[str, Any],
-    hass: core.HomeAssistant,
-    config_dir: Optional[str] = None,
-    enable_log: bool = True,
-    verbose: bool = False,
-    skip_pip: bool = False,
-    log_rotate_days: Any = None,
-    log_file: Any = None,
-    log_no_color: bool = False,
+    config: Dict[str, Any], hass: core.HomeAssistant
 ) -> Optional[core.HomeAssistant]:
     """Try to configure Home Assistant from a configuration dictionary.
 
@@ -59,15 +110,6 @@ async def async_from_config_dict(
     This method is a coroutine.
     """
     start = time()
-
-    if enable_log:
-        async_enable_logging(hass, verbose, log_rotate_days, log_file, log_no_color)
-
-    hass.config.skip_pip = skip_pip
-    if skip_pip:
-        _LOGGER.warning(
-            "Skipping pip installation of required modules. This may cause issues"
-        )
 
     core_config = config.get(core.DOMAIN, {})
 
@@ -83,14 +125,6 @@ async def async_from_config_dict(
         )
         return None
 
-    # Make a copy because we are mutating it.
-    config = OrderedDict(config)
-
-    # Merge packages
-    await conf_util.merge_packages_config(
-        hass, config, core_config.get(conf_util.CONF_PACKAGES, {})
-    )
-
     hass.config_entries = config_entries.ConfigEntries(hass, config)
     await hass.config_entries.async_initialize()
 
@@ -98,6 +132,12 @@ async def async_from_config_dict(
 
     stop = time()
     _LOGGER.info("Home Assistant initialized in %.2fs", stop - start)
+    from homeassistant.components.ais_dom import ais_global
+
+    ais_global.say_direct(
+        "Asystent domowy, inicjalizacja: %.2f sekundy. Trwa uruchamianie konfiguracji. Poczekaj..."
+        % (stop - start)
+    )
 
     if REQUIRED_NEXT_PYTHON_DATE and sys.version_info[:3] < REQUIRED_NEXT_PYTHON_VER:
         msg = (
@@ -114,64 +154,6 @@ async def async_from_config_dict(
         )
 
     return hass
-
-
-async def async_from_config_file(
-    config_path: str,
-    hass: core.HomeAssistant,
-    verbose: bool = False,
-    skip_pip: bool = True,
-    log_rotate_days: Any = None,
-    log_file: Any = None,
-    log_no_color: bool = False,
-) -> Optional[core.HomeAssistant]:
-    """Read the configuration file and try to start all the functionality.
-
-    Will add functionality to 'hass' parameter.
-    This method is a coroutine.
-    """
-    # Set config dir to directory holding config file
-    config_dir = os.path.abspath(os.path.dirname(config_path))
-    hass.config.config_dir = config_dir
-
-    if not is_virtual_env():
-        await async_mount_local_lib_path(config_dir)
-
-    async_enable_logging(hass, verbose, log_rotate_days, log_file, log_no_color)
-
-    await hass.async_add_executor_job(conf_util.process_ha_config_upgrade, hass)
-
-    # ais config
-    ais_config = str(os.path.dirname(__file__))
-    ais_config += "/ais-dom-config/configuration.yaml"
-
-    try:
-        config_dict = await hass.async_add_executor_job(
-            conf_util.load_yaml_config_file, ais_config
-        )
-    except HomeAssistantError as err:
-        _LOGGER.error("Error loading %s: %s", ais_config, err)
-        return None
-    try:
-        user_config_dict = await hass.async_add_executor_job(
-            conf_util.load_yaml_config_file, config_path
-        )
-    except HomeAssistantError as err:
-        _LOGGER.error("Error loading %s: %s", config_path, err)
-        # return None
-    finally:
-        clear_secret_cache()
-
-    try:
-        import homeassistant.components.ais_dom.ais_utils as ais_utils
-
-        ais_utils.dict_merge(config_dict, user_config_dict)
-    except:
-        _LOGGER.error("Error loading user customize")
-
-    return await async_from_config_dict(
-        config_dict, hass, enable_log=False, skip_pip=skip_pip
-    )
 
 
 @core.callback
@@ -287,7 +269,8 @@ def _get_domains(hass: core.HomeAssistant, config: Dict[str, Any]) -> Set[str]:
     domains = set(key.split(" ")[0] for key in config.keys() if key != core.DOMAIN)
 
     # Add config entry domains
-    domains.update(hass.config_entries.async_domains())
+    if "safe_mode" not in config:
+        domains.update(hass.config_entries.async_domains())
 
     # Make sure the Hass.io component is loaded
     if "HASSIO" in os.environ:

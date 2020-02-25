@@ -12,6 +12,7 @@ from homeassistant.loader import bind_hass
 
 from .agent import AbstractConversationAgent
 from .default_agent import DefaultAgent, async_register
+from homeassistant.components.ais_ai_service.ais_agent import AisAgent
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -139,10 +140,18 @@ class ConversationProcessView(http.HomeAssistantView):
 
 
 async def _get_agent(hass: core.HomeAssistant) -> AbstractConversationAgent:
-    """Get the active conversation agent."""
+    """Get the AIS dom agent."""
     agent = hass.data.get(DATA_AGENT)
     if agent is None:
-        agent = hass.data[DATA_AGENT] = DefaultAgent(hass)
+        agent = hass.data[DATA_AGENT] = AisAgent(hass)
+    return agent
+
+
+async def _get_ha_agent(hass: core.HomeAssistant) -> AbstractConversationAgent:
+    """Get the default ha agent."""
+    agent = hass.data.get("ha_conversation_agent")
+    if agent is None:
+        agent = hass.data["ha_conversation_agent"] = DefaultAgent(hass)
         await agent.async_initialize(hass.data.get(DATA_CONFIG))
     return agent
 
@@ -152,14 +161,22 @@ async def _async_converse(
 ) -> intent.IntentResponse:
     """Process text and get intent."""
     agent = await _get_agent(hass)
+    ha_agent = await _get_ha_agent(hass)
+
     try:
-        intent_result = await agent.async_process(text, context, conversation_id)
+        intent_result = await ha_agent.async_process(text, context, conversation_id)
     except intent.IntentHandleError as err:
-        intent_result = intent.IntentResponse()
-        intent_result.async_set_speech(str(err))
+        _LOGGER.warning("converse: " + str(err))
+
+    if intent_result is None:
+        try:
+            intent_result = await agent.async_process(text, context, conversation_id)
+        except intent.IntentHandleError as err:
+            intent_result = intent.IntentResponse()
+            intent_result.async_set_speech(str(err))
 
     if intent_result is None:
         intent_result = intent.IntentResponse()
-        intent_result.async_set_speech("Sorry, I didn't understand that")
+        intent_result.async_set_speech("Przepraszam, nie zrozumiałem tego.")
 
     return intent_result

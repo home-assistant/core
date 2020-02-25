@@ -7,10 +7,9 @@ import datetime
 import json
 import logging
 import re
-from typing import Optional
 import warnings
 
-from aiohttp.web import Response, json_response
+from aiohttp.web import json_response
 import requests
 import voluptuous as vol
 
@@ -54,10 +53,15 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     STATE_UNLOCKED,
 )
-from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import config_validation as cv, event, intent
+from homeassistant.helpers import config_validation as cv, event
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
+from homeassistant.helpers import intent
+from .ais_agent import AisAgent
+from homeassistant.components.conversation.default_agent import (
+    DefaultAgent,
+    async_register,
+)
 
 aisCloudWS = ais_cloud.AisCloudWS()
 
@@ -3607,6 +3611,13 @@ def _process(hass, text, calling_client_id=None, hot_word_on=False):
     m = None
     m_org = None
     found_intent = None
+
+    # async_initialize ha agent
+    ha_agent = hass.data.get("ha_conversation_agent")
+    if ha_agent is None:
+        ha_agent = hass.data["ha_conversation_agent"] = DefaultAgent(hass)
+        yield from ha_agent.async_initialize(hass.data.get("conversation_config"))
+
     # first check the conversation intents
     conv_intents = hass.data.get("conversation", {})
     for intent_type, matchers in conv_intents.items():
@@ -4806,47 +4817,3 @@ class AisClimateSetAllOff(intent.IntentHandler):
 #             else:
 #                 msg = 'Na urządzeniu ' + name + ' nie można wyłączyć ogrzwania.'
 #             return msg, success
-
-
-class AisAgent(conversation.AbstractConversationAgent):
-    """Almond conversation agent."""
-
-    def __init__(self, hass: HomeAssistant):
-        """Initialize the agent."""
-        self.hass = hass
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return {
-            "name": "",
-            "url": "https://sviete.github.io/AIS-docs/docs/en/ais_app_ai_integration.html",
-        }
-
-    async def async_get_onboarding(self):
-        """Get onboard url if not onboarded."""
-        # return {
-        #     "text": "Would you like to opt-in to share your anonymized commands with Stanford to improve Almond's responses?",
-        #     "url": f"{host}/conversation",
-        # }
-        return None
-
-    async def async_set_onboarding(self, shown):
-        """Set onboarding status."""
-        # TODO
-        return True
-
-    async def async_process(
-        self, text: str, context: Context, conversation_id: Optional[str] = None
-    ) -> intent.IntentResponse:
-        """Process a sentence."""
-        from homeassistant.components import ais_ai_service as ais_ai
-
-        intent_result = await ais_ai._process(self.hass, text)
-        if intent_result is None:
-            intent_result = intent.IntentResponse()
-            intent_result.async_set_speech(
-                "Przepraszam, jeszcze tego nie potrafię zrozumieć."
-            )
-
-        return intent_result

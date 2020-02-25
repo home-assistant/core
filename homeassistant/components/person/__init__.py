@@ -88,7 +88,11 @@ _UNDEF = object()
 async def async_create_person(hass, name, *, user_id=None, device_trackers=None):
     """Create a new person."""
     await hass.data[DOMAIN][1].async_create_item(
-        {ATTR_NAME: name, ATTR_USER_ID: user_id, "device_trackers": device_trackers}
+        {
+            ATTR_NAME: name,
+            ATTR_USER_ID: user_id,
+            CONF_DEVICE_TRACKERS: device_trackers or [],
+        }
     )
 
 
@@ -103,14 +107,14 @@ async def async_add_user_device_tracker(
         if person.get(ATTR_USER_ID) != user_id:
             continue
 
-        device_trackers = person["device_trackers"]
+        device_trackers = person[CONF_DEVICE_TRACKERS]
 
         if device_tracker_entity_id in device_trackers:
             return
 
         await coll.async_update_item(
             person[collection.CONF_ID],
-            {"device_trackers": device_trackers + [device_tracker_entity_id]},
+            {CONF_DEVICE_TRACKERS: device_trackers + [device_tracker_entity_id]},
         )
         break
 
@@ -159,8 +163,24 @@ class PersonStorageCollection(collection.StorageCollection):
     ):
         """Initialize a person storage collection."""
         super().__init__(store, logger, id_manager)
-        self.async_add_listener(self._collection_changed)
         self.yaml_collection = yaml_collection
+
+    async def _async_load_data(self) -> Optional[dict]:
+        """Load the data.
+
+        A past bug caused onboarding to create invalid person objects.
+        This patches it up.
+        """
+        data = await super()._async_load_data()
+
+        if data is None:
+            return data
+
+        for person in data["items"]:
+            if person[CONF_DEVICE_TRACKERS] is None:
+                person[CONF_DEVICE_TRACKERS] = []
+
+        return data
 
     async def async_load(self) -> None:
         """Load the Storage collection."""
@@ -180,14 +200,16 @@ class PersonStorageCollection(collection.StorageCollection):
             return
 
         for person in list(self.data.values()):
-            if entity_id not in person["device_trackers"]:
+            if entity_id not in person[CONF_DEVICE_TRACKERS]:
                 continue
 
             await self.async_update_item(
                 person[collection.CONF_ID],
                 {
-                    "device_trackers": [
-                        devt for devt in person["device_trackers"] if devt != entity_id
+                    CONF_DEVICE_TRACKERS: [
+                        devt
+                        for devt in person[CONF_DEVICE_TRACKERS]
+                        if devt != entity_id
                     ]
                 },
             )
@@ -227,16 +249,6 @@ class PersonStorageCollection(collection.StorageCollection):
         for persons in (self.data.values(), self.yaml_collection.async_items()):
             if any(person for person in persons if person.get(CONF_USER_ID) == user_id):
                 raise ValueError("User already taken")
-
-    async def _collection_changed(
-        self, change_type: str, item_id: str, config: Optional[dict]
-    ) -> None:
-        """Handle a collection change."""
-        if change_type != collection.CHANGE_REMOVED:
-            return
-
-        ent_reg = await entity_registry.async_get_registry(self.hass)
-        ent_reg.async_remove(ent_reg.async_get_entity_id(DOMAIN, DOMAIN, item_id))
 
 
 async def filter_yaml_data(hass: HomeAssistantType, persons: List[dict]) -> List[dict]:
@@ -294,6 +306,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     collection.attach_entity_component_collection(
         entity_component, storage_collection, lambda conf: Person(conf, True)
     )
+    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, yaml_collection)
+    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, storage_collection)
 
     await yaml_collection.async_load(
         await filter_yaml_data(hass, config.get(DOMAIN, []))
@@ -324,7 +338,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         conf = await entity_component.async_prepare_reload(skip_reset=True)
         if conf is None:
             return
-        await yaml_collection.async_load(await filter_yaml_data(hass, conf[DOMAIN]))
+        await yaml_collection.async_load(
+            await filter_yaml_data(hass, conf.get(DOMAIN, []))
+        )
 
     service.async_register_admin_service(
         hass, DOMAIN, SERVICE_RELOAD, async_reload_yaml
@@ -415,7 +431,7 @@ class Person(RestoreEntity):
             self._unsub_track_device()
             self._unsub_track_device = None
 
-        trackers = self._config.get(CONF_DEVICE_TRACKERS)
+        trackers = self._config[CONF_DEVICE_TRACKERS]
 
         if trackers:
             _LOGGER.debug("Subscribe to device trackers for %s", self.entity_id)
@@ -435,7 +451,7 @@ class Person(RestoreEntity):
     def _update_state(self):
         """Update the state."""
         latest_non_gps_home = latest_not_home = latest_gps = latest = None
-        for entity_id in self._config.get(CONF_DEVICE_TRACKERS, []):
+        for entity_id in self._config[CONF_DEVICE_TRACKERS]:
             state = self.hass.states.get(entity_id)
 
             if not state or state.state in IGNORE_STATES:

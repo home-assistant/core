@@ -1,12 +1,11 @@
 {
     "config": {
         "abort": {
-            "username_exists": "Ra\u010dun \u017ee nastavljen"
+            "already_configured": "Ra\u010dun \u017ee nastavljen"
         },
         "error": {
             "login": "Napaka pri prijavi: preverite svoj e-po\u0161tni naslov in geslo",
             "send_verification_code": "Kode za preverjanje ni bilo mogo\u010de poslati",
-            "username_exists": "Ra\u010dun \u017ee nastavljen",
             "validate_verification_code": "Kode za preverjanje ni bilo mogo\u010de preveriti, izberi napravo za zaupanje in znova za\u017eeni preverjanje"
         },
         "step": {

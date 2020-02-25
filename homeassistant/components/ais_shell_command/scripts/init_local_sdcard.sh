@@ -35,17 +35,30 @@ if [ ! -e "/sdcard/dom/informacja.txt" ] ; then
     touch "/sdcard/dom/informacja.txt"
     echo "Cześć, przeglądasz dyski w systemie. Obsługujemy trzy rodzaje dysków:" > /sdcard/dom/informacja.txt
     echo "1. 'Dysk-wewnętrzny' jest to folder w pamięci urządzenia umieszczony w lokalizacji dostępnej dla wszystkich aplikacji, ta lokalizacja to /sdcard/dom "  >> /sdcard/dom/informacja.txt
-    echo "folder ten jest dostępny w twojej lokalnej sieci (protokół ftp) pod adresem ftp://ais-dom.local:1024/sdcard/dom" >> /sdcard/dom/informacja.txt
+    echo "folder ten jest dostępny w twojej lokalnej sieci (protokół ftp) pod adresem ftp://ais-dom.local/sdcard/dom" >> /sdcard/dom/informacja.txt
     echo "możesz tu dodać muzykę lub pliki tekstowe a następnie je odtwarzać w aplikacji." >> /sdcard/dom/informacja.txt
-    echo "2. 'Dyski-zewnętrzne' są to dołączone do urządzenia karty SD lub pamięci USB " >> /sdcard/dom/informacja.txt
+    echo "2. 'Dyski-wymienne' są to dołączone do urządzenia karty SD lub pamięci USB " >> /sdcard/dom/informacja.txt
     echo "3. 'Dyski-zdalne' są to dyski/usługi przechowywania danych w churach. Połączenie z dyskami zdalnymi definiowane jest w ustawieniach aplikacji. " >> /sdcard/dom/informacja.txt
     echo "Pozdrowienia, Twój Asystent domowy!" >> /sdcard/dom/informacja.txt
     echo "PS Obecnie odtwarzamy pliki tekstowe i pliki audio. Koniec wiadomości." >> /sdcard/dom/informacja.txt
 fi
 
 
-if [ ! -e "/data/data/pl.sviete.dom/files/home/dom/rclone.conf" ] ; then
-    touch "/data/data/pl.sviete.dom/files/home/dom/rclone.conf"
+if [ ! -e "/data/data/pl.sviete.dom/files/home/AIS/.dom/rclone.conf" ] ; then
+    touch "/data/data/pl.sviete.dom/files/home/AIS/.dom/rclone.conf"
 fi
 
 # ln -s /sdcard/dom dysk-wewnętrzny
+
+
+if [ ! -e "/data/data/pl.sviete.dom/dom_cloud_drives" ] ; then
+    mkdir -p /data/data/pl.sviete.dom/dom_cloud_drives
+fi
+
+if [ ! -e "/data/data/pl.sviete.dom/files/home/dom/dyski-zdalne" ] ; then
+    ln -s /data/data/pl.sviete.dom/dom_cloud_drives/  /data/data/pl.sviete.dom/files/home/dom/dyski-zdalne
+fi
+
+if [ ! -e "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne" ] ; then
+     mkdir -p /data/data/pl.sviete.dom/files/home/dom/dyski-wymienne
+fi
