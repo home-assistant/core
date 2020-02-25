@@ -23,6 +23,7 @@ FLOWS = [
     "daikin",
     "deconz",
     "dialogflow",
+    "directv",
     "dynalite",
     "ecobee",
     "elgato",

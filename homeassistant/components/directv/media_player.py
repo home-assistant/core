@@ -22,6 +22,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_HOST,
+    CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PORT,
     STATE_OFF,
@@ -36,10 +37,16 @@ from .const import (
     ATTR_MEDIA_RATING,
     ATTR_MEDIA_RECORDED,
     ATTR_MEDIA_START_TIME,
+    DATA_CLIENT,
     DATA_DIRECTV,
+    DATA_VERSION_INFO,
     DEFAULT_DEVICE,
+    DEFAULT_MANUFACTURER,
     DEFAULT_NAME,
     DEFAULT_PORT,
+    DOMAIN,
+    MODEL_CLIENT,
+    MODEL_HOST,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,6 +79,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
     }
 )
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up the DirecTV config entry."""
+    dtv = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
+    version_info = hass.data[DOMAIN][entry.entry_id][DATA_VERSION_INFO]
+
+    async_add_entities(
+        [DirecTvDevice(entry[CONF_NAME], entry[CONF_DEVICE], dtv, entry[version_info])],
+        True,
+    )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -179,13 +197,19 @@ class DirecTvDevice(MediaPlayerDevice):
         self._assumed_state = None
         self._available = False
         self._first_error_timestamp = None
+        self._version_info = version_info
+        self._model = MODEL_HOST
+        self._receiver_id = None
 
         if device != "0":
             self._unique_id = device
         elif version_info:
-            self._unique_id = "".join(version_info.get("receiverId").split())
+            self._unique_id = self._receiver_id = "".join(
+                version_info["receiverId"].split()
+            )
 
         if self._is_client:
+            self._model = MODEL_CLIENT
             _LOGGER.debug("Created DirecTV client %s for device %s", self._name, device)
         else:
             _LOGGER.debug("Created DirecTV device for %s", self._name)
@@ -274,6 +298,18 @@ class DirecTvDevice(MediaPlayerDevice):
     def unique_id(self):
         """Return a unique ID to use for this media player."""
         return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "name": self.name,
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "manufacturer": DEFAULT_MANUFACTURER,
+            "model": self._model,
+            "sw_version": self._version_info["stbSoftwareVersion"],
+            "via_device": (DOMAIN, self._receiver_id),
+        }
 
     # MediaPlayerDevice properties and methods
     @property
