@@ -677,6 +677,9 @@ class SimpliSafeEntity(Entity):
         elif event.event_type == EVENT_CONNECTION_RESTORED:
             self._online = True
 
+        # It's uncertain whether SimpliSafe events wills till propagate down the
+        # websocket when the base station is offline. Just in case, we guard against
+        # further action until connection is restored:
         if not self._online:
             return
 
