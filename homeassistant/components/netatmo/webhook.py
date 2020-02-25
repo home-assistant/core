@@ -59,7 +59,7 @@ async def handle_webhook(hass, webhook_id, request):
     except ValueError:
         return None
 
-    _LOGGER.info("Got webhook data: %s", data)
+    _LOGGER.debug("Got webhook data: %s", data)
 
     def evaluate_event(event_data):
         published_data = {
