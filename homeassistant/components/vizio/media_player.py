@@ -61,6 +61,11 @@ async def async_setup_entry(
             config_entry, options={CONF_VOLUME_STEP: volume_step}
         )
 
+    if not config_entry.data.get(CONF_VOLUME_STEP):
+        new_data = config_entry.data.copy()
+        new_data.update({CONF_VOLUME_STEP: volume_step})
+        hass.config_entries.async_update_entry(config_entry, data=new_data)
+
     device = VizioAsync(
         DEVICE_ID,
         host,
