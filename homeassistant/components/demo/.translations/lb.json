@@ -1,5 +1,14 @@
 {
     "config": {
         "title": "Demo"
+    },
+    "options": {
+        "step": {
+            "options_2": {
+                "data": {
+                    "select": "Eng Optioun auswielen"
+                }
+            }
+        }
     }
 }
