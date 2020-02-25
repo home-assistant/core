@@ -203,7 +203,7 @@ async def test_user_esn_already_exists(
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup_with_diff_host_and_name"
+    assert result["reason"] == "already_configured"
 
 
 async def test_user_error_on_could_not_connect(
