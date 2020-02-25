@@ -11,7 +11,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .abbreviations import ABBREVIATIONS, DEVICE_ABBREVIATIONS
-from .const import ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC
+from .const import ATTR_DISCOVERY_HASH, ATTR_DISCOVERY_TOPIC, CONF_STATE_TOPIC
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -137,6 +137,11 @@ async def async_start(
         if payload:
             # Attach MQTT topic to the payload, used for debug prints
             setattr(payload, "__configuration_source__", f"MQTT (topic: '{topic}')")
+            discovery_data = {
+                ATTR_DISCOVERY_HASH: discovery_hash,
+                ATTR_DISCOVERY_TOPIC: topic,
+            }
+            setattr(payload, "discovery_data", discovery_data)
 
             if CONF_PLATFORM in payload and "schema" not in payload:
                 platform = payload[CONF_PLATFORM]
@@ -172,8 +177,6 @@ async def async_start(
                     payload[CONF_STATE_TOPIC],
                     topic,
                 )
-
-            payload[ATTR_DISCOVERY_HASH] = discovery_hash
 
         if ALREADY_DISCOVERED not in hass.data:
             hass.data[ALREADY_DISCOVERED] = {}
