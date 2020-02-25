@@ -91,7 +91,7 @@ async def async_request_validation(hass, config_entry, august_gateway):
     username = entry_data.get(CONF_USERNAME)
 
     _CONFIGURING[entry_id] = configurator.async_request_config(
-        DEFAULT_NAME + " (" + username + ")",
+        f"{DEFAULT_NAME} ({username})",
         async_august_configuration_validation_callback,
         description="August must be re-verified. Please check your {} ({}) and enter the verification "
         "code below".format(login_method, username),
