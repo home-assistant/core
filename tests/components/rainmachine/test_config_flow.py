@@ -17,8 +17,8 @@ from homeassistant.const import (
 from tests.common import MockConfigEntry, mock_coro
 
 
-async def test_get_configured_instances(hass):
-    """Test retrieving all configured instances."""
+async def test_duplicate_error(hass):
+    """Test that errors are shown when duplicates are added."""
     conf = {
         CONF_IP_ADDRESS: "192.168.1.100",
         CONF_PASSWORD: "password",
@@ -30,7 +30,11 @@ async def test_get_configured_instances(hass):
         hass
     )
 
-    assert len(config_flow.configured_instances(hass)) == 1
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=conf
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_invalid_password(hass):
