@@ -42,8 +42,8 @@ async def test_cannot_connect_shows_error_form(hass, controller):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
     assert result["errors"][CONF_HOST] == "connection_failure"
-    assert controller.connect.call_count == 1
-    assert controller.disconnect.call_count == 1
+    assert controller.connect.call_count == 2
+    assert controller.disconnect.call_count == 2
     controller.connect.reset_mock()
     controller.disconnect.reset_mock()
 
@@ -60,8 +60,8 @@ async def test_create_entry_when_host_valid(hass, controller):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "Controller (127.0.0.1)"
     assert result["data"] == data
-    assert controller.connect.call_count == 1
-    assert controller.disconnect.call_count == 1
+    assert controller.connect.call_count == 2
+    assert controller.disconnect.call_count == 2
 
 
 async def test_create_entry_when_friendly_name_valid(hass, controller):
@@ -77,8 +77,8 @@ async def test_create_entry_when_friendly_name_valid(hass, controller):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "Controller (127.0.0.1)"
     assert result["data"] == {CONF_HOST: "127.0.0.1"}
-    assert controller.connect.call_count == 1
-    assert controller.disconnect.call_count == 1
+    assert controller.connect.call_count == 2
+    assert controller.disconnect.call_count == 2
     assert DATA_DISCOVERED_HOSTS not in hass.data
 
 

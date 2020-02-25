@@ -6,12 +6,12 @@ import pytest
 from transmissionrpc.error import TransmissionError
 
 from homeassistant import data_entry_flow
+from homeassistant.components import transmission
 from homeassistant.components.transmission import config_flow
 from homeassistant.components.transmission.const import (
     DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -85,7 +85,7 @@ async def test_flow_works(hass, api):
     flow = init_config_flow(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        transmission.DOMAIN, context={"source": "user"}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -118,7 +118,7 @@ async def test_flow_works(hass, api):
 async def test_options(hass):
     """Test updating options."""
     entry = MockConfigEntry(
-        domain=DOMAIN,
+        domain=transmission.DOMAIN,
         title=CONF_NAME,
         data=MOCK_ENTRY,
         options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
@@ -178,13 +178,13 @@ async def test_import(hass, api):
 async def test_host_already_configured(hass, api):
     """Test host is already configured."""
     entry = MockConfigEntry(
-        domain=DOMAIN,
+        domain=transmission.DOMAIN,
         data=MOCK_ENTRY,
         options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        transmission.DOMAIN, context={"source": "user"}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_ENTRY
@@ -197,7 +197,7 @@ async def test_host_already_configured(hass, api):
 async def test_name_already_configured(hass, api):
     """Test name is already configured."""
     entry = MockConfigEntry(
-        domain=DOMAIN,
+        domain=transmission.DOMAIN,
         data=MOCK_ENTRY,
         options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
     )
@@ -206,7 +206,7 @@ async def test_name_already_configured(hass, api):
     mock_entry = MOCK_ENTRY.copy()
     mock_entry[CONF_HOST] = "0.0.0.0"
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        transmission.DOMAIN, context={"source": "user"}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=mock_entry
