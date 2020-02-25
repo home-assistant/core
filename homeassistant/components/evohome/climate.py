@@ -351,7 +351,7 @@ class EvoController(EvoClimateDevice):
             mode = EVO_RESET
 
         if ATTR_DURATION_DAYS in data:
-            until = dt.combine(dt_util.now().date(), dt.min.time())
+            until = dt_util.start_of_local_day()
             until += data[ATTR_DURATION_DAYS]
 
         elif ATTR_DURATION_HOURS in data:
@@ -365,7 +365,9 @@ class EvoController(EvoClimateDevice):
     async def _set_tcs_mode(self, mode: str, until: Optional[dt] = None) -> None:
         """Set a Controller to any of its native EVO_* operating modes."""
         # TODO: until dt from aware to evo naive/local ???
-        await self._evo_broker.call_client_api(self._evo_tcs.set_status(mode))
+        await self._evo_broker.call_client_api(
+            self._evo_tcs.set_status(mode, until=dt_util.as_utc(until))
+        )
 
     @property
     def hvac_mode(self) -> str:
