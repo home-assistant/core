@@ -2,6 +2,12 @@
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_SMOKE,
+)
+
 from tests.components.homekit_controller.common import setup_test_component
 
 MOTION_DETECTED = ("motion", "motion-detected")
@@ -29,6 +35,8 @@ async def test_motion_sensor_read_state(hass, utcnow):
     state = await helper.poll_and_get_state()
     assert state.state == "on"
 
+    assert state.attributes["device_class"] == DEVICE_CLASS_MOTION
+
 
 def create_contact_sensor_service(accessory):
     """Define contact characteristics."""
@@ -49,6 +57,8 @@ async def test_contact_sensor_read_state(hass, utcnow):
     helper.characteristics[CONTACT_STATE].value = 1
     state = await helper.poll_and_get_state()
     assert state.state == "on"
+
+    assert state.attributes["device_class"] == DEVICE_CLASS_OPENING
 
 
 def create_smoke_sensor_service(accessory):
@@ -71,4 +81,4 @@ async def test_smoke_sensor_read_state(hass, utcnow):
     state = await helper.poll_and_get_state()
     assert state.state == "on"
 
-    assert state.attributes["device_class"] == "smoke"
+    assert state.attributes["device_class"] == DEVICE_CLASS_SMOKE
