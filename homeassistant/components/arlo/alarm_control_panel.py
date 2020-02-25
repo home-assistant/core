@@ -110,19 +110,19 @@ class ArloBaseStation(AlarmControlPanel):
         else:
             self._state = None
 
-    async def async_alarm_disarm(self, code=None):
+    def alarm_disarm(self, code=None):
         """Send disarm command."""
         self._base_station.mode = DISARMED
 
-    async def async_alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code=None):
         """Send arm away command. Uses custom mode."""
         self._base_station.mode = self._away_mode_name
 
-    async def async_alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code=None):
         """Send arm home command. Uses custom mode."""
         self._base_station.mode = self._home_mode_name
 
-    async def async_alarm_arm_night(self, code=None):
+    def alarm_arm_night(self, code=None):
         """Send arm night command. Uses custom mode."""
         self._base_station.mode = self._night_mode_name
 
