@@ -35,7 +35,7 @@ async def test_cannot_connect_shows_error_form(hass, controller):
     """Test form is shown with error when cannot connect."""
     controller.connect.side_effect = HeosError()
     result = await hass.config_entries.flow.async_init(
-        heos.DOMAIN, context={"source": "user"}
+        heos.DOMAIN, context={"source": "user"}, data={CONF_HOST: "127.0.0.1"}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_HOST: "127.0.0.1"})
@@ -104,7 +104,7 @@ async def test_discovery_shows_create_form(hass, controller, discovery_data):
 
 
 async def test_disovery_flow_aborts_already_setup(
-    hass, controller, discovery_data, config_entry
+        hass, controller, discovery_data, config_entry
 ):
     """Test discovery flow aborts when entry already setup."""
     config_entry.add_to_hass(hass)

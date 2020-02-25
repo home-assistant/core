@@ -51,7 +51,7 @@ def mock_transmission_api():
 def mock_api_authentication_error():
     """Mock an api."""
     with patch(
-        "transmissionrpc.Client", side_effect=TransmissionError("401: Unauthorized")
+            "transmissionrpc.Client", side_effect=TransmissionError("401: Unauthorized")
     ):
         yield
 
@@ -60,8 +60,8 @@ def mock_api_authentication_error():
 def mock_api_connection_error():
     """Mock an api."""
     with patch(
-        "transmissionrpc.Client",
-        side_effect=TransmissionError("111: Connection refused"),
+            "transmissionrpc.Client",
+            side_effect=TransmissionError("111: Connection refused"),
     ):
         yield
 
