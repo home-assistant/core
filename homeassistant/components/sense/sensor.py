@@ -73,7 +73,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             else:
                 update_call = update_trends
 
-            unique_id = f"sense-{sense_monitor_id}-{type_id}-{var}".lower()
+            unique_id = f"{sense_monitor_id}-{type_id}-{var}".lower()
             devices.append(
                 Sense(
                     data, name, sensor_type, is_production, update_call, var, unique_id

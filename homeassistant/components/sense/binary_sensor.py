@@ -101,7 +101,7 @@ class SenseDevice(BinarySensorDevice):
         self._name = device["name"]
         self._id = device["id"]
         self._sense_monitor_id = sense_monitor_id
-        self._unique_id = f"sense-{sense_monitor_id}-{self._id}"
+        self._unique_id = f"{sense_monitor_id}-{self._id}"
         self._icon = sense_to_mdi(device["icon"])
         self._data = data
         self._undo_dispatch_subscription = None

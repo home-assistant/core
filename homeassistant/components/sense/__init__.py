@@ -13,6 +13,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TIMEOUT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -55,8 +56,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
             DOMAIN,
             context={"source": SOURCE_IMPORT},
             data={
-                CONF_EMAIL: conf.get(CONF_EMAIL),
-                CONF_PASSWORD: conf.get(CONF_PASSWORD),
+                CONF_EMAIL: conf[CONF_EMAIL],
+                CONF_PASSWORD: conf[CONF_PASSWORD],
                 CONF_TIMEOUT: conf.get(CONF_TIMEOUT),
             },
         )
@@ -66,8 +67,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Sense from a config entry."""
-
-    hass.data.setdefault(DOMAIN, {})
 
     entry_data = entry.data
     email = entry_data[CONF_EMAIL]
@@ -81,11 +80,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except SenseAuthenticationException:
         _LOGGER.error("Could not authenticate with sense server")
         return False
+    except SenseAPITimeoutException:
+        raise ConfigEntryNotReady
 
-    hass.data[DOMAIN][entry.entry_id] = {}
-    hass.data[DOMAIN][entry.entry_id][SENSE_DATA] = gateway
+    hass.data[DOMAIN][entry.entry_id] = {SENSE_DATA: gateway}
 
-    await gateway.update_realtime()
+    try:
+        await gateway.update_realtime()
+    except SenseAPITimeoutException:
+        raise ConfigEntryNotReady
 
     for component in PLATFORMS:
         hass.async_create_task(
