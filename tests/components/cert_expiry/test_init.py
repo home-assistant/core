@@ -49,7 +49,8 @@ async def test_update_unique_id(hass):
 
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1
-    assert not config_entries[0].unique_id
+    assert entry is config_entries[0]
+    assert not entry.unique_id
 
     with patch(
         "homeassistant.components.cert_expiry.sensor.get_cert_time_to_expiry",
@@ -58,8 +59,8 @@ async def test_update_unique_id(hass):
         assert await async_setup_component(hass, DOMAIN, {}) is True
         await hass.async_block_till_done()
 
-    assert config_entries[0].state == ENTRY_STATE_LOADED
-    assert config_entries[0].unique_id == f"{HOST}:{PORT}"
+    assert entry.state == ENTRY_STATE_LOADED
+    assert entry.unique_id == f"{HOST}:{PORT}"
 
 
 async def test_unload_config_entry(hass):
@@ -73,6 +74,7 @@ async def test_unload_config_entry(hass):
 
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1
+    assert entry is config_entries[0]
 
     with patch(
         "homeassistant.components.cert_expiry.sensor.get_cert_time_to_expiry",
@@ -81,14 +83,14 @@ async def test_unload_config_entry(hass):
         assert await async_setup_component(hass, DOMAIN, {}) is True
         await hass.async_block_till_done()
 
-    assert config_entries[0].state == ENTRY_STATE_LOADED
+    assert entry.state == ENTRY_STATE_LOADED
     state = hass.states.get("sensor.cert_expiry_example_com")
     assert state.state == "100"
     assert state.attributes.get("error") == "None"
     assert state.attributes.get("is_valid")
 
-    await hass.config_entries.async_unload(config_entries[0].entry_id)
+    await hass.config_entries.async_unload(entry.entry_id)
 
-    assert config_entries[0].state == ENTRY_STATE_NOT_LOADED
+    assert entry.state == ENTRY_STATE_NOT_LOADED
     state = hass.states.get("sensor.cert_expiry_example_com")
     assert state is None
