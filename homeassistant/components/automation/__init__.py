@@ -43,6 +43,7 @@ GROUP_NAME_ALL_AUTOMATIONS = "all automations"
 
 CONF_ALIAS = "alias"
 CONF_DESCRIPTION = "description"
+CONF_HIDE_ENTITY = "hide_entity"
 
 CONF_CONDITION = "condition"
 CONF_ACTION = "action"
@@ -92,6 +93,7 @@ _TRIGGER_SCHEMA = vol.All(
 _CONDITION_SCHEMA = vol.All(cv.ensure_list, [cv.CONDITION_SCHEMA])
 
 PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_HIDE_ENTITY, invalidation_version="0.110"),
     vol.Schema(
         {
             # str on purpose
@@ -99,6 +101,7 @@ PLATFORM_SCHEMA = vol.All(
             CONF_ALIAS: cv.string,
             vol.Optional(CONF_DESCRIPTION): cv.string,
             vol.Optional(CONF_INITIAL_STATE): cv.boolean,
+            vol.Optional(CONF_HIDE_ENTITY): cv.boolean,
             vol.Required(CONF_TRIGGER): _TRIGGER_SCHEMA,
             vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
             vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
