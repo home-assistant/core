@@ -21,7 +21,7 @@
             },
             "pairing_complete": {
                 "title": "Pairing Complete",
-                "description": "Your Vizio SmartCast device is now connected to Home Assistant.\n\nYour Access Token is '**{access_token_value}**'."
+                "description": "Your Vizio SmartCast device is now connected to Home Assistant."
             },
             "pairing_complete_import": {
                 "title": "Pairing Complete",
