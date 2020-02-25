@@ -233,7 +233,7 @@ async def async_setup(hass, config):
         _LOGGER.warning(
             (
                 "Legacy homekit_controller state found in %s. Support for reading "
-                "the folder is deprecated and will be removed in 0.108.0."
+                "the folder is deprecated and will be removed in 0.109.0."
             ),
             dothomekit_dir,
         )
