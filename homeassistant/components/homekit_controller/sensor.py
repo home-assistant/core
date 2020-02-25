@@ -4,6 +4,9 @@ from aiohomekit.model.characteristics import CharacteristicsTypes
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
@@ -30,6 +33,11 @@ class HomeKitHumiditySensor(HomeKitEntity):
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
         return [CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT]
+
+    @property
+    def device_class(self) -> str:
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_HUMIDITY
 
     @property
     def name(self):
@@ -68,6 +76,11 @@ class HomeKitTemperatureSensor(HomeKitEntity):
         return [CharacteristicsTypes.TEMPERATURE_CURRENT]
 
     @property
+    def device_class(self) -> str:
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_TEMPERATURE
+
+    @property
     def name(self):
         """Return the name of the device."""
         return f"{super().name} Temperature"
@@ -102,6 +115,11 @@ class HomeKitLightSensor(HomeKitEntity):
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
         return [CharacteristicsTypes.LIGHT_LEVEL_CURRENT]
+
+    @property
+    def device_class(self) -> str:
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_ILLUMINANCE
 
     @property
     def name(self):
