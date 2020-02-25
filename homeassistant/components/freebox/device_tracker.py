@@ -22,7 +22,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker for Freebox component."""
     router = hass.data[DOMAIN][entry.unique_id]
-    tracked = {}
+    tracked = []
 
     @callback
     def update_router():
@@ -45,8 +45,8 @@ def add_entities(router, async_add_entities, tracked):
         if mac in tracked:
             continue
 
-        tracked[mac] = FreeboxDevice(router, device)
-        new_tracked.append(tracked[mac])
+        new_tracked.append(FreeboxDevice(router, device))
+        tracked.append(mac)
 
     if new_tracked:
         async_add_entities(new_tracked, True)
