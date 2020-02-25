@@ -1,6 +1,6 @@
 """Constants for monitoring a Sense energy sensor."""
 DOMAIN = "sense"
-DEFAULT_TIMEOUT = 5
+DEFAULT_TIMEOUT = 10
 ACTIVE_UPDATE_RATE = 60
 DEFAULT_NAME = "Sense"
 SENSE_DATA = "sense_data"

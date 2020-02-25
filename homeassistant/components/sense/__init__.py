@@ -58,7 +58,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
             data={
                 CONF_EMAIL: conf[CONF_EMAIL],
                 CONF_PASSWORD: conf[CONF_PASSWORD],
-                CONF_TIMEOUT: conf.get(CONF_TIMEOUT),
+                CONF_TIMEOUT: conf.get[CONF_TIMEOUT],
             },
         )
     )
@@ -73,9 +73,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     password = entry_data[CONF_PASSWORD]
     timeout = entry_data[CONF_TIMEOUT]
 
+    gateway = ASyncSenseable(api_timeout=timeout, wss_timeout=timeout)
+    gateway.rate_limit = ACTIVE_UPDATE_RATE
+
     try:
-        gateway = ASyncSenseable(api_timeout=timeout, wss_timeout=timeout)
-        gateway.rate_limit = ACTIVE_UPDATE_RATE
         await gateway.authenticate(email, password)
     except SenseAuthenticationException:
         _LOGGER.error("Could not authenticate with sense server")
@@ -84,11 +85,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         raise ConfigEntryNotReady
 
     hass.data[DOMAIN][entry.entry_id] = {SENSE_DATA: gateway}
-
-    try:
-        await gateway.update_realtime()
-    except SenseAPITimeoutException:
-        raise ConfigEntryNotReady
 
     for component in PLATFORMS:
         hass.async_create_task(

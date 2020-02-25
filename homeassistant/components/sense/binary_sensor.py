@@ -141,17 +141,6 @@ class SenseDevice(BinarySensorDevice):
         """Return the deviceshould not poll for updates."""
         return False
 
-    @property
-    def device_state_attributes(self):
-        """Return the device specific state attributes."""
-        realtime_data = self._data.get_realtime()
-        devices = realtime_data.get("devices", {})
-        for device in devices:
-            if device["id"] == self._id:
-                return {ATTR_WATTS: round(device["w"], 1)}
-
-        return None
-
     async def async_added_to_hass(self):
         """Register callbacks."""
 
