@@ -35,7 +35,7 @@ ChangeListener = Callable[
         Optional[dict],
     ],
     Awaitable[None],
-]  # pylint: disable=invalid-name
+]
 
 
 class CollectionError(HomeAssistantError):
