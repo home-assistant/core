@@ -168,7 +168,6 @@ async def async_setup_entity_legacy(
     async_add_entities([MqttVacuum(config, config_entry, discovery_hash)])
 
 
-# pylint: disable=too-many-ancestors
 class MqttVacuum(
     MqttAttributes,
     MqttAvailability,
