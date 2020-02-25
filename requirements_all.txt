@@ -1865,7 +1865,7 @@ smhi-pkg==1.0.10
 snapcast==2.0.10
 
 # homeassistant.components.socialblade
-socialbladeclient==0.2
+socialbladeclient==0.5
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.0
