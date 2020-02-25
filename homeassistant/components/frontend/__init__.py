@@ -50,8 +50,8 @@ MANIFEST_JSON = {
     "display": "standalone",
     "icons": [
         {
-            "src": "/static/icons/favicon-{size}x{size}.png".format(size=size),
-            "sizes": "{size}x{size}".format(size=size),
+            "src": f"/static/icons/favicon-{size}x{size}.png",
+            "sizes": f"{size}x{size}",
             "type": "image/png",
             "purpose": "maskable any",
         }
