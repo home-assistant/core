@@ -13,7 +13,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import CONF_GEOGRAPHIES, DOMAIN
+from .const import CONF_GEOGRAPHIES, DOMAIN  # pylint: disable=unused-import
 
 
 class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
