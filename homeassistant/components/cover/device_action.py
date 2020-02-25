@@ -1,5 +1,6 @@
 """Provides device automations for Cover."""
 from typing import List, Optional
+
 import voluptuous as vol
 
 from homeassistant.const import (
