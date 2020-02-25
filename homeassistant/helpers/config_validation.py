@@ -402,7 +402,20 @@ def service(value: Any) -> str:
     raise vol.Invalid(f"Service {value} does not match format <domain>.<name>")
 
 
-def schema_with_slug_keys(value_schema: Union[T, Callable]) -> Callable:
+def slug(value: Any) -> str:
+    """Validate value is a valid slug."""
+    if value is None:
+        raise vol.Invalid("Slug should not be None")
+    str_value = str(value)
+    slg = util_slugify(str_value)
+    if str_value == slg:
+        return str_value
+    raise vol.Invalid(f"invalid slug {value} (try {slg})")
+
+
+def schema_with_slug_keys(
+    value_schema: Union[T, Callable], *, slug_validator: Callable[[Any], str] = slug
+) -> Callable:
     """Ensure dicts have slugs as keys.
 
     Replacement of vol.Schema({cv.slug: value_schema}) to prevent misleading
@@ -416,22 +429,11 @@ def schema_with_slug_keys(value_schema: Union[T, Callable]) -> Callable:
             raise vol.Invalid("expected dictionary")
 
         for key in value.keys():
-            slug(key)
+            slug_validator(key)
 
         return cast(Dict, schema(value))
 
     return verify
-
-
-def slug(value: Any) -> str:
-    """Validate value is a valid slug."""
-    if value is None:
-        raise vol.Invalid("Slug should not be None")
-    str_value = str(value)
-    slg = util_slugify(str_value)
-    if str_value == slg:
-        return str_value
-    raise vol.Invalid(f"invalid slug {value} (try {slg})")
 
 
 def slugify(value: Any) -> str:

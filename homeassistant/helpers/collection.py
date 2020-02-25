@@ -235,6 +235,26 @@ class StorageCollection(ObservableCollection):
         return {"items": list(self.data.values())}
 
 
+class IDLessCollection(ObservableCollection):
+    """A collection without IDs."""
+
+    counter = 0
+
+    async def async_load(self, data: List[dict]) -> None:
+        """Load the collection. Overrides existing data."""
+        for item_id in list(self.data):
+            await self.notify_change(CHANGE_REMOVED, item_id, None)
+
+        self.data.clear()
+
+        for item in data:
+            self.counter += 1
+            item_id = f"fakeid-{self.counter}"
+
+            self.data[item_id] = item
+            await self.notify_change(CHANGE_ADDED, item_id, item)
+
+
 @callback
 def attach_entity_component_collection(
     entity_component: EntityComponent,
