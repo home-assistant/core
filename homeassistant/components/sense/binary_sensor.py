@@ -4,11 +4,14 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_registry import async_get_registry
 
-from . import SENSE_DATA, SENSE_DEVICE_UPDATE
+from .const import DOMAIN, SENSE_DATA, SENSE_DEVICE_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_WATTS = "watts"
+DEVICE_ID_SOLAR = "solar"
 BIN_SENSOR_CLASS = "power"
 MDI_ICONS = {
     "ac": "air-conditioner",
@@ -41,6 +44,7 @@ MDI_ICONS = {
     "skillet": "pot",
     "smartcamera": "webcam",
     "socket": "power-plug",
+    "solar_alt": "solar-power",
     "sound": "speaker",
     "stove": "stove",
     "trash": "trash-can",
@@ -50,19 +54,38 @@ MDI_ICONS = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Sense binary sensor."""
-    if discovery_info is None:
-        return
-    data = hass.data[SENSE_DATA]
+    data = hass.data[DOMAIN][config_entry.entry_id][SENSE_DATA]
+    sense_monitor_id = data.sense_monitor_id
 
     sense_devices = await data.get_discovered_device_data()
     devices = [
-        SenseDevice(data, device)
+        SenseDevice(data, device, sense_monitor_id)
         for device in sense_devices
-        if device["tags"]["DeviceListAllowed"] == "true"
+        if device["id"] == DEVICE_ID_SOLAR
+        or device["tags"]["DeviceListAllowed"] == "true"
     ]
+
+    await _migrate_old_unique_ids(hass, devices)
+
     async_add_entities(devices)
+
+
+async def _migrate_old_unique_ids(hass, devices):
+    registry = await async_get_registry(hass)
+    for device in devices:
+        # Migration of old not so unique ids
+        old_entity_id = registry.async_get_entity_id(
+            "binary_sensor", DOMAIN, device.old_unique_id
+        )
+        if old_entity_id is not None:
+            _LOGGER.debug(
+                "Migrating unique_id from [%s] to [%s]",
+                device.old_unique_id,
+                device.unique_id,
+            )
+            registry.async_update_entity(old_entity_id, new_unique_id=device.unique_id)
 
 
 def sense_to_mdi(sense_icon):
@@ -73,10 +96,12 @@ def sense_to_mdi(sense_icon):
 class SenseDevice(BinarySensorDevice):
     """Implementation of a Sense energy device binary sensor."""
 
-    def __init__(self, data, device):
+    def __init__(self, data, device, sense_monitor_id):
         """Initialize the Sense binary sensor."""
         self._name = device["name"]
         self._id = device["id"]
+        self._sense_monitor_id = sense_monitor_id
+        self._unique_id = f"{sense_monitor_id}-{self._id}"
         self._icon = sense_to_mdi(device["icon"])
         self._data = data
         self._undo_dispatch_subscription = None
@@ -93,7 +118,12 @@ class SenseDevice(BinarySensorDevice):
 
     @property
     def unique_id(self):
-        """Return the id of the binary sensor."""
+        """Return the unique id of the binary sensor."""
+        return self._unique_id
+
+    @property
+    def old_unique_id(self):
+        """Return the old not so unique id of the binary sensor."""
         return self._id
 
     @property
@@ -120,7 +150,7 @@ class SenseDevice(BinarySensorDevice):
             self.async_schedule_update_ha_state(True)
 
         self._undo_dispatch_subscription = async_dispatcher_connect(
-            self.hass, SENSE_DEVICE_UPDATE, update
+            self.hass, f"{SENSE_DEVICE_UPDATE}-{self._sense_monitor_id}", update
         )
 
     async def async_will_remove_from_hass(self):

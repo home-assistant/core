@@ -78,6 +78,7 @@ FLOWS = [
     "rainmachine",
     "ring",
     "samsungtv",
+    "sense",
     "sentry",
     "simplisafe",
     "smartthings",
