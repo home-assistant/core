@@ -16,6 +16,7 @@ from .const import (
     ATTR_VIGNETTE_URL,
     DATA_PERSONS,
     DEFAULT_PERSON,
+    DOMAIN,
     EVENT_ANIMAL,
     EVENT_BUS_ANIMAL,
     EVENT_BUS_CONNECTION,
@@ -71,7 +72,7 @@ async def handle_webhook(hass, webhook_id, request):
         if event_data.get(ATTR_EVENT_TYPE) == EVENT_PERSON:
             for person in event_data[ATTR_PERSONS]:
                 published_data[ATTR_ID] = person.get(ATTR_ID)
-                published_data[ATTR_NAME] = hass.data[DATA_PERSONS].get(
+                published_data[ATTR_NAME] = hass.data[DOMAIN][DATA_PERSONS].get(
                     published_data[ATTR_ID], DEFAULT_PERSON
                 )
                 published_data[ATTR_IS_KNOWN] = person.get(ATTR_IS_KNOWN)
