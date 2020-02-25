@@ -411,7 +411,6 @@ class Device(RestoreEntity):
                 self.gps_accuracy = 0
                 LOGGER.warning("Could not parse gps value for %s: %s", self.dev_id, gps)
 
-        # pylint: disable=not-an-iterable
         await self.async_update()
 
     def stale(self, now: dt_util.dt.datetime = None):
