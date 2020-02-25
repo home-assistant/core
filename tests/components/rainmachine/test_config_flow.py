@@ -29,30 +29,12 @@ async def test_duplicate_error(hass):
     MockConfigEntry(domain=DOMAIN, unique_id="192.168.1.100", data=conf).add_to_hass(
         hass
     )
-    flow = config_flow.RainMachineFlowHandler()
-    flow.hass = hass
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=conf
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_get_configured_instances(hass):
-    """Test retrieving all configured instances."""
-    conf = {
-        CONF_IP_ADDRESS: "192.168.1.100",
-        CONF_PASSWORD: "password",
-        CONF_PORT: 8080,
-        CONF_SSL: True,
-    }
-
-    MockConfigEntry(domain=DOMAIN, unique_id="192.168.1.100", data=conf).add_to_hass(
-        hass
-    )
-
-    assert len(config_flow.configured_instances(hass)) == 1
 
 
 async def test_invalid_password(hass):
