@@ -1,6 +1,6 @@
 """Support for the definition of zones."""
 import logging
-from typing import Dict, List, Optional, cast
+from typing import Dict, Optional, cast
 
 import voluptuous as vol
 
@@ -159,32 +159,12 @@ class ZoneStorageCollection(collection.StorageCollection):
         return {**data, **update_data}
 
 
-class IDLessCollection(collection.ObservableCollection):
-    """A collection without IDs."""
-
-    counter = 0
-
-    async def async_load(self, data: List[dict]) -> None:
-        """Load the collection. Overrides existing data."""
-        for item_id in list(self.data):
-            await self.notify_change(collection.CHANGE_REMOVED, item_id, None)
-
-        self.data.clear()
-
-        for item in data:
-            self.counter += 1
-            item_id = f"fakeid-{self.counter}"
-
-            self.data[item_id] = item
-            await self.notify_change(collection.CHANGE_ADDED, item_id, item)
-
-
 async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
     """Set up configured zones as well as Home Assistant zone if necessary."""
     component = entity_component.EntityComponent(_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
 
-    yaml_collection = IDLessCollection(
+    yaml_collection = collection.IDLessCollection(
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
     collection.attach_entity_component_collection(
