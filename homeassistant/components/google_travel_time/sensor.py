@@ -163,7 +163,7 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
                 options[CONF_MODE] = travel_mode
 
         titled_mode = options.get(CONF_MODE).title()
-        formatted_name = "{} - {}".format(DEFAULT_NAME, titled_mode)
+        formatted_name = f"{DEFAULT_NAME} - {titled_mode}"
         name = config.get(CONF_NAME, formatted_name)
         api_key = config.get(CONF_API_KEY)
         origin = config.get(CONF_ORIGIN)

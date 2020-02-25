@@ -107,11 +107,7 @@ class GEMSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique ID for this sensor."""
-        return "{serial}-{sensor_type}-{number}".format(
-            serial=self._monitor_serial_number,
-            sensor_type=self._sensor_type,
-            number=self._number,
-        )
+        return f"{self._monitor_serial_number}-{self._sensor_type }-{self._number}"
 
     @property
     def name(self):
@@ -249,9 +245,7 @@ class PulseCounter(GEMSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement for this pulse counter."""
-        return "{counted_quantity}/{time_unit}".format(
-            counted_quantity=self._counted_quantity, time_unit=self._time_unit
-        )
+        return f"{self._counted_quantity}/{self._time_unit}"
 
     @property
     def device_state_attributes(self):
