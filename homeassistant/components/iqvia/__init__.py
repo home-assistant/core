@@ -8,9 +8,9 @@ from pyiqvia.errors import InvalidZipError, IQVIAError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
+from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -58,17 +58,7 @@ FETCHER_MAPPING = {
 }
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_ZIP_CODE): str,
-                vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSORS)): vol.All(
-                    cv.ensure_list, [vol.In(SENSORS)]
-                ),
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
+    {DOMAIN: vol.Schema({vol.Required(CONF_ZIP_CODE): str})}, extra=vol.ALLOW_EXTRA,
 )
 
 
@@ -100,10 +90,7 @@ async def async_setup_entry(hass, config_entry):
     websession = aiohttp_client.async_get_clientsession(hass)
 
     try:
-        iqvia = IQVIAData(
-            Client(config_entry.data[CONF_ZIP_CODE], websession),
-            config_entry.data.get(CONF_MONITORED_CONDITIONS, list(SENSORS)),
-        )
+        iqvia = IQVIAData(Client(config_entry.data[CONF_ZIP_CODE], websession))
         await iqvia.async_update()
     except InvalidZipError:
         _LOGGER.error("Invalid ZIP code provided: %s", config_entry.data[CONF_ZIP_CODE])
@@ -143,11 +130,10 @@ async def async_unload_entry(hass, config_entry):
 class IQVIAData:
     """Define a data object to retrieve info from IQVIA."""
 
-    def __init__(self, client, sensor_types):
+    def __init__(self, client):
         """Initialize."""
         self._client = client
         self.data = {}
-        self.sensor_types = sensor_types
         self.zip_code = client.zip_code
 
         self.fetchers = Registry()
@@ -164,7 +150,7 @@ class IQVIAData:
         tasks = {}
 
         for conditions, fetcher_types in FETCHER_MAPPING.items():
-            if not any(c in self.sensor_types for c in conditions):
+            if not any(c in SENSORS for c in conditions):
                 continue
 
             for fetcher_type in fetcher_types:
