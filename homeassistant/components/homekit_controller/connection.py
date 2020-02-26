@@ -108,6 +108,10 @@ class HKDevice:
         self._polling_lock = asyncio.Lock()
         self._polling_lock_warned = False
 
+        self.watchable_characteristics = []
+
+        self.pairing.dispatcher_connect(self.process_new_events)
+
     def add_pollable_characteristics(self, characteristics):
         """Add (aid, iid) pairs that we need to poll."""
         self.pollable_characteristics.extend(characteristics)
@@ -116,6 +120,17 @@ class HKDevice:
         """Remove all pollable characteristics by accessory id."""
         self.pollable_characteristics = [
             char for char in self.pollable_characteristics if char[0] != accessory_id
+        ]
+
+    def add_watchable_characteristics(self, characteristics):
+        """Add (aid, iid) pairs that we need to poll."""
+        self.watchable_characteristics.extend(characteristics)
+        self.hass.add_job(self.pairing.subscribe(characteristics))
+
+    def remove_watchable_characteristics(self, accessory_id):
+        """Remove all pollable characteristics by accessory id."""
+        self.watchable_characteristics = [
+            char for char in self.watchable_characteristics if char[0] != accessory_id
         ]
 
     @callback
@@ -163,6 +178,9 @@ class HKDevice:
 
         self.add_entities()
 
+        if self.watchable_characteristics:
+            await self.pairing.subscribe(self.watchable_characteristics)
+
         await self.async_update()
 
         return True
@@ -171,6 +189,8 @@ class HKDevice:
         """Stop interacting with device and prepare for removal from hass."""
         if self._polling_interval_remover:
             self._polling_interval_remover()
+
+        await self.pairing.unsubscribe(self.watchable_characteristics)
 
         unloads = []
         for platform in self.platforms:
