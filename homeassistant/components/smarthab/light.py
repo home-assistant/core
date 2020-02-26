@@ -1,9 +1,4 @@
-"""
-Support for SmartHab device integration.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/integrations/smarthab/
-"""
+"""Support for SmartHab device integration."""
 from datetime import timedelta
 import logging
 

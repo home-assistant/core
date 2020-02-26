@@ -35,7 +35,7 @@ ChangeListener = Callable[
         Optional[dict],
     ],
     Awaitable[None],
-]  # pylint: disable=invalid-name
+]
 
 
 class CollectionError(HomeAssistantError):
@@ -158,9 +158,13 @@ class StorageCollection(ObservableCollection):
         """Home Assistant object."""
         return self.store.hass
 
+    async def _async_load_data(self) -> Optional[dict]:
+        """Load the data."""
+        return cast(Optional[dict], await self.store.async_load())
+
     async def async_load(self) -> None:
         """Load the storage Manager."""
-        raw_storage = cast(Optional[dict], await self.store.async_load())
+        raw_storage = await self._async_load_data()
 
         if raw_storage is None:
             raw_storage = {"items": []}
@@ -229,6 +233,26 @@ class StorageCollection(ObservableCollection):
     def _data_to_save(self) -> dict:
         """Return data of area registry to store in a file."""
         return {"items": list(self.data.values())}
+
+
+class IDLessCollection(ObservableCollection):
+    """A collection without IDs."""
+
+    counter = 0
+
+    async def async_load(self, data: List[dict]) -> None:
+        """Load the collection. Overrides existing data."""
+        for item_id in list(self.data):
+            await self.notify_change(CHANGE_REMOVED, item_id, None)
+
+        self.data.clear()
+
+        for item in data:
+            self.counter += 1
+            item_id = f"fakeid-{self.counter}"
+
+            self.data[item_id] = item
+            await self.notify_change(CHANGE_ADDED, item_id, item)
 
 
 @callback

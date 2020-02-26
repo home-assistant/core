@@ -270,26 +270,22 @@ async def test_template_mutex(hass, calls):
     assert hass.states.async_all() == []
 
 
-async def test_template_open_or_position(hass, calls):
+async def test_template_open_or_position(hass, caplog):
     """Test that at least one of open_cover or set_position is used."""
-    with assert_setup_component(1, "cover"):
-        assert await setup.async_setup_component(
-            hass,
-            "cover",
-            {
-                "cover": {
-                    "platform": "template",
-                    "covers": {
-                        "test_template_cover": {"value_template": "{{ 1 == 1 }}"}
-                    },
-                }
-            },
-        )
-
-    await hass.async_start()
+    assert await setup.async_setup_component(
+        hass,
+        "cover",
+        {
+            "cover": {
+                "platform": "template",
+                "covers": {"test_template_cover": {"value_template": "{{ 1 == 1 }}"}},
+            }
+        },
+    )
     await hass.async_block_till_done()
 
     assert hass.states.async_all() == []
+    assert "Invalid config for [cover.template]" in caplog.text
 
 
 async def test_template_open_and_close(hass, calls):

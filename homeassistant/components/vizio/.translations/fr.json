@@ -33,7 +33,8 @@
         "step": {
             "init": {
                 "data": {
-                    "timeout": "D\u00e9lai d'expiration de la demande d'API (secondes)"
+                    "timeout": "D\u00e9lai d'expiration de la demande d'API (secondes)",
+                    "volume_step": "Taille du pas de volume"
                 },
                 "title": "Mettre \u00e0 jour les options de Vizo SmartCast"
             }

@@ -45,7 +45,6 @@ from .const import (
     DEFAULT_CONSIDER_HOME,
     DEFAULT_TRACK_NEW,
     DOMAIN,
-    ENTITY_ID_FORMAT,
     LOGGER,
     SOURCE_TYPE_GPS,
 )
@@ -182,7 +181,7 @@ class DeviceTracker:
             return
 
         # Guard from calling see on entity registry entities.
-        entity_id = ENTITY_ID_FORMAT.format(dev_id)
+        entity_id = f"{DOMAIN}.{dev_id}"
         if registry.async_is_registered(entity_id):
             LOGGER.error(
                 "The see service is not supported for this entity %s", entity_id
@@ -197,7 +196,6 @@ class DeviceTracker:
             self.track_new,
             dev_id,
             mac,
-            (host_name or dev_id).replace("_", " "),
             picture=picture,
             icon=icon,
             hide_if_away=self.defaults.get(CONF_AWAY_HIDE, DEFAULT_AWAY_HIDE),
@@ -309,7 +307,7 @@ class Device(RestoreEntity):
     ) -> None:
         """Initialize a device."""
         self.hass = hass
-        self.entity_id = ENTITY_ID_FORMAT.format(dev_id)
+        self.entity_id = f"{DOMAIN}.{dev_id}"
 
         # Timedelta object how long we consider a device home if it is not
         # detected anymore.
@@ -342,7 +340,7 @@ class Device(RestoreEntity):
     @property
     def name(self):
         """Return the name of the entity."""
-        return self.config_name or self.host_name or DEVICE_DEFAULT_NAME
+        return self.config_name or self.host_name or self.dev_id or DEVICE_DEFAULT_NAME
 
     @property
     def state(self):
@@ -393,7 +391,7 @@ class Device(RestoreEntity):
         """Mark the device as seen."""
         self.source_type = source_type
         self.last_seen = dt_util.utcnow()
-        self.host_name = host_name
+        self.host_name = host_name or self.host_name
         self.location_name = location_name
         self.consider_home = consider_home or self.consider_home
 
@@ -413,7 +411,6 @@ class Device(RestoreEntity):
                 self.gps_accuracy = 0
                 LOGGER.warning("Could not parse gps value for %s: %s", self.dev_id, gps)
 
-        # pylint: disable=not-an-iterable
         await self.async_update()
 
     def stale(self, now: dt_util.dt.datetime = None):
@@ -580,5 +577,7 @@ def get_gravatar_for_email(email: str):
     Async friendly.
     """
 
-    url = "https://www.gravatar.com/avatar/{}.jpg?s=80&d=wavatar"
-    return url.format(hashlib.md5(email.encode("utf-8").lower()).hexdigest())
+    return (
+        f"https://www.gravatar.com/avatar/"
+        f"{hashlib.md5(email.encode('utf-8').lower()).hexdigest()}.jpg?s=80&d=wavatar"
+    )

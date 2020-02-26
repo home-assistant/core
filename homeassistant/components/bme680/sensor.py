@@ -1,7 +1,7 @@
 """Support for BME680 Sensor over SMBus."""
 import logging
 import threading
-from time import sleep, time
+from time import monotonic, sleep
 
 import bme680  # pylint: disable=import-error
 from smbus import SMBus  # pylint: disable=import-error
@@ -240,15 +240,15 @@ class BME680Handler:
         # Pause to allow initial data read for device validation.
         sleep(1)
 
-        start_time = time()
-        curr_time = time()
+        start_time = monotonic()
+        curr_time = monotonic()
         burn_in_data = []
 
         _LOGGER.info(
             "Beginning %d second gas sensor burn in for Air Quality", burn_in_time
         )
         while curr_time - start_time < burn_in_time:
-            curr_time = time()
+            curr_time = monotonic()
             if self._sensor.get_sensor_data() and self._sensor.data.heat_stable:
                 gas_resistance = self._sensor.data.gas_resistance
                 burn_in_data.append(gas_resistance)

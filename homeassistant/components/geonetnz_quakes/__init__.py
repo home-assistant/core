@@ -34,10 +34,6 @@ from .const import (
     DOMAIN,
     FEED,
     PLATFORMS,
-    SIGNAL_DELETE_ENTITY,
-    SIGNAL_NEW_GEOLOCATION,
-    SIGNAL_STATUS,
-    SIGNAL_UPDATE_ENTITY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -200,7 +196,7 @@ class GeonetnzQuakesFeedEntityManager:
     @callback
     def async_event_new_entity(self):
         """Return manager specific event to signal new entity."""
-        return SIGNAL_NEW_GEOLOCATION.format(self._config_entry_id)
+        return f"geonetnz_quakes_new_geolocation_{self._config_entry_id}"
 
     def get_entry(self, external_id):
         """Get feed entry by external id."""
@@ -222,14 +218,16 @@ class GeonetnzQuakesFeedEntityManager:
 
     async def _update_entity(self, external_id):
         """Update entity."""
-        async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY.format(external_id))
+        async_dispatcher_send(self._hass, f"geonetnz_quakes_update_{external_id}")
 
     async def _remove_entity(self, external_id):
         """Remove entity."""
-        async_dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
+        async_dispatcher_send(self._hass, f"geonetnz_quakes_delete_{external_id}")
 
     async def _status_update(self, status_info):
         """Propagate status update."""
         _LOGGER.debug("Status update received: %s", status_info)
         self._status_info = status_info
-        async_dispatcher_send(self._hass, SIGNAL_STATUS.format(self._config_entry_id))
+        async_dispatcher_send(
+            self._hass, f"geonetnz_quakes_status_{self._config_entry_id}"
+        )

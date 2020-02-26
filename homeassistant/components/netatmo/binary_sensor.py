@@ -24,7 +24,10 @@ PRESENCE_SENSOR_TYPES = {
 }
 TAG_SENSOR_TYPES = {"Tag Vibration": "vibration", "Tag Open": "opening"}
 
-SENSOR_TYPES = {"NACamera": WELCOME_SENSOR_TYPES, "NOC": PRESENCE_SENSOR_TYPES}
+SENSOR_TYPES = {
+    "NACamera": WELCOME_SENSOR_TYPES,
+    "NOC": PRESENCE_SENSOR_TYPES,
+}
 
 CONF_HOME = "home"
 CONF_CAMERAS = "cameras"
@@ -61,12 +64,28 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 sensor_types.update(SENSOR_TYPES[camera["type"]])
 
                 # Tags are only supported with Netatmo Welcome indoor cameras
-                if camera["type"] == "NACamera" and data.get_modules(camera["id"]):
-                    sensor_types.update(TAG_SENSOR_TYPES)
+                modules = data.get_modules(camera["id"])
+                if camera["type"] == "NACamera" and modules:
+                    for module in modules:
+                        for sensor_type in TAG_SENSOR_TYPES:
+                            _LOGGER.debug(
+                                "Adding camera tag %s (%s)",
+                                module["name"],
+                                module["id"],
+                            )
+                            entities.append(
+                                NetatmoBinarySensor(
+                                    data,
+                                    camera["id"],
+                                    home_id,
+                                    sensor_type,
+                                    module["id"],
+                                )
+                            )
 
-                for sensor_name in sensor_types:
+                for sensor_type in sensor_types:
                     entities.append(
-                        NetatmoBinarySensor(data, camera["id"], home_id, sensor_name)
+                        NetatmoBinarySensor(data, camera["id"], home_id, sensor_type)
                     )
         except pyatmo.NoDevice:
             _LOGGER.debug("No camera entities to add")
@@ -114,6 +133,15 @@ class NetatmoBinarySensor(BinarySensorDevice):
     def unique_id(self):
         """Return the unique ID for this sensor."""
         return self._unique_id
+
+    @property
+    def device_class(self):
+        """Return the class of this sensor."""
+        if self._camera_type == "NACamera":
+            return WELCOME_SENSOR_TYPES.get(self._sensor_type)
+        if self._camera_type == "NOC":
+            return PRESENCE_SENSOR_TYPES.get(self._sensor_type)
+        return TAG_SENSOR_TYPES.get(self._sensor_type)
 
     @property
     def device_info(self):

@@ -119,14 +119,10 @@ async def test_if_fires_on_state_change(hass, calls):
     hass.states.async_set("fan.entity", STATE_ON)
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0].data["some"] == "turn_on - device - {} - off - on - None".format(
-        "fan.entity"
-    )
+    assert calls[0].data["some"] == "turn_on - device - fan.entity - off - on - None"
 
     # Fake that the entity is turning off.
     hass.states.async_set("fan.entity", STATE_OFF)
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[1].data["some"] == "turn_off - device - {} - on - off - None".format(
-        "fan.entity"
-    )
+    assert calls[1].data["some"] == "turn_off - device - fan.entity - on - off - None"

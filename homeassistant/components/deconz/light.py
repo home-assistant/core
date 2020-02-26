@@ -67,7 +67,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities = []
 
         for group in groups:
-            if group.lights:
+            if group.lights and group.deconz_id not in gateway.deconz_ids.values():
                 entities.append(DeconzGroup(group, gateway))
 
         async_add_entities(entities, True)

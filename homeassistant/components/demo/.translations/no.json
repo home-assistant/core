@@ -1,5 +1,22 @@
 {
     "config": {
         "title": "Demo"
+    },
+    "options": {
+        "step": {
+            "options_1": {
+                "data": {
+                    "bool": "Valgfri boolean",
+                    "int": "Numerisk inndata"
+                }
+            },
+            "options_2": {
+                "data": {
+                    "multi": "Flervalg",
+                    "select": "Velg et alternativ",
+                    "string": "Strengverdi"
+                }
+            }
+        }
     }
 }

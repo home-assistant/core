@@ -1,9 +1,4 @@
-"""
-Patch functions for Zigbee Home Automation.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/integrations/zha/
-"""
+"""Patch functions for Zigbee Home Automation."""
 
 
 def apply_application_controller_patch(zha_gateway):
