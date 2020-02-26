@@ -77,7 +77,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
             data={
                 CONF_EMAIL: conf[CONF_EMAIL],
                 CONF_PASSWORD: conf[CONF_PASSWORD],
-                CONF_TIMEOUT: conf.get[CONF_TIMEOUT],
+                CONF_TIMEOUT: conf[CONF_TIMEOUT],
             },
         )
     )
