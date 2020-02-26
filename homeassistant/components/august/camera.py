@@ -34,6 +34,7 @@ class AugustCamera(Camera):
         self._image_url = None
         self._image_content = None
         self._firmware_version = None
+        self._model = None
 
     @property
     def name(self):
@@ -58,7 +59,7 @@ class AugustCamera(Camera):
     @property
     def model(self):
         """Return the camera model."""
-        return "Doorbell"
+        return self._model
 
     async def async_camera_image(self):
         """Return bytes of camera image."""
@@ -85,6 +86,7 @@ class AugustCamera(Camera):
             return None
 
         self._firmware_version = self._doorbell_detail.firmware_version
+        self._model = self._doorbell_detail.model
 
     def _camera_image(self):
         """Return bytes of camera image via http get."""
@@ -104,4 +106,5 @@ class AugustCamera(Camera):
             "name": self._doorbell.device_name + " Camera",
             "manufacturer": DEFAULT_NAME,
             "sw_version": self._firmware_version,
+            "model": self._model,
         }

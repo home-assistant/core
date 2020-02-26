@@ -17,6 +17,21 @@ from tests.components.august.mocks import (
 )
 
 
+async def test_lock_device_registry(hass):
+    """Test creation of a lock with doorsense and bridge ands up in the registry."""
+    lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
+    lock_details = [lock_one]
+    await _create_august_with_devices(hass, lock_details)
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+
+    reg_device = device_registry.async_get_device(
+        identifiers={("august", "online_with_doorsense")}, connections=set()
+    )
+    assert "AUG-MD01" == reg_device.model
+    assert "undefined-4.3.0-1.8.14" == reg_device.sw_version
+
+
 async def test_one_lock_operation(hass):
     """Test creation of a lock with doorsense and bridge."""
     lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
