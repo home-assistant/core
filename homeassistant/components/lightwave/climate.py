@@ -69,9 +69,9 @@ class LightwaveTrv(ClimateDevice):
         """Communicate with a Lightwave RTF Proxy to get state."""
         targ = temp = battery = trv_output = None
         (temp, targ, battery, trv_output) = self._lwlink.read_trv_status(self._serial)
-        if temp:
+        if temp is not None:
             self._current_temperature = temp
-        if targ:
+        if targ is not None:
             if self._inhibit == 0:
                 self._target_temperature = targ
                 if targ == 0:
@@ -83,9 +83,9 @@ class LightwaveTrv(ClimateDevice):
             else:
                 # Done the job - use proxy next iteration
                 self._inhibit = 0
-        if battery:
+        if battery is not None:
             self._battery = battery
-        if trv_output:
+        if trv_output is not None:
             if trv_output > 0:
                 self._hvac_action = CURRENT_HVAC_HEAT
             else:
