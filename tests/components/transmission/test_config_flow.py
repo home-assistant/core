@@ -80,7 +80,7 @@ def init_config_flow(hass):
     return flow
 
 
-async def test_flow_works(hass, api):
+async def test_flow_user_config(hass, api):
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
         transmission.DOMAIN, context={"source": "user"}
@@ -88,7 +88,9 @@ async def test_flow_works(hass, api):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
-    # test with required fields only
+
+async def test_flow_required_fields(hass, api):
+    """ Test with required fields only."""
     result = await hass.config_entries.flow.async_init(
         transmission.DOMAIN,
         context={"source": "user"},
@@ -101,13 +103,20 @@ async def test_flow_works(hass, api):
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == PORT
 
-    # test with all provided
+
+async def test_flow_all_provided(hass, api):
+    """ Test with all provided."""
     result = await hass.config_entries.flow.async_init(
         transmission.DOMAIN, context={"source": "user"}, data=MOCK_ENTRY
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == NAME
+    assert result["data"][CONF_NAME] == NAME
+    assert result["data"][CONF_HOST] == HOST
+    assert result["data"][CONF_USERNAME] == USERNAME
+    assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_PORT] == PORT
 
 
 async def test_options(hass):
