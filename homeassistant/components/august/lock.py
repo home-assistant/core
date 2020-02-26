@@ -67,9 +67,7 @@ class AugustLock(LockDevice):
 
         if detail is not None:
             lock_status = detail.lock_status
-            self._available = (
-                lock_status is not None and lock_status != LockStatus.UNKNOWN
-            )
+            self._available = detail.bridge_is_online
 
         if self._lock_status != lock_status:
             self._lock_status = lock_status
