@@ -70,20 +70,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         mac = api.iammeter.mac
         serial_number = api.iammeter.serial_number
         uid = f"{mac}-{serial_number}-{row}-{idx}"
-        devices.append(
-            IamMeter(coordinator, uid, serial_number, sensor_name, unit, config_name)
-        )
+        devices.append(IamMeter(coordinator, uid, sensor_name, unit, config_name))
     async_add_entities(devices)
 
 
 class IamMeter(Entity):
     """Class for a sensor."""
 
-    def __init__(self, coordinator, uid, serial, sensor_name, unit, dev_name):
+    def __init__(self, coordinator, uid, sensor_name, unit, dev_name):
         """Initialize an iammeter sensor."""
         self.coordinator = coordinator
         self.uid = uid
-        self.serial = serial
         self.sensor_name = sensor_name
         self.unit = unit
         self.dev_name = dev_name
