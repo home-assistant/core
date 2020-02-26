@@ -16,7 +16,6 @@ ICON = "mdi:flash"
 
 PRODUCTION_NAME = "Production"
 
-DEVICE_ID_SOLAR = "solar"
 MDI_ICONS = {
     "ac": "air-conditioner",
     "aquarium": "fish",

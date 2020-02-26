@@ -14,7 +14,6 @@ from .const import (
     ACTIVE_NAME,
     ACTIVE_TYPE,
     CONSUMPTION_NAME,
-    DEVICE_ID_SOLAR,
     DOMAIN,
     ICON,
     MDI_ICONS,
@@ -22,6 +21,7 @@ from .const import (
     SENSE_DATA,
     SENSE_DEVICE_UPDATE,
     SENSE_DEVICES_DATA,
+    SENSE_DISCOVERED_DEVICES_DATA,
 )
 
 MIN_TIME_BETWEEN_DAILY_UPDATES = timedelta(seconds=300)
@@ -70,14 +70,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         await data.update_trend_data()
 
     sense_monitor_id = data.sense_monitor_id
-    sense_devices = await data.get_discovered_device_data()
+    sense_devices = hass.data[DOMAIN][config_entry.entry_id][
+        SENSE_DISCOVERED_DEVICES_DATA
+    ]
     await data.update_trend_data()
 
     devices = [
-        SenseDevice(sense_devices_data, device, sense_monitor_id)
+        SenseEnergyDevice(sense_devices_data, device, sense_monitor_id)
         for device in sense_devices
-        if device["id"] == DEVICE_ID_SOLAR
-        or device["tags"]["DeviceListAllowed"] == "true"
+        if device["tags"]["DeviceListAllowed"] == "true"
     ]
 
     for var in SENSOR_VARIANTS:
@@ -138,6 +139,7 @@ class SenseActiveSensor(Entity):
         self._sensor_type = sensor_type
         self._is_production = is_production
         self._state = None
+        self._undo_dispatch_subscription = None
 
     @property
     def name(self):
@@ -266,7 +268,7 @@ class SenseTrendsSensor(Entity):
         self._available = True
 
 
-class SenseDevice(Entity):
+class SenseEnergyDevice(Entity):
     """Implementation of a Sense energy device."""
 
     def __init__(self, sense_devices_data, device, sense_monitor_id):
@@ -275,10 +277,11 @@ class SenseDevice(Entity):
         self._id = device["id"]
         self._available = False
         self._sense_monitor_id = sense_monitor_id
-        self._unique_id = f"{sense_monitor_id}-{self._id}"
+        self._unique_id = f"{sense_monitor_id}-{self._id}-energy"
         self._icon = sense_to_mdi(device["icon"])
         self._sense_devices_data = sense_devices_data
         self._undo_dispatch_subscription = None
+        self._state = None
 
     @property
     def state(self):

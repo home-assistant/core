@@ -25,11 +25,12 @@ from .const import (
     SENSE_DATA,
     SENSE_DEVICE_UPDATE,
     SENSE_DEVICES_DATA,
+    SENSE_DISCOVERED_DEVICES_DATA,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = ["binary_sensor", "sensor"]
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -103,9 +104,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         raise ConfigEntryNotReady
 
     sense_devices_data = SenseDevicesData()
+    sense_discovered_devices = await gateway.get_discovered_device_data()
+
     hass.data[DOMAIN][entry.entry_id] = {
         SENSE_DATA: gateway,
         SENSE_DEVICES_DATA: sense_devices_data,
+        SENSE_DISCOVERED_DEVICES_DATA: sense_discovered_devices,
     }
 
     for component in PLATFORMS:
