@@ -96,7 +96,6 @@ class AugustBatterySensor(Entity):
 
     def __init__(self, data, sensor_type, device):
         """Initialize the sensor."""
-        self._undo_dispatch_subscription = None
         self._data = data
         self._sensor_type = sensor_type
         self._device = device
