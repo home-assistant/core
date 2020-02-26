@@ -107,11 +107,7 @@ async def test_flow_works(hass, api):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["data"][CONF_NAME] == NAME
-    assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_USERNAME] == USERNAME
-    assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_PORT] == PORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_options(hass):
@@ -183,10 +179,7 @@ async def test_host_already_configured(hass, api):
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        transmission.DOMAIN, context={"source": "user"}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_ENTRY
+        transmission.DOMAIN, context={"source": "user"}, data=MOCK_ENTRY
     )
 
     assert result["type"] == "abort"
@@ -205,10 +198,7 @@ async def test_name_already_configured(hass, api):
     mock_entry = MOCK_ENTRY.copy()
     mock_entry[CONF_HOST] = "0.0.0.0"
     result = await hass.config_entries.flow.async_init(
-        transmission.DOMAIN, context={"source": "user"}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=mock_entry
+        transmission.DOMAIN, context={"source": "user"}, data=mock_entry
     )
 
     assert result["type"] == "form"
