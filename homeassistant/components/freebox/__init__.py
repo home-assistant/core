@@ -28,7 +28,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass, config):
-    """Set up the Freebox component from legacy config file."""
+    """Set up the Freebox component."""
     conf = config.get(DOMAIN)
 
     async def discovery_dispatch(service, discovery_info):

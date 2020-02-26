@@ -33,7 +33,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 class FreeboxRouter:
     """Representation of a Freebox router."""
 
-    def __init__(self, hass: HomeAssistantType, entry: ConfigEntry):
+    def __init__(self, hass: HomeAssistantType, entry: ConfigEntry) -> None:
         """Initialize a Freebox router."""
         self.hass = hass
         self._entry = entry
