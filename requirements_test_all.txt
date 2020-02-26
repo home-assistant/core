@@ -257,7 +257,7 @@ hole==0.5.0
 holidays==0.10.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200220.1
+home-assistant-frontend==20200220.3
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.8
@@ -618,6 +618,9 @@ rxv==0.6.0
 
 # homeassistant.components.samsungtv
 samsungctl[websocket]==0.7.1
+
+# homeassistant.components.sense
+sense_energy==0.7.0
 
 # homeassistant.components.sentry
 sentry-sdk==0.13.5

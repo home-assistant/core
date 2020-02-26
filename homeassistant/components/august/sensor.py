@@ -7,12 +7,16 @@ from homeassistant.helpers.entity import Entity
 
 from .const import DATA_AUGUST, DEFAULT_NAME, DOMAIN
 
+BATTERY_LEVEL_FULL = "Full"
+BATTERY_LEVEL_MEDIUM = "Medium"
+BATTERY_LEVEL_LOW = "Low"
+
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
 
-async def _async_retrieve_device_battery_state(detail):
+def _retrieve_device_battery_state(detail):
     """Get the latest state of the sensor."""
     if detail is None:
         return None
@@ -20,7 +24,7 @@ async def _async_retrieve_device_battery_state(detail):
     return detail.battery_level
 
 
-async def _async_retrieve_linked_keypad_battery_state(detail):
+def _retrieve_linked_keypad_battery_state(detail):
     """Get the latest state of the sensor."""
     if detail is None:
         return None
@@ -30,13 +34,11 @@ async def _async_retrieve_linked_keypad_battery_state(detail):
 
     battery_level = detail.keypad.battery_level
 
-    _LOGGER.debug("keypad battery level: %s %s", battery_level, battery_level.lower())
-
-    if battery_level.lower() == "full":
+    if battery_level == BATTERY_LEVEL_FULL:
         return 100
-    if battery_level.lower() == "medium":
+    if battery_level == BATTERY_LEVEL_MEDIUM:
         return 60
-    if battery_level.lower() == "low":
+    if battery_level == BATTERY_LEVEL_LOW:
         return 10
 
     return 0
@@ -45,11 +47,11 @@ async def _async_retrieve_linked_keypad_battery_state(detail):
 SENSOR_TYPES_BATTERY = {
     "device_battery": {
         "name": "Battery",
-        "async_state_provider": _async_retrieve_device_battery_state,
+        "state_provider": _retrieve_device_battery_state,
     },
     "linked_keypad_battery": {
         "name": "Keypad Battery",
-        "async_state_provider": _async_retrieve_linked_keypad_battery_state,
+        "state_provider": _retrieve_linked_keypad_battery_state,
     },
 }
 
@@ -71,11 +73,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     for sensor_type in SENSOR_TYPES_BATTERY:
         for device in batteries[sensor_type]:
-            async_state_provider = SENSOR_TYPES_BATTERY[sensor_type][
-                "async_state_provider"
-            ]
+            state_provider = SENSOR_TYPES_BATTERY[sensor_type]["state_provider"]
             detail = await data.async_get_device_detail(device)
-            state = await async_state_provider(detail)
+            state = state_provider(detail)
             sensor_name = SENSOR_TYPES_BATTERY[sensor_type]["name"]
             if state is None:
                 _LOGGER.debug(
@@ -103,6 +103,7 @@ class AugustBatterySensor(Entity):
         self._state = None
         self._available = False
         self._firmware_version = None
+        self._model = None
 
     @property
     def available(self):
@@ -133,14 +134,13 @@ class AugustBatterySensor(Entity):
 
     async def async_update(self):
         """Get the latest state of the sensor."""
-        async_state_provider = SENSOR_TYPES_BATTERY[self._sensor_type][
-            "async_state_provider"
-        ]
+        state_provider = SENSOR_TYPES_BATTERY[self._sensor_type]["state_provider"]
         detail = await self._data.async_get_device_detail(self._device)
-        self._state = await async_state_provider(detail)
+        self._state = state_provider(detail)
         self._available = self._state is not None
         if detail is not None:
             self._firmware_version = detail.firmware_version
+            self._model = detail.model
 
     @property
     def unique_id(self) -> str:
@@ -155,4 +155,5 @@ class AugustBatterySensor(Entity):
             "name": self._device.device_name,
             "manufacturer": DEFAULT_NAME,
             "sw_version": self._firmware_version,
+            "model": self._model,
         }

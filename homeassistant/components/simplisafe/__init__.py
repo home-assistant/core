@@ -6,6 +6,8 @@ from simplipy import API
 from simplipy.errors import InvalidCredentialsError, SimplipyError
 from simplipy.websocket import (
     EVENT_CAMERA_MOTION_DETECTED,
+    EVENT_CONNECTION_LOST,
+    EVENT_CONNECTION_RESTORED,
     EVENT_DOORBELL_DETECTED,
     EVENT_ENTRY_DETECTED,
     EVENT_LOCK_LOCKED,
@@ -528,7 +530,10 @@ class SimpliSafeEntity(Entity):
         self._online = True
         self._simplisafe = simplisafe
         self._system = system
-        self.websocket_events_to_listen_for = []
+        self.websocket_events_to_listen_for = [
+            EVENT_CONNECTION_LOST,
+            EVENT_CONNECTION_RESTORED,
+        ]
 
         if serial:
             self._serial = serial
@@ -655,12 +660,31 @@ class SimpliSafeEntity(Entity):
                 ATTR_LAST_EVENT_TIMESTAMP: last_websocket_event.timestamp,
             }
         )
-        self.async_update_from_websocket_event(last_websocket_event)
+        self._async_internal_update_from_websocket_event(last_websocket_event)
 
     @callback
     def async_update_from_rest_api(self):
         """Update the entity with the provided REST API data."""
         pass
+
+    @callback
+    def _async_internal_update_from_websocket_event(self, event):
+        """Check for connection events and set offline appropriately.
+
+        Should not be called directly.
+        """
+        if event.event_type == EVENT_CONNECTION_LOST:
+            self._online = False
+        elif event.event_type == EVENT_CONNECTION_RESTORED:
+            self._online = True
+
+        # It's uncertain whether SimpliSafe events will still propagate down the
+        # websocket when the base station is offline. Just in case, we guard against
+        # further action until connection is restored:
+        if not self._online:
+            return
+
+        self.async_update_from_websocket_event(event)
 
     @callback
     def async_update_from_websocket_event(self, event):

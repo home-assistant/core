@@ -104,6 +104,7 @@ class AugustDoorBinarySensor(BinarySensorDevice):
         self._state = None
         self._available = False
         self._firmware_version = None
+        self._model = None
 
     @property
     def available(self):
@@ -141,6 +142,7 @@ class AugustDoorBinarySensor(BinarySensorDevice):
             lock_door_state = detail.door_state
             self._available = detail.bridge_is_online
             self._firmware_version = detail.firmware_version
+            self._model = detail.model
 
         self._state = lock_door_state == LockDoorStatus.OPEN
 
@@ -157,6 +159,7 @@ class AugustDoorBinarySensor(BinarySensorDevice):
             "name": self._door.device_name,
             "manufacturer": DEFAULT_NAME,
             "sw_version": self._firmware_version,
+            "model": self._model,
         }
 
 
@@ -171,6 +174,7 @@ class AugustDoorbellBinarySensor(BinarySensorDevice):
         self._state = None
         self._available = False
         self._firmware_version = None
+        self._model = None
 
     @property
     def available(self):
@@ -211,6 +215,7 @@ class AugustDoorbellBinarySensor(BinarySensorDevice):
         self._state = None
         if detail is not None:
             self._firmware_version = detail.firmware_version
+            self._model = detail.model
             self._state = await async_state_provider(self._data, detail)
 
     @property
@@ -229,4 +234,5 @@ class AugustDoorbellBinarySensor(BinarySensorDevice):
             "name": self._doorbell.device_name,
             "manufacturer": "August",
             "sw_version": self._firmware_version,
+            "model": self._model,
         }
