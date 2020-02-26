@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_STATE,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_START,
+    TIME_HOURS,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
@@ -35,7 +36,7 @@ CONF_TYPE_COUNT = "count"
 CONF_TYPE_KEYS = [CONF_TYPE_TIME, CONF_TYPE_RATIO, CONF_TYPE_COUNT]
 
 DEFAULT_NAME = "unnamed statistics"
-UNITS = {CONF_TYPE_TIME: "h", CONF_TYPE_RATIO: "%", CONF_TYPE_COUNT: ""}
+UNITS = {CONF_TYPE_TIME: TIME_HOURS, CONF_TYPE_RATIO: "%", CONF_TYPE_COUNT: ""}
 ICON = "mdi:chart-line"
 
 ATTR_VALUE = "value"

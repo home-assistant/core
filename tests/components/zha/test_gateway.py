@@ -1,29 +1,39 @@
 """Test ZHA Gateway."""
+import pytest
 import zigpy.zcl.clusters.general as general
 
-import homeassistant.components.zha.core.const as zha_const
-
-from .common import async_enable_traffic, async_init_zigpy_device
+from .common import async_enable_traffic, get_zha_gateway
 
 
-async def test_device_left(hass, config_entry, zha_gateway):
-    """Test zha fan platform."""
-
-    # create zigpy device
-    zigpy_device = await async_init_zigpy_device(
-        hass, [general.Basic.cluster_id], [], None, zha_gateway
+@pytest.fixture
+def zigpy_dev_basic(zigpy_device_mock):
+    """Zigpy device with just a basic cluster."""
+    return zigpy_device_mock(
+        {
+            1: {
+                "in_clusters": [general.Basic.cluster_id],
+                "out_clusters": [],
+                "device_type": 0,
+            }
+        },
     )
 
-    # load up fan domain
-    await hass.config_entries.async_forward_entry_setup(config_entry, zha_const.SENSOR)
-    await hass.async_block_till_done()
 
-    zha_device = zha_gateway.get_device(zigpy_device.ieee)
+@pytest.fixture
+async def zha_dev_basic(hass, zha_device_restored, zigpy_dev_basic):
+    """ZHA device with just a basic cluster."""
 
-    assert zha_device.available is False
+    zha_device = await zha_device_restored(zigpy_dev_basic)
+    return zha_device
 
-    await async_enable_traffic(hass, zha_gateway, [zha_device])
-    assert zha_device.available is True
 
-    zha_gateway.device_left(zigpy_device)
-    assert zha_device.available is False
+async def test_device_left(hass, zigpy_dev_basic, zha_dev_basic):
+    """Device leaving the network should become unavailable."""
+
+    assert zha_dev_basic.available is False
+
+    await async_enable_traffic(hass, [zha_dev_basic])
+    assert zha_dev_basic.available is True
+
+    get_zha_gateway(hass).device_left(zigpy_dev_basic)
+    assert zha_dev_basic.available is False

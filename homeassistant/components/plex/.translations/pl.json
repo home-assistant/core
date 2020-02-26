@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "all_configured": "Wszystkie znalezione serwery s\u0105 ju\u017c skonfigurowane.",
-            "already_configured": "Serwer Plex jest ju\u017c skonfigurowany",
+            "already_configured": "Ten serwer Plex jest ju\u017c skonfigurowany.",
             "already_in_progress": "Plex jest konfigurowany",
             "discovery_no_file": "Nie znaleziono pliku konfiguracyjnego",
             "invalid_import": "Zaimportowana konfiguracja jest nieprawid\u0142owa",
@@ -53,6 +53,8 @@
         "step": {
             "plex_mp_settings": {
                 "data": {
+                    "ignore_new_shared_users": "Ignoruj nowych zarz\u0105dzanych/wsp\u00f3\u0142dzielonych u\u017cytkownik\u00f3w",
+                    "monitored_users": "Monitorowani u\u017cytkownicy",
                     "show_all_controls": "Poka\u017c wszystkie elementy steruj\u0105ce",
                     "use_episode_art": "U\u017cyj grafiki odcinka"
                 },

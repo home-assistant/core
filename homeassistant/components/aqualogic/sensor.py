@@ -70,7 +70,7 @@ class AquaLogicSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "AquaLogic {}".format(SENSOR_TYPES[self._type][0])
+        return f"AquaLogic {SENSOR_TYPES[self._type][0]}"
 
     @property
     def unit_of_measurement(self):

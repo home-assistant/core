@@ -1,5 +1,28 @@
 {
     "config": {
         "title": "Demo"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "one": "uno",
+                    "other": "altro"
+                }
+            },
+            "options_1": {
+                "data": {
+                    "bool": "Valore booleano facoltativo",
+                    "int": "Input numerico"
+                }
+            },
+            "options_2": {
+                "data": {
+                    "multi": "Selezione multipla",
+                    "select": "Selezionare un'opzione",
+                    "string": "Valore stringa"
+                }
+            }
+        }
     }
 }

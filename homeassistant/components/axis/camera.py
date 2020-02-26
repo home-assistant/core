@@ -21,10 +21,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .axis_base import AxisEntityBase
 from .const import DOMAIN as AXIS_DOMAIN
 
-AXIS_IMAGE = "http://{}:{}/axis-cgi/jpg/image.cgi"
-AXIS_VIDEO = "http://{}:{}/axis-cgi/mjpg/video.cgi"
-AXIS_STREAM = "rtsp://{}:{}@{}/axis-media/media.amp?videocodec=h264"
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Axis camera video stream."""
@@ -36,11 +32,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         CONF_NAME: config_entry.data[CONF_NAME],
         CONF_USERNAME: config_entry.data[CONF_USERNAME],
         CONF_PASSWORD: config_entry.data[CONF_PASSWORD],
-        CONF_MJPEG_URL: AXIS_VIDEO.format(
-            config_entry.data[CONF_HOST], config_entry.data[CONF_PORT],
+        CONF_MJPEG_URL: (
+            f"http://{config_entry.data[CONF_HOST]}"
+            f":{config_entry.data[CONF_PORT]}/axis-cgi/mjpg/video.cgi"
         ),
-        CONF_STILL_IMAGE_URL: AXIS_IMAGE.format(
-            config_entry.data[CONF_HOST], config_entry.data[CONF_PORT],
+        CONF_STILL_IMAGE_URL: (
+            f"http://{config_entry.data[CONF_HOST]}"
+            f":{config_entry.data[CONF_PORT]}/axis-cgi/jpg/image.cgi"
         ),
         CONF_AUTHENTICATION: HTTP_DIGEST_AUTHENTICATION,
     }
@@ -72,17 +70,19 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
 
     async def stream_source(self):
         """Return the stream source."""
-        return AXIS_STREAM.format(
-            self.device.config_entry.data[CONF_USERNAME],
-            self.device.config_entry.data[CONF_PASSWORD],
-            self.device.host,
+        return (
+            f"rtsp://{self.device.config_entry.data[CONF_USERNAME]}´"
+            f":{self.device.config_entry.data[CONF_PASSWORD]}"
+            f"@{self.device.host}/axis-media/media.amp?videocodec=h264"
         )
 
     def _new_address(self):
         """Set new device address for video stream."""
         port = self.device.config_entry.data[CONF_PORT]
-        self._mjpeg_url = AXIS_VIDEO.format(self.device.host, port)
-        self._still_image_url = AXIS_IMAGE.format(self.device.host, port)
+        self._mjpeg_url = (f"http://{self.device.host}:{port}/axis-cgi/mjpg/video.cgi",)
+        self._still_image_url = (
+            f"http://{self.device.host}:{port}/axis-cgi/jpg/image.cgi"
+        )
 
     @property
     def unique_id(self):

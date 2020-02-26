@@ -1,8 +1,9 @@
 """Support for Homekit device discovery."""
 import logging
+import os
 
-import homekit
-from homekit.model.characteristics import CharacteristicsTypes
+import aiohomekit
+from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -94,7 +95,8 @@ class HomeKitEntity(Entity):
     def _setup_characteristic(self, char):
         """Configure an entity based on a HomeKit characteristics metadata."""
         # Build up a list of (aid, iid) tuples to poll on update()
-        self.pollable_characteristics.append((self._aid, char["iid"]))
+        if "pr" in char["perms"]:
+            self.pollable_characteristics.append((self._aid, char["iid"]))
 
         # Build a map of ctype -> iid
         short_name = CharacteristicsTypes.get_short(char["type"])
@@ -223,8 +225,18 @@ async def async_setup(hass, config):
     map_storage = hass.data[ENTITY_MAP] = EntityMapStorage(hass)
     await map_storage.async_initialize()
 
-    hass.data[CONTROLLER] = homekit.Controller()
+    hass.data[CONTROLLER] = aiohomekit.Controller()
     hass.data[KNOWN_DEVICES] = {}
+
+    dothomekit_dir = hass.config.path(".homekit")
+    if os.path.exists(dothomekit_dir):
+        _LOGGER.warning(
+            (
+                "Legacy homekit_controller state found in %s. Support for reading "
+                "the folder is deprecated and will be removed in 0.109.0."
+            ),
+            dothomekit_dir,
+        )
 
     return True
 

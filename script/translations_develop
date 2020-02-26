@@ -1,21 +1,81 @@
-#!/usr/bin/env bash
+#!/usr/bin/env python
 
 # Compile the current translation strings files for testing
 
-# Safe bash settings
-# -e            Exit on command fail
-# -u            Exit on unset variable
-# -o pipefail   Exit if piped command has error code
-set -eu -o pipefail
+import argparse
+import json
+import os
+from pathlib import Path
+from shutil import rmtree
+import subprocess
+import sys
 
-cd "$(dirname "$0")/.."
 
-mkdir -p build/translations-download
+def valid_integration(integration):
+    """Test if it's a valid integration."""
+    if not Path(f"homeassistant/components/{integration}").exists():
+        raise argparse.ArgumentTypeError(
+            f"The integration {integration} does not exist."
+        )
 
-script/translations_upload_merge.py
+    return integration
 
-# Use the generated translations upload file as the mock output from the
-# Lokalise download
-mv build/translations-upload.json build/translations-download/en.json
 
-script/translations_download_split.py
+def get_arguments() -> argparse.Namespace:
+    """Get parsed passed in arguments."""
+    parser = argparse.ArgumentParser(description="Develop Translations")
+    parser.add_argument(
+        "--integration", type=valid_integration, help="Integration to process."
+    )
+
+    arguments = parser.parse_args()
+
+    return arguments
+
+
+def main():
+    """Run the script."""
+    if not os.path.isfile("requirements_all.txt"):
+        print("Run this from HA root dir")
+        return
+
+    args = get_arguments()
+    if args.integration:
+        integration = args.integration
+    else:
+        integration = None
+        while (
+            integration is None
+            or not Path(f"homeassistant/components/{integration}").exists()
+        ):
+            if integration is not None:
+                print(f"Integration {integration} doesn't exist!")
+                print()
+            integration = input("Integration to process: ")
+
+    download_dir = Path("build/translations-download")
+
+    if download_dir.is_dir():
+        rmtree(str(download_dir))
+
+    download_dir.mkdir(parents=True)
+
+    subprocess.run("script/translations_upload_merge.py")
+
+    raw_data = json.loads(Path("build/translations-upload.json").read_text())
+
+    if integration not in raw_data["component"]:
+        print("Integration has no strings.json")
+        sys.exit(1)
+
+    Path("build/translations-download/en.json").write_text(
+        json.dumps({"component": {integration: raw_data["component"][integration]}})
+    )
+
+    subprocess.run(
+        ["script/translations_download_split.py", "--integration", "{integration}"]
+    )
+
+
+if __name__ == "__main__":
+    main()

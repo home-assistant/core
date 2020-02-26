@@ -13,6 +13,7 @@ from withings_api.common import (
 )
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import MASS_KILOGRAMS, SPEED_METERS_PER_SECOND, TIME_SECONDS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.entity import Entity
@@ -86,35 +87,35 @@ WITHINGS_ATTRIBUTES = [
         const.MEAS_WEIGHT_KG,
         MeasureType.WEIGHT,
         "Weight",
-        const.UOM_MASS_KG,
+        MASS_KILOGRAMS,
         "mdi:weight-kilogram",
     ),
     WithingsMeasureAttribute(
         const.MEAS_FAT_MASS_KG,
         MeasureType.FAT_MASS_WEIGHT,
         "Fat Mass",
-        const.UOM_MASS_KG,
+        MASS_KILOGRAMS,
         "mdi:weight-kilogram",
     ),
     WithingsMeasureAttribute(
         const.MEAS_FAT_FREE_MASS_KG,
         MeasureType.FAT_FREE_MASS,
         "Fat Free Mass",
-        const.UOM_MASS_KG,
+        MASS_KILOGRAMS,
         "mdi:weight-kilogram",
     ),
     WithingsMeasureAttribute(
         const.MEAS_MUSCLE_MASS_KG,
         MeasureType.MUSCLE_MASS,
         "Muscle Mass",
-        const.UOM_MASS_KG,
+        MASS_KILOGRAMS,
         "mdi:weight-kilogram",
     ),
     WithingsMeasureAttribute(
         const.MEAS_BONE_MASS_KG,
         MeasureType.BONE_MASS,
         "Bone Mass",
-        const.UOM_MASS_KG,
+        MASS_KILOGRAMS,
         "mdi:weight-kilogram",
     ),
     WithingsMeasureAttribute(
@@ -187,7 +188,7 @@ WITHINGS_ATTRIBUTES = [
         const.MEAS_PWV,
         MeasureType.PULSE_WAVE_VELOCITY,
         "Pulse Wave Velocity",
-        const.UOM_METERS_PER_SECOND,
+        SPEED_METERS_PER_SECOND,
         None,
     ),
     WithingsSleepStateAttribute(
@@ -197,28 +198,28 @@ WITHINGS_ATTRIBUTES = [
         const.MEAS_SLEEP_WAKEUP_DURATION_SECONDS,
         GetSleepSummaryField.WAKEUP_DURATION.value,
         "Wakeup time",
-        const.UOM_SECONDS,
+        TIME_SECONDS,
         "mdi:sleep-off",
     ),
     WithingsSleepSummaryAttribute(
         const.MEAS_SLEEP_LIGHT_DURATION_SECONDS,
         GetSleepSummaryField.LIGHT_SLEEP_DURATION.value,
         "Light sleep",
-        const.UOM_SECONDS,
+        TIME_SECONDS,
         "mdi:sleep",
     ),
     WithingsSleepSummaryAttribute(
         const.MEAS_SLEEP_DEEP_DURATION_SECONDS,
         GetSleepSummaryField.DEEP_SLEEP_DURATION.value,
         "Deep sleep",
-        const.UOM_SECONDS,
+        TIME_SECONDS,
         "mdi:sleep",
     ),
     WithingsSleepSummaryAttribute(
         const.MEAS_SLEEP_REM_DURATION_SECONDS,
         GetSleepSummaryField.REM_SLEEP_DURATION.value,
         "REM sleep",
-        const.UOM_SECONDS,
+        TIME_SECONDS,
         "mdi:sleep",
     ),
     WithingsSleepSummaryAttribute(
@@ -232,14 +233,14 @@ WITHINGS_ATTRIBUTES = [
         const.MEAS_SLEEP_TOSLEEP_DURATION_SECONDS,
         GetSleepSummaryField.DURATION_TO_SLEEP.value,
         "Time to sleep",
-        const.UOM_SECONDS,
+        TIME_SECONDS,
         "mdi:sleep",
     ),
     WithingsSleepSummaryAttribute(
         const.MEAS_SLEEP_TOWAKEUP_DURATION_SECONDS,
         GetSleepSummaryField.DURATION_TO_WAKEUP.value,
         "Time to wakeup",
-        const.UOM_SECONDS,
+        TIME_SECONDS,
         "mdi:sleep-off",
     ),
     WithingsSleepSummaryAttribute(

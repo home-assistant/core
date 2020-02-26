@@ -57,7 +57,9 @@ async def websocket_get_entity(hass, connection, msg):
         )
         return
 
-    connection.send_message(websocket_api.result_message(msg["id"], _entry_dict(entry)))
+    connection.send_message(
+        websocket_api.result_message(msg["id"], _entry_ext_dict(entry))
+    )
 
 
 @require_admin
@@ -68,6 +70,7 @@ async def websocket_get_entity(hass, connection, msg):
         vol.Required("entity_id"): cv.entity_id,
         # If passed in, we update value. Passing None will remove old value.
         vol.Optional("name"): vol.Any(str, None),
+        vol.Optional("icon"): vol.Any(str, None),
         vol.Optional("new_entity_id"): str,
         # We only allow setting disabled_by user via API.
         vol.Optional("disabled_by"): vol.Any("user", None),
@@ -88,11 +91,9 @@ async def websocket_update_entity(hass, connection, msg):
 
     changes = {}
 
-    if "name" in msg:
-        changes["name"] = msg["name"]
-
-    if "disabled_by" in msg:
-        changes["disabled_by"] = msg["disabled_by"]
+    for key in ("name", "icon", "disabled_by"):
+        if key in msg:
+            changes[key] = msg[key]
 
     if "new_entity_id" in msg and msg["new_entity_id"] != msg["entity_id"]:
         changes["new_entity_id"] = msg["new_entity_id"]
@@ -113,7 +114,7 @@ async def websocket_update_entity(hass, connection, msg):
         )
     else:
         connection.send_message(
-            websocket_api.result_message(msg["id"], _entry_dict(entry))
+            websocket_api.result_message(msg["id"], _entry_ext_dict(entry))
         )
 
 
@@ -151,5 +152,17 @@ def _entry_dict(entry):
         "disabled_by": entry.disabled_by,
         "entity_id": entry.entity_id,
         "name": entry.name,
+        "icon": entry.icon,
         "platform": entry.platform,
     }
+
+
+@callback
+def _entry_ext_dict(entry):
+    """Convert entry to API format."""
+    data = _entry_dict(entry)
+    data["original_name"] = entry.original_name
+    data["original_icon"] = entry.original_icon
+    data["unique_id"] = entry.unique_id
+    data["capabilities"] = entry.capabilities
+    return data

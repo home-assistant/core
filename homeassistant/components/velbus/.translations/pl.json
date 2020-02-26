@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "port_exists": "Ten port jest ju\u017c skonfigurowany"
+            "port_exists": "Ten port jest ju\u017c skonfigurowany."
         },
         "error": {
             "connection_failed": "Po\u0142\u0105czenie Velbus nie powiod\u0142o si\u0119",
-            "port_exists": "Ten port jest ju\u017c skonfigurowany"
+            "port_exists": "Ten port jest ju\u017c skonfigurowany."
         },
         "step": {
             "user": {

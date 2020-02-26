@@ -6,7 +6,8 @@ https://github.com/home-assistant/home-assistant/issues/15336
 
 from unittest import mock
 
-from homekit import AccessoryDisconnectedError
+from aiohomekit import AccessoryDisconnectedError
+from aiohomekit.testing import FakePairing
 
 from homeassistant.components.climate.const import (
     SUPPORT_TARGET_HUMIDITY,
@@ -15,7 +16,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
 
 from tests.components.homekit_controller.common import (
-    FakePairing,
     Helper,
     device_config_changed,
     setup_accessories_from_file,

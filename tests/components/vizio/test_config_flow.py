@@ -25,8 +25,8 @@ from .const import (
     HOST,
     HOST2,
     MOCK_IMPORT_VALID_TV_CONFIG,
-    MOCK_INVALID_TV_CONFIG,
     MOCK_SPEAKER_CONFIG,
+    MOCK_TV_CONFIG_NO_TOKEN,
     MOCK_USER_VALID_TV_CONFIG,
     MOCK_ZEROCONF_SERVICE_INFO,
     NAME,
@@ -219,7 +219,7 @@ async def test_user_error_on_tv_needs_token(
 ) -> None:
     """Test when config fails custom validation for non null access token when device_class = tv during user setup."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_INVALID_TV_CONFIG
+        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_TV_CONFIG_NO_TOKEN
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -300,15 +300,15 @@ async def test_import_flow_update_options(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
-        data=vol.Schema(VIZIO_SCHEMA)(MOCK_IMPORT_VALID_TV_CONFIG),
+        data=vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_CONFIG),
     )
     await hass.async_block_till_done()
 
-    assert result["result"].options == {CONF_VOLUME_STEP: VOLUME_STEP}
+    assert result["result"].options == {CONF_VOLUME_STEP: DEFAULT_VOLUME_STEP}
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     entry_id = result["result"].entry_id
 
-    updated_config = MOCK_IMPORT_VALID_TV_CONFIG.copy()
+    updated_config = MOCK_SPEAKER_CONFIG.copy()
     updated_config[CONF_VOLUME_STEP] = VOLUME_STEP + 1
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -405,3 +405,29 @@ async def test_zeroconf_flow_already_configured(
     # Flow should abort because device is already setup
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_setup"
+
+
+async def test_zeroconf_dupe_fail(
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_bypass_setup: pytest.fixture,
+    vizio_guess_device_type: pytest.fixture,
+) -> None:
+    """Test zeroconf config flow when device gets discovered multiple times."""
+    discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
+    )
+
+    # Form should always show even if all required properties are discovered
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
+    )
+
+    # Flow should abort because device is already setup
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_in_progress"

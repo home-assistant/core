@@ -55,7 +55,7 @@ class SensorManager:
         try:
             with async_timeout.timeout(4):
                 return await self.bridge.async_request_call(
-                    self.bridge.api.sensors.update()
+                    self.bridge.api.sensors.update
                 )
         except Unauthorized:
             await self.bridge.handle_unauthorized_error()

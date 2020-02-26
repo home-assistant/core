@@ -4,9 +4,6 @@ Generic GeoRSS events service.
 Retrieves current events (typically incidents or alerts) in GeoRSS format, and
 shows information on events filtered by distance to the HA instance's location
 and grouped by category.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.geo_rss_events/
 """
 from datetime import timedelta
 import logging
@@ -121,9 +118,7 @@ class GeoRssServiceSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(
-            self._service_name, "Any" if self._category is None else self._category
-        )
+        return f"{self._service_name} {'Any' if self._category is None else self._category}"
 
     @property
     def state(self):

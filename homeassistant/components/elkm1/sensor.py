@@ -178,7 +178,7 @@ class ElkZone(ElkSensor):
             ZoneType.PHONE_KEY.value: "phone-classic",
             ZoneType.INTERCOM_KEY.value: "deskphone",
         }
-        return "mdi:{}".format(zone_icons.get(self._element.definition, "alarm-bell"))
+        return f"mdi:{zone_icons.get(self._element.definition, 'alarm-bell')}"
 
     @property
     def device_state_attributes(self):
