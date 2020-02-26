@@ -134,7 +134,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
 
 async def async_get_action_capabilities(hass: HomeAssistant, config: dict) -> dict:
     """List action capabilities."""
-    if config[CONF_TYPE] not in ["set_position", "set_tilt_position"]:
+    if config[CONF_TYPE] not in POSITION_ACTION_TYPES:
         return {}
 
     return {
