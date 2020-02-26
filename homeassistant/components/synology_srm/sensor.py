@@ -1,49 +1,59 @@
-import logging
+"""Sensor for Synology SRM routers.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.synology_srm/
+"""
 import synology_srm
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
-
-from homeassistant.const import TEMP_CELSIUS
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers import config_validation
 
 from homeassistant.const import (
-    CONF_NAME,
-
     CONF_HOST,
-    CONF_USERNAME,
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
+    CONF_USERNAME,
     CONF_VERIFY_SSL,
-
-    CONF_MONITORED_CONDITIONS,
 )
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
-DEFAULT_NAME = 'synology_srm'
-DEFAULT_USERNAME = 'admin'
+CONF_TRAFFIC_INTERVAL = "traffic_interval"
+
+DEFAULT_NAME = "synology_srm"
+DEFAULT_USERNAME = "admin"
 DEFAULT_PORT = 8001
 DEFAULT_SSL = True
 DEFAULT_VERIFY_SSL = False
 
+EXTERNALIP_CONDITION = "core.ddns_extip"
+TRAFFIC_CONDITION = "core.ngfw_traffic"
+
 POSSIBLE_MONITORED_CONDITIONS = {
-    'base.encryption',
-    'base.info',
-
-    'core.ddns_extip',
-    'core.ddns_record',
-    'core.system_utilization',
-    'core.network_nsm_device',
-
-    'mesh.network_wanstatus',
-    'mesh.network_wifidevice',
-    'mesh.system_info',
+    "base.encryption",
+    "base.info",
+    EXTERNALIP_CONDITION,
+    "core.ddns_record",
+    "core.system_utilization",
+    "core.network_nsm_device",
+    TRAFFIC_CONDITION,
+    "mesh.network_wanstatus",
+    "mesh.network_wifidevice",
+    "mesh.system_info",
 }
+
 DEFAULT_MONITORED_CONDITIONS = [
-    'core.ddns_extip'
+    EXTERNALIP_CONDITION,
 ]
 
-PLATFORM_SCHEMA = config_validation.PLATFORM_SCHEMA.extend(
+POSSIBLE_TRAFFIC_INTERVAL = {"live", "day", "week", "month"}
+
+DEFAULT_TRAFFIC_INTERVAL = [
+    "live",
+]
+
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_HOST): cv.string,
@@ -52,18 +62,26 @@ PLATFORM_SCHEMA = config_validation.PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=DEFAULT_MONITORED_CONDITIONS): vol.All(cv.ensure_list, [vol.In(POSSIBLE_MONITORED_CONDITIONS)])
+        vol.Optional(CONF_TRAFFIC_INTERVAL, default=DEFAULT_TRAFFIC_INTERVAL): vol.All(
+            cv.ensure_list, [vol.In(POSSIBLE_TRAFFIC_INTERVAL)]
+        ),
+        vol.Optional(
+            CONF_MONITORED_CONDITIONS, default=DEFAULT_MONITORED_CONDITIONS
+        ): vol.All(cv.ensure_list, [vol.In(POSSIBLE_MONITORED_CONDITIONS)]),
     }
 )
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up the Synology SRM Sensor."""
     add_devices([SynologySrm(config)])
 
 
 class SynologySrm(Entity):
+    """This class gets information from a SRM router."""
 
     def __init__(self, config):
+        """Initialize."""
         self.config = config
 
         self.client = synology_srm.Client(
@@ -79,84 +97,45 @@ class SynologySrm(Entity):
 
         self._state = None
 
-        self._base_encryption = None
-        self._base_info = None
-
-        self._core_ddns_extip = None
-        self._core_ddns_record = None
-        self._core_system_utilization = None
-        self._core_network_nsm_device = None
-
-        self._mesh_network_wanstatus = None
-        self._mesh_network_wifidevice = None
-        self._mesh_system_info = None
+        self._attribs = None
 
     @property
     def name(self):
+        """Sensors name."""
         return self.config.get(CONF_NAME)
 
     @property
     def icon(self):
         """Return the icon."""
-        return 'mdi:router-wireless'
+        return "mdi:router-wireless"
 
     @property
     def state(self):
+        """Return the state."""
         return self._state
-
-    @property
-    def unit_of_measurement(self):
-        return None
 
     @property
     def device_state_attributes(self):
         """Attributes."""
-        return {
-            'base': {
-                'encryption': self._base_encryption,
-                'info': self._base_info,
-            },
-            'core': {
-                'ddns_extip': self._core_ddns_extip,
-                'ddns_record': self._core_ddns_record,
-                'system_utilization': self._core_system_utilization,
-                'network_nsm_device': self._core_network_nsm_device
-            },
-            'mesh': {
-                'network_wanstatus': self._mesh_network_wanstatus,
-                'network_wifidevice': self._mesh_network_wifidevice,
-                'system_info': self._mesh_system_info,
-            },
-        }
+        return self._attribs
 
     def update(self):
+        """Check the router for various information."""
         monitored_conditions = self.config.get(CONF_MONITORED_CONDITIONS)
+        attribs = {}
+        for condition in monitored_conditions:
+            parts = condition.split(".")
+            conditionname = condition.replace(".", "_")
+            if condition == TRAFFIC_CONDITION:
+                for interval in self.config.get(CONF_TRAFFIC_INTERVAL):
+                    attrib = self.client.core.ngfw_traffic(interval=interval)
+                    attribs[f"{conditionname}_{interval}"] = attrib
+            else:
+                attrib = getattr(self.client, parts[0])
+                attrib = getattr(attrib, parts[1])()
+                attribs[conditionname] = attrib
+                if condition == EXTERNALIP_CONDITION:
+                    firstWan = next(iter(attrib), None)
+                    self._state = firstWan and firstWan["ip"]
 
-        """Base"""
-        if any(filter(lambda x: (x.startswith('base.')), monitored_conditions)):
-            base = self.client.base
-
-            if 'base.encryption' in monitored_conditions: self._base_encryption = base.encryption()
-            if 'base.info' in monitored_conditions:       self._base_info = base.info()
-
-        """Core"""
-        if any(filter(lambda x: (x.startswith('core.')), monitored_conditions)):
-            core = self.client.core
-
-            if 'core.ddns_extip' in monitored_conditions:
-                self._core_ddns_extip = core.ddns_extip()
-                firstWan = next(iter(self._core_ddns_extip), None)
-                self._state = firstWan and firstWan['ip']
-
-            if 'core.ddns_record' in monitored_conditions:        self._core_ddns_record = core.ddns_record()
-            if 'core.system_utilization' in monitored_conditions: self._core_system_utilization = core.system_utilization()
-            if 'core.network_nsm_device' in monitored_conditions: self._core_network_nsm_device = core.network_nsm_device()
-
-        """Mesh"""
-        if any(filter(lambda x: (x.startswith('mesh.')), monitored_conditions)):
-            mesh = self.client.mesh
-
-            if 'mesh.network_wanstatus' in monitored_conditions: self._mesh_network_wanstatus = mesh.network_wanstatus()
-            if 'mesh.network_wifidevice' in monitored_conditions: self._mesh_network_wifidevice = mesh.network_wifidevice()
-            if 'mesh.system_info' in monitored_conditions: self._mesh_system_info = mesh.system_info()
-            
+        self._attribs = attribs
