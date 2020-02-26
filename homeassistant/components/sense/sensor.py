@@ -171,7 +171,7 @@ class SenseActiveSensor(Entity):
 
     @property
     def should_poll(self):
-        """Return the deviceshould not poll for updates."""
+        """Return the device should not poll for updates."""
         return False
 
     async def async_update(self):
@@ -317,7 +317,7 @@ class SenseDevice(Entity):
 
     @property
     def should_poll(self):
-        """Return the deviceshould not poll for updates."""
+        """Return the device should not poll for updates."""
         return False
 
     async def async_update(self):
