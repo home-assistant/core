@@ -217,7 +217,7 @@ async def test_google_config_should_2fa(hass, mock_cloud_setup, mock_cloud_login
 
 
 async def test_set_username(hass):
-    """Test we set username during loggin."""
+    """Test we set username during login."""
     prefs = MagicMock(
         alexa_enabled=False,
         google_enabled=False,

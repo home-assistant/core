@@ -163,7 +163,7 @@ stages:
 
         git commit -am "Bump Home Assistant $version"
         git push
-      displayName: 'Update version files'
+      displayName: "Update version files"
   - job: 'ReleaseDocker'
     pool:
       vmImage: 'ubuntu-latest'

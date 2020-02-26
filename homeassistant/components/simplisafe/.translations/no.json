@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Denne SimpliSafe-kontoen er allerede i bruk."
+        },
         "error": {
             "identifier_exists": "Konto er allerede registrert",
             "invalid_credentials": "Ugyldig legitimasjon"

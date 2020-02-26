@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Lokaliteten er allerede konfigureret."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "radius": "Radius"
+                },
+                "title": "Udfyld dine filteroplysninger."
+            }
+        },
+        "title": "Globalt katastrofevarslings- og koordineringssystem (GDACS)"
+    }
+}

@@ -6,13 +6,13 @@ import voluptuous as vol
 
 from homeassistant import core
 from homeassistant.components import http, websocket_api
+from homeassistant.components.ais_ai_service.ais_agent import AisAgent
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.loader import bind_hass
 
 from .agent import AbstractConversationAgent
 from .default_agent import DefaultAgent, async_register
-from homeassistant.components.ais_ai_service.ais_agent import AisAgent
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -132,9 +132,22 @@ class ConversationProcessView(http.HomeAssistantView):
         """Send a request for processing."""
         hass = request.app["hass"]
 
-        intent_result = await _async_converse(
-            hass, data["text"], data.get("conversation_id"), self.context(request)
-        )
+        try:
+            intent_result = await _async_converse(
+                hass, data["text"], data.get("conversation_id"), self.context(request)
+            )
+        except intent.IntentError as err:
+            _LOGGER.error("Error handling intent: %s", err)
+            return self.json(
+                {
+                    "success": False,
+                    "error": {
+                        "code": str(err.__class__.__name__).lower(),
+                        "message": str(err),
+                    },
+                },
+                status_code=500,
+            )
 
         return self.json(intent_result)
 

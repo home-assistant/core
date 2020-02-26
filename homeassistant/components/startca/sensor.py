@@ -8,7 +8,12 @@ import voluptuous as vol
 import xmltodict
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_API_KEY, CONF_MONITORED_VARIABLES, CONF_NAME
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_MONITORED_VARIABLES,
+    CONF_NAME,
+    DATA_GIGABYTES,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -19,7 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Start.ca"
 CONF_TOTAL_BANDWIDTH = "total_bandwidth"
 
-GIGABYTES = "GB"
 PERCENT = "%"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
@@ -27,17 +31,17 @@ REQUEST_TIMEOUT = 5  # seconds
 
 SENSOR_TYPES = {
     "usage": ["Usage Ratio", PERCENT, "mdi:percent"],
-    "usage_gb": ["Usage", GIGABYTES, "mdi:download"],
-    "limit": ["Data limit", GIGABYTES, "mdi:download"],
-    "used_download": ["Used Download", GIGABYTES, "mdi:download"],
-    "used_upload": ["Used Upload", GIGABYTES, "mdi:upload"],
-    "used_total": ["Used Total", GIGABYTES, "mdi:download"],
-    "grace_download": ["Grace Download", GIGABYTES, "mdi:download"],
-    "grace_upload": ["Grace Upload", GIGABYTES, "mdi:upload"],
-    "grace_total": ["Grace Total", GIGABYTES, "mdi:download"],
-    "total_download": ["Total Download", GIGABYTES, "mdi:download"],
-    "total_upload": ["Total Upload", GIGABYTES, "mdi:download"],
-    "used_remaining": ["Remaining", GIGABYTES, "mdi:download"],
+    "usage_gb": ["Usage", DATA_GIGABYTES, "mdi:download"],
+    "limit": ["Data limit", DATA_GIGABYTES, "mdi:download"],
+    "used_download": ["Used Download", DATA_GIGABYTES, "mdi:download"],
+    "used_upload": ["Used Upload", DATA_GIGABYTES, "mdi:upload"],
+    "used_total": ["Used Total", DATA_GIGABYTES, "mdi:download"],
+    "grace_download": ["Grace Download", DATA_GIGABYTES, "mdi:download"],
+    "grace_upload": ["Grace Upload", DATA_GIGABYTES, "mdi:upload"],
+    "grace_total": ["Grace Total", DATA_GIGABYTES, "mdi:download"],
+    "total_download": ["Total Download", DATA_GIGABYTES, "mdi:download"],
+    "total_upload": ["Total Upload", DATA_GIGABYTES, "mdi:download"],
+    "used_remaining": ["Remaining", DATA_GIGABYTES, "mdi:download"],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

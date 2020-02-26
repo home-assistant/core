@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dieser Vilfo Router ist bereits konfiguriert."
+        },
+        "error": {
+            "cannot_connect": "Verbindung nicht m\u00f6glich. Bitte \u00fcberpr\u00fcfen Sie die von Ihnen angegebenen Informationen und versuchen Sie es erneut.",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung. Bitte \u00fcberpr\u00fcfen Sie den Zugriffstoken und versuchen Sie es erneut.",
+            "unknown": "Beim Einrichten der Integration ist ein unerwarteter Fehler aufgetreten."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Zugriffstoken f\u00fcr die Vilfo Router-API",
+                    "host": "Router-Hostname oder IP"
+                },
+                "title": "Stellen Sie eine Verbindung zum Vilfo Router her"
+            }
+        },
+        "title": "Vilfo Router"
+    }
+}

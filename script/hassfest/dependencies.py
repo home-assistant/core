@@ -103,14 +103,12 @@ ALLOWED_USED_COMPONENTS = {
     "homeassistant",
     "system_log",
     "person",
-    # Discovery
-    "discovery",
     # Other
     "mjpeg",  # base class, has no reqs or component to load.
     "stream",  # Stream cannot install on all systems, can be imported without reqs.
 }
 
-IGNORE_VIOLATIONS = [
+IGNORE_VIOLATIONS = {
     # Has same requirement, gets defaults.
     ("sql", "recorder"),
     # Sharing a base class
@@ -122,6 +120,7 @@ IGNORE_VIOLATIONS = [
     ("demo", "openalpr_local"),
     # This should become a helper method that integrations can submit data to
     ("websocket_api", "lovelace"),
+    ("websocket_api", "shopping_list"),
     # Expose HA to external systems
     "homekit",
     "alexa",
@@ -134,9 +133,7 @@ IGNORE_VIOLATIONS = [
     # These should be extracted to external package
     "pvoutput",
     "dwd_weather_warnings",
-    # Should be rewritten to use own data fetcher
-    "scrape",
-]
+}
 
 
 def calc_allowed_references(integration: Integration) -> Set[str]:

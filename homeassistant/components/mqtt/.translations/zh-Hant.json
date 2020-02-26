@@ -27,5 +27,27 @@
             }
         },
         "title": "MQTT"
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "\u7b2c\u4e00\u500b\u6309\u9215",
+            "button_2": "\u7b2c\u4e8c\u500b\u6309\u9215",
+            "button_3": "\u7b2c\u4e09\u500b\u6309\u9215",
+            "button_4": "\u7b2c\u56db\u500b\u6309\u9215",
+            "button_5": "\u7b2c\u4e94\u500b\u6309\u9215",
+            "button_6": "\u7b2c\u516d\u500b\u6309\u9215",
+            "turn_off": "\u95dc\u9589",
+            "turn_on": "\u958b\u555f"
+        },
+        "trigger_type": {
+            "button_double_press": "\"{subtype}\" \u96d9\u64ca",
+            "button_long_press": "\"{subtype}\" \u6301\u7e8c\u6309\u4e0b",
+            "button_long_release": "\"{subtype}\" \u9577\u6309\u5f8c\u91cb\u653e",
+            "button_quadruple_press": "\"{subtype}\" \u56db\u9023\u64ca",
+            "button_quintuple_press": "\"{subtype}\" \u4e94\u9023\u64ca",
+            "button_short_press": "\"{subtype}\" \u6309\u4e0b",
+            "button_short_release": "\"{subtype}\" \u91cb\u653e",
+            "button_triple_press": "\"{subtype}\" \u4e09\u9023\u64ca"
+        }
     }
 }

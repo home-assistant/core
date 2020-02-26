@@ -14,6 +14,8 @@ SCAN_INTERVAL = timedelta(seconds=120)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Tahoma controller devices."""
+    if discovery_info is None:
+        return
     _LOGGER.debug("Setup Tahoma Binary sensor platform")
     controller = hass.data[TAHOMA_DOMAIN]["controller"]
     devices = []

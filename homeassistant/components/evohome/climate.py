@@ -175,7 +175,7 @@ class EvoZone(EvoChild, EvoClimateDevice):
 
         if ATTR_DURATION_UNTIL in data:
             duration = data[ATTR_DURATION_UNTIL]
-            if duration == 0:
+            if duration.total_seconds() == 0:
                 await self._update_schedule()
                 until = parse_datetime(str(self.setpoints.get("next_sp_from")))
             else:

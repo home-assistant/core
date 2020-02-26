@@ -112,7 +112,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if station is not None:
         if zone_id and wmo_id:
             _LOGGER.warning(
-                "Using config %s, not %s and %s for BOM sensor",
+                "Using configuration %s, not %s and %s for BOM sensor",
                 CONF_STATION,
                 CONF_ZONE_ID,
                 CONF_WMO_ID,
@@ -281,7 +281,7 @@ def _get_bom_stations():
     """Return {CONF_STATION: (lat, lon)} for all stations, for auto-config.
 
     This function does several MB of internet requests, so please use the
-    caching version to minimise latency and hit-count.
+    caching version to minimize latency and hit-count.
     """
     latlon = {}
     with io.BytesIO() as file_obj:

@@ -108,7 +108,8 @@
                     "allow_clip_sensor": "\u5141\u8a31 deCONZ CLIP \u611f\u61c9\u5668",
                     "allow_deconz_groups": "\u5141\u8a31 deCONZ \u71c8\u5149\u7fa4\u7d44"
                 },
-                "description": "\u8a2d\u5b9a deCONZ \u53ef\u8996\u8a2d\u5099\u985e\u578b"
+                "description": "\u8a2d\u5b9a deCONZ \u53ef\u8996\u8a2d\u5099\u985e\u578b",
+                "title": "deCONZ \u9078\u9805"
             }
         }
     }

@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Account al geconfigureerd"
+        },
         "error": {
             "access": "Geen toegang tot Enedis.fr, controleer uw internetverbinding",
             "enedis": "Enedis.fr antwoordde met een fout: probeer het later opnieuw (meestal niet tussen 23.00 en 02.00 uur)",

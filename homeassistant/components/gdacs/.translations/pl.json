@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Lokalizacja jest ju\u017c skonfigurowana."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "radius": "Promie\u0144"
+                },
+                "title": "Wprowad\u017a szczeg\u00f3\u0142owe dane filtra."
+            }
+        },
+        "title": "Globalny system ostrzegania i koordynacji w przypadku katastrof (GDACS)"
+    }
+}

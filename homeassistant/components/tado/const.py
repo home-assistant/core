@@ -2,6 +2,7 @@
 
 # Configuration
 CONF_FALLBACK = "fallback"
+DATA = "data"
 
 # Types
 TYPE_AIR_CONDITIONING = "AIR_CONDITIONING"

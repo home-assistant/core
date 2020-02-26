@@ -4,8 +4,8 @@
   "documentation": "https://www.home-assistant.io/integrations/mcp23017",
   "requirements": [
     "RPi.GPIO==0.7.0",
-    "adafruit-blinka==1.2.1",
-    "adafruit-circuitpython-mcp230xx==1.1.2"
+    "adafruit-blinka==3.9.0",
+    "adafruit-circuitpython-mcp230xx==2.2.2"
   ],
   "dependencies": [],
   "codeowners": ["@jardiamj"]

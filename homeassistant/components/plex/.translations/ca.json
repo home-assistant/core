@@ -53,6 +53,8 @@
         "step": {
             "plex_mp_settings": {
                 "data": {
+                    "ignore_new_shared_users": "Ignora els nous usuaris gestionats/compartits",
+                    "monitored_users": "Usuaris monitoritzats",
                     "show_all_controls": "Mostra tots els controls",
                     "use_episode_art": "Utilitza imatges de l'episodi"
                 },
