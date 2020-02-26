@@ -14,6 +14,7 @@ from homeassistant.const import (
 
 from tests.components.august.mocks import (
     _create_august_with_devices,
+    _mock_activities_from_fixture,
     _mock_doorbell_from_fixture,
     _mock_lock_from_fixture,
 )
@@ -70,6 +71,10 @@ async def test_create_doorbell(hass):
         "binary_sensor.k98gidt45gul_name_ding"
     )
     assert binary_sensor_k98gidt45gul_name_ding.state == STATE_OFF
+    binary_sensor_k98gidt45gul_name_motion = hass.states.get(
+        "binary_sensor.k98gidt45gul_name_motion"
+    )
+    assert binary_sensor_k98gidt45gul_name_motion.state == STATE_OFF
 
 
 async def test_create_doorbell_offline(hass):
@@ -88,6 +93,29 @@ async def test_create_doorbell_offline(hass):
     assert binary_sensor_tmt100_name_online.state == STATE_OFF
     binary_sensor_tmt100_name_ding = hass.states.get("binary_sensor.tmt100_name_ding")
     assert binary_sensor_tmt100_name_ding.state == STATE_UNAVAILABLE
+
+
+async def test_create_doorbell_with_motion(hass):
+    """Test creation of a doorbell."""
+    doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.json")
+    doorbell_details = [doorbell_one]
+    activities = await _mock_activities_from_fixture(
+        hass, "get_activity.doorbell_motion.json"
+    )
+    await _create_august_with_devices(hass, doorbell_details, activities=activities)
+
+    binary_sensor_k98gidt45gul_name_motion = hass.states.get(
+        "binary_sensor.k98gidt45gul_name_motion"
+    )
+    assert binary_sensor_k98gidt45gul_name_motion.state == STATE_ON
+    binary_sensor_k98gidt45gul_name_online = hass.states.get(
+        "binary_sensor.k98gidt45gul_name_online"
+    )
+    assert binary_sensor_k98gidt45gul_name_online.state == STATE_ON
+    binary_sensor_k98gidt45gul_name_ding = hass.states.get(
+        "binary_sensor.k98gidt45gul_name_ding"
+    )
+    assert binary_sensor_k98gidt45gul_name_ding.state == STATE_OFF
 
 
 async def test_doorbell_device_registry(hass):
