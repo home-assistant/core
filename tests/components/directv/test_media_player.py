@@ -1,9 +1,11 @@
 """The tests for the DirecTV Media player platform."""
 from datetime import datetime, timedelta
-from unittest.mock import call, patch
+from typing import Dict, Optional
+from unittest.mock import call
 
-import pytest
-import requests
+from asynctest import patch
+from pytest import fixture
+from requests import RequestException
 
 from homeassistant.components.directv.media_player import (
     ATTR_MEDIA_CURRENTLY_RECORDING,
@@ -11,7 +13,7 @@ from homeassistant.components.directv.media_player import (
     ATTR_MEDIA_RECORDED,
     ATTR_MEDIA_START_TIME,
     DEFAULT_DEVICE,
-    DEFAULT_PORT,
+    DOMAIN,
 )
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
@@ -24,7 +26,7 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_SERIES_TITLE,
     ATTR_MEDIA_TITLE,
-    DOMAIN,
+    DOMAIN as MP_DOMAIN,
     MEDIA_TYPE_TVSHOW,
     SERVICE_PLAY_MEDIA,
     SUPPORT_NEXT_TRACK,
@@ -38,10 +40,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_DEVICE,
     CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -54,18 +53,19 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_UNAVAILABLE,
 )
-from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 
 ATTR_UNIQUE_ID = "unique_id"
-CLIENT_ENTITY_ID = "media_player.client_dvr"
-MAIN_ENTITY_ID = "media_player.main_dvr"
+CLIENT_ENTITY_ID = f"{MP_DOMAIN}.bedroom_client"
+CLIENT_NAME = "Bedroom Client"
+CLIENT_ADDRESS = "2CA17D1CD30X"
+MAIN_ENTITY_ID = f"{MP_DOMAIN}.main_dvr"
+MAIN_NAME = "Main DVR"
 IP_ADDRESS = "127.0.0.1"
-
-DISCOVERY_INFO = {"host": IP_ADDRESS, "serial": 1234}
 
 LIVE = {
     "callsign": "HASSTV",
@@ -85,8 +85,6 @@ LIVE = {
     "stationId": 3900947,
     "title": "Using Home Assistant to automate your home",
 }
-
-LOCATIONS = [{"locationName": "Main DVR", "clientAddr": DEFAULT_DEVICE}]
 
 RECORDING = {
     "callsign": "HASSTV",
@@ -109,139 +107,46 @@ RECORDING = {
     "episodeTitle": "Configure DirecTV platform.",
 }
 
-WORKING_CONFIG = {
-    "media_player": {
-        "platform": "directv",
-        CONF_HOST: IP_ADDRESS,
-        CONF_NAME: "Main DVR",
-        CONF_PORT: DEFAULT_PORT,
-        CONF_DEVICE: DEFAULT_DEVICE,
-    }
+MOCK_CONFIG = {DOMAIN: [{CONF_HOST: IP_ADDRESS}]}
+
+MOCK_GET_LOCATIONS = {
+    "locations": [{"locationName": MAIN_NAME, "clientAddr": DEFAULT_DEVICE}],
+    "status": {
+        "code": 200,
+        "commandResult": 0,
+        "msg": "OK.",
+        "query": "/info/getLocations",
+    },
 }
 
+MOCK_GET_LOCATIONS_MULTIPLE = {
+    "locations": [
+        {"locationName": MAIN_NAME, "clientAddr": DEFAULT_DEVICE},
+        {"locationName": CLIENT_NAME, "clientAddr": CLIENT_ADDRESS},
+    ],
+    "status": {
+        "code": 200,
+        "commandResult": 0,
+        "msg": "OK.",
+        "query": "/info/getLocations",
+    },
+}
 
-@pytest.fixture
-def client_dtv():
-    """Fixture for a client device."""
-    mocked_dtv = MockDirectvClass("mock_ip")
-    mocked_dtv.attributes = RECORDING
-    mocked_dtv._standby = False
-    return mocked_dtv
+MOCK_GET_VERSION = {
+    "accessCardId": "0021-1495-6572",
+    "receiverId": "0288 7745 5858",
+    "status": {
+        "code": 200,
+        "commandResult": 0,
+        "msg": "OK.",
+        "query": "/info/getVersion",
+    },
+    "stbSoftwareVersion": "0x4ed7",
+    "systemTime": 1281625203,
+    "version": "1.2",
+}
 
-
-@pytest.fixture
-def main_dtv():
-    """Fixture for main DVR."""
-    return MockDirectvClass("mock_ip")
-
-
-@pytest.fixture
-def dtv_side_effect(client_dtv, main_dtv):
-    """Fixture to create DIRECTV instance for main and client."""
-
-    def mock_dtv(ip, port, client_addr="0"):
-        if client_addr != "0":
-            mocked_dtv = client_dtv
-        else:
-            mocked_dtv = main_dtv
-        mocked_dtv._host = ip
-        mocked_dtv._port = port
-        mocked_dtv._device = client_addr
-        return mocked_dtv
-
-    return mock_dtv
-
-
-@pytest.fixture
-def mock_now():
-    """Fixture for dtutil.now."""
-    return dt_util.utcnow()
-
-
-@pytest.fixture
-def platforms(hass, dtv_side_effect, mock_now):
-    """Fixture for setting up test platforms."""
-    config = {
-        "media_player": [
-            {
-                "platform": "directv",
-                "name": "Main DVR",
-                "host": IP_ADDRESS,
-                "port": DEFAULT_PORT,
-                "device": DEFAULT_DEVICE,
-            },
-            {
-                "platform": "directv",
-                "name": "Client DVR",
-                "host": IP_ADDRESS,
-                "port": DEFAULT_PORT,
-                "device": "2CA17D1CD30X",
-            },
-        ]
-    }
-
-    with patch(
-        "homeassistant.components.directv.media_player.DIRECTV",
-        side_effect=dtv_side_effect,
-    ), patch("homeassistant.util.dt.utcnow", return_value=mock_now):
-        hass.loop.run_until_complete(async_setup_component(hass, DOMAIN, config))
-        hass.loop.run_until_complete(hass.async_block_till_done())
-        yield
-
-
-async def async_turn_on(hass, entity_id=None):
-    """Turn on specified media player or all."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data)
-
-
-async def async_turn_off(hass, entity_id=None):
-    """Turn off specified media player or all."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data)
-
-
-async def async_media_pause(hass, entity_id=None):
-    """Send the media player the command for pause."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(DOMAIN, SERVICE_MEDIA_PAUSE, data)
-
-
-async def async_media_play(hass, entity_id=None):
-    """Send the media player the command for play/pause."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(DOMAIN, SERVICE_MEDIA_PLAY, data)
-
-
-async def async_media_stop(hass, entity_id=None):
-    """Send the media player the command for stop."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(DOMAIN, SERVICE_MEDIA_STOP, data)
-
-
-async def async_media_next_track(hass, entity_id=None):
-    """Send the media player the command for next track."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(DOMAIN, SERVICE_MEDIA_NEXT_TRACK, data)
-
-
-async def async_media_previous_track(hass, entity_id=None):
-    """Send the media player the command for prev track."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, data)
-
-
-async def async_play_media(hass, media_type, media_id, entity_id=None, enqueue=None):
-    """Send the media player the command for playing media."""
-    data = {ATTR_MEDIA_CONTENT_TYPE: media_type, ATTR_MEDIA_CONTENT_ID: media_id}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    if enqueue:
-        data[ATTR_MEDIA_ENQUEUE] = enqueue
-
-    await hass.services.async_call(DOMAIN, SERVICE_PLAY_MEDIA, data)
+# pylint: disable=redefined-outer-name
 
 
 class MockDirectvClass:
@@ -255,23 +160,11 @@ class MockDirectvClass:
         self._standby = True
         self._play = False
 
-        self._locations = LOCATIONS
-
         self.attributes = LIVE
 
     def get_locations(self):
         """Mock for get_locations method."""
-        test_locations = {
-            "locations": self._locations,
-            "status": {
-                "code": 200,
-                "commandResult": 0,
-                "msg": "OK.",
-                "query": "/info/getLocations",
-            },
-        }
-
-        return test_locations
+        return MOCK_GET_LOCATIONS
 
     def get_serial_num(self):
         """Mock for get_serial_num method."""
@@ -307,21 +200,7 @@ class MockDirectvClass:
 
     def get_version(self):
         """Mock for get_version method."""
-        test_version = {
-            "accessCardId": "0021-1495-6572",
-            "receiverId": "0288 7745 5858",
-            "status": {
-                "code": 200,
-                "commandResult": 0,
-                "msg": "OK.",
-                "query": "/info/getVersion",
-            },
-            "stbSoftwareVersion": "0x4ed7",
-            "systemTime": 1281625203,
-            "version": "1.2",
-        }
-
-        return test_version
+        return MOCK_GET_VERSION
 
     def key_press(self, keypress):
         """Mock for key_press method."""
@@ -341,91 +220,212 @@ class MockDirectvClass:
         self.attributes["major"] = int(source)
 
 
-async def test_setup_platform_config(hass):
-    """Test setting up the platform from configuration."""
+@fixture
+def client_dtv() -> MockDirectvClass:
+    """Fixture for a client device."""
+    mocked_dtv = MockDirectvClass(IP_ADDRESS, clientAddr=CLIENT_ADDRESS)
+    mocked_dtv.attributes = RECORDING
+    mocked_dtv._standby = False  # pylint: disable=protected-access
+    return mocked_dtv
+
+
+@fixture
+def main_dtv() -> MockDirectvClass:
+    """Fixture for main DVR."""
+    return MockDirectvClass(IP_ADDRESS)
+
+
+@fixture
+def mock_now() -> datetime:
+    """Fixture for dtutil.now."""
+    return dt_util.utcnow()
+
+
+async def setup_directv(
+    hass: HomeAssistantType, config: Dict, main_dtv: MockDirectvClass
+) -> None:
+    """Set up mock DirecTV integration."""
     with patch(
-        "homeassistant.components.directv.media_player.DIRECTV", new=MockDirectvClass
+        "homeassistant.components.directv.config_flow.get_ip", return_value=IP_ADDRESS
+    ), patch(
+        "homeassistant.components.directv.config_flow.get_dtv_version",
+        return_value=MOCK_GET_VERSION,
+    ), patch(
+        "homeassistant.components.directv.get_dtv_instance", return_value=main_dtv,
+    ), patch(
+        "homeassistant.components.directv.get_dtv_locations",
+        return_value=MOCK_GET_LOCATIONS,
+    ), patch(
+        "homeassistant.components.directv.get_dtv_version",
+        return_value=MOCK_GET_VERSION,
     ):
-
-        await async_setup_component(hass, DOMAIN, WORKING_CONFIG)
+        await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
-    state = hass.states.get(MAIN_ENTITY_ID)
-    assert state
-    assert len(hass.states.async_entity_ids("media_player")) == 1
 
-
-async def test_setup_platform_discover(hass):
-    """Test setting up the platform from discovery."""
+async def setup_directv_with_instance_error(
+    hass: HomeAssistantType,
+    config: Dict,
+    main_dtv: MockDirectvClass,
+    client_dtv: Optional[MockDirectvClass] = None,
+) -> None:
+    """Set up mock DirecTV integration."""
     with patch(
-        "homeassistant.components.directv.media_player.DIRECTV", new=MockDirectvClass
+        "homeassistant.components.directv.config_flow.get_ip", return_value=IP_ADDRESS
+    ), patch(
+        "homeassistant.components.directv.config_flow.get_dtv_version",
+        return_value=MOCK_GET_VERSION,
+    ), patch(
+        "homeassistant.components.directv.get_dtv_instance", return_value=main_dtv,
+    ), patch(
+        "homeassistant.components.directv.get_dtv_locations",
+        return_value=MOCK_GET_LOCATIONS_MULTIPLE,
+    ), patch(
+        "homeassistant.components.directv.get_dtv_version",
+        return_value=MOCK_GET_VERSION,
+    ), patch(
+        "homeassistant.components.directv.media_player.get_dtv_instance",
+        return_value=None,
     ):
-
-        hass.async_create_task(
-            async_load_platform(
-                hass, DOMAIN, "directv", DISCOVERY_INFO, {"media_player": {}}
-            )
-        )
+        await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
-    state = hass.states.get(MAIN_ENTITY_ID)
-    assert state
-    assert len(hass.states.async_entity_ids("media_player")) == 1
 
-
-async def test_setup_platform_discover_duplicate(hass):
-    """Test setting up the platform from discovery."""
+async def setup_directv_with_locations(
+    hass: HomeAssistantType,
+    config: Dict,
+    main_dtv: MockDirectvClass,
+    client_dtv: Optional[MockDirectvClass] = None,
+) -> None:
+    """Set up mock DirecTV integration."""
     with patch(
-        "homeassistant.components.directv.media_player.DIRECTV", new=MockDirectvClass
+        "homeassistant.components.directv.config_flow.get_ip", return_value=IP_ADDRESS
+    ), patch(
+        "homeassistant.components.directv.config_flow.get_dtv_version",
+        return_value=MOCK_GET_VERSION,
+    ), patch(
+        "homeassistant.components.directv.get_dtv_instance", return_value=main_dtv,
+    ), patch(
+        "homeassistant.components.directv.get_dtv_locations",
+        return_value=MOCK_GET_LOCATIONS_MULTIPLE,
+    ), patch(
+        "homeassistant.components.directv.get_dtv_version",
+        return_value=MOCK_GET_VERSION,
+    ), patch(
+        "homeassistant.components.directv.media_player.get_dtv_instance",
+        return_value=client_dtv,
     ):
-
-        await async_setup_component(hass, DOMAIN, WORKING_CONFIG)
-        await hass.async_block_till_done()
-        hass.async_create_task(
-            async_load_platform(
-                hass, DOMAIN, "directv", DISCOVERY_INFO, {"media_player": {}}
-            )
-        )
+        await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
-    state = hass.states.get(MAIN_ENTITY_ID)
-    assert state
-    assert len(hass.states.async_entity_ids("media_player")) == 1
+
+async def async_turn_on(
+    hass: HomeAssistantType, entity_id: Optional[str] = None
+) -> None:
+    """Turn on specified media player or all."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    await hass.services.async_call(MP_DOMAIN, SERVICE_TURN_ON, data)
 
 
-async def test_setup_platform_discover_client(hass):
-    """Test setting up the platform from discovery."""
-    LOCATIONS.append({"locationName": "Client 1", "clientAddr": "1"})
-    LOCATIONS.append({"locationName": "Client 2", "clientAddr": "2"})
-
-    with patch(
-        "homeassistant.components.directv.media_player.DIRECTV", new=MockDirectvClass
-    ):
-
-        await async_setup_component(hass, DOMAIN, WORKING_CONFIG)
-        await hass.async_block_till_done()
-
-        hass.async_create_task(
-            async_load_platform(
-                hass, DOMAIN, "directv", DISCOVERY_INFO, {"media_player": {}}
-            )
-        )
-        await hass.async_block_till_done()
-
-    del LOCATIONS[-1]
-    del LOCATIONS[-1]
-    state = hass.states.get(MAIN_ENTITY_ID)
-    assert state
-    state = hass.states.get("media_player.client_1")
-    assert state
-    state = hass.states.get("media_player.client_2")
-    assert state
-
-    assert len(hass.states.async_entity_ids("media_player")) == 3
+async def async_turn_off(
+    hass: HomeAssistantType, entity_id: Optional[str] = None
+) -> None:
+    """Turn off specified media player or all."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    await hass.services.async_call(MP_DOMAIN, SERVICE_TURN_OFF, data)
 
 
-async def test_unique_id(hass, platforms):
+async def async_media_pause(
+    hass: HomeAssistantType, entity_id: Optional[str] = None
+) -> None:
+    """Send the media player the command for pause."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PAUSE, data)
+
+
+async def async_media_play(
+    hass: HomeAssistantType, entity_id: Optional[str] = None
+) -> None:
+    """Send the media player the command for play/pause."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, data)
+
+
+async def async_media_stop(
+    hass: HomeAssistantType, entity_id: Optional[str] = None
+) -> None:
+    """Send the media player the command for stop."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_STOP, data)
+
+
+async def async_media_next_track(
+    hass: HomeAssistantType, entity_id: Optional[str] = None
+) -> None:
+    """Send the media player the command for next track."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_NEXT_TRACK, data)
+
+
+async def async_media_previous_track(
+    hass: HomeAssistantType, entity_id: Optional[str] = None
+) -> None:
+    """Send the media player the command for prev track."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, data)
+
+
+async def async_play_media(
+    hass: HomeAssistantType,
+    media_type: str,
+    media_id: str,
+    entity_id: Optional[str] = None,
+    enqueue: Optional[str] = None,
+) -> None:
+    """Send the media player the command for playing media."""
+    data = {ATTR_MEDIA_CONTENT_TYPE: media_type, ATTR_MEDIA_CONTENT_ID: media_id}
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    if enqueue:
+        data[ATTR_MEDIA_ENQUEUE] = enqueue
+
+    await hass.services.async_call(MP_DOMAIN, SERVICE_PLAY_MEDIA, data)
+
+
+async def test_setup(hass: HomeAssistantType, main_dtv) -> None:
+    """Test setup with basic config."""
+    await setup_directv(hass, MOCK_CONFIG, main_dtv)
+    assert hass.states.get(MAIN_ENTITY_ID)
+
+
+async def test_setup_with_multiple_locations(
+    hass: HomeAssistantType, main_dtv: MockDirectvClass, client_dtv: MockDirectvClass
+) -> None:
+    """Test setup with basic config with client location."""
+    await setup_directv_with_locations(hass, MOCK_CONFIG, main_dtv, client_dtv)
+
+    assert hass.states.get(MAIN_ENTITY_ID)
+    assert hass.states.get(CLIENT_ENTITY_ID)
+
+
+async def test_setup_with_instance_error(
+    hass: HomeAssistantType, main_dtv: MockDirectvClass, client_dtv: MockDirectvClass
+) -> None:
+    """Test setup with basic config with client location that results in instance error"""
+    await setup_directv_with_instance_error(hass, MOCK_CONFIG, main_dtv, client_dtv)
+
+    assert hass.states.get(MAIN_ENTITY_ID)
+    assert hass.states.async_entity_ids(MP_DOMAIN) == [MAIN_ENTITY_ID]
+
+
+async def test_unique_id(
+    hass: HomeAssistantType, main_dtv: MockDirectvClass, client_dtv: MockDirectvClass
+) -> None:
     """Test unique id."""
+    await setup_directv_with_locations(hass, MOCK_CONFIG, main_dtv, client_dtv)
+
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
     main = entity_registry.async_get(MAIN_ENTITY_ID)
@@ -435,8 +435,12 @@ async def test_unique_id(hass, platforms):
     assert client.unique_id == "2CA17D1CD30X"
 
 
-async def test_supported_features(hass, platforms):
+async def test_supported_features(
+    hass: HomeAssistantType, main_dtv: MockDirectvClass, client_dtv: MockDirectvClass
+) -> None:
     """Test supported features."""
+    await setup_directv_with_locations(hass, MOCK_CONFIG, main_dtv, client_dtv)
+
     # Features supported for main DVR
     state = hass.states.get(MAIN_ENTITY_ID)
     assert (
@@ -464,8 +468,15 @@ async def test_supported_features(hass, platforms):
     )
 
 
-async def test_check_attributes(hass, platforms, mock_now):
+async def test_check_attributes(
+    hass: HomeAssistantType,
+    mock_now: dt_util.dt.datetime,
+    main_dtv: MockDirectvClass,
+    client_dtv: MockDirectvClass,
+) -> None:
     """Test attributes."""
+    await setup_directv_with_locations(hass, MOCK_CONFIG, main_dtv, client_dtv)
+
     next_update = mock_now + timedelta(minutes=5)
     with patch("homeassistant.util.dt.utcnow", return_value=next_update):
         async_fire_time_changed(hass, next_update)
@@ -512,8 +523,15 @@ async def test_check_attributes(hass, platforms, mock_now):
     assert state.attributes.get(ATTR_MEDIA_POSITION_UPDATED_AT) == next_update
 
 
-async def test_main_services(hass, platforms, main_dtv, mock_now):
+async def test_main_services(
+    hass: HomeAssistantType,
+    mock_now: dt_util.dt.datetime,
+    main_dtv: MockDirectvClass,
+    client_dtv: MockDirectvClass,
+) -> None:
     """Test the different services."""
+    await setup_directv_with_locations(hass, MOCK_CONFIG, main_dtv, client_dtv)
+
     next_update = mock_now + timedelta(minutes=5)
     with patch("homeassistant.util.dt.utcnow", return_value=next_update):
         async_fire_time_changed(hass, next_update)
@@ -591,8 +609,15 @@ async def test_main_services(hass, platforms, main_dtv, mock_now):
         assert mock_get_tuned.call_count == 5
 
 
-async def test_available(hass, platforms, main_dtv, mock_now):
+async def test_available(
+    hass: HomeAssistantType,
+    mock_now: dt_util.dt.datetime,
+    main_dtv: MockDirectvClass,
+    client_dtv: MockDirectvClass,
+) -> None:
     """Test available status."""
+    await setup_directv_with_locations(hass, MOCK_CONFIG, main_dtv, client_dtv)
+
     next_update = mock_now + timedelta(minutes=5)
     with patch("homeassistant.util.dt.utcnow", return_value=next_update):
         async_fire_time_changed(hass, next_update)
@@ -604,9 +629,9 @@ async def test_available(hass, platforms, main_dtv, mock_now):
 
     # Make update fail 1st time
     next_update = next_update + timedelta(minutes=5)
-    with patch.object(
-        main_dtv, "get_standby", side_effect=requests.RequestException
-    ), patch("homeassistant.util.dt.utcnow", return_value=next_update):
+    with patch.object(main_dtv, "get_standby", side_effect=RequestException), patch(
+        "homeassistant.util.dt.utcnow", return_value=next_update
+    ):
         async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
 
@@ -615,9 +640,9 @@ async def test_available(hass, platforms, main_dtv, mock_now):
 
     # Make update fail 2nd time within 1 minute
     next_update = next_update + timedelta(seconds=30)
-    with patch.object(
-        main_dtv, "get_standby", side_effect=requests.RequestException
-    ), patch("homeassistant.util.dt.utcnow", return_value=next_update):
+    with patch.object(main_dtv, "get_standby", side_effect=RequestException), patch(
+        "homeassistant.util.dt.utcnow", return_value=next_update
+    ):
         async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
 
@@ -626,9 +651,9 @@ async def test_available(hass, platforms, main_dtv, mock_now):
 
     # Make update fail 3rd time more then a minute after 1st failure
     next_update = next_update + timedelta(minutes=1)
-    with patch.object(
-        main_dtv, "get_standby", side_effect=requests.RequestException
-    ), patch("homeassistant.util.dt.utcnow", return_value=next_update):
+    with patch.object(main_dtv, "get_standby", side_effect=RequestException), patch(
+        "homeassistant.util.dt.utcnow", return_value=next_update
+    ):
         async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
 
