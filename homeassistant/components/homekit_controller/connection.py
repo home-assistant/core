@@ -3,7 +3,6 @@ import asyncio
 import datetime
 import logging
 
-from aiohomekit.controller.ip import IpPairing
 from aiohomekit.exceptions import (
     AccessoryDisconnectedError,
     AccessoryNotFoundError,
@@ -15,7 +14,7 @@ from aiohomekit.model.services import ServicesTypes
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import DOMAIN, ENTITY_MAP, HOMEKIT_ACCESSORY_DISPATCH
+from .const import CONTROLLER, DOMAIN, ENTITY_MAP, HOMEKIT_ACCESSORY_DISPATCH
 
 DEFAULT_SCAN_INTERVAL = datetime.timedelta(seconds=60)
 RETRY_INTERVAL = 60  # seconds
@@ -66,7 +65,9 @@ class HKDevice:
         # don't want to mutate a dict owned by a config entry.
         self.pairing_data = pairing_data.copy()
 
-        self.pairing = IpPairing(self.pairing_data)
+        self.pairing = hass.data[CONTROLLER].load_pairing(
+            self.pairing_data["AccessoryPairingID"], self.pairing_data
+        )
 
         self.accessories = {}
         self.config_num = 0
