@@ -45,6 +45,7 @@ class SmartPlugSwitch(SwitchDevice):
         """Initialize the switch."""
         self._device_id = device_id
         self._name = "PCA 301"
+        self._unique_id = "elv_pca_301_" + str(device_id)
         self._state = None
         self._available = True
         self._emeter_params = {}
@@ -77,6 +78,10 @@ class SmartPlugSwitch(SwitchDevice):
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         return self._emeter_params
+
+    @property
+    def unique_id(self):
+        return self._unique_id
 
     def update(self):
         """Update the PCA switch's state."""
