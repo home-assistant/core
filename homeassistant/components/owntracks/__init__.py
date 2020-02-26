@@ -3,7 +3,6 @@ from collections import defaultdict
 import json
 import logging
 import re
-import time
 
 from aiohttp.web import json_response
 import voluptuous as vol
@@ -194,7 +193,7 @@ async def handle_webhook(hass, webhook_id, request):
                     "lat": person.attributes["latitude"],
                     "lon": person.attributes["longitude"],
                     "tid": person.attributes["id"][-2:],
-                    "tst": int(time.mktime(person.last_updated.timetuple())),
+                    "tst": int(person.last_updated.timestamp()),
                 }
             )
 
