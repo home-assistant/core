@@ -277,7 +277,7 @@ class SenseEnergyDevice(Entity):
         self._id = device["id"]
         self._available = False
         self._sense_monitor_id = sense_monitor_id
-        self._unique_id = f"{sense_monitor_id}-{self._id}-energy"
+        self._unique_id = f"{sense_monitor_id}-{self._id}-{CONSUMPTION_NAME.lower()}"
         self._icon = sense_to_mdi(device["icon"])
         self._sense_devices_data = sense_devices_data
         self._undo_dispatch_subscription = None
