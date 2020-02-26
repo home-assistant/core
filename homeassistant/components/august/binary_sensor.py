@@ -22,7 +22,7 @@ SCAN_INTERVAL = timedelta(seconds=5)
 
 async def _async_retrieve_online_state(data, detail):
     """Get the latest state of the sensor."""
-    return detail.is_online or detail.status == "standby"
+    return detail.is_online or detail.is_standby
 
 
 async def _async_retrieve_motion_state(data, detail):
@@ -137,12 +137,13 @@ class AugustDoorBinarySensor(BinarySensorDevice):
             update_lock_detail_from_activity(detail, door_activity)
 
         lock_door_state = None
+        self._available = False
         if detail is not None:
             lock_door_state = detail.door_state
+            self._available = detail.bridge_is_online
             self._firmware_version = detail.firmware_version
             self._model = detail.model
 
-        self._available = lock_door_state != LockDoorStatus.UNKNOWN
         self._state = lock_door_state == LockDoorStatus.OPEN
 
     @property
@@ -208,7 +209,7 @@ class AugustDoorbellBinarySensor(BinarySensorDevice):
             self._available = True
         else:
             self._available = detail is not None and (
-                detail.is_online or detail.status == "standby"
+                detail.is_online or detail.is_standby
             )
 
         self._state = None
