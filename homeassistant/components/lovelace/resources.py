@@ -11,8 +11,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, storage
 
 from .const import (
+    CONF_RESOURCE_TYPE_WS,
     CONF_RESOURCES,
-    CONF_TYPE_WS,
     DOMAIN,
     RESOURCE_CREATE_FIELDS,
     RESOURCE_SCHEMA,
@@ -95,7 +95,7 @@ class ResourceStorageCollection(collection.StorageCollection):
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         data = self.CREATE_SCHEMA(data)
-        data[CONF_TYPE] = data.pop(CONF_TYPE_WS)
+        data[CONF_TYPE] = data.pop(CONF_RESOURCE_TYPE_WS)
         return data
 
     @callback
@@ -110,7 +110,7 @@ class ResourceStorageCollection(collection.StorageCollection):
             self.loaded = True
 
         update_data = self.UPDATE_SCHEMA(update_data)
-        if CONF_TYPE_WS in update_data:
-            update_data[CONF_TYPE] = update_data.pop(CONF_TYPE_WS)
+        if CONF_RESOURCE_TYPE_WS in update_data:
+            update_data[CONF_TYPE] = update_data.pop(CONF_RESOURCE_TYPE_WS)
 
         return {**data, **update_data}

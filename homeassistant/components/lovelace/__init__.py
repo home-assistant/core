@@ -116,7 +116,7 @@ async def async_setup(hass, config):
         collection.StorageCollectionWebsocket(
             resource_collection,
             "lovelace/resources",
-            "lovelace_resource",
+            "resource",
             RESOURCE_CREATE_FIELDS,
             RESOURCE_UPDATE_FIELDS,
         ).async_setup(hass, create_list=False)
