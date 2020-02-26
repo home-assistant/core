@@ -60,6 +60,7 @@ from .const import (
     CHALLENGE_FAILED_PIN_NEEDED,
     ERR_ALREADY_DISARMED,
     ERR_ALREADY_ARMED,
+    CONF_LIGHT_TRANSITION,
 )
 from .error import SmartHomeError, ChallengeNeeded
 
@@ -191,6 +192,7 @@ class BrightnessTrait(_Trait):
     async def execute(self, command, data, params, challenge):
         """Execute a brightness command."""
         domain = self.state.domain
+        transition = self.config._config.get(CONF_LIGHT_TRANSITION)
 
         if domain == light.DOMAIN:
             await self.hass.services.async_call(
@@ -199,6 +201,7 @@ class BrightnessTrait(_Trait):
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     light.ATTR_BRIGHTNESS_PCT: params["brightness"],
+                    light.ATTR_TRANSITION: transition,
                 },
                 blocking=True,
                 context=data.context,

@@ -35,6 +35,8 @@ from .const import (
     CONF_SERVICE_ACCOUNT,
     CONF_CLIENT_EMAIL,
     CONF_PRIVATE_KEY,
+    CONF_LIGHT_TRANSITION,
+    DEFAULT_LIGHT_TRANSITION,
 )
 from .const import EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED  # noqa: F401
 from .const import EVENT_QUERY_RECEIVED  # noqa: F401
@@ -87,6 +89,9 @@ GOOGLE_ASSISTANT_SCHEMA = vol.All(
             vol.Optional(CONF_SECURE_DEVICES_PIN): str,
             vol.Optional(CONF_REPORT_STATE, default=False): cv.boolean,
             vol.Optional(CONF_SERVICE_ACCOUNT): GOOGLE_SERVICE_ACCOUNT,
+            vol.Optional(
+                CONF_LIGHT_TRANSITION, default=DEFAULT_LIGHT_TRANSITION
+            ): vol.All(vol.Coerce(float), vol.Clamp(min=0, max=6553)),
         },
         extra=vol.PREVENT_EXTRA,
     ),

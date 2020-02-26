@@ -36,6 +36,7 @@ CONF_REPORT_STATE = "report_state"
 CONF_SERVICE_ACCOUNT = "service_account"
 CONF_CLIENT_EMAIL = "client_email"
 CONF_PRIVATE_KEY = "private_key"
+CONF_LIGHT_TRANSITION = "light_transition"
 
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
@@ -55,6 +56,7 @@ DEFAULT_EXPOSED_DOMAINS = [
     "sensor",
     "alarm_control_panel",
 ]
+DEFAULT_LIGHT_TRANSITION = 1
 
 PREFIX_TYPES = "action.devices.types."
 TYPE_CAMERA = PREFIX_TYPES + "CAMERA"
