@@ -28,6 +28,9 @@ STATE_SNOOZE = "snooze"
 STATE_LOOKING_TO_TRADE = "looking_to_trade"
 STATE_LOOKING_TO_PLAY = "looking_to_play"
 
+STEAM_API_URL = "https://steamcdn-a.akamaihd.net/steam/"
+STEAM_APP_ENDPOINT = "apps/"
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
@@ -169,9 +172,7 @@ class SteamSensor(Entity):
     def _get_game_image_header(self):
         """Return the current games header image URL."""
         if self._game_id is not None:
-            return (
-                f"https://steamcdn-a.akamaihd.net/steam/apps/{self._game_id}/header.jpg"
-            )
+            return f"{STEAM_API_URL}{STEAM_APP_ENDPOINT}{self._game_id}/header.jpg"
 
         return None
 
@@ -186,7 +187,7 @@ class SteamSensor(Entity):
             attr["game_image_header"] = self._get_game_image_header()
             attr[
                 "game_image_main"
-            ] = f"https://steamcdn-a.akamaihd.net/steam/apps/{self._game_id}/capsule_616x353.jpg"
+            ] = f"{STEAM_API_URL}{STEAM_APP_ENDPOINT}{self._game_id}/capsule_616x353.jpg"
         if self._last_online is not None:
             attr["last_online"] = self._last_online
         if self._level is not None:
