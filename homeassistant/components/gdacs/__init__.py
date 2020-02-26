@@ -194,7 +194,11 @@ class GdacsFeedEntityManager:
     async def _generate_entity(self, external_id):
         """Generate new entity."""
         async_dispatcher_send(
-            self._hass, self.async_event_new_entity(), self, external_id
+            self._hass,
+            self.async_event_new_entity(),
+            self,
+            self._config_entry.title,
+            external_id,
         )
 
     async def _update_entity(self, external_id):

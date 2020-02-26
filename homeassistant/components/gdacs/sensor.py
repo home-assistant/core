@@ -108,6 +108,11 @@ class GdacsSensor(Entity):
         return self._total
 
     @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID containing latitude/longitude."""
+        return self.name
+
+    @property
     def name(self) -> Optional[str]:
         """Return the name of the entity."""
         return f"GDACS ({self._config_title})"
