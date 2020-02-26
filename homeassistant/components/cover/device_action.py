@@ -16,8 +16,6 @@ from homeassistant.const import (
     SERVICE_OPEN_COVER_TILT,
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
-    SERVICE_STOP_COVER,
-    SERVICE_STOP_COVER_TILT,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry
@@ -33,11 +31,9 @@ from . import (
     SUPPORT_OPEN_TILT,
     SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP,
-    SUPPORT_STOP_TILT,
 )
 
-CMD_ACTION_TYPES = {"open", "close", "stop", "open_tilt", "close_tilt", "stop_tilt"}
+CMD_ACTION_TYPES = {"open", "close", "open_tilt", "close_tilt"}
 POSITION_ACTION_TYPES = {"set_position", "set_tilt_position"}
 
 CMD_ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
@@ -75,60 +71,6 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
         supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
 
         # Add actions for each entity that belongs to this integration
-        if supported_features & SUPPORT_OPEN:
-            actions.append(
-                {
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "open",
-                }
-            )
-        if supported_features & SUPPORT_CLOSE:
-            actions.append(
-                {
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "close",
-                }
-            )
-        if supported_features & SUPPORT_STOP:
-            actions.append(
-                {
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "stop",
-                }
-            )
-        if supported_features & SUPPORT_OPEN_TILT:
-            actions.append(
-                {
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "open_tilt",
-                }
-            )
-        if supported_features & SUPPORT_CLOSE_TILT:
-            actions.append(
-                {
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "close_tilt",
-                }
-            )
-        if supported_features & SUPPORT_STOP_TILT:
-            actions.append(
-                {
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "stop_tilt",
-                }
-            )
         if supported_features & SUPPORT_SET_POSITION:
             actions.append(
                 {
@@ -138,6 +80,26 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
                     CONF_TYPE: "set_position",
                 }
             )
+        else:
+            if supported_features & SUPPORT_OPEN:
+                actions.append(
+                    {
+                        CONF_DEVICE_ID: device_id,
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_ENTITY_ID: entry.entity_id,
+                        CONF_TYPE: "open",
+                    }
+                )
+            if supported_features & SUPPORT_CLOSE:
+                actions.append(
+                    {
+                        CONF_DEVICE_ID: device_id,
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_ENTITY_ID: entry.entity_id,
+                        CONF_TYPE: "close",
+                    }
+                )
+
         if supported_features & SUPPORT_SET_TILT_POSITION:
             actions.append(
                 {
@@ -147,6 +109,25 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
                     CONF_TYPE: "set_tilt_position",
                 }
             )
+        else:
+            if supported_features & SUPPORT_OPEN_TILT:
+                actions.append(
+                    {
+                        CONF_DEVICE_ID: device_id,
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_ENTITY_ID: entry.entity_id,
+                        CONF_TYPE: "open_tilt",
+                    }
+                )
+            if supported_features & SUPPORT_CLOSE_TILT:
+                actions.append(
+                    {
+                        CONF_DEVICE_ID: device_id,
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_ENTITY_ID: entry.entity_id,
+                        CONF_TYPE: "close_tilt",
+                    }
+                )
 
     return actions
 
@@ -179,14 +160,10 @@ async def async_call_action_from_config(
         service = SERVICE_OPEN_COVER
     elif config[CONF_TYPE] == "close":
         service = SERVICE_CLOSE_COVER
-    elif config[CONF_TYPE] == "stop":
-        service = SERVICE_STOP_COVER
     elif config[CONF_TYPE] == "open_tilt":
         service = SERVICE_OPEN_COVER_TILT
     elif config[CONF_TYPE] == "close_tilt":
         service = SERVICE_CLOSE_COVER_TILT
-    elif config[CONF_TYPE] == "stop_tilt":
-        service = SERVICE_STOP_COVER_TILT
     elif config[CONF_TYPE] == "set_position":
         service = SERVICE_SET_COVER_POSITION
         service_data[ATTR_POSITION] = config["position"]

@@ -60,12 +60,6 @@ async def test_get_actions(hass, device_reg, entity_reg):
             "device_id": device_entry.id,
             "entity_id": ent.entity_id,
         },
-        {
-            "domain": DOMAIN,
-            "type": "stop",
-            "device_id": device_entry.id,
-            "entity_id": ent.entity_id,
-        },
     ]
     actions = await async_get_device_automations(hass, "action", device_entry.id)
     assert_lists_same(actions, expected_actions)
@@ -89,24 +83,6 @@ async def test_get_actions_set_pos(hass, device_reg, entity_reg):
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
 
     expected_actions = [
-        {
-            "domain": DOMAIN,
-            "type": "open",
-            "device_id": device_entry.id,
-            "entity_id": ent.entity_id,
-        },
-        {
-            "domain": DOMAIN,
-            "type": "close",
-            "device_id": device_entry.id,
-            "entity_id": ent.entity_id,
-        },
-        {
-            "domain": DOMAIN,
-            "type": "stop",
-            "device_id": device_entry.id,
-            "entity_id": ent.entity_id,
-        },
         {
             "domain": DOMAIN,
             "type": "set_position",
@@ -150,30 +126,6 @@ async def test_get_actions_set_tilt_pos(hass, device_reg, entity_reg):
         },
         {
             "domain": DOMAIN,
-            "type": "stop",
-            "device_id": device_entry.id,
-            "entity_id": ent.entity_id,
-        },
-        {
-            "domain": DOMAIN,
-            "type": "open_tilt",
-            "device_id": device_entry.id,
-            "entity_id": ent.entity_id,
-        },
-        {
-            "domain": DOMAIN,
-            "type": "close_tilt",
-            "device_id": device_entry.id,
-            "entity_id": ent.entity_id,
-        },
-        {
-            "domain": DOMAIN,
-            "type": "stop_tilt",
-            "device_id": device_entry.id,
-            "entity_id": ent.entity_id,
-        },
-        {
-            "domain": DOMAIN,
             "type": "set_tilt_position",
             "device_id": device_entry.id,
             "entity_id": ent.entity_id,
@@ -202,7 +154,7 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
 
     actions = await async_get_device_automations(hass, "action", device_entry.id)
-    assert len(actions) == 3
+    assert len(actions) == 2  # open, close
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
             hass, "action", action
@@ -241,7 +193,7 @@ async def test_get_action_capabilities_set_pos(hass, device_reg, entity_reg):
         ]
     }
     actions = await async_get_device_automations(hass, "action", device_entry.id)
-    assert len(actions) == 4
+    assert len(actions) == 1  # set_position
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
             hass, "action", action
@@ -283,7 +235,7 @@ async def test_get_action_capabilities_set_tilt_pos(hass, device_reg, entity_reg
         ]
     }
     actions = await async_get_device_automations(hass, "action", device_entry.id)
-    assert len(actions) == 7
+    assert len(actions) == 3  # open, close, set_tilt_position
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
             hass, "action", action
@@ -323,40 +275,27 @@ async def test_action(hass):
                         "type": "close",
                     },
                 },
-                {
-                    "trigger": {"platform": "event", "event_type": "test_event_stop"},
-                    "action": {
-                        "domain": DOMAIN,
-                        "device_id": "abcdefgh",
-                        "entity_id": "cover.entity",
-                        "type": "stop",
-                    },
-                },
             ]
         },
     )
 
     open_calls = async_mock_service(hass, "cover", "open_cover")
     close_calls = async_mock_service(hass, "cover", "close_cover")
-    stop_calls = async_mock_service(hass, "cover", "stop_cover")
 
     hass.bus.async_fire("test_event_open")
     await hass.async_block_till_done()
     assert len(open_calls) == 1
     assert len(close_calls) == 0
-    assert len(stop_calls) == 0
 
     hass.bus.async_fire("test_event_close")
     await hass.async_block_till_done()
     assert len(open_calls) == 1
     assert len(close_calls) == 1
-    assert len(stop_calls) == 0
 
     hass.bus.async_fire("test_event_stop")
     await hass.async_block_till_done()
     assert len(open_calls) == 1
     assert len(close_calls) == 1
-    assert len(stop_calls) == 1
 
 
 async def test_action_tilt(hass):
@@ -388,40 +327,27 @@ async def test_action_tilt(hass):
                         "type": "close_tilt",
                     },
                 },
-                {
-                    "trigger": {"platform": "event", "event_type": "test_event_stop"},
-                    "action": {
-                        "domain": DOMAIN,
-                        "device_id": "abcdefgh",
-                        "entity_id": "cover.entity",
-                        "type": "stop_tilt",
-                    },
-                },
             ]
         },
     )
 
     open_calls = async_mock_service(hass, "cover", "open_cover_tilt")
     close_calls = async_mock_service(hass, "cover", "close_cover_tilt")
-    stop_calls = async_mock_service(hass, "cover", "stop_cover_tilt")
 
     hass.bus.async_fire("test_event_open")
     await hass.async_block_till_done()
     assert len(open_calls) == 1
     assert len(close_calls) == 0
-    assert len(stop_calls) == 0
 
     hass.bus.async_fire("test_event_close")
     await hass.async_block_till_done()
     assert len(open_calls) == 1
     assert len(close_calls) == 1
-    assert len(stop_calls) == 0
 
     hass.bus.async_fire("test_event_stop")
     await hass.async_block_till_done()
     assert len(open_calls) == 1
     assert len(close_calls) == 1
-    assert len(stop_calls) == 1
 
 
 async def test_action_set_position(hass):
