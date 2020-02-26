@@ -474,7 +474,7 @@ class SimpliSafe:
 
         tasks = [update_system(system) for system in self.systems.values()]
 
-        results = asyncio.gather(*tasks, return_exceptions=True)
+        results = await asyncio.gather(*tasks, return_exceptions=True)
         for result in results:
             if isinstance(result, InvalidCredentialsError):
                 if self._emergency_refresh_token_used:
