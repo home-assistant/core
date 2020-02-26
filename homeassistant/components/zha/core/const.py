@@ -62,6 +62,7 @@ CHANNEL_EVENT_RELAY = "event_relay"
 CHANNEL_FAN = "fan"
 CHANNEL_HUMIDITY = "humidity"
 CHANNEL_IAS_WD = "ias_wd"
+CHANNEL_IDENTIFY = "identify"
 CHANNEL_ILLUMINANCE = "illuminance"
 CHANNEL_LEVEL = ATTR_LEVEL
 CHANNEL_MULTISTATE_INPUT = "multistate_input"
