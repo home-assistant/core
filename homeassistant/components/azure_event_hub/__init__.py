@@ -59,9 +59,32 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
+async def async_setup(hass, yaml_config):
     """Activate Azure EH component."""
     config = yaml_config[DOMAIN]
+    _LOGGER.debug("Config: %s", config)
+    entities_filter = config.get(CONF_FILTER)
+    if config.get(CONF_EVENT_HUB_CON_STRING, None):
+        client_args = {"conn_str": config[CONF_EVENT_HUB_CON_STRING]}
+        conn_str_client = True
+    else:
+        client_args = {
+            "fully_qualified_namespace": f"{config[CONF_EVENT_HUB_NAMESPACE]}.servicebus.windows.net",
+            "credential": EventHubSharedKeyCredential(
+                policy=config[CONF_EVENT_HUB_SAS_POLICY],
+                key=config[CONF_EVENT_HUB_SAS_KEY],
+            ),
+            "eventhub_name": config[CONF_EVENT_HUB_INSTANCE_NAME],
+        }
+        conn_str_client = False
+
+    instance = hass.data[DOMAIN] = AEHThread(
+        hass, client_args, conn_str_client, entities_filter
+    )
+    instance.async_initialize()
+    instance.start()
+
+    return await instance.async_ready
 
     entities_filter = config[CONF_FILTER]
     if config[CONF_IOT_HUB_CON_STRING]:
