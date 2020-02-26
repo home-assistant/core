@@ -12,10 +12,11 @@ ACTIVE_NAME = "Energy"
 ACTIVE_TYPE = "active"
 
 CONSUMPTION_NAME = "Usage"
+CONSUMPTION_ID = "usage"
+PRODUCTION_NAME = "Production"
+PRODUCTION_ID = "production"
 
 ICON = "mdi:flash"
-
-PRODUCTION_NAME = "Production"
 
 MDI_ICONS = {
     "ac": "air-conditioner",

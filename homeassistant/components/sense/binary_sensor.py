@@ -115,24 +115,22 @@ class SenseDevice(BinarySensorDevice):
         """Return the deviceshould not poll for updates."""
         return False
 
-    async def async_update(self):
-        """Get the latest data, update state."""
-        self._available = True
-        self._state = bool(self._sense_devices_data.get_device_by_id(self._id))
-
     async def async_added_to_hass(self):
         """Register callbacks."""
-
-        @callback
-        def update():
-            """Update the state."""
-            self.async_schedule_update_ha_state(True)
-
         self._undo_dispatch_subscription = async_dispatcher_connect(
-            self.hass, f"{SENSE_DEVICE_UPDATE}-{self._sense_monitor_id}", update
+            self.hass,
+            f"{SENSE_DEVICE_UPDATE}-{self._sense_monitor_id}",
+            self._async_update_from_data,
         )
 
     async def async_will_remove_from_hass(self):
         """Undo subscription."""
         if self._undo_dispatch_subscription:
             self._undo_dispatch_subscription()
+
+    @callback
+    def _async_update_from_data(self):
+        """Get the latest data, update state. Must not do I/O."""
+        self._available = True
+        self._state = bool(self._sense_devices_data.get_device_by_id(self._id))
+        self.async_write_ha_state()

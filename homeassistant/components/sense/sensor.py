@@ -13,10 +13,12 @@ from homeassistant.util import Throttle
 from .const import (
     ACTIVE_NAME,
     ACTIVE_TYPE,
+    CONSUMPTION_ID,
     CONSUMPTION_NAME,
     DOMAIN,
     ICON,
     MDI_ICONS,
+    PRODUCTION_ID,
     PRODUCTION_NAME,
     SENSE_DATA,
     SENSE_DEVICE_UPDATE,
@@ -51,7 +53,7 @@ TRENDS_SENSOR_TYPES = {
 }
 
 # Production/consumption variants
-SENSOR_VARIANTS = [PRODUCTION_NAME.lower(), CONSUMPTION_NAME.lower()]
+SENSOR_VARIANTS = [PRODUCTION_ID, CONSUMPTION_ID]
 
 
 def sense_to_mdi(sense_icon):
@@ -84,9 +86,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for var in SENSOR_VARIANTS:
         name = ACTIVE_SENSOR_TYPE.name
         sensor_type = ACTIVE_SENSOR_TYPE.sensor_type
-        is_production = var == PRODUCTION_NAME.lower()
+        is_production = var == PRODUCTION_ID
 
-        unique_id = f"{sense_monitor_id}-active-{var}".lower()
+        unique_id = f"{sense_monitor_id}-active-{var}"
         devices.append(
             SenseActiveSensor(
                 data, name, sensor_type, is_production, sense_monitor_id, var, unique_id
@@ -98,9 +100,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for var in SENSOR_VARIANTS:
             name = typ.name
             sensor_type = typ.sensor_type
-            is_production = var == PRODUCTION_NAME.lower()
+            is_production = var == PRODUCTION_ID
 
-            unique_id = f"{sense_monitor_id}-{type_id}-{var}".lower()
+            unique_id = f"{sense_monitor_id}-{type_id}-{var}"
             devices.append(
                 SenseTrendsSensor(
                     data,
@@ -176,31 +178,29 @@ class SenseActiveSensor(Entity):
         """Return the device should not poll for updates."""
         return False
 
-    async def async_update(self):
-        """Get the latest data, update state."""
-        if self._is_production:
-            self._state = round(self._data.active_solar_power)
-        else:
-            self._state = round(self._data.active_power)
-
-        self._available = True
-
     async def async_added_to_hass(self):
         """Register callbacks."""
-
-        @callback
-        def update():
-            """Update the state."""
-            self.async_schedule_update_ha_state(True)
-
         self._undo_dispatch_subscription = async_dispatcher_connect(
-            self.hass, f"{SENSE_DEVICE_UPDATE}-{self._sense_monitor_id}", update
+            self.hass,
+            f"{SENSE_DEVICE_UPDATE}-{self._sense_monitor_id}",
+            self._async_update_from_data,
         )
 
     async def async_will_remove_from_hass(self):
         """Undo subscription."""
         if self._undo_dispatch_subscription:
             self._undo_dispatch_subscription()
+
+    @callback
+    def _async_update_from_data(self):
+        """Update the sensor from the data. Must not do I/O."""
+        self._state = round(
+            self._data.active_solar_power
+            if self._is_production
+            else self._data.active_power
+        )
+        self._available = True
+        self.async_write_ha_state()
 
 
 class SenseTrendsSensor(Entity):
@@ -274,7 +274,7 @@ class SenseEnergyDevice(Entity):
         self._id = device["id"]
         self._available = False
         self._sense_monitor_id = sense_monitor_id
-        self._unique_id = f"{sense_monitor_id}-{self._id}-{CONSUMPTION_NAME.lower()}"
+        self._unique_id = f"{sense_monitor_id}-{self._id}-{CONSUMPTION_ID}"
         self._icon = sense_to_mdi(device["icon"])
         self._sense_devices_data = sense_devices_data
         self._undo_dispatch_subscription = None
@@ -320,29 +320,26 @@ class SenseEnergyDevice(Entity):
         """Return the device should not poll for updates."""
         return False
 
-    async def async_update(self):
-        """Get the latest data, update state."""
-        self._available = True
-        device_data = self._sense_devices_data.get_device_by_id(self._id)
-        if not device_data or "w" not in device_data:
-            self._state = 0
-            return
-
-        self._state = int(device_data["w"])
-
     async def async_added_to_hass(self):
         """Register callbacks."""
-
-        @callback
-        def update():
-            """Update the state."""
-            self.async_schedule_update_ha_state(True)
-
         self._undo_dispatch_subscription = async_dispatcher_connect(
-            self.hass, f"{SENSE_DEVICE_UPDATE}-{self._sense_monitor_id}", update
+            self.hass,
+            f"{SENSE_DEVICE_UPDATE}-{self._sense_monitor_id}",
+            self._async_update_from_data,
         )
 
     async def async_will_remove_from_hass(self):
         """Undo subscription."""
         if self._undo_dispatch_subscription:
             self._undo_dispatch_subscription()
+
+    @callback
+    def _async_update_from_data(self):
+        """Get the latest data, update state. Must not do I/O."""
+        device_data = self._sense_devices_data.get_device_by_id(self._id)
+        if not device_data or "w" not in device_data:
+            self._state = 0
+        else:
+            self._state = int(device_data["w"])
+        self._available = True
+        self.async_write_ha_state()
