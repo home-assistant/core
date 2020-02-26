@@ -13,7 +13,7 @@ DEFAULT_GPS_ACCURACY_THRESHOLD = 500  # meters
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
-ICLOUD_COMPONENTS = ["device_tracker", "sensor"]
+PLATFORMS = ["device_tracker", "sensor"]
 
 # pyicloud.AppleDevice status
 DEVICE_BATTERY_LEVEL = "batteryLevel"

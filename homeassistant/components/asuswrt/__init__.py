@@ -70,7 +70,7 @@ async def async_setup(hass, config):
 
     await api.connection.async_connect()
     if not api.is_connected:
-        _LOGGER.error("Unable to setup asuswrt component")
+        _LOGGER.error("Unable to setup component")
         return False
 
     hass.data[DATA_ASUSWRT] = api

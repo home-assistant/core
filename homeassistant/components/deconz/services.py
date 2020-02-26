@@ -6,9 +6,9 @@ from homeassistant.helpers import config_validation as cv
 
 from .config_flow import get_master_gateway
 from .const import (
-    _LOGGER,
     CONF_BRIDGE_ID,
     DOMAIN,
+    LOGGER,
     NEW_GROUP,
     NEW_LIGHT,
     NEW_SCENE,
@@ -110,7 +110,7 @@ async def async_configure_service(hass, data):
         try:
             field = gateway.deconz_ids[entity_id] + field
         except KeyError:
-            _LOGGER.error("Could not find the entity %s", entity_id)
+            LOGGER.error("Could not find the entity %s", entity_id)
             return
 
     await gateway.api.request("put", field, json=data)

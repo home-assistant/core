@@ -378,7 +378,7 @@ class AmbientStation:
             if data != self.stations[mac_address][ATTR_LAST_DATA]:
                 _LOGGER.debug("New data received: %s", data)
                 self.stations[mac_address][ATTR_LAST_DATA] = data
-                async_dispatcher_send(self._hass, TOPIC_UPDATE)
+                async_dispatcher_send(self._hass, TOPIC_UPDATE.format(mac_address))
 
             _LOGGER.debug("Resetting watchdog")
             self._watchdog_listener()
@@ -518,7 +518,7 @@ class AmbientWeatherEntity(Entity):
             self.async_schedule_update_ha_state(True)
 
         self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_UPDATE, update
+            self.hass, TOPIC_UPDATE.format(self._mac_address), update
         )
 
     async def async_will_remove_from_hass(self):

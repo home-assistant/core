@@ -39,7 +39,7 @@ def check_real(func):
     """Force a function to require a keyword _test_real to be passed in."""
 
     @functools.wraps(func)
-    def guard_func(*args, **kwargs):
+    async def guard_func(*args, **kwargs):
         real = kwargs.pop("_test_real", None)
 
         if not real:
@@ -47,7 +47,7 @@ def check_real(func):
                 'Forgot to mock or pass "_test_real=True" to %s', func.__name__
             )
 
-        return func(*args, **kwargs)
+        return await func(*args, **kwargs)
 
     return guard_func
 

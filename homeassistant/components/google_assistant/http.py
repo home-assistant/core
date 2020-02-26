@@ -180,7 +180,7 @@ class GoogleConfig(AbstractConfig):
             return 500
 
     async def async_call_homegraph_api(self, url, data):
-        """Call a homegraph api with authenticaiton."""
+        """Call a homegraph api with authentication."""
         session = async_get_clientsession(self.hass)
 
         async def _call():

@@ -32,7 +32,7 @@
             "already_paired": "This accessory is already paired to another device. Please reset the accessory and try again.",
             "ignored_model": "HomeKit support for this model is blocked as a more feature complete native integration is available.",
             "already_configured": "Accessory is already configured with this controller.",
-            "invalid_config_entry": "This device is showing as ready to pair but there is already a conflicting config entry for it in Home Assistant that must first be removed.",
+            "invalid_config_entry": "This device is showing as ready to pair but there is already a conflicting configuration entry for it in Home Assistant that must first be removed.",
             "accessory_not_found_error": "Cannot add pairing as device can no longer be found.",
             "already_in_progress": "Config flow for device is already in progress."
         }

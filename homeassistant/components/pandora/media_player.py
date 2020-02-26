@@ -119,8 +119,8 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         elif mode == 2:
             _LOGGER.warning(
                 "The pianobar client is not configured to log in. "
-                "Please create a config file for it as described at "
-                "https://home-assistant.io/components/media_player.pandora/"
+                "Please create a configuration file for it as described at "
+                "https://home-assistant.io/integrations/pandora/"
             )
             # pass through the email/password prompts to quit cleanly
             self._pianobar.sendcontrol("m")

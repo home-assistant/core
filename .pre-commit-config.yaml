@@ -1,10 +1,3 @@
-# This configuration includes the default, minimal set of hooks to be
-# run on all commits. It requires no specific setup and one can just
-# start using pre-commit with it.
-#
-# See .pre-commit-config-all.yaml for a more complete one that comes
-# with a better coverage at the cost of some specific setup needed.
-
 repos:
 -   repo: https://github.com/psf/black
     rev: 19.10b0
@@ -14,6 +7,15 @@ repos:
           - --safe
           - --quiet
         files: ^((homeassistant|script|tests)/.+)?[^/]+\.py$
+-   repo: https://github.com/codespell-project/codespell
+    rev: v1.16.0
+    hooks:
+    -   id: codespell
+        args:
+          - --ignore-words-list=hass,alot,datas,dof,dur,farenheit,hist,iff,ines,ist,lightsensor,mut,nd,pres,referer,ser,serie,te,technik,ue,uint,visability,wan,wanna,withing
+          - --skip="./.*,*.json"
+          - --quiet-level=2
+        exclude_types: [json]
 -   repo: https://gitlab.com/pycqa/flake8
     rev: 3.7.9
     hooks:
@@ -39,3 +41,16 @@ repos:
     rev: v2.4.0
     hooks:
     -   id: check-json
+-   repo: local
+    hooks:
+    # Run mypy through our wrapper script in order to get the possible
+    # pyenv and/or virtualenv activated; it may not have been e.g. if
+    # committing from a GUI tool that was not launched from an activated
+    # shell.
+    -   id: mypy
+        name: mypy
+        entry: script/run-in-env.sh mypy
+        language: script
+        types: [python]
+        require_serial: true
+        files: ^homeassistant/.+\.py$

@@ -610,7 +610,7 @@ async def test_close_cover(hass_hue, hue_client):
 
 
 async def test_set_position_cover(hass_hue, hue_client):
-    """Test setting postion cover ."""
+    """Test setting position cover ."""
     COVER_ID = "cover.living_room_window"
     # Turn the office light off first
     await hass_hue.services.async_call(
