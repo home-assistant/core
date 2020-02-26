@@ -356,7 +356,7 @@ class BraviaTVDevice(MediaPlayerDevice):
     def media_stop(self):
         """Send media stop command to media player."""
         self._playing = False
-        self._braviarc.meadia_stop()
+        self._braviarc.media_stop()
 
     def media_next_track(self):
         """Send next track command."""
