@@ -55,6 +55,7 @@ class SenseDevicesData:
 
     def set_devices_data(self, devices):
         """Store a device update."""
+        self._data_by_device = {}
         for device in devices:
             self._data_by_device[device["id"]] = device
 
