@@ -136,9 +136,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     keep_days = conf.get(CONF_PURGE_KEEP_DAYS)
     purge_interval = conf.get(CONF_PURGE_INTERVAL)
 
-    db_url = conf.get(CONF_DB_URL, None)
-    if not db_url:
-        db_url = DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
+    # db_url = conf.get(CONF_DB_URL, None)
+    # if not db_url:
+    #     db_url = DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
+    # AIS dom fix
+    db_url = DEFAULT_URL
 
     include = conf.get(CONF_INCLUDE, {})
     exclude = conf.get(CONF_EXCLUDE, {})

@@ -205,6 +205,8 @@ def async_enable_logging(
     logging.getLogger("requests").setLevel(logging.WARNING)
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
+    #
+    return
 
     # Log errors to a file if we have write access to file or config dir
     if log_file is None:

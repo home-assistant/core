@@ -79,3 +79,10 @@ cd /data/data/pl.sviete.dom
 # su -c "tar -cvzf /sdcard/files.tar files"
 # to prevent the kill form Android, 7z have to be limited to 2 threads only (mmt=2)
 7za a -m0=lzma2 /sdcard/files.tar.7z /data/data/pl.sviete.dom/files -mmt=2
+
+
+# 15. rm links to drives
+rm /data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/*
+rm /data/data/pl.sviete.dom/files/home/dom/dyski-zewnętrzne/*
+rm -rf /data/data/pl.sviete.dom/files/home/dom/dyski-zewnętrzne/*
+
