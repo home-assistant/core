@@ -183,7 +183,7 @@ class ConfigEntry:
             component = integration.get_component()
         except ImportError as err:
             _LOGGER.error(
-                "Error importing integration %s to set up %s config entry: %s",
+                "Error importing integration %s to set up %s configuration entry: %s",
                 integration.domain,
                 self.domain,
                 err,
@@ -197,7 +197,7 @@ class ConfigEntry:
                 integration.get_platform("config_flow")
             except ImportError as err:
                 _LOGGER.error(
-                    "Error importing platform config_flow from integration %s to set up %s config entry: %s",
+                    "Error importing platform config_flow from integration %s to set up %s configuration entry: %s",
                     integration.domain,
                     self.domain,
                     err,
@@ -503,7 +503,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
             integration.get_platform("config_flow")
         except ImportError as err:
             _LOGGER.error(
-                "Error occurred loading config flow for integration %s: %s",
+                "Error occurred loading configuration flow for integration %s: %s",
                 handler_key,
                 err,
             )
@@ -775,6 +775,7 @@ class ConfigEntries:
 
         return await entry.async_unload(self.hass, integration=integration)
 
+    @callback
     def _async_schedule_save(self) -> None:
         """Save the entity registry to a file."""
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
@@ -947,7 +948,7 @@ class SystemOptions:
         self.disable_new_entities = disable_new_entities
 
     def as_dict(self) -> Dict[str, Any]:
-        """Return dictionary version of this config entrys system options."""
+        """Return dictionary version of this config entries system options."""
         return {"disable_new_entities": self.disable_new_entities}
 
 
@@ -1024,7 +1025,7 @@ class EntityRegistryDisabledHandler:
         self.changed = set()
 
         _LOGGER.info(
-            "Reloading config entries because disabled_by changed in entity registry: %s",
+            "Reloading configuration entries because disabled_by changed in entity registry: %s",
             ", ".join(self.changed),
         )
 

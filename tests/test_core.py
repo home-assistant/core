@@ -904,6 +904,7 @@ class TestConfig(unittest.TestCase):
             "whitelist_external_dirs": set(),
             "version": __version__,
             "config_source": "default",
+            "safe_mode": False,
         }
 
         assert expected == self.config.as_dict()
@@ -1180,3 +1181,28 @@ def test_context():
     assert c.user_id == 23
     assert c.parent_id == 100
     assert c.id is not None
+
+
+async def test_async_functions_with_callback(hass):
+    """Test we deal with async functions accidentally marked as callback."""
+    runs = []
+
+    @ha.callback
+    async def test():
+        runs.append(True)
+
+    await hass.async_add_job(test)
+    assert len(runs) == 1
+
+    hass.async_run_job(test)
+    await hass.async_block_till_done()
+    assert len(runs) == 2
+
+    @ha.callback
+    async def service_handler(call):
+        runs.append(True)
+
+    hass.services.async_register("test_domain", "test_service", service_handler)
+
+    await hass.services.async_call("test_domain", "test_service", blocking=True)
+    assert len(runs) == 3

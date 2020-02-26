@@ -1,5 +1,6 @@
 """Alexa capabilities."""
 import logging
+import math
 
 from homeassistant.components import (
     cover,
@@ -645,6 +646,43 @@ class AlexaSpeaker(AlexaCapability):
         """Return the Alexa API name of this interface."""
         return "Alexa.Speaker"
 
+    def properties_supported(self):
+        """Return what properties this entity supports."""
+        properties = [{"name": "volume"}]
+
+        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if supported & media_player.SUPPORT_VOLUME_MUTE:
+            properties.append({"name": "muted"})
+
+        return properties
+
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return True
+
+    def properties_retrievable(self):
+        """Return True if properties can be retrieved."""
+        return True
+
+    def get_property(self, name):
+        """Read and return a property."""
+        if name == "volume":
+            current_level = self.entity.attributes.get(
+                media_player.ATTR_MEDIA_VOLUME_LEVEL
+            )
+            try:
+                current = math.floor(int(current_level * 100))
+            except ZeroDivisionError:
+                current = 0
+            return current
+
+        if name == "muted":
+            return bool(
+                self.entity.attributes.get(media_player.ATTR_MEDIA_VOLUME_MUTED)
+            )
+
+        return None
+
 
 class AlexaStepSpeaker(AlexaCapability):
     """Implements Alexa.StepSpeaker.
@@ -711,6 +749,13 @@ class AlexaInputController(AlexaCapability):
         source_list = self.entity.attributes.get(
             media_player.ATTR_INPUT_SOURCE_LIST, []
         )
+        input_list = AlexaInputController.get_valid_inputs(source_list)
+
+        return input_list
+
+    @staticmethod
+    def get_valid_inputs(source_list):
+        """Return list of supported inputs."""
         input_list = []
         for source in source_list:
             formatted_source = (

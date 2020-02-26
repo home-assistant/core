@@ -731,6 +731,9 @@ async def async_process_component_config(
         except (vol.Invalid, HomeAssistantError) as ex:
             async_log_exception(ex, domain, config, hass, integration.documentation)
             return None
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unknown error calling %s config validator", domain)
+            return None
 
     # No custom config validator, proceed with schema validation
     if hasattr(component, "CONFIG_SCHEMA"):
@@ -738,6 +741,9 @@ async def async_process_component_config(
             return component.CONFIG_SCHEMA(config)  # type: ignore
         except vol.Invalid as ex:
             async_log_exception(ex, domain, config, hass, integration.documentation)
+            return None
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unknown error calling %s CONFIG_SCHEMA", domain)
             return None
 
     component_platform_schema = getattr(
@@ -754,6 +760,13 @@ async def async_process_component_config(
             p_validated = component_platform_schema(p_config)
         except vol.Invalid as ex:
             async_log_exception(ex, domain, p_config, hass, integration.documentation)
+            continue
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception(
+                "Unknown error validating %s platform config with %s component platform schema",
+                p_name,
+                domain,
+            )
             continue
 
         # Not all platform components follow same pattern for platforms
@@ -788,6 +801,13 @@ async def async_process_component_config(
                     p_config,
                     hass,
                     p_integration.documentation,
+                )
+                continue
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception(
+                    "Unknown error validating config for %s platform for %s component with PLATFORM_SCHEMA",
+                    p_name,
+                    domain,
                 )
                 continue
 

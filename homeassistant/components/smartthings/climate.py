@@ -406,7 +406,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
                     self._device.device_id,
                     mode,
                 )
-        self._hvac_modes = modes
+        self._hvac_modes = list(modes)
 
     @property
     def current_temperature(self):

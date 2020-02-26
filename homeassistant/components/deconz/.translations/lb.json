@@ -108,7 +108,8 @@
                     "allow_clip_sensor": "deCONZ Clip Sensoren erlaben",
                     "allow_deconz_groups": "deCONZ Luucht Gruppen erlaben"
                 },
-                "description": "Visibilit\u00e9it vun deCONZ Apparater konfigur\u00e9ieren"
+                "description": "Visibilit\u00e9it vun deCONZ Apparater konfigur\u00e9ieren",
+                "title": "deCONZ Optiounen"
             }
         }
     }

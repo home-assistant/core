@@ -52,4 +52,14 @@ markComment: >
 limitPerRun: 30
 
 # Limit to only `issues` or `pulls`
-only: issues
+# only: issues
+
+# Handle pull requests a little bit faster and with an adjusted comment.
+pulls:
+  daysUntilStale: 30
+  markComment: >
+    There hasn't been any activity on this pull request recently. This pull
+    request has been automatically marked as stale because of that and will
+    be closed if no further activity occurs within 7 days.
+
+    Thank you for your contributions.

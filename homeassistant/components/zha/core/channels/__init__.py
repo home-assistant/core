@@ -194,8 +194,7 @@ class ZigbeeChannel(LogMixin):
 
     async def async_configure(self):
         """Set cluster binding and attribute reporting."""
-        # Xiaomi devices don't need this and it disrupts pairing
-        if self._zha_device.manufacturer != "LUMI":
+        if not self._zha_device.skip_configuration:
             await self.bind()
             if self.cluster.is_server:
                 for report_config in self._report_config:
@@ -203,8 +202,9 @@ class ZigbeeChannel(LogMixin):
                         report_config["attr"], report_config["config"]
                     )
                     await asyncio.sleep(uniform(0.1, 0.5))
-
-        self.debug("finished channel configuration")
+            self.debug("finished channel configuration")
+        else:
+            self.debug("skipping channel configuration")
         self._status = ChannelStatus.CONFIGURED
 
     async def async_initialize(self, from_cache):
@@ -264,7 +264,7 @@ class ZigbeeChannel(LogMixin):
     def log(self, level, msg, *args):
         """Log a message."""
         msg = f"[%s:%s]: {msg}"
-        args = (self.device.nwk, self._id,) + args
+        args = (self.device.nwk, self._id) + args
         _LOGGER.log(level, msg, *args)
 
     def __getattr__(self, name):

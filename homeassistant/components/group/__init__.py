@@ -13,6 +13,8 @@ from homeassistant.const import (
     ATTR_NAME,
     CONF_ICON,
     CONF_NAME,
+    ENTITY_MATCH_ALL,
+    ENTITY_MATCH_NONE,
     SERVICE_RELOAD,
     STATE_CLOSED,
     STATE_HOME,
@@ -134,7 +136,10 @@ def expand_entity_ids(hass: HomeAssistantType, entity_ids: Iterable[Any]) -> Lis
     """
     found_ids: List[str] = []
     for entity_id in entity_ids:
-        if not isinstance(entity_id, str):
+        if not isinstance(entity_id, str) or entity_id in (
+            ENTITY_MATCH_NONE,
+            ENTITY_MATCH_ALL,
+        ):
             continue
 
         entity_id = entity_id.lower()

@@ -4,5 +4,5 @@
   "documentation": "https://www.home-assistant.io/integrations/signal_messenger",
   "dependencies": [],
   "codeowners": ["@bbernhard"],
-  "requirements": ["pysignalclirestapi==0.1.4"]
+  "requirements": ["pysignalclirestapi==0.2.4"]
 }

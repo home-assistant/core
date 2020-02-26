@@ -36,7 +36,7 @@ def init_valid_settings(hass, config):
 
 @pytest.fixture(name="invalid_provider_settings")
 def init_invalid_provider_settings(hass, config):
-    """Set invalid provider data and initalize component."""
+    """Set invalid provider data and initialize component."""
     config["notify"][CONF_PROVIDER] = "FantasyMobile"  # invalid provider
     return async_setup_component(hass, "notify", config)
 

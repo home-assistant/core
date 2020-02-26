@@ -30,6 +30,7 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_ZONE,
     ENTITY_MATCH_ALL,
+    ENTITY_MATCH_NONE,
     STATE_OFF,
     STATE_ON,
     STATE_PAUSED,
@@ -201,6 +202,10 @@ class DenonDevice(MediaPlayerDevice):
     def signal_handler(self, data):
         """Handle domain-specific signal by calling appropriate method."""
         entity_ids = data[ATTR_ENTITY_ID]
+
+        if entity_ids == ENTITY_MATCH_NONE:
+            return
+
         if entity_ids == ENTITY_MATCH_ALL or self.entity_id in entity_ids:
             params = {
                 key: value
