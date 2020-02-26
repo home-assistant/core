@@ -118,8 +118,7 @@ class SenseDevice(BinarySensorDevice):
     async def async_update(self):
         """Get the latest data, update state."""
         self._available = True
-        device_data = self._sense_devices_data.get_device_by_id(self._id)
-        self._state = True if device_data else False
+        self._state = bool(self._sense_devices_data.get_device_by_id(self._id))
 
     async def async_added_to_hass(self):
         """Register callbacks."""
