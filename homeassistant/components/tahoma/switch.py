@@ -13,6 +13,8 @@ ATTR_RSSI_LEVEL = "rssi_level"
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Tahoma switches."""
+    if discovery_info is None:
+        return
     controller = hass.data[TAHOMA_DOMAIN]["controller"]
     devices = []
     for switch in hass.data[TAHOMA_DOMAIN]["devices"]["switch"]:

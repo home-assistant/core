@@ -144,17 +144,17 @@ def do_authentication(hass, hass_config, config):
         dev_flow = oauth.step1_get_device_and_user_codes()
     except OAuth2DeviceCodeError as err:
         hass.components.persistent_notification.create(
-            "Error: {}<br />You will need to restart hass after fixing." "".format(err),
+            f"Error: {err}<br />You will need to restart hass after fixing." "",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
         return False
 
     hass.components.persistent_notification.create(
-        "In order to authorize Home-Assistant to view your calendars "
-        'you must visit: <a href="{}" target="_blank">{}</a> and enter '
-        "code: {}".format(
-            dev_flow.verification_url, dev_flow.verification_url, dev_flow.user_code
+        (
+            f"In order to authorize Home-Assistant to view your calendars "
+            f'you must visit: <a href="{dev_flow.verification_url}" target="_blank">{dev_flow.verification_url}</a> and enter '
+            f"code: {dev_flow.user_code}"
         ),
         title=NOTIFICATION_TITLE,
         notification_id=NOTIFICATION_ID,
@@ -182,8 +182,10 @@ def do_authentication(hass, hass_config, config):
         do_setup(hass, hass_config, config)
         listener()
         hass.components.persistent_notification.create(
-            "We are all setup now. Check {} for calendars that have "
-            "been found".format(YAML_DEVICES),
+            (
+                f"We are all setup now. Check {YAML_DEVICES} for calendars that have "
+                f"been found"
+            ),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )

@@ -2,9 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Enheten \u00e4r redan konfigurerad",
-            "bad_config_file": "Felaktig data fr\u00e5n config fil",
+            "bad_config_file": "Felaktig data fr\u00e5n konfigurationsfilen",
             "link_local_address": "Link local addresses are not supported",
-            "not_axis_device": "Uppt\u00e4ckte enhet som inte \u00e4r en Axis enhet"
+            "not_axis_device": "Uppt\u00e4ckte enhet som inte \u00e4r en Axis enhet",
+            "updated_configuration": "Uppdaterad enhetskonfiguration med ny v\u00e4rdadress"
         },
         "error": {
             "already_configured": "Enheten \u00e4r redan konfigurerad",
@@ -12,6 +13,7 @@
             "device_unavailable": "Enheten \u00e4r inte tillg\u00e4nglig",
             "faulty_credentials": "Felaktiga anv\u00e4ndaruppgifter"
         },
+        "flow_title": "Axisenhet: {name} ({host})",
         "step": {
             "user": {
                 "data": {

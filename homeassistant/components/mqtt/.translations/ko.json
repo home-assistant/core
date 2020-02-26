@@ -27,5 +27,27 @@
             }
         },
         "title": "MQTT"
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "\uccab \ubc88\uc9f8 \ubc84\ud2bc",
+            "button_2": "\ub450 \ubc88\uc9f8 \ubc84\ud2bc",
+            "button_3": "\uc138 \ubc88\uc9f8 \ubc84\ud2bc",
+            "button_4": "\ub124 \ubc88\uc9f8 \ubc84\ud2bc",
+            "button_5": "\ub2e4\uc12f \ubc88\uc9f8 \ubc84\ud2bc",
+            "button_6": "\uc5ec\uc12f \ubc88\uc9f8 \ubc84\ud2bc",
+            "turn_off": "\ub044\uae30",
+            "turn_on": "\ucf1c\uae30"
+        },
+        "trigger_type": {
+            "button_double_press": "\"{subtype}\" \uc774 \ub450 \ubc88 \ub20c\ub9b4 \ub54c",
+            "button_long_press": "\"{subtype}\" \uc774 \uacc4\uc18d \ub20c\ub824\uc9c8 \ub54c",
+            "button_long_release": "\"{subtype}\" \uc774 \uae38\uac8c \ub20c\ub838\ub2e4\uac00 \uc190\uc744 \ub5c4 \ub54c",
+            "button_quadruple_press": "\"{subtype}\" \uc774 \ub124 \ubc88 \ub20c\ub9b4 \ub54c",
+            "button_quintuple_press": "\"{subtype}\" \uc774 \ub2e4\uc12f \ubc88 \ub20c\ub9b4 \ub54c",
+            "button_short_press": "\"{subtype}\" \uc774 \ub20c\ub9b4 \ub54c",
+            "button_short_release": "\"{subtype}\" \uc5d0\uc11c \uc190\uc744 \ub5c4 \ub54c",
+            "button_triple_press": "\"{subtype}\" \uc774 \uc138 \ubc88 \ub20c\ub9b4 \ub54c"
+        }
     }
 }

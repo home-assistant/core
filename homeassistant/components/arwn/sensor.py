@@ -50,7 +50,7 @@ def discover_sensors(topic, payload):
 
 
 def _slug(name):
-    return "sensor.arwn_{}".format(slugify(name))
+    return f"sensor.arwn_{slugify(name)}"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

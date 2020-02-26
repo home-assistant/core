@@ -1,11 +1,42 @@
 {
     "config": {
+        "error": {
+            "error_auth_app": "Fel applikations-id eller hemlighet",
+            "error_auth_mfa": "Felaktig kod",
+            "error_auth_user": "Felaktigt anv\u00e4ndarnamn eller l\u00f6senord"
+        },
         "step": {
             "auth_app": {
                 "data": {
+                    "app_id": "App-ID",
                     "app_secret": "Hemlighet"
-                }
+                },
+                "description": "Applikations-ID och hemlig kod fr\u00e5n <a href=\"https://my.starline.ru/developer\" target=\"_blank\">StarLine-utvecklarkonto</a>",
+                "title": "Autentiseringsuppgifter f\u00f6r applikation"
+            },
+            "auth_captcha": {
+                "data": {
+                    "captcha_code": "Kod fr\u00e5n bild"
+                },
+                "description": "{captcha_img}",
+                "title": "Captcha"
+            },
+            "auth_mfa": {
+                "data": {
+                    "mfa_code": "SMS-kod"
+                },
+                "description": "Ange koden som skickas till telefonen {phone_number}",
+                "title": "Tv\u00e5faktorautentisering"
+            },
+            "auth_user": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn"
+                },
+                "description": "StarLine-kontots e-postadress och l\u00f6senord",
+                "title": "Anv\u00e4ndaruppgifter"
             }
-        }
+        },
+        "title": "StarLine"
     }
 }

@@ -8,7 +8,7 @@ from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from . import SENSE_DATA
+from .const import DOMAIN, SENSE_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,11 +46,9 @@ SENSOR_TYPES = {
 SENSOR_VARIANTS = [PRODUCTION_NAME.lower(), CONSUMPTION_NAME.lower()]
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Sense sensor."""
-    if discovery_info is None:
-        return
-    data = hass.data[SENSE_DATA]
+    data = hass.data[DOMAIN][config_entry.entry_id][SENSE_DATA]
 
     @Throttle(MIN_TIME_BETWEEN_DAILY_UPDATES)
     async def update_trends():
@@ -61,8 +59,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         """Update the active power usage."""
         await data.update_realtime()
 
+    sense_monitor_id = data.sense_monitor_id
+
     devices = []
-    for typ in SENSOR_TYPES.values():
+    for type_id in SENSOR_TYPES:
+        typ = SENSOR_TYPES[type_id]
         for var in SENSOR_VARIANTS:
             name = typ.name
             sensor_type = typ.sensor_type
@@ -71,7 +72,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 update_call = update_active
             else:
                 update_call = update_trends
-            devices.append(Sense(data, name, sensor_type, is_production, update_call))
+
+            unique_id = f"{sense_monitor_id}-{type_id}-{var}".lower()
+            devices.append(
+                Sense(
+                    data, name, sensor_type, is_production, update_call, var, unique_id
+                )
+            )
 
     async_add_entities(devices)
 
@@ -79,10 +86,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class Sense(Entity):
     """Implementation of a Sense energy sensor."""
 
-    def __init__(self, data, name, sensor_type, is_production, update_call):
+    def __init__(
+        self, data, name, sensor_type, is_production, update_call, sensor_id, unique_id
+    ):
         """Initialize the Sense sensor."""
         name_type = PRODUCTION_NAME if is_production else CONSUMPTION_NAME
         self._name = f"{name} {name_type}"
+        self._unique_id = unique_id
+        self._available = False
         self._data = data
         self._sensor_type = sensor_type
         self.update_sensor = update_call
@@ -105,6 +116,11 @@ class Sense(Entity):
         return self._state
 
     @property
+    def available(self):
+        """Return the availability of the sensor."""
+        return self._available
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
@@ -113,6 +129,11 @@ class Sense(Entity):
     def icon(self):
         """Icon to use in the frontend, if any."""
         return ICON
+
+    @property
+    def unique_id(self):
+        """Return the unique id."""
+        return self._unique_id
 
     async def async_update(self):
         """Get the latest data, update state."""
@@ -131,3 +152,5 @@ class Sense(Entity):
         else:
             state = self._data.get_trend(self._sensor_type, self._is_production)
             self._state = round(state, 1)
+
+        self._available = True

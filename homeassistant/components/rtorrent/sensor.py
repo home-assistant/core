@@ -9,6 +9,7 @@ from homeassistant.const import (
     CONF_MONITORED_VARIABLES,
     CONF_NAME,
     CONF_URL,
+    DATA_RATE_KILOBYTES_PER_SECOND,
     STATE_IDLE,
 )
 from homeassistant.exceptions import PlatformNotReady
@@ -24,8 +25,8 @@ SENSOR_TYPE_UPLOAD_SPEED = "upload_speed"
 DEFAULT_NAME = "rtorrent"
 SENSOR_TYPES = {
     SENSOR_TYPE_CURRENT_STATUS: ["Status", None],
-    SENSOR_TYPE_DOWNLOAD_SPEED: ["Down Speed", "kB/s"],
-    SENSOR_TYPE_UPLOAD_SPEED: ["Up Speed", "kB/s"],
+    SENSOR_TYPE_DOWNLOAD_SPEED: ["Down Speed", DATA_RATE_KILOBYTES_PER_SECOND],
+    SENSOR_TYPE_UPLOAD_SPEED: ["Up Speed", DATA_RATE_KILOBYTES_PER_SECOND],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

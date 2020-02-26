@@ -1,14 +1,8 @@
-"""
-Measurement channels module for Zigbee Home Automation.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/integrations/zha/
-"""
+"""Measurement channels module for Zigbee Home Automation."""
 import logging
 
 import zigpy.zcl.clusters.measurement as measurement
 
-from . import AttributeListeningChannel
 from .. import registries
 from ..const import (
     REPORT_CONFIG_DEFAULT,
@@ -16,6 +10,7 @@ from ..const import (
     REPORT_CONFIG_MAX_INT,
     REPORT_CONFIG_MIN_INT,
 )
+from .base import AttributeListeningChannel
 
 _LOGGER = logging.getLogger(__name__)
 

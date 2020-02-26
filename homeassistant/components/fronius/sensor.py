@@ -90,11 +90,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         device = condition[CONF_DEVICE]
         sensor_type = condition[CONF_SENSOR_TYPE]
         scope = condition[CONF_SCOPE]
-        name = "Fronius {} {} {}".format(
-            condition[CONF_SENSOR_TYPE].replace("_", " ").capitalize(),
-            device if scope == SCOPE_DEVICE else SCOPE_SYSTEM,
-            config[CONF_RESOURCE],
-        )
+        name = f"Fronius {condition[CONF_SENSOR_TYPE].replace('_', ' ').capitalize()} {device if scope == SCOPE_DEVICE else SCOPE_SYSTEM} {config[CONF_RESOURCE]}"
         if sensor_type == TYPE_INVERTER:
             if scope == SCOPE_SYSTEM:
                 adapter_cls = FroniusInverterSystem
@@ -258,9 +254,7 @@ class FroniusTemplateSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(
-            self._name.replace("_", " ").capitalize(), self.parent.name
-        )
+        return f"{self._name.replace('_', ' ').capitalize()} {self.parent.name}"
 
     @property
     def state(self):

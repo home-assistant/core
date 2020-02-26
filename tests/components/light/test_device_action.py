@@ -2,7 +2,7 @@
 import pytest
 
 import homeassistant.components.automation as automation
-from homeassistant.components.light import DOMAIN
+from homeassistant.components.light import DOMAIN, SUPPORT_BRIGHTNESS
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
@@ -30,7 +30,7 @@ def entity_reg(hass):
 
 @pytest.fixture
 def calls(hass):
-    """Track calls to a mock serivce."""
+    """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
@@ -42,7 +42,13 @@ async def test_get_actions(hass, device_reg, entity_reg):
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        supported_features=SUPPORT_BRIGHTNESS,
+    )
     expected_actions = [
         {
             "domain": DOMAIN,
@@ -59,6 +65,18 @@ async def test_get_actions(hass, device_reg, entity_reg):
         {
             "domain": DOMAIN,
             "type": "toggle",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
+        {
+            "domain": DOMAIN,
+            "type": "brightness_increase",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
+        {
+            "domain": DOMAIN,
+            "type": "brightness_decrease",
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
         },
@@ -108,6 +126,30 @@ async def test_action(hass, calls):
                         "type": "toggle",
                     },
                 },
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_brightness_increase",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "device_id": "",
+                        "entity_id": ent1.entity_id,
+                        "type": "brightness_increase",
+                    },
+                },
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_brightness_decrease",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "device_id": "",
+                        "entity_id": ent1.entity_id,
+                        "type": "brightness_decrease",
+                    },
+                },
             ]
         },
     )
@@ -138,3 +180,19 @@ async def test_action(hass, calls):
     hass.bus.async_fire("test_event3")
     await hass.async_block_till_done()
     assert hass.states.get(ent1.entity_id).state == STATE_ON
+
+    turn_on_calls = async_mock_service(hass, DOMAIN, "turn_on")
+
+    hass.bus.async_fire("test_brightness_increase")
+    await hass.async_block_till_done()
+
+    assert len(turn_on_calls) == 1
+    assert turn_on_calls[0].data["entity_id"] == ent1.entity_id
+    assert turn_on_calls[0].data["brightness_step_pct"] == 10
+
+    hass.bus.async_fire("test_brightness_decrease")
+    await hass.async_block_till_done()
+
+    assert len(turn_on_calls) == 2
+    assert turn_on_calls[1].data["entity_id"] == ent1.entity_id
+    assert turn_on_calls[1].data["brightness_step_pct"] == -10

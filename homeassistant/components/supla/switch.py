@@ -1,4 +1,4 @@
-"""Support for Supla cover - curtains, rollershutters etc."""
+"""Support for Supla switch."""
 import logging
 from pprint import pformat
 

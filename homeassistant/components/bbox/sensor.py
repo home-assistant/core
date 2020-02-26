@@ -11,6 +11,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_MONITORED_VARIABLES,
     CONF_NAME,
+    DATA_RATE_MEGABITS_PER_SECOND,
     DEVICE_CLASS_TIMESTAMP,
 )
 import homeassistant.helpers.config_validation as cv
@@ -19,8 +20,6 @@ from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
-
-BANDWIDTH_MEGABITS_SECONDS = "Mb/s"
 
 ATTRIBUTION = "Powered by Bouygues Telecom"
 
@@ -32,22 +31,22 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 SENSOR_TYPES = {
     "down_max_bandwidth": [
         "Maximum Download Bandwidth",
-        BANDWIDTH_MEGABITS_SECONDS,
+        DATA_RATE_MEGABITS_PER_SECOND,
         "mdi:download",
     ],
     "up_max_bandwidth": [
         "Maximum Upload Bandwidth",
-        BANDWIDTH_MEGABITS_SECONDS,
+        DATA_RATE_MEGABITS_PER_SECOND,
         "mdi:upload",
     ],
     "current_down_bandwidth": [
         "Currently Used Download Bandwidth",
-        BANDWIDTH_MEGABITS_SECONDS,
+        DATA_RATE_MEGABITS_PER_SECOND,
         "mdi:download",
     ],
     "current_up_bandwidth": [
         "Currently Used Upload Bandwidth",
-        BANDWIDTH_MEGABITS_SECONDS,
+        DATA_RATE_MEGABITS_PER_SECOND,
         "mdi:upload",
     ],
     "uptime": ["Uptime", None, "mdi:clock"],

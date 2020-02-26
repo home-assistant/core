@@ -66,7 +66,7 @@ from .helpers import (
 _LOGGER = logging.getLogger(__name__)
 
 CONF_IGNORE_CEC = "ignore_cec"
-CAST_SPLASH = "https://home-assistant.io/images/cast/splash.png"
+CAST_SPLASH = "https://www.home-assistant.io/images/cast/splash.png"
 
 SUPPORT_CAST = (
     SUPPORT_PAUSE
