@@ -55,7 +55,7 @@ async def test_create_entry_when_host_valid(hass, controller):
     assert result["title"] == "Controller (127.0.0.1)"
     assert result["data"] == data
     assert controller.connect.call_count == 2
-    assert controller.disconnect.call_count == 2
+    assert controller.disconnect.call_count == 1
 
 
 async def test_create_entry_when_friendly_name_valid(hass, controller):

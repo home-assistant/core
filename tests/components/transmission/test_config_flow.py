@@ -103,10 +103,7 @@ async def test_flow_works(hass, api):
 
     # test with all provided
     result = await hass.config_entries.flow.async_init(
-        transmission.DOMAIN, context={"source": "user"}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_ENTRY
+        transmission.DOMAIN, context={"source": "user"}, data=MOCK_ENTRY
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
