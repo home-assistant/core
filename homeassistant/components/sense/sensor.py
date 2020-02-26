@@ -273,7 +273,7 @@ class SenseEnergyDevice(Entity):
 
     def __init__(self, sense_devices_data, device, sense_monitor_id):
         """Initialize the Sense binary sensor."""
-        self._name = device["name"]
+        self._name = f"{device['name']} {CONSUMPTION_NAME}"
         self._id = device["id"]
         self._available = False
         self._sense_monitor_id = sense_monitor_id

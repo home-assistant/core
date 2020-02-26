@@ -2,12 +2,12 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.const import DEVICE_CLASS_POWER
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_registry import async_get_registry
 
 from .const import (
-    BIN_SENSOR_CLASS,
     DOMAIN,
     MDI_ICONS,
     SENSE_DATA,
@@ -108,7 +108,7 @@ class SenseDevice(BinarySensorDevice):
     @property
     def device_class(self):
         """Return the device class of the binary sensor."""
-        return BIN_SENSOR_CLASS
+        return DEVICE_CLASS_POWER
 
     @property
     def should_poll(self):
@@ -119,7 +119,7 @@ class SenseDevice(BinarySensorDevice):
         """Get the latest data, update state."""
         self._available = True
         device_data = self._sense_devices_data.get_device_by_id(self._id)
-        self._state = False if device_data else True
+        self._state = True if device_data else False
 
     async def async_added_to_hass(self):
         """Register callbacks."""
