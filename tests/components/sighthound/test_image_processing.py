@@ -115,3 +115,24 @@ async def test_save_image(hass, mock_image, mock_detections):
         state = hass.states.get(VALID_ENTITY_ID)
         assert state.state == "2"
         assert pil_img.save.call_count == 1
+
+
+async def test_save_timestamped_image(hass, mock_image, mock_detections):
+    """Save a processed image."""
+    valid_config_save_ts_file = deepcopy(VALID_CONFIG)
+    valid_config_save_ts_file[ip.DOMAIN].update({sh.CONF_SAVE_FILE_FOLDER: TEST_DIR})
+    valid_config_save_ts_file[ip.DOMAIN].update({sh.CONF_SAVE_TIMESTAMPTED_FILE: True})
+    await async_setup_component(hass, ip.DOMAIN, valid_config_save_ts_file)
+    assert hass.states.get(VALID_ENTITY_ID)
+
+    with patch(
+        "homeassistant.components.sighthound.image_processing.Image.open"
+    ) as pil_img_open:
+        pil_img = pil_img_open.return_value
+        pil_img = pil_img.convert.return_value
+        data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
+        await hass.services.async_call(ip.DOMAIN, ip.SERVICE_SCAN, service_data=data)
+        await hass.async_block_till_done()
+        state = hass.states.get(VALID_ENTITY_ID)
+        assert state.state == "2"
+        assert pil_img.save.call_count == 2
