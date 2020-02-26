@@ -6,7 +6,7 @@ from homeassistant.components.switch import SwitchDevice
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import AbodeAutomation, AbodeDevice
-from .const import DOMAIN, SIGNAL_TRIGGER_AUTOMATION
+from .const import DOMAIN
 
 DEVICE_TYPES = [CONST.TYPE_SWITCH, CONST.TYPE_VALVE]
 
@@ -55,7 +55,7 @@ class AbodeAutomationSwitch(AbodeAutomation, SwitchDevice):
         """Subscribe Abode events."""
         await super().async_added_to_hass()
 
-        signal = SIGNAL_TRIGGER_AUTOMATION.format(self.entity_id)
+        signal = f"abode_trigger_quick_action_{self.entity_id}"
         async_dispatcher_connect(self.hass, signal, self.trigger)
 
     def turn_on(self, **kwargs):
