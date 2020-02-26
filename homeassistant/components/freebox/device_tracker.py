@@ -55,7 +55,7 @@ def add_entities(router, async_add_entities, tracked):
 class FreeboxDevice(ScannerEntity):
     """Representation of a Freebox device."""
 
-    def __init__(self, router: FreeboxRouter, device: Dict[str, any]):
+    def __init__(self, router: FreeboxRouter, device: Dict[str, any]) -> None:
         """Initialize a Freebox device."""
         self._router = router
         self._name = device["primary_name"].strip() or DEFAULT_DEVICE_NAME

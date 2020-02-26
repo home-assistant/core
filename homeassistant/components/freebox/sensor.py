@@ -57,7 +57,9 @@ async def async_setup_entry(
 class FreeboxSensor(Entity):
     """Representation of a Freebox sensor."""
 
-    def __init__(self, router: FreeboxRouter, sensor_type: str, sensor: Dict[str, any]):
+    def __init__(
+        self, router: FreeboxRouter, sensor_type: str, sensor: Dict[str, any]
+    ) -> None:
         """Initialize a Freebox sensor."""
         self._state = None
         self._router = router

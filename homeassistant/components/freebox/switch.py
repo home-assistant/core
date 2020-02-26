@@ -25,7 +25,7 @@ async def async_setup_entry(
 class FreeboxWifiSwitch(SwitchDevice):
     """Representation of a freebox wifi switch."""
 
-    def __init__(self, router: FreeboxRouter):
+    def __init__(self, router: FreeboxRouter) -> None:
         """Initialize the Wifi switch."""
         self._name = "Freebox WiFi"
         self._state = None
@@ -38,12 +38,12 @@ class FreeboxWifiSwitch(SwitchDevice):
         return self._unique_id
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the switch."""
         return self._name
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._state
 
