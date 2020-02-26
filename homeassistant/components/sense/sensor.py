@@ -260,11 +260,8 @@ class SenseTrendsSensor(Entity):
             _LOGGER.error("Timeout retrieving data")
             return
 
-        if self._is_production:
-            self._state = round(self._data.active_solar_power)
-        else:
-            self._state = round(self._data.active_power)
-
+        state = self._data.get_trend(self._sensor_type, self._is_production)
+        self._state = round(state, 1)
         self._available = True
 
 
