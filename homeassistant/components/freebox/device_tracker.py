@@ -74,8 +74,6 @@ class FreeboxDevice(ScannerEntity):
         if device.get("attrs") is None:
             # device
             self._attrs = {
-                "active": self._active,
-                "reachable": device["reachable"],
                 "last_time_reachable": datetime.fromtimestamp(
                     device["last_time_reachable"]
                 ),
