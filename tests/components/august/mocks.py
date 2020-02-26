@@ -103,9 +103,6 @@ async def _create_august_with_devices(
         return _get_base_devices("doorbells")
 
     def get_house_activities_side_effect(access_token, house_id, limit=10):
-        import pprint
-
-        pprint.pprint(["activities", activities])
         if activities is not None:
             return activities
         return []
