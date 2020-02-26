@@ -98,7 +98,7 @@ class SamsungTVDevice(MediaPlayerDevice):
             config_entry.data[CONF_METHOD],
             config_entry.data[CONF_HOST],
             config_entry.data[CONF_PORT],
-            config_entry.data[CONF_TOKEN],
+            config_entry.data.get(CONF_TOKEN),
         )
         self._bridge.register_reauth_callback(self.access_denied)
 

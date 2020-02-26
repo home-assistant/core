@@ -65,20 +65,19 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._bridge = None
 
     def _get_entry(self):
-        return self.async_create_entry(
-            title=self._title,
-            data={
-                CONF_HOST: self._host,
-                CONF_ID: self._id,
-                CONF_IP_ADDRESS: self._ip,
-                CONF_MANUFACTURER: self._manufacturer,
-                CONF_METHOD: self._bridge.method,
-                CONF_MODEL: self._model,
-                CONF_NAME: self._name,
-                CONF_PORT: self._bridge.port,
-                CONF_TOKEN: self._bridge.token,
-            },
-        )
+        data = {
+            CONF_HOST: self._host,
+            CONF_ID: self._id,
+            CONF_IP_ADDRESS: self._ip,
+            CONF_MANUFACTURER: self._manufacturer,
+            CONF_METHOD: self._bridge.method,
+            CONF_MODEL: self._model,
+            CONF_NAME: self._name,
+            CONF_PORT: self._bridge.port,
+        }
+        if self._bridge.token:
+            data[CONF_TOKEN] = self._bridge.token
+        return self.async_create_entry(title=self._title, data=data,)
 
     def _try_connect(self):
         """Try to connect and check auth."""
