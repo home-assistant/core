@@ -6,10 +6,10 @@ from pymyq.errors import MyQError
 import voluptuous as vol
 
 from homeassistant.components.cover import (
-    CoverDevice,
     PLATFORM_SCHEMA,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
+    CoverDevice,
 )
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -97,7 +97,7 @@ class MyQDevice(CoverDevice):
 
     @property
     def unique_id(self):
-        """Return a unique, HASS-friendly identifier for this entity."""
+        """Return a unique, Home Assistant friendly identifier for this entity."""
         return self._device.device_id
 
     async def async_close_cover(self, **kwargs):

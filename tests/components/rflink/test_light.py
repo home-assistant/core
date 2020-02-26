@@ -4,7 +4,6 @@ Test setup of RFLink lights component/platform. State tracking and
 control of RFLink switch devices.
 
 """
-
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.rflink import EVENT_BUTTON_PRESSED
 from homeassistant.const import (
@@ -185,6 +184,7 @@ async def test_firing_bus_event(hass, monkeypatch):
     # test event for new unconfigured sensor
     event_callback({"id": "protocol_0_0", "command": "off"})
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert calls[0].data == {"state": "off", "entity_id": DOMAIN + ".test"}
 
@@ -267,15 +267,11 @@ async def test_signal_repetitions_alternation(hass, monkeypatch):
     # setup mocking rflink module
     _, _, protocol, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
 
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: DOMAIN + ".test"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: DOMAIN + ".test"}
     )
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: DOMAIN + ".test1"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: DOMAIN + ".test1"}
     )
 
     await hass.async_block_till_done()
@@ -299,24 +295,20 @@ async def test_signal_repetitions_cancelling(hass, monkeypatch):
     # setup mocking rflink module
     _, _, protocol, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
 
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: DOMAIN + ".test"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: DOMAIN + ".test"}
     )
 
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: DOMAIN + ".test"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: DOMAIN + ".test"}, blocking=True
     )
 
-    await hass.async_block_till_done()
-
-    assert protocol.send_command_ack.call_args_list[0][0][1] == "off"
-    assert protocol.send_command_ack.call_args_list[1][0][1] == "on"
-    assert protocol.send_command_ack.call_args_list[2][0][1] == "on"
-    assert protocol.send_command_ack.call_args_list[3][0][1] == "on"
+    assert [call[0][1] for call in protocol.send_command_ack.call_args_list] == [
+        "off",
+        "on",
+        "on",
+        "on",
+    ]
 
 
 async def test_type_toggle(hass, monkeypatch):

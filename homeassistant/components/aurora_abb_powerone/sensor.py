@@ -2,8 +2,8 @@
 
 import logging
 
+from aurorapy.client import AuroraError, AuroraSerialClient
 import voluptuous as vol
-from aurorapy.client import AuroraSerialClient, AuroraError
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -96,7 +96,6 @@ class AuroraABBSolarPVMonitorSensor(Entity):
             if "No response after" in str(error):
                 _LOGGER.debug("No response from inverter (could be dark)")
             else:
-                # print("Exception!!: {}".format(str(e)))
                 raise error
             self._state = None
         finally:

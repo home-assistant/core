@@ -22,5 +22,28 @@
             }
         },
         "title": "UniFi Controller"
+    },
+    "options": {
+        "step": {
+            "device_tracker": {
+                "data": {
+                    "detection_time": "Tid i sekunder fr\u00e5n senast sett tills den anses borta",
+                    "track_clients": "Sp\u00e5ra n\u00e4tverksklienter",
+                    "track_devices": "Sp\u00e5ra n\u00e4tverksenheter (Ubiquiti-enheter)",
+                    "track_wired_clients": "Inkludera tr\u00e5dbundna n\u00e4tverksklienter"
+                }
+            },
+            "init": {
+                "data": {
+                    "one": "Tom",
+                    "other": "Tomma"
+                }
+            },
+            "statistics_sensors": {
+                "data": {
+                    "allow_bandwidth_sensors": "Skapa bandbreddsanv\u00e4ndningssensorer f\u00f6r n\u00e4tverksklienter"
+                }
+            }
+        }
     }
 }

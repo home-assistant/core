@@ -3,11 +3,9 @@
 import logging
 import threading
 
-import geopy.distance
 import aprslib
-from aprslib import ConnectionError as AprsConnectionError
-from aprslib import LoginError
-
+from aprslib import ConnectionError as AprsConnectionError, LoginError
+import geopy.distance
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
@@ -59,7 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def make_filter(callsigns: list) -> str:
     """Make a server-side filter from a list of callsigns."""
-    return " ".join("b/{0}".format(cs.upper()) for cs in callsigns)
+    return " ".join(f"b/{sign.upper()}" for sign in callsigns)
 
 
 def gps_accuracy(gps, posambiguity: int) -> int:

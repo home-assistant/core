@@ -5,16 +5,16 @@ import logging
 
 import aiohttp
 import async_timeout
-import voluptuous as vol
 import pysensibo
+import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT_COOL,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     SUPPORT_FAN_MODE,
     SUPPORT_SWING_MODE,
@@ -65,7 +65,7 @@ _FETCH_FIELDS = ",".join(
         "temperatureUnit",
     ]
 )
-_INITIAL_FETCH_FIELDS = "id," + _FETCH_FIELDS
+_INITIAL_FETCH_FIELDS = f"id,{_FETCH_FIELDS}"
 
 FIELD_TO_FLAG = {
     "fanLevel": SUPPORT_FAN_MODE,

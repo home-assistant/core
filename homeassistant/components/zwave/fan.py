@@ -2,17 +2,18 @@
 import logging
 import math
 
-from homeassistant.core import callback
 from homeassistant.components.fan import (
     DOMAIN,
-    FanEntity,
-    SPEED_OFF,
+    SPEED_HIGH,
     SPEED_LOW,
     SPEED_MEDIUM,
-    SPEED_HIGH,
+    SPEED_OFF,
     SUPPORT_SET_SPEED,
+    FanEntity,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
 from . import ZWaveDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,11 +26,6 @@ SUPPORTED_FEATURES = SUPPORT_SET_SPEED
 VALUE_TO_SPEED = {0: SPEED_OFF, 1: SPEED_LOW, 2: SPEED_MEDIUM, 3: SPEED_HIGH}
 
 SPEED_TO_VALUE = {SPEED_OFF: 0, SPEED_LOW: 1, SPEED_MEDIUM: 50, SPEED_HIGH: 99}
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old method of setting up Z-Wave fans."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

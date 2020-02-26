@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Vilfo \u8def\u7531\u5668\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3002"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557\u3002\u8acb\u6aa2\u67e5\u8f38\u5165\u8cc7\u6599\u5f8c\uff0c\u518d\u8a66\u4e00\u6b21\u3002",
+            "invalid_auth": "\u9a57\u8b49\u7121\u6548\uff0c\u8acb\u6aa2\u67e5\u5b58\u53d6\u5bc6\u9470\u5f8c\u518d\u8a66\u4e00\u6b21\u3002",
+            "unknown": "\u8a2d\u5b9a\u6574\u5408\u6642\u767c\u751f\u672a\u77e5\u932f\u8aa4\u3002"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Vilfo \u8def\u7531\u5668 API \u5b58\u53d6\u5bc6\u9470",
+                    "host": "\u8def\u7531\u5668\u4e3b\u6a5f\u7aef\u6216 IP \u4f4d\u5740"
+                },
+                "description": "\u8a2d\u5b9a Vilfo \u8def\u7531\u5668\u6574\u5408\u3002\u9700\u8981\u8f38\u5165 Vilfo \u8def\u7531\u5668\u4e3b\u6a5f\u540d\u7a31/IP \u4f4d\u5740\u3001API \u5b58\u53d6\u5bc6\u9470\u3002\u5176\u4ed6\u6574\u5408\u76f8\u95dc\u8cc7\u8a0a\uff0c\u8acb\u53c3\u8003\uff1ahttps://www.home-assistant.io/integrations/vilfo",
+                "title": "\u9023\u7dda\u81f3 Vilfo \u8def\u7531\u5668"
+            }
+        },
+        "title": "Vilfo \u8def\u7531\u5668"
+    }
+}

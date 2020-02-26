@@ -1,14 +1,16 @@
 """Support for the MAX! Cube LAN Gateway."""
 import logging
-import time
 from socket import timeout
 from threading import Lock
+import time
 
+from maxcube.connection import MaxCubeConnection
+from maxcube.cube import MaxCube
 import voluptuous as vol
 
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,8 +48,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Establish connection to MAX! Cube."""
-    from maxcube.connection import MaxCubeConnection
-    from maxcube.cube import MaxCube
 
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
@@ -90,14 +90,14 @@ class MaxCubeHandle:
         self.cube = cube
         self.scan_interval = scan_interval
         self.mutex = Lock()
-        self._updatets = time.time()
+        self._updatets = time.monotonic()
 
     def update(self):
         """Pull the latest data from the MAX! Cube."""
         # Acquire mutex to prevent simultaneous update from multiple threads
         with self.mutex:
             # Only update every update_interval
-            if (time.time() - self._updatets) >= self.scan_interval:
+            if (time.monotonic() - self._updatets) >= self.scan_interval:
                 _LOGGER.debug("Updating")
 
                 try:
@@ -106,6 +106,6 @@ class MaxCubeHandle:
                     _LOGGER.error("Max!Cube connection failed")
                     return False
 
-                self._updatets = time.time()
+                self._updatets = time.monotonic()
             else:
                 _LOGGER.debug("Skipping update")

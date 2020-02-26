@@ -1,7 +1,7 @@
 """Support for IP Cameras."""
 import asyncio
-import logging
 from contextlib import closing
+import logging
 
 import aiohttp
 import async_timeout
@@ -9,21 +9,21 @@ import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.const import (
-    CONF_NAME,
-    CONF_USERNAME,
-    CONF_PASSWORD,
     CONF_AUTHENTICATION,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
-    CONF_VERIFY_SSL,
-)
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
-from homeassistant.helpers.aiohttp_client import (
-    async_get_clientsession,
-    async_aiohttp_proxy_web,
 )
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import (
+    async_aiohttp_proxy_web,
+    async_get_clientsession,
+)
 
 _LOGGER = logging.getLogger(__name__)
 

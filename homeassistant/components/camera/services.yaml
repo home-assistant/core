@@ -68,16 +68,6 @@ record:
       description: (Optional) Target lookback period (in seconds) to include in addition to duration.  Only available if there is currently an active HLS stream.
       example: 4
 
-local_file_update_file_path:
-  description: Update the file_path for a local_file camera.
-  fields:
-    entity_id:
-      description: Name(s) of entities to update.
-      example: 'camera.local_file'
-    file_path:
-      description: Path to the new image file.
-      example: '/images/newimage.jpg'
-
 onvif_ptz:
   description: Pan/Tilt/Zoom service for ONVIF camera.
   fields:

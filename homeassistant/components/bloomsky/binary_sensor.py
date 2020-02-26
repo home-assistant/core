@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import BinarySensorDevice, PLATFORM_SCHEMA
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
@@ -40,7 +40,7 @@ class BloomSkySensor(BinarySensorDevice):
         self._bloomsky = bs
         self._device_id = device["DeviceID"]
         self._sensor_name = sensor_name
-        self._name = "{} {}".format(device["DeviceName"], sensor_name)
+        self._name = f"{device['DeviceName']} {sensor_name}"
         self._state = None
         self._unique_id = f"{self._device_id}-{self._sensor_name}"
 

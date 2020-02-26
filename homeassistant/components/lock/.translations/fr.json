@@ -8,6 +8,10 @@
         "condition_type": {
             "is_locked": "{entity_name} est verrouill\u00e9",
             "is_unlocked": "{entity_name} est d\u00e9verrouill\u00e9"
+        },
+        "trigger_type": {
+            "locked": "{entity_name} verrouill\u00e9",
+            "unlocked": "{entity_name} d\u00e9verrouill\u00e9"
         }
     }
 }

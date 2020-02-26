@@ -25,7 +25,6 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import async_mock_service
 
-
 GOOGLE_CONFIG = {CONF_CLIENT_ID: "client_id", CONF_CLIENT_SECRET: "client_secret"}
 TEST_ENTITY = "calendar.we_are_we_are_a_test_calendar"
 TEST_ENTITY_NAME = "We are, we are, a... Test Calendar"
@@ -219,7 +218,7 @@ async def test_offset_in_progress_event(hass, mock_next_event):
     event = copy.deepcopy(TEST_EVENT)
     event["start"]["dateTime"] = start
     event["end"]["dateTime"] = end
-    event["summary"] = "{} !!-15".format(event_summary)
+    event["summary"] = f"{event_summary} !!-15"
     mock_next_event.return_value.event = event
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
@@ -251,7 +250,7 @@ async def test_all_day_offset_in_progress_event(hass, mock_next_event):
     event = copy.deepcopy(TEST_EVENT)
     event["start"]["date"] = start
     event["end"]["date"] = end
-    event["summary"] = "{} !!-25:0".format(event_summary)
+    event["summary"] = f"{event_summary} !!-25:0"
     mock_next_event.return_value.event = event
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
@@ -283,7 +282,7 @@ async def test_all_day_offset_event(hass, mock_next_event):
     event = copy.deepcopy(TEST_EVENT)
     event["start"]["date"] = start
     event["end"]["date"] = end
-    event["summary"] = "{} !!-{}:0".format(event_summary, offset_hours)
+    event["summary"] = f"{event_summary} !!-{offset_hours}:0"
     mock_next_event.return_value.event = event
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})

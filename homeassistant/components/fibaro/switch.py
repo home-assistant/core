@@ -1,7 +1,7 @@
 """Support for Fibaro switches."""
 import logging
 
-from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
+from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.util import convert
 
 from . import FIBARO_DEVICES, FibaroDevice
@@ -26,7 +26,7 @@ class FibaroSwitch(FibaroDevice, SwitchDevice):
         """Initialize the Fibaro device."""
         self._state = False
         super().__init__(fibaro_device)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
+        self.entity_id = f"{DOMAIN}.{self.ha_id}"
 
     def turn_on(self, **kwargs):
         """Turn device on."""

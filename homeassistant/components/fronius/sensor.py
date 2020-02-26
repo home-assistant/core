@@ -2,23 +2,22 @@
 import copy
 from datetime import timedelta
 import logging
-import voluptuous as vol
 
 from pyfronius import Fronius
+import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_RESOURCE,
-    CONF_SENSOR_TYPE,
     CONF_DEVICE,
     CONF_MONITORED_CONDITIONS,
+    CONF_RESOURCE,
     CONF_SCAN_INTERVAL,
+    CONF_SENSOR_TYPE,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,11 +90,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         device = condition[CONF_DEVICE]
         sensor_type = condition[CONF_SENSOR_TYPE]
         scope = condition[CONF_SCOPE]
-        name = "Fronius {} {} {}".format(
-            condition[CONF_SENSOR_TYPE].replace("_", " ").capitalize(),
-            device if scope == SCOPE_DEVICE else SCOPE_SYSTEM,
-            config[CONF_RESOURCE],
-        )
+        name = f"Fronius {condition[CONF_SENSOR_TYPE].replace('_', ' ').capitalize()} {device if scope == SCOPE_DEVICE else SCOPE_SYSTEM} {config[CONF_RESOURCE]}"
         if sensor_type == TYPE_INVERTER:
             if scope == SCOPE_SYSTEM:
                 adapter_cls = FroniusInverterSystem
@@ -259,9 +254,7 @@ class FroniusTemplateSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(
-            self._name.replace("_", " ").capitalize(), self.parent.name
-        )
+        return f"{self._name.replace('_', ' ').capitalize()} {self.parent.name}"
 
     @property
     def state(self):

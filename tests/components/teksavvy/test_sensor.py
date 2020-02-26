@@ -1,12 +1,11 @@
 """Tests for the TekSavvy sensor platform."""
-import asyncio
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.teksavvy.sensor import TekSavvyData
+from homeassistant.const import DATA_GIGABYTES
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 
-@asyncio.coroutine
-def test_capped_setup(hass, aioclient_mock):
+async def test_capped_setup(hass, aioclient_mock):
     """Test the default setup."""
     config = {
         "platform": "teksavvy",
@@ -44,34 +43,34 @@ def test_capped_setup(hass, aioclient_mock):
         text=result,
     )
 
-    yield from async_setup_component(hass, "sensor", {"sensor": config})
+    await async_setup_component(hass, "sensor", {"sensor": config})
 
     state = hass.states.get("sensor.teksavvy_data_limit")
-    assert state.attributes.get("unit_of_measurement") == "GB"
+    assert state.attributes.get("unit_of_measurement") == DATA_GIGABYTES
     assert state.state == "400"
 
     state = hass.states.get("sensor.teksavvy_off_peak_download")
-    assert state.attributes.get("unit_of_measurement") == "GB"
+    assert state.attributes.get("unit_of_measurement") == DATA_GIGABYTES
     assert state.state == "36.24"
 
     state = hass.states.get("sensor.teksavvy_off_peak_upload")
-    assert state.attributes.get("unit_of_measurement") == "GB"
+    assert state.attributes.get("unit_of_measurement") == DATA_GIGABYTES
     assert state.state == "1.58"
 
     state = hass.states.get("sensor.teksavvy_off_peak_total")
-    assert state.attributes.get("unit_of_measurement") == "GB"
+    assert state.attributes.get("unit_of_measurement") == DATA_GIGABYTES
     assert state.state == "37.82"
 
     state = hass.states.get("sensor.teksavvy_on_peak_download")
-    assert state.attributes.get("unit_of_measurement") == "GB"
+    assert state.attributes.get("unit_of_measurement") == DATA_GIGABYTES
     assert state.state == "226.75"
 
     state = hass.states.get("sensor.teksavvy_on_peak_upload")
-    assert state.attributes.get("unit_of_measurement") == "GB"
+    assert state.attributes.get("unit_of_measurement") == DATA_GIGABYTES
     assert state.state == "8.82"
 
     state = hass.states.get("sensor.teksavvy_on_peak_total")
-    assert state.attributes.get("unit_of_measurement") == "GB"
+    assert state.attributes.get("unit_of_measurement") == DATA_GIGABYTES
     assert state.state == "235.57"
 
     state = hass.states.get("sensor.teksavvy_usage_ratio")
@@ -79,16 +78,15 @@ def test_capped_setup(hass, aioclient_mock):
     assert state.state == "56.69"
 
     state = hass.states.get("sensor.teksavvy_usage")
-    assert state.attributes.get("unit_of_measurement") == "GB"
+    assert state.attributes.get("unit_of_measurement") == DATA_GIGABYTES
     assert state.state == "226.75"
 
     state = hass.states.get("sensor.teksavvy_remaining")
-    assert state.attributes.get("unit_of_measurement") == "GB"
+    assert state.attributes.get("unit_of_measurement") == DATA_GIGABYTES
     assert state.state == "173.25"
 
 
-@asyncio.coroutine
-def test_unlimited_setup(hass, aioclient_mock):
+async def test_unlimited_setup(hass, aioclient_mock):
     """Test the default setup."""
     config = {
         "platform": "teksavvy",
@@ -126,38 +124,38 @@ def test_unlimited_setup(hass, aioclient_mock):
         text=result,
     )
 
-    yield from async_setup_component(hass, "sensor", {"sensor": config})
+    await async_setup_component(hass, "sensor", {"sensor": config})
 
     state = hass.states.get("sensor.teksavvy_data_limit")
-    assert state.attributes.get("unit_of_measurement") == "GB"
+    assert state.attributes.get("unit_of_measurement") == DATA_GIGABYTES
     assert state.state == "inf"
 
     state = hass.states.get("sensor.teksavvy_off_peak_download")
-    assert state.attributes.get("unit_of_measurement") == "GB"
+    assert state.attributes.get("unit_of_measurement") == DATA_GIGABYTES
     assert state.state == "36.24"
 
     state = hass.states.get("sensor.teksavvy_off_peak_upload")
-    assert state.attributes.get("unit_of_measurement") == "GB"
+    assert state.attributes.get("unit_of_measurement") == DATA_GIGABYTES
     assert state.state == "1.58"
 
     state = hass.states.get("sensor.teksavvy_off_peak_total")
-    assert state.attributes.get("unit_of_measurement") == "GB"
+    assert state.attributes.get("unit_of_measurement") == DATA_GIGABYTES
     assert state.state == "37.82"
 
     state = hass.states.get("sensor.teksavvy_on_peak_download")
-    assert state.attributes.get("unit_of_measurement") == "GB"
+    assert state.attributes.get("unit_of_measurement") == DATA_GIGABYTES
     assert state.state == "226.75"
 
     state = hass.states.get("sensor.teksavvy_on_peak_upload")
-    assert state.attributes.get("unit_of_measurement") == "GB"
+    assert state.attributes.get("unit_of_measurement") == DATA_GIGABYTES
     assert state.state == "8.82"
 
     state = hass.states.get("sensor.teksavvy_on_peak_total")
-    assert state.attributes.get("unit_of_measurement") == "GB"
+    assert state.attributes.get("unit_of_measurement") == DATA_GIGABYTES
     assert state.state == "235.57"
 
     state = hass.states.get("sensor.teksavvy_usage")
-    assert state.attributes.get("unit_of_measurement") == "GB"
+    assert state.attributes.get("unit_of_measurement") == DATA_GIGABYTES
     assert state.state == "226.75"
 
     state = hass.states.get("sensor.teksavvy_usage_ratio")
@@ -165,12 +163,11 @@ def test_unlimited_setup(hass, aioclient_mock):
     assert state.state == "0"
 
     state = hass.states.get("sensor.teksavvy_remaining")
-    assert state.attributes.get("unit_of_measurement") == "GB"
+    assert state.attributes.get("unit_of_measurement") == DATA_GIGABYTES
     assert state.state == "inf"
 
 
-@asyncio.coroutine
-def test_bad_return_code(hass, aioclient_mock):
+async def test_bad_return_code(hass, aioclient_mock):
     """Test handling a return code that isn't HTTP OK."""
     aioclient_mock.get(
         "https://api.teksavvy.com/"
@@ -181,12 +178,11 @@ def test_bad_return_code(hass, aioclient_mock):
 
     tsd = TekSavvyData(hass.loop, async_get_clientsession(hass), "notakey", 400)
 
-    result = yield from tsd.async_update()
+    result = await tsd.async_update()
     assert result is False
 
 
-@asyncio.coroutine
-def test_bad_json_decode(hass, aioclient_mock):
+async def test_bad_json_decode(hass, aioclient_mock):
     """Test decoding invalid json result."""
     aioclient_mock.get(
         "https://api.teksavvy.com/"
@@ -197,5 +193,5 @@ def test_bad_json_decode(hass, aioclient_mock):
 
     tsd = TekSavvyData(hass.loop, async_get_clientsession(hass), "notakey", 400)
 
-    result = yield from tsd.async_update()
+    result = await tsd.async_update()
     assert result is False

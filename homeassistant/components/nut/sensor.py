@@ -1,25 +1,27 @@
 """Provides a sensor to track various status aspects of a UPS."""
-import logging
 from datetime import timedelta
+import logging
 
+from pynut2.nut2 import PyNUTClient, PyNUTError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    CONF_NAME,
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    TEMP_CELSIUS,
-    CONF_RESOURCES,
-    CONF_ALIAS,
     ATTR_STATE,
-    STATE_UNKNOWN,
+    CONF_ALIAS,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_RESOURCES,
+    CONF_USERNAME,
     POWER_WATT,
+    STATE_UNKNOWN,
+    TEMP_CELSIUS,
+    TIME_SECONDS,
 )
 from homeassistant.exceptions import PlatformNotReady
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -52,13 +54,13 @@ SENSOR_TYPES = {
     "ups.load": ["Load", "%", "mdi:gauge"],
     "ups.load.high": ["Overload Setting", "%", "mdi:gauge"],
     "ups.id": ["System identifier", "", "mdi:information-outline"],
-    "ups.delay.start": ["Load Restart Delay", "s", "mdi:timer"],
-    "ups.delay.reboot": ["UPS Reboot Delay", "s", "mdi:timer"],
-    "ups.delay.shutdown": ["UPS Shutdown Delay", "s", "mdi:timer"],
-    "ups.timer.start": ["Load Start Timer", "s", "mdi:timer"],
-    "ups.timer.reboot": ["Load Reboot Timer", "s", "mdi:timer"],
-    "ups.timer.shutdown": ["Load Shutdown Timer", "s", "mdi:timer"],
-    "ups.test.interval": ["Self-Test Interval", "s", "mdi:timer"],
+    "ups.delay.start": ["Load Restart Delay", TIME_SECONDS, "mdi:timer"],
+    "ups.delay.reboot": ["UPS Reboot Delay", TIME_SECONDS, "mdi:timer"],
+    "ups.delay.shutdown": ["UPS Shutdown Delay", TIME_SECONDS, "mdi:timer"],
+    "ups.timer.start": ["Load Start Timer", TIME_SECONDS, "mdi:timer"],
+    "ups.timer.reboot": ["Load Reboot Timer", TIME_SECONDS, "mdi:timer"],
+    "ups.timer.shutdown": ["Load Shutdown Timer", TIME_SECONDS, "mdi:timer"],
+    "ups.test.interval": ["Self-Test Interval", TIME_SECONDS, "mdi:timer"],
     "ups.test.result": ["Self-Test Result", "", "mdi:information-outline"],
     "ups.test.date": ["Self-Test Date", "", "mdi:calendar"],
     "ups.display.language": ["Language", "", "mdi:information-outline"],
@@ -88,9 +90,13 @@ SENSOR_TYPES = {
     "battery.current": ["Battery Current", "A", "mdi:flash"],
     "battery.current.total": ["Total Battery Current", "A", "mdi:flash"],
     "battery.temperature": ["Battery Temperature", TEMP_CELSIUS, "mdi:thermometer"],
-    "battery.runtime": ["Battery Runtime", "s", "mdi:timer"],
-    "battery.runtime.low": ["Low Battery Runtime", "s", "mdi:timer"],
-    "battery.runtime.restart": ["Minimum Battery Runtime to Start", "s", "mdi:timer"],
+    "battery.runtime": ["Battery Runtime", TIME_SECONDS, "mdi:timer"],
+    "battery.runtime.low": ["Low Battery Runtime", TIME_SECONDS, "mdi:timer"],
+    "battery.runtime.restart": [
+        "Minimum Battery Runtime to Start",
+        TIME_SECONDS,
+        "mdi:timer",
+    ],
     "battery.alarm.threshold": [
         "Battery Alarm Threshold",
         "",
@@ -133,6 +139,7 @@ STATE_TYPES = {
     "TRIM": "Trimming Voltage",
     "BOOST": "Boosting Voltage",
     "FSD": "Forced Shutdown",
+    "ALARM": "Alarm",
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -187,8 +194,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         data.update(no_throttle=True)
     except data.pynuterror as err:
         _LOGGER.error(
-            "Failure while testing NUT status retrieval. " "Cannot continue setup: %s",
-            err,
+            "Failure while testing NUT status retrieval. Cannot continue setup: %s", err
         )
         raise PlatformNotReady
 
@@ -269,7 +275,6 @@ class PyNUTData:
 
     def __init__(self, host, port, alias, username, password):
         """Initialize the data object."""
-        from pynut2.nut2 import PyNUTClient, PyNUTError
 
         self._host = host
         self._port = port

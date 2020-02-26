@@ -44,7 +44,7 @@ def setup(hass, config):
     """Listen for download events to download files."""
     download_path = config[DOMAIN][CONF_DOWNLOAD_DIR]
 
-    # If path is relative, we assume relative to HASS config dir
+    # If path is relative, we assume relative to Home Assistant config dir
     if not os.path.isabs(download_path):
         download_path = hass.config.path(download_path)
 

@@ -1,6 +1,7 @@
 """Support for UPnP/IGD Sensors."""
 import logging
 
+from homeassistant.const import DATA_BYTES, DATA_KIBIBYTES, TIME_SECONDS
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -18,15 +19,15 @@ PACKETS_RECEIVED = "packets_received"
 PACKETS_SENT = "packets_sent"
 
 SENSOR_TYPES = {
-    BYTES_RECEIVED: {"name": "bytes received", "unit": "bytes"},
-    BYTES_SENT: {"name": "bytes sent", "unit": "bytes"},
+    BYTES_RECEIVED: {"name": "bytes received", "unit": DATA_BYTES},
+    BYTES_SENT: {"name": "bytes sent", "unit": DATA_BYTES},
     PACKETS_RECEIVED: {"name": "packets received", "unit": "packets"},
     PACKETS_SENT: {"name": "packets sent", "unit": "packets"},
 }
 
 IN = "received"
 OUT = "sent"
-KBYTE = 1024
+KIBIBYTE = 1024
 
 
 async def async_setup_platform(
@@ -126,6 +127,9 @@ class RawUPnPIGDSensor(UpnpSensor):
     @property
     def state(self) -> str:
         """Return the state of the device."""
+        if self._state is None:
+            return None
+
         return format(self._state, "d")
 
     @property
@@ -154,7 +158,7 @@ class PerSecondUPnPIGDSensor(UpnpSensor):
     """Abstract representation of a X Sent/Received per second sensor."""
 
     def __init__(self, device, direction):
-        """Initializer."""
+        """Initialize sensor."""
         super().__init__(device)
         self._direction = direction
 
@@ -167,7 +171,7 @@ class PerSecondUPnPIGDSensor(UpnpSensor):
         """Get unit we are measuring in."""
         raise NotImplementedError()
 
-    def _async_fetch_value(self):
+    async def _async_fetch_value(self):
         """Fetch a value from the IGD."""
         raise NotImplementedError()
 
@@ -189,7 +193,7 @@ class PerSecondUPnPIGDSensor(UpnpSensor):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity, if any."""
-        return f"{self.unit}/sec"
+        return f"{self.unit}/{TIME_SECONDS}"
 
     def _is_overflowed(self, new_value) -> bool:
         """Check if value has overflowed."""
@@ -222,7 +226,7 @@ class KBytePerSecondUPnPIGDSensor(PerSecondUPnPIGDSensor):
     @property
     def unit(self) -> str:
         """Get unit we are measuring in."""
-        return "kbyte"
+        return DATA_KIBIBYTES
 
     async def _async_fetch_value(self) -> float:
         """Fetch value from device."""
@@ -237,7 +241,7 @@ class KBytePerSecondUPnPIGDSensor(PerSecondUPnPIGDSensor):
         if self._state is None:
             return None
 
-        return format(float(self._state / KBYTE), ".1f")
+        return format(float(self._state / KIBIBYTE), ".1f")
 
 
 class PacketsPerSecondUPnPIGDSensor(PerSecondUPnPIGDSensor):

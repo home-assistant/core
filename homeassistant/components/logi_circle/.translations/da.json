@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Du kan kun konfigurere en enkelt Logi Circle konto.",
-            "external_error": "Der opstod en undtagelse fra et andet flow.",
+            "already_setup": "Du kan kun konfigurere en enkelt Logi Circle-konto.",
+            "external_error": "Undtagelse skete fra et andet flow.",
             "external_setup": "Logi Circle er konfigureret med succes fra et andet flow.",
             "no_flows": "Du skal konfigurere Logi Circle f\u00f8r du kan godkende med det. [L\u00e6s venligst vejledningen](https://www.home-assistant.io/components/logi_circle/)."
         },
@@ -24,7 +24,7 @@
                     "flow_impl": "Udbyder"
                 },
                 "description": "V\u00e6lg via hvilken godkendelsesudbyder du vil godkende med Logi Circle.",
-                "title": "Godkendelses udbyder"
+                "title": "Godkendelsesudbyder"
             }
         },
         "title": "Logi Circle"

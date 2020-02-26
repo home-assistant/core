@@ -8,9 +8,10 @@ from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
 
 from homeassistant.components import dyson as dyson_parent
 from homeassistant.components.dyson import sensor as dyson
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, STATE_OFF
+from homeassistant.const import STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT, TIME_HOURS
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
+
 from tests.common import get_test_home_assistant
 
 
@@ -122,7 +123,7 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
         assert sensor.state is None
-        assert sensor.unit_of_measurement == "hours"
+        assert sensor.unit_of_measurement == TIME_HOURS
         assert sensor.name == "Device_name Filter Life"
         assert sensor.entity_id == "sensor.dyson_1"
         sensor.on_message("message")
@@ -134,7 +135,7 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
         assert sensor.state == 100
-        assert sensor.unit_of_measurement == "hours"
+        assert sensor.unit_of_measurement == TIME_HOURS
         assert sensor.name == "Device_name Filter Life"
         assert sensor.entity_id == "sensor.dyson_1"
         sensor.on_message("message")

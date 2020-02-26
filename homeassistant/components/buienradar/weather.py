@@ -28,8 +28,8 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_C
 from homeassistant.helpers import config_validation as cv
 
 # Reuse data and API logic from the sensor implementation
-from .util import BrData
 from .const import DEFAULT_TIMEFRAME
+from .util import BrData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -113,8 +113,8 @@ class BrWeather(WeatherEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._stationname or "BR {}".format(
-            self._data.stationname or "(unknown station)"
+        return (
+            self._stationname or f"BR {self._data.stationname or '(unknown station)'}"
         )
 
     @property

@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Mesto je \u017ee konfigurirano",
+            "unknown": "Neznana napaka: poskusite pozneje"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "city": "Mesto"
+                },
+                "description": "Vnesite po\u0161tno \u0161tevilko (samo za Francijo) ali ime mesta",
+                "title": "M\u00e9t\u00e9o-France"
+            }
+        },
+        "title": "M\u00e9t\u00e9o-France"
+    }
+}

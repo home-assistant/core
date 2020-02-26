@@ -5,16 +5,16 @@ from typing import Optional
 from homeassistant.components.geo_location import GeolocationEvent
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    ATTR_TIME,
     CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
-    ATTR_TIME,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
-from .const import DOMAIN, FEED, SIGNAL_DELETE_ENTITY, SIGNAL_UPDATE_ENTITY
+from .const import DOMAIN, FEED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,12 +75,12 @@ class GeonetnzQuakesEvent(GeolocationEvent):
         """Call when entity is added to hass."""
         self._remove_signal_delete = async_dispatcher_connect(
             self.hass,
-            SIGNAL_DELETE_ENTITY.format(self._external_id),
+            f"geonetnz_quakes_delete_{self._external_id}",
             self._delete_callback,
         )
         self._remove_signal_update = async_dispatcher_connect(
             self.hass,
-            SIGNAL_UPDATE_ENTITY.format(self._external_id),
+            f"geonetnz_quakes_update_{self._external_id}",
             self._update_callback,
         )
 

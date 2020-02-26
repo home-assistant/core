@@ -4,9 +4,9 @@ import logging
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.lock import LockDevice, PLATFORM_SCHEMA
+from homeassistant.components.lock import PLATFORM_SCHEMA, LockDevice
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ID
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 

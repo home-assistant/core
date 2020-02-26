@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    ENTITY_ID_FORMAT,
+    DOMAIN,
     CoverDevice,
 )
 
@@ -29,7 +29,7 @@ class FibaroCover(FibaroDevice, CoverDevice):
     def __init__(self, fibaro_device):
         """Initialize the Vera device."""
         super().__init__(fibaro_device)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
+        self.entity_id = f"{DOMAIN}.{self.ha_id}"
 
     @staticmethod
     def bound(position):

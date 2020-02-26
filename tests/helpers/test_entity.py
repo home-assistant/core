@@ -1,16 +1,16 @@
 """Test the entity helper."""
 # pylint: disable=protected-access
 import asyncio
-import threading
 from datetime import timedelta
-from unittest.mock import MagicMock, patch, PropertyMock
+import threading
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
-from homeassistant.helpers import entity, entity_registry
-from homeassistant.core import Context
-from homeassistant.const import ATTR_HIDDEN, ATTR_DEVICE_CLASS
 from homeassistant.config import DATA_CUSTOMIZE
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_HIDDEN, STATE_UNAVAILABLE
+from homeassistant.core import Context
+from homeassistant.helpers import entity, entity_registry
 from homeassistant.helpers.entity_values import EntityValues
 
 from tests.common import get_test_home_assistant, mock_registry
@@ -641,3 +641,63 @@ async def test_disabled_in_entity_registry(hass):
     assert entry3 != entry2
     assert ent.registry_entry == entry3
     assert ent.enabled is False
+
+
+async def test_capability_attrs(hass):
+    """Test we still include capabilities even when unavailable."""
+    with patch.object(
+        entity.Entity, "available", PropertyMock(return_value=False)
+    ), patch.object(
+        entity.Entity,
+        "capability_attributes",
+        PropertyMock(return_value={"always": "there"}),
+    ):
+        ent = entity.Entity()
+        ent.hass = hass
+        ent.entity_id = "hello.world"
+        ent.async_write_ha_state()
+
+    state = hass.states.get("hello.world")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert state.attributes["always"] == "there"
+
+
+async def test_warn_slow_write_state(hass, caplog):
+    """Check that we log a warning if reading properties takes too long."""
+    mock_entity = entity.Entity()
+    mock_entity.hass = hass
+    mock_entity.entity_id = "comp_test.test_entity"
+    mock_entity.platform = MagicMock(platform_name="hue")
+
+    with patch("homeassistant.helpers.entity.timer", side_effect=[0, 10]):
+        mock_entity.async_write_ha_state()
+
+    assert (
+        "Updating state for comp_test.test_entity "
+        "(<class 'homeassistant.helpers.entity.Entity'>) "
+        "took 10.000 seconds. Please create a bug report at "
+        "https://github.com/home-assistant/home-assistant/issues?"
+        "q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+hue%22"
+    ) in caplog.text
+
+
+async def test_warn_slow_write_state_custom_component(hass, caplog):
+    """Check that we log a warning if reading properties takes too long."""
+
+    class CustomComponentEntity(entity.Entity):
+        __module__ = "custom_components.bla.sensor"
+
+    mock_entity = CustomComponentEntity()
+    mock_entity.hass = hass
+    mock_entity.entity_id = "comp_test.test_entity"
+    mock_entity.platform = MagicMock(platform_name="hue")
+
+    with patch("homeassistant.helpers.entity.timer", side_effect=[0, 10]):
+        mock_entity.async_write_ha_state()
+
+    assert (
+        "Updating state for comp_test.test_entity "
+        "(<class 'custom_components.bla.sensor.test_warn_slow_write_state_custom_component.<locals>.CustomComponentEntity'>) "
+        "took 10.000 seconds. Please report it to the custom component author."
+    ) in caplog.text

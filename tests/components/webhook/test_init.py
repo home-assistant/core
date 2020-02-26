@@ -24,13 +24,13 @@ async def test_unregistering_webhook(hass, mock_client):
 
     hass.components.webhook.async_register("test", "Test hook", webhook_id, handle)
 
-    resp = await mock_client.post("/api/webhook/{}".format(webhook_id))
+    resp = await mock_client.post(f"/api/webhook/{webhook_id}")
     assert resp.status == 200
     assert len(hooks) == 1
 
     hass.components.webhook.async_unregister(webhook_id)
 
-    resp = await mock_client.post("/api/webhook/{}".format(webhook_id))
+    resp = await mock_client.post(f"/api/webhook/{webhook_id}")
     assert resp.status == 200
     assert len(hooks) == 1
 
@@ -73,9 +73,7 @@ async def test_posting_webhook_json(hass, mock_client):
 
     hass.components.webhook.async_register("test", "Test hook", webhook_id, handle)
 
-    resp = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), json={"data": True}
-    )
+    resp = await mock_client.post(f"/api/webhook/{webhook_id}", json={"data": True})
     assert resp.status == 200
     assert len(hooks) == 1
     assert hooks[0][0] is hass
@@ -94,7 +92,7 @@ async def test_posting_webhook_no_data(hass, mock_client):
 
     hass.components.webhook.async_register("test", "Test hook", webhook_id, handle)
 
-    resp = await mock_client.post("/api/webhook/{}".format(webhook_id))
+    resp = await mock_client.post(f"/api/webhook/{webhook_id}")
     assert resp.status == 200
     assert len(hooks) == 1
     assert hooks[0][0] is hass
@@ -114,7 +112,7 @@ async def test_webhook_put(hass, mock_client):
 
     hass.components.webhook.async_register("test", "Test hook", webhook_id, handle)
 
-    resp = await mock_client.put("/api/webhook/{}".format(webhook_id))
+    resp = await mock_client.put(f"/api/webhook/{webhook_id}")
     assert resp.status == 200
     assert len(hooks) == 1
     assert hooks[0][0] is hass
@@ -133,7 +131,7 @@ async def test_webhook_head(hass, mock_client):
 
     hass.components.webhook.async_register("test", "Test hook", webhook_id, handle)
 
-    resp = await mock_client.head("/api/webhook/{}".format(webhook_id))
+    resp = await mock_client.head(f"/api/webhook/{webhook_id}")
     assert resp.status == 200
     assert len(hooks) == 1
     assert hooks[0][0] is hass

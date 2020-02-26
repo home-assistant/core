@@ -47,11 +47,9 @@ class DteEnergyBridgeSensor(Entity):
         self._version = version
 
         if self._version == 1:
-            url_template = "http://{}/instantaneousdemand"
+            self._url = f"http://{ip_address}/instantaneousdemand"
         elif self._version == 2:
-            url_template = "http://{}:8888/zigbee/se/instantaneousdemand"
-
-        self._url = url_template.format(ip_address)
+            self._url = f"http://{ip_address}:8888/zigbee/se/instantaneousdemand"
 
         self._name = name
         self._unit_of_measurement = "kW"

@@ -1,28 +1,28 @@
 """Support for Flux lights."""
 import logging
-import socket
 import random
+import socket
 
 from flux_led import BulbScanner, WifiLedBulb
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PROTOCOL, ATTR_MODE
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_HS_COLOR,
-    ATTR_EFFECT,
-    ATTR_WHITE_VALUE,
     ATTR_COLOR_TEMP,
+    ATTR_EFFECT,
+    ATTR_HS_COLOR,
+    ATTR_WHITE_VALUE,
     EFFECT_COLORLOOP,
     EFFECT_RANDOM,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_EFFECT,
-    SUPPORT_COLOR,
-    SUPPORT_WHITE_VALUE,
-    SUPPORT_COLOR_TEMP,
-    Light,
     PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
+    SUPPORT_EFFECT,
+    SUPPORT_WHITE_VALUE,
+    Light,
 )
+from homeassistant.const import ATTR_MODE, CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
@@ -167,7 +167,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ipaddr = device["ipaddr"]
         if ipaddr in light_ips:
             continue
-        device["name"] = "{} {}".format(device["id"], ipaddr)
+        device["name"] = f"{device['id']} {ipaddr}"
         device[ATTR_MODE] = None
         device[CONF_PROTOCOL] = None
         device[CONF_CUSTOM_EFFECT] = None

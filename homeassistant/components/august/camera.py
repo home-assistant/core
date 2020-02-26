@@ -1,37 +1,41 @@
 """Support for August camera."""
 from datetime import timedelta
 
-import requests
+from august.activity import ActivityType
+from august.util import update_doorbell_image_from_activity
 
 from homeassistant.components.camera import Camera
 
-from . import DATA_AUGUST, DEFAULT_TIMEOUT
+from .const import DATA_AUGUST, DEFAULT_NAME, DEFAULT_TIMEOUT, DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up August cameras."""
-    data = hass.data[DATA_AUGUST]
+    data = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
     devices = []
 
     for doorbell in data.doorbells:
         devices.append(AugustCamera(data, doorbell, DEFAULT_TIMEOUT))
 
-    add_entities(devices, True)
+    async_add_entities(devices, True)
 
 
 class AugustCamera(Camera):
-    """An implementation of a Canary security camera."""
+    """An implementation of a August security camera."""
 
     def __init__(self, data, doorbell, timeout):
-        """Initialize a Canary security camera."""
+        """Initialize a August security camera."""
         super().__init__()
         self._data = data
         self._doorbell = doorbell
+        self._doorbell_detail = None
         self._timeout = timeout
         self._image_url = None
         self._image_content = None
+        self._firmware_version = None
+        self._model = None
 
     @property
     def name(self):
@@ -51,26 +55,65 @@ class AugustCamera(Camera):
     @property
     def brand(self):
         """Return the camera brand."""
-        return "August"
+        return DEFAULT_NAME
 
     @property
     def model(self):
         """Return the camera model."""
-        return "Doorbell"
+        return self._model
 
-    def camera_image(self):
+    async def async_camera_image(self):
         """Return bytes of camera image."""
-        latest = self._data.get_doorbell_detail(self._doorbell.device_id)
+        self._doorbell_detail = await self._data.async_get_doorbell_detail(
+            self._doorbell.device_id
+        )
+        doorbell_activity = await self._data.async_get_latest_device_activity(
+            self._doorbell.device_id, ActivityType.DOORBELL_MOTION
+        )
 
-        if self._image_url is not latest.image_url:
-            self._image_url = latest.image_url
-            self._image_content = requests.get(
-                self._image_url, timeout=self._timeout
-            ).content
+        if doorbell_activity is not None:
+            update_doorbell_image_from_activity(
+                self._doorbell_detail, doorbell_activity
+            )
 
+        if self._doorbell_detail is None:
+            return None
+
+        if self._image_url is not self._doorbell_detail.image_url:
+            self._image_url = self._doorbell_detail.image_url
+            self._image_content = await self.hass.async_add_executor_job(
+                self._camera_image
+            )
         return self._image_content
+
+    async def async_update(self):
+        """Update camera data."""
+        self._doorbell_detail = await self._data.async_get_doorbell_detail(
+            self._doorbell.device_id
+        )
+
+        if self._doorbell_detail is None:
+            return None
+
+        self._firmware_version = self._doorbell_detail.firmware_version
+        self._model = self._doorbell_detail.model
+
+    def _camera_image(self):
+        """Return bytes of camera image."""
+        return self._doorbell_detail.get_doorbell_image(timeout=self._timeout)
 
     @property
     def unique_id(self) -> str:
         """Get the unique id of the camera."""
         return f"{self._doorbell.device_id:s}_camera"
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        return {
+            "identifiers": {(DOMAIN, self._doorbell.device_id)},
+            "name": self._doorbell.device_name + " Camera",
+            "manufacturer": DEFAULT_NAME,
+            "sw_version": self._firmware_version,
+            "model": self._model,
+        }
