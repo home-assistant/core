@@ -120,21 +120,13 @@ async def async_setup_hass(
         hass.config.config_dir = config_dir
 
     if safe_mode:
-        _LOGGER.info("Starting in safe mode")
+        _LOGGER.info("Starting in AIS dom safe mode")
         hass.config.safe_mode = True
 
-        http_conf = (await http.async_get_last_config(hass)) or {}
-
-        await async_from_config_dict({"safe_mode": {}, "http": http_conf}, hass)
-        # AIS dom TODO
-        # if safe_mode or config_dict is None:
-        #     _LOGGER.info("Starting in AIS dom safe mode")
-        #     # pure AIS dom config in safe_mode
-        #     ais_conf = await conf_util.async_ais_config_yaml(hass)
-        #     ais_conf["safe_mode"] = {}
-        #     await async_from_config_dict(ais_conf, hass)
+        ais_conf = await (conf_util.async_ais_config_yaml(hass)) or {}
         # http_conf = (await http.async_get_last_config(hass)) or {}
-        # await async_from_config_dict({"safe_mode": {}, "http": http_conf}, hass)
+
+        await async_from_config_dict({"safe_mode": {}, "http": ais_conf["http"]}, hass)
 
     return hass
 
