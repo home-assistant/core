@@ -23,7 +23,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
 
-from .const import ATTRIBUTION, DEFAULT_CACHEDB, DOMAIN
+from .const import ATTRIBUTION, DEFAULT_CACHEDB, DOMAIN, LOGGER
 
 CONF_POLLING = "polling"
 

@@ -10,7 +10,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import Throttle
 
 from . import AbodeDevice
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=90)
 
