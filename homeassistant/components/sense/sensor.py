@@ -267,7 +267,7 @@ class SenseTrendsSensor(Entity):
 
 
 class SenseDevice(Entity):
-    """Implementation of a Sense energy device binary sensor."""
+    """Implementation of a Sense energy device."""
 
     def __init__(self, sense_devices_data, device, sense_monitor_id):
         """Initialize the Sense binary sensor."""
