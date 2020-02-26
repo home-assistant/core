@@ -70,7 +70,7 @@ async def test_deconz_events(hass):
     mock_listener = Mock()
     unsub = hass.bus.async_listen(CONF_DECONZ_EVENT, mock_listener)
 
-    gateway.api.sensors["1"].async_update({"state": {"buttonevent": 2000}})
+    gateway.api.sensors["1"].update({"state": {"buttonevent": 2000}})
     await hass.async_block_till_done()
 
     assert len(mock_listener.mock_calls) == 1
@@ -85,7 +85,7 @@ async def test_deconz_events(hass):
     mock_listener = Mock()
     unsub = hass.bus.async_listen(CONF_DECONZ_EVENT, mock_listener)
 
-    gateway.api.sensors["3"].async_update({"state": {"buttonevent": 2000}})
+    gateway.api.sensors["3"].update({"state": {"buttonevent": 2000}})
     await hass.async_block_till_done()
 
     assert len(mock_listener.mock_calls) == 1
@@ -101,7 +101,7 @@ async def test_deconz_events(hass):
     mock_listener = Mock()
     unsub = hass.bus.async_listen(CONF_DECONZ_EVENT, mock_listener)
 
-    gateway.api.sensors["4"].async_update({"state": {"gesture": 0}})
+    gateway.api.sensors["4"].update({"state": {"gesture": 0}})
     await hass.async_block_till_done()
 
     assert len(mock_listener.mock_calls) == 1

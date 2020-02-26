@@ -3,6 +3,7 @@ Provide a mock light platform.
 
 Call init before using it in your tests to ensure clean test data.
 """
+from homeassistant.components.light import Light
 from homeassistant.const import STATE_OFF, STATE_ON
 
 from tests.common import MockToggleEntity
@@ -18,9 +19,9 @@ def init(empty=False):
         []
         if empty
         else [
-            MockToggleEntity("Ceiling", STATE_ON),
-            MockToggleEntity("Ceiling", STATE_OFF),
-            MockToggleEntity(None, STATE_OFF),
+            MockLight("Ceiling", STATE_ON),
+            MockLight("Ceiling", STATE_OFF),
+            MockLight(None, STATE_OFF),
         ]
     )
 
@@ -30,3 +31,10 @@ async def async_setup_platform(
 ):
     """Return mock entities."""
     async_add_entities_callback(ENTITIES)
+
+
+class MockLight(MockToggleEntity, Light):
+    """Mock light class."""
+
+    brightness = None
+    supported_features = 0

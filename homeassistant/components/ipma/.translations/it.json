@@ -8,6 +8,7 @@
                 "data": {
                     "latitude": "Latitudine",
                     "longitude": "Longitudine",
+                    "mode": "Modalit\u00e0",
                     "name": "Nome"
                 },
                 "description": "Instituto Portugu\u00eas do Mar e Atmosfera",

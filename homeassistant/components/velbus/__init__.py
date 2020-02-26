@@ -140,11 +140,11 @@ class VelbusEntity(Entity):
             "identifiers": {
                 (DOMAIN, self._module.get_module_address(), self._module.serial)
             },
-            "name": "{} {}".format(
-                self._module.get_module_address(), self._module.get_module_name()
+            "name": "{} ({})".format(
+                self._module.get_module_name(), self._module.get_module_address()
             ),
             "manufacturer": "Velleman",
-            "model": self._module.get_module_name(),
+            "model": self._module.get_module_type_name(),
             "sw_version": "{}.{}-{}".format(
                 self._module.memory_map_version,
                 self._module.build_year,

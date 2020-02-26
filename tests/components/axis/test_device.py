@@ -14,18 +14,14 @@ MAC = "00408C12345"
 MODEL = "model"
 NAME = "name"
 
-DEVICE_DATA = {
-    axis.device.CONF_HOST: "1.2.3.4",
-    axis.device.CONF_USERNAME: "username",
-    axis.device.CONF_PASSWORD: "password",
-    axis.device.CONF_PORT: 80,
-}
-
-ENTRY_OPTIONS = {axis.device.CONF_CAMERA: True, axis.device.CONF_EVENTS: True}
+ENTRY_OPTIONS = {axis.CONF_CAMERA: True, axis.CONF_EVENTS: True}
 
 ENTRY_CONFIG = {
-    axis.device.CONF_DEVICE: DEVICE_DATA,
-    axis.device.CONF_MAC: MAC,
+    axis.CONF_HOST: "1.2.3.4",
+    axis.CONF_USERNAME: "username",
+    axis.CONF_PASSWORD: "password",
+    axis.CONF_PORT: 80,
+    axis.CONF_MAC: MAC,
     axis.device.CONF_MODEL: MODEL,
     axis.device.CONF_NAME: NAME,
 }
@@ -76,6 +72,7 @@ async def setup_axis_integration(
         connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
         options=deepcopy(options),
         entry_id="1",
+        version=2,
     )
     config_entry.add_to_hass(hass)
 
@@ -116,10 +113,10 @@ async def test_device_setup(hass):
     assert forward_entry_setup.mock_calls[1][1] == (entry, "binary_sensor")
     assert forward_entry_setup.mock_calls[2][1] == (entry, "switch")
 
-    assert device.host == DEVICE_DATA[axis.device.CONF_HOST]
+    assert device.host == ENTRY_CONFIG[axis.CONF_HOST]
     assert device.model == ENTRY_CONFIG[axis.device.CONF_MODEL]
     assert device.name == ENTRY_CONFIG[axis.device.CONF_NAME]
-    assert device.serial == ENTRY_CONFIG[axis.device.CONF_MAC]
+    assert device.serial == ENTRY_CONFIG[axis.CONF_MAC]
 
 
 async def test_update_address(hass):
@@ -204,7 +201,7 @@ async def test_get_device_fails(hass):
     with patch(
         "axis.param_cgi.Params.update_brand", side_effect=axislib.Unauthorized
     ), pytest.raises(axis.errors.AuthenticationRequired):
-        await axis.device.get_device(hass, DEVICE_DATA)
+        await axis.device.get_device(hass, host="", port="", username="", password="")
 
 
 async def test_get_device_device_unavailable(hass):
@@ -212,7 +209,7 @@ async def test_get_device_device_unavailable(hass):
     with patch(
         "axis.param_cgi.Params.update_brand", side_effect=axislib.RequestError
     ), pytest.raises(axis.errors.CannotConnect):
-        await axis.device.get_device(hass, DEVICE_DATA)
+        await axis.device.get_device(hass, host="", port="", username="", password="")
 
 
 async def test_get_device_unknown_error(hass):
@@ -220,4 +217,4 @@ async def test_get_device_unknown_error(hass):
     with patch(
         "axis.param_cgi.Params.update_brand", side_effect=axislib.AxisException
     ), pytest.raises(axis.errors.AuthenticationRequired):
-        await axis.device.get_device(hass, DEVICE_DATA)
+        await axis.device.get_device(hass, host="", port="", username="", password="")

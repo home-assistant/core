@@ -5,12 +5,12 @@ from homeassistant.const import (
     ATTR_STATE,
     CONF_DEVICES,
     CONF_NAME,
-    CONF_PIN,
     CONF_SWITCHES,
+    CONF_ZONE,
 )
 from homeassistant.helpers.entity import ToggleEntity
 
-from . import (
+from .const import (
     CONF_ACTIVATION,
     CONF_MOMENTARY,
     CONF_PAUSE,
@@ -23,16 +23,13 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set switches attached to a Konnected device."""
-    if discovery_info is None:
-        return
-
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up switches attached to a Konnected device from a config entry."""
     data = hass.data[KONNECTED_DOMAIN]
-    device_id = discovery_info["device_id"]
+    device_id = config_entry.data["id"]
     switches = [
-        KonnectedSwitch(device_id, pin_data.get(CONF_PIN), pin_data)
-        for pin_data in data[CONF_DEVICES][device_id][CONF_SWITCHES]
+        KonnectedSwitch(device_id, zone_data.get(CONF_ZONE), zone_data)
+        for zone_data in data[CONF_DEVICES][device_id][CONF_SWITCHES]
     ]
     async_add_entities(switches)
 
@@ -40,11 +37,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class KonnectedSwitch(ToggleEntity):
     """Representation of a Konnected switch."""
 
-    def __init__(self, device_id, pin_num, data):
+    def __init__(self, device_id, zone_num, data):
         """Initialize the Konnected switch."""
         self._data = data
         self._device_id = device_id
-        self._pin_num = pin_num
+        self._zone_num = zone_num
         self._activation = self._data.get(CONF_ACTIVATION, STATE_HIGH)
         self._momentary = self._data.get(CONF_MOMENTARY)
         self._pause = self._data.get(CONF_PAUSE)
@@ -52,7 +49,7 @@ class KonnectedSwitch(ToggleEntity):
         self._state = self._boolean_state(self._data.get(ATTR_STATE))
         self._name = self._data.get(CONF_NAME)
         self._unique_id = "{}-{}-{}-{}-{}".format(
-            device_id, self._pin_num, self._momentary, self._pause, self._repeat
+            device_id, self._zone_num, self._momentary, self._pause, self._repeat
         )
 
     @property
@@ -71,16 +68,22 @@ class KonnectedSwitch(ToggleEntity):
         return self._state
 
     @property
-    def client(self):
+    def panel(self):
         """Return the Konnected HTTP client."""
-        return self.hass.data[KONNECTED_DOMAIN][CONF_DEVICES][self._device_id].get(
-            "client"
-        )
+        device_data = self.hass.data[KONNECTED_DOMAIN][CONF_DEVICES][self._device_id]
+        return device_data.get("panel")
 
-    def turn_on(self, **kwargs):
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(KONNECTED_DOMAIN, self._device_id)},
+        }
+
+    async def async_turn_on(self, **kwargs):
         """Send a command to turn on the switch."""
-        resp = self.client.put_device(
-            self._pin_num,
+        resp = await self.panel.update_switch(
+            self._zone_num,
             int(self._activation == STATE_HIGH),
             self._momentary,
             self._repeat,
@@ -94,9 +97,11 @@ class KonnectedSwitch(ToggleEntity):
                 # Immediately set the state back off for momentary switches
                 self._set_state(False)
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Send a command to turn off the switch."""
-        resp = self.client.put_device(self._pin_num, int(self._activation == STATE_LOW))
+        resp = await self.panel.update_switch(
+            self._zone_num, int(self._activation == STATE_LOW)
+        )
 
         if resp.get(ATTR_STATE) is not None:
             self._set_state(self._boolean_state(resp.get(ATTR_STATE)))
@@ -111,9 +116,9 @@ class KonnectedSwitch(ToggleEntity):
 
     def _set_state(self, state):
         self._state = state
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
         _LOGGER.debug(
-            "Setting status of %s actuator pin %s to %s",
+            "Setting status of %s actuator zone %s to %s",
             self._device_id,
             self.name,
             state,

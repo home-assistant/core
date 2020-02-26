@@ -99,10 +99,10 @@ def catch_request_errors():
         """Call wrapper for decorator."""
 
         @functools.wraps(func)
-        def wrapper(self, *args, **kwargs):
+        async def wrapper(self, *args, **kwargs):
             """Catch asyncio.TimeoutError, aiohttp.ClientError errors."""
             try:
-                return func(self, *args, **kwargs)
+                return await func(self, *args, **kwargs)
             except (asyncio.TimeoutError, aiohttp.ClientError):
                 _LOGGER.error("Error during call %s", func.__name__)
 

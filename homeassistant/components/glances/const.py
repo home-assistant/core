@@ -1,5 +1,5 @@
 """Constants for Glances component."""
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import DATA_GIBIBYTES, DATA_MEBIBYTES, TEMP_CELSIUS
 
 DOMAIN = "glances"
 CONF_VERSION = "version"
@@ -14,23 +14,28 @@ DATA_UPDATED = "glances_data_updated"
 SUPPORTED_VERSIONS = [2, 3]
 
 SENSOR_TYPES = {
-    "disk_use_percent": ["Disk used percent", "%", "mdi:harddisk"],
-    "disk_use": ["Disk used", "GiB", "mdi:harddisk"],
-    "disk_free": ["Disk free", "GiB", "mdi:harddisk"],
-    "memory_use_percent": ["RAM used percent", "%", "mdi:memory"],
-    "memory_use": ["RAM used", "MiB", "mdi:memory"],
-    "memory_free": ["RAM free", "MiB", "mdi:memory"],
-    "swap_use_percent": ["Swap used percent", "%", "mdi:memory"],
-    "swap_use": ["Swap used", "GiB", "mdi:memory"],
-    "swap_free": ["Swap free", "GiB", "mdi:memory"],
-    "processor_load": ["CPU load", "15 min", "mdi:memory"],
-    "process_running": ["Running", "Count", "mdi:memory"],
-    "process_total": ["Total", "Count", "mdi:memory"],
-    "process_thread": ["Thread", "Count", "mdi:memory"],
-    "process_sleeping": ["Sleeping", "Count", "mdi:memory"],
-    "cpu_use_percent": ["CPU used", "%", "mdi:memory"],
-    "cpu_temp": ["CPU Temp", TEMP_CELSIUS, "mdi:thermometer"],
-    "docker_active": ["Containers active", "", "mdi:docker"],
-    "docker_cpu_use": ["Containers CPU used", "%", "mdi:docker"],
-    "docker_memory_use": ["Containers RAM used", "MiB", "mdi:docker"],
+    "disk_use_percent": ["fs", "used percent", "%", "mdi:harddisk"],
+    "disk_use": ["fs", "used", DATA_GIBIBYTES, "mdi:harddisk"],
+    "disk_free": ["fs", "free", DATA_GIBIBYTES, "mdi:harddisk"],
+    "memory_use_percent": ["mem", "RAM used percent", "%", "mdi:memory"],
+    "memory_use": ["mem", "RAM used", DATA_MEBIBYTES, "mdi:memory"],
+    "memory_free": ["mem", "RAM free", DATA_MEBIBYTES, "mdi:memory"],
+    "swap_use_percent": ["memswap", "Swap used percent", "%", "mdi:memory"],
+    "swap_use": ["memswap", "Swap used", DATA_GIBIBYTES, "mdi:memory"],
+    "swap_free": ["memswap", "Swap free", DATA_GIBIBYTES, "mdi:memory"],
+    "processor_load": ["load", "CPU load", "15 min", "mdi:memory"],
+    "process_running": ["processcount", "Running", "Count", "mdi:memory"],
+    "process_total": ["processcount", "Total", "Count", "mdi:memory"],
+    "process_thread": ["processcount", "Thread", "Count", "mdi:memory"],
+    "process_sleeping": ["processcount", "Sleeping", "Count", "mdi:memory"],
+    "cpu_use_percent": ["cpu", "CPU used", "%", "mdi:memory"],
+    "sensor_temp": ["sensors", "Temp", TEMP_CELSIUS, "mdi:thermometer"],
+    "docker_active": ["docker", "Containers active", "", "mdi:docker"],
+    "docker_cpu_use": ["docker", "Containers CPU used", "%", "mdi:docker"],
+    "docker_memory_use": [
+        "docker",
+        "Containers RAM used",
+        DATA_MEBIBYTES,
+        "mdi:docker",
+    ],
 }

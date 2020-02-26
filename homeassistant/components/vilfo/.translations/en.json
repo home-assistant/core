@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "This Vilfo Router is already configured."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect. Please check the information you provided and try again.",
+            "invalid_auth": "Invalid authentication. Please check the access token and try again.",
+            "unknown": "An unexpected error occurred while setting up the integration."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Access token for the Vilfo Router API",
+                    "host": "Router hostname or IP"
+                },
+                "description": "Set up the Vilfo Router integration. You need your Vilfo Router hostname/IP and an API access token. For additional information on this integration and how to get those details, visit: https://www.home-assistant.io/integrations/vilfo",
+                "title": "Connect to the Vilfo Router"
+            }
+        },
+        "title": "Vilfo Router"
+    }
+}

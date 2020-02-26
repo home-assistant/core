@@ -1,0 +1,10 @@
+{
+  "domain": "minecraft_server",
+  "name": "Minecraft Server",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/minecraft_server",
+  "requirements": ["getmac==0.8.1", "mcstatus==2.3.0"],
+  "dependencies": [],
+  "codeowners": ["@elmurato"],
+  "quality_scale": "silver"
+}

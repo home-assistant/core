@@ -1,9 +1,9 @@
 {
     "config": {
         "abort": {
-            "all_configured": "Wszystkie mostki Hue s\u0105 ju\u017c skonfigurowane",
-            "already_configured": "Mostek jest ju\u017c skonfigurowany",
-            "already_in_progress": "Konfigurowanie mostka jest ju\u017c w toku.",
+            "all_configured": "Wszystkie mostki Hue s\u0105 ju\u017c skonfigurowane.",
+            "already_configured": "Mostek jest ju\u017c skonfigurowany.",
+            "already_in_progress": "Konfiguracja mostka jest ju\u017c w toku.",
             "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z mostkiem",
             "discover_timeout": "Nie mo\u017cna wykry\u0107 \u017cadnych mostk\u00f3w Hue",
             "no_bridges": "Nie wykryto \u017cadnych mostk\u00f3w Hue",

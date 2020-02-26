@@ -12,7 +12,7 @@ from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.util import Throttle
 
-from .const import CONF_FALLBACK
+from .const import CONF_FALLBACK, DATA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,19 +20,22 @@ DOMAIN = "tado"
 
 SIGNAL_TADO_UPDATE_RECEIVED = "tado_update_received_{}_{}"
 
-TADO_COMPONENTS = ["sensor", "climate"]
+TADO_COMPONENTS = ["sensor", "climate", "water_heater"]
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 SCAN_INTERVAL = timedelta(seconds=15)
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_FALLBACK, default=True): cv.boolean,
-            }
+        DOMAIN: vol.All(
+            cv.ensure_list,
+            [
+                {
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Optional(CONF_FALLBACK, default=True): cv.boolean,
+                }
+            ],
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -41,32 +44,39 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up of the Tado component."""
-    username = config[DOMAIN][CONF_USERNAME]
-    password = config[DOMAIN][CONF_PASSWORD]
+    acc_list = config[DOMAIN]
 
-    tadoconnector = TadoConnector(hass, username, password)
-    if not tadoconnector.setup():
-        return False
+    api_data_list = []
 
-    hass.data[DOMAIN] = tadoconnector
+    for acc in acc_list:
+        username = acc[CONF_USERNAME]
+        password = acc[CONF_PASSWORD]
+        fallback = acc[CONF_FALLBACK]
 
-    # Do first update
-    tadoconnector.update()
+        tadoconnector = TadoConnector(hass, username, password, fallback)
+        if not tadoconnector.setup():
+            continue
+
+        # Do first update
+        tadoconnector.update()
+
+        api_data_list.append(tadoconnector)
+        # Poll for updates in the background
+        hass.helpers.event.track_time_interval(
+            # we're using here tadoconnector as a parameter of lambda
+            # to capture actual value instead of closuring of latest value
+            lambda now, tc=tadoconnector: tc.update(),
+            SCAN_INTERVAL,
+        )
+
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][DATA] = api_data_list
 
     # Load components
     for component in TADO_COMPONENTS:
         load_platform(
-            hass,
-            component,
-            DOMAIN,
-            {CONF_FALLBACK: config[DOMAIN][CONF_FALLBACK]},
-            config,
+            hass, component, DOMAIN, {}, config,
         )
-
-    # Poll for updates in the background
-    hass.helpers.event.track_time_interval(
-        lambda now: tadoconnector.update(), SCAN_INTERVAL
-    )
 
     return True
 
@@ -74,12 +84,14 @@ def setup(hass, config):
 class TadoConnector:
     """An object to store the Tado data."""
 
-    def __init__(self, hass, username, password):
+    def __init__(self, hass, username, password, fallback):
         """Initialize Tado Connector."""
         self.hass = hass
         self._username = username
         self._password = password
+        self._fallback = fallback
 
+        self.device_id = None
         self.tado = None
         self.zones = None
         self.devices = None
@@ -87,6 +99,11 @@ class TadoConnector:
             "zone": {},
             "device": {},
         }
+
+    @property
+    def fallback(self):
+        """Return fallback flag to Smart Schedule."""
+        return self._fallback
 
     def setup(self):
         """Connect to Tado and fetch the zones."""
@@ -101,7 +118,7 @@ class TadoConnector:
         # Load zones and devices
         self.zones = self.tado.getZones()
         self.devices = self.tado.getMe()["homes"]
-
+        self.device_id = self.devices[0]["id"]
         return True
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)

@@ -6,6 +6,10 @@
             "missing_configuration": "Prosimo, preverite dokumentacijo o tem, kako nastaviti Almond."
         },
         "step": {
+            "hassio_confirm": {
+                "description": "Ali \u017eelite konfigurirati Home Assistant za povezavo z Almondom, ki ga ponuja dodatek Hass.io: {addon} ?",
+                "title": "Almond prek dodatka Hass.io"
+            },
             "pick_implementation": {
                 "title": "Izberite na\u010din preverjanja pristnosti"
             }
