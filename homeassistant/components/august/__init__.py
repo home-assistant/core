@@ -319,7 +319,7 @@ class AugustData:
     def async_signal_operation_changed_device_state(self, device_id):
         """Signal a device update when an operation changes state."""
         _LOGGER.debug(
-            f"async_dispatcher_send (from operation): AUGUST_DEVICE_UPDATE-{device_id}"
+            "async_dispatcher_send (from operation): AUGUST_DEVICE_UPDATE-%s", device_id
         )
         async_dispatcher_send(self._hass, f"{AUGUST_DEVICE_UPDATE}-{device_id}")
 

@@ -101,7 +101,7 @@ class ActivityStream:
 
             updated_device_ids = self._process_newer_device_activities(activities)
 
-            if len(updated_device_ids):
+            if updated_device_ids:
                 self._signal_device_updates(updated_device_ids)
 
         self._last_update_time = time
@@ -109,7 +109,8 @@ class ActivityStream:
     def _signal_device_updates(self, updated_device_ids):
         for device_id in updated_device_ids:
             _LOGGER.debug(
-                f"async_dispatcher_send (from activity stream): AUGUST_DEVICE_UPDATE-{device_id}"
+                "async_dispatcher_send (from activity stream): AUGUST_DEVICE_UPDATE-%s",
+                device_id,
             )
             async_dispatcher_send(self._hass, f"{AUGUST_DEVICE_UPDATE}-{device_id}")
 
