@@ -10,62 +10,24 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from .const import DOMAIN, SENSE_DATA, SENSE_DEVICE_UPDATE, SENSE_DEVICES_DATA
-
-_LOGGER = logging.getLogger(__name__)
-
-ACTIVE_NAME = "Energy"
-ACTIVE_TYPE = "active"
-
-CONSUMPTION_NAME = "Usage"
-
-ICON = "mdi:flash"
+from .const import (
+    ACTIVE_NAME,
+    ACTIVE_TYPE,
+    CONSUMPTION_NAME,
+    DEVICE_ID_SOLAR,
+    DOMAIN,
+    ICON,
+    MDI_ICONS,
+    PRODUCTION_NAME,
+    SENSE_DATA,
+    SENSE_DEVICE_UPDATE,
+    SENSE_DEVICES_DATA,
+)
 
 MIN_TIME_BETWEEN_DAILY_UPDATES = timedelta(seconds=300)
 
-PRODUCTION_NAME = "Production"
 
-DEVICE_ID_SOLAR = "solar"
-BIN_SENSOR_CLASS = "power"
-MDI_ICONS = {
-    "ac": "air-conditioner",
-    "aquarium": "fish",
-    "car": "car-electric",
-    "computer": "desktop-classic",
-    "cup": "coffee",
-    "dehumidifier": "water-off",
-    "dishes": "dishwasher",
-    "drill": "toolbox",
-    "fan": "fan",
-    "freezer": "fridge-top",
-    "fridge": "fridge-bottom",
-    "game": "gamepad-variant",
-    "garage": "garage",
-    "grill": "stove",
-    "heat": "fire",
-    "heater": "radiatior",
-    "humidifier": "water",
-    "kettle": "kettle",
-    "leafblower": "leaf",
-    "lightbulb": "lightbulb",
-    "media_console": "set-top-box",
-    "modem": "router-wireless",
-    "outlet": "power-socket-us",
-    "papershredder": "shredder",
-    "printer": "printer",
-    "pump": "water-pump",
-    "settings": "settings",
-    "skillet": "pot",
-    "smartcamera": "webcam",
-    "socket": "power-plug",
-    "solar_alt": "solar-power",
-    "sound": "speaker",
-    "stove": "stove",
-    "trash": "trash-can",
-    "tv": "television",
-    "vacuum": "robot-vacuum",
-    "washer": "washing-machine",
-}
+_LOGGER = logging.getLogger(__name__)
 
 
 class SensorConfig:
