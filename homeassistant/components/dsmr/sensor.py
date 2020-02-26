@@ -96,7 +96,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     # Protocol version specific obis
     if dsmr_version in ("4", "5"):
         gas_obis = obis_ref.HOURLY_GAS_METER_READING
-    elif dsmr_version in ("5B"):
+    elif dsmr_version in ("5B",):
         gas_obis = obis_ref.BELGIUM_HOURLY_GAS_METER_READING
     else:
         gas_obis = obis_ref.GAS_METER_READING
@@ -243,7 +243,7 @@ class DSMREntity(Entity):
         """Convert 2/1 to normal/low depending on DSMR version."""
         # DSMR V5B: Note: In Belgium values are swapped:
         # Rate code 2 is used for low rate and rate code 1 is used for normal rate.
-        if dsmr_version in ("5B"):
+        if dsmr_version in ("5B",):
             if value == "0001":
                 value = "0002"
             elif value == "0002":
