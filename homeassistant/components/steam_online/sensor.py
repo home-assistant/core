@@ -199,8 +199,8 @@ class SteamSensor(Entity):
         """Avatar of the account."""
         if self._game_id is not None:
             return self._get_game_image_header()
-        else:
-            return self._avatar
+
+        return self._avatar
 
     @property
     def icon(self):
