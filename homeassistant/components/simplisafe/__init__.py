@@ -474,41 +474,39 @@ class SimpliSafe:
 
         tasks = [update_system(system) for system in self.systems.values()]
 
-        def cancel_tasks():
-            """Cancel tasks and ensure their cancellation is processed."""
-            for task in tasks:
-                task.cancel()
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for result in results:
+            if isinstance(result, InvalidCredentialsError):
+                if self._emergency_refresh_token_used:
+                    _LOGGER.error(
+                        "SimpliSafe authentication disconnected. Please restart HASS."
+                    )
+                    remove_listener = self._hass.data[DOMAIN][DATA_LISTENER].pop(
+                        self._config_entry.entry_id
+                    )
+                    remove_listener()
+                    return
 
-        try:
-            await asyncio.gather(*tasks)
-        except InvalidCredentialsError:
-            cancel_tasks()
+                _LOGGER.warning("SimpliSafe cloud error; trying stored refresh token")
+                self._emergency_refresh_token_used = True
+                return await self._api.refresh_access_token(
+                    self._config_entry.data[CONF_TOKEN]
+                )
 
-            if self._emergency_refresh_token_used:
-                _LOGGER.error(
-                    "SimpliSafe authentication disconnected. Please restart HASS."
-                )
-                remove_listener = self._hass.data[DOMAIN][DATA_LISTENER].pop(
-                    self._config_entry.entry_id
-                )
-                remove_listener()
+            if isinstance(result, SimplipyError):
+                _LOGGER.error("SimpliSafe error while updating: %s", result)
                 return
 
-            _LOGGER.warning("SimpliSafe cloud error; trying stored refresh token")
-            self._emergency_refresh_token_used = True
-            return await self._api.refresh_access_token(
-                self._config_entry.data[CONF_TOKEN]
-            )
-        except SimplipyError as err:
-            cancel_tasks()
-            _LOGGER.error("SimpliSafe error while updating: %s", err)
-            return
-        except Exception as err:  # pylint: disable=broad-except
-            cancel_tasks()
-            _LOGGER.error("Unknown error while updating: %s", err)
-            return
+            if isinstance(result, SimplipyError):
+                _LOGGER.error("Unknown error while updating: %s", result)
+                return
 
         if self._api.refresh_token_dirty:
+            # Reconnect the websocket:
+            await self._api.websocket.async_disconnect()
+            await self._api.websocket.async_connect()
+
+            # Save the new refresh token:
             _async_save_refresh_token(
                 self._hass, self._config_entry, self._api.refresh_token
             )
