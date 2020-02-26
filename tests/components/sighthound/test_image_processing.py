@@ -1,7 +1,8 @@
 """Tests for the Sighthound integration."""
 from copy import deepcopy
 import os
-from unittest.mock import patch
+from pathlib import Path
+from unittest import mock
 
 import pytest
 import simplehound.core as hound
@@ -44,7 +45,7 @@ MOCK_DETECTIONS = {
 @pytest.fixture
 def mock_detections():
     """Return a mock detection."""
-    with patch(
+    with mock.patch(
         "simplehound.core.cloud.detect", return_value=MOCK_DETECTIONS
     ) as detection:
         yield detection
@@ -53,7 +54,7 @@ def mock_detections():
 @pytest.fixture
 def mock_image():
     """Return a mock camera image."""
-    with patch(
+    with mock.patch(
         "homeassistant.components.demo.camera.DemoCamera.camera_image",
         return_value=b"Test",
     ) as image:
@@ -62,7 +63,9 @@ def mock_image():
 
 async def test_bad_api_key(hass, caplog):
     """Catch bad api key."""
-    with patch("simplehound.core.cloud.detect", side_effect=hound.SimplehoundException):
+    with mock.patch(
+        "simplehound.core.cloud.detect", side_effect=hound.SimplehoundException
+    ):
         await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
         assert "Sighthound error" in caplog.text
         assert not hass.states.get(VALID_ENTITY_ID)
@@ -104,7 +107,7 @@ async def test_save_image(hass, mock_image, mock_detections):
     await async_setup_component(hass, ip.DOMAIN, valid_config_save_file)
     assert hass.states.get(VALID_ENTITY_ID)
 
-    with patch(
+    with mock.patch(
         "homeassistant.components.sighthound.image_processing.Image.open"
     ) as pil_img_open:
         pil_img = pil_img_open.return_value
@@ -116,6 +119,11 @@ async def test_save_image(hass, mock_image, mock_detections):
         assert state.state == "2"
         assert pil_img.save.call_count == 1
 
+        directory = Path(TEST_DIR)
+        camera_name = VALID_ENTITY_ID.split(".")[-1]
+        latest_save_path = directory / f"{camera_name}_latest.jpg"
+        assert pil_img.save.call_args == mock.call(latest_save_path)
+
 
 async def test_save_timestamped_image(hass, mock_image, mock_detections):
     """Save a processed image."""
@@ -125,7 +133,7 @@ async def test_save_timestamped_image(hass, mock_image, mock_detections):
     await async_setup_component(hass, ip.DOMAIN, valid_config_save_ts_file)
     assert hass.states.get(VALID_ENTITY_ID)
 
-    with patch(
+    with mock.patch(
         "homeassistant.components.sighthound.image_processing.Image.open"
     ) as pil_img_open:
         pil_img = pil_img_open.return_value
