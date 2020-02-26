@@ -1,10 +1,10 @@
 from typing import Optional
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.components import conversation
 from homeassistant.helpers import intent
+from homeassistant.components.conversation import agent
 
 
-class AisAgent(conversation.AbstractConversationAgent):
+class AisAgent(agent.AbstractConversationAgent):
     """AIS dom conversation agent."""
 
     def __init__(self, hass: HomeAssistant):

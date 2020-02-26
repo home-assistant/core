@@ -3,8 +3,7 @@
   "name": "Ais dom Frontend",
   "documentation": "https://sviete.github.io/AIS-docs/docs/en/ais_app_index.html",
   "requirements": [
-    /* 20200220.4 AIS dom TODO */
-    "ais-dom-frontend==20200212.2"
+    "ais-dom-frontend==20200220.4"
   ],
   "dependencies": [
     "api",
