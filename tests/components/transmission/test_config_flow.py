@@ -90,7 +90,7 @@ async def test_flow_user_config(hass, api):
 
 
 async def test_flow_required_fields(hass, api):
-    """ Test with required fields only."""
+    """Test with required fields only."""
     result = await hass.config_entries.flow.async_init(
         transmission.DOMAIN,
         context={"source": "user"},
@@ -105,7 +105,7 @@ async def test_flow_required_fields(hass, api):
 
 
 async def test_flow_all_provided(hass, api):
-    """ Test with all provided."""
+    """Test with all provided."""
     result = await hass.config_entries.flow.async_init(
         transmission.DOMAIN, context={"source": "user"}, data=MOCK_ENTRY
     )
