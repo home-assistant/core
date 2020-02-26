@@ -63,6 +63,9 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         Given a configured host, will ask the user to press the button
         to connect to the router.
         """
+        if user_input is None:
+            return self.async_show_form(step_id="link")
+
         errors = {}
 
         fbx = await get_api(self.hass, self._host)

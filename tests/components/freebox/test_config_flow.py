@@ -1,13 +1,10 @@
 """Tests for the Freebox config flow."""
-import asyncio
-from unittest.mock import MagicMock
-
 from aiofreepybox.exceptions import (
     AuthorizationError,
     HttpRequestError,
     InvalidTokenError,
 )
-from asynctest import patch
+from asynctest import CoroutineMock, patch
 import pytest
 
 from homeassistant import data_entry_flow
@@ -24,28 +21,16 @@ PORT = 1234
 @pytest.fixture(name="connect")
 def mock_controller_connect():
     """Mock a successful connection."""
-    with patch(
-        "homeassistant.components.freebox.config_flow.Freepybox"
-    ) as service_mock:
-        service_mock.return_value.open = MagicMock(return_value=asyncio.Future())
-        service_mock.return_value.open.return_value.set_result(None)
-
-        service_mock.return_value.system.get_config = MagicMock(
-            return_value=asyncio.Future()
-        )
-        service_mock.return_value.system.get_config.return_value.set_result(None)
-
-        service_mock.return_value.lan.get_hosts_list = MagicMock(
-            return_value=asyncio.Future()
-        )
-        service_mock.return_value.lan.get_hosts_list.return_value.set_result(None)
-
-        service_mock.return_value.close = MagicMock(return_value=asyncio.Future())
-        service_mock.return_value.close.return_value.set_result(None)
+    with patch("homeassistant.components.freebox.router.Freepybox") as service_mock:
+        service_mock.return_value.open = CoroutineMock()
+        service_mock.return_value.system.get_config = CoroutineMock()
+        service_mock.return_value.lan.get_hosts_list = CoroutineMock()
+        service_mock.return_value.connection.get_status = CoroutineMock()
+        service_mock.return_value.close = CoroutineMock()
         yield service_mock
 
 
-async def test_user(hass, connect):
+async def test_user(hass):
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -63,7 +48,7 @@ async def test_user(hass, connect):
     assert result["step_id"] == "link"
 
 
-async def test_import(hass, connect):
+async def test_import(hass):
     """Test import step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -74,7 +59,7 @@ async def test_import(hass, connect):
     assert result["step_id"] == "link"
 
 
-async def test_discovery(hass, connect):
+async def test_discovery(hass):
     """Test discovery step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -126,7 +111,7 @@ async def test_abort_if_already_setup(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_abort_on_link_failed(hass):
+async def test_on_link_failed(hass):
     """Test when we have errors during linking the router."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -135,7 +120,7 @@ async def test_abort_on_link_failed(hass):
     )
 
     with patch(
-        "homeassistant.components.freebox.config_flow.Freepybox.open",
+        "homeassistant.components.freebox.router.Freepybox.open",
         side_effect=AuthorizationError(),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -143,7 +128,7 @@ async def test_abort_on_link_failed(hass):
         assert result["errors"] == {"base": "register_failed"}
 
     with patch(
-        "homeassistant.components.freebox.config_flow.Freepybox.open",
+        "homeassistant.components.freebox.router.Freepybox.open",
         side_effect=HttpRequestError(),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -151,7 +136,7 @@ async def test_abort_on_link_failed(hass):
         assert result["errors"] == {"base": "connection_failed"}
 
     with patch(
-        "homeassistant.components.freebox.config_flow.Freepybox.open",
+        "homeassistant.components.freebox.router.Freepybox.open",
         side_effect=InvalidTokenError(),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
