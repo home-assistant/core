@@ -23,13 +23,7 @@ DOMAIN = "august"
 # Limit battery, online, and hardware updates to 1800 seconds
 # in order to reduce the number of api requests and
 # avoid hitting rate limits
-MIN_TIME_BETWEEN_LOCK_DETAIL_UPDATES = timedelta(seconds=1800)
-
-# Doorbells need to update more frequently than locks
-# since we get an image from the doorbell api. Once
-# py-august 0.18.0 is released doorbell status updates
-# can be reduced in the same was as locks have been
-MIN_TIME_BETWEEN_DOORBELL_DETAIL_UPDATES = timedelta(seconds=20)
+MIN_TIME_BETWEEN_DETAIL_UPDATES = timedelta(seconds=1800)
 
 # Activity needs to be checked more frequently as the
 # doorbell motion and rings are included here

@@ -5,7 +5,18 @@ import time
 from unittest.mock import MagicMock, PropertyMock
 
 from asynctest import mock
-from august.activity import DoorOperationActivity, LockOperationActivity
+from august.activity import (
+    ACTIVITY_ACTIONS_DOOR_OPERATION,
+    ACTIVITY_ACTIONS_DOORBELL_DING,
+    ACTIVITY_ACTIONS_DOORBELL_MOTION,
+    ACTIVITY_ACTIONS_DOORBELL_VIEW,
+    ACTIVITY_ACTIONS_LOCK_OPERATION,
+    DoorbellDingActivity,
+    DoorbellMotionActivity,
+    DoorbellViewActivity,
+    DoorOperationActivity,
+    LockOperationActivity,
+)
 from august.authenticator import AuthenticationState
 from august.doorbell import Doorbell, DoorbellDetail
 from august.lock import Lock, LockDetail
@@ -45,9 +56,12 @@ async def _mock_setup_august(hass, api_instance, authenticate_mock, api_mock):
     return True
 
 
-async def _create_august_with_devices(hass, devices, api_call_side_effects=None):
+async def _create_august_with_devices(
+    hass, devices, api_call_side_effects=None, activities=None
+):
     if api_call_side_effects is None:
         api_call_side_effects = {}
+
     device_data = {
         "doorbells": [],
         "locks": [],
@@ -89,6 +103,8 @@ async def _create_august_with_devices(hass, devices, api_call_side_effects=None)
         return _get_base_devices("doorbells")
 
     def get_house_activities_side_effect(access_token, house_id, limit=10):
+        if activities is not None:
+            return activities
         return []
 
     def lock_return_activities_side_effect(access_token, device_id):
@@ -234,6 +250,17 @@ async def _mock_inoperative_august_lock_detail(hass):
     return await _mock_lock_from_fixture(hass, "get_lock.offline.json")
 
 
+async def _mock_activities_from_fixture(hass, path):
+    json_dict = await _load_json_fixture(hass, path)
+    activities = []
+    for activity_json in json_dict:
+        activity = _activity_from_dict(activity_json)
+        if activity:
+            activities.append(activity)
+
+    return activities
+
+
 async def _mock_lock_from_fixture(hass, path):
     json_dict = await _load_json_fixture(hass, path)
     return LockDetail(json_dict)
@@ -279,3 +306,21 @@ def _mock_door_operation_activity(lock, action):
             "action": action,
         }
     )
+
+
+def _activity_from_dict(activity_dict):
+    action = activity_dict.get("action")
+
+    activity_dict["dateTime"] = time.time() * 1000
+
+    if action in ACTIVITY_ACTIONS_DOORBELL_DING:
+        return DoorbellDingActivity(activity_dict)
+    if action in ACTIVITY_ACTIONS_DOORBELL_MOTION:
+        return DoorbellMotionActivity(activity_dict)
+    if action in ACTIVITY_ACTIONS_DOORBELL_VIEW:
+        return DoorbellViewActivity(activity_dict)
+    if action in ACTIVITY_ACTIONS_LOCK_OPERATION:
+        return LockOperationActivity(activity_dict)
+    if action in ACTIVITY_ACTIONS_DOOR_OPERATION:
+        return DoorOperationActivity(activity_dict)
+    return None
