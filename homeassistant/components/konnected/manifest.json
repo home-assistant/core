@@ -1,8 +1,21 @@
 {
   "domain": "konnected",
   "name": "Konnected",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/konnected",
-  "requirements": ["konnected==0.1.5"],
-  "dependencies": ["http"],
-  "codeowners": ["@heythisisnate"]
+  "requirements": [
+    "konnected==1.1.0"
+  ],
+  "ssdp": [
+    {
+      "manufacturer": "konnected.io"
+    }
+  ],
+  "dependencies": [
+    "http"
+  ],
+  "codeowners": [
+    "@heythisisnate",
+    "@kit-klein"
+  ]
 }

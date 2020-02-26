@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La ubicaci\u00f3n ya est\u00e1 configurada."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "radius": "Radio"
+                },
+                "title": "Rellena los datos de tu filtro."
+            }
+        },
+        "title": "Sistema Mundial de Alerta y Coordinaci\u00f3n de Desastres (GDACS)"
+    }
+}

@@ -32,10 +32,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     client = hass.data[TOTALCONNECT_DOMAIN].client
 
-    for location in client.locations:
-        location_id = location.get("LocationID")
-        name = location.get("LocationName")
-        alarms.append(TotalConnectAlarm(name, location_id, client))
+    for location_id, location in client.locations.items():
+        location_name = location.location_name
+        alarms.append(TotalConnectAlarm(location_name, location_id, client))
     add_entities(alarms)
 
 
@@ -72,35 +71,35 @@ class TotalConnectAlarm(alarm.AlarmControlPanel):
 
     def update(self):
         """Return the state of the device."""
-        status = self._client.get_armed_status(self._name)
+        status = self._client.get_armed_status(self._location_id)
         attr = {
             "location_name": self._name,
             "location_id": self._location_id,
-            "ac_loss": self._client.ac_loss,
-            "low_battery": self._client.low_battery,
+            "ac_loss": self._client.locations[self._location_id].ac_loss,
+            "low_battery": self._client.locations[self._location_id].low_battery,
+            "cover_tampered": self._client.locations[
+                self._location_id
+            ].is_cover_tampered,
             "triggered_source": None,
             "triggered_zone": None,
         }
 
-        if status == self._client.DISARMED:
+        if status in (self._client.DISARMED, self._client.DISARMED_BYPASS):
             state = STATE_ALARM_DISARMED
-        elif status == self._client.DISARMED_BYPASS:
-            state = STATE_ALARM_DISARMED
-        elif status == self._client.ARMED_STAY:
-            state = STATE_ALARM_ARMED_HOME
-        elif status == self._client.ARMED_STAY_INSTANT:
-            state = STATE_ALARM_ARMED_HOME
-        elif status == self._client.ARMED_STAY_INSTANT_BYPASS:
+        elif status in (
+            self._client.ARMED_STAY,
+            self._client.ARMED_STAY_INSTANT,
+            self._client.ARMED_STAY_INSTANT_BYPASS,
+        ):
             state = STATE_ALARM_ARMED_HOME
         elif status == self._client.ARMED_STAY_NIGHT:
             state = STATE_ALARM_ARMED_NIGHT
-        elif status == self._client.ARMED_AWAY:
-            state = STATE_ALARM_ARMED_AWAY
-        elif status == self._client.ARMED_AWAY_BYPASS:
-            state = STATE_ALARM_ARMED_AWAY
-        elif status == self._client.ARMED_AWAY_INSTANT:
-            state = STATE_ALARM_ARMED_AWAY
-        elif status == self._client.ARMED_AWAY_INSTANT_BYPASS:
+        elif status in (
+            self._client.ARMED_AWAY,
+            self._client.ARMED_AWAY_BYPASS,
+            self._client.ARMED_AWAY_INSTANT,
+            self._client.ARMED_AWAY_INSTANT_BYPASS,
+        ):
             state = STATE_ALARM_ARMED_AWAY
         elif status == self._client.ARMED_CUSTOM_BYPASS:
             state = STATE_ALARM_ARMED_CUSTOM_BYPASS
@@ -128,16 +127,16 @@ class TotalConnectAlarm(alarm.AlarmControlPanel):
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
-        self._client.disarm(self._name)
+        self._client.disarm(self._location_id)
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        self._client.arm_stay(self._name)
+        self._client.arm_stay(self._location_id)
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        self._client.arm_away(self._name)
+        self._client.arm_away(self._location_id)
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
-        self._client.arm_stay_night(self._name)
+        self._client.arm_stay_night(self._location_id)

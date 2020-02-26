@@ -1,11 +1,9 @@
 """Test ZHA API."""
 
 import pytest
-import zigpy
+import zigpy.profiles.zha
 import zigpy.zcl.clusters.general as general
 
-from homeassistant.components.light import DOMAIN as light_domain
-from homeassistant.components.switch import DOMAIN
 from homeassistant.components.websocket_api import const
 from homeassistant.components.zha.api import ID, TYPE, async_load_api
 from homeassistant.components.zha.core.const import (
@@ -23,50 +21,67 @@ from homeassistant.components.zha.core.const import (
     GROUP_NAME,
 )
 
-from .common import async_init_zigpy_device
 from .conftest import FIXTURE_GRP_ID, FIXTURE_GRP_NAME
+
+IEEE_SWITCH_DEVICE = "01:2d:6f:00:0a:90:69:e7"
+IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
 
 
 @pytest.fixture
-async def zha_client(hass, config_entry, zha_gateway, hass_ws_client):
+async def device_switch(hass, zigpy_device_mock, zha_device_joined):
+    """Test zha switch platform."""
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                "in_clusters": [general.OnOff.cluster_id, general.Basic.cluster_id],
+                "out_clusters": [],
+                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+            }
+        },
+        ieee=IEEE_SWITCH_DEVICE,
+    )
+    zha_device = await zha_device_joined(zigpy_device)
+    zha_device.set_available(True)
+    return zha_device
+
+
+@pytest.fixture
+async def device_groupable(hass, zigpy_device_mock, zha_device_joined):
+    """Test zha light platform."""
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                "in_clusters": [
+                    general.OnOff.cluster_id,
+                    general.Basic.cluster_id,
+                    general.Groups.cluster_id,
+                ],
+                "out_clusters": [],
+                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+            }
+        },
+        ieee=IEEE_GROUPABLE_DEVICE,
+    )
+    zha_device = await zha_device_joined(zigpy_device)
+    zha_device.set_available(True)
+    return zha_device
+
+
+@pytest.fixture
+async def zha_client(hass, hass_ws_client, device_switch, device_groupable):
     """Test zha switch platform."""
 
     # load the ZHA API
     async_load_api(hass)
-
-    # create zigpy device
-    await async_init_zigpy_device(
-        hass,
-        [general.OnOff.cluster_id, general.Basic.cluster_id],
-        [],
-        None,
-        zha_gateway,
-    )
-
-    await async_init_zigpy_device(
-        hass,
-        [general.OnOff.cluster_id, general.Basic.cluster_id, general.Groups.cluster_id],
-        [],
-        zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT,
-        zha_gateway,
-        manufacturer="FakeGroupManufacturer",
-        model="FakeGroupModel",
-        ieee="01:2d:6f:00:0a:90:69:e8",
-    )
-
-    # load up switch domain
-    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
-    await hass.async_block_till_done()
-    await hass.config_entries.async_forward_entry_setup(config_entry, light_domain)
-    await hass.async_block_till_done()
-
     return await hass_ws_client(hass)
 
 
-async def test_device_clusters(hass, config_entry, zha_gateway, zha_client):
+async def test_device_clusters(hass, zha_client):
     """Test getting device cluster info."""
     await zha_client.send_json(
-        {ID: 5, TYPE: "zha/devices/clusters", ATTR_IEEE: "00:0d:6f:00:0a:90:69:e7"}
+        {ID: 5, TYPE: "zha/devices/clusters", ATTR_IEEE: IEEE_SWITCH_DEVICE}
     )
 
     msg = await zha_client.receive_json()
@@ -86,14 +101,14 @@ async def test_device_clusters(hass, config_entry, zha_gateway, zha_client):
     assert cluster_info[ATTR_NAME] == "OnOff"
 
 
-async def test_device_cluster_attributes(hass, config_entry, zha_gateway, zha_client):
+async def test_device_cluster_attributes(zha_client):
     """Test getting device cluster attributes."""
     await zha_client.send_json(
         {
             ID: 5,
             TYPE: "zha/devices/clusters/attributes",
             ATTR_ENDPOINT_ID: 1,
-            ATTR_IEEE: "00:0d:6f:00:0a:90:69:e7",
+            ATTR_IEEE: IEEE_SWITCH_DEVICE,
             ATTR_CLUSTER_ID: 6,
             ATTR_CLUSTER_TYPE: CLUSTER_TYPE_IN,
         }
@@ -109,14 +124,14 @@ async def test_device_cluster_attributes(hass, config_entry, zha_gateway, zha_cl
         assert attribute[ATTR_NAME] is not None
 
 
-async def test_device_cluster_commands(hass, config_entry, zha_gateway, zha_client):
+async def test_device_cluster_commands(zha_client):
     """Test getting device cluster commands."""
     await zha_client.send_json(
         {
             ID: 5,
             TYPE: "zha/devices/clusters/commands",
             ATTR_ENDPOINT_ID: 1,
-            ATTR_IEEE: "00:0d:6f:00:0a:90:69:e7",
+            ATTR_IEEE: IEEE_SWITCH_DEVICE,
             ATTR_CLUSTER_ID: 6,
             ATTR_CLUSTER_TYPE: CLUSTER_TYPE_IN,
         }
@@ -133,7 +148,7 @@ async def test_device_cluster_commands(hass, config_entry, zha_gateway, zha_clie
         assert command[TYPE] is not None
 
 
-async def test_list_devices(hass, config_entry, zha_gateway, zha_client):
+async def test_list_devices(zha_client):
     """Test getting zha devices."""
     await zha_client.send_json({ID: 5, TYPE: "zha/devices"})
 
@@ -164,7 +179,7 @@ async def test_list_devices(hass, config_entry, zha_gateway, zha_client):
         assert device == device2
 
 
-async def test_device_not_found(hass, config_entry, zha_gateway, zha_client):
+async def test_device_not_found(zha_client):
     """Test not found response from get device API."""
     await zha_client.send_json(
         {ID: 6, TYPE: "zha/device", ATTR_IEEE: "28:6d:97:00:01:04:11:8c"}
@@ -176,7 +191,7 @@ async def test_device_not_found(hass, config_entry, zha_gateway, zha_client):
     assert msg["error"]["code"] == const.ERR_NOT_FOUND
 
 
-async def test_list_groups(hass, config_entry, zha_gateway, zha_client):
+async def test_list_groups(zha_client):
     """Test getting zha zigbee groups."""
     await zha_client.send_json({ID: 7, TYPE: "zha/groups"})
 
@@ -193,7 +208,7 @@ async def test_list_groups(hass, config_entry, zha_gateway, zha_client):
         assert group["members"] == []
 
 
-async def test_get_group(hass, config_entry, zha_gateway, zha_client):
+async def test_get_group(zha_client):
     """Test getting a specific zha zigbee group."""
     await zha_client.send_json({ID: 8, TYPE: "zha/group", GROUP_ID: FIXTURE_GRP_ID})
 
@@ -208,7 +223,7 @@ async def test_get_group(hass, config_entry, zha_gateway, zha_client):
     assert group["members"] == []
 
 
-async def test_get_group_not_found(hass, config_entry, zha_gateway, zha_client):
+async def test_get_group_not_found(zha_client):
     """Test not found response from get group API."""
     await zha_client.send_json({ID: 9, TYPE: "zha/group", GROUP_ID: 1234567})
 
@@ -220,13 +235,8 @@ async def test_get_group_not_found(hass, config_entry, zha_gateway, zha_client):
     assert msg["error"]["code"] == const.ERR_NOT_FOUND
 
 
-async def test_list_groupable_devices(hass, config_entry, zha_gateway, zha_client):
+async def test_list_groupable_devices(zha_client, device_groupable):
     """Test getting zha devices that have a group cluster."""
-
-    # Make device available
-    zha_gateway.devices[
-        zigpy.types.EUI64.convert("01:2d:6f:00:0a:90:69:e8")
-    ].set_available(True)
 
     await zha_client.send_json({ID: 10, TYPE: "zha/devices/groupable"})
 
@@ -251,9 +261,7 @@ async def test_list_groupable_devices(hass, config_entry, zha_gateway, zha_clien
 
     # Make sure there are no groupable devices when the device is unavailable
     # Make device unavailable
-    zha_gateway.devices[
-        zigpy.types.EUI64.convert("01:2d:6f:00:0a:90:69:e8")
-    ].set_available(False)
+    device_groupable.set_available(False)
 
     await zha_client.send_json({ID: 11, TYPE: "zha/devices/groupable"})
 
@@ -265,7 +273,7 @@ async def test_list_groupable_devices(hass, config_entry, zha_gateway, zha_clien
     assert len(devices) == 0
 
 
-async def test_add_group(hass, config_entry, zha_gateway, zha_client):
+async def test_add_group(zha_client):
     """Test adding and getting a new zha zigbee group."""
     await zha_client.send_json({ID: 12, TYPE: "zha/group/add", GROUP_NAME: "new_group"})
 
@@ -291,7 +299,7 @@ async def test_add_group(hass, config_entry, zha_gateway, zha_client):
         assert group["name"] == FIXTURE_GRP_NAME or group["name"] == "new_group"
 
 
-async def test_remove_group(hass, config_entry, zha_gateway, zha_client):
+async def test_remove_group(zha_client):
     """Test removing a new zha zigbee group."""
 
     await zha_client.send_json({ID: 14, TYPE: "zha/groups"})

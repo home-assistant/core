@@ -1,0 +1,33 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Az \u00e1tj\u00e1r\u00f3 m\u00e1r konfigur\u00e1lva van",
+            "id_exists": "Az \u00e1tj\u00e1r\u00f3 azonos\u00edt\u00f3ja m\u00e1r l\u00e9tezik",
+            "serial_error": "Hiba t\u00f6rt\u00e9nt az eszk\u00f6zh\u00f6z val\u00f3 csatlakoz\u00e1skor",
+            "timeout": "A csatlakoz\u00e1si k\u00eds\u00e9rletre sz\u00e1nt id\u0151 lej\u00e1rt"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "device": "El\u00e9r\u00e9si \u00fat vagy URL",
+                    "floor_temperature": "Padl\u00f3 kl\u00edma h\u0151m\u00e9rs\u00e9klete",
+                    "id": "ID",
+                    "name": "N\u00e9v",
+                    "precision": "Kl\u00edma h\u0151m\u00e9rs\u00e9klet pontoss\u00e1ga"
+                },
+                "title": "OpenTherm \u00e1tj\u00e1r\u00f3"
+            }
+        },
+        "title": "OpenTherm \u00e1tj\u00e1r\u00f3"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "floor_temperature": "Padl\u00f3 h\u0151m\u00e9rs\u00e9klete",
+                    "precision": "Pontoss\u00e1g"
+                }
+            }
+        }
+    }
+}

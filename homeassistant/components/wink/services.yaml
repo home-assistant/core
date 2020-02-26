@@ -131,7 +131,7 @@ set_nimbus_dial_configuration:
       description: The minimum value allowed to be set
       example: 0
     max_value:
-      description: The maximum value allowd to be set
+      description: The maximum value allowed to be set
       example: 500
     min_position:
       description: The minimum position the dial hand can rotate to generally [0-360]
@@ -141,10 +141,10 @@ set_nimbus_dial_configuration:
       example: 360
 
 set_nimbus_dial_state:
-  description: Set the value and lables of an individual nimbus dial
+  description: Set the value and labels of an individual nimbus dial
   fields:
     entity_id:
-      description: Name fo the entity to set.
+      description: Name of the entity to set.
       example: 'wink.nimbus_dial_3'
     value:
       description: The value that should be set (Should be between min_value and max_value)

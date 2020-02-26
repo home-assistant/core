@@ -4,9 +4,11 @@ write_coil:
     address: {description: Address of the register to write to., example: 0}
     state: {description: State to write., example: false}
     unit: {description: Address of the modbus unit., example: 21}
+    hub: {description: Optional Modbus hub name. A hub with the name 'default' is used if not specified., example: "hub1"}
 write_register:
   description: Write to a modbus holding register.
   fields:
     address: {description: Address of the holding register to write to., example: 0}
     unit: {description: Address of the modbus unit., example: 21}
     value: {description: Value (single value or array) to write., example: "0 or [4,0]"}
+    hub: {description: Optional Modbus hub name. A hub with the name 'default' is used if not specified., example: "hub1"}

@@ -30,7 +30,7 @@ class UnknownHandler(FlowError):
 
 
 class UnknownFlow(FlowError):
-    """Uknown flow specified."""
+    """Unknown flow specified."""
 
 
 class UnknownStep(FlowError):

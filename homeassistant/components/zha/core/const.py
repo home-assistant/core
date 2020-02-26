@@ -96,6 +96,7 @@ DATA_ZHA_GATEWAY = "zha_gateway"
 DEBUG_COMP_BELLOWS = "bellows"
 DEBUG_COMP_ZHA = "homeassistant.components.zha"
 DEBUG_COMP_ZIGPY = "zigpy"
+DEBUG_COMP_ZIGPY_CC = "zigpy_cc"
 DEBUG_COMP_ZIGPY_DECONZ = "zigpy_deconz"
 DEBUG_COMP_ZIGPY_XBEE = "zigpy_xbee"
 DEBUG_COMP_ZIGPY_ZIGATE = "zigpy_zigate"
@@ -105,8 +106,9 @@ DEBUG_LEVELS = {
     DEBUG_COMP_BELLOWS: logging.DEBUG,
     DEBUG_COMP_ZHA: logging.DEBUG,
     DEBUG_COMP_ZIGPY: logging.DEBUG,
-    DEBUG_COMP_ZIGPY_XBEE: logging.DEBUG,
+    DEBUG_COMP_ZIGPY_CC: logging.DEBUG,
     DEBUG_COMP_ZIGPY_DECONZ: logging.DEBUG,
+    DEBUG_COMP_ZIGPY_XBEE: logging.DEBUG,
     DEBUG_COMP_ZIGPY_ZIGATE: logging.DEBUG,
 }
 DEBUG_RELAY_LOGGERS = [DEBUG_COMP_ZHA, DEBUG_COMP_ZIGPY]
@@ -131,9 +133,10 @@ POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
 class RadioType(enum.Enum):
     """Possible options for radio type."""
 
-    ezsp = "ezsp"
-    xbee = "xbee"
     deconz = "deconz"
+    ezsp = "ezsp"
+    ti_cc = "ti_cc"
+    xbee = "xbee"
     zigate = "zigate"
 
     @classmethod
