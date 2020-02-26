@@ -166,6 +166,15 @@ class SteamSensor(Entity):
 
         return None
 
+    def _get_game_image_header(self):
+        """Return the current games header image URL."""
+        if self._game_id is not None:
+            return (
+                f"https://steamcdn-a.akamaihd.net/steam/apps/{self._game_id}/header.jpg"
+            )
+
+        return None
+
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
@@ -174,8 +183,10 @@ class SteamSensor(Entity):
             attr["game"] = self._game
         if self._game_id is not None:
             attr["game_id"] = self._game_id
-            attr["game_image_header"] = f"https://steamcdn-a.akamaihd.net/steam/apps/{self._game_id}/header.jpg"
-            attr["game_image_main"] = f"https://steamcdn-a.akamaihd.net/steam/apps/{self._game_id}/capsule_616x353.jpg"
+            attr["game_image_header"] = self._get_game_image_header()
+            attr[
+                "game_image_main"
+            ] = f"https://steamcdn-a.akamaihd.net/steam/apps/{self._game_id}/capsule_616x353.jpg"
         if self._last_online is not None:
             attr["last_online"] = self._last_online
         if self._level is not None:
@@ -185,7 +196,10 @@ class SteamSensor(Entity):
     @property
     def entity_picture(self):
         """Avatar of the account."""
-        return self._avatar
+        if self._game_id is not None:
+            return self._get_game_image_header()
+        else:
+            return self._avatar
 
     @property
     def icon(self):
