@@ -1,6 +1,7 @@
 """Tests for the Heos config flow module."""
 from urllib.parse import urlparse
 
+from asynctest import patch
 from pyheos import HeosError
 
 from homeassistant import data_entry_flow
@@ -55,8 +56,9 @@ async def test_create_entry_when_host_valid(hass, controller):
     assert result["title"] == "Controller (127.0.0.1)"
     assert result["data"] == data
     await heos.async_setup_entry(hass, result)
-    assert controller.connect.call_count == 1
-    assert controller.disconnect.call_count == 1
+    with patch("homeassistant.components.hue.async_setup_entry"):
+        assert controller.connect.call_count == 1
+        assert controller.disconnect.call_count == 1
 
 
 async def test_create_entry_when_friendly_name_valid(hass, controller):
@@ -69,9 +71,9 @@ async def test_create_entry_when_friendly_name_valid(hass, controller):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "Controller (127.0.0.1)"
     assert result["data"] == {CONF_HOST: "127.0.0.1"}
-    await heos.async_setup_entry(hass, result)
-    assert controller.connect.call_count == 1
-    assert controller.disconnect.call_count == 1
+    with patch("homeassistant.components.hue.async_setup_entry"):
+        assert controller.connect.call_count == 1
+        assert controller.disconnect.call_count == 1
     assert DATA_DISCOVERED_HOSTS not in hass.data
 
 
