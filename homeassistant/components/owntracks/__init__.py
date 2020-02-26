@@ -187,15 +187,16 @@ async def handle_webhook(hass, webhook_id, request):
     persons = list(filter(lambda x: x.domain == "person", hass.states.async_all()))
 
     for person in persons:
-        response.append(
-            {
-                "_type": "location",
-                "lat": person.attributes["latitude"],
-                "lon": person.attributes["longitude"],
-                "tid": person.attributes["id"][0:2],
-                "tst": int(time.mktime(person.last_updated.timetuple())),
-            }
-        )
+        if "latitude" in person.attributes and "longitude" in person.attributes:
+            response.append(
+                {
+                    "_type": "location",
+                    "lat": person.attributes["latitude"],
+                    "lon": person.attributes["longitude"],
+                    "tid": person.attributes["id"][-2:],
+                    "tst": int(time.mktime(person.last_updated.timetuple())),
+                }
+            )
 
     if message["_type"] == "encrypted" and context.secret:
         return json_response(
