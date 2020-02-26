@@ -175,7 +175,7 @@ async def test_service_calls_without_entity_id(hass):
     )
 
     # Saving existing values
-    await _call_monoprice_service(hass, SERVICE_SNAPSHOT, {})
+    await _call_monoprice_service(hass, SERVICE_SNAPSHOT, {"entity_id": "all"})
 
     # Changing media player to new state
     await _call_media_player_service(
@@ -186,7 +186,7 @@ async def test_service_calls_without_entity_id(hass):
     )
 
     # Restoring media player to its previous state
-    await _call_monoprice_service(hass, SERVICE_RESTORE, {})
+    await _call_monoprice_service(hass, SERVICE_RESTORE, {"entity_id": "all"})
     await hass.async_block_till_done()
 
     state = hass.states.get(ZONE_1_ID)

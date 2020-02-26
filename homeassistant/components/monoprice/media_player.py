@@ -3,7 +3,6 @@ import logging
 
 from pymonoprice import get_monoprice
 from serial import SerialException
-import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
@@ -14,8 +13,8 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_PORT, STATE_OFF, STATE_ON
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_PORT, STATE_OFF, STATE_ON
+from homeassistant.helpers import config_validation as cv, entity_platform, service
 
 from .const import CONF_SOURCES, DOMAIN, SERVICE_RESTORE, SERVICE_SNAPSHOT
 
@@ -29,9 +28,6 @@ SUPPORT_MONOPRICE = (
     | SUPPORT_TURN_OFF
     | SUPPORT_SELECT_SOURCE
 )
-
-
-MEDIA_PLAYER_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.comp_entity_ids})
 
 
 def _get_sources(sources_config):
@@ -67,29 +63,37 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
 
     async_add_devices(hass.data[DOMAIN], True)
 
-    def service_handle(service):
+    platform = entity_platform.current_platform.get()
+
+    def _call_service(entities, service_call):
+        for entity in entities:
+            if service_call.service == SERVICE_SNAPSHOT:
+                entity.snapshot()
+            elif service_call.service == SERVICE_RESTORE:
+                entity.restore()
+
+    @service.verify_domain_control(hass, DOMAIN)
+    async def async_service_handle(service_call):
         """Handle for services."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        entities = await platform.async_extract_from_service(service_call)
 
-        if entity_ids:
-            devices = [
-                device for device in hass.data[DOMAIN] if device.entity_id in entity_ids
-            ]
-        else:
-            devices = hass.data[DOMAIN]
+        if not entities:
+            return
 
-        for device in devices:
-            if service.service == SERVICE_SNAPSHOT:
-                device.snapshot()
-            elif service.service == SERVICE_RESTORE:
-                device.restore()
+        hass.async_add_executor_job(_call_service, entities, service_call)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SNAPSHOT, service_handle, schema=MEDIA_PLAYER_SCHEMA
+        DOMAIN,
+        SERVICE_SNAPSHOT,
+        async_service_handle,
+        schema=cv.make_entity_service_schema({}),
     )
 
     hass.services.async_register(
-        DOMAIN, SERVICE_RESTORE, service_handle, schema=MEDIA_PLAYER_SCHEMA
+        DOMAIN,
+        SERVICE_RESTORE,
+        async_service_handle,
+        schema=cv.make_entity_service_schema({}),
     )
 
 
