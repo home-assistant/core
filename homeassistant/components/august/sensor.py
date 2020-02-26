@@ -1,11 +1,14 @@
 """Support for August sensors."""
-from datetime import timedelta
 import logging
 
 from homeassistant.components.sensor import DEVICE_CLASS_BATTERY
 from homeassistant.helpers.entity import Entity
 
-from .const import DATA_AUGUST, DEFAULT_NAME, DOMAIN
+from .const import DATA_AUGUST, DEFAULT_NAME, DOMAIN, MIN_TIME_BETWEEN_DETAIL_UPDATES
+
+BATTERY_LEVEL_FULL = "Full"
+BATTERY_LEVEL_MEDIUM = "Medium"
+BATTERY_LEVEL_LOW = "Low"
 
 BATTERY_LEVEL_FULL = "Full"
 BATTERY_LEVEL_MEDIUM = "Medium"
@@ -13,7 +16,7 @@ BATTERY_LEVEL_LOW = "Low"
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=5)
+SCAN_INTERVAL = MIN_TIME_BETWEEN_DETAIL_UPDATES
 
 
 def _retrieve_device_battery_state(detail):
@@ -97,6 +100,7 @@ class AugustBatterySensor(Entity):
 
     def __init__(self, data, sensor_type, device):
         """Initialize the sensor."""
+        self._undo_dispatch_subscription = None
         self._data = data
         self._sensor_type = sensor_type
         self._device = device

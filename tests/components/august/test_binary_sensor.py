@@ -1,7 +1,5 @@
 """The binary_sensor tests for the august platform."""
 
-import pytest
-
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -20,11 +18,6 @@ from tests.components.august.mocks import (
 )
 
 
-@pytest.mark.skip(
-    reason="The lock and doorsense can get out of sync due to update intervals, "
-    + "this is an existing bug which will be fixed with dispatcher events to tell "
-    + "all linked devices to update."
-)
 async def test_doorsense(hass):
     """Test creation of a lock with doorsense and bridge."""
     lock_one = await _mock_lock_from_fixture(
@@ -33,24 +26,32 @@ async def test_doorsense(hass):
     lock_details = [lock_one]
     await _create_august_with_devices(hass, lock_details)
 
-    binary_sensor_abc_name = hass.states.get("binary_sensor.abc_name_open")
-    assert binary_sensor_abc_name.state == STATE_ON
+    binary_sensor_online_with_doorsense_name = hass.states.get(
+        "binary_sensor.online_with_doorsense_name_open"
+    )
+    assert binary_sensor_online_with_doorsense_name.state == STATE_ON
 
     data = {}
-    data[ATTR_ENTITY_ID] = "lock.abc_name"
+    data[ATTR_ENTITY_ID] = "lock.online_with_doorsense_name"
     assert await hass.services.async_call(
         LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True
     )
+    await hass.async_block_till_done()
 
-    binary_sensor_abc_name = hass.states.get("binary_sensor.abc_name_open")
-    assert binary_sensor_abc_name.state == STATE_ON
+    binary_sensor_online_with_doorsense_name = hass.states.get(
+        "binary_sensor.online_with_doorsense_name_open"
+    )
+    assert binary_sensor_online_with_doorsense_name.state == STATE_ON
 
     assert await hass.services.async_call(
         LOCK_DOMAIN, SERVICE_LOCK, data, blocking=True
     )
+    await hass.async_block_till_done()
 
-    binary_sensor_abc_name = hass.states.get("binary_sensor.abc_name_open")
-    assert binary_sensor_abc_name.state == STATE_OFF
+    binary_sensor_online_with_doorsense_name = hass.states.get(
+        "binary_sensor.online_with_doorsense_name_open"
+    )
+    assert binary_sensor_online_with_doorsense_name.state == STATE_OFF
 
 
 async def test_create_doorbell(hass):
