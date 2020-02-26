@@ -1,5 +1,6 @@
 """Support for August devices."""
 import asyncio
+import itertools
 import logging
 
 from august.api import AugustApiHTTPError
@@ -11,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -212,7 +213,7 @@ class AugustData:
             self._api.get_operable_locks(self._august_gateway.access_token) or []
         )
         self._house_ids = set()
-        for device in self._doorbells + self._locks:
+        for device in itertools.chain(self._doorbells, self._locks):
             self._house_ids.add(device.house_id)
 
         self._doorbell_detail_by_id = {}
@@ -280,7 +281,7 @@ class AugustData:
 
     def get_device_name(self, device_id):
         """Return doorbell or lock name as August has it stored."""
-        for device in self._locks + self._doorbells:
+        for device in itertools.chain(self._locks, self._doorbells):
             if device.device_id == device_id:
                 return device.device_name
 
@@ -315,8 +316,7 @@ class AugustData:
         _LOGGER.debug("Completed retrieving %s detail", device_type)
         return detail_by_id
 
-    @callback
-    def async_signal_operation_changed_device_state(self, device_id):
+    async def async_signal_operation_changed_device_state(self, device_id):
         """Signal a device update when an operation changes state."""
         _LOGGER.debug(
             "async_dispatcher_send (from operation): AUGUST_DEVICE_UPDATE-%s", device_id

@@ -66,7 +66,9 @@ class AugustLock(LockDevice):
             update_lock_detail_from_activity(self._lock_detail, lock_activity)
 
         if self._update_lock_status_from_detail():
-            self._data.async_signal_operation_changed_device_state(self._lock.device_id)
+            await self._data.async_signal_operation_changed_device_state(
+                self._lock.device_id
+            )
 
     def _update_lock_status_from_detail(self):
         detail = self._lock_detail

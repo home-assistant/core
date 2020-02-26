@@ -1,4 +1,5 @@
 """Consume the august activity stream."""
+from functools import partial
 import logging
 
 from requests import RequestException
@@ -69,12 +70,9 @@ class ActivityStream:
 
         # This is the only place we refresh the api token
         await self._august_gateway.async_refresh_access_token_if_needed()
+        await self._update_device_activities(time)
 
-        return await self._hass.async_add_executor_job(
-            self._update_device_activities, time
-        )
-
-    def _update_device_activities(self, time):
+    async def _update_device_activities(self, time):
         _LOGGER.debug("Start retrieving device activities")
 
         limit = (
@@ -86,8 +84,13 @@ class ActivityStream:
         for house_id in self._house_ids:
             _LOGGER.debug("Updating device activity for house id %s", house_id)
             try:
-                activities = self._api.get_house_activities(
-                    self._august_gateway.access_token, house_id, limit=limit
+                activities = await self._hass.async_add_executor_job(
+                    partial(
+                        self._api.get_house_activities,
+                        self._august_gateway.access_token,
+                        house_id,
+                        limit=limit,
+                    )
                 )
             except RequestException as ex:
                 _LOGGER.error(
@@ -102,17 +105,16 @@ class ActivityStream:
             updated_device_ids = self._process_newer_device_activities(activities)
 
             if updated_device_ids:
-                self._signal_device_updates(updated_device_ids)
+                for device_id in updated_device_ids:
+                    _LOGGER.debug(
+                        "async_dispatcher_send (from activity stream): AUGUST_DEVICE_UPDATE-%s",
+                        device_id,
+                    )
+                    async_dispatcher_send(
+                        self._hass, f"{AUGUST_DEVICE_UPDATE}-{device_id}"
+                    )
 
         self._last_update_time = time
-
-    def _signal_device_updates(self, updated_device_ids):
-        for device_id in updated_device_ids:
-            _LOGGER.debug(
-                "async_dispatcher_send (from activity stream): AUGUST_DEVICE_UPDATE-%s",
-                device_id,
-            )
-            async_dispatcher_send(self._hass, f"{AUGUST_DEVICE_UPDATE}-{device_id}")
 
     def _process_newer_device_activities(self, activities):
         updated_device_ids = set()
