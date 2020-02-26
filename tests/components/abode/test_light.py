@@ -56,6 +56,7 @@ async def test_switch_off(hass, requests_mock):
         assert await hass.services.async_call(
             LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
         )
+        await hass.async_block_till_done()
         mock_switch_off.assert_called_once()
 
 
@@ -67,6 +68,7 @@ async def test_switch_on(hass, requests_mock):
         await hass.services.async_call(
             LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
         )
+        await hass.async_block_till_done()
         mock_switch_on.assert_called_once()
 
 
@@ -81,6 +83,7 @@ async def test_set_brightness(hass, requests_mock):
             {ATTR_ENTITY_ID: DEVICE_ID, "brightness": 100},
             blocking=True,
         )
+        await hass.async_block_till_done()
         # Brightness is converted in abode.light.AbodeLight.turn_on
         mock_set_level.assert_called_once_with(39)
 
@@ -98,6 +101,7 @@ async def test_set_color(hass, requests_mock):
             {ATTR_ENTITY_ID: DEVICE_ID, "hs_color": [240, 100]},
             blocking=True,
         )
+        await hass.async_block_till_done()
         mock_set_color.assert_called_once_with((240.0, 100.0))
         mock_set_status.assert_called_once()
 
@@ -115,6 +119,7 @@ async def test_set_color_temp(hass, requests_mock):
             {ATTR_ENTITY_ID: DEVICE_ID, "color_temp": 309},
             blocking=True,
         )
+        await hass.async_block_till_done()
         # Color temp is converted in abode.light.AbodeLight.turn_on
         mock_set_color_temp.assert_called_once_with(3236)
         mock_set_status.assert_called_once()

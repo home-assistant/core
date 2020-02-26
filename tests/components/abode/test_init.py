@@ -41,6 +41,7 @@ async def test_change_settings(hass, requests_mock):
             {"setting": "confirm_snd", "value": "loud"},
             blocking=True,
         )
+        await hass.async_block_till_done()
         mock_set_setting.assert_called_once()
 
     # Test change_setting when an exception is raised
@@ -53,6 +54,7 @@ async def test_change_settings(hass, requests_mock):
         {"setting": "confirm_snd", "value": "loud"},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
 
 async def test_unload_entry(hass, requests_mock):

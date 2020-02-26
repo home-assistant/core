@@ -50,6 +50,7 @@ async def test_set_alarm_away(hass, requests_mock):
             {ATTR_ENTITY_ID: "alarm_control_panel.abode_alarm"},
             blocking=True,
         )
+        await hass.async_block_till_done()
         mock_set_away.assert_called_once()
 
 
@@ -64,6 +65,7 @@ async def test_set_alarm_home(hass, requests_mock):
             {ATTR_ENTITY_ID: "alarm_control_panel.abode_alarm"},
             blocking=True,
         )
+        await hass.async_block_till_done()
         mock_set_home.assert_called_once()
 
 
@@ -78,4 +80,5 @@ async def test_set_alarm_standby(hass, requests_mock):
             {ATTR_ENTITY_ID: "alarm_control_panel.abode_alarm"},
             blocking=True,
         )
+        await hass.async_block_till_done()
         mock_set_standby.assert_called_once()
