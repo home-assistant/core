@@ -31,6 +31,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
 )
+from homeassistant.helpers.entity_component import async_update_entity
 
 from tests.common import MockConfigEntry
 
@@ -222,7 +223,7 @@ async def test_update(hass):
     monoprice.set_source(11, 3)
     monoprice.set_volume(11, 38)
 
-    await _call_homeassistant_service(hass, "update_entity", {"entity_id": ZONE_1_ID})
+    await async_update_entity(hass, ZONE_1_ID)
     await hass.async_block_till_done()
 
     state = hass.states.get(ZONE_1_ID)
