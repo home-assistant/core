@@ -26,6 +26,10 @@ TIME_TO_DECLARE_DETECTION = timedelta(seconds=60)
 
 def _retrieve_online_state(data, detail):
     """Get the latest state of the sensor."""
+    # The doorbell will go into standby mode when there is no motion
+    # for a short while. It will wake by itself when needed so we need
+    # to consider is available or we will not report motion or dings
+
     return detail.is_online or detail.is_standby
 
 
@@ -59,12 +63,18 @@ def _activity_time_based_state(data, device_id, activity_types):
 SENSOR_NAME = 0
 SENSOR_DEVICE_CLASS = 1
 SENSOR_STATE_PROVIDER = 2
+SENSOR_STATE_IS_TIME_BASED = 3
 
-# sensor_type: [name, device_class, state_provider]
+# sensor_type: [name, device_class, state_provider, is_time_based]
 SENSOR_TYPES_DOORBELL = {
-    "doorbell_ding": ["Ding", DEVICE_CLASS_OCCUPANCY, _retrieve_ding_state],
-    "doorbell_motion": ["Motion", DEVICE_CLASS_MOTION, _retrieve_motion_state],
-    "doorbell_online": ["Online", DEVICE_CLASS_CONNECTIVITY, _retrieve_online_state],
+    "doorbell_ding": ["Ding", DEVICE_CLASS_OCCUPANCY, _retrieve_ding_state, True],
+    "doorbell_motion": ["Motion", DEVICE_CLASS_MOTION, _retrieve_motion_state, True],
+    "doorbell_online": [
+        "Online",
+        DEVICE_CLASS_CONNECTIVITY,
+        _retrieve_online_state,
+        False,
+    ],
 }
 
 
@@ -186,26 +196,39 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorDevice):
         """Return the name of the binary sensor."""
         return f"{self._device.device_name} {SENSOR_TYPES_DOORBELL[self._sensor_type][SENSOR_NAME]}"
 
+    @property
+    def _state_provider(self):
+        """Return the state provider for the binary sensor."""
+        return SENSOR_TYPES_DOORBELL[self._sensor_type][SENSOR_STATE_PROVIDER]
+
+    @property
+    def _is_time_based(self):
+        """Return true of false if the sensor is time based."""
+        return SENSOR_TYPES_DOORBELL[self._sensor_type][SENSOR_STATE_IS_TIME_BASED]
+
     @callback
     def _update_from_data(self):
         """Get the latest state of the sensor."""
         self._cancel_any_pending_updates()
-        state_provider = SENSOR_TYPES_DOORBELL[self._sensor_type][SENSOR_STATE_PROVIDER]
-        detail = self._detail
-        # The doorbell will go into standby mode when there is no motion
-        # for a short while. It will wake by itself when needed so we need
-        # to consider is available or we will not report motion or dings
-        if self.device_class == DEVICE_CLASS_CONNECTIVITY:
-            self._available = True
-        else:
-            self._available = _retrieve_online_state(self._data, detail)
+        self._state = self._state_provider(self._data, self._detail)
 
-        self._state = state_provider(self._data, detail)
-        if self._state and self.device_class != DEVICE_CLASS_CONNECTIVITY:
+        if self._is_time_based:
+            self._available = _retrieve_online_state(self._data, self._detail)
             self._schedule_update_to_recheck_turn_off_sensor()
+        else:
+            self._available = True
 
     def _schedule_update_to_recheck_turn_off_sensor(self):
         """Schedule an update to recheck the sensor to see if it is ready to turn off."""
+
+        # If the sensor is already off there is nothing to do
+        if not self._state:
+            return
+
+        # self.hass is only available after setup is completed
+        # and we will recheck in async_added_to_hass
+        if not self.hass:
+            return
 
         @callback
         def _scheduled_update(now):
@@ -223,6 +246,11 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorDevice):
             _LOGGER.debug("%s: canceled pending update", self.entity_id)
             self._check_for_off_update_listener()
             self._check_for_off_update_listener = None
+
+    async def async_added_to_hass(self):
+        """Call the mixin to subscribe and setup an async_track_point_in_utc_time to turn off the sensor if needed."""
+        self._schedule_update_to_recheck_turn_off_sensor()
+        await super().async_added_to_hass()
 
     @property
     def unique_id(self) -> str:
