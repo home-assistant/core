@@ -138,17 +138,18 @@ async def test_options(hass):
     assert result["data"][CONF_SCAN_INTERVAL] == 10
 
 
-async def test_import_with_minimum_fields(hass, api):
-    """Test import with minimum fields only."""
-    result = await hass.config_entries.flow.async_init(
-        transmission.DOMAIN,
-        context={"source": "user"},
-        data={
+async def test_import(hass, api):
+    """Test import step."""
+    flow = init_config_flow(hass)
+
+    # import with minimum fields only
+    result = await flow.async_step_import(
+        {
             CONF_NAME: DEFAULT_NAME,
             CONF_HOST: HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SCAN_INTERVAL: timedelta(seconds=DEFAULT_SCAN_INTERVAL),
-        },
+        }
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
@@ -157,20 +158,16 @@ async def test_import_with_minimum_fields(hass, api):
     assert result["data"][CONF_PORT] == DEFAULT_PORT
     assert result["data"][CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
 
-
-async def test_import_with_all(hass, api):
-    """Test import with all."""
-    result = await hass.config_entries.flow.async_init(
-        transmission.DOMAIN,
-        context={"source": "user"},
-        data={
+    # import with all
+    result = await flow.async_step_import(
+        {
             CONF_NAME: NAME,
             CONF_HOST: HOST,
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
             CONF_PORT: PORT,
             CONF_SCAN_INTERVAL: timedelta(seconds=SCAN_INTERVAL),
-        },
+        }
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == NAME
