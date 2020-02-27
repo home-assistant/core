@@ -138,13 +138,12 @@ async def test_options(hass):
     assert result["data"][CONF_SCAN_INTERVAL] == 10
 
 
-async def test_import(hass, api):
-    """Test import step."""
-    flow = init_config_flow(hass)
-
-    # import with minimum fields only
-    result = await flow.async_step_import(
-        {
+async def test_import_with_minimum_fields(hass, api):
+    """Test import with minimum fields only."""
+    result = await hass.config_entries.flow.async_init(
+        transmission.DOMAIN,
+        context={"source": "user"},
+        data={
             CONF_NAME: DEFAULT_NAME,
             CONF_HOST: HOST,
             CONF_PORT: DEFAULT_PORT,
@@ -158,9 +157,13 @@ async def test_import(hass, api):
     assert result["data"][CONF_PORT] == DEFAULT_PORT
     assert result["data"][CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
 
-    # import with all
-    result = await flow.async_step_import(
-        {
+
+async def test_import_with_all(hass, api):
+    """Test import with all."""
+    result = await hass.config_entries.flow.async_init(
+        transmission.DOMAIN,
+        context={"source": "user"},
+        data={
             CONF_NAME: NAME,
             CONF_HOST: HOST,
             CONF_USERNAME: USERNAME,
