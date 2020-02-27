@@ -169,17 +169,17 @@ async def test_if_action_before_sunrise_no_offset(hass, calls):
         },
     )
 
-    # sunrise: 2015-09-16 06:32:43 local, sunset: 2015-09-16 18:55:24 local
-    # sunrise: 2015-09-16 13:32:43 UTC,   sunset: 2015-09-17 01:55:24 UTC
+    # sunrise: 2015-09-16 06:33:18.342542 local, sunset: 2015-09-16 18:53:44.723614 local
+    # sunrise: 2015-09-16 13:33:18.342542 UTC,   sunset: 2015-09-17 01:53:44.723614 UTC
     # now = sunrise + 1s -> 'before sunrise' not true
-    now = datetime(2015, 9, 16, 13, 32, 44, tzinfo=dt_util.UTC)
+    now = datetime(2015, 9, 16, 13, 33, 19, 342542, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 0
 
     # now = sunrise -> 'before sunrise' true
-    now = datetime(2015, 9, 16, 13, 32, 43, tzinfo=dt_util.UTC)
+    now = datetime(2015, 9, 16, 13, 33, 18, 342542, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
@@ -218,17 +218,17 @@ async def test_if_action_after_sunrise_no_offset(hass, calls):
         },
     )
 
-    # sunrise: 2015-09-16 06:32:43 local, sunset: 2015-09-16 18:55:24 local
-    # sunrise: 2015-09-16 13:32:43 UTC,   sunset: 2015-09-17 01:55:24 UTC
+    # sunrise: 2015-09-16 06:33:18.342542 local, sunset: 2015-09-16 18:53:44.723614 local
+    # sunrise: 2015-09-16 13:33:18.342542 UTC,   sunset: 2015-09-17 01:53:44.723614 UTC
     # now = sunrise - 1s -> 'after sunrise' not true
-    now = datetime(2015, 9, 16, 13, 32, 42, tzinfo=dt_util.UTC)
+    now = datetime(2015, 9, 16, 13, 33, 17, 342542, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 0
 
     # now = sunrise + 1s -> 'after sunrise' true
-    now = datetime(2015, 9, 16, 13, 32, 43, tzinfo=dt_util.UTC)
+    now = datetime(2015, 9, 16, 13, 33, 19, 342542, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
@@ -271,17 +271,17 @@ async def test_if_action_before_sunrise_with_offset(hass, calls):
         },
     )
 
-    # sunrise: 2015-09-16 06:32:43 local, sunset: 2015-09-16 18:55:24 local
-    # sunrise: 2015-09-16 13:32:43 UTC,   sunset: 2015-09-17 01:55:24 UTC
+    # sunrise: 2015-09-16 06:33:18.342542 local, sunset: 2015-09-16 18:53:44.723614 local
+    # sunrise: 2015-09-16 13:33:18.342542 UTC,   sunset: 2015-09-17 01:53:44.723614 UTC
     # now = sunrise + 1s + 1h -> 'before sunrise' with offset +1h not true
-    now = datetime(2015, 9, 16, 14, 32, 44, tzinfo=dt_util.UTC)
+    now = datetime(2015, 9, 16, 14, 33, 19, 342542, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 0
 
     # now = sunrise + 1h -> 'before sunrise' with offset +1h true
-    now = datetime(2015, 9, 16, 14, 32, 43, tzinfo=dt_util.UTC)
+    now = datetime(2015, 9, 16, 14, 33, 18, 342542, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
@@ -316,14 +316,14 @@ async def test_if_action_before_sunrise_with_offset(hass, calls):
         assert len(calls) == 2
 
     # now = sunset -> 'before sunrise' with offset +1h not true
-    now = datetime(2015, 9, 17, 1, 56, 48, tzinfo=dt_util.UTC)
+    now = datetime(2015, 9, 17, 1, 53, 44, 723614, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 2
 
     # now = sunset -1s -> 'before sunrise' with offset +1h not true
-    now = datetime(2015, 9, 17, 1, 56, 45, tzinfo=dt_util.UTC)
+    now = datetime(2015, 9, 17, 1, 53, 43, 723614, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
@@ -352,8 +352,8 @@ async def test_if_action_before_sunset_with_offset(hass, calls):
         },
     )
 
-    # sunrise: 2015-09-16 06:32:43 local, sunset: 2015-09-16 18:55:24 local
-    # sunrise: 2015-09-16 13:32:43 UTC,   sunset: 2015-09-17 01:55:24 UTC
+    # sunrise: 2015-09-16 06:33:18.342542 local, sunset: 2015-09-16 18:53:44.723614 local
+    # sunrise: 2015-09-16 13:33:18.342542 UTC,   sunset: 2015-09-17 01:53:44.723614 UTC
     # now = local midnight -> 'before sunset' with offset +1h true
     now = datetime(2015, 9, 16, 7, 0, 0, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
@@ -362,14 +362,14 @@ async def test_if_action_before_sunset_with_offset(hass, calls):
         assert len(calls) == 1
 
     # now = sunset + 1s + 1h -> 'before sunset' with offset +1h not true
-    now = datetime(2015, 9, 17, 2, 55, 25, tzinfo=dt_util.UTC)
+    now = datetime(2015, 9, 17, 2, 53, 45, 723614, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 1
 
     # now = sunset + 1h -> 'before sunset' with offset +1h true
-    now = datetime(2015, 9, 17, 2, 55, 24, tzinfo=dt_util.UTC)
+    now = datetime(2015, 9, 17, 2, 53, 44, 723614, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
@@ -390,14 +390,14 @@ async def test_if_action_before_sunset_with_offset(hass, calls):
         assert len(calls) == 4
 
     # now = sunrise -> 'before sunset' with offset +1h true
-    now = datetime(2015, 9, 16, 13, 32, 43, tzinfo=dt_util.UTC)
+    now = datetime(2015, 9, 16, 13, 33, 18, 342542, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 5
 
     # now = sunrise -1s -> 'before sunset' with offset +1h true
-    now = datetime(2015, 9, 16, 13, 32, 42, tzinfo=dt_util.UTC)
+    now = datetime(2015, 9, 16, 13, 33, 17, 342542, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
@@ -433,17 +433,17 @@ async def test_if_action_after_sunrise_with_offset(hass, calls):
         },
     )
 
-    # sunrise: 2015-09-16 06:32:43 local, sunset: 2015-09-16 18:55:24 local
-    # sunrise: 2015-09-16 13:32:43 UTC,   sunset: 2015-09-17 01:55:24 UTC
+    # sunrise: 2015-09-16 06:33:18.342542 local, sunset: 2015-09-16 18:53:44.723614 local
+    # sunrise: 2015-09-16 13:33:18.342542 UTC,   sunset: 2015-09-17 01:53:44.723614 UTC
     # now = sunrise - 1s + 1h -> 'after sunrise' with offset +1h not true
-    now = datetime(2015, 9, 16, 14, 32, 42, tzinfo=dt_util.UTC)
+    now = datetime(2015, 9, 16, 14, 33, 17, 342542, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 0
 
     # now = sunrise + 1h -> 'after sunrise' with offset +1h true
-    now = datetime(2015, 9, 16, 14, 32, 43, tzinfo=dt_util.UTC)
+    now = datetime(2015, 9, 16, 14, 33, 18, 342542, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
@@ -464,7 +464,7 @@ async def test_if_action_after_sunrise_with_offset(hass, calls):
         assert len(calls) == 1
 
     # now = local noon -> 'after sunrise' with offset +1h true
-    now = datetime(2015, 9, 16, 19, 1, 0, tzinfo=dt_util.UTC)
+    now = datetime(2015, 9, 16, 19, 0, 0, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
@@ -478,14 +478,14 @@ async def test_if_action_after_sunrise_with_offset(hass, calls):
         assert len(calls) == 3
 
     # now = sunset -> 'after sunrise' with offset +1h true
-    now = datetime(2015, 9, 17, 1, 55, 24, tzinfo=dt_util.UTC)
+    now = datetime(2015, 9, 17, 1, 53, 44, 723614, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 4
 
     # now = sunset + 1s -> 'after sunrise' with offset +1h true
-    now = datetime(2015, 9, 17, 1, 55, 25, tzinfo=dt_util.UTC)
+    now = datetime(2015, 9, 17, 1, 53, 45, 723614, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
@@ -528,17 +528,17 @@ async def test_if_action_after_sunset_with_offset(hass, calls):
         },
     )
 
-    # sunrise: 2015-09-15 06:32:05 local, sunset: 2015-09-15 18:56:46 local
-    # sunrise: 2015-09-15 13:32:05 UTC,   sunset: 2015-09-16 01:56:46 UTC
+    # sunrise: 2015-09-16 06:33:18.342542 local, sunset: 2015-09-16 18:53:44.723614 local
+    # sunrise: 2015-09-16 13:33:18.342542 UTC,   sunset: 2015-09-17 01:53:44.723614 UTC
     # now = sunset - 1s + 1h -> 'after sunset' with offset +1h not true
-    now = datetime(2015, 9, 16, 2, 56, 45, tzinfo=dt_util.UTC)
+    now = datetime(2015, 9, 17, 2, 53, 43, 723614, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 0
 
     # now = sunset + 1h -> 'after sunset' with offset +1h true
-    now = datetime(2015, 9, 16, 2, 56, 46, tzinfo=dt_util.UTC)
+    now = datetime(2015, 9, 17, 2, 53, 44, 723614, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
@@ -581,31 +581,31 @@ async def test_if_action_before_and_after_during(hass, calls):
         },
     )
 
-    # sunrise: 2015-09-16 06:32:43 local, sunset: 2015-09-16 18:55:24 local
-    # sunrise: 2015-09-16 13:32:43 UTC,   sunset: 2015-09-17 01:55:24 UTC
+    # sunrise: 2015-09-16 06:33:18.342542 local, sunset: 2015-09-16 18:53:44.723614 local
+    # sunrise: 2015-09-16 13:33:18.342542 UTC,   sunset: 2015-09-17 01:53:44.723614 UTC
     # now = sunrise - 1s -> 'after sunrise' + 'before sunset' not true
-    now = datetime(2015, 9, 16, 13, 32, 42, tzinfo=dt_util.UTC)
+    now = datetime(2015, 9, 16, 13, 33, 17, 342542, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 0
 
     # now = sunset + 1s -> 'after sunrise' + 'before sunset' not true
-    now = datetime(2015, 9, 17, 1, 55, 25, tzinfo=dt_util.UTC)
+    now = datetime(2015, 9, 17, 1, 53, 45, 723614, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 0
 
     # now = sunrise -> 'after sunrise' + 'before sunset' true
-    now = datetime(2015, 9, 16, 13, 32, 43, tzinfo=dt_util.UTC)
+    now = datetime(2015, 9, 16, 13, 33, 18, 342542, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 1
 
     # now = sunset -> 'after sunrise' + 'before sunset' true
-    now = datetime(2015, 9, 17, 1, 55, 24, tzinfo=dt_util.UTC)
+    now = datetime(2015, 9, 17, 1, 53, 44, 723614, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
@@ -644,17 +644,17 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(hass, calls):
         },
     )
 
-    # sunrise: 2015-07-24 07:17:24 local, sunset: 2015-07-25 03:16:27 local
-    # sunrise: 2015-07-24 15:17:24 UTC,   sunset: 2015-07-25 11:16:27 UTC
+    # sunrise: 2015-07-24 07:16:46.975735 local, sunset: 2015-07-25 03:13:32.501837 local
+    # sunrise: 2015-07-24 15:16:46.975735 UTC,   sunset: 2015-07-25 11:13:32.501837 UTC
     # now = sunrise + 1s -> 'before sunrise' not true
-    now = datetime(2015, 7, 24, 15, 17, 25, tzinfo=dt_util.UTC)
+    now = datetime(2015, 7, 24, 15, 16, 47, 975735, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 0
 
     # now = sunrise -> 'before sunrise' true
-    now = datetime(2015, 7, 24, 15, 17, 24, tzinfo=dt_util.UTC)
+    now = datetime(2015, 7, 24, 15, 16, 46, 975735, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
@@ -700,17 +700,17 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(hass, calls):
         },
     )
 
-    # sunrise: 2015-07-24 07:17:24 local, sunset: 2015-07-25 03:16:27 local
-    # sunrise: 2015-07-24 15:17:24 UTC,   sunset: 2015-07-25 11:16:27 UTC
+    # sunrise: 2015-07-24 07:16:46.975735 local, sunset: 2015-07-25 03:13:32.501837 local
+    # sunrise: 2015-07-24 15:16:46.975735 UTC,   sunset: 2015-07-25 11:13:32.501837 UTC
     # now = sunrise -> 'after sunrise' true
-    now = datetime(2015, 7, 24, 15, 17, 24, tzinfo=dt_util.UTC)
+    now = datetime(2015, 7, 24, 15, 16, 46, 975735, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 1
 
     # now = sunrise - 1s -> 'after sunrise' not true
-    now = datetime(2015, 7, 24, 15, 17, 23, tzinfo=dt_util.UTC)
+    now = datetime(2015, 7, 24, 15, 16, 45, 975735, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
@@ -756,30 +756,30 @@ async def test_if_action_before_sunset_no_offset_kotzebue(hass, calls):
         },
     )
 
-    # sunrise: 2015-07-24 07:17:24 local, sunset: 2015-07-25 03:16:27 local
-    # sunrise: 2015-07-24 15:17:24 UTC,   sunset: 2015-07-25 11:16:27 UTC
-    # now = sunrise + 1s -> 'before sunrise' not true
-    now = datetime(2015, 7, 25, 11, 16, 28, tzinfo=dt_util.UTC)
+    # sunrise: 2015-07-24 07:16:46.975735 local, sunset: 2015-07-25 03:13:32.501837 local
+    # sunrise: 2015-07-24 15:16:46.975735 UTC,   sunset: 2015-07-25 11:13:32.501837 UTC
+    # now = sunset + 1s -> 'before sunset' not true
+    now = datetime(2015, 7, 25, 11, 13, 33, 501837, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 0
 
-    # now = sunrise -> 'before sunrise' true
-    now = datetime(2015, 7, 25, 11, 16, 27, tzinfo=dt_util.UTC)
+    # now = sunset -> 'before sunset' true
+    now = datetime(2015, 7, 25, 11, 13, 32, 501837, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 1
 
-    # now = local midnight -> 'before sunrise' true
+    # now = local midnight -> 'before sunset' true
     now = datetime(2015, 7, 24, 8, 0, 0, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 2
 
-    # now = local midnight - 1s -> 'before sunrise' not true
+    # now = local midnight - 1s -> 'before sunset' not true
     now = datetime(2015, 7, 24, 7, 59, 59, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
@@ -812,17 +812,17 @@ async def test_if_action_after_sunset_no_offset_kotzebue(hass, calls):
         },
     )
 
-    # sunrise: 2015-07-24 07:17:24 local, sunset: 2015-07-25 03:16:27 local
-    # sunrise: 2015-07-24 15:17:24 UTC,   sunset: 2015-07-25 11:16:27 UTC
+    # sunrise: 2015-07-24 07:16:46.975735 local, sunset: 2015-07-25 03:13:32.501837 local
+    # sunrise: 2015-07-24 15:16:46.975735 UTC,   sunset: 2015-07-25 11:13:32.501837 UTC
     # now = sunset -> 'after sunset' true
-    now = datetime(2015, 7, 25, 11, 16, 27, tzinfo=dt_util.UTC)
+    now = datetime(2015, 7, 25, 11, 13, 32, 501837, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(calls) == 1
 
     # now = sunset - 1s -> 'after sunset' not true
-    now = datetime(2015, 7, 25, 11, 16, 26, tzinfo=dt_util.UTC)
+    now = datetime(2015, 7, 25, 11, 13, 31, 501837, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()

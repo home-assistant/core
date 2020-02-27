@@ -1,6 +1,8 @@
 """The tests for the Sun component."""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
+from astral import LocationInfo
+from astral.location import Location
 from pytest import mark
 
 import homeassistant.components.sun as sun
@@ -23,62 +25,55 @@ async def test_setting_rising(hass):
     await hass.async_block_till_done()
     state = hass.states.get(sun.ENTITY_ID)
 
-    from astral import Astral
-
-    astral = Astral()
+    location = Location(
+        LocationInfo(
+            "",
+            "",
+            str(hass.config.time_zone),
+            hass.config.latitude,
+            hass.config.longitude,
+        )
+    )
     utc_today = utc_now.date()
-
-    latitude = hass.config.latitude
-    longitude = hass.config.longitude
 
     mod = -1
     while True:
-        next_dawn = astral.dawn_utc(
-            utc_today + timedelta(days=mod), latitude, longitude
-        )
+        next_dawn = location.dawn(utc_today + timedelta(days=mod))
         if next_dawn > utc_now:
             break
         mod += 1
 
     mod = -1
     while True:
-        next_dusk = astral.dusk_utc(
-            utc_today + timedelta(days=mod), latitude, longitude
-        )
+        next_dusk = location.dusk(utc_today + timedelta(days=mod))
         if next_dusk > utc_now:
             break
         mod += 1
 
     mod = -1
     while True:
-        next_midnight = astral.solar_midnight_utc(
-            utc_today + timedelta(days=mod), longitude
-        )
+        next_midnight = location.midnight(utc_today + timedelta(days=mod))
         if next_midnight > utc_now:
             break
         mod += 1
 
     mod = -1
     while True:
-        next_noon = astral.solar_noon_utc(utc_today + timedelta(days=mod), longitude)
+        next_noon = location.noon(utc_today + timedelta(days=mod))
         if next_noon > utc_now:
             break
         mod += 1
 
     mod = -1
     while True:
-        next_rising = astral.sunrise_utc(
-            utc_today + timedelta(days=mod), latitude, longitude
-        )
+        next_rising = location.sunrise(utc_today + timedelta(days=mod))
         if next_rising > utc_now:
             break
         mod += 1
 
     mod = -1
     while True:
-        next_setting = astral.sunset_utc(
-            utc_today + timedelta(days=mod), latitude, longitude
-        )
+        next_setting = location.sunset(utc_today + timedelta(days=mod))
         if next_setting > utc_now:
             break
         mod += 1
@@ -152,10 +147,10 @@ async def test_norway_in_june(hass):
 
     assert dt_util.parse_datetime(
         state.attributes[sun.STATE_ATTR_NEXT_RISING]
-    ) == datetime(2016, 7, 25, 23, 23, 39, tzinfo=dt_util.UTC)
+    ) == datetime(2016, 7, 24, 22, 59, 45, 689645, tzinfo=timezone.utc)
     assert dt_util.parse_datetime(
         state.attributes[sun.STATE_ATTR_NEXT_SETTING]
-    ) == datetime(2016, 7, 26, 22, 19, 1, tzinfo=dt_util.UTC)
+    ) == datetime(2016, 7, 25, 22, 17, 13, 503932, tzinfo=timezone.utc)
 
     assert state.state == sun.STATE_ABOVE_HORIZON
 
