@@ -10,8 +10,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
