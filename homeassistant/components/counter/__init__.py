@@ -1,9 +1,17 @@
 """Component to count within automations."""
 import logging
+from typing import Dict, Optional
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_ICON, CONF_MAXIMUM, CONF_MINIMUM, CONF_NAME
+from homeassistant.const import (
+    ATTR_EDITABLE,
+    CONF_ICON,
+    CONF_ID,
+    CONF_MAXIMUM,
+    CONF_MINIMUM,
+    CONF_NAME,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -72,20 +80,7 @@ async def async_setup(hass, config):
     entities = []
 
     for object_id, cfg in config[DOMAIN].items():
-        if not cfg:
-            cfg = {}
-
-        name = cfg.get(CONF_NAME)
-        initial = cfg[CONF_INITIAL]
-        restore = cfg[CONF_RESTORE]
-        step = cfg[CONF_STEP]
-        icon = cfg.get(CONF_ICON)
-        minimum = cfg[CONF_MINIMUM]
-        maximum = cfg[CONF_MAXIMUM]
-
-        entities.append(
-            Counter(object_id, name, initial, minimum, maximum, restore, step, icon)
-        )
+        entities.append(Counter.from_yaml({CONF_ID: object_id, **cfg}))
 
     if not entities:
         return False
@@ -112,16 +107,19 @@ async def async_setup(hass, config):
 class Counter(RestoreEntity):
     """Representation of a counter."""
 
-    def __init__(self, object_id, name, initial, minimum, maximum, restore, step, icon):
+    def __init__(self, config: Dict):
         """Initialize a counter."""
-        self.entity_id = ENTITY_ID_FORMAT.format(object_id)
-        self._name = name
-        self._restore = restore
-        self._step = step
-        self._state = self._initial = initial
-        self._min = minimum
-        self._max = maximum
-        self._icon = icon
+        self._config = config
+        self._state = config[CONF_INITIAL]
+        self.editable = True
+
+    @classmethod
+    def from_yaml(cls, config: Dict):
+        """Create counter instance from yaml config."""
+        counter = cls(config)
+        counter.editable = False
+        counter.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])
+        return counter
 
     @property
     def should_poll(self):
@@ -131,12 +129,12 @@ class Counter(RestoreEntity):
     @property
     def name(self):
         """Return name of the counter."""
-        return self._name
+        return self._config.get(CONF_NAME)
 
     @property
     def icon(self):
         """Return the icon to be used for this entity."""
-        return self._icon
+        return self._config.get(CONF_ICON)
 
     @property
     def state(self):
@@ -146,19 +144,28 @@ class Counter(RestoreEntity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        ret = {ATTR_INITIAL: self._initial, ATTR_STEP: self._step}
-        if self._min is not None:
-            ret[CONF_MINIMUM] = self._min
-        if self._max is not None:
-            ret[CONF_MAXIMUM] = self._max
+        ret = {
+            ATTR_EDITABLE: self.editable,
+            ATTR_INITIAL: self._config[CONF_INITIAL],
+            ATTR_STEP: self._config[CONF_STEP],
+        }
+        if self._config[CONF_MINIMUM] is not None:
+            ret[CONF_MINIMUM] = self._config[CONF_MINIMUM]
+        if self._config[CONF_MAXIMUM] is not None:
+            ret[CONF_MAXIMUM] = self._config[CONF_MAXIMUM]
         return ret
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return unique id of the entity."""
+        return self._config[CONF_ID]
 
     def compute_next_state(self, state):
         """Keep the state within the range of min/max values."""
-        if self._min is not None:
-            state = max(self._min, state)
-        if self._max is not None:
-            state = min(self._max, state)
+        if self._config[CONF_MINIMUM] is not None:
+            state = max(self._config[CONF_MINIMUM], state)
+        if self._config[CONF_MAXIMUM] is not None:
+            state = min(self._config[CONF_MAXIMUM], state)
 
         return state
 
@@ -167,42 +174,33 @@ class Counter(RestoreEntity):
         await super().async_added_to_hass()
         # __init__ will set self._state to self._initial, only override
         # if needed.
-        if self._restore:
+        if self._config[CONF_RESTORE]:
             state = await self.async_get_last_state()
             if state is not None:
                 self._state = self.compute_next_state(int(state.state))
-                self._initial = state.attributes.get(ATTR_INITIAL)
-                self._max = state.attributes.get(ATTR_MAXIMUM)
-                self._min = state.attributes.get(ATTR_MINIMUM)
-                self._step = state.attributes.get(ATTR_STEP)
+                self._config[CONF_INITIAL] = state.attributes.get(ATTR_INITIAL)
+                self._config[CONF_MAXIMUM] = state.attributes.get(ATTR_MAXIMUM)
+                self._config[CONF_MINIMUM] = state.attributes.get(ATTR_MINIMUM)
+                self._config[CONF_STEP] = state.attributes.get(ATTR_STEP)
 
     async def async_decrement(self):
         """Decrement the counter."""
-        self._state = self.compute_next_state(self._state - self._step)
-        await self.async_update_ha_state()
+        self._state = self.compute_next_state(self._state - self._config[CONF_STEP])
+        self.async_write_ha_state()
 
     async def async_increment(self):
         """Increment a counter."""
-        self._state = self.compute_next_state(self._state + self._step)
-        await self.async_update_ha_state()
+        self._state = self.compute_next_state(self._state + self._config[CONF_STEP])
+        self.async_write_ha_state()
 
     async def async_reset(self):
         """Reset a counter."""
-        self._state = self.compute_next_state(self._initial)
-        await self.async_update_ha_state()
+        self._state = self.compute_next_state(self._config[CONF_INITIAL])
+        self.async_write_ha_state()
 
     async def async_configure(self, **kwargs):
         """Change the counter's settings with a service."""
-        if CONF_MINIMUM in kwargs:
-            self._min = kwargs[CONF_MINIMUM]
-        if CONF_MAXIMUM in kwargs:
-            self._max = kwargs[CONF_MAXIMUM]
-        if CONF_STEP in kwargs:
-            self._step = kwargs[CONF_STEP]
-        if CONF_INITIAL in kwargs:
-            self._initial = kwargs[CONF_INITIAL]
-        if VALUE in kwargs:
-            self._state = kwargs[VALUE]
-
-        self._state = self.compute_next_state(self._state)
-        await self.async_update_ha_state()
+        new_state = kwargs.pop(VALUE, self._state)
+        self._config = {**self._config, **kwargs}
+        self._state = self.compute_next_state(new_state)
+        self.async_write_ha_state()
