@@ -28,8 +28,8 @@ async def test_lock_device_registry(hass):
     reg_device = device_registry.async_get_device(
         identifiers={("august", "online_with_doorsense")}, connections=set()
     )
-    assert "AUG-MD01" == reg_device.model
-    assert "undefined-4.3.0-1.8.14" == reg_device.sw_version
+    assert reg_device.model == "AUG-MD01"
+    assert reg_device.sw_version == "undefined-4.3.0-1.8.14"
 
 
 async def test_one_lock_operation(hass):
