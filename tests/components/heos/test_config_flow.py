@@ -49,9 +49,7 @@ async def test_cannot_connect_shows_error_form(hass, controller):
 async def test_create_entry_when_host_valid(hass, controller):
     """Test result type is create entry when host is valid."""
     data = {CONF_HOST: "127.0.0.1"}
-    with patch(
-        "homeassistant.components.hue.async_setup_entry", return_value=True
-    ):
+    with patch("homeassistant.components.hue.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
             heos.DOMAIN, context={"source": "user"}, data=data
         )
@@ -66,9 +64,7 @@ async def test_create_entry_when_friendly_name_valid(hass, controller):
     """Test result type is create entry when friendly name is valid."""
     hass.data[DATA_DISCOVERED_HOSTS] = {"Office (127.0.0.1)": "127.0.0.1"}
     data = {CONF_HOST: "Office (127.0.0.1)"}
-    with patch(
-        "homeassistant.components.hue.async_setup_entry", return_value=True
-    ):
+    with patch("homeassistant.components.hue.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
             heos.DOMAIN, context={"source": "user"}, data=data
         )
