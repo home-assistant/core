@@ -5,11 +5,19 @@ import uuid
 
 import voluptuous as vol
 
+from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, storage
 
-from .const import CONF_RESOURCES, DOMAIN, RESOURCE_SCHEMA
+from .const import (
+    CONF_RESOURCE_TYPE_WS,
+    CONF_RESOURCES,
+    DOMAIN,
+    RESOURCE_CREATE_FIELDS,
+    RESOURCE_SCHEMA,
+    RESOURCE_UPDATE_FIELDS,
+)
 from .dashboard import LovelaceConfig
 
 RESOURCE_STORAGE_KEY = f"{DOMAIN}_resources"
@@ -36,6 +44,8 @@ class ResourceStorageCollection(collection.StorageCollection):
     """Collection to store resources."""
 
     loaded = False
+    CREATE_SCHEMA = vol.Schema(RESOURCE_CREATE_FIELDS)
+    UPDATE_SCHEMA = vol.Schema(RESOURCE_UPDATE_FIELDS)
 
     def __init__(self, hass: HomeAssistant, ll_config: LovelaceConfig):
         """Initialize the storage collection."""
@@ -84,13 +94,23 @@ class ResourceStorageCollection(collection.StorageCollection):
 
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
-        raise NotImplementedError
+        data = self.CREATE_SCHEMA(data)
+        data[CONF_TYPE] = data.pop(CONF_RESOURCE_TYPE_WS)
+        return data
 
     @callback
     def _get_suggested_id(self, info: dict) -> str:
-        """Suggest an ID based on the config."""
-        raise NotImplementedError
+        """Return unique ID."""
+        return uuid.uuid4().hex
 
     async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
-        raise NotImplementedError
+        if not self.loaded:
+            await self.async_load()
+            self.loaded = True
+
+        update_data = self.UPDATE_SCHEMA(update_data)
+        if CONF_RESOURCE_TYPE_WS in update_data:
+            update_data[CONF_TYPE] = update_data.pop(CONF_RESOURCE_TYPE_WS)
+
+        return {**data, **update_data}
