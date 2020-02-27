@@ -116,6 +116,11 @@ class IamMeter(Entity):
         """Poll needed."""
         return False
 
+    @property
+    def available(self):
+        """Return if entity is available."""
+        return self.coordinator.last_update_success
+
     async def async_added_to_hass(self):
         """When entity is added to hass."""
         self.coordinator.async_add_listener(self.async_write_ha_state)
