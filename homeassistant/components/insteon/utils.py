@@ -224,16 +224,8 @@ def print_aldb_to_log(aldb):
         mode = "C" if rec.control_flags.is_controller else "R"
         hwm = "Y" if rec.control_flags.is_high_water_mark else "N"
         _LOGGER.info(
-            " {:04x}    {:s}     {:s}   {:s}    {:3d} {:s}"
-            "   {:3d}   {:3d}   {:3d}".format(
-                rec.mem_addr,
-                in_use,
-                mode,
-                hwm,
-                rec.group,
-                rec.address.human,
-                rec.data1,
-                rec.data2,
-                rec.data3,
+            (
+                f" {rec.mem_addr:04x}    {in_use:s}     {mode:s}   {hwm:s}    {rec.group:3d} {rec.address.human:s}"
+                f"   {rec.data1:3d}   {rec.data2:3d}   {rec.data3:3d}"
             )
         )

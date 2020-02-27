@@ -437,7 +437,7 @@ class ZoneDevice(ClimateDevice):
     @property
     def unique_id(self):
         """Return the ID of the controller device."""
-        return "{}_z{}".format(self._controller.unique_id, self._zone.index + 1)
+        return f"{self._controller.unique_id}_z{self._zone.index + 1}"
 
     @property
     def name(self) -> str:
