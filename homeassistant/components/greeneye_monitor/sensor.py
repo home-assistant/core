@@ -1,7 +1,14 @@
 """Support for the sensors in a GreenEye Monitor."""
 import logging
 
-from homeassistant.const import CONF_NAME, CONF_TEMPERATURE_UNIT, POWER_WATT
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_TEMPERATURE_UNIT,
+    POWER_WATT,
+    TIME_HOURS,
+    TIME_MINUTES,
+    TIME_SECONDS,
+)
 from homeassistant.helpers.entity import Entity
 
 from . import (
@@ -16,9 +23,7 @@ from . import (
     SENSOR_TYPE_CURRENT,
     SENSOR_TYPE_PULSE_COUNTER,
     SENSOR_TYPE_TEMPERATURE,
-    TIME_UNIT_HOUR,
-    TIME_UNIT_MINUTE,
-    TIME_UNIT_SECOND,
+    SENSOR_TYPE_VOLTAGE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,6 +36,7 @@ UNIT_WATTS = POWER_WATT
 COUNTER_ICON = "mdi:counter"
 CURRENT_SENSOR_ICON = "mdi:flash"
 TEMPERATURE_ICON = "mdi:thermometer"
+VOLTAGE_ICON = "mdi:current-ac"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -70,6 +76,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                     sensor[CONF_TEMPERATURE_UNIT],
                 )
             )
+        elif sensor_type == SENSOR_TYPE_VOLTAGE:
+            entities.append(
+                VoltageSensor(
+                    sensor[CONF_MONITOR_SERIAL_NUMBER],
+                    sensor[CONF_NUMBER],
+                    sensor[CONF_NAME],
+                )
+            )
 
     async_add_entities(entities)
 
@@ -93,11 +107,7 @@ class GEMSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique ID for this sensor."""
-        return "{serial}-{sensor_type}-{number}".format(
-            serial=self._monitor_serial_number,
-            sensor_type=self._sensor_type,
-            number=self._number,
-        )
+        return f"{self._monitor_serial_number}-{self._sensor_type }-{self._number}"
 
     @property
     def name(self):
@@ -225,19 +235,17 @@ class PulseCounter(GEMSensor):
     @property
     def _seconds_per_time_unit(self):
         """Return the number of seconds in the given display time unit."""
-        if self._time_unit == TIME_UNIT_SECOND:
+        if self._time_unit == TIME_SECONDS:
             return 1
-        if self._time_unit == TIME_UNIT_MINUTE:
+        if self._time_unit == TIME_MINUTES:
             return 60
-        if self._time_unit == TIME_UNIT_HOUR:
+        if self._time_unit == TIME_HOURS:
             return 3600
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement for this pulse counter."""
-        return "{counted_quantity}/{time_unit}".format(
-            counted_quantity=self._counted_quantity, time_unit=self._time_unit
-        )
+        return f"{self._counted_quantity}/{self._time_unit}"
 
     @property
     def device_state_attributes(self):
@@ -276,3 +284,33 @@ class TemperatureSensor(GEMSensor):
     def unit_of_measurement(self):
         """Return the unit of measurement for this sensor (user specified)."""
         return self._unit
+
+
+class VoltageSensor(GEMSensor):
+    """Entity showing voltage."""
+
+    def __init__(self, monitor_serial_number, number, name):
+        """Construct the entity."""
+        super().__init__(monitor_serial_number, name, "volts", number)
+
+    def _get_sensor(self, monitor):
+        """Wire the updates to the monitor itself, since there is no voltage element in the API."""
+        return monitor
+
+    @property
+    def icon(self):
+        """Return the icon that should represent this sensor in the UI."""
+        return VOLTAGE_ICON
+
+    @property
+    def state(self):
+        """Return the current voltage being reported by this sensor."""
+        if not self._sensor:
+            return None
+
+        return self._sensor.voltage
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement for this sensor."""
+        return "V"

@@ -4,12 +4,12 @@ import logging
 from numbers import Number
 
 from homeassistant.const import (
-    LENGTH_KILOMETERS,
-    LENGTH_MILES,
-    LENGTH_FEET,
-    LENGTH_METERS,
-    UNIT_NOT_RECOGNIZED_TEMPLATE,
     LENGTH,
+    LENGTH_FEET,
+    LENGTH_KILOMETERS,
+    LENGTH_METERS,
+    LENGTH_MILES,
+    UNIT_NOT_RECOGNIZED_TEMPLATE,
 )
 
 _LOGGER = logging.getLogger(__name__)

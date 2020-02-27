@@ -10,7 +10,7 @@ from homeassistant.components.light import (
 )
 import homeassistant.util.color as color_util
 
-from . import DOMAIN, DATA_HIVE, HiveEntity, refresh_system
+from . import DATA_HIVE, DOMAIN, HiveEntity, refresh_system
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

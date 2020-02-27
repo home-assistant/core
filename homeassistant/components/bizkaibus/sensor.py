@@ -2,14 +2,13 @@
 
 import logging
 
-import voluptuous as vol
 from bizkaibus.bizkaibus import BizkaibusData
-import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
 
-from homeassistant.const import CONF_NAME
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_NAME, TIME_MINUTES
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +62,7 @@ class BizkaibusSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of the sensor."""
-        return "minutes"
+        return TIME_MINUTES
 
     def update(self):
         """Get the latest data from the webservice."""

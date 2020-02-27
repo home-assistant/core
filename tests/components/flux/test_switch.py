@@ -2,15 +2,15 @@
 from asynctest.mock import patch
 import pytest
 
-from homeassistant.setup import async_setup_component
-from homeassistant.components import switch, light
+from homeassistant.components import light, switch
 from homeassistant.const import (
     CONF_PLATFORM,
-    STATE_ON,
     SERVICE_TURN_ON,
+    STATE_ON,
     SUN_EVENT_SUNRISE,
 )
 from homeassistant.core import State
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
@@ -923,9 +923,9 @@ async def test_flux_with_multiple_lights(hass):
 
     def event_date(hass, event, now=None):
         if event == SUN_EVENT_SUNRISE:
-            print("sunrise {}".format(sunrise_time))
+            print(f"sunrise {sunrise_time}")
             return sunrise_time
-        print("sunset {}".format(sunset_time))
+        print(f"sunset {sunset_time}")
         return sunset_time
 
     with patch(

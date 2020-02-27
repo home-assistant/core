@@ -1,21 +1,21 @@
 """Support for retrieving status info from Google Wifi/OnHub routers."""
-import logging
 from datetime import timedelta
+import logging
 
-import voluptuous as vol
 import requests
+import voluptuous as vol
 
-from homeassistant.util import dt
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME,
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
     STATE_UNKNOWN,
+    TIME_DAYS,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+from homeassistant.util import Throttle, dt
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ MONITORED_CONDITIONS = {
         "mdi:checkbox-marked-circle-outline",
     ],
     ATTR_NEW_VERSION: [["software", "updateNewVersion"], None, "mdi:update"],
-    ATTR_UPTIME: [["system", "uptime"], "days", "mdi:timelapse"],
+    ATTR_UPTIME: [["system", "uptime"], TIME_DAYS, "mdi:timelapse"],
     ATTR_LAST_RESTART: [["system", "uptime"], None, "mdi:restart"],
     ATTR_LOCAL_IP: [["wan", "localIpAddress"], None, "mdi:access-point-network"],
     ATTR_STATUS: [["wan", "online"], None, "mdi:google"],

@@ -5,7 +5,6 @@ import logging
 import uuid
 
 import brottsplatskartan
-
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -70,7 +69,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # Every Home Assistant instance should have their own unique
     # app parameter: https://brottsplatskartan.se/sida/api
-    app = "ha-{}".format(uuid.getnode())
+    app = f"ha-{uuid.getnode()}"
 
     bpk = brottsplatskartan.BrottsplatsKartan(
         app=app, area=area, latitude=latitude, longitude=longitude

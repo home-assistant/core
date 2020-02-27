@@ -1,9 +1,4 @@
-"""
-Support for MQTT JSON lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.mqtt_json/
-"""
+"""Support for MQTT JSON lights."""
 import json
 import logging
 
@@ -124,13 +119,12 @@ PLATFORM_SCHEMA_JSON = (
 
 
 async def async_setup_entity_json(
-    config: ConfigType, async_add_entities, config_entry, discovery_hash
+    config: ConfigType, async_add_entities, config_entry, discovery_data
 ):
     """Set up a MQTT JSON Light."""
-    async_add_entities([MqttLightJson(config, config_entry, discovery_hash)])
+    async_add_entities([MqttLightJson(config, config_entry, discovery_data)])
 
 
-# pylint: disable=too-many-ancestors
 class MqttLightJson(
     MqttAttributes,
     MqttAvailability,
@@ -141,7 +135,7 @@ class MqttLightJson(
 ):
     """Representation of a MQTT JSON light."""
 
-    def __init__(self, config, config_entry, discovery_hash):
+    def __init__(self, config, config_entry, discovery_data):
         """Initialize MQTT JSON light."""
         self._state = False
         self._sub_state = None
@@ -164,7 +158,7 @@ class MqttLightJson(
 
         MqttAttributes.__init__(self, config)
         MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_hash, self.discovery_update)
+        MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
         MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
 
     async def async_added_to_hass(self):
@@ -352,6 +346,7 @@ class MqttLightJson(
         )
         await MqttAttributes.async_will_remove_from_hass(self)
         await MqttAvailability.async_will_remove_from_hass(self)
+        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
 
     @property
     def brightness(self):

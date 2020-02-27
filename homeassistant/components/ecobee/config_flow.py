@@ -1,19 +1,18 @@
 """Config flow to configure ecobee."""
-import voluptuous as vol
-
 from pyecobee import (
-    Ecobee,
-    ECOBEE_CONFIG_FILENAME,
     ECOBEE_API_KEY,
+    ECOBEE_CONFIG_FILENAME,
     ECOBEE_REFRESH_TOKEN,
+    Ecobee,
 )
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistantError
 from homeassistant.util.json import load_json
 
-from .const import CONF_REFRESH_TOKEN, DATA_ECOBEE_CONFIG, DOMAIN, _LOGGER
+from .const import _LOGGER, CONF_REFRESH_TOKEN, DATA_ECOBEE_CONFIG, DOMAIN
 
 
 class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -108,7 +107,7 @@ class EcobeeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if await self.hass.async_add_executor_job(ecobee.refresh_tokens):
             # Credentials found and validated; create the entry.
             _LOGGER.debug(
-                "Valid ecobee configuration found for import, creating config entry"
+                "Valid ecobee configuration found for import, creating configuration entry"
             )
             return self.async_create_entry(
                 title=DOMAIN,

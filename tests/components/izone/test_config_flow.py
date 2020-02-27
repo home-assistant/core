@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.izone.const import IZONE, DISPATCH_CONTROLLER_DISCOVERED
+from homeassistant.components.izone.const import DISPATCH_CONTROLLER_DISCOVERED, IZONE
 
 from tests.common import mock_coro
 
@@ -33,9 +33,9 @@ async def test_not_found(hass, mock_disco):
     """Test not finding iZone controller."""
 
     with patch(
-        "homeassistant.components.izone.discovery.async_start_discovery_service"
+        "homeassistant.components.izone.config_flow.async_start_discovery_service"
     ) as start_disco, patch(
-        "homeassistant.components.izone.discovery.async_stop_discovery_service",
+        "homeassistant.components.izone.config_flow.async_stop_discovery_service",
         return_value=mock_coro(),
     ) as stop_disco:
         start_disco.side_effect = _mock_start_discovery(hass, mock_disco)
@@ -62,7 +62,7 @@ async def test_found(hass, mock_disco):
         "homeassistant.components.izone.climate.async_setup_entry",
         return_value=mock_coro(True),
     ) as mock_setup, patch(
-        "homeassistant.components.izone.discovery.async_start_discovery_service"
+        "homeassistant.components.izone.config_flow.async_start_discovery_service"
     ) as start_disco, patch(
         "homeassistant.components.izone.async_start_discovery_service",
         return_value=mock_coro(),

@@ -2,13 +2,14 @@
 import logging
 import socket
 import ssl
+
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PORT, CONF_NAME, CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DOMAIN, DEFAULT_PORT, DEFAULT_NAME
+from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 from .helper import get_cert
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,7 +69,7 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return False
 
     async def async_step_user(self, user_input=None):
-        """Step when user intializes a integration."""
+        """Step when user initializes a integration."""
         self._errors = {}
         if user_input is not None:
             # set some defaults in case we need to return to the form

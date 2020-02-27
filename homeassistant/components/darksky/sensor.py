@@ -1,12 +1,11 @@
 """Support for Dark Sky weather service."""
-import logging
 from datetime import timedelta
+import logging
 
 import forecastio
-import voluptuous as vol
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -15,9 +14,14 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
-    UNIT_UV_INDEX,
     CONF_SCAN_INTERVAL,
+    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_METERS_PER_SECOND,
+    SPEED_MILES_PER_HOUR,
+    TIME_HOURS,
+    UNIT_UV_INDEX,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -99,11 +103,11 @@ SENSOR_TYPES = {
     ],
     "precip_intensity": [
         "Precip Intensity",
-        "mm/h",
+        f"mm/{TIME_HOURS}",
         "in",
-        "mm/h",
-        "mm/h",
-        "mm/h",
+        f"mm/{TIME_HOURS}",
+        f"mm/{TIME_HOURS}",
+        f"mm/{TIME_HOURS}",
         "mdi:weather-rainy",
         ["currently", "minutely", "hourly", "daily"],
     ],
@@ -159,11 +163,11 @@ SENSOR_TYPES = {
     ],
     "wind_speed": [
         "Wind Speed",
-        "m/s",
-        "mph",
-        "km/h",
-        "mph",
-        "mph",
+        SPEED_METERS_PER_SECOND,
+        SPEED_MILES_PER_HOUR,
+        SPEED_KILOMETERS_PER_HOUR,
+        SPEED_MILES_PER_HOUR,
+        SPEED_MILES_PER_HOUR,
         "mdi:weather-windy",
         ["currently", "hourly", "daily"],
     ],
@@ -179,11 +183,11 @@ SENSOR_TYPES = {
     ],
     "wind_gust": [
         "Wind Gust",
-        "m/s",
-        "mph",
-        "km/h",
-        "mph",
-        "mph",
+        SPEED_METERS_PER_SECOND,
+        SPEED_MILES_PER_HOUR,
+        SPEED_KILOMETERS_PER_HOUR,
+        SPEED_MILES_PER_HOUR,
+        SPEED_MILES_PER_HOUR,
         "mdi:weather-windy-variant",
         ["currently", "hourly", "daily"],
     ],
@@ -319,11 +323,11 @@ SENSOR_TYPES = {
     ],
     "precip_intensity_max": [
         "Daily Max Precip Intensity",
-        "mm/h",
+        f"mm/{TIME_HOURS}",
         "in",
-        "mm/h",
-        "mm/h",
-        "mm/h",
+        f"mm/{TIME_HOURS}",
+        f"mm/{TIME_HOURS}",
+        f"mm/{TIME_HOURS}",
         "mdi:thermometer",
         ["daily"],
     ],
@@ -385,7 +389,7 @@ CONDITION_PICTURES = {
     ],
     "partly-cloudy-night": [
         "/static/images/darksky/weather-cloudy.svg",
-        "mdi:weather-partly-cloudy",
+        "mdi:weather-night-partly-cloudy",
     ],
 }
 
@@ -750,7 +754,7 @@ class DarkSkyAlertSensor(Entity):
         for i, alert in enumerate(data):
             for attr in ALERTS_ATTRS:
                 if multiple_alerts:
-                    dkey = attr + "_" + str(i)
+                    dkey = f"{attr}_{i!s}"
                 else:
                     dkey = attr
                 alerts[dkey] = getattr(alert, attr)

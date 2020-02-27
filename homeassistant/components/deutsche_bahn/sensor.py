@@ -2,9 +2,8 @@
 from datetime import timedelta
 import logging
 
-import voluptuous as vol
-
 import schiene
+import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
@@ -83,7 +82,7 @@ class DeutscheBahnSensor(Entity):
         self.data.update()
         self._state = self.data.connections[0].get("departure", "Unknown")
         if self.data.connections[0].get("delay", 0) != 0:
-            self._state += " + {}".format(self.data.connections[0]["delay"])
+            self._state += f" + {self.data.connections[0]['delay']}"
 
 
 class SchieneData:

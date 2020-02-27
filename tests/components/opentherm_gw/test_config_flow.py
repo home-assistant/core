@@ -1,18 +1,19 @@
 """Test the Opentherm Gateway config flow."""
 import asyncio
-from serial import SerialException
 from unittest.mock import patch
 
+from pyotgw import OTGW_ABOUT
+from serial import SerialException
+
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_NAME, PRECISION_HALVES
 from homeassistant.components.opentherm_gw.const import (
-    DOMAIN,
     CONF_FLOOR_TEMP,
     CONF_PRECISION,
+    DOMAIN,
 )
+from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_NAME, PRECISION_HALVES
 
-from pyotgw import OTGW_ABOUT
-from tests.common import mock_coro, MockConfigEntry
+from tests.common import MockConfigEntry, mock_coro
 
 
 async def test_form_user(hass):
@@ -181,13 +182,13 @@ async def test_options_form(hass):
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.options.flow.async_init(
+    result = await hass.config_entries.options.async_init(
         entry.entry_id, context={"source": "test"}, data=None
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
-    result = await hass.config_entries.options.flow.async_configure(
+    result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={CONF_FLOOR_TEMP: True, CONF_PRECISION: PRECISION_HALVES},
     )
@@ -196,11 +197,11 @@ async def test_options_form(hass):
     assert result["data"][CONF_PRECISION] == PRECISION_HALVES
     assert result["data"][CONF_FLOOR_TEMP] is True
 
-    result = await hass.config_entries.options.flow.async_init(
+    result = await hass.config_entries.options.async_init(
         entry.entry_id, context={"source": "test"}, data=None
     )
 
-    result = await hass.config_entries.options.flow.async_configure(
+    result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_PRECISION: 0}
     )
 

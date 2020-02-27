@@ -12,6 +12,9 @@ ZEROCONF = {
     "_coap._udp.local.": [
         "tradfri"
     ],
+    "_elg._tcp.local.": [
+        "elgato"
+    ],
     "_esphomelib._tcp.local.": [
         "esphome"
     ],
@@ -20,12 +23,27 @@ ZEROCONF = {
     ],
     "_hap._tcp.local.": [
         "homekit_controller"
+    ],
+    "_printer._tcp.local.": [
+        "brother"
+    ],
+    "_spotify-connect._tcp.local.": [
+        "spotify"
+    ],
+    "_viziocast._tcp.local.": [
+        "vizio"
+    ],
+    "_wled._tcp.local.": [
+        "wled"
     ]
 }
 
 HOMEKIT = {
     "BSB002": "hue",
     "LIFX": "lifx",
+    "Netatmo Relay": "netatmo",
+    "Presence": "netatmo",
     "TRADFRI": "tradfri",
+    "Welcome": "netatmo",
     "Wemo": "wemo"
 }

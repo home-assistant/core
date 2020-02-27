@@ -10,10 +10,12 @@ from homeassistant.components.image_processing import (
     CONF_SOURCE,
     ImageProcessingFaceEntity,
 )
+from homeassistant.core import split_entity_id
 
 # pylint: disable=unused-import
-from homeassistant.components.image_processing import PLATFORM_SCHEMA  # noqa
-from homeassistant.core import split_entity_id
+from homeassistant.components.image_processing import (  # noqa: F401, isort:skip
+    PLATFORM_SCHEMA,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +45,7 @@ class DlibFaceDetectEntity(ImageProcessingFaceEntity):
         if name:
             self._name = name
         else:
-            self._name = "Dlib Face {0}".format(split_entity_id(camera_entity)[1])
+            self._name = f"Dlib Face {split_entity_id(camera_entity)[1]}"
 
     @property
     def camera_entity(self):

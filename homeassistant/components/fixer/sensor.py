@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+from fixerio import Fixerio
+from fixerio.exceptions import FixerioException
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -35,7 +37,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Fixer.io sensor."""
-    from fixerio import Fixerio, exceptions
 
     api_key = config.get(CONF_API_KEY)
     name = config.get(CONF_NAME)
@@ -43,7 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         Fixerio(symbols=[target], access_key=api_key).latest()
-    except exceptions.FixerioException:
+    except FixerioException:
         _LOGGER.error("One of the given currencies is not supported")
         return
 
@@ -102,7 +103,6 @@ class ExchangeData:
 
     def __init__(self, target_currency, api_key):
         """Initialize the data object."""
-        from fixerio import Fixerio
 
         self.api_key = api_key
         self.rate = None

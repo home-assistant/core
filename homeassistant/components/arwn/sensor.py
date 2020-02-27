@@ -3,8 +3,8 @@ import json
 import logging
 
 from homeassistant.components import mqtt
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
-from homeassistant.const import TEMP_FAHRENHEIT, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
@@ -50,7 +50,7 @@ def discover_sensors(topic, payload):
 
 
 def _slug(name):
-    return "sensor.arwn_{}".format(slugify(name))
+    return f"sensor.arwn_{slugify(name)}"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

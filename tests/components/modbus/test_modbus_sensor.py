@@ -1,14 +1,9 @@
 """The tests for the Modbus sensor component."""
-import pytest
 from datetime import timedelta
 from unittest import mock
 
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_OFFSET,
-    CONF_PLATFORM,
-    CONF_SCAN_INTERVAL,
-)
+import pytest
+
 from homeassistant.components.modbus import DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN
 from homeassistant.components.modbus.sensor import (
     CONF_COUNT,
@@ -22,13 +17,20 @@ from homeassistant.components.modbus.sensor import (
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
     DATA_TYPE_UINT,
-    REGISTER_TYPE_HOLDING,
-    REGISTER_TYPE_INPUT,
+    DEFAULT_REGISTER_TYPE_HOLDING,
+    DEFAULT_REGISTER_TYPE_INPUT,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_OFFSET,
+    CONF_PLATFORM,
+    CONF_SCAN_INTERVAL,
+)
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-from tests.common import MockModule, mock_integration, async_fire_time_changed
+
+from tests.common import MockModule, async_fire_time_changed, mock_integration
 
 
 @pytest.fixture()
@@ -70,7 +72,7 @@ async def run_test(hass, mock_hub, register_config, register_words, expected):
 
     # Setup inputs for the sensor
     read_result = ReadResult(register_words)
-    if register_config.get(CONF_REGISTER_TYPE) == REGISTER_TYPE_INPUT:
+    if register_config.get(CONF_REGISTER_TYPE) == DEFAULT_REGISTER_TYPE_INPUT:
         mock_hub.read_input_registers.return_value = read_result
     else:
         mock_hub.read_holding_registers.return_value = read_result
@@ -308,7 +310,7 @@ async def test_two_word_input_register(hass, mock_hub):
     """Test reaging of input register."""
     register_config = {
         CONF_COUNT: 2,
-        CONF_REGISTER_TYPE: REGISTER_TYPE_INPUT,
+        CONF_REGISTER_TYPE: DEFAULT_REGISTER_TYPE_INPUT,
         CONF_DATA_TYPE: DATA_TYPE_UINT,
         CONF_SCALE: 1,
         CONF_OFFSET: 0,
@@ -327,7 +329,7 @@ async def test_two_word_holding_register(hass, mock_hub):
     """Test reaging of holding register."""
     register_config = {
         CONF_COUNT: 2,
-        CONF_REGISTER_TYPE: REGISTER_TYPE_HOLDING,
+        CONF_REGISTER_TYPE: DEFAULT_REGISTER_TYPE_HOLDING,
         CONF_DATA_TYPE: DATA_TYPE_UINT,
         CONF_SCALE: 1,
         CONF_OFFSET: 0,
@@ -346,7 +348,7 @@ async def test_float_data_type(hass, mock_hub):
     """Test floating point register data type."""
     register_config = {
         CONF_COUNT: 2,
-        CONF_REGISTER_TYPE: REGISTER_TYPE_HOLDING,
+        CONF_REGISTER_TYPE: DEFAULT_REGISTER_TYPE_HOLDING,
         CONF_DATA_TYPE: DATA_TYPE_FLOAT,
         CONF_SCALE: 1,
         CONF_OFFSET: 0,

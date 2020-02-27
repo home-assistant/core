@@ -1,15 +1,15 @@
 """Tracks the latency of a host by sending ICMP echo requests (ping)."""
-import logging
-import subprocess
-import re
-import sys
 from datetime import timedelta
+import logging
+import re
+import subprocess
+import sys
 
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.const import CONF_HOST, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.binary_sensor import BinarySensorDevice, PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_HOST
 
 _LOGGER = logging.getLogger(__name__)
 

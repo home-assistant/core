@@ -3,7 +3,6 @@ from collections import OrderedDict
 import queue
 
 import voluptuous as vol
-import paho.mqtt.client as mqtt
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -126,6 +125,8 @@ class FlowHandler(config_entries.ConfigFlow):
 
 def try_connection(broker, port, username, password, protocol="3.1"):
     """Test if we can connect to an MQTT broker."""
+    import paho.mqtt.client as mqtt
+
     if protocol == "3.1":
         proto = mqtt.MQTTv31
     else:

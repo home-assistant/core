@@ -1,10 +1,11 @@
 """The tests for the Yamaha Media player platform."""
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-from homeassistant.setup import setup_component
 import homeassistant.components.media_player as mp
 from homeassistant.components.yamaha import media_player as yamaha
+from homeassistant.setup import setup_component
+
 from tests.common import get_test_home_assistant
 
 

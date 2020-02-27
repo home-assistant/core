@@ -1,9 +1,9 @@
 """Test the solarlog config flow."""
 from unittest.mock import patch
+
 import pytest
 
-from homeassistant import data_entry_flow
-from homeassistant import config_entries, setup
+from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.solarlog import config_flow
 from homeassistant.components.solarlog.const import DEFAULT_HOST, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -46,7 +46,7 @@ async def test_form(hass):
 
 @pytest.fixture(name="test_connect")
 def mock_controller():
-    """Mock a successfull _host_in_configuration_exists."""
+    """Mock a successful _host_in_configuration_exists."""
     with patch(
         "homeassistant.components.solarlog.config_flow.SolarLogConfigFlow._test_connection",
         side_effect=lambda *_: mock_coro(True),

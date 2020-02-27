@@ -3,9 +3,6 @@ Support for Rejseplanen information from rejseplanen.dk.
 
 For more info on the API see:
 https://help.rejseplanen.dk/hc/en-us/articles/214174465-Rejseplanen-s-API
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.rejseplanen/
 """
 from datetime import datetime, timedelta
 import logging
@@ -15,7 +12,7 @@ import rjpl
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
@@ -133,7 +130,7 @@ class RejseplanenTransportSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return "min"
+        return TIME_MINUTES
 
     @property
     def icon(self):

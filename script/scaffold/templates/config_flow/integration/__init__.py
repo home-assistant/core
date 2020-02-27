@@ -3,8 +3,8 @@ import asyncio
 
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
@@ -21,9 +21,9 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up Somfy from a config entry."""
+    """Set up NEW_NAME from a config entry."""
     # TODO Store an API object for your platforms to access
-    # hass.data[DOMAIN][entry.entry_id] = MyApi(…)
+    # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
 
     for component in PLATFORMS:
         hass.async_create_task(

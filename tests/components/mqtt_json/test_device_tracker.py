@@ -2,18 +2,18 @@
 import json
 import logging
 import os
+
 from asynctest import patch
 import pytest
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components.device_tracker.legacy import (
-    YAML_DEVICES,
-    ENTITY_ID_FORMAT,
     DOMAIN as DT_DOMAIN,
+    YAML_DEVICES,
 )
 from homeassistant.const import CONF_PLATFORM
+from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_mqtt_component, async_fire_mqtt_message
+from tests.common import async_fire_mqtt_message, async_mock_mqtt_component
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ async def test_ensure_device_tracker_platform_validation(hass):
         assert "qos" in config
 
     with patch(
-        "homeassistant.components.mqtt_json.device_tracker." "async_setup_scanner",
+        "homeassistant.components.mqtt_json.device_tracker.async_setup_scanner",
         autospec=True,
         side_effect=mock_setup_scanner,
     ) as mock_sp:
@@ -160,7 +160,7 @@ async def test_multi_level_wildcard_topic(hass):
 async def test_single_level_wildcard_topic_not_matching(hass):
     """Test not matching single level wildcard topic."""
     dev_id = "zanzito"
-    entity_id = ENTITY_ID_FORMAT.format(dev_id)
+    entity_id = f"{DT_DOMAIN}.{dev_id}"
     subscription = "location/+/zanzito"
     topic = "location/zanzito"
     location = json.dumps(LOCATION_MESSAGE)
@@ -178,7 +178,7 @@ async def test_single_level_wildcard_topic_not_matching(hass):
 async def test_multi_level_wildcard_topic_not_matching(hass):
     """Test not matching multi level wildcard topic."""
     dev_id = "zanzito"
-    entity_id = ENTITY_ID_FORMAT.format(dev_id)
+    entity_id = f"{DT_DOMAIN}.{dev_id}"
     subscription = "location/#"
     topic = "somewhere/zanzito"
     location = json.dumps(LOCATION_MESSAGE)

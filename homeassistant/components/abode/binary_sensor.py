@@ -5,6 +5,7 @@ import abodepy.helpers.constants as CONST
 import abodepy.helpers.timeline as TIMELINE
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import AbodeAutomation, AbodeDevice
 from .const import DOMAIN
@@ -12,13 +13,8 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform uses config entry setup."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up a sensor for an Abode device."""
+    """Set up Abode binary sensor devices."""
     data = hass.data[DOMAIN]
 
     device_types = [
@@ -29,19 +25,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         CONST.TYPE_OPENING,
     ]
 
-    devices = []
+    entities = []
 
     for device in data.abode.get_devices(generic_type=device_types):
-        devices.append(AbodeBinarySensor(data, device))
+        entities.append(AbodeBinarySensor(data, device))
 
     for automation in data.abode.get_automations(generic_type=CONST.TYPE_QUICK_ACTION):
-        devices.append(
+        entities.append(
             AbodeQuickActionBinarySensor(
                 data, automation, TIMELINE.AUTOMATION_EDIT_GROUP
             )
         )
 
-    async_add_entities(devices)
+    async_add_entities(entities)
 
 
 class AbodeBinarySensor(AbodeDevice, BinarySensorDevice):
@@ -60,6 +56,12 @@ class AbodeBinarySensor(AbodeDevice, BinarySensorDevice):
 
 class AbodeQuickActionBinarySensor(AbodeAutomation, BinarySensorDevice):
     """A binary sensor implementation for Abode quick action automations."""
+
+    async def async_added_to_hass(self):
+        """Subscribe Abode events."""
+        await super().async_added_to_hass()
+        signal = f"abode_trigger_quick_action_{self.entity_id}"
+        async_dispatcher_connect(self.hass, signal, self.trigger)
 
     def trigger(self):
         """Trigger a quick automation."""

@@ -29,5 +29,35 @@
             }
         },
         "title": "deCONZ"
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "side_1": "\u7b2c 1 \u9762",
+            "side_2": "\u7b2c 2 \u9762",
+            "side_3": "\u7b2c 3 \u9762",
+            "side_4": "\u7b2c 4 \u9762",
+            "side_5": "\u7b2c 5 \u9762",
+            "side_6": "\u7b2c 6 \u9762"
+        },
+        "trigger_type": {
+            "remote_awakened": "\u8bbe\u5907\u5524\u9192",
+            "remote_double_tap": "\u8bbe\u5907\u7684\u201c{subtype}\u201d\u88ab\u8f7b\u6572\u4e24\u6b21",
+            "remote_falling": "\u8bbe\u5907\u81ea\u7531\u843d\u4f53",
+            "remote_gyro_activated": "\u8bbe\u5907\u6447\u6643",
+            "remote_moved": "\u8bbe\u5907\u6c34\u5e73\u79fb\u52a8\u4e14\u201c{subtype}\u201d\u671d\u4e0a",
+            "remote_rotate_from_side_1": "\u8bbe\u5907\u4ece\u201c\u7b2c 1 \u9762\u201d\u7ffb\u8f6c\u5230\u201c{subtype}\u201d",
+            "remote_rotate_from_side_2": "\u8bbe\u5907\u4ece\u201c\u7b2c 2 \u9762\u201d\u7ffb\u8f6c\u5230\u201c{subtype}\u201d",
+            "remote_rotate_from_side_3": "\u8bbe\u5907\u4ece\u201c\u7b2c 3 \u9762\u201d\u7ffb\u8f6c\u5230\u201c{subtype}\u201d",
+            "remote_rotate_from_side_4": "\u8bbe\u5907\u4ece\u201c\u7b2c 4 \u9762\u201d\u7ffb\u8f6c\u5230\u201c{subtype}\u201d",
+            "remote_rotate_from_side_5": "\u8bbe\u5907\u4ece\u201c\u7b2c 5 \u9762\u201d\u7ffb\u8f6c\u5230\u201c{subtype}\u201d",
+            "remote_rotate_from_side_6": "\u8bbe\u5907\u4ece\u201c\u7b2c 6 \u9762\u201d\u7ffb\u8f6c\u5230\u201c{subtype}\u201d"
+        }
+    },
+    "options": {
+        "step": {
+            "deconz_devices": {
+                "title": "deCONZ \u9009\u9879"
+            }
+        }
     }
 }
