@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 import logging
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 
 from aiofreepybox import Freepybox
 from aiofreepybox.api.system import System
@@ -71,7 +71,7 @@ class FreeboxRouter:
         await self.update_all()
         async_track_time_interval(self.hass, self.update_all, SCAN_INTERVAL)
 
-    async def update_all(self, now: datetime = None) -> None:
+    async def update_all(self, now: Optional[datetime] = None) -> None:
         """Update all Freebox platforms."""
         await self.update_sensors()
         await self.update_devices()
