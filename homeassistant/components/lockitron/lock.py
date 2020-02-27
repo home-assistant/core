@@ -16,15 +16,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_ACCESS_TOKEN): cv.string, vol.Required(CONF_ID): cv.string}
 )
 BASE_URL = "https://api.lockitron.com"
-API_STATE_URL = BASE_URL + "/v2/locks/{}?access_token={}"
-API_ACTION_URL = BASE_URL + "/v2/locks/{}?access_token={}&state={}"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Lockitron platform."""
     access_token = config.get(CONF_ACCESS_TOKEN)
     device_id = config.get(CONF_ID)
-    response = requests.get(API_STATE_URL.format(device_id, access_token), timeout=5)
+    response = requests.get(
+        f"{BASE_URL}/v2/locks/{device_id}?access_token={access_token}", timeout=5
+    )
     if response.status_code == 200:
         add_entities([Lockitron(response.json()["state"], access_token, device_id)])
     else:
@@ -64,7 +64,8 @@ class Lockitron(LockDevice):
     def update(self):
         """Update the internal state of the device."""
         response = requests.get(
-            API_STATE_URL.format(self.device_id, self.access_token), timeout=5
+            f"{BASE_URL}/v2/locks/{self.device_id}?access_token={self.access_token}",
+            timeout=5,
         )
         if response.status_code == 200:
             self._state = response.json()["state"]
@@ -74,7 +75,7 @@ class Lockitron(LockDevice):
     def do_change_request(self, requested_state):
         """Execute the change request and pull out the new state."""
         response = requests.put(
-            API_ACTION_URL.format(self.device_id, self.access_token, requested_state),
+            f"{BASE_URL}/v2/locks/{self.device_id}?access_token={self.access_token}&state={requested_state}",
             timeout=5,
         )
         if response.status_code == 200:
