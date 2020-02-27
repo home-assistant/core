@@ -5,9 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components import light
 from homeassistant.components.mqtt import ATTR_DISCOVERY_HASH
-from homeassistant.components.mqtt.discovery import (
-    clear_discovery_hash,
-)
+from homeassistant.components.mqtt.discovery import clear_discovery_hash
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
