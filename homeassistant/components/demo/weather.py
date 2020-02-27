@@ -106,7 +106,7 @@ class DemoWeather(WeatherEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format("Demo Weather", self._name)
+        return f"Demo Weather {self._name}"
 
     @property
     def should_poll(self):

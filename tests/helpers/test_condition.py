@@ -176,3 +176,37 @@ async def test_if_numeric_state_not_raise_on_unavailable(hass):
         hass.states.async_set("sensor.temperature", "unknown")
         assert not test(hass)
         assert len(logwarn.mock_calls) == 0
+
+
+async def test_extract_entities():
+    """Test extracting entities."""
+    condition.async_extract_entities(
+        {
+            "condition": "and",
+            "conditions": [
+                {
+                    "condition": "state",
+                    "entity_id": "sensor.temperature",
+                    "state": "100",
+                },
+                {
+                    "condition": "numeric_state",
+                    "entity_id": "sensor.temperature_2",
+                    "below": 110,
+                },
+            ],
+        }
+    ) == {"sensor.temperature", "sensor.temperature_2"}
+
+
+async def test_extract_devices():
+    """Test extracting devices."""
+    condition.async_extract_devices(
+        {
+            "condition": "and",
+            "conditions": [
+                {"condition": "device", "device_id": "abcd", "domain": "light"},
+                {"condition": "device", "device_id": "qwer", "domain": "switch"},
+            ],
+        }
+    ) == {"abcd", "qwer"}

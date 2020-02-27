@@ -185,22 +185,23 @@ class RussoundZoneDevice(MediaPlayerDevice):
         """
         return float(self._zone_var("volume", 0)) / 50.0
 
-    def async_turn_off(self):
+    async def async_turn_off(self):
         """Turn off the zone."""
-        return self._russ.send_zone_event(self._zone_id, "ZoneOff")
+        await self._russ.send_zone_event(self._zone_id, "ZoneOff")
 
-    def async_turn_on(self):
+    async def async_turn_on(self):
         """Turn on the zone."""
-        return self._russ.send_zone_event(self._zone_id, "ZoneOn")
+        await self._russ.send_zone_event(self._zone_id, "ZoneOn")
 
-    def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume):
         """Set the volume level."""
         rvol = int(volume * 50.0)
-        return self._russ.send_zone_event(self._zone_id, "KeyPress", "Volume", rvol)
+        await self._russ.send_zone_event(self._zone_id, "KeyPress", "Volume", rvol)
 
-    def async_select_source(self, source):
+    async def async_select_source(self, source):
         """Select the source input for this zone."""
         for source_id, name in self._sources:
             if name.lower() != source.lower():
                 continue
-            return self._russ.send_zone_event(self._zone_id, "SelectSource", source_id)
+            await self._russ.send_zone_event(self._zone_id, "SelectSource", source_id)
+            break

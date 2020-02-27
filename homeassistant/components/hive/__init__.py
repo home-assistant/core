@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "hive"
 DATA_HIVE = "data_hive"
-SERVICES = ["Heating", "HotWater"]
+SERVICES = ["Heating", "HotWater", "TRV"]
 SERVICE_BOOST_HOT_WATER = "boost_hot_water"
 SERVICE_BOOST_HEATING = "boost_heating"
 ATTR_TIME_PERIOD = "time_period"

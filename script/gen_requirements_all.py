@@ -33,6 +33,7 @@ COMMENT_REQUIREMENTS = (
     "PySwitchbot",
     "pySwitchmate",
     "python-eq3bt",
+    "python-gammu",
     "python-lirc",
     "pyuserinput",
     "raspihats",
@@ -57,6 +58,9 @@ CONSTRAINT_PATH = os.path.join(
 CONSTRAINT_BASE = """
 pycryptodome>=3.6.6
 
+# Constrain urllib3 to ensure we deal with CVE-2019-11236 & CVE-2019-11324
+urllib3>=1.24.3
+
 # Not needed for our supported Python versions
 enum34==1000000000.0.0
 
@@ -64,7 +68,7 @@ enum34==1000000000.0.0
 pycrypto==1000000000.0.0
 """
 
-IGNORE_PRE_COMMIT_HOOK_ID = ("check-json",)
+IGNORE_PRE_COMMIT_HOOK_ID = ("check-json", "no-commit-to-branch")
 
 
 def has_tests(module: str):
@@ -252,7 +256,7 @@ def requirements_test_output(reqs):
 
 def requirements_pre_commit_output():
     """Generate output for pre-commit dependencies."""
-    source = ".pre-commit-config-all.yaml"
+    source = ".pre-commit-config.yaml"
     pre_commit_conf = load_yaml(source)
     reqs = []
     for repo in (x for x in pre_commit_conf["repos"] if x.get("rev")):

@@ -1,7 +1,7 @@
 """Support for Homekit covers."""
 import logging
 
-from homekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -16,6 +16,7 @@ from homeassistant.components.cover import (
     CoverDevice,
 )
 from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
+from homeassistant.core import callback
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
@@ -41,6 +42,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]
 
+    @callback
     def async_add_service(aid, service):
         info = {"aid": aid, "iid": service["iid"]}
         if service["stype"] == "garage-door-opener":

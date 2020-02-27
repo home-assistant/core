@@ -4,6 +4,7 @@ import logging
 
 from eagle200_reader import EagleReader
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
+from uEagle import Eagle as LegacyReader
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -49,6 +50,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+def hwtest(cloud_id, install_code, ip_address):
+    """Try API call 'get_network_info' to see if target device is Legacy or Eagle-200."""
+    reader = LeagleReader(cloud_id, install_code, ip_address)
+    response = reader.get_network_info()
+
+    # Branch to test if target is Legacy Model
+    if "NetworkInfo" in response:
+        if response["NetworkInfo"].get("ModelId", None) == "Z109-EAGLE":
+            return reader
+
+    # Branch to test if target is Eagle-200 Model
+    if "Response" in response:
+        if response["Response"].get("Command", None) == "get_network_info":
+            return EagleReader(ip_address, cloud_id, install_code)
+
+    # Catch-all if hardware ID tests fail
+    raise ValueError("Couldn't determine device model.")
+
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the Eagle-200 sensor."""
     ip_address = config[CONF_IP_ADDRESS]
@@ -56,7 +76,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     install_code = config[CONF_INSTALL_CODE]
 
     try:
-        eagle_reader = EagleReader(ip_address, cloud_id, install_code)
+        eagle_reader = hwtest(cloud_id, install_code, ip_address)
     except (ConnectError, HTTPError, Timeout, ValueError) as error:
         _LOGGER.error("Failed to connect during setup: %s", error)
         return
@@ -138,3 +158,21 @@ class EagleData:
         state = self.data.get(sensor_type)
         _LOGGER.debug("Updating: %s - %s", sensor_type, state)
         return state
+
+
+class LeagleReader(LegacyReader):
+    """Wraps uEagle to make it behave like eagle_reader, offering update()."""
+
+    def update(self):
+        """Fetch and return the four sensor values in a dict."""
+        out = {}
+
+        resp = self.get_instantaneous_demand()["InstantaneousDemand"]
+        out["instantanous_demand"] = resp["Demand"]
+
+        resp = self.get_current_summation()["CurrentSummation"]
+        out["summation_delivered"] = resp["SummationDelivered"]
+        out["summation_received"] = resp["SummationReceived"]
+        out["summation_total"] = out["summation_delivered"] - out["summation_received"]
+
+        return out

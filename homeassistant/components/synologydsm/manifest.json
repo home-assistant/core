@@ -2,7 +2,7 @@
   "domain": "synologydsm",
   "name": "SynologyDSM",
   "documentation": "https://www.home-assistant.io/integrations/synologydsm",
-  "requirements": ["python-synology==0.3.0"],
+  "requirements": ["python-synology==0.4.0"],
   "dependencies": [],
   "codeowners": []
 }

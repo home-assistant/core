@@ -11,6 +11,9 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -36,10 +39,6 @@ CONF_COUNTRY = "country"
 
 DEFAULT_ATTRIBUTION = "Data provided by AirVisual"
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=10)
-
-MASS_PARTS_PER_MILLION = "ppm"
-MASS_PARTS_PER_BILLION = "ppb"
-VOLUME_MICROGRAMS_PER_CUBIC_METER = "µg/m3"
 
 SENSOR_TYPE_LEVEL = "air_pollution_level"
 SENSOR_TYPE_AQI = "air_quality_index"
@@ -70,12 +69,12 @@ POLLUTANT_LEVEL_MAPPING = [
 ]
 
 POLLUTANT_MAPPING = {
-    "co": {"label": "Carbon Monoxide", "unit": MASS_PARTS_PER_MILLION},
-    "n2": {"label": "Nitrogen Dioxide", "unit": MASS_PARTS_PER_BILLION},
-    "o3": {"label": "Ozone", "unit": MASS_PARTS_PER_BILLION},
-    "p1": {"label": "PM10", "unit": VOLUME_MICROGRAMS_PER_CUBIC_METER},
-    "p2": {"label": "PM2.5", "unit": VOLUME_MICROGRAMS_PER_CUBIC_METER},
-    "s2": {"label": "Sulfur Dioxide", "unit": MASS_PARTS_PER_BILLION},
+    "co": {"label": "Carbon Monoxide", "unit": CONCENTRATION_PARTS_PER_MILLION},
+    "n2": {"label": "Nitrogen Dioxide", "unit": CONCENTRATION_PARTS_PER_BILLION},
+    "o3": {"label": "Ozone", "unit": CONCENTRATION_PARTS_PER_BILLION},
+    "p1": {"label": "PM10", "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    "p2": {"label": "PM2.5", "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    "s2": {"label": "Sulfur Dioxide", "unit": CONCENTRATION_PARTS_PER_BILLION},
 }
 
 SENSOR_LOCALES = {"cn": "Chinese", "us": "U.S."}
@@ -185,7 +184,7 @@ class AirVisualSensor(Entity):
     @property
     def name(self):
         """Return the name."""
-        return "{0} {1}".format(SENSOR_LOCALES[self._locale], self._name)
+        return f"{SENSOR_LOCALES[self._locale]} {self._name}"
 
     @property
     def state(self):

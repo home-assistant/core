@@ -8,7 +8,7 @@ from RMVtransport.rmvtransport import RMVtransportApiConnectionError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, TIME_MINUTES
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -177,7 +177,7 @@ class RMVDepartureSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return "min"
+        return TIME_MINUTES
 
     async def async_update(self):
         """Get the latest data and update the state."""
@@ -233,7 +233,7 @@ class RMVDepartureData:
             )
         except RMVtransportApiConnectionError:
             self.departures = []
-            _LOGGER.warning("Could not retrive data from rmv.de")
+            _LOGGER.warning("Could not retrieve data from rmv.de")
             return
         self.station = _data.get("station")
         _deps = []

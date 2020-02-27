@@ -1,12 +1,16 @@
 """Support for Homekit motion sensors."""
 import logging
 
-from homekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OCCUPANCY,
+    DEVICE_CLASS_OPENING,
     DEVICE_CLASS_SMOKE,
     BinarySensorDevice,
 )
+from homeassistant.core import callback
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
@@ -31,7 +35,7 @@ class HomeKitMotionSensor(HomeKitEntity, BinarySensorDevice):
     @property
     def device_class(self):
         """Define this binary_sensor as a motion sensor."""
-        return "motion"
+        return DEVICE_CLASS_MOTION
 
     @property
     def is_on(self):
@@ -53,6 +57,11 @@ class HomeKitContactSensor(HomeKitEntity, BinarySensorDevice):
 
     def _update_contact_state(self, value):
         self._state = value
+
+    @property
+    def device_class(self):
+        """Define this binary_sensor as a opening sensor."""
+        return DEVICE_CLASS_OPENING
 
     @property
     def is_on(self):
@@ -86,10 +95,37 @@ class HomeKitSmokeSensor(HomeKitEntity, BinarySensorDevice):
         return self._state == 1
 
 
+class HomeKitOccupancySensor(HomeKitEntity, BinarySensorDevice):
+    """Representation of a Homekit smoke sensor."""
+
+    def __init__(self, *args):
+        """Initialise the entity."""
+        super().__init__(*args)
+        self._state = None
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this sensor."""
+        return DEVICE_CLASS_OCCUPANCY
+
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity is tracking."""
+        return [CharacteristicsTypes.OCCUPANCY_DETECTED]
+
+    def _update_occupancy_detected(self, value):
+        self._state = value
+
+    @property
+    def is_on(self):
+        """Return true if smoke is currently detected."""
+        return self._state == 1
+
+
 ENTITY_TYPES = {
     "motion": HomeKitMotionSensor,
     "contact": HomeKitContactSensor,
     "smoke": HomeKitSmokeSensor,
+    "occupancy": HomeKitOccupancySensor,
 }
 
 
@@ -98,6 +134,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]
 
+    @callback
     def async_add_service(aid, service):
         entity_class = ENTITY_TYPES.get(service["stype"])
         if not entity_class:

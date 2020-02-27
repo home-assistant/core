@@ -1,4 +1,5 @@
 """The iCloud component."""
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -16,7 +17,7 @@ from .const import (
     DEFAULT_GPS_ACCURACY_THRESHOLD,
     DEFAULT_MAX_INTERVAL,
     DOMAIN,
-    ICLOUD_COMPONENTS,
+    PLATFORMS,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
@@ -122,11 +123,14 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         hass, username, password, icloud_dir, max_interval, gps_accuracy_threshold,
     )
     await hass.async_add_executor_job(account.setup)
+    if not account.devices:
+        return False
+
     hass.data[DOMAIN][username] = account
 
-    for component in ICLOUD_COMPONENTS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     def play_sound(service: ServiceDataType) -> None:
@@ -207,3 +211,21 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     hass.services.async_register(
         DOMAIN, SERVICE_ICLOUD_UPDATE, update_account, schema=SERVICE_SCHEMA
     )
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+    """Unload a config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.data[CONF_USERNAME])
+
+    return unload_ok

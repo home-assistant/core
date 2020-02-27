@@ -22,7 +22,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SERVICE_PLAY_MEDIA,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, ENTITY_MATCH_ALL
+from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
@@ -90,7 +90,7 @@ SCHEMA_SERVICE_SAY = vol.Schema(
     {
         vol.Required(ATTR_MESSAGE): cv.string,
         vol.Optional(ATTR_CACHE): cv.boolean,
-        vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
+        vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
         vol.Optional(ATTR_LANGUAGE): cv.string,
         vol.Optional(ATTR_OPTIONS): dict,
     }
@@ -148,7 +148,7 @@ async def async_setup(hass, config):
 
         async def async_say_handle(service):
             """Service handle for say."""
-            entity_ids = service.data.get(ATTR_ENTITY_ID, ENTITY_MATCH_ALL)
+            entity_ids = service.data[ATTR_ENTITY_ID]
             message = service.data.get(ATTR_MESSAGE)
             cache = service.data.get(ATTR_CACHE)
             language = service.data.get(ATTR_LANGUAGE)
@@ -501,14 +501,12 @@ class Provider:
         """Load tts audio file from provider."""
         raise NotImplementedError()
 
-    def async_get_tts_audio(self, message, language, options=None):
+    async def async_get_tts_audio(self, message, language, options=None):
         """Load tts audio file from provider.
 
         Return a tuple of file extension and data as bytes.
-
-        This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(
+        return await self.hass.async_add_job(
             ft.partial(self.get_tts_audio, message, language, options=options)
         )
 

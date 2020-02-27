@@ -2,6 +2,7 @@
 from datetime import timedelta
 import functools as ft
 import logging
+from typing import Any, Iterable
 
 import voluptuous as vol
 
@@ -19,9 +20,10 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.loader import bind_hass
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
+# mypy: allow-untyped-calls
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,12 +59,12 @@ REMOTE_SERVICE_ACTIVITY_SCHEMA = make_entity_service_schema(
 
 
 @bind_hass
-def is_on(hass, entity_id):
+def is_on(hass: HomeAssistantType, entity_id: str) -> bool:
     """Return if the remote is on based on the statemachine."""
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Track states and offer events for remotes."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     await component.async_setup(config)
@@ -111,32 +113,26 @@ class RemoteDevice(ToggleEntity):
     """Representation of a remote."""
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         return 0
 
-    def send_command(self, command, **kwargs):
-        """Send a command to a device."""
+    def send_command(self, command: Iterable[str], **kwargs: Any) -> None:
+        """Send commands to a device."""
         raise NotImplementedError()
 
-    def async_send_command(self, command, **kwargs):
-        """Send a command to a device.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_executor_job(
+    async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
+        """Send commands to a device."""
+        assert self.hass is not None
+        await self.hass.async_add_executor_job(
             ft.partial(self.send_command, command, **kwargs)
         )
 
-    def learn_command(self, **kwargs):
+    def learn_command(self, **kwargs: Any) -> None:
         """Learn a command from a device."""
         raise NotImplementedError()
 
-    def async_learn_command(self, **kwargs):
-        """Learn a command from a device.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_executor_job(
-            ft.partial(self.learn_command, **kwargs)
-        )
+    async def async_learn_command(self, **kwargs: Any) -> None:
+        """Learn a command from a device."""
+        assert self.hass is not None
+        await self.hass.async_add_executor_job(ft.partial(self.learn_command, **kwargs))

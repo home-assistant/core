@@ -26,7 +26,6 @@ from homeassistant.const import (
     URL_API_EVENTS,
     URL_API_SERVICES,
     URL_API_STATES,
-    URL_API_STATES_ENTITY,
     URL_API_STREAM,
     URL_API_TEMPLATE,
     __version__,
@@ -254,7 +253,7 @@ class APIEntityStateView(HomeAssistantView):
         status_code = HTTP_CREATED if is_new_state else 200
         resp = self.json(hass.states.get(entity_id), status_code)
 
-        resp.headers.add("Location", URL_API_STATES_ENTITY.format(entity_id))
+        resp.headers.add("Location", f"/api/states/{entity_id}")
 
         return resp
 
@@ -411,6 +410,7 @@ async def async_services_json(hass):
     return [{"domain": key, "services": value} for key, value in descriptions.items()]
 
 
+@ha.callback
 def async_events_json(hass):
     """Generate event data to JSONify."""
     return [

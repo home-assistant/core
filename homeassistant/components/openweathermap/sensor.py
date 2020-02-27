@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -33,7 +34,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 SENSOR_TYPES = {
     "weather": ["Condition", None],
     "temperature": ["Temperature", None],
-    "wind_speed": ["Wind speed", "m/s"],
+    "wind_speed": ["Wind speed", SPEED_METERS_PER_SECOND],
     "wind_bearing": ["Wind bearing", "°"],
     "humidity": ["Humidity", "%"],
     "pressure": ["Pressure", "mbar"],
