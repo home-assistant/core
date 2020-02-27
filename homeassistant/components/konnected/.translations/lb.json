@@ -14,6 +14,10 @@
                 "description": "Modell: {model}\nHost: {host}\nPort: {port}\n\nDir k\u00ebnnt den I/O a Panel Verhaalen an de Konnected Alarm Panel Astellunge konfigur\u00e9ieren.",
                 "title": "Konnected Apparat parat"
             },
+            "import_confirm": {
+                "description": "Ee Konnected Alarm Pael mat der ID {id} gouf an der configuration.yaml entdeckt. D\u00ebsen Oflaf erlaabt et als eng Konfiguratioun z'import\u00e9ieren.",
+                "title": "Konnected Apparat import\u00e9ieren"
+            },
             "user": {
                 "data": {
                     "host": "Konnected Apparat IP Adress",
