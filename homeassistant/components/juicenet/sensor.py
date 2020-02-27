@@ -43,7 +43,7 @@ class JuicenetSensorDevice(JuicenetDevice, Entity):
     @property
     def name(self):
         """Return the name of the device."""
-        return "{} {}".format(self.device.name(), self._name)
+        return f"{self.device.name()} {self._name}"
 
     @property
     def icon(self):
