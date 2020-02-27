@@ -154,6 +154,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 @callback
 def _async_save_refresh_token(hass, config_entry, token):
+    """Save a refresh token to the config entry."""
     hass.config_entries.async_update_entry(
         config_entry, data={**config_entry.data, CONF_TOKEN: token}
     )
@@ -501,12 +502,7 @@ class SimpliSafe:
                 _LOGGER.error("Unknown error while updating: %s", result)
                 return
 
-        if self._api.refresh_token_dirty:
-            # Reconnect the websocket:
-            await self._api.websocket.async_disconnect()
-            await self._api.websocket.async_connect()
-
-            # Save the new refresh token:
+        if self._api.refresh_token != self._config_entry.data[CONF_TOKEN]:
             _async_save_refresh_token(
                 self._hass, self._config_entry, self._api.refresh_token
             )
