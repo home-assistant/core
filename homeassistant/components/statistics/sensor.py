@@ -54,7 +54,7 @@ DEFAULT_SIZE = 20
 DEFAULT_PRECISION = 2
 ICON = "mdi:calculator"
 
-# TODO Fine tuning to avoid excessive state updates and purge old operations
+# Fine tuning to avoid excessive state updates and purge old operations
 _DEBOUNCING_COOLDOWN = 0.05
 _DELTA_MAX_AGE_ERROR = timedelta(seconds=1)
 
