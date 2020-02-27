@@ -204,7 +204,10 @@ class RestSensor(Entity):
         _LOGGER.debug("Data fetched from resource: %s", value)
         content_type = self.rest.headers.get("content-type")
 
-        if content_type and content_type.startswith("text/xml"):
+        if content_type and (
+            content_type.startswith("text/xml")
+            or content_type.startswith("application/xml")
+        ):
             try:
                 value = json.dumps(xmltodict.parse(value))
                 _LOGGER.debug("JSON converted from XML: %s", value)
