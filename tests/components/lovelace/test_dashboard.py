@@ -275,3 +275,89 @@ async def test_dashboard_from_yaml(hass, hass_ws_client, url_path):
     assert response["result"] == {"hello": "yo2"}
 
     assert len(events) == 1
+
+
+async def test_storage_dashboards(hass, hass_ws_client, hass_storage):
+    """Test we load lovelace config from storage."""
+    assert await async_setup_component(hass, "lovelace", {})
+    assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "storage"}
+
+    client = await hass_ws_client(hass)
+
+    # Fetch data
+    await client.send_json({"id": 5, "type": "lovelace/dashboards/list"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == []
+
+    # Add a dashboard
+    await client.send_json(
+        {"id": 6, "type": "lovelace/dashboards/create", "url_path": "created_url_path"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    dashboard_id = response["result"]["id"]
+
+    assert "created_url_path" in hass.data[frontend.DATA_PANELS]
+
+    # Fetch config
+    await client.send_json(
+        {"id": 7, "type": "lovelace/config", "url_path": "created_url_path"}
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "config_not_found"
+
+    # Store new config
+    events = async_capture_events(hass, const.EVENT_LOVELACE_UPDATED)
+
+    await client.send_json(
+        {
+            "id": 8,
+            "type": "lovelace/config/save",
+            "url_path": "created_url_path",
+            "config": {"yo": "hello"},
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert hass_storage[dashboard.CONFIG_STORAGE_KEY.format(dashboard_id)]["data"] == {
+        "config": {"yo": "hello"}
+    }
+    assert len(events) == 1
+    assert events[0].data["url_path"] == "created_url_path"
+
+    await client.send_json(
+        {"id": 9, "type": "lovelace/config", "url_path": "created_url_path"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"yo": "hello"}
+
+    # Update a dashboard
+    await client.send_json(
+        {
+            "id": 10,
+            "type": "lovelace/dashboards/update",
+            "dashboard_id": dashboard_id,
+            "require_admin": True,
+            "sidebar": {"title": "Updated Title", "icon": "mdi:map"},
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"]["require_admin"] is True
+    assert response["result"]["sidebar"] == {
+        "title": "Updated Title",
+        "icon": "mdi:map",
+    }
+
+    # Delete dashboards
+    await client.send_json(
+        {"id": 11, "type": "lovelace/dashboards/delete", "dashboard_id": dashboard_id}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    assert "created_url_path" not in hass.data[frontend.DATA_PANELS]

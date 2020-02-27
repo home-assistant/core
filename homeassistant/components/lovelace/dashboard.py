@@ -1,23 +1,33 @@
 """Lovelace dashboard support."""
 from abc import ABC, abstractmethod
+import logging
 import os
 import time
 
+import voluptuous as vol
+
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import storage
+from homeassistant.helpers import collection, storage
 from homeassistant.util.yaml import load_yaml
 
 from .const import (
+    CONF_URL_PATH,
     DOMAIN,
     EVENT_LOVELACE_UPDATED,
     MODE_STORAGE,
     MODE_YAML,
+    STORAGE_DASHBOARD_CREATE_FIELDS,
+    STORAGE_DASHBOARD_UPDATE_FIELDS,
     ConfigNotFound,
 )
 
 CONFIG_STORAGE_KEY_DEFAULT = DOMAIN
+CONFIG_STORAGE_KEY = "lovelace.{}"
 CONFIG_STORAGE_VERSION = 1
+DASHBOARDS_STORAGE_KEY = f"{DOMAIN}_dashboards"
+DASHBOARDS_STORAGE_VERSION = 1
+_LOGGER = logging.getLogger(__name__)
 
 
 class LovelaceConfig(ABC):
@@ -58,13 +68,13 @@ class LovelaceConfig(ABC):
 class LovelaceStorage(LovelaceConfig):
     """Class to handle Storage based Lovelace config."""
 
-    def __init__(self, hass, url_path):
+    def __init__(self, hass, url_path, item_id):
         """Initialize Lovelace config based on storage helper."""
         super().__init__(hass, url_path)
         if url_path is None:
             storage_key = CONFIG_STORAGE_KEY_DEFAULT
         else:
-            raise ValueError("Storage-based dashboards are not supported")
+            storage_key = CONFIG_STORAGE_KEY.format(item_id)
 
         self._store = storage.Store(hass, CONFIG_STORAGE_VERSION, storage_key)
         self._data = None
@@ -185,3 +195,40 @@ def _config_info(mode, config):
         "resources": len(config.get("resources", [])),
         "views": len(config.get("views", [])),
     }
+
+
+class DashboardsCollection(collection.StorageCollection):
+    """Collection of dashboards."""
+
+    CREATE_SCHEMA = vol.Schema(STORAGE_DASHBOARD_CREATE_FIELDS)
+    UPDATE_SCHEMA = vol.Schema(STORAGE_DASHBOARD_UPDATE_FIELDS)
+
+    def __init__(self, hass):
+        """Initialize the dashboards collection."""
+        super().__init__(
+            storage.Store(hass, DASHBOARDS_STORAGE_VERSION, DASHBOARDS_STORAGE_KEY),
+            _LOGGER,
+        )
+
+    async def _process_create_data(self, data: dict) -> dict:
+        """Validate the config is valid."""
+        # TODO make sure url path is unique
+        return self.CREATE_SCHEMA(data)
+
+    @callback
+    def _get_suggested_id(self, info: dict) -> str:
+        """Suggest an ID based on the config."""
+        return info[CONF_URL_PATH]
+
+    async def _update_data(self, data: dict, update_data: dict) -> dict:
+        """Return a new updated data object."""
+        update_data = self.UPDATE_SCHEMA(update_data)
+        return {**data, **update_data}
+
+
+"""
+Collection with dashboards that we can manage.
+
+Each storage dashboard backed by own store.
+
+"""
