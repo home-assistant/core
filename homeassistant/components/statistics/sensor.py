@@ -1,5 +1,7 @@
 """Support for statistics for sensor values."""
+import asyncio
 from collections import deque
+from datetime import timedelta
 import logging
 import statistics
 
@@ -52,6 +54,10 @@ DEFAULT_SIZE = 20
 DEFAULT_PRECISION = 2
 ICON = "mdi:calculator"
 
+# TODO Fine tuning to avoid excessive state updates and purge old operations
+_DEBOUNCING_COOLDOWN = 0.05
+_DELTA_MAX_AGE_ERROR = timedelta(seconds=1)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
@@ -72,7 +78,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     sampling_size = config.get(CONF_SAMPLING_SIZE)
     max_age = config.get(CONF_MAX_AGE, None)
     precision = config.get(CONF_PRECISION)
-    debounced_updater = Debouncer(hass, _LOGGER, cooldown=0.01, immediate=False)
+    debounced_updater = Debouncer(
+        hass, _LOGGER, cooldown=_DEBOUNCING_COOLDOWN, immediate=False
+    )
 
     async_add_entities(
         [
@@ -114,7 +122,10 @@ class StatisticsSensor(Entity):
         self.total = self.min = self.max = None
         self.min_age = self.max_age = None
         self.change = self.average_change = self.change_rate = None
+
+        self._last_scheduled_purge = dt_util.utc_from_timestamp(0)
         self._update_listener = None
+        self._update_listener_lock = asyncio.Lock()
         self._debounced_updater = debounced_updater
         self._debounced_updater.function = self._async_debounced_update
 
@@ -136,12 +147,24 @@ class StatisticsSensor(Entity):
             )
 
             self._add_state_to_queue(new_state)
+
+            if self._max_age:
+                # Do not call update if a purge update is scheduled in the short time
+                delta_to_next_purge = self._last_scheduled_purge - dt_util.utcnow()
+                if timedelta(0) < delta_to_next_purge < _DELTA_MAX_AGE_ERROR:
+                    _LOGGER.debug(
+                        "%s: quick exit of new sample, scheduled update comes in %.6f",
+                        self.entity_id,
+                        delta_to_next_purge.total_seconds(),
+                    )
+                    return
+
             await self._debounced_updater.async_call()
 
         @callback
         def async_stats_sensor_startup(event):
             """Add listener and get recorded state."""
-            _LOGGER.debug("Startup for %s", self.entity_id)
+            _LOGGER.debug("%s: startup", self.entity_id)
 
             async_track_state_change(
                 self.hass, self._entity_id, async_stats_sensor_state_listener
@@ -232,12 +255,6 @@ class StatisticsSensor(Entity):
         )
 
         while self.ages and (now - self.ages[0]) > self._max_age:
-            _LOGGER.debug(
-                "%s: purging record with datetime %s(%s)",
-                self.entity_id,
-                dt_util.as_local(self.ages[0]),
-                (now - self.ages[0]),
-            )
             self.ages.popleft()
             self.states.popleft()
 
@@ -247,8 +264,64 @@ class StatisticsSensor(Entity):
             # Take the oldest entry from the ages list and add the configured max_age.
             # If executed after purging old states, the result is the next timestamp
             # in the future when the oldest state will expire.
-            return self.ages[0] + self._max_age
+            next_purge = self.ages[0] + self._max_age
+
+            # do not schedule a new purge if last one was set for ~ the same time
+            if next_purge - self._last_scheduled_purge > 2 * _DELTA_MAX_AGE_ERROR:
+                return next_purge.replace(microsecond=0) + _DELTA_MAX_AGE_ERROR
+            _LOGGER.debug(
+                "%s: Do not schedule for %s as delta_last=%.6f s",
+                self.entity_id,
+                next_purge.strftime("%H:%M:%S.%f"),
+                (next_purge - self._last_scheduled_purge).total_seconds(),
+            )
+
         return None
+
+    def _process_statistics(self):
+        """Process all extra attributes for non-binary sensors."""
+        try:  # require only one data point
+            self.mean = round(statistics.mean(self.states), self._precision)
+            self.median = round(statistics.median(self.states), self._precision)
+        except statistics.StatisticsError as err:
+            _LOGGER.debug("%s: %s", self.entity_id, err)
+            self.mean = self.median = STATE_UNKNOWN
+
+        try:  # require at least two data points
+            self.stdev = round(statistics.stdev(self.states), self._precision)
+            self.variance = round(statistics.variance(self.states), self._precision)
+        except statistics.StatisticsError as err:
+            _LOGGER.debug("%s: %s", self.entity_id, err)
+            self.stdev = self.variance = STATE_UNKNOWN
+
+        if self.states:
+            self.total = round(sum(self.states), self._precision)
+            self.min = round(min(self.states), self._precision)
+            self.max = round(max(self.states), self._precision)
+
+            self.min_age = self.ages[0]
+            self.max_age = self.ages[-1]
+
+            self.change = self.states[-1] - self.states[0]
+            self.average_change = self.change
+            self.change_rate = 0
+
+            if len(self.states) > 1:
+                self.average_change /= len(self.states) - 1
+
+                time_diff = (self.max_age - self.min_age).total_seconds()
+                if time_diff > 0:
+                    self.change_rate = self.average_change / time_diff
+
+            self.change = round(self.change, self._precision)
+            self.average_change = round(self.average_change, self._precision)
+            self.change_rate = round(self.change_rate, self._precision)
+
+        else:
+            self.total = self.min = self.max = STATE_UNKNOWN
+            self.min_age = self.max_age = dt_util.utcnow()
+            self.change = self.average_change = STATE_UNKNOWN
+            self.change_rate = STATE_UNKNOWN
 
     async def async_update(self):
         """Get the latest data and updates the states."""
@@ -259,64 +332,26 @@ class StatisticsSensor(Entity):
         self.count = len(self.states)
 
         if not self.is_binary:
-            try:  # require only one data point
-                self.mean = round(statistics.mean(self.states), self._precision)
-                self.median = round(statistics.median(self.states), self._precision)
-            except statistics.StatisticsError as err:
-                _LOGGER.debug("%s: %s", self.entity_id, err)
-                self.mean = self.median = STATE_UNKNOWN
+            self._process_statistics()
 
-            try:  # require at least two data points
-                self.stdev = round(statistics.stdev(self.states), self._precision)
-                self.variance = round(statistics.variance(self.states), self._precision)
-            except statistics.StatisticsError as err:
-                _LOGGER.debug("%s: %s", self.entity_id, err)
-                self.stdev = self.variance = STATE_UNKNOWN
+        await self._set_expiration_update_for_max_age_sensors()
 
-            if self.states:
-                self.total = round(sum(self.states), self._precision)
-                self.min = round(min(self.states), self._precision)
-                self.max = round(max(self.states), self._precision)
-
-                self.min_age = self.ages[0]
-                self.max_age = self.ages[-1]
-
-                self.change = self.states[-1] - self.states[0]
-                self.average_change = self.change
-                self.change_rate = 0
-
-                if len(self.states) > 1:
-                    self.average_change /= len(self.states) - 1
-
-                    time_diff = (self.max_age - self.min_age).total_seconds()
-                    if time_diff > 0:
-                        self.change_rate = self.average_change / time_diff
-
-                self.change = round(self.change, self._precision)
-                self.average_change = round(self.average_change, self._precision)
-                self.change_rate = round(self.change_rate, self._precision)
-
-            else:
-                self.total = self.min = self.max = STATE_UNKNOWN
-                self.min_age = self.max_age = dt_util.utcnow()
-                self.change = self.average_change = STATE_UNKNOWN
-                self.change_rate = STATE_UNKNOWN
-
-        # If max_age is set, ensure to update again after the defined interval.
+    async def _set_expiration_update_for_max_age_sensors(self):
         next_to_purge_timestamp = self._next_to_purge_timestamp()
         if next_to_purge_timestamp:
-            _LOGGER.debug(
-                "%s: scheduling update at %s", self.entity_id, next_to_purge_timestamp
-            )
-            if self._update_listener:
-                self._update_listener()
-                self._update_listener = None
+            async with self._update_listener_lock:
+                if self._update_listener is not None:
+                    self._update_listener()
+                    self._update_listener = None
+
+            self._last_scheduled_purge = next_to_purge_timestamp
 
             async def _scheduled_update(now):
                 """Timer callback for sensor update."""
-                _LOGGER.debug("%s: executing scheduled update", self.entity_id)
-                self._update_listener = None
-                await self._debounced_updater.async_call()
+                async with self._update_listener_lock:
+                    self._update_listener = None
+                    _LOGGER.debug("%s: executing scheduled update", self.entity_id)
+                    await self._debounced_updater.async_call()
 
             self._update_listener = async_track_point_in_utc_time(
                 self.hass, _scheduled_update, next_to_purge_timestamp
@@ -330,7 +365,7 @@ class StatisticsSensor(Entity):
         list so that we get it in the right order again.
 
         If MaxAge is provided then query will restrict to entries younger then
-        current datetime - MaxAge.
+        current datetime - MaxAge - some time for HA start.
         """
 
         _LOGGER.debug("%s: initializing values from the database", self.entity_id)
@@ -341,7 +376,10 @@ class StatisticsSensor(Entity):
             )
 
             if self._max_age is not None:
-                records_older_then = dt_util.utcnow() - self._max_age
+                # make initial purge a little more to leave some time for HA start
+                records_older_then = (
+                    dt_util.utcnow() - self._max_age - 3 * _DELTA_MAX_AGE_ERROR
+                )
                 _LOGGER.debug(
                     "%s: retrieve records not older then %s",
                     self.entity_id,
