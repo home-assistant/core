@@ -14,6 +14,10 @@
                 "description": "Model: {model} \nAmfitri\u00f3: {host} \nPort: {port} \n\nPots configurar el comportament de les E/S (I/O) i del panell a la configuraci\u00f3 del panell d\u2019alarma Konnected.",
                 "title": "Dispositiu Konnected llest"
             },
+            "import_confirm": {
+                "description": "S'ha descobert un panell d'alarma Konnected amb ID {id} a configuration.yaml. Aquest flux et permetr\u00e0 importar-lo a una entrada de configuraci\u00f3.",
+                "title": "Importaci\u00f3 de dispositiu Konnected"
+            },
             "user": {
                 "data": {
                     "host": "Adre\u00e7a IP del dispositiu Konnected",

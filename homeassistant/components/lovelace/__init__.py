@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components import frontend
 from homeassistant.const import CONF_FILENAME, CONF_ICON
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.util import sanitize_filename, slugify
 
 from . import dashboard, resources, websocket
@@ -17,7 +17,9 @@ from .const import (
     LOVELACE_CONFIG_FILE,
     MODE_STORAGE,
     MODE_YAML,
+    RESOURCE_CREATE_FIELDS,
     RESOURCE_SCHEMA,
+    RESOURCE_UPDATE_FIELDS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -110,6 +112,14 @@ async def async_setup(hass, config):
             )
 
         resource_collection = resources.ResourceStorageCollection(hass, default_config)
+
+        collection.StorageCollectionWebsocket(
+            resource_collection,
+            "lovelace/resources",
+            "resource",
+            RESOURCE_CREATE_FIELDS,
+            RESOURCE_UPDATE_FIELDS,
+        ).async_setup(hass, create_list=False)
 
     hass.components.websocket_api.async_register_command(
         websocket.websocket_lovelace_config

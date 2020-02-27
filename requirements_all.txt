@@ -163,7 +163,7 @@ aioftp==0.12.0
 aioharmony==0.1.13
 
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.11
+aiohomekit[IP]==0.2.15
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -687,7 +687,7 @@ hole==0.5.0
 holidays==0.10.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200220.3
+home-assistant-frontend==20200220.4
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.8
@@ -1831,7 +1831,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==8.1.1
+simplisafe-python==9.0.0
 
 # homeassistant.components.sisyphus
 sisyphus-control==2.2.1
