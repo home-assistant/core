@@ -37,7 +37,7 @@ class AugustEntityMixin:
         """Return the device_info of the device."""
         return {
             "identifiers": {(DOMAIN, self._device_id)},
-            "name": self.name,
+            "name": self._device.device_name,
             "manufacturer": DEFAULT_NAME,
             "sw_version": self._detail.firmware_version,
             "model": self._detail.model,
