@@ -38,6 +38,7 @@ class AugustLock(AugustEntityMixin, LockDevice):
         self._lock_status = None
         self._changed_by = None
         self._available = False
+        self._update_from_data()
 
     async def async_lock(self, **kwargs):
         """Lock the device."""
@@ -85,7 +86,6 @@ class AugustLock(AugustEntityMixin, LockDevice):
             update_lock_detail_from_activity(lock_detail, lock_activity)
 
         self._update_lock_status_from_detail()
-        self.async_write_ha_state()
 
     @property
     def name(self):

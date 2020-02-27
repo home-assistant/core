@@ -96,6 +96,7 @@ class AugustBatterySensor(AugustEntityMixin, Entity):
         self._device = device
         self._state = None
         self._available = False
+        self._update_from_data()
 
     @property
     def available(self):
@@ -130,7 +131,6 @@ class AugustBatterySensor(AugustEntityMixin, Entity):
         state_provider = SENSOR_TYPES_BATTERY[self._sensor_type]["state_provider"]
         self._state = state_provider(self._detail)
         self._available = self._state is not None
-        self.async_write_ha_state()
 
     @property
     def unique_id(self) -> str:

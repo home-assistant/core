@@ -108,6 +108,7 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorDevice):
         self._device = device
         self._state = None
         self._available = False
+        self._update_from_data()
 
     @property
     def available(self):
@@ -144,7 +145,6 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorDevice):
         self._available = detail.bridge_is_online
 
         self._state = lock_door_state == LockDoorStatus.OPEN
-        self.async_write_ha_state()
 
     @property
     def unique_id(self) -> str:
@@ -164,6 +164,7 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorDevice):
         self._device = device
         self._state = None
         self._available = False
+        self._update_from_data()
 
     @property
     def available(self):
@@ -197,14 +198,11 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorDevice):
         if self.device_class == DEVICE_CLASS_CONNECTIVITY:
             self._available = True
         else:
-            self._available = detail.is_online or detail.is_standby
+            self._available = _retrieve_online_state(self._data, detail)
 
-        self._state = None
         self._state = state_provider(self._data, detail)
         if self._state and self.device_class != DEVICE_CLASS_CONNECTIVITY:
             self._schedule_update_to_recheck_turn_off_sensor()
-
-        self.async_write_ha_state()
 
     def _schedule_update_to_recheck_turn_off_sensor(self):
         """Schedule an update to recheck the sensor to see if it is ready to turn off."""
