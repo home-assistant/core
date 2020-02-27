@@ -1,9 +1,9 @@
 """Support for statistics for sensor values."""
-import asyncio
 from collections import deque
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 import statistics
+from typing import Optional
 
 import voluptuous as vol
 
@@ -125,7 +125,6 @@ class StatisticsSensor(Entity):
 
         self._last_scheduled_purge = dt_util.utc_from_timestamp(0)
         self._update_listener = None
-        self._update_listener_lock = asyncio.Lock()
         self._debounced_updater = debounced_updater
         self._debounced_updater.function = self._async_debounced_update
 
@@ -258,7 +257,7 @@ class StatisticsSensor(Entity):
             self.ages.popleft()
             self.states.popleft()
 
-    def _next_to_purge_timestamp(self):
+    def _next_to_purge_timestamp(self) -> Optional[datetime]:
         """Find the timestamp when the next purge would occur."""
         if self.ages and self._max_age:
             # Take the oldest entry from the ages list and add the configured max_age.
@@ -325,7 +324,7 @@ class StatisticsSensor(Entity):
 
     async def async_update(self):
         """Get the latest data and updates the states."""
-        _LOGGER.debug("%s: updating statistics.", self.entity_id)
+        _LOGGER.debug("%s: updating statistics", self.entity_id)
         if self._max_age is not None:
             self._purge_old()
 
@@ -339,19 +338,17 @@ class StatisticsSensor(Entity):
     async def _set_expiration_update_for_max_age_sensors(self):
         next_to_purge_timestamp = self._next_to_purge_timestamp()
         if next_to_purge_timestamp:
-            async with self._update_listener_lock:
-                if self._update_listener is not None:
-                    self._update_listener()
-                    self._update_listener = None
+            if self._update_listener is not None:
+                self._update_listener()
+                self._update_listener = None
 
             self._last_scheduled_purge = next_to_purge_timestamp
 
             async def _scheduled_update(now):
                 """Timer callback for sensor update."""
-                async with self._update_listener_lock:
-                    self._update_listener = None
-                    _LOGGER.debug("%s: executing scheduled update", self.entity_id)
-                    await self._debounced_updater.async_call()
+                self._update_listener = None
+                _LOGGER.debug("%s: executing scheduled update", self.entity_id)
+                await self._debounced_updater.async_call()
 
             self._update_listener = async_track_point_in_utc_time(
                 self.hass, _scheduled_update, next_to_purge_timestamp
@@ -387,7 +384,7 @@ class StatisticsSensor(Entity):
                 )
                 query = query.filter(States.last_updated >= records_older_then)
             else:
-                _LOGGER.debug("%s: retrieving all records.", self.entity_id)
+                _LOGGER.debug("%s: retrieving all records", self.entity_id)
 
             query = query.order_by(States.last_updated.desc()).limit(
                 self._sampling_size
