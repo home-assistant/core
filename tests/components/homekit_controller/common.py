@@ -103,7 +103,7 @@ async def setup_test_accessories(hass, accessories):
     )
     config_entry.add_to_hass(hass)
 
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     return config_entry, pairing
