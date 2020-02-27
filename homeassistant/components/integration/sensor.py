@@ -106,7 +106,7 @@ class IntegrationSensor(RestoreEntity):
 
         if unit_of_measurement is None:
             self._unit_template = (
-                f"{'' if unit_prefix is None else unit_prefix}{'{}'}{unit_time}"
+                f"{'' if unit_prefix is None else unit_prefix}{{}}{unit_time}"
             )
             # we postpone the definition of unit_of_measurement to later
             self._unit_of_measurement = None
