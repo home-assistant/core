@@ -8,13 +8,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import (
-    CONF_ADDR,
-    CONF_DIMMERS,
-    CONF_RATE,
-    HOMEWORKS_CONTROLLER,
-    HomeworksDevice,
-)
+from . import CONF_ADDR, CONF_DIMMERS, CONF_RATE, HOMEWORKS_CONTROLLER, HomeworksDevice
 
 _LOGGER = logging.getLogger(__name__)
 
