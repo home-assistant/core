@@ -6,6 +6,7 @@ import time
 
 import voluptuous as vol
 
+from homeassistant.const import CONF_FILENAME
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, storage
@@ -16,6 +17,7 @@ from .const import (
     CONF_URL_PATH,
     DOMAIN,
     EVENT_LOVELACE_UPDATED,
+    LOVELACE_CONFIG_FILE,
     MODE_STORAGE,
     MODE_YAML,
     STORAGE_DASHBOARD_CREATE_FIELDS,
@@ -34,10 +36,18 @@ _LOGGER = logging.getLogger(__name__)
 class LovelaceConfig(ABC):
     """Base class for Lovelace config."""
 
-    def __init__(self, hass, url_path):
+    def __init__(self, hass, url_path, config):
         """Initialize Lovelace config."""
         self.hass = hass
-        self.url_path = url_path
+        if config:
+            self.config = {**config, CONF_URL_PATH: url_path}
+        else:
+            self.config = None
+
+    @property
+    def url_path(self) -> str:
+        """Return url path."""
+        return self.config[CONF_URL_PATH] if self.config else None
 
     @property
     @abstractmethod
@@ -69,13 +79,16 @@ class LovelaceConfig(ABC):
 class LovelaceStorage(LovelaceConfig):
     """Class to handle Storage based Lovelace config."""
 
-    def __init__(self, hass, url_path, item_id):
+    def __init__(self, hass, config):
         """Initialize Lovelace config based on storage helper."""
-        super().__init__(hass, url_path)
-        if url_path is None:
+        if config is None:
+            url_path = None
             storage_key = CONFIG_STORAGE_KEY_DEFAULT
         else:
-            storage_key = CONFIG_STORAGE_KEY.format(item_id)
+            url_path = config[CONF_URL_PATH]
+            storage_key = CONFIG_STORAGE_KEY.format(url_path)
+
+        super().__init__(hass, url_path, config)
 
         self._store = storage.Store(hass, CONFIG_STORAGE_VERSION, storage_key)
         self._data = None
@@ -139,10 +152,13 @@ class LovelaceStorage(LovelaceConfig):
 class LovelaceYAML(LovelaceConfig):
     """Class to handle YAML-based Lovelace config."""
 
-    def __init__(self, hass, url_path, path):
+    def __init__(self, hass, url_path, config):
         """Initialize the YAML config."""
-        super().__init__(hass, url_path)
-        self.path = hass.config.path(path)
+        super().__init__(hass, url_path, config)
+
+        self.path = hass.config.path(
+            config[CONF_FILENAME] if config else LOVELACE_CONFIG_FILE
+        )
         self._cache = None
 
     @property

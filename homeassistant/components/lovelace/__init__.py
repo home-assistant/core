@@ -21,7 +21,6 @@ from .const import (
     CONF_URL_PATH,
     DASHBOARD_BASE_CREATE_FIELDS,
     DOMAIN,
-    LOVELACE_CONFIG_FILE,
     MODE_STORAGE,
     MODE_YAML,
     RESOURCE_CREATE_FIELDS,
@@ -70,7 +69,7 @@ async def async_setup(hass, config):
     frontend.async_register_built_in_panel(hass, DOMAIN, config={"mode": mode})
 
     if mode == MODE_YAML:
-        default_config = dashboard.LovelaceYAML(hass, None, LOVELACE_CONFIG_FILE)
+        default_config = dashboard.LovelaceYAML(hass, None, None)
 
         if yaml_resources is None:
             try:
@@ -87,7 +86,7 @@ async def async_setup(hass, config):
         resource_collection = resources.ResourceYAMLCollection(yaml_resources or [])
 
     else:
-        default_config = dashboard.LovelaceStorage(hass, None, None)
+        default_config = dashboard.LovelaceStorage(hass, None)
 
         if yaml_resources is not None:
             _LOGGER.warning(
@@ -117,6 +116,10 @@ async def async_setup(hass, config):
         websocket.websocket_lovelace_resources
     )
 
+    hass.components.websocket_api.async_register_command(
+        websocket.websocket_lovelace_dashboards
+    )
+
     hass.components.system_health.async_register_info(DOMAIN, system_health_info)
 
     hass.data[DOMAIN] = {
@@ -131,7 +134,7 @@ async def async_setup(hass, config):
     # Process YAML dashboards
     for url_path, dashboard_conf in config[DOMAIN].get(CONF_DASHBOARDS, {}).items():
         # For now always mode=yaml
-        config = dashboard.LovelaceYAML(hass, url_path, dashboard_conf[CONF_FILENAME])
+        config = dashboard.LovelaceYAML(hass, url_path, dashboard_conf)
         hass.data[DOMAIN]["dashboards"][url_path] = config
 
         try:
@@ -163,7 +166,7 @@ async def async_setup(hass, config):
                 return
 
             hass.data[DOMAIN]["dashboards"][url_path] = dashboard.LovelaceStorage(
-                hass, url_path, item_id
+                hass, item
             )
 
             update = False
@@ -184,7 +187,7 @@ async def async_setup(hass, config):
         "dashboard",
         STORAGE_DASHBOARD_CREATE_FIELDS,
         STORAGE_DASHBOARD_UPDATE_FIELDS,
-    ).async_setup(hass)
+    ).async_setup(hass, create_list=False)
 
     return True
 
