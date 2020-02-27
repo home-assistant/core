@@ -10,8 +10,6 @@ from homeassistant.components.heos.config_flow import HeosFlowHandler
 from homeassistant.components.heos.const import DATA_DISCOVERED_HOSTS
 from homeassistant.const import CONF_HOST
 
-from tests.common import mock_coro
-
 
 async def test_flow_aborts_already_setup(hass, config_entry):
     """Test flow aborts when entry already setup."""
@@ -52,7 +50,7 @@ async def test_create_entry_when_host_valid(hass, controller):
     """Test result type is create entry when host is valid."""
     data = {CONF_HOST: "127.0.0.1"}
     with patch(
-        "homeassistant.components.hue.async_setup_entry", return_value=mock_coro(True)
+        "homeassistant.components.hue.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_init(
             heos.DOMAIN, context={"source": "user"}, data=data
@@ -69,7 +67,7 @@ async def test_create_entry_when_friendly_name_valid(hass, controller):
     hass.data[DATA_DISCOVERED_HOSTS] = {"Office (127.0.0.1)": "127.0.0.1"}
     data = {CONF_HOST: "Office (127.0.0.1)"}
     with patch(
-        "homeassistant.components.hue.async_setup_entry", return_value=mock_coro(True)
+        "homeassistant.components.hue.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_init(
             heos.DOMAIN, context={"source": "user"}, data=data
