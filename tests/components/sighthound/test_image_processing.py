@@ -1,5 +1,6 @@
 """Tests for the Sighthound integration."""
 from copy import deepcopy
+import datetime
 import os
 from pathlib import Path
 from unittest import mock
@@ -41,6 +42,8 @@ MOCK_DETECTIONS = {
     "requestId": "545cec700eac4d389743e2266264e84b",
 }
 
+MOCK_NOW = datetime.datetime(2020, 2, 20, 10, 5, 3)
+
 
 @pytest.fixture
 def mock_detections():
@@ -59,6 +62,13 @@ def mock_image():
         return_value=b"Test",
     ) as image:
         yield image
+
+
+@pytest.fixture
+def mock_now():
+    """Return a mock now datetime."""
+    with mock.patch("homeassistant.util.dt.now", return_value=MOCK_NOW) as now_dt:
+        yield now_dt
 
 
 async def test_bad_api_key(hass, caplog):
@@ -120,12 +130,11 @@ async def test_save_image(hass, mock_image, mock_detections):
         assert pil_img.save.call_count == 1
 
         directory = Path(TEST_DIR)
-        camera_name = VALID_ENTITY_ID.split(".")[-1]
-        latest_save_path = directory / f"{camera_name}_latest.jpg"
-        assert pil_img.save.call_args == mock.call(latest_save_path)
+        latest_save_path = directory / "sighthound_demo_camera_latest.jpg"
+        assert pil_img.save.call_args_list[0] == mock.call(latest_save_path)
 
 
-async def test_save_timestamped_image(hass, mock_image, mock_detections):
+async def test_save_timestamped_image(hass, mock_image, mock_detections, mock_now):
     """Save a processed image."""
     valid_config_save_ts_file = deepcopy(VALID_CONFIG)
     valid_config_save_ts_file[ip.DOMAIN].update({sh.CONF_SAVE_FILE_FOLDER: TEST_DIR})
@@ -144,3 +153,9 @@ async def test_save_timestamped_image(hass, mock_image, mock_detections):
         state = hass.states.get(VALID_ENTITY_ID)
         assert state.state == "2"
         assert pil_img.save.call_count == 2
+
+        directory = Path(TEST_DIR)
+        timestamp_save_path = (
+            directory / "sighthound_demo_camera_2020-02-20_10:05:03.jpg"
+        )
+        assert pil_img.save.call_args_list[1] == mock.call(timestamp_save_path)
