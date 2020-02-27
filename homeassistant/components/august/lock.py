@@ -57,9 +57,10 @@ class AugustLock(AugustEntityMixin, LockDevice):
 
         if self._update_lock_status_from_detail():
             _LOGGER.debug(
-                "signal_device_id_update (from lock operation): %s", self._device_id
+                "async_signal_device_id_update (from lock operation): %s",
+                self._device_id,
             )
-            self._data.signal_device_id_update(self._device_id)
+            await self._data.async_signal_device_id_update(self._device_id)
 
     def _update_lock_status_from_detail(self):
         detail = self._detail

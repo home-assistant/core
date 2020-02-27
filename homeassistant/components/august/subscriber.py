@@ -42,3 +42,11 @@ class AugustSubscriberMixin:
 
         for update_callback in self._subscriptions[device_id]:
             self._hass.loop.call_soon_threadsafe(update_callback)
+
+    async def async_signal_device_id_update(self, device_id):
+        """Call the callbacks for a device_id."""
+        if not self._subscriptions.get(device_id):
+            return
+
+        for update_callback in self._subscriptions[device_id]:
+            update_callback()

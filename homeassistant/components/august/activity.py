@@ -98,9 +98,10 @@ class ActivityStream(AugustSubscriberMixin):
             if updated_device_ids:
                 for device_id in updated_device_ids:
                     _LOGGER.debug(
-                        "signal_device_id_update (from activity stream): %s", device_id,
+                        "async_signal_device_id_update (from activity stream): %s",
+                        device_id,
                     )
-                    self.signal_device_id_update(device_id)
+                    await self.async_signal_device_id_update(device_id)
 
         self._last_update_time = time
 
