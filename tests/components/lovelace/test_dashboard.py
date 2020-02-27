@@ -353,9 +353,16 @@ async def test_storage_dashboards(hass, hass_ws_client, hass_storage):
         "icon": "mdi:map",
     }
 
+    # Add dashboard with existing url path
+    await client.send_json(
+        {"id": 11, "type": "lovelace/dashboards/create", "url_path": "created_url_path"}
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+
     # Delete dashboards
     await client.send_json(
-        {"id": 11, "type": "lovelace/dashboards/delete", "dashboard_id": dashboard_id}
+        {"id": 12, "type": "lovelace/dashboards/delete", "dashboard_id": dashboard_id}
     )
     response = await client.receive_json()
     assert response["success"]

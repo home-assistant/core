@@ -212,7 +212,9 @@ class DashboardsCollection(collection.StorageCollection):
 
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
-        # TODO make sure url path is unique
+        if data[CONF_URL_PATH] in self.hass.data[DOMAIN]["dashboards"]:
+            raise vol.Invalid("Dashboard url path needs to be unique")
+
         return self.CREATE_SCHEMA(data)
 
     @callback
@@ -224,11 +226,3 @@ class DashboardsCollection(collection.StorageCollection):
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
         return {**data, **update_data}
-
-
-"""
-Collection with dashboards that we can manage.
-
-Each storage dashboard backed by own store.
-
-"""
