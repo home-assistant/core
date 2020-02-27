@@ -86,6 +86,9 @@ class ActivityStream(AugustSubscriberMixin):
                     house_id,
                     ex,
                 )
+                # Make sure we process the next house if one of them fails
+                continue
+
             _LOGGER.debug(
                 "Completed retrieving device activities for house id %s", house_id
             )
