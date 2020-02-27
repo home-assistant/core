@@ -197,7 +197,7 @@ class GdacsFeedEntityManager:
             self._hass,
             self.async_event_new_entity(),
             self,
-            self._config_entry.title,
+            self._config_entry.unique_id,
             external_id,
         )
 
