@@ -71,7 +71,7 @@ class FreeboxRouter:
         await self.update_all()
         async_track_time_interval(self.hass, self.update_all, SCAN_INTERVAL)
 
-    async def update_all(self, now=None) -> None:
+    async def update_all(self, now: datetime = None) -> None:
         """Update all Freebox platforms."""
         await self.update_sensors()
         await self.update_devices()
