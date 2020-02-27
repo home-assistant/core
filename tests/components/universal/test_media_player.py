@@ -187,10 +187,10 @@ class TestMediaPlayer(unittest.TestCase):
         self.mock_volume_id = f"{input_number.DOMAIN}.volume_level"
         self.hass.states.set(self.mock_volume_id, 0)
 
-        self.mock_source_list_id = input_select.ENTITY_ID_FORMAT.format("source_list")
+        self.mock_source_list_id = f"{input_select.DOMAIN}.source_list"
         self.hass.states.set(self.mock_source_list_id, ["dvd", "htpc"])
 
-        self.mock_source_id = input_select.ENTITY_ID_FORMAT.format("source")
+        self.mock_source_id = f"{input_select.DOMAIN}.source"
         self.hass.states.set(self.mock_source_id, "dvd")
 
         self.mock_shuffle_switch_id = switch.ENTITY_ID_FORMAT.format("shuffle")
