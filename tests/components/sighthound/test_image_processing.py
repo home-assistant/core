@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from unittest import mock
 
+from PIL import UnidentifiedImageError
 import pytest
 import simplehound.core as hound
 
@@ -65,6 +66,16 @@ def mock_image():
 
 
 @pytest.fixture
+def mock_bad_image_data():
+    """Mock bad image data."""
+    with mock.patch(
+        "homeassistant.components.sighthound.image_processing.Image.open",
+        side_effect=UnidentifiedImageError,
+    ) as bad_data:
+        yield bad_data
+
+
+@pytest.fixture
 def mock_now():
     """Return a mock now datetime."""
     with mock.patch("homeassistant.util.dt.now", return_value=MOCK_NOW) as now_dt:
@@ -108,6 +119,25 @@ async def test_process_image(hass, mock_image, mock_detections):
     state = hass.states.get(VALID_ENTITY_ID)
     assert state.state == "2"
     assert len(person_events) == 2
+
+
+async def test_catch_bad_image(
+    hass, caplog, mock_image, mock_detections, mock_bad_image_data
+):
+    """Process an image."""
+    await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+    assert hass.states.get(VALID_ENTITY_ID)
+
+    with mock.patch(
+        "homeassistant.components.sighthound.image_processing.Image.open"
+    ) as pil_img_open:
+        pil_img = pil_img_open.return_value
+        pil_img = pil_img.convert.return_value
+        data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
+        await hass.services.async_call(ip.DOMAIN, ip.SERVICE_SCAN, service_data=data)
+        await hass.async_block_till_done()
+        assert pil_img.save.call_count == 0
+        assert "Sighthound unable to process image" in caplog.text
 
 
 async def test_save_image(hass, mock_image, mock_detections):

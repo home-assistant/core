@@ -126,7 +126,7 @@ class SighthoundEntity(ImageProcessingEntity):
         try:
             img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
         except UnidentifiedImageError:
-            _LOGGER.warning("Unable to process image, bad data")
+            _LOGGER.warning("Sighthound unable to process image, bad data")
             return
         draw = ImageDraw.Draw(img)
 
