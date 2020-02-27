@@ -148,7 +148,7 @@ async def test_import_with_minimum_fields(hass, api):
             CONF_HOST: HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SCAN_INTERVAL: timedelta(seconds=DEFAULT_SCAN_INTERVAL),
-        }
+        },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
@@ -170,7 +170,7 @@ async def test_import_with_all(hass, api):
             CONF_PASSWORD: PASSWORD,
             CONF_PORT: PORT,
             CONF_SCAN_INTERVAL: timedelta(seconds=SCAN_INTERVAL),
-        }
+        },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == NAME
