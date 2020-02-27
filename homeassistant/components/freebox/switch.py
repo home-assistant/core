@@ -1,6 +1,8 @@
 """Support for Freebox Delta, Revolution and Mini 4K."""
 import logging
 
+from aiohttp.client_exceptions import ClientConnectorError
+
 from homeassistant.components.switch import SwitchDevice
 
 from . import DATA_FREEBOX
@@ -57,6 +59,10 @@ class FbxWifiSwitch(SwitchDevice):
 
     async def async_update(self):
         """Get the state and update it."""
-        datas = await self._fbx.wifi.get_global_config()
+        try:
+            datas = await self._fbx.wifi.get_global_config()
+        except ClientConnectorError as err:
+            _LOGGER.error("Error getting Freebox switch info: %s" % str(err))
+            return
         active = datas["enabled"]
         self._state = bool(active)

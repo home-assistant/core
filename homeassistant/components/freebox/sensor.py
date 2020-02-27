@@ -1,6 +1,8 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 import logging
 
+from aiohttp.client_exceptions import ClientConnectorError
+
 from homeassistant.const import DATA_RATE_KILOBYTES_PER_SECOND
 from homeassistant.helpers.entity import Entity
 
@@ -50,7 +52,11 @@ class FbxSensor(Entity):
 
     async def async_update(self):
         """Fetch status from freebox."""
-        self._datas = await self._fbx.connection.get_status()
+        try:
+            self._datas = await self._fbx.connection.get_status()
+        except ClientConnectorError as err:
+            _LOGGER.error("Error while getting Freebox data: %s" % str(err))
+            return
 
 
 class FbxRXSensor(FbxSensor):

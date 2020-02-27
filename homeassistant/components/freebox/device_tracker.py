@@ -2,6 +2,8 @@
 from collections import namedtuple
 import logging
 
+from aiohttp.client_exceptions import ClientConnectorError
+
 from homeassistant.components.device_tracker import DeviceScanner
 
 from . import DATA_FREEBOX
@@ -12,8 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_get_scanner(hass, config):
     """Validate the configuration and return a Freebox scanner."""
     scanner = FreeboxDeviceScanner(hass.data[DATA_FREEBOX])
-    await scanner.async_connect()
-    return scanner if scanner.success_init else None
+    return scanner
 
 
 Device = namedtuple("Device", ["id", "name", "ip"])
@@ -33,7 +34,7 @@ class FreeboxDeviceScanner(DeviceScanner):
     def __init__(self, fbx):
         """Initialize the scanner."""
         self.last_results = {}
-        self.success_init = False
+        self.success_init = True
         self.connection = fbx
 
     async def async_connect(self):
@@ -58,7 +59,11 @@ class FreeboxDeviceScanner(DeviceScanner):
         """Ensure the information from the Freebox router is up to date."""
         _LOGGER.debug("Checking Devices")
 
-        hosts = await self.connection.lan.get_hosts_list()
+        try:
+            hosts = await self.connection.lan.get_hosts_list()
+        except ClientConnectorError as err:
+            _LOGGER.error("Error getting freebox devices infos: %s" % str(err))
+            hosts = []
 
         last_results = [_build_device(device) for device in hosts if device["active"]]
 
