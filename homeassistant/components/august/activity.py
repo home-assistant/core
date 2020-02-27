@@ -101,7 +101,7 @@ class ActivityStream(AugustSubscriberMixin):
                         "async_signal_device_id_update (from activity stream): %s",
                         device_id,
                     )
-                    await self.async_signal_device_id_update(device_id)
+                    self.async_signal_device_id_update(device_id)
 
         self._last_update_time = time
 
