@@ -125,7 +125,9 @@ async def test_catch_bad_image(
     hass, caplog, mock_image, mock_detections, mock_bad_image_data
 ):
     """Process an image."""
-    await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+    valid_config_save_file = deepcopy(VALID_CONFIG)
+    valid_config_save_file[ip.DOMAIN].update({sh.CONF_SAVE_FILE_FOLDER: TEST_DIR})
+    await async_setup_component(hass, ip.DOMAIN, valid_config_save_file)
     assert hass.states.get(VALID_ENTITY_ID)
 
     with mock.patch(
