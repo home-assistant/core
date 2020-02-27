@@ -148,7 +148,7 @@ async def async_setup(hass, config):
 
         if change_type == collection.CHANGE_REMOVED:
             frontend.async_remove_panel(hass, url_path)
-            hass.data[DOMAIN]["dashboards"].pop(url_path)
+            await hass.data[DOMAIN]["dashboards"].pop(url_path).async_delete()
             return
 
         if change_type == collection.CHANGE_ADDED:

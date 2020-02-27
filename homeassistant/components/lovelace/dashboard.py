@@ -126,7 +126,9 @@ class LovelaceStorage(LovelaceConfig):
         if self.hass.config.safe_mode:
             raise HomeAssistantError("Deleting not supported in safe mode")
 
-        await self.async_save(None)
+        await self._store.async_remove()
+        self._data = None
+        self._config_updated()
 
     async def _load(self):
         """Load the config."""

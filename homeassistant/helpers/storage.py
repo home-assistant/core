@@ -210,3 +210,10 @@ class Store:
     async def _async_migrate_func(self, old_version, old_data):
         """Migrate to the new version."""
         raise NotImplementedError
+
+    async def async_remove(self):
+        """Remove all data."""
+        try:
+            await self.hass.async_add_executor_job(os.unlink, self.path)
+        except FileNotFoundError:
+            pass

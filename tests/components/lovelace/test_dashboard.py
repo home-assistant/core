@@ -98,9 +98,7 @@ async def test_lovelace_from_storage_delete(hass, hass_ws_client, hass_storage):
     await client.send_json({"id": 7, "type": "lovelace/config/delete"})
     response = await client.receive_json()
     assert response["success"]
-    assert hass_storage[dashboard.CONFIG_STORAGE_KEY_DEFAULT]["data"] == {
-        "config": None
-    }
+    assert dashboard.CONFIG_STORAGE_KEY_DEFAULT not in hass_storage
 
     # Fetch data
     await client.send_json({"id": 8, "type": "lovelace/config"})
@@ -376,3 +374,4 @@ async def test_storage_dashboards(hass, hass_ws_client, hass_storage):
     assert response["success"]
 
     assert "created_url_path" not in hass.data[frontend.DATA_PANELS]
+    assert dashboard.CONFIG_STORAGE_KEY.format(dashboard_id) not in hass_storage
