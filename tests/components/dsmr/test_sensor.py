@@ -203,7 +203,7 @@ async def test_v5_meter(hass, mock_connection_factory):
         HOURLY_GAS_METER_READING: MBusObject(
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": VOLUME_CUBIC_METERS},
+                {"value": Decimal(745.695), "unit": "m³"},
             ]
         ),
         ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0001", "unit": ""}]),
@@ -228,7 +228,7 @@ async def test_v5_meter(hass, mock_connection_factory):
     # check if gas consumption is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_consumption")
     assert gas_consumption.state == "745.695"
-    assert gas_consumption.attributes.get("unit_of_measurement") == VOLUME_CUBIC_METERS
+    assert gas_consumption.attributes.get("unit_of_measurement") == "m³"
 
 
 async def test_belgian_meter(hass, mock_connection_factory):
