@@ -157,8 +157,8 @@ class IntesisAC(ClimateDevice):
         self._power = False
         self._fan_speed = None
         self._support = 0
-        self._power_consumption_heat_kw = None
-        self._power_consumption_cool_kw = None
+        self._power_consumption_heat = None
+        self._power_consumption_cool = None
 
         # Setpoint support
         if controller.has_setpoint_control(ih_device_id):
