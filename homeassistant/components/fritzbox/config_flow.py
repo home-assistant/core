@@ -10,19 +10,21 @@ from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_FRIENDLY
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 # pylint:disable=unused-import
-from .const import DOMAIN
+from .const import DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN
 
-DEFAULT_HOST = "fritz.box"
 DATA_SCHEMA_USER = vol.Schema(
     {
         vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
-        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
     }
 )
 
 DATA_SCHEMA_CONFIRM = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+    {
+        vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+    }
 )
 
 RESULT_AUTH_FAILED = "auth_failed"
@@ -84,7 +86,7 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 socket.gethostbyname, user_input[CONF_HOST]
             )
 
-            await self.async_set_unique_id(ip_address)
+            await self.async_set_unique_id(ip_address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
 
             self._host = user_input[CONF_HOST]
@@ -94,12 +96,11 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             result = await self.hass.async_add_executor_job(self._try_connect)
 
-            if result == RESULT_AUTH_FAILED:
-                errors["base"] = result
-            elif result != RESULT_SUCCESS:
-                return self.async_abort(reason=result)
-            else:
+            if result == RESULT_SUCCESS:
                 return self._get_entry()
+            if result != RESULT_AUTH_FAILED:
+                return self.async_abort(reason=result)
+            errors["base"] = result
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA_USER, errors=errors
@@ -128,12 +129,11 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._username = user_input[CONF_USERNAME]
             result = await self.hass.async_add_executor_job(self._try_connect)
 
-            if result == RESULT_AUTH_FAILED:
-                errors["base"] = result
-            elif result != RESULT_SUCCESS:
-                return self.async_abort(reason=result)
-            else:
+            if result == RESULT_SUCCESS:
                 return self._get_entry()
+            if result != RESULT_AUTH_FAILED:
+                return self.async_abort(reason=result)
+            errors["base"] = result
 
         return self.async_show_form(
             step_id="confirm",
