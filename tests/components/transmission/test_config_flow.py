@@ -73,6 +73,13 @@ def mock_api_unknown_error():
         yield
 
 
+@pytest.fixture(name="transmission_setup", autouse=True)
+def transmission_setup_fixture():
+    """Mock transmission entry setup."""
+    with patch("homeassistant.components.transmission.async_setup_entry", return_value=True):
+        yield
+
+
 def init_config_flow(hass):
     """Init a configuration flow."""
     flow = config_flow.TransmissionFlowHandler()
