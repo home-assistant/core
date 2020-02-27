@@ -60,7 +60,7 @@ FETCHER_MAPPING = {
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            cv.deprecated(CONF_MONITORED_CONDITIONS, invalidation_version="0.108.0"),
+            cv.deprecated(CONF_MONITORED_CONDITIONS, invalidation_version="0.114.0"),
             vol.Schema(
                 {
                     vol.Required(CONF_ZIP_CODE): str,
