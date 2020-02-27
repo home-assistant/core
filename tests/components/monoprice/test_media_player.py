@@ -2,6 +2,7 @@
 from collections import defaultdict
 
 from asynctest import patch
+from serial import SerialException
 
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
@@ -89,6 +90,22 @@ class MockMonoprice:
         self.zones[zone.zone] = AttrDict(zone)
 
 
+async def test_cannot_connect(hass):
+    """Test connection error."""
+
+    with patch(
+        "homeassistant.components.monoprice.media_player.get_monoprice",
+        side_effect=SerialException,
+    ):
+        config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        # setup_component(self.hass, DOMAIN, MOCK_CONFIG)
+        # self.hass.async_block_till_done()
+        await hass.async_block_till_done()
+        assert hass.states.get(ZONE_1_ID) is None
+
+
 async def _setup_monoprice(hass, monoprice):
     with patch(
         "homeassistant.components.monoprice.media_player.get_monoprice",
@@ -162,7 +179,7 @@ async def test_service_calls_with_entity_id(hass):
     assert "one" == state.attributes[ATTR_INPUT_SOURCE]
 
 
-async def test_service_calls_without_entity_id(hass):
+async def test_service_calls_with_all_entities(hass):
     """Test snapshot save/restore service calls."""
     await _setup_monoprice(hass, MockMonoprice())
 
@@ -193,6 +210,39 @@ async def test_service_calls_without_entity_id(hass):
 
     assert 0.0 == state.attributes[ATTR_MEDIA_VOLUME_LEVEL]
     assert "one" == state.attributes[ATTR_INPUT_SOURCE]
+
+
+async def test_service_calls_without_relevant_entities(hass):
+    """Test snapshot save/restore service calls."""
+    await _setup_monoprice(hass, MockMonoprice())
+
+    # Changing media player to new state
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 0.0}
+    )
+    await _call_media_player_service(
+        hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "one"}
+    )
+
+    # Saving existing values
+    await _call_monoprice_service(hass, SERVICE_SNAPSHOT, {"entity_id": "all"})
+
+    # Changing media player to new state
+    await _call_media_player_service(
+        hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 1.0}
+    )
+    await _call_media_player_service(
+        hass, SERVICE_SELECT_SOURCE, {"entity_id": ZONE_1_ID, "source": "three"}
+    )
+
+    # Restoring media player to its previous state
+    await _call_monoprice_service(hass, SERVICE_RESTORE, {"entity_id": "light.demo"})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ZONE_1_ID)
+
+    assert 1.0 == state.attributes[ATTR_MEDIA_VOLUME_LEVEL]
+    assert "three" == state.attributes[ATTR_INPUT_SOURCE]
 
 
 async def test_restore_without_snapshort(hass):
@@ -276,6 +326,21 @@ async def test_select_source(hass):
         {"entity_id": ZONE_1_ID, ATTR_INPUT_SOURCE: "no name"},
     )
     assert 3 == monoprice.zones[11].source
+
+
+async def test_unknown_source(hass):
+    """Test behavior when device has unknown source."""
+    monoprice = MockMonoprice()
+    await _setup_monoprice(hass, monoprice)
+
+    monoprice.set_source(11, 5)
+
+    await async_update_entity(hass, ZONE_1_ID)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ZONE_1_ID)
+
+    assert state.attributes.get(ATTR_INPUT_SOURCE) is None
 
 
 async def test_turn_on_off(hass):
