@@ -130,16 +130,10 @@ async def test_catch_bad_image(
     await async_setup_component(hass, ip.DOMAIN, valid_config_save_file)
     assert hass.states.get(VALID_ENTITY_ID)
 
-    with mock.patch(
-        "homeassistant.components.sighthound.image_processing.Image.open"
-    ) as pil_img_open:
-        pil_img = pil_img_open.return_value
-        pil_img = pil_img.convert.return_value
-        data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
-        await hass.services.async_call(ip.DOMAIN, ip.SERVICE_SCAN, service_data=data)
-        await hass.async_block_till_done()
-        assert pil_img.save.call_count == 0
-        assert "Sighthound unable to process image" in caplog.text
+    data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
+    await hass.services.async_call(ip.DOMAIN, ip.SERVICE_SCAN, service_data=data)
+    await hass.async_block_till_done()
+    assert "Sighthound unable to process image" in caplog.text
 
 
 async def test_save_image(hass, mock_image, mock_detections):
