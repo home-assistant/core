@@ -52,16 +52,16 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
 
     sources = _get_sources(config_entry.data.get(CONF_SOURCES))
 
-    hass.data[DOMAIN] = []
+    devices = []
     for i in range(1, 4):
         for j in range(1, 7):
             zone_id = (i * 10) + j
             _LOGGER.info("Adding zone %d for port %s", zone_id, port)
-            hass.data[DOMAIN].append(
+            devices.append(
                 MonopriceZone(monoprice, sources, config_entry.entry_id, zone_id)
             )
 
-    async_add_devices(hass.data[DOMAIN], True)
+    async_add_devices(devices, True)
 
     platform = entity_platform.current_platform.get()
 
@@ -133,10 +133,6 @@ class MonopriceZone(MediaPlayerDevice):
         else:
             self._source = None
         return True
-
-    async def async_will_remove_from_hass(self):
-        """Remove zone from list."""
-        self.hass.data[DOMAIN].remove(self)
 
     @property
     def entity_registry_enabled_default(self):
