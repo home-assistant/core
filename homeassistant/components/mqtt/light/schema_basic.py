@@ -675,7 +675,7 @@ class MqttLight(
                     {"red": rgb[0], "green": rgb[1], "blue": rgb[2]}
                 )
             else:
-                rgb_color_str = "{},{},{}".format(*rgb)
+                rgb_color_str = f"{rgb[0]},{rgb[1]},{rgb[2]}"
 
             mqtt.async_publish(
                 self.hass,
@@ -695,7 +695,7 @@ class MqttLight(
             mqtt.async_publish(
                 self.hass,
                 self._topic[CONF_HS_COMMAND_TOPIC],
-                "{},{}".format(*hs_color),
+                f"{hs_color[0]},{hs_color[1]}",
                 self._config[CONF_QOS],
                 self._config[CONF_RETAIN],
             )
@@ -710,7 +710,7 @@ class MqttLight(
             mqtt.async_publish(
                 self.hass,
                 self._topic[CONF_XY_COMMAND_TOPIC],
-                "{},{}".format(*xy_color),
+                f"{xy_color[0]},{xy_color[1]}",
                 self._config[CONF_QOS],
                 self._config[CONF_RETAIN],
             )
@@ -753,7 +753,7 @@ class MqttLight(
                     {"red": rgb[0], "green": rgb[1], "blue": rgb[2]}
                 )
             else:
-                rgb_color_str = "{},{},{}".format(*rgb)
+                rgb_color_str = f"{rgb[0]},{rgb[1]},{rgb[2]}"
 
             mqtt.async_publish(
                 self.hass,

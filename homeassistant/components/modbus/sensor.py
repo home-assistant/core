@@ -99,8 +99,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         structure = ">i"
         if register[CONF_DATA_TYPE] != DATA_TYPE_CUSTOM:
             try:
-                structure = ">{}".format(
-                    data_types[register[CONF_DATA_TYPE]][register[CONF_COUNT]]
+                structure = (
+                    f">{data_types[register[CONF_DATA_TYPE]][register[CONF_COUNT]]}"
                 )
             except KeyError:
                 _LOGGER.error(

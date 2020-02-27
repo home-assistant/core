@@ -14,7 +14,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for handler in hass.data[DATA_KEY].values():
         cube = handler.cube
         for device in cube.devices:
-            name = "{} {}".format(cube.room_by_id(device.room_id).name, device.name)
+            name = f"{cube.room_by_id(device.room_id).name} {device.name}"
 
             # Only add Window Shutters
             if cube.is_windowshutter(device):

@@ -93,7 +93,7 @@ async def async_setup_entry(hass, entry):
 
     hass.data[DOMAIN][DATA_DEVICES][webhook_id] = device
 
-    registration_name = "Mobile App: {}".format(registration[ATTR_DEVICE_NAME])
+    registration_name = f"Mobile App: {registration[ATTR_DEVICE_NAME]}"
     webhook_register(hass, DOMAIN, registration_name, webhook_id, handle_webhook)
 
     for domain in PLATFORMS:

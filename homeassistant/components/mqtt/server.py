@@ -85,9 +85,7 @@ def generate_config(hass, passwd, password):
 
         # Encrypt with what hbmqtt uses to verify
         passwd.write(
-            "homeassistant:{}\n".format(custom_app_context.encrypt(password)).encode(
-                "utf-8"
-            )
+            f"homeassistant:{custom_app_context.encrypt(password)}\n".encode("utf-8")
         )
         passwd.flush()
 

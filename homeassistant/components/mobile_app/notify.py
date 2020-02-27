@@ -139,8 +139,8 @@ class MobileAppNotificationService(BaseNotificationService):
                     continue
 
                 fallback_error = result.get("errorMessage", "Unknown error")
-                fallback_message = "Internal server error, please try again later: {}".format(
-                    fallback_error
+                fallback_message = (
+                    f"Internal server error, please try again later: {fallback_error}"
                 )
                 message = result.get("message", fallback_message)
                 if response.status == 429:

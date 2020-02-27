@@ -78,7 +78,6 @@ from .const import (
     ERR_ENCRYPTION_REQUIRED,
     ERR_SENSOR_DUPLICATE_UNIQUE_ID,
     ERR_SENSOR_NOT_REGISTERED,
-    SIGNAL_LOCATION_UPDATE,
     SIGNAL_SENSOR_UPDATE,
 )
 from .helpers import (
@@ -274,7 +273,7 @@ async def webhook_render_template(hass, config_entry, data):
 async def webhook_update_location(hass, config_entry, data):
     """Handle an update location webhook."""
     hass.helpers.dispatcher.async_dispatcher_send(
-        SIGNAL_LOCATION_UPDATE.format(config_entry.entry_id), data
+        f"{DOMAIN}_location_update_{config_entry.entry_id}", data
     )
     return empty_okay_response()
 
@@ -381,7 +380,7 @@ async def webhook_register_sensor(hass, config_entry, data):
         _LOGGER.error("Error registering sensor: %s", ex)
         return empty_okay_response()
 
-    register_signal = "{}_{}_register".format(DOMAIN, data[ATTR_SENSOR_TYPE])
+    register_signal = f"{DOMAIN}_{data[ATTR_SENSOR_TYPE]}_register"
     async_dispatcher_send(hass, register_signal, data)
 
     return webhook_response(

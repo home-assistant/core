@@ -22,7 +22,7 @@ class MoparSwitch(SwitchDevice):
     def __init__(self, data, index):
         """Initialize the Switch."""
         self._index = index
-        self._name = "{} Switch".format(data.get_vehicle_name(self._index))
+        self._name = f"{data.get_vehicle_name(self._index)} Switch"
         self._actuate = data.actuate
         self._state = None
 
