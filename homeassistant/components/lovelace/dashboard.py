@@ -12,6 +12,7 @@ from homeassistant.helpers import collection, storage
 from homeassistant.util.yaml import load_yaml
 
 from .const import (
+    CONF_SIDEBAR,
     CONF_URL_PATH,
     DOMAIN,
     EVENT_LOVELACE_UPDATED,
@@ -225,4 +226,9 @@ class DashboardsCollection(collection.StorageCollection):
     async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
-        return {**data, **update_data}
+        updated = {**data, **update_data}
+
+        if CONF_SIDEBAR in updated and updated[CONF_SIDEBAR] is None:
+            updated.pop(CONF_SIDEBAR)
+
+        return updated

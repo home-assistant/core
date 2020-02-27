@@ -43,17 +43,25 @@ CONF_SIDEBAR = "sidebar"
 CONF_TITLE = "title"
 CONF_REQUIRE_ADMIN = "require_admin"
 
-DASHBOARD_BASE_FIELDS = {
+SIDEBAR_FIELDS = {
+    vol.Required(CONF_ICON): cv.icon,
+    vol.Required(CONF_TITLE): cv.string,
+}
+
+DASHBOARD_BASE_CREATE_FIELDS = {
     vol.Optional(CONF_REQUIRE_ADMIN, default=False): cv.boolean,
-    vol.Optional(CONF_SIDEBAR): {
-        vol.Required(CONF_ICON): cv.icon,
-        vol.Required(CONF_TITLE): cv.string,
-    },
+    vol.Optional(CONF_SIDEBAR): SIDEBAR_FIELDS,
+}
+
+
+DASHBOARD_BASE_UPDATE_FIELDS = {
+    vol.Optional(CONF_REQUIRE_ADMIN): cv.boolean,
+    vol.Optional(CONF_SIDEBAR): vol.Any(None, SIDEBAR_FIELDS),
 }
 
 
 STORAGE_DASHBOARD_CREATE_FIELDS = {
-    **DASHBOARD_BASE_FIELDS,
+    **DASHBOARD_BASE_CREATE_FIELDS,
     vol.Required(CONF_URL_PATH): cv.string,
     # For now we write "storage" as all modes.
     # In future we can adjust this to be other modes.
@@ -61,7 +69,7 @@ STORAGE_DASHBOARD_CREATE_FIELDS = {
 }
 
 STORAGE_DASHBOARD_UPDATE_FIELDS = {
-    **DASHBOARD_BASE_FIELDS,
+    **DASHBOARD_BASE_UPDATE_FIELDS,
 }
 
 

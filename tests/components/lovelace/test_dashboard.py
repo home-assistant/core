@@ -292,10 +292,21 @@ async def test_storage_dashboards(hass, hass_ws_client, hass_storage):
 
     # Add a dashboard
     await client.send_json(
-        {"id": 6, "type": "lovelace/dashboards/create", "url_path": "created_url_path"}
+        {
+            "id": 6,
+            "type": "lovelace/dashboards/create",
+            "url_path": "created_url_path",
+            "require_admin": True,
+            "sidebar": {"title": "Updated Title", "icon": "mdi:map"},
+        }
     )
     response = await client.receive_json()
     assert response["success"]
+    assert response["result"]["require_admin"] is True
+    assert response["result"]["sidebar"] == {
+        "title": "Updated Title",
+        "icon": "mdi:map",
+    }
 
     dashboard_id = response["result"]["id"]
 
@@ -341,17 +352,14 @@ async def test_storage_dashboards(hass, hass_ws_client, hass_storage):
             "id": 10,
             "type": "lovelace/dashboards/update",
             "dashboard_id": dashboard_id,
-            "require_admin": True,
-            "sidebar": {"title": "Updated Title", "icon": "mdi:map"},
+            "require_admin": False,
+            "sidebar": None,
         }
     )
     response = await client.receive_json()
     assert response["success"]
-    assert response["result"]["require_admin"] is True
-    assert response["result"]["sidebar"] == {
-        "title": "Updated Title",
-        "icon": "mdi:map",
-    }
+    assert response["result"]["require_admin"] is False
+    assert "sidebar" not in response["result"]
 
     # Add dashboard with existing url path
     await client.send_json(

@@ -19,7 +19,7 @@ from .const import (
     CONF_SIDEBAR,
     CONF_TITLE,
     CONF_URL_PATH,
-    DASHBOARD_BASE_FIELDS,
+    DASHBOARD_BASE_CREATE_FIELDS,
     DOMAIN,
     LOVELACE_CONFIG_FILE,
     MODE_STORAGE,
@@ -38,7 +38,7 @@ CONF_DASHBOARDS = "dashboards"
 
 YAML_DASHBOARD_SCHEMA = vol.Schema(
     {
-        **DASHBOARD_BASE_FIELDS,
+        **DASHBOARD_BASE_CREATE_FIELDS,
         vol.Required(CONF_MODE): MODE_YAML,
         vol.Required(CONF_FILENAME): vol.All(cv.string, sanitize_filename),
     }
