@@ -30,7 +30,7 @@ def async_sign_path(hass, refresh_token_id, path, expiration):
 
     now = dt_util.utcnow()
     encoded = jwt.encode(
-        {"iss": refresh_token_id, "path": path, "iat": now, "exp": now + expiration,},
+        {"iss": refresh_token_id, "path": path, "iat": now, "exp": now + expiration},
         secret,
         algorithm="HS256",
     )
