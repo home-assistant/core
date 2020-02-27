@@ -239,7 +239,7 @@ class AugustData(AugustSubscriberMixin):
         return self._device_detail_by_id[device_id]
 
     def _refresh(self, time):
-        self._refresh_device_detail_by_ids([list(self._subscriptions.keys())])
+        self._refresh_device_detail_by_ids(self._subscriptions.keys())
 
     def _refresh_device_detail_by_ids(self, device_ids_list):
         for device_id in device_ids_list:
