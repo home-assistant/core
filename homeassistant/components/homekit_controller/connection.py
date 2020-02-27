@@ -125,7 +125,7 @@ class HKDevice:
     def add_watchable_characteristics(self, characteristics):
         """Add (aid, iid) pairs that we need to poll."""
         self.watchable_characteristics.extend(characteristics)
-        self.hass.add_job(self.pairing.subscribe(characteristics))
+        self.hass.async_create_task(self.pairing.subscribe(characteristics))
 
     def remove_watchable_characteristics(self, accessory_id):
         """Remove all pollable characteristics by accessory id."""
