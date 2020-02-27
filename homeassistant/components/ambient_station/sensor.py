@@ -87,8 +87,8 @@ class AmbientWeatherSensor(AmbientWeatherEntity):
             try:
                 self._state = round(float(w_m2_brightness_val) / 0.0079)
             except TypeError:
-                # In rare cases when the Ambient websocket doesn't return a parse-able
-                # float value, just return:
+                # In rare cases, Ambient won't initially return a brightness value; if
+                # that happens, just return:
                 return
         else:
             self._state = self._ambient.stations[self._mac_address][ATTR_LAST_DATA].get(
