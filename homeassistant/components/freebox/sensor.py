@@ -50,7 +50,11 @@ class FbxSensor(Entity):
 
     async def async_update(self):
         """Fetch status from freebox."""
-        self._datas = await self._fbx.connection.get_status()
+        try:
+            self._datas = await self._fbx.connection.get_status()
+        except Exception as e:
+            _LOGGER.error("Error while getting Freebox data: " + str(e))
+            return
 
 
 class FbxRXSensor(FbxSensor):

@@ -57,6 +57,10 @@ class FbxWifiSwitch(SwitchDevice):
 
     async def async_update(self):
         """Get the state and update it."""
-        datas = await self._fbx.wifi.get_global_config()
+        try:
+            datas = await self._fbx.wifi.get_global_config()
+        except Exception as e:
+            _LOGGER.error("Error getting Freebox switch info: " + str(e))
+            return
         active = datas["enabled"]
         self._state = bool(active)
