@@ -28,7 +28,7 @@ ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
             toggle_entity.DEVICE_ACTION_TYPES
             + [TYPE_BRIGHTNESS_INCREASE, TYPE_BRIGHTNESS_DECREASE]
         ),
-        vol.Optional("brightness", default=100): vol.All(
+        vol.Optional(ATTR_BRIGHTNESS): vol.All(
             vol.Coerce(int), vol.Range(min=0, max=100)
         ),
     }
@@ -57,8 +57,8 @@ async def async_call_action_from_config(
         data[ATTR_BRIGHTNESS_STEP_PCT] = 10
     elif config[CONF_TYPE] == TYPE_BRIGHTNESS_DECREASE:
         data[ATTR_BRIGHTNESS_STEP_PCT] = -10
-    else:
-        data[ATTR_BRIGHTNESS] = config["brightness"]
+    elif ATTR_BRIGHTNESS in config:
+        data[ATTR_BRIGHTNESS] = config[ATTR_BRIGHTNESS]
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, data, blocking=True, context=context
@@ -125,7 +125,7 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: dict) -> di
     return {
         "extra_fields": vol.Schema(
             {
-                vol.Optional("brightness", default=100): vol.All(
+                vol.Optional(ATTR_BRIGHTNESS): vol.All(
                     vol.Coerce(int), vol.Range(min=0, max=100)
                 )
             }

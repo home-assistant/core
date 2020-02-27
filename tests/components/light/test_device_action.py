@@ -129,7 +129,6 @@ async def test_get_action_capabilities_brightness(hass, device_reg, entity_reg):
                 "name": "brightness",
                 "optional": True,
                 "type": "integer",
-                "default": 100,
                 "valueMax": 100,
                 "valueMin": 0,
             }
@@ -281,4 +280,4 @@ async def test_action(hass, calls):
 
     assert len(turn_on_calls) == 4
     assert turn_on_calls[3].data["entity_id"] == ent1.entity_id
-    assert turn_on_calls[3].data["brightness"] == 100
+    assert "brightness" not in turn_on_calls[3].data
