@@ -251,22 +251,26 @@ class Counter(RestoreEntity):
                 self._config[CONF_MINIMUM] = state.attributes.get(ATTR_MINIMUM)
                 self._config[CONF_STEP] = state.attributes.get(ATTR_STEP)
 
-    async def async_decrement(self) -> None:
+    @callback
+    def async_decrement(self) -> None:
         """Decrement the counter."""
         self._state = self.compute_next_state(self._state - self._config[CONF_STEP])
         self.async_write_ha_state()
 
-    async def async_increment(self) -> None:
+    @callback
+    def async_increment(self) -> None:
         """Increment a counter."""
         self._state = self.compute_next_state(self._state + self._config[CONF_STEP])
         self.async_write_ha_state()
 
-    async def async_reset(self) -> None:
+    @callback
+    def async_reset(self) -> None:
         """Reset a counter."""
         self._state = self.compute_next_state(self._config[CONF_INITIAL])
         self.async_write_ha_state()
 
-    async def async_configure(self, **kwargs) -> None:
+    @callback
+    def async_configure(self, **kwargs) -> None:
         """Change the counter's settings with a service."""
         new_state = kwargs.pop(VALUE, self._state)
         self._config = {**self._config, **kwargs}
