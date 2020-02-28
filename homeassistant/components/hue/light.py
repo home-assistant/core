@@ -5,6 +5,7 @@ from functools import partial
 import logging
 import random
 
+from aiohttp import client_exceptions
 import aiohue
 import async_timeout
 
@@ -172,7 +173,11 @@ async def async_safe_fetch(bridge, fetch_method):
     except aiohue.Unauthorized:
         await bridge.handle_unauthorized_error()
         raise UpdateFailed
-    except (asyncio.TimeoutError, aiohue.AiohueException):
+    except (
+        asyncio.TimeoutError,
+        aiohue.AiohueException,
+        client_exceptions.ClientError,
+    ):
         raise UpdateFailed
 
 

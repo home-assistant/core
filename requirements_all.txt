@@ -1305,7 +1305,7 @@ pyicloud==0.9.2
 pyintesishome==1.6
 
 # homeassistant.components.ipma
-pyipma==2.0.3
+pyipma==2.0.4
 
 # homeassistant.components.iqvia
 pyiqvia==0.2.1
@@ -1827,7 +1827,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==8.1.1
+simplisafe-python==9.0.2
 
 # homeassistant.components.sisyphus
 sisyphus-control==2.2.1
