@@ -7,7 +7,7 @@ from dynalite_devices_lib import DynaliteDevices
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import CONF_ALL, CONF_HOST, LOGGER
+from .const import CONF_ALL, CONF_HOST, ENTITY_PLATFORMS, LOGGER
 
 CONNECT_TIMEOUT = 30
 CONNECT_INTERVAL = 1
@@ -20,8 +20,8 @@ class DynaliteBridge:
         """Initialize the system based on host parameter."""
         self.hass = hass
         self.area = {}
-        self.async_add_devices = None
-        self.waiting_devices = []
+        self.async_add_devices = {}
+        self.waiting_devices = {}
         self.host = config[CONF_HOST]
         # Configure the dynalite devices
         self.dynalite_devices = DynaliteDevices(
@@ -72,17 +72,23 @@ class DynaliteBridge:
         return False
 
     @callback
-    def register_add_devices(self, async_add_devices):
+    def register_add_devices(self, platform, async_add_devices):
         """Add an async_add_entities for a category."""
-        self.async_add_devices = async_add_devices
-        if self.waiting_devices:
-            self.async_add_devices(self.waiting_devices)
+        self.async_add_devices[platform] = async_add_devices
+        if platform in self.waiting_devices:
+            self.async_add_devices[platform](self.waiting_devices[platform])
 
     def add_devices_when_registered(self, devices):
         """Add the devices to HA if the add devices callback was registered, otherwise queue until it is."""
         if not devices:
             return
-        if self.async_add_devices:
-            self.async_add_devices(devices)
-        else:  # handle it later when it is registered
-            self.waiting_devices.extend(devices)
+        for platform in ENTITY_PLATFORMS:
+            platform_devices = [
+                device for device in devices if device.category == platform
+            ]
+            if platform in self.async_add_devices:
+                self.async_add_devices[platform](platform_devices)
+            else:  # handle it later when it is registered
+                if platform not in self.waiting_devices:
+                    self.waiting_devices[platform] = []
+                self.waiting_devices[platform].extend(platform_devices)
