@@ -37,8 +37,8 @@ class ComfoAirFan(FanEntity):
     def __init__(self, ca: ComfoAirModule) -> None:
         """Initialize the ComfoAir fan."""
         self._ca = ca
-        self._speed = 1
-        self._saved_speed = 2
+        self._numeric_speed = 1
+        self._poweron_speed = SPEED_LOW
         self._attr = ComfoAir.FAN_SPEED_MODE
 
     async def async_added_to_hass(self):
@@ -47,7 +47,10 @@ class ComfoAirFan(FanEntity):
         async def async_handle_update(attr, value):
             _LOGGER.debug("Dispatcher update for %s: %s", attr, value)
             assert attr == self._attr
-            self._speed = value
+            if value in SPEED_MAPPING:
+                self._numeric_speed = value
+                if self._numeric_speed > 1:
+                    self._poweron_speed = self.speed
             self.async_schedule_update_ha_state()
 
         self._ca.add_cooked_listener(self._attr, async_handle_update)
@@ -75,35 +78,29 @@ class ComfoAirFan(FanEntity):
     @property
     def speed(self):
         """Return the current fan mode."""
-        return SPEED_MAPPING[self._speed]
+        return SPEED_MAPPING[self._numeric_speed]
 
     @property
     def speed_list(self):
         """List of available fan modes."""
         return SPEED_VALUES
 
-    def async_turn_on(self, speed: Optional[str] = None, **kwargs):
+    async def async_turn_on(self, speed: Optional[str] = None, **kwargs):
         """Turn on the fan."""
         if speed is None:
-            return self._ca_set_speed(self._saved_speed)
+            speed = self._poweron_speed
+        await self.async_set_speed(speed)
 
-        return self.async_set_speed(speed)
-
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn off the fan (to away)."""
-        if self._speed > 1:
-            self._saved_speed = self._speed
-        return self._ca_set_speed(1)
+        await self.async_set_speed(SPEED_OFF)
 
-    def async_set_speed(self, speed: str):
+    async def async_set_speed(self, speed: str):
         """Set fan speed."""
         for key, value in SPEED_MAPPING.items():
             if value == speed:
-                return self._ca_set_speed(key)
-
-        # shouldn't happen
-        return self.async_turn_off()
-
-    def _ca_set_speed(self, speed):
-        _LOGGER.debug("Changing fan speed to %s", SPEED_MAPPING[speed])
-        return self._ca.set_speed(speed)
+                _LOGGER.debug("Changing fan speed to %s", speed)
+                await self._ca.set_speed(key)
+                break
+        else:
+            _LOGGER.warning("Invalid fan speed: %s", speed)
