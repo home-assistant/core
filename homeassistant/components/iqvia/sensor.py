@@ -66,7 +66,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     }
 
     sensors = []
-    for sensor_type in iqvia.sensor_types:
+    for sensor_type in SENSORS:
         klass = sensor_class_mapping[sensor_type]
         name, icon = SENSORS[sensor_type]
         sensors.append(klass(iqvia, sensor_type, name, icon, iqvia.zip_code))
