@@ -4,12 +4,7 @@ from pyairvisual.errors import InvalidKeyError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_SHOW_ON_MAP,
-)
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
@@ -93,6 +88,5 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_LONGITUDE: user_input[CONF_LONGITUDE],
                     }
                 ],
-                CONF_SHOW_ON_MAP: True,
             },
         )

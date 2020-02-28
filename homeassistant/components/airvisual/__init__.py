@@ -58,11 +58,10 @@ CLOUD_API_SCHEMA = vol.Schema(
             cv.ensure_list,
             [vol.Any(GEOGRAPHY_COORDINATES_SCHEMA, GEOGRAPHY_PLACE_SCHEMA)],
         ),
-        vol.Optional(CONF_SHOW_ON_MAP, default=True): cv.boolean,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: CLOUD_API_SCHEMA}, extra=vol.ALLOW_EXTRA,)
+CONFIG_SCHEMA = vol.Schema({DOMAIN: CLOUD_API_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 
 @callback
@@ -103,10 +102,17 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up AirVisual as config entry."""
+    entry_updates = {}
     if not config_entry.unique_id:
-        hass.config_entries.async_update_entry(
-            config_entry, unique_id=config_entry.data[CONF_API_KEY]
-        )
+        entry_updates["unique_id"] = config_entry.data[CONF_API_KEY]
+
+    if not config_entry.options.GET(CONF_SHOW_ON_MAP):
+        options = {**config_entry.options}
+        options[CONF_SHOW_ON_MAP] = True
+        entry_updates["options"] = options
+
+    if entry_updates:
+        hass.config_entries.async_update_entry(config_entry, **entry_updates)
 
     websession = aiohttp_client.async_get_clientsession(hass)
 
