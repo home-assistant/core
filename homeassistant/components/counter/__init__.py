@@ -58,12 +58,12 @@ CREATE_FIELDS = {
 
 UPDATE_FIELDS = {
     vol.Optional(CONF_ICON): cv.icon,
-    vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL): cv.positive_int,
+    vol.Optional(CONF_INITIAL): cv.positive_int,
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_MAXIMUM, default=None): vol.Any(None, vol.Coerce(int)),
-    vol.Optional(CONF_MINIMUM, default=None): vol.Any(None, vol.Coerce(int)),
-    vol.Optional(CONF_RESTORE, default=True): cv.boolean,
-    vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
+    vol.Optional(CONF_MAXIMUM): vol.Any(None, vol.Coerce(int)),
+    vol.Optional(CONF_MINIMUM): vol.Any(None, vol.Coerce(int)),
+    vol.Optional(CONF_RESTORE): cv.boolean,
+    vol.Optional(CONF_STEP): cv.positive_int,
 }
 
 
