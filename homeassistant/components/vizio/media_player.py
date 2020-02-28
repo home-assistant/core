@@ -54,7 +54,7 @@ async def async_setup_entry(
 
     # If config entry options not set up, set them up, otherwise assign values managed in options
     volume_step = config_entry.options.get(
-        CONF_VOLUME_STEP, config_entry.data.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP),
+        CONF_VOLUME_STEP, config_entry.data.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP)
     )
 
     params = {}
