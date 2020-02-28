@@ -113,8 +113,6 @@ async def async_setup(hass, config):
 async def async_entry_changed(hass, entry):
     """Reload entry since the data has changed."""
     LOGGER.debug("Reconfiguring entry %s", entry.data)
-    while entry.state == "not_loaded":
-        await asyncio.sleep(1)
     bridge = hass.data[DOMAIN][entry.entry_id]
     await bridge.reload_config(entry.data)
     LOGGER.debug("Reconfiguring entry finished %s", entry.data)
