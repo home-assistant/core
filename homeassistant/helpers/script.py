@@ -52,27 +52,19 @@ from homeassistant.util.dt import utcnow
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
-IF_RUNNING_ERROR = "error"
-IF_RUNNING_IGNORE = "ignore"
-IF_RUNNING_PARALLEL = "parallel"
-IF_RUNNING_RESTART = "restart"
-# First choice is default
-IF_RUNNING_CHOICES = [
-    IF_RUNNING_PARALLEL,
-    IF_RUNNING_ERROR,
-    IF_RUNNING_IGNORE,
-    IF_RUNNING_RESTART,
+SCRIPT_MODE_ERROR = "error"
+SCRIPT_MODE_IGNORE = "ignore"
+SCRIPT_MODE_LEGACY = "legacy"
+SCRIPT_MODE_PARALLEL = "parallel"
+SCRIPT_MODE_RESTART = "restart"
+SCRIPT_MODE_CHOICES = [
+    SCRIPT_MODE_ERROR,
+    SCRIPT_MODE_IGNORE,
+    SCRIPT_MODE_LEGACY,
+    SCRIPT_MODE_PARALLEL,
+    SCRIPT_MODE_RESTART,
 ]
-
-RUN_MODE_BACKGROUND = "background"
-RUN_MODE_BLOCKING = "blocking"
-RUN_MODE_LEGACY = "legacy"
-# First choice is default
-RUN_MODE_CHOICES = [
-    RUN_MODE_BLOCKING,
-    RUN_MODE_BACKGROUND,
-    RUN_MODE_LEGACY,
-]
+DEFAULT_SCRIPT_MODE = SCRIPT_MODE_LEGACY
 
 _LOG_EXCEPTION = logging.ERROR + 1
 _TIMEOUT_MSG = "Timeout reached, abort script."
@@ -333,19 +325,24 @@ class _ScriptRun(_ScriptRunBase):
         if not self._stop.is_set():
             super()._changed()
 
-    async def _async_run(self, propagate_exceptions=True):
+    async def async_run(self) -> None:
+        """Run script."""
+        try:
+            await asyncio.shield(self._async_run())
+        except asyncio.CancelledError:
+            await self.async_stop()
+            raise
+
+    async def _async_run(self):
         self._changed()
         self._log("Running script")
         try:
             for self._step, self._action in enumerate(self._script.sequence):
                 if self._stop.is_set():
                     break
-                await self._async_step(log_exceptions=not propagate_exceptions)
+                await self._async_step(log_exceptions=False)
         except _StopScript:
             pass
-        except Exception:  # pylint: disable=broad-except
-            if propagate_exceptions:
-                raise
         finally:
             self._script._runs.remove(self)  # pylint: disable=protected-access
             if not self._script.is_running:
@@ -400,26 +397,6 @@ class _ScriptRun(_ScriptRunBase):
                 raise _StopScript
         finally:
             unsub()
-
-
-class _BackgroundScriptRun(_ScriptRun):
-    """Manage background Script sequence run."""
-
-    async def async_run(self) -> None:
-        """Run script."""
-        self._hass.async_create_task(self._async_run(False))
-
-
-class _BlockingScriptRun(_ScriptRun):
-    """Manage blocking Script sequence run."""
-
-    async def async_run(self) -> None:
-        """Run script."""
-        try:
-            await asyncio.shield(self._async_run())
-        except asyncio.CancelledError:
-            await self.async_stop()
-            raise
 
 
 class _LegacyScriptRun(_ScriptRunBase):
@@ -572,8 +549,7 @@ class Script:
         sequence: Sequence[Dict[str, Any]],
         name: Optional[str] = None,
         change_listener: Optional[Callable[..., Any]] = None,
-        if_running: Optional[str] = None,
-        run_mode: Optional[str] = None,
+        script_mode: str = DEFAULT_SCRIPT_MODE,
         logger: Optional[logging.Logger] = None,
         log_exceptions: bool = True,
     ) -> None:
@@ -583,6 +559,7 @@ class Script:
         template.attach(hass, self.sequence)
         self.name = name
         self._change_listener = change_listener
+        self._script_mode = script_mode
         if logger:
             self._logger = logger
         else:
@@ -594,20 +571,11 @@ class Script:
 
         self.last_action = None
         self.last_triggered: Optional[datetime] = None
-        if not if_running and not run_mode:
-            self._if_running = IF_RUNNING_PARALLEL
-            self._run_mode = RUN_MODE_LEGACY
-        elif if_running and run_mode == RUN_MODE_LEGACY:
-            raise exceptions.HomeAssistantError(
-                'Cannot use if_running if run_mode is "legacy"'
-            )
-        else:
-            self._if_running = if_running or IF_RUNNING_CHOICES[0]
-            self._run_mode = run_mode or RUN_MODE_CHOICES[0]
         self.can_cancel = not self.is_legacy or any(
             CONF_DELAY in action or CONF_WAIT_TEMPLATE in action
             for action in self.sequence
         )
+
         self._runs: List[_ScriptRunBase] = []
         self._config_cache: Dict[Set[Tuple], Callable[..., bool]] = {}
         self._referenced_entities: Optional[Set[str]] = None
@@ -628,7 +596,7 @@ class Script:
     @property
     def is_legacy(self) -> bool:
         """Return if using legacy mode."""
-        return self._run_mode == RUN_MODE_LEGACY
+        return self._script_mode == SCRIPT_MODE_LEGACY
 
     @property
     def referenced_devices(self):
@@ -697,14 +665,14 @@ class Script:
     ) -> None:
         """Run script."""
         if self.is_running:
-            if self._if_running == IF_RUNNING_IGNORE:
+            if self._script_mode == SCRIPT_MODE_IGNORE:
                 self._log("Skipping script")
                 return
 
-            if self._if_running == IF_RUNNING_ERROR:
+            if self._script_mode == SCRIPT_MODE_ERROR:
                 raise AlreadyRunning
 
-            if self._if_running == IF_RUNNING_RESTART:
+            if self._script_mode == SCRIPT_MODE_RESTART:
                 self._log("Restarting script")
                 await self.async_stop()
 
@@ -718,14 +686,7 @@ class Script:
                 self._hass, self, variables, context, self._log_exceptions, shared
             )
         else:
-            if self._run_mode == RUN_MODE_BACKGROUND:
-                run = _BackgroundScriptRun(
-                    self._hass, self, variables, context, self._log_exceptions
-                )
-            else:
-                run = _BlockingScriptRun(
-                    self._hass, self, variables, context, self._log_exceptions
-                )
+            run = _ScriptRun(self._hass, self, variables, context, self._log_exceptions)
         self._runs.append(run)
         await run.async_run()
 

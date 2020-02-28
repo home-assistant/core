@@ -21,7 +21,7 @@ from tests.common import async_fire_time_changed
 
 ENTITY_ID = "script.test"
 
-_ALL_RUN_MODES = [None, "background", "blocking"]
+_BASIC_SCRIPT_MODES = ("legacy", "parallel")
 
 
 async def test_firing_event_basic(hass):
@@ -38,14 +38,9 @@ async def test_firing_event_basic(hass):
 
     schema = cv.SCRIPT_SCHEMA({"event": event, "event_data": {"hello": "world"}})
 
-    # For this one test we'll make sure "legacy" works the same as None.
-    for run_mode in _ALL_RUN_MODES + ["legacy"]:
+    for script_mode in _BASIC_SCRIPT_MODES:
         events = []
-
-        if run_mode is None:
-            script_obj = script.Script(hass, schema)
-        else:
-            script_obj = script.Script(hass, schema, run_mode=run_mode)
+        script_obj = script.Script(hass, schema, script_mode=script_mode)
 
         assert script_obj.can_cancel == (not script_obj.is_legacy)
 
@@ -85,13 +80,9 @@ async def test_firing_event_template(hass):
         }
     )
 
-    for run_mode in _ALL_RUN_MODES:
+    for script_mode in _BASIC_SCRIPT_MODES:
         events = []
-
-        if run_mode is None:
-            script_obj = script.Script(hass, schema)
-        else:
-            script_obj = script.Script(hass, schema, run_mode=run_mode)
+        script_obj = script.Script(hass, schema, script_mode=script_mode)
 
         assert script_obj.can_cancel == (not script_obj.is_legacy)
 
@@ -120,13 +111,9 @@ async def test_calling_service_basic(hass):
 
     schema = cv.SCRIPT_SCHEMA({"service": "test.script", "data": {"hello": "world"}})
 
-    for run_mode in _ALL_RUN_MODES:
+    for script_mode in _BASIC_SCRIPT_MODES:
         calls = []
-
-        if run_mode is None:
-            script_obj = script.Script(hass, schema)
-        else:
-            script_obj = script.Script(hass, schema, run_mode=run_mode)
+        script_obj = script.Script(hass, schema, script_mode=script_mode)
 
         assert script_obj.can_cancel == (not script_obj.is_legacy)
 
@@ -158,20 +145,13 @@ async def test_cancel_no_wait(hass, caplog):
 
     schema = cv.SCRIPT_SCHEMA([{"event": event}, {"service": "test.script"}])
 
-    for run_mode in _ALL_RUN_MODES:
+    for script_mode in _BASIC_SCRIPT_MODES:
         event_sem = asyncio.Semaphore(0)
-
-        if run_mode is None:
-            script_obj = script.Script(hass, schema)
-        else:
-            script_obj = script.Script(hass, schema, run_mode=run_mode)
+        script_obj = script.Script(hass, schema, script_mode=script_mode)
 
         tasks = []
         for _ in range(3):
-            if run_mode == "background":
-                await script_obj.async_run()
-            else:
-                hass.async_create_task(script_obj.async_run())
+            hass.async_create_task(script_obj.async_run())
             tasks.append(hass.async_create_task(event_sem.acquire()))
         await asyncio.wait_for(asyncio.gather(*tasks), 1)
 
@@ -199,13 +179,9 @@ async def test_activating_scene(hass):
 
     schema = cv.SCRIPT_SCHEMA({"scene": "scene.hello"})
 
-    for run_mode in _ALL_RUN_MODES:
+    for script_mode in _BASIC_SCRIPT_MODES:
         calls = []
-
-        if run_mode is None:
-            script_obj = script.Script(hass, schema)
-        else:
-            script_obj = script.Script(hass, schema, run_mode=run_mode)
+        script_obj = script.Script(hass, schema, script_mode=script_mode)
 
         assert script_obj.can_cancel == (not script_obj.is_legacy)
 
@@ -249,13 +225,9 @@ async def test_calling_service_template(hass):
         }
     )
 
-    for run_mode in _ALL_RUN_MODES:
+    for script_mode in _BASIC_SCRIPT_MODES:
         calls = []
-
-        if run_mode is None:
-            script_obj = script.Script(hass, schema)
-        else:
-            script_obj = script.Script(hass, schema, run_mode=run_mode)
+        script_obj = script.Script(hass, schema, script_mode=script_mode)
 
         assert script_obj.can_cancel == (not script_obj.is_legacy)
 
@@ -316,14 +288,10 @@ async def test_multiple_runs_no_wait(hass):
         ]
     )
 
-    for run_mode in _ALL_RUN_MODES:
+    for script_mode in _BASIC_SCRIPT_MODES:
         calls = []
         heard_event.clear()
-
-        if run_mode is None:
-            script_obj = script.Script(hass, schema)
-        else:
-            script_obj = script.Script(hass, schema, run_mode=run_mode)
+        script_obj = script.Script(hass, schema, script_mode=script_mode)
 
         # Start script twice in such a way that second run will be started while first
         # run is in the middle of the first service call.
@@ -331,13 +299,11 @@ async def test_multiple_runs_no_wait(hass):
         unsub = hass.bus.async_listen("1", heard_event_cb)
 
         logger.debug("starting 1st script")
-        coro = script_obj.async_run(
-            {"fire1": "1", "listen1": "2", "fire2": "3", "listen2": "4"}
+        hass.async_create_task(
+            script_obj.async_run(
+                {"fire1": "1", "listen1": "2", "fire2": "3", "listen2": "4"}
+            )
         )
-        if run_mode == "background":
-            await coro
-        else:
-            hass.async_create_task(coro)
         await asyncio.wait_for(heard_event.wait(), 1)
 
         unsub()
@@ -359,28 +325,23 @@ async def test_delay_basic(hass):
 
     @callback
     def delay_started_cb():
-        delay_started_flag.set()
+        if script_obj.last_action and "delay" in script_obj.last_action:
+            delay_started_flag.set()
 
     delay = timedelta(milliseconds=10)
     schema = cv.SCRIPT_SCHEMA({"delay": delay, "alias": delay_alias})
 
-    for run_mode in _ALL_RUN_MODES:
+    for script_mode in _BASIC_SCRIPT_MODES:
         delay_started_flag.clear()
 
-        if run_mode is None:
-            script_obj = script.Script(hass, schema, change_listener=delay_started_cb)
-        else:
-            script_obj = script.Script(
-                hass, schema, change_listener=delay_started_cb, run_mode=run_mode
-            )
+        script_obj = script.Script(
+            hass, schema, change_listener=delay_started_cb, script_mode=script_mode
+        )
 
         assert script_obj.can_cancel
 
         try:
-            if run_mode == "background":
-                await script_obj.async_run()
-            else:
-                hass.async_create_task(script_obj.async_run())
+            hass.async_create_task(script_obj.async_run())
             await asyncio.wait_for(delay_started_flag.wait(), 1)
 
             assert script_obj.is_running
@@ -389,7 +350,7 @@ async def test_delay_basic(hass):
             await script_obj.async_stop()
             raise
         else:
-            if run_mode in (None, "legacy"):
+            if script_mode == "legacy":
                 future = dt_util.utcnow() + delay
                 async_fire_time_changed(hass, future)
             await hass.async_block_till_done()
@@ -412,7 +373,8 @@ async def test_multiple_runs_delay(hass):
 
     @callback
     def delay_started_cb():
-        delay_started_flag.set()
+        if script_obj.last_action and "delay" in script_obj.last_action:
+            delay_started_flag.set()
 
     delay = timedelta(milliseconds=10)
     schema = cv.SCRIPT_SCHEMA(
@@ -423,22 +385,16 @@ async def test_multiple_runs_delay(hass):
         ]
     )
 
-    for run_mode in _ALL_RUN_MODES:
+    for script_mode in _BASIC_SCRIPT_MODES:
         events = []
         delay_started_flag.clear()
 
-        if run_mode is None:
-            script_obj = script.Script(hass, schema, change_listener=delay_started_cb)
-        else:
-            script_obj = script.Script(
-                hass, schema, change_listener=delay_started_cb, run_mode=run_mode
-            )
+        script_obj = script.Script(
+            hass, schema, change_listener=delay_started_cb, script_mode=script_mode
+        )
 
         try:
-            if run_mode == "background":
-                await script_obj.async_run()
-            else:
-                hass.async_create_task(script_obj.async_run())
+            hass.async_create_task(script_obj.async_run())
             await asyncio.wait_for(delay_started_flag.wait(), 1)
 
             assert script_obj.is_running
@@ -450,13 +406,13 @@ async def test_multiple_runs_delay(hass):
         else:
             # Start second run of script while first run is in a delay.
             await script_obj.async_run()
-            if run_mode in (None, "legacy"):
+            if script_mode == "legacy":
                 future = dt_util.utcnow() + delay
                 async_fire_time_changed(hass, future)
             await hass.async_block_till_done()
 
             assert not script_obj.is_running
-            if run_mode in (None, "legacy"):
+            if script_mode == "legacy":
                 assert len(events) == 2
             else:
                 assert len(events) == 4
@@ -471,34 +427,29 @@ async def test_delay_template_ok(hass):
 
     @callback
     def delay_started_cb():
-        delay_started_flag.set()
+        if script_obj.last_action and "delay" in script_obj.last_action:
+            delay_started_flag.set()
 
     schema = cv.SCRIPT_SCHEMA({"delay": "00:00:{{ 1 }}"})
 
-    for run_mode in _ALL_RUN_MODES:
+    for script_mode in _BASIC_SCRIPT_MODES:
         delay_started_flag.clear()
 
-        if run_mode is None:
-            script_obj = script.Script(hass, schema, change_listener=delay_started_cb)
-        else:
-            script_obj = script.Script(
-                hass, schema, change_listener=delay_started_cb, run_mode=run_mode
-            )
+        script_obj = script.Script(
+            hass, schema, change_listener=delay_started_cb, script_mode=script_mode
+        )
 
         assert script_obj.can_cancel
 
         try:
-            if run_mode == "background":
-                await script_obj.async_run()
-            else:
-                hass.async_create_task(script_obj.async_run())
+            hass.async_create_task(script_obj.async_run())
             await asyncio.wait_for(delay_started_flag.wait(), 1)
             assert script_obj.is_running
         except (AssertionError, asyncio.TimeoutError):
             await script_obj.async_stop()
             raise
         else:
-            if run_mode in (None, "legacy"):
+            if script_mode == "legacy":
                 future = dt_util.utcnow() + timedelta(seconds=1)
                 async_fire_time_changed(hass, future)
             await hass.async_block_till_done()
@@ -526,13 +477,9 @@ async def test_delay_template_invalid(hass, caplog):
         ]
     )
 
-    for run_mode in _ALL_RUN_MODES:
+    for script_mode in _BASIC_SCRIPT_MODES:
         events = []
-
-        if run_mode is None:
-            script_obj = script.Script(hass, schema)
-        else:
-            script_obj = script.Script(hass, schema, run_mode=run_mode)
+        script_obj = script.Script(hass, schema, script_mode=script_mode)
         start_idx = len(caplog.records)
 
         await script_obj.async_run()
@@ -553,36 +500,30 @@ async def test_delay_template_complex_ok(hass):
 
     @callback
     def delay_started_cb():
-        delay_started_flag.set()
+        if script_obj.last_action and "delay" in script_obj.last_action:
+            delay_started_flag.set()
 
     milliseconds = 10
     schema = cv.SCRIPT_SCHEMA({"delay": {"milliseconds": "{{ milliseconds }}"}})
 
-    for run_mode in _ALL_RUN_MODES:
+    for script_mode in _BASIC_SCRIPT_MODES:
         delay_started_flag.clear()
 
-        if run_mode is None:
-            script_obj = script.Script(hass, schema, change_listener=delay_started_cb)
-        else:
-            script_obj = script.Script(
-                hass, schema, change_listener=delay_started_cb, run_mode=run_mode
-            )
+        script_obj = script.Script(
+            hass, schema, change_listener=delay_started_cb, script_mode=script_mode
+        )
 
         assert script_obj.can_cancel
 
         try:
-            coro = script_obj.async_run({"milliseconds": milliseconds})
-            if run_mode == "background":
-                await coro
-            else:
-                hass.async_create_task(coro)
+            hass.async_create_task(script_obj.async_run({"milliseconds": milliseconds}))
             await asyncio.wait_for(delay_started_flag.wait(), 1)
             assert script_obj.is_running
         except (AssertionError, asyncio.TimeoutError):
             await script_obj.async_stop()
             raise
         else:
-            if run_mode in (None, "legacy"):
+            if script_mode == "legacy":
                 future = dt_util.utcnow() + timedelta(milliseconds=milliseconds)
                 async_fire_time_changed(hass, future)
             await hass.async_block_till_done()
@@ -610,13 +551,9 @@ async def test_delay_template_complex_invalid(hass, caplog):
         ]
     )
 
-    for run_mode in _ALL_RUN_MODES:
+    for script_mode in _BASIC_SCRIPT_MODES:
         events = []
-
-        if run_mode is None:
-            script_obj = script.Script(hass, schema)
-        else:
-            script_obj = script.Script(hass, schema, run_mode=run_mode)
+        script_obj = script.Script(hass, schema, script_mode=script_mode)
         start_idx = len(caplog.records)
 
         await script_obj.async_run()
@@ -638,7 +575,8 @@ async def test_cancel_delay(hass):
 
     @callback
     def delay_started_cb():
-        delay_started_flag.set()
+        if script_obj.last_action and "delay" in script_obj.last_action:
+            delay_started_flag.set()
 
     @callback
     def record_event(event):
@@ -650,22 +588,16 @@ async def test_cancel_delay(hass):
     delay = timedelta(milliseconds=10)
     schema = cv.SCRIPT_SCHEMA([{"delay": delay}, {"event": event}])
 
-    for run_mode in _ALL_RUN_MODES:
+    for script_mode in _BASIC_SCRIPT_MODES:
         delay_started_flag.clear()
         events = []
 
-        if run_mode is None:
-            script_obj = script.Script(hass, schema, change_listener=delay_started_cb)
-        else:
-            script_obj = script.Script(
-                hass, schema, change_listener=delay_started_cb, run_mode=run_mode
-            )
+        script_obj = script.Script(
+            hass, schema, change_listener=delay_started_cb, script_mode=script_mode
+        )
 
         try:
-            if run_mode == "background":
-                await script_obj.async_run()
-            else:
-                hass.async_create_task(script_obj.async_run())
+            hass.async_create_task(script_obj.async_run())
             await asyncio.wait_for(delay_started_flag.wait(), 1)
 
             assert script_obj.is_running
@@ -680,7 +612,7 @@ async def test_cancel_delay(hass):
 
             # Make sure the script is really stopped.
 
-            if run_mode in (None, "legacy"):
+            if script_mode == "legacy":
                 future = dt_util.utcnow() + delay
                 async_fire_time_changed(hass, future)
             await hass.async_block_till_done()
@@ -696,7 +628,8 @@ async def test_wait_template_basic(hass):
 
     @callback
     def wait_started_cb():
-        wait_started_flag.set()
+        if script_obj.last_action and "wait" in script_obj.last_action:
+            wait_started_flag.set()
 
     schema = cv.SCRIPT_SCHEMA(
         {
@@ -705,24 +638,18 @@ async def test_wait_template_basic(hass):
         }
     )
 
-    for run_mode in _ALL_RUN_MODES:
+    for script_mode in _BASIC_SCRIPT_MODES:
         wait_started_flag.clear()
         hass.states.async_set("switch.test", "on")
 
-        if run_mode is None:
-            script_obj = script.Script(hass, schema, change_listener=wait_started_cb)
-        else:
-            script_obj = script.Script(
-                hass, schema, change_listener=wait_started_cb, run_mode=run_mode
-            )
+        script_obj = script.Script(
+            hass, schema, change_listener=wait_started_cb, script_mode=script_mode
+        )
 
         assert script_obj.can_cancel
 
         try:
-            if run_mode == "background":
-                await script_obj.async_run()
-            else:
-                hass.async_create_task(script_obj.async_run())
+            hass.async_create_task(script_obj.async_run())
             await asyncio.wait_for(wait_started_flag.wait(), 1)
 
             assert script_obj.is_running
@@ -752,7 +679,8 @@ async def test_multiple_runs_wait_template(hass):
 
     @callback
     def wait_started_cb():
-        wait_started_flag.set()
+        if script_obj.last_action and "wait" in script_obj.last_action:
+            wait_started_flag.set()
 
     schema = cv.SCRIPT_SCHEMA(
         [
@@ -762,23 +690,17 @@ async def test_multiple_runs_wait_template(hass):
         ]
     )
 
-    for run_mode in _ALL_RUN_MODES:
+    for script_mode in _BASIC_SCRIPT_MODES:
         events = []
         wait_started_flag.clear()
         hass.states.async_set("switch.test", "on")
 
-        if run_mode is None:
-            script_obj = script.Script(hass, schema, change_listener=wait_started_cb)
-        else:
-            script_obj = script.Script(
-                hass, schema, change_listener=wait_started_cb, run_mode=run_mode
-            )
+        script_obj = script.Script(
+            hass, schema, change_listener=wait_started_cb, script_mode=script_mode
+        )
 
         try:
-            if run_mode == "background":
-                await script_obj.async_run()
-            else:
-                hass.async_create_task(script_obj.async_run())
+            hass.async_create_task(script_obj.async_run())
             await asyncio.wait_for(wait_started_flag.wait(), 1)
 
             assert script_obj.is_running
@@ -789,15 +711,15 @@ async def test_multiple_runs_wait_template(hass):
             raise
         else:
             # Start second run of script while first run is in wait_template.
-            if run_mode == "blocking":
-                hass.async_create_task(script_obj.async_run())
-            else:
+            if script_mode == "legacy":
                 await script_obj.async_run()
+            else:
+                hass.async_create_task(script_obj.async_run())
             hass.states.async_set("switch.test", "off")
             await hass.async_block_till_done()
 
             assert not script_obj.is_running
-            if run_mode in (None, "legacy"):
+            if script_mode == "legacy":
                 assert len(events) == 2
             else:
                 assert len(events) == 4
@@ -813,7 +735,8 @@ async def test_cancel_wait_template(hass):
 
     @callback
     def wait_started_cb():
-        wait_started_flag.set()
+        if script_obj.last_action and "wait" in script_obj.last_action:
+            wait_started_flag.set()
 
     @callback
     def record_event(event):
@@ -829,23 +752,17 @@ async def test_cancel_wait_template(hass):
         ]
     )
 
-    for run_mode in _ALL_RUN_MODES:
+    for script_mode in _BASIC_SCRIPT_MODES:
         wait_started_flag.clear()
         events = []
         hass.states.async_set("switch.test", "on")
 
-        if run_mode is None:
-            script_obj = script.Script(hass, schema, change_listener=wait_started_cb)
-        else:
-            script_obj = script.Script(
-                hass, schema, change_listener=wait_started_cb, run_mode=run_mode
-            )
+        script_obj = script.Script(
+            hass, schema, change_listener=wait_started_cb, script_mode=script_mode
+        )
 
         try:
-            if run_mode == "background":
-                await script_obj.async_run()
-            else:
-                hass.async_create_task(script_obj.async_run())
+            hass.async_create_task(script_obj.async_run())
             await asyncio.wait_for(wait_started_flag.wait(), 1)
 
             assert script_obj.is_running
@@ -888,13 +805,9 @@ async def test_wait_template_not_schedule(hass):
         ]
     )
 
-    for run_mode in _ALL_RUN_MODES:
+    for script_mode in _BASIC_SCRIPT_MODES:
         events = []
-
-        if run_mode is None:
-            script_obj = script.Script(hass, schema)
-        else:
-            script_obj = script.Script(hass, schema, run_mode=run_mode)
+        script_obj = script.Script(hass, schema, script_mode=script_mode)
 
         await script_obj.async_run()
         await hass.async_block_till_done()
@@ -917,7 +830,8 @@ async def test_wait_template_timeout_halt(hass):
 
     @callback
     def wait_started_cb():
-        wait_started_flag.set()
+        if script_obj.last_action and "wait" in script_obj.last_action:
+            wait_started_flag.set()
 
     hass.states.async_set("switch.test", "on")
 
@@ -933,22 +847,16 @@ async def test_wait_template_timeout_halt(hass):
         ]
     )
 
-    for run_mode in _ALL_RUN_MODES:
+    for script_mode in _BASIC_SCRIPT_MODES:
         events = []
         wait_started_flag.clear()
 
-        if run_mode is None:
-            script_obj = script.Script(hass, schema, change_listener=wait_started_cb)
-        else:
-            script_obj = script.Script(
-                hass, schema, change_listener=wait_started_cb, run_mode=run_mode
-            )
+        script_obj = script.Script(
+            hass, schema, change_listener=wait_started_cb, script_mode=script_mode
+        )
 
         try:
-            if run_mode == "background":
-                await script_obj.async_run()
-            else:
-                hass.async_create_task(script_obj.async_run())
+            hass.async_create_task(script_obj.async_run())
             await asyncio.wait_for(wait_started_flag.wait(), 1)
 
             assert script_obj.is_running
@@ -957,7 +865,7 @@ async def test_wait_template_timeout_halt(hass):
             await script_obj.async_stop()
             raise
         else:
-            if run_mode in (None, "legacy"):
+            if script_mode == "legacy":
                 future = dt_util.utcnow() + timeout
                 async_fire_time_changed(hass, future)
             await hass.async_block_till_done()
@@ -980,7 +888,8 @@ async def test_wait_template_timeout_continue(hass):
 
     @callback
     def wait_started_cb():
-        wait_started_flag.set()
+        if script_obj.last_action and "wait" in script_obj.last_action:
+            wait_started_flag.set()
 
     hass.states.async_set("switch.test", "on")
 
@@ -996,22 +905,16 @@ async def test_wait_template_timeout_continue(hass):
         ]
     )
 
-    for run_mode in _ALL_RUN_MODES:
+    for script_mode in _BASIC_SCRIPT_MODES:
         events = []
         wait_started_flag.clear()
 
-        if run_mode is None:
-            script_obj = script.Script(hass, schema, change_listener=wait_started_cb)
-        else:
-            script_obj = script.Script(
-                hass, schema, change_listener=wait_started_cb, run_mode=run_mode
-            )
+        script_obj = script.Script(
+            hass, schema, change_listener=wait_started_cb, script_mode=script_mode
+        )
 
         try:
-            if run_mode == "background":
-                await script_obj.async_run()
-            else:
-                hass.async_create_task(script_obj.async_run())
+            hass.async_create_task(script_obj.async_run())
             await asyncio.wait_for(wait_started_flag.wait(), 1)
 
             assert script_obj.is_running
@@ -1020,7 +923,7 @@ async def test_wait_template_timeout_continue(hass):
             await script_obj.async_stop()
             raise
         else:
-            if run_mode in (None, "legacy"):
+            if script_mode == "legacy":
                 future = dt_util.utcnow() + timeout
                 async_fire_time_changed(hass, future)
             await hass.async_block_till_done()
@@ -1043,7 +946,8 @@ async def test_wait_template_timeout_default(hass):
 
     @callback
     def wait_started_cb():
-        wait_started_flag.set()
+        if script_obj.last_action and "wait" in script_obj.last_action:
+            wait_started_flag.set()
 
     hass.states.async_set("switch.test", "on")
 
@@ -1058,22 +962,16 @@ async def test_wait_template_timeout_default(hass):
         ]
     )
 
-    for run_mode in _ALL_RUN_MODES:
+    for script_mode in _BASIC_SCRIPT_MODES:
         events = []
         wait_started_flag.clear()
 
-        if run_mode is None:
-            script_obj = script.Script(hass, schema, change_listener=wait_started_cb)
-        else:
-            script_obj = script.Script(
-                hass, schema, change_listener=wait_started_cb, run_mode=run_mode
-            )
+        script_obj = script.Script(
+            hass, schema, change_listener=wait_started_cb, script_mode=script_mode
+        )
 
         try:
-            if run_mode == "background":
-                await script_obj.async_run()
-            else:
-                hass.async_create_task(script_obj.async_run())
+            hass.async_create_task(script_obj.async_run())
             await asyncio.wait_for(wait_started_flag.wait(), 1)
 
             assert script_obj.is_running
@@ -1082,7 +980,7 @@ async def test_wait_template_timeout_default(hass):
             await script_obj.async_stop()
             raise
         else:
-            if run_mode in (None, "legacy"):
+            if script_mode == "legacy":
                 future = dt_util.utcnow() + timeout
                 async_fire_time_changed(hass, future)
             await hass.async_block_till_done()
@@ -1097,29 +995,23 @@ async def test_wait_template_variables(hass):
 
     @callback
     def wait_started_cb():
-        wait_started_flag.set()
+        if script_obj.last_action and "wait" in script_obj.last_action:
+            wait_started_flag.set()
 
     schema = cv.SCRIPT_SCHEMA({"wait_template": "{{ is_state(data, 'off') }}"})
 
-    for run_mode in _ALL_RUN_MODES:
+    for script_mode in _BASIC_SCRIPT_MODES:
         wait_started_flag.clear()
         hass.states.async_set("switch.test", "on")
 
-        if run_mode is None:
-            script_obj = script.Script(hass, schema, change_listener=wait_started_cb)
-        else:
-            script_obj = script.Script(
-                hass, schema, change_listener=wait_started_cb, run_mode=run_mode
-            )
+        script_obj = script.Script(
+            hass, schema, change_listener=wait_started_cb, script_mode=script_mode
+        )
 
         assert script_obj.can_cancel
 
         try:
-            coro = script_obj.async_run({"data": "switch.test"})
-            if run_mode == "background":
-                await coro
-            else:
-                hass.async_create_task(coro)
+            hass.async_create_task(script_obj.async_run({"data": "switch.test"}))
             await asyncio.wait_for(wait_started_flag.wait(), 1)
 
             assert script_obj.is_running
@@ -1156,14 +1048,10 @@ async def test_condition_basic(hass):
         ]
     )
 
-    for run_mode in _ALL_RUN_MODES:
+    for script_mode in _BASIC_SCRIPT_MODES:
         events = []
         hass.states.async_set("test.entity", "hello")
-
-        if run_mode is None:
-            script_obj = script.Script(hass, schema)
-        else:
-            script_obj = script.Script(hass, schema, run_mode=run_mode)
+        script_obj = script.Script(hass, schema, script_mode=script_mode)
 
         assert script_obj.can_cancel == (not script_obj.is_legacy)
 
@@ -1259,11 +1147,8 @@ async def test_last_triggered(hass):
 
     schema = cv.SCRIPT_SCHEMA({"event": event})
 
-    for run_mode in _ALL_RUN_MODES:
-        if run_mode is None:
-            script_obj = script.Script(hass, schema)
-        else:
-            script_obj = script.Script(hass, schema, run_mode=run_mode)
+    for script_mode in _BASIC_SCRIPT_MODES:
+        script_obj = script.Script(hass, schema, script_mode=script_mode)
 
         assert script_obj.last_triggered is None
 
@@ -1287,16 +1172,9 @@ async def test_propagate_error_service_not_found(hass):
 
     schema = cv.SCRIPT_SCHEMA([{"service": "test.script"}, {"event": event}])
 
-    run_modes = _ALL_RUN_MODES
-    if "background" in run_modes:
-        run_modes.remove("background")
-    for run_mode in run_modes:
+    for script_mode in _BASIC_SCRIPT_MODES:
         events = []
-
-        if run_mode is None:
-            script_obj = script.Script(hass, schema)
-        else:
-            script_obj = script.Script(hass, schema, run_mode=run_mode)
+        script_obj = script.Script(hass, schema, script_mode=script_mode)
 
         with pytest.raises(exceptions.ServiceNotFound):
             await script_obj.async_run()
@@ -1328,17 +1206,10 @@ async def test_propagate_error_invalid_service_data(hass):
         [{"service": "test.script", "data": {"text": 1}}, {"event": event}]
     )
 
-    run_modes = _ALL_RUN_MODES
-    if "background" in run_modes:
-        run_modes.remove("background")
-    for run_mode in run_modes:
+    for script_mode in _BASIC_SCRIPT_MODES:
         events = []
         calls = []
-
-        if run_mode is None:
-            script_obj = script.Script(hass, schema)
-        else:
-            script_obj = script.Script(hass, schema, run_mode=run_mode)
+        script_obj = script.Script(hass, schema, script_mode=script_mode)
 
         with pytest.raises(vol.Invalid):
             await script_obj.async_run()
@@ -1367,16 +1238,9 @@ async def test_propagate_error_service_exception(hass):
 
     schema = cv.SCRIPT_SCHEMA([{"service": "test.script"}, {"event": event}])
 
-    run_modes = _ALL_RUN_MODES
-    if "background" in run_modes:
-        run_modes.remove("background")
-    for run_mode in run_modes:
+    for script_mode in _BASIC_SCRIPT_MODES:
         events = []
-
-        if run_mode is None:
-            script_obj = script.Script(hass, schema)
-        else:
-            script_obj = script.Script(hass, schema, run_mode=run_mode)
+        script_obj = script.Script(hass, schema, script_mode=script_mode)
 
         with pytest.raises(ValueError):
             await script_obj.async_run()
@@ -1441,28 +1305,8 @@ async def test_referenced_devices():
     assert script_obj.referenced_devices is script_obj.referenced_devices
 
 
-async def test_if_running_with_legacy_run_mode(hass, caplog):
-    """Test using if_running with run_mode='legacy'."""
-    # TODO: REMOVE
-    if _ALL_RUN_MODES == [None]:
-        return
-
-    with pytest.raises(exceptions.HomeAssistantError):
-        script.Script(
-            hass,
-            [],
-            if_running="ignore",
-            run_mode="legacy",
-            logger=logging.getLogger("TEST"),
-        )
-
-
-async def test_if_running_ignore(hass, caplog):
-    """Test overlapping runs with if_running='ignore'."""
-    # TODO: REMOVE
-    if _ALL_RUN_MODES == [None]:
-        return
-
+async def test_script_mode_ignore(hass, caplog):
+    """Test overlapping runs with script_mode='ignore'."""
     event = "test_event"
     events = []
     wait_started_flag = asyncio.Event()
@@ -1476,7 +1320,8 @@ async def test_if_running_ignore(hass, caplog):
 
     @callback
     def wait_started_cb():
-        wait_started_flag.set()
+        if script_obj.last_action and "wait" in script_obj.last_action:
+            wait_started_flag.set()
 
     hass.states.async_set("switch.test", "on")
 
@@ -1490,13 +1335,12 @@ async def test_if_running_ignore(hass, caplog):
             ]
         ),
         change_listener=wait_started_cb,
-        if_running="ignore",
-        run_mode="background",
+        script_mode="ignore",
         logger=logging.getLogger("TEST"),
     )
 
     try:
-        await script_obj.async_run()
+        hass.async_create_task(script_obj.async_run())
         await asyncio.wait_for(wait_started_flag.wait(), 1)
 
         assert script_obj.is_running
@@ -1525,12 +1369,8 @@ async def test_if_running_ignore(hass, caplog):
         assert events[1].data["value"] == 2
 
 
-async def test_if_running_error(hass, caplog):
-    """Test overlapping runs with if_running='error'."""
-    # TODO: REMOVE
-    if _ALL_RUN_MODES == [None]:
-        return
-
+async def test_script_mode_error(hass, caplog):
+    """Test overlapping runs with script_mode='error'."""
     event = "test_event"
     events = []
     wait_started_flag = asyncio.Event()
@@ -1544,7 +1384,8 @@ async def test_if_running_error(hass, caplog):
 
     @callback
     def wait_started_cb():
-        wait_started_flag.set()
+        if script_obj.last_action and "wait" in script_obj.last_action:
+            wait_started_flag.set()
 
     hass.states.async_set("switch.test", "on")
 
@@ -1558,13 +1399,12 @@ async def test_if_running_error(hass, caplog):
             ]
         ),
         change_listener=wait_started_cb,
-        if_running="error",
-        run_mode="background",
+        script_mode="error",
         logger=logging.getLogger("TEST"),
     )
 
     try:
-        await script_obj.async_run()
+        hass.async_create_task(script_obj.async_run())
         await asyncio.wait_for(wait_started_flag.wait(), 1)
 
         assert script_obj.is_running
@@ -1590,12 +1430,8 @@ async def test_if_running_error(hass, caplog):
         assert events[1].data["value"] == 2
 
 
-async def test_if_running_restart(hass, caplog):
-    """Test overlapping runs with if_running='restart'."""
-    # TODO: REMOVE
-    if _ALL_RUN_MODES == [None]:
-        return
-
+async def test_script_mode_restart(hass, caplog):
+    """Test overlapping runs with script_mode='restart'."""
     event = "test_event"
     events = []
     wait_started_flag = asyncio.Event()
@@ -1609,7 +1445,8 @@ async def test_if_running_restart(hass, caplog):
 
     @callback
     def wait_started_cb():
-        wait_started_flag.set()
+        if script_obj.last_action and "wait" in script_obj.last_action:
+            wait_started_flag.set()
 
     hass.states.async_set("switch.test", "on")
 
@@ -1623,13 +1460,12 @@ async def test_if_running_restart(hass, caplog):
             ]
         ),
         change_listener=wait_started_cb,
-        if_running="restart",
-        run_mode="background",
+        script_mode="restart",
         logger=logging.getLogger("TEST"),
     )
 
     try:
-        await script_obj.async_run()
+        hass.async_create_task(script_obj.async_run())
         await asyncio.wait_for(wait_started_flag.wait(), 1)
 
         assert script_obj.is_running
@@ -1640,7 +1476,7 @@ async def test_if_running_restart(hass, caplog):
         # This should stop first run then start a new run.
 
         wait_started_flag.clear()
-        await script_obj.async_run()
+        hass.async_create_task(script_obj.async_run())
         await asyncio.wait_for(wait_started_flag.wait(), 1)
 
         assert script_obj.is_running
@@ -1664,12 +1500,8 @@ async def test_if_running_restart(hass, caplog):
         assert events[2].data["value"] == 2
 
 
-async def test_if_running_parallel(hass):
-    """Test overlapping runs with if_running='parallel'."""
-    # TODO: REMOVE
-    if _ALL_RUN_MODES == [None]:
-        return
-
+async def test_script_mode_parallel(hass):
+    """Test overlapping runs with script_mode='parallel'."""
     event = "test_event"
     events = []
     wait_started_flag = asyncio.Event()
@@ -1683,7 +1515,8 @@ async def test_if_running_parallel(hass):
 
     @callback
     def wait_started_cb():
-        wait_started_flag.set()
+        if script_obj.last_action and "wait" in script_obj.last_action:
+            wait_started_flag.set()
 
     hass.states.async_set("switch.test", "on")
 
@@ -1697,13 +1530,12 @@ async def test_if_running_parallel(hass):
             ]
         ),
         change_listener=wait_started_cb,
-        if_running="parallel",
-        run_mode="background",
+        script_mode="parallel",
         logger=logging.getLogger("TEST"),
     )
 
     try:
-        await script_obj.async_run()
+        hass.async_create_task(script_obj.async_run())
         await asyncio.wait_for(wait_started_flag.wait(), 1)
 
         assert script_obj.is_running
@@ -1714,7 +1546,7 @@ async def test_if_running_parallel(hass):
         # This should start a new, independent run.
 
         wait_started_flag.clear()
-        await script_obj.async_run()
+        hass.async_create_task(script_obj.async_run())
         await asyncio.wait_for(wait_started_flag.wait(), 1)
 
         assert script_obj.is_running
