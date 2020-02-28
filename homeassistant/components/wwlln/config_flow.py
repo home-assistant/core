@@ -45,7 +45,7 @@ class WWLLNFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry from configuration.yaml."""
         default_window_seconds = DEFAULT_WINDOW.total_seconds()
         if (
-            import_config.get(CONF_WINDOW)
+            CONF_WINDOW in import_config
             and import_config[CONF_WINDOW] < default_window_seconds
         ):
             LOGGER.error(
