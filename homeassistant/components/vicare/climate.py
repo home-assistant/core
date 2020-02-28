@@ -162,6 +162,9 @@ class ViCareClimate(ClimateDevice):
                 self._attributes[
                     "boiler_temperature"
                 ] = self._api.getBoilerTemperature()
+                
+                self._attributes["burner_hours"] = self._api.getBurnerHours()
+                self._attributes["burner_starts"] = self._api.getBurnerStarts()
 
             elif self._heating_type == HeatingType.heatpump:
                 self._current_action = self._api.getCompressorActive()
