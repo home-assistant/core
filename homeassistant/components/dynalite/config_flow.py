@@ -27,7 +27,7 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 entry = self.hass.config_entries.async_get_entry(entry_id)
                 if entry.data != import_info:
                     self.hass.config_entries.async_update_entry(entry, data=import_info)
-                return
+                return self.async_abort(reason="already_configured")
         # New entry
         bridge = DynaliteBridge(self.hass, import_info)
         if not await bridge.async_setup():
