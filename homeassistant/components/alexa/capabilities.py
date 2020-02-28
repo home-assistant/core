@@ -1,6 +1,5 @@
 """Alexa capabilities."""
 import logging
-import math
 
 from homeassistant.components import (
     cover,
@@ -669,11 +668,8 @@ class AlexaSpeaker(AlexaCapability):
             current_level = self.entity.attributes.get(
                 media_player.ATTR_MEDIA_VOLUME_LEVEL
             )
-            try:
-                current = math.floor(int(current_level * 100))
-            except ZeroDivisionError:
-                current = 0
-            return current
+            if current_level is not None:
+                return round(float(current_level) * 100)
 
         if name == "muted":
             return bool(
