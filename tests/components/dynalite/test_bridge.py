@@ -1,7 +1,6 @@
 """Test Dynalite bridge."""
-from unittest.mock import Mock, call
 
-from asynctest import patch
+from asynctest import Mock, call, patch
 from dynalite_devices_lib import CONF_ALL
 import pytest
 
@@ -51,7 +50,7 @@ async def test_add_devices_then_register(dyn_bridge):
     device2.category = "switch"
     dyn_bridge.add_devices_when_registered([device1, device2])
     reg_func = Mock()
-    dyn_bridge.register_add_devices(reg_func)
+    dyn_bridge.register_add_devices("light", reg_func)
     reg_func.assert_called_once()
     assert reg_func.mock_calls[0][1][0][0] is device1
 
@@ -63,7 +62,7 @@ async def test_register_then_add_devices(dyn_bridge):
     device2 = Mock()
     device2.category = "switch"
     reg_func = Mock()
-    dyn_bridge.register_add_devices(reg_func)
+    dyn_bridge.register_add_devices("light", reg_func)
     dyn_bridge.add_devices_when_registered([device1, device2])
     reg_func.assert_called_once()
     assert reg_func.mock_calls[0][1][0][0] is device1
