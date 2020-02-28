@@ -42,6 +42,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
     """Representation of EnOcean binary sensors such as wall switches.
+
     Supported EEPs (EnOcean Equipment Profiles):
     - F6-02-01 (Light and Blind Control - Application Style 2)
     - F6-02-02 (Light and Blind Control - Application Style 1)
@@ -72,6 +73,7 @@ class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
 
     def value_changed(self, packet):
         """Fire an event with the data that have changed.
+
         This method is called when there is an incoming packet associated
         with this platform.
         Example packet data:
@@ -81,59 +83,58 @@ class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
             ['0xf6', '0x00', '0x00', '0x2d', '0xcf', '0x45', '0x20']
         """
 
-        if packet.data[0] == 0xf6:
-          # Energy Bow
-          pushed = None
-          pressed = None
-          first_action = None
-          second_action = None
-          second_action_valid = None
+        if packet.data[0] == 0xF6:
+            # Energy Bow
+            pushed = None
+            pressed = None
+            first_action = None
+            second_action = None
+            second_action_valid = None
 
-          
-          if self._device_type == 2:
-            packet.parse_eep(0x02, 0x02)
-            pressed = packet.parsed['EB']['raw_value']
-            first_action = packet.parsed['R1']['raw_value']
-            second_action = packet.parsed['R2']['raw_value']
-            second_action_valid = packet.parsed['SA']['raw_value']
+            if self._device_type == 2:
+                packet.parse_eep(0x02, 0x02)
+                pressed = packet.parsed["EB"]["raw_value"]
+                first_action = packet.parsed["R1"]["raw_value"]
+                second_action = packet.parsed["R2"]["raw_value"]
+                second_action_valid = packet.parsed["SA"]["raw_value"]
 
-          if packet.data[6] == 0x30:
-              pushed = 1
-          elif packet.data[6] == 0x20:
-              pushed = 0
+            if packet.data[6] == 0x30:
+                pushed = 1
+            elif packet.data[6] == 0x20:
+                pushed = 0
 
-          self.schedule_update_ha_state()
+            self.schedule_update_ha_state()
 
-          action = packet.data[1]
-          if action == 0x70:
-              self.which = 0
-              self.onoff = 0
-          elif action == 0x50:
-              self.which = 0
-              self.onoff = 1
-          elif action == 0x30:
-              self.which = 1
-              self.onoff = 0
-          elif action == 0x10:
-              self.which = 1
-              self.onoff = 1
-          elif action == 0x37:
-              self.which = 10
-              self.onoff = 0
-          elif action == 0x15:
-              self.which = 10
-              self.onoff = 1
+            action = packet.data[1]
+            if action == 0x70:
+                self.which = 0
+                self.onoff = 0
+            elif action == 0x50:
+                self.which = 0
+                self.onoff = 1
+            elif action == 0x30:
+                self.which = 1
+                self.onoff = 0
+            elif action == 0x10:
+                self.which = 1
+                self.onoff = 1
+            elif action == 0x37:
+                self.which = 10
+                self.onoff = 0
+            elif action == 0x15:
+                self.which = 10
+                self.onoff = 1
 
-          self.hass.bus.fire(
-              EVENT_BUTTON_PRESSED,
-              {
-                  "id": self.dev_id,
-                  "pushed": pushed,
-                  "which": self.which,
-                  "onoff": self.onoff,
-                  "pressed": pressed,
-                  "first_action": first_action,
-                  "second_action": second_action,
-                  "second_action_valid": second_action_valid,
-              }
-          )
+            self.hass.bus.fire(
+                EVENT_BUTTON_PRESSED,
+                {
+                    "id": self.dev_id,
+                    "pushed": pushed,
+                    "which": self.which,
+                    "onoff": self.onoff,
+                    "pressed": pressed,
+                    "first_action": first_action,
+                    "second_action": second_action,
+                    "second_action_valid": second_action_valid,
+                },
+            )

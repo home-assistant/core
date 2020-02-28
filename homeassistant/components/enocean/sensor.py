@@ -113,7 +113,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     elif sensor_type == SENSOR_TYPE_WINDOWHANDLE:
         add_entities([EnOceanWindowHandle(dev_id, dev_name)])
-        
+
     elif sensor_type == SENSOR_TYPE_DOOR_WINDOW:
         add_entities([EnOceanDoorWindow(dev_id, dev_name)])
 
@@ -162,6 +162,7 @@ class EnOceanSensor(enocean.EnOceanDevice):
 
 class EnOceanPowerSensor(EnOceanSensor):
     """Representation of an EnOcean power sensor.
+
     EEPs (EnOcean Equipment Profiles):
     - A5-12-01 (Automated Meter Reading, Electricity)
     """
@@ -185,6 +186,7 @@ class EnOceanPowerSensor(EnOceanSensor):
 
 class EnOceanTemperatureSensor(EnOceanSensor):
     """Representation of an EnOcean temperature sensor device.
+
     EEPs (EnOcean Equipment Profiles):
     - A5-02-01 to A5-02-1B All 8 Bit Temperature Sensors of A5-02
     - A5-10-01 to A5-10-14 (Room Operating Panels)
@@ -222,6 +224,7 @@ class EnOceanTemperatureSensor(EnOceanSensor):
 
 class EnOceanHumiditySensor(EnOceanSensor):
     """Representation of an EnOcean humidity sensor device.
+
     EEPs (EnOcean Equipment Profiles):
     - A5-04-01 (Temp. and Humidity Sensor, Range 0°C to +40°C and 0% to 100%)
     - A5-04-02 (Temp. and Humidity Sensor, Range -20°C to +60°C and 0% to 100%)
@@ -243,6 +246,7 @@ class EnOceanHumiditySensor(EnOceanSensor):
 
 class EnOceanWindowHandle(EnOceanSensor):
     """Representation of an EnOcean window handle device.
+
     EEPs (EnOcean Equipment Profiles):
     - F6-10-00 (Mechanical handle / Hoppe AG)
     """
@@ -253,7 +257,7 @@ class EnOceanWindowHandle(EnOceanSensor):
 
     def value_changed(self, packet):
         """Update the internal state of the sensor."""
- 
+
         action = (packet.data[1] & 0x70) >> 4
 
         if action == 0x07:
@@ -265,12 +269,14 @@ class EnOceanWindowHandle(EnOceanSensor):
 
         self.schedule_update_ha_state()
 
+
 class EnOceanDoorWindow(EnOceanSensor):
     """Representation of an EnOcean door sensor device.
+
     EEPs (EnOcean Equipment Profiles):
     - D5-00-01
     """
-    
+
     def __init__(self, dev_id, dev_name):
         """Initialize the EnOcean door and window sensor device."""
         super().__init__(dev_id, dev_name, SENSOR_TYPE_DOOR_WINDOW)
@@ -279,12 +285,12 @@ class EnOceanDoorWindow(EnOceanSensor):
     def value_changed(self, packet):
         """Update the internal state of the sensor."""
         packet.parse_eep(0x00, 0x01)
-        contact_value = packet.parsed['CO']['value']
-        if contact_value == 'open':
-          self._state = STATE_OPEN
-          self._icon = "mdi:door-open"
-        elif contact_value == 'closed':
-          self._state = STATE_CLOSED
-          self._icon = "mdi:door-closed"
+        contact_value = packet.parsed["CO"]["value"]
+        if contact_value == "open":
+            self._state = STATE_OPEN
+            self._icon = "mdi:door-open"
+        elif contact_value == "closed":
+            self._state = STATE_CLOSED
+            self._icon = "mdi:door-closed"
 
         self.schedule_update_ha_state()
