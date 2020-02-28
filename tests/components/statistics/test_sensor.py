@@ -1,4 +1,5 @@
 """The test for the statistics sensor platform."""
+import asyncio
 from datetime import datetime, timedelta
 import statistics
 import unittest
@@ -7,7 +8,10 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import recorder
-from homeassistant.components.statistics.sensor import StatisticsSensor
+from homeassistant.components.statistics.sensor import (
+    _DEBOUNCING_COOLDOWN as SENSOR_COOLDOWN,
+    StatisticsSensor,
+)
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, TEMP_CELSIUS
 from homeassistant.setup import setup_component
 from homeassistant.util import dt as dt_util
@@ -42,6 +46,12 @@ class TestStatisticsSensor(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
+    def _block_till_debounced_sensor_is_done(self):
+        # Insert a dummy task to wait for the delayed debouncer to make the real call
+        self.hass.add_job(asyncio.sleep(SENSOR_COOLDOWN))
+        # And then we wait till done
+        self.hass.block_till_done()
+
     def test_binary_sensor_source(self):
         """Test if source is a sensor."""
         values = ["on", "off", "on", "off", "on", "off", "on"]
@@ -62,7 +72,7 @@ class TestStatisticsSensor(unittest.TestCase):
 
         for value in values:
             self.hass.states.set("binary_sensor.test_monitored", value)
-            self.hass.block_till_done()
+            self._block_till_debounced_sensor_is_done()
 
         state = self.hass.states.get("sensor.test")
 
@@ -89,7 +99,7 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass.states.set(
                 "sensor.test_monitored", value, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
             )
-            self.hass.block_till_done()
+            self._block_till_debounced_sensor_is_done()
 
         state = self.hass.states.get("sensor.test")
 
@@ -128,7 +138,7 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass.states.set(
                 "sensor.test_monitored", value, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
             )
-            self.hass.block_till_done()
+            self._block_till_debounced_sensor_is_done()
 
         state = self.hass.states.get("sensor.test")
 
@@ -157,7 +167,7 @@ class TestStatisticsSensor(unittest.TestCase):
             self.hass.states.set(
                 "sensor.test_monitored", value, {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}
             )
-            self.hass.block_till_done()
+            self._block_till_debounced_sensor_is_done()
 
         state = self.hass.states.get("sensor.test")
 
@@ -206,7 +216,7 @@ class TestStatisticsSensor(unittest.TestCase):
                     value,
                     {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
                 )
-                self.hass.block_till_done()
+                self._block_till_debounced_sensor_is_done()
                 # insert the next value one minute later
                 mock_data["return_time"] += timedelta(minutes=1)
 
@@ -247,7 +257,7 @@ class TestStatisticsSensor(unittest.TestCase):
                     value,
                     {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
                 )
-                self.hass.block_till_done()
+                self._block_till_debounced_sensor_is_done()
                 # insert the next value 30 seconds later
                 mock_data["return_time"] += timedelta(seconds=30)
 
@@ -259,7 +269,7 @@ class TestStatisticsSensor(unittest.TestCase):
             # wait for 3 minutes (max_age).
             mock_data["return_time"] += timedelta(minutes=3)
             fire_time_changed(self.hass, mock_data["return_time"])
-            self.hass.block_till_done()
+            self._block_till_debounced_sensor_is_done()
 
             state = self.hass.states.get("sensor.test")
 
@@ -300,7 +310,7 @@ class TestStatisticsSensor(unittest.TestCase):
                     value,
                     {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
                 )
-                self.hass.block_till_done()
+                self._block_till_debounced_sensor_is_done()
                 # insert the next value one minute later
                 mock_data["return_time"] += timedelta(minutes=1)
 

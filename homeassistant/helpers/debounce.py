@@ -104,7 +104,3 @@ class Debouncer:
             self.cooldown,
             lambda: self.hass.async_create_task(self._handle_timer_finish()),
         )
-        self.hass.async_create_task(self._wait_until_cooldown())
-
-    async def _wait_until_cooldown(self) -> None:
-        await asyncio.sleep(self.cooldown)
