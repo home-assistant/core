@@ -4,6 +4,7 @@ from functools import wraps
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
@@ -96,3 +97,17 @@ async def websocket_lovelace_save_config(hass, connection, msg, config):
 async def websocket_lovelace_delete_config(hass, connection, msg, config):
     """Delete Lovelace UI configuration."""
     await config.async_delete()
+
+
+@websocket_api.websocket_command({"type": "lovelace/dashboards/list"})
+@callback
+def websocket_lovelace_dashboards(hass, connection, msg):
+    """Delete Lovelace UI configuration."""
+    connection.send_result(
+        msg["id"],
+        [
+            dashboard.config
+            for dashboard in hass.data[DOMAIN]["dashboards"].values()
+            if dashboard.config
+        ],
+    )
