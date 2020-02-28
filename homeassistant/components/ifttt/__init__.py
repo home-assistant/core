@@ -93,10 +93,18 @@ async def handle_webhook(hass, webhook_id, request):
     try:
         data = json.loads(body) if body else {}
     except ValueError:
-        return None
+        _LOGGER.error(
+            "Received invalid data from IFTTT. Data needs to be formatted as JSON."
+        )
+        return
 
-    if isinstance(data, dict):
-        data["webhook_id"] = webhook_id
+    if not isinstance(data, dict):
+        _LOGGER.error(
+            "Received invalid data from IFTTT. Data needs to be a dictionary."
+        )
+        return
+
+    data["webhook_id"] = webhook_id
     hass.bus.async_fire(EVENT_RECEIVED, data)
 
 
