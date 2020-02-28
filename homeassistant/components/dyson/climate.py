@@ -39,7 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         [
             DysonPureHotCoolLinkDevice(device)
             for device in hass.data[DYSON_DEVICES]
-            if isinstance(device, DysonPureHotCoolLink) 
+            if isinstance(device, DysonPureHotCoolLink)
         ]
     )
 
@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         [
             DysonPureHotCoolDevice(device)
             for device in hass.data[DYSON_DEVICES]
-            if isinstance(device, DysonPureHotCool) 
+            if isinstance(device, DysonPureHotCool)
         ]
     )
 
@@ -198,5 +198,6 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
         """Return the maximum temperature."""
         return 37
 
+
 class DysonPureHotCoolDevice(DysonPureHotCoolLinkDevice):
-    """Dummy class to provide capability for Pure Hot+Cool Devices"""
+    """Dummy class to provide capability for Pure Hot+Cool devices."""
