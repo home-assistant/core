@@ -35,7 +35,7 @@ class AisSuplaFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_import(self, import_config):
         """Import the supla server as config entry."""
-        _LOGGER.warning("Go to async_step_user")
+        _LOGGER.info("Go to async_step_user")
         return await self.async_step_init(user_input=import_config)
 
     async def async_step_user(self, user_input=None):
