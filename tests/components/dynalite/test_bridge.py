@@ -62,6 +62,7 @@ async def test_register_then_add_devices(dyn_bridge):
     device2 = Mock()
     device2.category = "switch"
     reg_func = Mock()
+    # First register
     dyn_bridge.register_add_devices("light", reg_func)
     dyn_bridge.add_devices_when_registered([device1, device2])
     reg_func.assert_called_once()
