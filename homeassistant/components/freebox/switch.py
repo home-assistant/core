@@ -62,7 +62,7 @@ class FbxWifiSwitch(SwitchDevice):
         try:
             datas = await self._fbx.wifi.get_global_config()
         except ClientConnectorError as err:
-            _LOGGER.error("Error getting Freebox switch info: %s" % str(err))
+            _LOGGER.error("Error getting Freebox switch info: %s", str(err))
             return
         active = datas["enabled"]
         self._state = bool(active)
