@@ -8,20 +8,27 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.media_player import DEVICE_CLASS_SPEAKER, DEVICE_CLASS_TV
+from homeassistant.components.vizio import validate_apps
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_ZEROCONF, ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_DEVICE_CLASS,
+    CONF_EXCLUDE,
     CONF_HOST,
+    CONF_INCLUDE,
     CONF_NAME,
     CONF_PIN,
     CONF_PORT,
     CONF_TYPE,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
+    CONF_APPS,
+    CONF_APPS_TO_INCLUDE_OR_EXCLUDE,
+    CONF_INCLUDE_OR_EXCLUDE,
     CONF_VOLUME_STEP,
     DEFAULT_DEVICE_CLASS,
     DEFAULT_NAME,
@@ -38,6 +45,23 @@ def _get_config_schema(input_dict: Dict[str, Any] = None) -> vol.Schema:
     if input_dict is None:
         input_dict = {}
 
+    # Attempt to get input_dict[CONF_INCLUDE_OR_EXCLUDE], and if it doesn't exist check
+    # for CONF_INCLUDE or CONF_EXCLUDE as a key in input_dict[CONF_APPS]
+    default_include_or_exclude = input_dict.get(
+        CONF_INCLUDE_OR_EXCLUDE,
+        CONF_EXCLUDE
+        if CONF_EXCLUDE in input_dict.get(CONF_APPS, {}).keys()
+        else CONF_INCLUDE,
+    )
+
+    # Attempt to get input_dict[CONF_APPS_TO_INCLUDE_OR_EXCLUDE], and if it doesn't exist
+    # check for input_dict[CONF_APPS][CONF_INCLUDE] or input_dict[CONF_APPS][CONF_EXCLUDE]
+    # depending on default_include_or_exclude
+    default_apps_to_include_or_exclude = input_dict.get(
+        CONF_APPS_TO_INCLUDE_OR_EXCLUDE,
+        input_dict.get(CONF_APPS, {}).get(default_include_or_exclude.lower(), []),
+    )
+
     return vol.Schema(
         {
             vol.Required(
@@ -51,8 +75,15 @@ def _get_config_schema(input_dict: Dict[str, Any] = None) -> vol.Schema:
             vol.Optional(
                 CONF_ACCESS_TOKEN, default=input_dict.get(CONF_ACCESS_TOKEN, "")
             ): str,
+            vol.Optional(
+                CONF_INCLUDE_OR_EXCLUDE, default=default_include_or_exclude.title(),
+            ): vol.In([CONF_INCLUDE.title(), CONF_EXCLUDE.title()]),
+            vol.Optional(
+                CONF_APPS_TO_INCLUDE_OR_EXCLUDE,
+                default=default_apps_to_include_or_exclude,
+            ): cv.multi_select(VizioAsync.get_apps_list()),
         },
-        extra=vol.REMOVE_EXTRA,
+        extra=vol.ALLOW_EXTRA,
     )
 
 
@@ -73,7 +104,7 @@ def _host_is_same(host1: str, host2: str) -> bool:
 
 
 class VizioOptionsConfigFlow(config_entries.OptionsFlow):
-    """Handle Transmission client options."""
+    """Handle Vizio client options."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize vizio options flow."""
@@ -134,6 +165,10 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id=unique_id, raise_on_progress=True)
         self._abort_if_unique_id_configured()
 
+        # Remove extra keys that will not be used by entry setup
+        input_dict.pop(CONF_APPS_TO_INCLUDE_OR_EXCLUDE, None)
+        input_dict.pop(CONF_INCLUDE_OR_EXCLUDE, None)
+
         return self.async_create_entry(title=input_dict[CONF_NAME], data=input_dict)
 
     async def async_step_user(
@@ -152,6 +187,25 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors[CONF_HOST] = "host_exists"
                 if entry.data[CONF_NAME] == user_input[CONF_NAME]:
                     errors[CONF_NAME] = "name_exists"
+
+            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+            if (
+                not errors
+                and user_input.get(CONF_APPS_TO_INCLUDE_OR_EXCLUDE)
+                and self.context["source"] != SOURCE_IMPORT
+            ):
+                # Copy user entry config keys to place that entry setup expects
+                user_input[CONF_APPS] = {
+                    user_input[CONF_INCLUDE_OR_EXCLUDE].lower(): list(
+                        user_input[CONF_APPS_TO_INCLUDE_OR_EXCLUDE]
+                    )
+                }
+
+                # Show an error if apps are listed but CONF_DEVICE_CLASS == DEVICE_CLASS_TV
+                try:
+                    validate_apps(user_input)
+                except vol.Invalid:
+                    errors[CONF_APPS_TO_INCLUDE_OR_EXCLUDE] = "apps_require_tv"
 
             if not errors:
                 # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
@@ -210,20 +264,32 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if _host_is_same(entry.data[CONF_HOST], import_config[CONF_HOST]):
                 updated_options = {}
-                updated_name = {}
+                updated_data = {}
+                remove_apps = False
 
                 if entry.data[CONF_NAME] != import_config[CONF_NAME]:
-                    updated_name[CONF_NAME] = import_config[CONF_NAME]
+                    updated_data[CONF_NAME] = import_config[CONF_NAME]
+
+                # Update entry.data[CONF_APPS] if import_config[CONF_APPS] differs, and
+                # pop entry.data[CONF_APPS] if import_config[CONF_APPS] is not specified
+                if entry.data.get(CONF_APPS) != import_config.get(CONF_APPS):
+                    if not import_config.get(CONF_APPS):
+                        remove_apps = True
+                    else:
+                        updated_data[CONF_APPS] = import_config[CONF_APPS]
 
                 if entry.data.get(CONF_VOLUME_STEP) != import_config[CONF_VOLUME_STEP]:
                     updated_options[CONF_VOLUME_STEP] = import_config[CONF_VOLUME_STEP]
 
-                if updated_options or updated_name:
+                if updated_options or updated_data or remove_apps:
                     new_data = entry.data.copy()
                     new_options = entry.options.copy()
 
-                    if updated_name:
-                        new_data.update(updated_name)
+                    if remove_apps:
+                        new_data.pop(CONF_APPS, None)
+
+                    if updated_data:
+                        new_data.update(updated_data)
 
                     if updated_options:
                         new_data.update(updated_options)

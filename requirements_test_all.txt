@@ -602,7 +602,7 @@ pyvera==0.3.7
 pyvesync==1.1.0
 
 # homeassistant.components.vizio
-pyvizio==0.1.26
+pyvizio==0.1.34
 
 # homeassistant.components.html5
 pywebpush==1.9.2

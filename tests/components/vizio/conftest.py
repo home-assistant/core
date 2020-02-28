@@ -5,9 +5,12 @@ from pyvizio.const import DEVICE_CLASS_SPEAKER, MAX_VOLUME
 
 from .const import (
     ACCESS_TOKEN,
+    APP_LIST,
     CH_TYPE,
+    CURRENT_APP,
     CURRENT_INPUT,
     INPUT_LIST,
+    INPUT_LIST_WITH_APPS,
     MODEL,
     RESPONSE_TOKEN,
     UNIQUE_ID,
@@ -152,5 +155,24 @@ def vizio_update_fixture():
     ), patch(
         "homeassistant.components.vizio.media_player.VizioAsync.get_version",
         return_value=VERSION,
+    ):
+        yield
+
+
+@pytest.fixture(name="vizio_update_with_apps")
+def vizio_update_with_apps_fixture(vizio_update: pytest.fixture):
+    """Mock valid updates to vizio device that supports apps."""
+    with patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.get_inputs_list",
+        return_value=get_mock_inputs(INPUT_LIST_WITH_APPS),
+    ), patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.get_apps_list",
+        return_value=APP_LIST,
+    ), patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.get_current_input",
+        return_value="CAST",
+    ), patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.get_current_app",
+        return_value=CURRENT_APP,
     ):
         yield

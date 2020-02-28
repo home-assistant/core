@@ -4,12 +4,14 @@
         "step": {
             "user": {
                 "title": "Setup Vizio SmartCast Device",
-                "description": "All fields are required except Access Token. If you choose not to provide an Access Token, and your Device Type is 'tv', you will go through a pairing process with your device so an Access Token can be retrieved.\n\nTo go through the pairing process, before clicking Submit, ensure your TV is powered on and connected to the network. You also need to be able to see the screen.",
+                "description": "If you are configuring a TV:\n - If it supports apps, you can choose to whitelist or blacklist apps by choosing Include or Exclude correspondingly and selecting apps from the app list.\n - If you choose not to provide an Access Token, and your Device Type is 'tv', you will go through a pairing process with your device so an Access Token can be retrieved. To go through the pairing process, before clicking Submit, ensure your TV is powered on and connected to the network. You also need to be able to see the screen.",
                 "data": {
                     "name": "Name",
                     "host": "<Host/IP>:<Port>",
                     "device_class": "Device Type",
-                    "access_token": "Access Token"
+                    "access_token": "Access Token",
+                    "include_or_exclude": "Include or Exclude Apps?",
+                    "apps_to_include_or_exclude": "Apps to Include or Exclude"
                 }
             },
             "pair_tv": {
@@ -29,6 +31,7 @@
             }
         },
         "error": {
+            "apps_require_tv": "Apps can only be included/excluded when the Device Type is TV.",
             "host_exists": "Vizio device with specified host already configured.",
             "name_exists": "Vizio device with specified name already configured.",
             "complete_pairing failed": "Unable to complete pairing. Ensure the PIN you provided is correct and the TV is still powered and connected to the network before resubmitting.",
@@ -36,7 +39,7 @@
         },
         "abort": {
             "already_setup": "This entry has already been setup.",
-            "updated_entry": "This entry has already been setup but the name and/or options defined in the configuration do not match the previously imported configuration, so the configuration entry has been updated accordingly."
+            "updated_entry": "This entry has already been setup but the name, apps, and/or options defined in the configuration do not match the previously imported configuration, so the configuration entry has been updated accordingly."
         }
     },
     "options": {
