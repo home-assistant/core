@@ -34,6 +34,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_LISTENER = "listener"
 
+DEFAULT_OPTIONS = {CONF_SHOW_ON_MAP: True}
+
 CONF_NODE_ID = "node_id"
 
 GEOGRAPHY_COORDINATES_SCHEMA = vol.Schema(
@@ -104,12 +106,11 @@ async def async_setup_entry(hass, config_entry):
     """Set up AirVisual as config entry."""
     entry_updates = {}
     if not config_entry.unique_id:
+        # If the config entry doesn't already have a unique ID, set one:
         entry_updates["unique_id"] = config_entry.data[CONF_API_KEY]
-
-    if not config_entry.options.get(CONF_SHOW_ON_MAP):
-        options = {**config_entry.options}
-        options[CONF_SHOW_ON_MAP] = True
-        entry_updates["options"] = options
+    if not config_entry.options:
+        # If the config entry doesn't already have any options set, set defaults:
+        entry_updates["options"] = DEFAULT_OPTIONS
 
     if entry_updates:
         hass.config_entries.async_update_entry(config_entry, **entry_updates)
