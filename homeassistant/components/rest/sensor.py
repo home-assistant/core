@@ -202,7 +202,10 @@ class RestSensor(Entity):
         self.rest.update()
         value = self.rest.data
         _LOGGER.debug("Data fetched from resource: %s", value)
-        content_type = self.rest.headers.get("content-type")
+        content_type = None
+
+        if self.rest.headers:
+            content_type = self.rest.headers.get("content-type")
 
         if content_type and content_type.startswith("text/xml"):
             try:
