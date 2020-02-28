@@ -23,6 +23,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     STATE_UNAVAILABLE,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import parse_datetime, utcnow
@@ -156,7 +157,7 @@ async def test_awair_score(hass):
     sensor = hass.states.get("sensor.awair_score")
     assert sensor.state == "78"
     assert sensor.attributes["device_class"] == DEVICE_CLASS_SCORE
-    assert sensor.attributes["unit_of_measurement"] == "%"
+    assert sensor.attributes["unit_of_measurement"] == UNIT_PERCENTAGE
 
 
 async def test_awair_temp(hass):
@@ -176,7 +177,7 @@ async def test_awair_humid(hass):
     sensor = hass.states.get("sensor.awair_humidity")
     assert sensor.state == "32.7"
     assert sensor.attributes["device_class"] == DEVICE_CLASS_HUMIDITY
-    assert sensor.attributes["unit_of_measurement"] == "%"
+    assert sensor.attributes["unit_of_measurement"] == UNIT_PERCENTAGE
 
 
 async def test_awair_co2(hass):

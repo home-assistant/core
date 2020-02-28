@@ -9,6 +9,7 @@ from homeassistant.const import (
     ENERGY_WATT_HOUR,
     POWER_WATT,
     SPEED_KILOMETERS_PER_HOUR,
+    UNIT_PERCENTAGE,
     VOLUME_CUBIC_METERS,
 )
 
@@ -32,7 +33,7 @@ HM_STATE_HA_CAST = {
 }
 
 HM_UNIT_HA_CAST = {
-    "HUMIDITY": "%",
+    "HUMIDITY": UNIT_PERCENTAGE,
     "TEMPERATURE": "°C",
     "ACTUAL_TEMPERATURE": "°C",
     "BRIGHTNESS": "#",

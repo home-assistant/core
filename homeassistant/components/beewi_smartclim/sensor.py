@@ -12,6 +12,7 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -24,8 +25,8 @@ DEFAULT_NAME = "BeeWi SmartClim"
 # Sensor config
 SENSOR_TYPES = [
     [DEVICE_CLASS_TEMPERATURE, "Temperature", TEMP_CELSIUS],
-    [DEVICE_CLASS_HUMIDITY, "Humidity", "%"],
-    [DEVICE_CLASS_BATTERY, "Battery", "%"],
+    [DEVICE_CLASS_HUMIDITY, "Humidity", UNIT_PERCENTAGE],
+    [DEVICE_CLASS_BATTERY, "Battery", UNIT_PERCENTAGE],
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

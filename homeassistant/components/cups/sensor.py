@@ -6,7 +6,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, UNIT_PERCENTAGE
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -268,7 +268,7 @@ class MarkerSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "%"
+        return UNIT_PERCENTAGE
 
     @property
     def device_state_attributes(self):

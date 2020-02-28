@@ -9,6 +9,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     PRESSURE_HPA,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.entity import Entity
 
@@ -27,8 +28,6 @@ ATTR_ICON = "icon"
 ATTR_LABEL = "label"
 ATTR_UNIT = "unit"
 
-HUMI_PERCENT = "%"
-
 SENSOR_TYPES = {
     ATTR_API_PM1: {
         ATTR_DEVICE_CLASS: None,
@@ -40,7 +39,7 @@ SENSOR_TYPES = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
         ATTR_ICON: None,
         ATTR_LABEL: ATTR_API_HUMIDITY.capitalize(),
-        ATTR_UNIT: HUMI_PERCENT,
+        ATTR_UNIT: UNIT_PERCENTAGE,
     },
     ATTR_API_PRESSURE: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_PRESSURE,

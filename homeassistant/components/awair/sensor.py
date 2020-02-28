@@ -16,6 +16,7 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -48,7 +49,7 @@ SENSOR_TYPES = {
     },
     "HUMID": {
         "device_class": DEVICE_CLASS_HUMIDITY,
-        "unit_of_measurement": "%",
+        "unit_of_measurement": UNIT_PERCENTAGE,
         "icon": "mdi:water-percent",
     },
     "CO2": {
@@ -80,7 +81,7 @@ SENSOR_TYPES = {
     },
     "score": {
         "device_class": DEVICE_CLASS_SCORE,
-        "unit_of_measurement": "%",
+        "unit_of_measurement": UNIT_PERCENTAGE,
         "icon": "mdi:percent",
     },
 }

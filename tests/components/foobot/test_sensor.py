@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import async_setup_component
@@ -40,10 +41,10 @@ async def test_default_setup(hass, aioclient_mock):
     metrics = {
         "co2": ["1232.0", CONCENTRATION_PARTS_PER_MILLION],
         "temperature": ["21.1", TEMP_CELSIUS],
-        "humidity": ["49.5", "%"],
+        "humidity": ["49.5", UNIT_PERCENTAGE],
         "pm2_5": ["144.8", CONCENTRATION_MICROGRAMS_PER_CUBIC_METER],
         "voc": ["340.7", CONCENTRATION_PARTS_PER_BILLION],
-        "index": ["138.9", "%"],
+        "index": ["138.9", UNIT_PERCENTAGE],
     }
 
     for name, value in metrics.items():
