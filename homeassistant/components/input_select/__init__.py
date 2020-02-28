@@ -23,7 +23,6 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceC
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "input_select"
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 CONF_INITIAL = "initial"
 CONF_OPTIONS = "options"
@@ -58,9 +57,7 @@ def _cv_input_select(cfg):
     initial = cfg.get(CONF_INITIAL)
     if initial is not None and initial not in options:
         raise vol.Invalid(
-            'initial state "{}" is not part of the options: {}'.format(
-                initial, ",".join(options)
-            )
+            f"initial state {initial} is not part of the options: {','.join(options)}"
         )
     return cfg
 
@@ -201,7 +198,7 @@ class InputSelect(RestoreEntity):
     def from_yaml(cls, config: typing.Dict) -> "InputSelect":
         """Return entity instance initialized from yaml storage."""
         input_select = cls(config)
-        input_select.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])
+        input_select.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         input_select.editable = False
         return input_select
 

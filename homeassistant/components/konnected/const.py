@@ -46,5 +46,4 @@ ZONE_TO_PIN = {zone: pin for pin, zone in PIN_TO_ZONE.items()}
 
 ENDPOINT_ROOT = "/api/konnected"
 UPDATE_ENDPOINT = ENDPOINT_ROOT + r"/device/{device_id:[a-zA-Z0-9]+}"
-SIGNAL_SENSOR_UPDATE = "konnected.{}.update"
 SIGNAL_DS18B20_NEW = "konnected.ds18b20.new"

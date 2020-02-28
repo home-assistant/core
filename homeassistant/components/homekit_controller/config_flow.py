@@ -73,7 +73,7 @@ def ensure_pin_format(pin):
     match = PIN_FORMAT.search(pin)
     if not match:
         raise aiohomekit.exceptions.MalformedPinError(f"Invalid PIN code f{pin}")
-    return "{}-{}-{}".format(*match.groups())
+    return "-".join(match.groups())
 
 
 @config_entries.HANDLERS.register(DOMAIN)

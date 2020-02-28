@@ -102,7 +102,7 @@ async def async_setup(hass, config):
     except XKNXException as ex:
         _LOGGER.warning("Can't connect to KNX interface: %s", ex)
         hass.components.persistent_notification.async_create(
-            "Can't connect to KNX interface: <br><b>{0}</b>".format(ex), title="KNX"
+            f"Can't connect to KNX interface: <br><b>{ex}</b>", title="KNX"
         )
 
     for component, discovery_type in (
@@ -291,7 +291,7 @@ class KNXAutomation:
         """Initialize Automation class."""
         self.hass = hass
         self.device = device
-        script_name = "{} turn ON script".format(device.get_name())
+        script_name = f"{device.get_name()} turn ON script"
         self.script = Script(hass, action, script_name)
 
         self.action = ActionCallback(
