@@ -156,11 +156,21 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
         if tasks:
             await asyncio.wait(tasks)
 
-    hass.helpers.service.async_register_admin_service(
-        ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service
+    # AIS - allow to pass extra command to gate
+    service_schema = vol.Schema(
+        {vol.Optional("ais_command"): cv.string}, extra=vol.ALLOW_EXTRA
     )
     hass.helpers.service.async_register_admin_service(
-        ha.DOMAIN, SERVICE_HOMEASSISTANT_RESTART, async_handle_core_service
+        ha.DOMAIN,
+        SERVICE_HOMEASSISTANT_STOP,
+        async_handle_core_service,
+        schema=service_schema,
+    )
+    hass.helpers.service.async_register_admin_service(
+        ha.DOMAIN,
+        SERVICE_HOMEASSISTANT_RESTART,
+        async_handle_core_service,
+        schema=service_schema,
     )
     hass.helpers.service.async_register_admin_service(
         ha.DOMAIN, SERVICE_CHECK_CONFIG, async_handle_core_service
