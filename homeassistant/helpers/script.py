@@ -14,6 +14,7 @@ import homeassistant.components.device_automation as device_automation
 import homeassistant.components.scene as scene
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_ALIAS,
     CONF_CONDITION,
     CONF_CONTINUE_ON_TIMEOUT,
     CONF_DELAY,
@@ -31,19 +32,17 @@ from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.helpers import (
     condition,
     config_validation as cv,
-    service,
     template as template,
 )
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
     async_track_template,
 )
+from homeassistant.helpers.service import CONF_SERVICE_DATA, async_call_from_config
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import utcnow
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
-
-CONF_ALIAS = "alias"
 
 IF_RUNNING_ERROR = "error"
 IF_RUNNING_IGNORE = "ignore"
@@ -137,11 +136,11 @@ class _ScriptRunBase(ABC):
             await getattr(
                 self, f"_async_{cv.determine_script_action(self._action)}_step"
             )()
-        except Exception as err:
-            if not isinstance(err, (_SuspendScript, _StopScript)) and (
+        except Exception as ex:
+            if not isinstance(ex, (_SuspendScript, _StopScript)) and (
                 self._log_exceptions or log_exceptions
             ):
-                self._log_exception(err)
+                self._log_exception(ex)
             raise
 
     @abstractmethod
@@ -224,7 +223,7 @@ class _ScriptRunBase(ABC):
         """Call the service specified in the action."""
         self._script.last_action = self._action.get(CONF_ALIAS, "call service")
         self._log("Executing step %s", self._script.last_action)
-        await service.async_call_from_config(
+        await async_call_from_config(
             self._hass,
             self._action,
             blocking=True,
@@ -318,21 +317,24 @@ class _ScriptRun(_ScriptRunBase):
         self._stop = asyncio.Event()
         self._stopped = asyncio.Event()
 
+    def _changed(self):
+        if not self._stop.is_set():
+            super()._changed()
+
     async def _async_run(self, propagate_exceptions=True):
         self._log("Running script")
         try:
             for self._step, self._action in enumerate(self._script.sequence):
                 if self._stop.is_set():
                     break
-                await self._async_step(not propagate_exceptions)
+                await self._async_step(log_exceptions=not propagate_exceptions)
         except _StopScript:
             pass
         except Exception:  # pylint: disable=broad-except
             if propagate_exceptions:
                 raise
         finally:
-            if not self._stop.is_set():
-                self._changed()
+            self._changed()
             self._script.last_action = None
             self._script._runs.remove(self)  # pylint: disable=protected-access
             self._stopped.set()
@@ -345,8 +347,7 @@ class _ScriptRun(_ScriptRunBase):
     async def _async_delay_step(self):
         """Handle delay."""
         timeout = self._prep_delay_step().total_seconds()
-        if not self._stop.is_set():
-            self._changed()
+        self._changed()
         await asyncio.wait({self._stop.wait()}, timeout=timeout)
 
     async def _async_wait_template_step(self):
@@ -361,8 +362,7 @@ class _ScriptRun(_ScriptRunBase):
         if not unsub:
             return
 
-        if not self._stop.is_set():
-            self._changed()
+        self._changed()
         try:
             timeout = self._action[CONF_TIMEOUT].total_seconds()
         except KeyError:
@@ -457,7 +457,7 @@ class _LegacyScriptRun(_ScriptRunBase):
             for self._step, self._action in islice(
                 enumerate(self._script.sequence), self._cur, None
             ):
-                await self._async_step(not propagate_exceptions)
+                await self._async_step(log_exceptions=not propagate_exceptions)
         except _StopScript:
             pass
         except _SuspendScript:
@@ -512,9 +512,9 @@ class _LegacyScriptRun(_ScriptRunBase):
 
         @callback
         def async_script_timeout(now):
-            """Call after timeout is retrieve."""
+            """Call after timeout has expired."""
             with suppress(ValueError):
-                self._async_listener.remove(unsub)
+                self._async_listener.remove(unsub_timeout)
 
             # Check if we want to continue to execute
             # the script after the timeout
@@ -530,10 +530,10 @@ class _LegacyScriptRun(_ScriptRunBase):
         self._async_listener.append(unsub_wait)
 
         if CONF_TIMEOUT in self._action:
-            unsub = async_track_point_in_utc_time(
+            unsub_timeout = async_track_point_in_utc_time(
                 self._hass, async_script_timeout, utcnow() + self._action[CONF_TIMEOUT]
             )
-            self._async_listener.append(unsub)
+            self._async_listener.append(unsub_timeout)
 
         raise _SuspendScript
 
@@ -626,7 +626,7 @@ class Script:
             action = cv.determine_script_action(step)
 
             if action == cv.SCRIPT_ACTION_CALL_SERVICE:
-                data = step.get(service.CONF_SERVICE_DATA)
+                data = step.get(CONF_SERVICE_DATA)
                 if not data:
                     continue
 
