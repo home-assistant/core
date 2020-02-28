@@ -146,6 +146,7 @@ class VizioDevice(MediaPlayerDevice):
         if not is_on:
             self._state = STATE_OFF
             self._volume_level = None
+            self._is_muted = None
             self._current_input = None
             self._available_inputs = None
             return
