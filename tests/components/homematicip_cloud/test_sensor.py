@@ -27,6 +27,7 @@ from homeassistant.const import (
     POWER_WATT,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.setup import async_setup_component
 
@@ -55,7 +56,7 @@ async def test_hmip_accesspoint_status(hass, default_mock_hap_factory):
     )
     assert hmip_device
     assert ha_state.state == "8.0"
-    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UNIT_PERCENTAGE
 
     await async_manipulate_test_data(hass, hmip_device, "dutyCycle", 17.3)
 
@@ -77,7 +78,7 @@ async def test_hmip_heating_thermostat(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == "0"
-    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UNIT_PERCENTAGE
     await async_manipulate_test_data(hass, hmip_device, "valvePosition", 0.37)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "37"
@@ -111,7 +112,7 @@ async def test_hmip_humidity_sensor(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == "40"
-    assert ha_state.attributes["unit_of_measurement"] == "%"
+    assert ha_state.attributes["unit_of_measurement"] == UNIT_PERCENTAGE
     await async_manipulate_test_data(hass, hmip_device, "humidity", 45)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "45"

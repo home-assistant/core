@@ -5,6 +5,7 @@ import logging
 from pythinkingcleaner import Discovery
 
 from homeassistant import util
+from homeassistant.const import UNIT_PERCENTAGE
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -13,7 +14,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 SENSOR_TYPES = {
-    "battery": ["Battery", "%", "mdi:battery"],
+    "battery": ["Battery", UNIT_PERCENTAGE, "mdi:battery"],
     "state": ["State", None, None],
     "capacity": ["Capacity", None, None],
 }

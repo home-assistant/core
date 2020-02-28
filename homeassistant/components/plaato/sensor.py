@@ -2,6 +2,7 @@
 
 import logging
 
+from homeassistant.const import UNIT_PERCENTAGE
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -145,7 +146,7 @@ class PlaatoSensor(Entity):
         if self._type == ATTR_BPM:
             return "bpm"
         if self._type == ATTR_ABV:
-            return "%"
+            return UNIT_PERCENTAGE
 
         return ""
 
