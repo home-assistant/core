@@ -72,7 +72,7 @@ def _include_name(filter_dict, name):
 
 
 def _exc_msg(exc):
-    return "{}: {}".format(exc.__class__.__name__, str(exc))
+    return f"{exc.__class__.__name__}: {exc}"
 
 
 def _dump_filter(filter_dict, desc, func=lambda x: x):
@@ -253,7 +253,7 @@ class Life360Scanner:
 
         msg = f"Updating {dev_id}"
         if prev_seen:
-            msg += "; Time since last update: {}".format(last_seen - prev_seen)
+            msg += f"; Time since last update: {last_seen - prev_seen}"
         _LOGGER.debug(msg)
 
         if self._max_gps_accuracy is not None and gps_accuracy > self._max_gps_accuracy:
@@ -402,10 +402,10 @@ class Life360Scanner:
                         places = api.get_circle_places(circle_id)
                         place_data = "Circle's Places:"
                         for place in places:
-                            place_data += "\n- name: {}".format(place["name"])
-                            place_data += "\n  latitude: {}".format(place["latitude"])
-                            place_data += "\n  longitude: {}".format(place["longitude"])
-                            place_data += "\n  radius: {}".format(place["radius"])
+                            place_data += f"\n- name: {place['name']}"
+                            place_data += f"\n  latitude: {place['latitude']}"
+                            place_data += f"\n  longitude: {place['longitude']}"
+                            place_data += f"\n  radius: {place['radius']}"
                         if not places:
                             place_data += " None"
                         _LOGGER.debug(place_data)

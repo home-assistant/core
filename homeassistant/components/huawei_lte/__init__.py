@@ -81,8 +81,6 @@ _LOGGER = logging.getLogger(__name__)
 # https://github.com/quandyfactory/dicttoxml/issues/60
 logging.getLogger("dicttoxml").setLevel(logging.WARNING)
 
-DEFAULT_NAME_TEMPLATE = "Huawei {} {}"
-
 SCAN_INTERVAL = timedelta(seconds=10)
 
 NOTIFY_SCHEMA = vol.Any(
@@ -567,7 +565,7 @@ class HuaweiLteBaseEntity(Entity):
     @property
     def name(self) -> str:
         """Return entity name."""
-        return DEFAULT_NAME_TEMPLATE.format(self.router.device_name, self._entity_name)
+        return f"Huawei {self.router.device_name} {self._entity_name}"
 
     @property
     def available(self) -> bool:

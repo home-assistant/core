@@ -198,6 +198,6 @@ class IndexSensor(IQVIAEntity):
                 )
         elif self._type == TYPE_DISEASE_TODAY:
             for attrs in period["Triggers"]:
-                self._attrs["{0}_index".format(attrs["Name"].lower())] = attrs["Index"]
+                self._attrs[f"{attrs['Name'].lower()}_index"] = attrs["Index"]
 
         self._state = period["Index"]

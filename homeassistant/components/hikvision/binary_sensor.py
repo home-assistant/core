@@ -109,7 +109,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for channel in channel_list:
             # Build sensor name, then parse customize config.
             if data.type == "NVR":
-                sensor_name = "{}_{}".format(sensor.replace(" ", "_"), channel[1])
+                sensor_name = f"{sensor.replace(' ', '_')}_{channel[1]}"
             else:
                 sensor_name = sensor.replace(" ", "_")
 

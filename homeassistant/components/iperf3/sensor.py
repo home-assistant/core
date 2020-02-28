@@ -28,7 +28,7 @@ class Iperf3Sensor(RestoreEntity):
 
     def __init__(self, iperf3_data, sensor_type):
         """Initialize the sensor."""
-        self._name = "{} {}".format(SENSOR_TYPES[sensor_type][0], iperf3_data.host)
+        self._name = f"{SENSOR_TYPES[sensor_type][0]} {iperf3_data.host}"
         self._state = None
         self._sensor_type = sensor_type
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]

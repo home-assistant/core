@@ -65,4 +65,4 @@ class JuicenetDevice(Entity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return "{}-{}".format(self.device.id(), self.type)
+        return f"{self.device.id()}-{self.type}"

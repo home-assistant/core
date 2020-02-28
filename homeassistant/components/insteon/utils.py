@@ -189,13 +189,13 @@ def async_register_services(hass, config, insteon_modem):
     )
     hass.services.async_register(DOMAIN, SRV_PRINT_IM_ALDB, print_im_aldb, schema=None)
     hass.services.async_register(
-        DOMAIN, SRV_X10_ALL_UNITS_OFF, x10_all_units_off, schema=X10_HOUSECODE_SCHEMA,
+        DOMAIN, SRV_X10_ALL_UNITS_OFF, x10_all_units_off, schema=X10_HOUSECODE_SCHEMA
     )
     hass.services.async_register(
-        DOMAIN, SRV_X10_ALL_LIGHTS_OFF, x10_all_lights_off, schema=X10_HOUSECODE_SCHEMA,
+        DOMAIN, SRV_X10_ALL_LIGHTS_OFF, x10_all_lights_off, schema=X10_HOUSECODE_SCHEMA
     )
     hass.services.async_register(
-        DOMAIN, SRV_X10_ALL_LIGHTS_ON, x10_all_lights_on, schema=X10_HOUSECODE_SCHEMA,
+        DOMAIN, SRV_X10_ALL_LIGHTS_ON, x10_all_lights_on, schema=X10_HOUSECODE_SCHEMA
     )
     hass.services.async_register(
         DOMAIN, SRV_SCENE_ON, scene_on, schema=TRIGGER_SCENE_SCHEMA
@@ -223,17 +223,9 @@ def print_aldb_to_log(aldb):
         in_use = "Y" if rec.control_flags.is_in_use else "N"
         mode = "C" if rec.control_flags.is_controller else "R"
         hwm = "Y" if rec.control_flags.is_high_water_mark else "N"
-        _LOGGER.info(
-            " {:04x}    {:s}     {:s}   {:s}    {:3d} {:s}"
-            "   {:3d}   {:3d}   {:3d}".format(
-                rec.mem_addr,
-                in_use,
-                mode,
-                hwm,
-                rec.group,
-                rec.address.human,
-                rec.data1,
-                rec.data2,
-                rec.data3,
-            )
+        log_msg = (
+            f" {rec.mem_addr:04x}    {in_use:s}     {mode:s}   {hwm:s}    "
+            f"{rec.group:3d} {rec.address.human:s}   {rec.data1:3d}   "
+            f"{rec.data2:3d}   {rec.data3:3d}"
         )
+        _LOGGER.info(log_msg)
