@@ -7,9 +7,8 @@ from homeassistant.components.wwlln import (
     DATA_CLIENT,
     DOMAIN,
     async_setup_entry,
-    config_flow,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 
 from tests.common import MockConfigEntry
@@ -33,11 +32,9 @@ async def test_duplicate_error(hass, config_entry):
 
 async def test_show_form(hass):
     """Test that the form is served with no input."""
-    flow = config_flow.WWLLNFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_USER}
-
-    result = await flow.async_step_user(user_input=None)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER},
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -51,11 +48,10 @@ async def test_step_import(hass):
         CONF_RADIUS: 25,
     }
 
-    flow = config_flow.WWLLNFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_USER}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+    )
 
-    result = await flow.async_step_import(import_config=conf)
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "39.128712, -104.9812612"
     assert result["data"] == {
@@ -75,11 +71,10 @@ async def test_step_import_too_small_window(hass):
         CONF_WINDOW: 60,
     }
 
-    flow = config_flow.WWLLNFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_USER}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+    )
 
-    result = await flow.async_step_import(import_config=conf)
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "window_too_small"
 
@@ -88,11 +83,10 @@ async def test_step_user(hass):
     """Test that the user step works."""
     conf = {CONF_LATITUDE: 39.128712, CONF_LONGITUDE: -104.9812612, CONF_RADIUS: 25}
 
-    flow = config_flow.WWLLNFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_USER}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=conf
+    )
 
-    result = await flow.async_step_user(user_input=conf)
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "39.128712, -104.9812612"
     assert result["data"] == {
@@ -111,11 +105,10 @@ async def test_different_unit_system(hass):
         CONF_RADIUS: 25,
     }
 
-    flow = config_flow.WWLLNFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_USER}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=conf
+    )
 
-    result = await flow.async_step_user(user_input=conf)
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "39.128712, -104.9812612"
     assert result["data"] == {
@@ -135,11 +128,10 @@ async def test_custom_window(hass):
         CONF_WINDOW: 7200,
     }
 
-    flow = config_flow.WWLLNFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_USER}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=conf
+    )
 
-    result = await flow.async_step_user(user_input=conf)
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "39.128712, -104.9812612"
     assert result["data"] == {
