@@ -62,4 +62,4 @@ class UniFiClient(Entity):
     @property
     def should_poll(self) -> bool:
         """No polling needed."""
-        return False
+        return True
