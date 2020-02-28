@@ -30,7 +30,7 @@ class IOSSensor(Entity):
     def __init__(self, sensor_type, device_name, device):
         """Initialize the sensor."""
         self._device_name = device_name
-        self._name = "{} {}".format(device_name, SENSOR_TYPES[sensor_type][0])
+        self._name = f"{device_name} {SENSOR_TYPES[sensor_type][0]}"
         self._device = device
         self.type = sensor_type
         self._state = None
@@ -56,7 +56,7 @@ class IOSSensor(Entity):
     def name(self):
         """Return the name of the iOS sensor."""
         device_name = self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_NAME]
-        return "{} {}".format(device_name, SENSOR_TYPES[self.type][0])
+        return f"{device_name} {SENSOR_TYPES[self.type][0]}"
 
     @property
     def state(self):

@@ -15,7 +15,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN as KONNECTED_DOMAIN, SIGNAL_DS18B20_NEW, SIGNAL_SENSOR_UPDATE
+from .const import DOMAIN as KONNECTED_DOMAIN, SIGNAL_DS18B20_NEW
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,9 +84,7 @@ class KonnectedSensor(Entity):
         self._type = sensor_type
         self._zone_num = self._data.get(CONF_ZONE)
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self._unique_id = addr or "{}-{}-{}".format(
-            device_id, self._zone_num, sensor_type
-        )
+        self._unique_id = addr or f"{device_id}-{self._zone_num}-{sensor_type}"
 
         # set initial state if known at initialization
         self._state = initial_state
@@ -130,7 +128,7 @@ class KonnectedSensor(Entity):
         entity_id_key = self._addr or self._type
         self._data[entity_id_key] = self.entity_id
         async_dispatcher_connect(
-            self.hass, SIGNAL_SENSOR_UPDATE.format(self.entity_id), self.async_set_state
+            self.hass, f"konnected.{self.entity_id}.update", self.async_set_state
         )
 
     @callback

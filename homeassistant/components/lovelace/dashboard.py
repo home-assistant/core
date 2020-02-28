@@ -138,7 +138,7 @@ class LovelaceYAML(LovelaceConfig):
         except ConfigNotFound:
             return {
                 "mode": self.mode,
-                "error": "{} not found".format(self.path),
+                "error": f"{self.path} not found",
             }
 
         return _config_info(self.mode, config)

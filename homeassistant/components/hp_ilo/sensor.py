@@ -90,9 +90,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         new_device = HpIloSensor(
             hass=hass,
             hp_ilo_data=hp_ilo_data,
-            sensor_name="{} {}".format(
-                config.get(CONF_NAME), monitored_variable[CONF_NAME]
-            ),
+            sensor_name=f"{config.get(CONF_NAME)} {monitored_variable[CONF_NAME]}",
             sensor_type=monitored_variable[CONF_SENSOR_TYPE],
             sensor_value_template=monitored_variable.get(CONF_VALUE_TEMPLATE),
             unit_of_measurement=monitored_variable.get(CONF_UNIT_OF_MEASUREMENT),
