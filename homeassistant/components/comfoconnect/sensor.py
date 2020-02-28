@@ -33,6 +33,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TIME_DAYS,
     TIME_HOURS,
+    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -78,7 +79,7 @@ SENSOR_TYPES = {
     ATTR_CURRENT_HUMIDITY: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
         ATTR_LABEL: "Inside Humidity",
-        ATTR_UNIT: "%",
+        ATTR_UNIT: UNIT_PERCENTAGE,
         ATTR_ICON: "mdi:water-percent",
         ATTR_ID: SENSOR_HUMIDITY_EXTRACT,
     },
@@ -93,7 +94,7 @@ SENSOR_TYPES = {
     ATTR_OUTSIDE_HUMIDITY: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
         ATTR_LABEL: "Outside Humidity",
-        ATTR_UNIT: "%",
+        ATTR_UNIT: UNIT_PERCENTAGE,
         ATTR_ICON: "mdi:water-percent",
         ATTR_ID: SENSOR_HUMIDITY_OUTDOOR,
     },
@@ -108,7 +109,7 @@ SENSOR_TYPES = {
     ATTR_SUPPLY_HUMIDITY: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
         ATTR_LABEL: "Supply Humidity",
-        ATTR_UNIT: "%",
+        ATTR_UNIT: UNIT_PERCENTAGE,
         ATTR_ICON: "mdi:water-percent",
         ATTR_ID: SENSOR_HUMIDITY_SUPPLY,
     },
@@ -122,7 +123,7 @@ SENSOR_TYPES = {
     ATTR_SUPPLY_FAN_DUTY: {
         ATTR_DEVICE_CLASS: None,
         ATTR_LABEL: "Supply Fan Duty",
-        ATTR_UNIT: "%",
+        ATTR_UNIT: UNIT_PERCENTAGE,
         ATTR_ICON: "mdi:fan",
         ATTR_ID: SENSOR_FAN_SUPPLY_DUTY,
     },
@@ -136,7 +137,7 @@ SENSOR_TYPES = {
     ATTR_EXHAUST_FAN_DUTY: {
         ATTR_DEVICE_CLASS: None,
         ATTR_LABEL: "Exhaust Fan Duty",
-        ATTR_UNIT: "%",
+        ATTR_UNIT: UNIT_PERCENTAGE,
         ATTR_ICON: "mdi:fan",
         ATTR_ID: SENSOR_FAN_EXHAUST_DUTY,
     },
@@ -151,7 +152,7 @@ SENSOR_TYPES = {
     ATTR_EXHAUST_HUMIDITY: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
         ATTR_LABEL: "Exhaust Humidity",
-        ATTR_UNIT: "%",
+        ATTR_UNIT: UNIT_PERCENTAGE,
         ATTR_ICON: "mdi:water-percent",
         ATTR_ID: SENSOR_HUMIDITY_EXHAUST,
     },
@@ -172,7 +173,7 @@ SENSOR_TYPES = {
     ATTR_BYPASS_STATE: {
         ATTR_DEVICE_CLASS: None,
         ATTR_LABEL: "Bypass State",
-        ATTR_UNIT: "%",
+        ATTR_UNIT: UNIT_PERCENTAGE,
         ATTR_ICON: "mdi:camera-iris",
         ATTR_ID: SENSOR_BYPASS_STATE,
     },
