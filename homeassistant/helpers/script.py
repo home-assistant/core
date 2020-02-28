@@ -7,6 +7,7 @@ from itertools import islice
 import logging
 from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple, cast
 
+from async_timeout import timeout
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -346,9 +347,13 @@ class _ScriptRun(_ScriptRunBase):
 
     async def _async_delay_step(self):
         """Handle delay."""
-        timeout = self._prep_delay_step().total_seconds()
+        delay = self._prep_delay_step().total_seconds()
         self._changed()
-        await asyncio.wait({self._stop.wait()}, timeout=timeout)
+        try:
+            async with timeout(delay):
+                await self._stop.wait()
+        except asyncio.TimeoutError:
+            pass
 
     async def _async_wait_template_step(self):
         """Handle a wait template."""
@@ -364,18 +369,18 @@ class _ScriptRun(_ScriptRunBase):
 
         self._changed()
         try:
-            timeout = self._action[CONF_TIMEOUT].total_seconds()
+            delay = self._action[CONF_TIMEOUT].total_seconds()
         except KeyError:
-            timeout = None
+            delay = None
         done = asyncio.Event()
         try:
-            await asyncio.wait_for(
-                asyncio.wait(
+            async with timeout(delay):
+                _, pending = await asyncio.wait(
                     {self._stop.wait(), done.wait()},
                     return_when=asyncio.FIRST_COMPLETED,
-                ),
-                timeout,
-            )
+                )
+            for pending_task in pending:
+                pending_task.cancel()
         except asyncio.TimeoutError:
             if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
                 self._log(_TIMEOUT_MSG)
