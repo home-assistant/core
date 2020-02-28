@@ -2,7 +2,7 @@
 from unittest.mock import Mock, call
 
 from asynctest import patch
-from dynalite_lib import CONF_ALL
+from dynalite_devices_lib import CONF_ALL
 import pytest
 
 from homeassistant.components import dynalite
