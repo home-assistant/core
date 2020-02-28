@@ -140,7 +140,7 @@ class GitHubSensor(Entity):
         if self._latest_release_url is not None:
             self._state = self._latest_release_url.split("tag/")[1]
         else:
-            self._state = self._github_data.latest_commit_sha[0:7]
+            self._state = self._github_data.latest_commit_sha[0:8]
         self._open_issue_count = self._github_data.open_issue_count
         self._latest_open_issue_url = self._github_data.latest_open_issue_url
         self._pull_request_count = self._github_data.pull_request_count
