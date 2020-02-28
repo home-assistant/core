@@ -17,7 +17,7 @@ data/
 .AppleDouble
 .LSOverride
 Icon
-
+__pycache__
 # Thumbnails
 ._*
 
