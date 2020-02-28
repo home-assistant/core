@@ -14,5 +14,5 @@ async def test_create_doorbell(hass):
     doorbell_details = [doorbell_one]
     await _create_august_with_devices(hass, doorbell_details)
 
-    camera_k98gidt45gul_name = hass.states.get("camera.k98gidt45gul_name")
-    assert camera_k98gidt45gul_name.state == STATE_IDLE
+    camera_k98gidt45gul_name_camera = hass.states.get("camera.k98gidt45gul_name_camera")
+    assert camera_k98gidt45gul_name_camera.state == STATE_IDLE
