@@ -1,6 +1,4 @@
 """Support for the Dynalite networks."""
-import asyncio
-
 import voluptuous as vol
 
 from homeassistant import config_entries
