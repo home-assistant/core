@@ -1455,12 +1455,6 @@ async def test_if_running_with_legacy_run_mode(hass, caplog):
             run_mode="legacy",
             logger=logging.getLogger("TEST"),
         )
-    assert any(
-        rec.levelname == "ERROR"
-        and rec.name == "TEST"
-        and all(text in rec.message for text in ("if_running", "legacy"))
-        for rec in caplog.records
-    )
 
 
 async def test_if_running_ignore(hass, caplog):
@@ -1584,12 +1578,6 @@ async def test_if_running_error(hass, caplog):
             await script_obj.async_run()
 
         assert script_obj.is_running
-        assert any(
-            rec.levelname == "ERROR"
-            and rec.name == "TEST"
-            and "Already running" in rec.message
-            for rec in caplog.records
-        )
     except (AssertionError, asyncio.TimeoutError):
         await script_obj.async_stop()
         raise

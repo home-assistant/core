@@ -47,6 +47,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.service import CONF_SERVICE_DATA, async_call_from_config
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
@@ -106,6 +107,10 @@ class _StopScript(Exception):
 
 class _SuspendScript(Exception):
     """Throw if script needs to suspend."""
+
+
+class AlreadyRunning(exceptions.HomeAssistantError):
+    """Throw if script already running and user wants error."""
 
 
 class _ScriptRunBase(ABC):
@@ -172,6 +177,9 @@ class _ScriptRunBase(ABC):
         elif isinstance(exception, exceptions.ServiceNotFound):
             error_desc = "Service not found"
 
+        elif isinstance(exception, AlreadyRunning):
+            error_desc = "Already running"
+
         else:
             error_desc = "Unexpected error"
             level = _LOG_EXCEPTION
@@ -195,12 +203,13 @@ class _ScriptRunBase(ABC):
                 template.render_complex(self._action[CONF_DELAY], self._variables)
             )
         except (exceptions.TemplateError, vol.Invalid) as ex:
-            self._raise(
+            self._log(
                 "Error rendering %s delay template: %s",
                 self._script.name,
                 ex,
-                exception=_StopScript,
+                level=logging.ERROR,
             )
+            raise _StopScript
 
         self._script.last_action = self._action.get(CONF_ALIAS, f"delay {delay}")
         self._log("Executing step %s", self._script.last_action)
@@ -303,10 +312,6 @@ class _ScriptRunBase(ABC):
 
     def _log(self, msg, *args, level=logging.INFO):
         self._script._log(msg, *args, level=level)  # pylint: disable=protected-access
-
-    def _raise(self, msg, *args, exception=None):
-        # pylint: disable=protected-access
-        self._script._raise(msg, *args, exception=exception)
 
 
 class _ScriptRun(_ScriptRunBase):
@@ -573,19 +578,29 @@ class Script:
         log_exceptions: bool = True,
     ) -> None:
         """Initialize the script."""
-        self._logger = logger or logging.getLogger(__name__)
         self._hass = hass
         self.sequence = sequence
         template.attach(hass, self.sequence)
         self.name = name
         self._change_listener = change_listener
+        if logger:
+            self._logger = logger
+        else:
+            logger_name = __name__
+            if name:
+                logger_name = ".".join([logger_name, slugify(name)])
+            self._logger = logging.getLogger(name)
+        self._log_exceptions = log_exceptions
+
         self.last_action = None
         self.last_triggered: Optional[datetime] = None
         if not if_running and not run_mode:
             self._if_running = IF_RUNNING_PARALLEL
             self._run_mode = RUN_MODE_LEGACY
         elif if_running and run_mode == RUN_MODE_LEGACY:
-            self._raise('Cannot use if_running if run_mode is "legacy"')
+            raise exceptions.HomeAssistantError(
+                'Cannot use if_running if run_mode is "legacy"'
+            )
         else:
             self._if_running = if_running or IF_RUNNING_CHOICES[0]
             self._run_mode = run_mode or RUN_MODE_CHOICES[0]
@@ -594,7 +609,6 @@ class Script:
             for action in self.sequence
         )
         self._runs: List[_ScriptRunBase] = []
-        self._log_exceptions = log_exceptions
         self._config_cache: Dict[Set[Tuple], Callable[..., bool]] = {}
         self._referenced_entities: Optional[Set[str]] = None
         self._referenced_devices: Optional[Set[str]] = None
@@ -688,7 +702,8 @@ class Script:
                 return
 
             if self._if_running == IF_RUNNING_ERROR:
-                self._raise("Already running")
+                raise AlreadyRunning
+
             if self._if_running == IF_RUNNING_RESTART:
                 self._log("Restarting script")
                 await self.async_stop()
@@ -728,9 +743,3 @@ class Script:
             self._logger.exception(msg, *args)
         else:
             self._logger.log(level, msg, *args)
-
-    def _raise(self, msg, *args, exception=None):
-        if not exception:
-            exception = exceptions.HomeAssistantError
-        self._log(msg, *args, level=logging.ERROR)
-        raise exception(msg % args)
