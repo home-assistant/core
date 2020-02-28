@@ -47,7 +47,7 @@ async def test_firing_event_basic(hass):
         else:
             script_obj = script.Script(hass, schema, run_mode=run_mode)
 
-        assert not script_obj.can_cancel
+        assert script_obj.can_cancel == (not script_obj.is_legacy)
 
         await script_obj.async_run(context=context)
 
@@ -56,7 +56,7 @@ async def test_firing_event_basic(hass):
         assert len(events) == 1
         assert events[0].context is context
         assert events[0].data.get("hello") == "world"
-        assert not script_obj.can_cancel
+        assert script_obj.can_cancel == (not script_obj.is_legacy)
 
 
 async def test_firing_event_template(hass):
@@ -93,7 +93,7 @@ async def test_firing_event_template(hass):
         else:
             script_obj = script.Script(hass, schema, run_mode=run_mode)
 
-        assert not script_obj.can_cancel
+        assert script_obj.can_cancel == (not script_obj.is_legacy)
 
         await script_obj.async_run({"is_world": "yes"}, context=context)
 
@@ -128,7 +128,7 @@ async def test_calling_service_basic(hass):
         else:
             script_obj = script.Script(hass, schema, run_mode=run_mode)
 
-        assert not script_obj.can_cancel
+        assert script_obj.can_cancel == (not script_obj.is_legacy)
 
         await script_obj.async_run(context=context)
 
@@ -207,7 +207,7 @@ async def test_activating_scene(hass):
         else:
             script_obj = script.Script(hass, schema, run_mode=run_mode)
 
-        assert not script_obj.can_cancel
+        assert script_obj.can_cancel == (not script_obj.is_legacy)
 
         await script_obj.async_run(context=context)
 
@@ -257,7 +257,7 @@ async def test_calling_service_template(hass):
         else:
             script_obj = script.Script(hass, schema, run_mode=run_mode)
 
-        assert not script_obj.can_cancel
+        assert script_obj.can_cancel == (not script_obj.is_legacy)
 
         await script_obj.async_run({"is_world": "yes"}, context=context)
 
@@ -1165,7 +1165,7 @@ async def test_condition_basic(hass):
         else:
             script_obj = script.Script(hass, schema, run_mode=run_mode)
 
-        assert not script_obj.can_cancel
+        assert script_obj.can_cancel == (not script_obj.is_legacy)
 
         await script_obj.async_run()
         await hass.async_block_till_done()

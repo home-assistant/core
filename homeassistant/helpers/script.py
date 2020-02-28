@@ -29,7 +29,13 @@ from homeassistant.const import (
     CONF_WAIT_TEMPLATE,
     SERVICE_TURN_ON,
 )
-from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Context,
+    HomeAssistant,
+    callback,
+    is_callback,
+)
 from homeassistant.helpers import (
     condition,
     config_validation as cv,
@@ -323,6 +329,7 @@ class _ScriptRun(_ScriptRunBase):
             super()._changed()
 
     async def _async_run(self, propagate_exceptions=True):
+        self._changed()
         self._log("Running script")
         try:
             for self._step, self._action in enumerate(self._script.sequence):
@@ -335,9 +342,10 @@ class _ScriptRun(_ScriptRunBase):
             if propagate_exceptions:
                 raise
         finally:
-            self._changed()
-            self._script.last_action = None
             self._script._runs.remove(self)  # pylint: disable=protected-access
+            if not self._script.is_running:
+                self._script.last_action = None
+            self._changed()
             self._stopped.set()
 
     async def async_stop(self) -> None:
@@ -474,11 +482,12 @@ class _LegacyScriptRun(_ScriptRunBase):
             if propagate_exceptions:
                 raise
         finally:
-            if self._cur != -1:
-                self._changed()
+            _cur_was = self._cur
             if not suspended:
                 self._script.last_action = None
                 await self.async_stop()
+            if _cur_was != -1:
+                self._changed()
 
     async def async_stop(self) -> None:
         """Stop script run."""
@@ -572,10 +581,6 @@ class Script:
         self._change_listener = change_listener
         self.last_action = None
         self.last_triggered: Optional[datetime] = None
-        self.can_cancel = any(
-            CONF_DELAY in action or CONF_WAIT_TEMPLATE in action
-            for action in self.sequence
-        )
         if not if_running and not run_mode:
             self._if_running = IF_RUNNING_PARALLEL
             self._run_mode = RUN_MODE_LEGACY
@@ -584,6 +589,10 @@ class Script:
         else:
             self._if_running = if_running or IF_RUNNING_CHOICES[0]
             self._run_mode = run_mode or RUN_MODE_CHOICES[0]
+        self.can_cancel = not self.is_legacy or any(
+            CONF_DELAY in action or CONF_WAIT_TEMPLATE in action
+            for action in self.sequence
+        )
         self._runs: List[_ScriptRunBase] = []
         self._log_exceptions = log_exceptions
         self._config_cache: Dict[Set[Tuple], Callable[..., bool]] = {}
@@ -592,12 +601,20 @@ class Script:
 
     def _changed(self):
         if self._change_listener:
-            self._hass.async_add_job(self._change_listener)
+            if is_callback(self._change_listener):
+                self._change_listener()
+            else:
+                self._hass.async_add_job(self._change_listener)
 
     @property
     def is_running(self) -> bool:
         """Return true if script is on."""
         return len(self._runs) > 0
+
+    @property
+    def is_legacy(self) -> bool:
+        """Return if using legacy mode."""
+        return self._run_mode == RUN_MODE_LEGACY
 
     @property
     def referenced_devices(self):
@@ -677,7 +694,7 @@ class Script:
                 await self.async_stop()
 
         self.last_triggered = utcnow()
-        if self._run_mode == RUN_MODE_LEGACY:
+        if self.is_legacy:
             if self._runs:
                 shared = cast(Optional[_LegacyScriptRun], self._runs[0])
             else:
