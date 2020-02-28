@@ -353,6 +353,14 @@ class CoffeeMaker(DeviceWithPrograms):
         {"name": "ConsumerProducts.CoffeeMaker.Program.Beverage.Cappuccino"},
         {"name": "ConsumerProducts.CoffeeMaker.Program.Beverage.LatteMacchiato"},
         {"name": "ConsumerProducts.CoffeeMaker.Program.Beverage.CaffeLatte"},
+        {"name": "ConsumerProducts.CoffeeMaker.Program.CoffeeWorld.Americano"},
+        {"name": "ConsumerProducts.CoffeeMaker.Program.Beverage.EspressoDoppio"},
+        {"name": "ConsumerProducts.CoffeeMaker.Program.CoffeeWorld.FlatWhite"},
+        {"name": "ConsumerProducts.CoffeeMaker.Program.CoffeeWorld.Galao"},
+        {"name": "ConsumerProducts.CoffeeMaker.Program.Beverage.MilkFroth"},
+        {"name": "ConsumerProducts.CoffeeMaker.Program.Beverage.WarmMilk"},
+        {"name": "ConsumerProducts.CoffeeMaker.Program.Beverage.Ristretto"},
+        {"name": "ConsumerProducts.CoffeeMaker.Program.CoffeeWorld.Cortado"},
     ]
 
     power_off_state = "BSH.Common.EnumType.PowerState.Standby"
