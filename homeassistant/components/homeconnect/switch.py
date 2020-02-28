@@ -95,13 +95,6 @@ def convert_to_snake(camel):
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", snake).lower()
 
 
-def format_key(key):
-    """Format Home Connect keys like `BSH.Something.SomeValue` to a simple `some_value`."""
-    if not isinstance(key, str):
-        return key
-    return convert_to_snake(key.split(".")[-1])
-
-
 class HomeConnectPowerSwitch(HomeConnectEntity, SwitchDevice):
     """Power switch class for Home Connect."""
 
@@ -182,4 +175,15 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchDevice):
     def device_state_attributes(self):
         """Return the state attributes."""
         status = self.device.appliance.status
-        return {format_key(k): format_key(v.get("value")) for k, v in status.items()}
+        attributes = {}
+        for k, v in status.items():
+            # e.g. `BSH.Something.SomeValue` -> `some_value`
+            key = convert_to_snake(k.split(".")[-1])
+            if isinstance(v, str):
+                val = convert_to_snake(v.split(".")[-1])
+            elif isinstance(v, (dict, int)):
+                val = v
+            else:
+                raise ValueError("Unexpected type for value")
+            attributes[key] = val
+        return attributes
