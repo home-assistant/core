@@ -1,0 +1,50 @@
+environment:
+  system-packages:
+    - recipe: python3.7
+    - recipe: python3.7-dev
+    - recipe: python3.7-venv
+    - recipe: python3-pip
+    - recipe: autoconf
+    - recipe: libssl-dev
+    - recipe: libxml2-dev
+    - recipe: libxslt1-dev
+    - recipe: libjpeg-dev
+    - recipe: libffi-dev
+    - recipe: libudev-dev
+    - recipe: zlib1g-dev
+    - recipe: libavformat-dev
+    - recipe: libavcodec-dev
+    - recipe: libavdevice-dev
+    - recipe: libavutil-dev
+    - recipe: libswscale-dev
+    - recipe: libavresample-dev
+    - recipe: libavfilter-dev
+    - recipe: curl
+    - recipe: git
+  setup-steps:
+    - name: python3.7
+      type: script
+      as_user: false
+      run:
+        - 'update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 1'
+        - 'update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 2'
+        - 'update-alternatives  --set python3 /usr/bin/python3.7' 
+    - name: bootstrap
+      type: script
+      run: 'script/bootstrap'
+    - name: pipInstall
+      type: script
+      run: 'pip3 install -e .'
+network:
+  ports:
+    - '8123:8123'
+actions:
+  - name: run
+    script: 'python3 -m homeassistant'
+    help: 'Run Home Assistant'
+  - name: test
+    script: 'python3 -m tox'
+    help: 'Run unit tests'
+  - name: lint
+    script: 'python3 -m tox -e lint'
+    help: 'Run linter'
