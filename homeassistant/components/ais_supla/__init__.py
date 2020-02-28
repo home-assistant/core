@@ -90,7 +90,7 @@ async def async_discover_devices(hass, config_entry):
         component_name = SUPLA_FUNCTION_HA_CMP_MAP.get(channel_function)
 
         if component_name is None:
-            _LOGGER.warning(
+            _LOGGER.info(
                 "Unsupported function: %s, channel id: %s",
                 channel_function,
                 channel["id"],

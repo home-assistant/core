@@ -2539,7 +2539,7 @@ async def async_setup(hass, config):
                     )
                 )
             hass.async_add_job(
-                hass.services.async_call("frontend", "set_theme", {"name": "ais"})
+                hass.services.async_call("frontend", "set_theme", {"name": "default"})
             )
 
         if not timer:
@@ -3417,6 +3417,7 @@ def _beep_it(hass, tone):
 
 def _say_it(hass, message, img=None, exclude_say_it=None):
     # sent the tts message to the panel via http api
+    message = message.replace("°C", "stopni Celsjusza")
     _post_message(message, hass, exclude_say_it)
 
     if len(message) > 1999:
