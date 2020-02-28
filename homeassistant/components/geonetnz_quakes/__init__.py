@@ -2,7 +2,6 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Optional
 
 from aio_geojson_geonetnz_quakes import GeonetnzQuakesFeedManager
 import voluptuous as vol
@@ -196,15 +195,14 @@ class GeonetnzQuakesFeedEntityManager:
         """Return latest status update info received."""
         return self._status_info
 
-    @property
-    def unique_id(self) -> Optional[str]:
-        """Return a unique ID (contains latitude/longitude)."""
-        return self._config_entry_id
-
     async def _generate_entity(self, external_id):
         """Generate new entity."""
         async_dispatcher_send(
-            self._hass, self.async_event_new_entity(), self, external_id
+            self._hass,
+            self.async_event_new_entity(),
+            self,
+            self._config_entry.unique_id,
+            external_id,
         )
 
     async def _update_entity(self, external_id):
