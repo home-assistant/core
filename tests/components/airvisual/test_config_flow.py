@@ -4,7 +4,7 @@ from unittest.mock import patch
 from pyairvisual.errors import InvalidKeyError
 
 from homeassistant import data_entry_flow
-from homeassistant.components.airvisual import CONF_GEOGRAPHIES, DOMAIN, config_flow
+from homeassistant.components.airvisual import CONF_GEOGRAPHIES, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 
@@ -29,15 +29,13 @@ async def test_invalid_api_key(hass):
     """Test that invalid credentials throws an error."""
     conf = {CONF_API_KEY: "abcde12345"}
 
-    flow = config_flow.AirVisualFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_USER}
-
     with patch(
         "pyairvisual.api.API.nearest_city",
         return_value=mock_coro(exception=InvalidKeyError),
     ):
-        result = await flow.async_step_user(user_input=conf)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=conf
+        )
         assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
 
 
