@@ -283,8 +283,10 @@ class VizioDevice(MediaPlayerDevice):
         """Mute the volume."""
         if mute:
             await self._device.mute_on()
+            self._is_muted = True
         else:
             await self._device.mute_off()
+            self._is_muted = False
 
     async def async_media_previous_track(self) -> None:
         """Send previous channel command."""
