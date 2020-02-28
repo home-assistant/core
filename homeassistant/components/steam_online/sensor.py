@@ -28,8 +28,9 @@ STATE_SNOOZE = "snooze"
 STATE_LOOKING_TO_TRADE = "looking_to_trade"
 STATE_LOOKING_TO_PLAY = "looking_to_play"
 
-STEAM_API_URL = "https://steamcdn-a.akamaihd.net/steam/"
-STEAM_APP_ENDPOINT = "apps/"
+STEAM_API_URL = "https://steamcdn-a.akamaihd.net/steam/apps/"
+STEAM_HEADER_IMAGE_FILE = "header.jpg"
+STEAM_MAIN_IMAGE_FILE = "capsule_616x353.jpg"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -124,6 +125,7 @@ class SteamSensor(Entity):
         except self._steamod.api.HTTPTimeoutError as error:
             _LOGGER.warning(error)
             self._game = None
+            self._game_id = None
             self._state = None
             self._name = None
             self._avatar = None
@@ -169,13 +171,6 @@ class SteamSensor(Entity):
 
         return None
 
-    def _get_game_image_header(self):
-        """Return the current games header image URL."""
-        if self._game_id is not None:
-            return f"{STEAM_API_URL}{STEAM_APP_ENDPOINT}{self._game_id}/header.jpg"
-
-        return None
-
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
@@ -184,10 +179,12 @@ class SteamSensor(Entity):
             attr["game"] = self._game
         if self._game_id is not None:
             attr["game_id"] = self._game_id
-            attr["game_image_header"] = self._get_game_image_header()
+            attr[
+                "game_image_header"
+            ] = f"{STEAM_API_URL}{self._game_id}/{STEAM_HEADER_IMAGE_FILE}"
             attr[
                 "game_image_main"
-            ] = f"{STEAM_API_URL}{STEAM_APP_ENDPOINT}{self._game_id}/capsule_616x353.jpg"
+            ] = f"{STEAM_API_URL}{self._game_id}/{STEAM_MAIN_IMAGE_FILE}"
         if self._last_online is not None:
             attr["last_online"] = self._last_online
         if self._level is not None:
