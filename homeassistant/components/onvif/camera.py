@@ -11,6 +11,7 @@ from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 import onvif
 from onvif import ONVIFCamera, exceptions
 import voluptuous as vol
+from zeep.asyncio import AsyncTransport
 from zeep.exceptions import Fault
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
@@ -25,7 +26,10 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
+from homeassistant.helpers.aiohttp_client import (
+    async_aiohttp_proxy_stream,
+    async_get_clientsession,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_extract_entity_ids
 import homeassistant.util.dt as dt_util
@@ -143,12 +147,15 @@ class ONVIFHassCamera(Camera):
             "Setting up the ONVIF camera device @ '%s:%s'", self._host, self._port
         )
 
+        session = async_get_clientsession(hass)
+        transport = AsyncTransport(None, session=session)
         self._camera = ONVIFCamera(
             self._host,
             self._port,
             self._username,
             self._password,
             "{}/wsdl/".format(os.path.dirname(onvif.__file__)),
+            transport=transport,
         )
 
     async def async_initialize(self):
