@@ -17,7 +17,8 @@
                         {
                             "cards": [
                                 {
-                                    "content": "#  **Cze\u015b\u0107 [[ {user} ]]**. \n\n### Witamy w systemie Asystent domowy  <ha-icon icon=\"mdi:party-popper\" ></ha-icon> \n#### Dzi\u0119kujemy, \u017ce nam zaufa\u0142e\u015b i wybra\u0142e\u015b naszego **Asystenta domowego**! \n Mam nadziej\u0119, \u017ce spe\u0142ni\u0105 si\u0119 Twoje wszystkie oczekiwania i \u017ce uprzyjemnimy Ci dotwarzanie multimedi\u00f3w i sterowanie urz\u0105dzeniami w domu :)\n\n------------------------\nWiadomo\u015b\u0107, kt\u00f3r\u0105 teraz czytasz, umieszczona jest na **karcie**  <ha-icon icon=\"mdi:card-bulleted-outline\" ></ha-icon>    na pierwszym **widoku** <ha-icon icon=\"mdi:home\" ></ha-icon> interfejsu u\u017cytkownika **Asystenta domowego**. \n\nInterfejs dzia\u0142a na urz\u0105dzeniach mobilnych oraz stacjonarnych i jest konfigurowalny, tak \u017ceby\u015b\u00a0m\u00f3g\u0142 w szybki i \u0142atwy spos\u00f3b doda\u0107 tu, w\u0142asne widoki oraz karty, a nast\u0119pnie umie\u015bci\u0142 na nich swoje sterowalne urz\u0105dzenia domowe. \n\n\nW instrukcji wyja\u015bniamy [jak w\u0142\u0105czy\u0107 tryb konfiguracji interfejsu](https://sviete.github.io/AIS-docs/docs/en/ais_app_ui_config.html), by dostosowa\u0107 wygl\u0105d do w\u0142asnych preferencji. \nNa drugim widoku **Jednostki**  <ha-icon icon=\"mdi:google-circles-extended\" ></ha-icon> prezentujemy przyk\u0142adowe karty, kt\u00f3re mo\u017cesz kopiowa\u0107 do w\u0142asnych widok\u00f3w. \n\n------------------------\n AI-Speaker [[ sensor.daytodisplay ]]\n",
+                                    "content": "#  **Cze\u015b\u0107 [[ {user} ]]**! \n\n### Witamy w systemie Asystent domowy  <ha-icon icon=\"mdi:party-popper\" ></ha-icon> \n#### Dzi\u0119kujemy, \u017ce nam zaufa\u0142e\u015b i wybra\u0142e\u015b naszego **Asystenta domowego**! \n Mamy nadziej\u0119, \u017ce spe\u0142ni\u0105 si\u0119 Twoje wszystkie oczekiwania i \u017ce uprzyjemnimy Ci odtwarzanie multimedi\u00f3w i sterowanie urz\u0105dzeniami w domu  <ha-icon icon=\"mdi:emoticon-cool-outline\" ></ha-icon>\n\n------------------------\nWiadomo\u015b\u0107, kt\u00f3r\u0105 teraz czytasz, umieszczona jest na **karcie**  <ha-icon icon=\"mdi:card-bulleted-outline\" ></ha-icon>    na pierwszym **widoku** <ha-icon icon=\"mdi:home\" ></ha-icon> interfejsu u\u017cytkownika **Asystenta domowego**. \n\nInterfejs dzia\u0142a na urz\u0105dzeniach mobilnych oraz stacjonarnych i jest konfigurowalny tak, \u017ceby\u015b\u00a0m\u00f3g\u0142 w szybki i \u0142atwy spos\u00f3b doda\u0107 tu w\u0142asne widoki oraz karty, a nast\u0119pnie umie\u015bci\u0142 na nich swoje sterowalne urz\u0105dzenia domowe. \n\n\nW instrukcji wyja\u015bniamy [jak w\u0142\u0105czy\u0107 tryb konfiguracji interfejsu](https://sviete.github.io/AIS-docs/docs/en/ais_app_ui_config.html), by dostosowa\u0107 wygl\u0105d do w\u0142asnych preferencji. \nNa drugim widoku **Jednostki**  <ha-icon icon=\"mdi:google-circles-extended\" ></ha-icon> prezentujemy przyk\u0142adowe karty, kt\u00f3re mo\u017cesz kopiowa\u0107 do w\u0142asnych widok\u00f3w. \n\n------------------------\n AI-Speaker [[ sensor.daytodisplay ]]\n",
+                                    "style": "ha-card {\n  background: #323232cc;\n }\n",
                                     "type": "markdown"
                                 },
                                 {
@@ -447,7 +448,7 @@
                                         {
                                             "cards": [
                                                 {
-                                                    "color": "#727272",
+                                                    "color": "white",
                                                     "color_type": "icon",
                                                     "entity": "sensor.ais_player_mode",
                                                     "icon": "mdi:heart",
@@ -470,7 +471,7 @@
                                                     "type": "ais-button"
                                                 },
                                                 {
-                                                    "color": "#727272",
+                                                    "color": "white",
                                                     "color_type": "icon",
                                                     "entity": "sensor.ais_player_mode",
                                                     "icon": "mdi:bookmark",
@@ -493,7 +494,7 @@
                                                     "type": "ais-button"
                                                 },
                                                 {
-                                                    "color": "#727272",
+                                                    "color": "white",
                                                     "color_type": "icon",
                                                     "entity": "sensor.ais_player_mode",
                                                     "icon": "mdi:newspaper",
@@ -516,7 +517,7 @@
                                                     "type": "ais-button"
                                                 },
                                                 {
-                                                    "color": "#727272",
+                                                    "color": "white",
                                                     "color_type": "icon",
                                                     "entity": "sensor.ais_player_mode",
                                                     "icon": "mdi:folder",
@@ -544,7 +545,7 @@
                                         {
                                             "cards": [
                                                 {
-                                                    "color": "#727272",
+                                                    "color": "white",
                                                     "color_type": "icon",
                                                     "entity": "sensor.ais_player_mode",
                                                     "icon": "mdi:radio",
@@ -567,7 +568,7 @@
                                                     "type": "ais-button"
                                                 },
                                                 {
-                                                    "color": "#727272",
+                                                    "color": "white",
                                                     "color_type": "icon",
                                                     "entity": "sensor.ais_player_mode",
                                                     "icon": "mdi:podcast",
@@ -590,7 +591,7 @@
                                                     "type": "ais-button"
                                                 },
                                                 {
-                                                    "color": "#727272",
+                                                    "color": "white",
                                                     "color_type": "icon",
                                                     "entity": "sensor.ais_player_mode",
                                                     "icon": "mdi:audiobook",
@@ -613,7 +614,7 @@
                                                     "type": "ais-button"
                                                 },
                                                 {
-                                                    "color": "#727272",
+                                                    "color": "white",
                                                     "color_type": "icon",
                                                     "entity": "sensor.ais_player_mode",
                                                     "icon": "mdi:music",
@@ -651,7 +652,7 @@
                                             {
                                                 "cards": [
                                                     {
-                                                        "color": "#727272",
+                                                        "color": "white",
                                                         "color_type": "icon",
                                                         "entity": "input_select.ais_music_service",
                                                         "icon": "mdi:youtube",
@@ -671,7 +672,7 @@
                                                         "type": "ais-button"
                                                     },
                                                     {
-                                                        "color": "#727272",
+                                                        "color": "white",
                                                         "color_type": "icon",
                                                         "entity": "input_select.ais_music_service",
                                                         "icon": "mdi:spotify",
