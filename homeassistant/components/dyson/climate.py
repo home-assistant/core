@@ -2,6 +2,7 @@
 import logging
 
 from libpurecool.const import FocusMode, HeatMode, HeatState, HeatTarget
+from libpurecool.dyson_pure_hotcool import DysonPureHotCool
 from libpurecool.dyson_pure_hotcool_link import DysonPureHotCoolLink
 from libpurecool.dyson_pure_state import DysonPureHotCoolState
 
@@ -38,7 +39,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         [
             DysonPureHotCoolLinkDevice(device)
             for device in hass.data[DYSON_DEVICES]
-            if isinstance(device, DysonPureHotCoolLink)
+            if isinstance(device, DysonPureHotCoolLink) 
+        ]
+    )
+
+    add_devices(
+        [
+            DysonPureHotCoolDevice(device)
+            for device in hass.data[DYSON_DEVICES]
+            if isinstance(device, DysonPureHotCool) 
         ]
     )
 
@@ -188,3 +197,6 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
     def max_temp(self):
         """Return the maximum temperature."""
         return 37
+
+class DysonPureHotCoolDevice(DysonPureHotCoolLinkDevice):
+    """Dummy class to provide capability for Pure Hot+Cool Devices"""
