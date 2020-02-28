@@ -7,7 +7,7 @@
     "@DavidMStraub"
   ],
   "requirements": [
-    "homeconnect==0.3.3"
+    "homeconnect==0.4.2"
   ],
   "config_flow": true
 }

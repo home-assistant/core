@@ -303,7 +303,7 @@ home-assistant-frontend==20200427.1
 homeassistant-pyozw==0.1.10
 
 # homeassistant.components.homeconnect
-homeconnect==0.3.3
+homeconnect==0.4.2
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.10.17
