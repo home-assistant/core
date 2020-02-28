@@ -107,6 +107,7 @@ class VizioDevice(MediaPlayerDevice):
         self._state = None
         self._volume_level = None
         self._volume_step = volume_step
+        self._is_muted = None
         self._current_input = None
         self._available_inputs = None
         self._device_class = device_class
@@ -151,9 +152,14 @@ class VizioDevice(MediaPlayerDevice):
 
         self._state = STATE_ON
 
-        volume = await self._device.get_current_volume(log_api_exception=False)
-        if volume is not None:
-            self._volume_level = float(volume) / self._max_volume
+        audio_settings = await self._device.get_all_audio_settings(
+            log_api_exception=False
+        )
+        if audio_settings is not None:
+            self._volume_level = float(audio_settings["volume"]) / self._max_volume
+
+            mute_val = audio_settings["mute"].lower()
+            self._is_muted = mute_val == "on"
 
         input_ = await self._device.get_current_input(log_api_exception=False)
         if input_ is not None:
@@ -223,6 +229,11 @@ class VizioDevice(MediaPlayerDevice):
     def volume_level(self) -> float:
         """Return the volume level of the device."""
         return self._volume_level
+
+    @property
+    def is_volume_muted(self):
+        """Boolean if volume is currently muted."""
+        return self._is_muted
 
     @property
     def source(self) -> str:
