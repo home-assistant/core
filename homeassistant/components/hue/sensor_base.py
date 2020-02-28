@@ -3,6 +3,7 @@ import asyncio
 from datetime import timedelta
 import logging
 
+from aiohttp import client_exceptions
 from aiohue import AiohueException, Unauthorized
 from aiohue.sensors import TYPE_ZLL_PRESENCE
 import async_timeout
@@ -60,7 +61,7 @@ class SensorManager:
         except Unauthorized:
             await self.bridge.handle_unauthorized_error()
             raise UpdateFailed
-        except (asyncio.TimeoutError, AiohueException):
+        except (asyncio.TimeoutError, AiohueException, client_exceptions.ClientError):
             raise UpdateFailed
 
     async def async_register_component(self, binary, async_add_entities):
