@@ -34,7 +34,7 @@ class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorDevice):
     """Binary sensor for Home Connect."""
 
     def __init__(self, device, name, device_class):
-        """Initialize the entitiy."""
+        """Initialize the entity."""
         super().__init__(device, name)
         self._device_class = device_class
         self._state = None
