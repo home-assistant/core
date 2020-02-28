@@ -1,5 +1,7 @@
 """Test Dynalite config flow."""
-from asynctest import patch
+from itertools import chain, repeat
+
+from asynctest import PropertyMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components import dynalite
@@ -14,9 +16,10 @@ async def run_flow(hass, setup, connection):
     host = "1.2.3.4"
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
-        return_value=setup,
+        side_effect=setup,
     ), patch(
-        "homeassistant.components.dynalite.bridge.DynaliteDevices.available", connection
+        "homeassistant.components.dynalite.bridge.DynaliteDevices.available",
+        PropertyMock(side_effect=connection),
     ), patch(
         "homeassistant.components.dynalite.bridge.CONNECT_INTERVAL", 0
     ):
@@ -25,27 +28,43 @@ async def run_flow(hass, setup, connection):
             context={"source": config_entries.SOURCE_IMPORT},
             data={dynalite.CONF_HOST: host},
         )
+        await hass.async_block_till_done()
     return result
 
 
 async def test_flow_works(hass):
     """Test a successful config flow."""
-    result = await run_flow(hass, True, True)
+    result = await run_flow(hass, [True, True], [True, True])
     assert result["type"] == "create_entry"
+    assert result["result"].state == "loaded"
 
 
 async def test_flow_setup_fails(hass):
     """Test a flow where async_setup fails."""
-    result = await run_flow(hass, False, True)
+    result = await run_flow(hass, [False], [True])
     assert result["type"] == "abort"
     assert result["reason"] == "bridge_setup_failed"
 
 
 async def test_flow_no_connection(hass):
     """Test a flow where connection times out."""
-    result = await run_flow(hass, True, False)
+    result = await run_flow(hass, [True], repeat(False))
     assert result["type"] == "abort"
     assert result["reason"] == "no_connection"
+
+
+async def test_flow_setup_fails_in_setup_entry(hass):
+    """Test a flow where the initial check works but inside setup_entry, the bridge setup fails."""
+    result = await run_flow(hass, [True, False], repeat(True))
+    assert result["type"] == "create_entry"
+    assert result["result"].state == "setup_error"
+
+
+async def test_flow_no_connection_in_setup_entry(hass):
+    """Test a flow where the initial check works but inside setup_entry, the bridge setup fails."""
+    result = await run_flow(hass, [True, True], chain([True], repeat(False)))
+    assert result["type"] == "create_entry"
+    assert result["result"].state == "setup_retry"
 
 
 async def test_existing(hass):
@@ -70,7 +89,7 @@ async def test_existing(hass):
 
 
 async def test_existing_update(hass):
-    """Test when the entry exists with the same config."""
+    """Test when the entry exists with a different config."""
     host = "1.2.3.4"
     port1 = 7777
     port2 = 8888
