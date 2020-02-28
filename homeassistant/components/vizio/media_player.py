@@ -157,9 +157,7 @@ class VizioDevice(MediaPlayerDevice):
         )
         if audio_settings is not None:
             self._volume_level = float(audio_settings["volume"]) / self._max_volume
-
-            mute_val = audio_settings["mute"].lower()
-            self._is_muted = mute_val == "on"
+            self._is_muted = audio_settings["mute"].lower() == "on"
 
         input_ = await self._device.get_current_input(log_api_exception=False)
         if input_ is not None:
