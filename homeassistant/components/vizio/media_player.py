@@ -56,10 +56,18 @@ async def async_setup_entry(
     volume_step = config_entry.options.get(
         CONF_VOLUME_STEP, config_entry.data.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP),
     )
+
+    params = {}
     if not config_entry.options:
-        hass.config_entries.async_update_entry(
-            config_entry, options={CONF_VOLUME_STEP: volume_step}
-        )
+        params["options"] = {CONF_VOLUME_STEP: volume_step}
+
+    if not config_entry.data.get(CONF_VOLUME_STEP):
+        new_data = config_entry.data.copy()
+        new_data.update({CONF_VOLUME_STEP: volume_step})
+        params["data"] = new_data
+
+    if params:
+        hass.config_entries.async_update_entry(config_entry, **params)
 
     device = VizioAsync(
         DEVICE_ID,
@@ -71,7 +79,7 @@ async def async_setup_entry(
         timeout=DEFAULT_TIMEOUT,
     )
 
-    if not await device.can_connect():
+    if not await device.can_connect_with_auth_check():
         _LOGGER.warning("Failed to connect to %s", host)
         raise PlatformNotReady
 
@@ -107,9 +115,17 @@ class VizioDevice(MediaPlayerDevice):
         self._max_volume = float(self._device.get_max_volume())
         self._icon = ICON[device_class]
         self._available = True
+        self._model = None
+        self._sw_version = None
 
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
+        if not self._model:
+            self._model = await self._device.get_model_name()
+
+        if not self._sw_version:
+            self._sw_version = await self._device.get_version()
+
         is_on = await self._device.get_power_state(log_api_exception=False)
 
         if is_on is None:
@@ -141,9 +157,9 @@ class VizioDevice(MediaPlayerDevice):
 
         input_ = await self._device.get_current_input(log_api_exception=False)
         if input_ is not None:
-            self._current_input = input_.meta_name
+            self._current_input = input_
 
-        inputs = await self._device.get_inputs(log_api_exception=False)
+        inputs = await self._device.get_inputs_list(log_api_exception=False)
         if inputs is not None:
             self._available_inputs = [input_.name for input_ in inputs]
 
@@ -235,6 +251,8 @@ class VizioDevice(MediaPlayerDevice):
             "identifiers": {(DOMAIN, self._config_entry.unique_id)},
             "name": self.name,
             "manufacturer": "VIZIO",
+            "model": self._model,
+            "sw_version": self._sw_version,
         }
 
     @property
@@ -267,7 +285,7 @@ class VizioDevice(MediaPlayerDevice):
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        await self._device.input_switch(source)
+        await self._device.set_input(source)
 
     async def async_volume_up(self) -> None:
         """Increase volume of the device."""

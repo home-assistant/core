@@ -241,7 +241,7 @@ def websocket_handle_items(hass, connection, msg):
 def websocket_handle_add(hass, connection, msg):
     """Handle add item to shopping_list."""
     item = hass.data[DOMAIN].async_add(msg["name"])
-    hass.bus.async_fire(EVENT)
+    hass.bus.async_fire(EVENT, {"action": "add", "item": item})
     connection.send_message(websocket_api.result_message(msg["id"], item))
 
 
@@ -255,7 +255,7 @@ async def websocket_handle_update(hass, connection, msg):
 
     try:
         item = hass.data[DOMAIN].async_update(item_id, data)
-        hass.bus.async_fire(EVENT)
+        hass.bus.async_fire(EVENT, {"action": "update", "item": item})
         connection.send_message(websocket_api.result_message(msg_id, item))
     except KeyError:
         connection.send_message(
@@ -267,5 +267,5 @@ async def websocket_handle_update(hass, connection, msg):
 def websocket_handle_clear(hass, connection, msg):
     """Handle clearing shopping_list items."""
     hass.data[DOMAIN].async_clear_completed()
-    hass.bus.async_fire(EVENT)
+    hass.bus.async_fire(EVENT, {"action": "clear"})
     connection.send_message(websocket_api.result_message(msg["id"]))

@@ -1,5 +1,6 @@
 """Support for Zigbee Home Automation devices."""
 
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -22,6 +23,7 @@ from .core.const import (
     DATA_ZHA_CONFIG,
     DATA_ZHA_DISPATCHERS,
     DATA_ZHA_GATEWAY,
+    DATA_ZHA_PLATFORM_LOADED,
     DEFAULT_BAUDRATE,
     DEFAULT_RADIO_TYPE,
     DOMAIN,
@@ -87,11 +89,23 @@ async def async_setup_entry(hass, config_entry):
     Will automatically load components to support devices found on the network.
     """
 
-    for component in COMPONENTS:
-        hass.data[DATA_ZHA][component] = hass.data[DATA_ZHA].get(component, {})
-
     hass.data[DATA_ZHA] = hass.data.get(DATA_ZHA, {})
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS] = []
+    hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED] = asyncio.Event()
+    platforms = []
+    for component in COMPONENTS:
+        platforms.append(
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(config_entry, component)
+            )
+        )
+
+    async def _platforms_loaded():
+        await asyncio.gather(*platforms)
+        hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED].set()
+
+    hass.async_create_task(_platforms_loaded())
+
     config = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {})
 
     if config.get(CONF_ENABLE_QUIRKS, True):
@@ -112,11 +126,6 @@ async def async_setup_entry(hass, config_entry):
         model=zha_gateway.radio_description,
     )
 
-    for component in COMPONENTS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
-        )
-
     api.async_load_api(hass)
 
     async def async_zha_shutdown(event):
@@ -125,6 +134,7 @@ async def async_setup_entry(hass, config_entry):
         await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].async_update_device_storage()
 
     hass.bus.async_listen_once(ha_const.EVENT_HOMEASSISTANT_STOP, async_zha_shutdown)
+    hass.async_create_task(zha_gateway.async_load_devices())
     return True
 
 

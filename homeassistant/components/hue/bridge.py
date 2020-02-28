@@ -1,6 +1,9 @@
 """Code to handle a Hue bridge."""
 import asyncio
+from functools import partial
+import logging
 
+from aiohttp import client_exceptions
 import aiohue
 import async_timeout
 import slugify as unicode_slug
@@ -21,6 +24,9 @@ ATTR_SCENE_NAME = "scene_name"
 SCENE_SCHEMA = vol.Schema(
     {vol.Required(ATTR_GROUP_NAME): cv.string, vol.Required(ATTR_SCENE_NAME): cv.string}
 )
+# How long should we sleep if the hub is busy
+HUB_BUSY_SLEEP = 0.5
+_LOGGER = logging.getLogger(__name__)
 
 
 class HueBridge:
@@ -101,11 +107,38 @@ class HueBridge:
         self.authorized = True
         return True
 
-    async def async_request_call(self, coro):
-        """Process request batched."""
+    async def async_request_call(self, task):
+        """Limit parallel requests to Hue hub.
 
+        The Hue hub can only handle a certain amount of parallel requests, total.
+        Although we limit our parallel requests, we still will run into issues because
+        other products are hitting up Hue.
+
+        ClientOSError means hub closed the socket on us.
+        ContentResponseError means hub raised an error.
+        Since we don't make bad requests, this is on them.
+        """
         async with self.parallel_updates_semaphore:
-            return await coro
+            for tries in range(4):
+                try:
+                    return await task()
+                except (
+                    client_exceptions.ClientOSError,
+                    client_exceptions.ClientResponseError,
+                    client_exceptions.ServerDisconnectedError,
+                ) as err:
+                    if tries == 3:
+                        _LOGGER.error("Request failed %s times, giving up.", tries)
+                        raise
+
+                    # We only retry if it's a server error. So raise on all 4XX errors.
+                    if (
+                        isinstance(err, client_exceptions.ClientResponseError)
+                        and err.status < 500
+                    ):
+                        raise
+
+                    await asyncio.sleep(HUB_BUSY_SLEEP * tries)
 
     async def async_reset(self):
         """Reset this bridge to default state.
@@ -167,8 +200,8 @@ class HueBridge:
 
         # If we can't find it, fetch latest info.
         if not updated and (group is None or scene is None):
-            await self.api.groups.update()
-            await self.api.scenes.update()
+            await self.async_request_call(self.api.groups.update)
+            await self.async_request_call(self.api.scenes.update)
             await self.hue_activate_scene(call, updated=True)
             return
 
@@ -180,7 +213,7 @@ class HueBridge:
             LOGGER.warning("Unable to find scene %s", scene_name)
             return
 
-        await group.set_action(scene=scene.id)
+        await self.async_request_call(partial(group.set_action, scene=scene.id))
 
     async def handle_unauthorized_error(self):
         """Create a new config flow when the authorization is no longer valid."""
@@ -210,7 +243,7 @@ async def authenticate_bridge(hass: core.HomeAssistant, bridge: aiohue.Bridge):
 
     except (aiohue.LinkButtonNotPressed, aiohue.Unauthorized):
         raise AuthenticationRequired
-    except (asyncio.TimeoutError, aiohue.RequestError):
+    except (asyncio.TimeoutError, client_exceptions.ClientOSError):
         raise CannotConnect
     except aiohue.AiohueException:
         LOGGER.exception("Unknown Hue linking error occurred")

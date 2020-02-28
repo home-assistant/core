@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.input_number import (
     ATTR_VALUE,
@@ -21,7 +22,6 @@ from homeassistant.const import (
 from homeassistant.core import Context, CoreState, State
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry
-from homeassistant.loader import bind_hass
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_restore_cache
@@ -63,38 +63,36 @@ def storage_setup(hass, hass_storage):
     return _storage
 
 
-@bind_hass
-def set_value(hass, entity_id, value):
+async def set_value(hass, entity_id, value):
     """Set input_number to value.
 
     This is a legacy helper method. Do not use it for new tests.
     """
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_SET_VALUE, {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: value}
-        )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: value},
+        blocking=True,
     )
 
 
-@bind_hass
-def increment(hass, entity_id):
+async def increment(hass, entity_id):
     """Increment value of entity.
 
     This is a legacy helper method. Do not use it for new tests.
     """
-    hass.async_create_task(
-        hass.services.async_call(DOMAIN, SERVICE_INCREMENT, {ATTR_ENTITY_ID: entity_id})
+    await hass.services.async_call(
+        DOMAIN, SERVICE_INCREMENT, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
 
 
-@bind_hass
-def decrement(hass, entity_id):
+async def decrement(hass, entity_id):
     """Decrement value of entity.
 
     This is a legacy helper method. Do not use it for new tests.
     """
-    hass.async_create_task(
-        hass.services.async_call(DOMAIN, SERVICE_DECREMENT, {ATTR_ENTITY_ID: entity_id})
+    await hass.services.async_call(
+        DOMAIN, SERVICE_DECREMENT, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
 
 
@@ -110,7 +108,7 @@ async def test_config(hass):
         assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
 
 
-async def test_set_value(hass):
+async def test_set_value(hass, caplog):
     """Test set_value method."""
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"test_1": {"initial": 50, "min": 0, "max": 100}}}
@@ -120,20 +118,22 @@ async def test_set_value(hass):
     state = hass.states.get(entity_id)
     assert 50 == float(state.state)
 
-    set_value(hass, entity_id, "30.4")
-    await hass.async_block_till_done()
+    await set_value(hass, entity_id, "30.4")
 
     state = hass.states.get(entity_id)
     assert 30.4 == float(state.state)
 
-    set_value(hass, entity_id, "70")
-    await hass.async_block_till_done()
+    await set_value(hass, entity_id, "70")
 
     state = hass.states.get(entity_id)
     assert 70 == float(state.state)
 
-    set_value(hass, entity_id, "110")
-    await hass.async_block_till_done()
+    with pytest.raises(vol.Invalid) as excinfo:
+        await set_value(hass, entity_id, "110")
+
+    assert "Invalid value for input_number.test_1: 110.0 (range 0.0 - 100.0)" in str(
+        excinfo.value
+    )
 
     state = hass.states.get(entity_id)
     assert 70 == float(state.state)
@@ -149,13 +149,13 @@ async def test_increment(hass):
     state = hass.states.get(entity_id)
     assert 50 == float(state.state)
 
-    increment(hass, entity_id)
+    await increment(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert 51 == float(state.state)
 
-    increment(hass, entity_id)
+    await increment(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -172,13 +172,13 @@ async def test_decrement(hass):
     state = hass.states.get(entity_id)
     assert 50 == float(state.state)
 
-    decrement(hass, entity_id)
+    await decrement(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert 49 == float(state.state)
 
-    decrement(hass, entity_id)
+    await decrement(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)

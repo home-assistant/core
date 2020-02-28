@@ -1,23 +1,16 @@
-"""
-Home automation channels module for Zigbee Home Automation.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/integrations/zha/
-"""
+"""Home automation channels module for Zigbee Home Automation."""
 import logging
 from typing import Optional
 
 import zigpy.zcl.clusters.homeautomation as homeautomation
 
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-
-from . import AttributeListeningChannel, ZigbeeChannel
-from .. import registries
+from .. import registries, typing as zha_typing
 from ..const import (
     CHANNEL_ELECTRICAL_MEASUREMENT,
     REPORT_CONFIG_DEFAULT,
     SIGNAL_ATTR_UPDATED,
 )
+from .base import AttributeListeningChannel, ZigbeeChannel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,9 +59,11 @@ class ElectricalMeasurementChannel(AttributeListeningChannel):
 
     REPORT_CONFIG = ({"attr": "active_power", "config": REPORT_CONFIG_DEFAULT},)
 
-    def __init__(self, cluster, device):
+    def __init__(
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType,
+    ) -> None:
         """Initialize Metering."""
-        super().__init__(cluster, device)
+        super().__init__(cluster, ch_pool)
         self._divisor = None
         self._multiplier = None
 
@@ -78,9 +73,7 @@ class ElectricalMeasurementChannel(AttributeListeningChannel):
 
         # This is a polling channel. Don't allow cache.
         result = await self.get_attribute_value("active_power", from_cache=False)
-        async_dispatcher_send(
-            self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", result
-        )
+        self.async_send_signal(f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", result)
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""

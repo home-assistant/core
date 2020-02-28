@@ -4,7 +4,7 @@ from unittest.mock import DEFAULT, Mock, patch
 
 import homeassistant.components.mhz19.sensor as mhz19
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.const import TEMP_FAHRENHEIT
+from homeassistant.const import CONCENTRATION_PARTS_PER_MILLION, TEMP_FAHRENHEIT
 from homeassistant.setup import setup_component
 
 from tests.common import assert_setup_component, get_test_home_assistant
@@ -100,7 +100,7 @@ class TestMHZ19Sensor(unittest.TestCase):
 
         assert "name: CO2" == sensor.name
         assert 1000 == sensor.state
-        assert "ppm" == sensor.unit_of_measurement
+        assert CONCENTRATION_PARTS_PER_MILLION == sensor.unit_of_measurement
         assert sensor.should_poll
         assert {"temperature": 24} == sensor.device_state_attributes
 

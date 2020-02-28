@@ -1,9 +1,10 @@
 """JSON utility functions."""
+from collections import deque
 import json
 import logging
 import os
 import tempfile
-from typing import Dict, List, Optional, Type, Union
+from typing import Any, Dict, List, Optional, Type, Union
 
 from homeassistant.exceptions import HomeAssistantError
 
@@ -51,10 +52,17 @@ def save_json(
 
     Returns True on success.
     """
+    try:
+        json_data = json.dumps(data, sort_keys=True, indent=4, cls=encoder)
+    except TypeError:
+        # pylint: disable=no-member
+        msg = f"Failed to serialize to JSON: {filename}. Bad data found at {', '.join(find_paths_unserializable_data(data))}"
+        _LOGGER.error(msg)
+        raise SerializationError(msg)
+
     tmp_filename = ""
     tmp_path = os.path.split(filename)[0]
     try:
-        json_data = json.dumps(data, sort_keys=True, indent=4, cls=encoder)
         # Modern versions of Python tempfile create this file with mode 0o600
         with tempfile.NamedTemporaryFile(
             mode="w", encoding="utf-8", dir=tmp_path, delete=False
@@ -64,9 +72,6 @@ def save_json(
         if not private:
             os.chmod(tmp_filename, 0o644)
         os.replace(tmp_filename, filename)
-    except TypeError as error:
-        _LOGGER.exception("Failed to serialize to JSON: %s", filename)
-        raise SerializationError(error)
     except OSError as error:
         _LOGGER.exception("Saving JSON file failed: %s", filename)
         raise WriteError(error)
@@ -78,3 +83,39 @@ def save_json(
                 # If we are cleaning up then something else went wrong, so
                 # we should suppress likely follow-on errors in the cleanup
                 _LOGGER.error("JSON replacement cleanup failed: %s", err)
+
+
+def find_paths_unserializable_data(bad_data: Any) -> List[str]:
+    """Find the paths to unserializable data.
+
+    This method is slow! Only use for error handling.
+    """
+    to_process = deque([(bad_data, "$")])
+    invalid = []
+
+    while to_process:
+        obj, obj_path = to_process.popleft()
+
+        try:
+            json.dumps(obj)
+            continue
+        except TypeError:
+            pass
+
+        if isinstance(obj, dict):
+            for key, value in obj.items():
+                try:
+                    # Is key valid?
+                    json.dumps({key: None})
+                except TypeError:
+                    invalid.append(f"{obj_path}<key: {key}>")
+                else:
+                    # Process value
+                    to_process.append((value, f"{obj_path}.{key}"))
+        elif isinstance(obj, list):
+            for idx, value in enumerate(obj):
+                to_process.append((value, f"{obj_path}[{idx}]"))
+        else:
+            invalid.append(obj_path)
+
+    return invalid

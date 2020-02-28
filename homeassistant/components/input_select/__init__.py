@@ -23,7 +23,6 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceC
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "input_select"
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 CONF_INITIAL = "initial"
 CONF_OPTIONS = "options"
@@ -58,9 +57,7 @@ def _cv_input_select(cfg):
     initial = cfg.get(CONF_INITIAL)
     if initial is not None and initial not in options:
         raise vol.Invalid(
-            'initial state "{}" is not part of the options: {}'.format(
-                initial, ",".join(options)
-            )
+            f"initial state {initial} is not part of the options: {','.join(options)}"
         )
     return cfg
 
@@ -143,11 +140,15 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_NEXT, {}, lambda entity, call: entity.async_offset_index(1)
+        SERVICE_SELECT_NEXT,
+        {},
+        callback(lambda entity, call: entity.async_offset_index(1)),
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_PREVIOUS, {}, lambda entity, call: entity.async_offset_index(-1)
+        SERVICE_SELECT_PREVIOUS,
+        {},
+        callback(lambda entity, call: entity.async_offset_index(-1)),
     )
 
     component.async_register_entity_service(
@@ -197,7 +198,7 @@ class InputSelect(RestoreEntity):
     def from_yaml(cls, config: typing.Dict) -> "InputSelect":
         """Return entity instance initialized from yaml storage."""
         input_select = cls(config)
-        input_select.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])
+        input_select.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         input_select.editable = False
         return input_select
 
@@ -248,7 +249,8 @@ class InputSelect(RestoreEntity):
         """Return unique id for the entity."""
         return self._config[CONF_ID]
 
-    async def async_select_option(self, option):
+    @callback
+    def async_select_option(self, option):
         """Select new option."""
         if option not in self._options:
             _LOGGER.warning(
@@ -260,14 +262,16 @@ class InputSelect(RestoreEntity):
         self._current_option = option
         self.async_write_ha_state()
 
-    async def async_offset_index(self, offset):
+    @callback
+    def async_offset_index(self, offset):
         """Offset current index."""
         current_index = self._options.index(self._current_option)
         new_index = (current_index + offset) % len(self._options)
         self._current_option = self._options[new_index]
         self.async_write_ha_state()
 
-    async def async_set_options(self, options):
+    @callback
+    def async_set_options(self, options):
         """Set options."""
         self._current_option = options[0]
         self._config[CONF_OPTIONS] = options

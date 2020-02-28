@@ -24,7 +24,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import verify_domain_control
 
-from .config_flow import configured_instances
 from .const import (
     DATA_CLIENT,
     DATA_PROGRAMS,
@@ -34,8 +33,6 @@ from .const import (
     DATA_ZONES,
     DATA_ZONES_DETAILS,
     DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
-    DEFAULT_SSL,
     DOMAIN,
     PROGRAM_UPDATE_TOPIC,
     SENSOR_UPDATE_TOPIC,
@@ -54,6 +51,8 @@ CONF_ZONE_RUN_TIME = "zone_run_time"
 
 DEFAULT_ATTRIBUTION = "Data provided by Green Electronics LLC"
 DEFAULT_ICON = "mdi:water"
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
+DEFAULT_SSL = True
 DEFAULT_ZONE_RUN = 60 * 10
 
 SERVICE_ALTER_PROGRAM = vol.Schema({vol.Required(CONF_PROGRAM_ID): cv.positive_int})
@@ -85,8 +84,10 @@ CONTROLLER_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
-        vol.Optional(CONF_ZONE_RUN_TIME): cv.positive_int,
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
+            cv.time_period, lambda value: value.total_seconds()
+        ),
+        vol.Optional(CONF_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN): cv.positive_int,
     }
 )
 
@@ -116,9 +117,6 @@ async def async_setup(hass, config):
     conf = config[DOMAIN]
 
     for controller in conf[CONF_CONTROLLERS]:
-        if controller[CONF_IP_ADDRESS] in configured_instances(hass):
-            continue
-
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}, data=controller
@@ -130,6 +128,11 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up RainMachine as config entry."""
+    if not config_entry.unique_id:
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=config_entry.data[CONF_IP_ADDRESS]
+        )
+
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
     websession = aiohttp_client.async_get_clientsession(hass)
@@ -153,7 +156,7 @@ async def async_setup_entry(hass, config_entry):
         rainmachine = RainMachine(
             hass,
             controller,
-            config_entry.data.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN),
+            config_entry.data[CONF_ZONE_RUN_TIME],
             config_entry.data[CONF_SCAN_INTERVAL],
         )
 

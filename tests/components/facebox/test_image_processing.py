@@ -119,7 +119,7 @@ def mock_open_file():
 def test_check_box_health(caplog):
     """Test check box health."""
     with requests_mock.Mocker() as mock_req:
-        url = "http://{}:{}/healthz".format(MOCK_IP, MOCK_PORT)
+        url = f"http://{MOCK_IP}:{MOCK_PORT}/healthz"
         mock_req.get(url, status_code=HTTP_OK, json=MOCK_HEALTH)
         assert fb.check_box_health(url, "user", "pass") == MOCK_BOX_ID
 
@@ -184,7 +184,7 @@ async def test_process_image(hass, mock_healthybox, mock_image):
     hass.bus.async_listen("image_processing.detect_face", mock_face_event)
 
     with requests_mock.Mocker() as mock_req:
-        url = "http://{}:{}/facebox/check".format(MOCK_IP, MOCK_PORT)
+        url = f"http://{MOCK_IP}:{MOCK_PORT}/facebox/check"
         mock_req.post(url, json=MOCK_JSON)
         data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
         await hass.services.async_call(ip.DOMAIN, ip.SERVICE_SCAN, service_data=data)
@@ -219,7 +219,7 @@ async def test_process_image_errors(hass, mock_healthybox, mock_image, caplog):
 
     # Test connection error.
     with requests_mock.Mocker() as mock_req:
-        url = "http://{}:{}/facebox/check".format(MOCK_IP, MOCK_PORT)
+        url = f"http://{MOCK_IP}:{MOCK_PORT}/facebox/check"
         mock_req.register_uri("POST", url, exc=requests.exceptions.ConnectTimeout)
         data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
         await hass.services.async_call(ip.DOMAIN, ip.SERVICE_SCAN, service_data=data)
@@ -233,7 +233,7 @@ async def test_process_image_errors(hass, mock_healthybox, mock_image, caplog):
 
     # Now test with bad auth.
     with requests_mock.Mocker() as mock_req:
-        url = "http://{}:{}/facebox/check".format(MOCK_IP, MOCK_PORT)
+        url = f"http://{MOCK_IP}:{MOCK_PORT}/facebox/check"
         mock_req.register_uri("POST", url, status_code=HTTP_UNAUTHORIZED)
         data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
         await hass.services.async_call(ip.DOMAIN, ip.SERVICE_SCAN, service_data=data)
@@ -253,7 +253,7 @@ async def test_teach_service(
 
     # Test successful teach.
     with requests_mock.Mocker() as mock_req:
-        url = "http://{}:{}/facebox/teach".format(MOCK_IP, MOCK_PORT)
+        url = f"http://{MOCK_IP}:{MOCK_PORT}/facebox/teach"
         mock_req.post(url, status_code=HTTP_OK)
         data = {
             ATTR_ENTITY_ID: VALID_ENTITY_ID,
@@ -267,7 +267,7 @@ async def test_teach_service(
 
     # Now test with bad auth.
     with requests_mock.Mocker() as mock_req:
-        url = "http://{}:{}/facebox/teach".format(MOCK_IP, MOCK_PORT)
+        url = f"http://{MOCK_IP}:{MOCK_PORT}/facebox/teach"
         mock_req.post(url, status_code=HTTP_UNAUTHORIZED)
         data = {
             ATTR_ENTITY_ID: VALID_ENTITY_ID,
@@ -282,7 +282,7 @@ async def test_teach_service(
 
     # Now test the failed teaching.
     with requests_mock.Mocker() as mock_req:
-        url = "http://{}:{}/facebox/teach".format(MOCK_IP, MOCK_PORT)
+        url = f"http://{MOCK_IP}:{MOCK_PORT}/facebox/teach"
         mock_req.post(url, status_code=HTTP_BAD_REQUEST, text=MOCK_ERROR_NO_FACE)
         data = {
             ATTR_ENTITY_ID: VALID_ENTITY_ID,
@@ -297,7 +297,7 @@ async def test_teach_service(
 
     # Now test connection error.
     with requests_mock.Mocker() as mock_req:
-        url = "http://{}:{}/facebox/teach".format(MOCK_IP, MOCK_PORT)
+        url = f"http://{MOCK_IP}:{MOCK_PORT}/facebox/teach"
         mock_req.post(url, exc=requests.exceptions.ConnectTimeout)
         data = {
             ATTR_ENTITY_ID: VALID_ENTITY_ID,
@@ -313,7 +313,7 @@ async def test_teach_service(
 
 async def test_setup_platform_with_name(hass, mock_healthybox):
     """Set up platform with one entity and a name."""
-    named_entity_id = "image_processing.{}".format(MOCK_NAME)
+    named_entity_id = f"image_processing.{MOCK_NAME}"
 
     valid_config_named = VALID_CONFIG.copy()
     valid_config_named[ip.DOMAIN][ip.CONF_SOURCE][ip.CONF_NAME] = MOCK_NAME

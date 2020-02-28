@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto jest ju\u017c skonfigurowane"
+            "already_configured": "Konto jest ju\u017c skonfigurowane."
         },
         "error": {
             "login": "B\u0142\u0105d logowania: sprawd\u017a adres e-mail i has\u0142o",

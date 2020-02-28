@@ -10,6 +10,10 @@ from homeassistant.const import (
     CONF_NAME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TIME_DAYS,
+    TIME_HOURS,
+    TIME_MINUTES,
+    TIME_SECONDS,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -38,7 +42,12 @@ INTEGRATION_METHOD = [TRAPEZOIDAL_METHOD, LEFT_METHOD, RIGHT_METHOD]
 UNIT_PREFIXES = {None: 1, "k": 10 ** 3, "G": 10 ** 6, "T": 10 ** 9}
 
 # SI Time prefixes
-UNIT_TIME = {"s": 1, "min": 60, "h": 60 * 60, "d": 24 * 60 * 60}
+UNIT_TIME = {
+    TIME_SECONDS: 1,
+    TIME_MINUTES: 60,
+    TIME_HOURS: 60 * 60,
+    TIME_DAYS: 24 * 60 * 60,
+}
 
 ICON = "mdi:chart-histogram"
 
@@ -50,7 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
         vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
         vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
-        vol.Optional(CONF_UNIT_TIME, default="h"): vol.In(UNIT_TIME),
+        vol.Optional(CONF_UNIT_TIME, default=TIME_HOURS): vol.In(UNIT_TIME),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_METHOD, default=TRAPEZOIDAL_METHOD): vol.In(
             INTEGRATION_METHOD
@@ -96,8 +105,8 @@ class IntegrationSensor(RestoreEntity):
         self._name = name if name is not None else f"{source_entity} integral"
 
         if unit_of_measurement is None:
-            self._unit_template = "{}{}{}".format(
-                "" if unit_prefix is None else unit_prefix, "{}", unit_time
+            self._unit_template = (
+                f"{'' if unit_prefix is None else unit_prefix}{{}}{unit_time}"
             )
             # we postpone the definition of unit_of_measurement to later
             self._unit_of_measurement = None

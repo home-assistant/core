@@ -4,7 +4,7 @@
             "all_configured": "Tutti i server collegati sono gi\u00e0 configurati",
             "already_configured": "Questo server Plex \u00e8 gi\u00e0 configurato",
             "already_in_progress": "Plex \u00e8 in fase di configurazione",
-            "discovery_no_file": "Nessun file di configurazione legacy trovato",
+            "discovery_no_file": "Non \u00e8 stato trovato nessun file di configurazione da sostituire",
             "invalid_import": "La configurazione importata non \u00e8 valida",
             "non-interactive": "Importazione non interattiva",
             "token_request_timeout": "Timeout per l'ottenimento del token",
@@ -53,6 +53,8 @@
         "step": {
             "plex_mp_settings": {
                 "data": {
+                    "ignore_new_shared_users": "Ignora nuovi utenti gestiti/condivisi",
+                    "monitored_users": "Utenti monitorati",
                     "show_all_controls": "Mostra tutti i controlli",
                     "use_episode_art": "Usa la grafica dell'episodio"
                 },

@@ -529,5 +529,5 @@ class ISYDevice(Entity):
         attr = {}
         if hasattr(self._node, "aux_properties"):
             for name, val in self._node.aux_properties.items():
-                attr[name] = "{} {}".format(val.get("value"), val.get("uom"))
+                attr[name] = f"{val.get('value')} {val.get('uom')}"
         return attr

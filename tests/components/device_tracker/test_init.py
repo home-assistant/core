@@ -57,7 +57,7 @@ def mock_yaml_devices(hass):
 
 async def test_is_on(hass):
     """Test is_on method."""
-    entity_id = const.ENTITY_ID_FORMAT.format("test")
+    entity_id = f"{const.DOMAIN}.test"
 
     hass.states.async_set(entity_id, STATE_HOME)
 
@@ -271,7 +271,7 @@ async def test_entity_attributes(hass, mock_device_tracker_conf):
     """Test the entity attributes."""
     devices = mock_device_tracker_conf
     dev_id = "test_entity"
-    entity_id = const.ENTITY_ID_FORMAT.format(dev_id)
+    entity_id = f"{const.DOMAIN}.{dev_id}"
     friendly_name = "Paulus"
     picture = "http://placehold.it/200x200"
     icon = "mdi:kettle"
@@ -303,7 +303,7 @@ async def test_device_hidden(hass, mock_device_tracker_conf):
     """Test hidden devices."""
     devices = mock_device_tracker_conf
     dev_id = "test_entity"
-    entity_id = const.ENTITY_ID_FORMAT.format(dev_id)
+    entity_id = f"{const.DOMAIN}.{dev_id}"
     device = legacy.Device(
         hass, timedelta(seconds=180), True, dev_id, None, hide_if_away=True
     )
@@ -350,7 +350,7 @@ async def test_see_service_guard_config_entry(hass, mock_device_tracker_conf):
     """Test the guard if the device is registered in the entity registry."""
     mock_entry = Mock()
     dev_id = "test"
-    entity_id = const.ENTITY_ID_FORMAT.format(dev_id)
+    entity_id = f"{const.DOMAIN}.{dev_id}"
     mock_registry(hass, {entity_id: mock_entry})
     devices = mock_device_tracker_conf
     assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)

@@ -107,7 +107,7 @@ class SonosData:
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Sonos platform. Obsolete."""
     _LOGGER.error(
-        "Loading Sonos by media_player platform config is no longer supported"
+        "Loading Sonos by media_player platform configuration is no longer supported"
     )
 
 
@@ -174,6 +174,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     platform = entity_platform.current_platform.get()
 
+    @service.verify_domain_control(hass, SONOS_DOMAIN)
     async def async_service_handle(service_call: ServiceCall):
         """Handle dispatched services."""
         entities = await platform.async_extract_from_service(service_call)
@@ -201,16 +202,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 hass, entities, service_call.data[ATTR_WITH_GROUP]
             )
 
-    service.async_register_admin_service(
-        hass,
+    hass.services.async_register(
         SONOS_DOMAIN,
         SERVICE_JOIN,
         async_service_handle,
         cv.make_entity_service_schema({vol.Required(ATTR_MASTER): cv.entity_id}),
     )
 
-    service.async_register_admin_service(
-        hass,
+    hass.services.async_register(
         SONOS_DOMAIN,
         SERVICE_UNJOIN,
         async_service_handle,
@@ -221,12 +220,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         {vol.Optional(ATTR_WITH_GROUP, default=True): cv.boolean}
     )
 
-    service.async_register_admin_service(
-        hass, SONOS_DOMAIN, SERVICE_SNAPSHOT, async_service_handle, join_unjoin_schema
+    hass.services.async_register(
+        SONOS_DOMAIN, SERVICE_SNAPSHOT, async_service_handle, join_unjoin_schema
     )
 
-    service.async_register_admin_service(
-        hass, SONOS_DOMAIN, SERVICE_RESTORE, async_service_handle, join_unjoin_schema
+    hass.services.async_register(
+        SONOS_DOMAIN, SERVICE_RESTORE, async_service_handle, join_unjoin_schema
     )
 
     platform.async_register_entity_service(
@@ -763,6 +762,7 @@ class SonosEntity(MediaPlayerDevice):
 
             return await self.hass.async_add_executor_job(_get_soco_group)
 
+        @callback
         def _async_regroup(group):
             """Rebuild internal group layout."""
             sonos_group = []

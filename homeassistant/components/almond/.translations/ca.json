@@ -7,6 +7,7 @@
         },
         "step": {
             "hassio_confirm": {
+                "description": "Vols configurar Home Assistant perqu\u00e8 es connecti amb Almond proporcionat pel complement de Hass.io: {addon}?",
                 "title": "Almond (complement de Hass.io)"
             },
             "pick_implementation": {

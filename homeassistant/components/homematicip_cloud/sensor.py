@@ -14,6 +14,7 @@ from homematicip.aio.device import (
     AsyncPassageDetector,
     AsyncPlugableSwitchMeasuring,
     AsyncPresenceDetectorIndoor,
+    AsyncRoomControlDeviceAnalog,
     AsyncTemperatureHumiditySensorDisplay,
     AsyncTemperatureHumiditySensorOutdoor,
     AsyncTemperatureHumiditySensorWithoutDisplay,
@@ -30,6 +31,7 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     POWER_WATT,
+    SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
 )
 from homeassistant.helpers.typing import HomeAssistantType
@@ -79,6 +81,8 @@ async def async_setup_entry(
         ):
             entities.append(HomematicipTemperatureSensor(hap, device))
             entities.append(HomematicipHumiditySensor(hap, device))
+        elif isinstance(device, (AsyncRoomControlDeviceAnalog,)):
+            entities.append(HomematicipTemperatureSensor(hap, device))
         if isinstance(
             device,
             (
@@ -329,7 +333,7 @@ class HomematicipWindspeedSensor(HomematicipGenericDevice):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
-        return "km/h"
+        return SPEED_KILOMETERS_PER_HOUR
 
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
