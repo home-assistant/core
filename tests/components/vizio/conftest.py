@@ -3,7 +3,18 @@ from asynctest import patch
 import pytest
 from pyvizio.const import DEVICE_CLASS_SPEAKER, MAX_VOLUME
 
-from .const import CURRENT_INPUT, INPUT_LIST, MODEL, UNIQUE_ID, VERSION
+from .const import (
+    ACCESS_TOKEN,
+    CH_TYPE,
+    CURRENT_INPUT,
+    INPUT_LIST,
+    MODEL,
+    RESPONSE_TOKEN,
+    UNIQUE_ID,
+    VERSION,
+    MockCompletePairingResponse,
+    MockStartPairingResponse,
+)
 
 
 class MockInput:
@@ -38,6 +49,41 @@ def vizio_connect_fixture():
     ), patch(
         "homeassistant.components.vizio.config_flow.VizioAsync.get_unique_id",
         return_value=UNIQUE_ID,
+    ):
+        yield
+
+
+@pytest.fixture(name="vizio_complete_pairing")
+def vizio_complete_pairing_fixture():
+    """Mock complete vizio pairing workflow."""
+    with patch(
+        "homeassistant.components.vizio.config_flow.VizioAsync.start_pair",
+        return_value=MockStartPairingResponse(CH_TYPE, RESPONSE_TOKEN),
+    ), patch(
+        "homeassistant.components.vizio.config_flow.VizioAsync.pair",
+        return_value=MockCompletePairingResponse(ACCESS_TOKEN),
+    ):
+        yield
+
+
+@pytest.fixture(name="vizio_start_pairing_failure")
+def vizio_start_pairing_failure_fixture():
+    """Mock vizio start pairing failure."""
+    with patch(
+        "homeassistant.components.vizio.config_flow.VizioAsync.start_pair",
+        return_value=None,
+    ):
+        yield
+
+
+@pytest.fixture(name="vizio_invalid_pin_failure")
+def vizio_invalid_pin_failure_fixture():
+    """Mock vizio failure due to invalid pin."""
+    with patch(
+        "homeassistant.components.vizio.config_flow.VizioAsync.start_pair",
+        return_value=MockStartPairingResponse(CH_TYPE, RESPONSE_TOKEN),
+    ), patch(
+        "homeassistant.components.vizio.config_flow.VizioAsync.pair", return_value=None,
     ):
         yield
 

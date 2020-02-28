@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_HOST,
     CONF_NAME,
+    CONF_PIN,
     CONF_PORT,
     CONF_TYPE,
 )
@@ -28,6 +29,30 @@ VOLUME_STEP = 2
 UNIQUE_ID = "testid"
 MODEL = "model"
 VERSION = "version"
+
+CH_TYPE = 1
+RESPONSE_TOKEN = 1234
+PIN = "abcd"
+
+
+class MockStartPairingResponse(object):
+    """Mock Vizio start pairing response."""
+
+    def __init__(self, ch_type: int, token: int) -> None:
+        """Initialize mock start pairing response."""
+        self.ch_type = ch_type
+        self.token = token
+
+
+class MockCompletePairingResponse(object):
+    """Mock Vizio complete pairing response."""
+
+    def __init__(self, auth_token: str) -> None:
+        """Initialize mock complete pairing response."""
+        self.auth_token = auth_token
+
+
+MOCK_PIN_CONFIG = {CONF_PIN: PIN}
 
 MOCK_USER_VALID_TV_CONFIG = {
     CONF_NAME: NAME,
