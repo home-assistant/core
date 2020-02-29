@@ -62,7 +62,7 @@ class FreeboxDeviceScanner(DeviceScanner):
         try:
             hosts = await self.connection.lan.get_hosts_list()
         except ClientConnectorError as err:
-            _LOGGER.error("Error getting freebox devices infos: %s", str(err))
+            _LOGGER.error("Error getting info from devices: %s", err)
             hosts = []
 
         last_results = [_build_device(device) for device in hosts if device["active"]]
