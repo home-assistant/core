@@ -167,6 +167,9 @@ directpy==0.6
 # homeassistant.components.updater
 distro==1.4.0
 
+# homeassistant.components.minecraft_server
+dnspython==1.16.0
+
 # homeassistant.components.dsmr
 dsmr_parser==0.18
 

@@ -18,6 +18,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
+from . import helpers
 from .const import DOMAIN, MANUFACTURER, SCAN_INTERVAL, SIGNAL_NAME_PREFIX
 
 PLATFORMS = ["binary_sensor", "sensor"]
@@ -98,6 +99,7 @@ class MinecraftServer:
         self.port = config_data[CONF_PORT]
         self.online = False
         self._last_status_request_failed = False
+        self.srv_record_checked = False
 
         # 3rd party library instance
         self._mc_status = MCStatus(self.host, self.port)
@@ -128,6 +130,24 @@ class MinecraftServer:
 
     async def async_check_connection(self) -> None:
         """Check server connection using a 'ping' request and store result."""
+        # Check if host is a valid SRV record, if not already done.
+        if not self.srv_record_checked:
+            self.srv_record_checked = True
+            srv_record = await helpers.async_check_srv_record(self._hass, self.host)
+            if srv_record is not None:
+                _LOGGER.debug(
+                    "'%s' is a valid Minecraft SRV record (host=%s, port=%s)",
+                    self.host,
+                    srv_record[CONF_HOST],
+                    srv_record[CONF_PORT],
+                )
+                # Overwrite host, port and 3rd party library instance
+                # with data extracted out of SRV record.
+                self.host = srv_record[CONF_HOST]
+                self.port = srv_record[CONF_PORT]
+                self._mc_status = MCStatus(self.host, self.port)
+
+        # Ping the server.
         try:
             await self._hass.async_add_executor_job(
                 self._mc_status.ping, self._MAX_RETRIES_PING

@@ -9,7 +9,7 @@ from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 
-from . import MinecraftServer
+from . import MinecraftServer, helpers
 from .const import (  # pylint: disable=unused-import
     DEFAULT_HOST,
     DEFAULT_NAME,
@@ -42,6 +42,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                 ip_address = ipaddress.ip_address(host)
             except ValueError:
                 # Host is not a valid IP address.
+                # Continue with host and port.
                 pass
             else:
                 # Host is a valid IP address.
@@ -55,7 +56,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                     partial(getmac.get_mac_address, **params)
                 )
 
-            # Validate IP address via valid MAC address.
+            # Validate IP address (MAC address must be available).
             if ip_address is not None and mac_address is None:
                 errors["base"] = "invalid_ip"
             # Validate port configuration (limit to user and dynamic port range).
@@ -63,20 +64,30 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_port"
             # Validate host and port via ping request to server.
             else:
-                # Build unique_id.
+                # Build unique_id and config entry title.
+                title = f"{host}:{port}"
                 if ip_address is not None:
                     # Since IP addresses can change and therefore are not allowed in a
-                    # unique_id, fall back to the MAC address.
+                    # unique_id, fall back to the MAC address and port (to support
+                    # servers with same MAC address but different ports).
                     unique_id = f"{mac_address}-{port}"
                 else:
-                    # Use host name in unique_id (host names should not change).
-                    unique_id = f"{host}-{port}"
+                    # Check if 'host' is a valid SRV record.
+                    srv_record = await helpers.async_check_srv_record(self.hass, host)
+                    if srv_record is not None:
+                        # Use only SRV host name in unique_id (does not change).
+                        unique_id = f"{host}-srv"
+                        title = host
+                    else:
+                        # Use host name and port in unique_id (to support servers with
+                        # same host name but different ports).
+                        unique_id = f"{host}-{port}"
 
                 # Abort in case the host was already configured before.
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
 
-                # Create server instance with configuration data and try pinging the server.
+                # Create server instance with configuration data and ping the server.
                 server = MinecraftServer(self.hass, unique_id, user_input)
                 await server.async_check_connection()
                 if not server.online:
@@ -84,9 +95,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "cannot_connect"
                 else:
                     # Configuration data are available and no error was detected, create configuration entry.
-                    return self.async_create_entry(
-                        title=f"{host}:{port}", data=user_input
-                    )
+                    return self.async_create_entry(title=title, data=user_input)
 
         # Show configuration form (default form in case of no user_input,
         # form filled with user_input and eventually with errors otherwise).
