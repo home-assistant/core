@@ -2,9 +2,8 @@
 # from unittest.mock import MagicMock
 
 from homeassistant import data_entry_flow
-from homeassistant.components.totalconnect.const import DOMAIN
+from homeassistant.components.totalconnect.const import DOMAIN, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry
 

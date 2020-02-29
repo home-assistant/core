@@ -7,9 +7,8 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_SMOKE,
     BinarySensorDevice,
 )
-from homeassistant.const import CONF_USERNAME
 
-from .const import DOMAIN
+from .const import DOMAIN, CONF_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
 

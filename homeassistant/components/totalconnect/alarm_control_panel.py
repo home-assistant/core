@@ -8,7 +8,6 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_NIGHT,
 )
 from homeassistant.const import (
-    CONF_USERNAME,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
@@ -19,7 +18,7 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, CONF_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
 
