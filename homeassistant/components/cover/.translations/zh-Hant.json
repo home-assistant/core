@@ -1,5 +1,13 @@
 {
     "device_automation": {
+        "action_type": {
+            "close": "\u95dc\u9589{entity_name}",
+            "close_tilt": "\u95dc\u9589{entity_name}\u7a97\u7c3e",
+            "open": "\u958b\u555f{entity_name}",
+            "open_tilt": "\u958b\u555f{entity_name}\u7a97\u7c3e",
+            "set_position": "\u8a2d\u5b9a{entity_name}\u4f4d\u7f6e",
+            "set_tilt_position": "\u8a2d\u5b9a{entity_name}\u5e8a\u7c3e\u4f4d\u7f6e"
+        },
         "condition_type": {
             "is_closed": "{entity_name}\u5df2\u95dc\u9589",
             "is_closing": "{entity_name}\u6b63\u5728\u95dc\u9589",

@@ -1,5 +1,10 @@
 {
     "device_automation": {
+        "action_type": {
+            "open": "{entity_name} opmaachen",
+            "set_position": "{entity_name} positioun programm\u00e9ieren",
+            "set_tilt_position": "{entity_name} kipp positioun programm\u00e9ieren"
+        },
         "condition_type": {
             "is_closed": "{entity_name} ass zou",
             "is_closing": "{entity_name} g\u00ebtt zougemaach",
