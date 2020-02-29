@@ -55,7 +55,7 @@ class FbxSensor(Entity):
         try:
             self._datas = await self._fbx.connection.get_status()
         except ClientConnectorError as err:
-            _LOGGER.error("Error while getting Freebox data: %s", str(err))
+            _LOGGER.error("Error while getting sensor data: %s", err)
             return
 
 
