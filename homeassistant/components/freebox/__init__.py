@@ -2,7 +2,6 @@
 import asyncio
 import logging
 
-from aiofreepybox.exceptions import HttpRequestError
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_FREEBOX
@@ -61,12 +60,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Freebox component."""
     router = FreeboxRouter(hass, entry)
-
-    try:
-        await router.setup()
-    except HttpRequestError:
-        _LOGGER.exception("Failed to connect to Freebox")
-        return False
+    await router.setup()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.unique_id] = router

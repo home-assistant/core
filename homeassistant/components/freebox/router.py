@@ -7,9 +7,11 @@ from typing import Dict, Optional
 from aiofreepybox import Freepybox
 from aiofreepybox.api.system import System
 from aiofreepybox.api.wifi import Wifi
+from aiofreepybox.exceptions import HttpRequestError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -59,7 +61,11 @@ class FreeboxRouter:
         """Set up a Freebox router."""
         self._api = await get_api(self.hass, self._host)
 
-        await self._api.open(self._host, self._port)
+        try:
+            await self._api.open(self._host, self._port)
+        except HttpRequestError:
+            _LOGGER.exception("Failed to connect to Freebox")
+            return ConfigEntryNotReady
 
         # System
         fbx_config = await self._api.system.get_config()
