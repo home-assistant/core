@@ -30,7 +30,7 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.monoprice.config_flow.get_monoprice",
+        "homeassistant.components.monoprice.config_flow.get_async_monoprice",
         return_value=True,
     ), patch(
         "homeassistant.components.monoprice.async_setup", return_value=True
@@ -59,7 +59,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.monoprice.config_flow.get_monoprice",
+        "homeassistant.components.monoprice.config_flow.get_async_monoprice",
         side_effect=SerialException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -77,7 +77,7 @@ async def test_generic_exception(hass):
     )
 
     with patch(
-        "homeassistant.components.monoprice.config_flow.get_monoprice",
+        "homeassistant.components.monoprice.config_flow.get_async_monoprice",
         side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(

@@ -1,7 +1,7 @@
 """Config flow for Monoprice 6-Zone Amplifier integration."""
 import logging
 
-from pymonoprice import get_monoprice
+from pymonoprice import get_async_monoprice
 from serial import SerialException
 import voluptuous as vol
 
@@ -40,7 +40,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     try:
-        await hass.async_add_executor_job(get_monoprice, data[CONF_PORT])
+        await get_async_monoprice(data[CONF_PORT], hass.loop)
     except SerialException:
         _LOGGER.error("Error connecting to Monoprice controller")
         raise CannotConnect
