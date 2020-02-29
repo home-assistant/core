@@ -176,14 +176,14 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchDevice):
         """Return the state attributes."""
         status = self.device.appliance.status
         attributes = {}
-        for k, v in status.items():
+        for key, val in status.items():
             # e.g. `BSH.Something.SomeValue` -> `some_value`
-            key = convert_to_snake(k.split(".")[-1])
-            if isinstance(v, str):
-                val = convert_to_snake(v.split(".")[-1])
-            elif isinstance(v, (dict, int)):
-                val = v
+            newkey = convert_to_snake(key.split(".")[-1])
+            if isinstance(val, str):
+                newval = convert_to_snake(val.split(".")[-1])
+            elif isinstance(val, (dict, int)):
+                newval = val
             else:
                 raise ValueError("Unexpected type for value")
-            attributes[key] = val
+            attributes[newkey] = newval
         return attributes
