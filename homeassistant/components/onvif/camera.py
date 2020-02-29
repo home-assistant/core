@@ -63,7 +63,6 @@ SERVICE_PTZ = "onvif_ptz"
 ONVIF_DATA = "onvif"
 ENTITIES = "entities"
 
-PREFER_TCP = "prefer_tcp"
 RTSP_TRANS_PROTOCOLS = ["tcp", "udp", "udp_multicast", "http"]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
