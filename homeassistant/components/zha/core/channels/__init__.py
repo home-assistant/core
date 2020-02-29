@@ -39,6 +39,7 @@ class Channels:
         """Initialize instance."""
         self._pools: List[zha_typing.ChannelPoolType] = []
         self._power_config = None
+        self._identify = None
         self._semaphore = asyncio.Semaphore(3)
         self._unique_id = str(zha_device.ieee)
         self._zdo_channel = base.ZDOChannel(zha_device.device.endpoints[0], zha_device)
@@ -59,6 +60,17 @@ class Channels:
         """Power configuration channel setter."""
         if self._power_config is None:
             self._power_config = channel
+
+    @property
+    def identify_ch(self) -> zha_typing.ChannelType:
+        """Return power configuration channel."""
+        return self._identify
+
+    @identify_ch.setter
+    def identify_ch(self, channel: zha_typing.ChannelType) -> None:
+        """Power configuration channel setter."""
+        if self._identify is None:
+            self._identify = channel
 
     @property
     def semaphore(self) -> asyncio.Semaphore:
@@ -242,6 +254,8 @@ class ChannelPool:
                     # on power configuration channel per device
                     continue
                 self._channels.power_configuration_ch = channel
+            elif channel.name == const.CHANNEL_IDENTIFY:
+                self._channels.identify_ch = channel
 
             self.all_channels[channel.id] = channel
 

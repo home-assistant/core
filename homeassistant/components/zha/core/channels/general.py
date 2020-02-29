@@ -153,7 +153,13 @@ class Groups(ZigbeeChannel):
 class Identify(ZigbeeChannel):
     """Identify channel."""
 
-    pass
+    @callback
+    def cluster_command(self, tsn, command_id, args):
+        """Handle commands received to this cluster."""
+        cmd = parse_and_log_command(self, tsn, command_id, args)
+
+        if cmd == "trigger_effect":
+            self.async_send_signal(f"{self.unique_id}_{cmd}", args[0])
 
 
 @registries.BINDABLE_CLUSTERS.register(general.LevelControl.cluster_id)
