@@ -3,7 +3,7 @@
   "name": "Instituto Português do Mar e Atmosfera (IPMA)",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ipma",
-  "requirements": ["pyipma==2.0.4"],
+  "requirements": ["pyipma==2.0.5"],
   "dependencies": [],
   "codeowners": ["@dgomes", "@abmantis"]
 }
