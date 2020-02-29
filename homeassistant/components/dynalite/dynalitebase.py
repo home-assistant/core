@@ -1,6 +1,7 @@
 """Support for the Dynalite devices as entities."""
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, LOGGER
 
@@ -25,13 +26,14 @@ def async_setup_entry_base(
     bridge.register_add_devices(platform, async_add_entities_platform)
 
 
-class DynaliteBase:  # Deriving from Object so it doesn't override the entity (light, switch, cover, etc.)
+class DynaliteBase(Entity):
     """Base class for the Dynalite entities."""
 
     def __init__(self, device, bridge):
         """Initialize the base class."""
         self._device = device
         self._bridge = bridge
+        self._unsub_dispatchers = []
 
     @property
     def name(self):
@@ -60,12 +62,24 @@ class DynaliteBase:  # Deriving from Object so it doesn't override the entity (l
     async def async_added_to_hass(self):
         """Added to hass so need to register to dispatch."""
         # register for device specific update
-        async_dispatcher_connect(
-            self.hass,
-            self._bridge.update_signal(self._device),
-            self.async_schedule_update_ha_state,
+        self._unsub_dispatchers.append(
+            async_dispatcher_connect(
+                self.hass,
+                self._bridge.update_signal(self._device),
+                self.async_schedule_update_ha_state,
+            )
         )
         # register for wide update
-        async_dispatcher_connect(
-            self.hass, self._bridge.update_signal(), self.async_schedule_update_ha_state
+        self._unsub_dispatchers.append(
+            (
+                self.hass,
+                self._bridge.update_signal(),
+                self.async_schedule_update_ha_state,
+            )
         )
+
+    async def async_will_remove_from_hass(self):
+        """Unregister signal dispatch listeners when being removed."""
+        for unsub in self._unsub_dispatchers:
+            unsub()
+        self._unsub_dispatchers = []
