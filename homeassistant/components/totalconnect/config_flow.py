@@ -24,8 +24,8 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             # Validate user input
-            username = user_input.get(CONF_USERNAME)
-            password = user_input.get(CONF_PASSWORD)
+            username = user_input[CONF_USERNAME]
+            password = user_input[CONF_PASSWORD]
 
             await self.async_set_unique_id(username)
             self._abort_if_unique_id_configured()
