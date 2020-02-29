@@ -123,10 +123,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         hass, username, password, icloud_dir, max_interval, gps_accuracy_threshold,
     )
     await hass.async_add_executor_job(account.setup)
-    if not account.devices:
-        return False
 
-    hass.data[DOMAIN][username] = account
+    hass.data[DOMAIN][entry.unique_id] = account
 
     for platform in PLATFORMS:
         hass.async_create_task(
