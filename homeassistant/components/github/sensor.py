@@ -137,7 +137,7 @@ class GitHubSensor(Entity):
         self._latest_commit_message = self._github_data.latest_commit_message
         self._latest_commit_sha = self._github_data.latest_commit_sha
         self._latest_release_url = self._github_data.latest_release_url
-        self._state = self._github_data.latest_commit_sha[0:8]
+        self._state = self._github_data.latest_commit_sha[0:7]
         self._open_issue_count = self._github_data.open_issue_count
         self._latest_open_issue_url = self._github_data.latest_open_issue_url
         self._pull_request_count = self._github_data.pull_request_count
