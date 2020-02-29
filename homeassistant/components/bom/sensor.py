@@ -19,14 +19,15 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
-_RESOURCE = "http://www.bom.gov.au/fwo/{}/{}.{}.json"
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_LAST_UPDATE = "last_update"
@@ -59,7 +60,7 @@ SENSOR_TYPES = {
     "cloud_type_id": ["Cloud Type ID", None],
     "cloud_type": ["Cloud Type", None],
     "delta_t": ["Delta Temp C", TEMP_CELSIUS],
-    "gust_kmh": ["Wind Gust kmh", "km/h"],
+    "gust_kmh": ["Wind Gust kmh", SPEED_KILOMETERS_PER_HOUR],
     "gust_kt": ["Wind Gust kt", "kt"],
     "air_temp": ["Air Temp C", TEMP_CELSIUS],
     "dewpt": ["Dew Point C", TEMP_CELSIUS],
@@ -68,7 +69,7 @@ SENSOR_TYPES = {
     "press_msl": ["Pressure msl", "msl"],
     "press_tend": ["Pressure Tend", None],
     "rain_trace": ["Rain Today", "mm"],
-    "rel_hum": ["Relative Humidity", "%"],
+    "rel_hum": ["Relative Humidity", UNIT_PERCENTAGE],
     "sea_state": ["Sea State", None],
     "swell_dir_worded": ["Swell Direction", None],
     "swell_height": ["Swell Height", "m"],
@@ -76,7 +77,7 @@ SENSOR_TYPES = {
     "vis_km": ["Visability km", "km"],
     "weather": ["Weather", None],
     "wind_dir": ["Wind Direction", None],
-    "wind_spd_kmh": ["Wind Speed kmh", "km/h"],
+    "wind_spd_kmh": ["Wind Speed kmh", SPEED_KILOMETERS_PER_HOUR],
     "wind_spd_kt": ["Wind Speed kt", "kt"],
 }
 
@@ -158,9 +159,9 @@ class BOMCurrentSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         if self.stationname is None:
-            return "BOM {}".format(SENSOR_TYPES[self._condition][0])
+            return f"BOM {SENSOR_TYPES[self._condition][0]}"
 
-        return "BOM {} {}".format(self.stationname, SENSOR_TYPES[self._condition][0])
+        return f"BOM {self.stationname} {SENSOR_TYPES[self._condition][0]}"
 
     @property
     def state(self):
@@ -202,7 +203,10 @@ class BOMCurrentData:
 
     def _build_url(self):
         """Build the URL for the requests."""
-        url = _RESOURCE.format(self._zone_id, self._zone_id, self._wmo_id)
+        url = (
+            f"http://www.bom.gov.au/fwo/{self._zone_id}"
+            f"/{self._zone_id}.{self._wmo_id}.json"
+        )
         _LOGGER.debug("BOM URL: %s", url)
         return url
 
@@ -309,10 +313,10 @@ def _get_bom_stations():
         r'(?P=zone)\.(?P<wmo>\d\d\d\d\d).shtml">'
     )
     for state in ("nsw", "vic", "qld", "wa", "tas", "nt"):
-        url = "http://www.bom.gov.au/{0}/observations/{0}all.shtml".format(state)
+        url = f"http://www.bom.gov.au/{state}/observations/{state}all.shtml"
         for zone_id, wmo_id in re.findall(pattern, requests.get(url).text):
             zones[wmo_id] = zone_id
-    return {"{}.{}".format(zones[k], k): latlon[k] for k in set(latlon) & set(zones)}
+    return {f"{zones[k]}.{k}": latlon[k] for k in set(latlon) & set(zones)}
 
 
 def bom_stations(cache_dir):

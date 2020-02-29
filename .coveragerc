@@ -29,6 +29,7 @@ omit =
     homeassistant/components/airly/air_quality.py
     homeassistant/components/airly/sensor.py
     homeassistant/components/airly/const.py
+    homeassistant/components/airvisual/__init__.py
     homeassistant/components/airvisual/sensor.py
     homeassistant/components/aladdin_connect/cover.py
     homeassistant/components/alarmdecoder/*
@@ -58,7 +59,6 @@ omit =
     homeassistant/components/arwn/sensor.py
     homeassistant/components/asterisk_cdr/mailbox.py
     homeassistant/components/asterisk_mbox/*
-    homeassistant/components/asuswrt/device_tracker.py
     homeassistant/components/aten_pe/*
     homeassistant/components/atome/*
     homeassistant/components/august/*
@@ -66,6 +66,7 @@ omit =
     homeassistant/components/automatic/device_tracker.py
     homeassistant/components/avea/light.py
     homeassistant/components/avion/light.py
+    homeassistant/components/avri/sensor.py
     homeassistant/components/azure_event_hub/*
     homeassistant/components/azure_service_bus/*
     homeassistant/components/baidu/tts.py
@@ -166,7 +167,6 @@ omit =
     homeassistant/components/dsmr_reader/*
     homeassistant/components/dte_energy_bridge/sensor.py
     homeassistant/components/dublin_bus_transport/sensor.py
-    homeassistant/components/duke_energy/sensor.py
     homeassistant/components/dunehd/media_player.py
     homeassistant/components/dwd_weather_warnings/sensor.py
     homeassistant/components/dweet/*
@@ -219,6 +219,7 @@ omit =
     homeassistant/components/eufy/*
     homeassistant/components/everlights/light.py
     homeassistant/components/evohome/*
+    homeassistant/components/ezviz/*
     homeassistant/components/familyhub/camera.py
     homeassistant/components/fastdotcom/*
     homeassistant/components/ffmpeg/camera.py
@@ -481,6 +482,7 @@ omit =
     homeassistant/components/nissan_leaf/*
     homeassistant/components/nmap_tracker/device_tracker.py
     homeassistant/components/nmbs/sensor.py
+    homeassistant/components/notion/__init__.py
     homeassistant/components/notion/binary_sensor.py
     homeassistant/components/notion/sensor.py
     homeassistant/components/noaa_tides/sensor.py
@@ -757,7 +759,6 @@ omit =
     homeassistant/components/twentemilieu/sensor.py
     homeassistant/components/twilio_call/notify.py
     homeassistant/components/twilio_sms/notify.py
-    homeassistant/components/twitch/sensor.py
     homeassistant/components/twitter/notify.py
     homeassistant/components/ubee/device_tracker.py
     homeassistant/components/ubus/device_tracker.py
@@ -844,6 +845,7 @@ omit =
     homeassistant/components/zha/core/helpers.py
     homeassistant/components/zha/core/patches.py
     homeassistant/components/zha/core/registries.py
+    homeassistant/components/zha/core/typing.py
     homeassistant/components/zha/entity.py
     homeassistant/components/zha/light.py
     homeassistant/components/zha/sensor.py

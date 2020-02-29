@@ -24,6 +24,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_scanner(hass, config):
     """Validate the configuration and return an Xfinity Gateway scanner."""
+    _LOGGER.warning(
+        "The Xfinity Gateway has been deprecated and will be removed from "
+        "Home Assistant in version 0.109. Please remove it from your "
+        "configuration. "
+    )
 
     gateway = XfinityGateway(config[DOMAIN][CONF_HOST])
     scanner = None

@@ -31,6 +31,9 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     POWER_WATT,
     TEMP_CELSIUS,
+    TIME_DAYS,
+    TIME_HOURS,
+    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -76,7 +79,7 @@ SENSOR_TYPES = {
     ATTR_CURRENT_HUMIDITY: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
         ATTR_LABEL: "Inside Humidity",
-        ATTR_UNIT: "%",
+        ATTR_UNIT: UNIT_PERCENTAGE,
         ATTR_ICON: "mdi:water-percent",
         ATTR_ID: SENSOR_HUMIDITY_EXTRACT,
     },
@@ -91,7 +94,7 @@ SENSOR_TYPES = {
     ATTR_OUTSIDE_HUMIDITY: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
         ATTR_LABEL: "Outside Humidity",
-        ATTR_UNIT: "%",
+        ATTR_UNIT: UNIT_PERCENTAGE,
         ATTR_ICON: "mdi:water-percent",
         ATTR_ID: SENSOR_HUMIDITY_OUTDOOR,
     },
@@ -106,7 +109,7 @@ SENSOR_TYPES = {
     ATTR_SUPPLY_HUMIDITY: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
         ATTR_LABEL: "Supply Humidity",
-        ATTR_UNIT: "%",
+        ATTR_UNIT: UNIT_PERCENTAGE,
         ATTR_ICON: "mdi:water-percent",
         ATTR_ID: SENSOR_HUMIDITY_SUPPLY,
     },
@@ -120,7 +123,7 @@ SENSOR_TYPES = {
     ATTR_SUPPLY_FAN_DUTY: {
         ATTR_DEVICE_CLASS: None,
         ATTR_LABEL: "Supply Fan Duty",
-        ATTR_UNIT: "%",
+        ATTR_UNIT: UNIT_PERCENTAGE,
         ATTR_ICON: "mdi:fan",
         ATTR_ID: SENSOR_FAN_SUPPLY_DUTY,
     },
@@ -134,7 +137,7 @@ SENSOR_TYPES = {
     ATTR_EXHAUST_FAN_DUTY: {
         ATTR_DEVICE_CLASS: None,
         ATTR_LABEL: "Exhaust Fan Duty",
-        ATTR_UNIT: "%",
+        ATTR_UNIT: UNIT_PERCENTAGE,
         ATTR_ICON: "mdi:fan",
         ATTR_ID: SENSOR_FAN_EXHAUST_DUTY,
     },
@@ -149,35 +152,35 @@ SENSOR_TYPES = {
     ATTR_EXHAUST_HUMIDITY: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
         ATTR_LABEL: "Exhaust Humidity",
-        ATTR_UNIT: "%",
+        ATTR_UNIT: UNIT_PERCENTAGE,
         ATTR_ICON: "mdi:water-percent",
         ATTR_ID: SENSOR_HUMIDITY_EXHAUST,
     },
     ATTR_AIR_FLOW_SUPPLY: {
         ATTR_DEVICE_CLASS: None,
         ATTR_LABEL: "Supply airflow",
-        ATTR_UNIT: "m³/h",
+        ATTR_UNIT: f"m³/{TIME_HOURS}",
         ATTR_ICON: "mdi:fan",
         ATTR_ID: SENSOR_FAN_SUPPLY_FLOW,
     },
     ATTR_AIR_FLOW_EXHAUST: {
         ATTR_DEVICE_CLASS: None,
         ATTR_LABEL: "Exhaust airflow",
-        ATTR_UNIT: "m³/h",
+        ATTR_UNIT: f"m³/{TIME_HOURS}",
         ATTR_ICON: "mdi:fan",
         ATTR_ID: SENSOR_FAN_EXHAUST_FLOW,
     },
     ATTR_BYPASS_STATE: {
         ATTR_DEVICE_CLASS: None,
         ATTR_LABEL: "Bypass State",
-        ATTR_UNIT: "%",
+        ATTR_UNIT: UNIT_PERCENTAGE,
         ATTR_ICON: "mdi:camera-iris",
         ATTR_ID: SENSOR_BYPASS_STATE,
     },
     ATTR_DAYS_TO_REPLACE_FILTER: {
         ATTR_DEVICE_CLASS: None,
         ATTR_LABEL: "Days to replace filter",
-        ATTR_UNIT: "days",
+        ATTR_UNIT: TIME_DAYS,
         ATTR_ICON: "mdi:calendar",
         ATTR_ID: SENSOR_DAYS_TO_REPLACE_FILTER,
     },
@@ -194,7 +197,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_RESOURCES, default=[]): vol.All(
             cv.ensure_list, [vol.In(SENSOR_TYPES)]
-        ),
+        )
     }
 )
 
@@ -229,7 +232,7 @@ class ComfoConnectSensor(Entity):
     async def async_added_to_hass(self):
         """Register for sensor updates."""
         _LOGGER.debug(
-            "Registering for sensor %s (%d)", self._sensor_type, self._sensor_id,
+            "Registering for sensor %s (%d)", self._sensor_type, self._sensor_id
         )
         async_dispatcher_connect(
             self.hass,

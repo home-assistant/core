@@ -40,7 +40,7 @@ class BloomSkySensor(BinarySensorDevice):
         self._bloomsky = bs
         self._device_id = device["DeviceID"]
         self._sensor_name = sensor_name
-        self._name = "{} {}".format(device["DeviceName"], sensor_name)
+        self._name = f"{device['DeviceName']} {sensor_name}"
         self._state = None
         self._unique_id = f"{self._device_id}-{self._sensor_name}"
 

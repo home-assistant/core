@@ -27,9 +27,7 @@ class HeosFlowHandler(config_entries.ConfigFlow):
         """Handle a discovered Heos device."""
         # Store discovered host
         hostname = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
-        friendly_name = "{} ({})".format(
-            discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME], hostname
-        )
+        friendly_name = f"{discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME]} ({hostname})"
         self.hass.data.setdefault(DATA_DISCOVERED_HOSTS, {})
         self.hass.data[DATA_DISCOVERED_HOSTS][friendly_name] = hostname
         # Abort if other flows in progress or an entry already exists

@@ -103,8 +103,6 @@ ALLOWED_USED_COMPONENTS = {
     "homeassistant",
     "system_log",
     "person",
-    # Discovery
-    "discovery",
     # Other
     "mjpeg",  # base class, has no reqs or component to load.
     "stream",  # Stream cannot install on all systems, can be imported without reqs.
@@ -135,8 +133,6 @@ IGNORE_VIOLATIONS = {
     # These should be extracted to external package
     "pvoutput",
     "dwd_weather_warnings",
-    # Should be rewritten to use own data fetcher
-    "scrape",
 }
 
 

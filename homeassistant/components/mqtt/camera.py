@@ -47,15 +47,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async def async_discover(discovery_payload):
         """Discover and add a MQTT camera."""
+        discovery_data = discovery_payload.discovery_data
         try:
-            discovery_hash = discovery_payload.pop(ATTR_DISCOVERY_HASH)
             config = PLATFORM_SCHEMA(discovery_payload)
             await _async_setup_entity(
-                config, async_add_entities, config_entry, discovery_hash
+                config, async_add_entities, config_entry, discovery_data
             )
         except Exception:
-            if discovery_hash:
-                clear_discovery_hash(hass, discovery_hash)
+            clear_discovery_hash(hass, discovery_data[ATTR_DISCOVERY_HASH])
             raise
 
     async_dispatcher_connect(
@@ -64,16 +63,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 async def _async_setup_entity(
-    config, async_add_entities, config_entry=None, discovery_hash=None
+    config, async_add_entities, config_entry=None, discovery_data=None
 ):
     """Set up the MQTT Camera."""
-    async_add_entities([MqttCamera(config, config_entry, discovery_hash)])
+    async_add_entities([MqttCamera(config, config_entry, discovery_data)])
 
 
 class MqttCamera(MqttDiscoveryUpdate, MqttEntityDeviceInfo, Camera):
     """representation of a MQTT camera."""
 
-    def __init__(self, config, config_entry, discovery_hash):
+    def __init__(self, config, config_entry, discovery_data):
         """Initialize the MQTT Camera."""
         self._config = config
         self._unique_id = config.get(CONF_UNIQUE_ID)
@@ -85,7 +84,7 @@ class MqttCamera(MqttDiscoveryUpdate, MqttEntityDeviceInfo, Camera):
         device_config = config.get(CONF_DEVICE)
 
         Camera.__init__(self)
-        MqttDiscoveryUpdate.__init__(self, discovery_hash, self.discovery_update)
+        MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
         MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
 
     async def async_added_to_hass(self):
@@ -127,6 +126,7 @@ class MqttCamera(MqttDiscoveryUpdate, MqttEntityDeviceInfo, Camera):
         self._sub_state = await subscription.async_unsubscribe_topics(
             self.hass, self._sub_state
         )
+        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
 
     async def async_camera_image(self):
         """Return image response."""

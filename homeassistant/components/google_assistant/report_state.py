@@ -21,6 +21,9 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
     """Enable state reporting."""
 
     async def async_entity_state_listener(changed_entity, old_state, new_state):
+        if not hass.is_running:
+            return
+
         if not new_state:
             return
 

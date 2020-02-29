@@ -55,9 +55,7 @@ class GoogleMapsScanner:
         self.scan_interval = config.get(CONF_SCAN_INTERVAL) or timedelta(seconds=60)
         self._prev_seen = {}
 
-        credfile = "{}.{}".format(
-            hass.config.path(CREDENTIALS_FILE), slugify(self.username)
-        )
+        credfile = f"{hass.config.path(CREDENTIALS_FILE)}.{slugify(self.username)}"
         try:
             self.service = Service(credfile, self.username)
             self._update_info()
@@ -75,7 +73,7 @@ class GoogleMapsScanner:
     def _update_info(self, now=None):
         for person in self.service.get_all_people():
             try:
-                dev_id = "google_maps_{0}".format(slugify(person.id))
+                dev_id = f"google_maps_{slugify(person.id)}"
             except TypeError:
                 _LOGGER.warning("No location(s) shared with this account")
                 return

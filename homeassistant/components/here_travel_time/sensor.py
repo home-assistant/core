@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
     EVENT_HOMEASSISTANT_START,
+    TIME_MINUTES,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import location
@@ -84,8 +85,6 @@ ATTR_TRAFFIC_MODE = CONF_TRAFFIC_MODE
 ATTR_DURATION_IN_TRAFFIC = "duration_in_traffic"
 ATTR_ORIGIN_NAME = "origin_name"
 ATTR_DESTINATION_NAME = "destination_name"
-
-UNIT_OF_MEASUREMENT = "min"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -209,7 +208,7 @@ class HERETravelTimeSensor(Entity):
         self._origin_entity_id = origin_entity_id
         self._destination_entity_id = destination_entity_id
         self._here_data = here_data
-        self._unit_of_measurement = UNIT_OF_MEASUREMENT
+        self._unit_of_measurement = TIME_MINUTES
         self._attrs = {
             ATTR_UNIT_SYSTEM: self._here_data.units,
             ATTR_MODE: self._here_data.travel_mode,
@@ -316,7 +315,7 @@ class HERETravelTimeSensor(Entity):
             return self._get_location_from_attributes(entity)
 
         # Check if device is in a zone
-        zone_entity = self.hass.states.get("zone.{}".format(entity.state))
+        zone_entity = self.hass.states.get(f"zone.{entity.state}")
         if location.has_location(zone_entity):
             _LOGGER.debug(
                 "%s is in %s, getting zone location", entity_id, zone_entity.entity_id
@@ -349,7 +348,7 @@ class HERETravelTimeSensor(Entity):
     def _get_location_from_attributes(entity: State) -> str:
         """Get the lat/long string from an entities attributes."""
         attr = entity.attributes
-        return "{},{}".format(attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
+        return f"{attr.get(ATTR_LATITUDE)},{attr.get(ATTR_LONGITUDE)}"
 
 
 class HERETravelTimeData:

@@ -1,74 +1,62 @@
 """Test Dynalite __init__."""
-from unittest.mock import Mock, call, patch
 
-from homeassistant.components.dynalite import DATA_CONFIGS, DOMAIN, LOGGER
-from homeassistant.components.dynalite.__init__ import (
-    async_setup,
-    async_setup_entry,
-    async_unload_entry,
-)
+from asynctest import patch
 
-from tests.common import mock_coro
+from homeassistant.components import dynalite
+from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 
-async def test_async_setup():
+async def test_empty_config(hass):
+    """Test with an empty config."""
+    assert await async_setup_component(hass, dynalite.DOMAIN, {}) is True
+    assert len(hass.config_entries.flow.async_progress()) == 0
+    assert hass.data[dynalite.DOMAIN] == {}
+
+
+async def test_async_setup(hass):
     """Test a successful setup."""
-    new_host = "1.2.3.4"
-    old_host = "5.6.7.8"
-    hass = Mock()
-    hass.data = {}
-    config = {DOMAIN: {"bridges": [{"host": old_host}, {"host": new_host}]}}
-    mock_conf_host = Mock(return_value=[old_host])
-    with patch(
-        "homeassistant.components.dynalite.__init__.configured_hosts", mock_conf_host
-    ):
-        await async_setup(hass, config)
-        mock_conf_host.assert_called_once()
-        assert mock_conf_host.mock_calls[0] == call(hass)
-        assert hass.data[DOMAIN][DATA_CONFIGS] == {
-            new_host: {"host": new_host},
-            old_host: {"host": old_host},
-        }
-        hass.async_create_task.assert_called_once()
-
-
-async def test_async_setup_entry():
-    """Test setup of an entry."""
-
-    def async_mock(mock):
-        """Return the return value of a mock from async."""
-
-        async def async_func(*args, **kwargs):
-            return mock()
-
-        return async_func
-
     host = "1.2.3.4"
-    hass = Mock()
-    entry = Mock()
-    entry.data = {"host": host}
-    hass.data = {}
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_CONFIGS] = {host: {}}
-    mock_async_setup = Mock(return_value=True)
     with patch(
-        "homeassistant.components.dynalite.__init__.DynaliteBridge.async_setup",
-        async_mock(mock_async_setup),
-    ):
-        assert await async_setup_entry(hass, entry)
-    mock_async_setup.assert_called_once()
+        "dynalite_devices_lib.DynaliteDevices.async_setup", return_value=True
+    ), patch("dynalite_devices_lib.DynaliteDevices.available", True):
+        assert await async_setup_component(
+            hass,
+            dynalite.DOMAIN,
+            {dynalite.DOMAIN: {dynalite.CONF_BRIDGES: [{dynalite.CONF_HOST: host}]}},
+        )
+
+    assert len(hass.data[dynalite.DOMAIN]) == 1
 
 
-async def test_async_unload_entry():
-    """Test unloading of an entry."""
-    hass = Mock()
-    mock_bridge = Mock()
-    mock_bridge.async_reset.return_value = mock_coro(True)
-    entry = Mock()
-    hass.data = {}
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][entry.entry_id] = mock_bridge
-    await async_unload_entry(hass, entry)
-    LOGGER.error("XXX calls=%s", mock_bridge.mock_calls)
-    mock_bridge.async_reset.assert_called_once()
-    assert mock_bridge.mock_calls[0] == call.async_reset()
+async def test_async_setup_failed(hass):
+    """Test a setup when DynaliteBridge.async_setup fails."""
+    host = "1.2.3.4"
+    with patch("dynalite_devices_lib.DynaliteDevices.async_setup", return_value=False):
+        assert await async_setup_component(
+            hass,
+            dynalite.DOMAIN,
+            {dynalite.DOMAIN: {dynalite.CONF_BRIDGES: [{dynalite.CONF_HOST: host}]}},
+        )
+    assert hass.data[dynalite.DOMAIN] == {}
+
+
+async def test_unload_entry(hass):
+    """Test being able to unload an entry."""
+    host = "1.2.3.4"
+    entry = MockConfigEntry(domain=dynalite.DOMAIN, data={"host": host})
+    entry.add_to_hass(hass)
+
+    with patch(
+        "dynalite_devices_lib.DynaliteDevices.async_setup", return_value=True
+    ), patch("dynalite_devices_lib.DynaliteDevices.available", True):
+        assert await async_setup_component(
+            hass,
+            dynalite.DOMAIN,
+            {dynalite.DOMAIN: {dynalite.CONF_BRIDGES: [{dynalite.CONF_HOST: host}]}},
+        )
+    assert hass.data[dynalite.DOMAIN].get(entry.entry_id)
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert not hass.data[dynalite.DOMAIN].get(entry.entry_id)

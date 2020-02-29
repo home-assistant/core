@@ -86,7 +86,7 @@ class ArestSwitchBase(SwitchDevice):
     def __init__(self, resource, location, name):
         """Initialize the switch."""
         self._resource = resource
-        self._name = "{} {}".format(location.title(), name.title())
+        self._name = f"{location.title()} {name.title()}"
         self._state = None
         self._available = True
 

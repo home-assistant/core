@@ -5,6 +5,7 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.entity import Entity
 
@@ -12,7 +13,7 @@ from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 SENSOR_TYPES = {
     "temperature": ["Temperature", TEMP_FAHRENHEIT],
-    "humidity": ["Humidity", "%"],
+    "humidity": ["Humidity", UNIT_PERCENTAGE],
 }
 
 
@@ -37,7 +38,7 @@ class EcobeeSensor(Entity):
     def __init__(self, data, sensor_name, sensor_type, sensor_index):
         """Initialize the sensor."""
         self.data = data
-        self._name = "{} {}".format(sensor_name, SENSOR_TYPES[sensor_type][0])
+        self._name = f"{sensor_name} {SENSOR_TYPES[sensor_type][0]}"
         self.sensor_name = sensor_name
         self.type = sensor_type
         self.index = sensor_index

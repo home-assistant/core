@@ -3,9 +3,6 @@ Support for Fido.
 
 Get data from 'Usage Summary' page:
 https://www.fido.ca/pages/#/my-account/wireless
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.fido/
 """
 from datetime import timedelta
 import logging
@@ -21,6 +18,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     DATA_KILOBITS,
+    TIME_MINUTES,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -30,7 +28,6 @@ _LOGGER = logging.getLogger(__name__)
 
 PRICE = "CAD"
 MESSAGES = "messages"
-MINUTES = "minutes"
 
 DEFAULT_NAME = "Fido"
 
@@ -52,12 +49,12 @@ SENSOR_TYPES = {
     "text_int_used": ["International text used", MESSAGES, "mdi:message-alert"],
     "text_int_limit": ["International text limit", MESSAGES, "mdi:message-alert"],
     "text_int_remaining": ["International remaining", MESSAGES, "mdi:message-alert"],
-    "talk_used": ["Talk used", MINUTES, "mdi:cellphone"],
-    "talk_limit": ["Talk limit", MINUTES, "mdi:cellphone"],
-    "talk_remaining": ["Talk remaining", MINUTES, "mdi:cellphone"],
-    "other_talk_used": ["Other Talk used", MINUTES, "mdi:cellphone"],
-    "other_talk_limit": ["Other Talk limit", MINUTES, "mdi:cellphone"],
-    "other_talk_remaining": ["Other Talk remaining", MINUTES, "mdi:cellphone"],
+    "talk_used": ["Talk used", TIME_MINUTES, "mdi:cellphone"],
+    "talk_limit": ["Talk limit", TIME_MINUTES, "mdi:cellphone"],
+    "talk_remaining": ["Talk remaining", TIME_MINUTES, "mdi:cellphone"],
+    "other_talk_used": ["Other Talk used", TIME_MINUTES, "mdi:cellphone"],
+    "other_talk_limit": ["Other Talk limit", TIME_MINUTES, "mdi:cellphone"],
+    "other_talk_remaining": ["Other Talk remaining", TIME_MINUTES, "mdi:cellphone"],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

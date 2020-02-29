@@ -48,8 +48,9 @@ class KonnectedSwitch(ToggleEntity):
         self._repeat = self._data.get(CONF_REPEAT)
         self._state = self._boolean_state(self._data.get(ATTR_STATE))
         self._name = self._data.get(CONF_NAME)
-        self._unique_id = "{}-{}-{}-{}-{}".format(
-            device_id, self._zone_num, self._momentary, self._pause, self._repeat
+        self._unique_id = (
+            f"{device_id}-{self._zone_num}-{self._momentary}-"
+            f"{self._pause}-{self._repeat}"
         )
 
     @property

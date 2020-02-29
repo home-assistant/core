@@ -1,5 +1,6 @@
 """Use Bayesian Inference to trigger a binary sensor."""
 from collections import OrderedDict
+from itertools import chain
 
 import voluptuous as vol
 
@@ -21,6 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 
 ATTR_OBSERVATIONS = "observations"
+ATTR_OCCURRED_OBSERVATION_ENTITIES = "occurred_observation_entities"
 ATTR_PROBABILITY = "probability"
 ATTR_PROBABILITY_THRESHOLD = "probability_threshold"
 
@@ -126,6 +128,15 @@ class BayesianBinarySensor(BinarySensorDevice):
         self.probability = prior
 
         self.current_obs = OrderedDict({})
+        self.entity_obs_dict = []
+
+        for obs in self._observations:
+            if "entity_id" in obs:
+                self.entity_obs_dict.append([obs.get("entity_id")])
+            if "value_template" in obs:
+                self.entity_obs_dict.append(
+                    list(obs.get(CONF_VALUE_TEMPLATE).extract_entities())
+                )
 
         to_observe = set()
         for obs in self._observations:
@@ -251,6 +262,13 @@ class BayesianBinarySensor(BinarySensorDevice):
         """Return the state attributes of the sensor."""
         return {
             ATTR_OBSERVATIONS: list(self.current_obs.values()),
+            ATTR_OCCURRED_OBSERVATION_ENTITIES: list(
+                set(
+                    chain.from_iterable(
+                        self.entity_obs_dict[obs] for obs in self.current_obs.keys()
+                    )
+                )
+            ),
             ATTR_PROBABILITY: round(self.probability, 2),
             ATTR_PROBABILITY_THRESHOLD: self._probability_threshold,
         }

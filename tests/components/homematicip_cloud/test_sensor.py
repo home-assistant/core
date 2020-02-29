@@ -22,7 +22,13 @@ from homeassistant.components.homematicip_cloud.sensor import (
     ATTR_WIND_DIRECTION_VARIATION,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, POWER_WATT, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    POWER_WATT,
+    SPEED_KILOMETERS_PER_HOUR,
+    TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
+)
 from homeassistant.setup import async_setup_component
 
 from .helper import async_manipulate_test_data, get_and_check_entity_basics
@@ -50,7 +56,7 @@ async def test_hmip_accesspoint_status(hass, default_mock_hap_factory):
     )
     assert hmip_device
     assert ha_state.state == "8.0"
-    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UNIT_PERCENTAGE
 
     await async_manipulate_test_data(hass, hmip_device, "dutyCycle", 17.3)
 
@@ -72,7 +78,7 @@ async def test_hmip_heating_thermostat(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == "0"
-    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UNIT_PERCENTAGE
     await async_manipulate_test_data(hass, hmip_device, "valvePosition", 0.37)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "37"
@@ -106,7 +112,7 @@ async def test_hmip_humidity_sensor(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == "40"
-    assert ha_state.attributes["unit_of_measurement"] == "%"
+    assert ha_state.attributes["unit_of_measurement"] == UNIT_PERCENTAGE
     await async_manipulate_test_data(hass, hmip_device, "humidity", 45)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "45"
@@ -156,6 +162,31 @@ async def test_hmip_temperature_sensor2(hass, default_mock_hap_factory):
     assert ha_state.state == "20.0"
     assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
     await async_manipulate_test_data(hass, hmip_device, "valveActualTemperature", 23.5)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == "23.5"
+
+    assert not ha_state.attributes.get(ATTR_TEMPERATURE_OFFSET)
+    await async_manipulate_test_data(hass, hmip_device, "temperatureOffset", 10)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.attributes[ATTR_TEMPERATURE_OFFSET] == 10
+
+
+async def test_hmip_temperature_sensor3(hass, default_mock_hap_factory):
+    """Test HomematicipTemperatureSensor."""
+    entity_id = "sensor.raumbediengerat_analog_temperature"
+    entity_name = "Raumbediengerät Analog Temperature"
+    device_model = "ALPHA-IP-RBGa"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Raumbediengerät Analog"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == "23.3"
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    await async_manipulate_test_data(hass, hmip_device, "actualTemperature", 23.5)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "23.5"
 
@@ -259,7 +290,7 @@ async def test_hmip_windspeed_sensor(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == "2.6"
-    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "km/h"
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == SPEED_KILOMETERS_PER_HOUR
     await async_manipulate_test_data(hass, hmip_device, "windSpeed", 9.4)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "9.4"

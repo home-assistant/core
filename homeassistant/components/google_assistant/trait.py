@@ -392,9 +392,7 @@ class ColorSettingTrait(_Trait):
             if temp < min_temp or temp > max_temp:
                 raise SmartHomeError(
                     ERR_VALUE_OUT_OF_RANGE,
-                    "Temperature should be between {} and {}".format(
-                        min_temp, max_temp
-                    ),
+                    f"Temperature should be between {min_temp} and {max_temp}",
                 )
 
             await self.hass.services.async_call(
@@ -407,7 +405,7 @@ class ColorSettingTrait(_Trait):
 
         elif "spectrumRGB" in params["color"]:
             # Convert integer to hex format and left pad with 0's till length 6
-            hex_value = "{0:06x}".format(params["color"]["spectrumRGB"])
+            hex_value = f"{params['color']['spectrumRGB']:06x}"
             color = color_util.color_RGB_to_hs(
                 *color_util.rgb_hex_to_rgb_list(hex_value)
             )
@@ -746,9 +744,7 @@ class TemperatureSettingTrait(_Trait):
             if temp < min_temp or temp > max_temp:
                 raise SmartHomeError(
                     ERR_VALUE_OUT_OF_RANGE,
-                    "Temperature should be between {} and {}".format(
-                        min_temp, max_temp
-                    ),
+                    f"Temperature should be between {min_temp} and {max_temp}",
                 )
 
             await self.hass.services.async_call(
@@ -769,8 +765,10 @@ class TemperatureSettingTrait(_Trait):
             if temp_high < min_temp or temp_high > max_temp:
                 raise SmartHomeError(
                     ERR_VALUE_OUT_OF_RANGE,
-                    "Upper bound for temperature range should be between "
-                    "{} and {}".format(min_temp, max_temp),
+                    (
+                        f"Upper bound for temperature range should be between "
+                        f"{min_temp} and {max_temp}"
+                    ),
                 )
 
             temp_low = temp_util.convert(
@@ -782,8 +780,10 @@ class TemperatureSettingTrait(_Trait):
             if temp_low < min_temp or temp_low > max_temp:
                 raise SmartHomeError(
                     ERR_VALUE_OUT_OF_RANGE,
-                    "Lower bound for temperature range should be between "
-                    "{} and {}".format(min_temp, max_temp),
+                    (
+                        f"Lower bound for temperature range should be between "
+                        f"{min_temp} and {max_temp}"
+                    ),
                 )
 
             supported = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)

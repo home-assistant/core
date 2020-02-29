@@ -1,7 +1,15 @@
 """Support for Homekit sensors."""
-from homekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics import CharacteristicsTypes
 
-from homeassistant.const import DEVICE_CLASS_BATTERY, TEMP_CELSIUS
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
+)
 from homeassistant.core import callback
 
 from . import KNOWN_DEVICES, HomeKitEntity
@@ -11,9 +19,7 @@ TEMP_C_ICON = "mdi:thermometer"
 BRIGHTNESS_ICON = "mdi:brightness-6"
 CO2_ICON = "mdi:periodic-table-co2"
 
-UNIT_PERCENT = "%"
 UNIT_LUX = "lux"
-UNIT_CO2 = "ppm"
 
 
 class HomeKitHumiditySensor(HomeKitEntity):
@@ -29,6 +35,11 @@ class HomeKitHumiditySensor(HomeKitEntity):
         return [CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT]
 
     @property
+    def device_class(self) -> str:
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_HUMIDITY
+
+    @property
     def name(self):
         """Return the name of the device."""
         return f"{super().name} Humidity"
@@ -41,7 +52,7 @@ class HomeKitHumiditySensor(HomeKitEntity):
     @property
     def unit_of_measurement(self):
         """Return units for the sensor."""
-        return UNIT_PERCENT
+        return UNIT_PERCENTAGE
 
     def _update_relative_humidity_current(self, value):
         self._state = value
@@ -63,6 +74,11 @@ class HomeKitTemperatureSensor(HomeKitEntity):
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
         return [CharacteristicsTypes.TEMPERATURE_CURRENT]
+
+    @property
+    def device_class(self) -> str:
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_TEMPERATURE
 
     @property
     def name(self):
@@ -99,6 +115,11 @@ class HomeKitLightSensor(HomeKitEntity):
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
         return [CharacteristicsTypes.LIGHT_LEVEL_CURRENT]
+
+    @property
+    def device_class(self) -> str:
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_ILLUMINANCE
 
     @property
     def name(self):
@@ -149,7 +170,7 @@ class HomeKitCarbonDioxideSensor(HomeKitEntity):
     @property
     def unit_of_measurement(self):
         """Return units for the sensor."""
-        return UNIT_CO2
+        return CONCENTRATION_PARTS_PER_MILLION
 
     def _update_carbon_dioxide_level(self, value):
         self._state = value
@@ -213,7 +234,7 @@ class HomeKitBatterySensor(HomeKitEntity):
     @property
     def unit_of_measurement(self):
         """Return units for the sensor."""
-        return UNIT_PERCENT
+        return UNIT_PERCENTAGE
 
     def _update_battery_level(self, value):
         self._state = value

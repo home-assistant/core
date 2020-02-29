@@ -11,8 +11,12 @@
         },
         "step": {
             "confirm": {
-                "description": "Model: {model}\nHost: {host}\nPort: {port}\n\nYou can configure the IO and panel behavior in the Konnected Alarm Panel settings.",
+                "description": "Model: {model}\nID: {id}\nHost: {host}\nPort: {port}\n\nYou can configure the IO and panel behavior in the Konnected Alarm Panel settings.",
                 "title": "Konnected Device Ready"
+            },
+            "import_confirm": {
+                "description": "A Konnected Alarm Panel with ID {id} has been discovered in configuration.yaml. This flow will allow you to import it into a config entry.",
+                "title": "Import Konnected Device"
             },
             "user": {
                 "data": {

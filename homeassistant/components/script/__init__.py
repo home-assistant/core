@@ -9,6 +9,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
     CONF_ALIAS,
+    CONF_ICON,
     EVENT_SCRIPT_STARTED,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
@@ -42,7 +43,8 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 SCRIPT_ENTRY_SCHEMA = vol.Schema(
     {
-        CONF_ALIAS: cv.string,
+        vol.Optional(CONF_ALIAS): cv.string,
+        vol.Optional(CONF_ICON): cv.icon,
         vol.Required(CONF_SEQUENCE): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_DESCRIPTION, default=""): cv.string,
         vol.Optional(CONF_FIELDS, default={}): {
@@ -207,9 +209,15 @@ async def _async_process_config(hass, config, component):
     scripts = []
 
     for object_id, cfg in config.get(DOMAIN, {}).items():
-        alias = cfg.get(CONF_ALIAS, object_id)
-        script = ScriptEntity(hass, object_id, alias, cfg[CONF_SEQUENCE])
-        scripts.append(script)
+        scripts.append(
+            ScriptEntity(
+                hass,
+                object_id,
+                cfg.get(CONF_ALIAS, object_id),
+                cfg.get(CONF_ICON),
+                cfg[CONF_SEQUENCE],
+            )
+        )
         hass.services.async_register(
             DOMAIN, object_id, service_handler, schema=SCRIPT_SERVICE_SCHEMA
         )
@@ -227,11 +235,16 @@ async def _async_process_config(hass, config, component):
 class ScriptEntity(ToggleEntity):
     """Representation of a script entity."""
 
-    def __init__(self, hass, object_id, name, sequence):
+    icon = None
+
+    def __init__(self, hass, object_id, name, icon, sequence):
         """Initialize the script."""
         self.object_id = object_id
+        self.icon = icon
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
-        self.script = Script(hass, sequence, name, self.async_update_ha_state)
+        self.script = Script(
+            hass, sequence, name, self.async_update_ha_state, logger=_LOGGER
+        )
 
     @property
     def should_poll(self):
@@ -268,22 +281,15 @@ class ScriptEntity(ToggleEntity):
             {ATTR_NAME: self.script.name, ATTR_ENTITY_ID: self.entity_id},
             context=context,
         )
-        try:
-            await self.script.async_run(kwargs.get(ATTR_VARIABLES), context)
-        except Exception as err:
-            self.script.async_log_exception(
-                _LOGGER, f"Error executing script {self.entity_id}", err
-            )
-            raise err
+        await self.script.async_run(kwargs.get(ATTR_VARIABLES), context)
 
     async def async_turn_off(self, **kwargs):
         """Turn script off."""
-        self.script.async_stop()
+        await self.script.async_stop()
 
     async def async_will_remove_from_hass(self):
         """Stop script and remove service when it will be removed from Home Assistant."""
-        if self.script.is_running:
-            self.script.async_stop()
+        await self.script.async_stop()
 
         # remove service
         self.hass.services.async_remove(DOMAIN, self.object_id)

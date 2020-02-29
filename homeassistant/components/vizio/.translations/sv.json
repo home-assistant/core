@@ -6,7 +6,7 @@
             "already_setup_with_diff_host_and_name": "Den h\u00e4r posten verkar redan ha st\u00e4llts in med en annan v\u00e4rd och ett annat namn baserat p\u00e5 dess serienummer. Ta bort alla gamla poster fr\u00e5n configuration.yaml och fr\u00e5n menyn Integrationer innan du f\u00f6rs\u00f6ker l\u00e4gga till den h\u00e4r enheten igen.",
             "host_exists": "Vizio-komponenten med v\u00e4rdnamnet \u00e4r redan konfigurerad.",
             "name_exists": "Vizio-komponent med namn redan konfigurerad.",
-            "updated_entry": "Den h\u00e4r posten har redan konfigurerats men namnet och/eller alternativen som definierats i konfigurationen matchar inte den tidigare importerade konfigurationen s\u00e5 konfigureringsposten har uppdaterats i enlighet med detta.",
+            "updated_entry": "Den h\u00e4r posten har redan konfigurerats, men namnet och/eller alternativen som definierats i konfigurationen matchar inte den tidigare importerade konfigurationen och d\u00e4rf\u00f6r har konfigureringsposten uppdaterats i enlighet med detta.",
             "updated_options": "Den h\u00e4r posten har redan st\u00e4llts in men de alternativ som definierats i konfigurationen matchar inte de tidigare importerade alternativv\u00e4rdena s\u00e5 konfigurationsposten har uppdaterats i enlighet med detta.",
             "updated_volume_step": "Den h\u00e4r posten har redan st\u00e4llts in men volymstegstorleken i konfigurationen matchar inte konfigurationsposten s\u00e5 konfigurationsposten har uppdaterats i enlighet med detta."
         },

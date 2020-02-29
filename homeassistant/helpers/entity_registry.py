@@ -392,11 +392,14 @@ class EntityRegistry:
                     unique_id=entity["unique_id"],
                     platform=entity["platform"],
                     name=entity.get("name"),
+                    icon=entity.get("icon"),
                     disabled_by=entity.get("disabled_by"),
                     capabilities=entity.get("capabilities") or {},
                     supported_features=entity.get("supported_features", 0),
                     device_class=entity.get("device_class"),
                     unit_of_measurement=entity.get("unit_of_measurement"),
+                    original_name=entity.get("original_name"),
+                    original_icon=entity.get("original_icon"),
                 )
 
         self.entities = entities
@@ -419,11 +422,14 @@ class EntityRegistry:
                 "unique_id": entry.unique_id,
                 "platform": entry.platform,
                 "name": entry.name,
+                "icon": entry.icon,
                 "disabled_by": entry.disabled_by,
                 "capabilities": entry.capabilities,
                 "supported_features": entry.supported_features,
                 "device_class": entry.device_class,
                 "unit_of_measurement": entry.unit_of_measurement,
+                "original_name": entry.original_name,
+                "original_icon": entry.original_icon,
             }
             for entry in self.entities.values()
         ]

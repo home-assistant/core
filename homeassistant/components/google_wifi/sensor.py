@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     STATE_UNKNOWN,
+    TIME_DAYS,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -39,7 +40,7 @@ MONITORED_CONDITIONS = {
         "mdi:checkbox-marked-circle-outline",
     ],
     ATTR_NEW_VERSION: [["software", "updateNewVersion"], None, "mdi:update"],
-    ATTR_UPTIME: [["system", "uptime"], "days", "mdi:timelapse"],
+    ATTR_UPTIME: [["system", "uptime"], TIME_DAYS, "mdi:timelapse"],
     ATTR_LAST_RESTART: [["system", "uptime"], None, "mdi:restart"],
     ATTR_LOCAL_IP: [["wan", "localIpAddress"], None, "mdi:access-point-network"],
     ATTR_STATUS: [["wan", "online"], None, "mdi:google"],

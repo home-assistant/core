@@ -402,7 +402,20 @@ def service(value: Any) -> str:
     raise vol.Invalid(f"Service {value} does not match format <domain>.<name>")
 
 
-def schema_with_slug_keys(value_schema: Union[T, Callable]) -> Callable:
+def slug(value: Any) -> str:
+    """Validate value is a valid slug."""
+    if value is None:
+        raise vol.Invalid("Slug should not be None")
+    str_value = str(value)
+    slg = util_slugify(str_value)
+    if str_value == slg:
+        return str_value
+    raise vol.Invalid(f"invalid slug {value} (try {slg})")
+
+
+def schema_with_slug_keys(
+    value_schema: Union[T, Callable], *, slug_validator: Callable[[Any], str] = slug
+) -> Callable:
     """Ensure dicts have slugs as keys.
 
     Replacement of vol.Schema({cv.slug: value_schema}) to prevent misleading
@@ -416,22 +429,11 @@ def schema_with_slug_keys(value_schema: Union[T, Callable]) -> Callable:
             raise vol.Invalid("expected dictionary")
 
         for key in value.keys():
-            slug(key)
+            slug_validator(key)
 
         return cast(Dict, schema(value))
 
     return verify
-
-
-def slug(value: Any) -> str:
-    """Validate value is a valid slug."""
-    if value is None:
-        raise vol.Invalid("Slug should not be None")
-    str_value = str(value)
-    slg = util_slugify(str_value)
-    if str_value == slg:
-        return str_value
-    raise vol.Invalid(f"invalid slug {value} (try {slg})")
 
 
 def slugify(value: Any) -> str:
@@ -704,6 +706,30 @@ def deprecated(
     return validator
 
 
+def key_value_schemas(
+    key: str, value_schemas: Dict[str, vol.Schema]
+) -> Callable[[Any], Dict[str, Any]]:
+    """Create a validator that validates based on a value for specific key.
+
+    This gives better error messages.
+    """
+
+    def key_value_validator(value: Any) -> Dict[str, Any]:
+        if not isinstance(value, dict):
+            raise vol.Invalid("Expected a dictionary")
+
+        key_value = value.get(key)
+
+        if key_value not in value_schemas:
+            raise vol.Invalid(
+                f"Unexpected key {key_value}. Expected {', '.join(value_schemas)}"
+            )
+
+        return cast(Dict[str, Any], value_schemas[key_value](value))
+
+    return key_value_validator
+
+
 # Validator helpers
 
 
@@ -899,16 +925,19 @@ DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
 
 DEVICE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
-CONDITION_SCHEMA: vol.Schema = vol.Any(
-    NUMERIC_STATE_CONDITION_SCHEMA,
-    STATE_CONDITION_SCHEMA,
-    SUN_CONDITION_SCHEMA,
-    TEMPLATE_CONDITION_SCHEMA,
-    TIME_CONDITION_SCHEMA,
-    ZONE_CONDITION_SCHEMA,
-    AND_CONDITION_SCHEMA,
-    OR_CONDITION_SCHEMA,
-    DEVICE_CONDITION_SCHEMA,
+CONDITION_SCHEMA: vol.Schema = key_value_schemas(
+    CONF_CONDITION,
+    {
+        "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
+        "state": STATE_CONDITION_SCHEMA,
+        "sun": SUN_CONDITION_SCHEMA,
+        "template": TEMPLATE_CONDITION_SCHEMA,
+        "time": TIME_CONDITION_SCHEMA,
+        "zone": ZONE_CONDITION_SCHEMA,
+        "and": AND_CONDITION_SCHEMA,
+        "or": OR_CONDITION_SCHEMA,
+        "device": DEVICE_CONDITION_SCHEMA,
+    },
 )
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema(

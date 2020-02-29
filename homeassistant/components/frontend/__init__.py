@@ -50,8 +50,8 @@ MANIFEST_JSON = {
     "display": "standalone",
     "icons": [
         {
-            "src": "/static/icons/favicon-{size}x{size}.png".format(size=size),
-            "sizes": "{size}x{size}".format(size=size),
+            "src": f"/static/icons/favicon-{size}x{size}.png",
+            "sizes": f"{size}x{size}",
             "type": "image/png",
             "purpose": "maskable any",
         }
@@ -171,6 +171,8 @@ def async_register_built_in_panel(
     frontend_url_path=None,
     config=None,
     require_admin=False,
+    *,
+    update=False,
 ):
     """Register a built-in panel."""
     panel = Panel(
@@ -184,8 +186,8 @@ def async_register_built_in_panel(
 
     panels = hass.data.setdefault(DATA_PANELS, {})
 
-    if panel.frontend_url_path in panels:
-        _LOGGER.warning("Overwriting integration %s", panel.frontend_url_path)
+    if not update and panel.frontend_url_path in panels:
+        raise ValueError(f"Overwriting panel {panel.frontend_url_path}")
 
     panels[panel.frontend_url_path] = panel
 
@@ -508,6 +510,23 @@ def websocket_get_themes(hass, connection, msg):
 
     Async friendly.
     """
+    if hass.config.safe_mode:
+        connection.send_message(
+            websocket_api.result_message(
+                msg["id"],
+                {
+                    "themes": {
+                        "safe_mode": {
+                            "primary-color": "#db4437",
+                            "accent-color": "#eeee02",
+                        }
+                    },
+                    "default_theme": "safe_mode",
+                },
+            )
+        )
+        return
+
     connection.send_message(
         websocket_api.result_message(
             msg["id"],
