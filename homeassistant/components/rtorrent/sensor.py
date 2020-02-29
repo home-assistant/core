@@ -33,12 +33,12 @@ SENSOR_TYPES = {
     SENSOR_TYPE_CURRENT_STATUS: ["Status", None],
     SENSOR_TYPE_DOWNLOAD_SPEED: ["Down Speed", DATA_RATE_KILOBYTES_PER_SECOND],
     SENSOR_TYPE_UPLOAD_SPEED: ["Up Speed", DATA_RATE_KILOBYTES_PER_SECOND],
-    SENSOR_TYPE_ALL_TORRENTS : ["All Torrents", None],
-    SENSOR_TYPE_STOPPED_TORRENTS : ["Stopped Torrents", None],
-    SENSOR_TYPE_COMPLETE_TORRENTS : ["Complete Torrents", None],
-    SENSOR_TYPE_UPLOADING_TORRENTS : ["Uploading Torrents", None],
-    SENSOR_TYPE_DOWNLOADING_TORRENTS : ["Downloading Torrents", None],
-    SENSOR_TYPE_ACTIVE_TORRENTS : ["Active Torrents", None],
+    SENSOR_TYPE_ALL_TORRENTS: ["All Torrents", None],
+    SENSOR_TYPE_STOPPED_TORRENTS: ["Stopped Torrents", None],
+    SENSOR_TYPE_COMPLETE_TORRENTS: ["Complete Torrents", None],
+    SENSOR_TYPE_UPLOADING_TORRENTS: ["Uploading Torrents", None],
+    SENSOR_TYPE_DOWNLOADING_TORRENTS: ["Downloading Torrents", None],
+    SENSOR_TYPE_ACTIVE_TORRENTS: ["Active Torrents", None],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
