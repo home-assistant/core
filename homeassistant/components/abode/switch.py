@@ -55,7 +55,7 @@ class AbodeAutomationSwitch(AbodeAutomation, SwitchDevice):
         """Subscribe Abode events."""
         await super().async_added_to_hass()
 
-        signal = f"abode_trigger_quick_action_{self.entity_id}"
+        signal = f"abode_trigger_automation_{self.entity_id}"
         async_dispatcher_connect(self.hass, signal, self.trigger)
 
     def turn_on(self, **kwargs):

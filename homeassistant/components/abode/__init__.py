@@ -195,7 +195,7 @@ def setup_hass_services(hass):
         ]
 
         for entity_id in target_entities:
-            signal = f"abode_trigger_quick_action_{entity_id}"
+            signal = f"abode_trigger_automation_{entity_id}"
             dispatcher_send(hass, signal)
 
     hass.services.register(
