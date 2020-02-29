@@ -301,10 +301,6 @@ class IntesisAC(ClimateDevice):
         ih_preset_mode = MAP_PRESET_MODE_TO_IH.get(preset_mode)
         await self._controller.set_preset_mode(self._device_id, ih_preset_mode)
 
-        # Updates can take longer than 2 seconds, so update locally
-        self._preset = ih_preset_mode
-        self.async_write_ha_state()
-
     async def async_set_swing_mode(self, swing_mode):
         """Set the vertical vane."""
         swing_settings = MAP_SWING_TO_IH.get(swing_mode)
