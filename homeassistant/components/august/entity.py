@@ -18,7 +18,6 @@ class AugustEntityMixin(Entity):
         super().__init__()
         self._data = data
         self._device = device
-        self._undo_dispatch_subscription = None
 
     @property
     def should_poll(self):
