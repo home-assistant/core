@@ -24,10 +24,10 @@ def create_mock_device(platform, spec):
     return device
 
 
-def get_bridge_from_hass(hass_obj):
+def get_bridge_from_hass(hass):
     """Get the bridge from hass.data."""
-    key = next(iter(hass_obj.data[dynalite.DOMAIN]))
-    return hass_obj.data[dynalite.DOMAIN][key]
+    key = next(iter(hass.data[dynalite.DOMAIN]))
+    return hass.data[dynalite.DOMAIN][key]
 
 
 async def create_entity_from_device(hass, device):
@@ -53,16 +53,14 @@ async def create_entity_from_device(hass, device):
     await hass.async_block_till_done()
 
 
-async def run_service_tests(hass_obj, device, platform, services):
+async def run_service_tests(hass, device, platform, services):
     """Run a series of service calls and check that the entity and device behave correctly."""
     for cur_item in services:
         service = cur_item[ATTR_SERVICE]
         args = cur_item.get(ATTR_ARGS, {})
         service_data = {"entity_id": f"{platform}.name", **args}
-        await hass_obj.services.async_call(
-            platform, service, service_data, blocking=True
-        )
-        await hass_obj.async_block_till_done()
+        await hass.services.async_call(platform, service, service_data, blocking=True)
+        await hass.async_block_till_done()
         for check_item in services:
             check_method = getattr(device, check_item[ATTR_METHOD])
             if check_item[ATTR_SERVICE] == service:
