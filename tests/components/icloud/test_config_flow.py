@@ -59,6 +59,20 @@ def mock_controller_service_with_cookie():
         yield service_mock
 
 
+@pytest.fixture(name="service_with_cookie_no_device")
+def mock_controller_service_with_cookie_no_device():
+    """Mock a successful service while already authenticate, but without device."""
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService"
+    ) as service_mock:
+        service_mock.return_value.requires_2sa = False
+        service_mock.return_value.trusted_devices = TRUSTED_DEVICES
+        service_mock.return_value.send_verification_code = Mock(return_value=True)
+        service_mock.return_value.validate_verification_code = Mock(return_value=True)
+        service_mock.return_value.devices = {}
+        yield service_mock
+
+
 @pytest.fixture(name="service_send_verification_code_failed")
 def mock_controller_service_send_verification_code_failed():
     """Mock a failed service during sending verification code step."""
@@ -210,7 +224,7 @@ async def test_two_accounts_setup(
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
 
-async def test_abort_if_already_setup(hass: HomeAssistantType):
+async def test_already_setup(hass: HomeAssistantType):
     """Test we abort if the account is already setup."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -240,7 +254,7 @@ async def test_abort_if_already_setup(hass: HomeAssistantType):
 async def test_login_failed(hass: HomeAssistantType):
     """Test when we have errors during login."""
     with patch(
-        "pyicloud.base.PyiCloudService.authenticate",
+        "homeassistant.components.icloud.config_flow.PyiCloudService.authenticate",
         side_effect=PyiCloudFailedLoginException(),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -250,6 +264,19 @@ async def test_login_failed(hass: HomeAssistantType):
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {CONF_USERNAME: "login"}
+
+
+async def test_devices_failed(
+    hass: HomeAssistantType, service_with_cookie_no_device: MagicMock
+):
+    """Test when we have no devices."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "no_device"
 
 
 async def test_trusted_device(hass: HomeAssistantType, service: MagicMock):

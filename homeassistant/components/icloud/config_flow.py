@@ -3,7 +3,11 @@ import logging
 import os
 
 from pyicloud import PyiCloudService
-from pyicloud.exceptions import PyiCloudException, PyiCloudFailedLoginException
+from pyicloud.exceptions import (
+    PyiCloudException,
+    PyiCloudFailedLoginException,
+    PyiCloudNoDevicesException,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -100,6 +104,17 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if self.api.requires_2sa:
             return await self.async_step_trusted_device()
+
+        try:
+            devices = await self.hass.async_add_executor_job(
+                getattr, self.api, "devices"
+            )
+            if not devices:
+                raise PyiCloudNoDevicesException()
+        except (KeyError, PyiCloudNoDevicesException):
+            _LOGGER.error("No device found in the iCloud account: %s", self._username)
+            self.api = None
+            return self.async_abort(reason="no_device")
 
         return self.async_create_entry(
             title=self._username,
