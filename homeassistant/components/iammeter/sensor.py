@@ -54,12 +54,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        # Name of the data. For logging purposes.
         name=DEFAULT_DEVICE_NAME,
         update_method=async_update_data,
-        # Polling interval. Will only be polled if there are subscribers.
         update_interval=SCAN_INTERVAL,
-        # Debouncer to limit request_refresh
         request_refresh_debouncer=debounce.Debouncer(
             hass, _LOGGER, cooldown=0.3, immediate=True
         ),
