@@ -1312,7 +1312,7 @@ pyicloud==0.9.2
 pyintesishome==1.6
 
 # homeassistant.components.ipma
-pyipma==2.0.4
+pyipma==2.0.5
 
 # homeassistant.components.iqvia
 pyiqvia==0.2.1
