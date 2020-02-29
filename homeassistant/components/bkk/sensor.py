@@ -49,7 +49,10 @@ async def async_create_group(hass, name, entities):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up bkk platform."""
-    data_updater = BkkDataUpdater(config)
+    data_updater = BkkDataUpdater(config[CONF_STOP],
+                                  config[CONF_GROUPED],
+                                  config[CONF_ONLY_DEPARTURES],
+                                  config[CONF_MINUTES_AFTER])
     try:
         data_updater.get_data()
     except ConnectionError:
@@ -91,22 +94,21 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class BkkDataUpdater(Entity):
     """Data updater class to query api and update entity data."""
 
-    def __init__(self, config):
+    def __init__(self, stop_id, grouped, only_departures, minutes_after):
         """Initialize the sensor."""
         self._name = "BKK Data Updater"
         self.api = futar.BkkFutar()
         self.routes = None
-        self.stop_id = (
-            f"BKK_{config[CONF_STOP][1:]}"
-            if config[CONF_STOP][0] == "#"
-            else f"BKK_{config[CONF_STOP]}"
-        )
+        if stop_id[0] == "#":
+            self.stop_id = f"BKK_{stop_id[1:]}"
+        else:
+            self.stop_id = f"BKK_{stop_id}"
         self._data = None
         self._state = None
         self._icon = ICONS["API"]
-        self.is_grouped = config[CONF_GROUPED]
-        self._only_departures = config[CONF_ONLY_DEPARTURES]
-        self._minutes_after = config[CONF_MINUTES_AFTER]
+        self.is_grouped = grouped
+        self._only_departures = only_departures
+        self._minutes_after = minutes_after
 
     def get_data(self):
         """Fetch data from BKK api."""
@@ -136,11 +138,6 @@ class BkkDataUpdater(Entity):
     def state(self):
         """Get BKKDataUpdater state."""
         return self._state
-
-    @property
-    def hidden(self) -> bool:
-        """Set BKKDataUpdater hidden."""
-        return True
 
     @property
     def name(self):
@@ -182,7 +179,7 @@ class BkkRoute(Entity):
 
     def __init__(self, stop_id, idx, vehicle_type):
         """Initialize the sensor."""
-        self._id = self._line = ""
+        self._id = self._line = None
         self._name = None
         self._entity_idx = idx
         self._stop_id = stop_id
