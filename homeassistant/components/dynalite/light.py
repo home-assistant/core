@@ -13,7 +13,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         return DynaliteLight(device, bridge)
 
     async_setup_entry_base(
-        "light", hass, config_entry, async_add_entities, light_from_device
+        hass, config_entry, async_add_entities, "light", light_from_device
     )
 
 

@@ -6,7 +6,7 @@ from .const import DOMAIN, LOGGER
 
 
 def async_setup_entry_base(
-    platform, hass, config_entry, async_add_entities, entity_from_device
+    hass, config_entry, async_add_entities, platform, entity_from_device
 ):
     """Record the async_add_entities function to add them later when received from Dynalite."""
     LOGGER.debug("Setting up %s entry = %s", platform, config_entry.data)
