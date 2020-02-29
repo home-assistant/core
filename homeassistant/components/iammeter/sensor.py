@@ -81,7 +81,6 @@ class IamMeter(Entity):
         self.sensor_name = sensor_name
         self.unit = unit
         self.dev_name = dev_name
-        self.idx = uid
 
     @property
     def state(self):
