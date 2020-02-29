@@ -60,7 +60,6 @@ class DynaliteBase:  # Deriving from Object so it doesn't override the entity (l
     async def async_added_to_hass(self):
         """Added to hass so need to register to dispatch."""
         # register for device specific update
-        # pylint: disable=no-member
         async_dispatcher_connect(
             self.hass,
             self._bridge.update_signal(self._device),
