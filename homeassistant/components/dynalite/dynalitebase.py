@@ -71,7 +71,7 @@ class DynaliteBase(Entity):
         )
         # register for wide update
         self._unsub_dispatchers.append(
-            (
+            async_dispatcher_connect(
                 self.hass,
                 self._bridge.update_signal(),
                 self.async_schedule_update_ha_state,

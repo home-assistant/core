@@ -6,8 +6,6 @@ from asynctest import patch
 from homeassistant.components import dynalite
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
-
 
 async def test_empty_config(hass):
     """Test with an empty config."""
@@ -89,9 +87,6 @@ async def test_async_setup_failed(hass):
 async def test_unload_entry(hass):
     """Test being able to unload an entry."""
     host = "1.2.3.4"
-    entry = MockConfigEntry(domain=dynalite.DOMAIN, data={"host": host})
-    entry.add_to_hass(hass)
-
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
         return_value=True,
@@ -104,8 +99,8 @@ async def test_unload_entry(hass):
             {dynalite.DOMAIN: {dynalite.CONF_BRIDGES: [{dynalite.CONF_HOST: host}]}},
         )
         await hass.async_block_till_done()
-    assert hass.data[dynalite.DOMAIN].get(entry.entry_id)
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert len(hass.data[dynalite.DOMAIN]) == 1
+    entry_id = next(iter(hass.data[dynalite.DOMAIN]))
+    assert await hass.config_entries.async_unload(entry_id)
     await hass.async_block_till_done()
-    assert not hass.data[dynalite.DOMAIN].get(entry.entry_id)
+    assert not hass.data[dynalite.DOMAIN].get(entry_id)

@@ -3,6 +3,7 @@
 from dynalite_devices_lib.light import DynaliteChannelLightDevice
 import pytest
 
+from homeassistant.components import dynalite
 from homeassistant.components.light import SUPPORT_BRIGHTNESS
 
 from .common import (
@@ -36,3 +37,14 @@ async def test_light_setup(hass, mock_device):
             {ATTR_SERVICE: "turn_off", ATTR_METHOD: "async_turn_off"},
         ],
     )
+
+
+async def test_remove_entity(hass, mock_device):
+    """Test when an entity is removed from HA."""
+    await create_entity_from_device(hass, mock_device)
+    assert hass.states.get("light.name")
+    assert len(hass.data[dynalite.DOMAIN]) == 1
+    entry_id = next(iter(hass.data[dynalite.DOMAIN]))
+    assert await hass.config_entries.async_unload(entry_id)
+    await hass.async_block_till_done()
+    assert not hass.states.get("light.name")
