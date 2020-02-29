@@ -1,7 +1,7 @@
 """Test Dynalite bridge."""
 
 from asynctest import Mock, call, patch
-from dynalite_devices_lib import CONF_ALL
+from dynalite_devices_lib.const import CONF_ALL
 import pytest
 
 from homeassistant.components import dynalite

@@ -2,7 +2,7 @@
 
 import asyncio
 
-from dynalite_devices_lib import DynaliteDevices
+from dynalite_devices_lib.dynalite_devices import DynaliteDevices
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
