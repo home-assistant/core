@@ -32,7 +32,7 @@ PLATFORMS = ["alarm_control_panel", "binary_sensor"]
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up from existing/saved configuration."""
-    conf = config.get(DOMAIN)
+    conf = config[DOMAIN]
     if conf is None:
         return True
 
@@ -50,8 +50,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data.setdefault(DOMAIN, {})
 
     conf = entry.data
-    username = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
+    username = conf[CONF_USERNAME]
+    password = conf[CONF_PASSWORD]
 
     client = TotalConnectClient.TotalConnectClient(username, password)
 
