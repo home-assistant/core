@@ -3,13 +3,14 @@
 import logging
 
 from homeassistant.core import callback
+from homeassistant.helpers.entity import Entity
 
 from . import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class AugustEntityMixin:
+class AugustEntityMixin(Entity):
     """Base implementation for August device."""
 
     def __init__(self, data, device):
