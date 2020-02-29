@@ -82,3 +82,42 @@ async def test_create_lock_with_linked_keypad(hass):
     )
     assert entry
     assert entry.unique_id == "A6697750D607098BAE8D6BAA11EF8063_linked_keypad_battery"
+
+
+async def test_create_lock_with_low_battery_linked_keypad(hass):
+    """Test creation of a lock with a linked keypad that both have a battery."""
+    lock_one = await _mock_lock_from_fixture(hass, "get_lock.low_keypad_battery.json")
+    await _create_august_with_devices(hass, [lock_one])
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+
+    sensor_a6697750d607098bae8d6baa11ef8063_name_battery = hass.states.get(
+        "sensor.a6697750d607098bae8d6baa11ef8063_name_battery"
+    )
+    assert sensor_a6697750d607098bae8d6baa11ef8063_name_battery.state == "88"
+    assert (
+        sensor_a6697750d607098bae8d6baa11ef8063_name_battery.attributes[
+            "unit_of_measurement"
+        ]
+        == "%"
+    )
+    entry = entity_registry.async_get(
+        "sensor.a6697750d607098bae8d6baa11ef8063_name_battery"
+    )
+    assert entry
+    assert entry.unique_id == "A6697750D607098BAE8D6BAA11EF8063_device_battery"
+
+    sensor_a6697750d607098bae8d6baa11ef8063_name_keypad_battery = hass.states.get(
+        "sensor.a6697750d607098bae8d6baa11ef8063_name_keypad_battery"
+    )
+    assert sensor_a6697750d607098bae8d6baa11ef8063_name_keypad_battery.state == "10"
+    assert (
+        sensor_a6697750d607098bae8d6baa11ef8063_name_keypad_battery.attributes[
+            "unit_of_measurement"
+        ]
+        == "%"
+    )
+    entry = entity_registry.async_get(
+        "sensor.a6697750d607098bae8d6baa11ef8063_name_keypad_battery"
+    )
+    assert entry
+    assert entry.unique_id == "A6697750D607098BAE8D6BAA11EF8063_linked_keypad_battery"

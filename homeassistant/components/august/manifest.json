@@ -3,7 +3,7 @@
   "name": "August",
   "documentation": "https://www.home-assistant.io/integrations/august",
   "requirements": [
-    "py-august==0.21.0"
+    "py-august==0.22.0"
   ],
   "dependencies": [
     "configurator"
