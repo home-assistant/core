@@ -10,6 +10,7 @@ from pyicloud.services.findmyiphone import AppleDevice
 
 from homeassistant.components.zone import async_active_zone
 from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.storage import Store
@@ -37,7 +38,7 @@ from .const import (
     DEVICE_STATUS,
     DEVICE_STATUS_CODES,
     DEVICE_STATUS_SET,
-    SERVICE_UPDATE,
+    DOMAIN,
 )
 
 ATTRIBUTION = "Data provided by Apple iCloud"
@@ -91,7 +92,7 @@ class IcloudAccount:
         self._family_members_fullname = {}
         self._devices = {}
 
-        self.unsub_device_tracker = None
+        self.listeners = []
 
     def setup(self) -> None:
         """Set up an iCloud account."""
@@ -105,12 +106,22 @@ class IcloudAccount:
             return
 
         user_info = None
+        api_devices = {}
         try:
+            api_devices = self.api.devices
             # Gets device owners infos
-            user_info = self.api.devices.response["userInfo"]
-        except PyiCloudNoDevicesException:
+            user_info = api_devices.response["userInfo"]
+        except (KeyError, PyiCloudNoDevicesException):
             _LOGGER.error("No iCloud device found")
-            return
+            raise ConfigEntryNotReady
+
+        if not api_devices:
+            _LOGGER.error("No iCloud device found")
+            raise ConfigEntryNotReady
+
+        if DEVICE_STATUS_CODES.get(list(api_devices)[0][DEVICE_STATUS]) == "pending":
+            _LOGGER.warning("Pending devices, trying again ...")
+            raise ConfigEntryNotReady
 
         self._owner_fullname = f"{user_info['firstName']} {user_info['lastName']}"
 
@@ -132,13 +143,21 @@ class IcloudAccount:
         api_devices = {}
         try:
             api_devices = self.api.devices
-        except PyiCloudNoDevicesException:
-            _LOGGER.error("No iCloud device found")
-            return
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.error("Unknown iCloud error: %s", err)
-            self._fetch_interval = 5
-            dispatcher_send(self.hass, SERVICE_UPDATE)
+            self._fetch_interval = 2
+            dispatcher_send(self.hass, self.signal_device_update)
+            track_point_in_utc_time(
+                self.hass,
+                self.keep_alive,
+                utcnow() + timedelta(minutes=self._fetch_interval),
+            )
+            return
+
+        if DEVICE_STATUS_CODES.get(list(api_devices)[0][DEVICE_STATUS]) == "pending":
+            _LOGGER.warning("Pending devices, trying again in 15s")
+            self._fetch_interval = 0.25
+            dispatcher_send(self.hass, self.signal_device_update)
             track_point_in_utc_time(
                 self.hass,
                 self.keep_alive,
@@ -147,10 +166,19 @@ class IcloudAccount:
             return
 
         # Gets devices infos
+        new_device = False
         for device in api_devices:
             status = device.status(DEVICE_STATUS_SET)
             device_id = status[DEVICE_ID]
             device_name = status[DEVICE_NAME]
+            device_status = DEVICE_STATUS_CODES.get(status[DEVICE_STATUS], "error")
+
+            if (
+                device_status == "pending"
+                or status[DEVICE_BATTERY_STATUS] == "Unknown"
+                or status.get(DEVICE_BATTERY_LEVEL) is None
+            ):
+                continue
 
             if self._devices.get(device_id, None) is not None:
                 # Seen device -> updating
@@ -165,9 +193,14 @@ class IcloudAccount:
                 )
                 self._devices[device_id] = IcloudDevice(self, device, status)
                 self._devices[device_id].update(status)
+                new_device = True
 
         self._fetch_interval = self._determine_interval()
-        dispatcher_send(self.hass, SERVICE_UPDATE)
+
+        dispatcher_send(self.hass, self.signal_device_update)
+        if new_device:
+            dispatcher_send(self.hass, self.signal_device_new)
+
         track_point_in_utc_time(
             self.hass,
             self.keep_alive,
@@ -291,6 +324,16 @@ class IcloudAccount:
         """Return the account devices."""
         return self._devices
 
+    @property
+    def signal_device_new(self) -> str:
+        """Event specific per Freebox entry to signal new device."""
+        return f"{DOMAIN}-{self._username}-device-new"
+
+    @property
+    def signal_device_update(self) -> str:
+        """Event specific per Freebox entry to signal updates in devices."""
+        return f"{DOMAIN}-{self._username}-device-update"
+
 
 class IcloudDevice:
     """Representation of a iCloud device."""
@@ -348,6 +391,8 @@ class IcloudDevice:
                 and self._status[DEVICE_LOCATION][DEVICE_LOCATION_LATITUDE]
             ):
                 location = self._status[DEVICE_LOCATION]
+                if self._location is None:
+                    dispatcher_send(self._account.hass, self._account.signal_device_new)
                 self._location = location
 
     def play_sound(self) -> None:

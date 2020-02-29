@@ -1,7 +1,6 @@
 """iCloud component constants."""
 
 DOMAIN = "icloud"
-SERVICE_UPDATE = f"{DOMAIN}_update"
 
 CONF_MAX_INTERVAL = "max_interval"
 CONF_GPS_ACCURACY_THRESHOLD = "gps_accuracy_threshold"
