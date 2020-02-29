@@ -1,4 +1,5 @@
 """Config flow for Vizio."""
+import copy
 import logging
 from typing import Any, Dict
 
@@ -7,24 +8,25 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.media_player import DEVICE_CLASS_SPEAKER, DEVICE_CLASS_TV
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_ZEROCONF, ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_DEVICE_CLASS,
     CONF_HOST,
     CONF_NAME,
+    CONF_PIN,
     CONF_PORT,
     CONF_TYPE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import validate_auth
 from .const import (
     CONF_VOLUME_STEP,
     DEFAULT_DEVICE_CLASS,
     DEFAULT_NAME,
     DEFAULT_VOLUME_STEP,
+    DEVICE_ID,
     DOMAIN,
 )
 
@@ -42,7 +44,7 @@ def _get_config_schema(input_dict: Dict[str, Any] = None) -> vol.Schema:
                 CONF_NAME, default=input_dict.get(CONF_NAME, DEFAULT_NAME)
             ): str,
             vol.Required(CONF_HOST, default=input_dict.get(CONF_HOST)): str,
-            vol.Optional(
+            vol.Required(
                 CONF_DEVICE_CLASS,
                 default=input_dict.get(CONF_DEVICE_CLASS, DEFAULT_DEVICE_CLASS),
             ): vol.All(str, vol.Lower, vol.In([DEVICE_CLASS_TV, DEVICE_CLASS_SPEAKER])),
@@ -51,6 +53,17 @@ def _get_config_schema(input_dict: Dict[str, Any] = None) -> vol.Schema:
             ): str,
         },
         extra=vol.REMOVE_EXTRA,
+    )
+
+
+def _get_pairing_schema(input_dict: Dict[str, Any] = None) -> vol.Schema:
+    """Return schema defaults for pairing data based on user input. Retain info already provided for future form views by setting them as defaults in schema."""
+    if input_dict is None:
+        input_dict = {}
+
+    return vol.Schema(
+        {vol.Required(CONF_PIN, default=input_dict.get(CONF_PIN, "")): str},
+        extra=vol.ALLOW_EXTRA,
     )
 
 
@@ -101,6 +114,27 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize config flow."""
         self._user_schema = None
         self._must_show_form = None
+        self._ch_type = None
+        self._pairing_token = None
+        self._data = None
+
+    async def _create_entry_if_unique(
+        self, input_dict: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Check if unique_id doesn't already exist. If it does, abort. If it doesn't, create entry."""
+        unique_id = await VizioAsync.get_unique_id(
+            input_dict[CONF_HOST],
+            input_dict.get(CONF_ACCESS_TOKEN),
+            input_dict[CONF_DEVICE_CLASS],
+            session=async_get_clientsession(self.hass, False),
+        )
+
+        # Set unique ID and abort if unique ID is already configured on an entry or a flow
+        # with the unique ID is already in progress
+        await self.async_set_unique_id(unique_id=unique_id, raise_on_progress=True)
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(title=input_dict[CONF_NAME], data=input_dict)
 
     async def async_step_user(
         self, user_input: Dict[str, Any] = None
@@ -116,17 +150,18 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             for entry in self.hass.config_entries.async_entries(DOMAIN):
                 if _host_is_same(entry.data[CONF_HOST], user_input[CONF_HOST]):
                     errors[CONF_HOST] = "host_exists"
-                    break
-
                 if entry.data[CONF_NAME] == user_input[CONF_NAME]:
                     errors[CONF_NAME] = "name_exists"
-                    break
 
             if not errors:
-                try:
-                    # Ensure schema passes custom validation, otherwise catch exception and add error
-                    validate_auth(user_input)
-
+                # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+                if self._must_show_form and self.context["source"] == SOURCE_ZEROCONF:
+                    # Discovery should always display the config form before trying to
+                    # create entry so that user can update default config options
+                    self._must_show_form = False
+                elif user_input[
+                    CONF_DEVICE_CLASS
+                ] == DEVICE_CLASS_SPEAKER or user_input.get(CONF_ACCESS_TOKEN):
                     # Ensure config is valid for a device
                     if not await VizioAsync.validate_ha_config(
                         user_input[CONF_HOST],
@@ -135,37 +170,37 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         session=async_get_clientsession(self.hass, False),
                     ):
                         errors["base"] = "cant_connect"
-                except vol.Invalid:
-                    errors["base"] = "tv_needs_token"
 
-            if not errors:
-                # Skip validating config and creating entry if form must be shown
-                if self._must_show_form:
+                    if not errors:
+                        return await self._create_entry_if_unique(user_input)
+                # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+                elif self._must_show_form and self.context["source"] == SOURCE_IMPORT:
+                    # Import should always display the config form if CONF_ACCESS_TOKEN
+                    # wasn't included but is needed so that the user can choose to update
+                    # their configuration.yaml or to proceed with config flow pairing. We
+                    # will also provide contextual message to user explaining why
+                    _LOGGER.warning(
+                        "Couldn't complete configuration.yaml import: '%s' key is missing. To "
+                        "complete setup, '%s' can be obtained by going through pairing process "
+                        "via frontend Integrations menu; to avoid re-pairing your device in the "
+                        "future, once you have finished pairing, it is recommended to add "
+                        "obtained value to your config ",
+                        CONF_ACCESS_TOKEN,
+                        CONF_ACCESS_TOKEN,
+                    )
                     self._must_show_form = False
                 else:
-                    # Abort flow if existing entry with same unique ID matches new config entry.
-                    # Since name and host check have already passed, if an entry already exists,
-                    # It is likely a reconfigured device.
-                    unique_id = await VizioAsync.get_unique_id(
-                        user_input[CONF_HOST],
-                        user_input.get(CONF_ACCESS_TOKEN),
-                        user_input[CONF_DEVICE_CLASS],
-                        session=async_get_clientsession(self.hass, False),
-                    )
+                    self._data = copy.deepcopy(user_input)
+                    return await self.async_step_pair_tv()
 
-                    if await self.async_set_unique_id(
-                        unique_id=unique_id, raise_on_progress=True
-                    ):
-                        return self.async_abort(
-                            reason="already_setup_with_diff_host_and_name"
-                        )
-
-                    return self.async_create_entry(
-                        title=user_input[CONF_NAME], data=user_input
-                    )
-
-        # Use user_input params as default values for schema if user_input is non-empty, otherwise use default schema
         schema = self._user_schema or _get_config_schema()
+
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        if errors and self.context["source"] == SOURCE_IMPORT:
+            # Log an error message if import config flow fails since otherwise failure is silent
+            _LOGGER.error(
+                "configuration.yaml import failure: %s", ", ".join(errors.values())
+            )
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
@@ -201,6 +236,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 return self.async_abort(reason="already_setup")
 
+        self._must_show_form = True
         return await self.async_step_user(user_input=import_config)
 
     async def async_step_zeroconf(
@@ -231,7 +267,95 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             discovery_info[CONF_HOST]
         )
 
-        # Form must be shown after discovery so user can confirm/update configuration before ConfigEntry creation.
+        # Form must be shown after discovery so user can confirm/update configuration
+        # before ConfigEntry creation.
         self._must_show_form = True
-
         return await self.async_step_user(user_input=discovery_info)
+
+    async def async_step_pair_tv(
+        self, user_input: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
+        """Start pairing process and ask user for PIN to complete pairing process."""
+        errors = {}
+
+        # Start pairing process if it hasn't already started
+        if not self._ch_type and not self._pairing_token:
+            dev = VizioAsync(
+                DEVICE_ID,
+                self._data[CONF_HOST],
+                self._data[CONF_NAME],
+                None,
+                self._data[CONF_DEVICE_CLASS],
+                session=async_get_clientsession(self.hass, False),
+            )
+            pair_data = await dev.start_pair()
+
+            if pair_data:
+                self._ch_type = pair_data.ch_type
+                self._pairing_token = pair_data.token
+                return await self.async_step_pair_tv()
+
+            return self.async_show_form(
+                step_id="user",
+                data_schema=_get_config_schema(self._data),
+                errors={"base": "cant_connect"},
+            )
+
+        # Complete pairing process if PIN has been provided
+        if user_input and user_input.get(CONF_PIN):
+            dev = VizioAsync(
+                DEVICE_ID,
+                self._data[CONF_HOST],
+                self._data[CONF_NAME],
+                None,
+                self._data[CONF_DEVICE_CLASS],
+                session=async_get_clientsession(self.hass, False),
+            )
+            pair_data = await dev.pair(
+                self._ch_type, self._pairing_token, user_input[CONF_PIN]
+            )
+
+            if pair_data:
+                self._data[CONF_ACCESS_TOKEN] = pair_data.auth_token
+                self._must_show_form = True
+
+                # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+                if self.context["source"] == SOURCE_IMPORT:
+                    # If user is pairing via config import, show different message
+                    return await self.async_step_pairing_complete_import()
+
+                return await self.async_step_pairing_complete()
+
+            # If no data was retrieved, it's assumed that the pairing attempt was not
+            # successful
+            errors[CONF_PIN] = "complete_pairing_failed"
+
+        return self.async_show_form(
+            step_id="pair_tv",
+            data_schema=_get_pairing_schema(user_input),
+            errors=errors,
+        )
+
+    async def _pairing_complete(self, step_id: str) -> Dict[str, Any]:
+        """Handle config flow completion."""
+        if not self._must_show_form:
+            return await self._create_entry_if_unique(self._data)
+
+        self._must_show_form = False
+        return self.async_show_form(
+            step_id=step_id,
+            data_schema=vol.Schema({}),
+            description_placeholders={"access_token": self._data[CONF_ACCESS_TOKEN]},
+        )
+
+    async def async_step_pairing_complete(
+        self, user_input: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
+        """Complete non-import config flow by displaying final message to confirm pairing."""
+        return await self._pairing_complete("pairing_complete")
+
+    async def async_step_pairing_complete_import(
+        self, user_input: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
+        """Complete import config flow by displaying final message to show user access token and give further instructions."""
+        return await self._pairing_complete("pairing_complete_import")

@@ -146,7 +146,7 @@ class MediaPlayer(HomeAccessory):
 
     def generate_service_name(self, mode):
         """Generate name for individual service."""
-        return "{} {}".format(self.display_name, MODE_FRIENDLY_NAME[mode])
+        return f"{self.display_name} {MODE_FRIENDLY_NAME[mode]}"
 
     def set_on_off(self, value):
         """Move switch state to value if call came from HomeKit."""
@@ -287,7 +287,7 @@ class TelevisionMediaPlayer(HomeAccessory):
             )
             serv_tv.add_linked_service(serv_speaker)
 
-            name = "{} {}".format(self.display_name, "Volume")
+            name = f"{self.display_name} Volume"
             serv_speaker.configure_char(CHAR_NAME, value=name)
             serv_speaker.configure_char(CHAR_ACTIVE, value=1)
 

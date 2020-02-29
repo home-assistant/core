@@ -50,6 +50,16 @@ async def test_lovelace_from_storage(hass, hass_ws_client, hass_storage):
     assert not response["success"]
     assert response["error"]["code"] == "config_not_found"
 
+    await client.send_json(
+        {"id": 9, "type": "lovelace/config/save", "config": {"yo": "hello"}}
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+
+    await client.send_json({"id": 10, "type": "lovelace/config/delete"})
+    response = await client.receive_json()
+    assert not response["success"]
+
 
 async def test_lovelace_from_storage_save_before_load(
     hass, hass_ws_client, hass_storage
@@ -88,9 +98,7 @@ async def test_lovelace_from_storage_delete(hass, hass_ws_client, hass_storage):
     await client.send_json({"id": 7, "type": "lovelace/config/delete"})
     response = await client.receive_json()
     assert response["success"]
-    assert hass_storage[dashboard.CONFIG_STORAGE_KEY_DEFAULT]["data"] == {
-        "config": None
-    }
+    assert dashboard.CONFIG_STORAGE_KEY_DEFAULT not in hass_storage
 
     # Fetch data
     await client.send_json({"id": 8, "type": "lovelace/config"})
@@ -202,8 +210,9 @@ async def test_dashboard_from_yaml(hass, hass_ws_client, url_path):
                         "mode": "yaml",
                         "filename": "bla.yaml",
                         "sidebar": {"title": "Test Panel", "icon": "mdi:test-icon"},
+                        "require_admin": True,
                     },
-                    "test-panel-no-sidebar": {"mode": "yaml", "filename": "bla.yaml"},
+                    "test-panel-no-sidebar": {"mode": "yaml", "filename": "bla2.yaml"},
                 }
             }
         },
@@ -214,6 +223,25 @@ async def test_dashboard_from_yaml(hass, hass_ws_client, url_path):
     }
 
     client = await hass_ws_client(hass)
+
+    # List dashboards
+    await client.send_json({"id": 4, "type": "lovelace/dashboards/list"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert len(response["result"]) == 2
+    with_sb, without_sb = response["result"]
+
+    assert with_sb["mode"] == "yaml"
+    assert with_sb["filename"] == "bla.yaml"
+    assert with_sb["sidebar"] == {"title": "Test Panel", "icon": "mdi:test-icon"}
+    assert with_sb["require_admin"] is True
+    assert with_sb["url_path"] == "test-panel"
+
+    assert without_sb["mode"] == "yaml"
+    assert without_sb["filename"] == "bla2.yaml"
+    assert "sidebar" not in without_sb
+    assert without_sb["require_admin"] is False
+    assert without_sb["url_path"] == "test-panel-no-sidebar"
 
     # Fetch data
     await client.send_json({"id": 5, "type": "lovelace/config", "url_path": url_path})
@@ -265,3 +293,154 @@ async def test_dashboard_from_yaml(hass, hass_ws_client, url_path):
     assert response["result"] == {"hello": "yo2"}
 
     assert len(events) == 1
+
+
+async def test_storage_dashboards(hass, hass_ws_client, hass_storage):
+    """Test we load lovelace config from storage."""
+    assert await async_setup_component(hass, "lovelace", {})
+    assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "storage"}
+
+    client = await hass_ws_client(hass)
+
+    # Fetch data
+    await client.send_json({"id": 5, "type": "lovelace/dashboards/list"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == []
+
+    # Add a dashboard
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "lovelace/dashboards/create",
+            "url_path": "created_url_path",
+            "require_admin": True,
+            "sidebar": {"title": "Updated Title", "icon": "mdi:map"},
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"]["require_admin"] is True
+    assert response["result"]["sidebar"] == {
+        "title": "Updated Title",
+        "icon": "mdi:map",
+    }
+
+    dashboard_id = response["result"]["id"]
+
+    assert "created_url_path" in hass.data[frontend.DATA_PANELS]
+
+    await client.send_json({"id": 7, "type": "lovelace/dashboards/list"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert len(response["result"]) == 1
+    assert response["result"][0]["mode"] == "storage"
+    assert response["result"][0]["sidebar"] == {
+        "title": "Updated Title",
+        "icon": "mdi:map",
+    }
+    assert response["result"][0]["require_admin"] is True
+
+    # Fetch config
+    await client.send_json(
+        {"id": 8, "type": "lovelace/config", "url_path": "created_url_path"}
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "config_not_found"
+
+    # Store new config
+    events = async_capture_events(hass, const.EVENT_LOVELACE_UPDATED)
+
+    await client.send_json(
+        {
+            "id": 9,
+            "type": "lovelace/config/save",
+            "url_path": "created_url_path",
+            "config": {"yo": "hello"},
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert hass_storage[dashboard.CONFIG_STORAGE_KEY.format(dashboard_id)]["data"] == {
+        "config": {"yo": "hello"}
+    }
+    assert len(events) == 1
+    assert events[0].data["url_path"] == "created_url_path"
+
+    await client.send_json(
+        {"id": 10, "type": "lovelace/config", "url_path": "created_url_path"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"yo": "hello"}
+
+    # Update a dashboard
+    await client.send_json(
+        {
+            "id": 11,
+            "type": "lovelace/dashboards/update",
+            "dashboard_id": dashboard_id,
+            "require_admin": False,
+            "sidebar": None,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"]["require_admin"] is False
+    assert "sidebar" not in response["result"]
+
+    # Add dashboard with existing url path
+    await client.send_json(
+        {"id": 12, "type": "lovelace/dashboards/create", "url_path": "created_url_path"}
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+
+    # Delete dashboards
+    await client.send_json(
+        {"id": 13, "type": "lovelace/dashboards/delete", "dashboard_id": dashboard_id}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    assert "created_url_path" not in hass.data[frontend.DATA_PANELS]
+    assert dashboard.CONFIG_STORAGE_KEY.format(dashboard_id) not in hass_storage
+
+
+async def test_websocket_list_dashboards(hass, hass_ws_client):
+    """Test listing dashboards both storage + YAML."""
+    assert await async_setup_component(
+        hass,
+        "lovelace",
+        {
+            "lovelace": {
+                "dashboards": {
+                    "test-panel-no-sidebar": {"mode": "yaml", "filename": "bla.yaml"},
+                }
+            }
+        },
+    )
+
+    client = await hass_ws_client(hass)
+
+    # Create a storage dashboard
+    await client.send_json(
+        {"id": 6, "type": "lovelace/dashboards/create", "url_path": "created_url_path"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    # List dashboards
+    await client.send_json({"id": 7, "type": "lovelace/dashboards/list"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert len(response["result"]) == 2
+    with_sb, without_sb = response["result"]
+
+    assert with_sb["mode"] == "yaml"
+    assert with_sb["filename"] == "bla.yaml"
+    assert with_sb["url_path"] == "test-panel-no-sidebar"
+
+    assert without_sb["mode"] == "storage"
+    assert without_sb["url_path"] == "created_url_path"

@@ -318,13 +318,9 @@ def humanify(hass, events):
                 if entity_id:
                     state = hass.states.get(entity_id)
                     name = state.name if state else entity_id
-                    message = "send command {}/{} for {}".format(
-                        data["request"]["namespace"], data["request"]["name"], name
-                    )
+                    message = f"send command {data['request']['namespace']}/{data['request']['name']} for {name}"
                 else:
-                    message = "send command {}/{}".format(
-                        data["request"]["namespace"], data["request"]["name"]
-                    )
+                    message = f"send command {data['request']['namespace']}/{data['request']['name']}"
 
                 yield {
                     "when": event.time_fired,
@@ -342,9 +338,7 @@ def humanify(hass, events):
                 value = data.get(ATTR_VALUE)
 
                 value_msg = f" to {value}" if value else ""
-                message = "send command {}{} for {}".format(
-                    data[ATTR_SERVICE], value_msg, data[ATTR_DISPLAY_NAME]
-                )
+                message = f"send command {data[ATTR_SERVICE]}{value_msg} for {data[ATTR_DISPLAY_NAME]}"
 
                 yield {
                     "when": event.time_fired,

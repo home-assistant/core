@@ -278,6 +278,9 @@ avea==1.4
 # homeassistant.components.avion
 # avion==0.10
 
+# homeassistant.components.avri
+avri-api==0.1.6
+
 # homeassistant.components.axis
 axis==25
 
@@ -460,7 +463,7 @@ dsmr_parser==0.18
 dweepy==0.3.0
 
 # homeassistant.components.dynalite
-dynalite_devices==0.1.22
+dynalite_devices==0.1.26
 
 # homeassistant.components.rainforest_eagle
 eagle200_reader==0.2.1
@@ -687,7 +690,7 @@ hole==0.5.0
 holidays==0.10.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200220.4
+home-assistant-frontend==20200220.5
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.8

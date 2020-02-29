@@ -9,7 +9,12 @@ from pydeconz.sensor import (
     Thermostat,
 )
 
-from homeassistant.const import ATTR_TEMPERATURE, ATTR_VOLTAGE, DEVICE_CLASS_BATTERY
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    ATTR_VOLTAGE,
+    DEVICE_CLASS_BATTERY,
+    UNIT_PERCENTAGE,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -194,7 +199,7 @@ class DeconzBattery(DeconzDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
-        return "%"
+        return UNIT_PERCENTAGE
 
     @property
     def device_state_attributes(self):

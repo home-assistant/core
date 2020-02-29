@@ -1,7 +1,7 @@
 """Support for an Intergas boiler via an InComfort/InTouch Lan2RF gateway."""
 from typing import Any, Dict, List, Optional
 
-from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateDevice
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     SUPPORT_TARGET_TEMPERATURE,
@@ -32,7 +32,7 @@ class InComfortClimate(IncomfortChild, ClimateDevice):
         super().__init__()
 
         self._unique_id = f"{heater.serial_no}_{room.room_no}"
-        self.entity_id = ENTITY_ID_FORMAT.format(f"{DOMAIN}_{room.room_no}")
+        self.entity_id = f"{CLIMATE_DOMAIN}.{DOMAIN}_{room.room_no}"
         self._name = f"Thermostat {room.room_no}"
 
         self._client = client

@@ -113,7 +113,7 @@ class EmailReader:
             self.connection.select(self._folder, readonly=True)
 
             if not self._unread_ids:
-                search = "SINCE {0:%d-%b-%Y}".format(datetime.date.today())
+                search = f"SINCE {datetime.date.today():%d-%b-%Y}"
                 if self._last_id is not None:
                     search = f"UID {self._last_id}:*"
 

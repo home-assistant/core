@@ -166,5 +166,5 @@ async def setup_test_component(hass, setup_accessory, capitalize=False, suffix=N
     assert domain, "Cannot map test homekit services to Home Assistant domain"
 
     config_entry, pairing = await setup_test_accessories(hass, [accessory])
-    entity = "testdevice" if suffix is None else "testdevice_{}".format(suffix)
+    entity = "testdevice" if suffix is None else f"testdevice_{suffix}"
     return Helper(hass, ".".join((domain, entity)), pairing, accessory, config_entry)

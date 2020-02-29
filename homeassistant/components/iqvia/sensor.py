@@ -66,7 +66,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     }
 
     sensors = []
-    for sensor_type in iqvia.sensor_types:
+    for sensor_type in SENSORS:
         klass = sensor_class_mapping[sensor_type]
         name, icon = SENSORS[sensor_type]
         sensors.append(klass(iqvia, sensor_type, name, icon, iqvia.zip_code))
@@ -198,6 +198,6 @@ class IndexSensor(IQVIAEntity):
                 )
         elif self._type == TYPE_DISEASE_TODAY:
             for attrs in period["Triggers"]:
-                self._attrs["{0}_index".format(attrs["Name"].lower())] = attrs["Index"]
+                self._attrs[f"{attrs['Name'].lower()}_index"] = attrs["Index"]
 
         self._state = period["Index"]

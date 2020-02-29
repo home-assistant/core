@@ -8,8 +8,6 @@ CONF_ACCESS_TOKEN_CACHE_FILE = "access_token_cache_file"
 CONF_LOGIN_METHOD = "login_method"
 CONF_INSTALL_ID = "install_id"
 
-AUGUST_DEVICE_UPDATE = "august_devices_update"
-
 VERIFICATION_CODE_KEY = "verification_code"
 
 NOTIFICATION_ID = "august_notification"
