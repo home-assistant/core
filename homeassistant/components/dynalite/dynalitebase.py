@@ -54,7 +54,7 @@ class DynaliteBase(Entity):
     def device_info(self):
         """Device info for this entity."""
         return {
-            "identifiers": {(DOMAIN, self.unique_id)},
+            "identifiers": {(DOMAIN, self._device.unique_id)},
             "name": self.name,
             "manufacturer": "Dynalite",
         }
