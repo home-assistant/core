@@ -1,7 +1,6 @@
 """Test Dynalite config flow."""
-from itertools import chain, repeat
 
-from asynctest import PropertyMock, patch
+from asynctest import patch
 
 from homeassistant import config_entries
 from homeassistant.components import dynalite
@@ -11,17 +10,12 @@ from .common import get_bridge_from_hass
 from tests.common import MockConfigEntry
 
 
-async def run_flow(hass, setup, connection):
+async def run_flow(hass, connection):
     """Run a flow with or without errors and return result."""
     host = "1.2.3.4"
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
-        side_effect=setup,
-    ), patch(
-        "homeassistant.components.dynalite.bridge.DynaliteDevices.available",
-        PropertyMock(side_effect=connection),
-    ), patch(
-        "homeassistant.components.dynalite.bridge.CONNECT_INTERVAL", 0
+        side_effect=connection,
     ):
         result = await hass.config_entries.flow.async_init(
             dynalite.DOMAIN,
@@ -34,35 +28,21 @@ async def run_flow(hass, setup, connection):
 
 async def test_flow_works(hass):
     """Test a successful config flow."""
-    result = await run_flow(hass, [True, True], [True, True])
+    result = await run_flow(hass, [True, True])
     assert result["type"] == "create_entry"
     assert result["result"].state == "loaded"
 
 
 async def test_flow_setup_fails(hass):
     """Test a flow where async_setup fails."""
-    result = await run_flow(hass, [False], [True])
-    assert result["type"] == "abort"
-    assert result["reason"] == "bridge_setup_failed"
-
-
-async def test_flow_no_connection(hass):
-    """Test a flow where connection times out."""
-    result = await run_flow(hass, [True], repeat(False))
+    result = await run_flow(hass, [False])
     assert result["type"] == "abort"
     assert result["reason"] == "no_connection"
 
 
 async def test_flow_setup_fails_in_setup_entry(hass):
     """Test a flow where the initial check works but inside setup_entry, the bridge setup fails."""
-    result = await run_flow(hass, [True, False], repeat(True))
-    assert result["type"] == "create_entry"
-    assert result["result"].state == "setup_error"
-
-
-async def test_flow_no_connection_in_setup_entry(hass):
-    """Test a flow where the initial check works but inside setup_entry, the bridge setup fails."""
-    result = await run_flow(hass, [True, True], chain([True], repeat(False)))
+    result = await run_flow(hass, [True, False])
     assert result["type"] == "create_entry"
     assert result["result"].state == "setup_retry"
 
@@ -76,8 +56,6 @@ async def test_existing(hass):
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
         return_value=True,
-    ), patch(
-        "homeassistant.components.dynalite.bridge.DynaliteDevices.available", True
     ):
         result = await hass.config_entries.flow.async_init(
             dynalite.DOMAIN,
@@ -96,8 +74,6 @@ async def test_existing_update(hass):
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
         return_value=True,
-    ), patch(
-        "homeassistant.components.dynalite.bridge.DynaliteDevices.available", True
     ):
         assert await hass.config_entries.flow.async_init(
             dynalite.DOMAIN,

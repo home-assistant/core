@@ -20,8 +20,6 @@ async def test_async_setup(hass):
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
         return_value=True,
-    ), patch(
-        "homeassistant.components.dynalite.bridge.DynaliteDevices.available", True
     ):
         assert await async_setup_component(
             hass,
@@ -47,8 +45,6 @@ async def test_async_setup_bad_config2(hass):
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
         return_value=True,
-    ), patch(
-        "homeassistant.components.dynalite.bridge.DynaliteDevices.available", True
     ):
         assert not await async_setup_component(
             hass,
@@ -90,8 +86,6 @@ async def test_unload_entry(hass):
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
         return_value=True,
-    ), patch(
-        "homeassistant.components.dynalite.bridge.DynaliteDevices.available", True
     ):
         assert await async_setup_component(
             hass,

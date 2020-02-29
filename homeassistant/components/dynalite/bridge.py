@@ -1,16 +1,11 @@
 """Code to handle a Dynalite bridge."""
 
-import asyncio
-
 from dynalite_devices_lib.dynalite_devices import DynaliteDevices
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import CONF_ALL, CONF_HOST, ENTITY_PLATFORMS, LOGGER
-
-CONNECT_TIMEOUT = 30
-CONNECT_INTERVAL = 1
 
 
 class DynaliteBridge:
@@ -61,15 +56,6 @@ class DynaliteBridge:
             async_dispatcher_send(self.hass, self.update_signal())
         else:
             async_dispatcher_send(self.hass, self.update_signal(device))
-
-    async def try_connection(self):
-        """Try to connect to dynalite with timeout."""
-        # Currently by polling. Future - will need to change the library to be proactive
-        for _ in range(0, CONNECT_TIMEOUT):
-            if self.dynalite_devices.available:
-                return True
-            await asyncio.sleep(CONNECT_INTERVAL)
-        return False
 
     @callback
     def register_add_devices(self, platform, async_add_devices):

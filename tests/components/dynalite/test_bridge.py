@@ -67,15 +67,3 @@ async def test_register_then_add_devices(dyn_bridge):
     dyn_bridge.add_devices_when_registered([device1, device2])
     reg_func.assert_called_once()
     assert reg_func.mock_calls[0][1][0][0] is device1
-
-
-async def test_try_connection(dyn_bridge):
-    """Test that try connection works."""
-    # successful
-    with patch.object(dyn_bridge.dynalite_devices, "connected", True):
-        assert await dyn_bridge.try_connection()
-    # unsuccessful
-    with patch.object(dyn_bridge.dynalite_devices, "connected", False), patch(
-        "homeassistant.components.dynalite.bridge.CONNECT_INTERVAL", 0
-    ):
-        assert not await dyn_bridge.try_connection()
