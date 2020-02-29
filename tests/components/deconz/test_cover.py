@@ -14,7 +14,7 @@ COVERS = {
         "id": "Level controllable cover id",
         "name": "Level controllable cover",
         "type": "Level controllable output",
-        "state": {"bri": 255, "on": False, "reachable": True},
+        "state": {"bri": 254, "on": False, "reachable": True},
         "modelid": "Not zigbee spec",
         "uniqueid": "00:00:00:00:00:00:00:00-00",
     },
@@ -22,7 +22,7 @@ COVERS = {
         "id": "Window covering device id",
         "name": "Window covering device",
         "type": "Window covering device",
-        "state": {"bri": 255, "on": True, "reachable": True},
+        "state": {"bri": 254, "on": True, "reachable": True},
         "modelid": "lumi.curtain",
         "uniqueid": "00:00:00:00:00:00:00:01-00",
     },
@@ -105,7 +105,7 @@ async def test_cover(hass):
         )
         await hass.async_block_till_done()
         set_callback.assert_called_with(
-            "put", "/lights/1/state", json={"on": True, "bri": 255}
+            "put", "/lights/1/state", json={"on": True, "bri": 254}
         )
 
     with patch.object(
