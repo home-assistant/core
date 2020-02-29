@@ -176,4 +176,3 @@ class RTorrentSensor(Entity):
                 self._state = downloading_torrents
             elif self.type == SENSOR_TYPE_ACTIVE_TORRENTS:
                 self._state = active_torrents
-
