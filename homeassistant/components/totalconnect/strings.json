@@ -3,7 +3,7 @@
     "title": "Total Connect",
     "step": {
       "user": {
-        "title": "Fill in your Total Connect login information",
+        "title": "Total Connect",
         "data": {
           "username": "Username",
           "password": "Password"
