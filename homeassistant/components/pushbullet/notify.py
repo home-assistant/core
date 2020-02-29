@@ -102,7 +102,7 @@ class PushBulletNotificationService(BaseNotificationService):
             # Target is sms, send directly, don't use a target object.
             if ttype == "sms":
                 self._push_data(
-                    message, title, data, self.pushbullet,phonenumber=tname)
+                    message, title, data, self.pushbullet, phonenumber=tname)
                 _LOGGER.info("Sent sms notification to %s", tname)
                 continue
 
