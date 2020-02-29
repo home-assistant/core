@@ -118,10 +118,7 @@ async def async_setup_entry(hass, config_entry):
     websession = aiohttp_client.async_get_clientsession(hass)
 
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = AirVisualData(
-        hass,
-        Client(websession, api_key=config_entry.data[CONF_API_KEY]),
-        config_entry.data[CONF_GEOGRAPHIES],
-        config_entry.options,
+        hass, Client(websession, api_key=config_entry.data[CONF_API_KEY]), config_entry
     )
 
     try:
@@ -160,15 +157,16 @@ async def async_unload_entry(hass, config_entry):
 class AirVisualData:
     """Define a class to manage data from the AirVisual cloud API."""
 
-    def __init__(self, hass, client, geographies, config_entry_options):
+    def __init__(self, hass, client, config_entry):
         """Initialize."""
         self._client = client
         self._hass = hass
         self.data = {}
-        self.show_on_map = config_entry_options[CONF_SHOW_ON_MAP]
+        self.show_on_map = config_entry.options[CONF_SHOW_ON_MAP]
 
         self.geographies = {
-            async_get_geography_id(geography): geography for geography in geographies
+            async_get_geography_id(geography): geography
+            for geography in config_entry.data[CONF_GEOGRAPHIES]
         }
 
     async def async_update(self):
