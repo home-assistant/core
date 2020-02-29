@@ -48,10 +48,6 @@ class DynaliteBase:  # Deriving from Object so it doesn't override the entity (l
         """Return if entity is available."""
         return self._device.available
 
-    async def async_update(self):
-        """Update the entity."""
-        return
-
     @property
     def device_info(self):
         """Device info for this entity."""
