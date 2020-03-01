@@ -17,11 +17,6 @@ def create_mock_device(platform, spec):
     device.unique_id = "UNIQUE"
     device.name = "NAME"
     device.device_class = "Device Class"
-    device.device_info = {
-        "identifiers": {(dynalite.DOMAIN, device.unique_id)},
-        "name": device.name,
-        "manufacturer": "Dynalite",
-    }
     return device
 
 
