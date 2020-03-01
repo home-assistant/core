@@ -43,6 +43,7 @@ WARN_THRESHOLD = 4
 
 
 def threshold_log(count: int, *args, **kwargs) -> None:
+    """Log at warn level after WARN_THRESHOLD failures, debug otherwise."""
     if count >= WARN_THRESHOLD:
         _LOGGER.warn(*args, **kwargs)
     else:
