@@ -1,11 +1,9 @@
 """Test Dynalite config flow."""
 
-from asynctest import patch
+from asynctest import CoroutineMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components import dynalite
-
-from .common import get_entry_id_from_hass
 
 from tests.common import MockConfigEntry
 
@@ -71,27 +69,26 @@ async def test_existing_update(hass):
     host = "1.2.3.4"
     port1 = 7777
     port2 = 8888
+    entry = MockConfigEntry(
+        domain=dynalite.DOMAIN,
+        data={dynalite.CONF_HOST: host, dynalite.CONF_PORT: port1},
+    )
+    entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
-        return_value=True,
-    ):
-        assert await hass.config_entries.flow.async_init(
-            dynalite.DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={dynalite.CONF_HOST: host, dynalite.CONF_PORT: port1},
-        )
+        "homeassistant.components.dynalite.bridge.DynaliteDevices"
+    ) as mock_dyn_dev:
+        mock_dyn_dev().async_setup = CoroutineMock(return_value=True)
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        old_entry_id = await get_entry_id_from_hass(hass)
-        old_bridge = hass.data[dynalite.DOMAIN][old_entry_id]
-        assert old_bridge.dynalite_devices.port == port1
+        mock_dyn_dev().configure.assert_called_once()
+        assert mock_dyn_dev().configure.mock_calls[0][1][0][dynalite.CONF_PORT] == port1
         result = await hass.config_entries.flow.async_init(
             dynalite.DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
             data={dynalite.CONF_HOST: host, dynalite.CONF_PORT: port2},
         )
         await hass.async_block_till_done()
+        assert mock_dyn_dev().configure.call_count == 2
+        assert mock_dyn_dev().configure.mock_calls[1][1][0][dynalite.CONF_PORT] == port2
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    entry_id = await get_entry_id_from_hass(hass)
-    bridge = hass.data[dynalite.DOMAIN][entry_id]
-    assert bridge.dynalite_devices.port == port2
