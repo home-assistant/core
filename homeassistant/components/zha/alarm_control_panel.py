@@ -27,6 +27,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .core import discovery
+from .core.channels.security import IasAcePanelStatus
 from .core.const import (
     CHANNEL_IAS_ACE,
     DATA_ZHA,
@@ -41,6 +42,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
+IAS_ACE_STATE_MAP = {
+    IasAcePanelStatus.Panel_Disarmed: STATE_ALARM_DISARMED,
+    IasAcePanelStatus.Armed_Stay: STATE_ALARM_ARMED_HOME,
+    IasAcePanelStatus.Armed_Night: STATE_ALARM_ARMED_NIGHT,
+    IasAcePanelStatus.Armed_Away: STATE_ALARM_ARMED_AWAY,
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -74,6 +81,13 @@ class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanel):
         await self.async_accept_signal(
             self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state
         )
+
+    @callback
+    def async_set_state(self, state):
+        """Handle state update from channel."""
+        _LOGGER.debug("state=%s", state)
+        self._state = IAS_ACE_STATE_MAP.get(state)
+        self.async_schedule_update_ha_state()
 
     @callback
     def async_restore_last_state(self, last_state):
