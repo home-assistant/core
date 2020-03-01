@@ -2,7 +2,7 @@
 import logging
 import re
 
-import requests
+import aiohttp
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,10 +41,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass, config):
+async def async_get_scanner(hass, config):
     """Validate the configuration and return a DD-WRT scanner."""
+    websession = aiohttp_client.async_get_clientsession(hass)
     try:
-        return DdWrtDeviceScanner(config[DOMAIN])
+        scanner = DdWrtDeviceScanner(config[DOMAIN], websession)
+        await scanner.test_connection()
+        return scanner
     except ConnectionError:
         return None
 
@@ -52,7 +55,7 @@ def get_scanner(hass, config):
 class DdWrtDeviceScanner(DeviceScanner):
     """This class queries a wireless router running DD-WRT firmware."""
 
-    def __init__(self, config):
+    def __init__(self, config, websession):
         """Initialize the DD-WRT scanner."""
         self.protocol = "https" if config[CONF_SSL] else "http"
         self.verify_ssl = config[CONF_VERIFY_SSL]
@@ -60,28 +63,29 @@ class DdWrtDeviceScanner(DeviceScanner):
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
         self.wireless_only = config[CONF_WIRELESS_ONLY]
-
+        self.websession = websession
         self.last_results = {}
         self.mac2name = {}
 
-        # Test the router is accessible
+    async def test_connection(self):
+        """Test the router is accessible."""
         url = f"{self.protocol}://{self.host}/Status_Wireless.live.asp"
-        data = self.get_ddwrt_data(url)
+        data = await self.get_ddwrt_data(url)
         if not data:
             raise ConnectionError("Cannot connect to DD-Wrt router")
 
-    def scan_devices(self):
+    async def async_scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
-        self._update_info()
+        await self._update_info()
 
         return self.last_results
 
-    def get_device_name(self, device):
+    async def async_get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         # If not initialised and not already scanned and not found.
         if device not in self.mac2name:
             url = f"{self.protocol}://{self.host}/Status_Lan.live.asp"
-            data = self.get_ddwrt_data(url)
+            data = await self.get_ddwrt_data(url)
 
             if not data:
                 return None
@@ -107,18 +111,19 @@ class DdWrtDeviceScanner(DeviceScanner):
 
         return self.mac2name.get(device)
 
-    def _update_info(self):
+    async def _update_info(self):
         """Ensure the information from the DD-WRT router is up to date.
 
         Return boolean if scanning successful.
         """
-        _LOGGER.info("Checking ARP")
+        _LOGGER.debug("Checking ARP for %s", self.host)
 
         endpoint = "Wireless" if self.wireless_only else "Lan"
         url = f"{self.protocol}://{self.host}/Status_{endpoint}.live.asp"
-        data = self.get_ddwrt_data(url)
+        data = await self.get_ddwrt_data(url)
 
         if not data:
+            _LOGGER.debugt("No ARP data %s", self.host)
             return False
 
         self.last_results = []
@@ -140,24 +145,29 @@ class DdWrtDeviceScanner(DeviceScanner):
 
         return True
 
-    def get_ddwrt_data(self, url):
+    async def get_ddwrt_data(self, url):
         """Retrieve data from DD-WRT and return parsed result."""
         try:
-            response = requests.get(
+            response = await self.websession.get(
                 url,
-                auth=(self.username, self.password),
-                timeout=4,
-                verify=self.verify_ssl,
+                auth=aiohttp.BasicAuth(self.username, self.password),
+                verify_ssl=self.verify_ssl,
             )
-        except requests.exceptions.Timeout:
+        except aiohttp.client_exceptions.ClientConnectorError:
             _LOGGER.exception("Connection to the router timed out")
             return
-        if response.status_code == 200:
-            return _parse_ddwrt_response(response.text)
-        if response.status_code == 401:
+        if response.status == 200:
+            return _parse_ddwrt_response(await response.text())
+        if response.status == 401:
             # Authentication error
             _LOGGER.exception(
                 "Failed to authenticate, check your username and password"
+            )
+            return
+        if response.status == 404:
+            # Page does not exist
+            _LOGGER.exception(
+                "DD-WRT status page missing. Is the host a DD-WRT router?"
             )
             return
         _LOGGER.error("Invalid response from DD-WRT: %s", response)
