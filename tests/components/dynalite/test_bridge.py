@@ -1,10 +1,11 @@
 """Test Dynalite bridge."""
 
-from asynctest import CoroutineMock, Mock, call, patch
+from asynctest import CoroutineMock, Mock, patch
 from dynalite_devices_lib.const import CONF_ALL
 import pytest
 
 from homeassistant.components import dynalite
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from tests.common import MockConfigEntry
 
@@ -18,26 +19,34 @@ def dyn_bridge():
     return bridge
 
 
-async def test_update_device(dyn_bridge):
-    """Test a successful setup."""
-    async_dispatch = Mock()
-
+async def test_update_device(hass):
+    """Test that update works."""
+    host = "1.2.3.4"
+    entry = MockConfigEntry(domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host})
+    entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.dynalite.bridge.async_dispatcher_send", async_dispatch
-    ):
-        dyn_bridge.update_device(CONF_ALL)
-        async_dispatch.assert_called_once()
-        assert async_dispatch.mock_calls[0] == call(
-            dyn_bridge.hass, f"dynalite-update-{dyn_bridge.host}"
-        )
-        async_dispatch.reset_mock()
-        device = Mock
-        device.unique_id = "abcdef"
-        dyn_bridge.update_device(device)
-        async_dispatch.assert_called_once()
-        assert async_dispatch.mock_calls[0] == call(
-            dyn_bridge.hass, f"dynalite-update-{dyn_bridge.host}-{device.unique_id}"
-        )
+        "homeassistant.components.dynalite.bridge.DynaliteDevices"
+    ) as mock_dyn_dev:
+        mock_dyn_dev().async_setup = CoroutineMock(return_value=True)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        # Not waiting so it add the devices before registration
+        update_device_func = mock_dyn_dev.mock_calls[1][2]["updateDeviceFunc"]
+    device = Mock()
+    device.unique_id = "abcdef"
+    wide_func = Mock()
+    async_dispatcher_connect(hass, f"dynalite-update-{host}", wide_func)
+    specific_func = Mock()
+    async_dispatcher_connect(
+        hass, f"dynalite-update-{host}-{device.unique_id}", specific_func
+    )
+    update_device_func(CONF_ALL)
+    await hass.async_block_till_done()
+    wide_func.assert_called_once()
+    specific_func.assert_not_called()
+    update_device_func(device)
+    await hass.async_block_till_done()
+    wide_func.assert_called_once()
+    specific_func.assert_called_once()
 
 
 async def test_add_devices_then_register(hass, dyn_bridge):
