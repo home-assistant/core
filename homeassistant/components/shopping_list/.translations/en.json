@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Only a single configuration of Shopping List is allowed."
+        },
+        "step": {
+            "user": {
+                "description": "Do you want to configure Shopping List?",
+                "title": "Shopping List"
+            }
+        },
+        "title": "Shopping List"
+    }
+}

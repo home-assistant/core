@@ -5,6 +5,7 @@ import uuid
 
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.components import http, websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import HTTP_BAD_REQUEST, HTTP_NOT_FOUND
@@ -12,9 +13,10 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
+from .const import DOMAIN
+
 ATTR_NAME = "name"
 
-DOMAIN = "shopping_list"
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {}}, extra=vol.ALLOW_EXTRA)
 EVENT = "shopping_list_updated"
@@ -53,9 +55,23 @@ SCHEMA_WEBSOCKET_CLEAR_ITEMS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
 )
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Initialize the shopping list."""
+
+    # Only import if we haven't before.
+    if not hass.config_entries.async_entries(DOMAIN):
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={}
+            )
+        )
+
+    return True
+
+
+@asyncio.coroutine
+def async_setup_entry(hass, config_entry):
+    """Set up shopping list from config flow."""
 
     @asyncio.coroutine
     def add_item_service(call):
