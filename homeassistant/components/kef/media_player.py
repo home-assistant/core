@@ -144,7 +144,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         entity_id = service.data.get(ATTR_ENTITY_ID)
 
         media_player = next(
-            (d for d in hass.data[DOMAIN] if d.entity_id == entity_id), None,
+            (d for d in hass.data[DOMAIN].values() if d.entity_id == entity_id), None,
         )
 
         if media_player is None:
@@ -152,7 +152,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             return
 
         if service.service == SERVICE_MODE:
-            await media_player.set_mode(
+            await media_player._speaker.set_mode(
                 desk_mode=service.data.get("desk_mode"),
                 wall_mode=service.data.get("wall_mode"),
                 phase_correction=service.data.get("phase_correction"),
@@ -162,35 +162,35 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             )
         elif service.service == SERVICE_DESK_DB:
             db = service.data.get("db")
-            await media_player.set_desk_db(db)
+            await media_player._speaker.set_desk_db(db)
         elif service.service == SERVICE_WALL_DB:
             db = service.data.get("db")
-            await media_player.set_wall_db(db)
+            await media_player._speaker.set_wall_db(db)
         elif service.service == SERVICE_TREBLE_DB:
             db = service.data.get("db")
-            await media_player.set_treble_db(db)
+            await media_player._speaker.set_treble_db(db)
         elif service.service == SERVICE_HIGH_HZ:
             hz = service.data.get("hz")
-            await media_player.set_high_hz(hz)
+            await media_player._speaker.set_high_hz(hz)
         elif service.service == SERVICE_LOW_HZ:
             hz = service.data.get("hz")
-            await media_player.set_low_hz(hz)
+            await media_player._speaker.set_low_hz(hz)
         elif service.service == SERVICE_SUB_DB:
             db = service.data.get("db")
-            await media_player.set_sub_db(db)
+            await media_player._speaker.set_sub_db(db)
 
     mode_schema = vol.Schema(
         {
             vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-            vol.Optional("desk_mode"): vol.boolean,
-            vol.Optional("wall_mode"): vol.boolean,
-            vol.Optional("phase_correction"): vol.boolean,
-            vol.Optional("high_pass"): vol.boolean,
+            vol.Optional("desk_mode"): cv.boolean,
+            vol.Optional("wall_mode"): cv.boolean,
+            vol.Optional("phase_correction"): cv.boolean,
+            vol.Optional("high_pass"): cv.boolean,
             vol.Optional("sub_polarity"): vol.In(["-", "+"]),
             vol.Optional("bass_extension"): vol.In(["Less", "Standard", "Extra"]),
         }
     )
-    hass.services.async_register_admin_service(
+    hass.services.async_register(
         DOMAIN, SERVICE_MODE, service_handler, schema=mode_schema,
     )
 
@@ -201,15 +201,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 vol.Required(option): vol.In(DSP_OPTION_MAPPING[which]),
             }
         )
-        hass.services.async_register_admin_service(
+        hass.services.async_register(
             DOMAIN, name, service_handler, schema=schema,
         )
 
     add_service(SERVICE_DESK_DB, "desk_db", "db")
     add_service(SERVICE_WALL_DB, "wall_db", "db")
     add_service(SERVICE_TREBLE_DB, "treble_db", "db")
-    add_service(SERVICE_HIGH_HZ, "high_db", "hz")
-    add_service(SERVICE_LOW_HZ, "low_db", "hz")
+    add_service(SERVICE_HIGH_HZ, "high_hz", "hz")
+    add_service(SERVICE_LOW_HZ, "low_hz", "hz")
     add_service(SERVICE_SUB_DB, "sub_db", "db")
 
 
