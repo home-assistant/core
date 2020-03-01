@@ -1,4 +1,7 @@
 """Support for the Dynalite networks."""
+
+import asyncio
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -10,6 +13,9 @@ from homeassistant.helpers import config_validation as cv
 from .bridge import DynaliteBridge
 from .const import (
     CONF_ACTIVE,
+    CONF_ACTIVE_INIT,
+    CONF_ACTIVE_OFF,
+    CONF_ACTIVE_ON,
     CONF_AREA,
     CONF_AUTO_DISCOVER,
     CONF_BRIDGES,
@@ -17,11 +23,14 @@ from .const import (
     CONF_DEFAULT,
     CONF_FADE,
     CONF_NAME,
+    CONF_NO_DEFAULT,
     CONF_POLLTIMER,
     CONF_PORT,
+    CONF_PRESET,
     DEFAULT_NAME,
     DEFAULT_PORT,
     DOMAIN,
+    ENTITY_PLATFORMS,
     LOGGER,
 )
 
@@ -40,11 +49,20 @@ CHANNEL_DATA_SCHEMA = vol.Schema(
 
 CHANNEL_SCHEMA = vol.Schema({num_string: CHANNEL_DATA_SCHEMA})
 
+PRESET_DATA_SCHEMA = vol.Schema(
+    {vol.Optional(CONF_NAME): cv.string, vol.Optional(CONF_FADE): vol.Coerce(float)}
+)
+
+PRESET_SCHEMA = vol.Schema({num_string: vol.Any(PRESET_DATA_SCHEMA, None)})
+
+
 AREA_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_FADE): vol.Coerce(float),
+        vol.Optional(CONF_NO_DEFAULT): vol.Coerce(bool),
         vol.Optional(CONF_CHANNEL): CHANNEL_SCHEMA,
+        vol.Optional(CONF_PRESET): PRESET_SCHEMA,
     },
 )
 
@@ -62,7 +80,10 @@ BRIDGE_SCHEMA = vol.Schema(
         vol.Optional(CONF_POLLTIMER, default=1.0): vol.Coerce(float),
         vol.Optional(CONF_AREA): AREA_SCHEMA,
         vol.Optional(CONF_DEFAULT): PLATFORM_DEFAULTS_SCHEMA,
-        vol.Optional(CONF_ACTIVE, default=False): vol.Coerce(bool),
+        vol.Optional(CONF_ACTIVE, default=False): vol.Any(
+            CONF_ACTIVE_ON, CONF_ACTIVE_OFF, CONF_ACTIVE_INIT, bool
+        ),
+        vol.Optional(CONF_PRESET): PRESET_SCHEMA,
     }
 )
 
@@ -125,9 +146,10 @@ async def async_setup_entry(hass, entry):
         LOGGER.error("Could not set up bridge for entry %s", entry.data)
         raise ConfigEntryNotReady
     hass.data[DOMAIN][entry.entry_id] = bridge
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "light")
-    )
+    for platform in ENTITY_PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, platform)
+        )
     return True
 
 
@@ -135,5 +157,9 @@ async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     LOGGER.debug("Unloading entry %s", entry.data)
     hass.data[DOMAIN].pop(entry.entry_id)
-    result = await hass.config_entries.async_forward_entry_unload(entry, "light")
-    return result
+    tasks = [
+        hass.config_entries.async_forward_entry_unload(entry, platform)
+        for platform in ENTITY_PLATFORMS
+    ]
+    results = await asyncio.gather(*tasks)
+    return False not in results

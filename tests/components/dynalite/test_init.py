@@ -83,5 +83,9 @@ async def test_unload_entry(hass):
     ) as mock_unload:
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
-        mock_unload.assert_called_once()
-        assert mock_unload.mock_calls == [call(entry, "light")]
+        assert mock_unload.call_count == len(dynalite.ENTITY_PLATFORMS)
+        expected_calls = [
+            call(entry, platform) for platform in dynalite.ENTITY_PLATFORMS
+        ]
+        for cur_call in mock_unload.mock_calls:
+            assert cur_call in expected_calls

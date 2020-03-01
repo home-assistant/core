@@ -3,7 +3,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
 
 from .bridge import DynaliteBridge
-from .const import DOMAIN, LOGGER  # pylint: disable=unused-import
+from .const import DOMAIN, LOGGER
 
 
 class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -11,8 +11,6 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
-
-    # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
 
     def __init__(self):
         """Initialize the Dynalite flow."""
