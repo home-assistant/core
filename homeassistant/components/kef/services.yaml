@@ -5,22 +5,28 @@ set_mode:
       description: The entity_id of the KEF speaker.
       example: media_player.kef_lsx
     desk_mode:
-      description: "Desk mode" (true or false)
+      description: >
+        "Desk mode" (true or false)
       example: true
     wall_mode:
-      description: "Wall mode" (true or false)
+      description: >
+        "Wall mode" (true or false)
       example: true
     phase_correction:
-      description: "Phase correction" (true or false)
+      description: >
+        "Phase correction" (true or false)
       example: true
     high_pass:
-      description: "High-pass mode" (true or false)
+      description: >
+        "High-pass mode" (true or false)
       example: true
     sub_polarity:
-      description: The "Sub polarity" ("-" or "+")
+      description: >
+        "Sub polarity" ("-" or "+")
       example: "+"
     bass_extension:
-      description: The "Bass extension" selector ("Less", "Standard", or "Extra")
+      description: >
+        "Bass extension" selector ("Less", "Standard", or "Extra")
       example: "Extra"
 
 set_desk_db:
