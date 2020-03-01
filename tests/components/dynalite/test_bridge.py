@@ -1,10 +1,12 @@
 """Test Dynalite bridge."""
 
-from asynctest import Mock, call, patch
+from asynctest import CoroutineMock, Mock, call, patch
 from dynalite_devices_lib.const import CONF_ALL
 import pytest
 
 from homeassistant.components import dynalite
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -38,32 +40,47 @@ async def test_update_device(dyn_bridge):
         )
 
 
-async def test_add_devices_then_register(dyn_bridge):
+async def test_add_devices_then_register(hass, dyn_bridge):
     """Test that add_devices work."""
-    # First test empty
-    dyn_bridge.add_devices_when_registered([])
-    assert not dyn_bridge.waiting_devices
+    host = "1.2.3.4"
+    entry = MockConfigEntry(domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host})
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.dynalite.bridge.DynaliteDevices"
+    ) as mock_dyn_dev:
+        mock_dyn_dev().async_setup = CoroutineMock(return_value=True)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        # Not waiting so it add the devices before registration
+        new_device_func = mock_dyn_dev.mock_calls[1][2]["newDeviceFunc"]
     # Now with devices
     device1 = Mock()
     device1.category = "light"
+    device1.name = "NAME"
     device2 = Mock()
     device2.category = "switch"
-    dyn_bridge.add_devices_when_registered([device1, device2])
-    reg_func = Mock()
-    dyn_bridge.register_add_devices("light", reg_func)
-    reg_func.assert_called_once()
-    assert reg_func.mock_calls[0][1][0][0] is device1
+    new_device_func([device1, device2])
+    await hass.async_block_till_done()
+    assert hass.states.get("light.name")
 
 
-async def test_register_then_add_devices(dyn_bridge):
+async def test_register_then_add_devices(hass, dyn_bridge):
     """Test that add_devices work after register_add_entities."""
+    host = "1.2.3.4"
+    entry = MockConfigEntry(domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host})
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.dynalite.bridge.DynaliteDevices"
+    ) as mock_dyn_dev:
+        mock_dyn_dev().async_setup = CoroutineMock(return_value=True)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        new_device_func = mock_dyn_dev.mock_calls[1][2]["newDeviceFunc"]
+    # Now with devices
     device1 = Mock()
     device1.category = "light"
+    device1.name = "NAME"
     device2 = Mock()
     device2.category = "switch"
-    reg_func = Mock()
-    # First register
-    dyn_bridge.register_add_devices("light", reg_func)
-    dyn_bridge.add_devices_when_registered([device1, device2])
-    reg_func.assert_called_once()
-    assert reg_func.mock_calls[0][1][0][0] is device1
+    new_device_func([device1, device2])
+    await hass.async_block_till_done()
+    assert hass.states.get("light.name")

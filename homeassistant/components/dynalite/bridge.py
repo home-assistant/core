@@ -66,8 +66,6 @@ class DynaliteBridge:
 
     def add_devices_when_registered(self, devices):
         """Add the devices to HA if the add devices callback was registered, otherwise queue until it is."""
-        if not devices:
-            return
         for platform in ENTITY_PLATFORMS:
             platform_devices = [
                 device for device in devices if device.category == platform
