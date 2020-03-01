@@ -6,5 +6,6 @@
   "requirements": ["wled==0.2.1"],
   "dependencies": [],
   "zeroconf": ["_wled._tcp.local."],
-  "codeowners": ["@frenck"]
+  "codeowners": ["@frenck"],
+  "quality_scale": "platinum"
 }

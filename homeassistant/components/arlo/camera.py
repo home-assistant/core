@@ -78,11 +78,14 @@ class ArloCam(Camera):
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
+        video = await self.hass.async_add_executor_job(
+            getattr, self._camera, "last_video"
+        )
 
-        video = self._camera.last_video
         if not video:
-            error_msg = "Video not found for {0}. Is it older than {1} days?".format(
-                self.name, self._camera.min_days_vdo_cache
+            error_msg = (
+                f"Video not found for {self.name}. "
+                f"Is it older than {self._camera.min_days_vdo_cache} days?"
             )
             _LOGGER.error(error_msg)
             return

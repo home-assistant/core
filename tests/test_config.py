@@ -4,9 +4,11 @@ import asyncio
 from collections import OrderedDict
 import copy
 import os
-import unittest.mock as mock
+from unittest import mock
+from unittest.mock import Mock
 
 import asynctest
+from asynctest import CoroutineMock, patch
 import pytest
 from voluptuous import Invalid, MultipleInvalid
 import yaml
@@ -82,7 +84,7 @@ def teardown():
 
 async def test_create_default_config(hass):
     """Test creation of default config."""
-    await config_util.async_create_default_config(hass, CONFIG_DIR)
+    await config_util.async_create_default_config(hass)
 
     assert os.path.isfile(YAML_PATH)
     assert os.path.isfile(SECRET_PATH)
@@ -91,20 +93,13 @@ async def test_create_default_config(hass):
     assert os.path.isfile(AUTOMATIONS_PATH)
 
 
-def test_find_config_file_yaml():
-    """Test if it finds a YAML config file."""
-    create_file(YAML_PATH)
-
-    assert YAML_PATH == config_util.find_config_file(CONFIG_DIR)
-
-
 async def test_ensure_config_exists_creates_config(hass):
     """Test that calling ensure_config_exists.
 
     If not creates a new config file.
     """
     with mock.patch("builtins.print") as mock_print:
-        await config_util.async_ensure_config_exists(hass, CONFIG_DIR)
+        await config_util.async_ensure_config_exists(hass)
 
     assert os.path.isfile(YAML_PATH)
     assert mock_print.called
@@ -113,7 +108,7 @@ async def test_ensure_config_exists_creates_config(hass):
 async def test_ensure_config_exists_uses_existing_config(hass):
     """Test that calling ensure_config_exists uses existing config."""
     create_file(YAML_PATH)
-    await config_util.async_ensure_config_exists(hass, CONFIG_DIR)
+    await config_util.async_ensure_config_exists(hass)
 
     with open(YAML_PATH) as f:
         content = f.read()
@@ -172,13 +167,9 @@ async def test_create_default_config_returns_none_if_write_error(hass):
 
     Non existing folder returns None.
     """
+    hass.config.config_dir = os.path.join(CONFIG_DIR, "non_existing_dir/")
     with mock.patch("builtins.print") as mock_print:
-        assert (
-            await config_util.async_create_default_config(
-                hass, os.path.join(CONFIG_DIR, "non_existing_dir/")
-            )
-            is None
-        )
+        assert await config_util.async_create_default_config(hass) is False
     assert mock_print.called
 
 
@@ -331,7 +322,6 @@ def test_config_upgrade_same_version(hass):
         assert opened_file.write.call_count == 0
 
 
-@mock.patch("homeassistant.config.find_config_file", mock.Mock())
 def test_config_upgrade_no_file(hass):
     """Test update of version on upgrade, with no version file."""
     mock_open = mock.mock_open()
@@ -359,7 +349,7 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
         "version": 1,
     }
     await config_util.async_process_ha_core_config(
-        hass, {"whitelist_external_dirs": "/tmp"}
+        hass, {"whitelist_external_dirs": "/etc"}
     )
 
     assert hass.config.latitude == 55
@@ -369,7 +359,7 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
     assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
     assert hass.config.time_zone.zone == "Europe/Copenhagen"
     assert len(hass.config.whitelist_external_dirs) == 2
-    assert "/tmp" in hass.config.whitelist_external_dirs
+    assert "/etc" in hass.config.whitelist_external_dirs
     assert hass.config.config_source == SOURCE_STORAGE
 
 
@@ -389,7 +379,7 @@ async def test_updating_configuration(hass, hass_storage):
     }
     hass_storage["core.config"] = dict(core_data)
     await config_util.async_process_ha_core_config(
-        hass, {"whitelist_external_dirs": "/tmp"}
+        hass, {"whitelist_external_dirs": "/etc"}
     )
     await hass.config.async_update(latitude=50)
 
@@ -414,7 +404,7 @@ async def test_override_stored_configuration(hass, hass_storage):
         "version": 1,
     }
     await config_util.async_process_ha_core_config(
-        hass, {"latitude": 60, "whitelist_external_dirs": "/tmp"}
+        hass, {"latitude": 60, "whitelist_external_dirs": "/etc"}
     )
 
     assert hass.config.latitude == 60
@@ -424,7 +414,7 @@ async def test_override_stored_configuration(hass, hass_storage):
     assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
     assert hass.config.time_zone.zone == "Europe/Copenhagen"
     assert len(hass.config.whitelist_external_dirs) == 2
-    assert "/tmp" in hass.config.whitelist_external_dirs
+    assert "/etc" in hass.config.whitelist_external_dirs
     assert hass.config.config_source == config_util.SOURCE_YAML
 
 
@@ -439,7 +429,7 @@ async def test_loading_configuration(hass):
             "name": "Huis",
             CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
             "time_zone": "America/New_York",
-            "whitelist_external_dirs": "/tmp",
+            "whitelist_external_dirs": "/etc",
         },
     )
 
@@ -450,7 +440,7 @@ async def test_loading_configuration(hass):
     assert hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL
     assert hass.config.time_zone.zone == "America/New_York"
     assert len(hass.config.whitelist_external_dirs) == 2
-    assert "/tmp" in hass.config.whitelist_external_dirs
+    assert "/etc" in hass.config.whitelist_external_dirs
     assert hass.config.config_source == config_util.SOURCE_YAML
 
 
@@ -588,7 +578,7 @@ async def test_merge(merge_log_err, hass):
 
 
 async def test_merge_try_falsy(merge_log_err, hass):
-    """Ensure we dont add falsy items like empty OrderedDict() to list."""
+    """Ensure we don't add falsy items like empty OrderedDict() to list."""
     packages = {
         "pack_falsy_to_lst": {"automation": OrderedDict()},
         "pack_list2": {"light": OrderedDict()},
@@ -905,3 +895,97 @@ async def test_merge_split_component_definition(hass):
     assert len(config["light one"]) == 1
     assert len(config["light two"]) == 1
     assert len(config["light three"]) == 1
+
+
+async def test_component_config_exceptions(hass, caplog):
+    """Test unexpected exceptions validating component config."""
+    # Config validator
+    assert (
+        await config_util.async_process_component_config(
+            hass,
+            {},
+            integration=Mock(
+                domain="test_domain",
+                get_platform=Mock(
+                    return_value=Mock(
+                        async_validate_config=CoroutineMock(
+                            side_effect=ValueError("broken")
+                        )
+                    )
+                ),
+            ),
+        )
+        is None
+    )
+    assert "ValueError: broken" in caplog.text
+    assert "Unknown error calling test_domain config validator" in caplog.text
+
+    # component.CONFIG_SCHEMA
+    caplog.clear()
+    assert (
+        await config_util.async_process_component_config(
+            hass,
+            {},
+            integration=Mock(
+                domain="test_domain",
+                get_platform=Mock(return_value=None),
+                get_component=Mock(
+                    return_value=Mock(
+                        CONFIG_SCHEMA=Mock(side_effect=ValueError("broken"))
+                    )
+                ),
+            ),
+        )
+        is None
+    )
+    assert "ValueError: broken" in caplog.text
+    assert "Unknown error calling test_domain CONFIG_SCHEMA" in caplog.text
+
+    # component.PLATFORM_SCHEMA
+    caplog.clear()
+    assert await config_util.async_process_component_config(
+        hass,
+        {"test_domain": {"platform": "test_platform"}},
+        integration=Mock(
+            domain="test_domain",
+            get_platform=Mock(return_value=None),
+            get_component=Mock(
+                return_value=Mock(
+                    spec=["PLATFORM_SCHEMA_BASE"],
+                    PLATFORM_SCHEMA_BASE=Mock(side_effect=ValueError("broken")),
+                )
+            ),
+        ),
+    ) == {"test_domain": []}
+    assert "ValueError: broken" in caplog.text
+    assert (
+        "Unknown error validating test_platform platform config with test_domain component platform schema"
+        in caplog.text
+    )
+
+    # platform.PLATFORM_SCHEMA
+    caplog.clear()
+    with patch(
+        "homeassistant.config.async_get_integration_with_requirements",
+        return_value=Mock(  # integration that owns platform
+            get_platform=Mock(
+                return_value=Mock(  # platform
+                    PLATFORM_SCHEMA=Mock(side_effect=ValueError("broken"))
+                )
+            )
+        ),
+    ):
+        assert await config_util.async_process_component_config(
+            hass,
+            {"test_domain": {"platform": "test_platform"}},
+            integration=Mock(
+                domain="test_domain",
+                get_platform=Mock(return_value=None),
+                get_component=Mock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
+            ),
+        ) == {"test_domain": []}
+        assert "ValueError: broken" in caplog.text
+        assert (
+            "Unknown error validating config for test_platform platform for test_domain component with PLATFORM_SCHEMA"
+            in caplog.text
+        )

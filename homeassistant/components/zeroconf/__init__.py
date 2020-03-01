@@ -108,7 +108,6 @@ def setup(hass, config):
 
     def stop_zeroconf(_):
         """Stop Zeroconf."""
-        zeroconf.unregister_service(info)
         zeroconf.close()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zeroconf)
@@ -148,15 +147,20 @@ def handle_homekit(hass, info) -> bool:
 
 def info_from_service(service):
     """Return prepared info from mDNS entries."""
-    properties = {}
+    properties = {"_raw": {}}
 
     for key, value in service.properties.items():
+        # See https://ietf.org/rfc/rfc6763.html#section-6.4 and
+        # https://ietf.org/rfc/rfc6763.html#section-6.5 for expected encodings
+        # for property keys and values
+        key = key.decode("ascii")
+        properties["_raw"][key] = value
+
         try:
             if isinstance(value, bytes):
-                value = value.decode("utf-8")
-            properties[key.decode("utf-8")] = value
+                properties[key] = value.decode("utf-8")
         except UnicodeDecodeError:
-            _LOGGER.warning("Unicode decode error on %s: %s", key, value)
+            pass
 
     address = service.addresses[0]
 

@@ -24,6 +24,7 @@ from tests.common import (
     get_test_home_assistant,
     get_test_instance_port,
     mock_service,
+    mock_storage,
 )
 
 
@@ -45,6 +46,8 @@ class TestTTS:
         self.hass = get_test_home_assistant()
         self.demo_provider = DemoProvider("en")
         self.default_tts_cache = self.hass.config.path(tts.DEFAULT_CACHE_DIR)
+        self.mock_storage = mock_storage()
+        self.mock_storage.__enter__()
 
         setup_component(
             self.hass,
@@ -55,6 +58,7 @@ class TestTTS:
     def teardown_method(self):
         """Stop everything that was started."""
         self.hass.stop()
+        self.mock_storage.__exit__(None, None, None)
 
         if os.path.isdir(self.default_tts_cache):
             shutil.rmtree(self.default_tts_cache)
@@ -91,7 +95,10 @@ class TestTTS:
         self.hass.services.call(
             tts.DOMAIN,
             "demo_say",
-            {tts.ATTR_MESSAGE: "I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "There is someone at the door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -99,13 +106,13 @@ class TestTTS:
         assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
         assert calls[0].data[
             ATTR_MEDIA_CONTENT_ID
-        ] == "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd_en_-_demo.mp3".format(
+        ] == "{}/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3".format(
             self.hass.config.api.base_url
         )
         assert os.path.isfile(
             os.path.join(
                 self.default_tts_cache,
-                "265944c108cbb00b2a621be5930513e03a0bb2cd_en_-_demo.mp3",
+                "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3",
             )
         )
 
@@ -121,7 +128,10 @@ class TestTTS:
         self.hass.services.call(
             tts.DOMAIN,
             "demo_say",
-            {tts.ATTR_MESSAGE: "I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "There is someone at the door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -129,13 +139,13 @@ class TestTTS:
         assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
         assert calls[0].data[
             ATTR_MEDIA_CONTENT_ID
-        ] == "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd_de_-_demo.mp3".format(
+        ] == "{}/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3".format(
             self.hass.config.api.base_url
         )
         assert os.path.isfile(
             os.path.join(
                 self.default_tts_cache,
-                "265944c108cbb00b2a621be5930513e03a0bb2cd_de_-_demo.mp3",
+                "42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3",
             )
         )
 
@@ -159,7 +169,8 @@ class TestTTS:
             tts.DOMAIN,
             "demo_say",
             {
-                tts.ATTR_MESSAGE: "I person is on front of your door.",
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "There is someone at the door.",
                 tts.ATTR_LANGUAGE: "de",
             },
         )
@@ -169,13 +180,13 @@ class TestTTS:
         assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
         assert calls[0].data[
             ATTR_MEDIA_CONTENT_ID
-        ] == "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd_de_-_demo.mp3".format(
+        ] == "{}/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3".format(
             self.hass.config.api.base_url
         )
         assert os.path.isfile(
             os.path.join(
                 self.default_tts_cache,
-                "265944c108cbb00b2a621be5930513e03a0bb2cd_de_-_demo.mp3",
+                "42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3",
             )
         )
 
@@ -192,7 +203,8 @@ class TestTTS:
             tts.DOMAIN,
             "demo_say",
             {
-                tts.ATTR_MESSAGE: "I person is on front of your door.",
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "There is someone at the door.",
                 tts.ATTR_LANGUAGE: "lang",
             },
         )
@@ -202,7 +214,7 @@ class TestTTS:
         assert not os.path.isfile(
             os.path.join(
                 self.default_tts_cache,
-                "265944c108cbb00b2a621be5930513e03a0bb2cd_lang_-_demo.mp3",
+                "42f18378fd4393d18c8dd11d03fa9563c1e54491_lang_-_demo.mp3",
             )
         )
 
@@ -219,7 +231,8 @@ class TestTTS:
             tts.DOMAIN,
             "demo_say",
             {
-                tts.ATTR_MESSAGE: "I person is on front of your door.",
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "There is someone at the door.",
                 tts.ATTR_LANGUAGE: "de",
                 tts.ATTR_OPTIONS: {"voice": "alex"},
             },
@@ -232,13 +245,13 @@ class TestTTS:
         assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
         assert calls[0].data[
             ATTR_MEDIA_CONTENT_ID
-        ] == "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd_de_{}_demo.mp3".format(
+        ] == "{}/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{}_demo.mp3".format(
             self.hass.config.api.base_url, opt_hash
         )
         assert os.path.isfile(
             os.path.join(
                 self.default_tts_cache,
-                "265944c108cbb00b2a621be5930513e03a0bb2cd_de_{0}_demo.mp3".format(
+                "42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{0}_demo.mp3".format(
                     opt_hash
                 ),
             )
@@ -261,7 +274,8 @@ class TestTTS:
             tts.DOMAIN,
             "demo_say",
             {
-                tts.ATTR_MESSAGE: "I person is on front of your door.",
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "There is someone at the door.",
                 tts.ATTR_LANGUAGE: "de",
             },
         )
@@ -273,13 +287,13 @@ class TestTTS:
         assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
         assert calls[0].data[
             ATTR_MEDIA_CONTENT_ID
-        ] == "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd_de_{}_demo.mp3".format(
+        ] == "{}/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{}_demo.mp3".format(
             self.hass.config.api.base_url, opt_hash
         )
         assert os.path.isfile(
             os.path.join(
                 self.default_tts_cache,
-                "265944c108cbb00b2a621be5930513e03a0bb2cd_de_{0}_demo.mp3".format(
+                "42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{0}_demo.mp3".format(
                     opt_hash
                 ),
             )
@@ -298,7 +312,8 @@ class TestTTS:
             tts.DOMAIN,
             "demo_say",
             {
-                tts.ATTR_MESSAGE: "I person is on front of your door.",
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "There is someone at the door.",
                 tts.ATTR_LANGUAGE: "de",
                 tts.ATTR_OPTIONS: {"speed": 1},
             },
@@ -311,7 +326,7 @@ class TestTTS:
         assert not os.path.isfile(
             os.path.join(
                 self.default_tts_cache,
-                "265944c108cbb00b2a621be5930513e03a0bb2cd_de_{0}_demo.mp3".format(
+                "42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{0}_demo.mp3".format(
                     opt_hash
                 ),
             )
@@ -329,7 +344,10 @@ class TestTTS:
         self.hass.services.call(
             tts.DOMAIN,
             "demo_say",
-            {tts.ATTR_MESSAGE: "I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "There is someone at the door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -337,7 +355,7 @@ class TestTTS:
         assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
         assert (
             calls[0].data[ATTR_MEDIA_CONTENT_ID] == "http://fnord"
-            "/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd"
+            "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
             "_en_-_demo.mp3"
         )
 
@@ -353,7 +371,10 @@ class TestTTS:
         self.hass.services.call(
             tts.DOMAIN,
             "demo_say",
-            {tts.ATTR_MESSAGE: "I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "There is someone at the door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -361,7 +382,7 @@ class TestTTS:
         assert os.path.isfile(
             os.path.join(
                 self.default_tts_cache,
-                "265944c108cbb00b2a621be5930513e03a0bb2cd_en_-_demo.mp3",
+                "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3",
             )
         )
 
@@ -371,7 +392,7 @@ class TestTTS:
         assert not os.path.isfile(
             os.path.join(
                 self.default_tts_cache,
-                "265944c108cbb00b2a621be5930513e03a0bb2cd_en_-_demo.mp3",
+                "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3",
             )
         )
 
@@ -389,7 +410,10 @@ class TestTTS:
         self.hass.services.call(
             tts.DOMAIN,
             "demo_say",
-            {tts.ATTR_MESSAGE: "I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "There is someone at the door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -397,7 +421,7 @@ class TestTTS:
         req = requests.get(calls[0].data[ATTR_MEDIA_CONTENT_ID])
         _, demo_data = self.demo_provider.get_tts_audio("bla", "en")
         demo_data = tts.SpeechManager.write_tags(
-            "265944c108cbb00b2a621be5930513e03a0bb2cd_en_-_demo.mp3",
+            "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3",
             demo_data,
             self.demo_provider,
             "AI person is in front of your door.",
@@ -421,7 +445,10 @@ class TestTTS:
         self.hass.services.call(
             tts.DOMAIN,
             "demo_say",
-            {tts.ATTR_MESSAGE: "I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "There is someone at the door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -429,10 +456,10 @@ class TestTTS:
         req = requests.get(calls[0].data[ATTR_MEDIA_CONTENT_ID])
         _, demo_data = self.demo_provider.get_tts_audio("bla", "de")
         demo_data = tts.SpeechManager.write_tags(
-            "265944c108cbb00b2a621be5930513e03a0bb2cd_de_-_demo.mp3",
+            "42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3",
             demo_data,
             self.demo_provider,
-            "I person is on front of your door.",
+            "There is someone at the door.",
             "de",
             None,
         )
@@ -449,7 +476,7 @@ class TestTTS:
         self.hass.start()
 
         url = (
-            "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd_en_-_demo.mp3"
+            "{}/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
         ).format(self.hass.config.api.base_url)
 
         req = requests.get(url)
@@ -483,7 +510,10 @@ class TestTTS:
         self.hass.services.call(
             tts.DOMAIN,
             "demo_say",
-            {tts.ATTR_MESSAGE: "I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "There is someone at the door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -491,7 +521,7 @@ class TestTTS:
         assert not os.path.isfile(
             os.path.join(
                 self.default_tts_cache,
-                "265944c108cbb00b2a621be5930513e03a0bb2cd_en_-_demo.mp3",
+                "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3",
             )
         )
 
@@ -508,7 +538,8 @@ class TestTTS:
             tts.DOMAIN,
             "demo_say",
             {
-                tts.ATTR_MESSAGE: "I person is on front of your door.",
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "There is someone at the door.",
                 tts.ATTR_CACHE: False,
             },
         )
@@ -518,7 +549,7 @@ class TestTTS:
         assert not os.path.isfile(
             os.path.join(
                 self.default_tts_cache,
-                "265944c108cbb00b2a621be5930513e03a0bb2cd_en_-_demo.mp3",
+                "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3",
             )
         )
 
@@ -529,7 +560,7 @@ class TestTTS:
         _, demo_data = self.demo_provider.get_tts_audio("bla", "en")
         cache_file = os.path.join(
             self.default_tts_cache,
-            "265944c108cbb00b2a621be5930513e03a0bb2cd_en_-_demo.mp3",
+            "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3",
         )
 
         os.mkdir(self.default_tts_cache)
@@ -548,14 +579,17 @@ class TestTTS:
             self.hass.services.call(
                 tts.DOMAIN,
                 "demo_say",
-                {tts.ATTR_MESSAGE: "I person is on front of your door."},
+                {
+                    "entity_id": "media_player.something",
+                    tts.ATTR_MESSAGE: "There is someone at the door.",
+                },
             )
         self.hass.block_till_done()
 
         assert len(calls) == 1
         assert calls[0].data[
             ATTR_MEDIA_CONTENT_ID
-        ] == "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd_en_-_demo.mp3".format(
+        ] == "{}/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3".format(
             self.hass.config.api.base_url
         )
 
@@ -575,7 +609,10 @@ class TestTTS:
         self.hass.services.call(
             tts.DOMAIN,
             "demo_say",
-            {tts.ATTR_MESSAGE: "I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "There is someone at the door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -586,7 +623,7 @@ class TestTTS:
         _, demo_data = self.demo_provider.get_tts_audio("bla", "en")
         cache_file = os.path.join(
             self.default_tts_cache,
-            "265944c108cbb00b2a621be5930513e03a0bb2cd_en_-_demo.mp3",
+            "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3",
         )
 
         os.mkdir(self.default_tts_cache)
@@ -601,7 +638,7 @@ class TestTTS:
         self.hass.start()
 
         url = (
-            "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd_en_-_demo.mp3"
+            "{}/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
         ).format(self.hass.config.api.base_url)
 
         req = requests.get(url)
@@ -618,14 +655,15 @@ async def test_setup_component_and_web_get_url(hass, hass_client):
     client = await hass_client()
 
     url = "/api/tts_get_url"
-    data = {"platform": "demo", "message": "I person is on front of your door."}
+    data = {"platform": "demo", "message": "There is someone at the door."}
 
     req = await client.post(url, json=data)
     assert req.status == 200
     response = await req.json()
     assert response.get("url") == (
-        "{}/api/tts_proxy/265944c108cbb00b2a62"
-        "1be5930513e03a0bb2cd_en_-_demo.mp3".format(hass.config.api.base_url)
+        "{}/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3".format(
+            hass.config.api.base_url
+        )
     )
 
     tts_cache = hass.config.path(tts.DEFAULT_CACHE_DIR)
@@ -642,7 +680,7 @@ async def test_setup_component_and_web_get_url_bad_config(hass, hass_client):
     client = await hass_client()
 
     url = "/api/tts_get_url"
-    data = {"message": "I person is on front of your door."}
+    data = {"message": "There is someone at the door."}
 
     req = await client.post(url, json=data)
     assert req.status == 400

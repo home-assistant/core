@@ -1,6 +1,7 @@
 """Intents for the light integration."""
 import voluptuous as vol
 
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 import homeassistant.helpers.config_validation as cv
@@ -8,7 +9,6 @@ import homeassistant.util.color as color_util
 
 from . import (
     ATTR_BRIGHTNESS_PCT,
-    ATTR_ENTITY_ID,
     ATTR_RGB_COLOR,
     DOMAIN,
     SERVICE_TURN_ON,
@@ -51,14 +51,12 @@ class SetIntentHandler(intent.IntentHandler):
             service_data[ATTR_RGB_COLOR] = slots["color"]["value"]
             # Use original passed in value of the color because we don't have
             # human readable names for that internally.
-            speech_parts.append(
-                "the color {}".format(intent_obj.slots["color"]["value"])
-            )
+            speech_parts.append(f"the color {intent_obj.slots['color']['value']}")
 
         if "brightness" in slots:
             intent.async_test_feature(state, SUPPORT_BRIGHTNESS, "changing brightness")
             service_data[ATTR_BRIGHTNESS_PCT] = slots["brightness"]["value"]
-            speech_parts.append("{}% brightness".format(slots["brightness"]["value"]))
+            speech_parts.append(f"{slots['brightness']['value']}% brightness")
 
         await hass.services.async_call(
             DOMAIN, SERVICE_TURN_ON, service_data, context=intent_obj.context

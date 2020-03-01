@@ -54,7 +54,7 @@ class SolarLogConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return False
 
     async def async_step_user(self, user_input=None):
-        """Step when user intializes a integration."""
+        """Step when user initializes a integration."""
         self._errors = {}
         if user_input is not None:
             # set some defaults in case we need to return to the form

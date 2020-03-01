@@ -31,7 +31,8 @@
                     "track_clients": "Netzwierk Cliente verfollegen",
                     "track_devices": "Netzwierk Apparater (Ubiquiti Apparater) verfollegen",
                     "track_wired_clients": "Kabel Netzwierk Cliente abez\u00e9ien"
-                }
+                },
+                "title": "UniFi Optiounen"
             },
             "init": {
                 "data": {
@@ -42,7 +43,9 @@
             "statistics_sensors": {
                 "data": {
                     "allow_bandwidth_sensors": "Bandbreet Benotzung Sensore fir Netzwierk Cliente erstellen"
-                }
+                },
+                "description": "Statistik Sensoren konfigur\u00e9ieren",
+                "title": "UniFi Optiounen"
             }
         }
     }

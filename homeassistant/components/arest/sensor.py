@@ -140,7 +140,7 @@ class ArestSensor(Entity):
         """Initialize the sensor."""
         self.arest = arest
         self._resource = resource
-        self._name = "{} {}".format(location.title(), name.title())
+        self._name = f"{location.title()} {name.title()}"
         self._variable = variable
         self._pin = pin
         self._state = None
@@ -204,8 +204,7 @@ class ArestData:
                 try:
                     if str(self._pin[0]) == "A":
                         response = requests.get(
-                            "{}/analog/{}".format(self._resource, self._pin[1:]),
-                            timeout=10,
+                            f"{self._resource,}/analog/{self._pin[1:]}", timeout=10
                         )
                         self.data = {"value": response.json()["return_value"]}
                 except TypeError:

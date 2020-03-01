@@ -1,4 +1,5 @@
 """Sensor for Last.fm account status."""
+import hashlib
 import logging
 import re
 
@@ -54,6 +55,7 @@ class LastfmSensor(Entity):
 
     def __init__(self, user, lastfm_api):
         """Initialize the sensor."""
+        self._unique_id = hashlib.sha256(user.encode("utf-8")).hexdigest()
         self._user = lastfm_api.get_user(user)
         self._name = user
         self._lastfm = lastfm_api
@@ -64,14 +66,14 @@ class LastfmSensor(Entity):
         self._cover = None
 
     @property
+    def unique_id(self):
+        """Return the unique ID of the sensor."""
+        return self._unique_id
+
+    @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def entity_id(self):
-        """Return the entity ID."""
-        return f"sensor.lastfm_{self._name}"
 
     @property
     def state(self):
@@ -87,7 +89,7 @@ class LastfmSensor(Entity):
         top = self._user.get_top_tracks(limit=1)[0]
         toptitle = re.search("', '(.+?)',", str(top))
         topartist = re.search("'(.+?)',", str(top))
-        self._topplayed = "{} - {}".format(topartist.group(1), toptitle.group(1))
+        self._topplayed = f"{topartist.group(1)} - {toptitle.group(1)}"
         if self._user.get_now_playing() is None:
             self._state = "Not Scrobbling"
             return

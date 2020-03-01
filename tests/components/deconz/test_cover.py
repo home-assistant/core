@@ -62,7 +62,7 @@ async def test_cover(hass):
     assert "cover.level_controllable_cover" in gateway.deconz_ids
     assert "cover.window_covering_device" in gateway.deconz_ids
     assert "cover.unsupported_cover" not in gateway.deconz_ids
-    assert len(hass.states.async_all()) == 5
+    assert len(hass.states.async_all()) == 3
 
     level_controllable_cover = hass.states.get("cover.level_controllable_cover")
     assert level_controllable_cover.state == "open"
@@ -74,7 +74,7 @@ async def test_cover(hass):
         "id": "1",
         "state": {"on": True},
     }
-    gateway.api.async_event_handler(state_changed_event)
+    gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
     level_controllable_cover = hass.states.get("cover.level_controllable_cover")
@@ -122,4 +122,4 @@ async def test_cover(hass):
 
     await gateway.async_reset()
 
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 0

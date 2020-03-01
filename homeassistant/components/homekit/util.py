@@ -102,9 +102,7 @@ def validate_entity_config(values):
         domain, _ = split_entity_id(entity)
 
         if not isinstance(config, dict):
-            raise vol.Invalid(
-                "The configuration for {} must be a dictionary.".format(entity)
-            )
+            raise vol.Invalid(f"The configuration for {entity} must be a dictionary.")
 
         if domain in ("alarm_control_panel", "lock"):
             config = CODE_SCHEMA(config)
@@ -212,8 +210,8 @@ def show_setup_message(hass, pincode):
     pin = pincode.decode()
     _LOGGER.info("Pincode: %s", pin)
     message = (
-        "To set up Home Assistant in the Home App, enter the "
-        "following code:\n### {}".format(pin)
+        f"To set up Home Assistant in the Home App, enter the "
+        f"following code:\n### {pin}"
     )
     hass.components.persistent_notification.create(
         message, "HomeKit Setup", HOMEKIT_NOTIFY_ID

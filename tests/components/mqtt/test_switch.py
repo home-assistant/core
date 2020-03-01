@@ -391,8 +391,7 @@ async def test_unique_id(hass):
 
     async_fire_mqtt_message(hass, "test-topic", "payload")
 
-    assert len(hass.states.async_entity_ids()) == 2
-    # all switches group is 1, unique id created is 1
+    assert len(hass.states.async_entity_ids()) == 1
 
 
 async def test_discovery_removal_switch(hass, mqtt_mock, caplog):

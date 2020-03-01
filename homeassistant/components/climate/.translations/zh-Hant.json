@@ -1,16 +1,16 @@
 {
     "device_automation": {
         "action_type": {
-            "set_hvac_mode": "\u8b8a\u66f4 {entity_name} HVAC \u6a21\u5f0f",
-            "set_preset_mode": "\u8b8a\u66f4 {entity_name} \u8a2d\u5b9a\u6a21\u5f0f"
+            "set_hvac_mode": "\u8b8a\u66f4{entity_name} HVAC \u6a21\u5f0f",
+            "set_preset_mode": "\u8b8a\u66f4{entity_name}\u8a2d\u5b9a\u6a21\u5f0f"
         },
         "condition_type": {
-            "is_hvac_mode": "{entity_name} \u8a2d\u5b9a\u70ba\u6307\u5b9a HVAC \u6a21\u5f0f",
-            "is_preset_mode": "{entity_name} \u8a2d\u5b9a\u70ba\u6307\u5b9a\u8a2d\u5b9a\u6a21\u5f0f"
+            "is_hvac_mode": "{entity_name}\u8a2d\u5b9a\u70ba\u6307\u5b9a HVAC \u6a21\u5f0f",
+            "is_preset_mode": "{entity_name}\u8a2d\u5b9a\u70ba\u6307\u5b9a\u8a2d\u5b9a\u6a21\u5f0f"
         },
         "trigger_type": {
-            "current_humidity_changed": "{entity_name} \u91cf\u6e2c\u6fd5\u5ea6\u5df2\u8b8a\u66f4",
-            "current_temperature_changed": "{entity_name} \u91cf\u6e2c\u6eab\u5ea6\u5df2\u8b8a\u66f4",
+            "current_humidity_changed": "{entity_name}\u91cf\u6e2c\u6fd5\u5ea6\u5df2\u8b8a\u66f4",
+            "current_temperature_changed": "{entity_name}\u91cf\u6e2c\u6eab\u5ea6\u5df2\u8b8a\u66f4",
             "hvac_mode_changed": "{entity_name} HVAC \u6a21\u5f0f\u5df2\u8b8a\u66f4"
         }
     }

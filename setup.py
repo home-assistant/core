@@ -11,7 +11,7 @@ PROJECT_PACKAGE_NAME = "homeassistant"
 PROJECT_LICENSE = "Apache License 2.0"
 PROJECT_AUTHOR = "The Home Assistant Authors"
 PROJECT_COPYRIGHT = " 2013-{}, {}".format(dt.now().year, PROJECT_AUTHOR)
-PROJECT_URL = "https://home-assistant.io/"
+PROJECT_URL = "https://www.home-assistant.io/"
 PROJECT_EMAIL = "hello@home-assistant.io"
 
 PROJECT_GITHUB_USERNAME = "home-assistant"
@@ -38,7 +38,8 @@ REQUIRES = [
     "attrs==19.3.0",
     "bcrypt==3.1.7",
     "certifi>=2019.11.28",
-    "importlib-metadata==1.3.0",
+    "ciso8601==2.1.3",
+    "importlib-metadata==1.5.0",
     "jinja2>=2.10.3",
     "PyJWT==1.7.1",
     # PyJWT has loose dependency. We want the latest one.
@@ -46,8 +47,8 @@ REQUIRES = [
     "pip>=8.0.3",
     "python-slugify==4.0.0",
     "pytz>=2019.03",
-    "pyyaml==5.2.0",
-    "requests==2.22.0",
+    "pyyaml==5.3",
+    "requests==2.23.0",
     "ruamel.yaml==0.15.100",
     "voluptuous==0.11.7",
     "voluptuous-serialize==2.3.0",

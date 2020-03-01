@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Kod pocztowy ju\u017c zarejestrowany",
+            "identifier_exists": "Kod pocztowy jest ju\u017c zarejestrowany.",
             "invalid_zip_code": "Kod pocztowy jest nieprawid\u0142owy"
         },
         "step": {

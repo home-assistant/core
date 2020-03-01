@@ -19,6 +19,7 @@ def _get_device_class(zone_type):
         ZoneType.ALARM: "motion",
         ZoneType.ENTRY_EXIT: "opening",
         ZoneType.FIRE: "smoke",
+        ZoneType.TECHNICAL: "power",
     }.get(zone_type)
 
 
@@ -62,14 +63,7 @@ class SpcBinarySensor(BinarySensorDevice):
     @property
     def is_on(self):
         """Whether the device is switched on."""
-
         return self._zone.input == ZoneInput.OPEN
-
-    @property
-    def hidden(self) -> bool:
-        """Whether the device is hidden by default."""
-        # These type of sensors are probably mainly used for automations
-        return True
 
     @property
     def should_poll(self):

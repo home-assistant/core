@@ -10,9 +10,14 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_TIME,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
     CONF_TOKEN,
     CONF_USERNAME,
     TEMP_CELSIUS,
+    TIME_SECONDS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -30,13 +35,21 @@ ATTR_VOLATILE_ORGANIC_COMPOUNDS = "VOC"
 ATTR_FOOBOT_INDEX = "index"
 
 SENSOR_TYPES = {
-    "time": [ATTR_TIME, "s"],
-    "pm": [ATTR_PM2_5, "µg/m3", "mdi:cloud"],
+    "time": [ATTR_TIME, TIME_SECONDS],
+    "pm": [ATTR_PM2_5, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, "mdi:cloud"],
     "tmp": [ATTR_TEMPERATURE, TEMP_CELSIUS, "mdi:thermometer"],
-    "hum": [ATTR_HUMIDITY, "%", "mdi:water-percent"],
-    "co2": [ATTR_CARBON_DIOXIDE, "ppm", "mdi:periodic-table-co2"],
-    "voc": [ATTR_VOLATILE_ORGANIC_COMPOUNDS, "ppb", "mdi:cloud"],
-    "allpollu": [ATTR_FOOBOT_INDEX, "%", "mdi:percent"],
+    "hum": [ATTR_HUMIDITY, UNIT_PERCENTAGE, "mdi:water-percent"],
+    "co2": [
+        ATTR_CARBON_DIOXIDE,
+        CONCENTRATION_PARTS_PER_MILLION,
+        "mdi:periodic-table-co2",
+    ],
+    "voc": [
+        ATTR_VOLATILE_ORGANIC_COMPOUNDS,
+        CONCENTRATION_PARTS_PER_BILLION,
+        "mdi:cloud",
+    ],
+    "allpollu": [ATTR_FOOBOT_INDEX, UNIT_PERCENTAGE, "mdi:percent"],
 }
 
 SCAN_INTERVAL = timedelta(minutes=10)
@@ -89,7 +102,7 @@ class FoobotSensor(Entity):
         """Initialize the sensor."""
         self._uuid = device["uuid"]
         self.foobot_data = data
-        self._name = "Foobot {} {}".format(device["name"], SENSOR_TYPES[sensor_type][0])
+        self._name = f"Foobot {device['name']} {SENSOR_TYPES[sensor_type][0]}"
         self.type = sensor_type
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
 

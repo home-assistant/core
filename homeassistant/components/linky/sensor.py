@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     ENERGY_KILO_WATT_HOUR,
 )
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
@@ -28,11 +29,6 @@ TIME = "time"
 INDEX_CURRENT = -1
 INDEX_LAST = -2
 ATTRIBUTION = "Data provided by Enedis"
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up the Linky platform."""
-    pass
 
 
 async def async_setup_entry(
@@ -78,6 +74,7 @@ class LinkyAccount:
             _LOGGER.debug(json.dumps(self._data, indent=2))
         except PyLinkyException as exp:
             _LOGGER.error(exp)
+            raise PlatformNotReady
         finally:
             client.close_session()
 
@@ -151,6 +148,9 @@ class LinkySensor(Entity):
 
     async def async_update(self) -> None:
         """Retrieve the new data for the sensor."""
+        if self._account.data is None:
+            return
+
         data = self._account.data[self._scale][self._when]
         self._consumption = data[CONSUMPTION]
         self._time = data[TIME]

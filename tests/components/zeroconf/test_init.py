@@ -31,7 +31,7 @@ def get_service_info_mock(service_type, name):
         weight=0,
         priority=0,
         server="name.local.",
-        properties={b"macaddress": b"ABCDEF012345"},
+        properties={b"macaddress": b"ABCDEF012345", b"non-utf8-value": b"ABCDEF\x8a"},
     )
 
 
@@ -93,3 +93,16 @@ async def test_homekit_match_full(hass, mock_zeroconf):
     assert len(mock_service_browser.mock_calls) == 1
     assert len(mock_config_flow.mock_calls) == 2
     assert mock_config_flow.mock_calls[0][1][0] == "hue"
+
+
+async def test_info_from_service_non_utf8(hass):
+    """Test info_from_service handles non UTF-8 property values correctly."""
+    service_type = "_test._tcp.local."
+    info = zeroconf.info_from_service(
+        get_service_info_mock(service_type, f"test.{service_type}")
+    )
+    raw_info = info["properties"].pop("_raw", False)
+    assert raw_info
+    assert len(info["properties"]) <= len(raw_info)
+    assert "non-utf8-value" not in info["properties"]
+    assert raw_info["non-utf8-value"] is not None

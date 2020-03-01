@@ -9,14 +9,15 @@ from . import (
     TYPE_SOLARRADIATION_LX,
     AmbientWeatherEntity,
 )
-from .const import ATTR_LAST_DATA, DATA_CLIENT, DOMAIN, TYPE_SENSOR
+from .const import (
+    ATTR_LAST_DATA,
+    ATTR_MONITORED_CONDITIONS,
+    DATA_CLIENT,
+    DOMAIN,
+    TYPE_SENSOR,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up Ambient PWS sensors based on existing config."""
-    pass
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -25,7 +26,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     sensor_list = []
     for mac_address, station in ambient.stations.items():
-        for condition in ambient.monitored_conditions:
+        for condition in station[ATTR_MONITORED_CONDITIONS]:
             name, unit, kind, device_class = SENSOR_TYPES[condition]
             if kind == TYPE_SENSOR:
                 sensor_list.append(
@@ -82,7 +83,11 @@ class AmbientWeatherSensor(AmbientWeatherEntity):
             w_m2_brightness_val = self._ambient.stations[self._mac_address][
                 ATTR_LAST_DATA
             ].get(TYPE_SOLARRADIATION)
-            self._state = round(float(w_m2_brightness_val) / 0.0079)
+
+            if w_m2_brightness_val is None:
+                self._state = None
+            else:
+                self._state = round(float(w_m2_brightness_val) / 0.0079)
         else:
             self._state = self._ambient.stations[self._mac_address][ATTR_LAST_DATA].get(
                 self._sensor_type

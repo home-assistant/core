@@ -4,7 +4,7 @@ from unittest.mock import patch
 from teslajsonpy import TeslaException
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.tesla.const import DOMAIN
+from homeassistant.components.tesla.const import DOMAIN, MIN_SCAN_INTERVAL
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_PASSWORD,
@@ -40,8 +40,8 @@ async def test_form(hass):
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "test@email.com"
     assert result2["data"] == {
-        "token": "test-refresh-token",
-        "access_token": "test-access-token",
+        CONF_TOKEN: "test-refresh-token",
+        CONF_ACCESS_TOKEN: "test-access-token",
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
@@ -157,4 +157,4 @@ async def test_option_flow_input_floor(hass):
         result["flow_id"], user_input={CONF_SCAN_INTERVAL: 1}
     )
     assert result["type"] == "create_entry"
-    assert result["data"] == {CONF_SCAN_INTERVAL: 300}
+    assert result["data"] == {CONF_SCAN_INTERVAL: MIN_SCAN_INTERVAL}

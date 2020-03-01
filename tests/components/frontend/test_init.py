@@ -1,7 +1,7 @@
 """The tests for Home Assistant frontend."""
 import re
-from unittest.mock import patch
 
+from asynctest import patch
 import pytest
 
 from homeassistant.components.frontend import (
@@ -126,6 +126,16 @@ async def test_themes_api(hass, hass_ws_client):
     assert msg["result"]["default_theme"] == "default"
     assert msg["result"]["themes"] == {"happy": {"primary-color": "red"}}
 
+    # safe mode
+    hass.config.safe_mode = True
+    await client.send_json({"id": 6, "type": "frontend/get_themes"})
+    msg = await client.receive_json()
+
+    assert msg["result"]["default_theme"] == "safe_mode"
+    assert msg["result"]["themes"] == {
+        "safe_mode": {"primary-color": "#db4437", "accent-color": "#eeee02"}
+    }
+
 
 async def test_themes_set_theme(hass, hass_ws_client):
     """Test frontend.set_theme service."""
@@ -173,7 +183,7 @@ async def test_themes_reload_themes(hass, hass_ws_client):
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.frontend.load_yaml_config_file",
+        "homeassistant.components.frontend.async_hass_config_yaml",
         return_value={DOMAIN: {CONF_THEMES: {"sad": {"primary-color": "blue"}}}},
     ):
         await hass.services.async_call(

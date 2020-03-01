@@ -4,7 +4,5 @@
   "documentation": "https://www.home-assistant.io/integrations/keba",
   "requirements": ["keba-kecontact==1.0.0"],
   "dependencies": [],
-  "codeowners": [
-    "@dannerph"
-  ]
+  "codeowners": ["@dannerph"]
 }

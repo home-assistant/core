@@ -5,6 +5,7 @@ import logging
 from pybotvac.exceptions import NeatoRobotException
 
 from homeassistant.components.sensor import DEVICE_CLASS_BATTERY
+from homeassistant.const import UNIT_PERCENTAGE
 from homeassistant.helpers.entity import Entity
 
 from .const import NEATO_DOMAIN, NEATO_LOGIN, NEATO_ROBOTS, SCAN_INTERVAL_MINUTES
@@ -14,11 +15,6 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=SCAN_INTERVAL_MINUTES)
 
 BATTERY = "Battery"
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Neato sensor."""
-    pass
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -88,7 +84,7 @@ class NeatoSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return unit of measurement."""
-        return "%"
+        return UNIT_PERCENTAGE
 
     @property
     def device_info(self):

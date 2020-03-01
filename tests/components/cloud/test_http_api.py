@@ -1,7 +1,7 @@
 """Tests for the HTTP API for the cloud component."""
 import asyncio
 from ipaddress import ip_network
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from hass_nabucasa import thingtalk
 from hass_nabucasa.auth import Unauthenticated, UnknownError
@@ -21,7 +21,6 @@ from . import mock_cloud, mock_cloud_prefs
 from tests.common import mock_coro
 from tests.components.google_assistant import MockConfig
 
-GOOGLE_ACTIONS_SYNC_URL = "https://api-test.hass.io/google_actions_sync"
 SUBSCRIPTION_INFO_URL = "https://api-test.hass.io/subscription_info"
 
 
@@ -59,7 +58,6 @@ def setup_api(hass, aioclient_mock):
                 "user_pool_id": "user_pool_id",
                 "region": "region",
                 "relayer": "relayer",
-                "google_actions_sync_url": GOOGLE_ACTIONS_SYNC_URL,
                 "subscription_info_url": SUBSCRIPTION_INFO_URL,
                 "google_actions": {"filter": {"include_domains": "light"}},
                 "alexa": {
@@ -85,22 +83,26 @@ def mock_cognito():
         yield mock_cog()
 
 
-async def test_google_actions_sync(
-    mock_cognito, mock_cloud_login, cloud_client, aioclient_mock
-):
+async def test_google_actions_sync(mock_cognito, mock_cloud_login, cloud_client):
     """Test syncing Google Actions."""
-    aioclient_mock.post(GOOGLE_ACTIONS_SYNC_URL)
-    req = await cloud_client.post("/api/cloud/google_actions/sync")
-    assert req.status == 200
+    with patch(
+        "hass_nabucasa.cloud_api.async_google_actions_request_sync",
+        return_value=mock_coro(Mock(status=200)),
+    ) as mock_request_sync:
+        req = await cloud_client.post("/api/cloud/google_actions/sync")
+        assert req.status == 200
+        assert len(mock_request_sync.mock_calls) == 1
 
 
-async def test_google_actions_sync_fails(
-    mock_cognito, mock_cloud_login, cloud_client, aioclient_mock
-):
+async def test_google_actions_sync_fails(mock_cognito, mock_cloud_login, cloud_client):
     """Test syncing Google Actions gone bad."""
-    aioclient_mock.post(GOOGLE_ACTIONS_SYNC_URL, status=403)
-    req = await cloud_client.post("/api/cloud/google_actions/sync")
-    assert req.status == 403
+    with patch(
+        "hass_nabucasa.cloud_api.async_google_actions_request_sync",
+        return_value=mock_coro(Mock(status=500)),
+    ) as mock_request_sync:
+        req = await cloud_client.post("/api/cloud/google_actions/sync")
+        assert req.status == 500
+        assert len(mock_request_sync.mock_calls) == 1
 
 
 async def test_login_view(hass, cloud_client):

@@ -241,57 +241,46 @@ class SoundTouchDevice(MediaPlayerDevice):
     def turn_off(self):
         """Turn off media player."""
         self._device.power_off()
-        self._status = self._device.status()
 
     def turn_on(self):
         """Turn on media player."""
         self._device.power_on()
-        self._status = self._device.status()
 
     def volume_up(self):
         """Volume up the media player."""
         self._device.volume_up()
-        self._volume = self._device.volume()
 
     def volume_down(self):
         """Volume down media player."""
         self._device.volume_down()
-        self._volume = self._device.volume()
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         self._device.set_volume(int(volume * 100))
-        self._volume = self._device.volume()
 
     def mute_volume(self, mute):
         """Send mute command."""
         self._device.mute()
-        self._volume = self._device.volume()
 
     def media_play_pause(self):
         """Simulate play pause media player."""
         self._device.play_pause()
-        self._status = self._device.status()
 
     def media_play(self):
         """Send play command."""
         self._device.play()
-        self._status = self._device.status()
 
     def media_pause(self):
         """Send media pause command to media player."""
         self._device.pause()
-        self._status = self._device.status()
 
     def media_next_track(self):
         """Send next track command."""
         self._device.next_track()
-        self._status = self._device.status()
 
     def media_previous_track(self):
         """Send the previous track command."""
         self._device.previous_track()
-        self._status = self._device.status()
 
     @property
     def media_image_url(self):

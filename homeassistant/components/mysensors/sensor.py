@@ -3,16 +3,18 @@ from homeassistant.components import mysensors
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
+    MASS_KILOGRAMS,
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
 )
 
 SENSORS = {
     "V_TEMP": [None, "mdi:thermometer"],
-    "V_HUM": ["%", "mdi:water-percent"],
-    "V_DIMMER": ["%", "mdi:percent"],
-    "V_PERCENTAGE": ["%", "mdi:percent"],
+    "V_HUM": [UNIT_PERCENTAGE, "mdi:water-percent"],
+    "V_DIMMER": [UNIT_PERCENTAGE, "mdi:percent"],
+    "V_PERCENTAGE": [UNIT_PERCENTAGE, "mdi:percent"],
     "V_PRESSURE": [None, "mdi:gauge"],
     "V_FORECAST": [None, "mdi:weather-partly-cloudy"],
     "V_RAIN": [None, "mdi:weather-rainy"],
@@ -20,12 +22,12 @@ SENSORS = {
     "V_WIND": [None, "mdi:weather-windy"],
     "V_GUST": [None, "mdi:weather-windy"],
     "V_DIRECTION": ["°", "mdi:compass"],
-    "V_WEIGHT": ["kg", "mdi:weight-kilogram"],
+    "V_WEIGHT": [MASS_KILOGRAMS, "mdi:weight-kilogram"],
     "V_DISTANCE": ["m", "mdi:ruler"],
     "V_IMPEDANCE": ["ohm", None],
     "V_WATT": [POWER_WATT, None],
     "V_KWH": [ENERGY_KILO_WATT_HOUR, None],
-    "V_LIGHT_LEVEL": ["%", "mdi:white-balance-sunny"],
+    "V_LIGHT_LEVEL": [UNIT_PERCENTAGE, "mdi:white-balance-sunny"],
     "V_FLOW": ["m", "mdi:gauge"],
     "V_VOLUME": ["m³", None],
     "V_LEVEL": {

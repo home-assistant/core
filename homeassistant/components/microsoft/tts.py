@@ -6,7 +6,7 @@ from pycsspeechtts import pycsspeechtts
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
-from homeassistant.const import CONF_API_KEY, CONF_TYPE
+from homeassistant.const import CONF_API_KEY, CONF_TYPE, UNIT_PERCENTAGE
 import homeassistant.helpers.config_validation as cv
 
 CONF_GENDER = "gender"
@@ -122,8 +122,8 @@ class MicrosoftProvider(Provider):
         self._gender = gender
         self._type = ttype
         self._output = DEFAULT_OUTPUT
-        self._rate = f"{rate}%"
-        self._volume = f"{volume}%"
+        self._rate = f"{rate}{UNIT_PERCENTAGE}"
+        self._volume = f"{volume}{UNIT_PERCENTAGE}"
         self._pitch = pitch
         self._contour = contour
         self._region = region

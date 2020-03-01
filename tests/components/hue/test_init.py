@@ -1,5 +1,7 @@
 """Test Hue setup process."""
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
+
+from asynctest import CoroutineMock, patch
 
 from homeassistant.components import hue
 from homeassistant.setup import async_setup_component
@@ -29,11 +31,14 @@ async def test_setup_defined_hosts_known_auth(hass):
                 hue.DOMAIN,
                 {
                     hue.DOMAIN: {
-                        hue.CONF_BRIDGES: {
-                            hue.CONF_HOST: "0.0.0.0",
-                            hue.CONF_ALLOW_HUE_GROUPS: False,
-                            hue.CONF_ALLOW_UNREACHABLE: True,
-                        }
+                        hue.CONF_BRIDGES: [
+                            {
+                                hue.CONF_HOST: "0.0.0.0",
+                                hue.CONF_ALLOW_HUE_GROUPS: False,
+                                hue.CONF_ALLOW_UNREACHABLE: True,
+                            },
+                            {hue.CONF_HOST: "1.1.1.1"},
+                        ]
                     }
                 },
             )
@@ -41,7 +46,7 @@ async def test_setup_defined_hosts_known_auth(hass):
         )
 
     # Flow started for discovered bridge
-    assert len(hass.config_entries.flow.async_progress()) == 0
+    assert len(hass.config_entries.flow.async_progress()) == 1
 
     # Config stored for domain.
     assert hass.data[hue.DATA_CONFIGS] == {
@@ -49,7 +54,12 @@ async def test_setup_defined_hosts_known_auth(hass):
             hue.CONF_HOST: "0.0.0.0",
             hue.CONF_ALLOW_HUE_GROUPS: False,
             hue.CONF_ALLOW_UNREACHABLE: True,
-        }
+        },
+        "1.1.1.1": {
+            hue.CONF_HOST: "1.1.1.1",
+            hue.CONF_ALLOW_HUE_GROUPS: True,
+            hue.CONF_ALLOW_UNREACHABLE: False,
+        },
     }
 
 
@@ -175,3 +185,33 @@ async def test_setting_unique_id(hass):
         assert await async_setup_component(hass, hue.DOMAIN, {}) is True
 
     assert entry.unique_id == "mock-id"
+
+
+async def test_security_vuln_check(hass):
+    """Test that we report security vulnerabilities."""
+    assert await async_setup_component(hass, "persistent_notification", {})
+    entry = MockConfigEntry(domain=hue.DOMAIN, data={"host": "0.0.0.0"})
+    entry.add_to_hass(hass)
+
+    with patch.object(
+        hue,
+        "HueBridge",
+        Mock(
+            return_value=Mock(
+                async_setup=CoroutineMock(return_value=True),
+                api=Mock(
+                    config=Mock(
+                        bridgeid="", mac="", modelid="BSB002", swversion="1935144020"
+                    )
+                ),
+            )
+        ),
+    ):
+
+        assert await async_setup_component(hass, "hue", {})
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("persistent_notification.hue_hub_firmware")
+    assert state is not None
+    assert "CVE-2020-6007" in state.attributes["message"]

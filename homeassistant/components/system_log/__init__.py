@@ -99,6 +99,7 @@ class LogEntry:
     def __init__(self, record, stack, source):
         """Initialize a log entry."""
         self.first_occured = self.timestamp = record.created
+        self.name = record.name
         self.level = record.levelname
         self.message = record.getMessage()
         self.exception = ""
@@ -114,7 +115,7 @@ class LogEntry:
 
     def hash(self):
         """Calculate a key for DedupStore."""
-        return frozenset([self.message, self.root_cause])
+        return frozenset([self.name, self.message, self.root_cause])
 
     def to_dict(self):
         """Convert object into dict to maintain backward compatibility."""

@@ -27,5 +27,27 @@
             }
         },
         "title": "MQTT"
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "F\u00f8rste knap",
+            "button_2": "Anden knap",
+            "button_3": "Tredje knap",
+            "button_4": "Fjerde knap",
+            "button_5": "Femte knap",
+            "button_6": "Sjette knap",
+            "turn_off": "Sluk",
+            "turn_on": "T\u00e6nd"
+        },
+        "trigger_type": {
+            "button_double_press": "\"{subtype}\" dobbeltklikket",
+            "button_long_press": "\"{subtype}\" trykket p\u00e5 konstant",
+            "button_long_release": "\"{subtype}\" sluppet efter langt tryk",
+            "button_quadruple_press": "\"{subtype}\" firedobbelt-klikket",
+            "button_quintuple_press": "\"{subtype}\" femdobbelt-klikket",
+            "button_short_press": "\"{subtype}\" trykket p\u00e5",
+            "button_short_release": "\"{subtype}\" sluppet",
+            "button_triple_press": "\"{subtype}\" tredobbeltklikket"
+        }
     }
 }

@@ -31,7 +31,7 @@
                 "data": {
                     "server": "Server"
                 },
-                "description": "Mehrere Server verf\u00fcgbar, w\u00e4hlen Sie einen aus:",
+                "description": "Mehrere Server verf\u00fcgbar, w\u00e4hle einen aus:",
                 "title": "Plex-Server ausw\u00e4hlen"
             },
             "start_website_auth": {
@@ -43,7 +43,7 @@
                     "manual_setup": "Manuelle Einrichtung",
                     "token": "Plex Token"
                 },
-                "description": "Fahren Sie mit der Autorisierung unter plex.tv fort oder konfigurieren Sie einen Server manuell.",
+                "description": "Fahre mit der Autorisierung unter plex.tv fort oder konfiguriere einen Server manuell.",
                 "title": "Plex Server verbinden"
             }
         },
@@ -53,6 +53,8 @@
         "step": {
             "plex_mp_settings": {
                 "data": {
+                    "ignore_new_shared_users": "Ignorieren neuer verwalteter/freigegebener Benutzer",
+                    "monitored_users": "\u00dcberwachte Benutzer",
                     "show_all_controls": "Alle Steuerelemente anzeigen",
                     "use_episode_art": "Episode-Bilder verwenden"
                 },
