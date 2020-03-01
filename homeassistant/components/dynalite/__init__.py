@@ -120,16 +120,11 @@ async def async_setup_entry(hass, entry):
     """Set up a bridge from a config entry."""
     LOGGER.debug("Setting up entry %s", entry.data)
     bridge = DynaliteBridge(hass, entry.data)
-    hass.data[DOMAIN][entry.entry_id] = bridge
     entry.add_update_listener(async_entry_changed)
     if not await bridge.async_setup():
         LOGGER.error("Could not set up bridge for entry %s", entry.data)
-        hass.data[DOMAIN].pop(entry.entry_id)
-        return False
-    if not await bridge.try_connection():
-        LOGGER.error("Could not connect with entry %s", entry)
-        hass.data[DOMAIN].pop(entry.entry_id)
         raise ConfigEntryNotReady
+    hass.data[DOMAIN][entry.entry_id] = bridge
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "light")
     )
