@@ -20,6 +20,7 @@ from .const import (
     CONF_AUTO_DISCOVER,
     CONF_BRIDGES,
     CONF_CHANNEL,
+    CONF_CHANNEL_TYPE,
     CONF_DEFAULT,
     CONF_FADE,
     CONF_NAME,
@@ -27,6 +28,7 @@ from .const import (
     CONF_POLLTIMER,
     CONF_PORT,
     CONF_PRESET,
+    DEFAULT_CHANNEL_TYPE,
     DEFAULT_NAME,
     DEFAULT_PORT,
     DOMAIN,
@@ -44,7 +46,13 @@ def num_string(value):
 
 
 CHANNEL_DATA_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_NAME): cv.string, vol.Optional(CONF_FADE): vol.Coerce(float)}
+    {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_FADE): vol.Coerce(float),
+        vol.Optional(CONF_CHANNEL_TYPE, default=DEFAULT_CHANNEL_TYPE): vol.Any(
+            "light", "switch"
+        ),
+    }
 )
 
 CHANNEL_SCHEMA = vol.Schema({num_string: CHANNEL_DATA_SCHEMA})
@@ -141,11 +149,13 @@ async def async_setup_entry(hass, entry):
     """Set up a bridge from a config entry."""
     LOGGER.debug("Setting up entry %s", entry.data)
     bridge = DynaliteBridge(hass, entry.data)
+    # need to do it before the listener
+    hass.data[DOMAIN][entry.entry_id] = bridge
     entry.add_update_listener(async_entry_changed)
     if not await bridge.async_setup():
         LOGGER.error("Could not set up bridge for entry %s", entry.data)
+        hass.data[DOMAIN][entry.entry_id] = None
         raise ConfigEntryNotReady
-    hass.data[DOMAIN][entry.entry_id] = bridge
     for platform in ENTITY_PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
