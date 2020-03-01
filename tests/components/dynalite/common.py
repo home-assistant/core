@@ -1,9 +1,10 @@
 """Common functions for tests."""
-from asynctest import Mock, call, patch
+from asynctest import CoroutineMock, Mock, call, patch
 
 from homeassistant.components import dynalite
 from homeassistant.helpers import entity_registry
-from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 ATTR_SERVICE = "service"
 ATTR_METHOD = "method"
@@ -32,20 +33,16 @@ async def get_entry_id_from_hass(hass):
 async def create_entity_from_device(hass, device):
     """Set up the component and platform and create a light based on the device provided."""
     host = "1.2.3.4"
+    entry = MockConfigEntry(domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host})
+    entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
-        return_value=True,
-    ):
-        assert await async_setup_component(
-            hass,
-            dynalite.DOMAIN,
-            {dynalite.DOMAIN: {dynalite.CONF_BRIDGES: [{dynalite.CONF_HOST: host}]}},
-        )
-    await hass.async_block_till_done()
-    # Find the bridge
-    entry_id = await get_entry_id_from_hass(hass)
-    bridge = hass.data[dynalite.DOMAIN][entry_id]
-    bridge.dynalite_devices.newDeviceFunc([device])
+        "homeassistant.components.dynalite.bridge.DynaliteDevices"
+    ) as mock_dyn_dev:
+        mock_dyn_dev().async_setup = CoroutineMock(return_value=True)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        new_device_func = mock_dyn_dev.mock_calls[1][2]["newDeviceFunc"]
+        new_device_func([device])
     await hass.async_block_till_done()
 
 
