@@ -202,7 +202,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     def try_connect(self):
         """Try to connect to the Websocket TV."""
-        for self.port in (8002, 8001):
+        for self.port in (8001, 8002):
             config = {
                 CONF_NAME: VALUE_CONF_NAME,
                 CONF_HOST: self.host,
@@ -225,10 +225,10 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     self.token = remote.token
                 LOGGER.debug("Working config: %s", _hide_token(config))
                 return RESULT_SUCCESS
-            except (WebSocketException, ConnectionFailure):
+            except WebSocketException:
                 LOGGER.debug("Working but unsupported config: %s", _hide_token(config))
                 return RESULT_NOT_SUPPORTED
-            except OSError as err:
+            except (OSError, ConnectionFailure) as err:
                 LOGGER.debug("Failing config: %s, error: %s", _hide_token(config), err)
 
         return RESULT_NOT_SUCCESSFUL

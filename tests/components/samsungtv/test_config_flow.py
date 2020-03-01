@@ -5,6 +5,7 @@ from asynctest import mock
 import pytest
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
 from samsungtvws.exceptions import ConnectionFailure
+from websocket import WebSocketProtocolException
 
 from homeassistant.components.samsungtv.const import (
     CONF_MANUFACTURER,
@@ -166,7 +167,7 @@ async def test_user_websocket_not_supported(hass):
         "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
     ), patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS",
-        side_effect=ConnectionFailure("Boom"),
+        side_effect=WebSocketProtocolException("Boom"),
     ), patch(
         "homeassistant.components.samsungtv.config_flow.socket"
     ):
@@ -185,6 +186,23 @@ async def test_user_not_successful(hass):
     ), patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS",
         side_effect=OSError("Boom"),
+    ), patch(
+        "homeassistant.components.samsungtv.config_flow.socket"
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
+        )
+        assert result["type"] == "abort"
+        assert result["reason"] == "not_successful"
+
+
+async def test_user_not_successful_2(hass):
+    """Test starting a flow by user but no connection found."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
+    ), patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS",
+        side_effect=ConnectionFailure("Boom"),
     ), patch(
         "homeassistant.components.samsungtv.config_flow.socket"
     ):
@@ -308,7 +326,7 @@ async def test_ssdp_websocket_not_supported(hass):
         "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
     ), patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS",
-        side_effect=ConnectionFailure("Boom"),
+        side_effect=WebSocketProtocolException("Boom"),
     ), patch(
         "homeassistant.components.samsungtv.config_flow.socket"
     ):
@@ -334,6 +352,32 @@ async def test_ssdp_not_successful(hass):
     ), patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS",
         side_effect=OSError("Boom"),
+    ), patch(
+        "homeassistant.components.samsungtv.config_flow.socket"
+    ):
+
+        # confirm to add the entry
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "ssdp"}, data=MOCK_SSDP_DATA
+        )
+        assert result["type"] == "form"
+        assert result["step_id"] == "confirm"
+
+        # device not found
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input="whatever"
+        )
+        assert result["type"] == "abort"
+        assert result["reason"] == "not_successful"
+
+
+async def test_ssdp_not_successful_2(hass):
+    """Test starting a flow from discovery but no device found."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
+    ), patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS",
+        side_effect=ConnectionFailure("Boom"),
     ), patch(
         "homeassistant.components.samsungtv.config_flow.socket"
     ):
@@ -411,7 +455,7 @@ async def test_autodetect_websocket(hass, remote, remotews):
             call(
                 host="fake_host",
                 name="HomeAssistant",
-                port=8002,
+                port=8001,
                 timeout=31,
                 token=None,
             )
@@ -482,14 +526,14 @@ async def test_autodetect_none(hass, remote, remotews):
             call(
                 host="fake_host",
                 name="HomeAssistant",
-                port=8002,
+                port=8001,
                 timeout=31,
                 token=None,
             ),
             call(
                 host="fake_host",
                 name="HomeAssistant",
-                port=8001,
+                port=8002,
                 timeout=31,
                 token=None,
             ),
