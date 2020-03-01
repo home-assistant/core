@@ -14,6 +14,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
+from ...helpers.entity_registry import async_get_registry
 from .const import DOMAIN, FEED
 
 _LOGGER = logging.getLogger(__name__)
@@ -93,6 +94,9 @@ class GeonetnzQuakesEvent(GeolocationEvent):
         """Call when entity will be removed from hass."""
         self._remove_signal_delete()
         self._remove_signal_update()
+        # Remove from entity registry.
+        entity_registry = await async_get_registry(self.hass)
+        entity_registry.async_remove(self.entity_id)
 
     @callback
     def _delete_callback(self):
