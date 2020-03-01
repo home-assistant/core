@@ -11,6 +11,7 @@ from .common import (
     ATTR_SERVICE,
     create_entity_from_device,
     create_mock_device,
+    get_entry_id_from_hass,
     run_service_tests,
 )
 
@@ -44,7 +45,7 @@ async def test_remove_entity(hass, mock_device):
     await create_entity_from_device(hass, mock_device)
     assert hass.states.get("light.name")
     assert len(hass.data[dynalite.DOMAIN]) == 1
-    entry_id = next(iter(hass.data[dynalite.DOMAIN]))
+    entry_id = await get_entry_id_from_hass(hass)
     assert await hass.config_entries.async_unload(entry_id)
     await hass.async_block_till_done()
     assert not hass.states.get("light.name")

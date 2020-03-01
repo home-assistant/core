@@ -5,7 +5,7 @@ from asynctest import patch
 from homeassistant import config_entries
 from homeassistant.components import dynalite
 
-from .common import get_bridge_from_hass
+from .common import get_entry_id_from_hass
 
 from tests.common import MockConfigEntry
 
@@ -81,7 +81,8 @@ async def test_existing_update(hass):
             data={dynalite.CONF_HOST: host, dynalite.CONF_PORT: port1},
         )
         await hass.async_block_till_done()
-        old_bridge = get_bridge_from_hass(hass)
+        old_entry_id = await get_entry_id_from_hass(hass)
+        old_bridge = hass.data[dynalite.DOMAIN][old_entry_id]
         assert old_bridge.dynalite_devices.port == port1
         result = await hass.config_entries.flow.async_init(
             dynalite.DOMAIN,
@@ -91,5 +92,6 @@ async def test_existing_update(hass):
         await hass.async_block_till_done()
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    bridge = get_bridge_from_hass(hass)
+    entry_id = await get_entry_id_from_hass(hass)
+    bridge = hass.data[dynalite.DOMAIN][entry_id]
     assert bridge.dynalite_devices.port == port2

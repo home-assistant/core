@@ -33,7 +33,7 @@ class DynaliteBridge:
 
     async def reload_config(self, config):
         """Reconfigure a bridge when config changes."""
-        LOGGER.debug("Setting up bridge - host %s, config %s", self.host, config)
+        LOGGER.debug("Reloading bridge - host %s, config %s", self.host, config)
         self.dynalite_devices.configure(config)
 
     def update_signal(self, device=None):

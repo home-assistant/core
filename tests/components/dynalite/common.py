@@ -2,6 +2,7 @@
 from asynctest import Mock, call, patch
 
 from homeassistant.components import dynalite
+from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 
 ATTR_SERVICE = "service"
@@ -24,10 +25,13 @@ def create_mock_device(platform, spec):
     return device
 
 
-def get_bridge_from_hass(hass):
-    """Get the bridge from hass.data."""
-    key = next(iter(hass.data[dynalite.DOMAIN]))
-    return hass.data[dynalite.DOMAIN][key]
+async def get_entry_id_from_hass(hass):
+    """Get the config entry id from hass."""
+    ent_reg = await entity_registry.async_get_registry(hass)
+    assert ent_reg
+    conf_entries = hass.config_entries.async_entries(dynalite.DOMAIN)
+    assert len(conf_entries) == 1
+    return conf_entries[0].entry_id
 
 
 async def create_entity_from_device(hass, device):
@@ -44,9 +48,8 @@ async def create_entity_from_device(hass, device):
         )
     await hass.async_block_till_done()
     # Find the bridge
-    bridge = None
-    assert len(hass.data[dynalite.DOMAIN]) == 1
-    bridge = get_bridge_from_hass(hass)
+    entry_id = await get_entry_id_from_hass(hass)
+    bridge = hass.data[dynalite.DOMAIN][entry_id]
     bridge.dynalite_devices.newDeviceFunc([device])
     await hass.async_block_till_done()
 
