@@ -38,11 +38,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SomfyCover(SomfyEntity, CoverDevice):
     """Representation of a Somfy cover device."""
 
-    def __init__(self, device, api, shadow):
+    def __init__(self, device, api, optimistic):
         """Initialize the Somfy device."""
         super().__init__(device, api)
         self.cover = Blind(self.device, self.api)
-        self.shadow = shadow
+        self.optimistic = optimistic
         self._closed = None
 
     async def async_update(self):
@@ -52,13 +52,13 @@ class SomfyCover(SomfyEntity, CoverDevice):
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        if self.shadow:
+        if self.optimistic:
             self._closed = True
         self.cover.close()
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        if self.shadow:
+        if self.optimistic:
             self._closed = False
         self.cover.open()
 
@@ -84,7 +84,7 @@ class SomfyCover(SomfyEntity, CoverDevice):
         is_closed = None
         if self.has_capability("position"):
             is_closed = self.cover.is_closed()
-        elif self.shadow:
+        elif self.optimistic:
             is_closed = self._closed
         return is_closed
 
