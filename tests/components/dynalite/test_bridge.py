@@ -2,21 +2,11 @@
 
 from asynctest import CoroutineMock, Mock, patch
 from dynalite_devices_lib.const import CONF_ALL
-import pytest
 
 from homeassistant.components import dynalite
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def dyn_bridge():
-    """Define a basic mock bridge."""
-    hass = Mock()
-    host = "1.2.3.4"
-    bridge = dynalite.DynaliteBridge(hass, {dynalite.CONF_HOST: host})
-    return bridge
 
 
 async def test_update_device(hass):
@@ -49,7 +39,7 @@ async def test_update_device(hass):
     specific_func.assert_called_once()
 
 
-async def test_add_devices_then_register(hass, dyn_bridge):
+async def test_add_devices_then_register(hass):
     """Test that add_devices work."""
     host = "1.2.3.4"
     entry = MockConfigEntry(domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host})
@@ -72,7 +62,7 @@ async def test_add_devices_then_register(hass, dyn_bridge):
     assert hass.states.get("light.name")
 
 
-async def test_register_then_add_devices(hass, dyn_bridge):
+async def test_register_then_add_devices(hass):
     """Test that add_devices work after register_add_entities."""
     host = "1.2.3.4"
     entry = MockConfigEntry(domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host})
