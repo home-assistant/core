@@ -1,0 +1,10 @@
+{
+  "domain": "tankerkoenig",
+  "name": "Tankerkoenig",
+  "documentation": "https://www.home-assistant.io/integrations/tankerkoenig",
+  "requirements": ["pytankerkoenig==0.0.6"],
+  "dependencies": [],
+  "codeowners": [
+    "@guillempages"
+  ]
+}
