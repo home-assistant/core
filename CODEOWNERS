@@ -329,6 +329,7 @@ homeassistant/components/spotify/* @frenck
 homeassistant/components/sql/* @dgomes
 homeassistant/components/starline/* @anonym-tsk
 homeassistant/components/statistics/* @fabaff
+homeassistant/components/stib_mivb/* @Emilv2
 homeassistant/components/stiebel_eltron/* @fucm
 homeassistant/components/stookalert/* @fwestenberg
 homeassistant/components/stream/* @hunterjm

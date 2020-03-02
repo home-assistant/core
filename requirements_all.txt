@@ -1425,6 +1425,9 @@ pynzbgetapi==0.2.0
 # homeassistant.components.obihai
 pyobihai==1.2.0
 
+# homeassistant.components.stib_mivb
+pyodstibmivb==0.9.2
+
 # homeassistant.components.ombi
 pyombi==0.1.10
 

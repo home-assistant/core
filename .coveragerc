@@ -678,6 +678,7 @@ omit =
     homeassistant/components/starline/*
     homeassistant/components/starlingbank/sensor.py
     homeassistant/components/steam_online/sensor.py
+    homeassistant/components/stib_mivb/*
     homeassistant/components/stiebel_eltron/*
     homeassistant/components/stookalert/*
     homeassistant/components/streamlabswater/*
