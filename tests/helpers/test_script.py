@@ -1563,3 +1563,85 @@ async def test_script_mode_parallel(hass):
         assert len(events) == 4
         assert events[2].data["value"] == 2
         assert events[3].data["value"] == 2
+
+
+async def test_script_mode_queue(hass):
+    """Test overlapping runs with script_mode='queue'."""
+    event = "test_event"
+    events = []
+    wait_started_flag = asyncio.Event()
+
+    @callback
+    def record_event(event):
+        """Add recorded event to set."""
+        events.append(event)
+
+    hass.bus.async_listen(event, record_event)
+
+    @callback
+    def wait_started_cb():
+        if script_obj.last_action and "wait" in script_obj.last_action:
+            wait_started_flag.set()
+
+    hass.states.async_set("switch.test", "on")
+
+    script_obj = script.Script(
+        hass,
+        cv.SCRIPT_SCHEMA(
+            [
+                {"event": event, "event_data": {"value": 1}},
+                {"wait_template": "{{ states.switch.test.state == 'off' }}"},
+                {"event": event, "event_data": {"value": 2}},
+                {"wait_template": "{{ states.switch.test.state == 'on' }}"},
+            ]
+        ),
+        change_listener=wait_started_cb,
+        script_mode="queue",
+        logger=logging.getLogger("TEST"),
+    )
+
+    try:
+        hass.async_create_task(script_obj.async_run())
+        await asyncio.wait_for(wait_started_flag.wait(), 1)
+
+        assert script_obj.is_running
+        assert len(events) == 1
+        assert events[0].data["value"] == 1
+
+        # Start second run of script while first run is suspended in wait_template.
+        # This second run should not start until the first run has finished.
+
+        hass.async_create_task(script_obj.async_run())
+
+        await asyncio.sleep(0)
+        assert script_obj.is_running
+        assert len(events) == 1
+
+        wait_started_flag.clear()
+        hass.states.async_set("switch.test", "off")
+        await asyncio.wait_for(wait_started_flag.wait(), 1)
+
+        assert script_obj.is_running
+        assert len(events) == 2
+        assert events[1].data["value"] == 2
+
+        wait_started_flag.clear()
+        hass.states.async_set("switch.test", "on")
+        await asyncio.wait_for(wait_started_flag.wait(), 1)
+
+        await asyncio.sleep(0)
+        assert script_obj.is_running
+        assert len(events) == 3
+        assert events[2].data["value"] == 1
+    except (AssertionError, asyncio.TimeoutError):
+        await script_obj.async_stop()
+        raise
+    else:
+        hass.states.async_set("switch.test", "off")
+        await asyncio.sleep(0)
+        hass.states.async_set("switch.test", "on")
+        await hass.async_block_till_done()
+
+        assert not script_obj.is_running
+        assert len(events) == 4
+        assert events[3].data["value"] == 2

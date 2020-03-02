@@ -56,15 +56,19 @@ SCRIPT_MODE_ERROR = "error"
 SCRIPT_MODE_IGNORE = "ignore"
 SCRIPT_MODE_LEGACY = "legacy"
 SCRIPT_MODE_PARALLEL = "parallel"
+SCRIPT_MODE_QUEUE = "queue"
 SCRIPT_MODE_RESTART = "restart"
 SCRIPT_MODE_CHOICES = [
     SCRIPT_MODE_ERROR,
     SCRIPT_MODE_IGNORE,
     SCRIPT_MODE_LEGACY,
     SCRIPT_MODE_PARALLEL,
+    SCRIPT_MODE_QUEUE,
     SCRIPT_MODE_RESTART,
 ]
 DEFAULT_SCRIPT_MODE = SCRIPT_MODE_LEGACY
+
+DEFAULT_QUEUE_MAX = 10
 
 _LOG_EXCEPTION = logging.ERROR + 1
 _TIMEOUT_MSG = "Timeout reached, abort script."
@@ -103,6 +107,10 @@ class _SuspendScript(Exception):
 
 class AlreadyRunning(exceptions.HomeAssistantError):
     """Throw if script already running and user wants error."""
+
+
+class QueueFull(exceptions.HomeAssistantError):
+    """Throw if script already running, user wants new run queued, but queue is full."""
 
 
 class _ScriptRunBase(ABC):
@@ -171,6 +179,9 @@ class _ScriptRunBase(ABC):
 
         elif isinstance(exception, AlreadyRunning):
             error_desc = "Already running"
+
+        elif isinstance(exception, QueueFull):
+            error_desc = "Run queue is full"
 
         else:
             error_desc = "Unexpected error"
@@ -334,6 +345,7 @@ class _ScriptRun(_ScriptRunBase):
             raise
 
     async def _async_run(self):
+        self._script.last_triggered = utcnow()
         self._changed()
         self._log("Running script")
         try:
@@ -344,11 +356,14 @@ class _ScriptRun(_ScriptRunBase):
         except _StopScript:
             pass
         finally:
-            self._script._runs.remove(self)  # pylint: disable=protected-access
-            if not self._script.is_running:
-                self._script.last_action = None
-            self._changed()
-            self._stopped.set()
+            self._finish()
+
+    def _finish(self):
+        self._script._runs.remove(self)  # pylint: disable=protected-access
+        if not self._script.is_running:
+            self._script.last_action = None
+        self._changed()
+        self._stopped.set()
 
     async def async_stop(self) -> None:
         """Stop script run."""
@@ -399,6 +414,32 @@ class _ScriptRun(_ScriptRunBase):
             unsub()
 
 
+class _QueuedScriptRun(_ScriptRun):
+    """Manage queued Script sequence run."""
+
+    async def _async_run(self):
+        # pylint: disable=protected-access
+        _, pending = await asyncio.wait(
+            {self._stop.wait(), self._script._queue_lck.acquire()},
+            return_when=asyncio.FIRST_COMPLETED,
+        )
+        for pending_task in pending:
+            pending_task.cancel()
+        if self._stop.is_set():
+            self._finish()
+        else:
+            await super()._async_run()
+
+    def _finish(self):
+        # pylint: disable=protected-access
+        self._script._queue_len -= 1
+        try:
+            self._script._queue_lck.release()
+        except RuntimeError:
+            pass
+        super()._finish()
+
+
 class _LegacyScriptRun(_ScriptRunBase):
     """Manage legacy Script sequence run."""
 
@@ -440,6 +481,7 @@ class _LegacyScriptRun(_ScriptRunBase):
 
     async def _async_run(self, propagate_exceptions=True):
         if self._cur == -1:
+            self._script.last_triggered = utcnow()
             self._log("Running script")
             self._cur = 0
 
@@ -550,6 +592,7 @@ class Script:
         name: Optional[str] = None,
         change_listener: Optional[Callable[..., Any]] = None,
         script_mode: str = DEFAULT_SCRIPT_MODE,
+        queue_max: int = DEFAULT_QUEUE_MAX,
         logger: Optional[logging.Logger] = None,
         log_exceptions: bool = True,
     ) -> None:
@@ -577,6 +620,10 @@ class Script:
         )
 
         self._runs: List[_ScriptRunBase] = []
+        if script_mode == SCRIPT_MODE_QUEUE:
+            self._queue_max = queue_max
+            self._queue_len = 0
+            self._queue_lck = asyncio.Lock()
         self._config_cache: Dict[Set[Tuple], Callable[..., bool]] = {}
         self._referenced_entities: Optional[Set[str]] = None
         self._referenced_devices: Optional[Set[str]] = None
@@ -675,8 +722,15 @@ class Script:
             if self._script_mode == SCRIPT_MODE_RESTART:
                 self._log("Restarting script")
                 await self.async_stop()
+            elif self._script_mode == SCRIPT_MODE_QUEUE:
+                self._log(
+                    "Queueing script behind %i run%s",
+                    self._queue_len,
+                    "s" if self._queue_len > 1 else "",
+                )
+                if self._queue_len >= self._queue_max:
+                    raise QueueFull
 
-        self.last_triggered = utcnow()
         if self.is_legacy:
             if self._runs:
                 shared = cast(Optional[_LegacyScriptRun], self._runs[0])
@@ -686,7 +740,12 @@ class Script:
                 self._hass, self, variables, context, self._log_exceptions, shared
             )
         else:
-            run = _ScriptRun(self._hass, self, variables, context, self._log_exceptions)
+            if self._script_mode != SCRIPT_MODE_QUEUE:
+                cls = _ScriptRun
+            else:
+                cls = _QueuedScriptRun
+                self._queue_len += 1
+            run = cls(self._hass, self, variables, context, self._log_exceptions)
         self._runs.append(run)
         await run.async_run()
 
