@@ -68,7 +68,7 @@ async def async_setup(hass, config):
 
 
 @asyncio.coroutine
-def async_setup_entry(hass, config_entry):
+def async_setup_entry(hass):
     """Set up shopping list from config flow."""
 
     @asyncio.coroutine
