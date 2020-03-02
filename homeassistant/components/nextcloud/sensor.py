@@ -58,21 +58,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
 
 
 # Use recursion to create list of sensors & values based on nextcloud api data
-def get_sensors(api_data):
+def get_sensors(api_data, key_path=""):
     """Use Recursion to discover sensors and values.
 
     Get dictionary of sensors by recursing through dict returned by api until
     the dictionary value does not contain another dictionary and use the
-    resulting key/value as the name/value for the sensor.
+    resulting path of dictionary keys and resulting value as the name/value
+    for the sensor.
 
     returns: dictionary of sensors/values
     """
     result = {}
     for key, value in api_data.items():
         if isinstance(value, dict):
-            result.update(get_sensors(value))
+            key_path += f"{key}_"
+            result.update(get_sensors(value, key_path))
         else:
-            result[key] = value
+            result[key_path + key] = value
     return result
 
 
@@ -92,7 +94,7 @@ class NextcloudSensor(Entity):
     @property
     def name(self):
         """Return the name for this sensor."""
-        return f"{DOMAIN}_{self.item}"
+        return self.item
 
     @property
     def state(self):
@@ -102,7 +104,7 @@ class NextcloudSensor(Entity):
     @property
     def unique_id(self):
         """Return the unique ID for this sensor."""
-        return f"{DOMAIN}_{self.name}"
+        return self.name
 
     def update(self):
         """Update the sensor."""

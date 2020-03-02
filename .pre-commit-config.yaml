@@ -43,7 +43,6 @@ repos:
       - id: check-json
       - id: no-commit-to-branch
         args:
-          - --branch=dev
           - --branch=master
           - --branch=rc
   - repo: local
