@@ -161,23 +161,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 bass_extension=service.data.get("bass_extension"),
             )
         elif service.service == SERVICE_DESK_DB:
-            db = service.data.get("db")
-            await media_player.set_desk_db(db)
+            await media_player.set_desk_db(service.data.get("db"))
         elif service.service == SERVICE_WALL_DB:
-            db = service.data.get("db")
-            await media_player.set_wall_db(db)
+            await media_player.set_wall_db(service.data.get("db"))
         elif service.service == SERVICE_TREBLE_DB:
-            db = service.data.get("db")
-            await media_player.set_treble_db(db)
+            await media_player.set_treble_db(service.data.get("db"))
         elif service.service == SERVICE_HIGH_HZ:
-            hz = service.data.get("hz")
-            await media_player.set_high_hz(hz)
+            await media_player.set_high_hz(service.data.get("hz"))
         elif service.service == SERVICE_LOW_HZ:
-            hz = service.data.get("hz")
-            await media_player.set_low_hz(hz)
+            await media_player.set_low_hz(service.data.get("hz"))
         elif service.service == SERVICE_SUB_DB:
-            db = service.data.get("db")
-            await media_player.set_sub_db(db)
+            await media_player.set_sub_db(service.data.get("db"))
         elif service.service == SERVICE_UPDATE_DSP:
             await media_player.update_dsp()
 
@@ -384,11 +378,11 @@ class KefMediaPlayer(MediaPlayerDevice):
 
     async def async_media_play(self):
         """Send play command."""
-        await self._speaker.play_pause()
+        await self._speaker.set_play_pause()
 
     async def async_media_pause(self):
         """Send pause command."""
-        await self._speaker.play_pause()
+        await self._speaker.set_play_pause()
 
     async def async_media_previous_track(self):
         """Send previous track command."""
@@ -440,26 +434,26 @@ class KefMediaPlayer(MediaPlayerDevice):
             bass_extension=bass_extension,
         )
 
-    async def set_desk_db(self, db):
+    async def set_desk_db(self, db_value):
         """Set desk_db of the KEF speakers."""
-        await self._speaker.set_desk_db(db)
+        await self._speaker.set_desk_db(db_value)
 
-    async def set_wall_db(self, db):
+    async def set_wall_db(self, db_value):
         """Set wall_db of the KEF speakers."""
-        await self._speaker.set_wall_db(db)
+        await self._speaker.set_wall_db(db_value)
 
-    async def set_treble_db(self, db):
+    async def set_treble_db(self, db_value):
         """Set treble_db of the KEF speakers."""
-        await self._speaker.set_treble_db(db)
+        await self._speaker.set_treble_db(db_value)
 
-    async def set_high_hz(self, hz):
+    async def set_high_hz(self, hz_value):
         """Set high_hz of the KEF speakers."""
-        await self._speaker.set_high_hz(hz)
+        await self._speaker.set_high_hz(hz_value)
 
-    async def set_low_hz(self, hz):
+    async def set_low_hz(self, hz_value):
         """Set low_hz of the KEF speakers."""
-        await self._speaker.set_low_hz(hz)
+        await self._speaker.set_low_hz(hz_value)
 
-    async def set_sub_db(self, db):
+    async def set_sub_db(self, db_value):
         """Set sub_db of the KEF speakers."""
-        await self._speaker.set_sub_db(db)
+        await self._speaker.set_sub_db(db_value)
