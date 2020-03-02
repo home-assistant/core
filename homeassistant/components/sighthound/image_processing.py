@@ -66,7 +66,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             camera[CONF_ENTITY_ID],
             camera.get(CONF_NAME),
             save_file_folder,
-            config.get(CONF_SAVE_TIMESTAMPTED_FILE),
+            config[CONF_SAVE_TIMESTAMPTED_FILE],
         )
         entities.append(sighthound)
     add_entities(entities)
