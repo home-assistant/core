@@ -142,7 +142,9 @@ class GitHubSensor(Entity):
         self._latest_commit_message = self._github_data.latest_commit_message
         self._latest_commit_sha = self._github_data.latest_commit_sha
         if self._github_data.latest_release_url is not None:
-            self._latest_release_tag = self._github_data.latest_release_url.split("tag/")[1]
+            self._latest_release_tag = self._github_data.latest_release_url.split(
+                "tag/"
+            )[1]
         else:
             self._latest_release_tag = None
         self._latest_release_url = self._github_data.latest_release_url
