@@ -9,7 +9,6 @@ from homeassistant.setup import async_setup_component
 async def test_manual_config_set(hass):
     """Test entry will be imported."""
     assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, data={}, context={"source": SOURCE_USER}
