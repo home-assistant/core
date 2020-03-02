@@ -29,7 +29,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 DOMAIN = "atag"
-DATA_LISTENER = "listener"
+DATA_LISTENER = f"{DOMAIN}_listener"
 SIGNAL_UPDATE_ATAG = f"{DOMAIN}_update"
 PLATFORMS = [CLIMATE, WATER_HEATER, SENSOR]
 SCAN_INTERVAL = timedelta(seconds=30)
