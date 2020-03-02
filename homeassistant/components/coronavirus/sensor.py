@@ -25,9 +25,9 @@ class CoronavirusSensor(Entity):
     def __init__(self, coordinator, country, info_type):
         """Initialize coronavirus sensor."""
         if country == OPTION_WORLDWIDE:
-            self.name = f"Worldwide {info_type}"
+            self.name = f"Worldwide coronavirus {info_type}"
         else:
-            self.name = f"{coordinator.data[country].country} {info_type}"
+            self.name = f"{coordinator.data[country].country} coronavirus {info_type}"
         self.unique_id = f"{country}-{info_type}"
         self.coordinator = coordinator
         self.country = country
