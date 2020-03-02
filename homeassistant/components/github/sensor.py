@@ -124,7 +124,7 @@ class GitHubSensor(Entity):
             ATTR_STARGAZERS: self._stargazers,
         }
         if self._latest_release_tag is not None:
-            attrs[ATTR_LATEST_RELEASE_TAG] = self_latest_release_tag
+            attrs[ATTR_LATEST_RELEASE_TAG] = self._latest_release_tag
         return attrs
 
     @property
