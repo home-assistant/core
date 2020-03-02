@@ -35,18 +35,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
-from .const import (
-    DOMAIN,
-    SERVICE_DESK_DB,
-    SERVICE_HIGH_HZ,
-    SERVICE_LOW_HZ,
-    SERVICE_MODE,
-    SERVICE_SUB_DB,
-    SERVICE_TREBLE_DB,
-    SERVICE_UPDATE_DSP,
-    SERVICE_WALL_DB,
-)
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "KEF"
@@ -55,6 +43,8 @@ DEFAULT_MAX_VOLUME = 0.5
 DEFAULT_VOLUME_STEP = 0.05
 DEFAULT_INVERSE_SPEAKER_MODE = False
 DEFAULT_SUPPORTS_ON = True
+
+DOMAIN = "kef"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -66,6 +56,15 @@ CONF_VOLUME_STEP = "volume_step"
 CONF_INVERSE_SPEAKER_MODE = "inverse_speaker_mode"
 CONF_SUPPORTS_ON = "supports_on"
 CONF_STANDBY_TIME = "standby_time"
+
+SERVICE_MODE = "set_mode"
+SERVICE_DESK_DB = "set_desk_db"
+SERVICE_WALL_DB = "set_wall_db"
+SERVICE_TREBLE_DB = "set_treble_db"
+SERVICE_HIGH_HZ = "set_high_hz"
+SERVICE_LOW_HZ = "set_low_hz"
+SERVICE_SUB_DB = "set_sub_db"
+SERVICE_UPDATE_DSP = "update_dsp"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
