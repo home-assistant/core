@@ -9,3 +9,12 @@ SERVICE_HIGH_HZ = "set_high_hz"
 SERVICE_LOW_HZ = "set_low_hz"
 SERVICE_SUB_DB = "set_sub_db"
 SERVICE_UPDATE_DSP = "update_dsp"
+
+SLIDERS = [
+    ("desk_db", "db"),
+    ("wall_db", "db"),
+    ("treble_db", "db"),
+    ("high_hz", "hz"),
+    ("low_hz", "hz"),
+    ("sub_db", "db"),
+]

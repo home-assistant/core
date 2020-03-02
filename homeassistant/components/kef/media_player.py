@@ -259,20 +259,7 @@ class KefMediaPlayer(MediaPlayerDevice):
         self._source = None
         self._volume = None
         self._is_online = None
-        self._dsp = dict(
-            desk_mode=None,
-            wall_mode=None,
-            phase_correction=None,
-            high_pass=None,
-            sub_polarity=None,
-            bass_extension=None,
-            desk_db=None,
-            wall_db=None,
-            treble_db=None,
-            high_hz=None,
-            low_hz=None,
-            sub_db=None,
-        )
+        self._dsp = None
 
     @property
     def name(self):
@@ -416,12 +403,7 @@ class KefMediaPlayer(MediaPlayerDevice):
         """Update the DSP settings."""
         mode = await self._speaker.get_mode()
         self._dsp = dict(
-            desk_mode=mode.desk_mode,
-            wall_mode=mode.wall_mode,
-            phase_correction=mode.phase_correction,
-            high_pass=mode.high_pass,
-            sub_polarity=mode.sub_polarity,
-            bass_extension=mode.bass_extension,
+            **mode._asdict(),
             desk_db=await self._speaker.get_desk_db(),
             wall_db=await self._speaker.get_wall_db(),
             treble_db=await self._speaker.get_treble_db(),
@@ -434,6 +416,10 @@ class KefMediaPlayer(MediaPlayerDevice):
     @property
     def device_state_attributes(self):
         """Return the DSP settings of the KEF device."""
+        if self._dsp is None:
+            return dict(
+                dsp_settings="Run the `kef.update_dsp` service to get the DSP settings as attributes."
+            )
         return self._dsp
 
     async def set_mode(
