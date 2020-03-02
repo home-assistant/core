@@ -1,4 +1,4 @@
-"""Tests for the Cert Expiry sensors."""
+"""Tests for Cert Expiry setup."""
 from datetime import timedelta
 
 from asynctest import patch
