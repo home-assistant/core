@@ -123,9 +123,10 @@ class GitHubSensor(Entity):
             ATTR_OPEN_PULL_REQUESTS: self._pull_request_count,
             ATTR_STARGAZERS: self._stargazers,
         }
-        if self._latest_release_tag is not None:
-            attrs[ATTR_LATEST_RELEASE_TAG] = self._latest_release_tag
-        return attrs
+        if self._github_data.latest_release_url is not None:
+            self._latest_release_tag = self._github_data.latest_release_url.split("tag/")[1]
+        else:
+            self._latest_release_tag = None
 
     @property
     def icon(self):
