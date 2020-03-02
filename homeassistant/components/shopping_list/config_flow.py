@@ -9,7 +9,6 @@ class ShoppingListFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
-    SHOPPING_LIST = "Shopping List"
 
     def __init__(self):
         """Init ShoppingListFlowHandler."""
@@ -22,7 +21,7 @@ class ShoppingListFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._errors = {}
 
         if user_input is not None:
-            return self.async_create_entry(title=self.SHOPPING_LIST, data=user_input)
+            return self.async_create_entry(title="Shopping List", data=user_input)
 
         return self.async_show_form(step_id="user", errors=self._errors)
 
