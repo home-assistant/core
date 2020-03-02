@@ -30,17 +30,7 @@ PLATFORMS = ["alarm_control_panel", "binary_sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up from existing/saved configuration."""
-    conf = config[DOMAIN]
-    if conf is None:
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-        )
-    )
-
+    """Old way to set up."""
     return True
 
 
@@ -52,7 +42,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
 
-    client = TotalConnectClient.TotalConnectClient(username, password)
+    client = await hass.async_add_executor_job(
+        TotalConnectClient.TotalConnectClient, username, password
+    )
 
     if not client.is_logged_in():
         _LOGGER.error("TotalConnect authentication failed")

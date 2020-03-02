@@ -54,5 +54,7 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def is_valid(self, username="", password=""):
         """Return true if the given username and password are valid."""
-        client = TotalConnectClient.TotalConnectClient(username, password)
+        client = await self.hass.async_add_executor_job(
+            TotalConnectClient.TotalConnectClient, username, password
+        )
         return client.is_logged_in()
