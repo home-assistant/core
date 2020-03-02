@@ -1,7 +1,7 @@
 """Config flow to configure ShoppingList component."""
 from homeassistant import config_entries
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 
 
 class ShoppingListFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
