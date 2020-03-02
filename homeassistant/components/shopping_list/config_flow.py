@@ -18,12 +18,10 @@ class ShoppingListFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         self._abort_if_unique_id_configured()
 
-        self._errors = {}
-
         if user_input is not None:
             return self.async_create_entry(title="Shopping List", data=user_input)
 
-        return self.async_show_form(step_id="user", errors=self._errors)
+        return self.async_show_form(step_id="user", errors={})
 
     async def async_step_import(self, user_input):
         """Import a config entry.
