@@ -1,6 +1,8 @@
 {
     "device_automation": {
         "action_type": {
+            "brightness_decrease": "Riduci la luminosit\u00e0 di {entity_name}",
+            "brightness_increase": "Aumenta la luminosit\u00e0 di {entity_name}",
             "toggle": "Commuta {entity_name}",
             "turn_off": "Spegnere {entity_name}",
             "turn_on": "Accendere {entity_name}"
