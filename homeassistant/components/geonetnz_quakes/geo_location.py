@@ -12,9 +12,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
-from ...helpers.entity_registry import async_get_registry
 from .const import DOMAIN, FEED
 
 _LOGGER = logging.getLogger(__name__)
