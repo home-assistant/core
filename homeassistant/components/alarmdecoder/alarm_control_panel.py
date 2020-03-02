@@ -172,18 +172,18 @@ class AlarmDecoderAlarmPanel(AlarmControlPanel):
         if code:
             if self._auto_bypass:
                 self.hass.data[DATA_AD].send(f"{code!s}6#")
-        self.hass.data[DATA_AD].send(f"#2")
+        self.hass.data[DATA_AD].send("#2")
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
         if code:
             if self._auto_bypass:
                 self.hass.data[DATA_AD].send(f"{code!s}6#")
-        self.hass.data[DATA_AD].send(f"#3")
+        self.hass.data[DATA_AD].send("#3")
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
-        self.hass.data[DATA_AD].send(f"#7")
+        self.hass.data[DATA_AD].send("#7")
 
     def alarm_toggle_chime(self, code=None):
         """Send toggle chime command."""
