@@ -277,11 +277,11 @@ class EightUserSensor(EightSleepUserEntity):
         elif "last" in self._sensor_root:
             try:
                 state_attr[ATTR_AVG_RESP_RATE] = round(self._attr["resp_rate"], 2)
-            except:
+            except TypeError:
                 state_attr[ATTR_AVG_RESP_RATE] = None
             try:
                 state_attr[ATTR_AVG_HEART_RATE] = round(self._attr["heart_rate"], 2)
-            except:
+            except TypeError:
                 state_attr[ATTR_AVG_HEART_RATE] = None
             state_attr[ATTR_AVG_ROOM_TEMP] = room_temp
             state_attr[ATTR_AVG_BED_TEMP] = bed_temp
