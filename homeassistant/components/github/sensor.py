@@ -61,8 +61,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 "Error setting up GitHub platform. %s",
                 "Check previous errors for details",
             )
-            return
-        sensors.append(GitHubSensor(data))
+        else:
+            sensors.append(GitHubSensor(data))
     add_entities(sensors, True)
 
 
@@ -170,7 +170,6 @@ class GitHubData:
             return
 
         self.name = repository.get(CONF_NAME, repo.name)
-
         self.available = False
         self.latest_commit_message = None
         self.latest_commit_sha = None
