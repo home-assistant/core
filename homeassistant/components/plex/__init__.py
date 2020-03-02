@@ -48,12 +48,15 @@ from .const import (
 )
 from .server import PlexServer
 
-MEDIA_PLAYER_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_USE_EPISODE_ART, default=False): cv.boolean,
-        vol.Optional(CONF_SHOW_ALL_CONTROLS, default=False): cv.boolean,
-        vol.Optional(CONF_IGNORE_NEW_SHARED_USERS, default=False): cv.boolean,
-    }
+MEDIA_PLAYER_SCHEMA = vol.All(
+    cv.deprecated(CONF_SHOW_ALL_CONTROLS, invalidation_version="0.110"),
+    vol.Schema(
+        {
+            vol.Optional(CONF_USE_EPISODE_ART, default=False): cv.boolean,
+            vol.Optional(CONF_SHOW_ALL_CONTROLS): cv.boolean,
+            vol.Optional(CONF_IGNORE_NEW_SHARED_USERS, default=False): cv.boolean,
+        }
+    ),
 )
 
 SERVER_CONFIG_SCHEMA = vol.Schema(

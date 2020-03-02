@@ -16,7 +16,6 @@ from .const import (
     CONF_IGNORE_NEW_SHARED_USERS,
     CONF_MONITORED_USERS,
     CONF_SERVER,
-    CONF_SHOW_ALL_CONTROLS,
     CONF_USE_EPISODE_ART,
     DEFAULT_VERIFY_SSL,
     PLEX_NEW_MP_SIGNAL,
@@ -263,11 +262,6 @@ class PlexServer:
     def option_use_episode_art(self):
         """Return use_episode_art option."""
         return self.options[MP_DOMAIN][CONF_USE_EPISODE_ART]
-
-    @property
-    def option_show_all_controls(self):
-        """Return show_all_controls option."""
-        return self.options[MP_DOMAIN][CONF_SHOW_ALL_CONTROLS]
 
     @property
     def option_monitored_users(self):
