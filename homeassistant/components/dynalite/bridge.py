@@ -20,8 +20,8 @@ class DynaliteBridge:
         self.host = config[CONF_HOST]
         # Configure the dynalite devices
         self.dynalite_devices = DynaliteDevices(
-            newDeviceFunc=self.add_devices_when_registered,
-            updateDeviceFunc=self.update_device,
+            new_device_func=self.add_devices_when_registered,
+            update_device_func=self.update_device,
         )
         self.dynalite_devices.configure(config)
 
