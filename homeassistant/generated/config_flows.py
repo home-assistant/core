@@ -17,6 +17,7 @@ FLOWS = [
     "cast",
     "cert_expiry",
     "coolmaster",
+    "coronavirus",
     "daikin",
     "deconz",
     "dialogflow",
