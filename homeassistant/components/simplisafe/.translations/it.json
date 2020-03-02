@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Questo account SimpliSafe \u00e8 gi\u00e0 in uso."
+        },
         "error": {
             "identifier_exists": "Account gi\u00e0 registrato",
             "invalid_credentials": "Credenziali non valide"
