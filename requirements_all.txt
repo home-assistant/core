@@ -405,6 +405,9 @@ connect-box==0.2.5
 # homeassistant.components.xiaomi_miio
 construct==2.9.45
 
+# homeassistant.components.coronavirus
+coronavirus==1.0.1
+
 # homeassistant.scripts.credstash
 # credstash==1.15.0
 
