@@ -1,7 +1,6 @@
 """Test config flow."""
 
 from homeassistant.components.shopping_list.const import DOMAIN
-from homeassistant.const import CONF_TYPE
 from homeassistant.setup import async_setup_component
 
 
@@ -13,7 +12,7 @@ async def test_manual_config_set(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, data={}, context={"source": "user"}
     )
-    assert result[CONF_TYPE] == "create_entry"
+    assert result["type"] == "create_entry"
 
 
 async def test_user(hass):
@@ -23,7 +22,7 @@ async def test_user(hass):
         DOMAIN, data=None, context={"source": "user"}
     )
 
-    assert result[CONF_TYPE] == "form"
+    assert result["type"] == "form"
     assert result["step_id"] == "user"
 
 
@@ -34,5 +33,5 @@ async def test_user_confirm(hass):
         DOMAIN, data={}, context={"source": "user"}
     )
 
-    assert result[CONF_TYPE] == "create_entry"
+    assert result["type"] == "create_entry"
     assert result["result"].data == {}
