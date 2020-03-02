@@ -45,71 +45,71 @@ ICONS = {
 }
 
 ENTITY_TYPES = {
-    SENSOR: {
-        1: {
+    SENSOR: [
+        {
             ATTR_NAME: "Outside Temperature",
             ATTR_ID: "outside_temp",
             ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
             ATTR_ICON: ICONS[TEMP_CELSIUS],
         },
-        2: {
+        {
             ATTR_NAME: "Average Outside Temperature",
             ATTR_ID: "tout_avg",
             ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
             ATTR_ICON: ICONS[TEMP_CELSIUS],
         },
-        3: {
+        {
             ATTR_NAME: "Weather Status",
             ATTR_ID: "weather_status",
             ATTR_UNIT_OF_MEASUREMENT: None,
             ATTR_DEVICE_CLASS: None,
             ATTR_ICON: None,
         },
-        4: {
+        {
             ATTR_NAME: "Operation Mode",
             ATTR_ID: "ch_mode",
             ATTR_UNIT_OF_MEASUREMENT: None,
             ATTR_DEVICE_CLASS: None,
             ATTR_ICON: ICONS[ATTR_MODE],
         },
-        5: {
+        {
             ATTR_NAME: "CH Water Pressure",
             ATTR_ID: "ch_water_pres",
             ATTR_UNIT_OF_MEASUREMENT: PRESSURE_BAR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_PRESSURE,
             ATTR_ICON: ICONS[PRESSURE_BAR],
         },
-        6: {
+        {
             ATTR_NAME: "CH Water Temperature",
             ATTR_ID: "ch_water_temp",
             ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
             ATTR_ICON: ICONS[TEMP_CELSIUS],
         },
-        7: {
+        {
             ATTR_NAME: "CH Return Temperature",
             ATTR_ID: "ch_return_temp",
             ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
             ATTR_ICON: ICONS[TEMP_CELSIUS],
         },
-        8: {
+        {
             ATTR_NAME: "Burning Hours",
             ATTR_ID: "burning_hours",
             ATTR_UNIT_OF_MEASUREMENT: HOUR,
             ATTR_DEVICE_CLASS: None,
             ATTR_ICON: ICONS[FIRE],
         },
-        9: {
+        {
             ATTR_NAME: "Flame",
             ATTR_ID: "rel_mod_level",
             ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             ATTR_DEVICE_CLASS: None,
             ATTR_ICON: ICONS[FIRE],
         },
-    },
+    ],
     CLIMATE: {ATTR_NAME: CLIMATE.title()},
     WATER_HEATER: {ATTR_NAME: "Domestic Hot Water"},
 }

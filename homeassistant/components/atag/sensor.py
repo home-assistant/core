@@ -14,7 +14,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     atag = hass.data[DOMAIN][config_entry.entry_id]
     entities = []
     for sensor in ENTITY_TYPES[SENSOR]:
-        entities.append(AtagSensor(atag, ENTITY_TYPES[SENSOR][sensor]))
+        entities.append(AtagSensor(atag, sensor))
     async_add_entities(entities)
 
 
