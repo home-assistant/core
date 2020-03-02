@@ -109,7 +109,6 @@ omit =
     homeassistant/components/canary/alarm_control_panel.py
     homeassistant/components/canary/camera.py
     homeassistant/components/cast/*
-    homeassistant/components/cert_expiry/sensor.py
     homeassistant/components/cert_expiry/helper.py
     homeassistant/components/channels/*
     homeassistant/components/cisco_ios/device_tracker.py
