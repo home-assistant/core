@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dieser API-Schl\u00fcssel wird bereits verwendet."
+        },
+        "error": {
+            "invalid_api_key": "Ung\u00fcltiger API-Schl\u00fcssel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel",
+                    "latitude": "Breitengrad",
+                    "longitude": "L\u00e4ngengrad"
+                },
+                "title": "Konfigurieren Sie AirVisual"
+            }
+        },
+        "title": "AirVisual"
+    }
+}
