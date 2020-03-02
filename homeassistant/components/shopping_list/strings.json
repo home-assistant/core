@@ -8,7 +8,7 @@
           }
         },
         "abort": {
-          "single_instance_allowed": "Only a single configuration of Shopping List is allowed."
+          "already_configured": "Shopping List is already configured."
         }
     }
 }
