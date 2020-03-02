@@ -7,7 +7,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt
 
-from ...helpers.entity_registry import async_get_registry
 from .const import DOMAIN, FEED
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,9 +68,6 @@ class GeonetnzQuakesSensor(Entity):
         """Call when entity will be removed from hass."""
         if self._remove_signal_status:
             self._remove_signal_status()
-        # Remove from entity registry.
-        entity_registry = await async_get_registry(self.hass)
-        entity_registry.async_remove(self.entity_id)
 
     @callback
     def _update_status_callback(self):
