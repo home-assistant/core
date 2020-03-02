@@ -43,6 +43,7 @@ from .const import (
     SERVICE_MODE,
     SERVICE_SUB_DB,
     SERVICE_TREBLE_DB,
+    SERVICE_UPDATE_DSP,
     SERVICE_WALL_DB,
 )
 
@@ -152,7 +153,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             return
 
         if service.service == SERVICE_MODE:
-            await media_player._speaker.set_mode(
+            await media_player.set_mode(
                 desk_mode=service.data.get("desk_mode"),
                 wall_mode=service.data.get("wall_mode"),
                 phase_correction=service.data.get("phase_correction"),
@@ -162,22 +163,24 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             )
         elif service.service == SERVICE_DESK_DB:
             db = service.data.get("db")
-            await media_player._speaker.set_desk_db(db)
+            await media_player.set_desk_db(db)
         elif service.service == SERVICE_WALL_DB:
             db = service.data.get("db")
-            await media_player._speaker.set_wall_db(db)
+            await media_player.set_wall_db(db)
         elif service.service == SERVICE_TREBLE_DB:
             db = service.data.get("db")
-            await media_player._speaker.set_treble_db(db)
+            await media_player.set_treble_db(db)
         elif service.service == SERVICE_HIGH_HZ:
             hz = service.data.get("hz")
-            await media_player._speaker.set_high_hz(hz)
+            await media_player.set_high_hz(hz)
         elif service.service == SERVICE_LOW_HZ:
             hz = service.data.get("hz")
-            await media_player._speaker.set_low_hz(hz)
+            await media_player.set_low_hz(hz)
         elif service.service == SERVICE_SUB_DB:
             db = service.data.get("db")
-            await media_player._speaker.set_sub_db(db)
+            await media_player.set_sub_db(db)
+        elif service.service == SERVICE_UPDATE_DSP:
+            await media_player.update_dsp()
 
     mode_schema = vol.Schema(
         {
@@ -192,6 +195,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
     hass.services.async_register(
         DOMAIN, SERVICE_MODE, service_handler, schema=mode_schema,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_UPDATE_DSP,
+        service_handler,
+        schema=vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_id}),
     )
 
     def add_service(name, which, option):
@@ -250,6 +259,20 @@ class KefMediaPlayer(MediaPlayerDevice):
         self._source = None
         self._volume = None
         self._is_online = None
+        self._dsp = dict(
+            desk_mode=None,
+            wall_mode=None,
+            phase_correction=None,
+            high_pass=None,
+            sub_polarity=None,
+            bass_extension=None,
+            desk_db=None,
+            wall_db=None,
+            treble_db=None,
+            high_hz=None,
+            low_hz=None,
+            sub_db=None,
+        )
 
     @property
     def name(self):
@@ -388,3 +411,70 @@ class KefMediaPlayer(MediaPlayerDevice):
     async def async_media_next_track(self):
         """Send next track command."""
         await self._speaker.next_track()
+
+    async def update_dsp(self):
+        """Update the DSP settings."""
+        mode = await self._speaker.get_mode()
+        self._dsp = dict(
+            desk_mode=mode.desk_mode,
+            wall_mode=mode.wall_mode,
+            phase_correction=mode.phase_correction,
+            high_pass=mode.high_pass,
+            sub_polarity=mode.sub_polarity,
+            bass_extension=mode.bass_extension,
+            desk_db=await self._speaker.get_desk_db(),
+            wall_db=await self._speaker.get_wall_db(),
+            treble_db=await self._speaker.get_treble_db(),
+            high_hz=await self._speaker.get_high_hz(),
+            low_hz=await self._speaker.get_low_hz(),
+            sub_db=await self._speaker.get_sub_db(),
+        )
+        return self._dsp
+
+    @property
+    def device_state_attributes(self):
+        """Return the DSP settings of the KEF device."""
+        return self._dsp
+
+    async def set_mode(
+        self,
+        desk_mode=None,
+        wall_mode=None,
+        phase_correction=None,
+        high_pass=None,
+        sub_polarity=None,
+        bass_extension=None,
+    ):
+        """Set the speaker mode."""
+        await self._speaker.set_mode(
+            desk_mode=desk_mode,
+            wall_mode=wall_mode,
+            phase_correction=phase_correction,
+            high_pass=high_pass,
+            sub_polarity=sub_polarity,
+            bass_extension=bass_extension,
+        )
+
+    async def set_desk_db(self, db):
+        """Set desk_db of the KEF speakers."""
+        await self._speaker.set_desk_db(db)
+
+    async def set_wall_db(self, db):
+        """Set wall_db of the KEF speakers."""
+        await self._speaker.set_wall_db(db)
+
+    async def set_treble_db(self, db):
+        """Set treble_db of the KEF speakers."""
+        await self._speaker.set_treble_db(db)
+
+    async def set_high_hz(self, hz):
+        """Set high_hz of the KEF speakers."""
+        await self._speaker.set_high_hz(hz)
+
+    async def set_low_hz(self, hz):
+        """Set low_hz of the KEF speakers."""
+        await self._speaker.set_low_hz(hz)
+
+    async def set_sub_db(self, db):
+        """Set sub_db of the KEF speakers."""
+        await self._speaker.set_sub_db(db)

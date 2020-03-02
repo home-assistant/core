@@ -1,3 +1,10 @@
+update_dsp:
+  description: Update all DSP settings.
+  fields:
+    entity_id:
+      description: The entity_id of the KEF speaker.
+      example: media_player.kef_lsx
+
 set_mode:
   description: Set the mode of the speaker.
   fields:
