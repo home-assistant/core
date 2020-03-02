@@ -29,4 +29,4 @@ class ShoppingListFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         Special type of import, we're not actually going to store any data.
         Instead, we're going to rely on the values that are in config file.
         """
-        return self.async_create_entry(title="configuration.yaml")
+        return self.async_create_entry(title="configuration.yaml", data={})
