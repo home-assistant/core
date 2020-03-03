@@ -91,19 +91,16 @@ VIZIO_SCHEMA = {
             vol.Optional(CONF_ADDITIONAL_CONFIGS): vol.All(
                 cv.ensure_list,
                 [
-                    vol.All(
-                        dict,
-                        {
-                            vol.Required(CONF_NAME): cv.string,
-                            vol.Required(CONF_CONFIG): {
-                                vol.Required(CONF_APP_ID): cv.string,
-                                vol.Required(CONF_NAME_SPACE): vol.Coerce(int),
-                                vol.Optional(CONF_MESSAGE, default=None): vol.Or(
-                                    cv.string, None
-                                ),
-                            },
+                    {
+                        vol.Required(CONF_NAME): cv.string,
+                        vol.Required(CONF_CONFIG): {
+                            vol.Required(CONF_APP_ID): cv.string,
+                            vol.Required(CONF_NAME_SPACE): vol.Coerce(int),
+                            vol.Optional(CONF_MESSAGE, default=None): vol.Or(
+                                cv.string, None
+                            ),
                         },
-                    )
+                    },
                 ],
             ),
         },

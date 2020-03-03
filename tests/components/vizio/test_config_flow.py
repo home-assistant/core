@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.components.media_player import DEVICE_CLASS_SPEAKER, DEVICE_CLASS_TV
+from homeassistant.components.vizio.config_flow import _get_config_schema
 from homeassistant.components.vizio.const import (
     CONF_APPS,
     CONF_APPS_TO_INCLUDE_OR_EXCLUDE,
@@ -527,6 +528,49 @@ async def test_import_needs_pairing(
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
+
+
+async def test_import_with_apps_needs_pairing(
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_bypass_setup: pytest.fixture,
+    vizio_complete_pairing: pytest.fixture,
+) -> None:
+    """Test pairing config flow when access token not provided for tv but apps are included during import."""
+    import_config = MOCK_TV_CONFIG_NO_TOKEN.copy()
+    import_config[CONF_APPS] = {CONF_INCLUDE: [CURRENT_APP]}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=import_config
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    # Mock inputting info without apps to make sure apps get stored
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=_get_config_schema(MOCK_TV_CONFIG_NO_TOKEN)(MOCK_TV_CONFIG_NO_TOKEN),
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "pair_tv"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_PIN_CONFIG
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "pairing_complete_import"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == NAME
+    assert result["data"][CONF_NAME] == NAME
+    assert result["data"][CONF_HOST] == HOST
+    assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
+    assert result["data"][CONF_APPS][CONF_INCLUDE] == [CURRENT_APP]
 
 
 async def test_import_error(

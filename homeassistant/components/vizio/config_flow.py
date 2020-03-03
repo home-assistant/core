@@ -40,26 +40,29 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_config_schema(input_dict: Dict[str, Any] = None) -> vol.Schema:
+def _get_config_schema(
+    input_dict: Dict[str, Any] = None, apps: Dict[str, Any] = None
+) -> vol.Schema:
     """Return schema defaults for config data based on user input/config dict. Retain info already provided for future form views by setting them as defaults in schema."""
     if input_dict is None:
         input_dict = {}
 
+    if apps is None:
+        apps = {}
+
     # Attempt to get input_dict[CONF_INCLUDE_OR_EXCLUDE], and if it doesn't exist check
-    # for CONF_INCLUDE or CONF_EXCLUDE as a key in input_dict[CONF_APPS]
+    # for CONF_INCLUDE or CONF_EXCLUDE as a key in apps
     default_include_or_exclude = input_dict.get(
         CONF_INCLUDE_OR_EXCLUDE,
-        CONF_EXCLUDE
-        if CONF_EXCLUDE in input_dict.get(CONF_APPS, {}).keys()
-        else CONF_INCLUDE,
+        CONF_EXCLUDE if CONF_EXCLUDE in apps.keys() else CONF_INCLUDE,
     )
 
     # Attempt to get input_dict[CONF_APPS_TO_INCLUDE_OR_EXCLUDE], and if it doesn't exist
-    # check for input_dict[CONF_APPS][CONF_INCLUDE] or input_dict[CONF_APPS][CONF_EXCLUDE]
+    # check for apps[CONF_INCLUDE] or apps[CONF_EXCLUDE]
     # depending on default_include_or_exclude
     default_apps_to_include_or_exclude = input_dict.get(
         CONF_APPS_TO_INCLUDE_OR_EXCLUDE,
-        input_dict.get(CONF_APPS, {}).get(default_include_or_exclude.lower(), []),
+        apps.get(default_include_or_exclude.lower(), []),
     )
 
     return vol.Schema(
@@ -83,7 +86,7 @@ def _get_config_schema(input_dict: Dict[str, Any] = None) -> vol.Schema:
                 default=default_apps_to_include_or_exclude,
             ): cv.multi_select(VizioAsync.get_apps_list()),
         },
-        extra=vol.ALLOW_EXTRA,
+        extra=vol.REMOVE_EXTRA,
     )
 
 
@@ -94,7 +97,7 @@ def _get_pairing_schema(input_dict: Dict[str, Any] = None) -> vol.Schema:
 
     return vol.Schema(
         {vol.Required(CONF_PIN, default=input_dict.get(CONF_PIN, "")): str},
-        extra=vol.ALLOW_EXTRA,
+        extra=vol.REMOVE_EXTRA,
     )
 
 
@@ -148,6 +151,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._ch_type = None
         self._pairing_token = None
         self._data = None
+        self._apps = {}
 
     async def _create_entry_if_unique(
         self, input_dict: Dict[str, Any]
@@ -169,6 +173,11 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         input_dict.pop(CONF_APPS_TO_INCLUDE_OR_EXCLUDE, None)
         input_dict.pop(CONF_INCLUDE_OR_EXCLUDE, None)
 
+        # If CONF_APPS had been previously stored, update input_dict to ensure CONF_APPS
+        # is included
+        if self._apps:
+            input_dict[CONF_APPS] = self._apps
+
         return self.async_create_entry(title=input_dict[CONF_NAME], data=input_dict)
 
     async def async_step_user(
@@ -179,7 +188,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             # Store current values in case setup fails and user needs to edit
-            self._user_schema = _get_config_schema(user_input)
+            self._user_schema = _get_config_schema(user_input, self._apps)
 
             # Check if new config entry matches any existing config entries
             for entry in self.hass.config_entries.async_entries(DOMAIN):
@@ -194,12 +203,12 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 and user_input.get(CONF_APPS_TO_INCLUDE_OR_EXCLUDE)
                 and self.context["source"] != SOURCE_IMPORT
             ):
-                # Copy user entry config keys to place that entry setup expects
-                user_input[CONF_APPS] = {
-                    user_input[CONF_INCLUDE_OR_EXCLUDE].lower(): list(
-                        user_input[CONF_APPS_TO_INCLUDE_OR_EXCLUDE]
-                    )
-                }
+                # Update stored apps with user entry config keys after popping existing keys
+                self._apps.pop(CONF_INCLUDE, None)
+                self._apps.pop(CONF_EXCLUDE, None)
+                self._apps[user_input[CONF_INCLUDE_OR_EXCLUDE].lower()] = list(
+                    user_input[CONF_APPS_TO_INCLUDE_OR_EXCLUDE]
+                )
 
                 # Show an error if apps are listed but CONF_DEVICE_CLASS == DEVICE_CLASS_TV
                 try:
@@ -247,7 +256,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self._data = copy.deepcopy(user_input)
                     return await self.async_step_pair_tv()
 
-        schema = self._user_schema or _get_config_schema()
+        schema = self._user_schema or _get_config_schema(apps=self._apps)
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         if errors and self.context["source"] == SOURCE_IMPORT:
@@ -303,6 +312,9 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_setup")
 
         self._must_show_form = True
+        # If apps in config, store them for later
+        if import_config.get(CONF_APPS):
+            self._apps = copy.deepcopy(import_config[CONF_APPS])
         return await self.async_step_user(user_input=import_config)
 
     async def async_step_zeroconf(
@@ -363,7 +375,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=_get_config_schema(self._data),
+                data_schema=_get_config_schema(self._data, self._apps),
                 errors={"base": "cant_connect"},
             )
 
