@@ -405,6 +405,9 @@ connect-box==0.2.5
 # homeassistant.components.xiaomi_miio
 construct==2.9.45
 
+# homeassistant.components.coronavirus
+coronavirus==1.0.1
+
 # homeassistant.scripts.credstash
 # credstash==1.15.0
 
@@ -1469,6 +1472,9 @@ pypoint==1.1.2
 # homeassistant.components.ps4
 pyps4-2ndscreen==1.0.7
 
+# homeassistant.components.qvr_pro
+pyqvrpro==0.51
+
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.93
 
@@ -2140,7 +2146,7 @@ zengge==0.2
 zeroconf==0.24.4
 
 # homeassistant.components.zha
-zha-quirks==0.0.33
+zha-quirks==0.0.34
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9
