@@ -33,6 +33,7 @@ class NetatmoFlowHandler(
             "read_station",
             "read_thermostat",
             "write_camera",
+            "write_presence",
             "write_thermostat",
         ]
 
