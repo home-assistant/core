@@ -15,8 +15,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DEFAULT_MPRM, DEFAULT_MYDEVOLO, DOMAIN, PLATFORMS
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
-
 SUPPORTED_PLATFORMS = [ha_switch.DOMAIN]
 
 SERVER_CONFIG_SCHEMA = vol.Schema(
@@ -37,6 +35,7 @@ async def async_setup(hass, config):
     """Get all devices and add them to hass."""
     mydevolo = Mydevolo()
     try:
+        # We need this because of staging purposes, but don't want to show this on the UI
         mydevolo.url = config.get(DOMAIN).get("mydevolo")
         mydevolo.mprm = config.get(DOMAIN).get("mprm")
     except AttributeError:
@@ -54,7 +53,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         mydevolo = Mydevolo.get_instance()
         mydevolo.user = conf.get(CONF_USERNAME)
         mydevolo.password = conf.get(CONF_PASSWORD)
-        # mydevolo.url = conf.get("mydevolo")
     except (WrongCredentialsError, WrongUrlError):
         return False
 
@@ -76,4 +74,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
+    return True
+
+
+async def async_unload_entry(hass, config_entry):
+    """Unload a config entry."""
+    await hass.config_entries.async_forward_entry_unload(config_entry, "switch")
     return True

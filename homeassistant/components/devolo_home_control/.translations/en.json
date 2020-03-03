@@ -1,20 +1,23 @@
 {
-    "config": {
-        "abort": {
+    "device_automation": {
+        "action_type": {
+            "turn_off": "Turn off {entity_name}",
+            "turn_on": "Turn on {entity_name}"
+        }
+    },
+  "config": {
+    "error": {
+      "invalid_credentials": "invalid login information"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "password",
+          "username": "e-mail-address"
         },
-        "error": {
-            "connection_error": "Failed to connect."
-        },
-        "step": {
-            "user": {
-                "data": {
-                  "username": "Username",
-                  "password": "Password"
-                },
-                "description": "Set up your devolo Home Control to allow monitoring and control.",
-                "title": "Link your devolo Home Control."
-            }
-        },
-        "title": "devolo Home Control"
-    }
+        "title": "Please enter your login information"
+      }
+    },
+    "title": "devolo Home Control"
+  }
 }

@@ -1,0 +1,23 @@
+
+{    "device_automation": {
+        "action_type": {
+            "turn_off": "Schalte {entity_name} aus",
+            "turn_on": "Schalte {entity_name} an"
+        }
+    },
+  "config": {
+    "error": {
+      "invalid_credentials": "Ung\u00fcltige Anmeldeinformationen"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "Passwort",
+          "username": "E-Mail-Adresse"
+        },
+        "title": "Gib deine my devolo Zugangsdaten ein"
+      }
+    },
+    "title": "devolo Home Control"
+  }
+}

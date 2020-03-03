@@ -1,7 +1,6 @@
 """Platform for light integration."""
 import logging
 
-from devolo_home_control_api.devices.zwave import get_device_uid_from_element_uid
 from devolo_home_control_api.homecontrol import get_sub_device_uid_from_element_uid
 
 from homeassistant.components.switch import SwitchDevice
@@ -23,20 +22,16 @@ async def async_setup_entry(
 
     devices_list = []
     for device in devices:
-        if (
-            get_sub_device_uid_from_element_uid([*device.binary_switch_property][0])
-            is None
-        ):
-            # Normal binary switch device with one binary switch
+        for i in range(len(device.binary_switch_property)):
             devices_list.append(
-                DevoloSwitch(hass=hass, device_instance=device, sub_uid=None)
-            )
-        else:
-            # Device with more than one binary switch
-            for i in range(1, len(device.binary_switch_property) + 1):
-                devices_list.append(
-                    DevoloSwitch(hass=hass, device_instance=device, sub_uid=i)
+                DevoloSwitch(
+                    hass=hass,
+                    device_instance=device,
+                    sub_uid=get_sub_device_uid_from_element_uid(
+                        [*device.binary_switch_property][i]
+                    ),
                 )
+            )
     async_add_entities(devices_list, False)
 
 
@@ -46,57 +41,51 @@ class DevoloSwitch(SwitchDevice):
     def __init__(self, hass, device_instance, sub_uid):
         """Initialize an devolo Switch."""
         self._device_instance = device_instance
+
+        # Create the unique ID
         if sub_uid is not None:
-            binary_switch = (
-                "devolo.BinarySwitch:" + self._device_instance.uid + "#" + str(sub_uid)
-            )
-            consumption_property = (
-                "devolo.Meter:" + self._device_instance.uid + "#" + str(sub_uid)
-            )
-            self._unique_id = (
-                get_device_uid_from_element_uid(binary_switch) + "_" + str(sub_uid)
-            )
+            self._unique_id = self._device_instance.uid + "#" + str(sub_uid)
         else:
-            binary_switch = "devolo.BinarySwitch:" + self._device_instance.uid
-            consumption_property = "devolo.Meter:" + self._device_instance.uid
-            self._unique_id = get_device_uid_from_element_uid(binary_switch)
-        self._mprm = hass.data[DOMAIN]["homecontrol"]
+            self._unique_id = self._device_instance.uid
+
+        self._homecontrol = hass.data[DOMAIN]["homecontrol"]
         self._name = self._device_instance.itemName
-        self._available = self._mprm.is_online(self._device_instance.uid)
+        self._available = self._homecontrol.is_online(self._device_instance.uid)
+
+        # Get the brand and model information
         try:
             self._brand = self._device_instance.brand
             self._model = self._device_instance.name
         except AttributeError:
             self._brand = None
             self._model = None
-        print(self.name)
-        print(self._mprm.is_online(self._device_instance.uid))
+
         self._binary_switch_property = self._device_instance.binary_switch_property.get(
-            binary_switch
+            "devolo.BinarySwitch:" + self._unique_id
         )
         self._is_on = self._binary_switch_property.state
+
         if hasattr(self._device_instance, "consumption_property"):
             self._consumption = self._device_instance.consumption_property.get(
-                consumption_property
+                "devolo.Meter:" + self._unique_id
             ).current
         else:
             self._consumption = None
         self._subscriber = Subscriber(self._device_instance.itemName, device=self)
-        self._mprm.publisher.register(self._device_instance.uid, self._subscriber)
+        self._homecontrol.publisher.register(
+            self._device_instance.uid, self._subscriber
+        )
 
     @property
     def unique_id(self):
-        """Return the unique ID of switch."""
+        """Return the unique ID of the switch."""
         return self._unique_id
 
     @property
     def device_info(self):
-        """Return the device infos."""
+        """Return the device info."""
         return {
-            "identifiers": {
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self.unique_id)
-            },
+            "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
             "manufacturer": self._brand,
             "model": self._model,
@@ -151,9 +140,7 @@ class DevoloSwitch(SwitchDevice):
                 message[0]
             ].current
         elif message[0].startswith("hdm"):
-            print(self.name)
-            print(self._mprm.is_online(self._device_instance.uid))
-            self._available = self._mprm.is_online(self._device_instance.uid)
+            self._available = self._homecontrol.is_online(self._device_instance.uid)
         else:
             _LOGGER.debug("No valid message received")
             _LOGGER.debug(message)
