@@ -4,6 +4,7 @@
   "documentation": "https://www.home-assistant.io/integrations/emulated_hue",
   "requirements": ["aiohttp_cors==0.7.0"],
   "dependencies": [],
+  "after_dependencies": ["http"],
   "codeowners": [],
   "quality_scale": "internal"
 }
