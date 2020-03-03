@@ -106,24 +106,27 @@ class StibMivbSensor(Entity):
             try:
                 self._stop_name = stop_name["points"][0]["name"][self.lang]
             except IndexError:
-                _LOGGER.error("stop %s does not exist" % self.stop_id)
+                _LOGGER.error("stop %s does not exist", self.stop_id)
             self._attributes["stop_name"] = self._stop_name
         self._name = self._stop_name + " line " + " ".join(self.line_ids)
 
         try:
             waiting_time_response = await self.api.get_waiting_time(self.stop_id)
-        except HttpException:
+        except HttpException as ex:
             _LOGGER.error(
-                "Http Error getting waiting time for stop %s. %s. %s"(
-                    self.stop_id, HttpException, HttpException.text
-                )
+                "Http Error getting waiting time for stop %s. %s. %s",
+                self.stop_id,
+                ex,
+                ex.text,
             )
         try:
             messages_response = await self.api.get_message_by_line(*self.line_ids)
-        except HttpException:
+        except HttpException as ex:
             _LOGGER.error(
                 "Http Error getting messages for line(s) %s. %s. %s",
-                (self.line_ids, HttpException, HttpException.text),
+                self.line_ids,
+                ex,
+                ex.text,
             )
         next_passages = []
         now = pytz.utc.normalize(pytz.utc.localize(datetime.datetime.utcnow()))
@@ -179,9 +182,9 @@ class StibMivbSensor(Entity):
                                         messages.append(
                                             message["content"][0]["text"][0][self.lang]
                                         )
-                    type = await self.api.get_line_type(line_id)
+                    line_type = await self.api.get_line_type(line_id)
                     next_passage["messages"] = messages
-                    next_passage["line_type"] = TYPES[type]
+                    next_passage["line_type"] = TYPES[line_type]
                     next_passage["line_color"] = await self.api.get_line_color(line_id)
                     next_passage[
                         "line_text_color"
