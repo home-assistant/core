@@ -589,6 +589,35 @@ class TestRestSensor(unittest.TestCase):
         assert mock_logger.warning.called
         assert mock_logger.debug.called
 
+    @patch("homeassistant.components.rest.sensor._LOGGER")
+    def test_update_with_failed_get(self, mock_logger):
+        """Test attributes get extracted from a XML result with bad xml."""
+        value_template = template("{{ value_json.toplevel.master_value }}")
+        value_template.hass = self.hass
+
+        self.rest.update = Mock(
+            "rest.RestData.update", side_effect=self.update_side_effect(None, None),
+        )
+        self.sensor = rest.RestSensor(
+            self.hass,
+            self.rest,
+            self.name,
+            self.unit_of_measurement,
+            self.device_class,
+            value_template,
+            ["key"],
+            self.force_update,
+            self.resource_template,
+            self.json_attrs_path,
+        )
+
+        self.sensor.update()
+        assert {} == self.sensor.device_state_attributes
+        assert mock_logger.warning.called
+        assert mock_logger.debug.called
+        assert self.sensor.state is None
+        assert self.sensor.available is False
+
 
 class TestRestData(unittest.TestCase):
     """Tests for RestData."""
