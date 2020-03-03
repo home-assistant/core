@@ -22,7 +22,7 @@ ICON_OFF = "mdi:circle-outline"
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_DEVICE_CLASS = "binary_sensor"
+DEFAULT_DEVICE_CLASS = None
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

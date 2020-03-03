@@ -22,7 +22,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_DEVICE_CLASS = "sensor"
+DEFAULT_DEVICE_CLASS = None
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
