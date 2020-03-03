@@ -8,8 +8,8 @@ import async_timeout
 import coronavirus
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client, update_coordinator
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import aiohttp_client, entity_registry, update_coordinator
 
 from .const import DOMAIN
 
@@ -25,6 +25,23 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Coronavirus from a config entry."""
+    if isinstance(entry.data["country"], int):
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, "country": entry.title}
+        )
+
+        @callback
+        def _async_migrator(entity_entry: entity_registry.RegistryEntry):
+            """Migrate away from unstable ID."""
+            country, info_type = entity_entry.unique_id.rsplit("-", 1)
+            if not country.isnumeric():
+                return None
+            return {"new_unique_id": f"{entry.title}-{info_type}"}
+
+        await entity_registry.async_migrate_entries(
+            hass, entry.entry_id, _async_migrator
+        )
+
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
@@ -56,7 +73,7 @@ async def get_coordinator(hass):
         try:
             with async_timeout.timeout(10):
                 return {
-                    case.id: case
+                    case.country: case
                     for case in await coronavirus.get_cases(
                         aiohttp_client.async_get_clientsession(hass)
                     )
