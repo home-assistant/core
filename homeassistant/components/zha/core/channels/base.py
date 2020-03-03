@@ -284,8 +284,13 @@ class ZigbeeChannel(LogMixin):
             )
             results = {attribute: result.get(attribute) for attribute in attributes}
             result_handler(results)
-        except Exception:  # pylint: disable=broad-except
-            pass
+        except (asyncio.TimeoutError, zigpy.exceptions.DeliveryError) as ex:
+            self.debug(
+                "failed to get attributes '%s' on '%s' cluster: %s",
+                attributes,
+                self.cluster.ep_attribute,
+                str(ex),
+            )
 
     def log(self, level, msg, *args):
         """Log a message."""
