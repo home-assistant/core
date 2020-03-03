@@ -9,7 +9,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-from . import DATA_LUXTRONIK, ENTITY_ID_FORMAT
+from . import DOMAIN, ENTITY_ID_FORMAT
 from .const import (
     CONF_CALCULATIONS,
     CONF_GROUP,
@@ -46,7 +46,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Luxtronik sensor."""
-    luxtronik = hass.data.get(DATA_LUXTRONIK)
+    luxtronik = hass.data.get(DOMAIN)
     if not luxtronik:
         return False
 

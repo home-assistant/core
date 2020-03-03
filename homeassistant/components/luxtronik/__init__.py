@@ -23,9 +23,6 @@ LuxLogger.setLevel(level="WARNING")
 
 _LOGGER = logging.getLogger(__name__)
 
-
-DATA_LUXTRONIK = "DATA_LT"
-
 LUXTRONIK_PLATFORMS = ["binary_sensor", "sensor"]
 DOMAIN = "luxtronik"
 
@@ -66,7 +63,7 @@ def setup(hass, config):
 
     luxtronik = LuxtronikDevice(host, port, safe)
 
-    hass.data[DATA_LUXTRONIK] = luxtronik
+    hass.data[DOMAIN] = luxtronik
 
     def write_parameter(service):
         """Write a parameter to the Luxtronik heatpump."""
