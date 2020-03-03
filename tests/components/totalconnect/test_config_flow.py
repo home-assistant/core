@@ -3,9 +3,9 @@ from unittest.mock import patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components.totalconnect.const import (
-    DOMAIN,
     CONF_PASSWORD,
     CONF_USERNAME,
+    DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 

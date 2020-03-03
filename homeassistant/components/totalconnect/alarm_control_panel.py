@@ -18,7 +18,7 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 
-from .const import DOMAIN, CONF_USERNAME
+from .const import CONF_USERNAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
