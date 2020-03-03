@@ -423,6 +423,9 @@ class RangeFilter(Filter):
 
     def _filter_state(self, new_state):
         """Implement the range filter."""
+        if not isinstance(new_state.state, Number):
+            raise ValueError
+
         if self._upper_bound is not None and new_state.state > self._upper_bound:
 
             self._stats_internal["erasures_up"] += 1
@@ -469,6 +472,9 @@ class OutlierFilter(Filter):
 
     def _filter_state(self, new_state):
         """Implement the outlier filter."""
+        if not isinstance(new_state.state, Number):
+            raise ValueError
+
         median = statistics.median([s.state for s in self.states]) if self.states else 0
         if (
             len(self.states) == self.states.maxlen
@@ -498,6 +504,9 @@ class LowPassFilter(Filter):
 
     def _filter_state(self, new_state):
         """Implement the low pass filter."""
+        if not isinstance(new_state.state, Number):
+            raise ValueError
+
         if not self.states:
             return new_state
 
@@ -539,6 +548,9 @@ class TimeSMAFilter(Filter):
 
     def _filter_state(self, new_state):
         """Implement the Simple Moving Average filter."""
+        if not isinstance(new_state.state, Number):
+            raise ValueError
+
         self._leak(new_state.timestamp)
         self.queue.append(copy(new_state))
 
