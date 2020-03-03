@@ -15,6 +15,7 @@ from homeassistant.const import (
     DATA_RATE_MEGABYTES_PER_SECOND,
     STATE_OFF,
     STATE_ON,
+    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -29,7 +30,7 @@ CONF_ARG = "arg"
 SENSOR_TYPES = {
     "disk_free": ["Disk free", DATA_GIBIBYTES, "mdi:harddisk", None],
     "disk_use": ["Disk use", DATA_GIBIBYTES, "mdi:harddisk", None],
-    "disk_use_percent": ["Disk use (percent)", "%", "mdi:harddisk", None],
+    "disk_use_percent": ["Disk use (percent)", UNIT_PERCENTAGE, "mdi:harddisk", None],
     "ipv4_address": ["IPv4 address", "", "mdi:server-network", None],
     "ipv6_address": ["IPv6 address", "", "mdi:server-network", None],
     "last_boot": ["Last boot", "", "mdi:clock", "timestamp"],
@@ -38,7 +39,7 @@ SENSOR_TYPES = {
     "load_5m": ["Load (5m)", " ", "mdi:memory", None],
     "memory_free": ["Memory free", DATA_MEBIBYTES, "mdi:memory", None],
     "memory_use": ["Memory use", DATA_MEBIBYTES, "mdi:memory", None],
-    "memory_use_percent": ["Memory use (percent)", "%", "mdi:memory", None],
+    "memory_use_percent": ["Memory use (percent)", UNIT_PERCENTAGE, "mdi:memory", None],
     "network_in": ["Network in", DATA_MEBIBYTES, "mdi:server-network", None],
     "network_out": ["Network out", DATA_MEBIBYTES, "mdi:server-network", None],
     "packets_in": ["Packets in", " ", "mdi:server-network", None],
@@ -56,10 +57,10 @@ SENSOR_TYPES = {
         None,
     ],
     "process": ["Process", " ", "mdi:memory", None],
-    "processor_use": ["Processor use", "%", "mdi:memory", None],
+    "processor_use": ["Processor use", UNIT_PERCENTAGE, "mdi:memory", None],
     "swap_free": ["Swap free", DATA_MEBIBYTES, "mdi:harddisk", None],
     "swap_use": ["Swap use", DATA_MEBIBYTES, "mdi:harddisk", None],
-    "swap_use_percent": ["Swap use (percent)", "%", "mdi:harddisk", None],
+    "swap_use_percent": ["Swap use (percent)", UNIT_PERCENTAGE, "mdi:harddisk", None],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

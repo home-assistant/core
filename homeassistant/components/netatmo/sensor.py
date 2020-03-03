@@ -11,6 +11,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -57,13 +58,18 @@ SENSOR_TYPES = {
     "co2": ["CO2", CONCENTRATION_PARTS_PER_MILLION, "mdi:periodic-table-co2", None],
     "pressure": ["Pressure", "mbar", "mdi:gauge", None],
     "noise": ["Noise", "dB", "mdi:volume-high", None],
-    "humidity": ["Humidity", "%", "mdi:water-percent", DEVICE_CLASS_HUMIDITY],
+    "humidity": [
+        "Humidity",
+        UNIT_PERCENTAGE,
+        "mdi:water-percent",
+        DEVICE_CLASS_HUMIDITY,
+    ],
     "rain": ["Rain", "mm", "mdi:weather-rainy", None],
     "sum_rain_1": ["sum_rain_1", "mm", "mdi:weather-rainy", None],
     "sum_rain_24": ["sum_rain_24", "mm", "mdi:weather-rainy", None],
     "battery_vp": ["Battery", "", "mdi:battery", None],
     "battery_lvl": ["Battery_lvl", "", "mdi:battery", None],
-    "battery_percent": ["battery_percent", "%", None, DEVICE_CLASS_BATTERY],
+    "battery_percent": ["battery_percent", UNIT_PERCENTAGE, None, DEVICE_CLASS_BATTERY],
     "min_temp": ["Min Temp.", TEMP_CELSIUS, "mdi:thermometer", None],
     "max_temp": ["Max Temp.", TEMP_CELSIUS, "mdi:thermometer", None],
     "windangle": ["Angle", "", "mdi:compass", None],

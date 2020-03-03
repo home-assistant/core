@@ -5,9 +5,10 @@ from august.activity import ActivityType
 from august.lock import LockStatus
 from august.util import update_lock_detail_from_activity
 
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import ATTR_CHANGED_BY, LockDevice
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import callback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DATA_AUGUST, DOMAIN
 from .entity import AugustEntityMixin
@@ -27,7 +28,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(devices, True)
 
 
-class AugustLock(AugustEntityMixin, LockDevice):
+class AugustLock(AugustEntityMixin, RestoreEntity, LockDevice):
     """Representation of an August lock."""
 
     def __init__(self, data, device):
@@ -52,9 +53,8 @@ class AugustLock(AugustEntityMixin, LockDevice):
         activities = await self.hass.async_add_executor_job(
             lock_operation, self._device_id
         )
-        detail = self._detail
         for lock_activity in activities:
-            update_lock_detail_from_activity(detail, lock_activity)
+            update_lock_detail_from_activity(self._detail, lock_activity)
 
         if self._update_lock_status_from_detail():
             _LOGGER.debug(
@@ -64,26 +64,23 @@ class AugustLock(AugustEntityMixin, LockDevice):
             self._data.async_signal_device_id_update(self._device_id)
 
     def _update_lock_status_from_detail(self):
-        detail = self._detail
-        lock_status = detail.lock_status
-        self._available = detail.bridge_is_online
+        self._available = self._detail.bridge_is_online
 
-        if self._lock_status != lock_status:
-            self._lock_status = lock_status
+        if self._lock_status != self._detail.lock_status:
+            self._lock_status = self._detail.lock_status
             return True
         return False
 
     @callback
     def _update_from_data(self):
         """Get the latest state of the sensor and update activity."""
-        lock_detail = self._detail
         lock_activity = self._data.activity_stream.get_latest_device_activity(
             self._device_id, [ActivityType.LOCK_OPERATION]
         )
 
         if lock_activity is not None:
             self._changed_by = lock_activity.operated_by
-            update_lock_detail_from_activity(lock_detail, lock_activity)
+            update_lock_detail_from_activity(self._detail, lock_activity)
 
         self._update_lock_status_from_detail()
 
@@ -118,6 +115,17 @@ class AugustLock(AugustEntityMixin, LockDevice):
             attributes["keypad_battery_level"] = self._detail.keypad.battery_level
 
         return attributes
+
+    async def async_added_to_hass(self):
+        """Restore ATTR_CHANGED_BY on startup since it is likely no longer in the activity log."""
+        await super().async_added_to_hass()
+
+        last_state = await self.async_get_last_state()
+        if not last_state:
+            return
+
+        if ATTR_CHANGED_BY in last_state.attributes:
+            self._changed_by = last_state.attributes[ATTR_CHANGED_BY]
 
     @property
     def unique_id(self) -> str:

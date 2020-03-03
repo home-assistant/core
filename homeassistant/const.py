@@ -395,6 +395,8 @@ MASS_POUNDS: str = "lb"
 # UV Index units
 UNIT_UV_INDEX: str = "UV index"
 
+# Percentage units
+UNIT_PERCENTAGE = "%"
 # Irradiation units
 IRRADIATION_WATTS_PER_SQUARE_METER = f"{POWER_WATT}/{AREA_SQUARE_METERS}"
 

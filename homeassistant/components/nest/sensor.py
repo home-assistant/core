@@ -8,6 +8,7 @@ from homeassistant.const import (
     STATE_OFF,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
 )
 
 from . import CONF_SENSORS, DATA_NEST, DATA_NEST_CONFIG, NestSensorDevice
@@ -41,7 +42,7 @@ _VALID_SENSOR_TYPES = (
     + STRUCTURE_CAMERA_SENSOR_TYPES
 )
 
-SENSOR_UNITS = {"humidity": "%"}
+SENSOR_UNITS = {"humidity": UNIT_PERCENTAGE}
 
 SENSOR_DEVICE_CLASSES = {"humidity": DEVICE_CLASS_HUMIDITY}
 

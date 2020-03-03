@@ -26,6 +26,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import CoreState
 from homeassistant.helpers import entity_registry
@@ -287,7 +288,7 @@ async def test_sensor_restore(hass, hk_driver, events):
         "12345",
         suggested_object_id="humidity",
         device_class="humidity",
-        unit_of_measurement="%",
+        unit_of_measurement=UNIT_PERCENTAGE,
     )
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
     await hass.async_block_till_done()

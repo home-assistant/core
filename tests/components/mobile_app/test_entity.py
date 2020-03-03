@@ -2,6 +2,7 @@
 
 import logging
 
+from homeassistant.const import UNIT_PERCENTAGE
 from homeassistant.helpers import device_registry
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,7 +25,7 @@ async def test_sensor(hass, create_registrations, webhook_client):
                 "state": 100,
                 "type": "sensor",
                 "unique_id": "battery_state",
-                "unit_of_measurement": "%",
+                "unit_of_measurement": UNIT_PERCENTAGE,
             },
         },
     )
@@ -40,7 +41,7 @@ async def test_sensor(hass, create_registrations, webhook_client):
 
     assert entity.attributes["device_class"] == "battery"
     assert entity.attributes["icon"] == "mdi:battery"
-    assert entity.attributes["unit_of_measurement"] == "%"
+    assert entity.attributes["unit_of_measurement"] == UNIT_PERCENTAGE
     assert entity.attributes["foo"] == "bar"
     assert entity.domain == "sensor"
     assert entity.name == "Test 1 Battery State"
@@ -104,7 +105,7 @@ async def test_sensor_id_no_dupes(hass, create_registrations, webhook_client):
             "state": 100,
             "type": "sensor",
             "unique_id": "battery_state",
-            "unit_of_measurement": "%",
+            "unit_of_measurement": UNIT_PERCENTAGE,
         },
     }
 

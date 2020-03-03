@@ -1,6 +1,8 @@
 """Support for Eight Sleep sensors."""
 import logging
 
+from homeassistant.const import UNIT_PERCENTAGE
+
 from . import (
     CONF_SENSORS,
     DATA_EIGHT,
@@ -18,9 +20,9 @@ ATTR_AVG_RESP_RATE = "Average Respiratory Rate"
 ATTR_HEART_RATE = "Heart Rate"
 ATTR_AVG_HEART_RATE = "Average Heart Rate"
 ATTR_SLEEP_DUR = "Time Slept"
-ATTR_LIGHT_PERC = "Light Sleep %"
-ATTR_DEEP_PERC = "Deep Sleep %"
-ATTR_REM_PERC = "REM Sleep %"
+ATTR_LIGHT_PERC = f"Light Sleep {UNIT_PERCENTAGE}"
+ATTR_DEEP_PERC = f"Deep Sleep {UNIT_PERCENTAGE}"
+ATTR_REM_PERC = f"REM Sleep {UNIT_PERCENTAGE}"
 ATTR_TNT = "Tosses & Turns"
 ATTR_SLEEP_STAGE = "Sleep Stage"
 ATTR_TARGET_HEAT = "Target Heating Level"
@@ -100,7 +102,7 @@ class EightHeatSensor(EightSleepHeatEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return "%"
+        return UNIT_PERCENTAGE
 
     async def async_update(self):
         """Retrieve latest state."""
@@ -261,14 +263,26 @@ class EightUserSensor(EightSleepUserEntity):
             bed_temp = None
 
         if "current" in self._sensor_root:
-            state_attr[ATTR_RESP_RATE] = round(self._attr["resp_rate"], 2)
-            state_attr[ATTR_HEART_RATE] = round(self._attr["heart_rate"], 2)
+            try:
+                state_attr[ATTR_RESP_RATE] = round(self._attr["resp_rate"], 2)
+            except TypeError:
+                state_attr[ATTR_RESP_RATE] = None
+            try:
+                state_attr[ATTR_HEART_RATE] = round(self._attr["heart_rate"], 2)
+            except TypeError:
+                state_attr[ATTR_HEART_RATE] = None
             state_attr[ATTR_SLEEP_STAGE] = self._attr["stage"]
             state_attr[ATTR_ROOM_TEMP] = room_temp
             state_attr[ATTR_BED_TEMP] = bed_temp
         elif "last" in self._sensor_root:
-            state_attr[ATTR_AVG_RESP_RATE] = round(self._attr["resp_rate"], 2)
-            state_attr[ATTR_AVG_HEART_RATE] = round(self._attr["heart_rate"], 2)
+            try:
+                state_attr[ATTR_AVG_RESP_RATE] = round(self._attr["resp_rate"], 2)
+            except TypeError:
+                state_attr[ATTR_AVG_RESP_RATE] = None
+            try:
+                state_attr[ATTR_AVG_HEART_RATE] = round(self._attr["heart_rate"], 2)
+            except TypeError:
+                state_attr[ATTR_AVG_HEART_RATE] = None
             state_attr[ATTR_AVG_ROOM_TEMP] = room_temp
             state_attr[ATTR_AVG_BED_TEMP] = bed_temp
 

@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -40,7 +41,7 @@ SENSOR_TYPES = {
     "temp_min": ["Temperature min", "temperature"],
     "temp_max": ["Temperature max", "temperature"],
     "wind_speed": ["Wind speed", "speed"],
-    "humidity": ["Humidity", "%"],
+    "humidity": ["Humidity", UNIT_PERCENTAGE],
     "pressure": ["Pressure", "pressure"],
     "visibility": ["Visibility", "distance"],
 }

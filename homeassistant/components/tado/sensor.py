@@ -1,7 +1,7 @@
 """Support for Tado sensors for each zone."""
 import logging
 
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS, UNIT_PERCENTAGE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -134,9 +134,9 @@ class TadoSensor(Entity):
         if self.zone_variable == "temperature":
             return self.hass.config.units.temperature_unit
         if self.zone_variable == "humidity":
-            return "%"
+            return UNIT_PERCENTAGE
         if self.zone_variable == "heating":
-            return "%"
+            return UNIT_PERCENTAGE
         if self.zone_variable == "ac":
             return ""
 

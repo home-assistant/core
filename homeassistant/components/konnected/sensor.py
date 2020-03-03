@@ -10,6 +10,7 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -21,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
     DEVICE_CLASS_TEMPERATURE: ["Temperature", TEMP_CELSIUS],
-    DEVICE_CLASS_HUMIDITY: ["Humidity", "%"],
+    DEVICE_CLASS_HUMIDITY: ["Humidity", UNIT_PERCENTAGE],
 }
 
 
@@ -119,9 +120,7 @@ class KonnectedSensor(Entity):
     @property
     def device_info(self):
         """Return the device info."""
-        return {
-            "identifiers": {(KONNECTED_DOMAIN, self._device_id)},
-        }
+        return {"identifiers": {(KONNECTED_DOMAIN, self._device_id)}}
 
     async def async_added_to_hass(self):
         """Store entity_id and register state change callback."""

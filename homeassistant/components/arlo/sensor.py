@@ -11,6 +11,7 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -27,10 +28,10 @@ SENSOR_TYPES = {
     "last_capture": ["Last", None, "run-fast"],
     "total_cameras": ["Arlo Cameras", None, "video"],
     "captured_today": ["Captured Today", None, "file-video"],
-    "battery_level": ["Battery Level", "%", "battery-50"],
+    "battery_level": ["Battery Level", UNIT_PERCENTAGE, "battery-50"],
     "signal_strength": ["Signal Strength", None, "signal"],
     "temperature": ["Temperature", TEMP_CELSIUS, "thermometer"],
-    "humidity": ["Humidity", "%", "water-percent"],
+    "humidity": ["Humidity", UNIT_PERCENTAGE, "water-percent"],
     "air_quality": ["Air Quality", CONCENTRATION_PARTS_PER_MILLION, "biohazard"],
 }
 
