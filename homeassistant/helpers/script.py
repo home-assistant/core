@@ -27,10 +27,13 @@ from homeassistant.const import (
     CONF_SCENE,
     CONF_TIMEOUT,
     CONF_WAIT_TEMPLATE,
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
+    SERVICE_CALL_LIMIT,
     Context,
     HomeAssistant,
     callback,
@@ -45,12 +48,17 @@ from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
     async_track_template,
 )
-from homeassistant.helpers.service import CONF_SERVICE_DATA, async_call_from_config
+from homeassistant.helpers.service import (
+    CONF_SERVICE_DATA,
+    async_prepare_call_from_config,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
+
+ATTR_BLOCKING = "blocking"
 
 SCRIPT_MODE_ERROR = "error"
 SCRIPT_MODE_IGNORE = "ignore"
@@ -238,18 +246,14 @@ class _ScriptRunBase(ABC):
             self._hass, wait_template, async_script_wait, self._variables
         )
 
+    @abstractmethod
     async def _async_call_service_step(self):
         """Call the service specified in the action."""
+
+    def _prep_call_service_step(self):
         self._script.last_action = self._action.get(CONF_ALIAS, "call service")
         self._log("Executing step %s", self._script.last_action)
-        await async_call_from_config(
-            self._hass,
-            self._action,
-            blocking=True,
-            variables=self._variables,
-            validate_config=False,
-            context=self._context,
-        )
+        return async_prepare_call_from_config(self._hass, self._action, self._variables)
 
     async def _async_device_step(self):
         """Perform the device automation specified in the action."""
@@ -413,6 +417,62 @@ class _ScriptRun(_ScriptRunBase):
         finally:
             unsub()
 
+    async def _async_call_service_step(self):
+        """Call the service specified in the action."""
+        domain, service, service_data = self._prep_call_service_step()
+        blocking = service_data.get(ATTR_BLOCKING, True)
+
+        # If this might start a fully blocking script call then disable the call
+        # timeout. Otherwise use the normal service call limit.
+        if domain == "script" and (
+            service == SERVICE_TURN_ON and blocking or service != SERVICE_TURN_OFF
+        ):
+            limit = None
+        else:
+            limit = SERVICE_CALL_LIMIT
+
+        coro = self._hass.services.async_call(
+            domain,
+            service,
+            service_data,
+            blocking=True,
+            context=self._context,
+            limit=limit,
+        )
+
+        if limit is None:
+            # No call limit (i.e., potentially starting a fully blocking script call) so
+            # watch for a stop request and, if received, propagate it to the called
+            # scripts by turning them off.
+            task = self._hass.async_create_task(coro)
+            done, pending = await asyncio.wait(
+                {self._stop.wait(), task}, return_when=asyncio.FIRST_COMPLETED,
+            )
+            for pending_task in pending:
+                if pending_task == task:
+                    # The scripts did not all finish. Stop them by turning them off.
+                    # Do not cancel them now. Stopping them should cause them to finish
+                    # gracefully.
+                    if service in (SERVICE_TOGGLE, SERVICE_TURN_ON):
+                        service_data = {
+                            key: value
+                            for key, value in service_data.items()
+                            if key in cv.ENTITY_SERVICE_FIELDS
+                        }
+                    else:
+                        service_data = {ATTR_ENTITY_ID: f"script.{service}"}
+                    await self._hass.services.async_call(
+                        "script", SERVICE_TURN_OFF, service_data, blocking=True
+                    )
+                else:
+                    pending_task.cancel()
+            # Propagate any exceptions that might have happened.
+            for done_task in done:
+                done_task.result()
+        else:
+            # No call limit, so just wait for it to finish.
+            await coro
+
 
 class _QueuedScriptRun(_ScriptRun):
     """Manage queued Script sequence run."""
@@ -574,6 +634,12 @@ class _LegacyScriptRun(_ScriptRunBase):
             self._async_listener.append(unsub_timeout)
 
         raise _SuspendScript
+
+    async def _async_call_service_step(self):
+        """Call the service specified in the action."""
+        await self._hass.services.async_call(
+            *self._prep_call_service_step(), blocking=True, context=self._context
+        )
 
     def _async_remove_listener(self):
         """Remove listeners, if any."""
