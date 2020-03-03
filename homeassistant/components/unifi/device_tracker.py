@@ -338,4 +338,4 @@ class UniFiDeviceTracker(ScannerEntity):
     @property
     def should_poll(self):
         """No polling needed."""
-        return False
+        return True
