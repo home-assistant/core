@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 {
                     vol.Required(CONF_GROUP): vol.All(
                         cv.string,
-                        vol.Any(CONF_PARAMETERS, CONF_CALCULATIONS, CONF_VISIBILITIES),
+                        vol.In([CONF_PARAMETERS, CONF_CALCULATIONS, CONF_VISIBILITIES]),
                     ),
                     vol.Required(CONF_ID): cv.string,
                     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
