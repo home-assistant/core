@@ -8,6 +8,7 @@ from homeassistant.setup import async_setup_component
 async def test_humanify_alexa_event(hass):
     """Test humanifying Alexa event."""
     await async_setup_component(hass, "alexa", {})
+    hass.states.async_set("light.kitchen", "on", {"friendly_name": "Kitchen Light"})
 
     results = list(
         logbook.humanify(
