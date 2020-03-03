@@ -32,6 +32,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._options[case.country] = case.country
 
         if user_input is not None:
+            await self.async_set_unique_id(user_input["country"])
+            self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=self._options[user_input["country"]], data=user_input
             )
