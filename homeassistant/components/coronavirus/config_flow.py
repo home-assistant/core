@@ -29,7 +29,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             for case in sorted(
                 coordinator.data.values(), key=lambda case: case.country
             ):
-                self._options[case.id] = case.country
+                self._options[case.country] = case.country
 
         if user_input is not None:
             return self.async_create_entry(
