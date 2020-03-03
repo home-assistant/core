@@ -11,12 +11,9 @@ from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-_LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Flume Sensor"
-
-CONF_EXCLUDE_DEVICES = "exclude_devices"
-CONF_INCLUDE_DEVICES = "include_devices"
 
 
 CONF_CLIENT_ID = "client_id"
@@ -32,8 +29,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_CLIENT_ID): cv.string,
         vol.Required(CONF_CLIENT_SECRET): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_EXCLUDE_DEVICES): cv.ensure_list,
-        vol.Optional(CONF_INCLUDE_DEVICES): cv.ensure_list,
     }
 )
 
@@ -47,12 +42,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     flume_token_file = hass.config.path("FLUME_TOKEN_FILE")
     time_zone = str(hass.config.time_zone)
     name = config[CONF_NAME]
-    include_devices = [
-        str(device_id) for device_id in config.get(CONF_INCLUDE_DEVICES, [])
-    ]
-    exclude_devices = [
-        str(device_id) for device_id in config.get(CONF_EXCLUDE_DEVICES, [])
-    ]
     flume_entity_list = []
 
     http_session = Session()
@@ -70,20 +59,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if device["type"] == FLUME_TYPE_SENSOR:
             device_id = device["id"]
             device_name = device["location"]["name"]
-            if exclude_devices and str(device_id) in exclude_devices:
-                _LOGGER.info(
-                    "Skipping device %s (%s) because it is in exclude_devices",
-                    device_id,
-                    device_name,
-                )
-                continue
-            if include_devices and str(device_id) not in include_devices:
-                _LOGGER.info(
-                    "Skipping device %s (%s) because it is not in include_devices",
-                    device_id,
-                    device_name,
-                )
-                continue
 
             flume = FlumeData(
                 username,
@@ -140,12 +115,7 @@ class FlumeSensor(Entity):
     @property
     def unique_id(self):
         """Device unique ID."""
-        return f"Flume {self._device_id}"
-
-    @property
-    def device_state_attributes(self):
-        """Return the device specific state attributes."""
-        return {"device_id": self._device_id}
+        return self._device_id
 
     def update(self):
         """Get the latest data and updates the states."""
