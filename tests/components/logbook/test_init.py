@@ -1484,3 +1484,36 @@ async def test_humanify_script_started_event(hass):
     assert event2["domain"] == "script"
     assert event2["message"] == "started"
     assert event2["entity_id"] == "script.bye"
+
+
+async def test_humanify_same_state(hass):
+    """Test humanifying Script Run event."""
+    state_50 = ha.State("light.kitchen", "on", {"brightness": 50}).as_dict()
+    state_100 = ha.State("light.kitchen", "on", {"brightness": 100}).as_dict()
+    state_200 = ha.State("light.kitchen", "on", {"brightness": 200}).as_dict()
+
+    events = list(
+        logbook.humanify(
+            hass,
+            [
+                ha.Event(
+                    EVENT_STATE_CHANGED,
+                    {
+                        "entity_id": "light.kitchen",
+                        "old_state": state_50,
+                        "new_state": state_100,
+                    },
+                ),
+                ha.Event(
+                    EVENT_STATE_CHANGED,
+                    {
+                        "entity_id": "light.kitchen",
+                        "old_state": state_100,
+                        "new_state": state_200,
+                    },
+                ),
+            ],
+        )
+    )
+
+    assert len(events) == 1
