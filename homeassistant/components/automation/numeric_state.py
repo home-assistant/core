@@ -19,6 +19,25 @@ from homeassistant.helpers.event import async_track_same_state, async_track_stat
 # mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs
 
+
+def validate_above_below(value):
+    """Validate that above and below can co-exist."""
+    above = value.get(CONF_ABOVE)
+    below = value.get(CONF_BELOW)
+
+    if above is None or below is None:
+        return value
+
+    if above > below:
+        raise vol.Invalid(
+            "A value can never be above %s and below %s at the same time. You probably want two different triggers.",
+            above,
+            below,
+        )
+
+    return value
+
+
 TRIGGER_SCHEMA = vol.All(
     vol.Schema(
         {
@@ -35,6 +54,7 @@ TRIGGER_SCHEMA = vol.All(
         }
     ),
     cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
+    validate_above_below,
 )
 
 _LOGGER = logging.getLogger(__name__)
