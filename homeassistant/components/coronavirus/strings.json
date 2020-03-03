@@ -8,6 +8,9 @@
           "country": "Country"
         }
       }
+    },
+    "abort": {
+      "already_configured": "This country is already configured."
     }
   }
 }
