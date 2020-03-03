@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     await server.async_update()
     server.start_periodic_update()
 
-    # Set up platform(s).
+    # Set up platforms.
     for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, platform)
@@ -103,7 +103,6 @@ class MinecraftServer:
         self._mc_status = MCStatus(self.host, self.port)
 
         # Data provided by 3rd party library
-        self.description = None
         self.version = None
         self.protocol_version = None
         self.latency_time = None
@@ -168,7 +167,6 @@ class MinecraftServer:
             )
 
             # Got answer to request, update properties.
-            self.description = status_response.description["text"]
             self.version = status_response.version.name
             self.protocol_version = status_response.version.protocol
             self.players_online = status_response.players.online
@@ -185,7 +183,6 @@ class MinecraftServer:
             self._last_status_request_failed = False
         except OSError as error:
             # No answer to request, set all properties to unknown.
-            self.description = None
             self.version = None
             self.protocol_version = None
             self.players_online = None
