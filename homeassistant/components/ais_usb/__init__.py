@@ -109,7 +109,6 @@ async def async_setup(hass, config):
     class EventHandler(pyinotify.ProcessEvent):
         def process_IN_CREATE(self, event):
             if event.pathname.startswith(G_USB_DRIVES_PATH):
-                _LOGGER.error(str(event.pathname))
                 # create symlink
                 lno = len(
                     os.listdir(
@@ -155,7 +154,6 @@ async def async_setup(hass, config):
 
         def process_IN_DELETE(self, event):
             if event.pathname.startswith(G_USB_DRIVES_PATH):
-                _LOGGER.error(str(event.pathname))
                 # delete symlink
                 td = "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne"
                 for f in os.listdir(td):
