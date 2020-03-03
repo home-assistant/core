@@ -7,19 +7,48 @@ from pyezviz.camera import EzvizCamera
 from pyezviz.client import EzvizClient, PyEzvizError
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.camera import (
+    CAMERA_SERVICE_SCHEMA,
+    PLATFORM_SCHEMA,
+    SUPPORT_STREAM,
+    Camera,
+)
+from homeassistant.components.camera.const import DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+from homeassistant.helpers.service import async_extract_entity_ids
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CAMERAS = "cameras"
+CONF_SERIAL = "serial"
 
 DEFAULT_CAMERA_USERNAME = "admin"
 DEFAULT_RTSP_PORT = "554"
 
 DATA_FFMPEG = "ffmpeg"
 
+ATTR_DIRECTION = "direction"
+ATTR_SPEED = "speed"
+DEFAULT_SPEED = 5
+
+ATTR_ENABLE = "enable"
+ATTR_SWITCH = "switch"
+AUDIO = "audio"
+PRIVACY = "privacy"
+STATE = "state"
+FOLLOW_MOVE = "follow_move"
+
+DIR_UP = "up"
+DIR_DOWN = "down"
+DIR_LEFT = "left"
+DIR_RIGHT = "right"
+
+SERVICE_PTZ = "ezviz_ptz"
 EZVIZ_DATA = "ezviz"
 ENTITIES = "entities"
 
@@ -35,9 +64,81 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+SERVICE_PTZ_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required(ATTR_DIRECTION): vol.In([DIR_UP, DIR_DOWN, DIR_LEFT, DIR_RIGHT]),
+        vol.Optional(ATTR_SPEED, default=DEFAULT_SPEED): cv.positive_int,
+    }
+)
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ezviz IP Cameras."""
+
+    async def async_handle_ptz(service):
+        """Handle PTZ service call."""
+        direction = service.data.get(ATTR_DIRECTION, None)
+        speed = service.data.get(ATTR_SPEED, None)
+
+        all_cameras = hass.data[EZVIZ_DATA][ENTITIES]
+        entity_ids = await async_extract_entity_ids(hass, service)
+        target_cameras = []
+        if not entity_ids:
+            target_cameras = all_cameras
+        else:
+            target_cameras = [
+                camera for camera in all_cameras if camera.entity_id in entity_ids
+            ]
+        for camera in target_cameras:
+            await camera.async_perform_ptz(direction, speed)
+
+    async def async_switch_handler(call):
+        """Handle switch call."""
+        service = call.service
+        entity_id = call.data["entity_id"][0]
+        async_dispatcher_send(hass, f"{service}_{entity_id}")
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_PTZ, async_handle_ptz, schema=SERVICE_PTZ_SCHEMA
+    )
+
+    hass.services.async_register(
+        DOMAIN, "ezviz_switch_ir_on", async_switch_handler, CAMERA_SERVICE_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, "ezviz_switch_ir_off", async_switch_handler, CAMERA_SERVICE_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, "ezviz_switch_audio_on", async_switch_handler, CAMERA_SERVICE_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, "ezviz_switch_audio_off", async_switch_handler, CAMERA_SERVICE_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, "ezviz_switch_privacy_on", async_switch_handler, CAMERA_SERVICE_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, "ezviz_switch_privacy_off", async_switch_handler, CAMERA_SERVICE_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, "ezviz_switch_state_on", async_switch_handler, CAMERA_SERVICE_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, "ezviz_switch_state_off", async_switch_handler, CAMERA_SERVICE_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "ezviz_switch_follow_move_on",
+        async_switch_handler,
+        CAMERA_SERVICE_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "ezviz_switch_follow_move_off",
+        async_switch_handler,
+        CAMERA_SERVICE_SCHEMA,
+    )
 
     conf_cameras = config[CONF_CAMERAS]
 
@@ -147,6 +248,53 @@ class HassEzvizCamera(Camera):
     async def async_added_to_hass(self):
         """Subscribe to ffmpeg and add camera to list."""
         self._ffmpeg = self.hass.data[DATA_FFMPEG]
+        entities = self.hass.data.setdefault(EZVIZ_DATA, {}).setdefault(ENTITIES, [])
+        entities.append(self)
+        _LOGGER.debug("Registering services for entity_id=%s", self.entity_id)
+        async_dispatcher_connect(
+            self.hass, f"ezviz_switch_ir_on_{self.entity_id}", self.switch_ir_on
+        )
+        async_dispatcher_connect(
+            self.hass, f"ezviz_switch_ir_off_{self.entity_id}", self.switch_ir_off
+        )
+        async_dispatcher_connect(
+            self.hass, f"ezviz_switch_audio_on_{self.entity_id}", self.switch_audio_on
+        )
+        async_dispatcher_connect(
+            self.hass, f"ezviz_switch_audio_off_{self.entity_id}", self.switch_audio_off
+        )
+        async_dispatcher_connect(
+            self.hass,
+            f"ezviz_switch_privacy_on_{self.entity_id}",
+            self.switch_privacy_on,
+        )
+        async_dispatcher_connect(
+            self.hass,
+            f"ezviz_switch_privacy_off_{self.entity_id}",
+            self.switch_privacy_off,
+        )
+        async_dispatcher_connect(
+            self.hass, f"ezviz_switch_state_on_{self.entity_id}", self.switch_state_on
+        )
+        async_dispatcher_connect(
+            self.hass, f"ezviz_switch_state_off_{self.entity_id}", self.switch_state_off
+        )
+        async_dispatcher_connect(
+            self.hass,
+            f"ezviz_switch_follow_move_on_{self.entity_id}",
+            self.switch_follow_move_on,
+        )
+        async_dispatcher_connect(
+            self.hass,
+            f"ezviz_switch_follow_move_off_{self.entity_id}",
+            self.switch_follow_move_off,
+        )
+
+    async def async_perform_ptz(self, direction, sleep):
+        """Perform a PTZ action on the camera."""
+        await self.hass.async_add_executor_job(
+            self._ezviz_camera.move, direction, sleep
+        )
 
     @property
     def should_poll(self) -> bool:
@@ -235,3 +383,63 @@ class HassEzvizCamera(Camera):
             self._rtsp_stream = rtsp_stream_source
             return rtsp_stream_source
         return None
+
+    def switch_audio_on(self):
+        """Switch audio on."""
+        self._switch("audio", 1)
+
+    def switch_audio_off(self):
+        """Switch audio on."""
+        self._switch("audio", 0)
+
+    def switch_ir_on(self):
+        """Switch IR on."""
+        self._switch("ir", 1)
+
+    def switch_ir_off(self):
+        """Switch IR on."""
+        self._switch("ir", 0)
+
+    def switch_privacy_on(self):
+        """Switch privacy on."""
+        self._switch("privacy", 1)
+
+    def switch_privacy_off(self):
+        """Switch privacy on."""
+        self._switch("privacy", 0)
+
+    def switch_state_on(self):
+        """Switch state on."""
+        self._switch("state", 1)
+
+    def switch_state_off(self):
+        """Switch state on."""
+        self._switch("state", 0)
+
+    def switch_follow_move_on(self):
+        """Switch follow_move on."""
+        self._switch("follow_move", 1)
+
+    def switch_follow_move_off(self):
+        """Switch follow_move on."""
+        self._switch("follow_move", 0)
+
+    def _switch(self, switch, enable):
+        """Switch switch named switch to enable state."""
+        _LOGGER.debug(
+            "Switch %s for the camera %s to state: %s", switch, self._name, enable
+        )
+
+        if switch == "ir":
+            self._ezviz_camera.switch_device_ir_led(enable)
+        elif switch == "state":
+            self._ezviz_camera.switch_device_state_led(enable)
+        elif switch == "audio":
+            self._ezviz_camera.switch_device_audio(enable)
+        elif switch == "privacy":
+            self._ezviz_camera.switch_privacy_mode(enable)
+        elif switch == "follow_move":
+            self._ezviz_camera.switch_follow_move(enable)
+        else:
+            return None
+        return True
