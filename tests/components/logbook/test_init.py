@@ -1470,7 +1470,7 @@ async def test_humanify_same_state(hass):
 
 async def test_logbook_describe_event(hass, hass_client):
     """Test teaching logbook about a new event."""
-    await hass.async_add_job(init_recorder_component, hass)
+    await hass.async_add_executor_job(init_recorder_component, hass)
     assert await async_setup_component(hass, "logbook", {})
     with patch(
         "homeassistant.util.dt.utcnow",
@@ -1478,7 +1478,9 @@ async def test_logbook_describe_event(hass, hass_client):
     ):
         hass.bus.async_fire("some_event")
         await hass.async_block_till_done()
-        await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+        await hass.async_add_executor_job(
+            hass.data[recorder.DATA_INSTANCE].block_till_done
+        )
 
     def _describe(event):
         """Describe an event."""
