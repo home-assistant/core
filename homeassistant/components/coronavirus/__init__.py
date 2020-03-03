@@ -42,6 +42,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass, entry.entry_id, _async_migrator
         )
 
+    if not entry.unique_id:
+        hass.config_entries.async_update_entry(entry, unique_id=entry.data["country"])
+
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
