@@ -22,7 +22,6 @@ from ..const import (
     ATTR_VALUE,
     CHANNEL_EVENT_RELAY,
     CHANNEL_ZDO,
-    REPORT_CONFIG_DEFAULT,
     REPORT_CONFIG_MAX_INT,
     REPORT_CONFIG_MIN_INT,
     REPORT_CONFIG_RPT_CHANGE,
@@ -84,7 +83,7 @@ class ZigbeeChannel(LogMixin):
     REPORT_CONFIG = ()
 
     def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType,
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
     ) -> None:
         """Initialize ZigbeeChannel."""
         self._channel_name = cluster.ep_attribute
@@ -97,6 +96,12 @@ class ZigbeeChannel(LogMixin):
         unique_id = ch_pool.unique_id.replace("-", ":")
         self._unique_id = f"{unique_id}:0x{cluster.cluster_id:04x}"
         self._report_config = self.REPORT_CONFIG
+        if not hasattr(self, "_value_attribute") and len(self._report_config) > 0:
+            attr = self._report_config[0].get("attr")
+            if isinstance(attr, str):
+                self.value_attribute = get_attr_id_by_name(self.cluster, attr)
+            else:
+                self.value_attribute = attr
         self._status = ChannelStatus.CREATED
         self._cluster.add_listener(self)
 
@@ -209,6 +214,9 @@ class ZigbeeChannel(LogMixin):
     async def async_initialize(self, from_cache):
         """Initialize channel."""
         self.debug("initializing channel: from_cache: %s", from_cache)
+        for report_config in self._report_config:
+            await self.get_attribute_value(report_config["attr"], from_cache=from_cache)
+            await asyncio.sleep(uniform(0.1, 0.5))
         self._status = ChannelStatus.INITIALIZED
 
     @callback
@@ -219,7 +227,12 @@ class ZigbeeChannel(LogMixin):
     @callback
     def attribute_updated(self, attrid, value):
         """Handle attribute updates on this cluster."""
-        pass
+        self.async_send_signal(
+            f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
+            attrid,
+            self.cluster.attributes.get(attrid, [attrid])[0],
+            value,
+        )
 
     @callback
     def zdo_command(self, *args, **kwargs):
@@ -270,36 +283,6 @@ class ZigbeeChannel(LogMixin):
             command.__name__ = name
             return decorate_command(self, command)
         return self.__getattribute__(name)
-
-
-class AttributeListeningChannel(ZigbeeChannel):
-    """Channel for attribute reports from the cluster."""
-
-    REPORT_CONFIG = [{"attr": 0, "config": REPORT_CONFIG_DEFAULT}]
-
-    def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType,
-    ) -> None:
-        """Initialize AttributeListeningChannel."""
-        super().__init__(cluster, ch_pool)
-        attr = self._report_config[0].get("attr")
-        if isinstance(attr, str):
-            self.value_attribute = get_attr_id_by_name(self.cluster, attr)
-        else:
-            self.value_attribute = attr
-
-    @callback
-    def attribute_updated(self, attrid, value):
-        """Handle attribute updates on this cluster."""
-        if attrid == self.value_attribute:
-            self.async_send_signal(f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value)
-
-    async def async_initialize(self, from_cache):
-        """Initialize listener."""
-        await self.get_attribute_value(
-            self._report_config[0].get("attr"), from_cache=from_cache
-        )
-        await super().async_initialize(from_cache)
 
 
 class ZDOChannel(LogMixin):

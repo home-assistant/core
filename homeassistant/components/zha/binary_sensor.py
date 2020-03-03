@@ -103,9 +103,9 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
         return self._device_class
 
     @callback
-    def async_set_state(self, state):
+    def async_set_state(self, attr_id, attr_name, value):
         """Set the state."""
-        self._state = bool(state)
+        self._state = bool(value)
         self.async_schedule_update_ha_state()
 
     async def async_update(self):

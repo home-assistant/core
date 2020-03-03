@@ -91,10 +91,10 @@ class ZhaCover(ZhaEntity, CoverDevice):
         return self._current_position
 
     @callback
-    def async_set_position(self, pos):
+    def async_set_position(self, attr_id, attr_name, value):
         """Handle position update from channel."""
-        _LOGGER.debug("setting position: %s", pos)
-        self._current_position = 100 - pos
+        _LOGGER.debug("setting position: %s", value)
+        self._current_position = 100 - value
         if self._current_position == 0:
             self._state = STATE_CLOSED
         elif self._current_position == 100:
