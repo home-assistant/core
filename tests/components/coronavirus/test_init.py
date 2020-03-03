@@ -53,3 +53,6 @@ async def test_migration(hass):
 
     assert hass.states.get("sensor.netherlands_confirmed").state == "10"
     assert hass.states.get("sensor.worldwide_confirmed").state == "11"
+
+    assert nl_entry.unique_id == "Netherlands"
+    assert worldwide_entry.unique_id == OPTION_WORLDWIDE
