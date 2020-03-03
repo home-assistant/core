@@ -28,10 +28,8 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     ATTR_IDENTIFIERS,
-    ATTR_INSIDE_TEMPERATURE,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
-    ATTR_OUTSIDE_TEMPERATURE,
     ATTR_TARGET_TEMPERATURE,
     DATA_BSBLAN_CLIENT,
     DOMAIN,
@@ -60,13 +58,10 @@ HA_STATE_TO_BSBLAN = {
     PRESET_ECO: "2",
     HVAC_MODE_HEAT: "3",
     HVAC_MODE_OFF: "0",
-    # HVAC_MODE_COOL: "cool",  # not yet implemented
 }
 
 HA_ATTR_TO_BSBLAN = {
     ATTR_HVAC_MODE: "hvac_modes",
-    ATTR_INSIDE_TEMPERATURE: "8740",  # not yet implemented
-    ATTR_OUTSIDE_TEMPERATURE: "8700",  # not yet implemented
     ATTR_TARGET_TEMPERATURE: "target_temperature",
 }
 
@@ -80,7 +75,6 @@ BSBLAN_TO_HA_STATE = {
     "3": HVAC_MODE_HEAT,
     "0": HVAC_MODE_OFF,
 }
-# protection=0,auto=1,reduced=2,comfort=3
 
 
 async def async_setup_entry(
@@ -219,8 +213,6 @@ class BSBLanClimate(ClimateDevice):
         self._current_hvac_mode = BSBLAN_TO_HA_STATE[state.current_hvac_mode]
 
         self._temperature_unit = state.temperature_unit
-        # self._current_hvac_operation = state.current_hvac_operation
-        # self._current_heatpump_mode = state.current_heatpump_mode
 
     @property
     def device_info(self) -> Dict[str, Any]:
