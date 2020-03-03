@@ -20,11 +20,10 @@ _LOGGER = logging.getLogger(__name__)
 G_ZIGBEE_ID = "0451:16a8"
 G_AIS_REMOTE_ID = "0c45:5102"
 
+G_USB_DRIVES_PATH = "/mnt/media_rw"
 if platform.machine() == "x86_64":
     # local test
-    G_USB_DRIVES_PATH = "/media/andrzej/"
-else:
-    G_USB_DRIVES_PATH = "/mnt/media_rw/"
+    G_USB_DRIVES_PATH = "/media/andrzej"
 
 
 def get_device_info(pathname):
@@ -195,7 +194,7 @@ async def async_setup(hass, config):
     notifier = pyinotify.ThreadedNotifier(wm, EventHandler())
     notifier.start()
     wm.add_watch("/dev/bus", mask, rec=True)
-    wm.add_watch("/media/andrzej", mask, rec=True)
+    wm.add_watch(G_USB_DRIVES_PATH, mask, rec=True)
 
     async def stop_devices(call):
         # remove zigbee service on start - to prevent pm2 for restarting when usb is not connected
@@ -218,7 +217,7 @@ async def async_setup(hass, config):
             dirs = os.listdir(G_USB_DRIVES_PATH)
             for i in range(0, len(dirs)):
                 os.symlink(
-                    G_USB_DRIVES_PATH + dirs[i],
+                    G_USB_DRIVES_PATH + "/" + dirs[i],
                     "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/dysk_"
                     + str(i + 1),
                 )
