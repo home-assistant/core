@@ -212,7 +212,7 @@ class BSBLanClimate(ClimateDevice):
 
         # check if preset is active
         if BSBLAN_TO_HA_STATE[state.current_hvac_mode] == 2:
-            self.current_hvac_mode = None
+            self._current_hvac_mode = None
             self._preset_modes = HA_PRESET_TO_BSBLAN[state.current_hvac_mode]
         else:
             self._current_hvac_mode = BSBLAN_TO_HA_STATE[state.current_hvac_mode]
