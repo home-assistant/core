@@ -87,7 +87,7 @@ class ZHADevice(LogMixin):
         self._available_signal = "{}_{}_{}".format(
             self.name, self.ieee, SIGNAL_AVAILABLE
         )
-        self._checkins_missed_count = 2
+        self._checkins_missed_count = 0
         self._unsub = async_dispatcher_connect(
             self.hass, self._available_signal, self.async_initialize
         )
@@ -284,8 +284,12 @@ class ZHADevice(LogMixin):
                         )
                         if not self._channels.pools:
                             return
-                        pool = self._channels.pools[0]
-                        basic_ch = pool.all_channels[f"{pool.id}:0"]
+                        try:
+                            pool = self._channels.pools[0]
+                            basic_ch = pool.all_channels[f"{pool.id}:0x0000"]
+                        except KeyError:
+                            self.debug("%s %s does not have a mandatory basic cluster")
+                            return
                         self.hass.async_create_task(
                             basic_ch.get_attribute_value(
                                 ATTR_MANUFACTURER, from_cache=False
