@@ -126,8 +126,7 @@ class BrData:
             # schedule new call
             await self.schedule_update(SCHEDULE_NOK)
             return
-        else:
-            self.load_error_count = 0
+        self.load_error_count = 0
 
         # rounding coordinates prevents unnecessary redirects/calls
         lat = self.coordinates[CONF_LATITUDE]
@@ -147,9 +146,7 @@ class BrData:
             # schedule new call
             await self.schedule_update(SCHEDULE_NOK)
             return
-        else:
-            # Passed, reset error count
-            self.rain_error_count = 0
+        self.rain_error_count = 0
 
         result = parse_data(
             content.get(CONTENT),
