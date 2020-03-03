@@ -344,7 +344,7 @@ bomradarloop==0.1.3
 boto3==1.9.252
 
 # homeassistant.components.braviatv
-bravia-tv==1.0
+bravia-tv==1.0.1
 
 # homeassistant.components.broadlink
 broadlink==0.12.0
@@ -463,7 +463,7 @@ dsmr_parser==0.18
 dweepy==0.3.0
 
 # homeassistant.components.dynalite
-dynalite_devices==0.1.26
+dynalite_devices==0.1.30
 
 # homeassistant.components.rainforest_eagle
 eagle200_reader==0.2.1
@@ -1113,7 +1113,7 @@ pyRFXtrx==0.25
 # pySwitchmate==0.4.6
 
 # homeassistant.components.tibber
-pyTibber==0.12.2
+pyTibber==0.13.0
 
 # homeassistant.components.dlink
 pyW215==0.6.0
