@@ -267,6 +267,26 @@ class ZigbeeChannel(LogMixin):
         )
         return result.get(attribute)
 
+    async def get_many_attribute_values(
+        self, attributes, result_handler, from_cache=True
+    ):
+        """Get the values for a list of attributes and call the result handler callback."""
+        manufacturer = None
+        manufacturer_code = self._ch_pool.manufacturer_code
+        if self.cluster.cluster_id >= 0xFC00 and manufacturer_code:
+            manufacturer = manufacturer_code
+        try:
+            result, _ = await self.cluster.read_attributes(
+                attributes,
+                allow_cache=from_cache,
+                only_cache=from_cache,
+                manufacturer=manufacturer,
+            )
+            results = {attribute: result.get(attribute) for attribute in attributes}
+            result_handler(results)
+        except Exception:  # pylint: disable=broad-except
+            pass
+
     def log(self, level, msg, *args):
         """Log a message."""
         msg = f"[%s:%s]: {msg}"

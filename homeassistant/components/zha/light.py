@@ -337,37 +337,45 @@ class Light(ZhaEntity, light.Light):
                 "current_level", from_cache=from_cache
             )
         if self._color_channel:
+            attributes = []
+
+            def result_handler(results):
+                """Take the results and set the state accordingly."""
+                if "color_temperature" in results:
+                    self._color_temp = results["color_temperature"]
+
+                color_x = results.get("color_x", None)
+                color_y = results.get("color_y", None)
+                if color_x is not None and color_y is not None:
+                    self._hs_color = color_util.color_xy_to_hs(
+                        float(color_x / 65535), float(color_y / 65535)
+                    )
+                if "color_loop_active" in results:
+                    color_loop_active = results["color_loop_active"]
+                    if color_loop_active is not None and color_loop_active == 1:
+                        self._effect = light.EFFECT_COLORLOOP
+
             color_capabilities = self._color_channel.get_color_capabilities()
             if (
                 color_capabilities is not None
                 and color_capabilities & CAPABILITIES_COLOR_TEMP
             ):
-                self._color_temp = await self._color_channel.get_attribute_value(
-                    "color_temperature", from_cache=from_cache
-                )
+                attributes.append("color_temperature")
             if (
                 color_capabilities is not None
                 and color_capabilities & CAPABILITIES_COLOR_XY
             ):
-                color_x = await self._color_channel.get_attribute_value(
-                    "current_x", from_cache=from_cache
-                )
-                color_y = await self._color_channel.get_attribute_value(
-                    "current_y", from_cache=from_cache
-                )
-                if color_x is not None and color_y is not None:
-                    self._hs_color = color_util.color_xy_to_hs(
-                        float(color_x / 65535), float(color_y / 65535)
-                    )
+                attributes.append("current_x")
+                attributes.append("current_y")
             if (
                 color_capabilities is not None
                 and color_capabilities & CAPABILITIES_COLOR_LOOP
             ):
-                color_loop_active = await self._color_channel.get_attribute_value(
-                    "color_loop_active", from_cache=from_cache
-                )
-                if color_loop_active is not None and color_loop_active == 1:
-                    self._effect = light.EFFECT_COLORLOOP
+                attributes.append("color_loop_active")
+
+            await self._color_channel.get_many_attribute_values(
+                attributes, result_handler, from_cache=from_cache
+            )
 
     async def refresh(self, time):
         """Call async_get_state at an interval."""
