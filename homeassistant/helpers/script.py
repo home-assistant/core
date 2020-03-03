@@ -787,7 +787,7 @@ class Script:
 
             if self._script_mode == SCRIPT_MODE_RESTART:
                 self._log("Restarting script")
-                await self.async_stop()
+                await self.async_stop(update_state=False)
             elif self._script_mode == SCRIPT_MODE_QUEUE:
                 self._log(
                     "Queueing script behind %i run%s",
@@ -815,12 +815,13 @@ class Script:
         self._runs.append(run)
         await run.async_run()
 
-    async def async_stop(self) -> None:
+    async def async_stop(self, update_state: bool = True) -> None:
         """Stop running script."""
         if not self.is_running:
             return
         await asyncio.shield(asyncio.gather(*(run.async_stop() for run in self._runs)))
-        self._changed()
+        if update_state:
+            self._changed()
 
     def _log(self, msg, *args, level=logging.INFO):
         if self.name:
