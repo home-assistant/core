@@ -28,7 +28,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Required(CONF_API_KEY): cv.string,
+                vol.Required(CONF_API_KEY): cv.uuid4_string,
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.time_period,
@@ -49,7 +49,7 @@ CONFIG_SCHEMA = vol.Schema(
                     cv.positive_int, vol.Range(min=1)
                 ),
                 vol.Optional(CONF_STATIONS, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
+                    cv.ensure_list, [cv.uuid4_string]
                 ),
             }
         )
