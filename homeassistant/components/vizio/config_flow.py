@@ -230,7 +230,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         new_options.update(updated_options)
 
                     self.hass.config_entries.async_update_entry(
-                        entry=entry, data=new_data, options=new_options,
+                        entry=entry, data=new_data, options=new_options
                     )
                     return self.async_abort(reason="updated_entry")
 

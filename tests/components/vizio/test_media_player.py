@@ -69,8 +69,8 @@ async def _test_setup(
         )
 
     with patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_current_volume",
-        return_value=int(MAX_VOLUME[vizio_device_class] / 2),
+        "homeassistant.components.vizio.media_player.VizioAsync.get_all_audio_settings",
+        return_value={"volume": int(MAX_VOLUME[vizio_device_class] / 2), "mute": "Off"},
     ), patch(
         "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
         return_value=vizio_power_state,
