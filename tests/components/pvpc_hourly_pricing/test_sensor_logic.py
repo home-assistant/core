@@ -162,8 +162,8 @@ async def test_availability(hass, caplog, pvpc_aioclient_mock: AiohttpClientMock
         num_warnings = sum(
             1 for x in caplog.get_records("call") if x.levelno == logging.WARNING
         )
-        assert num_warnings == 4
-        assert num_errors == 1
+        assert num_warnings == 1
+        assert num_errors == 0
         assert pvpc_aioclient_mock.call_count == 8
 
         # check that it is silent until it becomes available again

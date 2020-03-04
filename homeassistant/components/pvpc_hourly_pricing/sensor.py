@@ -169,13 +169,13 @@ class ElecPriceSensor(RestoreEntity):
         self._hourly_tracker = async_track_time_change(
             self.hass, self.async_update, second=[0], minute=[0]
         )
-        # Update prices at random time, 3 times/hour (don't want to upset API)
-        random_minute = randint(1, 19)
-        mins_update = [random_minute + 20 * i for i in range(3)]
+        # Update prices at random time, 2 times/hour (don't want to upset API)
+        random_minute = randint(1, 29)
+        mins_update = [random_minute, random_minute + 30]
         self._price_tracker = async_track_time_change(
             self.hass, self.async_update_prices, second=[0], minute=mins_update
         )
-        _LOGGER.info(
+        _LOGGER.debug(
             "Setup of price sensor %s (%s) with tariff '%s', "
             "updating prices each hour at %s min",
             self.name,
@@ -303,7 +303,7 @@ class ElecPriceSensor(RestoreEntity):
             self.async_schedule_update_ha_state()
 
             if self._data_source_available:
-                _LOGGER.warning(
+                _LOGGER.debug(
                     "[%s]: Downloading prices as there are no valid ones",
                     self.entity_id,
                 )
@@ -330,7 +330,7 @@ class ElecPriceSensor(RestoreEntity):
                 _LOGGER.warning("Timeout error requesting data from '%s'", url)
         except aiohttp.ClientError:  # pragma: no cover
             if self._data_source_available:
-                _LOGGER.error("Client error in '%s'", url)
+                _LOGGER.warning("Client error in '%s'", url)
         return {}
 
     async def async_update_prices(self, *_args):
@@ -340,13 +340,13 @@ class ElecPriceSensor(RestoreEntity):
         if not data and self._data_source_available:
             self._num_retries += 1
             if self._num_retries > 2:
-                _LOGGER.error(
+                _LOGGER.warning(
                     "Repeated bad data update, mark component as unavailable source"
                 )
                 self._data_source_available = False
                 return
 
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "Bad update[retry:%d], will try again in %d s",
                 self._num_retries,
                 3 * self._timeout,
