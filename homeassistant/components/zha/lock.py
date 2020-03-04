@@ -103,9 +103,9 @@ class ZhaDoorLock(ZhaEntity, LockDevice):
         await self.async_get_state()
 
     @callback
-    def async_set_state(self, state):
+    def async_set_state(self, attr_id, attr_name, value):
         """Handle state update from channel."""
-        self._state = VALUE_TO_STATE.get(state, self._state)
+        self._state = VALUE_TO_STATE.get(value, self._state)
         self.async_schedule_update_ha_state()
 
     async def async_get_state(self, from_cache=True):
