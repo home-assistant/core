@@ -8,13 +8,11 @@ import asyncio
 from datetime import date, datetime, timedelta
 import logging
 from random import randint
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import aiohttp
 import async_timeout
-from dateutil.parser import parse
-from pytz import timezone
-import xmltodict
+from pytz import UTC, timezone
 
 from homeassistant import config_entries
 from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
@@ -36,8 +34,13 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(SENSOR_SCHEMA.schema)
 
-_RESOURCE = "https://api.esios.ree.es/archives/80/download?date={day:%Y-%m-%d}"
 _ATTRIBUTION = "Data retrieved from api.esios.ree.es by REE"
+_PRECISION = 5
+_RESOURCE = (
+    "https://api.esios.ree.es/archives/70/download_json"
+    "?locale=es&date={day:%Y-%m-%d}"
+)
+_TARIFF_KEYS = dict(zip(TARIFFS, ["GEN", "NOC", "VHC"]))
 
 # Prices are given in 0 to 24h sets, adjusted to the main timezone in Spain
 _REFERENCE_TZ = timezone("Europe/Madrid")
@@ -103,38 +106,30 @@ async def async_setup_entry(
     )
 
 
-def extract_prices_for_tariff(xml_data: dict, tariff: int = 2) -> Dict[datetime, float]:
+def extract_prices_for_tariff(data: List[dict], tariff: str) -> Dict[datetime, float]:
     """
-    PVPC xml data extractor.
+    PVPC data extractor.
 
-    Extract hourly prices for the selected tariff from the xml daily file download
+    Extract hourly prices for the selected tariff from the JSON daily file download
     of the official _Spain Electric Network_ (Red Eléctrica Española, REE)
     for the _Voluntary Price for Small Consumers_
     (Precio Voluntario para el Pequeño Consumidor, PVPC).
 
     Prices are referenced with datetimes in UTC.
     """
-    data = xml_data["PVPCDesgloseHorario"]
-
-    str_horiz = data["Horizonte"]["@v"]
-    ts_init: datetime = next(map(parse, str_horiz.split("/")))
-
-    tariff_id = f"Z0{tariff}"
-    prices = next(
-        filter(
-            lambda x: (
-                x["TerminoCosteHorario"]["@v"] == "FEU"
-                and x["TipoPrecio"]["@v"] == tariff_id
-            ),
-            data["SeriesTemporales"],
-        )
+    key = _TARIFF_KEYS[tariff]
+    ts_init = (
+        datetime.strptime(data[0]["Dia"], "%d/%m/%Y")
+        .astimezone(_REFERENCE_TZ)
+        .astimezone(UTC)
     )
-
-    price_values = {
-        ts_init + timedelta(hours=i): round(float(pair["Ctd"]["@v"]), 5)
-        for i, pair in enumerate(prices["Periodo"]["Intervalo"])
+    return {
+        ts_init
+        + timedelta(hours=i): round(
+            float(values_hour[key].replace(",", ".")) / 1000.0, _PRECISION
+        )
+        for i, values_hour in enumerate(data)
     }
-    return price_values
 
 
 class ElecPriceSensor(RestoreEntity):
@@ -319,23 +314,23 @@ class ElecPriceSensor(RestoreEntity):
                 )
             await self.async_update_prices()
 
-    async def _download_official_data(self, day: date) -> dict:
+    async def _download_official_data(self, day: date) -> List[dict]:
         """Make GET request to 'api.esios.ree.es' to retrieve hourly prices."""
         url = _RESOURCE.format(day=day)
         try:
             with async_timeout.timeout(self._timeout, loop=self.hass.loop):
                 resp = await self._websession.get(url)
                 if resp.status < 400:
-                    text = await resp.text()
-                    return xmltodict.parse(text)
+                    data = await resp.json()
+                    return data["PVPC"]
+        except KeyError:
+            _LOGGER.debug("Bad try on getting prices for %s", day)
         except asyncio.TimeoutError:  # pragma: no cover
             if self._data_source_available:
                 _LOGGER.warning("Timeout error requesting data from '%s'", url)
         except aiohttp.ClientError:  # pragma: no cover
             if self._data_source_available:
                 _LOGGER.error("Client error in '%s'", url)
-        except xmltodict.expat.ExpatError:
-            _LOGGER.debug("Bad try on getting prices for %s", day)
         return {}
 
     async def async_update_prices(self, *_args):
@@ -370,8 +365,7 @@ class ElecPriceSensor(RestoreEntity):
             )
             return
 
-        tariff_number = TARIFFS.index(self._tariff) + 1
-        prices = extract_prices_for_tariff(data, tariff_number)
+        prices = extract_prices_for_tariff(data, self._tariff)
         self._num_retries = 0
         self._current_prices.update(prices)
         if not self._data_source_available:
@@ -387,7 +381,7 @@ class ElecPriceSensor(RestoreEntity):
             next_day = (localized_now + timedelta(days=1)).date()
             data_next_day = await self._download_official_data(next_day)
             if data_next_day:
-                prices_fut = extract_prices_for_tariff(data_next_day, tariff_number)
+                prices_fut = extract_prices_for_tariff(data_next_day, self._tariff)
                 self._current_prices.update(prices_fut)
 
         _LOGGER.debug(
