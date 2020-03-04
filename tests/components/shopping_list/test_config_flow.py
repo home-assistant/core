@@ -6,7 +6,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.setup import async_setup_component
 
 
-async def test_manual_config_set(hass):
+async def test_import(hass):
     """Test entry will be imported."""
     assert await async_setup_component(hass, DOMAIN, {})
 
