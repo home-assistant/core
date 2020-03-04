@@ -20,7 +20,7 @@ async def test_user(hass):
     """Test we can start a config flow."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, data=None, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
