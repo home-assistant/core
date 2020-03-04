@@ -209,10 +209,16 @@ async def test_dashboard_from_yaml(hass, hass_ws_client, url_path):
                     "test-panel": {
                         "mode": "yaml",
                         "filename": "bla.yaml",
-                        "sidebar": {"title": "Test Panel", "icon": "mdi:test-icon"},
+                        "title": "Test Panel",
+                        "icon": "mdi:test-icon",
+                        "show_in_sidebar": False,
                         "require_admin": True,
                     },
-                    "test-panel-no-sidebar": {"mode": "yaml", "filename": "bla2.yaml"},
+                    "test-panel-no-sidebar": {
+                        "title": "Title No Sidebar",
+                        "mode": "yaml",
+                        "filename": "bla2.yaml",
+                    },
                 }
             }
         },
@@ -233,13 +239,15 @@ async def test_dashboard_from_yaml(hass, hass_ws_client, url_path):
 
     assert with_sb["mode"] == "yaml"
     assert with_sb["filename"] == "bla.yaml"
-    assert with_sb["sidebar"] == {"title": "Test Panel", "icon": "mdi:test-icon"}
+    assert with_sb["title"] == "Test Panel"
+    assert with_sb["icon"] == "mdi:test-icon"
+    assert with_sb["show_in_sidebar"] is False
     assert with_sb["require_admin"] is True
     assert with_sb["url_path"] == "test-panel"
 
     assert without_sb["mode"] == "yaml"
     assert without_sb["filename"] == "bla2.yaml"
-    assert "sidebar" not in without_sb
+    assert without_sb["show_in_sidebar"] is True
     assert without_sb["require_admin"] is False
     assert without_sb["url_path"] == "test-panel-no-sidebar"
 
@@ -315,16 +323,15 @@ async def test_storage_dashboards(hass, hass_ws_client, hass_storage):
             "type": "lovelace/dashboards/create",
             "url_path": "created_url_path",
             "require_admin": True,
-            "sidebar": {"title": "Updated Title", "icon": "mdi:map"},
+            "title": "Updated Title",
+            "icon": "mdi:map",
         }
     )
     response = await client.receive_json()
     assert response["success"]
     assert response["result"]["require_admin"] is True
-    assert response["result"]["sidebar"] == {
-        "title": "Updated Title",
-        "icon": "mdi:map",
-    }
+    assert response["result"]["title"] == "Updated Title"
+    assert response["result"]["icon"] == "mdi:map"
 
     dashboard_id = response["result"]["id"]
 
@@ -335,10 +342,9 @@ async def test_storage_dashboards(hass, hass_ws_client, hass_storage):
     assert response["success"]
     assert len(response["result"]) == 1
     assert response["result"][0]["mode"] == "storage"
-    assert response["result"][0]["sidebar"] == {
-        "title": "Updated Title",
-        "icon": "mdi:map",
-    }
+    assert response["result"][0]["title"] == "Updated Title"
+    assert response["result"][0]["icon"] == "mdi:map"
+    assert response["result"][0]["show_in_sidebar"] is True
     assert response["result"][0]["require_admin"] is True
 
     # Fetch config
@@ -382,11 +388,12 @@ async def test_storage_dashboards(hass, hass_ws_client, hass_storage):
             "type": "lovelace/dashboards/update",
             "dashboard_id": dashboard_id,
             "require_admin": False,
-            "sidebar": None,
+            "show_in_sidebar": False,
         }
     )
     response = await client.receive_json()
     assert response["success"]
+    assert response["result"]["show_in_sidebar"] is False
     assert response["result"]["require_admin"] is False
     assert "sidebar" not in response["result"]
 
@@ -416,7 +423,11 @@ async def test_websocket_list_dashboards(hass, hass_ws_client):
         {
             "lovelace": {
                 "dashboards": {
-                    "test-panel-no-sidebar": {"mode": "yaml", "filename": "bla.yaml"},
+                    "test-panel-no-sidebar": {
+                        "title": "Test YAML",
+                        "mode": "yaml",
+                        "filename": "bla.yaml",
+                    },
                 }
             }
         },
@@ -426,7 +437,12 @@ async def test_websocket_list_dashboards(hass, hass_ws_client):
 
     # Create a storage dashboard
     await client.send_json(
-        {"id": 6, "type": "lovelace/dashboards/create", "url_path": "created_url_path"}
+        {
+            "id": 6,
+            "type": "lovelace/dashboards/create",
+            "url_path": "created_url_path",
+            "title": "Test Storage",
+        }
     )
     response = await client.receive_json()
     assert response["success"]
@@ -439,8 +455,10 @@ async def test_websocket_list_dashboards(hass, hass_ws_client):
     with_sb, without_sb = response["result"]
 
     assert with_sb["mode"] == "yaml"
+    assert with_sb["title"] == "Test YAML"
     assert with_sb["filename"] == "bla.yaml"
     assert with_sb["url_path"] == "test-panel-no-sidebar"
 
     assert without_sb["mode"] == "storage"
+    assert without_sb["title"] == "Test Storage"
     assert without_sb["url_path"] == "created_url_path"
