@@ -70,21 +70,6 @@ class NetatmoLight(Light):
         return self._unique_id
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return 0
-
-    @property
-    def should_poll(self):
-        """Return if we should poll this device."""
-        return True
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return False if unable to access real state of the entity."""
-        return False
-
-    @property
     def is_on(self):
         """Return true if light is on."""
         return self._is_on
@@ -92,7 +77,7 @@ class NetatmoLight(Light):
     async def async_turn_on(self, **kwargs):
         """Turn camera floodlight on."""
         _LOGGER.debug("Turn camera '%s' on", self._name)
-        self.hass.async_create_task(
+        await self.hass.async_create_task(
             self._data.camera_data.set_state(
                 camera_id=self._camera_id, floodlight="on",
             )
@@ -101,7 +86,7 @@ class NetatmoLight(Light):
     async def async_turn_off(self, **kwargs):
         """Turn camera floodlight into auto mode."""
         _LOGGER.debug("Turn camera '%s' off", self._name)
-        self.hass.async_create_task(
+        await self.hass.async_create_task(
             self._data.camera_data.set_state(
                 camera_id=self._camera_id, floodlight="auto",
             )
