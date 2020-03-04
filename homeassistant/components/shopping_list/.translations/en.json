@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Shopping List is already configured."
+            "already_configured": "The shopping list is already configured."
         },
         "step": {
             "user": {
-                "description": "Do you want to configure Shopping List?",
+                "description": "Do you want to configure the shopping list?",
                 "title": "Shopping List"
             }
         },
