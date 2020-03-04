@@ -74,22 +74,18 @@ class NetatmoLight(Light):
         """Return true if light is on."""
         return self._is_on
 
-    async def async_turn_on(self, **kwargs):
+    def turn_on(self, **kwargs):
         """Turn camera floodlight on."""
         _LOGGER.debug("Turn camera '%s' on", self._name)
-        await self.hass.async_create_task(
-            self._data.camera_data.set_state(
-                camera_id=self._camera_id, floodlight="on",
-            )
+        self._data.camera_data.set_state(
+            camera_id=self._camera_id, floodlight="on",
         )
 
-    async def async_turn_off(self, **kwargs):
+    def turn_off(self, **kwargs):
         """Turn camera floodlight into auto mode."""
         _LOGGER.debug("Turn camera '%s' off", self._name)
-        await self.hass.async_create_task(
-            self._data.camera_data.set_state(
-                camera_id=self._camera_id, floodlight="auto",
-            )
+        self._data.camera_data.set_state(
+            camera_id=self._camera_id, floodlight="auto",
         )
 
     def update(self):
