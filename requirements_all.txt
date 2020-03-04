@@ -368,7 +368,7 @@ bthomehub5-devicelist==0.1.1
 btsmarthub_devicelist==0.1.3
 
 # homeassistant.components.buienradar
-buienradar==1.0.1
+buienradar==1.0.4
 
 # homeassistant.components.caldav
 caldav==0.6.1
