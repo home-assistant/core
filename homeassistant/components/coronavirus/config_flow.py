@@ -26,10 +26,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._options is None:
             self._options = {OPTION_WORLDWIDE: "Worldwide"}
             coordinator = await get_coordinator(self.hass)
-            for case_id in sorted(coordinator.data):
-                self._options[case_id] = coordinator.data[case_id].country
+            for case in sorted(
+                coordinator.data.values(), key=lambda case: case.country
+            ):
+                self._options[case.country] = case.country
 
         if user_input is not None:
+            await self.async_set_unique_id(user_input["country"])
+            self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=self._options[user_input["country"]], data=user_input
             )

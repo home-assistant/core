@@ -199,6 +199,9 @@ def humanify(hass, events):
     """
     domain_prefixes = tuple(f"{dom}." for dom in CONTINUOUS_DOMAINS)
 
+    # Track last states to filter out duplicates
+    last_state = {}
+
     # Group events in batches of GROUP_BY_MINUTES
     for _, g_events in groupby(
         events, lambda event: event.time_fired.minute // GROUP_BY_MINUTES
@@ -236,8 +239,14 @@ def humanify(hass, events):
         # Yield entries
         for event in events_batch:
             if event.event_type == EVENT_STATE_CHANGED:
-
                 to_state = State.from_dict(event.data.get("new_state"))
+
+                # Filter out states that become same state again (force_update=True)
+                # or light becoming different color
+                if last_state.get(to_state.entity_id) == to_state.state:
+                    continue
+
+                last_state[to_state.entity_id] = to_state.state
 
                 domain = to_state.domain
 

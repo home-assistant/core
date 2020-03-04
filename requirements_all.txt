@@ -203,7 +203,7 @@ aiopylgtv==0.3.3
 aioswitcher==2019.4.26
 
 # homeassistant.components.unifi
-aiounifi==13
+aiounifi==14
 
 # homeassistant.components.wwlln
 aiowwlln==2.0.2
@@ -350,7 +350,7 @@ bravia-tv==1.0.1
 broadlink==0.12.0
 
 # homeassistant.components.brother
-brother==0.1.6
+brother==0.1.8
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
@@ -1260,7 +1260,7 @@ pyflexit==0.3
 pyflic-homeassistant==0.4.dev0
 
 # homeassistant.components.flume
-pyflume==0.2.4
+pyflume==0.3.0
 
 # homeassistant.components.flunearyou
 pyflunearyou==1.0.3
