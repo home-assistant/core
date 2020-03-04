@@ -25,7 +25,6 @@ from .const import (  # pylint: disable=unused-import
     CONF_MONITORED_USERS,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
-    CONF_SHOW_ALL_CONTROLS,
     CONF_USE_EPISODE_ART,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
@@ -272,9 +271,6 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
             self.options[MP_DOMAIN][CONF_USE_EPISODE_ART] = user_input[
                 CONF_USE_EPISODE_ART
             ]
-            self.options[MP_DOMAIN][CONF_SHOW_ALL_CONTROLS] = user_input[
-                CONF_SHOW_ALL_CONTROLS
-            ]
             self.options[MP_DOMAIN][CONF_IGNORE_NEW_SHARED_USERS] = user_input[
                 CONF_IGNORE_NEW_SHARED_USERS
             ]
@@ -314,10 +310,6 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Required(
                         CONF_USE_EPISODE_ART,
                         default=plex_server.option_use_episode_art,
-                    ): bool,
-                    vol.Required(
-                        CONF_SHOW_ALL_CONTROLS,
-                        default=plex_server.option_show_all_controls,
                     ): bool,
                     vol.Optional(
                         CONF_MONITORED_USERS, default=default_accounts
