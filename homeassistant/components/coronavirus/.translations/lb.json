@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This country is already configured."
+            "already_configured": "D\u00ebst Land ass scho konfigur\u00e9iert"
         },
         "step": {
             "user": {
                 "data": {
-                    "country": "Country"
+                    "country": "Land"
                 },
-                "title": "Pick a country to monitor"
+                "title": "Wiel ee Land aus fir z'iwwerwaachen"
             }
         },
         "title": "Coronavirus"

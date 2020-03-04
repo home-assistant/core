@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This country is already configured."
+            "already_configured": "Este pa\u00eds ya est\u00e1 configurado."
         },
         "step": {
             "user": {
                 "data": {
-                    "country": "Country"
+                    "country": "Pa\u00eds"
                 },
-                "title": "Pick a country to monitor"
+                "title": "Elige un pa\u00eds para monitorizar"
             }
         },
         "title": "Coronavirus"
