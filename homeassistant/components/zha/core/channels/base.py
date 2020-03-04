@@ -4,7 +4,6 @@ import asyncio
 from enum import Enum
 from functools import wraps
 import logging
-from random import uniform
 from typing import Any, Union
 
 import zigpy.exceptions
@@ -205,7 +204,6 @@ class ZigbeeChannel(LogMixin):
                     await self.configure_reporting(
                         report_config["attr"], report_config["config"]
                     )
-                    await asyncio.sleep(uniform(0.1, 0.5))
             self.debug("finished channel configuration")
         else:
             self.debug("skipping channel configuration")
@@ -216,7 +214,6 @@ class ZigbeeChannel(LogMixin):
         self.debug("initializing channel: from_cache: %s", from_cache)
         for report_config in self._report_config:
             await self.get_attribute_value(report_config["attr"], from_cache=from_cache)
-            await asyncio.sleep(uniform(0.1, 0.5))
         self._status = ChannelStatus.INITIALIZED
 
     @callback
