@@ -46,8 +46,8 @@ def mock_controller_service():
         yield service_mock
 
 
-@pytest.fixture(name="service_with_cookie")
-def mock_controller_service_with_cookie():
+@pytest.fixture(name="service_authenticated")
+def mock_controller_service_authenticated():
     """Mock a successful service while already authenticate."""
     with patch(
         "homeassistant.components.icloud.config_flow.PyiCloudService"
@@ -59,8 +59,8 @@ def mock_controller_service_with_cookie():
         yield service_mock
 
 
-@pytest.fixture(name="service_with_cookie_no_device")
-def mock_controller_service_with_cookie_no_device():
+@pytest.fixture(name="service_authenticated_no_device")
+def mock_controller_service_authenticated_no_device():
     """Mock a successful service while already authenticate, but without device."""
     with patch(
         "homeassistant.components.icloud.config_flow.PyiCloudService"
@@ -117,7 +117,7 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
 
 
 async def test_user_with_cookie(
-    hass: HomeAssistantType, service_with_cookie: MagicMock
+    hass: HomeAssistantType, service_authenticated: MagicMock
 ):
     """Test user config with presence of a cookie."""
     # test with all provided
@@ -162,7 +162,7 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
 
 
 async def test_import_with_cookie(
-    hass: HomeAssistantType, service_with_cookie: MagicMock
+    hass: HomeAssistantType, service_authenticated: MagicMock
 ):
     """Test import step with presence of a cookie."""
     # import with username and password
@@ -200,7 +200,7 @@ async def test_import_with_cookie(
 
 
 async def test_two_accounts_setup(
-    hass: HomeAssistantType, service_with_cookie: MagicMock
+    hass: HomeAssistantType, service_authenticated: MagicMock
 ):
     """Test to setup two accounts."""
     MockConfigEntry(
@@ -266,8 +266,8 @@ async def test_login_failed(hass: HomeAssistantType):
         assert result["errors"] == {CONF_USERNAME: "login"}
 
 
-async def test_devices_failed(
-    hass: HomeAssistantType, service_with_cookie_no_device: MagicMock
+async def test_no_device(
+    hass: HomeAssistantType, service_authenticated_no_device: MagicMock
 ):
     """Test when we have no devices."""
     result = await hass.config_entries.flow.async_init(
