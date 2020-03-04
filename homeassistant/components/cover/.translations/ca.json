@@ -1,5 +1,11 @@
 {
     "device_automation": {
+        "action_type": {
+            "close": "Tanca {entity_name}",
+            "open": "Obre {entity_name}",
+            "set_position": "Estableix la posici\u00f3 de {entity_name}",
+            "set_tilt_position": "Estableix la inclinaci\u00f3 de {entity_name}"
+        },
         "condition_type": {
             "is_closed": "{entity_name} est\u00e0 tancat/da",
             "is_closing": "{entity_name} est\u00e0 tancant-se",

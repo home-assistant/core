@@ -109,7 +109,6 @@ omit =
     homeassistant/components/canary/alarm_control_panel.py
     homeassistant/components/canary/camera.py
     homeassistant/components/cast/*
-    homeassistant/components/cert_expiry/sensor.py
     homeassistant/components/cert_expiry/helper.py
     homeassistant/components/channels/*
     homeassistant/components/cisco_ios/device_tracker.py
@@ -568,6 +567,7 @@ omit =
     homeassistant/components/qnap/sensor.py
     homeassistant/components/qrcode/image_processing.py
     homeassistant/components/quantum_gateway/device_tracker.py
+    homeassistant/components/qvr_pro/*
     homeassistant/components/qwikswitch/*
     homeassistant/components/rachio/*
     homeassistant/components/radarr/sensor.py
@@ -701,6 +701,7 @@ omit =
     homeassistant/components/tado/device_tracker.py
     homeassistant/components/tahoma/*
     homeassistant/components/tank_utility/sensor.py
+    homeassistant/components/tankerkoenig/*
     homeassistant/components/tapsaff/binary_sensor.py
     homeassistant/components/tautulli/sensor.py
     homeassistant/components/ted5000/sensor.py

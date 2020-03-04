@@ -39,6 +39,14 @@ class OsramButton(ZigbeeChannel):
     REPORT_CONFIG = []
 
 
+@registries.CHANNEL_ONLY_CLUSTERS.register(0xFCC0)
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(0xFCC0)
+class OppleRemote(ZigbeeChannel):
+    """Opple button channel."""
+
+    REPORT_CONFIG = []
+
+
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
     registries.SMARTTHINGS_ACCELERATION_CLUSTER
 )
