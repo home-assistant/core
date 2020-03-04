@@ -89,7 +89,7 @@ BRIDGE_SCHEMA = vol.Schema(
         vol.Optional(CONF_AREA): AREA_SCHEMA,
         vol.Optional(CONF_DEFAULT): PLATFORM_DEFAULTS_SCHEMA,
         vol.Optional(CONF_ACTIVE, default=False): vol.Any(
-            CONF_ACTIVE_ON, CONF_ACTIVE_OFF, CONF_ACTIVE_INIT, bool
+            CONF_ACTIVE_ON, CONF_ACTIVE_OFF, CONF_ACTIVE_INIT, cv.boolean
         ),
         vol.Optional(CONF_PRESET): PRESET_SCHEMA,
     }
