@@ -36,7 +36,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         try:
             return await tankerkoenig.fetch_data()
         except LookupError:
-            raise UpdateFailed
+            raise UpdateFailed("Failed to fetch data")
 
     coordinator = DataUpdateCoordinator(
         hass,
