@@ -172,6 +172,7 @@ async def async_setup(hass, config):
 
             update = False
         else:
+            hass.data[DOMAIN]["dashboards"][url_path].config = item
             update = True
 
         try:

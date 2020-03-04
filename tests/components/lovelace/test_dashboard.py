@@ -323,14 +323,14 @@ async def test_storage_dashboards(hass, hass_ws_client, hass_storage):
             "type": "lovelace/dashboards/create",
             "url_path": "created_url_path",
             "require_admin": True,
-            "title": "Updated Title",
+            "title": "New Title",
             "icon": "mdi:map",
         }
     )
     response = await client.receive_json()
     assert response["success"]
     assert response["result"]["require_admin"] is True
-    assert response["result"]["title"] == "Updated Title"
+    assert response["result"]["title"] == "New Title"
     assert response["result"]["icon"] == "mdi:map"
 
     dashboard_id = response["result"]["id"]
@@ -342,7 +342,7 @@ async def test_storage_dashboards(hass, hass_ws_client, hass_storage):
     assert response["success"]
     assert len(response["result"]) == 1
     assert response["result"][0]["mode"] == "storage"
-    assert response["result"][0]["title"] == "Updated Title"
+    assert response["result"][0]["title"] == "New Title"
     assert response["result"][0]["icon"] == "mdi:map"
     assert response["result"][0]["show_in_sidebar"] is True
     assert response["result"][0]["require_admin"] is True
@@ -388,25 +388,39 @@ async def test_storage_dashboards(hass, hass_ws_client, hass_storage):
             "type": "lovelace/dashboards/update",
             "dashboard_id": dashboard_id,
             "require_admin": False,
+            "icon": "mdi:updated",
             "show_in_sidebar": False,
+            "title": "Updated Title",
         }
     )
     response = await client.receive_json()
     assert response["success"]
+    assert response["result"]["title"] == "Updated Title"
+    assert response["result"]["icon"] == "mdi:updated"
     assert response["result"]["show_in_sidebar"] is False
     assert response["result"]["require_admin"] is False
-    assert "sidebar" not in response["result"]
+
+    # List dashboards again and make sure we see latest config
+    await client.send_json({"id": 12, "type": "lovelace/dashboards/list"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert len(response["result"]) == 1
+    assert response["result"][0]["mode"] == "storage"
+    assert response["result"][0]["title"] == "Updated Title"
+    assert response["result"][0]["icon"] == "mdi:updated"
+    assert response["result"][0]["show_in_sidebar"] is False
+    assert response["result"][0]["require_admin"] is False
 
     # Add dashboard with existing url path
     await client.send_json(
-        {"id": 12, "type": "lovelace/dashboards/create", "url_path": "created_url_path"}
+        {"id": 13, "type": "lovelace/dashboards/create", "url_path": "created_url_path"}
     )
     response = await client.receive_json()
     assert not response["success"]
 
     # Delete dashboards
     await client.send_json(
-        {"id": 13, "type": "lovelace/dashboards/delete", "dashboard_id": dashboard_id}
+        {"id": 14, "type": "lovelace/dashboards/delete", "dashboard_id": dashboard_id}
     )
     response = await client.receive_json()
     assert response["success"]
