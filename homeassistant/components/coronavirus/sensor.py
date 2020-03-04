@@ -19,7 +19,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_add_entities(
         CoronavirusSensor(coordinator, config_entry.data["country"], info_type)
-        for info_type in SENSORS.keys()
+        for info_type in SENSORS
     )
 
 
