@@ -155,10 +155,10 @@ class Light(ZhaEntity, light.Light):
         return self._supported_features
 
     @callback
-    def async_set_state(self, state):
+    def async_set_state(self, attr_id, attr_name, value):
         """Set the state."""
-        self._state = bool(state)
-        if state:
+        self._state = bool(value)
+        if value:
             self._off_brightness = None
         self.async_schedule_update_ha_state()
 

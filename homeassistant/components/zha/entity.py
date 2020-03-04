@@ -111,7 +111,7 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
         self.async_schedule_update_ha_state()
 
     @callback
-    def async_set_state(self, state):
+    def async_set_state(self, attr_id, attr_name, value):
         """Set the entity state."""
         pass
 

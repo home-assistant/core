@@ -124,7 +124,9 @@ class IASZoneChannel(ZigbeeChannel):
         """Handle commands received to this cluster."""
         if command_id == 0:
             state = args[0] & 3
-            self.async_send_signal(f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", state)
+            self.async_send_signal(
+                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", 2, "zone_status", state
+            )
             self.debug("Updated alarm state: %s", state)
         elif command_id == 1:
             self.debug("Enroll requested")
@@ -165,7 +167,12 @@ class IASZoneChannel(ZigbeeChannel):
         """Handle attribute updates on this cluster."""
         if attrid == 2:
             value = value & 3
-            self.async_send_signal(f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value)
+            self.async_send_signal(
+                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
+                attrid,
+                self.cluster.attributes.get(attrid, [attrid])[0],
+                value,
+            )
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
