@@ -9,7 +9,7 @@ from homeassistant import data_entry_flow
 from homeassistant.components.pvpc_hourly_pricing import ATTR_TARIFF, DOMAIN
 from homeassistant.const import CONF_NAME
 
-from . import FIXTURE_XML_DATA_2019_03_30, check_valid_state
+from . import FIXTURE_JSON_DATA_2019_03_30, check_valid_state
 
 from tests.common import date_util, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -19,9 +19,8 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 def pvpc_aioclient_mock(aioclient_mock: AiohttpClientMocker):
     """Create a mock config entry."""
     aioclient_mock.get(
-        "https://api.esios.ree.es/archives/80/download?date=2019-03-30",
-        text=load_fixture(f"{DOMAIN}/{FIXTURE_XML_DATA_2019_03_30}"),
-        headers={"Content-Type": "xml"},
+        "https://api.esios.ree.es/archives/70/download_json?locale=es&date=2019-03-30",
+        text=load_fixture(f"{DOMAIN}/{FIXTURE_JSON_DATA_2019_03_30}"),
     )
     return aioclient_mock
 

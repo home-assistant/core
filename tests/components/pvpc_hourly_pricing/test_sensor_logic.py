@@ -1,11 +1,11 @@
 """Tests for the pvpc_hourly_pricing component."""
 from datetime import datetime, timedelta
+import json
 import logging
 from unittest.mock import patch
 
 import pytest
 from pytz import timezone
-import xmltodict
 
 from homeassistant.components.pvpc_hourly_pricing import ATTR_TARIFF, DOMAIN
 from homeassistant.components.pvpc_hourly_pricing.sensor import (
@@ -15,11 +15,11 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import ATTR_NOW, EVENT_TIME_CHANGED
 
 from . import (
-    FIXTURE_XML_DATA_2019_03_30,
-    FIXTURE_XML_DATA_2019_03_31,
-    FIXTURE_XML_DATA_2019_10_26,
-    FIXTURE_XML_DATA_2019_10_27,
-    FIXTURE_XML_DATA_2019_10_29,
+    FIXTURE_JSON_DATA_2019_03_30,
+    FIXTURE_JSON_DATA_2019_03_31,
+    FIXTURE_JSON_DATA_2019_10_26,
+    FIXTURE_JSON_DATA_2019_10_27,
+    FIXTURE_JSON_DATA_2019_10_29,
     check_valid_state,
 )
 
@@ -31,36 +31,30 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 def pvpc_aioclient_mock(aioclient_mock: AiohttpClientMocker):
     """Create a mock config entry."""
     aioclient_mock.get(
-        "https://api.esios.ree.es/archives/80/download?date=2019-03-30",
-        text=load_fixture(f"{DOMAIN}/{FIXTURE_XML_DATA_2019_03_30}"),
-        headers={"Content-Type": "xml"},
+        "https://api.esios.ree.es/archives/70/download_json?locale=es&date=2019-03-30",
+        text=load_fixture(f"{DOMAIN}/{FIXTURE_JSON_DATA_2019_03_30}"),
     )
     aioclient_mock.get(
-        "https://api.esios.ree.es/archives/80/download?date=2019-03-31",
-        text=load_fixture(f"{DOMAIN}/{FIXTURE_XML_DATA_2019_03_31}"),
-        headers={"Content-Type": "xml"},
+        "https://api.esios.ree.es/archives/70/download_json?locale=es&date=2019-03-31",
+        text=load_fixture(f"{DOMAIN}/{FIXTURE_JSON_DATA_2019_03_31}"),
     )
     aioclient_mock.get(
-        "https://api.esios.ree.es/archives/80/download?date=2019-10-26",
-        text=load_fixture(f"{DOMAIN}/{FIXTURE_XML_DATA_2019_10_26}"),
-        headers={"Content-Type": "xml"},
+        "https://api.esios.ree.es/archives/70/download_json?locale=es&date=2019-10-26",
+        text=load_fixture(f"{DOMAIN}/{FIXTURE_JSON_DATA_2019_10_26}"),
     )
     aioclient_mock.get(
-        "https://api.esios.ree.es/archives/80/download?date=2019-10-27",
-        text=load_fixture(f"{DOMAIN}/{FIXTURE_XML_DATA_2019_10_27}"),
-        headers={"Content-Type": "xml"},
+        "https://api.esios.ree.es/archives/70/download_json?locale=es&date=2019-10-27",
+        text=load_fixture(f"{DOMAIN}/{FIXTURE_JSON_DATA_2019_10_27}"),
     )
 
     # missing day
     aioclient_mock.get(
-        "https://api.esios.ree.es/archives/80/download?date=2019-10-28",
+        "https://api.esios.ree.es/archives/70/download_json?locale=es&date=2019-10-28",
         text='{"message":"No values for specified archive"}',
-        headers={"Content-Type": "application/json"},
     )
     aioclient_mock.get(
-        "https://api.esios.ree.es/archives/80/download?date=2019-10-29",
-        text=load_fixture(f"{DOMAIN}/{FIXTURE_XML_DATA_2019_10_29}"),
-        headers={"Content-Type": "xml"},
+        "https://api.esios.ree.es/archives/70/download_json?locale=es&date=2019-10-29",
+        text=load_fixture(f"{DOMAIN}/{FIXTURE_JSON_DATA_2019_10_29}"),
     )
 
     return aioclient_mock
@@ -69,15 +63,15 @@ def pvpc_aioclient_mock(aioclient_mock: AiohttpClientMocker):
 @pytest.mark.parametrize(
     "fixture_name, number_of_prices",
     (
-        (FIXTURE_XML_DATA_2019_10_26, 24),
-        (FIXTURE_XML_DATA_2019_10_27, 25),
-        (FIXTURE_XML_DATA_2019_03_31, 23),
+        (FIXTURE_JSON_DATA_2019_10_26, 24),
+        (FIXTURE_JSON_DATA_2019_10_27, 25),
+        (FIXTURE_JSON_DATA_2019_03_31, 23),
     ),
 )
-def test_xml_parsing_logic(fixture_name, number_of_prices):
+def test_json_parsing_logic(fixture_name, number_of_prices):
     """Test data parsing of official API files."""
-    data = xmltodict.parse(load_fixture(f"{DOMAIN}/{fixture_name}"))
-    prices = extract_prices_for_tariff(data)
+    data = json.loads(load_fixture(f"{DOMAIN}/{fixture_name}"))
+    prices = extract_prices_for_tariff(data["PVPC"], tariff="discrimination")
     assert len(prices) == number_of_prices
 
 

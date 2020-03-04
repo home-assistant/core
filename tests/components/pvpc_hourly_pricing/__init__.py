@@ -2,11 +2,11 @@
 from homeassistant.components.pvpc_hourly_pricing import ATTR_TARIFF
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 
-FIXTURE_XML_DATA_2019_10_26 = "80-pvpcdesglosehorario-2019-10-26T23_59_59+00_00.xml"
-FIXTURE_XML_DATA_2019_10_27 = "80-pvpcdesglosehorario-2019-10-27T23_59_59+00_00.xml"
-FIXTURE_XML_DATA_2019_10_29 = "80-pvpcdesglosehorario-2019-10-29T23_59_59+00_00.xml"
-FIXTURE_XML_DATA_2019_03_30 = "80-pvpcdesglosehorario-2019-03-30T23_59_59+00_00.xml"
-FIXTURE_XML_DATA_2019_03_31 = "80-pvpcdesglosehorario-2019-03-31T23_59_59+00_00.xml"
+FIXTURE_JSON_DATA_2019_10_26 = "PVPC_CURV_DD_2019_10_26.json"
+FIXTURE_JSON_DATA_2019_10_27 = "PVPC_CURV_DD_2019_10_27.json"
+FIXTURE_JSON_DATA_2019_10_29 = "PVPC_CURV_DD_2019_10_29.json"
+FIXTURE_JSON_DATA_2019_03_30 = "PVPC_CURV_DD_2019_03_30.json"
+FIXTURE_JSON_DATA_2019_03_31 = "PVPC_CURV_DD_2019_03_31.json"
 
 
 def check_valid_state(state, tariff: str, value=None, key_attr=None):
