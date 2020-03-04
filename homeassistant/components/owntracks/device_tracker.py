@@ -119,11 +119,6 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         return self._data.get("host_name")
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def source_type(self):
         """Return the source type, eg gps or router, of the device."""
         return self._data.get("source_type", SOURCE_TYPE_GPS)

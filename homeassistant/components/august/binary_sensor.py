@@ -8,6 +8,7 @@ from august.util import update_lock_detail_from_activity
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_DOOR,
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_OCCUPANCY,
     BinarySensorDevice,
@@ -116,24 +117,22 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorDevice):
         self._data = data
         self._sensor_type = sensor_type
         self._device = device
-        self._state = None
-        self._available = False
         self._update_from_data()
 
     @property
     def available(self):
         """Return the availability of this sensor."""
-        return self._available
+        return self._detail.bridge_is_online
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return self._state
+        return self._detail.door_state == LockDoorStatus.OPEN
 
     @property
     def device_class(self):
         """Return the class of this device."""
-        return "door"
+        return DEVICE_CLASS_DOOR
 
     @property
     def name(self):
@@ -146,15 +145,9 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorDevice):
         door_activity = self._data.activity_stream.get_latest_device_activity(
             self._device_id, [ActivityType.DOOR_OPERATION]
         )
-        detail = self._detail
 
         if door_activity is not None:
-            update_lock_detail_from_activity(detail, door_activity)
-
-        lock_door_state = detail.door_state
-        self._available = detail.bridge_is_online
-
-        self._state = lock_door_state == LockDoorStatus.OPEN
+            update_lock_detail_from_activity(self._detail, door_activity)
 
     @property
     def unique_id(self) -> str:

@@ -12,6 +12,7 @@ from homeassistant.const import (
 
 from tests.components.august.mocks import (
     _create_august_with_devices,
+    _mock_activities_from_fixture,
     _mock_doorsense_enabled_august_lock_detail,
     _mock_lock_from_fixture,
 )
@@ -20,8 +21,7 @@ from tests.components.august.mocks import (
 async def test_lock_device_registry(hass):
     """Test creation of a lock with doorsense and bridge ands up in the registry."""
     lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
-    lock_details = [lock_one]
-    await _create_august_with_devices(hass, lock_details)
+    await _create_august_with_devices(hass, [lock_one])
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
 
@@ -34,11 +34,27 @@ async def test_lock_device_registry(hass):
     assert reg_device.manufacturer == "August"
 
 
+async def test_lock_changed_by(hass):
+    """Test creation of a lock with doorsense and bridge."""
+    lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
+
+    activities = await _mock_activities_from_fixture(hass, "get_activity.lock.json")
+    await _create_august_with_devices(hass, [lock_one], activities=activities)
+
+    lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
+
+    assert lock_online_with_doorsense_name.state == STATE_LOCKED
+
+    assert (
+        lock_online_with_doorsense_name.attributes.get("changed_by")
+        == "Your favorite elven princess"
+    )
+
+
 async def test_one_lock_operation(hass):
     """Test creation of a lock with doorsense and bridge."""
     lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
-    lock_details = [lock_one]
-    await _create_august_with_devices(hass, lock_details)
+    await _create_august_with_devices(hass, [lock_one])
 
     lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
 
@@ -50,8 +66,7 @@ async def test_one_lock_operation(hass):
         == "online_with_doorsense Name"
     )
 
-    data = {}
-    data[ATTR_ENTITY_ID] = "lock.online_with_doorsense_name"
+    data = {ATTR_ENTITY_ID: "lock.online_with_doorsense_name"}
     assert await hass.services.async_call(
         LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True
     )
@@ -78,8 +93,7 @@ async def test_one_lock_unknown_state(hass):
     lock_one = await _mock_lock_from_fixture(
         hass, "get_lock.online.unknown_state.json",
     )
-    lock_details = [lock_one]
-    await _create_august_with_devices(hass, lock_details)
+    await _create_august_with_devices(hass, [lock_one])
 
     lock_brokenid_name = hass.states.get("lock.brokenid_name")
 

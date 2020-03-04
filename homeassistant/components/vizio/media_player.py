@@ -54,7 +54,7 @@ async def async_setup_entry(
 
     # If config entry options not set up, set them up, otherwise assign values managed in options
     volume_step = config_entry.options.get(
-        CONF_VOLUME_STEP, config_entry.data.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP),
+        CONF_VOLUME_STEP, config_entry.data.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP)
     )
 
     params = {}
@@ -107,6 +107,7 @@ class VizioDevice(MediaPlayerDevice):
         self._state = None
         self._volume_level = None
         self._volume_step = volume_step
+        self._is_muted = None
         self._current_input = None
         self._available_inputs = None
         self._device_class = device_class
@@ -145,15 +146,19 @@ class VizioDevice(MediaPlayerDevice):
         if not is_on:
             self._state = STATE_OFF
             self._volume_level = None
+            self._is_muted = None
             self._current_input = None
             self._available_inputs = None
             return
 
         self._state = STATE_ON
 
-        volume = await self._device.get_current_volume(log_api_exception=False)
-        if volume is not None:
-            self._volume_level = float(volume) / self._max_volume
+        audio_settings = await self._device.get_all_audio_settings(
+            log_api_exception=False
+        )
+        if audio_settings is not None:
+            self._volume_level = float(audio_settings["volume"]) / self._max_volume
+            self._is_muted = audio_settings["mute"].lower() == "on"
 
         input_ = await self._device.get_current_input(log_api_exception=False)
         if input_ is not None:
@@ -225,6 +230,11 @@ class VizioDevice(MediaPlayerDevice):
         return self._volume_level
 
     @property
+    def is_volume_muted(self):
+        """Boolean if volume is currently muted."""
+        return self._is_muted
+
+    @property
     def source(self) -> str:
         """Return current input of the device."""
         return self._current_input
@@ -272,8 +282,10 @@ class VizioDevice(MediaPlayerDevice):
         """Mute the volume."""
         if mute:
             await self._device.mute_on()
+            self._is_muted = True
         else:
             await self._device.mute_off()
+            self._is_muted = False
 
     async def async_media_previous_track(self) -> None:
         """Send previous channel command."""

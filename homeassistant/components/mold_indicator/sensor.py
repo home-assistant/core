@@ -13,6 +13,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -245,7 +246,7 @@ class MoldIndicator(Entity):
             )
             return None
 
-        if unit != "%":
+        if unit != UNIT_PERCENTAGE:
             _LOGGER.error(
                 "Humidity sensor %s has unsupported unit: %s %s",
                 state.entity_id,
@@ -360,7 +361,7 @@ class MoldIndicator(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "%"
+        return UNIT_PERCENTAGE
 
     @property
     def state(self):

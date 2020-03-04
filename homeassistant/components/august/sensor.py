@@ -2,15 +2,12 @@
 import logging
 
 from homeassistant.components.sensor import DEVICE_CLASS_BATTERY
+from homeassistant.const import UNIT_PERCENTAGE
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
 from .const import DATA_AUGUST, DOMAIN
 from .entity import AugustEntityMixin
-
-BATTERY_LEVEL_FULL = "Full"
-BATTERY_LEVEL_MEDIUM = "Medium"
-BATTERY_LEVEL_LOW = "Low"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,16 +22,7 @@ def _retrieve_linked_keypad_battery_state(detail):
     if detail.keypad is None:
         return None
 
-    battery_level = detail.keypad.battery_level
-
-    if battery_level == BATTERY_LEVEL_FULL:
-        return 100
-    if battery_level == BATTERY_LEVEL_MEDIUM:
-        return 60
-    if battery_level == BATTERY_LEVEL_LOW:
-        return 10
-
-    return 0
+    return detail.keypad.battery_percentage
 
 
 SENSOR_TYPES_BATTERY = {
@@ -111,7 +99,7 @@ class AugustBatterySensor(AugustEntityMixin, Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "%"  # UNIT_PERCENTAGE will be available after PR#32094
+        return UNIT_PERCENTAGE
 
     @property
     def device_class(self):

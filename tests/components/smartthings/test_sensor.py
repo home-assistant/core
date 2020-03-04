@@ -13,6 +13,7 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNKNOWN,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -37,7 +38,7 @@ async def test_entity_state(hass, device_factory):
     await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
     state = hass.states.get("sensor.sensor_1_battery")
     assert state.state == "100"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UNIT_PERCENTAGE
     assert state.attributes[ATTR_FRIENDLY_NAME] == device.label + " Battery"
 
 

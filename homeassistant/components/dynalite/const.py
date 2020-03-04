@@ -4,6 +4,8 @@ import logging
 LOGGER = logging.getLogger(__package__)
 DOMAIN = "dynalite"
 
+ENTITY_PLATFORMS = ["light"]
+
 CONF_ACTIVE = "active"
 CONF_ALL = "ALL"
 CONF_AREA = "area"
@@ -16,6 +18,7 @@ CONF_HOST = "host"
 CONF_NAME = "name"
 CONF_POLLTIMER = "polltimer"
 CONF_PORT = "port"
+
 
 DEFAULT_NAME = "dynalite"
 DEFAULT_PORT = 12345
