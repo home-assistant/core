@@ -31,7 +31,7 @@ async def test_user_confirm(hass):
     """Test we can finish a config flow."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, data={}, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}, data={}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
