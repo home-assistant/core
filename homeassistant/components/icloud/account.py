@@ -115,10 +115,6 @@ class IcloudAccount:
             _LOGGER.error("No iCloud device found")
             raise ConfigEntryNotReady
 
-        if not api_devices:
-            _LOGGER.error("No iCloud device found")
-            raise ConfigEntryNotReady
-
         if DEVICE_STATUS_CODES.get(list(api_devices)[0][DEVICE_STATUS]) == "pending":
             _LOGGER.warning("Pending devices, trying again ...")
             raise ConfigEntryNotReady
