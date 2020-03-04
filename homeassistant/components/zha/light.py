@@ -373,7 +373,7 @@ class Light(ZhaEntity, light.Light):
             ):
                 attributes.append("color_loop_active")
 
-            await self._color_channel.get_many_attribute_values(
+            await self._color_channel.get_attributes(
                 attributes, result_handler, from_cache=from_cache
             )
 

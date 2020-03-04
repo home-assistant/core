@@ -267,9 +267,7 @@ class ZigbeeChannel(LogMixin):
         )
         return result.get(attribute)
 
-    async def get_many_attribute_values(
-        self, attributes, result_handler, from_cache=True
-    ):
+    async def get_attributes(self, attributes, result_handler, from_cache=True):
         """Get the values for a list of attributes and call the result handler callback."""
         manufacturer = None
         manufacturer_code = self._ch_pool.manufacturer_code
@@ -285,7 +283,7 @@ class ZigbeeChannel(LogMixin):
             results = {attribute: result.get(attribute) for attribute in attributes}
             result_handler(results)
         except (asyncio.TimeoutError, zigpy.exceptions.DeliveryError) as ex:
-            self.debug(
+            self.error(
                 "failed to get attributes '%s' on '%s' cluster: %s",
                 attributes,
                 self.cluster.ep_attribute,
