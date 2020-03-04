@@ -4,16 +4,31 @@ import logging
 from homeassistant.helpers.entity import Entity
 
 from .const import (
+    ATTR_BLACK_DRUM_COUNTER,
+    ATTR_BLACK_DRUM_REMAINING_LIFE,
+    ATTR_BLACK_DRUM_REMAINING_PAGES,
+    ATTR_CYAN_DRUM_COUNTER,
+    ATTR_CYAN_DRUM_REMAINING_LIFE,
+    ATTR_CYAN_DRUM_REMAINING_PAGES,
     ATTR_DRUM_COUNTER,
     ATTR_DRUM_REMAINING_LIFE,
     ATTR_DRUM_REMAINING_PAGES,
     ATTR_ICON,
     ATTR_LABEL,
+    ATTR_MAGENTA_DRUM_COUNTER,
+    ATTR_MAGENTA_DRUM_REMAINING_LIFE,
+    ATTR_MAGENTA_DRUM_REMAINING_PAGES,
     ATTR_MANUFACTURER,
     ATTR_UNIT,
+    ATTR_YELLOW_DRUM_COUNTER,
+    ATTR_YELLOW_DRUM_REMAINING_LIFE,
+    ATTR_YELLOW_DRUM_REMAINING_PAGES,
     DOMAIN,
     SENSOR_TYPES,
 )
+
+ATTR_COUNTER = "counter"
+ATTR_REMAINING_PAGES = "remaining_pages"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,10 +81,30 @@ class BrotherPrinterSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         if self.kind == ATTR_DRUM_REMAINING_LIFE:
-            self._attrs["remaining_pages"] = self.printer.data.get(
+            self._attrs[ATTR_REMAINING_PAGES] = self.printer.data.get(
                 ATTR_DRUM_REMAINING_PAGES
             )
-            self._attrs["counter"] = self.printer.data.get(ATTR_DRUM_COUNTER)
+            self._attrs[ATTR_COUNTER] = self.printer.data.get(ATTR_DRUM_COUNTER)
+        elif self.kind == ATTR_BLACK_DRUM_REMAINING_LIFE:
+            self._attrs[ATTR_REMAINING_PAGES] = self.printer.data.get(
+                ATTR_BLACK_DRUM_REMAINING_PAGES
+            )
+            self._attrs[ATTR_COUNTER] = self.printer.data.get(ATTR_BLACK_DRUM_COUNTER)
+        elif self.kind == ATTR_CYAN_DRUM_REMAINING_LIFE:
+            self._attrs[ATTR_REMAINING_PAGES] = self.printer.data.get(
+                ATTR_CYAN_DRUM_REMAINING_PAGES
+            )
+            self._attrs[ATTR_COUNTER] = self.printer.data.get(ATTR_CYAN_DRUM_COUNTER)
+        elif self.kind == ATTR_MAGENTA_DRUM_REMAINING_LIFE:
+            self._attrs[ATTR_REMAINING_PAGES] = self.printer.data.get(
+                ATTR_MAGENTA_DRUM_REMAINING_PAGES
+            )
+            self._attrs[ATTR_COUNTER] = self.printer.data.get(ATTR_MAGENTA_DRUM_COUNTER)
+        elif self.kind == ATTR_YELLOW_DRUM_REMAINING_LIFE:
+            self._attrs[ATTR_REMAINING_PAGES] = self.printer.data.get(
+                ATTR_YELLOW_DRUM_REMAINING_PAGES
+            )
+            self._attrs[ATTR_COUNTER] = self.printer.data.get(ATTR_YELLOW_DRUM_COUNTER)
         return self._attrs
 
     @property
