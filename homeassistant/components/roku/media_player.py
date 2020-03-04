@@ -24,7 +24,7 @@ from homeassistant.const import (
     STATE_STANDBY,
 )
 
-DEFAULT_PORT = 8060
+from .const import DEFAULT_PORT
 
 _LOGGER = logging.getLogger(__name__)
 
