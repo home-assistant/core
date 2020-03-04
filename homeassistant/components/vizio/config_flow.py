@@ -50,19 +50,8 @@ def _get_config_schema(
     if apps is None:
         apps = {}
 
-    # Attempt to get input_dict[CONF_INCLUDE_OR_EXCLUDE], and if it doesn't exist check
-    # for CONF_INCLUDE or CONF_EXCLUDE as a key in apps
-    default_include_or_exclude = input_dict.get(
-        CONF_INCLUDE_OR_EXCLUDE,
-        CONF_EXCLUDE if CONF_EXCLUDE in apps.keys() else CONF_INCLUDE,
-    )
-
-    # Attempt to get input_dict[CONF_APPS_TO_INCLUDE_OR_EXCLUDE], and if it doesn't exist
-    # check for apps[CONF_INCLUDE] or apps[CONF_EXCLUDE]
-    # depending on default_include_or_exclude
-    default_apps_to_include_or_exclude = input_dict.get(
-        CONF_APPS_TO_INCLUDE_OR_EXCLUDE,
-        apps.get(default_include_or_exclude.lower(), []),
+    default_include_or_exclude = (
+        CONF_EXCLUDE if CONF_EXCLUDE in apps.keys() else CONF_INCLUDE
     )
 
     return vol.Schema(
@@ -83,7 +72,7 @@ def _get_config_schema(
             ): vol.In([CONF_INCLUDE.title(), CONF_EXCLUDE.title()]),
             vol.Optional(
                 CONF_APPS_TO_INCLUDE_OR_EXCLUDE,
-                default=default_apps_to_include_or_exclude,
+                default=apps.get(default_include_or_exclude.lower(), []),
             ): cv.multi_select(VizioAsync.get_apps_list()),
         },
         extra=vol.REMOVE_EXTRA,
@@ -198,17 +187,13 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors[CONF_NAME] = "name_exists"
 
             # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-            if (
-                not errors
-                and user_input.get(CONF_APPS_TO_INCLUDE_OR_EXCLUDE)
-                and self.context["source"] != SOURCE_IMPORT
-            ):
+            if not errors and user_input.get(CONF_APPS_TO_INCLUDE_OR_EXCLUDE):
                 # Update stored apps with user entry config keys after popping existing keys
                 self._apps.pop(CONF_INCLUDE, None)
                 self._apps.pop(CONF_EXCLUDE, None)
-                self._apps[user_input[CONF_INCLUDE_OR_EXCLUDE].lower()] = list(
-                    user_input[CONF_APPS_TO_INCLUDE_OR_EXCLUDE]
-                )
+                self._apps[user_input[CONF_INCLUDE_OR_EXCLUDE].lower()] = user_input[
+                    CONF_APPS_TO_INCLUDE_OR_EXCLUDE
+                ].copy()
 
                 # Show an error if apps are listed but CONF_DEVICE_CLASS == DEVICE_CLASS_TV
                 try:
