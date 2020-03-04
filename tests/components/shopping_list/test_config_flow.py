@@ -2,13 +2,11 @@
 
 from homeassistant import data_entry_flow
 from homeassistant.components.shopping_list.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.setup import async_setup_component
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 
 
 async def test_import(hass):
     """Test entry will be imported."""
-    assert await async_setup_component(hass, DOMAIN, {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, data={}, context={"source": SOURCE_IMPORT}
