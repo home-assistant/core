@@ -12,11 +12,27 @@
         },
         "error": {
             "cant_connect": "No se pudo conectar al dispositivo. [Revise los documentos] (https://www.home-assistant.io/integrations/vizio/) y vuelva a verificar que:\n- El dispositivo est\u00e1 encendido\n- El dispositivo est\u00e1 conectado a la red\n- Los valores que ha rellenado son precisos\nantes de intentar volver a enviar.",
+            "complete_pairing failed": "No se pudo completar el emparejamiento. Aseg\u00farate de que el PIN que has proporcionado es correcto y que el televisor sigue encendido y conectado a la red antes de volver a enviarlo.",
             "host_exists": "El host ya est\u00e1 configurado.",
             "name_exists": "Nombre ya configurado.",
             "tv_needs_token": "Cuando el tipo de dispositivo es `tv`, se necesita un token de acceso v\u00e1lido."
         },
         "step": {
+            "pair_tv": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "description": "Tu TV debe estar mostrando un c\u00f3digo. Escribe ese c\u00f3digo en el formulario y contin\u00faa con el paso siguiente para completar el emparejamiento.",
+                "title": "Completar Proceso de Emparejamiento"
+            },
+            "pairing_complete": {
+                "description": "Tu dispositivo Vizio SmartCast est\u00e1 ahora conectado a Home Assistant.",
+                "title": "Emparejamiento Completado"
+            },
+            "pairing_complete_import": {
+                "description": "Su dispositivo Vizio SmartCast ahora est\u00e1 conectado a Home Assistant.\n\nTu Token de Acceso es '**{access_token}**'.",
+                "title": "Emparejamiento Completado"
+            },
             "user": {
                 "data": {
                     "access_token": "Token de acceso",
@@ -24,6 +40,7 @@
                     "host": "< Host / IP > : <Port>",
                     "name": "Nombre"
                 },
+                "description": "Todos los campos son obligatorios excepto el Token de Acceso. Si decides no proporcionar un Token de Acceso y tu Tipo de Dispositivo es \"tv\", se te llevar\u00e1 por un proceso de emparejamiento con tu dispositivo para que se pueda recuperar un Token de Acceso.\n\nPara pasar por el proceso de emparejamiento, antes de pulsar en Enviar, aseg\u00farese de que tu TV est\u00e9 encendida y conectada a la red. Tambi\u00e9n es necesario poder ver la pantalla.",
                 "title": "Configurar el cliente de Vizio SmartCast"
             }
         },
