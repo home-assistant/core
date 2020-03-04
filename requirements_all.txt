@@ -1786,7 +1786,7 @@ rocketchat-API==0.6.1
 roku==4.0.0
 
 # homeassistant.components.roomba
-roombapy==1.4.2
+roombapy==1.4.3
 
 # homeassistant.components.rova
 rova==0.1.0
