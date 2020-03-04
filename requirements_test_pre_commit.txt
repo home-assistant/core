@@ -2,7 +2,8 @@
 
 bandit==1.6.2
 black==19.10b0
+codespell==v1.16.0
 flake8-docstrings==1.5.0
 flake8==3.7.9
 isort==v4.3.21
-pydocstyle==5.0.1
+pydocstyle==5.0.2
