@@ -11,7 +11,7 @@ async def test_import(hass):
     assert await async_setup_component(hass, DOMAIN, {})
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, data={}, context={"source": SOURCE_USER}
+        DOMAIN, data={}, context={"source": SOURCE_IMPORT}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
