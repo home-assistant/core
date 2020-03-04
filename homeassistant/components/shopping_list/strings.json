@@ -4,7 +4,7 @@
         "step": {
           "user": {
             "title": "Shopping List",
-            "description": "Do you want to configure Shopping List?"
+            "description": "Do you want to configure the shopping list?"
           }
         },
         "abort": {
