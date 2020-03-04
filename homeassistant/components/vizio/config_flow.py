@@ -72,7 +72,7 @@ def _get_config_schema(
             ): vol.In([CONF_INCLUDE.title(), CONF_EXCLUDE.title()]),
             vol.Optional(
                 CONF_APPS_TO_INCLUDE_OR_EXCLUDE,
-                default=apps.get(default_include_or_exclude.lower(), []),
+                default=apps.get(default_include_or_exclude, []),
             ): cv.multi_select(VizioAsync.get_apps_list()),
         },
         extra=vol.REMOVE_EXTRA,
@@ -96,7 +96,7 @@ def _host_is_same(host1: str, host2: str) -> bool:
 
 
 class VizioOptionsConfigFlow(config_entries.OptionsFlow):
-    """Handle Vizio client options."""
+    """Handle Vizio options."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize vizio options flow."""
