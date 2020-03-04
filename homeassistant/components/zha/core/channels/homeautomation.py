@@ -10,7 +10,7 @@ from ..const import (
     REPORT_CONFIG_DEFAULT,
     SIGNAL_ATTR_UPDATED,
 )
-from .base import AttributeListeningChannel, ZigbeeChannel
+from .base import ZigbeeChannel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ class Diagnostic(ZigbeeChannel):
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
     homeautomation.ElectricalMeasurement.cluster_id
 )
-class ElectricalMeasurementChannel(AttributeListeningChannel):
+class ElectricalMeasurementChannel(ZigbeeChannel):
     """Channel that polls active power level."""
 
     CHANNEL_NAME = CHANNEL_ELECTRICAL_MEASUREMENT
@@ -60,7 +60,7 @@ class ElectricalMeasurementChannel(AttributeListeningChannel):
     REPORT_CONFIG = ({"attr": "active_power", "config": REPORT_CONFIG_DEFAULT},)
 
     def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType,
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
     ) -> None:
         """Initialize Metering."""
         super().__init__(cluster, ch_pool)
@@ -73,7 +73,9 @@ class ElectricalMeasurementChannel(AttributeListeningChannel):
 
         # This is a polling channel. Don't allow cache.
         result = await self.get_attribute_value("active_power", from_cache=False)
-        self.async_send_signal(f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", result)
+        self.async_send_signal(
+            f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", 0x050B, "active_power", result
+        )
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""

@@ -40,8 +40,9 @@ class FanChannel(ZigbeeChannel):
     async def async_update(self):
         """Retrieve latest state."""
         result = await self.get_attribute_value("fan_mode", from_cache=True)
-
-        self.async_send_signal(f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", result)
+        self.async_send_signal(
+            f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", 0, "fan_mode", result
+        )
 
     @callback
     def attribute_updated(self, attrid, value):
@@ -51,7 +52,9 @@ class FanChannel(ZigbeeChannel):
             "Attribute report '%s'[%s] = %s", self.cluster.name, attr_name, value
         )
         if attrid == self._value_attribute:
-            self.async_send_signal(f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value)
+            self.async_send_signal(
+                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", attrid, attr_name, value
+            )
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""

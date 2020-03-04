@@ -98,7 +98,7 @@ async def test_in_channel_config(
 
     cluster = zigpy_dev.endpoints[1].in_clusters[cluster_id]
     channel_class = registries.ZIGBEE_CHANNEL_REGISTRY.get(
-        cluster_id, base_channels.AttributeListeningChannel
+        cluster_id, base_channels.ZigbeeChannel
     )
     channel = channel_class(cluster, channel_pool)
 
@@ -156,7 +156,7 @@ async def test_out_channel_config(
     cluster = zigpy_dev.endpoints[1].out_clusters[cluster_id]
     cluster.bind_only = True
     channel_class = registries.ZIGBEE_CHANNEL_REGISTRY.get(
-        cluster_id, base_channels.AttributeListeningChannel
+        cluster_id, base_channels.ZigbeeChannel
     )
     channel = channel_class(cluster, channel_pool)
 

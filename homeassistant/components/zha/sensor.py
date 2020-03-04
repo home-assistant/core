@@ -124,11 +124,11 @@ class Sensor(ZhaEntity):
         return self._state
 
     @callback
-    def async_set_state(self, state):
+    def async_set_state(self, attr_id, attr_name, value):
         """Handle state update from channel."""
-        if state is not None:
-            state = self.formatter(state)
-        self._state = state
+        if value is not None:
+            value = self.formatter(value)
+        self._state = value
         self.async_schedule_update_ha_state()
 
     @callback

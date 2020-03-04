@@ -71,9 +71,9 @@ class Switch(ZhaEntity, SwitchDevice):
         self.async_schedule_update_ha_state()
 
     @callback
-    def async_set_state(self, state):
+    def async_set_state(self, attr_id, attr_name, value):
         """Handle state update from channel."""
-        self._state = bool(state)
+        self._state = bool(value)
         self.async_schedule_update_ha_state()
 
     @property
