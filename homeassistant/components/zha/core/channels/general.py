@@ -302,9 +302,10 @@ class OnOffChannel(ZigbeeChannel):
         """Initialize channel."""
         if self.cluster.is_client:
             return
-        self.debug("attempting to update onoff state - from cache: False")
+        from_cache = not self._ch_pool.is_mains_powered
+        self.debug("attempting to update onoff state - from cache: %s", from_cache)
         self._state = bool(
-            await self.get_attribute_value(self.ON_OFF, from_cache=False)
+            await self.get_attribute_value(self.ON_OFF, from_cache=from_cache)
         )
         await super().async_update()
 

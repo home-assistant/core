@@ -192,6 +192,11 @@ class ChannelPool:
         return self._channels.zha_device.nwk
 
     @property
+    def is_mains_powered(self) -> bool:
+        """Device is_mains_powered."""
+        return self._channels.zha_device.is_mains_powered
+
+    @property
     def manufacturer(self) -> Optional[str]:
         """Return device manufacturer."""
         return self._channels.zha_device.manufacturer
