@@ -5,8 +5,8 @@ from unittest import mock
 
 import pytest
 
-from homeassistant.components.cover import DOMAIN
 import homeassistant.components.command_line.cover as cmd_rs
+from homeassistant.components.cover import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
@@ -44,7 +44,9 @@ def test_query_state_value(rs):
         result = rs._query_state_value("runme")
         assert "foo bar" == result
         assert mock_run.call_count == 1
-        assert mock_run.call_args == mock.call("runme", shell=True)
+        assert mock_run.call_args == mock.call(
+            "runme", shell=True,  # nosec # shell by design
+        )
 
 
 async def test_state_value(hass):

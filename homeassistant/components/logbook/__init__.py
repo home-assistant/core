@@ -195,9 +195,12 @@ def humanify(hass, events):
 
     Will try to group events if possible:
     - if 2+ sensor updates in GROUP_BY_MINUTES, show last
-    - if home assistant stop and start happen in same minute call it restarted
+    - if Home Assistant stop and start happen in same minute call it restarted
     """
     domain_prefixes = tuple(f"{dom}." for dom in CONTINUOUS_DOMAINS)
+
+    # Track last states to filter out duplicates
+    last_state = {}
 
     # Group events in batches of GROUP_BY_MINUTES
     for _, g_events in groupby(
@@ -236,8 +239,14 @@ def humanify(hass, events):
         # Yield entries
         for event in events_batch:
             if event.event_type == EVENT_STATE_CHANGED:
-
                 to_state = State.from_dict(event.data.get("new_state"))
+
+                # Filter out states that become same state again (force_update=True)
+                # or light becoming different color
+                if last_state.get(to_state.entity_id) == to_state.state:
+                    continue
+
+                last_state[to_state.entity_id] = to_state.state
 
                 domain = to_state.domain
 
@@ -318,13 +327,9 @@ def humanify(hass, events):
                 if entity_id:
                     state = hass.states.get(entity_id)
                     name = state.name if state else entity_id
-                    message = "send command {}/{} for {}".format(
-                        data["request"]["namespace"], data["request"]["name"], name
-                    )
+                    message = f"send command {data['request']['namespace']}/{data['request']['name']} for {name}"
                 else:
-                    message = "send command {}/{}".format(
-                        data["request"]["namespace"], data["request"]["name"]
-                    )
+                    message = f"send command {data['request']['namespace']}/{data['request']['name']}"
 
                 yield {
                     "when": event.time_fired,
@@ -342,9 +347,7 @@ def humanify(hass, events):
                 value = data.get(ATTR_VALUE)
 
                 value_msg = f" to {value}" if value else ""
-                message = "send command {}{} for {}".format(
-                    data[ATTR_SERVICE], value_msg, data[ATTR_DISPLAY_NAME]
-                )
+                message = f"send command {data[ATTR_SERVICE]}{value_msg} for {data[ATTR_DISPLAY_NAME]}"
 
                 yield {
                     "when": event.time_fired,

@@ -4,7 +4,7 @@
             "clean": "Lascia pulire {entity_name}",
             "dock": "Lascia che {entity_name} ritorni alla base"
         },
-        "condtion_type": {
+        "condition_type": {
             "is_cleaning": "{entity_name} sta pulendo",
             "is_docked": "{entity_name} \u00e8 agganciato alla base"
         },

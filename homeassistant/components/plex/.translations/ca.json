@@ -6,6 +6,7 @@
             "already_in_progress": "S\u2019est\u00e0 configurant Plex",
             "discovery_no_file": "No s'ha trobat cap fitxer de configuraci\u00f3 heretat",
             "invalid_import": "La configuraci\u00f3 importada \u00e9s inv\u00e0lida",
+            "non-interactive": "Importaci\u00f3 no interactiva",
             "token_request_timeout": "S'ha acabat el temps d'espera durant l'obtenci\u00f3 del testimoni.",
             "unknown": "Ha fallat per motiu desconegut"
         },
@@ -52,6 +53,8 @@
         "step": {
             "plex_mp_settings": {
                 "data": {
+                    "ignore_new_shared_users": "Ignora els nous usuaris gestionats/compartits",
+                    "monitored_users": "Usuaris monitoritzats",
                     "show_all_controls": "Mostra tots els controls",
                     "use_episode_art": "Utilitza imatges de l'episodi"
                 },

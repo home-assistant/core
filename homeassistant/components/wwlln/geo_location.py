@@ -35,7 +35,7 @@ DEFAULT_EVENT_NAME = "Lightning Strike: {0}"
 DEFAULT_ICON = "mdi:flash"
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=10)
 
-SIGNAL_DELETE_ENTITY = "delete_entity_{0}"
+SIGNAL_DELETE_ENTITY = "wwlln_delete_entity_{0}"
 
 
 async def async_setup_entry(hass, entry, async_add_entities):

@@ -15,7 +15,6 @@ import xmltodict
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
-    DOMAIN,
     MEDIA_TYPE_MUSIC,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
@@ -51,6 +50,14 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
+from .const import (
+    DOMAIN,
+    SERVICE_CLEAR_TIMER,
+    SERVICE_JOIN,
+    SERVICE_SET_TIMER,
+    SERVICE_UNJOIN,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_BLUESOUND_GROUP = "bluesound_group"
@@ -62,10 +69,6 @@ DEFAULT_PORT = 11000
 NODE_OFFLINE_CHECK_TIMEOUT = 180
 NODE_RETRY_INITIATION = timedelta(minutes=3)
 
-SERVICE_CLEAR_TIMER = "bluesound_clear_sleep_timer"
-SERVICE_JOIN = "bluesound_join"
-SERVICE_SET_TIMER = "bluesound_set_sleep_timer"
-SERVICE_UNJOIN = "bluesound_unjoin"
 STATE_GROUPED = "grouped"
 SYNC_STATUS_INTERVAL = timedelta(minutes=5)
 
@@ -418,7 +421,7 @@ class BluesoundPlayer(MediaPlayerDevice):
                     # sync_status. We will force an update if the player is
                     # grouped this isn't a foolproof solution. A better
                     # solution would be to fetch sync_status more often when
-                    # the device is playing. This would solve alot of
+                    # the device is playing. This would solve a lot of
                     # problems. This change will be done when the
                     # communication is moved to a separate library
                     await self.force_update_sync_status()
@@ -497,7 +500,7 @@ class BluesoundPlayer(MediaPlayerDevice):
                     "image": item.get("@image", ""),
                     "is_raw_url": True,
                     "url2": item.get("@url", ""),
-                    "url": "Preset?id={}".format(item.get("@id", "")),
+                    "url": f"Preset?id={item.get('@id', '')}",
                 }
             )
 
@@ -931,9 +934,7 @@ class BluesoundPlayer(MediaPlayerDevice):
             return
 
         selected_source = items[0]
-        url = "Play?url={}&preset_id&image={}".format(
-            selected_source["url"], selected_source["image"]
-        )
+        url = f"Play?url={selected_source['url']}&preset_id&image={selected_source['image']}"
 
         if "is_raw_url" in selected_source and selected_source["is_raw_url"]:
             url = selected_source["url"]
@@ -999,7 +1000,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         if self.is_grouped and not self.is_master:
             return
 
-        return await self.send_bluesound_command("Play?seek={}".format(float(position)))
+        return await self.send_bluesound_command(f"Play?seek={float(position)}")
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """

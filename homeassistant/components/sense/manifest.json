@@ -6,5 +6,8 @@
     "sense_energy==0.7.0"
   ],
   "dependencies": [],
-  "codeowners": ["@kbickar"]
+  "codeowners": [
+    "@kbickar"
+  ],
+  "config_flow": true
 }

@@ -1,18 +1,14 @@
-"""
-Support for Somfy Covers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.somfy/
-"""
-from pymfy.api.devices.category import Category
+"""Support for Somfy Covers."""
 from pymfy.api.devices.blind import Blind
+from pymfy.api.devices.category import Category
 
 from homeassistant.components.cover import (
-    CoverDevice,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
+    CoverDevice,
 )
-from homeassistant.components.somfy import DOMAIN, SomfyEntity, DEVICES, API
+
+from . import API, CONF_OPTIMISTIC, DEVICES, DOMAIN, SomfyEntity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -29,7 +25,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         devices = hass.data[DOMAIN][DEVICES]
 
         return [
-            SomfyCover(cover, hass.data[DOMAIN][API])
+            SomfyCover(
+                cover, hass.data[DOMAIN][API], hass.data[DOMAIN][CONF_OPTIMISTIC]
+            )
             for cover in devices
             if categories & set(cover.categories)
         ]
@@ -37,22 +35,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(await hass.async_add_executor_job(get_covers), True)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up platform.
-
-    Can only be called when a user accidentally mentions the platform in their
-    config. But even in that case it would have been ignored.
-    """
-    pass
-
-
 class SomfyCover(SomfyEntity, CoverDevice):
     """Representation of a Somfy cover device."""
 
-    def __init__(self, device, api):
+    def __init__(self, device, api, optimistic):
         """Initialize the Somfy device."""
         super().__init__(device, api)
         self.cover = Blind(self.device, self.api)
+        self.optimistic = optimistic
+        self._closed = None
 
     async def async_update(self):
         """Update the device with the latest data."""
@@ -61,10 +52,14 @@ class SomfyCover(SomfyEntity, CoverDevice):
 
     def close_cover(self, **kwargs):
         """Close the cover."""
+        if self.optimistic:
+            self._closed = True
         self.cover.close()
 
     def open_cover(self, **kwargs):
         """Open the cover."""
+        if self.optimistic:
+            self._closed = False
         self.cover.open()
 
     def stop_cover(self, **kwargs):
@@ -89,6 +84,8 @@ class SomfyCover(SomfyEntity, CoverDevice):
         is_closed = None
         if self.has_capability("position"):
             is_closed = self.cover.is_closed()
+        elif self.optimistic:
+            is_closed = self._closed
         return is_closed
 
     @property
@@ -104,15 +101,15 @@ class SomfyCover(SomfyEntity, CoverDevice):
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
-        self.cover.orientation = kwargs[ATTR_TILT_POSITION]
+        self.cover.orientation = 100 - kwargs[ATTR_TILT_POSITION]
 
     def open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
-        self.cover.orientation = 100
+        self.cover.orientation = 0
 
     def close_cover_tilt(self, **kwargs):
         """Close the cover tilt."""
-        self.cover.orientation = 0
+        self.cover.orientation = 100
 
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover."""

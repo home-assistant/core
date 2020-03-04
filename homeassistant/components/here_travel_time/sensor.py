@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
     EVENT_HOMEASSISTANT_START,
+    TIME_MINUTES,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import location
@@ -32,8 +33,7 @@ CONF_DESTINATION_ENTITY_ID = "destination_entity_id"
 CONF_ORIGIN_LATITUDE = "origin_latitude"
 CONF_ORIGIN_LONGITUDE = "origin_longitude"
 CONF_ORIGIN_ENTITY_ID = "origin_entity_id"
-CONF_APP_ID = "app_id"
-CONF_APP_CODE = "app_code"
+CONF_API_KEY = "api_key"
 CONF_TRAFFIC_MODE = "traffic_mode"
 CONF_ROUTE_MODE = "route_mode"
 
@@ -86,8 +86,6 @@ ATTR_DURATION_IN_TRAFFIC = "duration_in_traffic"
 ATTR_ORIGIN_NAME = "origin_name"
 ATTR_DESTINATION_NAME = "destination_name"
 
-UNIT_OF_MEASUREMENT = "min"
-
 SCAN_INTERVAL = timedelta(minutes=5)
 
 NO_ROUTE_ERROR_MESSAGE = "HERE could not find a route based on the input"
@@ -97,8 +95,7 @@ PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_ORIGIN_LATITUDE, CONF_ORIGIN_ENTITY_ID),
     PLATFORM_SCHEMA.extend(
         {
-            vol.Required(CONF_APP_ID): cv.string,
-            vol.Required(CONF_APP_CODE): cv.string,
+            vol.Required(CONF_API_KEY): cv.string,
             vol.Inclusive(
                 CONF_DESTINATION_LATITUDE, "destination_coordinates"
             ): cv.latitude,
@@ -131,9 +128,8 @@ async def async_setup_platform(
 ) -> None:
     """Set up the HERE travel time platform."""
 
-    app_id = config[CONF_APP_ID]
-    app_code = config[CONF_APP_CODE]
-    here_client = herepy.RoutingApi(app_id, app_code)
+    api_key = config[CONF_API_KEY]
+    here_client = herepy.RoutingApi(api_key)
 
     if not await hass.async_add_executor_job(
         _are_valid_client_credentials, here_client
@@ -212,7 +208,7 @@ class HERETravelTimeSensor(Entity):
         self._origin_entity_id = origin_entity_id
         self._destination_entity_id = destination_entity_id
         self._here_data = here_data
-        self._unit_of_measurement = UNIT_OF_MEASUREMENT
+        self._unit_of_measurement = TIME_MINUTES
         self._attrs = {
             ATTR_UNIT_SYSTEM: self._here_data.units,
             ATTR_MODE: self._here_data.travel_mode,
@@ -229,7 +225,7 @@ class HERETravelTimeSensor(Entity):
 
         @callback
         def delayed_sensor_update(event):
-            """Update sensor after homeassistant started."""
+            """Update sensor after Home Assistant started."""
             self.async_schedule_update_ha_state(True)
 
         self.hass.bus.async_listen_once(
@@ -319,7 +315,7 @@ class HERETravelTimeSensor(Entity):
             return self._get_location_from_attributes(entity)
 
         # Check if device is in a zone
-        zone_entity = self.hass.states.get("zone.{}".format(entity.state))
+        zone_entity = self.hass.states.get(f"zone.{entity.state}")
         if location.has_location(zone_entity):
             _LOGGER.debug(
                 "%s is in %s, getting zone location", entity_id, zone_entity.entity_id
@@ -352,7 +348,7 @@ class HERETravelTimeSensor(Entity):
     def _get_location_from_attributes(entity: State) -> str:
         """Get the lat/long string from an entities attributes."""
         attr = entity.attributes
-        return "{},{}".format(attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
+        return f"{attr.get(ATTR_LATITUDE)},{attr.get(ATTR_LONGITUDE)}"
 
 
 class HERETravelTimeData:

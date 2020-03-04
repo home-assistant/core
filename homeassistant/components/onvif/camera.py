@@ -1,13 +1,9 @@
-"""
-Support for ONVIF Cameras with FFmpeg as decoder.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.onvif/
-"""
+"""Support for ONVIF Cameras with FFmpeg as decoder."""
 import asyncio
 import datetime as dt
 import logging
 import os
+from typing import Optional
 
 from aiohttp.client_exceptions import ClientConnectionError, ServerDisconnectedError
 from haffmpeg.camera import CameraMjpeg
@@ -15,6 +11,7 @@ from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 import onvif
 from onvif import ONVIFCamera, exceptions
 import voluptuous as vol
+from zeep.asyncio import AsyncTransport
 from zeep.exceptions import Fault
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
@@ -29,7 +26,10 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
+from homeassistant.helpers.aiohttp_client import (
+    async_aiohttp_proxy_stream,
+    async_get_clientsession,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_extract_entity_ids
 import homeassistant.util.dt as dt_util
@@ -141,17 +141,21 @@ class ONVIFHassCamera(Camera):
         self._profile_index = config.get(CONF_PROFILE)
         self._ptz_service = None
         self._input = None
+        self._mac = None
 
         _LOGGER.debug(
             "Setting up the ONVIF camera device @ '%s:%s'", self._host, self._port
         )
 
+        session = async_get_clientsession(hass)
+        transport = AsyncTransport(None, session=session)
         self._camera = ONVIFCamera(
             self._host,
             self._port,
             self._username,
             self._password,
             "{}/wsdl/".format(os.path.dirname(onvif.__file__)),
+            transport=transport,
         )
 
     async def async_initialize(self):
@@ -165,6 +169,7 @@ class ONVIFHassCamera(Camera):
             _LOGGER.debug("Updating service addresses")
             await self._camera.update_xaddrs()
 
+            await self.async_obtain_mac_address()
             await self.async_check_date_and_time()
             await self.async_obtain_input_uri()
             self.setup_ptz()
@@ -182,6 +187,14 @@ class ONVIFHassCamera(Camera):
                 self._name,
                 err,
             )
+
+    async def async_obtain_mac_address(self):
+        """Obtain the MAC address of the camera to use as the unique ID."""
+        devicemgmt = self._camera.create_devicemgmt_service()
+        network_interfaces = await devicemgmt.GetNetworkInterfaces()
+        for interface in network_interfaces:
+            if interface.Enabled:
+                self._mac = interface.Info.HwAddress
 
     async def async_check_date_and_time(self):
         """Warns if camera and system date not synced."""
@@ -277,6 +290,10 @@ class ONVIFHassCamera(Camera):
             _LOGGER.debug("Using profile index '%d'", self._profile_index)
 
             _LOGGER.debug("Retrieving stream uri")
+
+            # Fix Onvif setup error on Goke GK7102 based IP camera
+            # where we need to recreate media_service  #26781
+            media_service = self._camera.create_media_service()
 
             req = media_service.create_type("GetStreamUri")
             req.ProfileToken = profiles[self._profile_index].token
@@ -399,3 +416,8 @@ class ONVIFHassCamera(Camera):
     def name(self):
         """Return the name of this camera."""
         return self._name
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+        return self._mac

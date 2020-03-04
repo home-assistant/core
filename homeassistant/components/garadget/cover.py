@@ -4,19 +4,19 @@ import logging
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.cover import CoverDevice, PLATFORM_SCHEMA
-from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.components.cover import PLATFORM_SCHEMA, CoverDevice
 from homeassistant.const import (
-    CONF_DEVICE,
-    CONF_USERNAME,
-    CONF_PASSWORD,
     CONF_ACCESS_TOKEN,
+    CONF_COVERS,
+    CONF_DEVICE,
     CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
     STATE_CLOSED,
     STATE_OPEN,
-    CONF_COVERS,
 )
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import track_utc_time_change
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -251,9 +251,7 @@ class GaradgetCover(CoverDevice):
 
     def _get_variable(self, var):
         """Get latest status."""
-        url = "{}/v1/devices/{}/{}?access_token={}".format(
-            self.particle_url, self.device_id, var, self.access_token
-        )
+        url = f"{self.particle_url}/v1/devices/{self.device_id}/{var}?access_token={self.access_token}"
         ret = requests.get(url, timeout=10)
         result = {}
         for pairs in ret.json()["result"].split("|"):

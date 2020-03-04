@@ -12,70 +12,64 @@ import functools
 import logging
 import os
 import pathlib
+import re
 import threading
 from time import monotonic
-import uuid
-
 from types import MappingProxyType
 from typing import (
-    Optional,
-    Any,
-    Callable,
-    List,
-    TypeVar,
-    Dict,
-    Coroutine,
-    Set,
     TYPE_CHECKING,
+    Any,
     Awaitable,
+    Callable,
+    Coroutine,
+    Dict,
+    List,
     Mapping,
+    Optional,
+    Set,
+    TypeVar,
 )
+import uuid
 
 from async_timeout import timeout
 import attr
 import voluptuous as vol
 
+from homeassistant import loader, util
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
     ATTR_NOW,
+    ATTR_SECONDS,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
-    ATTR_SECONDS,
     CONF_UNIT_SYSTEM_IMPERIAL,
     EVENT_CALL_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
+    EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_CLOSE,
-    EVENT_SERVICE_REMOVED,
     EVENT_SERVICE_REGISTERED,
+    EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED,
     EVENT_TIMER_OUT_OF_SYNC,
     MATCH_ALL,
     __version__,
 )
-from homeassistant import loader
 from homeassistant.exceptions import (
     HomeAssistantError,
     InvalidEntityFormatError,
     InvalidStateError,
-    Unauthorized,
     ServiceNotFound,
+    Unauthorized,
 )
-from homeassistant.util.async_ import run_callback_threadsafe, fire_coroutine_threadsafe
-from homeassistant import util
+from homeassistant.util import location
+from homeassistant.util.async_ import fire_coroutine_threadsafe, run_callback_threadsafe
 import homeassistant.util.dt as dt_util
-from homeassistant.util import location, slugify
-from homeassistant.util.unit_system import (  # NOQA
-    UnitSystem,
-    IMPERIAL_SYSTEM,
-    METRIC_SYSTEM,
-)
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 
 # Typing imports that create a circular dependency
-# pylint: disable=using-constant-test
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntries
     from homeassistant.components.http import HomeAssistantHTTP
@@ -110,12 +104,15 @@ def split_entity_id(entity_id: str) -> List[str]:
     return entity_id.split(".", 1)
 
 
+VALID_ENTITY_ID = re.compile(r"^(?!.+__)(?!_)[\da-z_]+(?<!_)\.(?!_)[\da-z_]+(?<!_)$")
+
+
 def valid_entity_id(entity_id: str) -> bool:
     """Test if an entity ID is a valid format.
 
     Format: <domain>.<entity> where both are slugs.
     """
-    return "." in entity_id and slugify(entity_id) == entity_id.replace(".", "_", 1)
+    return VALID_ENTITY_ID.match(entity_id) is not None
 
 
 def valid_state(state: str) -> bool:
@@ -199,7 +196,7 @@ class HomeAssistant:
         return self.state in (CoreState.starting, CoreState.running)
 
     def start(self) -> int:
-        """Start home assistant.
+        """Start Home Assistant.
 
         Note: This function is only used for testing.
         For regular use, use "await hass.run()".
@@ -224,7 +221,7 @@ class HomeAssistant:
         This method is a coroutine.
         """
         if self.state != CoreState.not_running:
-            raise RuntimeError("HASS is already running")
+            raise RuntimeError("Home Assistant is already running")
 
         # _async_stop will set this instead of stopping the loop
         self._stopped = asyncio.Event()
@@ -305,10 +302,10 @@ class HomeAssistant:
 
         if asyncio.iscoroutine(check_target):
             task = self.loop.create_task(target)  # type: ignore
-        elif is_callback(check_target):
-            self.loop.call_soon(target, *args)
         elif asyncio.iscoroutinefunction(check_target):
             task = self.loop.create_task(target(*args))
+        elif is_callback(check_target):
+            self.loop.call_soon(target, *args)
         else:
             task = self.loop.run_in_executor(  # type: ignore
                 None, target, *args
@@ -367,7 +364,11 @@ class HomeAssistant:
         target: target to call.
         args: parameters for method to call.
         """
-        if not asyncio.iscoroutine(target) and is_callback(target):
+        if (
+            not asyncio.iscoroutine(target)
+            and not asyncio.iscoroutinefunction(target)
+            and is_callback(target)
+        ):
             target(*args)
         else:
             self.async_add_job(target, *args)
@@ -719,18 +720,14 @@ class State:
 
         if not valid_entity_id(entity_id) and not temp_invalid_id_bypass:
             raise InvalidEntityFormatError(
-                (
-                    "Invalid entity id encountered: {}. "
-                    "Format should be <domain>.<object_id>"
-                ).format(entity_id)
+                f"Invalid entity id encountered: {entity_id}. "
+                "Format should be <domain>.<object_id>"
             )
 
         if not valid_state(state):
             raise InvalidStateError(
-                (
-                    "Invalid state encountered for entity id: {}. "
-                    "State max length is 255 characters."
-                ).format(entity_id)
+                f"Invalid state encountered for entity id: {entity_id}. "
+                "State max length is 255 characters."
             )
 
         self.entity_id = entity_id.lower()
@@ -1041,9 +1038,7 @@ class ServiceCall:
                 self.domain, self.service, self.context.id, util.repr_helper(self.data)
             )
 
-        return "<ServiceCall {}.{} (c:{})>".format(
-            self.domain, self.service, self.context.id
-        )
+        return f"<ServiceCall {self.domain}.{self.service} (c:{self.context.id})>"
 
 
 class ServiceRegistry:
@@ -1140,6 +1135,9 @@ class ServiceRegistry:
             return
 
         self._services[domain].pop(service)
+
+        if not self._services[domain]:
+            self._services.pop(domain)
 
         self._hass.bus.async_fire(
             EVENT_SERVICE_REMOVED, {ATTR_DOMAIN: domain, ATTR_SERVICE: service}
@@ -1255,10 +1253,10 @@ class ServiceRegistry:
         self, handler: Service, service_call: ServiceCall
     ) -> None:
         """Execute a service."""
-        if handler.is_callback:
-            handler.func(service_call)
-        elif handler.is_coroutinefunction:
+        if handler.is_coroutinefunction:
             await handler.func(service_call)
+        elif handler.is_callback:
+            handler.func(service_call)
         else:
             await self._hass.async_add_executor_job(handler.func, service_call)
 
@@ -1293,6 +1291,9 @@ class Config:
 
         # List of allowed external dirs to access
         self.whitelist_external_dirs: Set[str] = set()
+
+        # If Home Assistant is running in safe mode
+        self.safe_mode: bool = False
 
     def distance(self, lat: float, lon: float) -> Optional[float]:
         """Calculate distance from Home Assistant.
@@ -1356,6 +1357,7 @@ class Config:
             "whitelist_external_dirs": self.whitelist_external_dirs,
             "version": __version__,
             "config_source": self.config_source,
+            "safe_mode": self.safe_mode,
         }
 
     def set_time_zone(self, time_zone_str: str) -> None:

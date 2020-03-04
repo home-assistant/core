@@ -34,7 +34,7 @@ from .const import (
     DOMAIN,
 )
 
-SCAN_INTERVAL = timedelta(seconds=5)
+SCAN_INTERVAL = timedelta(seconds=10)
 WLED_COMPONENTS = (LIGHT_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Create WLED instance for this entry
     session = async_get_clientsession(hass)
-    wled = WLED(entry.data[CONF_HOST], loop=hass.loop, session=session)
+    wled = WLED(entry.data[CONF_HOST], session=session)
 
     # Ensure we can connect and talk to it
     try:
@@ -60,6 +60,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {DATA_WLED_CLIENT: wled}
+
+    # For backwards compat, set unique ID
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(
+            entry, unique_id=wled.device.info.mac_address
+        )
 
     # Set up all platforms for this device/entry.
     for component in WLED_COMPONENTS:
@@ -112,10 +118,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class WLEDEntity(Entity):
     """Defines a base WLED entity."""
 
-    def __init__(self, entry_id: str, wled: WLED, name: str, icon: str) -> None:
+    def __init__(
+        self,
+        entry_id: str,
+        wled: WLED,
+        name: str,
+        icon: str,
+        enabled_default: bool = True,
+    ) -> None:
         """Initialize the WLED entity."""
         self._attributes: Dict[str, Union[str, int, float]] = {}
         self._available = True
+        self._enabled_default = enabled_default
         self._entry_id = entry_id
         self._icon = icon
         self._name = name
@@ -136,6 +150,11 @@ class WLEDEntity(Entity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._enabled_default
 
     @property
     def should_poll(self) -> bool:
@@ -165,6 +184,9 @@ class WLEDEntity(Entity):
 
     async def async_update(self) -> None:
         """Update WLED entity."""
+        if not self.enabled:
+            return
+
         if self.wled.device is None:
             self._available = False
             return

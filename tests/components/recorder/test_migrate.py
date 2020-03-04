@@ -1,13 +1,14 @@
 """The tests for the Recorder component."""
 # pylint: disable=protected-access
-from unittest.mock import patch, call
+from unittest.mock import call, patch
 
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.pool import StaticPool
 
 from homeassistant.bootstrap import async_setup_component
-from homeassistant.components.recorder import migration, const, models
+from homeassistant.components.recorder import const, migration, models
+
 from tests.components.recorder import models_original
 
 

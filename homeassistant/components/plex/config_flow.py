@@ -8,30 +8,34 @@ from plexauth import PlexAuth
 import requests.exceptions
 import voluptuous as vol
 
-from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant import config_entries
+from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.const import CONF_URL, CONF_TOKEN, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_SSL, CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json
 
 from .const import (  # pylint: disable=unused-import
     AUTH_CALLBACK_NAME,
     AUTH_CALLBACK_PATH,
     CONF_CLIENT_IDENTIFIER,
+    CONF_IGNORE_NEW_SHARED_USERS,
+    CONF_MONITORED_USERS,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
-    CONF_USE_EPISODE_ART,
     CONF_SHOW_ALL_CONTROLS,
+    CONF_USE_EPISODE_ART,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     PLEX_CONFIG_FILE,
     PLEX_SERVER_CONFIG,
+    SERVERS,
     X_PLEX_DEVICE_NAME,
-    X_PLEX_VERSION,
-    X_PLEX_PRODUCT,
     X_PLEX_PLATFORM,
+    X_PLEX_PRODUCT,
+    X_PLEX_VERSION,
 )
 from .errors import NoServersFound, ServerNotSpecified
 from .server import PlexServer
@@ -52,7 +56,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Plex config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     @staticmethod
     @callback
@@ -80,12 +84,17 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Validate a provided configuration."""
         errors = {}
         self.current_login = server_config
+        is_importing = (
+            self.context["source"]  # pylint: disable=no-member
+            == config_entries.SOURCE_IMPORT
+        )
 
         plex_server = PlexServer(self.hass, server_config)
         try:
             await self.hass.async_add_executor_job(plex_server.connect)
 
         except NoServersFound:
+            _LOGGER.error("No servers linked to Plex account")
             errors["base"] = "no_servers"
         except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized):
             _LOGGER.error("Invalid credentials provided, config not created")
@@ -98,6 +107,11 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "not_found"
 
         except ServerNotSpecified as available_servers:
+            if is_importing:
+                _LOGGER.warning(
+                    "Imported configuration has multiple available Plex servers. Specify server in configuration or add a new Integration."
+                )
+                return self.async_abort(reason="non-interactive")
             self.available_servers = available_servers.args[0]
             return await self.async_step_select_server()
 
@@ -106,12 +120,17 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unknown")
 
         if errors:
+            if is_importing:
+                return self.async_abort(reason="non-interactive")
             return self.async_show_form(step_id="start_website_auth", errors=errors)
 
         server_id = plex_server.machine_identifier
 
         for entry in self._async_current_entries():
             if entry.data[CONF_SERVER_IDENTIFIER] == server_id:
+                _LOGGER.debug(
+                    "Plex server already configured: %s", entry.data[CONF_SERVER]
+                )
                 return self.async_abort(reason="already_configured")
 
         url = plex_server.url_in_use
@@ -239,6 +258,7 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry):
         """Initialize Plex options flow."""
         self.options = copy.deepcopy(config_entry.options)
+        self.server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
 
     async def async_step_init(self, user_input=None):
         """Manage the Plex options."""
@@ -246,6 +266,8 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_plex_mp_settings(self, user_input=None):
         """Manage the Plex media_player options."""
+        plex_server = self.hass.data[DOMAIN][SERVERS][self.server_id]
+
         if user_input is not None:
             self.options[MP_DOMAIN][CONF_USE_EPISODE_ART] = user_input[
                 CONF_USE_EPISODE_ART
@@ -253,7 +275,37 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
             self.options[MP_DOMAIN][CONF_SHOW_ALL_CONTROLS] = user_input[
                 CONF_SHOW_ALL_CONTROLS
             ]
+            self.options[MP_DOMAIN][CONF_IGNORE_NEW_SHARED_USERS] = user_input[
+                CONF_IGNORE_NEW_SHARED_USERS
+            ]
+
+            account_data = {
+                user: {"enabled": bool(user in user_input[CONF_MONITORED_USERS])}
+                for user in plex_server.accounts
+            }
+
+            self.options[MP_DOMAIN][CONF_MONITORED_USERS] = account_data
+
             return self.async_create_entry(title="", data=self.options)
+
+        available_accounts = {name: name for name in plex_server.accounts}
+        available_accounts[plex_server.owner] += " [Owner]"
+
+        default_accounts = plex_server.accounts
+        known_accounts = set(plex_server.option_monitored_users)
+        if known_accounts:
+            default_accounts = {
+                user
+                for user in plex_server.option_monitored_users
+                if plex_server.option_monitored_users[user]["enabled"]
+            }
+            for user in plex_server.accounts:
+                if user not in known_accounts:
+                    available_accounts[user] += " [New]"
+
+        if not plex_server.option_ignore_new_shared_users:
+            for new_user in plex_server.accounts - known_accounts:
+                default_accounts.add(new_user)
 
         return self.async_show_form(
             step_id="plex_mp_settings",
@@ -261,11 +313,18 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Required(
                         CONF_USE_EPISODE_ART,
-                        default=self.options[MP_DOMAIN][CONF_USE_EPISODE_ART],
+                        default=plex_server.option_use_episode_art,
                     ): bool,
                     vol.Required(
                         CONF_SHOW_ALL_CONTROLS,
-                        default=self.options[MP_DOMAIN][CONF_SHOW_ALL_CONTROLS],
+                        default=plex_server.option_show_all_controls,
+                    ): bool,
+                    vol.Optional(
+                        CONF_MONITORED_USERS, default=default_accounts
+                    ): cv.multi_select(available_accounts),
+                    vol.Required(
+                        CONF_IGNORE_NEW_SHARED_USERS,
+                        default=plex_server.option_ignore_new_shared_users,
                     ): bool,
                 }
             ),

@@ -7,7 +7,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt
 
-from .const import DOMAIN, FEED, SIGNAL_STATUS
+from .const import DOMAIN, FEED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ class GeonetnzQuakesSensor(Entity):
         """Call when entity is added to hass."""
         self._remove_signal_status = async_dispatcher_connect(
             self.hass,
-            SIGNAL_STATUS.format(self._config_entry_id),
+            f"geonetnz_quakes_status_{self._config_entry_id}",
             self._update_status_callback,
         )
         _LOGGER.debug("Waiting for updates %s", self._config_entry_id)

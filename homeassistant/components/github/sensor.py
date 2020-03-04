@@ -1,6 +1,7 @@
 """Support for GitHub."""
 from datetime import timedelta
 import logging
+
 import github
 import voluptuous as vol
 
@@ -60,8 +61,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 "Error setting up GitHub platform. %s",
                 "Check previous errors for details",
             )
-            return
-        sensors.append(GitHubSensor(data))
+        else:
+            sensors.append(GitHubSensor(data))
     add_entities(sensors, True)
 
 
@@ -131,12 +132,12 @@ class GitHubSensor(Entity):
         self._github_data.update()
 
         self._name = self._github_data.name
-        self._state = self._github_data.latest_commit_sha
         self._repository_path = self._github_data.repository_path
         self._available = self._github_data.available
         self._latest_commit_message = self._github_data.latest_commit_message
         self._latest_commit_sha = self._github_data.latest_commit_sha
         self._latest_release_url = self._github_data.latest_release_url
+        self._state = self._github_data.latest_commit_sha[0:7]
         self._open_issue_count = self._github_data.open_issue_count
         self._latest_open_issue_url = self._github_data.latest_open_issue_url
         self._pull_request_count = self._github_data.pull_request_count
@@ -169,7 +170,6 @@ class GitHubData:
             return
 
         self.name = repository.get(CONF_NAME, repo.name)
-
         self.available = False
         self.latest_commit_message = None
         self.latest_commit_sha = None

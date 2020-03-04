@@ -14,8 +14,6 @@ pr:
 
 resources:
   containers:
-  - container: 36
-    image: homeassistant/ci-azure:3.6
   - container: 37
     image: homeassistant/ci-azure:3.7
   repositories:
@@ -25,7 +23,7 @@ resources:
       endpoint: 'home-assistant'
 variables:
   - name: PythonMain
-    value: '36'
+    value: '37'
   - group: codecov
 
 stages:
@@ -45,11 +43,27 @@ stages:
 
           . venv/bin/activate
           pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
-          pre-commit install-hooks --config .pre-commit-config-all.yaml
+          pre-commit install-hooks
+    - script: |
+        . venv/bin/activate
+        pre-commit run codespell --all-files
+      displayName: 'Run codespell'
     - script: |
         . venv/bin/activate
         pre-commit run flake8 --all-files
       displayName: 'Run flake8'
+    - script: |
+        . venv/bin/activate
+        pre-commit run bandit --all-files
+      displayName: 'Run bandit'
+    - script: |
+        . venv/bin/activate
+        pre-commit run isort --all-files --show-diff-on-failure
+      displayName: 'Run isort'
+    - script: |
+        . venv/bin/activate
+        pre-commit run check-json --all-files
+      displayName: 'Run check-json'
   - job: 'Validate'
     pool:
       vmImage: 'ubuntu-latest'
@@ -84,10 +98,10 @@ stages:
 
           . venv/bin/activate
           pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
-          pre-commit install-hooks --config .pre-commit-config-all.yaml
+          pre-commit install-hooks
     - script: |
         . venv/bin/activate
-        pre-commit run black --all-files
+        pre-commit run black --all-files --show-diff-on-failure
       displayName: 'Check Black formatting'
 
 - stage: 'Tests'
@@ -100,8 +114,6 @@ stages:
     strategy:
       maxParallel: 3
       matrix:
-        Python36:
-          python.container: '36'
         Python37:
           python.container: '37'
     container: $[ variables['python.container'] ]
@@ -136,7 +148,7 @@ stages:
 
         . venv/bin/activate
         pytest --timeout=9 --durations=10 -n auto --dist=loadfile --cov homeassistant --cov-report html -qq -o console_output_style=count -p no:sugar tests
-        codecov --token $(codecovToken)
+        #codecov --token $(codecovToken)
         script/check_dirty
       displayName: 'Run pytest for python $(python.container) / coverage'
       condition: and(succeeded(), eq(variables['python.container'], variables['PythonMain']))
@@ -158,7 +170,7 @@ stages:
           python -m venv venv
 
           . venv/bin/activate
-          pip install -U pip setuptools
+          pip install -U pip setuptools wheel
           pip install -r requirements_all.txt -c homeassistant/package_constraints.txt
           pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
     - script: |
@@ -182,8 +194,8 @@ stages:
 
           . venv/bin/activate
           pip install -e . -r requirements_test.txt -c homeassistant/package_constraints.txt
-          pre-commit install-hooks --config .pre-commit-config-all.yaml
+          pre-commit install-hooks
     - script: |
         . venv/bin/activate
-        pre-commit run --config .pre-commit-config-all.yaml mypy --all-files
+        pre-commit run mypy --all-files
       displayName: 'Run mypy'

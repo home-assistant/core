@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {
     "lids": ["Doors", "opening", "mdi:car-door-lock"],
     "windows": ["Windows", "opening", "mdi:car-door"],
-    "door_lock_state": ["Door lock state", "safety", "mdi:car-key"],
+    "door_lock_state": ["Door lock state", "lock", "mdi:car-key"],
     "lights_parking": ["Parking lights", "light", "mdi:car-parking-lights"],
     "condition_based_services": ["Condition based services", "problem", "mdi:wrench"],
     "check_control_messages": ["Control messages", "problem", "mdi:car-tire-alert"],
@@ -59,7 +59,7 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
     def __init__(
         self, account, vehicle, attribute: str, sensor_name, device_class, icon
     ):
-        """Constructor."""
+        """Initialize sensor."""
         self._account = account
         self._vehicle = vehicle
         self._attribute = attribute

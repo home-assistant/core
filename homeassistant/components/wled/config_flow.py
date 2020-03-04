@@ -11,10 +11,10 @@ from homeassistant.config_entries import (
     ConfigFlow,
 )
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
-from homeassistant.helpers import ConfigType
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN  # pylint: disable=W0611
+from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
 
         errors = {}
         session = async_get_clientsession(self.hass)
-        wled = WLED(user_input[CONF_HOST], loop=self.hass.loop, session=session)
+        wled = WLED(user_input[CONF_HOST], session=session)
 
         try:
             device = await wled.update()
@@ -87,10 +87,8 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Check if already configured
         mac_address = device.info.mac_address
-        for entry in self._async_current_entries():
-            if entry.data[CONF_MAC] == mac_address:
-                # This mac address is already configured
-                return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(device.info.mac_address)
+        self._abort_if_unique_id_configured()
 
         title = user_input[CONF_HOST]
         if source == SOURCE_ZEROCONF:

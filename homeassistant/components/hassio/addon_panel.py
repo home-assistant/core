@@ -7,7 +7,7 @@ from aiohttp import web
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import ATTR_PANELS, ATTR_TITLE, ATTR_ICON, ATTR_ADMIN, ATTR_ENABLE
+from .const import ATTR_ADMIN, ATTR_ENABLE, ATTR_ICON, ATTR_PANELS, ATTR_TITLE
 from .handler import HassioAPIError
 
 _LOGGER = logging.getLogger(__name__)

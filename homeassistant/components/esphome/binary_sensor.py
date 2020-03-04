@@ -1,5 +1,4 @@
 """Support for ESPHome binary sensors."""
-import logging
 from typing import Optional
 
 from aioesphomeapi import BinarySensorInfo, BinarySensorState
@@ -7,8 +6,6 @@ from aioesphomeapi import BinarySensorInfo, BinarySensorState
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
 from . import EsphomeEntity, platform_async_setup_entry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):

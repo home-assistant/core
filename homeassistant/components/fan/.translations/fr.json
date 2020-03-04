@@ -4,7 +4,7 @@
             "turn_off": "\u00c9teindre {entity_name}",
             "turn_on": "Allumer {entity_name}"
         },
-        "condtion_type": {
+        "condition_type": {
             "is_off": "{entity_name} est d\u00e9sactiv\u00e9",
             "is_on": "{entity_name} est activ\u00e9"
         },

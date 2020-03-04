@@ -2,23 +2,23 @@
 from datetime import timedelta
 import logging
 
-import voluptuous as vol
 import requests
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_URL,
-    CONF_VALUE_TEMPLATE,
-    CONF_UNIT_OF_MEASUREMENT,
     CONF_ID,
     CONF_SCAN_INTERVAL,
-    STATE_UNKNOWN,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_URL,
+    CONF_VALUE_TEMPLATE,
     POWER_WATT,
+    STATE_UNKNOWN,
 )
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import template
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,9 +64,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_id(sensorid, feedtag, feedname, feedid, feeduserid):
     """Return unique identifier for feed / sensor."""
-    return "emoncms{}_{}_{}_{}_{}".format(
-        sensorid, feedtag, feedname, feedid, feeduserid
-    )
+    return f"emoncms{sensorid}_{feedtag}_{feedname}_{feedid}_{feeduserid}"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -134,7 +132,7 @@ class EmonCmsSensor(Entity):
             # ID if there's only one.
             id_for_name = "" if str(sensorid) == "1" else sensorid
             # Use the feed name assigned in EmonCMS or fall back to the feed ID
-            feed_name = elem.get("name") or "Feed {}".format(elem["id"])
+            feed_name = elem.get("name") or f"Feed {elem['id']}"
             self._name = f"EmonCMS{id_for_name} {feed_name}"
         else:
             self._name = name
@@ -246,7 +244,7 @@ class EmonCmsData:
                 self.data = req.json()
             else:
                 _LOGGER.error(
-                    "Please verify if the specified config value "
+                    "Please verify if the specified configuration value "
                     "'%s' is correct! (HTTP Status_code = %d)",
                     CONF_URL,
                     req.status_code,

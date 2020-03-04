@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Yaln\u0131zca bir Spotify hesab\u0131 ayarlayabilirsin.",
+            "authorize_url_timeout": "Kimlik do\u011frulama URL'sini olu\u015ftururken zaman a\u015f\u0131m\u0131 ger\u00e7ekle\u015fti.",
+            "missing_configuration": "Spotify entegrasyonu ayarlanmam\u0131\u015f. L\u00fctfen dok\u00fcmentasyonu takip et."
+        },
+        "create_entry": {
+            "default": "Spotify ile kimlik ba\u015far\u0131yla do\u011fruland\u0131."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Kimlik Do\u011frulama Y\u00f6ntemini Se\u00e7"
+            }
+        },
+        "title": "Spotify"
+    }
+}

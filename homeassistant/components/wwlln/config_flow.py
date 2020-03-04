@@ -2,7 +2,6 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.helpers import config_validation as cv
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -12,6 +11,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_METRIC,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_WINDOW, DEFAULT_RADIUS, DEFAULT_WINDOW, DOMAIN
 

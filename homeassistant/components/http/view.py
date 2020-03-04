@@ -34,8 +34,8 @@ class HomeAssistantView:
     requires_auth = True
     cors_allowed = False
 
-    # pylint: disable=no-self-use
-    def context(self, request):
+    @staticmethod
+    def context(request):
         """Generate a context from a request."""
         user = request.get("hass_user")
         if user is None:
@@ -43,7 +43,8 @@ class HomeAssistantView:
 
         return Context(user_id=user.id)
 
-    def json(self, result, status_code=200, headers=None):
+    @staticmethod
+    def json(result, status_code=200, headers=None):
         """Return a JSON response."""
         try:
             msg = json.dumps(
@@ -141,9 +142,9 @@ def request_handler_factory(view, handler):
         elif result is None:
             result = b""
         elif not isinstance(result, bytes):
-            assert False, (
-                "Result should be None, string, bytes or Response. " "Got: {}"
-            ).format(result)
+            assert (
+                False
+            ), f"Result should be None, string, bytes or Response. Got: {result}"
 
         return web.Response(body=result, status=status_code)
 

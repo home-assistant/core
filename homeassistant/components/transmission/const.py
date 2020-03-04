@@ -1,15 +1,18 @@
 """Constants for the Transmission Bittorent Client component."""
+
+from homeassistant.const import DATA_RATE_MEGABYTES_PER_SECOND
+
 DOMAIN = "transmission"
 
 SENSOR_TYPES = {
-    "active_torrents": ["Active Torrents", None],
+    "active_torrents": ["Active Torrents", "Torrents"],
     "current_status": ["Status", None],
-    "download_speed": ["Down Speed", "MB/s"],
-    "paused_torrents": ["Paused Torrents", None],
-    "total_torrents": ["Total Torrents", None],
-    "upload_speed": ["Up Speed", "MB/s"],
-    "completed_torrents": ["Completed Torrents", None],
-    "started_torrents": ["Started Torrents", None],
+    "download_speed": ["Down Speed", DATA_RATE_MEGABYTES_PER_SECOND],
+    "paused_torrents": ["Paused Torrents", "Torrents"],
+    "total_torrents": ["Total Torrents", "Torrents"],
+    "upload_speed": ["Up Speed", DATA_RATE_MEGABYTES_PER_SECOND],
+    "completed_torrents": ["Completed Torrents", "Torrents"],
+    "started_torrents": ["Started Torrents", "Torrents"],
 }
 SWITCH_TYPES = {"on_off": "Switch", "turtle_mode": "Turtle Mode"}
 

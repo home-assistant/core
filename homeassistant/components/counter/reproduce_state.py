@@ -12,9 +12,9 @@ from . import (
     ATTR_MAXIMUM,
     ATTR_MINIMUM,
     ATTR_STEP,
-    VALUE,
     DOMAIN,
     SERVICE_CONFIGURE,
+    VALUE,
 )
 
 _LOGGER = logging.getLogger(__name__)

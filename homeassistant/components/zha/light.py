@@ -1,5 +1,6 @@
 """Lights on Zigbee Home Automation networks."""
 from datetime import timedelta
+import functools
 import logging
 
 from zigpy.zcl.foundation import Status
@@ -11,16 +12,19 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.color as color_util
 
+from .core import discovery
 from .core.const import (
     CHANNEL_COLOR,
     CHANNEL_LEVEL,
     CHANNEL_ON_OFF,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
+    SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_SET_LEVEL,
-    ZHA_DISCOVERY_NEW,
 )
+from .core.registries import ZHA_ENTITIES
+from .core.typing import ZhaDeviceType
 from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,55 +38,33 @@ UPDATE_COLORLOOP_DIRECTION = 0x2
 UPDATE_COLORLOOP_TIME = 0x4
 UPDATE_COLORLOOP_HUE = 0x8
 
+FLASH_EFFECTS = {light.FLASH_SHORT: 0x00, light.FLASH_LONG: 0x01}
+
 UNSUPPORTED_ATTRIBUTE = 0x86
 SCAN_INTERVAL = timedelta(minutes=60)
+STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, light.DOMAIN)
 PARALLEL_UPDATES = 5
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up Zigbee Home Automation lights."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation light from config entry."""
-
-    async def async_discover(discovery_info):
-        await _async_setup_entities(
-            hass, config_entry, async_add_entities, [discovery_info]
-        )
+    entities_to_create = hass.data[DATA_ZHA][light.DOMAIN] = []
 
     unsub = async_dispatcher_connect(
-        hass, ZHA_DISCOVERY_NEW.format(light.DOMAIN), async_discover
+        hass,
+        SIGNAL_ADD_ENTITIES,
+        functools.partial(
+            discovery.async_add_entities, async_add_entities, entities_to_create
+        ),
     )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
-    lights = hass.data.get(DATA_ZHA, {}).get(light.DOMAIN)
-    if lights is not None:
-        await _async_setup_entities(
-            hass, config_entry, async_add_entities, lights.values()
-        )
-        del hass.data[DATA_ZHA][light.DOMAIN]
 
-
-async def _async_setup_entities(
-    hass, config_entry, async_add_entities, discovery_infos
-):
-    """Set up the ZHA lights."""
-    entities = []
-    for discovery_info in discovery_infos:
-        zha_light = Light(**discovery_info)
-        entities.append(zha_light)
-
-    async_add_entities(entities, update_before_add=True)
-
-
+@STRICT_MATCH(channel_names=CHANNEL_ON_OFF, aux_channels={CHANNEL_COLOR, CHANNEL_LEVEL})
 class Light(ZhaEntity, light.Light):
     """Representation of a ZHA or ZLL light."""
 
-    _domain = light.DOMAIN
-
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
+    def __init__(self, unique_id, zha_device: ZhaDeviceType, channels, **kwargs):
         """Initialize the ZHA light."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._supported_features = 0
@@ -95,6 +77,7 @@ class Light(ZhaEntity, light.Light):
         self._on_off_channel = self.cluster_channels.get(CHANNEL_ON_OFF)
         self._level_channel = self.cluster_channels.get(CHANNEL_LEVEL)
         self._color_channel = self.cluster_channels.get(CHANNEL_COLOR)
+        self._identify_channel = self.zha_device.channels.identify_ch
 
         if self._level_channel:
             self._supported_features |= light.SUPPORT_BRIGHTNESS
@@ -113,6 +96,9 @@ class Light(ZhaEntity, light.Light):
             if color_capabilities & CAPABILITIES_COLOR_LOOP:
                 self._supported_features |= light.SUPPORT_EFFECT
                 self._effect_list.append(light.EFFECT_COLORLOOP)
+
+        if self._identify_channel:
+            self._supported_features |= light.SUPPORT_FLASH
 
     @property
     def is_on(self) -> bool:
@@ -168,6 +154,7 @@ class Light(ZhaEntity, light.Light):
         """Flag supported features."""
         return self._supported_features
 
+    @callback
     def async_set_state(self, state):
         """Set the state."""
         self._state = bool(state)
@@ -208,6 +195,7 @@ class Light(ZhaEntity, light.Light):
         duration = transition * 10 if transition else 0
         brightness = kwargs.get(light.ATTR_BRIGHTNESS)
         effect = kwargs.get(light.ATTR_EFFECT)
+        flash = kwargs.get(light.ATTR_FLASH)
 
         if brightness is None and self._off_brightness is not None:
             brightness = self._off_brightness
@@ -296,6 +284,12 @@ class Light(ZhaEntity, light.Light):
             )
             t_log["color_loop_set"] = result
             self._effect = None
+
+        if flash is not None and self._supported_features & light.SUPPORT_FLASH:
+            result = await self._identify_channel.trigger_effect(
+                FLASH_EFFECTS[flash], 0  # effect identifier, effect variant
+            )
+            t_log["trigger_effect"] = result
 
         self._off_brightness = None
         self.debug("turned on: %s", t_log)

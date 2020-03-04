@@ -57,11 +57,16 @@ async def async_call_action_from_config(
 async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
     """List device actions."""
     zha_device = await async_get_zha_device(hass, device_id)
+    cluster_channels = [
+        ch.name
+        for pool in zha_device.channels.pools
+        for ch in pool.claimed_channels.values()
+    ]
     actions = [
         action
         for channel in DEVICE_ACTIONS
         for action in DEVICE_ACTIONS[channel]
-        if channel in zha_device.cluster_channels
+        if channel in cluster_channels
     ]
     for action in actions:
         action[CONF_DEVICE_ID] = device_id

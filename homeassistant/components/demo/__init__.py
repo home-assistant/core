@@ -4,8 +4,8 @@ import logging
 import time
 
 from homeassistant import bootstrap, config_entries
-import homeassistant.core as ha
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
+import homeassistant.core as ha
 
 DOMAIN = "demo"
 _LOGGER = logging.getLogger(__name__)
@@ -124,19 +124,6 @@ async def async_setup(hass, config):
         )
     )
 
-    # Set up weblink
-    tasks.append(
-        bootstrap.async_setup_component(
-            hass,
-            "weblink",
-            {
-                "weblink": {
-                    "entities": [{"name": "Router", "url": "http://192.168.1.1"}]
-                }
-            },
-        )
-    )
-
     results = await asyncio.gather(*tasks)
 
     if any(not result for result in results):
@@ -209,22 +196,6 @@ async def finish_setup(hass, config):
         switches = sorted(hass.states.async_entity_ids("switch"))
         lights = sorted(hass.states.async_entity_ids("light"))
 
-    # Set up history graph
-    await bootstrap.async_setup_component(
-        hass,
-        "history_graph",
-        {
-            "history_graph": {
-                "switches": {
-                    "name": "Recent Switches",
-                    "entities": switches,
-                    "hours_to_show": 1,
-                    "refresh": 60,
-                }
-            }
-        },
-    )
-
     # Set up scripts
     await bootstrap.async_setup_component(
         hass,
@@ -232,7 +203,7 @@ async def finish_setup(hass, config):
         {
             "script": {
                 "demo": {
-                    "alias": "Toggle {}".format(lights[0].split(".")[1]),
+                    "alias": f"Toggle {lights[0].split('.')[1]}",
                     "sequence": [
                         {
                             "service": "light.turn_off",

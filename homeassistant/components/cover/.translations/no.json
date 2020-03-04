@@ -1,5 +1,13 @@
 {
     "device_automation": {
+        "action_type": {
+            "close": "Lukk {entity_name}",
+            "close_tilt": "Lukk {entity_name} tilt",
+            "open": "\u00c5pne {entity_name}",
+            "open_tilt": "\u00c5pne {entity_name} tilt",
+            "set_position": "Angi {entity_name} posisjon",
+            "set_tilt_position": "Angi {entity_name} tilt posisjon"
+        },
         "condition_type": {
             "is_closed": "{entity_name} er stengt",
             "is_closing": "{entity_name} stenges",

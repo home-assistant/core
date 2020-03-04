@@ -5,10 +5,11 @@ https://github.com/home-assistant/home-assistant/issues/20957
 """
 
 from homeassistant.components.light import SUPPORT_BRIGHTNESS, SUPPORT_COLOR
+
 from tests.components.homekit_controller.common import (
+    Helper,
     setup_accessories_from_file,
     setup_test_accessories,
-    Helper,
 )
 
 

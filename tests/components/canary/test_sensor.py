@@ -3,16 +3,17 @@ import copy
 import unittest
 from unittest.mock import Mock
 
-from homeassistant.components.canary import DATA_CANARY
-from homeassistant.components.canary import sensor as canary
+from homeassistant.components.canary import DATA_CANARY, sensor as canary
 from homeassistant.components.canary.sensor import (
-    CanarySensor,
-    SENSOR_TYPES,
     ATTR_AIR_QUALITY,
-    STATE_AIR_QUALITY_NORMAL,
+    SENSOR_TYPES,
     STATE_AIR_QUALITY_ABNORMAL,
+    STATE_AIR_QUALITY_NORMAL,
     STATE_AIR_QUALITY_VERY_ABNORMAL,
+    CanarySensor,
 )
+from homeassistant.const import UNIT_PERCENTAGE
+
 from tests.common import get_test_home_assistant
 from tests.components.canary.test_init import mock_device, mock_location
 
@@ -97,7 +98,7 @@ class TestCanarySensorSetup(unittest.TestCase):
         sensor.update()
 
         assert "Home Family Room Humidity" == sensor.name
-        assert "%" == sensor.unit_of_measurement
+        assert UNIT_PERCENTAGE == sensor.unit_of_measurement
         assert 50.46 == sensor.state
         assert "mdi:water-percent" == sensor.icon
 
@@ -184,7 +185,7 @@ class TestCanarySensorSetup(unittest.TestCase):
         sensor.update()
 
         assert "Home Family Room Battery" == sensor.name
-        assert "%" == sensor.unit_of_measurement
+        assert UNIT_PERCENTAGE == sensor.unit_of_measurement
         assert 70.46 == sensor.state
         assert "mdi:battery-70" == sensor.icon
 

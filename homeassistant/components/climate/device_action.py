@@ -1,17 +1,19 @@
 """Provides device automations for Climate."""
-from typing import Optional, List
+from typing import List, Optional
+
 import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_DOMAIN,
-    CONF_TYPE,
     CONF_DEVICE_ID,
+    CONF_DOMAIN,
     CONF_ENTITY_ID,
+    CONF_TYPE,
 )
-from homeassistant.core import HomeAssistant, Context
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
+
 from . import DOMAIN, const
 
 ACTION_TYPES = {"set_hvac_mode", "set_preset_mode"}
@@ -59,14 +61,15 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
                 CONF_TYPE: "set_hvac_mode",
             }
         )
-        actions.append(
-            {
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "set_preset_mode",
-            }
-        )
+        if state.attributes["supported_features"] & const.SUPPORT_PRESET_MODE:
+            actions.append(
+                {
+                    CONF_DEVICE_ID: device_id,
+                    CONF_DOMAIN: DOMAIN,
+                    CONF_ENTITY_ID: entry.entity_id,
+                    CONF_TYPE: "set_preset_mode",
+                }
+            )
 
     return actions
 

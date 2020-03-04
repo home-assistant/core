@@ -20,17 +20,11 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
 
-from .const import (
-    ATTRIBUTION,
-    DOMAIN,
-    DEFAULT_CACHEDB,
-    SIGNAL_CAPTURE_IMAGE,
-    SIGNAL_TRIGGER_QUICK_ACTION,
-)
+from .const import ATTRIBUTION, DEFAULT_CACHEDB, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -170,7 +164,7 @@ async def async_unload_entry(hass, config_entry):
 
 
 def setup_hass_services(hass):
-    """Home assistant services."""
+    """Home Assistant services."""
 
     def change_setting(call):
         """Change an Abode system setting."""
@@ -193,7 +187,7 @@ def setup_hass_services(hass):
         ]
 
         for entity_id in target_entities:
-            signal = SIGNAL_CAPTURE_IMAGE.format(entity_id)
+            signal = f"abode_camera_capture_{entity_id}"
             dispatcher_send(hass, signal)
 
     def trigger_quick_action(call):
@@ -207,7 +201,7 @@ def setup_hass_services(hass):
         ]
 
         for entity_id in target_entities:
-            signal = SIGNAL_TRIGGER_QUICK_ACTION.format(entity_id)
+            signal = f"abode_trigger_quick_action_{entity_id}"
             dispatcher_send(hass, signal)
 
     hass.services.register(

@@ -1,33 +1,34 @@
 """Support for Yr.no weather service."""
 import asyncio
 import logging
-
 from random import randrange
 from xml.parsers.expat import ExpatError
 
 import aiohttp
 import async_timeout
-import xmltodict
 import voluptuous as vol
+import xmltodict
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    CONF_ELEVATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_ELEVATION,
     CONF_MONITORED_CONDITIONS,
-    ATTR_ATTRIBUTION,
     CONF_NAME,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     PRESSURE_HPA,
+    SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_utc_time_change, async_call_later
+from homeassistant.helpers.event import async_call_later, async_track_utc_time_change
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,16 +43,16 @@ SENSOR_TYPES = {
     "symbol": ["Symbol", None, None],
     "precipitation": ["Precipitation", "mm", None],
     "temperature": ["Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE],
-    "windSpeed": ["Wind speed", "m/s", None],
-    "windGust": ["Wind gust", "m/s", None],
+    "windSpeed": ["Wind speed", SPEED_METERS_PER_SECOND, None],
+    "windGust": ["Wind gust", SPEED_METERS_PER_SECOND, None],
     "pressure": ["Pressure", PRESSURE_HPA, DEVICE_CLASS_PRESSURE],
     "windDirection": ["Wind direction", "°", None],
-    "humidity": ["Humidity", "%", DEVICE_CLASS_HUMIDITY],
-    "fog": ["Fog", "%", None],
-    "cloudiness": ["Cloudiness", "%", None],
-    "lowClouds": ["Low clouds", "%", None],
-    "mediumClouds": ["Medium clouds", "%", None],
-    "highClouds": ["High clouds", "%", None],
+    "humidity": ["Humidity", UNIT_PERCENTAGE, DEVICE_CLASS_HUMIDITY],
+    "fog": ["Fog", UNIT_PERCENTAGE, None],
+    "cloudiness": ["Cloudiness", UNIT_PERCENTAGE, None],
+    "lowClouds": ["Low clouds", UNIT_PERCENTAGE, None],
+    "mediumClouds": ["Medium clouds", UNIT_PERCENTAGE, None],
+    "highClouds": ["High clouds", UNIT_PERCENTAGE, None],
     "dewpointTemperature": [
         "Dewpoint temperature",
         TEMP_CELSIUS,
@@ -161,7 +162,7 @@ class YrData:
     def __init__(self, hass, coordinates, forecast, devices):
         """Initialize the data object."""
         self._url = (
-            "https://aa015h6buqvih86i1.api.met.no/" "weatherapi/locationforecast/1.9/"
+            "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/1.9/"
         )
         self._urlparams = coordinates
         self._forecast = forecast

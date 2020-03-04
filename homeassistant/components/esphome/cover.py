@@ -2,7 +2,7 @@
 import logging
 from typing import Optional
 
-from aioesphomeapi import CoverInfo, CoverState
+from aioesphomeapi import CoverInfo, CoverOperation, CoverState
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -82,15 +82,11 @@ class EsphomeCover(EsphomeEntity, CoverDevice):
     @esphome_state_property
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
-        from aioesphomeapi import CoverOperation
-
         return self._state.current_operation == CoverOperation.IS_OPENING
 
     @esphome_state_property
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
-        from aioesphomeapi import CoverOperation
-
         return self._state.current_operation == CoverOperation.IS_CLOSING
 
     @esphome_state_property

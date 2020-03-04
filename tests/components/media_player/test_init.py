@@ -2,8 +2,8 @@
 import base64
 from unittest.mock import patch
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro
 

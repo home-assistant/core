@@ -12,7 +12,6 @@ from homeassistant.components import zone
 import homeassistant.components.device_tracker as device_tracker
 from homeassistant.components.device_tracker import const, legacy
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
     ATTR_GPS_ACCURACY,
@@ -58,7 +57,7 @@ def mock_yaml_devices(hass):
 
 async def test_is_on(hass):
     """Test is_on method."""
-    entity_id = const.ENTITY_ID_FORMAT.format("test")
+    entity_id = f"{const.DOMAIN}.test"
 
     hass.states.async_set(entity_id, STATE_HOME)
 
@@ -77,7 +76,7 @@ async def test_reading_broken_yaml_config(hass):
         "badkey.yaml": "@:\n  name: Device",
         "noname.yaml": "my_device:\n",
         "allok.yaml": "My Device:\n  name: Device",
-        "oneok.yaml": ("My Device!:\n  name: Device\n" "bad_device:\n  nme: Device"),
+        "oneok.yaml": ("My Device!:\n  name: Device\nbad_device:\n  nme: Device"),
     }
     args = {"hass": hass, "consider_home": timedelta(seconds=60)}
     with patch_yaml_files(files):
@@ -272,7 +271,7 @@ async def test_entity_attributes(hass, mock_device_tracker_conf):
     """Test the entity attributes."""
     devices = mock_device_tracker_conf
     dev_id = "test_entity"
-    entity_id = const.ENTITY_ID_FORMAT.format(dev_id)
+    entity_id = f"{const.DOMAIN}.{dev_id}"
     friendly_name = "Paulus"
     picture = "http://placehold.it/200x200"
     icon = "mdi:kettle"
@@ -304,7 +303,7 @@ async def test_device_hidden(hass, mock_device_tracker_conf):
     """Test hidden devices."""
     devices = mock_device_tracker_conf
     dev_id = "test_entity"
-    entity_id = const.ENTITY_ID_FORMAT.format(dev_id)
+    entity_id = f"{const.DOMAIN}.{dev_id}"
     device = legacy.Device(
         hass, timedelta(seconds=180), True, dev_id, None, hide_if_away=True
     )
@@ -317,28 +316,6 @@ async def test_device_hidden(hass, mock_device_tracker_conf):
         assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
 
     assert hass.states.get(entity_id).attributes.get(ATTR_HIDDEN)
-
-
-async def test_group_all_devices(hass, mock_device_tracker_conf):
-    """Test grouping of devices."""
-    devices = mock_device_tracker_conf
-    dev_id = "test_entity"
-    entity_id = const.ENTITY_ID_FORMAT.format(dev_id)
-    device = legacy.Device(
-        hass, timedelta(seconds=180), True, dev_id, None, hide_if_away=True
-    )
-    devices.append(device)
-    scanner = getattr(hass.components, "test.device_tracker").SCANNER
-    scanner.reset()
-
-    with assert_setup_component(1, device_tracker.DOMAIN):
-        assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
-        await hass.async_block_till_done()
-
-    state = hass.states.get(device_tracker.ENTITY_ID_ALL_DEVICES)
-    assert state is not None
-    assert STATE_NOT_HOME == state.state
-    assert (entity_id,) == state.attributes.get(ATTR_ENTITY_ID)
 
 
 @patch("homeassistant.components.device_tracker.legacy." "DeviceTracker.async_see")
@@ -373,7 +350,7 @@ async def test_see_service_guard_config_entry(hass, mock_device_tracker_conf):
     """Test the guard if the device is registered in the entity registry."""
     mock_entry = Mock()
     dev_id = "test"
-    entity_id = const.ENTITY_ID_FORMAT.format(dev_id)
+    entity_id = f"{const.DOMAIN}.{dev_id}"
     mock_registry(hass, {entity_id: mock_entry})
     devices = mock_device_tracker_conf
     assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)

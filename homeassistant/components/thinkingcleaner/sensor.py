@@ -1,8 +1,11 @@
 """Support for ThinkingCleaner sensors."""
-import logging
 from datetime import timedelta
+import logging
+
+from pythinkingcleaner import Discovery
 
 from homeassistant import util
+from homeassistant.const import UNIT_PERCENTAGE
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -11,7 +14,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 SENSOR_TYPES = {
-    "battery": ["Battery", "%", "mdi:battery"],
+    "battery": ["Battery", UNIT_PERCENTAGE, "mdi:battery"],
     "state": ["State", None, None],
     "capacity": ["Capacity", None, None],
 }
@@ -46,7 +49,6 @@ STATES = {
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ThinkingCleaner platform."""
-    from pythinkingcleaner import Discovery
 
     discovery = Discovery()
     devices = discovery.discover()

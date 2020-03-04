@@ -3,8 +3,8 @@ import asyncio
 from unittest.mock import Mock, patch
 
 from homeassistant import data_entry_flow
+from homeassistant.components.nest import DOMAIN, config_flow
 from homeassistant.setup import async_setup_component
-from homeassistant.components.nest import config_flow, DOMAIN
 
 from tests.common import mock_coro
 

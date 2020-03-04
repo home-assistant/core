@@ -7,7 +7,7 @@ from hass_nabucasa import account_link
 
 from homeassistant.const import MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import event, config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow, event
 
 from .const import DOMAIN
 

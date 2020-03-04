@@ -30,8 +30,6 @@ RESTART_GRACE_PERIOD = 7200  # 2 hours
 class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
     """A base class for ZHA entities."""
 
-    _domain = None  # Must be overridden by subclasses
-
     def __init__(self, unique_id, zha_device, channels, skip_entity_id=False, **kwargs):
         """Init ZHA entity."""
         self._force_update = False
@@ -46,7 +44,6 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
         self._zha_device = zha_device
         self.cluster_channels = {}
         self._available = False
-        self._component = kwargs["component"]
         self._unsubs = []
         self.remove_future = None
         for channel in channels:
@@ -101,16 +98,19 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
         """Return entity availability."""
         return self._available
 
+    @callback
     def async_set_available(self, available):
         """Set entity availability."""
         self._available = available
         self.async_schedule_update_ha_state()
 
+    @callback
     def async_update_state_attribute(self, key, value):
         """Update a single device state attribute."""
         self._device_state_attributes.update({key: value})
         self.async_schedule_update_ha_state()
 
+    @callback
     def async_set_state(self, state):
         """Set the entity state."""
         pass
@@ -187,6 +187,6 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
 
     def log(self, level, msg, *args):
         """Log a message."""
-        msg = "%s: " + msg
+        msg = f"%s: {msg}"
         args = (self.entity_id,) + args
         _LOGGER.log(level, msg, *args)

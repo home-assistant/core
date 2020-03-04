@@ -1,30 +1,29 @@
 """The GeoNet NZ Quakes integration."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
-import voluptuous as vol
 from aio_geojson_geonetnz_quakes import GeonetnzQuakesFeedManager
+import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
-    CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM,
+    CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_MILES,
 )
-from homeassistant.helpers import config_validation as cv, aiohttp_client
+from homeassistant.core import callback
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .config_flow import configured_instances
 from .const import (
-    PLATFORMS,
     CONF_MINIMUM_MAGNITUDE,
     CONF_MMI,
     DEFAULT_FILTER_TIME_INTERVAL,
@@ -34,10 +33,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     FEED,
-    SIGNAL_DELETE_ENTITY,
-    SIGNAL_NEW_GEOLOCATION,
-    SIGNAL_STATUS,
-    SIGNAL_UPDATE_ENTITY,
+    PLATFORMS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -200,7 +196,7 @@ class GeonetnzQuakesFeedEntityManager:
     @callback
     def async_event_new_entity(self):
         """Return manager specific event to signal new entity."""
-        return SIGNAL_NEW_GEOLOCATION.format(self._config_entry_id)
+        return f"geonetnz_quakes_new_geolocation_{self._config_entry_id}"
 
     def get_entry(self, external_id):
         """Get feed entry by external id."""
@@ -222,14 +218,16 @@ class GeonetnzQuakesFeedEntityManager:
 
     async def _update_entity(self, external_id):
         """Update entity."""
-        async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY.format(external_id))
+        async_dispatcher_send(self._hass, f"geonetnz_quakes_update_{external_id}")
 
     async def _remove_entity(self, external_id):
         """Remove entity."""
-        async_dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
+        async_dispatcher_send(self._hass, f"geonetnz_quakes_delete_{external_id}")
 
     async def _status_update(self, status_info):
         """Propagate status update."""
         _LOGGER.debug("Status update received: %s", status_info)
         self._status_info = status_info
-        async_dispatcher_send(self._hass, SIGNAL_STATUS.format(self._config_entry_id))
+        async_dispatcher_send(
+            self._hass, f"geonetnz_quakes_status_{self._config_entry_id}"
+        )

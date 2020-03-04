@@ -4,7 +4,7 @@
             "clean": "Naj {entity_name} \u010disti",
             "dock": "Pustite, da se {entity_name} vrne na dok"
         },
-        "condtion_type": {
+        "condition_type": {
             "is_cleaning": "{entity_name} \u010disti",
             "is_docked": "{entity_name} je priklju\u010den"
         },

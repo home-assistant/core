@@ -1,14 +1,14 @@
 """Config flow for the SolarEdge platform."""
+from requests.exceptions import ConnectTimeout, HTTPError
 import solaredge
 import voluptuous as vol
-from requests.exceptions import HTTPError, ConnectTimeout
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
-from .const import DOMAIN, DEFAULT_NAME, CONF_SITE_ID
+from .const import CONF_SITE_ID, DEFAULT_NAME, DOMAIN
 
 
 @callback
@@ -54,7 +54,7 @@ class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return True
 
     async def async_step_user(self, user_input=None):
-        """Step when user intializes a integration."""
+        """Step when user initializes a integration."""
         self._errors = {}
         if user_input is not None:
             name = slugify(user_input.get(CONF_NAME, DEFAULT_NAME))

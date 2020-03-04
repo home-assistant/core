@@ -9,8 +9,8 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST,
-    CONF_PASSWORD,
     CONF_NAME,
+    CONF_PASSWORD,
     CONF_TYPE,
     CONF_USERNAME,
     DEVICE_CLASS_POWER,
@@ -22,8 +22,10 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    TIME_HOURS,
 )
 from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
@@ -33,17 +35,15 @@ _LOGGER = logging.getLogger(__name__)
 MIN_INTERVAL = 5
 MAX_INTERVAL = 300
 
-UNIT_OF_MEASUREMENT_HOURS = "h"
-
 INVERTER_TYPES = ["ethernet", "wifi"]
 
 SAJ_UNIT_MAPPINGS = {
-    "W": POWER_WATT,
-    "kWh": ENERGY_KILO_WATT_HOUR,
-    "h": UNIT_OF_MEASUREMENT_HOURS,
-    "kg": MASS_KILOGRAMS,
-    "°C": TEMP_CELSIUS,
     "": None,
+    "h": TIME_HOURS,
+    "kg": MASS_KILOGRAMS,
+    "kWh": ENERGY_KILO_WATT_HOUR,
+    "W": POWER_WATT,
+    "°C": TEMP_CELSIUS,
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -58,7 +58,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up SAJ sensors."""
+    """Set up the SAJ sensors."""
 
     remove_interval_update = None
     wifi = config[CONF_TYPE] == INVERTER_TYPES[1]
@@ -80,7 +80,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         saj = pysaj.SAJ(config[CONF_HOST], **kwargs)
         done = await saj.read(sensor_def)
     except pysaj.UnauthorizedException:
-        _LOGGER.error("Username and/or password is wrong.")
+        _LOGGER.error("Username and/or password is wrong")
         return
     except pysaj.UnexpectedResponseException as err:
         _LOGGER.error(
@@ -88,13 +88,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
         return
 
-    if done:
-        for sensor in sensor_def:
-            hass_sensors.append(
-                SAJsensor(saj.serialnumber, sensor, inverter_name=config.get(CONF_NAME))
-            )
+    if not done:
+        raise PlatformNotReady
 
-        async_add_entities(hass_sensors)
+    for sensor in sensor_def:
+        hass_sensors.append(
+            SAJsensor(saj.serialnumber, sensor, inverter_name=config.get(CONF_NAME))
+        )
+
+    async_add_entities(hass_sensors)
 
     async def async_saj():
         """Update all the SAJ sensors."""
@@ -167,7 +169,7 @@ class SAJsensor(Entity):
     """Representation of a SAJ sensor."""
 
     def __init__(self, serialnumber, pysaj_sensor, inverter_name=None):
-        """Initialize the sensor."""
+        """Initialize the SAJ sensor."""
         self._sensor = pysaj_sensor
         self._inverter_name = inverter_name
         self._serialnumber = serialnumber
@@ -214,7 +216,7 @@ class SAJsensor(Entity):
 
     @property
     def per_total_basis(self) -> bool:
-        """Return if the sensors value is cummulative or not."""
+        """Return if the sensors value is cumulative or not."""
         return self._sensor.per_total_basis
 
     @property
@@ -222,6 +224,7 @@ class SAJsensor(Entity):
         """Return the date when the sensor was last updated."""
         return self._sensor.date
 
+    @callback
     def async_update_values(self, unknown_state=False):
         """Update this sensor."""
         update = False

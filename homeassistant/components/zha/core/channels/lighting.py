@@ -1,16 +1,11 @@
-"""
-Lighting channels module for Zigbee Home Automation.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/integrations/zha/
-"""
+"""Lighting channels module for Zigbee Home Automation."""
 import logging
 
 import zigpy.zcl.clusters.lighting as lighting
 
-from . import ZigbeeChannel
-from .. import registries
+from .. import registries, typing as zha_typing
 from ..const import REPORT_CONFIG_DEFAULT
+from .base import ZigbeeChannel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,9 +33,11 @@ class ColorChannel(ZigbeeChannel):
         {"attr": "color_temperature", "config": REPORT_CONFIG_DEFAULT},
     )
 
-    def __init__(self, cluster, device):
+    def __init__(
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType,
+    ) -> None:
         """Initialize ColorChannel."""
-        super().__init__(cluster, device)
+        super().__init__(cluster, ch_pool)
         self._color_capabilities = None
 
     def get_color_capabilities(self):

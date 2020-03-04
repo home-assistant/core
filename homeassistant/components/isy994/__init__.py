@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
@@ -56,13 +57,13 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-# Do not use the Hass consts for the states here - we're matching exact API
-# responses, not using them for Hass states
+# Do not use the Home Assistant consts for the states here - we're matching
+# exact API responses, not using them for Home Assistant states
 NODE_FILTERS = {
     "binary_sensor": {
         "uom": [],
         "states": [],
-        "node_def_id": ["BinaryAlarm"],
+        "node_def_id": ["BinaryAlarm", "BinaryAlarm_ADV"],
         "insteon_type": ["16."],  # Does a startswith() match; include the dot
     },
     "sensor": {
@@ -101,7 +102,7 @@ NODE_FILTERS = {
     },
     "light": {
         "uom": ["51"],
-        "states": ["on", "off", "%"],
+        "states": ["on", "off", UNIT_PERCENTAGE],
         "node_def_id": [
             "DimmerLampSwitch",
             "DimmerLampSwitch_ADV",
@@ -112,6 +113,8 @@ NODE_FILTERS = {
             "BallastRelayLampSwitch_ADV",
             "RemoteLinc2",
             "RemoteLinc2_ADV",
+            "KeypadDimmer",
+            "KeypadDimmer_ADV",
         ],
         "insteon_type": ["1."],
     },
@@ -155,7 +158,7 @@ SUPPORTED_DOMAINS = [
 ]
 SUPPORTED_PROGRAM_DOMAINS = ["binary_sensor", "lock", "fan", "cover", "switch"]
 
-# ISY Scenes are more like Switches than Hass Scenes
+# ISY Scenes are more like Switches than Home Assistant Scenes
 # (they can turn off, and report their state)
 SCENE_DOMAIN = "switch"
 
@@ -527,5 +530,5 @@ class ISYDevice(Entity):
         attr = {}
         if hasattr(self._node, "aux_properties"):
             for name, val in self._node.aux_properties.items():
-                attr[name] = "{} {}".format(val.get("value"), val.get("uom"))
+                attr[name] = f"{val.get('value')} {val.get('uom')}"
         return attr

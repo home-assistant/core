@@ -1,18 +1,18 @@
 """The tests for the pilight component."""
+from datetime import timedelta
 import logging
+import socket
 import unittest
 from unittest.mock import patch
-import socket
-from datetime import timedelta
 
 import pytest
 
 from homeassistant import core as ha
-from homeassistant.setup import setup_component
 from homeassistant.components import pilight
+from homeassistant.setup import setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import get_test_home_assistant, assert_setup_component
+from tests.common import assert_setup_component, get_test_home_assistant
 
 _LOGGER = logging.getLogger(__name__)
 

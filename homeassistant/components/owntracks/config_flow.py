@@ -1,22 +1,14 @@
 """Config flow for OwnTracks."""
+import secrets
+
 from homeassistant import config_entries
 from homeassistant.const import CONF_WEBHOOK_ID
-from homeassistant.auth.util import generate_secret
 
 from .const import DOMAIN  # noqa pylint: disable=unused-import
+from .helper import supports_encryption
 
 CONF_SECRET = "secret"
 CONF_CLOUDHOOK = "cloudhook"
-
-
-def supports_encryption():
-    """Test if we support encryption."""
-    try:
-        import nacl  # noqa pylint: disable=unused-import
-
-        return True
-    except OSError:
-        return False
 
 
 class OwnTracksFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -34,7 +26,7 @@ class OwnTracksFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         webhook_id, webhook_url, cloudhook = await self._get_webhook_id()
 
-        secret = generate_secret(16)
+        secret = secrets.token_hex(16)
 
         if supports_encryption():
             secret_desc = f"The encryption key is {secret} (on Android under preferences -> advanced)"
@@ -62,7 +54,7 @@ class OwnTracksFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="one_instance_allowed")
         webhook_id, _webhook_url, cloudhook = await self._get_webhook_id()
-        secret = generate_secret(16)
+        secret = secrets.token_hex(16)
         return self.async_create_entry(
             title="OwnTracks",
             data={
@@ -75,10 +67,7 @@ class OwnTracksFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _get_webhook_id(self):
         """Generate webhook ID."""
         webhook_id = self.hass.components.webhook.async_generate_id()
-        if (
-            "cloud" in self.hass.config.components
-            and self.hass.components.cloud.async_active_subscription()
-        ):
+        if self.hass.components.cloud.async_active_subscription():
             webhook_url = await self.hass.components.cloud.async_create_cloudhook(
                 webhook_id
             )

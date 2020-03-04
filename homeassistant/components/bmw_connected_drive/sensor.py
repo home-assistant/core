@@ -7,6 +7,8 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
+    TIME_HOURS,
+    UNIT_PERCENTAGE,
     VOLUME_GALLONS,
     VOLUME_LITERS,
 )
@@ -24,10 +26,10 @@ ATTR_TO_HA_METRIC = {
     "remaining_range_fuel": ["mdi:map-marker-distance", LENGTH_KILOMETERS],
     "max_range_electric": ["mdi:map-marker-distance", LENGTH_KILOMETERS],
     "remaining_fuel": ["mdi:gas-station", VOLUME_LITERS],
-    "charging_time_remaining": ["mdi:update", "h"],
+    "charging_time_remaining": ["mdi:update", TIME_HOURS],
     "charging_status": ["mdi:battery-charging", None],
     # No icon as this is dealt with directly as a special case in icon()
-    "charging_level_hv": [None, "%"],
+    "charging_level_hv": [None, UNIT_PERCENTAGE],
 }
 
 ATTR_TO_HA_IMPERIAL = {
@@ -37,10 +39,10 @@ ATTR_TO_HA_IMPERIAL = {
     "remaining_range_fuel": ["mdi:map-marker-distance", LENGTH_MILES],
     "max_range_electric": ["mdi:map-marker-distance", LENGTH_MILES],
     "remaining_fuel": ["mdi:gas-station", VOLUME_GALLONS],
-    "charging_time_remaining": ["mdi:update", "h"],
+    "charging_time_remaining": ["mdi:update", TIME_HOURS],
     "charging_status": ["mdi:battery-charging", None],
     # No icon as this is dealt with directly as a special case in icon()
-    "charging_level_hv": [None, "%"],
+    "charging_level_hv": [None, UNIT_PERCENTAGE],
 }
 
 
@@ -69,7 +71,7 @@ class BMWConnectedDriveSensor(Entity):
     """Representation of a BMW vehicle sensor."""
 
     def __init__(self, account, vehicle, attribute: str, attribute_info):
-        """Constructor."""
+        """Initialize BMW vehicle sensor."""
         self._vehicle = vehicle
         self._account = account
         self._attribute = attribute

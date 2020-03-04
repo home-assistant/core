@@ -3,7 +3,15 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.alarm_control_panel as alarm
+from homeassistant.components.alarm_control_panel import (
+    FORMAT_NUMBER,
+    AlarmControlPanel,
+)
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_ARM_NIGHT,
+)
 from homeassistant.const import (
     ATTR_CODE,
     STATE_ALARM_ARMED_AWAY,
@@ -13,11 +21,11 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-from . import DATA_AD, DOMAIN as DOMAIN_ALARMDECODER, SIGNAL_PANEL_MESSAGE
+from . import CONF_AUTO_BYPASS, DATA_AD, DOMAIN, SIGNAL_PANEL_MESSAGE
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_ALARM_TOGGLE_CHIME = "alarmdecoder_alarm_toggle_chime"
+SERVICE_ALARM_TOGGLE_CHIME = "alarm_toggle_chime"
 ALARM_TOGGLE_CHIME_SCHEMA = vol.Schema({vol.Required(ATTR_CODE): cv.string})
 
 SERVICE_ALARM_KEYPRESS = "alarm_keypress"
@@ -27,16 +35,20 @@ ALARM_KEYPRESS_SCHEMA = vol.Schema({vol.Required(ATTR_KEYPRESS): cv.string})
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up for AlarmDecoder alarm panels."""
-    device = AlarmDecoderAlarmPanel()
-    add_entities([device])
+    if discovery_info is None:
+        return
+
+    auto_bypass = discovery_info[CONF_AUTO_BYPASS]
+    entity = AlarmDecoderAlarmPanel(auto_bypass)
+    add_entities([entity])
 
     def alarm_toggle_chime_handler(service):
         """Register toggle chime handler."""
         code = service.data.get(ATTR_CODE)
-        device.alarm_toggle_chime(code)
+        entity.alarm_toggle_chime(code)
 
     hass.services.register(
-        alarm.DOMAIN,
+        DOMAIN,
         SERVICE_ALARM_TOGGLE_CHIME,
         alarm_toggle_chime_handler,
         schema=ALARM_TOGGLE_CHIME_SCHEMA,
@@ -45,20 +57,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     def alarm_keypress_handler(service):
         """Register keypress handler."""
         keypress = service.data[ATTR_KEYPRESS]
-        device.alarm_keypress(keypress)
+        entity.alarm_keypress(keypress)
 
     hass.services.register(
-        DOMAIN_ALARMDECODER,
+        DOMAIN,
         SERVICE_ALARM_KEYPRESS,
         alarm_keypress_handler,
         schema=ALARM_KEYPRESS_SCHEMA,
     )
 
 
-class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
+class AlarmDecoderAlarmPanel(AlarmControlPanel):
     """Representation of an AlarmDecoder-based alarm panel."""
 
-    def __init__(self):
+    def __init__(self, auto_bypass):
         """Initialize the alarm panel."""
         self._display = ""
         self._name = "Alarm Panel"
@@ -72,6 +84,7 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
         self._programming_mode = None
         self._ready = None
         self._zone_bypassed = None
+        self._auto_bypass = auto_bypass
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -115,12 +128,17 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
     @property
     def code_format(self):
         """Return one or more digits/characters."""
-        return alarm.FORMAT_NUMBER
+        return FORMAT_NUMBER
 
     @property
     def state(self):
         """Return the state of the device."""
         return self._state
+
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
 
     @property
     def device_state_attributes(self):
@@ -145,17 +163,21 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         if code:
+            if self._auto_bypass:
+                self.hass.data[DATA_AD].send(f"{code!s}6#")
             self.hass.data[DATA_AD].send(f"{code!s}2")
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
         if code:
+            if self._auto_bypass:
+                self.hass.data[DATA_AD].send(f"{code!s}6#")
             self.hass.data[DATA_AD].send(f"{code!s}3")
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
         if code:
-            self.hass.data[DATA_AD].send(f"{code!s}33")
+            self.hass.data[DATA_AD].send(f"{code!s}7")
 
     def alarm_toggle_chime(self, code=None):
         """Send toggle chime command."""

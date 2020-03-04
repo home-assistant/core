@@ -2,11 +2,10 @@
 from copy import deepcopy
 
 from homeassistant.components import unifi
+import homeassistant.components.sensor as sensor
 from homeassistant.setup import async_setup_component
 
-import homeassistant.components.sensor as sensor
-
-from .test_controller import ENTRY_CONFIG, SITES, setup_unifi_integration
+from .test_controller import setup_unifi_integration
 
 CLIENTS = [
     {
@@ -52,37 +51,27 @@ async def test_platform_manually_configured(hass):
 async def test_no_clients(hass):
     """Test the update_clients function when no clients are found."""
     controller = await setup_unifi_integration(
-        hass,
-        ENTRY_CONFIG,
-        options={unifi.const.CONF_ALLOW_BANDWIDTH_SENSORS: True},
-        sites=SITES,
-        clients_response=[],
-        devices_response=[],
-        clients_all_response=[],
+        hass, options={unifi.const.CONF_ALLOW_BANDWIDTH_SENSORS: True},
     )
 
-    assert len(controller.mock_requests) == 3
-    assert len(hass.states.async_all()) == 2
+    assert len(controller.mock_requests) == 4
+    assert len(hass.states.async_all()) == 1
 
 
 async def test_sensors(hass):
     """Test the update_items function with some clients."""
     controller = await setup_unifi_integration(
         hass,
-        ENTRY_CONFIG,
         options={
             unifi.const.CONF_ALLOW_BANDWIDTH_SENSORS: True,
             unifi.const.CONF_TRACK_CLIENTS: False,
             unifi.const.CONF_TRACK_DEVICES: False,
         },
-        sites=SITES,
         clients_response=CLIENTS,
-        devices_response=[],
-        clients_all_response=[],
     )
 
-    assert len(controller.mock_requests) == 3
-    assert len(hass.states.async_all()) == 6
+    assert len(controller.mock_requests) == 4
+    assert len(hass.states.async_all()) == 5
 
     wired_client_rx = hass.states.get("sensor.wired_client_name_rx")
     assert wired_client_rx.state == "1234.0"
@@ -101,8 +90,32 @@ async def test_sensors(hass):
     clients[1]["rx_bytes"] = 2345000000
     clients[1]["tx_bytes"] = 6789000000
 
-    controller.mock_client_responses.append(clients)
-    await controller.async_update()
+    event = {"meta": {"message": "sta:sync"}, "data": clients}
+    controller.api.message_handler(event)
+    await hass.async_block_till_done()
+
+    wireless_client_rx = hass.states.get("sensor.wireless_client_name_rx")
+    assert wireless_client_rx.state == "2345.0"
+
+    wireless_client_tx = hass.states.get("sensor.wireless_client_name_tx")
+    assert wireless_client_tx.state == "6789.0"
+
+    hass.config_entries.async_update_entry(
+        controller.config_entry,
+        options={unifi.const.CONF_ALLOW_BANDWIDTH_SENSORS: False},
+    )
+    await hass.async_block_till_done()
+
+    wireless_client_rx = hass.states.get("sensor.wireless_client_name_rx")
+    assert wireless_client_rx is None
+
+    wireless_client_tx = hass.states.get("sensor.wireless_client_name_tx")
+    assert wireless_client_tx is None
+
+    hass.config_entries.async_update_entry(
+        controller.config_entry,
+        options={unifi.const.CONF_ALLOW_BANDWIDTH_SENSORS: True},
+    )
     await hass.async_block_till_done()
 
     wireless_client_rx = hass.states.get("sensor.wireless_client_name_rx")

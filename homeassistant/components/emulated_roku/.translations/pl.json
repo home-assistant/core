@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "name_exists": "Nazwa ju\u017c istnieje"
+            "name_exists": "Nazwa ju\u017c istnieje."
         },
         "step": {
             "user": {

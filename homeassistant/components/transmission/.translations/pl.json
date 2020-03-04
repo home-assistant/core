@@ -6,7 +6,7 @@
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z hostem",
-            "name_exists": "Nazwa ju\u017c istnieje",
+            "name_exists": "Nazwa ju\u017c istnieje.",
             "wrong_credentials": "Nieprawid\u0142owa nazwa u\u017cytkownika lub has\u0142o"
         },
         "step": {

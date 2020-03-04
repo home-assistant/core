@@ -3,8 +3,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_LOCATION
-
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
@@ -13,6 +11,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import ATTR_LOCATION
 
 _LOGGER = logging.getLogger(__name__)
 

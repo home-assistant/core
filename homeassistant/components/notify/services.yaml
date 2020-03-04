@@ -16,16 +16,6 @@ notify:
       description: Extended information for notification. Optional depending on the platform.
       example: platform specific
 
-html5_dismiss:
-  description: Dismiss a html5 notification.
-  fields:
-    target:
-      description: An array of targets. Optional.
-      example: ['my_phone', 'my_tablet']
-    data:
-      description: Extended information of notification. Supports tag. Optional.
-      example: '{ "tag": "tagname" }'
-
 apns_register:
   description: Registers a device to receive push notifications.
   fields:

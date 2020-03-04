@@ -1,14 +1,14 @@
 """The tests for the IMAP email content sensor platform."""
 from collections import deque
+import datetime
 import email
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-import datetime
 import unittest
 
-from homeassistant.helpers.template import Template
-from homeassistant.helpers.event import track_state_change
 from homeassistant.components.imap_email_content import sensor as imap_email_content
+from homeassistant.helpers.event import track_state_change
+from homeassistant.helpers.template import Template
 
 from tests.common import get_test_home_assistant
 
