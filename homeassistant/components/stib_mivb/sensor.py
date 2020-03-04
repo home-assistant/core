@@ -180,7 +180,9 @@ class StibMivbSensor(Entity):
                                 for stop in message["points"]:
                                     if stop["id"] == self.stop_id:
                                         messages.append(
-                                            message["content"][0]["text"][0][self.lang]
+                                            message["content"][0]["text"][0][
+                                                self.message_lang
+                                            ]
                                         )
                     line_type = await self.api.get_line_type(line_id)
                     next_passage["messages"] = messages
