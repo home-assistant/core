@@ -8,7 +8,7 @@
           }
         },
         "abort": {
-          "already_configured": "Shopping List is already configured."
+          "already_configured": "The shopping list is already configured."
         }
     }
 }
