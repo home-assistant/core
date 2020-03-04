@@ -28,7 +28,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.dt as dt_util
 
 from . import SENSOR_SCHEMA
-from .const import ATTR_TARIFF, DOMAIN, TARIFFS
+from .const import ATTR_TARIFF, DEFAULT_TIMEOUT, DOMAIN, TARIFFS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ async def async_setup_platform(
 
       - platform: pvpc_hourly_pricing
         name: pvpc_manual_sensor_2
-        tariff: discriminacion
+        tariff: discrimination
         timeout: 8
     ```
     """
@@ -99,7 +99,7 @@ async def async_setup_entry(
                 name=name,
                 entity_id=entity_id,
                 tariff=config_entry.data[ATTR_TARIFF],
-                timeout=config_entry.data.get(CONF_TIMEOUT, 5),
+                timeout=config_entry.data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
             )
         ],
         True,

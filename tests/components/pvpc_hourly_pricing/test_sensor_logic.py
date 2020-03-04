@@ -76,7 +76,7 @@ def test_json_parsing_logic(fixture_name, number_of_prices):
 
 
 async def _process_time_step(
-    hass, mock_data, key_state=None, value=None, delta_hours=1, tariff="discriminacion"
+    hass, mock_data, key_state=None, value=None, delta_hours=1, tariff="discrimination"
 ):
     state = hass.states.get("sensor.test_dst")
     check_valid_state(state, tariff=tariff, value=value, key_attr=key_state)
@@ -90,7 +90,7 @@ async def _process_time_step(
 async def test_dst_spring_change(hass, pvpc_aioclient_mock: AiohttpClientMocker):
     """Test price sensor behavior in DST change day with 23 local hours."""
     hass.config.time_zone = timezone("Europe/Madrid")
-    config = {DOMAIN: [{CONF_NAME: "test_dst", ATTR_TARIFF: "discriminacion"}]}
+    config = {DOMAIN: [{CONF_NAME: "test_dst", ATTR_TARIFF: "discrimination"}]}
     mock_data = {"return_time": datetime(2019, 3, 30, 22, 0, tzinfo=date_util.UTC)}
 
     def mock_now():
@@ -114,7 +114,7 @@ async def test_dst_spring_change(hass, pvpc_aioclient_mock: AiohttpClientMocker)
 async def test_dst_autumn_change(hass, pvpc_aioclient_mock: AiohttpClientMocker):
     """Test price sensor behavior in DST change day with 25 local hours."""
     hass.config.time_zone = timezone("Europe/Madrid")
-    config = {DOMAIN: [{CONF_NAME: "test_dst", ATTR_TARIFF: "discriminacion"}]}
+    config = {DOMAIN: [{CONF_NAME: "test_dst", ATTR_TARIFF: "discrimination"}]}
     mock_data = {"return_time": datetime(2019, 10, 26, 22, 0, 0, tzinfo=date_util.UTC)}
 
     def mock_now():
@@ -136,7 +136,7 @@ async def test_dst_autumn_change(hass, pvpc_aioclient_mock: AiohttpClientMocker)
 async def test_availability(hass, caplog, pvpc_aioclient_mock: AiohttpClientMocker):
     """Test sensor availability and handling of cloud access."""
     hass.config.time_zone = timezone("Europe/Madrid")
-    config = {DOMAIN: [{CONF_NAME: "test_dst", ATTR_TARIFF: "discriminacion"}]}
+    config = {DOMAIN: [{CONF_NAME: "test_dst", ATTR_TARIFF: "discrimination"}]}
     mock_data = {"return_time": datetime(2019, 10, 27, 20, 0, 0, tzinfo=date_util.UTC)}
 
     def mock_now():

@@ -4,4 +4,5 @@ PLATFORM = "sensor"
 
 ATTR_TARIFF = "tariff"
 DEFAULT_NAME = "PVPC"
-TARIFFS = ["normal", "discriminacion", "coche_electrico"]
+DEFAULT_TIMEOUT = 5
+TARIFFS = ["normal", "discrimination", "electric_car"]

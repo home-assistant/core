@@ -29,7 +29,7 @@ async def _test_setup_from_yaml_config(
     aioclient_mock: AiohttpClientMocker,
     domain: str,
     config: dict,
-    tariff: str = "discriminacion",
+    tariff: str = "discrimination",
 ):
     hass.config.time_zone = timezone("Europe/Madrid")
     mock_data = {"return_time": datetime(2019, 3, 30, 14, 0, tzinfo=date_util.UTC)}
@@ -48,7 +48,7 @@ async def _test_setup_from_yaml_config(
 
 async def test_setup_as_integration(hass, pvpc_aioclient_mock: AiohttpClientMocker):
     """Test component setup creates entry from config and first state is valid."""
-    tariff = "discriminacion"
+    tariff = "discrimination"
     config = {DOMAIN: [{CONF_NAME: "test", ATTR_TARIFF: tariff}]}
     await _test_setup_from_yaml_config(
         hass, pvpc_aioclient_mock, DOMAIN, config, tariff

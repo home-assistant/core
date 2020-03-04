@@ -31,7 +31,7 @@ async def test_config_flow(hass, pvpc_aioclient_mock: AiohttpClientMocker):
 
     - Create a new entry with tariff "normal"
     - Check state and attributes
-    - Use Options flow to change to tariff "coche_electrico"
+    - Use Options flow to change to tariff "electric_car"
     - Check new tariff state and compare both.
     - Check abort stage on name collision
     """
@@ -68,15 +68,15 @@ async def test_config_flow(hass, pvpc_aioclient_mock: AiohttpClientMocker):
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
         result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={ATTR_TARIFF: "coche_electrico"}
+            result["flow_id"], user_input={ATTR_TARIFF: "electric_car"}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["data"][ATTR_TARIFF] == "coche_electrico"
+        assert result["data"][ATTR_TARIFF] == "electric_car"
 
         # check tariff change
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test")
-        check_valid_state(state, tariff="coche_electrico")
+        check_valid_state(state, tariff="electric_car")
         assert pvpc_aioclient_mock.call_count == 2
 
         # Check parsing was ok by ensuring that EV is better tariff than default one
