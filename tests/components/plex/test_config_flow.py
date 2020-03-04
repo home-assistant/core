@@ -26,7 +26,6 @@ MOCK_FILE_CONTENTS = {
 DEFAULT_OPTIONS = {
     config_flow.MP_DOMAIN: {
         config_flow.CONF_USE_EPISODE_ART: False,
-        config_flow.CONF_SHOW_ALL_CONTROLS: False,
         config_flow.CONF_IGNORE_NEW_SHARED_USERS: False,
     }
 }
@@ -485,7 +484,6 @@ async def test_option_flow(hass):
         result["flow_id"],
         user_input={
             config_flow.CONF_USE_EPISODE_ART: True,
-            config_flow.CONF_SHOW_ALL_CONTROLS: True,
             config_flow.CONF_IGNORE_NEW_SHARED_USERS: True,
             config_flow.CONF_MONITORED_USERS: list(mock_plex_server.accounts),
         },
@@ -494,7 +492,6 @@ async def test_option_flow(hass):
     assert result["data"] == {
         config_flow.MP_DOMAIN: {
             config_flow.CONF_USE_EPISODE_ART: True,
-            config_flow.CONF_SHOW_ALL_CONTROLS: True,
             config_flow.CONF_IGNORE_NEW_SHARED_USERS: True,
             config_flow.CONF_MONITORED_USERS: {
                 user: {"enabled": True} for user in mock_plex_server.accounts
@@ -530,7 +527,6 @@ async def test_option_flow_loading_saved_users(hass):
         result["flow_id"],
         user_input={
             config_flow.CONF_USE_EPISODE_ART: True,
-            config_flow.CONF_SHOW_ALL_CONTROLS: True,
             config_flow.CONF_IGNORE_NEW_SHARED_USERS: True,
             config_flow.CONF_MONITORED_USERS: list(mock_plex_server.accounts),
         },
@@ -539,7 +535,6 @@ async def test_option_flow_loading_saved_users(hass):
     assert result["data"] == {
         config_flow.MP_DOMAIN: {
             config_flow.CONF_USE_EPISODE_ART: True,
-            config_flow.CONF_SHOW_ALL_CONTROLS: True,
             config_flow.CONF_IGNORE_NEW_SHARED_USERS: True,
             config_flow.CONF_MONITORED_USERS: {
                 user: {"enabled": True} for user in mock_plex_server.accounts
@@ -580,7 +575,6 @@ async def test_option_flow_new_users_available(hass):
         result["flow_id"],
         user_input={
             config_flow.CONF_USE_EPISODE_ART: True,
-            config_flow.CONF_SHOW_ALL_CONTROLS: True,
             config_flow.CONF_IGNORE_NEW_SHARED_USERS: True,
             config_flow.CONF_MONITORED_USERS: list(mock_plex_server.accounts),
         },
@@ -589,7 +583,6 @@ async def test_option_flow_new_users_available(hass):
     assert result["data"] == {
         config_flow.MP_DOMAIN: {
             config_flow.CONF_USE_EPISODE_ART: True,
-            config_flow.CONF_SHOW_ALL_CONTROLS: True,
             config_flow.CONF_IGNORE_NEW_SHARED_USERS: True,
             config_flow.CONF_MONITORED_USERS: {
                 user: {"enabled": True} for user in mock_plex_server.accounts
