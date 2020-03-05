@@ -19,6 +19,9 @@ from .core.const import (
     CHANNEL_ON_OFF,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
+    EFFECT_BLINK,
+    EFFECT_BREATHE,
+    EFFECT_DEFAULT_VARIANT,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_SET_LEVEL,
@@ -38,7 +41,7 @@ UPDATE_COLORLOOP_DIRECTION = 0x2
 UPDATE_COLORLOOP_TIME = 0x4
 UPDATE_COLORLOOP_HUE = 0x8
 
-FLASH_EFFECTS = {light.FLASH_SHORT: 0x00, light.FLASH_LONG: 0x01}
+FLASH_EFFECTS = {light.FLASH_SHORT: EFFECT_BLINK, light.FLASH_LONG: EFFECT_BREATHE}
 
 UNSUPPORTED_ATTRIBUTE = 0x86
 SCAN_INTERVAL = timedelta(minutes=60)
@@ -287,7 +290,7 @@ class Light(ZhaEntity, light.Light):
 
         if flash is not None and self._supported_features & light.SUPPORT_FLASH:
             result = await self._identify_channel.trigger_effect(
-                FLASH_EFFECTS[flash], 0  # effect identifier, effect variant
+                FLASH_EFFECTS[flash], EFFECT_DEFAULT_VARIANT
             )
             t_log["trigger_effect"] = result
 
