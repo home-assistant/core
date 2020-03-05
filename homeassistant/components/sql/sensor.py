@@ -7,6 +7,7 @@ import sqlalchemy
 from sqlalchemy.orm import scoped_session, sessionmaker
 import voluptuous as vol
 
+from homeassistant.exceptions import TemplateError
 from homeassistant.components.recorder import (
     CONF_DB_URL,
     DEFAULT_DB_FILE,
@@ -113,7 +114,6 @@ class SQLSensor(Entity):
     def __init__(
         self, hass, name, sessmaker, query, column, unit, value_template, query_template
     ):
-
         """Initialize the SQL sensor."""
         self.hass = hass
         self._name = name
