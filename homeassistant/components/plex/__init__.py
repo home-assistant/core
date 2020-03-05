@@ -116,6 +116,11 @@ async def async_setup_entry(hass, entry):
     """Set up Plex from a config entry."""
     server_config = entry.data[PLEX_SERVER_CONFIG]
 
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(
+            entry, unique_id=entry.data[CONF_SERVER_IDENTIFIER]
+        )
+
     if MP_DOMAIN not in entry.options:
         options = dict(entry.options)
         options.setdefault(

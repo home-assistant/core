@@ -125,12 +125,8 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         server_id = plex_server.machine_identifier
 
-        for entry in self._async_current_entries():
-            if entry.data[CONF_SERVER_IDENTIFIER] == server_id:
-                _LOGGER.debug(
-                    "Plex server already configured: %s", entry.data[CONF_SERVER]
-                )
-                return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(server_id)
+        self._abort_if_unique_id_configured()
 
         url = plex_server.url_in_use
         token = server_config.get(CONF_TOKEN)
