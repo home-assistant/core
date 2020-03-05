@@ -270,7 +270,7 @@ class OnOffChannel(ZigbeeChannel):
                 self.attribute_updated(self.ON_OFF, True)
                 if on_time > 0:
                     self._off_listener = async_call_later(
-                        self.device.hass,
+                        self._ch_pool.hass,
                         (on_time / 10),  # value is in 10ths of a second
                         self.set_to_off,
                     )

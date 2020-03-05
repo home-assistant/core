@@ -207,6 +207,11 @@ class ChannelPool:
         return self._channels.zha_device.manufacturer_code
 
     @property
+    def hass(self):
+        """Return hass."""
+        return self._channels.zha_device.hass
+
+    @property
     def model(self) -> Optional[str]:
         """Return device model."""
         return self._channels.zha_device.model
