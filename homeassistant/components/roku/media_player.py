@@ -75,7 +75,7 @@ class RokuDevice(MediaPlayerDevice):
                 self.current_app = self.roku.current_app
             else:
                 self.current_app = None
-                
+
             self._available = True
         except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout):
             self._available = False
