@@ -1,6 +1,5 @@
 """Support for Dynalite channels as lights."""
 from homeassistant.components.light import SUPPORT_BRIGHTNESS, Light
-from homeassistant.core import callback
 
 from .dynalitebase import DynaliteBase, async_setup_entry_base
 
@@ -8,12 +7,8 @@ from .dynalitebase import DynaliteBase, async_setup_entry_base
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Record the async_add_entities function to add them later when received from Dynalite."""
 
-    @callback
-    def light_from_device(device, bridge):
-        return DynaliteLight(device, bridge)
-
     async_setup_entry_base(
-        hass, config_entry, async_add_entities, "light", light_from_device
+        hass, config_entry, async_add_entities, "light", DynaliteLight
     )
 
 
