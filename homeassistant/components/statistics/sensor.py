@@ -20,7 +20,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
@@ -55,8 +54,7 @@ DEFAULT_PRECISION = 2
 ICON = "mdi:calculator"
 
 # Fine tuning to avoid excessive state updates and purge old operations
-_DEBOUNCING_COOLDOWN = 0.05
-_DELTA_MAX_AGE_ERROR = timedelta(seconds=1)
+_DELTA_MAX_AGE_ERROR = timedelta(milliseconds=500)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -78,17 +76,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     sampling_size = config.get(CONF_SAMPLING_SIZE)
     max_age = config.get(CONF_MAX_AGE, None)
     precision = config.get(CONF_PRECISION)
-    debounced_updater = Debouncer(
-        hass, _LOGGER, cooldown=_DEBOUNCING_COOLDOWN, immediate=False
-    )
 
     async_add_entities(
-        [
-            StatisticsSensor(
-                entity_id, name, sampling_size, max_age, precision, debounced_updater
-            )
-        ],
-        True,
+        [StatisticsSensor(entity_id, name, sampling_size, max_age, precision)], True
     )
 
     return True
@@ -97,15 +87,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class StatisticsSensor(Entity):
     """Representation of a Statistics sensor."""
 
-    def __init__(
-        self,
-        entity_id,
-        name,
-        sampling_size,
-        max_age,
-        precision,
-        debounced_updater: Debouncer,
-    ):
+    def __init__(self, entity_id, name, sampling_size, max_age, precision):
         """Initialize the Statistics sensor."""
         self._entity_id = entity_id
         self.is_binary = self._entity_id.split(".")[0] == "binary_sensor"
@@ -125,21 +107,12 @@ class StatisticsSensor(Entity):
 
         self._last_scheduled_purge = dt_util.utc_from_timestamp(0)
         self._update_listener = None
-        self._debounced_updater = debounced_updater
-        self._debounced_updater.function = self._async_debounced_update
-
-    async def _async_debounced_update(self):
-        """
-        Debounced call to update entity.
-
-        To process stats just once (in the end) when a burst of samples is received.
-        """
-        await self.async_update_ha_state(True)
 
     async def async_added_to_hass(self):
         """Register callbacks."""
 
-        async def async_stats_sensor_state_listener(entity, old_state, new_state):
+        @callback
+        def async_stats_sensor_state_listener(entity, old_state, new_state):
             """Handle the sensor state changes."""
             self._unit_of_measurement = new_state.attributes.get(
                 ATTR_UNIT_OF_MEASUREMENT
@@ -158,7 +131,7 @@ class StatisticsSensor(Entity):
                     )
                     return
 
-            await self._debounced_updater.async_call()
+            self.async_schedule_update_ha_state(True)
 
         @callback
         def async_stats_sensor_startup(event):
@@ -338,17 +311,21 @@ class StatisticsSensor(Entity):
     async def _set_expiration_update_for_max_age_sensors(self):
         next_to_purge_timestamp = self._next_to_purge_timestamp()
         if next_to_purge_timestamp:
-            if self._update_listener is not None:
+            if (
+                self._update_listener is not None
+                and self._last_scheduled_purge > dt_util.utcnow()
+            ):
+                # cancel scheduled update only if it is in the future
                 self._update_listener()
-                self._update_listener = None
 
             self._last_scheduled_purge = next_to_purge_timestamp
 
-            async def _scheduled_update(now):
+            @callback
+            def _scheduled_update(now):
                 """Timer callback for sensor update."""
                 self._update_listener = None
                 _LOGGER.debug("%s: executing scheduled update", self.entity_id)
-                await self._debounced_updater.async_call()
+                self.async_schedule_update_ha_state(True)
 
             self._update_listener = async_track_point_in_utc_time(
                 self.hass, _scheduled_update, next_to_purge_timestamp

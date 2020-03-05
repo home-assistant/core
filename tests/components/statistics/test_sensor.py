@@ -19,20 +19,6 @@ from tests.common import (
 )
 
 
-class MockSensor(StatisticsSensor):
-    """Wrap sensor to avoid delayed calls to update because of debouncer."""
-
-    def __init__(self, *args):
-        """Initialize the Statistics sensor and substitute the call to debouncer."""
-        super(MockSensor, self).__init__(*args)
-        self._debounced_updater.async_call = self._instant_update
-
-    async def _instant_update(self):
-        """Call update directly, without using debouncer."""
-        await self._async_debounced_update()
-
-
-@patch("homeassistant.components.statistics.sensor.StatisticsSensor", MockSensor)
 class TestStatisticsSensor(unittest.TestCase):
     """Test the Statistics sensor."""
 
