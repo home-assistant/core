@@ -106,7 +106,7 @@ class IcloudAccount:
             return
 
         user_info = None
-        api_devices = {}
+        api_devices = None
         try:
             api_devices = self.api.devices
             # Gets device owners infos
