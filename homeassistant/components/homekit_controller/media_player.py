@@ -15,7 +15,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY,
     SUPPORT_STOP,
 )
-from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN
+from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import callback
 
 from . import KNOWN_DEVICES, HomeKitEntity
@@ -99,7 +99,7 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerDevice):
         """State of the tv."""
         homekit_state = self.get_hk_char_value(CharacteristicsTypes.CURRENT_MEDIA_STATE)
         if homekit_state is None:
-            return STATE_UNKNOWN
+            return None
         return HK_TO_HA_STATE[homekit_state]
 
     async def async_media_play(self):
