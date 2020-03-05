@@ -96,6 +96,7 @@ homeassistant/components/eight_sleep/* @mezz64
 homeassistant/components/elgato/* @frenck
 homeassistant/components/elv/* @majuss
 homeassistant/components/emby/* @mezz64
+homeassistant/components/emoncms/* @borpin
 homeassistant/components/enigma2/* @fbradyirl
 homeassistant/components/enocean/* @bdurrer
 homeassistant/components/entur_public_transport/* @hfurubotten
