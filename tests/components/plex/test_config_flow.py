@@ -383,8 +383,6 @@ async def test_already_configured(hass):
 
     mock_plex_server = MockPlexServer()
 
-    flow = init_config_flow(hass)
-    flow.context = {"source": "import"}
     MockConfigEntry(
         domain=config_flow.DOMAIN,
         data={
@@ -393,6 +391,7 @@ async def test_already_configured(hass):
                 config_flow.CONF_SERVER_IDENTIFIER
             ],
         },
+        unique_id=MOCK_SERVERS[0][config_flow.CONF_SERVER_IDENTIFIER],
     ).add_to_hass(hass)
 
     with patch(
@@ -400,11 +399,13 @@ async def test_already_configured(hass):
     ), asynctest.patch("plexauth.PlexAuth.initiate_auth"), asynctest.patch(
         "plexauth.PlexAuth.token", return_value=MOCK_TOKEN
     ):
-        result = await flow.async_step_import(
-            {
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={"source": "import"},
+            data={
                 CONF_TOKEN: MOCK_TOKEN,
                 CONF_URL: f"http://{MOCK_SERVERS[0][CONF_HOST]}:{MOCK_SERVERS[0][CONF_PORT]}",
-            }
+            },
         )
         assert result["type"] == "abort"
         assert result["reason"] == "already_configured"
