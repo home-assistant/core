@@ -57,6 +57,9 @@ SCHEMA_WEBSOCKET_CLEAR_ITEMS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
 async def async_setup(hass, config):
     """Initialize the shopping list."""
 
+    if DOMAIN not in config:
+        return True
+
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
