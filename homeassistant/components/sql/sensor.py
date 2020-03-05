@@ -31,10 +31,10 @@ CONF_QUERIES = "queries"
 CONF_QUERY = "query"
 CONF_QUERY_TEMPLATE = "query_template"
 
-def validate_sql_select(value):
+def validate_sql(value):
     """Validate that value is a SQL SELECT query."""
     if not value.lstrip().lower().startswith("select") and not value.lstrip().lower().startswith("exec"):
-         raise vol.Invalid("Only SELECT or EXEC queries allowed")
+        raise Exception("Only SELECT or EXEC queries allowed")
     return value
 
 _QUERY_SCHEME = vol.Schema(
@@ -176,10 +176,10 @@ class SQLSensor(Entity):
                 else:
                     self._state = None
                     _LOGGER.error("Could not render template %s: %s", self._name, ex)
-
-        try:            
+        try:     
+            validated_sql_command = validate_sql(sql_command)    
             sess = self.sessionmaker()
-            result = sess.execute(sql_command)
+            result = sess.execute(validated_sql_command)
             self._attributes = {}
 
             if not result.returns_rows or result.rowcount == 0:
