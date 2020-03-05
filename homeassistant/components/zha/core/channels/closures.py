@@ -22,10 +22,10 @@ class DoorLockChannel(ZigbeeChannel):
     async def async_update(self):
         """Retrieve latest state."""
         result = await self.get_attribute_value("lock_state", from_cache=True)
-
-        self.async_send_signal(
-            f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", 0, "lock_state", result
-        )
+        if result is not None:
+            self.async_send_signal(
+                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", 0, "lock_state", result
+            )
 
     @callback
     def attribute_updated(self, attrid, value):
@@ -67,12 +67,13 @@ class WindowCovering(ZigbeeChannel):
             "current_position_lift_percentage", from_cache=False
         )
         self.debug("read current position: %s", result)
-        self.async_send_signal(
-            f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
-            8,
-            "current_position_lift_percentage",
-            result,
-        )
+        if result is not None:
+            self.async_send_signal(
+                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
+                8,
+                "current_position_lift_percentage",
+                result,
+            )
 
     @callback
     def attribute_updated(self, attrid, value):

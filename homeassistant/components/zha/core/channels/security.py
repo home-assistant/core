@@ -176,6 +176,6 @@ class IASZoneChannel(ZigbeeChannel):
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
-        await self.get_attribute_value("zone_status", from_cache=from_cache)
-        await self.get_attribute_value("zone_state", from_cache=from_cache)
+        attributes = ["zone_status", "zone_state"]
+        await self.get_attributes(attributes, from_cache=from_cache)
         await super().async_initialize(from_cache)
