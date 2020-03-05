@@ -251,3 +251,9 @@ ZHA_GW_MSG_LOG_OUTPUT = "log_output"
 ZHA_GW_MSG_RAW_INIT = "raw_device_initialized"
 ZHA_GW_RADIO = "radio"
 ZHA_GW_RADIO_DESCRIPTION = "radio_description"
+
+EFFECT_BLINK = 0x00
+EFFECT_BREATHE = 0x01
+EFFECT_OKAY = 0x02
+
+EFFECT_DEFAULT_VARIANT = 0x00

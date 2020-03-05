@@ -48,6 +48,8 @@ from .const import (
     CLUSTER_COMMANDS_SERVER,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
+    EFFECT_DEFAULT_VARIANT,
+    EFFECT_OKAY,
     POWER_BATTERY_OR_UNKNOWN,
     POWER_MAINS_POWERED,
     SIGNAL_AVAILABLE,
@@ -341,6 +343,11 @@ class ZHADevice(LogMixin):
         self.debug("completed configuration")
         entry = self.gateway.zha_storage.async_create_or_update(self)
         self.debug("stored in registry: %s", entry)
+
+        if self._channels.identify_ch is not None:
+            await self._channels.identify_ch.trigger_effect(
+                EFFECT_OKAY, EFFECT_DEFAULT_VARIANT
+            )
 
     async def async_initialize(self, from_cache=False):
         """Initialize channels."""

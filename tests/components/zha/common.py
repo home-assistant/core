@@ -29,6 +29,7 @@ class FakeEndpoint:
         self.model = model
         self.profile_id = zigpy.profiles.zha.PROFILE_ID
         self.device_type = None
+        self.request = CoroutineMock()
 
     def add_input_cluster(self, cluster_id):
         """Add an input cluster."""
