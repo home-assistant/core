@@ -8,16 +8,16 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 import voluptuous as vol
 
 from homeassistant.components.recorder import (
-    CONF_DB_URL, 
-    DEFAULT_DB_FILE, 
-    DEFAULT_URL
+    CONF_DB_URL,
+    DEFAULT_DB_FILE,
+    DEFAULT_URL,
 )
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
 from homeassistant.const import (
-    CONF_NAME, 
-    CONF_UNIT_OF_MEASUREMENT, 
+    CONF_NAME,
+    CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
 
@@ -31,11 +31,15 @@ CONF_QUERIES = "queries"
 CONF_QUERY = "query"
 CONF_QUERY_TEMPLATE = "query_template"
 
+
 def validate_sql(value):
     """Validate that value is a SQL SELECT query."""
-    if not value.lstrip().lower().startswith("select") and not value.lstrip().lower().startswith("exec"):
+    if not value.lstrip().lower().startswith(
+        "select"
+    ) and not value.lstrip().lower().startswith("exec"):
         raise Exception("Only SELECT or EXEC queries allowed")
     return value
+
 
 _QUERY_SCHEME = vol.Schema(
     {
@@ -52,13 +56,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_QUERIES): [_QUERY_SCHEME], vol.Optional(CONF_DB_URL): cv.string}
 )
 
+
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the SQL sensor platform."""
     db_url = config.get(CONF_DB_URL, None)
 
     if not db_url:
         db_url = DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
-
     try:
         engine = sqlalchemy.create_engine(db_url)
         sessmaker = scoped_session(sessionmaker(bind=engine))
@@ -66,13 +70,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         # Run a dummy query just to test the db_url
         sess = sessmaker()
         sess.execute("SELECT 1;")
-
     except sqlalchemy.exc.SQLAlchemyError as err:
         _LOGGER.error("Couldn't connect using %s DB_URL: %s", db_url, err)
         return
     finally:
         sess.close()
-
     queries = []
 
     for query in config.get(CONF_QUERIES):
@@ -85,35 +87,31 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
         if query_str and query_template:
             raise Exception("Both query and query_template are defined. Choose one.")
- 
         if value_template is not None:
             value_template.hass = hass
-
         if query_template is not None:
             query_template.hass = hass
-
         sensor = SQLSensor(
-            hass, name, sessmaker, query_str, column_name, unit, value_template, query_template
+            hass,
+            name,
+            sessmaker,
+            query_str,
+            column_name,
+            unit,
+            value_template,
+            query_template,
         )
         queries.append(sensor)
-
     async_add_entities(queries)
 
     return True
+
 
 class SQLSensor(Entity):
     """Representation of an SQL sensor."""
 
     def __init__(
-        self,
-        hass, 
-        name, 
-        sessmaker, 
-        query, 
-        column, 
-        unit, 
-        value_template, 
-        query_template
+        self, hass, name, sessmaker, query, column, unit, value_template, query_template
     ):
 
         """Initialize the SQL sensor."""
@@ -128,7 +126,6 @@ class SQLSensor(Entity):
                 self._query = query.replace(";", " LIMIT 1;")
         else:
             self._query = None
-
         self._unit_of_measurement = unit
         self._template = value_template
         self._column_name = column
@@ -158,10 +155,9 @@ class SQLSensor(Entity):
 
     async def async_update(self):
         """Retrieve sensor data from the query."""
-        
+
         if self._query is not None:
             sql_command = self._query
-
         if self._query_template is not None:
             try:
                 sql_command = self._query_template.async_render()
@@ -171,13 +167,14 @@ class SQLSensor(Entity):
                 ):
                     # Common during HA startup - so just a warning
                     _LOGGER.warning(
-                        "Could not render template %s, the state is unknown.", self._name
+                        "Could not render template %s, the state is unknown.",
+                        self._name,
                     )
                 else:
                     self._state = None
                     _LOGGER.error("Could not render template %s: %s", self._name, ex)
-        try:     
-            validated_sql_command = validate_sql(sql_command)    
+        try:
+            validated_sql_command = validate_sql(sql_command)
             sess = self.sessionmaker()
             result = sess.execute(validated_sql_command)
             self._attributes = {}
@@ -186,7 +183,6 @@ class SQLSensor(Entity):
                 _LOGGER.warning("%s returned no results", self._query)
                 self._state = None
                 return
-
             for res in result:
                 _LOGGER.debug("result = %s", res.items())
                 data = res[self._column_name]
@@ -201,7 +197,6 @@ class SQLSensor(Entity):
             return
         finally:
             sess.close()
-
         if self._template is not None:
             self._state = self._template.async_render_with_possible_json_value(
                 data, None
