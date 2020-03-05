@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/alexa",
   "requirements": [],
   "dependencies": ["http"],
+  "after_dependencies": ["logbook"],
   "codeowners": ["@home-assistant/cloud", "@ochlocracy"]
 }
