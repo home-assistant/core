@@ -62,7 +62,7 @@ aiobotocore==0.11.1
 aioesphomeapi==2.6.1
 
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.17
+aiohomekit[IP]==0.2.21
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
