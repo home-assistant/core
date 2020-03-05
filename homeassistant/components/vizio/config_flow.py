@@ -364,9 +364,9 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._must_show_form = True
 
                 unique_id = await VizioAsync.get_unique_id(
-                    user_input[CONF_HOST],
-                    user_input.get(CONF_ACCESS_TOKEN),
-                    user_input[CONF_DEVICE_CLASS],
+                    self._data[CONF_HOST],
+                    self._data[CONF_ACCESS_TOKEN],
+                    self._data[CONF_DEVICE_CLASS],
                     session=async_get_clientsession(self.hass, False),
                 )
 
