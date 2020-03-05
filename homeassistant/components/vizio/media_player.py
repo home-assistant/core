@@ -57,7 +57,7 @@ async def async_setup_entry(
     token = config_entry.data.get(CONF_ACCESS_TOKEN)
     name = config_entry.data[CONF_NAME]
     device_class = config_entry.data[CONF_DEVICE_CLASS]
-    apps_config = config_entry.data.get(CONF_APPS, {})
+    conf_apps = config_entry.data.get(CONF_APPS, {})
 
     # If config entry options not set up, set them up, otherwise assign values managed in options
     volume_step = config_entry.options.get(
@@ -91,7 +91,7 @@ async def async_setup_entry(
         raise PlatformNotReady
 
     entity = VizioDevice(
-        config_entry, device, name, volume_step, device_class, apps_config,
+        config_entry, device, name, volume_step, device_class, conf_apps,
     )
 
     async_add_entities([entity], update_before_add=True)
@@ -107,7 +107,7 @@ class VizioDevice(MediaPlayerDevice):
         name: str,
         volume_step: int,
         device_class: str,
-        apps_config: Dict[str, List[Any]],
+        conf_apps: Dict[str, List[Any]],
     ) -> None:
         """Initialize Vizio device."""
         self._config_entry = config_entry
@@ -120,10 +120,10 @@ class VizioDevice(MediaPlayerDevice):
         self._is_muted = None
         self._current_input = None
         self._current_app = None
-        self._available_inputs = None
-        self._available_apps = None
-        self._apps_config = apps_config
-        self._additional_app_configs = self._apps_config.get(CONF_ADDITIONAL_CONFIGS)
+        self._available_inputs = []
+        self._available_apps = []
+        self._conf_apps = conf_apps
+        self._additional_app_configs = self._conf_apps.get(CONF_ADDITIONAL_CONFIGS, [])
         self._device_class = device_class
         self._supported_commands = SUPPORTED_COMMANDS[device_class]
         self._device = device
@@ -133,23 +133,17 @@ class VizioDevice(MediaPlayerDevice):
         self._model = None
         self._sw_version = None
 
-    def _get_processed_apps_list(self, apps_list: List[str]) -> List[Optional[str]]:
+    def _apps_list(self, apps: List[str]) -> List[Optional[str]]:
         """Return process apps list based on configured filters."""
-        if self._apps_config.get(CONF_INCLUDE):
-            return [
-                value for value in apps_list if value in self._apps_config[CONF_INCLUDE]
-            ]
+        if self._conf_apps.get(CONF_INCLUDE):
+            return [app for app in apps if app in self._conf_apps[CONF_INCLUDE]]
 
-        if self._apps_config.get(CONF_EXCLUDE):
-            return [
-                value
-                for value in apps_list
-                if value not in self._apps_config[CONF_EXCLUDE]
-            ]
+        if self._conf_apps.get(CONF_EXCLUDE):
+            return [app for app in apps if app not in self._conf_apps[CONF_EXCLUDE]]
 
-        return apps_list
+        return apps
 
-    async def _get_current_app_name(self) -> Optional[str]:
+    async def _current_app_name(self) -> Optional[str]:
         """Return name of the currently running app by parsing pyvizio output."""
         app = await self._device.get_current_app(log_api_exception=False)
         if app in [None, NO_APP_RUNNING]:
@@ -213,37 +207,21 @@ class VizioDevice(MediaPlayerDevice):
         if inputs is not None:
             self._available_inputs = [input_.name for input_ in inputs]
             # Only look for apps if one of INPUT_APPS is an available input
-            for app in INPUT_APPS:
-                if app in self._available_inputs:
-                    # Create list of available known apps from known app list after
-                    # filtering by CONF_INCLUDE/CONF_EXCLUDE
-                    if not self._available_apps:
-                        self._available_apps = self._get_processed_apps_list(
-                            self._device.get_apps_list()
-                        )
+            if next((app for app in INPUT_APPS if app in self._available_inputs), None):
+                # Create list of available known apps from known app list after
+                # filtering by CONF_INCLUDE/CONF_EXCLUDE
+                if not self._available_apps:
+                    self._available_apps = self._apps_list(self._device.get_apps_list())
 
-                    # Attempt to get current app name. If app name is unknown, check
-                    # list of additional apps specified in configuration
-                    self._current_app = await self._get_current_app_name()
-                    break
+                # Attempt to get current app name. If app name is unknown, check list
+                # of additional apps specified in configuration
+                self._current_app = await self._current_app_name()
 
     def _get_additional_app_names(self) -> List[Optional[Dict[str, Any]]]:
         """Return list of additional apps that were included in configuration.yaml."""
-        if self._additional_app_configs:
-            return [
-                additional_app["name"]
-                for additional_app in self._additional_app_configs
-            ]
-        return []
-
-    def _get_additional_app_by_name(self, app_name: str) -> Optional[Dict[str, Any]]:
-        """Attempt to find config of additional app using app name."""
-        if self._additional_app_configs:
-            for additional_app in self._additional_app_configs:
-                if additional_app["name"] == app_name:
-                    return additional_app["config"]
-
-        return None
+        return [
+            additional_app["name"] for additional_app in self._additional_app_configs
+        ]
 
     @staticmethod
     async def _async_send_update_options_signal(
@@ -325,14 +303,10 @@ class VizioDevice(MediaPlayerDevice):
         if self._available_inputs:
             inputs = list(self._available_inputs)
             # If Smartcast app is in input list, and the app list has been retrieved,
-            # show the combination, otherwise just return inputs
+            # show the combination with , otherwise just return inputs
             if self._available_apps:
-                for app in INPUT_APPS:
-                    if app in inputs:
-                        inputs.remove(app)
-
                 return [
-                    *inputs,
+                    *[_input for _input in inputs if _input not in INPUT_APPS],
                     *self._available_apps,
                     *self._get_additional_app_names(),
                 ]
@@ -408,7 +382,11 @@ class VizioDevice(MediaPlayerDevice):
             await self._device.set_input(source)
         elif source in self._get_additional_app_names():
             await self._device.launch_app_config(
-                **self._get_additional_app_by_name(source)
+                **next(
+                    app["config"]
+                    for app in self._additional_app_configs
+                    if app["name"] == source
+                )
             )
         elif source in self._available_apps:
             await self._device.launch_app(source)
