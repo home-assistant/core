@@ -1633,4 +1633,4 @@ async def test_returns_array_friends(hass, hass_client):
 
     assert response_json[0]["lat"] == 10
     assert response_json[0]["lon"] == 20
-    assert response_json[0]["tid"] == "n1"
+    assert response_json[0]["tid"] == "pe"

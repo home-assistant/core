@@ -183,8 +183,6 @@ async def handle_webhook(hass, webhook_id, request):
 
     response = []
 
-    persons = list(filter(lambda x: x.domain == "person", hass.states.async_all()))
-
     for person in hass.states.async_all():
         if person.domain != "person":
             continue
@@ -195,7 +193,7 @@ async def handle_webhook(hass, webhook_id, request):
                     "_type": "location",
                     "lat": person.attributes["latitude"],
                     "lon": person.attributes["longitude"],
-                    "tid": person.attributes["id"][-2:],
+                    "tid": "".join(p[0] for p in person.name.split(" ")[:2]),
                     "tst": int(person.last_updated.timestamp()),
                 }
             )
