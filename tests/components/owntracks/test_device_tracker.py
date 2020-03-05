@@ -1605,7 +1605,7 @@ async def test_returns_array_friends(hass, hass_client):
         {
             "person": [
                 {
-                    "name": "person1",
+                    "name": "person 1",
                     "id": "person1",
                     "device_trackers": ["device_tracker.person_1_tracker_1"],
                 },
@@ -1633,4 +1633,4 @@ async def test_returns_array_friends(hass, hass_client):
 
     assert response_json[0]["lat"] == 10
     assert response_json[0]["lon"] == 20
-    assert response_json[0]["tid"] == "pe"
+    assert response_json[0]["tid"] == "p1"
