@@ -215,7 +215,8 @@ class ZigbeeChannel(LogMixin):
         attributes = []
         for report_config in self._report_config:
             attributes.append(report_config["attr"])
-        await self.get_attributes(attributes, from_cache=from_cache)
+        if len(attributes) > 0:
+            await self.get_attributes(attributes, from_cache=from_cache)
         self._status = ChannelStatus.INITIALIZED
 
     @callback
@@ -270,9 +271,8 @@ class ZigbeeChannel(LogMixin):
         return result.get(attribute)
 
     async def get_attributes(self, attributes, from_cache=True):
-        """Get the values for a list of attributes and call the result handler callback."""
+        """Get the values for a list of attributes."""
         manufacturer = None
-        results = {}
         manufacturer_code = self._ch_pool.manufacturer_code
         if self.cluster.cluster_id >= 0xFC00 and manufacturer_code:
             manufacturer = manufacturer_code
@@ -291,6 +291,7 @@ class ZigbeeChannel(LogMixin):
                 self.cluster.ep_attribute,
                 str(ex),
             )
+            results = {}
         return results
 
     def log(self, level, msg, *args):
