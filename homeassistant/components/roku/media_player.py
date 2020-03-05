@@ -66,7 +66,6 @@ class RokuDevice(MediaPlayerDevice):
     def update(self):
         """Retrieve latest state."""
         try:
-            self._available = True
             self._device_info = self.roku.device_info
             self._power_state = self.roku.power_state
             self.ip_address = self.roku.host
@@ -76,6 +75,8 @@ class RokuDevice(MediaPlayerDevice):
                 self.current_app = self.roku.current_app
             else:
                 self.current_app = None
+                
+            self._available = True
         except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout):
             self._available = False
             pass
