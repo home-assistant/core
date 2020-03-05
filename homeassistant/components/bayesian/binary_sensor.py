@@ -1,6 +1,5 @@
 """Use Bayesian Inference to trigger a binary sensor."""
 from collections import OrderedDict
-from itertools import chain
 
 import voluptuous as vol
 
@@ -131,6 +130,14 @@ class BayesianBinarySensor(BinarySensorDevice):
 
         self.observations_by_entity = self._build_observations_by_entity()
 
+        # for obs in self._observations:
+        # if "entity_id" in obs:
+        # self.entity_obs_dict.append([obs.get("entity_id")])
+        # if "value_template" in obs:
+        # self.entity_obs_dict.append(
+        # list(obs.get(CONF_VALUE_TEMPLATE).extract_entities())
+        # )
+
         self.observation_handlers = {
             "numeric_state": self._process_numeric_state,
             "state": self._process_state,
@@ -192,7 +199,7 @@ class BayesianBinarySensor(BinarySensorDevice):
             should_trigger = self.observation_handlers[platform](entity_obs)
 
             if should_trigger:
-                obs_entry = entity_obs
+                obs_entry = {"entity_id": entity, **entity_obs}
             else:
                 obs_entry = None
 
@@ -299,13 +306,15 @@ class BayesianBinarySensor(BinarySensorDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
+        print(self.current_observations)
+        print(self.observations_by_entity)
         return {
-            ATTR_OBSERVATIONS: list(self.current_obs.values()),
+            ATTR_OBSERVATIONS: list(self.current_observations.values()),
             ATTR_OCCURRED_OBSERVATION_ENTITIES: list(
                 set(
-                    chain.from_iterable(
-                        self.entity_obs_dict[obs] for obs in self.current_obs.keys()
-                    )
+                    obs.get("entity_id")
+                    for obs in self.current_observations.values()
+                    if obs is not None
                 )
             ),
             ATTR_PROBABILITY: round(self.probability, 2),

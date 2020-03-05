@@ -383,7 +383,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
                         "platform": "state",
                         "entity_id": "sensor.test_monitored",
                         "to_state": "off",
-                        "prob_given_true": 0.8,
+                        "prob_given_true": 0.9,
                         "prob_given_false": 0.4,
                     },
                     {
