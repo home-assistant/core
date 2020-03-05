@@ -9,7 +9,7 @@ import asyncio
 from functools import partial
 import logging
 
-from miio import Device, DeviceException, gateway
+from miio import DeviceException, gateway
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
@@ -64,17 +64,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
 
     try:
-        miio_device = Device(host, token)
-        device_info = miio_device.info()
-        model = device_info.model
+        gateway_device = gateway.Gateway(host, token)
+        device_info = gateway_device.info()
         _LOGGER.info(
             "%s %s %s detected",
-            model,
+            device_info.model,
             device_info.firmware_version,
             device_info.hardware_version,
         )
 
-        gateway_device = gateway.Gateway(miio_device)
         device = XiaomiGatewayAlarm(gateway_device, config, device_info)
     except DeviceException:
         raise PlatformNotReady
