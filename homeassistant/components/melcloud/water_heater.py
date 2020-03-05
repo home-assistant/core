@@ -72,10 +72,9 @@ class AtwWaterHeater(WaterHeaterDevice):
         await self._device.set({PROPERTY_POWER: False})
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the optional state attributes with device specific additions."""
-        data = super().state_attributes
-        data[ATTR_STATUS] = self._device.status
+        data = {ATTR_STATUS: self._device.status}
         return data
 
     @property

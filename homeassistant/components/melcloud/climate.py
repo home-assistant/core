@@ -240,10 +240,11 @@ class AtwDeviceZoneClimate(MelCloudClimate):
     @property
     def state_attributes(self) -> Dict[str, Any]:
         """Return the optional state attributes with device specific additions."""
-        data = super().state_attributes
-        data[ATTR_STATUS] = ATW_ZONE_HVAC_MODE_LOOKUP.get(
-            self._zone.status, self._zone.status,
-        )
+        data = {
+            ATTR_STATUS: ATW_ZONE_HVAC_MODE_LOOKUP.get(
+                self._zone.status, self._zone.status
+            )
+        }
         return data
 
     @property
