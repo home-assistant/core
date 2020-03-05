@@ -757,6 +757,11 @@ class MediaPlayerDevice(Entity):
         if self.media_image_remotely_accessible:
             return self.media_image_url
 
+        return self.media_image_local
+
+    @property
+    def media_image_local(self):
+        """Return local url to media image."""
         image_hash = self.media_image_hash
 
         if image_hash is None:
@@ -788,11 +793,15 @@ class MediaPlayerDevice(Entity):
         if self.state == STATE_OFF:
             return None
 
-        state_attr = {
-            attr: getattr(self, attr)
-            for attr in ATTR_TO_PROPERTY
-            if getattr(self, attr) is not None
-        }
+        state_attr = {}
+
+        for attr in ATTR_TO_PROPERTY:
+            value = getattr(self, attr)
+            if value is not None:
+                state_attr[attr] = value
+
+        if self.media_image_remotely_accessible:
+            state_attr["entity_picture_local"] = self.media_image_local
 
         return state_attr
 
@@ -863,12 +872,6 @@ class MediaPlayerImageView(HomeAssistantView):
         if not authenticated:
             return web.Response(status=401)
 
-        if player.media_image_remotely_accessible:
-            url = player.media_image_url
-            if url is not None:
-                return web.Response(status=302, headers={"location": url})
-            return web.Response(status=500)
-
         data, content_type = await player.async_get_media_image()
 
         if data is None:
@@ -894,6 +897,10 @@ async def websocket_handle_thumbnail(hass, connection, msg):
             )
         )
         return
+
+    _LOGGER.warning(
+        "The websocket command media_player_thumbnail is deprecated. Use /api/media_player_proxy instead."
+    )
 
     data, content_type = await player.async_get_media_image()
 
