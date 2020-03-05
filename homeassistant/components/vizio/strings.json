@@ -33,7 +33,6 @@
             }
         },
         "error": {
-            "apps_require_tv": "Apps can only be included/excluded when the Device Type is TV.",
             "host_exists": "Vizio device with specified host already configured.",
             "name_exists": "Vizio device with specified name already configured.",
             "complete_pairing failed": "Unable to complete pairing. Ensure the PIN you provided is correct and the TV is still powered and connected to the network before resubmitting.",
