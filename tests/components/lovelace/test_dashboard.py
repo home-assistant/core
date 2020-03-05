@@ -395,6 +395,8 @@ async def test_storage_dashboards(hass, hass_ws_client, hass_storage):
     )
     response = await client.receive_json()
     assert response["success"]
+    assert response["result"]["mode"] == "storage"
+    assert response["result"]["url_path"] == "created_url_path"
     assert response["result"]["title"] == "Updated Title"
     assert response["result"]["icon"] == "mdi:updated"
     assert response["result"]["show_in_sidebar"] is False
@@ -406,6 +408,7 @@ async def test_storage_dashboards(hass, hass_ws_client, hass_storage):
     assert response["success"]
     assert len(response["result"]) == 1
     assert response["result"][0]["mode"] == "storage"
+    assert response["result"][0]["url_path"] == "created_url_path"
     assert response["result"][0]["title"] == "Updated Title"
     assert response["result"][0]["icon"] == "mdi:updated"
     assert response["result"][0]["show_in_sidebar"] is False
