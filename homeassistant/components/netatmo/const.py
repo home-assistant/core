@@ -19,6 +19,7 @@ OAUTH2_TOKEN = "https://api.netatmo.com/oauth2/token"
 DATA_PERSONS = "netatmo_persons"
 
 NETATMO_WEBHOOK_URL = None
+NETATMO_EVENT = "netatmo_event"
 
 DEFAULT_PERSON = "Unknown"
 DEFAULT_DISCOVERY = True
@@ -39,23 +40,6 @@ EVENT_ON = "on"
 EVENT_TAG_BIG_MOVE = "tag_big_move"
 EVENT_TAG_SMALL_MOVE = "tag_small_move"
 EVENT_TAG_OPEN = "tag_open"
-
-EVENT_BUS_PERSON = "netatmo_person"
-EVENT_BUS_MOVEMENT = "netatmo_movement"
-EVENT_BUS_HUMAN = "netatmo_human"
-EVENT_BUS_ANIMAL = "netatmo_animal"
-EVENT_BUS_VEHICLE = "netatmo_vehicle"
-EVENT_BUS_OUTDOOR = "netatmo_outdoor"
-EVENT_BUS_OTHER = "netatmo_other"
-EVENT_BUS_CONNECTION = "netatmo_connection"
-EVENT_BUS_HUSH = "netatmo_hush"
-EVENT_BUS_SMOKE = "netatmo_smoke"
-EVENT_BUS_TAMPERED = "netatmo_tampered"
-EVENT_BUS_OFF = "netatmo_off"
-EVENT_BUS_ON = "netatmo_on"
-EVENT_BUS_TAG_BIG_MOVE = "netatmo_tag_big_move"
-EVENT_BUS_TAG_SMALL_MOVE = "netatmo_tag_small_move"
-EVENT_BUS_TAG_OPEN = "netatmo_tag_open"
 
 ATTR_ID = "id"
 ATTR_PSEUDO = "pseudo"
