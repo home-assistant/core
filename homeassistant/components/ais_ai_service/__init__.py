@@ -3738,7 +3738,7 @@ def _process(hass, text, calling_client_id=None, hot_word_on=False):
         # the was no match - try again but with player context
         # we should get media player source first
         # this is done only if the hot word is False
-        if calling_client_id is None and hot_word_on is False:
+        if found_intent is None and calling_client_id is None and hot_word_on is False:
             if (
                 CURR_ENTITIE == "media_player.wbudowany_glosnik"
                 and CURR_ENTITIE_ENTERED
