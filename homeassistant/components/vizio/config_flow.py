@@ -40,7 +40,11 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _get_config_schema(input_dict: Dict[str, Any] = None) -> vol.Schema:
-    """Return schema defaults for init step based on user input/config dict. Retain info already provided for future form views by setting them as defaults in schema."""
+    """
+    Return schema defaults for init step based on user input/config dict.
+
+    Retain info already provided for future form views by setting them as defaults in schema.
+    """
     if input_dict is None:
         input_dict = {}
 
@@ -63,7 +67,11 @@ def _get_config_schema(input_dict: Dict[str, Any] = None) -> vol.Schema:
 
 
 def _get_pairing_schema(input_dict: Dict[str, Any] = None) -> vol.Schema:
-    """Return schema defaults for pairing data based on user input. Retain info already provided for future form views by setting them as defaults in schema."""
+    """
+    Return schema defaults for pairing data based on user input.
+
+    Retain info already provided for future form views by setting them as defaults in schema.
+    """
     if input_dict is None:
         input_dict = {}
 
@@ -135,18 +143,6 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._apps:
             input_dict[CONF_APPS] = self._apps
 
-        unique_id = await VizioAsync.get_unique_id(
-            input_dict[CONF_HOST],
-            input_dict.get(CONF_ACCESS_TOKEN),
-            input_dict[CONF_DEVICE_CLASS],
-            session=async_get_clientsession(self.hass, False),
-        )
-
-        # Set unique ID and abort if unique ID is already configured on an entry or a flow
-        # with the unique ID is already in progress
-        await self.async_set_unique_id(unique_id=unique_id, raise_on_progress=True)
-        self._abort_if_unique_id_configured()
-
         return self.async_create_entry(title=input_dict[CONF_NAME], data=input_dict)
 
     async def async_step_user(
@@ -185,6 +181,20 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         errors["base"] = "cant_connect"
 
                     if not errors:
+                        unique_id = await VizioAsync.get_unique_id(
+                            user_input[CONF_HOST],
+                            user_input.get(CONF_ACCESS_TOKEN),
+                            user_input[CONF_DEVICE_CLASS],
+                            session=async_get_clientsession(self.hass, False),
+                        )
+
+                        # Set unique ID and abort if unique ID is already configured on an entry or a flow
+                        # with the unique ID is already in progress
+                        await self.async_set_unique_id(
+                            unique_id=unique_id, raise_on_progress=True
+                        )
+                        self._abort_if_unique_id_configured()
+
                         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
                         if (
                             user_input[CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
@@ -352,6 +362,20 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if pair_data:
                 self._data[CONF_ACCESS_TOKEN] = pair_data.auth_token
                 self._must_show_form = True
+
+                unique_id = await VizioAsync.get_unique_id(
+                    user_input[CONF_HOST],
+                    user_input.get(CONF_ACCESS_TOKEN),
+                    user_input[CONF_DEVICE_CLASS],
+                    session=async_get_clientsession(self.hass, False),
+                )
+
+                # Set unique ID and abort if unique ID is already configured on an entry or a flow
+                # with the unique ID is already in progress
+                await self.async_set_unique_id(
+                    unique_id=unique_id, raise_on_progress=True
+                )
+                self._abort_if_unique_id_configured()
 
                 # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
                 if self.context["source"] == SOURCE_IMPORT:
