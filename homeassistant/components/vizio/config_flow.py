@@ -72,20 +72,6 @@ def _get_pairing_schema(input_dict: Dict[str, Any] = None) -> vol.Schema:
     )
 
 
-def _get_tv_apps_schema(self) -> vol.Schema:
-    """Return schema defaults for tv config step based on user input/config dict. Retain info already provided for future form views by setting them as defaults in schema."""
-    return vol.Schema(
-        {
-            vol.Optional(
-                CONF_INCLUDE_OR_EXCLUDE, default=CONF_INCLUDE.title(),
-            ): vol.In([CONF_INCLUDE.title(), CONF_EXCLUDE.title()]),
-            vol.Optional(CONF_APPS_TO_INCLUDE_OR_EXCLUDE): cv.multi_select(
-                VizioAsync.get_apps_list()
-            ),
-        }
-    )
-
-
 def _host_is_same(host1: str, host2: str) -> bool:
     """Check if host1 and host2 are the same."""
     return host1.split(":")[0] == host2.split(":")[0]
@@ -412,5 +398,15 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._create_entry_if_unique(self._data)
 
         return self.async_show_form(
-            step_id="tv_apps", data_schema=_get_tv_apps_schema()
+            step_id="tv_apps",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_INCLUDE_OR_EXCLUDE, default=CONF_INCLUDE.title(),
+                    ): vol.In([CONF_INCLUDE.title(), CONF_EXCLUDE.title()]),
+                    vol.Optional(CONF_APPS_TO_INCLUDE_OR_EXCLUDE): cv.multi_select(
+                        VizioAsync.get_apps_list()
+                    ),
+                }
+            ),
         )
