@@ -1,5 +1,4 @@
 """Support to manage a shopping list."""
-import asyncio
 import logging
 import uuid
 
@@ -68,20 +67,17 @@ async def async_setup(hass, config):
     return True
 
 
-@asyncio.coroutine
-def async_setup_entry(hass, config_entry=None):
+async def async_setup_entry(hass, config_entry=None):
     """Set up shopping list from config flow."""
 
-    @asyncio.coroutine
-    def add_item_service(call):
+    async def add_item_service(call):
         """Add an item with `name`."""
         data = hass.data[DOMAIN]
         name = call.data.get(ATTR_NAME)
         if name is not None:
             data.async_add(name)
 
-    @asyncio.coroutine
-    def complete_item_service(call):
+    async def complete_item_service(call):
         """Mark the item provided via `name` as completed."""
         data = hass.data[DOMAIN]
         name = call.data.get(ATTR_NAME)
@@ -95,7 +91,7 @@ def async_setup_entry(hass, config_entry=None):
             data.async_update(item["id"], {"name": name, "complete": True})
 
     data = hass.data[DOMAIN] = ShoppingData(hass)
-    yield from data.async_load()
+    await data.async_load()
 
     hass.services.async_register(
         DOMAIN, SERVICE_ADD_ITEM, add_item_service, schema=SERVICE_ITEM_SCHEMA
@@ -221,8 +217,7 @@ class CreateShoppingListItemView(http.HomeAssistantView):
     name = "api:shopping_list:item"
 
     @RequestDataValidator(vol.Schema({vol.Required("name"): str}))
-    @asyncio.coroutine
-    def post(self, request, data):
+    async def post(self, request, data):
         """Create a new shopping list item."""
         item = request.app["hass"].data[DOMAIN].async_add(data["name"])
         request.app["hass"].bus.async_fire(EVENT)
