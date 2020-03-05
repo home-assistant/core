@@ -72,6 +72,20 @@ def _get_pairing_schema(input_dict: Dict[str, Any] = None) -> vol.Schema:
     )
 
 
+def _get_tv_apps_schema(self) -> vol.Schema:
+    """Return schema defaults for tv config step based on user input/config dict. Retain info already provided for future form views by setting them as defaults in schema."""
+    return vol.Schema(
+        {
+            vol.Optional(
+                CONF_INCLUDE_OR_EXCLUDE, default=CONF_INCLUDE.title(),
+            ): vol.In([CONF_INCLUDE.title(), CONF_EXCLUDE.title()]),
+            vol.Optional(CONF_APPS_TO_INCLUDE_OR_EXCLUDE): cv.multi_select(
+                VizioAsync.get_apps_list()
+            ),
+        }
+    )
+
+
 def _host_is_same(host1: str, host2: str) -> bool:
     """Check if host1 and host2 are the same."""
     return host1.split(":")[0] == host2.split(":")[0]
@@ -123,25 +137,6 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._pairing_token = None
         self._data = None
         self._apps = {}
-
-    def _get_tv_schema(self) -> vol.Schema:
-        """Return schema defaults for tv config step based on user input/config dict. Retain info already provided for future form views by setting them as defaults in schema."""
-        default_include_or_exclude = (
-            CONF_EXCLUDE if CONF_EXCLUDE in self._apps else CONF_INCLUDE
-        )
-
-        return vol.Schema(
-            {
-                vol.Optional(
-                    CONF_INCLUDE_OR_EXCLUDE, default=default_include_or_exclude.title(),
-                ): vol.In([CONF_INCLUDE.title(), CONF_EXCLUDE.title()]),
-                vol.Optional(
-                    CONF_APPS_TO_INCLUDE_OR_EXCLUDE,
-                    default=self._apps.get(default_include_or_exclude, []),
-                ): cv.multi_select(VizioAsync.get_apps_list()),
-            },
-            extra=vol.REMOVE_EXTRA,
-        )
 
     async def _create_entry_if_unique(
         self, input_dict: Dict[str, Any]
@@ -407,7 +402,6 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """Handle app configuration to complete TV configuration."""
-        errors = {}
         if user_input is not None:
             if user_input.get(CONF_APPS_TO_INCLUDE_OR_EXCLUDE):
                 # Update stored apps with user entry config keys
@@ -418,5 +412,5 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._create_entry_if_unique(self._data)
 
         return self.async_show_form(
-            step_id="tv_apps", data_schema=self._get_tv_schema(), errors=errors
+            step_id="tv_apps", data_schema=_get_tv_apps_schema()
         )
