@@ -14,6 +14,8 @@ from .const import DOMAIN
 
 PLATFORMS = ["sensor"]
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Coronavirus component."""
@@ -73,16 +75,21 @@ async def get_coordinator(hass):
 
     async def async_get_cases():
         with async_timeout.timeout(10):
-            return {
-                case.country: case
-                for case in await coronavirus.get_cases(
-                    aiohttp_client.async_get_clientsession(hass)
-                )
-            }
+            cases = {}
+            try:
+                cases = {
+                    case.country: case
+                    for case in await coronavirus.get_cases(
+                        aiohttp_client.async_get_clientsession(hass)
+                    )
+                }
+            except KeyError:
+                _LOGGER.error("Failed to get data")
+            return cases
 
     hass.data[DOMAIN] = update_coordinator.DataUpdateCoordinator(
         hass,
-        logging.getLogger(__name__),
+        _LOGGER,
         name=DOMAIN,
         update_method=async_get_cases,
         update_interval=timedelta(hours=1),
