@@ -21,10 +21,4 @@ class ShoppingListFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user")
 
-    async def async_step_import(self, user_input=None):
-        """Import a config entry.
-
-        Special type of import, we're not actually going to store any data.
-        Instead, we're going to rely on the values that are in config file.
-        """
-        return self.async_create_entry(title="configuration.yaml", data={})
+    async_step_import = async_step_user
