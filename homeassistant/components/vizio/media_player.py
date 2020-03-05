@@ -298,30 +298,30 @@ class VizioDevice(MediaPlayerDevice):
         return self._current_input
 
     @property
-    def source_list(self) -> List:
+    def source_list(self) -> List[str]:
         """Return list of available inputs of the device."""
-        if self._available_inputs:
-            inputs = list(self._available_inputs)
-            # If Smartcast app is in input list, and the app list has been retrieved,
-            # show the combination with , otherwise just return inputs
-            if self._available_apps:
-                return [
-                    *[_input for _input in inputs if _input not in INPUT_APPS],
-                    *self._available_apps,
-                    *self._get_additional_app_names(),
-                ]
+        # If Smartcast app is in input list, and the app list has been retrieved,
+        # show the combination with , otherwise just return inputs
+        if self._available_apps:
+            return [
+                *[
+                    _input
+                    for _input in self._available_inputs
+                    if _input not in INPUT_APPS
+                ],
+                *self._available_apps,
+                *self._get_additional_app_names(),
+            ]
 
-            return inputs
-
-        return None
+        return self._available_inputs
 
     @property
-    def app_id(self):
+    def app_id(self) -> Optional[str]:
         """Return the current app."""
         return self._current_app
 
     @property
-    def app_name(self):
+    def app_name(self) -> Optional[str]:
         """Return the friendly name of the current app."""
         return self._current_app
 
