@@ -59,12 +59,14 @@ class RokuDevice(MediaPlayerDevice):
         self.ip_address = host
         self.channels = []
         self.current_app = None
+        self._available = False
         self._device_info = {}
         self._power_state = "Unknown"
 
     def update(self):
         """Retrieve latest state."""
         try:
+            self._available = True
             self._device_info = self.roku.device_info
             self._power_state = self.roku.power_state
             self.ip_address = self.roku.host
@@ -75,6 +77,7 @@ class RokuDevice(MediaPlayerDevice):
             else:
                 self.current_app = None
         except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout):
+            self._available = False
             pass
 
     def get_source_list(self):
@@ -115,6 +118,11 @@ class RokuDevice(MediaPlayerDevice):
     def supported_features(self):
         """Flag media player features that are supported."""
         return SUPPORT_ROKU
+
+    @property
+    def available(self):
+        """Return if able to retrieve information from device or not."""
+        return self._available
 
     @property
     def unique_id(self):
