@@ -41,7 +41,7 @@ async def create_entity_from_device(hass, device):
         mock_dyn_dev().async_setup = CoroutineMock(return_value=True)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        new_device_func = mock_dyn_dev.mock_calls[1][2]["newDeviceFunc"]
+        new_device_func = mock_dyn_dev.mock_calls[1][2]["new_device_func"]
         new_device_func([device])
     await hass.async_block_till_done()
 

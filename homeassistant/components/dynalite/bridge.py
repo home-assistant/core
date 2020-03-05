@@ -20,8 +20,8 @@ class DynaliteBridge:
         self.host = config[CONF_HOST]
         # Configure the dynalite devices
         self.dynalite_devices = DynaliteDevices(
-            newDeviceFunc=self.add_devices_when_registered,
-            updateDeviceFunc=self.update_device,
+            new_device_func=self.add_devices_when_registered,
+            update_device_func=self.update_device,
         )
         self.dynalite_devices.configure(config)
 
@@ -31,7 +31,7 @@ class DynaliteBridge:
         LOGGER.debug("Setting up bridge - host %s", self.host)
         return await self.dynalite_devices.async_setup()
 
-    async def reload_config(self, config):
+    def reload_config(self, config):
         """Reconfigure a bridge when config changes."""
         LOGGER.debug("Reloading bridge - host %s, config %s", self.host, config)
         self.dynalite_devices.configure(config)
