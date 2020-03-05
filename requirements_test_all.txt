@@ -741,7 +741,7 @@ yahooweather==0.10
 zeroconf==0.24.4
 
 # homeassistant.components.zha
-zha-quirks==0.0.34
+zha-quirks==0.0.35
 
 # homeassistant.components.zha
 zigpy-cc==0.1.0
@@ -750,7 +750,7 @@ zigpy-cc==0.1.0
 zigpy-deconz==0.7.0
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.14.0
+zigpy-homeassistant==0.15.0
 
 # homeassistant.components.zha
 zigpy-xbee-homeassistant==0.9.0
