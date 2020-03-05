@@ -7,7 +7,7 @@ import plexapi.exceptions
 import requests.exceptions
 
 from homeassistant.components.plex import config_flow
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_TOKEN, CONF_URL
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, CONF_URL
 from homeassistant.setup import async_setup_component
 
 from .mock_classes import MOCK_SERVERS, MockPlexAccount, MockPlexServer
@@ -63,77 +63,6 @@ async def test_bad_credentials(hass):
         assert result["type"] == "form"
         assert result["step_id"] == "start_website_auth"
         assert result["errors"]["base"] == "faulty_credentials"
-
-
-async def test_import_file_from_discovery(hass):
-    """Test importing a legacy file during discovery."""
-
-    file_host_and_port, file_config = list(MOCK_FILE_CONTENTS.items())[0]
-    file_use_ssl = file_config[CONF_SSL]
-    file_prefix = "https" if file_use_ssl else "http"
-    used_url = f"{file_prefix}://{file_host_and_port}"
-
-    mock_plex_server = MockPlexServer(ssl=file_use_ssl)
-
-    with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
-        "homeassistant.components.plex.config_flow.load_json",
-        return_value=MOCK_FILE_CONTENTS,
-    ):
-
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
-            context={"source": "discovery"},
-            data={
-                CONF_HOST: MOCK_SERVERS[0][CONF_HOST],
-                CONF_PORT: MOCK_SERVERS[0][CONF_PORT],
-            },
-        )
-        assert result["type"] == "create_entry"
-        assert result["title"] == mock_plex_server.friendlyName
-        assert result["data"][config_flow.CONF_SERVER] == mock_plex_server.friendlyName
-        assert (
-            result["data"][config_flow.CONF_SERVER_IDENTIFIER]
-            == mock_plex_server.machineIdentifier
-        )
-        assert result["data"][config_flow.PLEX_SERVER_CONFIG][CONF_URL] == used_url
-        assert (
-            result["data"][config_flow.PLEX_SERVER_CONFIG][CONF_TOKEN]
-            == file_config[CONF_TOKEN]
-        )
-
-
-async def test_discovery(hass):
-    """Test starting a flow from discovery."""
-    with patch("homeassistant.components.plex.config_flow.load_json", return_value={}):
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
-            context={"source": "discovery"},
-            data={
-                CONF_HOST: MOCK_SERVERS[0][CONF_HOST],
-                CONF_PORT: MOCK_SERVERS[0][CONF_PORT],
-            },
-        )
-        assert result["type"] == "abort"
-        assert result["reason"] == "discovery_no_file"
-
-
-async def test_discovery_while_in_progress(hass):
-    """Test starting a flow from discovery."""
-
-    await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
-        context={"source": "discovery"},
-        data={
-            CONF_HOST: MOCK_SERVERS[0][CONF_HOST],
-            CONF_PORT: MOCK_SERVERS[0][CONF_PORT],
-        },
-    )
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
 
 
 async def test_import_success(hass):
