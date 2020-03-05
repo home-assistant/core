@@ -7,21 +7,10 @@ import sqlalchemy
 from sqlalchemy.orm import scoped_session, sessionmaker
 import voluptuous as vol
 
-from homeassistant.exceptions import TemplateError
-from homeassistant.components.recorder import (
-    CONF_DB_URL,
-    DEFAULT_DB_FILE,
-    DEFAULT_URL,
-)
-
+from homeassistant.components.recorder import CONF_DB_URL, DEFAULT_DB_FILE, DEFAULT_URL
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_UNIT_OF_MEASUREMENT,
-    CONF_VALUE_TEMPLATE,
-)
-
+from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE
+from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
