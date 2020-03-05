@@ -280,7 +280,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     new_options = entry.options.copy()
 
                     if remove_apps:
-                        new_data.pop(CONF_APPS, None)
+                        new_data.pop(CONF_APPS)
 
                     if updated_data:
                         new_data.update(updated_data)
