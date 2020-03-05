@@ -3708,7 +3708,7 @@ def _process(hass, text, calling_client_id=None, hot_word_on=False):
                         s = True
                         found_intent = "YT"
 
-        # only if how word is disabled
+        # only if hot word is disabled
         if found_intent is None and hot_word_on is False:
             suffix = get_context_suffix(hass)
             if suffix is not None:

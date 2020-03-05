@@ -686,7 +686,7 @@ hole==0.5.0
 holidays==0.10.1
 
 # homeassistant.components.frontend
-ais-dom-frontend==20200220.5
+ais-dom-frontend==20200220.6
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.8
@@ -2124,7 +2124,7 @@ yeelight==0.5.0
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2020.02.16
+youtube_dl==2020.03.01
 
 # homeassistant.components.zengge
 zengge==0.2

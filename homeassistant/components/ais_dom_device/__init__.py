@@ -192,11 +192,12 @@ async def _async_remove_ais_dom_entity(hass, entity_id):
             discovery_hash = (domain, unique_id)
             if discovery_hash in hass.data[mqtt_disco.ALREADY_DISCOVERED]:
                 mqtt_disco.clear_discovery_hash(hass, discovery_hash)
-
+            # remove this code and his name from json
+            G_RF_CODES_DATA.async_remove_code(unique_id)
+        elif platform == "ais_drives_service":
+            pass
+            # TODO remove drive, unmount and remove symlincs
     hass.states.async_remove(entity_id)
-
-    # remove this code and his name from json
-    G_RF_CODES_DATA.async_remove_code(unique_id)
 
 
 async def _async_remove_ais_dom_device(hass, device_id):
