@@ -31,4 +31,5 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     "fanv2": "fan",
     "air-quality": "air_quality",
     "occupancy": "binary_sensor",
+    "television": "media_player",
 }
