@@ -133,7 +133,7 @@ class VizioDevice(MediaPlayerDevice):
         self._model = None
         self._sw_version = None
 
-    def _apps_list(self, apps: List[str]) -> List[Optional[str]]:
+    def _apps_list(self, apps: List[str]) -> List[str]:
         """Return process apps list based on configured filters."""
         if self._conf_apps.get(CONF_INCLUDE):
             return [app for app in apps if app in self._conf_apps[CONF_INCLUDE]]
@@ -217,7 +217,7 @@ class VizioDevice(MediaPlayerDevice):
                 # of additional apps specified in configuration
                 self._current_app = await self._current_app_name()
 
-    def _get_additional_app_names(self) -> List[Optional[Dict[str, Any]]]:
+    def _get_additional_app_names(self) -> List[Dict[str, Any]]:
         """Return list of additional apps that were included in configuration.yaml."""
         return [
             additional_app["name"] for additional_app in self._additional_app_configs
