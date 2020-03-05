@@ -105,8 +105,6 @@ class IcloudAccount:
             _LOGGER.error("Error logging into iCloud Service: %s", error)
             return
 
-        user_info = None
-        api_devices = None
         try:
             api_devices = self.api.devices
             # Gets device owners infos
