@@ -34,10 +34,10 @@ from .const import (
     HOST,
     HOST2,
     MOCK_IMPORT_VALID_TV_CONFIG,
+    MOCK_INCLUDE_APPS,
+    MOCK_INCLUDE_NO_APPS,
     MOCK_PIN_CONFIG,
-    MOCK_SPEAKER_APPS_FAILURE,
     MOCK_SPEAKER_CONFIG,
-    MOCK_TV_APPS_USER_SOURCE,
     MOCK_TV_CONFIG_NO_TOKEN,
     MOCK_TV_WITH_EXCLUDE_CONFIG,
     MOCK_USER_VALID_TV_CONFIG,
@@ -95,12 +95,20 @@ async def test_user_flow_all_fields(
         result["flow_id"], user_input=MOCK_USER_VALID_TV_CONFIG
     )
 
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "tv_apps"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_INCLUDE_APPS
+    )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
     assert result["data"][CONF_ACCESS_TOKEN] == ACCESS_TOKEN
+    assert result["data"][CONF_APPS][CONF_INCLUDE] == [CURRENT_APP]
 
 
 async def test_user_apps_with_tv(
@@ -110,7 +118,14 @@ async def test_user_apps_with_tv(
 ) -> None:
     """Test TV can have selected apps during user setup."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_TV_APPS_USER_SOURCE
+        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_IMPORT_VALID_TV_CONFIG
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "tv_apps"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_INCLUDE_APPS
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -164,20 +179,6 @@ async def test_user_host_already_configured(
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {CONF_HOST: "host_exists"}
-
-
-async def test_user_no_apps_with_speaker(
-    hass: HomeAssistantType,
-    vizio_connect: pytest.fixture,
-    vizio_bypass_setup: pytest.fixture,
-) -> None:
-    """Test speaker can't have selected apps during user setup."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_SPEAKER_APPS_FAILURE
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {CONF_APPS_TO_INCLUDE_OR_EXCLUDE: "apps_require_tv"}
 
 
 async def test_user_host_already_configured_no_port(
@@ -262,13 +263,13 @@ async def test_user_error_on_could_not_connect(
     assert result["errors"] == {"base": "cant_connect"}
 
 
-async def test_user_tv_pairing(
+async def test_user_tv_pairing_no_apps(
     hass: HomeAssistantType,
     vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
     vizio_complete_pairing: pytest.fixture,
 ) -> None:
-    """Test pairing config flow when access token not provided for tv during user entry."""
+    """Test pairing config flow when access token not provided for tv during user entry and no apps configured."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=MOCK_TV_CONFIG_NO_TOKEN
     )
@@ -281,15 +282,18 @@ async def test_user_tv_pairing(
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "pairing_complete"
+    assert result["step_id"] == "tv_apps"
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_INCLUDE_NO_APPS
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
+    assert CONF_APPS not in result["data"]
 
 
 async def test_user_start_pairing_failure(

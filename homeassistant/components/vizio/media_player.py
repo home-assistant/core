@@ -7,7 +7,10 @@ from pyvizio import VizioAsync
 from pyvizio.const import INPUT_APPS, NO_APP_RUNNING, UNKNOWN_APP
 from pyvizio.helpers import find_app_name
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import (
+    DEVICE_CLASS_SPEAKER,
+    MediaPlayerDevice,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -204,18 +207,27 @@ class VizioDevice(MediaPlayerDevice):
             self._current_input = input_
 
         inputs = await self._device.get_inputs_list(log_api_exception=False)
-        if inputs is not None:
-            self._available_inputs = [input_.name for input_ in inputs]
-            # Only look for apps if one of INPUT_APPS is an available input
-            if next((app for app in INPUT_APPS if app in self._available_inputs), None):
-                # Create list of available known apps from known app list after
-                # filtering by CONF_INCLUDE/CONF_EXCLUDE
-                if not self._available_apps:
-                    self._available_apps = self._apps_list(self._device.get_apps_list())
 
-                # Attempt to get current app name. If app name is unknown, check list
-                # of additional apps specified in configuration
-                self._current_app = await self._current_app_name()
+        # If no inputs returned, end update
+        if not inputs:
+            return
+
+        self._available_inputs = [input_.name for input_ in inputs]
+
+        # Return before setting app variables if INPUT_APPS isn't in available inputs
+        if self._device_class == DEVICE_CLASS_SPEAKER or not any(
+            app for app in INPUT_APPS if app in self._available_inputs
+        ):
+            return
+
+        # Create list of available known apps from known app list after
+        # filtering by CONF_INCLUDE/CONF_EXCLUDE
+        if not self._available_apps:
+            self._available_apps = self._apps_list(self._device.get_apps_list())
+
+        # Attempt to get current app name. If app name is unknown, check list
+        # of additional apps specified in configuration
+        self._current_app = await self._current_app_name()
 
     def _get_additional_app_names(self) -> List[Dict[str, Any]]:
         """Return list of additional apps that were included in configuration.yaml."""
