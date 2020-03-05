@@ -63,6 +63,8 @@ from .const import (
     KEY_DEVICE_INFORMATION,
     KEY_DEVICE_SIGNAL,
     KEY_DIALUP_MOBILE_DATASWITCH,
+    KEY_NET_CURRENT_PLMN,
+    KEY_NET_NET_MODE,
     KEY_MONITORING_MONTH_STATISTICS,
     KEY_MONITORING_STATUS,
     KEY_MONITORING_TRAFFIC_STATISTICS,
@@ -238,6 +240,8 @@ class Router:
         self._get_data(
             KEY_MONITORING_TRAFFIC_STATISTICS, self.client.monitoring.traffic_statistics
         )
+        self._get_data(KEY_NET_CURRENT_PLMN, self.client.net.current_plmn)
+        self._get_data(KEY_NET_NET_MODE, self.client.net.net_mode)
         self._get_data(KEY_WLAN_HOST_LIST, self.client.wlan.host_list)
 
         self.signal_update()
