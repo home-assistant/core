@@ -95,7 +95,7 @@ ATA_HVAC_MODE_REVERSE_LOOKUP = {v: k for k, v in ATA_HVAC_MODE_LOOKUP.items()}
 class AtaDeviceClimate(MelCloudClimate):
     """Air-to-Air climate device."""
 
-    def __init__(self, device: MelCloudDevice, ata_device: AtaDevice):
+    def __init__(self, device: MelCloudDevice, ata_device: AtaDevice) -> None:
         """Initialize the climate."""
         super().__init__(device)
         self._device = ata_device
@@ -221,7 +221,7 @@ ATW_ZONE_HVAC_MODE_REVERSE_LOOKUP = {v: k for k, v in ATW_ZONE_HVAC_MODE_LOOKUP.
 class AtwDeviceZoneClimate(MelCloudClimate):
     """Air-to-Water zone climate device."""
 
-    def __init__(self, device: MelCloudDevice, atw_device: AtwDevice, atw_zone: Zone):
+    def __init__(self, device: MelCloudDevice, atw_device: AtwDevice, atw_zone: Zone) -> None:
         """Initialize the climate."""
         super().__init__(device)
         self._device = atw_device
