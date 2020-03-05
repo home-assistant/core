@@ -172,36 +172,28 @@ SENSOR_META = {
     (KEY_MONITORING_TRAFFIC_STATISTICS, "TotalUpload"): dict(
         name="Total upload", unit=DATA_BYTES, icon="mdi:upload"
     ),
-    KEY_NET_CURRENT_PLMN: dict(
-        exclude=re.compile(r"^(Rat|ShortName)$", re.IGNORECASE)
-    ),
+    KEY_NET_CURRENT_PLMN: dict(exclude=re.compile(r"^(Rat|ShortName)$", re.IGNORECASE)),
     (KEY_NET_CURRENT_PLMN, "State"): dict(
         name="Operator search mode",
-        formatter=lambda x: ({
-            "0": "Auto",
-            "1": "Manual"
-        }.get(x, "Unknown"), None),
+        formatter=lambda x: ({"0": "Auto", "1": "Manual"}.get(x, "Unknown"), None),
     ),
-    (KEY_NET_CURRENT_PLMN, "FullName"): dict(
-        name="Operator name",
-    ),
-    (KEY_NET_CURRENT_PLMN, "Numeric"): dict(
-        name="Operator code",
-    ),
-    KEY_NET_NET_MODE: dict(
-        include=re.compile(r"^NetworkMode$", re.IGNORECASE)
-    ),
+    (KEY_NET_CURRENT_PLMN, "FullName"): dict(name="Operator name",),
+    (KEY_NET_CURRENT_PLMN, "Numeric"): dict(name="Operator code",),
+    KEY_NET_NET_MODE: dict(include=re.compile(r"^NetworkMode$", re.IGNORECASE)),
     (KEY_NET_NET_MODE, "NetworkMode"): dict(
         name="Preferred mode",
-        formatter=lambda x: ({
-            "00": "4G/3G/2G",
-            "01": "2G",
-            "02": "3G",
-            "03": "4G",
-            "0301": "4G/2G",
-            "0302": "4G/3G",
-            "0201": "3G/2G"
-        }.get(x, "Unknown"), None),
+        formatter=lambda x: (
+            {
+                "00": "4G/3G/2G",
+                "01": "2G",
+                "02": "3G",
+                "03": "4G",
+                "0301": "4G/2G",
+                "0302": "4G/3G",
+                "0201": "3G/2G"
+            }.get(x, "Unknown"),
+            None
+        ),
     ),
 }
 
