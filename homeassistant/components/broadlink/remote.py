@@ -85,7 +85,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the Broadlink remote."""
     host = config[CONF_HOST]
     mac_addr = config[CONF_MAC]
-    devtype = config[CONF_TYPE]
+    dev_type = config[CONF_TYPE]
     timeout = config[CONF_TIMEOUT]
     name = config[CONF_NAME]
     unique_id = f"remote_{hexlify(mac_addr).decode('utf-8')}"
@@ -95,7 +95,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return
     hass.data[DOMAIN][COMPONENT].append(unique_id)
 
-    api = broadlink.rm((host, DEFAULT_PORT), mac_addr, devtype)
+    api = broadlink.rm((host, DEFAULT_PORT), mac_addr, dev_type)
     api.timeout = timeout
     code_storage = Store(hass, CODE_STORAGE_VERSION, f"broadlink_{unique_id}_codes")
     flag_storage = Store(hass, FLAG_STORAGE_VERSION, f"broadlink_{unique_id}_flags")
