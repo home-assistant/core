@@ -27,7 +27,6 @@ from homeassistant.const import (
     CONF_SCENE,
     CONF_TIMEOUT,
     CONF_WAIT_TEMPLATE,
-    SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
@@ -341,16 +340,11 @@ class _ScriptRun(_ScriptRunBase):
     async def async_run(self) -> None:
         """Run script."""
         try:
-            await asyncio.shield(self._async_run())
-        except asyncio.CancelledError:
-            await self.async_stop()
-            raise
-
-    async def _async_run(self):
-        self._script.last_triggered = utcnow()
-        self._changed()
-        self._log("Running script")
-        try:
+            if self._stop.is_set():
+                return
+            self._script.last_triggered = utcnow()
+            self._changed()
+            self._log("Running script")
             for self._step, self._action in enumerate(self._script.sequence):
                 if self._stop.is_set():
                     break
@@ -440,31 +434,15 @@ class _ScriptRun(_ScriptRunBase):
             await coro
             return
 
-        # No call limit (i.e., potentially starting a fully blocking script call) so
-        # watch for a stop request and, if received, propagate it to the called
-        # scripts by turning them off.
-        task = self._hass.async_create_task(coro)
+        # No call limit (i.e., potentially starting one or more fully blocking scripts)
+        # so watch for a stop request.
         done, pending = await asyncio.wait(
-            {self._stop.wait(), task}, return_when=asyncio.FIRST_COMPLETED,
+            {self._stop.wait(), coro}, return_when=asyncio.FIRST_COMPLETED,
         )
+        # Note that cancelling the service call, if it has not yet returned, will also
+        # stop any non-background script runs that it may have started.
         for pending_task in pending:
-            if pending_task == task:
-                # The scripts did not all finish. Stop them by turning them off.
-                # Do not cancel them now. Stopping them should cause them to finish
-                # gracefully.
-                if service in (SERVICE_TOGGLE, SERVICE_TURN_ON):
-                    service_data = {
-                        key: value
-                        for key, value in service_data.items()
-                        if key in cv.ENTITY_SERVICE_FIELDS
-                    }
-                else:
-                    service_data = {ATTR_ENTITY_ID: f"script.{service}"}
-                await self._hass.services.async_call(
-                    "script", SERVICE_TURN_OFF, service_data, blocking=True
-                )
-            else:
-                pending_task.cancel()
+            pending_task.cancel()
         # Propagate any exceptions that might have happened.
         for done_task in done:
             done_task.result()
@@ -475,7 +453,8 @@ class _QueuedScriptRun(_ScriptRun):
 
     lock_acquired = False
 
-    async def _async_run(self):
+    async def async_run(self) -> None:
+        """Run script."""
         # Wait for previous run, if any, to finish by attempting to acquire the script's
         # shared lock. At the same time monitor if we've been told to stop.
         lock_task = self._hass.async_create_task(
@@ -493,7 +472,7 @@ class _QueuedScriptRun(_ScriptRun):
         if self._stop.is_set():
             self._finish()
         else:
-            await super()._async_run()
+            await super().async_run()
 
     def _finish(self):
         # pylint: disable=protected-access
@@ -817,7 +796,15 @@ class Script:
                 self._queue_len += 1
             run = cls(self._hass, self, variables, context, self._log_exceptions)
         self._runs.append(run)
-        await run.async_run()
+
+        try:
+            if self.is_legacy:
+                await run.async_run()
+            else:
+                await asyncio.shield(run.async_run())
+        except asyncio.CancelledError:
+            await run.async_stop()
+            raise
 
     async def async_stop(self, update_state: bool = True) -> None:
         """Stop running script."""
