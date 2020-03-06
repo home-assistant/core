@@ -3,20 +3,17 @@ import asyncio
 import base64
 from collections import OrderedDict
 import logging
-
-from typing import Any, Dict, List, Optional, Set, cast  # noqa: F401
+from typing import Any, Dict, List, Optional, Set, cast
 
 import bcrypt
 import voluptuous as vol
 
 from homeassistant.const import CONF_ID
-from homeassistant.core import callback, HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, LoginFlow
-
+from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
-
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "auth_provider.homeassistant"
@@ -53,7 +50,7 @@ class Data:
         self._store = hass.helpers.storage.Store(
             STORAGE_VERSION, STORAGE_KEY, private=True
         )
-        self._data = None  # type: Optional[Dict[str, Any]]
+        self._data: Optional[Dict[str, Any]] = None
         # Legacy mode will allow usernames to start/end with whitespace
         # and will compare usernames case-insensitive.
         # Remove in 2020 or when we launch 1.0.
@@ -74,7 +71,7 @@ class Data:
         if data is None:
             data = {"users": []}
 
-        seen = set()  # type: Set[str]
+        seen: Set[str] = set()
 
         for user in data["users"]:
             username = user["username"]
@@ -203,14 +200,14 @@ class Data:
 
 @AUTH_PROVIDERS.register("homeassistant")
 class HassAuthProvider(AuthProvider):
-    """Auth provider based on a local storage of users in HASS config dir."""
+    """Auth provider based on a local storage of users in Home Assistant config dir."""
 
     DEFAULT_TITLE = "Home Assistant Local"
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize an Home Assistant auth provider."""
         super().__init__(*args, **kwargs)
-        self.data = None  # type: Optional[Data]
+        self.data: Optional[Data] = None
         self._init_lock = asyncio.Lock()
 
     async def async_initialize(self) -> None:
@@ -296,7 +293,7 @@ class HassLoginFlow(LoginFlow):
                 user_input.pop("password")
                 return await self.async_finish(user_input)
 
-        schema = OrderedDict()  # type: Dict[str, type]
+        schema: Dict[str, type] = OrderedDict()
         schema["username"] = str
         schema["password"] = str
 

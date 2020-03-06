@@ -1,17 +1,25 @@
 """Support for monitoring the local system."""
-from datetime import datetime
 import logging
 import os
 import socket
 
+import psutil
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_RESOURCES, STATE_OFF, STATE_ON, CONF_TYPE
-from homeassistant.helpers.entity import Entity
+from homeassistant.const import (
+    CONF_RESOURCES,
+    CONF_TYPE,
+    DATA_GIBIBYTES,
+    DATA_MEBIBYTES,
+    DATA_RATE_MEGABYTES_PER_SECOND,
+    STATE_OFF,
+    STATE_ON,
+    UNIT_PERCENTAGE,
+)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -20,39 +28,39 @@ _LOGGER = logging.getLogger(__name__)
 CONF_ARG = "arg"
 
 SENSOR_TYPES = {
-    "disk_free": ["Disk free", "GiB", "mdi:harddisk", None],
-    "disk_use": ["Disk use", "GiB", "mdi:harddisk", None],
-    "disk_use_percent": ["Disk use (percent)", "%", "mdi:harddisk", None],
+    "disk_free": ["Disk free", DATA_GIBIBYTES, "mdi:harddisk", None],
+    "disk_use": ["Disk use", DATA_GIBIBYTES, "mdi:harddisk", None],
+    "disk_use_percent": ["Disk use (percent)", UNIT_PERCENTAGE, "mdi:harddisk", None],
     "ipv4_address": ["IPv4 address", "", "mdi:server-network", None],
     "ipv6_address": ["IPv6 address", "", "mdi:server-network", None],
     "last_boot": ["Last boot", "", "mdi:clock", "timestamp"],
     "load_15m": ["Load (15m)", " ", "mdi:memory", None],
     "load_1m": ["Load (1m)", " ", "mdi:memory", None],
     "load_5m": ["Load (5m)", " ", "mdi:memory", None],
-    "memory_free": ["Memory free", "MiB", "mdi:memory", None],
-    "memory_use": ["Memory use", "MiB", "mdi:memory", None],
-    "memory_use_percent": ["Memory use (percent)", "%", "mdi:memory", None],
-    "network_in": ["Network in", "MiB", "mdi:server-network", None],
-    "network_out": ["Network out", "MiB", "mdi:server-network", None],
+    "memory_free": ["Memory free", DATA_MEBIBYTES, "mdi:memory", None],
+    "memory_use": ["Memory use", DATA_MEBIBYTES, "mdi:memory", None],
+    "memory_use_percent": ["Memory use (percent)", UNIT_PERCENTAGE, "mdi:memory", None],
+    "network_in": ["Network in", DATA_MEBIBYTES, "mdi:server-network", None],
+    "network_out": ["Network out", DATA_MEBIBYTES, "mdi:server-network", None],
     "packets_in": ["Packets in", " ", "mdi:server-network", None],
     "packets_out": ["Packets out", " ", "mdi:server-network", None],
     "throughput_network_in": [
         "Network throughput in",
-        "MB/s",
+        DATA_RATE_MEGABYTES_PER_SECOND,
         "mdi:server-network",
         None,
     ],
     "throughput_network_out": [
         "Network throughput out",
-        "MB/s",
+        DATA_RATE_MEGABYTES_PER_SECOND,
         "mdi:server-network",
         None,
     ],
     "process": ["Process", " ", "mdi:memory", None],
-    "processor_use": ["Processor use", "%", "mdi:memory", None],
-    "swap_free": ["Swap free", "MiB", "mdi:harddisk", None],
-    "swap_use": ["Swap use", "MiB", "mdi:harddisk", None],
-    "swap_use_percent": ["Swap use (percent)", "%", "mdi:harddisk", None],
+    "processor_use": ["Processor use", UNIT_PERCENTAGE, "mdi:memory", None],
+    "swap_free": ["Swap free", DATA_MEBIBYTES, "mdi:harddisk", None],
+    "swap_use": ["Swap use", DATA_MEBIBYTES, "mdi:harddisk", None],
+    "swap_use_percent": ["Swap use (percent)", UNIT_PERCENTAGE, "mdi:harddisk", None],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -135,8 +143,6 @@ class SystemMonitorSensor(Entity):
 
     def update(self):
         """Get the latest system information."""
-        import psutil
-
         if self.type == "disk_use_percent":
             self._state = psutil.disk_usage(self.argument).percent
         elif self.type == "disk_use":
@@ -193,7 +199,7 @@ class SystemMonitorSensor(Entity):
             counters = psutil.net_io_counters(pernic=True)
             if self.argument in counters:
                 counter = counters[self.argument][IO_COUNTER[self.type]]
-                now = datetime.now()
+                now = dt_util.utcnow()
                 if self._last_value and self._last_value < counter:
                     self._state = round(
                         (counter - self._last_value)
@@ -220,8 +226,8 @@ class SystemMonitorSensor(Entity):
                 dt_util.utc_from_timestamp(psutil.boot_time())
             ).isoformat()
         elif self.type == "load_1m":
-            self._state = os.getloadavg()[0]
+            self._state = round(os.getloadavg()[0], 2)
         elif self.type == "load_5m":
-            self._state = os.getloadavg()[1]
+            self._state = round(os.getloadavg()[1], 2)
         elif self.type == "load_15m":
-            self._state = os.getloadavg()[2]
+            self._state = round(os.getloadavg()[2], 2)

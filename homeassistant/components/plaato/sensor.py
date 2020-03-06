@@ -2,8 +2,11 @@
 
 import logging
 
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.const import UNIT_PERCENTAGE
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
 
 from . import (
@@ -54,9 +57,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             async_add_entities(entities, True)
         else:
             for entity in devices[device_id]:
-                async_dispatcher_send(
-                    hass, "{}_{}".format(PLAATO_DOMAIN, entity.unique_id)
-                )
+                async_dispatcher_send(hass, f"{PLAATO_DOMAIN}_{entity.unique_id}")
 
     hass.data[SENSOR_DATA_KEY] = async_dispatcher_connect(
         hass, SENSOR_UPDATE, _update_sensor
@@ -73,18 +74,18 @@ class PlaatoSensor(Entity):
         self._device_id = device_id
         self._type = sensor_type
         self._state = 0
-        self._name = "{} {}".format(device_id, sensor_type)
+        self._name = f"{device_id} {sensor_type}"
         self._attributes = None
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(PLAATO_DOMAIN, self._name)
+        return f"{PLAATO_DOMAIN} {self._name}"
 
     @property
     def unique_id(self):
         """Return the unique ID of this sensor."""
-        return "{}_{}".format(self._device_id, self._type)
+        return f"{self._device_id}_{self._type}"
 
     @property
     def device_info(self):
@@ -145,7 +146,7 @@ class PlaatoSensor(Entity):
         if self._type == ATTR_BPM:
             return "bpm"
         if self._type == ATTR_ABV:
-            return "%"
+            return UNIT_PERCENTAGE
 
         return ""
 
@@ -157,6 +158,5 @@ class PlaatoSensor(Entity):
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            "{}_{}".format(PLAATO_DOMAIN, self.unique_id),
-            self.async_schedule_update_ha_state,
+            f"{PLAATO_DOMAIN}_{self.unique_id}", self.async_schedule_update_ha_state
         )

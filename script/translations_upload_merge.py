@@ -5,7 +5,7 @@ import itertools
 import json
 import os
 import re
-from typing import Union, List, Dict
+from typing import Dict, List, Union
 
 FILENAME_FORMAT = re.compile(r"strings\.(?P<suffix>\w+)\.json")
 

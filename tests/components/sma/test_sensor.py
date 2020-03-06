@@ -15,24 +15,6 @@ BASE_CFG = {
 }
 
 
-async def test_sma_config_old(hass):
-    """Test old config."""
-    sensors = {"current_consumption": ["current_consumption"]}
-
-    with assert_setup_component(1):
-        assert await async_setup_component(
-            hass, DOMAIN, {DOMAIN: dict(BASE_CFG, sensors=sensors)}
-        )
-
-    state = hass.states.get("sensor.current_consumption")
-    assert state
-    assert "unit_of_measurement" in state.attributes
-    assert "current_consumption" in state.attributes
-
-    state = hass.states.get("sensor.my_sensor")
-    assert not state
-
-
 async def test_sma_config(hass):
     """Test new config."""
     sensors = ["current_consumption"]

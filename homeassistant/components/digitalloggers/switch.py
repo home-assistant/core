@@ -1,16 +1,17 @@
 """Support for Digital Loggers DIN III Relays."""
-import logging
 from datetime import timedelta
+import logging
 
+import dlipower
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
-    CONF_USERNAME,
     CONF_PASSWORD,
     CONF_TIMEOUT,
+    CONF_USERNAME,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -45,7 +46,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Find and return DIN III Relay switch."""
-    import dlipower
 
     host = config.get(CONF_HOST)
     controller_name = config.get(CONF_NAME)
@@ -88,7 +88,7 @@ class DINRelay(SwitchDevice):
     @property
     def name(self):
         """Return the display name of this relay."""
-        return "{}_{}".format(self._controller_name, self._name)
+        return f"{self._controller_name}_{self._name}"
 
     @property
     def is_on(self):

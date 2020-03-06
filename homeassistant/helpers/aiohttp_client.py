@@ -1,18 +1,17 @@
 """Helper for aiohttp webclient stuff."""
 import asyncio
+from ssl import SSLContext
 import sys
-from ssl import SSLContext  # noqa: F401
-from typing import Any, Awaitable, Optional, cast
-from typing import Union  # noqa: F401
+from typing import Any, Awaitable, Optional, Union, cast
 
 import aiohttp
-from aiohttp.hdrs import USER_AGENT, CONTENT_TYPE
 from aiohttp import web
-from aiohttp.web_exceptions import HTTPGatewayTimeout, HTTPBadGateway
+from aiohttp.hdrs import CONTENT_TYPE, USER_AGENT
+from aiohttp.web_exceptions import HTTPBadGateway, HTTPGatewayTimeout
 import async_timeout
 
-from homeassistant.core import callback, Event
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
+from homeassistant.core import Event, callback
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util
@@ -171,7 +170,7 @@ def _async_get_connector(
         return cast(aiohttp.BaseConnector, hass.data[key])
 
     if verify_ssl:
-        ssl_context = ssl_util.client_context()  # type: Union[bool, SSLContext]
+        ssl_context: Union[bool, SSLContext] = ssl_util.client_context()
     else:
         ssl_context = False
 

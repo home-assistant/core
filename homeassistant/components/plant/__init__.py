@@ -5,7 +5,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import group
+from homeassistant.components.recorder.models import States
 from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -16,6 +16,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -43,15 +44,15 @@ ATTR_MAX_BRIGHTNESS_HISTORY = "max_brightness"
 # to have a separate literal for it to avoid confusion.
 ATTR_DICT_OF_UNITS_OF_MEASUREMENT = "unit_of_measurement_dict"
 
-CONF_MIN_BATTERY_LEVEL = "min_" + READING_BATTERY
-CONF_MIN_TEMPERATURE = "min_" + READING_TEMPERATURE
-CONF_MAX_TEMPERATURE = "max_" + READING_TEMPERATURE
-CONF_MIN_MOISTURE = "min_" + READING_MOISTURE
-CONF_MAX_MOISTURE = "max_" + READING_MOISTURE
-CONF_MIN_CONDUCTIVITY = "min_" + READING_CONDUCTIVITY
-CONF_MAX_CONDUCTIVITY = "max_" + READING_CONDUCTIVITY
-CONF_MIN_BRIGHTNESS = "min_" + READING_BRIGHTNESS
-CONF_MAX_BRIGHTNESS = "max_" + READING_BRIGHTNESS
+CONF_MIN_BATTERY_LEVEL = f"min_{READING_BATTERY}"
+CONF_MIN_TEMPERATURE = f"min_{READING_TEMPERATURE}"
+CONF_MAX_TEMPERATURE = f"max_{READING_TEMPERATURE}"
+CONF_MIN_MOISTURE = f"min_{READING_MOISTURE}"
+CONF_MAX_MOISTURE = f"max_{READING_MOISTURE}"
+CONF_MIN_CONDUCTIVITY = f"min_{READING_CONDUCTIVITY}"
+CONF_MAX_CONDUCTIVITY = f"max_{READING_CONDUCTIVITY}"
+CONF_MIN_BRIGHTNESS = f"min_{READING_BRIGHTNESS}"
+CONF_MAX_BRIGHTNESS = f"max_{READING_BRIGHTNESS}"
 CONF_CHECK_DAYS = "check_days"
 
 CONF_SENSOR_BATTERY_LEVEL = READING_BATTERY
@@ -100,8 +101,6 @@ PLANT_SCHEMA = vol.Schema(
 )
 
 DOMAIN = "plant"
-GROUP_NAME_ALL_PLANTS = "all plants"
-ENTITY_ID_ALL_PLANTS = group.ENTITY_ID_FORMAT.format("all_plants")
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {cv.string: PLANT_SCHEMA}}, extra=vol.ALLOW_EXTRA)
 
@@ -113,7 +112,7 @@ ENABLE_LOAD_HISTORY = False
 
 async def async_setup(hass, config):
     """Set up the Plant component."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass, group_name=GROUP_NAME_ALL_PLANTS)
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     entities = []
     for plant_name, plant_config in config[DOMAIN].items():
@@ -133,14 +132,17 @@ class Plant(Entity):
     """
 
     READINGS = {
-        READING_BATTERY: {ATTR_UNIT_OF_MEASUREMENT: "%", "min": CONF_MIN_BATTERY_LEVEL},
+        READING_BATTERY: {
+            ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
+            "min": CONF_MIN_BATTERY_LEVEL,
+        },
         READING_TEMPERATURE: {
             ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             "min": CONF_MIN_TEMPERATURE,
             "max": CONF_MAX_TEMPERATURE,
         },
         READING_MOISTURE: {
-            ATTR_UNIT_OF_MEASUREMENT: "%",
+            ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
             "min": CONF_MIN_MOISTURE,
             "max": CONF_MAX_MOISTURE,
         },
@@ -216,7 +218,7 @@ class Plant(Entity):
             )
         else:
             raise HomeAssistantError(
-                "Unknown reading from sensor {}: {}".format(entity_id, value)
+                f"Unknown reading from sensor {entity_id}: {value}"
             )
         if ATTR_UNIT_OF_MEASUREMENT in new_state.attributes:
             self._unit_of_measurement[reading] = new_state.attributes.get(
@@ -229,10 +231,10 @@ class Plant(Entity):
         result = []
         for sensor_name in self._sensormap.values():
             params = self.READINGS[sensor_name]
-            value = getattr(self, "_{}".format(sensor_name))
+            value = getattr(self, f"_{sensor_name}")
             if value is not None:
                 if value == STATE_UNAVAILABLE:
-                    result.append("{} unavailable".format(sensor_name))
+                    result.append(f"{sensor_name} unavailable")
                 else:
                     if sensor_name == READING_BRIGHTNESS:
                         result.append(
@@ -260,14 +262,14 @@ class Plant(Entity):
         if "min" in params and params["min"] in self._config:
             min_value = self._config[params["min"]]
             if value < min_value:
-                return "{} low".format(sensor_name)
+                return f"{sensor_name} low"
 
     def _check_max(self, sensor_name, value, params):
         """If configured, check the value against the defined maximum value."""
         if "max" in params and params["max"] in self._config:
             max_value = self._config[params["max"]]
             if value > max_value:
-                return "{} high".format(sensor_name)
+                return f"{sensor_name} high"
         return None
 
     async def async_added_to_hass(self):
@@ -288,7 +290,6 @@ class Plant(Entity):
 
         This only needs to be done once during startup.
         """
-        from homeassistant.components.recorder.models import States
 
         start_date = datetime.now() - timedelta(days=self._conf_check_days)
         entity_id = self._readingmap.get(READING_BRIGHTNESS)
@@ -352,7 +353,7 @@ class Plant(Entity):
         }
 
         for reading in self._sensormap.values():
-            attrib[reading] = getattr(self, "_{}".format(reading))
+            attrib[reading] = getattr(self, f"_{reading}")
 
         if self._brightness_history.max is not None:
             attrib[ATTR_MAX_BRIGHTNESS_HISTORY] = self._brightness_history.max

@@ -1,18 +1,19 @@
 """Support for interface with an Harman/Kardon or JBL AVR."""
 import logging
 
+import hkavr
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
+    SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
-    SUPPORT_TURN_ON,
-    SUPPORT_SELECT_SOURCE,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,8 +39,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discover_info=None):
     """Set up the AVR platform."""
-    import hkavr
-
     name = config[CONF_NAME]
     host = config[CONF_HOST]
     port = config[CONF_PORT]

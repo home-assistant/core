@@ -1,10 +1,8 @@
 {
   "domain": "fritzbox_netmonitor",
-  "name": "Fritzbox netmonitor",
-  "documentation": "https://www.home-assistant.io/components/fritzbox_netmonitor",
-  "requirements": [
-    "fritzconnection==0.6.5"
-  ],
+  "name": "AVM FRITZ!Box Net Monitor",
+  "documentation": "https://www.home-assistant.io/integrations/fritzbox_netmonitor",
+  "requirements": ["fritzconnection==1.2.0"],
   "dependencies": [],
   "codeowners": []
 }

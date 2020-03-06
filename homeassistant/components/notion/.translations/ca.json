@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Aquest nom d'usuari ja est\u00e0 en \u00fas."
+        },
         "error": {
             "identifier_exists": "Nom d'usuari ja registrat",
             "invalid_credentials": "Nom d'usuari o contrasenya incorrectes",

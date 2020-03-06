@@ -1,6 +1,8 @@
 """Support for Wink binary sensors."""
 import logging
 
+import pywink
+
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
 from . import DOMAIN, WinkDevice
@@ -26,7 +28,6 @@ SENSOR_TYPES = {
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink binary sensor platform."""
-    import pywink
 
     for sensor in pywink.get_sensors():
         _id = sensor.object_id() + sensor.name()
@@ -140,7 +141,7 @@ class WinkHub(WinkBinarySensorDevice):
             # The service call to set the Kidde code
             # takes a string of 1s and 0s so it makes
             # sense to display it to the user that way
-            _formatted_kidde_code = "{:b}".format(_kidde_code).zfill(8)
+            _formatted_kidde_code = f"{_kidde_code:b}".zfill(8)
             _attributes["kidde_radio_code"] = _formatted_kidde_code
         return _attributes
 

@@ -6,14 +6,12 @@ import logging
 import aiohttp
 import async_timeout
 
-from homeassistant.components.camera import Camera, SUPPORT_STREAM
+from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.util.dt as dt_util
 
 from . import DOMAIN as DOORBIRD_DOMAIN
 
-_CAMERA_LAST_VISITOR = "{} Last Ring"
-_CAMERA_LAST_MOTION = "{} Last Motion"
-_CAMERA_LIVE = "{} Live"
 _LAST_VISITOR_INTERVAL = datetime.timedelta(minutes=1)
 _LAST_MOTION_INTERVAL = datetime.timedelta(minutes=1)
 _LIVE_INTERVAL = datetime.timedelta(seconds=1)
@@ -29,18 +27,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             [
                 DoorBirdCamera(
                     device.live_image_url,
-                    _CAMERA_LIVE.format(doorstation.name),
+                    f"{doorstation.name} Live",
                     _LIVE_INTERVAL,
                     device.rtsp_live_video_url,
                 ),
                 DoorBirdCamera(
                     device.history_image_url(1, "doorbell"),
-                    _CAMERA_LAST_VISITOR.format(doorstation.name),
+                    f"{doorstation.name} Last Ring",
                     _LAST_VISITOR_INTERVAL,
                 ),
                 DoorBirdCamera(
                     device.history_image_url(1, "motionsensor"),
-                    _CAMERA_LAST_MOTION.format(doorstation.name),
+                    f"{doorstation.name} Last Motion",
                     _LAST_MOTION_INTERVAL,
                 ),
             ]
@@ -77,7 +75,7 @@ class DoorBirdCamera(Camera):
 
     async def async_camera_image(self):
         """Pull a still image from the camera."""
-        now = datetime.datetime.now()
+        now = dt_util.utcnow()
 
         if self._last_image and now - self._last_update < self._interval:
             return self._last_image

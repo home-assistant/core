@@ -2,6 +2,7 @@
 import asyncio
 import functools
 import logging
+import secrets
 from urllib.parse import urlparse
 from uuid import uuid4
 
@@ -22,7 +23,7 @@ from pysmartthings import (
     SubscriptionEntity,
 )
 
-from homeassistant.components import cloud, webhook
+from homeassistant.components import webhook
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -77,8 +78,7 @@ async def validate_installed_app(api, installed_app_id: str):
     installed_app = await api.installed_app(installed_app_id)
     if installed_app.installed_app_status != InstalledAppStatus.AUTHORIZED:
         raise RuntimeWarning(
-            "Installed SmartApp instance '{}' ({}) is not "
-            "AUTHORIZED but instead {}".format(
+            "Installed SmartApp instance '{}' ({}) is not AUTHORIZED but instead {}".format(
                 installed_app.display_name,
                 installed_app.installed_app_id,
                 installed_app.installed_app_status,
@@ -88,8 +88,8 @@ async def validate_installed_app(api, installed_app_id: str):
 
 
 def validate_webhook_requirements(hass: HomeAssistantType) -> bool:
-    """Ensure HASS is setup properly to receive webhooks."""
-    if cloud.async_active_subscription(hass):
+    """Ensure Home Assistant is setup properly to receive webhooks."""
+    if hass.components.cloud.async_active_subscription():
         return True
     if hass.data[DOMAIN][CONF_CLOUDHOOK_URL] is not None:
         return True
@@ -103,17 +103,17 @@ def get_webhook_url(hass: HomeAssistantType) -> str:
     Return the cloudhook if available, otherwise local webhook.
     """
     cloudhook_url = hass.data[DOMAIN][CONF_CLOUDHOOK_URL]
-    if cloud.async_active_subscription(hass) and cloudhook_url is not None:
+    if hass.components.cloud.async_active_subscription() and cloudhook_url is not None:
         return cloudhook_url
     return webhook.async_generate_url(hass, hass.data[DOMAIN][CONF_WEBHOOK_ID])
 
 
 def _get_app_template(hass: HomeAssistantType):
-    endpoint = "at " + hass.config.api.base_url
+    endpoint = f"at {hass.config.api.base_url}"
     cloudhook_url = hass.data[DOMAIN][CONF_CLOUDHOOK_URL]
     if cloudhook_url is not None:
         endpoint = "via Nabu Casa"
-    description = "{} {}".format(hass.config.location_name, endpoint)
+    description = f"{hass.config.location_name} {endpoint}"
 
     return {
         "app_name": APP_NAME_PREFIX + str(uuid4()),
@@ -209,7 +209,7 @@ async def setup_smartapp_endpoint(hass: HomeAssistantType):
         # Create config
         config = {
             CONF_INSTANCE_ID: str(uuid4()),
-            CONF_WEBHOOK_ID: webhook.generate_secret(),
+            CONF_WEBHOOK_ID: secrets.token_hex(),
             CONF_CLOUDHOOK_URL: None,
         }
         await store.async_save(config)
@@ -223,11 +223,11 @@ async def setup_smartapp_endpoint(hass: HomeAssistantType):
     cloudhook_url = config.get(CONF_CLOUDHOOK_URL)
     if (
         cloudhook_url is None
-        and cloud.async_active_subscription(hass)
+        and hass.components.cloud.async_active_subscription()
         and not hass.config_entries.async_entries(DOMAIN)
     ):
-        cloudhook_url = await cloud.async_create_cloudhook(
-            hass, config[CONF_WEBHOOK_ID]
+        cloudhook_url = await hass.components.cloud.async_create_cloudhook(
+            config[CONF_WEBHOOK_ID]
         )
         config[CONF_CLOUDHOOK_URL] = cloudhook_url
         await store.async_save(config)
@@ -274,8 +274,10 @@ async def unload_smartapp_endpoint(hass: HomeAssistantType):
         return
     # Remove the cloudhook if it was created
     cloudhook_url = hass.data[DOMAIN][CONF_CLOUDHOOK_URL]
-    if cloudhook_url and cloud.async_is_logged_in(hass):
-        await cloud.async_delete_cloudhook(hass, hass.data[DOMAIN][CONF_WEBHOOK_ID])
+    if cloudhook_url and hass.components.cloud.async_is_logged_in():
+        await hass.components.cloud.async_delete_cloudhook(
+            hass.data[DOMAIN][CONF_WEBHOOK_ID]
+        )
         # Remove cloudhook from storage
         store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         await store.async_save(
@@ -321,7 +323,7 @@ async def smartapp_sync_subscriptions(
             )
         except Exception as error:  # pylint:disable=broad-except
             _LOGGER.error(
-                "Failed to create subscription for '%s' under app " "'%s': %s",
+                "Failed to create subscription for '%s' under app '%s': %s",
                 target,
                 installed_app_id,
                 error,
@@ -331,14 +333,13 @@ async def smartapp_sync_subscriptions(
         try:
             await api.delete_subscription(installed_app_id, sub.subscription_id)
             _LOGGER.debug(
-                "Removed subscription for '%s' under app '%s' "
-                "because it was no longer needed",
+                "Removed subscription for '%s' under app '%s' because it was no longer needed",
                 sub.capability,
                 installed_app_id,
             )
         except Exception as error:  # pylint:disable=broad-except
             _LOGGER.error(
-                "Failed to remove subscription for '%s' under app " "'%s': %s",
+                "Failed to remove subscription for '%s' under app '%s': %s",
                 sub.capability,
                 installed_app_id,
                 error,

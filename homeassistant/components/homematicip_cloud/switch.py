@@ -1,9 +1,11 @@
 """Support for HomematicIP Cloud switches."""
 import logging
+from typing import Any, Dict
 
 from homematicip.aio.device import (
     AsyncBrandSwitchMeasuring,
     AsyncFullFlushSwitchMeasuring,
+    AsyncHeatingSwitch2,
     AsyncMultiIOBox,
     AsyncOpenCollector8Module,
     AsyncPlugableSwitch,
@@ -11,31 +13,26 @@ from homematicip.aio.device import (
     AsyncPrintedCircuitBoardSwitch2,
     AsyncPrintedCircuitBoardSwitchBattery,
 )
-from homematicip.aio.group import AsyncSwitchingGroup
-from homematicip.aio.home import AsyncHome
+from homematicip.aio.group import AsyncExtendedLinkedSwitchingGroup, AsyncSwitchingGroup
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import HomeAssistantType
 
-from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
+from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericDevice
 from .device import ATTR_GROUP_MEMBER_UNREACHABLE
+from .hap import HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the HomematicIP Cloud switch devices."""
-    pass
-
-
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP switch from a config entry."""
-    home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
-    devices = []
-    for device in home.devices:
+    hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
+    entities = []
+    for device in hap.home.devices:
         if isinstance(device, AsyncBrandSwitchMeasuring):
             # BrandSwitchMeasuring inherits PlugableSwitchMeasuring
             # This device is implemented in the light platform and will
@@ -44,46 +41,49 @@ async def async_setup_entry(
         elif isinstance(
             device, (AsyncPlugableSwitchMeasuring, AsyncFullFlushSwitchMeasuring)
         ):
-            devices.append(HomematicipSwitchMeasuring(home, device))
+            entities.append(HomematicipSwitchMeasuring(hap, device))
         elif isinstance(
             device, (AsyncPlugableSwitch, AsyncPrintedCircuitBoardSwitchBattery)
         ):
-            devices.append(HomematicipSwitch(home, device))
+            entities.append(HomematicipSwitch(hap, device))
         elif isinstance(device, AsyncOpenCollector8Module):
             for channel in range(1, 9):
-                devices.append(HomematicipMultiSwitch(home, device, channel))
+                entities.append(HomematicipMultiSwitch(hap, device, channel))
+        elif isinstance(device, AsyncHeatingSwitch2):
+            for channel in range(1, 3):
+                entities.append(HomematicipMultiSwitch(hap, device, channel))
         elif isinstance(device, AsyncMultiIOBox):
             for channel in range(1, 3):
-                devices.append(HomematicipMultiSwitch(home, device, channel))
+                entities.append(HomematicipMultiSwitch(hap, device, channel))
         elif isinstance(device, AsyncPrintedCircuitBoardSwitch2):
             for channel in range(1, 3):
-                devices.append(HomematicipMultiSwitch(home, device, channel))
+                entities.append(HomematicipMultiSwitch(hap, device, channel))
 
-    for group in home.groups:
-        if isinstance(group, AsyncSwitchingGroup):
-            devices.append(HomematicipGroupSwitch(home, group))
+    for group in hap.home.groups:
+        if isinstance(group, (AsyncExtendedLinkedSwitchingGroup, AsyncSwitchingGroup)):
+            entities.append(HomematicipGroupSwitch(hap, group))
 
-    if devices:
-        async_add_entities(devices)
+    if entities:
+        async_add_entities(entities)
 
 
 class HomematicipSwitch(HomematicipGenericDevice, SwitchDevice):
     """representation of a HomematicIP Cloud switch device."""
 
-    def __init__(self, home: AsyncHome, device) -> None:
+    def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the switch device."""
-        super().__init__(home, device)
+        super().__init__(hap, device)
 
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._device.on
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn the device on."""
         await self._device.turn_on()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn the device off."""
         await self._device.turn_off()
 
@@ -91,10 +91,10 @@ class HomematicipSwitch(HomematicipGenericDevice, SwitchDevice):
 class HomematicipGroupSwitch(HomematicipGenericDevice, SwitchDevice):
     """representation of a HomematicIP switching group."""
 
-    def __init__(self, home: AsyncHome, device, post: str = "Group") -> None:
+    def __init__(self, hap: HomematicipHAP, device, post: str = "Group") -> None:
         """Initialize switching group."""
-        device.modelType = "HmIP-{}".format(post)
-        super().__init__(home, device, post)
+        device.modelType = f"HmIP-{post}"
+        super().__init__(hap, device, post)
 
     @property
     def is_on(self) -> bool:
@@ -111,18 +111,20 @@ class HomematicipGroupSwitch(HomematicipGenericDevice, SwitchDevice):
         return True
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the switch-group."""
-        attr = {}
-        if self._device.unreach:
-            attr[ATTR_GROUP_MEMBER_UNREACHABLE] = True
-        return attr
+        state_attr = super().device_state_attributes
 
-    async def async_turn_on(self, **kwargs):
+        if self._device.unreach:
+            state_attr[ATTR_GROUP_MEMBER_UNREACHABLE] = True
+
+        return state_attr
+
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn the group on."""
         await self._device.turn_on()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn the group off."""
         await self._device.turn_off()
 
@@ -146,25 +148,25 @@ class HomematicipSwitchMeasuring(HomematicipSwitch):
 class HomematicipMultiSwitch(HomematicipGenericDevice, SwitchDevice):
     """Representation of a HomematicIP Cloud multi switch device."""
 
-    def __init__(self, home: AsyncHome, device, channel: int):
+    def __init__(self, hap: HomematicipHAP, device, channel: int) -> None:
         """Initialize the multi switch device."""
         self.channel = channel
-        super().__init__(home, device, "Channel{}".format(channel))
+        super().__init__(hap, device, f"Channel{channel}")
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return "{}_{}_{}".format(self.__class__.__name__, self.post, self._device.id)
+        return f"{self.__class__.__name__}_{self.post}_{self._device.id}"
 
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._device.functionalChannels[self.channel].on
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn the device on."""
         await self._device.turn_on(self.channel)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn the device off."""
         await self._device.turn_off(self.channel)

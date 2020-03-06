@@ -1,9 +1,9 @@
 """Support for RFXtrx sensors."""
 import logging
 
+from RFXtrx import SensorEvent
 import voluptuous as vol
 
-from homeassistant.components import rfxtrx
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, CONF_NAME
 import homeassistant.helpers.config_validation as cv
@@ -18,6 +18,9 @@ from . import (
     CONF_DEVICES,
     CONF_FIRE_EVENT,
     DATA_TYPES,
+    RECEIVED_EVT_SUBSCRIBERS,
+    RFX_DEVICES,
+    get_rfx_object,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,13 +46,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RFXtrx platform."""
-    from RFXtrx import SensorEvent
-
     sensors = []
     for packet_id, entity_info in config[CONF_DEVICES].items():
-        event = rfxtrx.get_rfx_object(packet_id)
+        event = get_rfx_object(packet_id)
         device_id = "sensor_{}".format(slugify(event.device.id_string.lower()))
-        if device_id in rfxtrx.RFX_DEVICES:
+        if device_id in RFX_DEVICES:
             continue
         _LOGGER.info("Add %s rfxtrx.sensor", entity_info[ATTR_NAME])
 
@@ -67,7 +68,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             )
             sensors.append(new_sensor)
             sub_sensors[_data_type] = new_sensor
-        rfxtrx.RFX_DEVICES[device_id] = sub_sensors
+        RFX_DEVICES[device_id] = sub_sensors
     add_entities(sensors)
 
     def sensor_update(event):
@@ -77,8 +78,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         device_id = "sensor_" + slugify(event.device.id_string.lower())
 
-        if device_id in rfxtrx.RFX_DEVICES:
-            sensors = rfxtrx.RFX_DEVICES[device_id]
+        if device_id in RFX_DEVICES:
+            sensors = RFX_DEVICES[device_id]
             for data_type in sensors:
                 # Some multi-sensor devices send individual messages for each
                 # of their sensors. Update only if event contains the
@@ -98,7 +99,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if not config[CONF_AUTOMATIC_ADD]:
             return
 
-        pkt_id = "".join("{0:02x}".format(x) for x in event.data)
+        pkt_id = "".join(f"{x:02x}" for x in event.data)
         _LOGGER.info("Automatic add rfxtrx.sensor: %s", pkt_id)
 
         data_type = ""
@@ -109,11 +110,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         new_sensor = RfxtrxSensor(event, pkt_id, data_type)
         sub_sensors = {}
         sub_sensors[new_sensor.data_type] = new_sensor
-        rfxtrx.RFX_DEVICES[device_id] = sub_sensors
+        RFX_DEVICES[device_id] = sub_sensors
         add_entities([new_sensor])
 
-    if sensor_update not in rfxtrx.RECEIVED_EVT_SUBSCRIBERS:
-        rfxtrx.RECEIVED_EVT_SUBSCRIBERS.append(sensor_update)
+    if sensor_update not in RECEIVED_EVT_SUBSCRIBERS:
+        RECEIVED_EVT_SUBSCRIBERS.append(sensor_update)
 
 
 class RfxtrxSensor(Entity):
@@ -141,7 +142,7 @@ class RfxtrxSensor(Entity):
     @property
     def name(self):
         """Get the name of the sensor."""
-        return "{} {}".format(self._name, self.data_type)
+        return f"{self._name} {self.data_type}"
 
     @property
     def device_state_attributes(self):

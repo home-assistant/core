@@ -1,7 +1,16 @@
 """Support for Homekit sensors."""
-from homekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics import CharacteristicsTypes
 
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
+)
+from homeassistant.core import callback
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
@@ -10,9 +19,7 @@ TEMP_C_ICON = "mdi:thermometer"
 BRIGHTNESS_ICON = "mdi:brightness-6"
 CO2_ICON = "mdi:periodic-table-co2"
 
-UNIT_PERCENT = "%"
 UNIT_LUX = "lux"
-UNIT_CO2 = "ppm"
 
 
 class HomeKitHumiditySensor(HomeKitEntity):
@@ -28,9 +35,14 @@ class HomeKitHumiditySensor(HomeKitEntity):
         return [CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT]
 
     @property
+    def device_class(self) -> str:
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_HUMIDITY
+
+    @property
     def name(self):
         """Return the name of the device."""
-        return "{} {}".format(super().name, "Humidity")
+        return f"{super().name} Humidity"
 
     @property
     def icon(self):
@@ -40,7 +52,7 @@ class HomeKitHumiditySensor(HomeKitEntity):
     @property
     def unit_of_measurement(self):
         """Return units for the sensor."""
-        return UNIT_PERCENT
+        return UNIT_PERCENTAGE
 
     def _update_relative_humidity_current(self, value):
         self._state = value
@@ -64,9 +76,14 @@ class HomeKitTemperatureSensor(HomeKitEntity):
         return [CharacteristicsTypes.TEMPERATURE_CURRENT]
 
     @property
+    def device_class(self) -> str:
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_TEMPERATURE
+
+    @property
     def name(self):
         """Return the name of the device."""
-        return "{} {}".format(super().name, "Temperature")
+        return f"{super().name} Temperature"
 
     @property
     def icon(self):
@@ -100,9 +117,14 @@ class HomeKitLightSensor(HomeKitEntity):
         return [CharacteristicsTypes.LIGHT_LEVEL_CURRENT]
 
     @property
+    def device_class(self) -> str:
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_ILLUMINANCE
+
+    @property
     def name(self):
         """Return the name of the device."""
-        return "{} {}".format(super().name, "Light Level")
+        return f"{super().name} Light Level"
 
     @property
     def icon(self):
@@ -138,7 +160,7 @@ class HomeKitCarbonDioxideSensor(HomeKitEntity):
     @property
     def name(self):
         """Return the name of the device."""
-        return "{} {}".format(super().name, "CO2")
+        return f"{super().name} CO2"
 
     @property
     def icon(self):
@@ -148,7 +170,7 @@ class HomeKitCarbonDioxideSensor(HomeKitEntity):
     @property
     def unit_of_measurement(self):
         """Return units for the sensor."""
-        return UNIT_CO2
+        return CONCENTRATION_PARTS_PER_MILLION
 
     def _update_carbon_dioxide_level(self, value):
         self._state = value
@@ -159,17 +181,86 @@ class HomeKitCarbonDioxideSensor(HomeKitEntity):
         return self._state
 
 
+class HomeKitBatterySensor(HomeKitEntity):
+    """Representation of a Homekit battery sensor."""
+
+    def __init__(self, *args):
+        """Initialise the entity."""
+        super().__init__(*args)
+        self._state = None
+        self._low_battery = False
+        self._charging = False
+
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity is tracking."""
+        return [
+            CharacteristicsTypes.BATTERY_LEVEL,
+            CharacteristicsTypes.STATUS_LO_BATT,
+            CharacteristicsTypes.CHARGING_STATE,
+        ]
+
+    @property
+    def device_class(self) -> str:
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_BATTERY
+
+    @property
+    def name(self):
+        """Return the name of the device."""
+        return f"{super().name} Battery"
+
+    @property
+    def icon(self):
+        """Return the sensor icon."""
+        if not self.available or self.state is None:
+            return "mdi:battery-unknown"
+
+        # This is similar to the logic in helpers.icon, but we have delegated the
+        # decision about what mdi:battery-alert is to the device.
+        icon = "mdi:battery"
+        if self._charging and self.state > 10:
+            percentage = int(round(self.state / 20 - 0.01)) * 20
+            icon += f"-charging-{percentage}"
+        elif self._charging:
+            icon += "-outline"
+        elif self._low_battery:
+            icon += "-alert"
+        elif self.state < 95:
+            percentage = max(int(round(self.state / 10 - 0.01)) * 10, 10)
+            icon += f"-{percentage}"
+
+        return icon
+
+    @property
+    def unit_of_measurement(self):
+        """Return units for the sensor."""
+        return UNIT_PERCENTAGE
+
+    def _update_battery_level(self, value):
+        self._state = value
+
+    def _update_status_lo_batt(self, value):
+        self._low_battery = value == 1
+
+    def _update_charging_state(self, value):
+        # 0 = not charging
+        # 1 = charging
+        # 2 = not chargeable
+        self._charging = value == 1
+
+    @property
+    def state(self):
+        """Return the current battery level percentage."""
+        return self._state
+
+
 ENTITY_TYPES = {
     "humidity": HomeKitHumiditySensor,
     "temperature": HomeKitTemperatureSensor,
     "light": HomeKitLightSensor,
     "carbon-dioxide": HomeKitCarbonDioxideSensor,
+    "battery": HomeKitBatterySensor,
 }
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Legacy set up platform."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -177,6 +268,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]
 
+    @callback
     def async_add_service(aid, service):
         entity_class = ENTITY_TYPES.get(service["stype"])
         if not entity_class:

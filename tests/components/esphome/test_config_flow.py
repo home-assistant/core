@@ -4,23 +4,17 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.esphome import config_flow, DATA_KEY
-from tests.common import mock_coro, MockConfigEntry
+from homeassistant.components.esphome import DATA_KEY, config_flow
+
+from tests.common import MockConfigEntry, mock_coro
 
 MockDeviceInfo = namedtuple("DeviceInfo", ["uses_password", "name"])
-
-
-@pytest.fixture(autouse=True)
-def aioesphomeapi_mock():
-    """Mock aioesphomeapi."""
-    with patch.dict("sys.modules", {"aioesphomeapi": MagicMock()}):
-        yield
 
 
 @pytest.fixture
 def mock_client():
     """Mock APIClient."""
-    with patch("aioesphomeapi.APIClient") as mock_client:
+    with patch("homeassistant.components.esphome.config_flow.APIClient") as mock_client:
 
         def mock_constructor(loop, host, port, password):
             """Fake the client constructor."""
@@ -40,7 +34,8 @@ def mock_client():
 def mock_api_connection_error():
     """Mock out the try login method."""
     with patch(
-        "aioesphomeapi.APIConnectionError", new_callable=lambda: OSError
+        "homeassistant.components.esphome.config_flow.APIConnectionError",
+        new_callable=lambda: OSError,
     ) as mock_error:
         yield mock_error
 
@@ -86,7 +81,8 @@ async def test_user_resolve_error(hass, mock_api_connection_error, mock_client):
             super().__init__("Error resolving IP address")
 
     with patch(
-        "aioesphomeapi.APIConnectionError", new_callable=lambda: MockResolveError
+        "homeassistant.components.esphome.config_flow.APIConnectionError",
+        new_callable=lambda: MockResolveError,
     ) as exc:
         mock_client.device_info.side_effect = exc
         result = await flow.async_step_user(

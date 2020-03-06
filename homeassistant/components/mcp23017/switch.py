@@ -1,12 +1,16 @@
 """Support for switch sensor using I2C MCP23017 chip."""
 import logging
 
+from adafruit_mcp230xx.mcp23017 import MCP23017  # pylint: disable=import-error
+import board  # pylint: disable=import-error
+import busio  # pylint: disable=import-error
+import digitalio  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import DEVICE_DEFAULT_NAME
-from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,15 +35,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the MCP23017 devices."""
-    import board
-    import busio
-    import adafruit_mcp230xx
-
     invert_logic = config.get(CONF_INVERT_LOGIC)
     i2c_address = config.get(CONF_I2C_ADDRESS)
 
     i2c = busio.I2C(board.SCL, board.SDA)
-    mcp = adafruit_mcp230xx.MCP23017(i2c, address=i2c_address)
+    mcp = MCP23017(i2c, address=i2c_address)
 
     switches = []
     pins = config.get(CONF_PINS)
@@ -54,8 +54,6 @@ class MCP23017Switch(ToggleEntity):
 
     def __init__(self, name, pin, invert_logic):
         """Initialize the pin."""
-        import digitalio
-
         self._name = name or DEVICE_DEFAULT_NAME
         self._pin = pin
         self._invert_logic = invert_logic

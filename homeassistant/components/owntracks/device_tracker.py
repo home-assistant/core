@@ -1,21 +1,22 @@
 """Device tracker platform that adds support for OwnTracks over MQTT."""
 import logging
 
-from homeassistant.core import callback
+from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.components.device_tracker.const import (
+    ATTR_SOURCE_TYPE,
+    DOMAIN,
+    SOURCE_TYPE_GPS,
+)
 from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    ATTR_BATTERY_LEVEL,
 )
-from homeassistant.components.device_tracker.const import (
-    ENTITY_ID_FORMAT,
-    ATTR_SOURCE_TYPE,
-    SOURCE_TYPE_GPS,
-)
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.core import callback
 from homeassistant.helpers import device_registry
+from homeassistant.helpers.restore_state import RestoreEntity
+
 from . import DOMAIN as OT_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,7 +68,7 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         """Set up OwnTracks entity."""
         self._dev_id = dev_id
         self._data = data or {}
-        self.entity_id = ENTITY_ID_FORMAT.format(dev_id)
+        self.entity_id = f"{DOMAIN}.{dev_id}"
 
     @property
     def unique_id(self):
@@ -116,11 +117,6 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
     def name(self):
         """Return the name of the device."""
         return self._data.get("host_name")
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def source_type(self):

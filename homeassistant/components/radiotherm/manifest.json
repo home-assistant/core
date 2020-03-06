@@ -1,10 +1,8 @@
 {
   "domain": "radiotherm",
-  "name": "Radiotherm",
-  "documentation": "https://www.home-assistant.io/components/radiotherm",
-  "requirements": [
-    "radiotherm==2.0.0"
-  ],
+  "name": "Radio Thermostat",
+  "documentation": "https://www.home-assistant.io/integrations/radiotherm",
+  "requirements": ["radiotherm==2.0.0"],
   "dependencies": [],
   "codeowners": []
 }

@@ -1,6 +1,7 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 import logging
 
+from homeassistant.const import DATA_RATE_KILOBYTES_PER_SECOND
 from homeassistant.helpers.entity import Entity
 
 from . import DATA_FREEBOX
@@ -18,6 +19,8 @@ class FbxSensor(Entity):
     """Representation of a freebox sensor."""
 
     _name = "generic"
+    _unit = None
+    _icon = None
 
     def __init__(self, fbx):
         """Initialize the sensor."""
@@ -29,6 +32,16 @@ class FbxSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of the sensor."""
+        return self._unit
+
+    @property
+    def icon(self):
+        """Return the icon of the sensor."""
+        return self._icon
 
     @property
     def state(self):
@@ -44,12 +57,8 @@ class FbxRXSensor(FbxSensor):
     """Update the Freebox RxSensor."""
 
     _name = "Freebox download speed"
-    _unit = "KB/s"
-
-    @property
-    def unit_of_measurement(self):
-        """Define the unit."""
-        return self._unit
+    _unit = DATA_RATE_KILOBYTES_PER_SECOND
+    _icon = "mdi:download-network"
 
     async def async_update(self):
         """Get the value from fetched datas."""
@@ -62,12 +71,8 @@ class FbxTXSensor(FbxSensor):
     """Update the Freebox TxSensor."""
 
     _name = "Freebox upload speed"
-    _unit = "KB/s"
-
-    @property
-    def unit_of_measurement(self):
-        """Define the unit."""
-        return self._unit
+    _unit = DATA_RATE_KILOBYTES_PER_SECOND
+    _icon = "mdi:upload-network"
 
     async def async_update(self):
         """Get the value from fetched datas."""

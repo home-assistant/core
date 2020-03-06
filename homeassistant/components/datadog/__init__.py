@@ -1,6 +1,7 @@
 """Support for sending data to Datadog."""
 import logging
 
+from datadog import initialize, statsd
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -42,7 +43,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the Datadog component."""
-    from datadog import initialize, statsd
 
     conf = config[DOMAIN]
     host = conf.get(CONF_HOST)
@@ -59,10 +59,10 @@ def setup(hass, config):
 
         statsd.event(
             title="Home Assistant",
-            text="%%% \n **{}** {} \n %%%".format(name, message),
+            text=f"%%% \n **{name}** {message} \n %%%",
             tags=[
-                "entity:{}".format(event.data.get("entity_id")),
-                "domain:{}".format(event.data.get("domain")),
+                f"entity:{event.data.get('entity_id')}",
+                f"domain:{event.data.get('domain')}",
             ],
         )
 
@@ -79,12 +79,12 @@ def setup(hass, config):
             return
 
         states = dict(state.attributes)
-        metric = "{}.{}".format(prefix, state.domain)
-        tags = ["entity:{}".format(state.entity_id)]
+        metric = f"{prefix}.{state.domain}"
+        tags = [f"entity:{state.entity_id}"]
 
         for key, value in states.items():
             if isinstance(value, (float, int)):
-                attribute = "{}.{}".format(metric, key.replace(" ", "_"))
+                attribute = f"{metric}.{key.replace(' ', '_')}"
                 statsd.gauge(attribute, value, sample_rate=sample_rate, tags=tags)
 
                 _LOGGER.debug("Sent metric %s: %s (tags: %s)", attribute, value, tags)

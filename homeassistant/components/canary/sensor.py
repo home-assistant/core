@@ -1,6 +1,7 @@
 """Support for Canary sensors."""
+from canary.api import SensorType
 
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS, UNIT_PERCENTAGE
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
@@ -13,10 +14,10 @@ ATTR_AIR_QUALITY = "air_quality"
 # sensor type name, unit_of_measurement, icon
 SENSOR_TYPES = [
     ["temperature", TEMP_CELSIUS, "mdi:thermometer", ["Canary"]],
-    ["humidity", "%", "mdi:water-percent", ["Canary"]],
+    ["humidity", UNIT_PERCENTAGE, "mdi:water-percent", ["Canary"]],
     ["air_quality", None, "mdi:weather-windy", ["Canary"]],
     ["wifi", "dBm", "mdi:wifi", ["Canary Flex"]],
-    ["battery", "%", "mdi:battery-50", ["Canary Flex"]],
+    ["battery", UNIT_PERCENTAGE, "mdi:battery-50", ["Canary Flex"]],
 ]
 
 STATE_AIR_QUALITY_NORMAL = "normal"
@@ -53,7 +54,7 @@ class CanarySensor(Entity):
         self._sensor_value = None
 
         sensor_type_name = sensor_type[0].replace("_", " ").title()
-        self._name = "{} {} {}".format(location.name, device.name, sensor_type_name)
+        self._name = f"{location.name} {device.name} {sensor_type_name}"
 
     @property
     def name(self):
@@ -102,8 +103,6 @@ class CanarySensor(Entity):
     def update(self):
         """Get the latest state of the sensor."""
         self._data.update()
-
-        from canary.api import SensorType
 
         canary_sensor_type = None
         if self._sensor_type[0] == "air_quality":

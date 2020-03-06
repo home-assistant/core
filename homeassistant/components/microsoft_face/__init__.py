@@ -8,7 +8,7 @@ from aiohttp.hdrs import CONTENT_TYPE
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.const import CONF_API_KEY, CONF_TIMEOUT, ATTR_NAME
+from homeassistant.const import ATTR_NAME, CONF_API_KEY, CONF_TIMEOUT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -92,7 +92,7 @@ async def async_setup(hass, config):
         g_id = slugify(name)
 
         try:
-            await face.call_api("put", "persongroups/{0}".format(g_id), {"name": name})
+            await face.call_api("put", f"persongroups/{g_id}", {"name": name})
             face.store[g_id] = {}
 
             entities[g_id] = MicrosoftFaceGroupEntity(hass, face, g_id, name)
@@ -109,7 +109,7 @@ async def async_setup(hass, config):
         g_id = slugify(service.data[ATTR_NAME])
 
         try:
-            await face.call_api("delete", "persongroups/{0}".format(g_id))
+            await face.call_api("delete", f"persongroups/{g_id}")
             face.store.pop(g_id)
 
             entity = entities.pop(g_id)
@@ -126,7 +126,7 @@ async def async_setup(hass, config):
         g_id = service.data[ATTR_GROUP]
 
         try:
-            await face.call_api("post", "persongroups/{0}/train".format(g_id))
+            await face.call_api("post", f"persongroups/{g_id}/train")
         except HomeAssistantError as err:
             _LOGGER.error("Can't train group '%s' with error: %s", g_id, err)
 
@@ -141,7 +141,7 @@ async def async_setup(hass, config):
 
         try:
             user_data = await face.call_api(
-                "post", "persongroups/{0}/persons".format(g_id), {"name": name}
+                "post", f"persongroups/{g_id}/persons", {"name": name}
             )
 
             face.store[g_id][name] = user_data["personId"]
@@ -160,9 +160,7 @@ async def async_setup(hass, config):
         p_id = face.store[g_id].get(name)
 
         try:
-            await face.call_api(
-                "delete", "persongroups/{0}/persons/{1}".format(g_id, p_id)
-            )
+            await face.call_api("delete", f"persongroups/{g_id}/persons/{p_id}")
 
             face.store[g_id].pop(name)
             await entities[g_id].async_update_ha_state()
@@ -186,7 +184,7 @@ async def async_setup(hass, config):
 
             await face.call_api(
                 "post",
-                "persongroups/{0}/persons/{1}/persistedFaces".format(g_id, p_id),
+                f"persongroups/{g_id}/persons/{p_id}/persistedFaces",
                 image.content,
                 binary=True,
             )
@@ -218,7 +216,7 @@ class MicrosoftFaceGroupEntity(Entity):
     @property
     def entity_id(self):
         """Return entity id."""
-        return "{0}.{1}".format(DOMAIN, self._id)
+        return f"{DOMAIN}.{self._id}"
 
     @property
     def state(self):
@@ -241,7 +239,7 @@ class MicrosoftFaceGroupEntity(Entity):
 
 
 class MicrosoftFace:
-    """Microsoft Face api for HomeAssistant."""
+    """Microsoft Face api for Home Assistant."""
 
     def __init__(self, hass, server_loc, api_key, timeout, entities):
         """Initialize Microsoft Face api."""
@@ -249,7 +247,7 @@ class MicrosoftFace:
         self.websession = async_get_clientsession(hass)
         self.timeout = timeout
         self._api_key = api_key
-        self._server_url = "https://{0}.{1}".format(server_loc, FACE_API_URL)
+        self._server_url = f"https://{server_loc}.{FACE_API_URL}"
         self._store = {}
         self._entities = entities
 
@@ -270,9 +268,7 @@ class MicrosoftFace:
                 self.hass, self, g_id, group["name"]
             )
 
-            persons = await self.call_api(
-                "get", "persongroups/{0}/persons".format(g_id)
-            )
+            persons = await self.call_api("get", f"persongroups/{g_id}/persons")
 
             for person in persons:
                 self._store[g_id][person["name"]] = person["personId"]

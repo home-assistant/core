@@ -1,65 +1,25 @@
 """deCONZ scene platform tests."""
-from unittest.mock import Mock, patch
+from copy import deepcopy
 
-from homeassistant import config_entries
+from asynctest import patch
+
 from homeassistant.components import deconz
+import homeassistant.components.scene as scene
 from homeassistant.setup import async_setup_component
 
-import homeassistant.components.scene as scene
+from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
-from tests.common import mock_coro
-
-
-GROUP = {
+GROUPS = {
     "1": {
-        "id": "Group 1 id",
-        "name": "Group 1 name",
-        "state": {},
+        "id": "Light group id",
+        "name": "Light group",
+        "type": "LightGroup",
+        "state": {"all_on": False, "any_on": True},
         "action": {},
-        "scenes": [{"id": "1", "name": "Scene 1"}],
+        "scenes": [{"id": "1", "name": "Scene"}],
         "lights": [],
     }
 }
-
-
-ENTRY_CONFIG = {
-    deconz.const.CONF_ALLOW_CLIP_SENSOR: True,
-    deconz.const.CONF_ALLOW_DECONZ_GROUPS: True,
-    deconz.config_flow.CONF_API_KEY: "ABCDEF",
-    deconz.config_flow.CONF_BRIDGEID: "0123456789",
-    deconz.config_flow.CONF_HOST: "1.2.3.4",
-    deconz.config_flow.CONF_PORT: 80,
-}
-
-
-async def setup_gateway(hass, data):
-    """Load the deCONZ scene platform."""
-    from pydeconz import DeconzSession
-
-    loop = Mock()
-    session = Mock()
-
-    config_entry = config_entries.ConfigEntry(
-        1,
-        deconz.DOMAIN,
-        "Mock Title",
-        ENTRY_CONFIG,
-        "test",
-        config_entries.CONN_CLASS_LOCAL_PUSH,
-        system_options={},
-    )
-    gateway = deconz.DeconzGateway(hass, config_entry)
-    gateway.api = DeconzSession(loop, session, **config_entry.data)
-    gateway.api.config = Mock()
-    hass.data[deconz.DOMAIN] = {gateway.bridgeid: gateway}
-
-    with patch("pydeconz.DeconzSession.async_get_state", return_value=mock_coro(data)):
-        await gateway.api.async_load_parameters()
-
-    await hass.config_entries.async_forward_entry_setup(config_entry, "scene")
-    # To flush out the service call to update the group
-    await hass.async_block_till_done()
-    return gateway
 
 
 async def test_platform_manually_configured(hass):
@@ -75,26 +35,31 @@ async def test_platform_manually_configured(hass):
 
 async def test_no_scenes(hass):
     """Test that scenes can be loaded without scenes being available."""
-    gateway = await setup_gateway(hass, {})
-    assert not hass.data[deconz.DOMAIN][gateway.bridgeid].deconz_ids
+    gateway = await setup_deconz_integration(hass)
+    assert len(gateway.deconz_ids) == 0
     assert len(hass.states.async_all()) == 0
 
 
 async def test_scenes(hass):
     """Test that scenes works."""
-    with patch("pydeconz.DeconzSession.async_put_state", return_value=mock_coro(True)):
-        gateway = await setup_gateway(hass, {"groups": GROUP})
-    assert "scene.group_1_name_scene_1" in gateway.deconz_ids
+    data = deepcopy(DECONZ_WEB_REQUEST)
+    data["groups"] = deepcopy(GROUPS)
+    gateway = await setup_deconz_integration(hass, get_state_response=data)
+
+    assert "scene.light_group_scene" in gateway.deconz_ids
     assert len(hass.states.async_all()) == 1
 
-    await hass.services.async_call(
-        "scene", "turn_on", {"entity_id": "scene.group_1_name_scene_1"}, blocking=True
-    )
+    light_group_scene = hass.states.get("scene.light_group_scene")
+    assert light_group_scene
 
+    group_scene = gateway.api.groups["1"].scenes["1"]
 
-async def test_unload_scene(hass):
-    """Test that it works to unload scene entities."""
-    gateway = await setup_gateway(hass, {"groups": GROUP})
+    with patch.object(group_scene, "_request", return_value=True) as set_callback:
+        await hass.services.async_call(
+            "scene", "turn_on", {"entity_id": "scene.light_group_scene"}, blocking=True
+        )
+        await hass.async_block_till_done()
+        set_callback.assert_called_with("put", "/groups/1/scenes/1/recall", json={})
 
     await gateway.async_reset()
 

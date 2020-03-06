@@ -1,37 +1,36 @@
 """Support for repeating alerts when conditions are met."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
+    ATTR_DATA,
     ATTR_MESSAGE,
     ATTR_TITLE,
-    ATTR_DATA,
     DOMAIN as DOMAIN_NOTIFY,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
-    STATE_IDLE,
     CONF_NAME,
     CONF_STATE,
-    STATE_ON,
-    STATE_OFF,
-    SERVICE_TURN_ON,
-    SERVICE_TURN_OFF,
     SERVICE_TOGGLE,
-    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_IDLE,
+    STATE_OFF,
+    STATE_ON,
 )
-from homeassistant.helpers import service, event
+from homeassistant.helpers import event, service
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.util.dt import now
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "alert"
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 CONF_CAN_ACK = "can_acknowledge"
 CONF_NOTIFIERS = "notifiers"
@@ -200,7 +199,7 @@ class Alert(ToggleEntity):
         self._ack = False
         self._cancel = None
         self._send_done_message = False
-        self.entity_id = ENTITY_ID_FORMAT.format(entity_id)
+        self.entity_id = f"{DOMAIN}.{entity_id}"
 
         event.async_track_state_change(
             hass, watched_entity_id, self.watched_entity_change
@@ -213,7 +212,7 @@ class Alert(ToggleEntity):
 
     @property
     def should_poll(self):
-        """HASS need not poll these entities."""
+        """Home Assistant need not poll these entities."""
         return False
 
     @property

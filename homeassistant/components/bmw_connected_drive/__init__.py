@@ -1,13 +1,15 @@
 """Reads vehicle status from BMW connected drive portal."""
-import datetime
 import logging
 
+from bimmer_connected.account import ConnectedDriveAccount
+from bimmer_connected.country_selector import get_region_from_name
 import voluptuous as vol
 
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import discovery
-from homeassistant.helpers.event import track_utc_time_change
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import track_utc_time_change
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,7 +102,7 @@ def setup_account(account_config: dict, hass, name: str) -> "BMWConnectedDriveAc
 
     # update every UPDATE_INTERVAL minutes, starting now
     # this should even out the load on the servers
-    now = datetime.datetime.now()
+    now = dt_util.utcnow()
     track_utc_time_change(
         hass,
         cd_account.update,
@@ -117,9 +119,7 @@ class BMWConnectedDriveAccount:
     def __init__(
         self, username: str, password: str, region_str: str, name: str, read_only
     ) -> None:
-        """Constructor."""
-        from bimmer_connected.account import ConnectedDriveAccount
-        from bimmer_connected.country_selector import get_region_from_name
+        """Initialize account."""
 
         region = get_region_from_name(region_str)
 
@@ -142,7 +142,7 @@ class BMWConnectedDriveAccount:
             self.account.update_vehicle_states()
             for listener in self._update_listeners:
                 listener()
-        except IOError as exception:
+        except OSError as exception:
             _LOGGER.error(
                 "Could not connect to the BMW Connected Drive portal. "
                 "The vehicle state could not be updated."

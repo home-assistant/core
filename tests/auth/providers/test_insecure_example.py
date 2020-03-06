@@ -4,7 +4,7 @@ import uuid
 
 import pytest
 
-from homeassistant.auth import auth_store, models as auth_models, AuthManager
+from homeassistant.auth import AuthManager, auth_store, models as auth_models
 from homeassistant.auth.providers import insecure_example
 
 from tests.common import mock_coro

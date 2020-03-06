@@ -16,5 +16,13 @@
             }
         },
         "title": "ZHA"
+    },
+    "device_automation": {
+        "action_type": {
+            "warn": "Avisar"
+        },
+        "trigger_subtype": {
+            "left": "Esquerda"
+        }
     }
 }

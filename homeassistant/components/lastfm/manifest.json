@@ -1,10 +1,8 @@
 {
   "domain": "lastfm",
-  "name": "Lastfm",
-  "documentation": "https://www.home-assistant.io/components/lastfm",
-  "requirements": [
-    "pylast==3.1.0"
-  ],
+  "name": "Last.fm",
+  "documentation": "https://www.home-assistant.io/integrations/lastfm",
+  "requirements": ["pylast==3.2.0"],
   "dependencies": [],
   "codeowners": []
 }

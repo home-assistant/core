@@ -1,4 +1,5 @@
 """Switches on Zigbee Home Automation networks."""
+import functools
 import logging
 
 from zigpy.zcl.foundation import Status
@@ -8,63 +9,42 @@ from homeassistant.const import STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
+from .core import discovery
 from .core.const import (
     CHANNEL_ON_OFF,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
+    SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
-    ZHA_DISCOVERY_NEW,
 )
+from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up Zigbee Home Automation switches."""
-    pass
+STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation switch from config entry."""
-
-    async def async_discover(discovery_info):
-        await _async_setup_entities(
-            hass, config_entry, async_add_entities, [discovery_info]
-        )
+    entities_to_create = hass.data[DATA_ZHA][DOMAIN] = []
 
     unsub = async_dispatcher_connect(
-        hass, ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover
+        hass,
+        SIGNAL_ADD_ENTITIES,
+        functools.partial(
+            discovery.async_add_entities, async_add_entities, entities_to_create
+        ),
     )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
-    switches = hass.data.get(DATA_ZHA, {}).get(DOMAIN)
-    if switches is not None:
-        await _async_setup_entities(
-            hass, config_entry, async_add_entities, switches.values()
-        )
-        del hass.data[DATA_ZHA][DOMAIN]
 
-
-async def _async_setup_entities(
-    hass, config_entry, async_add_entities, discovery_infos
-):
-    """Set up the ZHA switches."""
-    entities = []
-    for discovery_info in discovery_infos:
-        entities.append(Switch(**discovery_info))
-
-    async_add_entities(entities, update_before_add=True)
-
-
+@STRICT_MATCH(channel_names=CHANNEL_ON_OFF)
 class Switch(ZhaEntity, SwitchDevice):
     """ZHA switch."""
 
-    _domain = DOMAIN
-
-    def __init__(self, **kwargs):
+    def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Initialize the ZHA switch."""
-        super().__init__(**kwargs)
+        super().__init__(unique_id, zha_device, channels, **kwargs)
         self._on_off_channel = self.cluster_channels.get(CHANNEL_ON_OFF)
 
     @property
@@ -90,9 +70,10 @@ class Switch(ZhaEntity, SwitchDevice):
         self._state = False
         self.async_schedule_update_ha_state()
 
-    def async_set_state(self, state):
+    @callback
+    def async_set_state(self, attr_id, attr_name, value):
         """Handle state update from channel."""
-        self._state = bool(state)
+        self._state = bool(value)
         self.async_schedule_update_ha_state()
 
     @property

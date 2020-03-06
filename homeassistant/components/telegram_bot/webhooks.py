@@ -2,6 +2,8 @@
 import datetime as dt
 import logging
 
+from telegram.error import TimedOut
+
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.const import KEY_REAL_IP
 from homeassistant.const import (
@@ -26,7 +28,6 @@ REMOVE_HANDLER_URL = ""
 
 async def async_setup_platform(hass, config):
     """Set up the Telegram webhooks platform."""
-    import telegram
 
     bot = initialize_bot(config)
 
@@ -45,7 +46,7 @@ async def async_setup_platform(hass, config):
     else:
         _LOGGER.debug("telegram webhook Status: %s", current_status)
 
-    handler_url = "{0}{1}".format(base_url, TELEGRAM_HANDLER_URL)
+    handler_url = f"{base_url}{TELEGRAM_HANDLER_URL}"
     if not handler_url.startswith("https"):
         _LOGGER.error("Invalid telegram webhook %s must be https", handler_url)
         return False
@@ -55,7 +56,7 @@ async def async_setup_platform(hass, config):
         while retry_num < 3:
             try:
                 return bot.setWebhook(handler_url, timeout=5)
-            except telegram.error.TimedOut:
+            except TimedOut:
                 retry_num += 1
                 _LOGGER.warning("Timeout trying to set webhook (retry #%d)", retry_num)
 

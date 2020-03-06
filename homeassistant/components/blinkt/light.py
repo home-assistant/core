@@ -4,16 +4,16 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
     ATTR_HS_COLOR,
+    PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     Light,
-    PLATFORM_SCHEMA,
 )
 from homeassistant.const import CONF_NAME
+import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ class BlinktLight(Light):
         Default brightness and white color.
         """
         self._blinkt = blinkt
-        self._name = "{}_{}".format(name, index)
+        self._name = f"{name}_{index}"
         self._index = index
         self._is_on = False
         self._brightness = 255

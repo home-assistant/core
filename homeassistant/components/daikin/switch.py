@@ -44,7 +44,7 @@ class DaikinZoneSwitch(ToggleEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return "{}-zone{}".format(self._api.mac, self._zone_id)
+        return f"{self._api.mac}-zone{self._zone_id}"
 
     @property
     def icon(self):
@@ -54,7 +54,7 @@ class DaikinZoneSwitch(ToggleEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._api.name, self._api.device.zones[self._zone_id][0])
+        return f"{self._api.name} {self._api.device.zones[self._zone_id][0]}"
 
     @property
     def is_on(self):

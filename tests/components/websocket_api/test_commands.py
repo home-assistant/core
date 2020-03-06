@@ -1,20 +1,18 @@
 """Tests for WebSocket API commands."""
 from async_timeout import timeout
 
-from homeassistant.core import callback
-from homeassistant.components.websocket_api.const import URL
+from homeassistant.components.websocket_api import const
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
     TYPE_AUTH_REQUIRED,
 )
-from homeassistant.components.websocket_api import const
+from homeassistant.components.websocket_api.const import URL
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
-
-from . import API_PASSWORD
 
 
 async def test_call_service(hass, websocket_client):
@@ -250,9 +248,7 @@ async def test_ping(websocket_client):
 
 async def test_call_service_context_with_user(hass, aiohttp_client, hass_access_token):
     """Test that the user is set in the service call context."""
-    assert await async_setup_component(
-        hass, "websocket_api", {"http": {"api_password": API_PASSWORD}}
-    )
+    assert await async_setup_component(hass, "websocket_api", {})
 
     calls = async_mock_service(hass, "domain_test", "test_service")
     client = await aiohttp_client(hass.http.app)

@@ -1,20 +1,20 @@
 """Support for sending data to Emoncms."""
-import logging
 from datetime import timedelta
+import logging
 
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_WHITELIST,
-    CONF_URL,
-    STATE_UNKNOWN,
-    STATE_UNAVAILABLE,
     CONF_SCAN_INTERVAL,
+    CONF_URL,
+    CONF_WHITELIST,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.helpers import state as state_helper
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_time
 from homeassistant.util import dt as dt_util
 
@@ -47,7 +47,7 @@ def setup(hass, config):
     def send_data(url, apikey, node, payload):
         """Send payload data to Emoncms."""
         try:
-            fullurl = "{}/input/post.json".format(url)
+            fullurl = f"{url}/input/post.json"
             data = {"apikey": apikey, "data": payload}
             parameters = {"node": node}
             req = requests.post(
@@ -83,7 +83,7 @@ def setup(hass, config):
 
         if payload_dict:
             payload = "{%s}" % ",".join(
-                "{}:{}".format(key, val) for key, val in payload_dict.items()
+                f"{key}:{val}" for key, val in payload_dict.items()
             )
 
             send_data(

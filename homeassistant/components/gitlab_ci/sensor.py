@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+from gitlab import Gitlab, GitlabAuthenticationError, GitlabGetError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -141,12 +142,10 @@ class GitLabData:
 
     def __init__(self, gitlab_id, priv_token, interval, url):
         """Fetch data from GitLab API for most recent CI job."""
-        import gitlab
 
         self._gitlab_id = gitlab_id
-        self._gitlab = gitlab.Gitlab(url, private_token=priv_token, per_page=1)
+        self._gitlab = Gitlab(url, private_token=priv_token, per_page=1)
         self._gitlab.auth()
-        self._gitlab_exceptions = gitlab.exceptions
         self.update = Throttle(interval)(self._update)
 
         self.available = False
@@ -174,9 +173,9 @@ class GitLabData:
             self.build_id = _last_job.attributes.get("id")
             self.branch = _last_job.attributes.get("ref")
             self.available = True
-        except self._gitlab_exceptions.GitlabAuthenticationError as erra:
+        except GitlabAuthenticationError as erra:
             _LOGGER.error("Authentication Error: %s", erra)
             self.available = False
-        except self._gitlab_exceptions.GitlabGetError as errg:
+        except GitlabGetError as errg:
             _LOGGER.error("Project Not Found: %s", errg)
             self.available = False

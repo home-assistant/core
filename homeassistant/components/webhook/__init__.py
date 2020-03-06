@@ -1,14 +1,14 @@
 """Webhooks for Home Assistant."""
 import logging
+import secrets
 
-from aiohttp.web import Response
+from aiohttp.web import Request, Response
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.loader import bind_hass
-from homeassistant.auth.util import generate_secret
 from homeassistant.components import websocket_api
 from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.core import callback
+from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ def async_unregister(hass, webhook_id):
 @callback
 def async_generate_id():
     """Generate a webhook_id."""
-    return generate_secret(entropy=32)
+    return secrets.token_hex(32)
 
 
 @callback
@@ -98,11 +98,17 @@ class WebhookView(HomeAssistantView):
     url = URL_WEBHOOK_PATH
     name = "api:webhook"
     requires_auth = False
+    cors_allowed = True
 
-    async def post(self, request, webhook_id):
+    async def _handle(self, request: Request, webhook_id):
         """Handle webhook call."""
+        _LOGGER.debug("Handling webhook %s payload for %s", request.method, webhook_id)
         hass = request.app["hass"]
         return await async_handle_webhook(hass, webhook_id, request)
+
+    head = _handle
+    post = _handle
+    put = _handle
 
 
 @callback

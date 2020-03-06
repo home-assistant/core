@@ -3,6 +3,9 @@ import logging
 import threading
 from uuid import UUID
 
+from pygatt import BLEAddressType
+from pygatt.backends import Characteristic, GATTToolBackend
+from pygatt.exceptions import BLEError, NotConnectedError, NotificationTimeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -12,6 +15,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -79,7 +83,7 @@ class SkybeaconHumid(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return "%"
+        return UNIT_PERCENTAGE
 
     @property
     def device_state_attributes(self):
@@ -132,13 +136,8 @@ class Monitor(threading.Thread):
 
     def run(self):
         """Thread that keeps connection alive."""
-        # pylint: disable=import-error
-        import pygatt
-        from pygatt.backends import Characteristic
-        from pygatt.exceptions import BLEError, NotConnectedError, NotificationTimeout
-
         cached_char = Characteristic(BLE_TEMP_UUID, BLE_TEMP_HANDLE)
-        adapter = pygatt.backends.GATTToolBackend()
+        adapter = GATTToolBackend()
         while True:
             try:
                 _LOGGER.debug("Connecting to %s", self.name)
@@ -147,7 +146,7 @@ class Monitor(threading.Thread):
                 # Seems only one connection can be initiated at a time
                 with CONNECT_LOCK:
                     device = adapter.connect(
-                        self.mac, CONNECT_TIMEOUT, pygatt.BLEAddressType.random
+                        self.mac, CONNECT_TIMEOUT, BLEAddressType.random
                     )
                 if SKIP_HANDLE_LOOKUP:
                     # HACK: inject handle mapping collected offline

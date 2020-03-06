@@ -1,9 +1,11 @@
 """Support for Nest devices."""
+from datetime import datetime, timedelta
 import logging
 import socket
-from datetime import datetime, timedelta
 import threading
 
+from nest import Nest
+from nest.nest import APIError, AuthorizationError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -18,11 +20,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import dispatcher_send, async_dispatcher_connect
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
 from . import local_auth
+from .const import DOMAIN
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -142,7 +144,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up Nest from a config entry."""
-    from nest import Nest
 
     nest = Nest(access_token=entry.data["tokens"]["access_token"])
 
@@ -215,7 +216,7 @@ async def async_setup_entry(hass, entry):
                     structure.set_eta(trip_id, eta_begin, eta_end)
                 else:
                     _LOGGER.info(
-                        "No thermostats found in structure: %s, " "unable to set ETA",
+                        "No thermostats found in structure: %s, unable to set ETA",
                         structure.name,
                     )
 
@@ -286,8 +287,6 @@ class NestDevice:
 
     def initialize(self):
         """Initialize Nest."""
-        from nest.nest import AuthorizationError, APIError
-
         try:
             # Do not optimize next statement, it is here for initialize
             # persistence Nest API connection.
@@ -302,8 +301,6 @@ class NestDevice:
 
     def structures(self):
         """Generate a list of structures."""
-        from nest.nest import AuthorizationError, APIError
-
         try:
             for structure in self.nest.structures:
                 if structure.name not in self.local_structure:
@@ -332,8 +329,6 @@ class NestDevice:
 
     def _devices(self, device_type):
         """Generate a list of Nest devices."""
-        from nest.nest import AuthorizationError, APIError
-
         try:
             for structure in self.nest.structures:
                 if structure.name not in self.local_structure:
@@ -405,7 +400,7 @@ class NestSensorDevice(Entity):
     @property
     def unique_id(self):
         """Return unique id based on device serial and variable."""
-        return "{}-{}".format(self.device.serial, self.variable)
+        return f"{self.device.serial}-{self.variable}"
 
     @property
     def device_info(self):

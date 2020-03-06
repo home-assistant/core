@@ -3,9 +3,8 @@
 import os
 import shutil
 import tempfile
-
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import homeassistant.components.kira as kira
 from homeassistant.setup import setup_component

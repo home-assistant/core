@@ -1,6 +1,7 @@
 """Support for the Opple light."""
 import logging
 
+from pyoppleio.OppleLightDevice import OppleLightDevice
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -46,7 +47,6 @@ class OppleLight(Light):
 
     def __init__(self, name, host):
         """Initialize an Opple light."""
-        from pyoppleio.OppleLightDevice import OppleLightDevice
 
         self._device = OppleLightDevice(host)
 

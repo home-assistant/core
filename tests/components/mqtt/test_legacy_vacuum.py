@@ -5,10 +5,8 @@ import json
 from homeassistant.components import mqtt, vacuum
 from homeassistant.components.mqtt import CONF_COMMAND_TOPIC
 from homeassistant.components.mqtt.discovery import async_start
-from homeassistant.components.mqtt.vacuum import (
-    schema_legacy as mqttvacuum,
-    services_to_strings,
-)
+from homeassistant.components.mqtt.vacuum import schema_legacy as mqttvacuum
+from homeassistant.components.mqtt.vacuum.schema import services_to_strings
 from homeassistant.components.mqtt.vacuum.schema_legacy import (
     ALL_SERVICES,
     SERVICE_TO_STRING,
@@ -80,7 +78,7 @@ async def test_default_supported_features(hass, mqtt_mock):
 async def test_all_commands(hass, mqtt_mock):
     """Test simple commands to the vacuum."""
     config = deepcopy(DEFAULT_CONFIG)
-    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = mqttvacuum.services_to_strings(
+    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
         ALL_SERVICES, SERVICE_TO_STRING
     )
 
@@ -221,7 +219,7 @@ async def test_attributes_without_supported_features(hass, mqtt_mock):
 async def test_status(hass, mqtt_mock):
     """Test status updates from the vacuum."""
     config = deepcopy(DEFAULT_CONFIG)
-    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = mqttvacuum.services_to_strings(
+    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
         ALL_SERVICES, SERVICE_TO_STRING
     )
 
@@ -260,7 +258,7 @@ async def test_status(hass, mqtt_mock):
 async def test_status_battery(hass, mqtt_mock):
     """Test status updates from the vacuum."""
     config = deepcopy(DEFAULT_CONFIG)
-    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = mqttvacuum.services_to_strings(
+    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
         ALL_SERVICES, SERVICE_TO_STRING
     )
 
@@ -277,7 +275,7 @@ async def test_status_battery(hass, mqtt_mock):
 async def test_status_cleaning(hass, mqtt_mock):
     """Test status updates from the vacuum."""
     config = deepcopy(DEFAULT_CONFIG)
-    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = mqttvacuum.services_to_strings(
+    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
         ALL_SERVICES, SERVICE_TO_STRING
     )
 
@@ -294,7 +292,7 @@ async def test_status_cleaning(hass, mqtt_mock):
 async def test_status_docked(hass, mqtt_mock):
     """Test status updates from the vacuum."""
     config = deepcopy(DEFAULT_CONFIG)
-    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = mqttvacuum.services_to_strings(
+    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
         ALL_SERVICES, SERVICE_TO_STRING
     )
 
@@ -311,7 +309,7 @@ async def test_status_docked(hass, mqtt_mock):
 async def test_status_charging(hass, mqtt_mock):
     """Test status updates from the vacuum."""
     config = deepcopy(DEFAULT_CONFIG)
-    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = mqttvacuum.services_to_strings(
+    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
         ALL_SERVICES, SERVICE_TO_STRING
     )
 
@@ -328,7 +326,7 @@ async def test_status_charging(hass, mqtt_mock):
 async def test_status_fan_speed(hass, mqtt_mock):
     """Test status updates from the vacuum."""
     config = deepcopy(DEFAULT_CONFIG)
-    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = mqttvacuum.services_to_strings(
+    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
         ALL_SERVICES, SERVICE_TO_STRING
     )
 
@@ -345,7 +343,7 @@ async def test_status_fan_speed(hass, mqtt_mock):
 async def test_status_error(hass, mqtt_mock):
     """Test status updates from the vacuum."""
     config = deepcopy(DEFAULT_CONFIG)
-    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = mqttvacuum.services_to_strings(
+    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
         ALL_SERVICES, SERVICE_TO_STRING
     )
 
@@ -371,7 +369,7 @@ async def test_battery_template(hass, mqtt_mock):
     config = deepcopy(DEFAULT_CONFIG)
     config.update(
         {
-            mqttvacuum.CONF_SUPPORTED_FEATURES: mqttvacuum.services_to_strings(
+            mqttvacuum.CONF_SUPPORTED_FEATURES: services_to_strings(
                 ALL_SERVICES, SERVICE_TO_STRING
             ),
             mqttvacuum.CONF_BATTERY_LEVEL_TOPIC: "retroroomba/battery_level",
@@ -390,7 +388,7 @@ async def test_battery_template(hass, mqtt_mock):
 async def test_status_invalid_json(hass, mqtt_mock):
     """Test to make sure nothing breaks if the vacuum sends bad JSON."""
     config = deepcopy(DEFAULT_CONFIG)
-    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = mqttvacuum.services_to_strings(
+    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
         ALL_SERVICES, SERVICE_TO_STRING
     )
 
@@ -709,8 +707,7 @@ async def test_unique_id(hass, mqtt_mock):
 
     async_fire_mqtt_message(hass, "test-topic", "payload")
 
-    assert len(hass.states.async_entity_ids()) == 2
-    # all vacuums group is 1, unique id created is 1
+    assert len(hass.states.async_entity_ids()) == 1
 
 
 async def test_entity_device_info_with_identifier(hass, mqtt_mock):

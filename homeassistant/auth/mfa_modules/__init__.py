@@ -1,4 +1,4 @@
-"""Plugable auth modules for Home Assistant."""
+"""Pluggable auth modules for Home Assistant."""
 import importlib
 import logging
 import types
@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant import requirements, data_entry_flow
+from homeassistant import data_entry_flow, requirements
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -42,7 +42,7 @@ class MultiFactorAuthModule:
         self.config = config
 
     @property
-    def id(self) -> str:  # pylint: disable=invalid-name
+    def id(self) -> str:
         """Return id of the auth module.
 
         Default is same as type
@@ -109,7 +109,7 @@ class SetupFlow(data_entry_flow.FlowHandler):
         Return self.async_show_form(step_id='init') if user_input is None.
         Return self.async_create_entry(data={'result': result}) if finish.
         """
-        errors = {}  # type: Dict[str, str]
+        errors: Dict[str, str] = {}
 
         if user_input:
             result = await self._auth_module.async_setup_user(self._user_id, user_input)

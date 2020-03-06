@@ -5,21 +5,22 @@ from unittest.mock import patch
 
 import pytest
 
-import homeassistant.core as ha
-from homeassistant.const import SERVICE_TURN_ON, SERVICE_TURN_OFF
-from homeassistant.util import dt as dt_util
-from homeassistant.helpers import state
-from homeassistant.const import (
-    STATE_OPEN,
-    STATE_CLOSED,
-    STATE_LOCKED,
-    STATE_UNLOCKED,
-    STATE_ON,
-    STATE_OFF,
-    STATE_HOME,
-    STATE_NOT_HOME,
-)
 from homeassistant.components.sun import STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON
+from homeassistant.const import (
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_CLOSED,
+    STATE_HOME,
+    STATE_LOCKED,
+    STATE_NOT_HOME,
+    STATE_OFF,
+    STATE_ON,
+    STATE_OPEN,
+    STATE_UNLOCKED,
+)
+import homeassistant.core as ha
+from homeassistant.helpers import state
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_mock_service
 
@@ -129,7 +130,7 @@ async def test_reproduce_turn_on(hass):
     last_call = calls[-1]
     assert last_call.domain == "light"
     assert SERVICE_TURN_ON == last_call.service
-    assert ["light.test"] == last_call.data.get("entity_id")
+    assert "light.test" == last_call.data.get("entity_id")
 
 
 async def test_reproduce_turn_off(hass):
@@ -146,7 +147,7 @@ async def test_reproduce_turn_off(hass):
     last_call = calls[-1]
     assert last_call.domain == "light"
     assert SERVICE_TURN_OFF == last_call.service
-    assert ["light.test"] == last_call.data.get("entity_id")
+    assert "light.test" == last_call.data.get("entity_id")
 
 
 async def test_reproduce_complex_data(hass):
@@ -155,10 +156,10 @@ async def test_reproduce_complex_data(hass):
 
     hass.states.async_set("light.test", "off")
 
-    complex_data = ["hello", {"11": "22"}]
+    complex_data = [255, 100, 100]
 
     await state.async_reproduce_state(
-        hass, ha.State("light.test", "on", {"complex": complex_data})
+        hass, ha.State("light.test", "on", {"rgb_color": complex_data})
     )
 
     await hass.async_block_till_done()
@@ -167,7 +168,7 @@ async def test_reproduce_complex_data(hass):
     last_call = calls[-1]
     assert last_call.domain == "light"
     assert SERVICE_TURN_ON == last_call.service
-    assert complex_data == last_call.data.get("complex")
+    assert complex_data == last_call.data.get("rgb_color")
 
 
 async def test_reproduce_bad_state(hass):

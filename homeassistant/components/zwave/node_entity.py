@@ -1,25 +1,26 @@
 """Entity class that represents Z-Wave node."""
-import logging
 from itertools import count
+import logging
 
+from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, ATTR_WAKEUP
 from homeassistant.core import callback
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_WAKEUP, ATTR_ENTITY_ID
-from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_registry import async_get_registry
 
 from .const import (
-    ATTR_NODE_ID,
-    COMMAND_CLASS_WAKE_UP,
-    ATTR_SCENE_ID,
-    ATTR_SCENE_DATA,
     ATTR_BASIC_LEVEL,
+    ATTR_NODE_ID,
+    ATTR_SCENE_DATA,
+    ATTR_SCENE_ID,
+    COMMAND_CLASS_CENTRAL_SCENE,
+    COMMAND_CLASS_VERSION,
+    COMMAND_CLASS_WAKE_UP,
+    DOMAIN,
     EVENT_NODE_EVENT,
     EVENT_SCENE_ACTIVATED,
-    COMMAND_CLASS_CENTRAL_SCENE,
-    DOMAIN,
 )
-from .util import node_name, is_node_parsed, node_device_id_and_name
+from .util import is_node_parsed, node_device_id_and_name, node_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +31,7 @@ ATTR_FAILED = "is_failed"
 ATTR_PRODUCT_NAME = "product_name"
 ATTR_MANUFACTURER_NAME = "manufacturer_name"
 ATTR_NODE_NAME = "node_name"
+ATTR_APPLICATION_VERSION = "application_version"
 
 STAGE_COMPLETE = "Complete"
 
@@ -130,10 +132,14 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         self._product_name = node.product_name
         self._manufacturer_name = node.manufacturer_name
         self._unique_id = self._compute_unique_id()
+        self._application_version = None
         self._attributes = {}
         self.wakeup_interval = None
         self.location = None
         self.battery_level = None
+        dispatcher.connect(
+            self.network_node_value_added, ZWaveNetwork.SIGNAL_VALUE_ADDED
+        )
         dispatcher.connect(self.network_node_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
         dispatcher.connect(self.network_node_changed, ZWaveNetwork.SIGNAL_NODE)
         dispatcher.connect(self.network_node_changed, ZWaveNetwork.SIGNAL_NOTIFICATION)
@@ -161,6 +167,24 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             info["via_device"] = (DOMAIN, 1)
         return info
 
+    def maybe_update_application_version(self, value):
+        """Update application version if value is a Command Class Version, Application Value."""
+        if (
+            value
+            and value.command_class == COMMAND_CLASS_VERSION
+            and value.label == "Application Version"
+        ):
+            self._application_version = value.data
+
+    def network_node_value_added(self, node=None, value=None, args=None):
+        """Handle a added value to a none on the network."""
+        if node and node.node_id != self.node_id:
+            return
+        if args is not None and "nodeId" in args and args["nodeId"] != self.node_id:
+            return
+
+        self.maybe_update_application_version(value)
+
     def network_node_changed(self, node=None, value=None, args=None):
         """Handle a changed node on the network."""
         if node and node.node_id != self.node_id:
@@ -171,6 +195,8 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         # Process central scene activation
         if value is not None and value.command_class == COMMAND_CLASS_CENTRAL_SCENE:
             self.central_scene_activated(value.index, value.data)
+
+        self.maybe_update_application_version(value)
 
         self.node_changed()
 
@@ -343,10 +369,12 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             attrs[ATTR_BATTERY_LEVEL] = self.battery_level
         if self.wakeup_interval is not None:
             attrs[ATTR_WAKEUP] = self.wakeup_interval
+        if self._application_version is not None:
+            attrs[ATTR_APPLICATION_VERSION] = self._application_version
 
         return attrs
 
     def _compute_unique_id(self):
         if is_node_parsed(self.node) or self.node.is_ready:
-            return "node-{}".format(self.node_id)
+            return f"node-{self.node_id}"
         return None

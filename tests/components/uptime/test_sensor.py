@@ -1,11 +1,12 @@
 """The tests for the uptime sensor platform."""
+import asyncio
+from datetime import timedelta
 import unittest
 from unittest.mock import patch
-from datetime import timedelta
 
-from homeassistant.util.async_ import run_coroutine_threadsafe
-from homeassistant.setup import setup_component
 from homeassistant.components.uptime.sensor import UptimeSensor
+from homeassistant.setup import setup_component
+
 from tests.common import get_test_home_assistant
 
 
@@ -46,11 +47,15 @@ class TestUptimeSensor(unittest.TestCase):
         assert sensor.unit_of_measurement == "days"
         new_time = sensor.initial + timedelta(days=1)
         with patch("homeassistant.util.dt.now", return_value=new_time):
-            run_coroutine_threadsafe(sensor.async_update(), self.hass.loop).result()
+            asyncio.run_coroutine_threadsafe(
+                sensor.async_update(), self.hass.loop
+            ).result()
             assert sensor.state == 1.00
         new_time = sensor.initial + timedelta(days=111.499)
         with patch("homeassistant.util.dt.now", return_value=new_time):
-            run_coroutine_threadsafe(sensor.async_update(), self.hass.loop).result()
+            asyncio.run_coroutine_threadsafe(
+                sensor.async_update(), self.hass.loop
+            ).result()
             assert sensor.state == 111.50
 
     def test_uptime_sensor_hours_output(self):
@@ -59,11 +64,15 @@ class TestUptimeSensor(unittest.TestCase):
         assert sensor.unit_of_measurement == "hours"
         new_time = sensor.initial + timedelta(hours=16)
         with patch("homeassistant.util.dt.now", return_value=new_time):
-            run_coroutine_threadsafe(sensor.async_update(), self.hass.loop).result()
+            asyncio.run_coroutine_threadsafe(
+                sensor.async_update(), self.hass.loop
+            ).result()
             assert sensor.state == 16.00
         new_time = sensor.initial + timedelta(hours=72.499)
         with patch("homeassistant.util.dt.now", return_value=new_time):
-            run_coroutine_threadsafe(sensor.async_update(), self.hass.loop).result()
+            asyncio.run_coroutine_threadsafe(
+                sensor.async_update(), self.hass.loop
+            ).result()
             assert sensor.state == 72.50
 
     def test_uptime_sensor_minutes_output(self):
@@ -72,9 +81,13 @@ class TestUptimeSensor(unittest.TestCase):
         assert sensor.unit_of_measurement == "minutes"
         new_time = sensor.initial + timedelta(minutes=16)
         with patch("homeassistant.util.dt.now", return_value=new_time):
-            run_coroutine_threadsafe(sensor.async_update(), self.hass.loop).result()
+            asyncio.run_coroutine_threadsafe(
+                sensor.async_update(), self.hass.loop
+            ).result()
             assert sensor.state == 16.00
         new_time = sensor.initial + timedelta(minutes=12.499)
         with patch("homeassistant.util.dt.now", return_value=new_time):
-            run_coroutine_threadsafe(sensor.async_update(), self.hass.loop).result()
+            asyncio.run_coroutine_threadsafe(
+                sensor.async_update(), self.hass.loop
+            ).result()
             assert sensor.state == 12.50

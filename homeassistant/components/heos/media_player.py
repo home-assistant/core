@@ -60,11 +60,6 @@ CONTROL_TO_SUPPORT = {
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform uses config entry setup."""
-    pass
-
-
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ):
@@ -115,7 +110,6 @@ class HeosMediaPlayer(MediaPlayerDevice):
 
     async def async_added_to_hass(self):
         """Device added to hass."""
-        self._source_manager = self.hass.data[HEOS_DOMAIN][DATA_SOURCE_MANAGER]
         # Update state when attributes of the player change
         self._signals.append(
             self._player.heos.dispatcher.connect(
@@ -183,7 +177,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
                     None,
                 )
             if index is None:
-                raise ValueError("Invalid quick select '{}'".format(media_id))
+                raise ValueError(f"Invalid quick select '{media_id}'")
             await self._player.play_quick_select(index)
             return
 
@@ -191,7 +185,7 @@ class HeosMediaPlayer(MediaPlayerDevice):
             playlists = await self._player.heos.get_playlists()
             playlist = next((p for p in playlists if p.name == media_id), None)
             if not playlist:
-                raise ValueError("Invalid playlist '{}'".format(media_id))
+                raise ValueError(f"Invalid playlist '{media_id}'")
             add_queue_option = (
                 heos_const.ADD_QUEUE_ADD_TO_END
                 if kwargs.get(ATTR_MEDIA_ENQUEUE)
@@ -215,11 +209,11 @@ class HeosMediaPlayer(MediaPlayerDevice):
                     None,
                 )
             if index is None:
-                raise ValueError("Invalid favorite '{}'".format(media_id))
+                raise ValueError(f"Invalid favorite '{media_id}'")
             await self._player.play_favorite(index)
             return
 
-        raise ValueError("Unsupported media type '{}'".format(media_type))
+        raise ValueError(f"Unsupported media type '{media_type}'")
 
     @log_command_error("select source")
     async def async_select_source(self, source):
@@ -241,6 +235,9 @@ class HeosMediaPlayer(MediaPlayerDevice):
         controls = self._player.now_playing_media.supported_controls
         current_support = [CONTROL_TO_SUPPORT[control] for control in controls]
         self._supported_features = reduce(ior, current_support, BASE_SUPPORTED_FEATURES)
+
+        if self._source_manager is None:
+            self._source_manager = self.hass.data[HEOS_DOMAIN][DATA_SOURCE_MANAGER]
 
     async def async_will_remove_from_hass(self):
         """Disconnect the device when removed."""

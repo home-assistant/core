@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Endast en enda konfiguration av Abode \u00e4r till\u00e5ten."
+        },
+        "error": {
+            "connection_error": "Det gick inte att ansluta till Abode.",
+            "identifier_exists": "Kontot \u00e4r redan registrerat.",
+            "invalid_credentials": "Ogiltiga autentiseringsuppgifter."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "E-postadress"
+                },
+                "title": "Fyll i din inloggningsinformation f\u00f6r Abode"
+            }
+        },
+        "title": "Abode"
+    }
+}

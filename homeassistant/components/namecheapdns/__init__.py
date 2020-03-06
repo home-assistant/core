@@ -1,13 +1,14 @@
 """Support for namecheap DNS services."""
-import logging
 from datetime import timedelta
+import logging
 
+import defusedxml.ElementTree as ET
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_DOMAIN
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.const import CONF_DOMAIN, CONF_HOST, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,8 +56,6 @@ async def async_setup(hass, config):
 
 async def _update_namecheapdns(session, host, domain, password):
     """Update namecheap DNS entry."""
-    import defusedxml.ElementTree as ET
-
     params = {"host": host, "domain": domain, "password": password}
 
     resp = await session.get(UPDATE_URL, params=params)

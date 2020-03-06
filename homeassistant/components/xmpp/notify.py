@@ -7,8 +7,22 @@ import random
 import string
 
 import requests
+import slixmpp
+from slixmpp.exceptions import IqError, IqTimeout, XMPPError
+from slixmpp.plugins.xep_0363.http_upload import (
+    FileTooBig,
+    FileUploadError,
+    UploadServiceNotFound,
+)
+from slixmpp.xmlstream.xmlstream import NotConnectedError
 import voluptuous as vol
 
+from homeassistant.components.notify import (
+    ATTR_TITLE,
+    ATTR_TITLE_DEFAULT,
+    PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_RECIPIENT,
@@ -18,13 +32,6 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.template as template_helper
-
-from homeassistant.components.notify import (
-    ATTR_TITLE,
-    ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
-    BaseNotificationService,
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,12 +94,12 @@ class XmppNotificationService(BaseNotificationService):
     async def async_send_message(self, message="", **kwargs):
         """Send a message to a user."""
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-        text = "{}: {}".format(title, message) if title else message
+        text = f"{title}: {message}" if title else message
         data = kwargs.get(ATTR_DATA)
         timeout = data.get(ATTR_TIMEOUT, XEP_0363_TIMEOUT) if data else None
 
         await async_send_message(
-            "{}/{}".format(self._sender, self._resource),
+            f"{self._sender}/{self._resource}",
             self._password,
             self._recipient,
             self._tls,
@@ -118,14 +125,6 @@ async def async_send_message(
     data=None,
 ):
     """Send a message over XMPP."""
-    import slixmpp
-    from slixmpp.exceptions import IqError, IqTimeout, XMPPError
-    from slixmpp.xmlstream.xmlstream import NotConnectedError
-    from slixmpp.plugins.xep_0363.http_upload import (
-        FileTooBig,
-        FileUploadError,
-        UploadServiceNotFound,
-    )
 
     class SendNotificationBot(slixmpp.ClientXMPP):
         """Service for sending Jabber (XMPP) messages."""
@@ -190,7 +189,6 @@ async def async_send_message(
                     message = self.Message(sto=recipient, stype="chat")
 
                 message["body"] = url
-                # pylint: disable=invalid-sequence-index
                 message["oob"]["url"] = url
                 try:
                     message.send()
@@ -203,7 +201,7 @@ async def async_send_message(
             except FileTooBig as ex:
                 _LOGGER.error("File too big for server, could not upload file %s", ex)
             except UploadServiceNotFound as ex:
-                _LOGGER.error("UploadServiceNotFound: " " could not upload file %s", ex)
+                _LOGGER.error("UploadServiceNotFound, could not upload file %s", ex)
             except FileUploadError as ex:
                 _LOGGER.error("FileUploadError, could not upload file %s", ex)
             except requests.exceptions.SSLError as ex:

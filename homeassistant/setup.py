@@ -2,16 +2,13 @@
 import asyncio
 import logging.handlers
 from timeit import default_timer as timer
-
 from types import ModuleType
-from typing import Awaitable, Callable, Optional, Dict, List
+from typing import Awaitable, Callable, Dict, List, Optional
 
-from homeassistant import requirements, core, loader, config as conf_util
+from homeassistant import config as conf_util, core, loader, requirements
 from homeassistant.config import async_notify_setup_error
 from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.async_ import run_coroutine_threadsafe
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +22,7 @@ SLOW_SETUP_WARNING = 10
 
 def setup_component(hass: core.HomeAssistant, domain: str, config: Dict) -> bool:
     """Set up a component and all its dependencies."""
-    return run_coroutine_threadsafe(  # type: ignore
+    return asyncio.run_coroutine_threadsafe(
         async_setup_component(hass, domain, config), hass.loop
     ).result()
 
@@ -58,7 +55,7 @@ async def _async_process_dependencies(
     """Ensure all dependencies are set up."""
     blacklisted = [dep for dep in dependencies if dep in loader.DEPENDENCY_BLACKLIST]
 
-    if blacklisted and name != "default_config":
+    if blacklisted and name not in ("default_config", "safe_mode"):
         _LOGGER.error(
             "Unable to set up dependencies of %s: "
             "found blacklisted dependencies: %s",
@@ -78,7 +75,7 @@ async def _async_process_dependencies(
 
     if failed:
         _LOGGER.error(
-            "Unable to set up dependencies of %s. " "Setup failed for dependencies: %s",
+            "Unable to set up dependencies of %s. Setup failed for dependencies: %s",
             name,
             ", ".join(failed),
         )
@@ -95,7 +92,7 @@ async def _async_setup_component(
     This method is a coroutine.
     """
 
-    def log_error(msg: str, link: bool = True) -> None:
+    def log_error(msg: str, link: Optional[str] = None) -> None:
         """Log helper."""
         _LOGGER.error("Setup failed for %s: %s", domain, msg)
         async_notify_setup_error(hass, domain, link)
@@ -103,7 +100,7 @@ async def _async_setup_component(
     try:
         integration = await loader.async_get_integration(hass, domain)
     except loader.IntegrationNotFound:
-        log_error("Integration not found.", False)
+        log_error("Integration not found.")
         return False
 
     # Validate all dependencies exist and there are no circular dependencies
@@ -111,14 +108,14 @@ async def _async_setup_component(
         await loader.async_component_dependencies(hass, domain)
     except loader.IntegrationNotFound as err:
         _LOGGER.error(
-            "Not setting up %s because we are unable to resolve " "(sub)dependency %s",
+            "Not setting up %s because we are unable to resolve (sub)dependency %s",
             domain,
             err.domain,
         )
         return False
     except loader.CircularDependency as err:
         _LOGGER.error(
-            "Not setting up %s because it contains a circular dependency: " "%s -> %s",
+            "Not setting up %s because it contains a circular dependency: %s -> %s",
             domain,
             err.from_domain,
             err.to_domain,
@@ -130,7 +127,18 @@ async def _async_setup_component(
     try:
         await async_process_deps_reqs(hass, config, integration)
     except HomeAssistantError as err:
-        log_error(str(err))
+        log_error(str(err), integration.documentation)
+        return False
+
+    # Some integrations fail on import because they call functions incorrectly.
+    # So we do it before validating config to catch these errors.
+    try:
+        component = integration.get_component()
+    except ImportError as err:
+        log_error(f"Unable to import component: {err}", integration.documentation)
+        return False
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Setup failed for %s: unknown error", domain)
         return False
 
     processed_config = await conf_util.async_process_component_config(
@@ -138,17 +146,11 @@ async def _async_setup_component(
     )
 
     if processed_config is None:
-        log_error("Invalid config.")
+        log_error("Invalid config.", integration.documentation)
         return False
 
     start = timer()
     _LOGGER.info("Setting up %s", domain)
-
-    try:
-        component = integration.get_component()
-    except ImportError:
-        log_error("Unable to import component", False)
-        return False
 
     if hasattr(component, "PLATFORM_SCHEMA"):
         # Entity components have their own warning
@@ -176,7 +178,7 @@ async def _async_setup_component(
             return False
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Error during setup of component %s", domain)
-        async_notify_setup_error(hass, domain, True)
+        async_notify_setup_error(hass, domain, integration.documentation)
         return False
     finally:
         end = timer()
@@ -189,8 +191,8 @@ async def _async_setup_component(
         return False
     if result is not True:
         log_error(
-            "Integration {!r} did not return boolean if setup was "
-            "successful. Disabling component.".format(domain)
+            f"Integration {domain!r} did not return boolean if setup was "
+            "successful. Disabling component."
         )
         return False
 
@@ -284,8 +286,8 @@ async def async_process_deps_reqs(
         raise HomeAssistantError("Could not set up all dependencies.")
 
     if not hass.config.skip_pip and integration.requirements:
-        await requirements.async_process_requirements(
-            hass, integration.domain, integration.requirements
+        await requirements.async_get_integration_with_requirements(
+            hass, integration.domain
         )
 
     processed.add(integration.domain)

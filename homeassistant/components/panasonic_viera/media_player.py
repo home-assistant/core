@@ -1,9 +1,11 @@
 """Support for interface with a Panasonic Viera TV."""
 import logging
 
+from panasonic_viera import RemoteControl
 import voluptuous as vol
+import wakeonlan
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_URL,
     SUPPORT_NEXT_TRACK,
@@ -19,6 +21,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
+    CONF_BROADCAST_ADDRESS,
     CONF_HOST,
     CONF_MAC,
     CONF_NAME,
@@ -34,6 +37,7 @@ CONF_APP_POWER = "app_power"
 
 DEFAULT_NAME = "Panasonic Viera TV"
 DEFAULT_PORT = 55000
+DEFAULT_BROADCAST_ADDRESS = "255.255.255.255"
 DEFAULT_APP_POWER = False
 
 SUPPORT_VIERATV = (
@@ -53,6 +57,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_MAC): cv.string,
+        vol.Optional(
+            CONF_BROADCAST_ADDRESS, default=DEFAULT_BROADCAST_ADDRESS
+        ): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_APP_POWER, default=DEFAULT_APP_POWER): cv.boolean,
@@ -62,9 +69,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Panasonic Viera TV platform."""
-    from panasonic_viera import RemoteControl
-
     mac = config.get(CONF_MAC)
+    broadcast = config.get(CONF_BROADCAST_ADDRESS)
     name = config.get(CONF_NAME)
     port = config.get(CONF_PORT)
     app_power = config.get(CONF_APP_POWER)
@@ -86,17 +92,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
     remote = RemoteControl(host, port)
 
-    add_entities([PanasonicVieraTVDevice(mac, name, remote, host, app_power)])
+    add_entities(
+        [PanasonicVieraTVDevice(mac, name, remote, host, broadcast, app_power)]
+    )
     return True
 
 
 class PanasonicVieraTVDevice(MediaPlayerDevice):
     """Representation of a Panasonic Viera TV."""
 
-    def __init__(self, mac, name, remote, host, app_power, uuid=None):
+    def __init__(self, mac, name, remote, host, broadcast, app_power, uuid=None):
         """Initialize the Panasonic device."""
-        import wakeonlan
-
         # Save a reference to the imported class
         self._wol = wakeonlan
         self._mac = mac
@@ -107,6 +113,7 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
         self._state = None
         self._remote = remote
         self._host = host
+        self._broadcast = broadcast
         self._volume = 0
         self._app_power = app_power
 
@@ -164,7 +171,7 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
     def turn_on(self):
         """Turn on the media player."""
         if self._mac:
-            self._wol.send_magic_packet(self._mac, ip_address=self._host)
+            self._wol.send_magic_packet(self._mac, ip_address=self._broadcast)
             self._state = STATE_ON
         elif self._app_power:
             self._remote.turn_on()

@@ -1,16 +1,12 @@
-"""
-Support for SmartHab device integration.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/smarthab/
-"""
+"""Support for SmartHab device integration."""
 import logging
 
+import pysmarthab
 import voluptuous as vol
 
-from homeassistant.helpers.discovery import load_platform
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.discovery import load_platform
 
 DOMAIN = "smarthab"
 DATA_HUB = "hub"
@@ -32,7 +28,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config) -> bool:
     """Set up the SmartHab platform."""
-    import pysmarthab
 
     sh_conf = config.get(DOMAIN)
 

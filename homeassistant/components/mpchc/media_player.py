@@ -5,7 +5,7 @@ import re
 import requests
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -56,7 +56,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
 
-    url = "{}:{}".format(host, port)
+    url = f"{host}:{port}"
 
     add_entities([MpcHcDevice(name, url)], True)
 
@@ -69,26 +69,28 @@ class MpcHcDevice(MediaPlayerDevice):
         self._name = name
         self._url = url
         self._player_variables = dict()
+        self._available = False
 
     def update(self):
         """Get the latest details."""
         try:
-            response = requests.get(
-                "{}/variables.html".format(self._url), data=None, timeout=3
-            )
+            response = requests.get(f"{self._url}/variables.html", data=None, timeout=3)
 
             mpchc_variables = re.findall(r'<p id="(.+?)">(.+?)</p>', response.text)
 
             for var in mpchc_variables:
                 self._player_variables[var[0]] = var[1].lower()
+            self._available = True
         except requests.exceptions.RequestException:
             _LOGGER.error("Could not connect to MPC-HC at: %s", self._url)
+            self._player_variables = dict()
+            self._available = False
 
     def _send_command(self, command_id):
         """Send a command to MPC-HC via its window message ID."""
         try:
             params = {"wm_command": command_id}
-            requests.get("{}/command.html".format(self._url), params=params, timeout=3)
+            requests.get(f"{self._url}/command.html", params=params, timeout=3)
         except requests.exceptions.RequestException:
             _LOGGER.error(
                 "Could not send command %d to MPC-HC at: %s", command_id, self._url
@@ -112,6 +114,11 @@ class MpcHcDevice(MediaPlayerDevice):
             return STATE_PAUSED
 
         return STATE_IDLE
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
 
     @property
     def media_title(self):

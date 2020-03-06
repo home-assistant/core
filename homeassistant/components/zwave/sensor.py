@@ -1,17 +1,14 @@
 """Support for Z-Wave sensors."""
 import logging
-from homeassistant.core import callback
-from homeassistant.components.sensor import DOMAIN
+
+from homeassistant.components.sensor import DEVICE_CLASS_BATTERY, DOMAIN
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from . import const, ZWaveDeviceEntity
+
+from . import ZWaveDeviceEntity, const
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old method of setting up Z-Wave sensors."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -28,6 +25,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 def get_device(node, values, **kwargs):
     """Create Z-Wave entity device."""
     # Generic Device mappings
+    if values.primary.command_class == const.COMMAND_CLASS_BATTERY:
+        return ZWaveBatterySensor(values)
     if node.has_command_class(const.COMMAND_CLASS_SENSOR_MULTILEVEL):
         return ZWaveMultilevelSensor(values)
     if (
@@ -107,3 +106,12 @@ class ZWaveAlarmSensor(ZWaveSensor):
     """
 
     pass
+
+
+class ZWaveBatterySensor(ZWaveSensor):
+    """Representation of Z-Wave device battery level."""
+
+    @property
+    def device_class(self):
+        """Return the class of this device."""
+        return DEVICE_CLASS_BATTERY

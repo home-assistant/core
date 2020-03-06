@@ -1,41 +1,34 @@
 """Support for Abode Security System switches."""
-import logging
+import abodepy.helpers.constants as CONST
+import abodepy.helpers.timeline as TIMELINE
 
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DOMAIN as ABODE_DOMAIN, AbodeAutomation, AbodeDevice
+from . import AbodeAutomation, AbodeDevice
+from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+DEVICE_TYPES = [CONST.TYPE_SWITCH, CONST.TYPE_VALVE]
+
+ICON = "mdi:robot"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Abode switch devices."""
-    import abodepy.helpers.constants as CONST
-    import abodepy.helpers.timeline as TIMELINE
+    data = hass.data[DOMAIN]
 
-    data = hass.data[ABODE_DOMAIN]
+    entities = []
 
-    devices = []
+    for device_type in DEVICE_TYPES:
+        for device in data.abode.get_devices(generic_type=device_type):
+            entities.append(AbodeSwitch(data, device))
 
-    # Get all regular switches that are not excluded or marked as lights
-    for device in data.abode.get_devices(generic_type=CONST.TYPE_SWITCH):
-        if data.is_excluded(device) or data.is_light(device):
-            continue
-
-        devices.append(AbodeSwitch(data, device))
-
-    # Get all Abode automations that can be enabled/disabled
-    for automation in data.abode.get_automations(generic_type=CONST.TYPE_AUTOMATION):
-        if data.is_automation_excluded(automation):
-            continue
-
-        devices.append(
+    for automation in data.abode.get_automations():
+        entities.append(
             AbodeAutomationSwitch(data, automation, TIMELINE.AUTOMATION_EDIT_GROUP)
         )
 
-    data.devices.extend(devices)
-
-    add_entities(devices)
+    async_add_entities(entities)
 
 
 class AbodeSwitch(AbodeDevice, SwitchDevice):
@@ -58,15 +51,33 @@ class AbodeSwitch(AbodeDevice, SwitchDevice):
 class AbodeAutomationSwitch(AbodeAutomation, SwitchDevice):
     """A switch implementation for Abode automations."""
 
+    async def async_added_to_hass(self):
+        """Subscribe Abode events."""
+        await super().async_added_to_hass()
+
+        signal = f"abode_trigger_automation_{self.entity_id}"
+        async_dispatcher_connect(self.hass, signal, self.trigger)
+
     def turn_on(self, **kwargs):
-        """Turn on the device."""
-        self._automation.set_active(True)
+        """Enable the automation."""
+        if self._automation.enable(True):
+            self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
-        """Turn off the device."""
-        self._automation.set_active(False)
+        """Disable the automation."""
+        if self._automation.enable(False):
+            self.schedule_update_ha_state()
+
+    def trigger(self):
+        """Trigger the automation."""
+        self._automation.trigger()
 
     @property
     def is_on(self):
-        """Return True if the binary sensor is on."""
-        return self._automation.is_active
+        """Return True if the automation is enabled."""
+        return self._automation.is_enabled
+
+    @property
+    def icon(self):
+        """Return the robot icon to match Home Assistant automations."""
+        return ICON

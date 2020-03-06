@@ -1,8 +1,9 @@
 {
   "domain": "simulated",
   "name": "Simulated",
-  "documentation": "https://www.home-assistant.io/components/simulated",
+  "documentation": "https://www.home-assistant.io/integrations/simulated",
   "requirements": [],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "quality_scale": "internal"
 }

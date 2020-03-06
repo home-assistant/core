@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+from pyaftership.tracker import Tracking
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -11,6 +12,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,8 +58,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the AfterShip sensor platform."""
-    from pyaftership.tracker import Tracking
-
     apikey = config[CONF_API_KEY]
     name = config[CONF_NAME]
 
@@ -77,7 +77,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([instance], True)
 
     async def handle_add_tracking(call):
-        """Call when a user adds a new Aftership tracking from HASS."""
+        """Call when a user adds a new Aftership tracking from Home Assistant."""
         title = call.data.get(CONF_TITLE)
         slug = call.data.get(CONF_SLUG)
         tracking_number = call.data[CONF_TRACKING_NUMBER]
@@ -93,7 +93,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
     async def handle_remove_tracking(call):
-        """Call when a user removes an Aftership tracking from HASS."""
+        """Call when a user removes an Aftership tracking from Home Assistant."""
         slug = call.data[CONF_SLUG]
         tracking_number = call.data[CONF_TRACKING_NUMBER]
 
@@ -146,10 +146,10 @@ class AfterShipSensor(Entity):
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            UPDATE_TOPIC, self.force_update
+            UPDATE_TOPIC, self._force_update
         )
 
-    async def force_update(self):
+    async def _force_update(self):
         """Force update of data."""
         await self.async_update(no_throttle=True)
         await self.async_update_ha_state()

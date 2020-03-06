@@ -2,8 +2,8 @@
 from unittest.mock import patch
 
 from homeassistant import data_entry_flow
-from homeassistant.core import callback
 from homeassistant.components import ifttt
+from homeassistant.core import callback
 
 
 async def test_config_flow_registers_webhook(hass, aiohttp_client):
@@ -33,3 +33,11 @@ async def test_config_flow_registers_webhook(hass, aiohttp_client):
     assert len(ifttt_events) == 1
     assert ifttt_events[0].data["webhook_id"] == webhook_id
     assert ifttt_events[0].data["hello"] == "ifttt"
+
+    # Invalid JSON
+    await client.post("/api/webhook/{}".format(webhook_id), data="not a dict")
+    assert len(ifttt_events) == 1
+
+    # Not a dict
+    await client.post("/api/webhook/{}".format(webhook_id), json="not a dict")
+    assert len(ifttt_events) == 1

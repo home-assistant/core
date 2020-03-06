@@ -2,12 +2,14 @@
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant.auth.providers import legacy_api_password
-from homeassistant.components.http.ban import process_wrong_login, process_success_login
+from homeassistant.auth.models import RefreshToken, User
+from homeassistant.components.http.ban import process_success_login, process_wrong_login
 from homeassistant.const import __version__
 
 from .connection import ActiveConnection
 from .error import Disconnect
+
+# mypy: allow-untyped-calls, allow-untyped-defs
 
 TYPE_AUTH = "auth"
 TYPE_AUTH_INVALID = "auth_invalid"
@@ -70,24 +72,13 @@ class AuthPhase:
             if refresh_token is not None:
                 return await self._async_finish_auth(refresh_token.user, refresh_token)
 
-        elif self._hass.auth.support_legacy and "api_password" in msg:
-            self._logger.info(
-                "Received api_password, it is going to deprecate, please use"
-                " access_token instead. For instructions, see https://"
-                "developers.home-assistant.io/docs/en/external_api_websocket"
-                ".html#authentication-phase"
-            )
-            user = await legacy_api_password.async_validate_password(
-                self._hass, msg["api_password"]
-            )
-            if user is not None:
-                return await self._async_finish_auth(user, None)
-
         self._send_message(auth_invalid_message("Invalid access token or password"))
         await process_wrong_login(self._request)
         raise Disconnect
 
-    async def _async_finish_auth(self, user, refresh_token) -> ActiveConnection:
+    async def _async_finish_auth(
+        self, user: User, refresh_token: RefreshToken
+    ) -> ActiveConnection:
         """Create an active connection."""
         self._logger.debug("Auth OK")
         await process_success_login(self._request)

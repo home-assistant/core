@@ -1,12 +1,13 @@
 """Support for reading data from a serial port."""
-import logging
 import json
+import logging
 
+import serial_asyncio
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_VALUE_TEMPLATE, EVENT_HOMEASSISTANT_STOP
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,8 +65,6 @@ class SerialSensor(Entity):
 
     async def serial_read(self, device, rate, **kwargs):
         """Read the data from the port."""
-        import serial_asyncio
-
         reader, _ = await serial_asyncio.open_serial_connection(
             url=device, baudrate=rate, **kwargs
         )

@@ -2,29 +2,19 @@
 import asyncio
 import base64
 import io
-from unittest.mock import patch, mock_open, PropertyMock
+from unittest.mock import PropertyMock, mock_open, patch
 
 import pytest
 
-from homeassistant.setup import setup_component, async_setup_component
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_ENTITY_PICTURE,
-    EVENT_HOMEASSISTANT_START,
-)
-from homeassistant.components import camera, http
+from homeassistant.components import camera
 from homeassistant.components.camera.const import DOMAIN, PREF_PRELOAD_STREAM
 from homeassistant.components.camera.prefs import CameraEntityPreferences
 from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.async_ import run_coroutine_threadsafe
+from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    get_test_home_assistant,
-    get_test_instance_port,
-    assert_setup_component,
-    mock_coro,
-)
+from tests.common import mock_coro
 from tests.components.camera import common
 
 
@@ -56,108 +46,64 @@ def setup_camera_prefs(hass):
     return common.mock_camera_prefs(hass, "camera.demo_camera")
 
 
-class TestSetupCamera:
-    """Test class for setup camera."""
-
-    def setup_method(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-
-    def teardown_method(self):
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    def test_setup_component(self):
-        """Set up demo platform on camera component."""
-        config = {camera.DOMAIN: {"platform": "demo"}}
-
-        with assert_setup_component(1, camera.DOMAIN):
-            setup_component(self.hass, camera.DOMAIN, config)
+@pytest.fixture
+async def image_mock_url(hass):
+    """Fixture for get_image tests."""
+    await async_setup_component(
+        hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
+    )
 
 
-class TestGetImage:
-    """Test class for camera."""
+async def test_get_image_from_camera(hass, image_mock_url):
+    """Grab an image from camera entity."""
 
-    def setup_method(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-
-        setup_component(
-            self.hass,
-            http.DOMAIN,
-            {http.DOMAIN: {http.CONF_SERVER_PORT: get_test_instance_port()}},
-        )
-
-        config = {camera.DOMAIN: {"platform": "demo"}}
-
-        setup_component(self.hass, camera.DOMAIN, config)
-
-        state = self.hass.states.get("camera.demo_camera")
-        self.url = "{0}{1}".format(
-            self.hass.config.api.base_url, state.attributes.get(ATTR_ENTITY_PICTURE)
-        )
-
-    def teardown_method(self):
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    @patch(
+    with patch(
         "homeassistant.components.demo.camera.DemoCamera.camera_image",
         autospec=True,
         return_value=b"Test",
-    )
-    def test_get_image_from_camera(self, mock_camera):
-        """Grab an image from camera entity."""
-        self.hass.start()
+    ) as mock_camera:
+        image = await camera.async_get_image(hass, "camera.demo_camera")
 
-        image = run_coroutine_threadsafe(
-            camera.async_get_image(self.hass, "camera.demo_camera"), self.hass.loop
-        ).result()
-
-        assert mock_camera.called
-        assert image.content == b"Test"
-
-    def test_get_image_without_exists_camera(self):
-        """Try to get image without exists camera."""
-        with patch(
-            "homeassistant.helpers.entity_component.EntityComponent." "get_entity",
-            return_value=None,
-        ), pytest.raises(HomeAssistantError):
-            run_coroutine_threadsafe(
-                camera.async_get_image(self.hass, "camera.demo_camera"), self.hass.loop
-            ).result()
-
-    def test_get_image_with_timeout(self):
-        """Try to get image with timeout."""
-        with patch(
-            "homeassistant.components.camera.Camera.async_camera_image",
-            side_effect=asyncio.TimeoutError,
-        ), pytest.raises(HomeAssistantError):
-            run_coroutine_threadsafe(
-                camera.async_get_image(self.hass, "camera.demo_camera"), self.hass.loop
-            ).result()
-
-    def test_get_image_fails(self):
-        """Try to get image with timeout."""
-        with patch(
-            "homeassistant.components.camera.Camera.async_camera_image",
-            return_value=mock_coro(None),
-        ), pytest.raises(HomeAssistantError):
-            run_coroutine_threadsafe(
-                camera.async_get_image(self.hass, "camera.demo_camera"), self.hass.loop
-            ).result()
+    assert mock_camera.called
+    assert image.content == b"Test"
 
 
-@asyncio.coroutine
-def test_snapshot_service(hass, mock_camera):
+async def test_get_image_without_exists_camera(hass, image_mock_url):
+    """Try to get image without exists camera."""
+    with patch(
+        "homeassistant.helpers.entity_component.EntityComponent.get_entity",
+        return_value=None,
+    ), pytest.raises(HomeAssistantError):
+        await camera.async_get_image(hass, "camera.demo_camera")
+
+
+async def test_get_image_with_timeout(hass, image_mock_url):
+    """Try to get image with timeout."""
+    with patch(
+        "homeassistant.components.camera.Camera.async_camera_image",
+        side_effect=asyncio.TimeoutError,
+    ), pytest.raises(HomeAssistantError):
+        await camera.async_get_image(hass, "camera.demo_camera")
+
+
+async def test_get_image_fails(hass, image_mock_url):
+    """Try to get image with timeout."""
+    with patch(
+        "homeassistant.components.camera.Camera.async_camera_image",
+        return_value=mock_coro(None),
+    ), pytest.raises(HomeAssistantError):
+        await camera.async_get_image(hass, "camera.demo_camera")
+
+
+async def test_snapshot_service(hass, mock_camera):
     """Test snapshot service."""
     mopen = mock_open()
 
     with patch(
         "homeassistant.components.camera.open", mopen, create=True
     ), patch.object(hass.config, "is_allowed_path", return_value=True):
-        common.async_snapshot(hass, "/tmp/bla")
-        yield from hass.async_block_till_done()
+        common.async_snapshot(hass, "/test/snapshot.jpg")
+        await hass.async_block_till_done()
 
         mock_write = mopen().write
 

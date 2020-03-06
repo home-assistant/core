@@ -1,10 +1,10 @@
 """Support for tracking the online status of a UPS."""
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import BinarySensorDevice, PLATFORM_SCHEMA
+from homeassistant.components import apcupsd
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components import apcupsd
 
 DEFAULT_NAME = "UPS Online Status"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -34,8 +34,8 @@ class OnlineStatus(BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if the UPS is online, else false."""
-        return self._state == apcupsd.VALUE_ONLINE
+        return self._state & apcupsd.VALUE_ONLINE > 0
 
     def update(self):
         """Get the status report from APCUPSd and set this entity's state."""
-        self._state = self._data.status[apcupsd.KEY_STATUS]
+        self._state = int(self._data.status[apcupsd.KEY_STATUS], 16)

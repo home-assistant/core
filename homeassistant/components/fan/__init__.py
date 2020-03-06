@@ -6,25 +6,20 @@ from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant.components import group
-from homeassistant.const import SERVICE_TURN_ON, SERVICE_TOGGLE, SERVICE_TURN_OFF
-from homeassistant.loader import bind_hass
-from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.config_validation import (  # noqa
-    ENTITY_SERVICE_SCHEMA,
+from homeassistant.const import SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "fan"
 SCAN_INTERVAL = timedelta(seconds=30)
-
-GROUP_NAME_ALL_FANS = "all fans"
-ENTITY_ID_ALL_FANS = group.ENTITY_ID_FORMAT.format(GROUP_NAME_ALL_FANS)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -52,32 +47,14 @@ ATTR_DIRECTION = "direction"
 
 PROP_TO_ATTR = {
     "speed": ATTR_SPEED,
-    "speed_list": ATTR_SPEED_LIST,
     "oscillating": ATTR_OSCILLATING,
-    "direction": ATTR_DIRECTION,
-}  # type: dict
-
-FAN_SET_SPEED_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_SPEED): cv.string}
-)  # type: dict
-
-FAN_TURN_ON_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Optional(ATTR_SPEED): cv.string}
-)  # type: dict
-
-FAN_OSCILLATE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_OSCILLATING): cv.boolean}
-)  # type: dict
-
-FAN_SET_DIRECTION_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Optional(ATTR_DIRECTION): cv.string}
-)  # type: dict
+    "current_direction": ATTR_DIRECTION,
+}
 
 
 @bind_hass
-def is_on(hass, entity_id: Optional[str] = None) -> bool:
+def is_on(hass, entity_id: str) -> bool:
     """Return if the fans are on based on the statemachine."""
-    entity_id = entity_id or ENTITY_ID_ALL_FANS
     state = hass.states.get(entity_id)
     return state.attributes[ATTR_SPEED] not in [SPEED_OFF, None]
 
@@ -85,28 +62,33 @@ def is_on(hass, entity_id: Optional[str] = None) -> bool:
 async def async_setup(hass, config: dict):
     """Expose fan control via statemachine and services."""
     component = hass.data[DOMAIN] = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_FANS
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_TURN_ON, FAN_TURN_ON_SCHEMA, "async_turn_on"
+        SERVICE_TURN_ON, {vol.Optional(ATTR_SPEED): cv.string}, "async_turn_on"
+    )
+    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
+    component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
+    component.async_register_entity_service(
+        SERVICE_SET_SPEED,
+        {vol.Required(ATTR_SPEED): cv.string},
+        "async_set_speed",
+        [SUPPORT_SET_SPEED],
     )
     component.async_register_entity_service(
-        SERVICE_TURN_OFF, ENTITY_SERVICE_SCHEMA, "async_turn_off"
+        SERVICE_OSCILLATE,
+        {vol.Required(ATTR_OSCILLATING): cv.boolean},
+        "async_oscillate",
+        [SUPPORT_OSCILLATE],
     )
     component.async_register_entity_service(
-        SERVICE_TOGGLE, ENTITY_SERVICE_SCHEMA, "async_toggle"
-    )
-    component.async_register_entity_service(
-        SERVICE_SET_SPEED, FAN_SET_SPEED_SCHEMA, "async_set_speed"
-    )
-    component.async_register_entity_service(
-        SERVICE_OSCILLATE, FAN_OSCILLATE_SCHEMA, "async_oscillate"
-    )
-    component.async_register_entity_service(
-        SERVICE_SET_DIRECTION, FAN_SET_DIRECTION_SCHEMA, "async_set_direction"
+        SERVICE_SET_DIRECTION,
+        {vol.Optional(ATTR_DIRECTION): cv.string},
+        "async_set_direction",
+        [SUPPORT_DIRECTION],
     )
 
     return True
@@ -129,25 +111,20 @@ class FanEntity(ToggleEntity):
         """Set the speed of the fan."""
         raise NotImplementedError()
 
-    def async_set_speed(self, speed: str):
-        """Set the speed of the fan.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_set_speed(self, speed: str):
+        """Set the speed of the fan."""
         if speed is SPEED_OFF:
-            return self.async_turn_off()
-        return self.hass.async_add_job(self.set_speed, speed)
+            await self.async_turn_off()
+        else:
+            await self.hass.async_add_job(self.set_speed, speed)
 
     def set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         raise NotImplementedError()
 
-    def async_set_direction(self, direction: str):
-        """Set the direction of the fan.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.set_direction, direction)
+    async def async_set_direction(self, direction: str):
+        """Set the direction of the fan."""
+        await self.hass.async_add_job(self.set_direction, direction)
 
     # pylint: disable=arguments-differ
     def turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
@@ -155,25 +132,20 @@ class FanEntity(ToggleEntity):
         raise NotImplementedError()
 
     # pylint: disable=arguments-differ
-    def async_turn_on(self, speed: Optional[str] = None, **kwargs):
-        """Turn on the fan.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_turn_on(self, speed: Optional[str] = None, **kwargs):
+        """Turn on the fan."""
         if speed is SPEED_OFF:
-            return self.async_turn_off()
-        return self.hass.async_add_job(ft.partial(self.turn_on, speed, **kwargs))
+            await self.async_turn_off()
+        else:
+            await self.hass.async_add_job(ft.partial(self.turn_on, speed, **kwargs))
 
     def oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
         pass
 
-    def async_oscillate(self, oscillating: bool):
-        """Oscillate the fan.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.oscillate, oscillating)
+    async def async_oscillate(self, oscillating: bool):
+        """Oscillate the fan."""
+        await self.hass.async_add_job(self.oscillate, oscillating)
 
     @property
     def is_on(self):
@@ -196,9 +168,14 @@ class FanEntity(ToggleEntity):
         return None
 
     @property
+    def capability_attributes(self):
+        """Return capability attributes."""
+        return {ATTR_SPEED_LIST: self.speed_list}
+
+    @property
     def state_attributes(self) -> dict:
         """Return optional state attributes."""
-        data = {}  # type: dict
+        data = {}
 
         for prop, attr in PROP_TO_ATTR.items():
             if not hasattr(self, prop):

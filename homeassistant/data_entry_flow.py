@@ -1,16 +1,12 @@
 """Classes to help gather user submissions."""
+import abc
 import logging
-from typing import (
-    Dict,
-    Any,
-    Callable,
-    Hashable,
-    List,
-    Optional,
-)  # noqa pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, cast
 import uuid
+
 import voluptuous as vol
-from .core import callback, HomeAssistant
+
+from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,27 +30,57 @@ class UnknownHandler(FlowError):
 
 
 class UnknownFlow(FlowError):
-    """Uknown flow specified."""
+    """Unknown flow specified."""
 
 
 class UnknownStep(FlowError):
     """Unknown step specified."""
 
 
-class FlowManager:
+class AbortFlow(FlowError):
+    """Exception to indicate a flow needs to be aborted."""
+
+    def __init__(self, reason: str, description_placeholders: Optional[Dict] = None):
+        """Initialize an abort flow exception."""
+        super().__init__(f"Flow aborted: {reason}")
+        self.reason = reason
+        self.description_placeholders = description_placeholders
+
+
+class FlowManager(abc.ABC):
     """Manage all the flows that are in progress."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        async_create_flow: Callable,
-        async_finish_flow: Callable,
-    ) -> None:
+    def __init__(self, hass: HomeAssistant,) -> None:
         """Initialize the flow manager."""
         self.hass = hass
-        self._progress = {}  # type: Dict[str, Any]
-        self._async_create_flow = async_create_flow
-        self._async_finish_flow = async_finish_flow
+        self._progress: Dict[str, Any] = {}
+
+    @abc.abstractmethod
+    async def async_create_flow(
+        self,
+        handler_key: Any,
+        *,
+        context: Optional[Dict[str, Any]] = None,
+        data: Optional[Dict[str, Any]] = None,
+    ) -> "FlowHandler":
+        """Create a flow for specified handler.
+
+        Handler key is the domain of the component that we want to set up.
+        """
+        pass
+
+    @abc.abstractmethod
+    async def async_finish_flow(
+        self, flow: "FlowHandler", result: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Finish a config flow and add an entry."""
+        pass
+
+    async def async_post_init(
+        self, flow: "FlowHandler", result: Dict[str, Any]
+    ) -> None:
+        """Entry has finished executing its first step asynchronously."""
+        pass
 
     @callback
     def async_progress(self) -> List[Dict]:
@@ -62,22 +88,30 @@ class FlowManager:
         return [
             {"flow_id": flow.flow_id, "handler": flow.handler, "context": flow.context}
             for flow in self._progress.values()
+            if flow.cur_step is not None
         ]
 
     async def async_init(
-        self, handler: Hashable, *, context: Optional[Dict] = None, data: Any = None
+        self, handler: str, *, context: Optional[Dict] = None, data: Any = None
     ) -> Any:
         """Start a configuration flow."""
         if context is None:
             context = {}
-        flow = await self._async_create_flow(handler, context=context, data=data)
+        flow = await self.async_create_flow(handler, context=context, data=data)
+        if not flow:
+            raise UnknownFlow("Flow was not created")
         flow.hass = self.hass
         flow.handler = handler
         flow.flow_id = uuid.uuid4().hex
         flow.context = context
         self._progress[flow.flow_id] = flow
 
-        return await self._async_handle_step(flow, flow.init_step, data)
+        result = await self._async_handle_step(flow, flow.init_step, data)
+
+        if result["type"] != RESULT_TYPE_ABORT:
+            await self.async_post_init(flow, result)
+
+        return result
 
     async def async_configure(
         self, flow_id: str, user_input: Optional[Dict] = None
@@ -131,12 +165,15 @@ class FlowManager:
         if not hasattr(flow, method):
             self._progress.pop(flow.flow_id)
             raise UnknownStep(
-                "Handler {} doesn't support step {}".format(
-                    flow.__class__.__name__, step_id
-                )
+                f"Handler {flow.__class__.__name__} doesn't support step {step_id}"
             )
 
-        result = await getattr(flow, method)(user_input)  # type: Dict
+        try:
+            result: Dict = await getattr(flow, method)(user_input)
+        except AbortFlow as err:
+            result = _create_abort_data(
+                flow.flow_id, flow.handler, err.reason, err.description_placeholders
+            )
 
         if result["type"] not in (
             RESULT_TYPE_FORM,
@@ -158,7 +195,7 @@ class FlowManager:
             return result
 
         # We pass a copy of the result because we're mutating our version
-        result = await self._async_finish_flow(flow, dict(result))
+        result = await self.async_finish_flow(flow, dict(result))
 
         # _async_finish_flow may change result type, check it again
         if result["type"] == RESULT_TYPE_FORM:
@@ -175,9 +212,9 @@ class FlowHandler:
     """Handle the configuration flow of a component."""
 
     # Set by flow manager
-    flow_id: Optional[str] = None
+    flow_id: str = None  # type: ignore
     hass: Optional[HomeAssistant] = None
-    handler = None
+    handler: Optional[str] = None
     cur_step: Optional[Dict[str, str]] = None
     context: Dict
 
@@ -195,7 +232,7 @@ class FlowHandler:
         data_schema: vol.Schema = None,
         errors: Optional[Dict] = None,
         description_placeholders: Optional[Dict] = None,
-    ) -> Dict:
+    ) -> Dict[str, Any]:
         """Return the definition of a form to gather user input."""
         return {
             "type": RESULT_TYPE_FORM,
@@ -215,7 +252,7 @@ class FlowHandler:
         data: Dict,
         description: Optional[str] = None,
         description_placeholders: Optional[Dict] = None,
-    ) -> Dict:
+    ) -> Dict[str, Any]:
         """Finish config flow and create a config entry."""
         return {
             "version": self.VERSION,
@@ -231,20 +268,16 @@ class FlowHandler:
     @callback
     def async_abort(
         self, *, reason: str, description_placeholders: Optional[Dict] = None
-    ) -> Dict:
+    ) -> Dict[str, Any]:
         """Abort the config flow."""
-        return {
-            "type": RESULT_TYPE_ABORT,
-            "flow_id": self.flow_id,
-            "handler": self.handler,
-            "reason": reason,
-            "description_placeholders": description_placeholders,
-        }
+        return _create_abort_data(
+            self.flow_id, cast(str, self.handler), reason, description_placeholders
+        )
 
     @callback
     def async_external_step(
         self, *, step_id: str, url: str, description_placeholders: Optional[Dict] = None
-    ) -> Dict:
+    ) -> Dict[str, Any]:
         """Return the definition of an external step for the user to take."""
         return {
             "type": RESULT_TYPE_EXTERNAL_STEP,
@@ -256,7 +289,7 @@ class FlowHandler:
         }
 
     @callback
-    def async_external_step_done(self, *, next_step_id: str) -> Dict:
+    def async_external_step_done(self, *, next_step_id: str) -> Dict[str, Any]:
         """Return the definition of an external step for the user to take."""
         return {
             "type": RESULT_TYPE_EXTERNAL_STEP_DONE,
@@ -264,3 +297,20 @@ class FlowHandler:
             "handler": self.handler,
             "step_id": next_step_id,
         }
+
+
+@callback
+def _create_abort_data(
+    flow_id: str,
+    handler: str,
+    reason: str,
+    description_placeholders: Optional[Dict] = None,
+) -> Dict[str, Any]:
+    """Return the definition of an external step for the user to take."""
+    return {
+        "type": RESULT_TYPE_ABORT,
+        "flow_id": flow_id,
+        "handler": handler,
+        "reason": reason,
+        "description_placeholders": description_placeholders,
+    }

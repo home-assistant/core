@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Helper script to bump the current version."""
 import argparse
+from datetime import datetime
 import re
 import subprocess
-from datetime import datetime
 
 from packaging.version import Version
 
@@ -108,7 +108,7 @@ def write_version(version):
 
     content = re.sub("MAJOR_VERSION = .*\n", f"MAJOR_VERSION = {major}\n", content)
     content = re.sub("MINOR_VERSION = .*\n", f"MINOR_VERSION = {minor}\n", content)
-    content = re.sub("PATCH_VERSION = .*\n", f"PATCH_VERSION = '{patch}'\n", content)
+    content = re.sub("PATCH_VERSION = .*\n", f'PATCH_VERSION = "{patch}"\n', content)
 
     with open("homeassistant/const.py", "wt") as fil:
         content = fil.write(content)
@@ -126,15 +126,21 @@ def main():
         "--commit", action="store_true", help="Create a version bump commit."
     )
     arguments = parser.parse_args()
+
+    if arguments.commit and subprocess.run(["git", "diff", "--quiet"]).returncode == 1:
+        print("Cannot use --commit because git is dirty.")
+        return
+
     current = Version(const.__version__)
     bumped = bump_version(current, arguments.type)
     assert bumped > current, "BUG! New version is not newer than old version"
+
     write_version(bumped)
 
     if not arguments.commit:
         return
 
-    subprocess.run(["git", "commit", "-am", f"Bumped version to {bumped}"])
+    subprocess.run(["git", "commit", "-nam", f"Bumped version to {bumped}"])
 
 
 def test_bump_version():

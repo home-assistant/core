@@ -1,11 +1,12 @@
 """Test HTML5 notify platform."""
 import json
-from unittest.mock import patch, MagicMock, mock_open
+from unittest.mock import MagicMock, mock_open, patch
+
 from aiohttp.hdrs import AUTHORIZATION
 
-from homeassistant.setup import async_setup_component
-from homeassistant.exceptions import HomeAssistantError
 import homeassistant.components.html5.notify as html5
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.setup import async_setup_component
 
 CONFIG_FILE = "file.conf"
 
@@ -87,7 +88,7 @@ class TestHtml5Notify:
 
         assert service is not None
 
-    @patch("pywebpush.WebPusher")
+    @patch("homeassistant.components.html5.notify.WebPusher")
     def test_dismissing_message(self, mock_wp):
         """Test dismissing message."""
         hass = MagicMock()
@@ -115,7 +116,7 @@ class TestHtml5Notify:
         assert payload["dismiss"] is True
         assert payload["tag"] == "test"
 
-    @patch("pywebpush.WebPusher")
+    @patch("homeassistant.components.html5.notify.WebPusher")
     def test_sending_message(self, mock_wp):
         """Test sending message."""
         hass = MagicMock()
@@ -145,7 +146,7 @@ class TestHtml5Notify:
         assert payload["body"] == "Hello"
         assert payload["icon"] == "beer.png"
 
-    @patch("pywebpush.WebPusher")
+    @patch("homeassistant.components.html5.notify.WebPusher")
     def test_gcm_key_include(self, mock_wp):
         """Test if the gcm_key is only included for GCM endpoints."""
         hass = MagicMock()
@@ -176,7 +177,7 @@ class TestHtml5Notify:
         assert mock_wp.mock_calls[1][2]["gcm_key"] is not None
         assert mock_wp.mock_calls[4][2]["gcm_key"] is None
 
-    @patch("pywebpush.WebPusher")
+    @patch("homeassistant.components.html5.notify.WebPusher")
     def test_fcm_key_include(self, mock_wp):
         """Test if the FCM header is included."""
         hass = MagicMock()
@@ -201,7 +202,7 @@ class TestHtml5Notify:
         # Get the keys passed to the WebPusher's send method
         assert mock_wp.mock_calls[1][2]["headers"]["Authorization"] is not None
 
-    @patch("pywebpush.WebPusher")
+    @patch("homeassistant.components.html5.notify.WebPusher")
     def test_fcm_send_with_unknown_priority(self, mock_wp):
         """Test if the gcm_key is only included for GCM endpoints."""
         hass = MagicMock()
@@ -226,7 +227,7 @@ class TestHtml5Notify:
         # Get the keys passed to the WebPusher's send method
         assert mock_wp.mock_calls[1][2]["headers"]["priority"] == "normal"
 
-    @patch("pywebpush.WebPusher")
+    @patch("homeassistant.components.html5.notify.WebPusher")
     def test_fcm_no_targets(self, mock_wp):
         """Test if the gcm_key is only included for GCM endpoints."""
         hass = MagicMock()
@@ -251,7 +252,7 @@ class TestHtml5Notify:
         # Get the keys passed to the WebPusher's send method
         assert mock_wp.mock_calls[1][2]["headers"]["priority"] == "normal"
 
-    @patch("pywebpush.WebPusher")
+    @patch("homeassistant.components.html5.notify.WebPusher")
     def test_fcm_additional_data(self, mock_wp):
         """Test if the gcm_key is only included for GCM endpoints."""
         hass = MagicMock()
@@ -475,7 +476,7 @@ async def test_callback_view_with_jwt(hass, hass_client):
     registrations = {"device": SUBSCRIPTION_1}
     client = await mock_client(hass, hass_client, registrations)
 
-    with patch("pywebpush.WebPusher") as mock_wp:
+    with patch("homeassistant.components.html5.notify.WebPusher") as mock_wp:
         await hass.services.async_call(
             "notify",
             "notify",
@@ -511,7 +512,7 @@ async def test_send_fcm_without_targets(hass, hass_client):
     """Test that the notification is send with FCM without targets."""
     registrations = {"device": SUBSCRIPTION_5}
     await mock_client(hass, hass_client, registrations)
-    with patch("pywebpush.WebPusher") as mock_wp:
+    with patch("homeassistant.components.html5.notify.WebPusher") as mock_wp:
         await hass.services.async_call(
             "notify",
             "notify",

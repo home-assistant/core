@@ -1,9 +1,7 @@
 sudo: false
-dist: xenial
+dist: bionic
 addons:
   apt:
-    sources:
-      - sourceline: "ppa:jonathonf/ffmpeg-4"
     packages:
       - libudev-dev
       - libavformat-dev
@@ -16,22 +14,19 @@ addons:
 matrix:
   fast_finish: true
   include:
-    - python: "3.6.0"
+    - python: "3.7.0"
       env: TOXENV=lint
-      dist: trusty
-    - python: "3.6.0"
-      env: TOXENV=pylint
-      dist: trusty
-    - python: "3.6.0"
+    - python: "3.7.0"
+      env: TOXENV=pylint PYLINT_ARGS=--jobs=0 TRAVIS_WAIT=30
+    - python: "3.7.0"
       env: TOXENV=typing
-      dist: trusty
-    - python: "3.6.0"
-      env: TOXENV=py36
-      dist: trusty
-    - python: "3.7"
+    - python: "3.7.0"
       env: TOXENV=py37
 
-cache: pip
+cache:
+  pip: true
+  directories:
+    - $HOME/.cache/pre-commit
 install: pip install -U tox
 language: python
-script: travis_wait 40 tox --develop
+script: ${TRAVIS_WAIT:+travis_wait $TRAVIS_WAIT} tox --develop

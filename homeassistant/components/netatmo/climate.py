@@ -1,36 +1,43 @@
 """Support for Netatmo Smart thermostats."""
 from datetime import timedelta
 import logging
-from typing import Optional, List
+from typing import List, Optional
 
+import pyatmo
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+    DEFAULT_MIN_TEMP,
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_BOOST,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_PRESET_MODE,
-    DEFAULT_MIN_TEMP,
+    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
-    TEMP_CELSIUS,
+    ATTR_BATTERY_LEVEL,
     ATTR_TEMPERATURE,
-    CONF_NAME,
     PRECISION_HALVES,
     STATE_OFF,
-    ATTR_BATTERY_LEVEL,
+    TEMP_CELSIUS,
 )
+from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
 
-from .const import DATA_NETATMO_AUTH
+from .const import (
+    ATTR_HOME_NAME,
+    ATTR_SCHEDULE_NAME,
+    AUTH,
+    DOMAIN,
+    MANUFACTURER,
+    SERVICE_SETSCHEDULE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,65 +91,67 @@ CONF_ROOMS = "rooms"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
-HOME_CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_ROOMS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-    }
-)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_HOMES): vol.All(cv.ensure_list, [HOME_CONFIG_SCHEMA])}
-)
-
 DEFAULT_MAX_TEMP = 30
 
 NA_THERM = "NATherm1"
 NA_VALVE = "NRV"
 
+SCHEMA_SERVICE_SETSCHEDULE = vol.Schema(
+    {
+        vol.Required(ATTR_SCHEDULE_NAME): cv.string,
+        vol.Required(ATTR_HOME_NAME): cv.string,
+    }
+)
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the NetAtmo Thermostat."""
-    import pyatmo
 
-    homes_conf = config.get(CONF_HOMES)
-
-    auth = hass.data[DATA_NETATMO_AUTH]
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up the Netatmo energy platform."""
+    auth = hass.data[DOMAIN][entry.entry_id][AUTH]
 
     home_data = HomeData(auth)
-    try:
-        home_data.setup()
-    except pyatmo.NoDevice:
-        return
 
-    home_ids = []
-    rooms = {}
-    if homes_conf is not None:
-        for home_conf in homes_conf:
-            home = home_conf[CONF_NAME]
-            home_id = home_data.homedata.gethomeId(home)
-            if home_conf[CONF_ROOMS] != []:
-                rooms[home_id] = home_conf[CONF_ROOMS]
-            home_ids.append(home_id)
-    else:
-        home_ids = home_data.get_home_ids()
-
-    devices = []
-    for home_id in home_ids:
-        _LOGGER.debug("Setting up %s ...", home_id)
+    def get_entities():
+        """Retrieve Netatmo entities."""
+        entities = []
         try:
-            room_data = ThermostatData(auth, home_id)
+            home_data.setup()
         except pyatmo.NoDevice:
-            continue
-        for room_id in room_data.get_room_ids():
-            room_name = room_data.homedata.rooms[home_id][room_id]["name"]
-            _LOGGER.debug("Setting up %s (%s) ...", room_name, room_id)
-            if home_id in rooms and room_name not in rooms[home_id]:
-                _LOGGER.debug("Excluding %s ...", room_name)
+            return
+        home_ids = home_data.get_all_home_ids()
+
+        for home_id in home_ids:
+            _LOGGER.debug("Setting up home %s ...", home_id)
+            try:
+                room_data = ThermostatData(auth, home_id)
+            except pyatmo.NoDevice:
                 continue
-            _LOGGER.debug("Adding devices for room %s (%s) ...", room_name, room_id)
-            devices.append(NetatmoThermostat(room_data, room_id))
-    add_entities(devices, True)
+            for room_id in room_data.get_room_ids():
+                room_name = room_data.homedata.rooms[home_id][room_id]["name"]
+                _LOGGER.debug("Setting up room %s (%s) ...", room_name, room_id)
+                entities.append(NetatmoThermostat(room_data, room_id))
+        return entities
+
+    async_add_entities(await hass.async_add_executor_job(get_entities), True)
+
+    def _service_setschedule(service):
+        """Service to change current home schedule."""
+        home_name = service.data.get(ATTR_HOME_NAME)
+        schedule_name = service.data.get(ATTR_SCHEDULE_NAME)
+        home_data.homedata.switchHomeSchedule(schedule=schedule_name, home=home_name)
+        _LOGGER.info("Set home (%s) schedule to %s", home_name, schedule_name)
+
+    if home_data.homedata is not None:
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_SETSCHEDULE,
+            _service_setschedule,
+            schema=SCHEMA_SERVICE_SETSCHEDULE,
+        )
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the Netatmo energy sensors."""
+    return
 
 
 class NetatmoThermostat(ClimateDevice):
@@ -154,7 +163,7 @@ class NetatmoThermostat(ClimateDevice):
         self._state = None
         self._room_id = room_id
         self._room_name = self._data.homedata.rooms[self._data.home_id][room_id]["name"]
-        self._name = "netatmo_{}".format(self._room_name)
+        self._name = f"{MANUFACTURER} {self._room_name}"
         self._current_temperature = None
         self._target_temperature = None
         self._preset = None
@@ -168,6 +177,23 @@ class NetatmoThermostat(ClimateDevice):
 
         if self._module_type == NA_THERM:
             self._operation_list.append(HVAC_MODE_OFF)
+
+        self._unique_id = f"{self._room_id}-{self._module_type}"
+
+    @property
+    def device_info(self):
+        """Return the device info for the thermostat/valve."""
+        return {
+            "identifiers": {(DOMAIN, self._room_id)},
+            "name": self._room_name,
+            "manufacturer": MANUFACTURER,
+            "model": self._module_type,
+        }
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def supported_features(self):
@@ -331,7 +357,7 @@ class NetatmoThermostat(ClimateDevice):
         except KeyError as err:
             _LOGGER.error(
                 "The thermostat in room %s seems to be out of reach. (%s)",
-                self._room_id,
+                self._room_name,
                 err,
             )
         self._away = self._hvac_mode == HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]
@@ -351,7 +377,7 @@ class HomeData:
         self.home = home
         self.home_id = None
 
-    def get_home_ids(self):
+    def get_all_home_ids(self):
         """Get all the home ids returned by NetAtmo API."""
         if self.homedata is None:
             return []
@@ -365,8 +391,6 @@ class HomeData:
 
     def setup(self):
         """Retrieve HomeData by NetAtmo API."""
-        import pyatmo
-
         try:
             self.homedata = pyatmo.HomeData(self.auth)
             self.home_id = self.homedata.gethomeId(self.home)
@@ -408,8 +432,6 @@ class ThermostatData:
 
     def setup(self):
         """Retrieve HomeData and HomeStatus by NetAtmo API."""
-        import pyatmo
-
         try:
             self.homedata = pyatmo.HomeData(self.auth)
             self.homestatus = pyatmo.HomeStatus(self.auth, home_id=self.home_id)
@@ -423,8 +445,6 @@ class ThermostatData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Call the NetAtmo API to update the data."""
-        import pyatmo
-
         try:
             self.homestatus = pyatmo.HomeStatus(self.auth, home_id=self.home_id)
         except TypeError:
@@ -433,8 +453,6 @@ class ThermostatData:
         except requests.exceptions.Timeout:
             _LOGGER.warning("Timed out when connecting to Netatmo server")
             return
-        _LOGGER.debug("Following is the debugging output for homestatus:")
-        _LOGGER.debug(self.homestatus.rawData)
         for room in self.homestatus.rooms:
             try:
                 roomstatus = {}

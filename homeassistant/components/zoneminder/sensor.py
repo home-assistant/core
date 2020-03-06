@@ -2,6 +2,7 @@
 import logging
 
 import voluptuous as vol
+from zoneminder.monitor import TimePeriod
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_MONITORED_CONDITIONS
@@ -68,7 +69,7 @@ class ZMSensorMonitors(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} Status".format(self._monitor.name)
+        return f"{self._monitor.name} Status"
 
     @property
     def state(self):
@@ -95,7 +96,6 @@ class ZMSensorEvents(Entity):
 
     def __init__(self, monitor, include_archived, sensor_type):
         """Initialize event sensor."""
-        from zoneminder.monitor import TimePeriod
 
         self._monitor = monitor
         self._include_archived = include_archived
@@ -105,7 +105,7 @@ class ZMSensorEvents(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._monitor.name, self.time_period.title)
+        return f"{self._monitor.name} {self.time_period.title}"
 
     @property
     def unit_of_measurement(self):

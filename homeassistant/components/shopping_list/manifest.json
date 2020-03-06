@@ -1,10 +1,9 @@
 {
   "domain": "shopping_list",
-  "name": "Shopping list",
-  "documentation": "https://www.home-assistant.io/components/shopping_list",
+  "name": "Shopping List",
+  "documentation": "https://www.home-assistant.io/integrations/shopping_list",
   "requirements": [],
-  "dependencies": [
-    "http"
-  ],
-  "codeowners": []
+  "dependencies": ["http"],
+  "codeowners": [],
+  "quality_scale": "internal"
 }

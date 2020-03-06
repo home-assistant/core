@@ -1,12 +1,14 @@
 """Support for departure information for Rhein-Main public transport."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
+from RMVtransport import RMVtransport
+from RMVtransport.rmvtransport import RMVtransportApiConnectionError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, TIME_MINUTES
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -157,7 +159,7 @@ class RMVDepartureSensor(Entity):
         """Return the state attributes."""
         try:
             return {
-                "next_departures": [val for val in self.data.departures[1:]],
+                "next_departures": self.data.departures[1:],
                 "direction": self.data.departures[0].get("direction"),
                 "line": self.data.departures[0].get("line"),
                 "minutes": self.data.departures[0].get("minutes"),
@@ -175,7 +177,7 @@ class RMVDepartureSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return "min"
+        return TIME_MINUTES
 
     async def async_update(self):
         """Get the latest data and update the state."""
@@ -208,8 +210,6 @@ class RMVDepartureData:
         timeout,
     ):
         """Initialize the sensor."""
-        from RMVtransport import RMVtransport
-
         self.station = None
         self._station_id = station_id
         self._destinations = destinations
@@ -224,18 +224,16 @@ class RMVDepartureData:
     @Throttle(SCAN_INTERVAL)
     async def async_update(self):
         """Update the connection data."""
-        from RMVtransport.rmvtransport import RMVtransportApiConnectionError
-
         try:
             _data = await self.rmv.get_departures(
                 self._station_id,
                 products=self._products,
-                directionId=self._direction,
-                maxJourneys=50,
+                direction_id=self._direction,
+                max_journeys=50,
             )
         except RMVtransportApiConnectionError:
             self.departures = []
-            _LOGGER.warning("Could not retrive data from rmv.de")
+            _LOGGER.warning("Could not retrieve data from rmv.de")
             return
         self.station = _data.get("station")
         _deps = []

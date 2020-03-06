@@ -4,16 +4,16 @@ from collections import OrderedDict
 from datetime import timedelta
 import hmac
 from logging import getLogger
-from typing import Any, Dict, List, Optional  # noqa: F401
+from typing import Any, Dict, List, Optional
 
 from homeassistant.auth.const import ACCESS_TOKEN_EXPIRATION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
 from . import models
-from .const import GROUP_ID_ADMIN, GROUP_ID_USER, GROUP_ID_READ_ONLY
+from .const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY, GROUP_ID_USER
 from .permissions import PermissionLookup, system_policies
-from .permissions.types import PolicyType  # noqa: F401
+from .permissions.types import PolicyType
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "auth"
@@ -34,9 +34,9 @@ class AuthStore:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the auth store."""
         self.hass = hass
-        self._users = None  # type: Optional[Dict[str, models.User]]
-        self._groups = None  # type: Optional[Dict[str, models.Group]]
-        self._perm_lookup = None  # type: Optional[PermissionLookup]
+        self._users: Optional[Dict[str, models.User]] = None
+        self._groups: Optional[Dict[str, models.Group]] = None
+        self._perm_lookup: Optional[PermissionLookup] = None
         self._store = hass.helpers.storage.Store(
             STORAGE_VERSION, STORAGE_KEY, private=True
         )
@@ -97,13 +97,13 @@ class AuthStore:
                 raise ValueError(f"Invalid group specified {group_id}")
             groups.append(group)
 
-        kwargs = {
+        kwargs: Dict[str, Any] = {
             "name": name,
             # Until we get group management, we just put everyone in the
             # same group.
             "groups": groups,
             "perm_lookup": self._perm_lookup,
-        }  # type: Dict[str, Any]
+        }
 
         if is_owner is not None:
             kwargs["is_owner"] = is_owner
@@ -210,12 +210,12 @@ class AuthStore:
         access_token_expiration: timedelta = ACCESS_TOKEN_EXPIRATION,
     ) -> models.RefreshToken:
         """Create a new token for a user."""
-        kwargs = {
+        kwargs: Dict[str, Any] = {
             "user": user,
             "client_id": client_id,
             "token_type": token_type,
             "access_token_expiration": access_token_expiration,
-        }  # type: Dict[str, Any]
+        }
         if client_name:
             kwargs["client_name"] = client_name
         if client_icon:
@@ -307,8 +307,8 @@ class AuthStore:
             self._set_defaults()
             return
 
-        users = OrderedDict()  # type: Dict[str, models.User]
-        groups = OrderedDict()  # type: Dict[str, models.Group]
+        users: Dict[str, models.User] = OrderedDict()
+        groups: Dict[str, models.Group] = OrderedDict()
 
         # Soft-migrating data as we load. We are going to make sure we have a
         # read only group and an admin group. There are two states that we can
@@ -325,7 +325,7 @@ class AuthStore:
         # was added.
 
         for group_dict in data.get("groups", []):
-            policy = None  # type: Optional[PolicyType]
+            policy: Optional[PolicyType] = None
 
             if group_dict["id"] == GROUP_ID_ADMIN:
                 has_admin_group = True
@@ -503,11 +503,11 @@ class AuthStore:
 
         groups = []
         for group in self._groups.values():
-            g_dict = {
+            g_dict: Dict[str, Any] = {
                 "id": group.id,
                 # Name not read for sys groups. Kept here for backwards compat
                 "name": group.name,
-            }  # type: Dict[str, Any]
+            }
 
             if not group.system_generated:
                 g_dict["policy"] = group.policy
@@ -558,7 +558,7 @@ class AuthStore:
         """Set default values for auth store."""
         self._users = OrderedDict()
 
-        groups = OrderedDict()  # type: Dict[str, models.Group]
+        groups: Dict[str, models.Group] = OrderedDict()
         admin_group = _system_admin_group()
         groups[admin_group.id] = admin_group
         user_group = _system_user_group()

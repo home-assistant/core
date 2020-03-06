@@ -4,6 +4,25 @@ from functools import reduce
 import logging
 import multiprocessing
 
+from pycec.cec import CecAdapter
+from pycec.commands import CecCommand, KeyPressCommand, KeyReleaseCommand
+from pycec.const import (
+    ADDR_AUDIOSYSTEM,
+    ADDR_BROADCAST,
+    ADDR_UNREGISTERED,
+    KEY_MUTE_OFF,
+    KEY_MUTE_ON,
+    KEY_MUTE_TOGGLE,
+    KEY_VOLUME_DOWN,
+    KEY_VOLUME_UP,
+    POWER_OFF,
+    POWER_ON,
+    STATUS_PLAY,
+    STATUS_STILL,
+    STATUS_STOP,
+)
+from pycec.network import HDMINetwork, PhysicalAddress
+from pycec.tcp import TcpAdapter
 import voluptuous as vol
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER
@@ -155,8 +174,6 @@ def parse_mapping(mapping, parents=None):
         parents = []
     for addr, val in mapping.items():
         if isinstance(addr, (str,)) and isinstance(val, (str,)):
-            from pycec.network import PhysicalAddress
-
             yield (addr, PhysicalAddress(val))
         else:
             cur = parents + [addr]
@@ -168,20 +185,6 @@ def parse_mapping(mapping, parents=None):
 
 def setup(hass: HomeAssistant, base_config):
     """Set up the CEC capability."""
-    from pycec.network import HDMINetwork
-    from pycec.commands import CecCommand, KeyReleaseCommand, KeyPressCommand
-    from pycec.const import (
-        KEY_VOLUME_UP,
-        KEY_VOLUME_DOWN,
-        KEY_MUTE_ON,
-        KEY_MUTE_OFF,
-        KEY_MUTE_TOGGLE,
-        ADDR_AUDIOSYSTEM,
-        ADDR_BROADCAST,
-        ADDR_UNREGISTERED,
-    )
-    from pycec.cec import CecAdapter
-    from pycec.tcp import TcpAdapter
 
     # Parse configuration into a dict of device name to physical address
     # represented as a list of four elements.
@@ -264,7 +267,7 @@ def setup(hass: HomeAssistant, base_config):
                 if isinstance(data[ATTR_ATT], (list,)):
                     att = data[ATTR_ATT]
                 else:
-                    att = reduce(lambda x, y: "%s:%x" % (x, y), data[ATTR_ATT])
+                    att = reduce(lambda x, y: f"{x}:{y:x}", data[ATTR_ATT])
             else:
                 att = ""
             command = CecCommand(cmd, dst, src, att)
@@ -278,8 +281,6 @@ def setup(hass: HomeAssistant, base_config):
 
     def _select_device(call):
         """Select the active device."""
-        from pycec.network import PhysicalAddress
-
         addr = call.data[ATTR_DEVICE]
         if not addr:
             _LOGGER.error("Device not found: %s", call.data[ATTR_DEVICE])
@@ -312,7 +313,7 @@ def setup(hass: HomeAssistant, base_config):
 
     def _new_device(device):
         """Handle new devices which are detected by HDMI network."""
-        key = "{}.{}".format(DOMAIN, device.name)
+        key = f"{DOMAIN}.{device.name}"
         hass.data[key] = device
         ent_platform = base_config[DOMAIN][CONF_TYPES].get(key, platform)
         discovery.load_platform(
@@ -366,14 +367,6 @@ class CecDevice(Entity):
     def update(self):
         """Update device status."""
         device = self._device
-        from pycec.const import (
-            STATUS_PLAY,
-            STATUS_STOP,
-            STATUS_STILL,
-            POWER_OFF,
-            POWER_ON,
-        )
-
         if device.power_status in [POWER_OFF, 3]:
             self._state = STATE_OFF
         elif device.status == STATUS_PLAY:
@@ -399,7 +392,7 @@ class CecDevice(Entity):
     def name(self):
         """Return the name of the device."""
         return (
-            "%s %s" % (self.vendor_name, self._device.osd_name)
+            f"{self.vendor_name} {self._device.osd_name}"
             if (
                 self._device.osd_name is not None
                 and self.vendor_name is not None

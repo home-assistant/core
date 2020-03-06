@@ -3,10 +3,13 @@
 from collections import namedtuple
 from datetime import timedelta
 import logging
+
+from fints.client import FinTS3PinTanClient
+from fints.dialog import FinTSDialogError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_USERNAME, CONF_PIN, CONF_URL, CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_PIN, CONF_URL, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -77,7 +80,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         account_name = account_config.get(account.iban)
         if not account_name:
-            account_name = "{} - {}".format(fints_name, account.iban)
+            account_name = f"{fints_name} - {account.iban}"
         accounts.append(FinTsAccount(client, account, account_name))
         _LOGGER.debug("Creating account %s for bank %s", account.iban, fints_name)
 
@@ -90,7 +93,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         account_name = holdings_config.get(account.accountnumber)
         if not account_name:
-            account_name = "{} - {}".format(fints_name, account.accountnumber)
+            account_name = f"{fints_name} - {account.accountnumber}"
         accounts.append(FinTsHoldingsAccount(client, account, account_name))
         _LOGGER.debug(
             "Creating holdings %s for bank %s", account.accountnumber, fints_name
@@ -118,7 +121,6 @@ class FinTsClient:
         the client objects. If that ever changes, consider caching the client
         object and also think about potential concurrency problems.
         """
-        from fints.client import FinTS3PinTanClient
 
         return FinTS3PinTanClient(
             self._credentials.blz,
@@ -129,7 +131,6 @@ class FinTsClient:
 
     def detect_accounts(self):
         """Identify the accounts of the bank."""
-        from fints.dialog import FinTSDialogError
 
         balance_accounts = []
         holdings_accounts = []
@@ -162,11 +163,11 @@ class FinTsAccount(Entity):
 
     def __init__(self, client: FinTsClient, account, name: str) -> None:
         """Initialize a FinTs balance account."""
-        self._client = client  # type: FinTsClient
+        self._client = client
         self._account = account
-        self._name = name  # type: str
-        self._balance = None  # type: float
-        self._currency = None  # type: str
+        self._name = name
+        self._balance: float = None
+        self._currency: str = None
 
     @property
     def should_poll(self) -> bool:
@@ -222,11 +223,11 @@ class FinTsHoldingsAccount(Entity):
 
     def __init__(self, client: FinTsClient, account, name: str) -> None:
         """Initialize a FinTs holdings account."""
-        self._client = client  # type: FinTsClient
-        self._name = name  # type: str
+        self._client = client
+        self._name = name
         self._account = account
         self._holdings = []
-        self._total = None  # type: float
+        self._total: float = None
 
     @property
     def should_poll(self) -> bool:
@@ -265,11 +266,11 @@ class FinTsHoldingsAccount(Entity):
         if self._client.name:
             attributes[ATTR_BANK] = self._client.name
         for holding in self._holdings:
-            total_name = "{} total".format(holding.name)
+            total_name = f"{holding.name} total"
             attributes[total_name] = holding.total_value
-            pieces_name = "{} pieces".format(holding.name)
+            pieces_name = f"{holding.name} pieces"
             attributes[pieces_name] = holding.pieces
-            price_name = "{} price".format(holding.name)
+            price_name = f"{holding.name} price"
             attributes[price_name] = holding.market_value
 
         return attributes

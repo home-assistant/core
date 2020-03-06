@@ -2,7 +2,6 @@
 
 import logging
 
-from homeassistant.core import callback
 from homeassistant.components.fan import (
     SPEED_HIGH,
     SPEED_LOW,
@@ -11,6 +10,7 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     FanEntity,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DOMAIN, SIGNAL_UPDATE_SMARTY
@@ -75,6 +75,16 @@ class SmartyFan(FanEntity):
     def speed(self) -> str:
         """Return speed of the fan."""
         return self._speed
+
+    def set_speed(self, speed: str) -> None:
+        """Set the speed of the fan."""
+        _LOGGER.debug("Set the fan speed to %s", speed)
+        if speed == SPEED_OFF:
+            self.turn_off()
+        else:
+            self._smarty.set_fan_speed(SPEED_TO_MODE.get(speed))
+            self._speed = speed
+            self._state = True
 
     def turn_on(self, speed=None, **kwargs):
         """Turn on the fan."""

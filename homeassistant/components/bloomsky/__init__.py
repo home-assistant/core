@@ -63,7 +63,7 @@ class BloomSky:
         """Use the API to retrieve a list of devices."""
         _LOGGER.debug("Fetching BloomSky update")
         response = requests.get(
-            "{}?{}".format(self.API_URL, self._endpoint_argument),
+            f"{self.API_URL}?{self._endpoint_argument}",
             headers={AUTHORIZATION: self._api_key},
             timeout=10,
         )

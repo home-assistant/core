@@ -9,7 +9,6 @@ from homeassistant.helpers import entity
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.util import slugify
 
 from .core.const import (
     ATTR_MANUFACTURER,
@@ -31,30 +30,20 @@ RESTART_GRACE_PERIOD = 7200  # 2 hours
 class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
     """A base class for ZHA entities."""
 
-    _domain = None  # Must be overridden by subclasses
-
     def __init__(self, unique_id, zha_device, channels, skip_entity_id=False, **kwargs):
         """Init ZHA entity."""
         self._force_update = False
         self._should_poll = False
         self._unique_id = unique_id
-        if not skip_entity_id:
-            ieee = zha_device.ieee
-            ieeetail = "".join(["%02x" % (o,) for o in ieee[-4:]])
-            self.entity_id = "{}.{}_{}_{}_{}{}".format(
-                self._domain,
-                slugify(zha_device.manufacturer),
-                slugify(zha_device.model),
-                ieeetail,
-                channels[0].cluster.endpoint.endpoint_id,
-                kwargs.get(ENTITY_SUFFIX, ""),
-            )
+        ieeetail = "".join([f"{o:02x}" for o in zha_device.ieee[:4]])
+        ch_names = [ch.cluster.ep_attribute for ch in channels]
+        ch_names = ", ".join(sorted(ch_names))
+        self._name = f"{zha_device.name} {ieeetail} {ch_names}"
         self._state = None
         self._device_state_attributes = {}
         self._zha_device = zha_device
         self.cluster_channels = {}
         self._available = False
-        self._component = kwargs["component"]
         self._unsubs = []
         self.remove_future = None
         for channel in channels:
@@ -63,7 +52,7 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
     @property
     def name(self):
         """Return Entity's default name."""
-        return self.zha_device.name
+        return self._name
 
     @property
     def unique_id(self) -> str:
@@ -109,17 +98,20 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
         """Return entity availability."""
         return self._available
 
+    @callback
     def async_set_available(self, available):
         """Set entity availability."""
         self._available = available
         self.async_schedule_update_ha_state()
 
+    @callback
     def async_update_state_attribute(self, key, value):
         """Update a single device state attribute."""
         self._device_state_attributes.update({key: value})
         self.async_schedule_update_ha_state()
 
-    def async_set_state(self, state):
+    @callback
+    def async_set_state(self, attr_id, attr_name, value):
         """Set the entity state."""
         pass
 
@@ -189,12 +181,12 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
             unsub = async_dispatcher_connect(self.hass, signal, func)
         else:
             unsub = async_dispatcher_connect(
-                self.hass, "{}_{}".format(channel.unique_id, signal), func
+                self.hass, f"{channel.unique_id}_{signal}", func
             )
         self._unsubs.append(unsub)
 
     def log(self, level, msg, *args):
         """Log a message."""
-        msg = "%s: " + msg
+        msg = f"%s: {msg}"
         args = (self.entity_id,) + args
         _LOGGER.log(level, msg, *args)

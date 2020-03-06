@@ -12,20 +12,22 @@ import zipfile
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS,
-    TEMP_CELSIUS,
-    CONF_NAME,
     ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
+    SPEED_KILOMETERS_PER_HOUR,
+    TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+import homeassistant.util.dt as dt_util
 
-_RESOURCE = "http://www.bom.gov.au/fwo/{}/{}.{}.json"
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_LAST_UPDATE = "last_update"
@@ -58,7 +60,7 @@ SENSOR_TYPES = {
     "cloud_type_id": ["Cloud Type ID", None],
     "cloud_type": ["Cloud Type", None],
     "delta_t": ["Delta Temp C", TEMP_CELSIUS],
-    "gust_kmh": ["Wind Gust kmh", "km/h"],
+    "gust_kmh": ["Wind Gust kmh", SPEED_KILOMETERS_PER_HOUR],
     "gust_kt": ["Wind Gust kt", "kt"],
     "air_temp": ["Air Temp C", TEMP_CELSIUS],
     "dewpt": ["Dew Point C", TEMP_CELSIUS],
@@ -67,7 +69,7 @@ SENSOR_TYPES = {
     "press_msl": ["Pressure msl", "msl"],
     "press_tend": ["Pressure Tend", None],
     "rain_trace": ["Rain Today", "mm"],
-    "rel_hum": ["Relative Humidity", "%"],
+    "rel_hum": ["Relative Humidity", UNIT_PERCENTAGE],
     "sea_state": ["Sea State", None],
     "swell_dir_worded": ["Swell Direction", None],
     "swell_height": ["Swell Height", "m"],
@@ -75,7 +77,7 @@ SENSOR_TYPES = {
     "vis_km": ["Visability km", "km"],
     "weather": ["Weather", None],
     "wind_dir": ["Wind Direction", None],
-    "wind_spd_kmh": ["Wind Speed kmh", "km/h"],
+    "wind_spd_kmh": ["Wind Speed kmh", SPEED_KILOMETERS_PER_HOUR],
     "wind_spd_kt": ["Wind Speed kt", "kt"],
 }
 
@@ -111,13 +113,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if station is not None:
         if zone_id and wmo_id:
             _LOGGER.warning(
-                "Using config %s, not %s and %s for BOM sensor",
+                "Using configuration %s, not %s and %s for BOM sensor",
                 CONF_STATION,
                 CONF_ZONE_ID,
                 CONF_WMO_ID,
             )
     elif zone_id and wmo_id:
-        station = "{}.{}".format(zone_id, wmo_id)
+        station = f"{zone_id}.{wmo_id}"
     else:
         station = closest_station(
             config.get(CONF_LATITUDE),
@@ -157,9 +159,9 @@ class BOMCurrentSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         if self.stationname is None:
-            return "BOM {}".format(SENSOR_TYPES[self._condition][0])
+            return f"BOM {SENSOR_TYPES[self._condition][0]}"
 
-        return "BOM {} {}".format(self.stationname, SENSOR_TYPES[self._condition][0])
+        return f"BOM {self.stationname} {SENSOR_TYPES[self._condition][0]}"
 
     @property
     def state(self):
@@ -201,7 +203,10 @@ class BOMCurrentData:
 
     def _build_url(self):
         """Build the URL for the requests."""
-        url = _RESOURCE.format(self._zone_id, self._zone_id, self._wmo_id)
+        url = (
+            f"http://www.bom.gov.au/fwo/{self._zone_id}"
+            f"/{self._zone_id}.{self._wmo_id}.json"
+        )
         _LOGGER.debug("BOM URL: %s", url)
         return url
 
@@ -240,7 +245,7 @@ class BOMCurrentData:
             # Never updated before, therefore an update should occur.
             return True
 
-        now = datetime.datetime.now()
+        now = dt_util.utcnow()
         update_due_at = self.last_updated + datetime.timedelta(minutes=35)
         return now > update_due_at
 
@@ -251,8 +256,8 @@ class BOMCurrentData:
             _LOGGER.debug(
                 "BOM was updated %s minutes ago, skipping update as"
                 " < 35 minutes, Now: %s, LastUpdate: %s",
-                (datetime.datetime.now() - self.last_updated),
-                datetime.datetime.now(),
+                (dt_util.utcnow() - self.last_updated),
+                dt_util.utcnow(),
                 self.last_updated,
             )
             return
@@ -263,8 +268,10 @@ class BOMCurrentData:
 
             # set lastupdate using self._data[0] as the first element in the
             # array is the latest date in the json
-            self.last_updated = datetime.datetime.strptime(
-                str(self._data[0]["local_date_time_full"]), "%Y%m%d%H%M%S"
+            self.last_updated = dt_util.as_utc(
+                datetime.datetime.strptime(
+                    str(self._data[0]["local_date_time_full"]), "%Y%m%d%H%M%S"
+                )
             )
             return
 
@@ -278,7 +285,7 @@ def _get_bom_stations():
     """Return {CONF_STATION: (lat, lon)} for all stations, for auto-config.
 
     This function does several MB of internet requests, so please use the
-    caching version to minimise latency and hit-count.
+    caching version to minimize latency and hit-count.
     """
     latlon = {}
     with io.BytesIO() as file_obj:
@@ -306,10 +313,10 @@ def _get_bom_stations():
         r'(?P=zone)\.(?P<wmo>\d\d\d\d\d).shtml">'
     )
     for state in ("nsw", "vic", "qld", "wa", "tas", "nt"):
-        url = "http://www.bom.gov.au/{0}/observations/{0}all.shtml".format(state)
+        url = f"http://www.bom.gov.au/{state}/observations/{state}all.shtml"
         for zone_id, wmo_id in re.findall(pattern, requests.get(url).text):
             zones[wmo_id] = zone_id
-    return {"{}.{}".format(zones[k], k): latlon[k] for k in set(latlon) & set(zones)}
+    return {f"{zones[k]}.{k}": latlon[k] for k in set(latlon) & set(zones)}
 
 
 def bom_stations(cache_dir):

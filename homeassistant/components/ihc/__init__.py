@@ -2,6 +2,8 @@
 import logging
 import os.path
 
+from defusedxml import ElementTree
+from ihcsdk.ihccontroller import IHCController
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
@@ -51,7 +53,6 @@ AUTO_SETUP_YAML = "ihc_auto_setup.yaml"
 DOMAIN = "ihc"
 
 IHC_CONTROLLER = "controller"
-IHC_DATA = "ihc{}"
 IHC_INFO = "info"
 IHC_PLATFORMS = ("binary_sensor", "light", "sensor", "switch")
 
@@ -61,7 +62,7 @@ def validate_name(config):
     if CONF_NAME in config:
         return config
     ihcid = config[CONF_ID]
-    name = "ihc_{}".format(ihcid)
+    name = f"ihc_{ihcid}"
     config[CONF_NAME] = name
     return config
 
@@ -189,7 +190,10 @@ SET_RUNTIME_VALUE_BOOL_SCHEMA = vol.Schema(
 )
 
 SET_RUNTIME_VALUE_INT_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_IHC_ID): cv.positive_int, vol.Required(ATTR_VALUE): int}
+    {
+        vol.Required(ATTR_IHC_ID): cv.positive_int,
+        vol.Required(ATTR_VALUE): vol.Coerce(int),
+    }
 )
 
 SET_RUNTIME_VALUE_FLOAT_SCHEMA = vol.Schema(
@@ -214,7 +218,6 @@ def setup(hass, config):
 
 def ihc_setup(hass, config, conf, controller_id):
     """Set up the IHC component."""
-    from ihcsdk.ihccontroller import IHCController
 
     url = conf[CONF_URL]
     username = conf[CONF_USERNAME]
@@ -232,7 +235,7 @@ def ihc_setup(hass, config, conf, controller_id):
     # Manual configuration
     get_manual_configuration(hass, config, conf, ihc_controller, controller_id)
     # Store controller configuration
-    ihc_key = IHC_DATA.format(controller_id)
+    ihc_key = f"ihc{controller_id}"
     hass.data[ihc_key] = {IHC_CONTROLLER: ihc_controller, IHC_INFO: conf[CONF_INFO]}
     setup_service_functions(hass, ihc_controller)
     return True
@@ -272,7 +275,6 @@ def autosetup_ihc_products(
     hass: HomeAssistantType, config, ihc_controller, controller_id
 ):
     """Auto setup of IHC products from the IHC project file."""
-    from defusedxml import ElementTree
 
     project_xml = ihc_controller.get_project()
     if not project_xml:
@@ -312,7 +314,7 @@ def get_discovery_info(component_setup, groups, controller_id):
                     if "setting" in node.attrib and node.attrib["setting"] == "yes":
                         continue
                     ihc_id = int(node.attrib["id"].strip("_"), 0)
-                    name = "{}_{}".format(groupname, ihc_id)
+                    name = f"{groupname}_{ihc_id}"
                     device = {
                         "ihc_id": ihc_id,
                         "ctrl_id": controller_id,

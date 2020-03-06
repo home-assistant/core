@@ -1,9 +1,9 @@
 {
   "domain": "frontend",
   "name": "Home Assistant Frontend",
-  "documentation": "https://www.home-assistant.io/components/frontend",
+  "documentation": "https://www.home-assistant.io/integrations/frontend",
   "requirements": [
-    "home-assistant-frontend==20190825.0"
+    "home-assistant-frontend==20200228.0"
   ],
   "dependencies": [
     "api",
@@ -11,10 +11,12 @@
     "http",
     "lovelace",
     "onboarding",
+    "search",
     "system_log",
     "websocket_api"
   ],
   "codeowners": [
     "@home-assistant/frontend"
-  ]
+  ],
+  "quality_scale": "internal"
 }

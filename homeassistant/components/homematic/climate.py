@@ -14,7 +14,8 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
-from . import ATTR_DISCOVER_DEVICES, HM_ATTRIBUTE_SUPPORT, HMDevice
+from .const import ATTR_DISCOVER_DEVICES, HM_ATTRIBUTE_SUPPORT
+from .entity import HMDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         new_device = HMThermostat(conf)
         devices.append(new_device)
 
-    add_entities(devices)
+    add_entities(devices, True)
 
 
 class HMThermostat(HMDevice, ClimateDevice):
@@ -94,7 +95,9 @@ class HMThermostat(HMDevice, ClimateDevice):
         if self._data.get("BOOST_MODE", False):
             return "boost"
 
-        # Get the name of the mode
+        if not self._hm_control_mode:
+            return None
+
         mode = HM_ATTRIBUTE_SUPPORT[HM_CONTROL_MODE][1][self._hm_control_mode]
         mode = mode.lower()
 
@@ -177,8 +180,9 @@ class HMThermostat(HMDevice, ClimateDevice):
         """Return Control mode."""
         if HMIP_CONTROL_MODE in self._data:
             return self._data[HMIP_CONTROL_MODE]
+
         # Homematic
-        return self._data["CONTROL_MODE"]
+        return self._data.get("CONTROL_MODE")
 
     def _init_data_struct(self):
         """Generate a data dict (self._data) from the Homematic metadata."""

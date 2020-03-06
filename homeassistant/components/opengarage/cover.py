@@ -5,20 +5,22 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.cover import (
-    CoverDevice,
     DEVICE_CLASS_GARAGE,
     PLATFORM_SCHEMA,
-    SUPPORT_OPEN,
     SUPPORT_CLOSE,
+    SUPPORT_OPEN,
+    CoverDevice,
 )
 from homeassistant.const import (
-    CONF_NAME,
-    STATE_CLOSED,
-    STATE_OPEN,
     CONF_COVERS,
     CONF_HOST,
+    CONF_NAME,
     CONF_PORT,
+    CONF_SSL,
+    CONF_VERIFY_SSL,
+    STATE_CLOSED,
     STATE_CLOSING,
+    STATE_OPEN,
     STATE_OPENING,
 )
 import homeassistant.helpers.config_validation as cv
@@ -42,6 +44,8 @@ COVER_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_SSL, default=False): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
 )
 
@@ -60,6 +64,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             CONF_NAME: device_config.get(CONF_NAME),
             CONF_HOST: device_config.get(CONF_HOST),
             CONF_PORT: device_config.get(CONF_PORT),
+            CONF_SSL: device_config.get(CONF_SSL),
+            CONF_VERIFY_SSL: device_config.get(CONF_VERIFY_SSL),
             CONF_DEVICE_KEY: device_config.get(CONF_DEVICE_KEY),
         }
 
@@ -73,13 +79,16 @@ class OpenGarageCover(CoverDevice):
 
     def __init__(self, args):
         """Initialize the cover."""
-        self.opengarage_url = "http://{}:{}".format(args[CONF_HOST], args[CONF_PORT])
+        self.opengarage_url = "{}://{}:{}".format(
+            "https" if args[CONF_SSL] else "http", args[CONF_HOST], args[CONF_PORT]
+        )
         self._name = args[CONF_NAME]
         self._device_key = args[CONF_DEVICE_KEY]
         self._state = None
         self._state_before_move = None
         self._device_state_attributes = {}
         self._available = True
+        self._verify_ssl = args[CONF_VERIFY_SSL]
 
     @property
     def name(self):
@@ -122,9 +131,7 @@ class OpenGarageCover(CoverDevice):
     def update(self):
         """Get updated status from API."""
         try:
-            status = requests.get(
-                "{}/jc".format(self.opengarage_url), timeout=10
-            ).json()
+            status = requests.get(f"{self.opengarage_url}/jc", timeout=10).json()
         except requests.exceptions.RequestException as ex:
             _LOGGER.error(
                 "Unable to connect to OpenGarage device: %(reason)s", dict(reason=ex)
@@ -157,8 +164,9 @@ class OpenGarageCover(CoverDevice):
         result = -1
         try:
             result = requests.get(
-                "{}/cc?dkey={}&click=1".format(self.opengarage_url, self._device_key),
+                f"{self.opengarage_url}/cc?dkey={self._device_key}&click=1",
                 timeout=10,
+                verify=self._verify_ssl,
             ).json()["result"]
         except requests.exceptions.RequestException as ex:
             _LOGGER.error(

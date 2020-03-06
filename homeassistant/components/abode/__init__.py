@@ -1,48 +1,35 @@
-"""Support for Abode Home Security system."""
-import logging
+"""Support for the Abode Security System."""
+from asyncio import gather
+from copy import deepcopy
 from functools import partial
-from requests.exceptions import HTTPError, ConnectTimeout
 
+from abodepy import Abode
+from abodepy.exceptions import AbodeException
+import abodepy.helpers.timeline as TIMELINE
+from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DATE,
-    ATTR_TIME,
     ATTR_ENTITY_ID,
-    CONF_USERNAME,
+    ATTR_TIME,
     CONF_PASSWORD,
-    CONF_EXCLUDE,
-    CONF_NAME,
-    CONF_LIGHTS,
+    CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import discovery
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
 
-_LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = "Data provided by goabode.com"
+from .const import ATTRIBUTION, DEFAULT_CACHEDB, DOMAIN, LOGGER
 
 CONF_POLLING = "polling"
 
-DOMAIN = "abode"
-DEFAULT_CACHEDB = "./abodepy_cache.pickle"
-
-NOTIFICATION_ID = "abode_notification"
-NOTIFICATION_TITLE = "Abode Security Setup"
-
-EVENT_ABODE_ALARM = "abode_alarm"
-EVENT_ABODE_ALARM_END = "abode_alarm_end"
-EVENT_ABODE_AUTOMATION = "abode_automation"
-EVENT_ABODE_FAULT = "abode_panel_fault"
-EVENT_ABODE_RESTORE = "abode_panel_restore"
-
 SERVICE_SETTINGS = "change_setting"
 SERVICE_CAPTURE_IMAGE = "capture_image"
-SERVICE_TRIGGER = "trigger_quick_action"
+SERVICE_TRIGGER_AUTOMATION = "trigger_automation"
 
 ATTR_DEVICE_ID = "device_id"
 ATTR_DEVICE_NAME = "device_name"
@@ -53,9 +40,9 @@ ATTR_EVENT_TYPE = "event_type"
 ATTR_EVENT_UTC = "event_utc"
 ATTR_SETTING = "setting"
 ATTR_USER_NAME = "user_name"
+ATTR_APP_TYPE = "app_type"
+ATTR_EVENT_BY = "event_by"
 ATTR_VALUE = "value"
-
-ABODE_DEVICE_ID_LIST_SCHEMA = vol.Schema([str])
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -63,10 +50,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_NAME): cv.string,
                 vol.Optional(CONF_POLLING, default=False): cv.boolean,
-                vol.Optional(CONF_EXCLUDE, default=[]): ABODE_DEVICE_ID_LIST_SCHEMA,
-                vol.Optional(CONF_LIGHTS, default=[]): ABODE_DEVICE_ID_LIST_SCHEMA,
             }
         )
     },
@@ -79,7 +63,7 @@ CHANGE_SETTING_SCHEMA = vol.Schema(
 
 CAPTURE_IMAGE_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 
-TRIGGER_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
+AUTOMATION_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 
 ABODE_PLATFORMS = [
     "alarm_control_panel",
@@ -96,83 +80,85 @@ ABODE_PLATFORMS = [
 class AbodeSystem:
     """Abode System class."""
 
-    def __init__(self, username, password, cache, name, polling, exclude, lights):
+    def __init__(self, abode, polling):
         """Initialize the system."""
-        import abodepy
-
-        self.abode = abodepy.Abode(
-            username,
-            password,
-            auto_login=True,
-            get_devices=True,
-            get_automations=True,
-            cache_path=cache,
-        )
-        self.name = name
+        self.abode = abode
         self.polling = polling
-        self.exclude = exclude
-        self.lights = lights
-        self.devices = []
-
-    def is_excluded(self, device):
-        """Check if a device is configured to be excluded."""
-        return device.device_id in self.exclude
-
-    def is_automation_excluded(self, automation):
-        """Check if an automation is configured to be excluded."""
-        return automation.automation_id in self.exclude
-
-    def is_light(self, device):
-        """Check if a switch device is configured as a light."""
-        import abodepy.helpers.constants as CONST
-
-        return device.generic_type == CONST.TYPE_LIGHT or (
-            device.generic_type == CONST.TYPE_SWITCH and device.device_id in self.lights
-        )
+        self.entity_ids = set()
+        self.logout_listener = None
 
 
-def setup(hass, config):
-    """Set up Abode component."""
-    from abodepy.exceptions import AbodeException
+async def async_setup(hass, config):
+    """Set up Abode integration."""
+    if DOMAIN not in config:
+        return True
 
     conf = config[DOMAIN]
-    username = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
-    name = conf.get(CONF_NAME)
-    polling = conf.get(CONF_POLLING)
-    exclude = conf.get(CONF_EXCLUDE)
-    lights = conf.get(CONF_LIGHTS)
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=deepcopy(conf)
+        )
+    )
+
+    return True
+
+
+async def async_setup_entry(hass, config_entry):
+    """Set up Abode integration from a config entry."""
+    username = config_entry.data.get(CONF_USERNAME)
+    password = config_entry.data.get(CONF_PASSWORD)
+    polling = config_entry.data.get(CONF_POLLING)
 
     try:
         cache = hass.config.path(DEFAULT_CACHEDB)
-        hass.data[DOMAIN] = AbodeSystem(
-            username, password, cache, name, polling, exclude, lights
+        abode = await hass.async_add_executor_job(
+            Abode, username, password, True, True, True, cache
         )
-    except (AbodeException, ConnectTimeout, HTTPError) as ex:
-        _LOGGER.error("Unable to connect to Abode: %s", str(ex))
+        hass.data[DOMAIN] = AbodeSystem(abode, polling)
 
-        hass.components.persistent_notification.create(
-            "Error: {}<br />"
-            "You will need to restart hass after fixing."
-            "".format(ex),
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID,
-        )
+    except (AbodeException, ConnectTimeout, HTTPError) as ex:
+        LOGGER.error("Unable to connect to Abode: %s", str(ex))
         return False
 
-    setup_hass_services(hass)
-    setup_hass_events(hass)
-    setup_abode_events(hass)
+    for platform in ABODE_PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
+        )
+
+    await setup_hass_events(hass)
+    await hass.async_add_executor_job(setup_hass_services, hass)
+    await hass.async_add_executor_job(setup_abode_events, hass)
+
+    return True
+
+
+async def async_unload_entry(hass, config_entry):
+    """Unload a config entry."""
+    hass.services.async_remove(DOMAIN, SERVICE_SETTINGS)
+    hass.services.async_remove(DOMAIN, SERVICE_CAPTURE_IMAGE)
+    hass.services.async_remove(DOMAIN, SERVICE_TRIGGER_AUTOMATION)
+
+    tasks = []
 
     for platform in ABODE_PLATFORMS:
-        discovery.load_platform(hass, platform, DOMAIN, {}, config)
+        tasks.append(
+            hass.config_entries.async_forward_entry_unload(config_entry, platform)
+        )
+
+    await gather(*tasks)
+
+    await hass.async_add_executor_job(hass.data[DOMAIN].abode.events.stop)
+    await hass.async_add_executor_job(hass.data[DOMAIN].abode.logout)
+
+    hass.data[DOMAIN].logout_listener()
+    hass.data.pop(DOMAIN)
 
     return True
 
 
 def setup_hass_services(hass):
-    """Home assistant services."""
-    from abodepy.exceptions import AbodeException
+    """Home Assistant services."""
 
     def change_setting(call):
         """Change an Abode system setting."""
@@ -182,33 +168,35 @@ def setup_hass_services(hass):
         try:
             hass.data[DOMAIN].abode.set_setting(setting, value)
         except AbodeException as ex:
-            _LOGGER.warning(ex)
+            LOGGER.warning(ex)
 
     def capture_image(call):
         """Capture a new image."""
         entity_ids = call.data.get(ATTR_ENTITY_ID)
 
-        target_devices = [
-            device
-            for device in hass.data[DOMAIN].devices
-            if device.entity_id in entity_ids
+        target_entities = [
+            entity_id
+            for entity_id in hass.data[DOMAIN].entity_ids
+            if entity_id in entity_ids
         ]
 
-        for device in target_devices:
-            device.capture()
+        for entity_id in target_entities:
+            signal = f"abode_camera_capture_{entity_id}"
+            dispatcher_send(hass, signal)
 
-    def trigger_quick_action(call):
-        """Trigger a quick action."""
+    def trigger_automation(call):
+        """Trigger an Abode automation."""
         entity_ids = call.data.get(ATTR_ENTITY_ID, None)
 
-        target_devices = [
-            device
-            for device in hass.data[DOMAIN].devices
-            if device.entity_id in entity_ids
+        target_entities = [
+            entity_id
+            for entity_id in hass.data[DOMAIN].entity_ids
+            if entity_id in entity_ids
         ]
 
-        for device in target_devices:
-            device.trigger()
+        for entity_id in target_entities:
+            signal = f"abode_trigger_automation_{entity_id}"
+            dispatcher_send(hass, signal)
 
     hass.services.register(
         DOMAIN, SERVICE_SETTINGS, change_setting, schema=CHANGE_SETTING_SCHEMA
@@ -219,16 +207,12 @@ def setup_hass_services(hass):
     )
 
     hass.services.register(
-        DOMAIN, SERVICE_TRIGGER, trigger_quick_action, schema=TRIGGER_SCHEMA
+        DOMAIN, SERVICE_TRIGGER_AUTOMATION, trigger_automation, schema=AUTOMATION_SCHEMA
     )
 
 
-def setup_hass_events(hass):
+async def setup_hass_events(hass):
     """Home Assistant start and stop callbacks."""
-
-    def startup(event):
-        """Listen for push events."""
-        hass.data[DOMAIN].abode.events.start()
 
     def logout(event):
         """Logout of Abode."""
@@ -236,17 +220,18 @@ def setup_hass_events(hass):
             hass.data[DOMAIN].abode.events.stop()
 
         hass.data[DOMAIN].abode.logout()
-        _LOGGER.info("Logged out of Abode")
+        LOGGER.info("Logged out of Abode")
 
     if not hass.data[DOMAIN].polling:
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, startup)
+        await hass.async_add_executor_job(hass.data[DOMAIN].abode.events.start)
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, logout)
+    hass.data[DOMAIN].logout_listener = hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, logout
+    )
 
 
 def setup_abode_events(hass):
     """Event callbacks."""
-    import abodepy.helpers.timeline as TIMELINE
 
     def event_callback(event, event_json):
         """Handle an event callback from Abode."""
@@ -259,6 +244,8 @@ def setup_abode_events(hass):
             ATTR_EVENT_TYPE: event_json.get(ATTR_EVENT_TYPE, ""),
             ATTR_EVENT_UTC: event_json.get(ATTR_EVENT_UTC, ""),
             ATTR_USER_NAME: event_json.get(ATTR_USER_NAME, ""),
+            ATTR_APP_TYPE: event_json.get(ATTR_APP_TYPE, ""),
+            ATTR_EVENT_BY: event_json.get(ATTR_EVENT_BY, ""),
             ATTR_DATE: event_json.get(ATTR_DATE, ""),
             ATTR_TIME: event_json.get(ATTR_TIME, ""),
         }
@@ -271,6 +258,12 @@ def setup_abode_events(hass):
         TIMELINE.PANEL_FAULT_GROUP,
         TIMELINE.PANEL_RESTORE_GROUP,
         TIMELINE.AUTOMATION_GROUP,
+        TIMELINE.DISARM_GROUP,
+        TIMELINE.ARM_GROUP,
+        TIMELINE.TEST_GROUP,
+        TIMELINE.CAPTURE_GROUP,
+        TIMELINE.DEVICE_GROUP,
+        TIMELINE.AUTOMATION_EDIT_GROUP,
     ]
 
     for event in events:
@@ -283,16 +276,23 @@ class AbodeDevice(Entity):
     """Representation of an Abode device."""
 
     def __init__(self, data, device):
-        """Initialize a sensor for Abode device."""
+        """Initialize Abode device."""
         self._data = data
         self._device = device
 
     async def async_added_to_hass(self):
-        """Subscribe Abode events."""
+        """Subscribe to device events."""
         self.hass.async_add_job(
             self._data.abode.events.add_device_callback,
             self._device.device_id,
             self._update_callback,
+        )
+        self.hass.data[DOMAIN].entity_ids.add(self.entity_id)
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe from device events."""
+        self.hass.async_add_job(
+            self._data.abode.events.remove_all_device_callbacks, self._device.device_id
         )
 
     @property
@@ -301,12 +301,12 @@ class AbodeDevice(Entity):
         return self._data.polling
 
     def update(self):
-        """Update automation state."""
+        """Update device and automation states."""
         self._device.refresh()
 
     @property
     def name(self):
-        """Return the name of the sensor."""
+        """Return the name of the device."""
         return self._device.name
 
     @property
@@ -317,6 +317,21 @@ class AbodeDevice(Entity):
             "device_id": self._device.device_id,
             "battery_low": self._device.battery_low,
             "no_response": self._device.no_response,
+            "device_type": self._device.type,
+        }
+
+    @property
+    def unique_id(self):
+        """Return a unique ID to use for this device."""
+        return self._device.device_uuid
+
+    @property
+    def device_info(self):
+        """Return device registry information for this entity."""
+        return {
+            "identifiers": {(DOMAIN, self._device.device_id)},
+            "manufacturer": "Abode",
+            "name": self._device.name,
             "device_type": self._device.type,
         }
 
@@ -335,13 +350,14 @@ class AbodeAutomation(Entity):
         self._event = event
 
     async def async_added_to_hass(self):
-        """Subscribe Abode events."""
+        """Subscribe to a group of Abode timeline events."""
         if self._event:
             self.hass.async_add_job(
                 self._data.abode.events.add_event_callback,
                 self._event,
                 self._update_callback,
             )
+            self.hass.data[DOMAIN].entity_ids.add(self.entity_id)
 
     @property
     def should_poll(self):
@@ -354,7 +370,7 @@ class AbodeAutomation(Entity):
 
     @property
     def name(self):
-        """Return the name of the sensor."""
+        """Return the name of the automation."""
         return self._automation.name
 
     @property
@@ -362,12 +378,15 @@ class AbodeAutomation(Entity):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            "automation_id": self._automation.automation_id,
-            "type": self._automation.type,
-            "sub_type": self._automation.sub_type,
+            "type": "CUE automation",
         }
 
+    @property
+    def unique_id(self):
+        """Return a unique ID to use for this automation."""
+        return self._automation.automation_id
+
     def _update_callback(self, device):
-        """Update the device state."""
+        """Update the automation state."""
         self._automation.refresh()
         self.schedule_update_ha_state()

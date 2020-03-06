@@ -1,10 +1,8 @@
 {
   "domain": "blinkt",
-  "name": "Blinkt",
-  "documentation": "https://www.home-assistant.io/components/blinkt",
-  "requirements": [
-    "blinkt==0.1.0"
-  ],
+  "name": "Blinkt!",
+  "documentation": "https://www.home-assistant.io/integrations/blinkt",
+  "requirements": ["blinkt==0.1.0"],
   "dependencies": [],
   "codeowners": []
 }

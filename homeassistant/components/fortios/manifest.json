@@ -1,10 +1,8 @@
 {
   "domain": "fortios",
   "name": "Home Assistant Device Tracker to support FortiOS",
-  "documentation": "https://www.home-assistant.io/components/fortios/",
-  "requirements": [
-    "fortiosapi==0.10.8"
-  ],
+  "documentation": "https://www.home-assistant.io/integrations/fortios/",
+  "requirements": ["fortiosapi==0.10.8"],
   "dependencies": [],
   "codeowners": ["@kimfrellsen"]
 }

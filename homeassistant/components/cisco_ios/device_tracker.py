@@ -1,15 +1,17 @@
 """Support for Cisco IOS Routers."""
 import logging
+import re
 
+from pexpect import pxssh
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN,
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,8 +102,6 @@ class CiscoDeviceScanner(DeviceScanner):
 
     def _get_arp_data(self):
         """Open connection to the router and get arp entries."""
-        from pexpect import pxssh
-        import re
 
         try:
             cisco_ssh = pxssh.pxssh()

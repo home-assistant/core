@@ -1,9 +1,10 @@
-"""Support gathering ted500 information."""
-import logging
+"""Support gathering ted5000 information."""
 from datetime import timedelta
+import logging
 
 import requests
 import voluptuous as vol
+import xmltodict
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, POWER_WATT
@@ -32,7 +33,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     name = config.get(CONF_NAME)
-    url = "http://{}:{}/api/LiveData.xml".format(host, port)
+    url = f"http://{host}:{port}/api/LiveData.xml"
 
     gateway = Ted5000Gateway(url)
 
@@ -94,7 +95,6 @@ class Ted5000Gateway:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from the Ted5000 XML API."""
-        import xmltodict
 
         try:
             request = requests.get(self.url, timeout=10)

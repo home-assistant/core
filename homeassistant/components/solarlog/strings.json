@@ -1,0 +1,21 @@
+{
+  "config": {
+    "title": "Solar-Log",
+    "step": {
+      "user": {
+        "title": "Define your Solar-Log connection",
+        "data": {
+          "host": "The hostname or ip-address of your Solar-Log device",
+          "name": "The prefix to be used for your Solar-Log sensors"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "Device is already configured",
+      "cannot_connect": "Failed to connect, please verify host address"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  }
+}

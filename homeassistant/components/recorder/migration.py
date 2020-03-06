@@ -2,6 +2,11 @@
 import logging
 import os
 
+from sqlalchemy import Table, text
+from sqlalchemy.engine import reflection
+from sqlalchemy.exc import OperationalError, SQLAlchemyError
+
+from .models import SCHEMA_VERSION, Base, SchemaChanges
 from .util import session_scope
 
 _LOGGER = logging.getLogger(__name__)
@@ -10,8 +15,6 @@ PROGRESS_FILE = ".migration_progress"
 
 def migrate_schema(instance):
     """Check if the schema needs to be upgraded."""
-    from .models import SchemaChanges, SCHEMA_VERSION
-
     progress_path = instance.hass.config.path(PROGRESS_FILE)
 
     with session_scope(session=instance.get_session()) as session:
@@ -60,11 +63,7 @@ def _create_index(engine, table_name, index_name):
     The index name should match the name given for the index
     within the table definition described in the models
     """
-    from sqlalchemy import Table
-    from sqlalchemy.exc import OperationalError
-    from . import models
-
-    table = Table(table_name, models.Base.metadata)
+    table = Table(table_name, Base.metadata)
     _LOGGER.debug("Looking up index for table %s", table_name)
     # Look up the index object by name from the table is the models
     index = next(idx for idx in table.indexes if idx.name == index_name)
@@ -99,9 +98,6 @@ def _drop_index(engine, table_name, index_name):
     string here is generated from the method parameters without sanitizing.
     DO NOT USE THIS FUNCTION IN ANY OPERATION THAT TAKES USER INPUT.
     """
-    from sqlalchemy import text
-    from sqlalchemy.exc import SQLAlchemyError
-
     _LOGGER.debug("Dropping index %s from table %s", index_name, table_name)
     success = False
 
@@ -159,9 +155,6 @@ def _drop_index(engine, table_name, index_name):
 
 def _add_columns(engine, table_name, columns_def):
     """Add columns to a table."""
-    from sqlalchemy import text
-    from sqlalchemy.exc import OperationalError
-
     _LOGGER.info(
         "Adding columns %s to table %s. Note: this can take several "
         "minutes on large databases and slow computers. Please "
@@ -277,9 +270,6 @@ def _inspect_schema_version(engine, session):
     version 1 are present to make the determination. Eventually this logic
     can be removed and we can assume a new db is being created.
     """
-    from sqlalchemy.engine import reflection
-    from .models import SchemaChanges, SCHEMA_VERSION
-
     inspector = reflection.Inspector.from_engine(engine)
     indexes = inspector.get_indexes("events")
 

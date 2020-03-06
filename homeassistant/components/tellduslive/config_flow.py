@@ -4,6 +4,7 @@ import logging
 import os
 
 import async_timeout
+from tellduslive import Session, supports_local_api
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -43,7 +44,6 @@ class FlowHandler(config_entries.ConfigFlow):
         self._scan_interval = SCAN_INTERVAL
 
     def _get_auth_url(self):
-        from tellduslive import Session
 
         self._session = Session(
             public_key=PUBLIC_KEY,
@@ -116,7 +116,6 @@ class FlowHandler(config_entries.ConfigFlow):
 
     async def async_step_discovery(self, user_input):
         """Run when a Tellstick is discovered."""
-        from tellduslive import supports_local_api
 
         _LOGGER.info("Discovered tellstick device: %s", user_input)
         if supports_local_api(user_input[1]):

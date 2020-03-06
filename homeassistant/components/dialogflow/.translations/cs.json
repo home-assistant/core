@@ -5,7 +5,7 @@
             "one_instance_allowed": "Povolena je pouze jedna instance."
         },
         "create_entry": {
-            "default": "Chcete-li odeslat ud\u00e1losti do aplikace Home Assistant, budete muset nastavit [integraci Dialogflow]({dialogflow_url}). \n\n Vypl\u0148te n\u00e1sleduj\u00edc\u00ed informace: \n\n - URL: `{webhook_url}' \n - Metoda: POST \n - Typ obsahu: aplikace/json \n\n Podrobn\u011bj\u0161\u00ed informace naleznete v [dokumentaci]({docs_url})."
+            "default": "Chcete-li odeslat ud\u00e1losti do aplikace Home Assistant, budete muset nastavit [integraci Dialogflow]({dialogflow_url}). \n\n Vypl\u0148te n\u00e1sleduj\u00edc\u00ed informace: \n\n - URL: `{webhook_url}' \n - Metoda: POST \n - Typ obsahu:  application/json\n\n Podrobn\u011bj\u0161\u00ed informace naleznete v [dokumentaci]({docs_url})."
         },
         "step": {
             "user": {

@@ -1,0 +1,8 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_home": "{entity_name} otthon van",
+            "is_not_home": "{entity_name} nincs otthon"
+        }
+    }
+}

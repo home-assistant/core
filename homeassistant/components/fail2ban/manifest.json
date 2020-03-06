@@ -1,7 +1,7 @@
 {
   "domain": "fail2ban",
-  "name": "Fail2ban",
-  "documentation": "https://www.home-assistant.io/components/fail2ban",
+  "name": "Fail2Ban",
+  "documentation": "https://www.home-assistant.io/integrations/fail2ban",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

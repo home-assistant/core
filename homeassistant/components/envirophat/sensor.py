@@ -1,12 +1,12 @@
 """Support for Enviro pHAT sensors."""
+from datetime import timedelta
 import importlib
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import TEMP_CELSIUS, CONF_DISPLAY_OPTIONS, CONF_NAME
+from homeassistant.const import CONF_DISPLAY_OPTIONS, CONF_NAME, TEMP_CELSIUS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -172,14 +172,18 @@ class EnvirophatData:
             self.envirophat.leds.off()
 
         # accelerometer readings in G
-        self.accelerometer_x, self.accelerometer_y, self.accelerometer_z = (
-            self.envirophat.motion.accelerometer()
-        )
+        (
+            self.accelerometer_x,
+            self.accelerometer_y,
+            self.accelerometer_z,
+        ) = self.envirophat.motion.accelerometer()
 
         # raw magnetometer reading
-        self.magnetometer_x, self.magnetometer_y, self.magnetometer_z = (
-            self.envirophat.motion.magnetometer()
-        )
+        (
+            self.magnetometer_x,
+            self.magnetometer_y,
+            self.magnetometer_z,
+        ) = self.envirophat.motion.magnetometer()
 
         # temperature resolution of BMP280 sensor: 0.01°C
         self.temperature = round(self.envirophat.weather.temperature(), 2)
@@ -189,6 +193,9 @@ class EnvirophatData:
         self.pressure = round(self.envirophat.weather.pressure() / 100.0, 3)
 
         # Voltage sensor, reading between 0-3.3V
-        self.voltage_0, self.voltage_1, self.voltage_2, self.voltage_3 = (
-            self.envirophat.analog.read_all()
-        )
+        (
+            self.voltage_0,
+            self.voltage_1,
+            self.voltage_2,
+            self.voltage_3,
+        ) = self.envirophat.analog.read_all()

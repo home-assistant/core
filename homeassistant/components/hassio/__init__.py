@@ -10,9 +10,9 @@ from homeassistant.components.homeassistant import SERVICE_CHECK_CONFIG
 import homeassistant.config as conf_util
 from homeassistant.const import (
     ATTR_NAME,
+    EVENT_CORE_CONFIG_UPDATE,
     SERVICE_HOMEASSISTANT_RESTART,
     SERVICE_HOMEASSISTANT_STOP,
-    EVENT_CORE_CONFIG_UPDATE,
 )
 from homeassistant.core import DOMAIN as HASS_DOMAIN, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -20,8 +20,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import utcnow
 
-from .auth import async_setup_auth_view
 from .addon_panel import async_setup_addon_panel
+from .auth import async_setup_auth_view
 from .discovery import async_setup_discovery_view
 from .handler import HassIO, HassioAPIError
 from .http import HassIOView
@@ -136,7 +136,7 @@ def get_homeassistant_version(hass):
 @callback
 @bind_hass
 def is_hassio(hass):
-    """Return true if hass.io is loaded.
+    """Return true if Hass.io is loaded.
 
     Async friendly.
     """
@@ -171,7 +171,7 @@ async def async_setup(hass, config):
         if user and user.refresh_tokens:
             refresh_token = list(user.refresh_tokens.values())[0]
 
-            # Migrate old hass.io users to be admin.
+            # Migrate old Hass.io users to be admin.
             if not user.is_admin:
                 await hass.auth.async_update_user(user, group_ids=[GROUP_ID_ADMIN])
 
@@ -194,14 +194,14 @@ async def async_setup(hass, config):
         await hass.components.panel_custom.async_register_panel(
             frontend_url_path="hassio",
             webcomponent_name="hassio-main",
-            sidebar_title="Hass.io",
+            sidebar_title="Supervisor",
             sidebar_icon="hass:home-assistant",
             js_url="/api/hassio/app/entrypoint.js",
             embed_iframe=True,
             require_admin=True,
         )
 
-    await hassio.update_hass_api(config.get("http", {}), refresh_token.token)
+    await hassio.update_hass_api(config.get("http", {}), refresh_token)
 
     async def push_config(_):
         """Push core config to Hass.io."""
@@ -219,7 +219,7 @@ async def async_setup(hass, config):
         snapshot = data.pop(ATTR_SNAPSHOT, None)
         payload = None
 
-        # Pass data to hass.io API
+        # Pass data to Hass.io API
         if service.service == SERVICE_ADDON_STDIN:
             payload = data[ATTR_INPUT]
         elif MAP_SERVICE_API[service.service][3]:
@@ -269,7 +269,7 @@ async def async_setup(hass, config):
         if errors:
             _LOGGER.error(errors)
             hass.components.persistent_notification.async_create(
-                "Config error. See dev-info panel for details.",
+                "Config error. See [the logs](/developer-tools/logs) for details.",
                 "Config validating",
                 f"{HASS_DOMAIN}.check_config",
             )
@@ -290,7 +290,7 @@ async def async_setup(hass, config):
     async_setup_discovery_view(hass, hassio)
 
     # Init auth Hass.io feature
-    async_setup_auth_view(hass)
+    async_setup_auth_view(hass, user)
 
     # Init ingress Hass.io feature
     async_setup_ingress_view(hass, host)

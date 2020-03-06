@@ -1,11 +1,9 @@
 {
   "domain": "logbook",
   "name": "Logbook",
-  "documentation": "https://www.home-assistant.io/components/logbook",
+  "documentation": "https://www.home-assistant.io/integrations/logbook",
   "requirements": [],
-  "dependencies": [
-    "frontend",
-    "recorder"
-  ],
+  "dependencies": ["frontend", "http", "recorder"],
+  "after_dependencies": ["homekit"],
   "codeowners": []
 }

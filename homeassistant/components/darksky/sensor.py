@@ -1,11 +1,11 @@
 """Support for Dark Sky weather service."""
-import logging
 from datetime import timedelta
+import logging
 
-import voluptuous as vol
+import forecastio
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -14,9 +14,15 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
-    UNIT_UV_INDEX,
     CONF_SCAN_INTERVAL,
+    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_METERS_PER_SECOND,
+    SPEED_MILES_PER_HOUR,
+    TIME_HOURS,
+    UNIT_PERCENTAGE,
+    UNIT_UV_INDEX,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -98,21 +104,21 @@ SENSOR_TYPES = {
     ],
     "precip_intensity": [
         "Precip Intensity",
-        "mm/h",
+        f"mm/{TIME_HOURS}",
         "in",
-        "mm/h",
-        "mm/h",
-        "mm/h",
+        f"mm/{TIME_HOURS}",
+        f"mm/{TIME_HOURS}",
+        f"mm/{TIME_HOURS}",
         "mdi:weather-rainy",
         ["currently", "minutely", "hourly", "daily"],
     ],
     "precip_probability": [
         "Precip Probability",
-        "%",
-        "%",
-        "%",
-        "%",
-        "%",
+        UNIT_PERCENTAGE,
+        UNIT_PERCENTAGE,
+        UNIT_PERCENTAGE,
+        UNIT_PERCENTAGE,
+        UNIT_PERCENTAGE,
         "mdi:water-percent",
         ["currently", "minutely", "hourly", "daily"],
     ],
@@ -158,11 +164,11 @@ SENSOR_TYPES = {
     ],
     "wind_speed": [
         "Wind Speed",
-        "m/s",
-        "mph",
-        "km/h",
-        "mph",
-        "mph",
+        SPEED_METERS_PER_SECOND,
+        SPEED_MILES_PER_HOUR,
+        SPEED_KILOMETERS_PER_HOUR,
+        SPEED_MILES_PER_HOUR,
+        SPEED_MILES_PER_HOUR,
         "mdi:weather-windy",
         ["currently", "hourly", "daily"],
     ],
@@ -178,31 +184,31 @@ SENSOR_TYPES = {
     ],
     "wind_gust": [
         "Wind Gust",
-        "m/s",
-        "mph",
-        "km/h",
-        "mph",
-        "mph",
+        SPEED_METERS_PER_SECOND,
+        SPEED_MILES_PER_HOUR,
+        SPEED_KILOMETERS_PER_HOUR,
+        SPEED_MILES_PER_HOUR,
+        SPEED_MILES_PER_HOUR,
         "mdi:weather-windy-variant",
         ["currently", "hourly", "daily"],
     ],
     "cloud_cover": [
         "Cloud Coverage",
-        "%",
-        "%",
-        "%",
-        "%",
-        "%",
-        "mdi:weather-partlycloudy",
+        UNIT_PERCENTAGE,
+        UNIT_PERCENTAGE,
+        UNIT_PERCENTAGE,
+        UNIT_PERCENTAGE,
+        UNIT_PERCENTAGE,
+        "mdi:weather-partly-cloudy",
         ["currently", "hourly", "daily"],
     ],
     "humidity": [
         "Humidity",
-        "%",
-        "%",
-        "%",
-        "%",
-        "%",
+        UNIT_PERCENTAGE,
+        UNIT_PERCENTAGE,
+        UNIT_PERCENTAGE,
+        UNIT_PERCENTAGE,
+        UNIT_PERCENTAGE,
         "mdi:water-percent",
         ["currently", "hourly", "daily"],
     ],
@@ -318,11 +324,11 @@ SENSOR_TYPES = {
     ],
     "precip_intensity_max": [
         "Daily Max Precip Intensity",
-        "mm/h",
+        f"mm/{TIME_HOURS}",
         "in",
-        "mm/h",
-        "mm/h",
-        "mm/h",
+        f"mm/{TIME_HOURS}",
+        f"mm/{TIME_HOURS}",
+        f"mm/{TIME_HOURS}",
         "mdi:thermometer",
         ["daily"],
     ],
@@ -371,7 +377,7 @@ SENSOR_TYPES = {
 
 CONDITION_PICTURES = {
     "clear-day": ["/static/images/darksky/weather-sunny.svg", "mdi:weather-sunny"],
-    "clear-night": ["/static/images/darksky/weather-night.svg", "mdi:weather-sunny"],
+    "clear-night": ["/static/images/darksky/weather-night.svg", "mdi:weather-night"],
     "rain": ["/static/images/darksky/weather-pouring.svg", "mdi:weather-pouring"],
     "snow": ["/static/images/darksky/weather-snowy.svg", "mdi:weather-snowy"],
     "sleet": ["/static/images/darksky/weather-hail.svg", "mdi:weather-snowy-rainy"],
@@ -380,11 +386,11 @@ CONDITION_PICTURES = {
     "cloudy": ["/static/images/darksky/weather-cloudy.svg", "mdi:weather-cloudy"],
     "partly-cloudy-day": [
         "/static/images/darksky/weather-partlycloudy.svg",
-        "mdi:weather-partlycloudy",
+        "mdi:weather-partly-cloudy",
     ],
     "partly-cloudy-night": [
         "/static/images/darksky/weather-cloudy.svg",
-        "mdi:weather-partlycloudy",
+        "mdi:weather-night-partly-cloudy",
     ],
 }
 
@@ -553,10 +559,10 @@ class DarkSkySensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         if self.forecast_day is not None:
-            return "{} {} {}d".format(self.client_name, self._name, self.forecast_day)
+            return f"{self.client_name} {self._name} {self.forecast_day}d"
         if self.forecast_hour is not None:
-            return "{} {} {}h".format(self.client_name, self._name, self.forecast_hour)
-        return "{} {}".format(self.client_name, self._name)
+            return f"{self.client_name} {self._name} {self.forecast_hour}h"
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):
@@ -704,7 +710,7 @@ class DarkSkyAlertSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self.client_name, self._name)
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):
@@ -749,7 +755,7 @@ class DarkSkyAlertSensor(Entity):
         for i, alert in enumerate(data):
             for attr in ALERTS_ATTRS:
                 if multiple_alerts:
-                    dkey = attr + "_" + str(i)
+                    dkey = f"{attr}_{i!s}"
                 else:
                     dkey = attr
                 alerts[dkey] = getattr(alert, attr)
@@ -797,8 +803,6 @@ class DarkSkyData:
 
     def _update(self):
         """Get the latest data from Dark Sky."""
-        import forecastio
-
         try:
             self.data = forecastio.load_forecast(
                 self._api_key,

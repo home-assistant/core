@@ -1,5 +1,4 @@
 """Support for a local MQTT broker."""
-import asyncio
 import logging
 import tempfile
 
@@ -7,6 +6,8 @@ import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
+
+from .const import PROTOCOL_311
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,12 +28,12 @@ HBMQTT_CONFIG_SCHEMA = vol.Any(
 )
 
 
-@asyncio.coroutine
-def async_start(hass, password, server_config):
+async def async_start(hass, password, server_config):
     """Initialize MQTT Server.
 
     This method is a coroutine.
     """
+    # pylint: disable=import-outside-toplevel
     from hbmqtt.broker import Broker, BrokerException
 
     passwd = tempfile.NamedTemporaryFile()
@@ -44,17 +45,16 @@ def async_start(hass, password, server_config):
             server_config = gen_server_config
 
         broker = Broker(server_config, hass.loop)
-        yield from broker.start()
+        await broker.start()
     except BrokerException:
         _LOGGER.exception("Error initializing MQTT server")
         return False, None
     finally:
         passwd.close()
 
-    @asyncio.coroutine
-    def async_shutdown_mqtt_server(event):
+    async def async_shutdown_mqtt_server(event):
         """Shut down the MQTT server."""
-        yield from broker.shutdown()
+        await broker.shutdown()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_shutdown_mqtt_server)
 
@@ -63,7 +63,8 @@ def async_start(hass, password, server_config):
 
 def generate_config(hass, passwd, password):
     """Generate a configuration based on current Home Assistant instance."""
-    from . import PROTOCOL_311
+    # pylint: disable=import-outside-toplevel
+    from passlib.apps import custom_app_context
 
     config = {
         "listeners": {
@@ -83,8 +84,6 @@ def generate_config(hass, passwd, password):
         username = "homeassistant"
 
         # Encrypt with what hbmqtt uses to verify
-        from passlib.apps import custom_app_context
-
         passwd.write(
             "homeassistant:{}\n".format(custom_app_context.encrypt(password)).encode(
                 "utf-8"

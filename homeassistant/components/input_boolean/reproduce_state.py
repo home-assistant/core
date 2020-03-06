@@ -4,11 +4,11 @@ import logging
 from typing import Iterable, Optional
 
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ON,
     STATE_OFF,
-    ATTR_ENTITY_ID,
+    STATE_ON,
 )
 from homeassistant.core import Context, State
 from homeassistant.helpers.typing import HomeAssistantType

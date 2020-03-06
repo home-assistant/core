@@ -3,9 +3,8 @@ from pathlib import Path
 
 from aiohttp import hdrs
 from aiohttp.web import FileResponse
-from aiohttp.web_exceptions import HTTPNotFound, HTTPForbidden
+from aiohttp.web_exceptions import HTTPForbidden, HTTPNotFound
 from aiohttp.web_urldispatcher import StaticResource
-
 
 # mypy: allow-untyped-defs
 
@@ -13,8 +12,6 @@ CACHE_TIME = 31 * 86400  # = 1 month
 CACHE_HEADERS = {hdrs.CACHE_CONTROL: f"public, max-age={CACHE_TIME}"}
 
 
-# https://github.com/PyCQA/astroid/issues/633
-# pylint: disable=duplicate-bases
 class CachingStaticResource(StaticResource):
     """Static Resource handler that will add cache headers."""
 
@@ -42,8 +39,10 @@ class CachingStaticResource(StaticResource):
         if filepath.is_dir():
             return await super()._handle(request)
         if filepath.is_file():
-            # type ignore: https://github.com/aio-libs/aiohttp/pull/3976
-            return FileResponse(  # type: ignore
-                filepath, chunk_size=self._chunk_size, headers=CACHE_HEADERS
+            return FileResponse(
+                filepath,
+                chunk_size=self._chunk_size,
+                # type ignore: https://github.com/aio-libs/aiohttp/pull/3976
+                headers=CACHE_HEADERS,  # type: ignore
             )
         raise HTTPNotFound

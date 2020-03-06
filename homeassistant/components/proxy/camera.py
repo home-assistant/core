@@ -1,15 +1,22 @@
 """Proxy camera platform that enables image processing of camera data."""
 import asyncio
+from datetime import timedelta
+import io
 import logging
 
-from datetime import timedelta
+from PIL import Image
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
-from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_MODE
+from homeassistant.components.camera import (
+    PLATFORM_SCHEMA,
+    Camera,
+    async_get_image,
+    async_get_mjpeg_stream,
+    async_get_still_stream,
+)
+from homeassistant.const import CONF_ENTITY_ID, CONF_MODE, CONF_NAME
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.util.async_ import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,14 +66,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 def _precheck_image(image, opts):
     """Perform some pre-checks on the given image."""
-    from PIL import Image
-    import io
-
     if not opts:
         raise ValueError()
     try:
         img = Image.open(io.BytesIO(image))
-    except IOError:
+    except OSError:
         _LOGGER.warning("Failed to open image")
         raise ValueError()
     imgfmt = str(img.format)
@@ -78,9 +82,6 @@ def _precheck_image(image, opts):
 
 def _resize_image(image, opts):
     """Resize image."""
-    from PIL import Image
-    import io
-
     try:
         img = _precheck_image(image, opts)
     except ValueError:
@@ -126,8 +127,6 @@ def _resize_image(image, opts):
 
 def _crop_image(image, opts):
     """Crop image."""
-    import io
-
     try:
         img = _precheck_image(image, opts)
     except ValueError:
@@ -220,7 +219,7 @@ class ProxyCamera(Camera):
 
     def camera_image(self):
         """Return camera image."""
-        return run_coroutine_threadsafe(
+        return asyncio.run_coroutine_threadsafe(
             self.async_camera_image(), self.hass.loop
         ).result()
 
@@ -234,7 +233,7 @@ class ProxyCamera(Camera):
             return self._last_image
 
         self._last_image_time = now
-        image = await self.hass.components.camera.async_get_image(self._proxied_camera)
+        image = await async_get_image(self.hass, self._proxied_camera)
         if not image:
             _LOGGER.error("Error getting original camera image")
             return self._last_image
@@ -254,12 +253,12 @@ class ProxyCamera(Camera):
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from camera images."""
         if not self._stream_opts:
-            return await self.hass.components.camera.async_get_mjpeg_stream(
-                request, self._proxied_camera
+            return await async_get_mjpeg_stream(
+                self.hass, request, self._proxied_camera
             )
 
-        return await self.hass.components.camera.async_get_still_stream(
-            request, self._async_stream_image, self.content_type, self.frame_interval
+        return await async_get_still_stream(
+            request, self._async_stream_image, self.content_type, self.frame_interval,
         )
 
     @property
@@ -270,9 +269,7 @@ class ProxyCamera(Camera):
     async def _async_stream_image(self):
         """Return a still image response from the camera."""
         try:
-            image = await self.hass.components.camera.async_get_image(
-                self._proxied_camera
-            )
+            image = await async_get_image(self.hass, self._proxied_camera)
             if not image:
                 return None
         except HomeAssistantError:

@@ -3,15 +3,16 @@ import socket
 import unittest
 from unittest import mock
 
+import pytest
 import requests
-from uvcclient import camera
-from uvcclient import nvr
+from uvcclient import camera, nvr
 
+from homeassistant.components.camera import SUPPORT_STREAM
+from homeassistant.components.uvc import camera as uvc
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import setup_component
-from homeassistant.components.uvc import camera as uvc
+
 from tests.common import get_test_home_assistant
-import pytest
 
 
 class TestUVCSetup(unittest.TestCase):
@@ -190,6 +191,26 @@ class TestUVC(unittest.TestCase):
             "host": "host-a",
             "internalHost": "host-b",
             "username": "admin",
+            "channels": [
+                {
+                    "id": "0",
+                    "width": 1920,
+                    "height": 1080,
+                    "fps": 25,
+                    "bitrate": 6000000,
+                    "isRtspEnabled": True,
+                    "rtspUris": ["rtsp://host-a:7447/uuid_rtspchannel_0"],
+                },
+                {
+                    "id": "1",
+                    "width": 1024,
+                    "height": 576,
+                    "fps": 15,
+                    "bitrate": 1200000,
+                    "isRtspEnabled": False,
+                    "rtspUris": ["rtsp://host-a:7447/uuid_rtspchannel_1"],
+                },
+            ],
         }
         self.nvr.server_version = (3, 2, 0)
 
@@ -199,6 +220,12 @@ class TestUVC(unittest.TestCase):
         assert self.uvc.is_recording
         assert "Ubiquiti" == self.uvc.brand
         assert "UVC Fake" == self.uvc.model
+        assert SUPPORT_STREAM == self.uvc.supported_features
+
+    def test_stream(self):
+        """Test the RTSP stream URI."""
+        stream_source = yield from self.uvc.stream_source()
+        assert stream_source == "rtsp://host-a:7447/uuid_rtspchannel_0"
 
     @mock.patch("uvcclient.store.get_info_store")
     @mock.patch("uvcclient.camera.UVCCameraClientV320")

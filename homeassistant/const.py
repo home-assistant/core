@@ -1,11 +1,13 @@
-# coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 98
+MINOR_VERSION = 107
 PATCH_VERSION = "0.dev0"
-__short_version__ = "{}.{}".format(MAJOR_VERSION, MINOR_VERSION)
-__version__ = "{}.{}".format(__short_version__, PATCH_VERSION)
-REQUIRED_PYTHON_VER = (3, 6, 0)
+__short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
+__version__ = f"{__short_version__}.{PATCH_VERSION}"
+REQUIRED_PYTHON_VER = (3, 7, 0)
+# Truthy date string triggers showing related deprecation warning messages.
+REQUIRED_NEXT_PYTHON_VER = (3, 8, 0)
+REQUIRED_NEXT_PYTHON_DATE = ""
 
 # Format for platform files
 PLATFORM_FORMAT = "{platform}.{domain}"
@@ -14,6 +16,7 @@ PLATFORM_FORMAT = "{platform}.{domain}"
 MATCH_ALL = "*"
 
 # Entity target all constant
+ENTITY_MATCH_NONE = "none"
 ENTITY_MATCH_ALL = "all"
 
 # If no name is specified
@@ -32,15 +35,18 @@ CONF_ALIAS = "alias"
 CONF_API_KEY = "api_key"
 CONF_API_VERSION = "api_version"
 CONF_AT = "at"
-CONF_AUTHENTICATION = "authentication"
 CONF_AUTH_MFA_MODULES = "auth_mfa_modules"
 CONF_AUTH_PROVIDERS = "auth_providers"
+CONF_AUTHENTICATION = "authentication"
 CONF_BASE = "base"
 CONF_BEFORE = "before"
 CONF_BELOW = "below"
 CONF_BINARY_SENSORS = "binary_sensors"
 CONF_BLACKLIST = "blacklist"
 CONF_BRIGHTNESS = "brightness"
+CONF_BROADCAST_ADDRESS = "broadcast_address"
+CONF_CLIENT_ID = "client_id"
+CONF_CLIENT_SECRET = "client_secret"
 CONF_CODE = "code"
 CONF_COLOR_TEMP = "color_temp"
 CONF_COMMAND = "command"
@@ -51,11 +57,13 @@ CONF_COMMAND_OPEN = "command_open"
 CONF_COMMAND_STATE = "command_state"
 CONF_COMMAND_STOP = "command_stop"
 CONF_CONDITION = "condition"
+CONF_CONTINUE_ON_TIMEOUT = "continue_on_timeout"
 CONF_COVERS = "covers"
 CONF_CURRENCY = "currency"
 CONF_CUSTOMIZE = "customize"
 CONF_CUSTOMIZE_DOMAIN = "customize_domain"
 CONF_CUSTOMIZE_GLOB = "customize_glob"
+CONF_DELAY = "delay"
 CONF_DELAY_TIME = "delay_time"
 CONF_DEVICE = "device"
 CONF_DEVICE_CLASS = "device_class"
@@ -76,6 +84,8 @@ CONF_ENTITY_ID = "entity_id"
 CONF_ENTITY_NAMESPACE = "entity_namespace"
 CONF_ENTITY_PICTURE_TEMPLATE = "entity_picture_template"
 CONF_EVENT = "event"
+CONF_EVENT_DATA = "event_data"
+CONF_EVENT_DATA_TEMPLATE = "event_data_template"
 CONF_EXCLUDE = "exclude"
 CONF_FILE_PATH = "file_path"
 CONF_FILENAME = "filename"
@@ -89,15 +99,15 @@ CONF_HOSTS = "hosts"
 CONF_HS = "hs"
 CONF_ICON = "icon"
 CONF_ICON_TEMPLATE = "icon_template"
-CONF_INCLUDE = "include"
 CONF_ID = "id"
+CONF_INCLUDE = "include"
 CONF_IP_ADDRESS = "ip_address"
 CONF_LATITUDE = "latitude"
-CONF_LONGITUDE = "longitude"
 CONF_LIGHTS = "lights"
+CONF_LONGITUDE = "longitude"
 CONF_MAC = "mac"
-CONF_METHOD = "method"
 CONF_MAXIMUM = "maximum"
+CONF_METHOD = "method"
 CONF_MINIMUM = "minimum"
 CONF_MODE = "mode"
 CONF_MONITORED_CONDITIONS = "monitored_conditions"
@@ -124,13 +134,18 @@ CONF_RADIUS = "radius"
 CONF_RECIPIENT = "recipient"
 CONF_REGION = "region"
 CONF_RESOURCE = "resource"
+CONF_RESOURCE_TEMPLATE = "resource_template"
 CONF_RESOURCES = "resources"
 CONF_RGB = "rgb"
 CONF_ROOM = "room"
 CONF_SCAN_INTERVAL = "scan_interval"
+CONF_SCENE = "scene"
 CONF_SENDER = "sender"
 CONF_SENSOR_TYPE = "sensor_type"
 CONF_SENSORS = "sensors"
+CONF_SERVICE = "service"
+CONF_SERVICE_DATA = "data"
+CONF_SERVICE_TEMPLATE = "service_template"
 CONF_SHOW_ON_MAP = "show_on_map"
 CONF_SLAVE = "slave"
 CONF_SOURCE = "source"
@@ -152,11 +167,12 @@ CONF_URL = "url"
 CONF_USERNAME = "username"
 CONF_VALUE_TEMPLATE = "value_template"
 CONF_VERIFY_SSL = "verify_ssl"
+CONF_WAIT_TEMPLATE = "wait_template"
 CONF_WEBHOOK_ID = "webhook_id"
 CONF_WEEKDAY = "weekday"
+CONF_WHITE_VALUE = "white_value"
 CONF_WHITELIST = "whitelist"
 CONF_WHITELIST_EXTERNAL_DIRS = "whitelist_external_dirs"
-CONF_WHITE_VALUE = "white_value"
 CONF_XY = "xy"
 CONF_ZONE = "zone"
 
@@ -260,8 +276,8 @@ ATTR_ICON = "icon"
 # The unit of measurement if applicable
 ATTR_UNIT_OF_MEASUREMENT = "unit_of_measurement"
 
-CONF_UNIT_SYSTEM_METRIC = "metric"  # type: str
-CONF_UNIT_SYSTEM_IMPERIAL = "imperial"  # type: str
+CONF_UNIT_SYSTEM_METRIC: str = "metric"
+CONF_UNIT_SYSTEM_IMPERIAL: str = "imperial"
 
 # Electrical attributes
 ATTR_VOLTAGE = "voltage"
@@ -271,6 +287,8 @@ ATTR_DISCOVERED = "discovered"
 
 # Location of the device/sensor
 ATTR_LOCATION = "location"
+
+ATTR_MODE = "mode"
 
 ATTR_BATTERY_CHARGING = "battery_charging"
 ATTR_BATTERY_LEVEL = "battery_level"
@@ -310,6 +328,7 @@ ATTR_GPS_ACCURACY = "gps_accuracy"
 ATTR_ASSUMED_STATE = "assumed_state"
 ATTR_STATE = "state"
 
+ATTR_EDITABLE = "editable"
 ATTR_OPTION = "option"
 
 # Bitfield of supported component features for the entity
@@ -333,40 +352,107 @@ ENERGY_WATT_HOUR = "Wh"
 TEMP_CELSIUS = "°C"
 TEMP_FAHRENHEIT = "°F"
 
-# Length units
-LENGTH_CENTIMETERS = "cm"  # type: str
-LENGTH_METERS = "m"  # type: str
-LENGTH_KILOMETERS = "km"  # type: str
+# Time units
+TIME_MICROSECONDS = "μs"
+TIME_MILLISECONDS = "ms"
+TIME_SECONDS = "s"
+TIME_MINUTES = "min"
+TIME_HOURS = "h"
+TIME_DAYS = "d"
+TIME_WEEKS = "w"
+TIME_MONTHS = "m"
+TIME_YEARS = "y"
 
-LENGTH_INCHES = "in"  # type: str
-LENGTH_FEET = "ft"  # type: str
-LENGTH_YARD = "yd"  # type: str
-LENGTH_MILES = "mi"  # type: str
+# Length units
+LENGTH_CENTIMETERS: str = "cm"
+LENGTH_METERS: str = "m"
+LENGTH_KILOMETERS: str = "km"
+
+LENGTH_INCHES: str = "in"
+LENGTH_FEET: str = "ft"
+LENGTH_YARD: str = "yd"
+LENGTH_MILES: str = "mi"
 
 # Pressure units
-PRESSURE_PA = "Pa"  # type: str
-PRESSURE_HPA = "hPa"  # type: str
-PRESSURE_BAR = "bar"  # type: str
-PRESSURE_MBAR = "mbar"  # type: str
-PRESSURE_INHG = "inHg"  # type: str
-PRESSURE_PSI = "psi"  # type: str
+PRESSURE_PA: str = "Pa"
+PRESSURE_HPA: str = "hPa"
+PRESSURE_BAR: str = "bar"
+PRESSURE_MBAR: str = "mbar"
+PRESSURE_INHG: str = "inHg"
+PRESSURE_PSI: str = "psi"
 
 # Volume units
-VOLUME_LITERS = "L"  # type: str
-VOLUME_MILLILITERS = "mL"  # type: str
+VOLUME_LITERS: str = "L"
+VOLUME_MILLILITERS: str = "mL"
+VOLUME_CUBIC_METERS = f"{LENGTH_METERS}³"
 
-VOLUME_GALLONS = "gal"  # type: str
-VOLUME_FLUID_OUNCE = "fl. oz."  # type: str
+VOLUME_GALLONS: str = "gal"
+VOLUME_FLUID_OUNCE: str = "fl. oz."
+
+# Area units
+AREA_SQUARE_METERS = f"{LENGTH_METERS}²"
 
 # Mass units
-MASS_GRAMS = "g"  # type: str
-MASS_KILOGRAMS = "kg"  # type: str
+MASS_GRAMS: str = "g"
+MASS_KILOGRAMS: str = "kg"
+MASS_MILLIGRAMS = "mg"
+MASS_MICROGRAMS = "µg"
 
-MASS_OUNCES = "oz"  # type: str
-MASS_POUNDS = "lb"  # type: str
+MASS_OUNCES: str = "oz"
+MASS_POUNDS: str = "lb"
 
 # UV Index units
-UNIT_UV_INDEX = "UV index"  # type: str
+UNIT_UV_INDEX: str = "UV index"
+
+# Percentage units
+UNIT_PERCENTAGE = "%"
+# Irradiation units
+IRRADIATION_WATTS_PER_SQUARE_METER = f"{POWER_WATT}/{AREA_SQUARE_METERS}"
+
+# Concentration units
+CONCENTRATION_MICROGRAMS_PER_CUBIC_METER = f"{MASS_MICROGRAMS}/{VOLUME_CUBIC_METERS}"
+CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER = f"{MASS_MILLIGRAMS}/{VOLUME_CUBIC_METERS}"
+CONCENTRATION_PARTS_PER_MILLION = "ppm"
+CONCENTRATION_PARTS_PER_BILLION = "ppb"
+
+# Speed units
+SPEED_METERS_PER_SECOND = f"{LENGTH_METERS}/{TIME_SECONDS}"
+SPEED_KILOMETERS_PER_HOUR = f"{LENGTH_KILOMETERS}/{TIME_HOURS}"
+SPEED_MILES_PER_HOUR = "mph"
+
+# Data units
+DATA_BITS = "bit"
+DATA_KILOBITS = "kbit"
+DATA_MEGABITS = "Mbit"
+DATA_GIGABITS = "Gbit"
+DATA_BYTES = "B"
+DATA_KILOBYTES = "kB"
+DATA_MEGABYTES = "MB"
+DATA_GIGABYTES = "GB"
+DATA_TERABYTES = "TB"
+DATA_PETABYTES = "PB"
+DATA_EXABYTES = "EB"
+DATA_ZETTABYTES = "ZB"
+DATA_YOTTABYTES = "YB"
+DATA_KIBIBYTES = "KiB"
+DATA_MEBIBYTES = "MiB"
+DATA_GIBIBYTES = "GiB"
+DATA_TEBIBYTES = "TiB"
+DATA_PEBIBYTES = "PiB"
+DATA_EXBIBYTES = "EiB"
+DATA_ZEBIBYTES = "ZiB"
+DATA_YOBIBYTES = "YiB"
+DATA_RATE_BITS_PER_SECOND = f"{DATA_BITS}/{TIME_SECONDS}"
+DATA_RATE_KILOBITS_PER_SECOND = f"{DATA_KILOBITS}/{TIME_SECONDS}"
+DATA_RATE_MEGABITS_PER_SECOND = f"{DATA_MEGABITS}/{TIME_SECONDS}"
+DATA_RATE_GIGABITS_PER_SECOND = f"{DATA_GIGABITS}/{TIME_SECONDS}"
+DATA_RATE_BYTES_PER_SECOND = f"{DATA_BYTES}/{TIME_SECONDS}"
+DATA_RATE_KILOBYTES_PER_SECOND = f"{DATA_KILOBYTES}/{TIME_SECONDS}"
+DATA_RATE_MEGABYTES_PER_SECOND = f"{DATA_MEGABYTES}/{TIME_SECONDS}"
+DATA_RATE_GIGABYTES_PER_SECOND = f"{DATA_GIGABYTES}/{TIME_SECONDS}"
+DATA_RATE_KIBIBYTES_PER_SECOND = f"{DATA_KIBIBYTES}/{TIME_SECONDS}"
+DATA_RATE_MEBIBYTES_PER_SECOND = f"{DATA_MEBIBYTES}/{TIME_SECONDS}"
+DATA_RATE_GIBIBYTES_PER_SECOND = f"{DATA_GIBIBYTES}/{TIME_SECONDS}"
 
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = "stop"
@@ -450,7 +536,6 @@ HTTP_SERVICE_UNAVAILABLE = 503
 HTTP_BASIC_AUTHENTICATION = "basic"
 HTTP_DIGEST_AUTHENTICATION = "digest"
 
-HTTP_HEADER_HA_AUTH = "X-HA-access"
 HTTP_HEADER_X_REQUESTED_WITH = "X-Requested-With"
 
 CONTENT_TYPE_JSON = "application/json"
@@ -460,15 +545,15 @@ CONTENT_TYPE_TEXT_PLAIN = "text/plain"
 # The exit code to send to request a restart
 RESTART_EXIT_CODE = 100
 
-UNIT_NOT_RECOGNIZED_TEMPLATE = "{} is not a recognized {} unit."  # type: str
+UNIT_NOT_RECOGNIZED_TEMPLATE: str = "{} is not a recognized {} unit."
 
-LENGTH = "length"  # type: str
-MASS = "mass"  # type: str
-PRESSURE = "pressure"  # type: str
-VOLUME = "volume"  # type: str
-TEMPERATURE = "temperature"  # type: str
-SPEED_MS = "speed_ms"  # type: str
-ILLUMINANCE = "illuminance"  # type: str
+LENGTH: str = "length"
+MASS: str = "mass"
+PRESSURE: str = "pressure"
+VOLUME: str = "volume"
+TEMPERATURE: str = "temperature"
+SPEED_MS: str = "speed_ms"
+ILLUMINANCE: str = "illuminance"
 
 WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 

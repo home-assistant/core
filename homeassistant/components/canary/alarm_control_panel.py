@@ -1,7 +1,14 @@
 """Support for Canary alarm."""
 import logging
 
+from canary.api import LOCATION_MODE_AWAY, LOCATION_MODE_HOME, LOCATION_MODE_NIGHT
+
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_ARM_NIGHT,
+)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -42,11 +49,6 @@ class CanaryAlarm(AlarmControlPanel):
     @property
     def state(self):
         """Return the state of the device."""
-        from canary.api import (
-            LOCATION_MODE_AWAY,
-            LOCATION_MODE_HOME,
-            LOCATION_MODE_NIGHT,
-        )
 
         location = self._data.get_location(self._location_id)
 
@@ -63,6 +65,11 @@ class CanaryAlarm(AlarmControlPanel):
         return None
 
     @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         location = self._data.get_location(self._location_id)
@@ -75,18 +82,15 @@ class CanaryAlarm(AlarmControlPanel):
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        from canary.api import LOCATION_MODE_HOME
 
         self._data.set_location_mode(self._location_id, LOCATION_MODE_HOME)
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        from canary.api import LOCATION_MODE_AWAY
 
         self._data.set_location_mode(self._location_id, LOCATION_MODE_AWAY)
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
-        from canary.api import LOCATION_MODE_NIGHT
 
         self._data.set_location_mode(self._location_id, LOCATION_MODE_NIGHT)

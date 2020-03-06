@@ -1,15 +1,15 @@
 """The tests for the APNS component."""
 import io
 import unittest
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, mock_open, patch
 
 from apns2.errors import Unregistered
 import yaml
 
-import homeassistant.components.notify as notify
-from homeassistant.setup import setup_component
 import homeassistant.components.apns.notify as apns
+import homeassistant.components.notify as notify
 from homeassistant.core import State
+from homeassistant.setup import setup_component
 
 from tests.common import assert_setup_component, get_test_home_assistant
 
@@ -121,7 +121,7 @@ class TestApns(unittest.TestCase):
             self._setup_notify()
 
         assert self.hass.services.call(
-            notify.DOMAIN,
+            apns.DOMAIN,
             "apns_test_app",
             {"push_id": "1234", "name": "test device"},
             blocking=True,
@@ -153,7 +153,7 @@ class TestApns(unittest.TestCase):
             self._setup_notify()
 
         assert self.hass.services.call(
-            notify.DOMAIN, "apns_test_app", {"push_id": "1234"}, blocking=True
+            apns.DOMAIN, "apns_test_app", {"push_id": "1234"}, blocking=True
         )
 
         devices = {dev.push_id: dev for dev in written_devices}
@@ -183,7 +183,7 @@ class TestApns(unittest.TestCase):
             self._setup_notify()
 
         assert self.hass.services.call(
-            notify.DOMAIN,
+            apns.DOMAIN,
             "apns_test_app",
             {"push_id": "1234", "name": "updated device 1"},
             blocking=True,
@@ -222,7 +222,7 @@ class TestApns(unittest.TestCase):
             self._setup_notify()
 
         assert self.hass.services.call(
-            notify.DOMAIN,
+            apns.DOMAIN,
             "apns_test_app",
             {"push_id": "1234", "name": "updated device 1"},
             blocking=True,
@@ -239,7 +239,7 @@ class TestApns(unittest.TestCase):
         assert "tracking123" == test_device_1.tracking_device_id
         assert "tracking456" == test_device_2.tracking_device_id
 
-    @patch("apns2.client.APNsClient")
+    @patch("homeassistant.components.apns.notify.APNsClient")
     def test_send(self, mock_client):
         """Test updating an existing device."""
         send = mock_client.return_value.send_notification
@@ -274,7 +274,7 @@ class TestApns(unittest.TestCase):
         assert "test.mp3" == payload.sound
         assert "testing" == payload.category
 
-    @patch("apns2.client.APNsClient")
+    @patch("homeassistant.components.apns.notify.APNsClient")
     def test_send_when_disabled(self, mock_client):
         """Test updating an existing device."""
         send = mock_client.return_value.send_notification
@@ -299,7 +299,7 @@ class TestApns(unittest.TestCase):
 
         assert not send.called
 
-    @patch("apns2.client.APNsClient")
+    @patch("homeassistant.components.apns.notify.APNsClient")
     def test_send_with_state(self, mock_client):
         """Test updating an existing device."""
         send = mock_client.return_value.send_notification
@@ -334,7 +334,7 @@ class TestApns(unittest.TestCase):
         assert "5678" == target
         assert "Hello" == payload.alert
 
-    @patch("apns2.client.APNsClient")
+    @patch("homeassistant.components.apns.notify.APNsClient")
     @patch("homeassistant.components.apns.notify._write_device")
     def test_disable_when_unregistered(self, mock_write, mock_client):
         """Test disabling a device when it is unregistered."""

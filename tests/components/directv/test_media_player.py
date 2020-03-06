@@ -1,33 +1,10 @@
 """The tests for the DirecTV Media player platform."""
+from datetime import datetime, timedelta
 from unittest.mock import call, patch
 
-from datetime import datetime, timedelta
-import requests
 import pytest
+import requests
 
-from homeassistant.components.media_player.const import (
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
-    MEDIA_TYPE_TVSHOW,
-    ATTR_MEDIA_ENQUEUE,
-    ATTR_MEDIA_DURATION,
-    ATTR_MEDIA_TITLE,
-    ATTR_MEDIA_POSITION,
-    ATTR_MEDIA_SERIES_TITLE,
-    ATTR_MEDIA_CHANNEL,
-    ATTR_INPUT_SOURCE,
-    ATTR_MEDIA_POSITION_UPDATED_AT,
-    DOMAIN,
-    SERVICE_PLAY_MEDIA,
-    SUPPORT_PAUSE,
-    SUPPORT_TURN_ON,
-    SUPPORT_TURN_OFF,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_STOP,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_PLAY,
-)
 from homeassistant.components.directv.media_player import (
     ATTR_MEDIA_CURRENTLY_RECORDING,
     ATTR_MEDIA_RATING,
@@ -35,6 +12,29 @@ from homeassistant.components.directv.media_player import (
     ATTR_MEDIA_START_TIME,
     DEFAULT_DEVICE,
     DEFAULT_PORT,
+)
+from homeassistant.components.media_player.const import (
+    ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_CHANNEL,
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_DURATION,
+    ATTR_MEDIA_ENQUEUE,
+    ATTR_MEDIA_POSITION,
+    ATTR_MEDIA_POSITION_UPDATED_AT,
+    ATTR_MEDIA_SERIES_TITLE,
+    ATTR_MEDIA_TITLE,
+    DOMAIN,
+    MEDIA_TYPE_TVSHOW,
+    SERVICE_PLAY_MEDIA,
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_STOP,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -58,8 +58,9 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import MockDependency, async_fire_time_changed
+from tests.common import async_fire_time_changed
 
+ATTR_UNIQUE_ID = "unique_id"
 CLIENT_ENTITY_ID = "media_player.client_dvr"
 MAIN_ENTITY_ID = "media_player.main_dvr"
 IP_ADDRESS = "127.0.0.1"
@@ -138,7 +139,7 @@ def main_dtv():
 def dtv_side_effect(client_dtv, main_dtv):
     """Fixture to create DIRECTV instance for main and client."""
 
-    def mock_dtv(ip, port, client_addr):
+    def mock_dtv(ip, port, client_addr="0"):
         if client_addr != "0":
             mocked_dtv = client_dtv
         else:
@@ -174,13 +175,14 @@ def platforms(hass, dtv_side_effect, mock_now):
                 "name": "Client DVR",
                 "host": IP_ADDRESS,
                 "port": DEFAULT_PORT,
-                "device": "1",
+                "device": "2CA17D1CD30X",
             },
         ]
     }
 
-    with MockDependency("DirectPy"), patch(
-        "DirectPy.DIRECTV", side_effect=dtv_side_effect
+    with patch(
+        "homeassistant.components.directv.media_player.DIRECTV",
+        side_effect=dtv_side_effect,
     ), patch("homeassistant.util.dt.utcnow", return_value=mock_now):
         hass.loop.run_until_complete(async_setup_component(hass, DOMAIN, config))
         hass.loop.run_until_complete(hass.async_block_till_done())
@@ -271,6 +273,20 @@ class MockDirectvClass:
 
         return test_locations
 
+    def get_serial_num(self):
+        """Mock for get_serial_num method."""
+        test_serial_num = {
+            "serialNum": "9999999999",
+            "status": {
+                "code": 200,
+                "commandResult": 0,
+                "msg": "OK.",
+                "query": "/info/getSerialNum",
+            },
+        }
+
+        return test_serial_num
+
     def get_standby(self):
         """Mock for get_standby method."""
         return self._standby
@@ -288,6 +304,24 @@ class MockDirectvClass:
             "query": "/tv/getTuned",
         }
         return test_attributes
+
+    def get_version(self):
+        """Mock for get_version method."""
+        test_version = {
+            "accessCardId": "0021-1495-6572",
+            "receiverId": "0288 7745 5858",
+            "status": {
+                "code": 200,
+                "commandResult": 0,
+                "msg": "OK.",
+                "query": "/info/getVersion",
+            },
+            "stbSoftwareVersion": "0x4ed7",
+            "systemTime": 1281625203,
+            "version": "1.2",
+        }
+
+        return test_version
 
     def key_press(self, keypress):
         """Mock for key_press method."""
@@ -309,7 +343,9 @@ class MockDirectvClass:
 
 async def test_setup_platform_config(hass):
     """Test setting up the platform from configuration."""
-    with MockDependency("DirectPy"), patch("DirectPy.DIRECTV", new=MockDirectvClass):
+    with patch(
+        "homeassistant.components.directv.media_player.DIRECTV", new=MockDirectvClass
+    ):
 
         await async_setup_component(hass, DOMAIN, WORKING_CONFIG)
         await hass.async_block_till_done()
@@ -321,7 +357,9 @@ async def test_setup_platform_config(hass):
 
 async def test_setup_platform_discover(hass):
     """Test setting up the platform from discovery."""
-    with MockDependency("DirectPy"), patch("DirectPy.DIRECTV", new=MockDirectvClass):
+    with patch(
+        "homeassistant.components.directv.media_player.DIRECTV", new=MockDirectvClass
+    ):
 
         hass.async_create_task(
             async_load_platform(
@@ -337,7 +375,9 @@ async def test_setup_platform_discover(hass):
 
 async def test_setup_platform_discover_duplicate(hass):
     """Test setting up the platform from discovery."""
-    with MockDependency("DirectPy"), patch("DirectPy.DIRECTV", new=MockDirectvClass):
+    with patch(
+        "homeassistant.components.directv.media_player.DIRECTV", new=MockDirectvClass
+    ):
 
         await async_setup_component(hass, DOMAIN, WORKING_CONFIG)
         await hass.async_block_till_done()
@@ -358,7 +398,9 @@ async def test_setup_platform_discover_client(hass):
     LOCATIONS.append({"locationName": "Client 1", "clientAddr": "1"})
     LOCATIONS.append({"locationName": "Client 2", "clientAddr": "2"})
 
-    with MockDependency("DirectPy"), patch("DirectPy.DIRECTV", new=MockDirectvClass):
+    with patch(
+        "homeassistant.components.directv.media_player.DIRECTV", new=MockDirectvClass
+    ):
 
         await async_setup_component(hass, DOMAIN, WORKING_CONFIG)
         await hass.async_block_till_done()
@@ -380,6 +422,17 @@ async def test_setup_platform_discover_client(hass):
     assert state
 
     assert len(hass.states.async_entity_ids("media_player")) == 3
+
+
+async def test_unique_id(hass, platforms):
+    """Test unique id."""
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+
+    main = entity_registry.async_get(MAIN_ENTITY_ID)
+    assert main.unique_id == "028877455858"
+
+    client = entity_registry.async_get(CLIENT_ENTITY_ID)
+    assert client.unique_id == "2CA17D1CD30X"
 
 
 async def test_supported_features(hass, platforms):

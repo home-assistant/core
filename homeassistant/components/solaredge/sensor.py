@@ -1,124 +1,54 @@
 """Support for SolarEdge Monitoring API."""
-
-from datetime import timedelta
 import logging
 
-import voluptuous as vol
+from requests.exceptions import ConnectTimeout, HTTPError
+import solaredge
+from stringcase import snakecase
 
-from requests.exceptions import HTTPError, ConnectTimeout
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_MONITORED_CONDITIONS,
-    CONF_NAME,
-    POWER_WATT,
-    ENERGY_WATT_HOUR,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-# Config for solaredge monitoring api requests.
-CONF_SITE_ID = "site_id"
-
-OVERVIEW_UPDATE_DELAY = timedelta(minutes=10)
-DETAILS_UPDATE_DELAY = timedelta(hours=12)
-INVENTORY_UPDATE_DELAY = timedelta(hours=12)
-POWER_FLOW_UPDATE_DELAY = timedelta(minutes=10)
-
-SCAN_INTERVAL = timedelta(minutes=10)
-
-# Supported overview sensor types:
-# Key: ['json_key', 'name', unit, icon]
-SENSOR_TYPES = {
-    "lifetime_energy": [
-        "lifeTimeData",
-        "Lifetime energy",
-        ENERGY_WATT_HOUR,
-        "mdi:solar-power",
-    ],
-    "energy_this_year": [
-        "lastYearData",
-        "Energy this year",
-        ENERGY_WATT_HOUR,
-        "mdi:solar-power",
-    ],
-    "energy_this_month": [
-        "lastMonthData",
-        "Energy this month",
-        ENERGY_WATT_HOUR,
-        "mdi:solar-power",
-    ],
-    "energy_today": [
-        "lastDayData",
-        "Energy today",
-        ENERGY_WATT_HOUR,
-        "mdi:solar-power",
-    ],
-    "current_power": ["currentPower", "Current Power", POWER_WATT, "mdi:solar-power"],
-    "site_details": [None, "Site details", None, None],
-    "meters": ["meters", "Meters", None, None],
-    "sensors": ["sensors", "Sensors", None, None],
-    "gateways": ["gateways", "Gateways", None, None],
-    "batteries": ["batteries", "Batteries", None, None],
-    "inverters": ["inverters", "Inverters", None, None],
-    "power_consumption": ["LOAD", "Power Consumption", None, "mdi:flash"],
-    "solar_power": ["PV", "Solar Power", None, "mdi:solar-power"],
-    "grid_power": ["GRID", "Grid Power", None, "mdi:power-plug"],
-    "storage_power": ["STORAGE", "Storage Power", None, "mdi:car-battery"],
-}
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_SITE_ID): cv.string,
-        vol.Optional(CONF_NAME, default="SolarEdge"): cv.string,
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=["current_power"]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
-        ),
-    }
+from .const import (
+    CONF_SITE_ID,
+    DETAILS_UPDATE_DELAY,
+    INVENTORY_UPDATE_DELAY,
+    OVERVIEW_UPDATE_DELAY,
+    POWER_FLOW_UPDATE_DELAY,
+    SENSOR_TYPES,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Create the SolarEdge Monitoring API sensor."""
-    import solaredge
-
-    api_key = config[CONF_API_KEY]
-    site_id = config[CONF_SITE_ID]
-    platform_name = config[CONF_NAME]
-
-    # Create new SolarEdge object to retrieve data
-    api = solaredge.Solaredge(api_key)
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Add an solarEdge entry."""
+    # Add the needed sensors to hass
+    api = solaredge.Solaredge(entry.data[CONF_API_KEY])
 
     # Check if api can be reached and site is active
     try:
-        response = api.get_details(site_id)
-
+        response = await hass.async_add_executor_job(
+            api.get_details, entry.data[CONF_SITE_ID]
+        )
         if response["details"]["status"].lower() != "active":
             _LOGGER.error("SolarEdge site is not active")
             return
         _LOGGER.debug("Credentials correct and site is active")
     except KeyError:
-        _LOGGER.error("Missing details data in solaredge response")
+        _LOGGER.error("Missing details data in SolarEdge response")
         return
     except (ConnectTimeout, HTTPError):
         _LOGGER.error("Could not retrieve details from SolarEdge API")
         return
 
-    # Create sensor factory that will create sensors based on sensor_key.
-    sensor_factory = SolarEdgeSensorFactory(platform_name, site_id, api)
-
-    # Create a new sensor for each sensor type.
+    sensor_factory = SolarEdgeSensorFactory(entry.title, entry.data[CONF_SITE_ID], api)
     entities = []
-    for sensor_key in config[CONF_MONITORED_CONDITIONS]:
+    for sensor_key in SENSOR_TYPES:
         sensor = sensor_factory.create_sensor(sensor_key)
         if sensor is not None:
             entities.append(sensor)
-
-    add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class SolarEdgeSensorFactory:
@@ -329,7 +259,6 @@ class SolarEdgeDetailsDataService(SolarEdgeDataService):
     @Throttle(DETAILS_UPDATE_DELAY)
     def update(self):
         """Update the data from the SolarEdge Monitoring API."""
-        from stringcase import snakecase
 
         try:
             data = self.api.get_details(self.site_id)
@@ -416,7 +345,9 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
         power_to = []
 
         if "connections" not in power_flow:
-            _LOGGER.error("Missing connections in power flow data")
+            _LOGGER.debug(
+                "Missing connections in power flow data. Assuming site does not have any"
+            )
             return
 
         for connection in power_flow["connections"]:

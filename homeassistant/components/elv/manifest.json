@@ -1,8 +1,8 @@
 {
-    "domain": "elv",
-    "name": "ELV PCA",
-    "documentation": "https://www.home-assistant.io/components/pca",
-    "dependencies": [],
-    "codeowners": ["@majuss"],
-    "requirements": ["pypca==0.0.4"]
-  }
+  "domain": "elv",
+  "name": "ELV PCA",
+  "documentation": "https://www.home-assistant.io/integrations/pca",
+  "dependencies": [],
+  "codeowners": ["@majuss"],
+  "requirements": ["pypca==0.0.7"]
+}

@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Dette brugernavn er allerede i brug."
+        },
         "error": {
             "identifier_exists": "Brugernavn er allerede registreret",
             "invalid_credentials": "Ugyldigt brugernavn eller adgangskode",
@@ -9,7 +12,7 @@
             "user": {
                 "data": {
                     "password": "Adgangskode",
-                    "username": "Brugernavn/e-mail adresse"
+                    "username": "Brugernavn/e-mailadresse"
                 },
                 "title": "Udfyld dine oplysninger"
             }

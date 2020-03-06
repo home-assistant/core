@@ -6,6 +6,7 @@ from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
 
+from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_RECIPIENT,
@@ -14,8 +15,6 @@ from homeassistant.const import (
     CONTENT_TYPE_JSON,
 )
 import homeassistant.helpers.config_validation as cv
-
-from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,7 +72,7 @@ class ClicksendNotificationService(BaseNotificationService):
                 }
             )
 
-        api_url = "{}/sms/send".format(BASE_API_URL)
+        api_url = f"{BASE_API_URL}/sms/send"
         resp = requests.post(
             api_url,
             data=json.dumps(data),
@@ -94,7 +93,7 @@ class ClicksendNotificationService(BaseNotificationService):
 
 def _authenticate(config):
     """Authenticate with ClickSend."""
-    api_url = "{}/account".format(BASE_API_URL)
+    api_url = f"{BASE_API_URL}/account"
     resp = requests.get(
         api_url,
         headers=HEADERS,

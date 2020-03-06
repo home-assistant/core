@@ -1,4 +1,4 @@
-"""Provide functionality to TTS."""
+"""Provide functionality for TTS."""
 import asyncio
 import ctypes
 import functools as ft
@@ -11,24 +11,24 @@ import re
 from typing import Optional
 
 from aiohttp import web
+import mutagen
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
+    DOMAIN as DOMAIN_MP,
     MEDIA_TYPE_MUSIC,
     SERVICE_PLAY_MEDIA,
 )
-from homeassistant.components.media_player.const import DOMAIN as DOMAIN_MP
-from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, CONF_PLATFORM
+from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform
+from homeassistant.helpers import config_per_platform, discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_prepare_setup_platform
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -90,7 +90,7 @@ SCHEMA_SERVICE_SAY = vol.Schema(
     {
         vol.Required(ATTR_MESSAGE): cv.string,
         vol.Optional(ATTR_CACHE): cv.boolean,
-        vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
+        vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
         vol.Optional(ATTR_LANGUAGE): cv.string,
         vol.Optional(ATTR_OPTIONS): dict,
     }
@@ -118,17 +118,24 @@ async def async_setup(hass, config):
     hass.http.register_view(TextToSpeechView(tts))
     hass.http.register_view(TextToSpeechUrlView(tts))
 
-    async def async_setup_platform(p_type, p_config, disc_info=None):
+    async def async_setup_platform(p_type, p_config=None, discovery_info=None):
         """Set up a TTS platform."""
+        if p_config is None:
+            p_config = {}
+
         platform = await async_prepare_setup_platform(hass, config, DOMAIN, p_type)
         if platform is None:
             return
 
         try:
             if hasattr(platform, "async_get_engine"):
-                provider = await platform.async_get_engine(hass, p_config)
+                provider = await platform.async_get_engine(
+                    hass, p_config, discovery_info
+                )
             else:
-                provider = await hass.async_add_job(platform.get_engine, hass, p_config)
+                provider = await hass.async_add_job(
+                    platform.get_engine, hass, p_config, discovery_info
+                )
 
             if provider is None:
                 _LOGGER.error("Error setting up platform %s", p_type)
@@ -141,7 +148,7 @@ async def async_setup(hass, config):
 
         async def async_say_handle(service):
             """Service handle for say."""
-            entity_ids = service.data.get(ATTR_ENTITY_ID, ENTITY_MATCH_ALL)
+            entity_ids = service.data[ATTR_ENTITY_ID]
             message = service.data.get(ATTR_MESSAGE)
             cache = service.data.get(ATTR_CACHE)
             language = service.data.get(ATTR_LANGUAGE)
@@ -177,6 +184,12 @@ async def async_setup(hass, config):
 
     if setup_tasks:
         await asyncio.wait(setup_tasks)
+
+    async def async_platform_discovered(platform, info):
+        """Handle for discovered platform."""
+        await async_setup_platform(platform, discovery_info=info)
+
+    discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
 
     async def async_clear_cache_handle(service):
         """Handle clear cache service call."""
@@ -340,7 +353,7 @@ class SpeechManager:
             raise HomeAssistantError(f"No TTS from {engine} for '{message}'")
 
         # Create file infos
-        filename = (f"{key}.{extension}").lower()
+        filename = f"{key}.{extension}".lower()
 
         data = self.write_tags(filename, data, provider, message, language, options)
 
@@ -425,7 +438,7 @@ class SpeechManager:
             await self.async_file_to_mem(key)
 
         content, _ = mimetypes.guess_type(filename)
-        return (content, self.mem_cache[key][MEM_CACHE_VOICE])
+        return content, self.mem_cache[key][MEM_CACHE_VOICE]
 
     @staticmethod
     def write_tags(filename, data, provider, message, language, options):
@@ -433,7 +446,6 @@ class SpeechManager:
 
         Async friendly.
         """
-        import mutagen
 
         data_bytes = io.BytesIO(data)
         data_bytes.name = filename
@@ -489,14 +501,12 @@ class Provider:
         """Load tts audio file from provider."""
         raise NotImplementedError()
 
-    def async_get_tts_audio(self, message, language, options=None):
+    async def async_get_tts_audio(self, message, language, options=None):
         """Load tts audio file from provider.
 
         Return a tuple of file extension and data as bytes.
-
-        This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(
+        return await self.hass.async_add_job(
             ft.partial(self.get_tts_audio, message, language, options=options)
         )
 

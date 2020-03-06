@@ -64,6 +64,7 @@ nosetests.xml
 htmlcov/
 test-reports/
 test-results.xml
+test-output.xml
 
 # Translations
 *.mo
@@ -127,3 +128,6 @@ monkeytype.sqlite3
 
 # This is left behind by Azure Restore Cache
 tmp_cache
+
+# python-language-server / Rope
+.ropeproject

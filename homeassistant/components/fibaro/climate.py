@@ -115,7 +115,7 @@ class FibaroThermostat(FibaroDevice, ClimateDevice):
         self._op_mode_device = None
         self._fan_mode_device = None
         self._support_flags = 0
-        self.entity_id = "climate.{}".format(self.ha_id)
+        self.entity_id = f"climate.{self.ha_id}"
         self._hvac_support = []
         self._preset_support = []
         self._fan_support = []

@@ -1,27 +1,34 @@
 """Support for Yr.no weather service."""
 import asyncio
 import logging
-
 from random import randrange
 from xml.parsers.expat import ExpatError
 
 import aiohttp
 import async_timeout
 import voluptuous as vol
+import xmltodict
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    CONF_ELEVATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_ELEVATION,
     CONF_MONITORED_CONDITIONS,
-    ATTR_ATTRIBUTION,
     CONF_NAME,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
+    PRESSURE_HPA,
+    SPEED_METERS_PER_SECOND,
+    TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_utc_time_change, async_call_later
+from homeassistant.helpers.event import async_call_later, async_track_utc_time_change
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,20 +40,24 @@ ATTRIBUTION = (
 # https://api.met.no/license_data.html
 
 SENSOR_TYPES = {
-    "symbol": ["Symbol", None],
-    "precipitation": ["Precipitation", "mm"],
-    "temperature": ["Temperature", "°C"],
-    "windSpeed": ["Wind speed", "m/s"],
-    "windGust": ["Wind gust", "m/s"],
-    "pressure": ["Pressure", "hPa"],
-    "windDirection": ["Wind direction", "°"],
-    "humidity": ["Humidity", "%"],
-    "fog": ["Fog", "%"],
-    "cloudiness": ["Cloudiness", "%"],
-    "lowClouds": ["Low clouds", "%"],
-    "mediumClouds": ["Medium clouds", "%"],
-    "highClouds": ["High clouds", "%"],
-    "dewpointTemperature": ["Dewpoint temperature", "°C"],
+    "symbol": ["Symbol", None, None],
+    "precipitation": ["Precipitation", "mm", None],
+    "temperature": ["Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE],
+    "windSpeed": ["Wind speed", SPEED_METERS_PER_SECOND, None],
+    "windGust": ["Wind gust", SPEED_METERS_PER_SECOND, None],
+    "pressure": ["Pressure", PRESSURE_HPA, DEVICE_CLASS_PRESSURE],
+    "windDirection": ["Wind direction", "°", None],
+    "humidity": ["Humidity", UNIT_PERCENTAGE, DEVICE_CLASS_HUMIDITY],
+    "fog": ["Fog", UNIT_PERCENTAGE, None],
+    "cloudiness": ["Cloudiness", UNIT_PERCENTAGE, None],
+    "lowClouds": ["Low clouds", UNIT_PERCENTAGE, None],
+    "mediumClouds": ["Medium clouds", UNIT_PERCENTAGE, None],
+    "highClouds": ["High clouds", UNIT_PERCENTAGE, None],
+    "dewpointTemperature": [
+        "Dewpoint temperature",
+        TEMP_CELSIUS,
+        DEVICE_CLASS_TEMPERATURE,
+    ],
 }
 
 CONF_FORECAST = "forecast"
@@ -102,11 +113,12 @@ class YrSensor(Entity):
         self.type = sensor_type
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
+        self._device_class = SENSOR_TYPES[self.type][2]
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self.client_name, self._name)
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):
@@ -138,6 +150,11 @@ class YrSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
+    @property
+    def device_class(self):
+        """Return the device class of this entity, if any."""
+        return self._device_class
+
 
 class YrData:
     """Get the latest data and updates the states."""
@@ -145,7 +162,7 @@ class YrData:
     def __init__(self, hass, coordinates, forecast, devices):
         """Initialize the data object."""
         self._url = (
-            "https://aa015h6buqvih86i1.api.met.no/" "weatherapi/locationforecast/1.9/"
+            "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/1.9/"
         )
         self._urlparams = coordinates
         self._forecast = forecast
@@ -155,7 +172,6 @@ class YrData:
 
     async def fetching_data(self, *_):
         """Get the latest data from yr.no."""
-        import xmltodict
 
         def try_again(err: str):
             """Retry in 15 to 20 minutes."""
@@ -168,7 +184,7 @@ class YrData:
             with async_timeout.timeout(10):
                 resp = await websession.get(self._url, params=self._urlparams)
             if resp.status != 200:
-                try_again("{} returned {}".format(resp.url, resp.status))
+                try_again(f"{resp.url} returned {resp.status}")
                 return
             text = await resp.text()
 

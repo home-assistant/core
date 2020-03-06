@@ -6,15 +6,14 @@ from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
 
-from homeassistant.const import CONTENT_TYPE_JSON
-import homeassistant.helpers.config_validation as cv
-
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONTENT_TYPE_JSON
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,7 +97,12 @@ class FacebookNotificationService(BaseNotificationService):
                 else:
                     recipient = {"id": target}
 
-                body = {"recipient": recipient, "message": body_message}
+                body = {
+                    "recipient": recipient,
+                    "message": body_message,
+                    "messaging_type": "MESSAGE_TAG",
+                    "tag": "ACCOUNT_UPDATE",
+                }
                 resp = requests.post(
                     BASE_URL,
                     data=json.dumps(body),

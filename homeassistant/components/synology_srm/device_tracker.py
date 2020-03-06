@@ -1,12 +1,9 @@
-"""Device tracker for Synology SRM routers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.synology_srm/
-"""
+"""Device tracker for Synology SRM routers."""
 import logging
+
+import synology_srm
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN,
     PLATFORM_SCHEMA,
@@ -14,12 +11,13 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.const import (
     CONF_HOST,
-    CONF_USERNAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
+    CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +50,6 @@ class SynologySrmDeviceScanner(DeviceScanner):
 
     def __init__(self, config):
         """Initialize the scanner."""
-        import synology_srm
 
         self.client = synology_srm.Client(
             host=config[CONF_HOST],

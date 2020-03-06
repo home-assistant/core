@@ -1,19 +1,20 @@
 """Support for iTach IR devices."""
 import logging
 
+import pyitachip2ir
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components import remote
-from homeassistant.const import (
-    DEVICE_DEFAULT_NAME,
-    CONF_NAME,
-    CONF_MAC,
-    CONF_HOST,
-    CONF_PORT,
-    CONF_DEVICES,
-)
 from homeassistant.components.remote import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_DEVICES,
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+    CONF_PORT,
+    DEVICE_DEFAULT_NAME,
+)
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,8 +56,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ITach connection and devices."""
-    import pyitachip2ir
-
     itachip2ir = pyitachip2ir.ITachIP2IR(
         config.get(CONF_MAC), config.get(CONF_HOST), int(config.get(CONF_PORT))
     )
@@ -78,7 +77,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             cmddata = cmd[CONF_DATA].strip()
             if not cmddata:
                 cmddata = '""'
-            cmddatas += "{}\n{}\n".format(cmdname, cmddata)
+            cmddatas += f"{cmdname}\n{cmddata}\n"
         itachip2ir.addDevice(name, modaddr, connaddr, cmddatas)
         devices.append(ITachIP2IRRemote(itachip2ir, name))
     add_entities(devices, True)

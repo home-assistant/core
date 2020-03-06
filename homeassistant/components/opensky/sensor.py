@@ -1,26 +1,25 @@
 """Sensor for the Open Sky Network."""
-import logging
 from datetime import timedelta
+import logging
 
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_RADIUS,
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    CONF_RADIUS,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import distance as util_distance
-from homeassistant.util import location as util_location
+from homeassistant.util import distance as util_distance, location as util_location
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,12 +35,12 @@ DOMAIN = "opensky"
 
 DEFAULT_ALTITUDE = 0
 
-EVENT_OPENSKY_ENTRY = "{}_entry".format(DOMAIN)
-EVENT_OPENSKY_EXIT = "{}_exit".format(DOMAIN)
+EVENT_OPENSKY_ENTRY = f"{DOMAIN}_entry"
+EVENT_OPENSKY_EXIT = f"{DOMAIN}_exit"
 SCAN_INTERVAL = timedelta(seconds=12)  # opensky public limit is 10 seconds
 
 OPENSKY_ATTRIBUTION = (
-    "Information provided by the OpenSky Network " "(https://opensky-network.org)"
+    "Information provided by the OpenSky Network (https://opensky-network.org)"
 )
 OPENSKY_API_URL = "https://opensky-network.org/api/states/all"
 OPENSKY_API_FIELDS = [

@@ -1,12 +1,8 @@
 {
   "domain": "influxdb",
-  "name": "Influxdb",
-  "documentation": "https://www.home-assistant.io/components/influxdb",
-  "requirements": [
-    "influxdb==5.2.0"
-  ],
+  "name": "InfluxDB",
+  "documentation": "https://www.home-assistant.io/integrations/influxdb",
+  "requirements": ["influxdb==5.2.3"],
   "dependencies": [],
-  "codeowners": [
-    "@fabaff"
-  ]
+  "codeowners": ["@fabaff"]
 }

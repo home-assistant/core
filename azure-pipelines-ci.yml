@@ -14,8 +14,6 @@ pr:
 
 resources:
   containers:
-  - container: 36
-    image: homeassistant/ci-azure:3.6
   - container: 37
     image: homeassistant/ci-azure:3.7
   repositories:
@@ -25,7 +23,7 @@ resources:
       endpoint: 'home-assistant'
 variables:
   - name: PythonMain
-    value: '36'
+    value: '37'
   - group: codecov
 
 stages:
@@ -37,27 +35,48 @@ stages:
       vmImage: 'ubuntu-latest'
     container: $[ variables['PythonMain'] ]
     steps:
-    - script: |
-        python -m venv venv
+    - template: templates/azp-step-cache.yaml@azure
+      parameters:
+        keyfile: 'requirements_test.txt | homeassistant/package_constraints.txt'
+        build: |
+          python -m venv venv
 
-        . venv/bin/activate
-        pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
-      displayName: 'Setup Env'
+          . venv/bin/activate
+          pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
+          pre-commit install-hooks
     - script: |
         . venv/bin/activate
-        flake8 homeassistant tests script
+        pre-commit run codespell --all-files
+      displayName: 'Run codespell'
+    - script: |
+        . venv/bin/activate
+        pre-commit run flake8 --all-files
       displayName: 'Run flake8'
+    - script: |
+        . venv/bin/activate
+        pre-commit run bandit --all-files
+      displayName: 'Run bandit'
+    - script: |
+        . venv/bin/activate
+        pre-commit run isort --all-files --show-diff-on-failure
+      displayName: 'Run isort'
+    - script: |
+        . venv/bin/activate
+        pre-commit run check-json --all-files
+      displayName: 'Run check-json'
   - job: 'Validate'
     pool:
       vmImage: 'ubuntu-latest'
     container: $[ variables['PythonMain'] ]
     steps:
-    - script: |
-        python -m venv venv
+    - template: templates/azp-step-cache.yaml@azure
+      parameters:
+        keyfile: 'homeassistant/package_constraints.txt'
+        build: |
+          python -m venv venv
 
-        . venv/bin/activate
-        pip install -e .
-      displayName: 'Setup Env'
+          . venv/bin/activate
+          pip install -e .
     - script: |
         . venv/bin/activate
         python -m script.hassfest validate
@@ -71,15 +90,18 @@ stages:
       vmImage: 'ubuntu-latest'
     container: $[ variables['PythonMain'] ]
     steps:
-    - script: |
-        python -m venv venv
+    - template: templates/azp-step-cache.yaml@azure
+      parameters:
+        keyfile: 'requirements_test.txt | homeassistant/package_constraints.txt'
+        build: |
+          python -m venv venv
 
-        . venv/bin/activate
-        pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
-      displayName: 'Setup Env'
+          . venv/bin/activate
+          pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
+          pre-commit install-hooks
     - script: |
         . venv/bin/activate
-        ./script/check_format
+        pre-commit run black --all-files --show-diff-on-failure
       displayName: 'Check Black formatting'
 
 - stage: 'Tests'
@@ -92,28 +114,32 @@ stages:
     strategy:
       maxParallel: 3
       matrix:
-        Python36:
-          python.container: '36'
         Python37:
           python.container: '37'
     container: $[ variables['python.container'] ]
     steps:
     - template: templates/azp-step-cache.yaml@azure
       parameters:
-        keyfile: 'requirements_test_all.txt, .cache, homeassistant/package_constraints.txt'
+        keyfile: 'requirements_test_all.txt | homeassistant/package_constraints.txt'
         build: |
           set -e
           python -m venv venv
 
           . venv/bin/activate
-          pip install -U pip setuptools pytest-azurepipelines -c homeassistant/package_constraints.txt
+          pip install -U pip setuptools pytest-azurepipelines pytest-xdist -c homeassistant/package_constraints.txt
           pip install -r requirements_test_all.txt -c homeassistant/package_constraints.txt
           # This is a TEMP. Eventually we should make sure our 4 dependencies drop typing.
           # Find offending deps with `pipdeptree -r -p typing`
           pip uninstall -y typing
     - script: |
         . venv/bin/activate
-        pytest --timeout=9 --durations=10 --junitxml=test-results.xml -qq -o console_output_style=count -p no:sugar tests
+        pip install -e .
+      displayName: 'Install Home Assistant'
+    - script: |
+        set -e
+
+        . venv/bin/activate
+        pytest --timeout=9 --durations=10 -n auto --dist=loadfile -qq -o console_output_style=count -p no:sugar tests
         script/check_dirty
       displayName: 'Run pytest for python $(python.container)'
       condition: and(succeeded(), ne(variables['python.container'], variables['PythonMain']))
@@ -121,21 +147,10 @@ stages:
         set -e
 
         . venv/bin/activate
-        pytest --timeout=9 --durations=10 --junitxml=test-results.xml --cov --cov-report=xml -qq -o console_output_style=count -p no:sugar tests
-        codecov --token $(codecovToken)
+        pytest --timeout=9 --durations=10 -n auto --dist=loadfile --cov homeassistant --cov-report html -qq -o console_output_style=count -p no:sugar tests
+        #codecov --token $(codecovToken)
         script/check_dirty
       displayName: 'Run pytest for python $(python.container) / coverage'
-      condition: and(succeeded(), eq(variables['python.container'], variables['PythonMain']))
-    - task: PublishTestResults@2
-      condition: succeededOrFailed()
-      inputs:
-        testResultsFiles: 'test-results.xml'
-        testRunTitle: 'Publish test results for Python $(python.container)'
-    - task: PublishCodeCoverageResults@1
-      inputs:
-        codeCoverageTool: cobertura
-        summaryFileLocation: coverage.xml
-      displayName: 'publish coverage artifact'
       condition: and(succeeded(), eq(variables['python.container'], variables['PythonMain']))
 
 - stage: 'FullCheck'
@@ -149,15 +164,19 @@ stages:
     steps:
     - template: templates/azp-step-cache.yaml@azure
       parameters:
-        keyfile: 'requirements_all.txt, requirements_test.txt, .cache, homeassistant/package_constraints.txt'
+        keyfile: 'requirements_all.txt | requirements_test.txt | homeassistant/package_constraints.txt'
         build: |
           set -e
           python -m venv venv
 
           . venv/bin/activate
-          pip install -U pip setuptools
+          pip install -U pip setuptools wheel
           pip install -r requirements_all.txt -c homeassistant/package_constraints.txt
           pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
+    - script: |
+        . venv/bin/activate
+        pip install -e .
+      displayName: 'Install Home Assistant'
     - script: |
         . venv/bin/activate
         pylint homeassistant
@@ -167,17 +186,16 @@ stages:
       vmImage: 'ubuntu-latest'
     container: $[ variables['PythonMain'] ]
     steps:
-    - script: |
-        python -m venv venv
+    - template: templates/azp-step-cache.yaml@azure
+      parameters:
+        keyfile: 'requirements_test.txt | setup.py | homeassistant/package_constraints.txt'
+        build: |
+          python -m venv venv
 
-        . venv/bin/activate
-        pip install -e .
-        pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
-      displayName: 'Setup Env'
+          . venv/bin/activate
+          pip install -e . -r requirements_test.txt -c homeassistant/package_constraints.txt
+          pre-commit install-hooks
     - script: |
-        TYPING_FILES=$(cat mypyrc)
-        echo -e "Run mypy on: \n$TYPING_FILES"
-
         . venv/bin/activate
-        mypy $TYPING_FILES
+        pre-commit run mypy --all-files
       displayName: 'Run mypy'

@@ -2,7 +2,12 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
+from homeassistant.const import (
+    ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
+    UNIT_PERCENTAGE,
+    VOLUME_CUBIC_METERS,
+)
 from homeassistant.helpers.entity import Entity
 
 from . import DATA_SMAPPEE
@@ -21,7 +26,13 @@ SENSOR_TYPES = {
     ],
     "current": ["Current", "mdi:gauge", "local", "A", "current"],
     "voltage": ["Voltage", "mdi:gauge", "local", "V", "voltage"],
-    "active_cosfi": ["Power Factor", "mdi:gauge", "local", "%", "active_cosfi"],
+    "active_cosfi": [
+        "Power Factor",
+        "mdi:gauge",
+        "local",
+        UNIT_PERCENTAGE,
+        "active_cosfi",
+    ],
     "alwayson_today": [
         "Always On Today",
         "mdi:gauge",
@@ -43,8 +54,20 @@ SENSOR_TYPES = {
         ENERGY_KILO_WATT_HOUR,
         "consumption",
     ],
-    "water_sensor_1": ["Water Sensor 1", "mdi:water", "water", "m3", "value1"],
-    "water_sensor_2": ["Water Sensor 2", "mdi:water", "water", "m3", "value2"],
+    "water_sensor_1": [
+        "Water Sensor 1",
+        "mdi:water",
+        "water",
+        VOLUME_CUBIC_METERS,
+        "value1",
+    ],
+    "water_sensor_2": [
+        "Water Sensor 2",
+        "mdi:water",
+        "water",
+        VOLUME_CUBIC_METERS,
+        "value2",
+    ],
     "water_sensor_temperature": [
         "Water Sensor Temperature",
         "mdi:temperature-celsius",
@@ -56,14 +79,14 @@ SENSOR_TYPES = {
         "Water Sensor Humidity",
         "mdi:water-percent",
         "water",
-        "%",
+        UNIT_PERCENTAGE,
         "humidity",
     ],
     "water_sensor_battery": [
         "Water Sensor Battery",
         "mdi:battery",
         "water",
-        "%",
+        UNIT_PERCENTAGE,
         "battery",
     ],
 }
@@ -97,19 +120,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                         )
 
     if smappee.is_local_active:
-        for location_id in smappee.locations.keys():
+        if smappee.is_remote_active:
+            location_keys = smappee.locations.keys()
+        else:
+            location_keys = [None]
+        for location_id in location_keys:
             for sensor in SENSOR_TYPES:
                 if "local" in SENSOR_TYPES[sensor]:
-                    if smappee.is_remote_active:
-                        dev.append(
-                            SmappeeSensor(
-                                smappee, location_id, sensor, SENSOR_TYPES[sensor]
-                            )
+                    dev.append(
+                        SmappeeSensor(
+                            smappee, location_id, sensor, SENSOR_TYPES[sensor]
                         )
-                    else:
-                        dev.append(
-                            SmappeeSensor(smappee, None, sensor, SENSOR_TYPES[sensor])
-                        )
+                    )
 
     add_entities(dev, True)
 
@@ -139,7 +161,7 @@ class SmappeeSensor(Entity):
         else:
             location_name = "Local"
 
-        return "{} {} {}".format(SENSOR_PREFIX, location_name, self._name)
+        return f"{SENSOR_PREFIX} {location_name} {self._name}"
 
     @property
     def icon(self):

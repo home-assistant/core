@@ -1,11 +1,11 @@
 """Support for Nest Cameras."""
-import logging
 from datetime import timedelta
+import logging
 
 import requests
 
 from homeassistant.components import nest
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera, SUPPORT_ON_OFF
+from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_ON_OFF, Camera
 from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ class NestCamera(Camera):
 
     def __init__(self, structure, device):
         """Initialize a Nest Camera."""
-        super(NestCamera, self).__init__()
+        super().__init__()
         self.structure = structure
         self.device = device
         self._location = None

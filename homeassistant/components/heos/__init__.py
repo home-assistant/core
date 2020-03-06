@@ -87,9 +87,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             favorites = await controller.get_favorites()
         else:
             _LOGGER.warning(
-                "%s is not logged in to a HEOS account and will be unable "
-                "to retrieve HEOS favorites: Use the 'heos.sign_in' service "
-                "to sign-in to a HEOS account",
+                "%s is not logged in to a HEOS account and will be unable to retrieve "
+                "HEOS favorites: Use the 'heos.sign_in' service to sign-in to a HEOS account",
                 host,
             )
         inputs = await controller.get_input_sources()
@@ -312,7 +311,7 @@ class SourceManager:
                     if retry_attempts < self.max_retry_attempts:
                         retry_attempts += 1
                         _LOGGER.debug(
-                            "Error retrieving sources and will " "retry: %s", error
+                            "Error retrieving sources and will retry: %s", error
                         )
                         await asyncio.sleep(self.retry_delay)
                     else:

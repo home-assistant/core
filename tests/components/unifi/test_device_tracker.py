@@ -1,38 +1,26 @@
-"""The tests for the Unifi WAP device tracker platform."""
-from collections import deque
+"""The tests for the UniFi device tracker platform."""
 from copy import copy
-from unittest.mock import Mock
 from datetime import timedelta
 
-import pytest
-
-from aiounifi.clients import Clients, ClientsAll
-from aiounifi.devices import Devices
+from aiounifi.controller import SIGNAL_CONNECTION_STATE
+from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
+from asynctest import patch
 
 from homeassistant import config_entries
 from homeassistant.components import unifi
+import homeassistant.components.device_tracker as device_tracker
 from homeassistant.components.unifi.const import (
-    CONF_CONTROLLER,
-    CONF_SITE_ID,
     CONF_SSID_FILTER,
-    UNIFI_CONFIG,
+    CONF_TRACK_CLIENTS,
+    CONF_TRACK_DEVICES,
+    CONF_TRACK_WIRED_CLIENTS,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
-
-import homeassistant.components.device_tracker as device_tracker
-import homeassistant.components.unifi.device_tracker as unifi_dt
 import homeassistant.util.dt as dt_util
 
-DEFAULT_DETECTION_TIME = timedelta(seconds=300)
+from .test_controller import ENTRY_CONFIG, setup_unifi_integration
 
 CLIENT_1 = {
     "essid": "ssid",
@@ -58,6 +46,22 @@ CLIENT_3 = {
     "last_seen": 1562600145,
     "mac": "00:00:00:00:00:03",
 }
+CLIENT_4 = {
+    "essid": "ssid",
+    "hostname": "client_4",
+    "ip": "10.0.0.4",
+    "is_wired": True,
+    "last_seen": 1562600145,
+    "mac": "00:00:00:00:00:04",
+}
+CLIENT_5 = {
+    "essid": "ssid",
+    "hostname": "client_5",
+    "ip": "10.0.0.5",
+    "is_wired": True,
+    "last_seen": None,
+    "mac": "00:00:00:00:00:05",
+}
 
 DEVICE_1 = {
     "board_rev": 3,
@@ -69,10 +73,10 @@ DEVICE_1 = {
     "mac": "00:00:00:00:01:01",
     "model": "US16P150",
     "name": "device_1",
-    "overheating": False,
+    "overheating": True,
     "state": 1,
     "type": "usw",
-    "upgradable": False,
+    "upgradable": True,
     "version": "4.0.42.10433",
 }
 DEVICE_2 = {
@@ -88,107 +92,38 @@ DEVICE_2 = {
     "version": "4.0.42.10433",
 }
 
-CONTROLLER_DATA = {
-    CONF_HOST: "mock-host",
-    CONF_USERNAME: "mock-user",
-    CONF_PASSWORD: "mock-pswd",
-    CONF_PORT: 1234,
-    CONF_SITE_ID: "mock-site",
-    CONF_VERIFY_SSL: True,
-}
-
-ENTRY_CONFIG = {CONF_CONTROLLER: CONTROLLER_DATA}
-
-CONTROLLER_ID = unifi.CONTROLLER_ID.format(host="mock-host", site="mock-site")
-
-
-@pytest.fixture
-def mock_controller(hass):
-    """Mock a UniFi Controller."""
-    hass.data[UNIFI_CONFIG] = {}
-    controller = unifi.UniFiController(hass, None)
-
-    controller.api = Mock()
-    controller.mock_requests = []
-
-    controller.mock_client_responses = deque()
-    controller.mock_device_responses = deque()
-    controller.mock_client_all_responses = deque()
-
-    async def mock_request(method, path, **kwargs):
-        kwargs["method"] = method
-        kwargs["path"] = path
-        controller.mock_requests.append(kwargs)
-        if path == "s/{site}/stat/sta":
-            return controller.mock_client_responses.popleft()
-        if path == "s/{site}/stat/device":
-            return controller.mock_device_responses.popleft()
-        if path == "s/{site}/rest/user":
-            return controller.mock_client_all_responses.popleft()
-        return None
-
-    controller.api.clients = Clients({}, mock_request)
-    controller.api.devices = Devices({}, mock_request)
-    controller.api.clients_all = ClientsAll({}, mock_request)
-
-    return controller
-
-
-async def setup_controller(hass, mock_controller, options={}):
-    """Load the UniFi switch platform with the provided controller."""
-    hass.config.components.add(unifi.DOMAIN)
-    hass.data[unifi.DOMAIN] = {CONTROLLER_ID: mock_controller}
-    config_entry = config_entries.ConfigEntry(
-        1,
-        unifi.DOMAIN,
-        "Mock Title",
-        ENTRY_CONFIG,
-        "test",
-        config_entries.CONN_CLASS_LOCAL_POLL,
-        entry_id=1,
-        system_options={},
-        options=options,
-    )
-    mock_controller.config_entry = config_entry
-
-    await mock_controller.async_update()
-    await hass.config_entries.async_forward_entry_setup(
-        config_entry, device_tracker.DOMAIN
-    )
-
-    await hass.async_block_till_done()
-
 
 async def test_platform_manually_configured(hass):
-    """Test that we do not discover anything or try to set up a bridge."""
+    """Test that nothing happens when configuring unifi through device tracker platform."""
     assert (
         await async_setup_component(
             hass, device_tracker.DOMAIN, {device_tracker.DOMAIN: {"platform": "unifi"}}
         )
-        is True
+        is False
     )
     assert unifi.DOMAIN not in hass.data
 
 
-async def test_no_clients(hass, mock_controller):
+async def test_no_clients(hass):
     """Test the update_clients function when no clients are found."""
-    mock_controller.mock_client_responses.append({})
-    mock_controller.mock_device_responses.append({})
+    await setup_unifi_integration(hass)
 
-    await setup_controller(hass, mock_controller)
-    assert len(mock_controller.mock_requests) == 2
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 1
 
 
-async def test_tracked_devices(hass, mock_controller):
+async def test_tracked_devices(hass):
     """Test the update_items function with some clients."""
-    mock_controller.mock_client_responses.append([CLIENT_1, CLIENT_2, CLIENT_3])
-    mock_controller.mock_device_responses.append([DEVICE_1, DEVICE_2])
-    options = {CONF_SSID_FILTER: ["ssid"]}
+    client_4_copy = copy(CLIENT_4)
+    client_4_copy["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
 
-    await setup_controller(hass, mock_controller, options)
-    assert len(mock_controller.mock_requests) == 2
-    assert len(hass.states.async_all()) == 5
+    controller = await setup_unifi_integration(
+        hass,
+        options={CONF_SSID_FILTER: ["ssid"]},
+        clients_response=[CLIENT_1, CLIENT_2, CLIENT_3, CLIENT_5, client_4_copy],
+        devices_response=[DEVICE_1, DEVICE_2],
+        known_wireless_clients=(CLIENT_4["mac"],),
+    )
+    assert len(hass.states.async_all()) == 7
 
     client_1 = hass.states.get("device_tracker.client_1")
     assert client_1 is not None
@@ -199,19 +134,32 @@ async def test_tracked_devices(hass, mock_controller):
     assert client_2.state == "not_home"
 
     client_3 = hass.states.get("device_tracker.client_3")
-    assert client_3 is None
+    assert client_3 is not None
+    assert client_3.state == "not_home"
+
+    # Wireless client with wired bug, if bug active on restart mark device away
+    client_4 = hass.states.get("device_tracker.client_4")
+    assert client_4 is not None
+    assert client_4.state == "not_home"
+
+    # A client that has never been seen should be marked away.
+    client_5 = hass.states.get("device_tracker.client_5")
+    assert client_5 is not None
+    assert client_5.state == "not_home"
 
     device_1 = hass.states.get("device_tracker.device_1")
     assert device_1 is not None
     assert device_1.state == "not_home"
 
+    # State change signalling works
     client_1_copy = copy(CLIENT_1)
     client_1_copy["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
+    event = {"meta": {"message": "sta:sync"}, "data": [client_1_copy]}
+    controller.api.message_handler(event)
     device_1_copy = copy(DEVICE_1)
     device_1_copy["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
-    mock_controller.mock_client_responses.append([client_1_copy])
-    mock_controller.mock_device_responses.append([device_1_copy])
-    await mock_controller.async_update()
+    event = {"meta": {"message": "device:sync"}, "data": [device_1_copy]}
+    controller.api.message_handler(event)
     await hass.async_block_till_done()
 
     client_1 = hass.states.get("device_tracker.client_1")
@@ -220,68 +168,313 @@ async def test_tracked_devices(hass, mock_controller):
     device_1 = hass.states.get("device_tracker.device_1")
     assert device_1.state == "home"
 
+    # Disabled device is unavailable
     device_1_copy = copy(DEVICE_1)
     device_1_copy["disabled"] = True
-    mock_controller.mock_client_responses.append({})
-    mock_controller.mock_device_responses.append([device_1_copy])
-    await mock_controller.async_update()
+    event = {"meta": {"message": "device:sync"}, "data": [device_1_copy]}
+    controller.api.message_handler(event)
     await hass.async_block_till_done()
 
     device_1 = hass.states.get("device_tracker.device_1")
     assert device_1.state == STATE_UNAVAILABLE
 
 
-async def test_restoring_client(hass, mock_controller):
-    """Test the update_items function with some clients."""
-    mock_controller.mock_client_responses.append([CLIENT_2])
-    mock_controller.mock_device_responses.append({})
-    mock_controller.mock_client_all_responses.append([CLIENT_1])
-    options = {unifi.CONF_BLOCK_CLIENT: True}
+async def test_controller_state_change(hass):
+    """Verify entities state reflect on controller becoming unavailable."""
+    controller = await setup_unifi_integration(
+        hass, clients_response=[CLIENT_1], devices_response=[DEVICE_1],
+    )
+    assert len(hass.states.async_all()) == 3
 
+    # Controller unavailable
+    controller.async_unifi_signalling_callback(
+        SIGNAL_CONNECTION_STATE, STATE_DISCONNECTED
+    )
+    await hass.async_block_till_done()
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1.state == STATE_UNAVAILABLE
+
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1.state == STATE_UNAVAILABLE
+
+    # Controller available
+    controller.async_unifi_signalling_callback(SIGNAL_CONNECTION_STATE, STATE_RUNNING)
+    await hass.async_block_till_done()
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1.state == "not_home"
+
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1.state == "not_home"
+
+
+async def test_option_track_clients(hass):
+    """Test the tracking of clients can be turned off."""
+    controller = await setup_unifi_integration(
+        hass, clients_response=[CLIENT_1, CLIENT_2], devices_response=[DEVICE_1],
+    )
+    assert len(hass.states.async_all()) == 4
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1 is not None
+
+    client_2 = hass.states.get("device_tracker.wired_client")
+    assert client_2 is not None
+
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1 is not None
+
+    hass.config_entries.async_update_entry(
+        controller.config_entry, options={CONF_TRACK_CLIENTS: False},
+    )
+    await hass.async_block_till_done()
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1 is None
+
+    client_2 = hass.states.get("device_tracker.wired_client")
+    assert client_2 is None
+
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1 is not None
+
+    hass.config_entries.async_update_entry(
+        controller.config_entry, options={CONF_TRACK_CLIENTS: True},
+    )
+    await hass.async_block_till_done()
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1 is not None
+
+    client_2 = hass.states.get("device_tracker.wired_client")
+    assert client_2 is not None
+
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1 is not None
+
+
+async def test_option_track_wired_clients(hass):
+    """Test the tracking of wired clients can be turned off."""
+    controller = await setup_unifi_integration(
+        hass, clients_response=[CLIENT_1, CLIENT_2], devices_response=[DEVICE_1],
+    )
+    assert len(hass.states.async_all()) == 4
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1 is not None
+
+    client_2 = hass.states.get("device_tracker.wired_client")
+    assert client_2 is not None
+
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1 is not None
+
+    hass.config_entries.async_update_entry(
+        controller.config_entry, options={CONF_TRACK_WIRED_CLIENTS: False},
+    )
+    await hass.async_block_till_done()
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1 is not None
+
+    client_2 = hass.states.get("device_tracker.wired_client")
+    assert client_2 is None
+
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1 is not None
+
+    hass.config_entries.async_update_entry(
+        controller.config_entry, options={CONF_TRACK_WIRED_CLIENTS: True},
+    )
+    await hass.async_block_till_done()
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1 is not None
+
+    client_2 = hass.states.get("device_tracker.wired_client")
+    assert client_2 is not None
+
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1 is not None
+
+
+async def test_option_track_devices(hass):
+    """Test the tracking of devices can be turned off."""
+    controller = await setup_unifi_integration(
+        hass, clients_response=[CLIENT_1, CLIENT_2], devices_response=[DEVICE_1],
+    )
+    assert len(hass.states.async_all()) == 4
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1 is not None
+
+    client_2 = hass.states.get("device_tracker.wired_client")
+    assert client_2 is not None
+
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1 is not None
+
+    hass.config_entries.async_update_entry(
+        controller.config_entry, options={CONF_TRACK_DEVICES: False},
+    )
+    await hass.async_block_till_done()
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1 is not None
+
+    client_2 = hass.states.get("device_tracker.wired_client")
+    assert client_2 is not None
+
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1 is None
+
+    hass.config_entries.async_update_entry(
+        controller.config_entry, options={CONF_TRACK_DEVICES: True},
+    )
+    await hass.async_block_till_done()
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1 is not None
+
+    client_2 = hass.states.get("device_tracker.wired_client")
+    assert client_2 is not None
+
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1 is not None
+
+
+async def test_option_ssid_filter(hass):
+    """Test the SSID filter works."""
+    controller = await setup_unifi_integration(
+        hass, options={CONF_SSID_FILTER: ["ssid"]}, clients_response=[CLIENT_3],
+    )
+    assert len(hass.states.async_all()) == 2
+
+    # SSID filter active
+    client_3 = hass.states.get("device_tracker.client_3")
+    assert client_3.state == "not_home"
+
+    client_3_copy = copy(CLIENT_3)
+    client_3_copy["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
+    event = {"meta": {"message": "sta:sync"}, "data": [client_3_copy]}
+    controller.api.message_handler(event)
+    await hass.async_block_till_done()
+
+    # SSID filter active even though time stamp should mark as home
+    client_3 = hass.states.get("device_tracker.client_3")
+    assert client_3.state == "not_home"
+
+    # Remove SSID filter
+    hass.config_entries.async_update_entry(
+        controller.config_entry, options={CONF_SSID_FILTER: []},
+    )
+    event = {"meta": {"message": "sta:sync"}, "data": [client_3_copy]}
+    controller.api.message_handler(event)
+    await hass.async_block_till_done()
+
+    # SSID no longer filtered
+    client_3 = hass.states.get("device_tracker.client_3")
+    assert client_3.state == "home"
+
+
+async def test_wireless_client_go_wired_issue(hass):
+    """Test the solution to catch wireless device go wired UniFi issue.
+
+    UniFi has a known issue that when a wireless device goes away it sometimes gets marked as wired.
+    """
+    client_1_client = copy(CLIENT_1)
+    client_1_client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
+
+    controller = await setup_unifi_integration(hass, clients_response=[client_1_client])
+    assert len(hass.states.async_all()) == 2
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1 is not None
+    assert client_1.state == "home"
+
+    client_1_client["is_wired"] = True
+    client_1_client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
+    event = {"meta": {"message": "sta:sync"}, "data": [client_1_client]}
+    controller.api.message_handler(event)
+    await hass.async_block_till_done()
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1.state == "home"
+
+    with patch.object(
+        unifi.device_tracker.dt_util,
+        "utcnow",
+        return_value=(dt_util.utcnow() + timedelta(minutes=5)),
+    ):
+        event = {"meta": {"message": "sta:sync"}, "data": [client_1_client]}
+        controller.api.message_handler(event)
+        await hass.async_block_till_done()
+
+        client_1 = hass.states.get("device_tracker.client_1")
+        assert client_1.state == "not_home"
+
+    client_1_client["is_wired"] = False
+    client_1_client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
+    event = {"meta": {"message": "sta:sync"}, "data": [client_1_client]}
+    controller.api.message_handler(event)
+    await hass.async_block_till_done()
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1.state == "home"
+
+
+async def test_restoring_client(hass):
+    """Test the update_items function with some clients."""
     config_entry = config_entries.ConfigEntry(
-        1,
-        unifi.DOMAIN,
-        "Mock Title",
-        ENTRY_CONFIG,
-        "test",
-        config_entries.CONN_CLASS_LOCAL_POLL,
-        entry_id=1,
+        version=1,
+        domain=unifi.DOMAIN,
+        title="Mock Title",
+        data=ENTRY_CONFIG,
+        source="test",
+        connection_class=config_entries.CONN_CLASS_LOCAL_POLL,
         system_options={},
+        options={},
+        entry_id=1,
     )
 
     registry = await entity_registry.async_get_registry(hass)
     registry.async_get_or_create(
         device_tracker.DOMAIN,
-        unifi_dt.UNIFI_DOMAIN,
-        "{}-mock-site".format(CLIENT_1["mac"]),
+        unifi.DOMAIN,
+        "{}-site_id".format(CLIENT_1["mac"]),
         suggested_object_id=CLIENT_1["hostname"],
         config_entry=config_entry,
     )
     registry.async_get_or_create(
         device_tracker.DOMAIN,
-        unifi_dt.UNIFI_DOMAIN,
-        "{}-mock-site".format(CLIENT_2["mac"]),
+        unifi.DOMAIN,
+        "{}-site_id".format(CLIENT_2["mac"]),
         suggested_object_id=CLIENT_2["hostname"],
         config_entry=config_entry,
     )
 
-    await setup_controller(hass, mock_controller, options)
-    assert len(mock_controller.mock_requests) == 3
-    assert len(hass.states.async_all()) == 4
+    await setup_unifi_integration(
+        hass,
+        options={unifi.CONF_BLOCK_CLIENT: True},
+        clients_response=[CLIENT_2],
+        clients_all_response=[CLIENT_1],
+    )
+    assert len(hass.states.async_all()) == 3
 
     device_1 = hass.states.get("device_tracker.client_1")
     assert device_1 is not None
 
 
-async def test_dont_track_clients(hass, mock_controller):
-    """Test dont track clients config works."""
-    mock_controller.mock_client_responses.append([CLIENT_1])
-    mock_controller.mock_device_responses.append([DEVICE_1])
-    options = {unifi.controller.CONF_TRACK_CLIENTS: False}
-
-    await setup_controller(hass, mock_controller, options)
-    assert len(mock_controller.mock_requests) == 2
-    assert len(hass.states.async_all()) == 3
+async def test_dont_track_clients(hass):
+    """Test don't track clients config works."""
+    await setup_unifi_integration(
+        hass,
+        options={unifi.controller.CONF_TRACK_CLIENTS: False},
+        clients_response=[CLIENT_1],
+        devices_response=[DEVICE_1],
+    )
+    assert len(hass.states.async_all()) == 2
 
     client_1 = hass.states.get("device_tracker.client_1")
     assert client_1 is None
@@ -291,15 +484,15 @@ async def test_dont_track_clients(hass, mock_controller):
     assert device_1.state == "not_home"
 
 
-async def test_dont_track_devices(hass, mock_controller):
-    """Test dont track devices config works."""
-    mock_controller.mock_client_responses.append([CLIENT_1])
-    mock_controller.mock_device_responses.append([DEVICE_1])
-    options = {unifi.controller.CONF_TRACK_DEVICES: False}
-
-    await setup_controller(hass, mock_controller, options)
-    assert len(mock_controller.mock_requests) == 2
-    assert len(hass.states.async_all()) == 3
+async def test_dont_track_devices(hass):
+    """Test don't track devices config works."""
+    await setup_unifi_integration(
+        hass,
+        options={unifi.controller.CONF_TRACK_DEVICES: False},
+        clients_response=[CLIENT_1],
+        devices_response=[DEVICE_1],
+    )
+    assert len(hass.states.async_all()) == 2
 
     client_1 = hass.states.get("device_tracker.client_1")
     assert client_1 is not None
@@ -309,15 +502,14 @@ async def test_dont_track_devices(hass, mock_controller):
     assert device_1 is None
 
 
-async def test_dont_track_wired_clients(hass, mock_controller):
-    """Test dont track wired clients config works."""
-    mock_controller.mock_client_responses.append([CLIENT_1, CLIENT_2])
-    mock_controller.mock_device_responses.append({})
-    options = {unifi.controller.CONF_TRACK_WIRED_CLIENTS: False}
-
-    await setup_controller(hass, mock_controller, options)
-    assert len(mock_controller.mock_requests) == 2
-    assert len(hass.states.async_all()) == 3
+async def test_dont_track_wired_clients(hass):
+    """Test don't track wired clients config works."""
+    await setup_unifi_integration(
+        hass,
+        options={unifi.controller.CONF_TRACK_WIRED_CLIENTS: False},
+        clients_response=[CLIENT_1, CLIENT_2],
+    )
+    assert len(hass.states.async_all()) == 2
 
     client_1 = hass.states.get("device_tracker.client_1")
     assert client_1 is not None

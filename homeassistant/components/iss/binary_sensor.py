@@ -1,18 +1,19 @@
 """Support for International Space Station data sensor."""
-import logging
 from datetime import timedelta
+import logging
 
+import pyiss
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.binary_sensor import BinarySensorDevice, PLATFORM_SCHEMA
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
 from homeassistant.const import (
-    CONF_NAME,
-    ATTR_LONGITUDE,
     ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    CONF_NAME,
     CONF_SHOW_ON_MAP,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -113,14 +114,12 @@ class IssData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from the ISS API."""
-        import pyiss
-
         try:
             iss = pyiss.ISS()
             self.is_above = iss.is_ISS_above(self.latitude, self.longitude)
             self.next_rise = iss.next_rise(self.latitude, self.longitude)
             self.number_of_people_in_space = iss.number_of_people_in_space()
             self.position = iss.current_location()
-        except requests.exceptions.HTTPError as error:
-            _LOGGER.error(error)
+        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError):
+            _LOGGER.error("Unable to retrieve data")
             return False

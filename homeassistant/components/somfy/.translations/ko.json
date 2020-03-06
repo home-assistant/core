@@ -8,6 +8,11 @@
         "create_entry": {
             "default": "Somfy \ub85c \uc131\uacf5\uc801\uc73c\ub85c \uc778\uc99d\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
         },
+        "step": {
+            "pick_implementation": {
+                "title": "\uc778\uc99d \ubc29\ubc95 \uc120\ud0dd"
+            }
+        },
         "title": "Somfy"
     }
 }

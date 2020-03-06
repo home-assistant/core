@@ -1,9 +1,9 @@
 """The tests for the Template vacuum platform."""
 import logging
+
 import pytest
 
 from homeassistant import setup
-from homeassistant.const import STATE_ON, STATE_UNKNOWN
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_LEVEL,
     STATE_CLEANING,
@@ -12,8 +12,9 @@ from homeassistant.components.vacuum import (
     STATE_PAUSED,
     STATE_RETURNING,
 )
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 
-from tests.common import async_mock_service, assert_setup_component
+from tests.common import assert_setup_component, async_mock_service
 from tests.components.vacuum import common
 
 _LOGGER = logging.getLogger(__name__)
@@ -208,6 +209,68 @@ async def test_invalid_templates(hass, calls):
     await hass.async_block_till_done()
 
     _verify(hass, STATE_UNKNOWN, None)
+
+
+async def test_available_template_with_entities(hass, calls):
+    """Test availability templates with values from other entities."""
+
+    assert await setup.async_setup_component(
+        hass,
+        "vacuum",
+        {
+            "vacuum": {
+                "platform": "template",
+                "vacuums": {
+                    "test_template_vacuum": {
+                        "availability_template": "{{ is_state('availability_state.state', 'on') }}",
+                        "start": {"service": "script.vacuum_start"},
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    # When template returns true..
+    hass.states.async_set("availability_state.state", STATE_ON)
+    await hass.async_block_till_done()
+
+    # Device State should not be unavailable
+    assert hass.states.get("vacuum.test_template_vacuum").state != STATE_UNAVAILABLE
+
+    # When Availability template returns false
+    hass.states.async_set("availability_state.state", STATE_OFF)
+    await hass.async_block_till_done()
+
+    # device state should be unavailable
+    assert hass.states.get("vacuum.test_template_vacuum").state == STATE_UNAVAILABLE
+
+
+async def test_invalid_availability_template_keeps_component_available(hass, caplog):
+    """Test that an invalid availability keeps the device available."""
+    assert await setup.async_setup_component(
+        hass,
+        "vacuum",
+        {
+            "vacuum": {
+                "platform": "template",
+                "vacuums": {
+                    "test_template_vacuum": {
+                        "availability_template": "{{ x - 12 }}",
+                        "start": {"service": "script.vacuum_start"},
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("vacuum.test_template_vacuum") != STATE_UNAVAILABLE
+    assert ("UndefinedError: 'x' is undefined") in caplog.text
 
 
 # End of template tests #
