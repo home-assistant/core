@@ -67,7 +67,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         mac = api.iammeter.mac
         serial_number = api.iammeter.serial_number
         uid = f"{mac}-{serial_number}-{row}-{idx}"
-        devices.append(IamMeter(coordinator, uid, sensor_name, unit, config_name))
+        entities.append(IamMeter(coordinator, uid, sensor_name, unit, config_name))
     async_add_entities(devices)
 
 
