@@ -60,7 +60,6 @@ async def async_setup_entry(
     token = config_entry.data.get(CONF_ACCESS_TOKEN)
     name = config_entry.data[CONF_NAME]
     device_class = config_entry.data[CONF_DEVICE_CLASS]
-    conf_apps = config_entry.data.get(CONF_APPS, {})
 
     # If config entry options not set up, set them up, otherwise assign values managed in options
     volume_step = config_entry.options.get(
@@ -70,6 +69,20 @@ async def async_setup_entry(
     params = {}
     if not config_entry.options:
         params["options"] = {CONF_VOLUME_STEP: volume_step}
+        include_or_exclude_key = next(
+            (
+                key
+                for key in config_entry.data.get(CONF_APPS, {})
+                if key in [CONF_INCLUDE, CONF_EXCLUDE]
+            ),
+            None,
+        )
+        if include_or_exclude_key:
+            params["options"][CONF_APPS] = {
+                include_or_exclude_key: config_entry.data[CONF_APPS][
+                    include_or_exclude_key
+                ].copy()
+            }
 
     if not config_entry.data.get(CONF_VOLUME_STEP):
         new_data = config_entry.data.copy()
@@ -93,9 +106,7 @@ async def async_setup_entry(
         _LOGGER.warning("Failed to connect to %s", host)
         raise PlatformNotReady
 
-    entity = VizioDevice(
-        config_entry, device, name, volume_step, device_class, conf_apps,
-    )
+    entity = VizioDevice(config_entry, device, name, device_class,)
 
     async_add_entities([entity], update_before_add=True)
 
@@ -108,9 +119,7 @@ class VizioDevice(MediaPlayerDevice):
         config_entry: ConfigEntry,
         device: VizioAsync,
         name: str,
-        volume_step: int,
         device_class: str,
-        conf_apps: Dict[str, List[Any]],
     ) -> None:
         """Initialize Vizio device."""
         self._config_entry = config_entry
@@ -119,14 +128,16 @@ class VizioDevice(MediaPlayerDevice):
         self._name = name
         self._state = None
         self._volume_level = None
-        self._volume_step = volume_step
+        self._volume_step = config_entry.options[CONF_VOLUME_STEP]
         self._is_muted = None
         self._current_input = None
         self._current_app = None
         self._available_inputs = []
         self._available_apps = []
-        self._conf_apps = conf_apps
-        self._additional_app_configs = self._conf_apps.get(CONF_ADDITIONAL_CONFIGS, [])
+        self._conf_apps = config_entry.options.get(CONF_APPS, {})
+        self._additional_app_configs = config_entry.data.get(CONF_APPS, {}).get(
+            CONF_ADDITIONAL_CONFIGS, []
+        )
         self._device_class = device_class
         self._supported_commands = SUPPORTED_COMMANDS[device_class]
         self._device = device
@@ -247,6 +258,7 @@ class VizioDevice(MediaPlayerDevice):
     async def _async_update_options(self, config_entry: ConfigEntry) -> None:
         """Update options if the update signal comes from this entity."""
         self._volume_step = config_entry.options[CONF_VOLUME_STEP]
+        self._conf_apps.update(config_entry.options.get(CONF_APPS, {}))
 
     async def async_added_to_hass(self):
         """Register callbacks when entity is added."""
