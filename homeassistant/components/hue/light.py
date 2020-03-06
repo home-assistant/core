@@ -54,6 +54,7 @@ SUPPORT_HUE = {
 }
 
 ATTR_IS_HUE_GROUP = "is_hue_group"
+ATTR_REACHABLE = "reachable"
 GAMUT_TYPE_UNAVAILABLE = "None"
 # Minimum Hue Bridge API version to support groups
 # 1.4.0 introduced extended group info
@@ -303,6 +304,11 @@ class HueLight(Light):
         )
 
     @property
+    def reachable(self):
+        """Return true if reachable (has power)."""
+        return self.light.state["reachable"]
+    
+    @property
     def supported_features(self):
         """Flag supported features."""
         return self._supported_features
@@ -443,4 +449,5 @@ class HueLight(Light):
         attributes = {}
         if self.is_group:
             attributes[ATTR_IS_HUE_GROUP] = self.is_group
+        attributes[ATTR_REACHABLE] = self.reachable
         return attributes
