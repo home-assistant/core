@@ -24,19 +24,20 @@ ERROR_CANNOT_CONNECT = "cannot_connect"
 ERROR_UNKNOWN = "unknown"
 
 
-def get_ip(host):
+def get_ip(host: str) -> str:
     """Translate hostname to IP address."""
     if host is None:
         return None
     return socket.gethostbyname(host)
 
 
-def get_roku_device_info(host):
+def get_roku_device_info(host: str) -> Any:
     """Connect to Roku device."""
     roku = Roku(host)
 
     try:
-        return roku.device_info
+        device_info = roku.device_info
+        return device_info
     except (OSError, RokuException) as exception:
         raise CannotConnect from exception
 
@@ -69,11 +70,15 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors or {},
         )
 
-    async def async_step_import(self, user_input=None):
+    async def async_step_import(
+        self, user_input: Optional[Dict] = None
+    ) -> Dict[str, Any]:
         """Handle configuration by yaml file."""
         return await self.async_step_user(user_input)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: Optional[Dict] = None
+    ) -> Dict[str, Any]:
         """Handle a flow initialized by the user."""
         errors = {}
 
@@ -95,7 +100,9 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=info["title"], data=user_input)
 
-    async def async_step_ssdp(self, discovery_info=None):
+    async def async_step_ssdp(
+        self, discovery_info: Optional[Dict] = None
+    ) -> Dict[str, Any]:
         """Handle a flow initialized by discovery."""
         host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
         host = await self.hass.async_add_executor_job(get_ip, host)
@@ -112,7 +119,9 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_ssdp_confirm()
 
-    async def async_step_ssdp_confirm(self, user_input=None):
+    async def async_step_ssdp_confirm(
+        self, user_input: Optional[Dict] = None
+    ) -> Dict[str, Any]:
         """Handle user-confirmation of discovered device."""
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         name = self.context.get(CONF_NAME)
@@ -120,6 +129,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
             user_input[CONF_HOST] = self.context.get(CONF_HOST)
+            user_input[CONF_NAME] = name
 
             try:
                 await validate_input(self.hass, user_input)

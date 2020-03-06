@@ -48,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Roku from a config entry."""
     try:
         roku = Roku(entry.data[CONF_HOST])
-        roku_device_info = await async_add_executor_job(roku.device_info)
+        roku_device_info = await hass.async_add_executor_job(roku.device_info)
     except (OSError, RokuException) as exception:
         raise ConfigEntryNotReady from exception
     except Exception as exception:  # pylint: disable=broad-except

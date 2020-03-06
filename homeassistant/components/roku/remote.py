@@ -1,13 +1,21 @@
 """Support for the Roku remote."""
+from typing import Callable, List
+
 import requests.exceptions
 from roku import RokuException
 
 from homeassistant.components.remote import RemoteDevice
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DATA_CLIENT, DEFAULT_MANUFACTURER, DOMAIN
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[List, bool], None],
+) -> bool:
     """Load Roku remote based on a config entry."""
     roku = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
     async_add_entities([RokuRemote(roku)], True)
@@ -29,8 +37,8 @@ class RokuRemote(RemoteDevice):
             return
 
         try:
-            self._available = True
             self._device_info = self.roku.device_info
+            self._available = True
         except (
             requests.exceptions.ConnectionError,
             requests.exceptions.ReadTimeout,

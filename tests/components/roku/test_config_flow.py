@@ -1,6 +1,9 @@
 """Test the Roku config flow."""
+from typing import Any, Dict, Optional
+
 from asynctest import patch
 
+from homeassistant.components.roku.config_flow import CannotConnect
 from homeassistant.components.roku.const import DOMAIN
 from homeassistant.components.ssdp import (
     ATTR_SSDP_LOCATION,
@@ -8,9 +11,16 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_SERIAL,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SOURCE
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_ABORT,
+    RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
+)
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 HOST = "1.2.3.4"
 NAME = "Roku 3"
@@ -18,80 +28,163 @@ SSDP_LOCATION = "http://1.2.3.4/"
 UPNP_FRIENDLY_NAME = "My Roku 3"
 UPNP_SERIAL = "1GU48T017973"
 
-MOCK_DATA_DEVICE_INFO = {
-    "model_name": NAME,
-    "model_num": "4200X",
-    "software_version": "7.5.0.09021",
-    "serial_num": UPNP_SERIAL,
-    "user_device_name": UPNP_FRIENDLY_NAME,
-    "roku_type": "Box",
-}
+
+class MockDeviceInfo(object):
+    """Mock DeviceInfo for Roku."""
+
+    model_name = NAME
+    model_num = "4200X"
+    software_version = "7.5.0.09021"
+    serial_num = UPNP_SERIAL
+    user_device_name = UPNP_FRIENDLY_NAME
+    roku_type = "Box"
+
+    def __repr__(self):
+        """Return the object representation of DeviceInfo."""
+        return "<DeviceInfo: %s-%s, SW v%s, Ser# %s (%s)>" % (
+            self.model_name,
+            self.model_num,
+            self.software_version,
+            self.serial_num,
+            self.roku_type,
+        )
 
 
-async def test_step_user(hass):
+async def async_configure_flow(
+    hass: HomeAssistantType, flow_id: str, user_input: Optional[Dict] = None
+) -> Any:
+    """Set up mock Roku integration flow."""
+    with patch(
+        "homeassistant.components.roku.config_flow.get_ip", return_value=HOST
+    ), patch(
+        "homeassistant.components.roku.config_flow.get_roku_device_info",
+        return_value=MockDeviceInfo,
+    ):
+        return await hass.config_entries.flow.async_configure(
+            flow_id=flow_id, user_input=user_input
+        )
+
+
+async def async_init_flow(
+    hass: HomeAssistantType,
+    handler: str = DOMAIN,
+    context: Optional[Dict] = None,
+    data: Any = None,
+) -> Any:
+    """Set up mock Roku integration flow."""
+    with patch(
+        "homeassistant.components.roku.config_flow.get_ip", return_value=HOST
+    ), patch(
+        "homeassistant.components.roku.config_flow.get_roku_device_info",
+        return_value=MockDeviceInfo,
+    ):
+        return await hass.config_entries.flow.async_init(
+            handler=handler, context=context, data=data
+        )
+
+
+async def test_duplicate_error(hass: HomeAssistantType) -> None:
+    """Test that errors are shown when duplicates are added."""
+    MockConfigEntry(
+        domain=DOMAIN, unique_id=UPNP_SERIAL, data={CONF_HOST: HOST}
+    ).add_to_hass(hass)
+
+    result = await async_init_flow(
+        hass, context={CONF_SOURCE: SOURCE_IMPORT}, data={CONF_HOST: HOST}
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+    result = await async_init_flow(
+        hass, context={CONF_SOURCE: SOURCE_USER}, data={CONF_HOST: HOST}
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+    result = await async_init_flow(
+        hass,
+        context={CONF_SOURCE: SOURCE_SSDP},
+        data={
+            ATTR_UPNP_FRIENDLY_NAME: UPNP_FRIENDLY_NAME,
+            ATTR_SSDP_LOCATION: SSDP_LOCATION,
+            ATTR_UPNP_SERIAL: UPNP_SERIAL,
+        },
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_form(hass: HomeAssistantType) -> None:
     """Test the user step."""
     await async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
     assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.roku.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.roku.async_setup_entry", return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.roku.config_flow.Roku.device_info",
-        return_value=MOCK_DATA_DEVICE_INFO,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: HOST},
-        )
+    ) as mock_setup_entry:
+        result = await async_configure_flow(hass, result["flow_id"], {CONF_HOST: HOST})
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == HOST
-    assert result2["data"] == {
-        CONF_HOST: HOST,
-        CONF_NAME: HOST,
-    }
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == HOST
+    assert result["data"] == {CONF_HOST: HOST}
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_step_import(hass):
+async def test_form_cannot_connect(hass: HomeAssistantType) -> None:
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.roku.config_flow.validate_input",
+        side_effect=CannotConnect,
+    ) as mock_validate_input:
+        result = await async_configure_flow(hass, result["flow_id"], {CONF_HOST: HOST},)
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    await hass.async_block_till_done()
+    assert len(mock_validate_input.mock_calls) == 1
+
+
+async def test_import(hass: HomeAssistantType) -> None:
     """Test the import step."""
     with patch(
         "homeassistant.components.roku.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.roku.async_setup_entry", return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.roku.config_flow.Roku.device_info",
-        return_value=MOCK_DATA_DEVICE_INFO,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_HOST: HOST},
+    ) as mock_setup_entry:
+        result = await async_init_flow(
+            hass, context={CONF_SOURCE: SOURCE_IMPORT}, data={CONF_HOST: HOST}
         )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == HOST
-    assert result["data"] == {
-        CONF_HOST: HOST,
-        CONF_NAME: HOST,
-    }
+    assert result["data"] == {CONF_HOST: HOST}
 
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_step_ssdp(hass):
+async def test_ssdp_discovery(hass: HomeAssistantType) -> None:
     """Test the ssdp discovery step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_SSDP},
+        context={CONF_SOURCE: SOURCE_SSDP},
         data={
             ATTR_SSDP_LOCATION: SSDP_LOCATION,
             ATTR_UPNP_FRIENDLY_NAME: UPNP_FRIENDLY_NAME,
@@ -107,15 +200,12 @@ async def test_step_ssdp(hass):
         "homeassistant.components.roku.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.roku.async_setup_entry", return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.roku.config_flow.Roku.device_info",
-        return_value=MOCK_DATA_DEVICE_INFO,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+    ) as mock_setup_entry:
+        result = await async_configure_flow(hass, result["flow_id"], {})
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == UPNP_FRIENDLY_NAME
-    assert result2["data"] == {
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == UPNP_FRIENDLY_NAME
+    assert result["data"] == {
         CONF_HOST: HOST,
         CONF_NAME: UPNP_FRIENDLY_NAME,
     }
