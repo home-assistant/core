@@ -12,3 +12,10 @@ rclone_mount_drive:
     name:
       description: Nazwa dysku
       example: 'drive'
+
+rclone_remove_drive:
+  description: Odmontowanie i usunięcie dysku zdalnego
+  fields:
+    name:
+      description: Nazwa dysku
+      example: 'drive'
