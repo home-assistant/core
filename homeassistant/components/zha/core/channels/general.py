@@ -401,7 +401,7 @@ class RSSILocation(ZigbeeChannel):
     pass
 
 
-@registries.OUTPUT_CHANNEL_ONLY_CLUSTERS.register(general.Scenes.cluster_id)
+@registries.EVENT_RELAY_CLUSTERS.register(general.Scenes.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Scenes.cluster_id)
 class Scenes(ZigbeeChannel):
     """Scenes channel."""
