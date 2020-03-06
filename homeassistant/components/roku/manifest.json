@@ -12,5 +12,6 @@
     }
   ],
   "codeowners": [],
+  "quality_scale": "silver",
   "config_flow": true
 }
