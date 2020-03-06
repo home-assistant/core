@@ -1,44 +1,42 @@
 """Support for the Roku remote."""
 import requests.exceptions
-from roku import Roku
+from roku import RokuException
 
 from homeassistant.components.remote import RemoteDevice
-from homeassistant.const import CONF_IP_ADDRESS
-from .const import (
-    DEFAULT_MANUFACTURER,
-    DOMAIN as ROKU_DOMAIN,
-)
+
+from .const import DATA_CLIENT, DEFAULT_MANUFACTURER, DOMAIN
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Roku remote platform."""
-    if not discovery_info:
-        return
-
-    ip_address = discovery_info[CONF_IP_ADDRESS]
-    async_add_entities([RokuRemote(ip_address)], True)
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Load Roku remote based on a config entry."""
-    ip_address = config_entry[CONF_IP_ADDRESS]
-    async_add_entities([RokuRemote(ip_address)], True)
+    roku = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
+    async_add_entities([RokuRemote(roku)], True)
 
 
 class RokuRemote(RemoteDevice):
     """Device that sends commands to an Roku."""
 
-    def __init__(self, host):
+    def __init__(self, roku, enabled_default=True):
         """Initialize the Roku device."""
-
-        self.roku = Roku(host)
+        self.roku = roku
+        self._available = False
         self._device_info = {}
+        self._enabled_default = enabled_default
 
     def update(self):
         """Retrieve latest state."""
+        if not self.enabled:
+            return
+
         try:
+            self._available = True
             self._device_info = self.roku.device_info
-        except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout):
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.ReadTimeout,
+            RokuException,
+        ):
+            self._available = False
             pass
 
     @property
@@ -47,6 +45,16 @@ class RokuRemote(RemoteDevice):
         if self._device_info.user_device_name:
             return self._device_info.user_device_name
         return f"Roku {self._device_info.serial_num}"
+
+    @property
+    def available(self):
+        """Return if able to retrieve information from device or not."""
+        return self._available
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._enabled_default
 
     @property
     def unique_id(self):
@@ -58,11 +66,10 @@ class RokuRemote(RemoteDevice):
         """Return device specific attributes."""
         return {
             "name": self.name,
-            "identifiers": {(ROKU_DOMAIN, self.unique_id)},
+            "identifiers": {(DOMAIN, self.unique_id)},
             "manufacturer": DEFAULT_MANUFACTURER,
             "model": self._device_info.model_num,
             "sw_version": self._device_info.software_version,
-            "via_device": (ROKU_DOMAIN, self.unique_id),
         }
 
     @property

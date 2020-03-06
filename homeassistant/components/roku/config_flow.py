@@ -1,61 +1,73 @@
 """Config flow for Roku."""
 import socket
+from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
 from roku import Roku, RokuException
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.ssdp import (
     ATTR_SSDP_LOCATION,
     ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_SERIAL,
 )
-from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS, CONF_NAME
+from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
+from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import CONF_SERIAL_NUMBER, DOMAIN
+from .const import DOMAIN  # pylint: disable=unused-import
 
-DATA_SCHEMA_USER = vol.Schema({vol.Required(CONF_HOST): str,})
+DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
-RESULT_NOT_FOUND = "not_found"
-RESULT_ROKU_ERROR = "roku_error"
-RESULT_SUCCESS = "success"
+ERROR_CANNOT_CONNECT = "cannot_connect"
+ERROR_UNKNOWN = "unknown"
 
 
-class RokuConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+def get_ip(host):
+    """Translate hostname to IP address."""
+    if host is None:
+        return None
+    return socket.gethostbyname(host)
+
+
+def get_roku_device_info(host):
+    """Connect to Roku device."""
+    roku = Roku(host)
+
+    try:
+        return roku.device_info
+    except (OSError, RokuException) as exception:
+        raise CannotConnect from exception
+
+
+async def validate_input(hass: HomeAssistantType, data: Dict) -> Dict:
+    """Validate the user input allows us to connect.
+
+    Data has the keys from DATA_SCHEMA with values provided by the user.
+    """
+
+    host = await hass.async_add_executor_job(get_ip, data["host"])
+    device_info = await hass.async_add_executor_job(get_roku_device_info, host)
+
+    return {
+        "title": host,
+        "host": host,
+        "serial_num": device_info.serial_num,
+    }
+
+
+class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Roku config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
-    # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-
-    def __init__(self):
-        """Initialize flow."""
-        self._host = None
-        self._ip = None
-        self._name = None
-
-    def _get_entry(self):
-        return self.async_create_entry(
-            title=self._name,
-            data={
-                CONF_HOST: self._host,
-                CONF_IP_ADDRESS: self._ip,
-                CONF_NAME: self._name,
-            },
+    async def _show_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
+        """Show the form to the user."""
+        return self.async_show_form(
+            step_id="user", data_schema=DATA_SCHEMA, errors=errors or {},
         )
-
-    def _try_connect(self):
-        """Try to connect """
-        roku = Roku(self._host)
-
-        try:
-            _device_info = roku.device_info
-            return RESULT_SUCCESS
-        except OSError:
-            return RESULT_NOT_FOUND
-        except RokuException:
-            return RESULT_ROKU_ERROR
 
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
@@ -65,53 +77,62 @@ class RokuConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
 
-        if user_input is not None:
-            ip_address = await self.hass.async_add_executor_job(
-                socket.gethostbyname, user_input[CONF_HOST]
-            )
+        if not user_input:
+            return await self._show_form()
 
-            await self.async_set_unique_id(ip_address, raise_on_progress=False)
-            self._abort_if_unique_id_configured()
+        try:
+            info = await validate_input(self.hass, user_input)
+            user_input[CONF_HOST] = info[CONF_HOST]
+        except CannotConnect:
+            errors["base"] = ERROR_CANNOT_CONNECT
+            return await self._show_form(errors)
+        except Exception:  # pylint: disable=broad-except
+            errors["base"] = ERROR_UNKNOWN
+            return await self._show_form(errors)
 
-            self._name = self._host = user_input[CONF_HOST]
-            self._ip = ip_address
+        await self.async_set_unique_id(info["serial_num"])
+        self._abort_if_unique_id_configured()
 
-            result = await self.hass.async_add_executor_job(self._try_connect)
-
-            if result == RESULT_SUCCESS:
-                return self._get_entry()
-            elif result != RESULT_ROKU_ERROR:
-                return self.async_abort(reason=result)
-
-            errors["base"] = result
-
-        return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA_USER, errors=errors
-        )
+        return self.async_create_entry(title=info["title"], data=user_input)
 
     async def async_step_ssdp(self, discovery_info=None):
         """Handle a flow initialized by discovery."""
         host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
-        ip_address = await self.hass.async_add_executor_job(socket.gethostbyname, host)
+        host = await self.hass.async_add_executor_job(get_ip, host)
+        name = discovery_info[ATTR_UPNP_FRIENDLY_NAME]
+        serial_num = discovery_info[ATTR_UPNP_SERIAL]
 
-        await self.async_set_unique_id(ip_address)
+        await self.async_set_unique_id(serial_num)
         self._abort_if_unique_id_configured()
 
-        self._host = host
-        self._ip = ip_address
-        self._name = discovery_info[ATTR_UPNP_FRIENDLY_NAME]
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context.update(
+            {CONF_HOST: host, CONF_NAME: name, "title_placeholders": {"name": host}}
+        )
 
-        return await self.async_step_confirm()
+        return await self.async_step_ssdp_confirm()
 
-    async def async_step_confirm(self, user_input=None):
-        """Handle user-confirmation of discovered node."""
+    async def async_step_ssdp_confirm(self, user_input=None):
+        """Handle user-confirmation of discovered device."""
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        name = self.context.get(CONF_NAME)
+
         if user_input is not None:
-            result = await self.hass.async_add_executor_job(self._try_connect)
+            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+            user_input[CONF_HOST] = self.context.get(CONF_HOST)
 
-            if result != RESULT_SUCCESS:
-                return self.async_abort(reason=result)
-            return self._get_entry()
+            try:
+                await validate_input(self.hass, user_input)
+                return self.async_create_entry(title=name, data=user_input)
+            except CannotConnect:
+                return self.async_abort(reason=ERROR_CANNOT_CONNECT)
+            except Exception:  # pylint: disable=broad-except
+                return self.async_abort(reason=ERROR_UNKNOWN)
 
         return self.async_show_form(
-            step_id="confirm", description_placeholders={"name": self._name},
+            step_id="ssdp_confirm", description_placeholders={"name": name},
         )
+
+
+class CannotConnect(HomeAssistantError):
+    """Error to indicate we cannot connect."""
