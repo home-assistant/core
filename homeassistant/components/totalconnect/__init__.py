@@ -6,9 +6,9 @@ from total_connect_client import TotalConnectClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import DOMAIN
 
