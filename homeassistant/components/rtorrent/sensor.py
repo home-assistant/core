@@ -130,18 +130,18 @@ class RTorrentSensor(Entity):
 
         upload = self.data[0]
         download = self.data[1]
-        alltorrents = self.data[2]
-        stoppedtorrents = self.data[3]
-        completetorrents = self.data[4]
+        all_torrents = self.data[2]
+        stopped_torrents = self.data[3]
+        complete_torrents = self.data[4]
 
         uploading_torrents = 0
-        for uptorrent in self.data[5]:
-            if uptorrent[0] > 0:
+        for up_torrent in self.data[5]:
+            if up_torrent[0] > 0:
                 uploading_torrents += 1
 
         downloading_torrents = 0
-        for downtorrent in self.data[6]:
-            if downtorrent[0] > 0:
+        for down_torrent in self.data[6]:
+            if down_torrent[0] > 0:
                 downloading_torrents += 1
 
         active_torrents = uploading_torrents + downloading_torrents
@@ -165,11 +165,11 @@ class RTorrentSensor(Entity):
             elif self.type == SENSOR_TYPE_UPLOAD_SPEED:
                 self._state = format_speed(upload)
             elif self.type == SENSOR_TYPE_ALL_TORRENTS:
-                self._state = len(alltorrents)
+                self._state = len(all_torrents)
             elif self.type == SENSOR_TYPE_STOPPED_TORRENTS:
-                self._state = len(stoppedtorrents)
+                self._state = len(stopped_torrents)
             elif self.type == SENSOR_TYPE_COMPLETE_TORRENTS:
-                self._state = len(completetorrents)
+                self._state = len(complete_torrents)
             elif self.type == SENSOR_TYPE_UPLOADING_TORRENTS:
                 self._state = uploading_torrents
             elif self.type == SENSOR_TYPE_DOWNLOADING_TORRENTS:
