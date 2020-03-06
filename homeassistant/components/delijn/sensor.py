@@ -90,6 +90,15 @@ class DeLijnPublicTransportSensor(Entity):
             self._attributes["next_passages"] = self.line.passages
         except (KeyError, IndexError) as error:
             _LOGGER.debug("Error getting data from De Lijn: %s", error)
+            first_passage = None
+            self._state = None
+            self._attributes["stopname"] = None
+            self._attributes["line_number_public"] = None
+            self._attributes["line_transport_type"] = None
+            self._attributes["final_destination"] = None
+            self._attributes["due_at_schedule"] = None
+            self._attributes["due_at_realtime"] = None
+            self._attributes["next_passages"] = []
 
     @property
     def device_class(self):
