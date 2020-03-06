@@ -10,6 +10,7 @@ from tests.components.homekit_controller.common import setup_test_component
 CURRENT_MEDIA_STATE = ("television", "current-media-state")
 TARGET_MEDIA_STATE = ("television", "target-media-state")
 REMOTE_KEY = ("television", "remote-key")
+ACTIVE_IDENTIFIER = ("television", "active-identifier")
 
 
 def create_tv_service(accessory):
@@ -18,16 +19,33 @@ def create_tv_service(accessory):
 
     The TV is not currently documented publicly - this is based on observing really TV's that have HomeKit support.
     """
-    service = accessory.add_service(ServicesTypes.TELEVISION)
+    tv_service = accessory.add_service(ServicesTypes.TELEVISION)
 
-    cur_state = service.add_char(CharacteristicsTypes.CURRENT_MEDIA_STATE)
+    cur_state = tv_service.add_char(CharacteristicsTypes.CURRENT_MEDIA_STATE)
     cur_state.value = 0
 
-    remote = service.add_char(CharacteristicsTypes.REMOTE_KEY)
+    remote = tv_service.add_char(CharacteristicsTypes.REMOTE_KEY)
     remote.value = None
     remote.perms.append(CharacteristicPermissions.paired_write)
 
-    return service
+    # Add a HDMI 1 channel
+    input_source_1 = accessory.add_service(ServicesTypes.INPUT_SOURCE)
+    input_source_1.add_char(CharacteristicsTypes.IDENTIFIER, value=1)
+    input_source_1.add_char(CharacteristicsTypes.CONFIGURED_NAME, value="HDMI 1")
+    tv_service.add_linked_service(input_source_1)
+
+    # Add a HDMI 2 channel
+    input_source_2 = accessory.add_service(ServicesTypes.INPUT_SOURCE)
+    input_source_2.add_char(CharacteristicsTypes.IDENTIFIER, value=2)
+    input_source_2.add_char(CharacteristicsTypes.CONFIGURED_NAME, value="HDMI 2")
+    tv_service.add_linked_service(input_source_2)
+
+    # Support switching channels
+    active_identifier = tv_service.add_char(CharacteristicsTypes.ACTIVE_IDENTIFIER)
+    active_identifier.value = 1
+    active_identifier.perms.append(CharacteristicPermissions.paired_write)
+
+    return tv_service
 
 
 def create_tv_service_with_target_media_state(accessory):
@@ -56,6 +74,15 @@ async def test_tv_read_state(hass, utcnow):
     helper.characteristics[CURRENT_MEDIA_STATE].value = 2
     state = await helper.poll_and_get_state()
     assert state.state == "idle"
+
+
+async def test_tv_read_sources(hass, utcnow):
+    """Test that we can read the input source of a HomeKit TV."""
+    helper = await setup_test_component(hass, create_tv_service)
+
+    state = await helper.poll_and_get_state()
+    assert state.attributes["source"] == "HDMI 1"
+    assert state.attributes["source_list"] == ["HDMI 1", "HDMI 2"]
 
 
 async def test_play_remote_key(hass, utcnow):
@@ -202,3 +229,19 @@ async def test_stop(hass, utcnow):
     )
     assert helper.characteristics[REMOTE_KEY].value is None
     assert helper.characteristics[TARGET_MEDIA_STATE].value is None
+
+
+async def test_tv_set_source(hass, utcnow):
+    """Test that we can set the input source of a HomeKit TV."""
+    helper = await setup_test_component(hass, create_tv_service)
+
+    await hass.services.async_call(
+        "media_player",
+        "select_source",
+        {"entity_id": "media_player.testdevice", "source": "HDMI 2"},
+        blocking=True,
+    )
+    assert helper.characteristics[ACTIVE_IDENTIFIER].value == 2
+
+    state = await helper.poll_and_get_state()
+    assert state.attributes["source"] == "HDMI 2"

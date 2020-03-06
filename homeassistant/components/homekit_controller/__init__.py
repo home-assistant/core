@@ -95,6 +95,16 @@ class HomeKitEntity(Entity):
                         continue
                     self._setup_characteristic(char)
 
+                accessory = self._accessory.entity_map.aid(self._aid)
+                this_service = accessory.services.iid(self._iid)
+                for child_service in accessory.services.filter(
+                    parent_service=this_service
+                ):
+                    for char in child_service.characteristics:
+                        if char.type not in characteristic_types:
+                            continue
+                        self._setup_characteristic(char.to_accessory_and_service_list())
+
     def _setup_characteristic(self, char):
         """Configure an entity based on a HomeKit characteristics metadata."""
         # Build up a list of (aid, iid) tuples to poll on update()
