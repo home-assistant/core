@@ -262,7 +262,7 @@ async def async_setup(hass, config):
             if not source:
                 continue
 
-            request_stream(hass, source, keepalive=True, options=camera.options)
+            request_stream(hass, source, keepalive=True, options=camera.stream_options)
 
     async_when_setup(hass, DOMAIN_STREAM, preload_stream)
 
@@ -318,7 +318,7 @@ class Camera(Entity):
     def __init__(self):
         """Initialize a camera."""
         self.is_streaming = False
-        self.options = {}
+        self.stream_options = {}
         self.content_type = DEFAULT_CONTENT_TYPE
         self.access_tokens: collections.deque = collections.deque([], 2)
         self.async_update_token()
@@ -591,7 +591,7 @@ async def ws_camera_stream(hass, connection, msg):
             source,
             fmt=fmt,
             keepalive=camera_prefs.preload_stream,
-            options=camera.options,
+            options=camera.stream_options,
         )
         connection.send_result(msg["id"], {"url": url})
     except HomeAssistantError as ex:
@@ -681,7 +681,7 @@ async def async_handle_play_stream_service(camera, service_call):
         source,
         fmt=fmt,
         keepalive=camera_prefs.preload_stream,
-        options=camera.options,
+        options=camera.stream_options,
     )
     data = {
         ATTR_ENTITY_ID: entity_ids,

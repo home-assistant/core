@@ -147,7 +147,7 @@ class ONVIFHassCamera(Camera):
         self._profile_index = config.get(CONF_PROFILE)
         self._ptz_service = None
         self._input = None
-        self.options[CONF_RTSP_TRANSPORT] = config.get(CONF_RTSP_TRANSPORT)
+        self.stream_options[CONF_RTSP_TRANSPORT] = config.get(CONF_RTSP_TRANSPORT)
         self._mac = None
 
         _LOGGER.debug(
