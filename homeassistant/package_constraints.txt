@@ -11,7 +11,7 @@ cryptography==2.8
 defusedxml==0.6.0
 distro==1.4.0
 hass-nabucasa==0.31
-ais-dom-frontend==20200220.7
+ais-dom-frontend==20200220.8
 importlib-metadata==1.5.0
 jinja2>=2.10.3
 netdisco==2.6.0
