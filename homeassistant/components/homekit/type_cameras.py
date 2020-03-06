@@ -239,7 +239,12 @@ class Camera(HomeAccessory, PyhapCamera):
         return True
 
     def get_snapshot(self, image_size):
-        """Return an ``Image`` of a snapshot from the camera."""
-        return asyncio.run_coroutine_threadsafe(
-            self.hass.components.camera.async_get_image(self.entity_id), self.hass.loop
-        ).result()
+        """Return a jpeg of a snapshot from the camera."""
+        return (
+            asyncio.run_coroutine_threadsafe(
+                self.hass.components.camera.async_get_image(self.entity_id),
+                self.hass.loop,
+            )
+            .result()
+            .content
+        )

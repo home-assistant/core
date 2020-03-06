@@ -2,13 +2,11 @@
 from datetime import timedelta
 from functools import partial, wraps
 from inspect import getmodule
-import json
 import logging
 
 from pyhap.accessory import Accessory, Bridge
 from pyhap.accessory_driver import AccessoryDriver
 from pyhap.const import CATEGORY_OTHER
-from pyhap.hap_server import HAPServerHandler
 
 from homeassistant.components import cover, vacuum
 from homeassistant.components.cover import DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE
@@ -487,24 +485,6 @@ class HomeBridge(Bridge):
         return acc.get_snapshot(info)
 
 
-class HomeServerHandler(HAPServerHandler):
-    """Manages HAP connection state and handles incoming HTTP requests."""
-
-    def handle_resource(self):
-        """Get a snapshot from the camera."""
-        if not hasattr(self.accessory_handler.accessory, "get_snapshot"):
-            raise ValueError(
-                "Got a request for snapshot, but the Accessory "
-                'does not define a "get_snapshot" method'
-            )
-        data_len = int(self.headers["Content-Length"])
-        image_size = json.loads(self.rfile.read(data_len).decode("utf-8"))
-        image = self.accessory_handler.accessory.get_snapshot(image_size)
-        self.send_response(200)
-        self.send_header("Content-Type", image.content_type)
-        self.end_response(image.content)
-
-
 class HomeDriver(AccessoryDriver):
     """Adapter class for AccessoryDriver."""
 
@@ -514,7 +494,6 @@ class HomeDriver(AccessoryDriver):
         self.hass = hass
         self._entry_id = entry_id
         self._bridge_name = bridge_name
-        self.http_server.RequestHandlerClass = HomeServerHandler
 
     def pair(self, client_uuid, client_public):
         """Override super function to dismiss setup message if paired."""
