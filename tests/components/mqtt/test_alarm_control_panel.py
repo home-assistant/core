@@ -6,9 +6,12 @@ from homeassistant.components import alarm_control_panel, mqtt
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
+    STATE_ALARM_DISARMING,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
     STATE_UNAVAILABLE,
@@ -83,7 +86,10 @@ async def test_update_state_via_state_topic(hass, mqtt_mock):
         STATE_ALARM_ARMED_HOME,
         STATE_ALARM_ARMED_AWAY,
         STATE_ALARM_ARMED_NIGHT,
+        STATE_ALARM_ARMED_CUSTOM_BYPASS,
         STATE_ALARM_PENDING,
+        STATE_ALARM_ARMING,
+        STATE_ALARM_DISARMING,
         STATE_ALARM_TRIGGERED,
     ):
         async_fire_mqtt_message(hass, "alarm/state", state)

@@ -17,9 +17,12 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_VALUE_TEMPLATE,
     STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
+    STATE_ALARM_DISARMING,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
@@ -179,7 +182,10 @@ class MqttAlarm(
                 STATE_ALARM_ARMED_HOME,
                 STATE_ALARM_ARMED_AWAY,
                 STATE_ALARM_ARMED_NIGHT,
+                STATE_ALARM_ARMED_CUSTOM_BYPASS,
                 STATE_ALARM_PENDING,
+                STATE_ALARM_ARMING,
+                STATE_ALARM_DISARMING,
                 STATE_ALARM_TRIGGERED,
             ):
                 _LOGGER.warning("Received unexpected payload: %s", msg.payload)
