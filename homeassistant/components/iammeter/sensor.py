@@ -62,7 +62,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         ),
     )
     await coordinator.async_refresh()
-    devices = []
+    entities = []
     for sensor_name, (row, idx, unit) in api.iammeter.sensor_map().items():
         mac = api.iammeter.mac
         serial_number = api.iammeter.serial_number
