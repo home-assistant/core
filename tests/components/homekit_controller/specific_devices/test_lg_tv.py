@@ -1,7 +1,11 @@
 """Make sure that handling real world LG HomeKit characteristics isn't broken."""
 
 
-from homeassistant.components.media_player.const import SUPPORT_PAUSE, SUPPORT_PLAY
+from homeassistant.components.media_player.const import (
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_SELECT_SOURCE,
+)
 
 from tests.components.homekit_controller.common import (
     Helper,
@@ -29,8 +33,22 @@ async def test_lg_tv(hass):
     # Assert that the friendly name is detected correctly
     assert state.attributes["friendly_name"] == "LG webOS TV AF80"
 
+    # Assert that all channels were found and that we know which is active.
+    assert state.attributes["source_list"] == [
+        "AirPlay",
+        "Live TV",
+        "HDMI 1",
+        "Sony",
+        "Apple",
+        "AV",
+        "HDMI 4",
+    ]
+    assert state.attributes["source"] == "HDMI 4"
+
     # Assert that all optional features the LS1 supports are detected
-    assert state.attributes["supported_features"] == (SUPPORT_PAUSE | SUPPORT_PLAY)
+    assert state.attributes["supported_features"] == (
+        SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_SELECT_SOURCE
+    )
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
 
