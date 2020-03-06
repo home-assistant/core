@@ -43,6 +43,7 @@ DEFAULT_ARGUMENTS = "-pred 1"
 DEFAULT_PROFILE = 0
 
 CONF_PROFILE = "profile"
+CONF_RTSP_TRANSPORT = "rtsp_transport"
 
 ATTR_PAN = "pan"
 ATTR_TILT = "tilt"
@@ -71,6 +72,7 @@ DOMAIN = "onvif"
 ONVIF_DATA = "onvif"
 ENTITIES = "entities"
 
+RTSP_TRANS_PROTOCOLS = ["tcp", "udp", "udp_multicast", "http"]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -80,6 +82,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_EXTRA_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
+        vol.Optional(CONF_RTSP_TRANSPORT, default=RTSP_TRANS_PROTOCOLS[0]): vol.In(
+            RTSP_TRANS_PROTOCOLS
+        ),
         vol.Optional(CONF_PROFILE, default=DEFAULT_PROFILE): vol.All(
             vol.Coerce(int), vol.Range(min=0)
         ),
@@ -161,6 +166,7 @@ class ONVIFHassCamera(Camera):
         self._profile_index = config.get(CONF_PROFILE)
         self._ptz_service = None
         self._input = None
+        self.stream_options[CONF_RTSP_TRANSPORT] = config.get(CONF_RTSP_TRANSPORT)
         self._mac = None
 
         _LOGGER.debug(
