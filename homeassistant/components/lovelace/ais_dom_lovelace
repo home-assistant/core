@@ -1,7 +1,6 @@
 {
     "data": {
         "config": {
-            "background": "center / cover no-repeat url(\"/static/ais_dom/ais_backgroud.jpg\") fixed",
             "resources": [],
             "title": "Asystent domowy",
             "views": [
