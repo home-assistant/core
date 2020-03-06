@@ -8,17 +8,16 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice,
 )
 
-from .const import CONF_USERNAME, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities) -> None:
     """Set up TotalConnect device sensors based on a config entry."""
-    username = entry.data[CONF_USERNAME]
     sensors = []
 
-    client_locations = hass.data[DOMAIN][username].client.locations
+    client_locations = hass.data[DOMAIN][entry.entry_id].client.locations
 
     for location_id, location in client_locations.items():
         for zone_id, zone in location.zones.items():

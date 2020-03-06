@@ -34,7 +34,7 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if valid:
                 # authentication success / valid
                 return self.async_create_entry(
-                    title=username,
+                    title="Total Connect",
                     data={CONF_USERNAME: username, CONF_PASSWORD: password},
                 )
             # authentication failed / invalid

@@ -18,17 +18,16 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 
-from .const import CONF_USERNAME, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities) -> None:
     """Set up TotalConnect alarm panels based on a config entry."""
-    username = entry.data[CONF_USERNAME]
     alarms = []
 
-    client = hass.data[DOMAIN][username].client
+    client = hass.data[DOMAIN][entry.entry_id].client
 
     for location_id, location in client.locations.items():
         location_name = location.location_name
