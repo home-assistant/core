@@ -2,17 +2,12 @@
 import logging
 
 from .const import (
-    ATTR_CAMERA_ID,
     ATTR_EVENT_TYPE,
     ATTR_FACE_URL,
-    ATTR_HOME_NAME,
     ATTR_ID,
     ATTR_IS_KNOWN,
-    ATTR_MESSAGE,
     ATTR_NAME,
     ATTR_PERSONS,
-    ATTR_SNAPSHOT_URL,
-    ATTR_VIGNETTE_URL,
     DATA_PERSONS,
     DEFAULT_PERSON,
     DOMAIN,
@@ -45,17 +40,12 @@ async def handle_webhook(hass, webhook_id, request):
 
 def evaluate_event(hass, event_data):
     """Evaluate events from webhook."""
-    published_data = {
-        ATTR_EVENT_TYPE: event_data.get(ATTR_EVENT_TYPE),
-        ATTR_HOME_NAME: event_data.get(ATTR_HOME_NAME),
-        ATTR_CAMERA_ID: event_data.get(ATTR_CAMERA_ID),
-        ATTR_MESSAGE: event_data.get(ATTR_MESSAGE),
-    }
+    published_data = dict(event_data)
 
-    event_type = event_data.get(ATTR_EVENT_TYPE)
+    event_type = published_data.get(ATTR_EVENT_TYPE)
 
     if event_type == "person":
-        for person in event_data.get(ATTR_PERSONS):
+        for person in published_data.get(ATTR_PERSONS):
             person_event_data = dict(published_data)
             person_event_data[ATTR_ID] = person.get(ATTR_ID)
             person_event_data[ATTR_NAME] = hass.data[DOMAIN][DATA_PERSONS].get(
@@ -67,20 +57,8 @@ def evaluate_event(hass, event_data):
                 event_type=NETATMO_EVENT,
                 event_data={"type": event_type, "data": person_event_data},
             )
-    elif event_type in [
-        "movement",
-        "human",
-        "animal",
-        "vehicle",
-    ]:
-        published_data[ATTR_VIGNETTE_URL] = event_data.get(ATTR_VIGNETTE_URL)
-        published_data[ATTR_SNAPSHOT_URL] = event_data.get(ATTR_SNAPSHOT_URL)
-        hass.bus.async_fire(
-            event_type=NETATMO_EVENT,
-            event_data={"type": event_type, "data": published_data},
-        )
     else:
         hass.bus.async_fire(
             event_type=NETATMO_EVENT,
-            event_data={"type": event_type, "data": event_data},
+            event_data={"type": event_type, "data": published_data},
         )
