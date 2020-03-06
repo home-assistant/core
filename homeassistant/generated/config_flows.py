@@ -82,6 +82,7 @@ FLOWS = [
     "samsungtv",
     "sense",
     "sentry",
+    "shopping_list",
     "simplisafe",
     "smartthings",
     "smhi",
