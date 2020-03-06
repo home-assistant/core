@@ -121,6 +121,7 @@ async def test_speaker_options_flow(hass: HomeAssistantType) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == ""
     assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
+    assert CONF_APPS not in result["data"]
 
 
 async def test_tv_options_flow_no_apps(hass: HomeAssistantType) -> None:
