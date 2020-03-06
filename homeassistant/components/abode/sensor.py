@@ -1,6 +1,4 @@
 """Support for Abode Security System sensors."""
-import logging
-
 import abodepy.helpers.constants as CONST
 
 from homeassistant.const import (
@@ -11,8 +9,6 @@ from homeassistant.const import (
 
 from . import AbodeDevice
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 # Sensor types: Name, icon
 SENSOR_TYPES = {

@@ -19,11 +19,15 @@ from .core.const import (
     CHANNEL_ON_OFF,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
+    EFFECT_BLINK,
+    EFFECT_BREATHE,
+    EFFECT_DEFAULT_VARIANT,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_SET_LEVEL,
 )
 from .core.registries import ZHA_ENTITIES
+from .core.typing import ZhaDeviceType
 from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,6 +40,8 @@ UPDATE_COLORLOOP_ACTION = 0x1
 UPDATE_COLORLOOP_DIRECTION = 0x2
 UPDATE_COLORLOOP_TIME = 0x4
 UPDATE_COLORLOOP_HUE = 0x8
+
+FLASH_EFFECTS = {light.FLASH_SHORT: EFFECT_BLINK, light.FLASH_LONG: EFFECT_BREATHE}
 
 UNSUPPORTED_ATTRIBUTE = 0x86
 SCAN_INTERVAL = timedelta(minutes=60)
@@ -61,7 +67,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class Light(ZhaEntity, light.Light):
     """Representation of a ZHA or ZLL light."""
 
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
+    def __init__(self, unique_id, zha_device: ZhaDeviceType, channels, **kwargs):
         """Initialize the ZHA light."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._supported_features = 0
@@ -74,6 +80,7 @@ class Light(ZhaEntity, light.Light):
         self._on_off_channel = self.cluster_channels.get(CHANNEL_ON_OFF)
         self._level_channel = self.cluster_channels.get(CHANNEL_LEVEL)
         self._color_channel = self.cluster_channels.get(CHANNEL_COLOR)
+        self._identify_channel = self.zha_device.channels.identify_ch
 
         if self._level_channel:
             self._supported_features |= light.SUPPORT_BRIGHTNESS
@@ -92,6 +99,9 @@ class Light(ZhaEntity, light.Light):
             if color_capabilities & CAPABILITIES_COLOR_LOOP:
                 self._supported_features |= light.SUPPORT_EFFECT
                 self._effect_list.append(light.EFFECT_COLORLOOP)
+
+        if self._identify_channel:
+            self._supported_features |= light.SUPPORT_FLASH
 
     @property
     def is_on(self) -> bool:
@@ -148,10 +158,10 @@ class Light(ZhaEntity, light.Light):
         return self._supported_features
 
     @callback
-    def async_set_state(self, state):
+    def async_set_state(self, attr_id, attr_name, value):
         """Set the state."""
-        self._state = bool(state)
-        if state:
+        self._state = bool(value)
+        if value:
             self._off_brightness = None
         self.async_schedule_update_ha_state()
 
@@ -188,6 +198,7 @@ class Light(ZhaEntity, light.Light):
         duration = transition * 10 if transition else 0
         brightness = kwargs.get(light.ATTR_BRIGHTNESS)
         effect = kwargs.get(light.ATTR_EFFECT)
+        flash = kwargs.get(light.ATTR_FLASH)
 
         if brightness is None and self._off_brightness is not None:
             brightness = self._off_brightness
@@ -276,6 +287,12 @@ class Light(ZhaEntity, light.Light):
             )
             t_log["color_loop_set"] = result
             self._effect = None
+
+        if flash is not None and self._supported_features & light.SUPPORT_FLASH:
+            result = await self._identify_channel.trigger_effect(
+                FLASH_EFFECTS[flash], EFFECT_DEFAULT_VARIANT
+            )
+            t_log["trigger_effect"] = result
 
         self._off_brightness = None
         self.debug("turned on: %s", t_log)

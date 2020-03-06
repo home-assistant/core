@@ -542,6 +542,7 @@ async def websocket_camera_thumbnail(hass, connection, msg):
 
     Async friendly.
     """
+    _LOGGER.warning("The websocket command 'camera_thumbnail' has been deprecated.")
     try:
         image = await async_get_image(hass, msg["entity_id"])
         await connection.send_big_result(

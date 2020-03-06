@@ -39,6 +39,7 @@ class Channels:
         """Initialize instance."""
         self._pools: List[zha_typing.ChannelPoolType] = []
         self._power_config = None
+        self._identify = None
         self._semaphore = asyncio.Semaphore(3)
         self._unique_id = str(zha_device.ieee)
         self._zdo_channel = base.ZDOChannel(zha_device.device.endpoints[0], zha_device)
@@ -59,6 +60,17 @@ class Channels:
         """Power configuration channel setter."""
         if self._power_config is None:
             self._power_config = channel
+
+    @property
+    def identify_ch(self) -> zha_typing.ChannelType:
+        """Return power configuration channel."""
+        return self._identify
+
+    @identify_ch.setter
+    def identify_ch(self, channel: zha_typing.ChannelType) -> None:
+        """Power configuration channel setter."""
+        if self._identify is None:
+            self._identify = channel
 
     @property
     def semaphore(self) -> asyncio.Semaphore:
@@ -223,7 +235,7 @@ class ChannelPool:
         """Create and add channels for all input clusters."""
         for cluster_id, cluster in self.endpoint.in_clusters.items():
             channel_class = zha_regs.ZIGBEE_CHANNEL_REGISTRY.get(
-                cluster_id, base.AttributeListeningChannel
+                cluster_id, base.ZigbeeChannel
             )
             # really ugly hack to deal with xiaomi using the door lock cluster
             # incorrectly.
@@ -231,7 +243,7 @@ class ChannelPool:
                 hasattr(cluster, "ep_attribute")
                 and cluster.ep_attribute == "multistate_input"
             ):
-                channel_class = base.AttributeListeningChannel
+                channel_class = base.ZigbeeChannel
             # end of ugly hack
             channel = channel_class(cluster, self)
             if channel.name == const.CHANNEL_POWER_CONFIGURATION:
@@ -242,6 +254,8 @@ class ChannelPool:
                     # on power configuration channel per device
                     continue
                 self._channels.power_configuration_ch = channel
+            elif channel.name == const.CHANNEL_IDENTIFY:
+                self._channels.identify_ch = channel
 
             self.all_channels[channel.id] = channel
 

@@ -48,6 +48,8 @@ from .const import (
     CLUSTER_COMMANDS_SERVER,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
+    EFFECT_DEFAULT_VARIANT,
+    EFFECT_OKAY,
     POWER_BATTERY_OR_UNKNOWN,
     POWER_MAINS_POWERED,
     SIGNAL_AVAILABLE,
@@ -87,7 +89,7 @@ class ZHADevice(LogMixin):
         self._available_signal = "{}_{}_{}".format(
             self.name, self.ieee, SIGNAL_AVAILABLE
         )
-        self._checkins_missed_count = 2
+        self._checkins_missed_count = 0
         self._unsub = async_dispatcher_connect(
             self.hass, self._available_signal, self.async_initialize
         )
@@ -284,8 +286,12 @@ class ZHADevice(LogMixin):
                         )
                         if not self._channels.pools:
                             return
-                        pool = self._channels.pools[0]
-                        basic_ch = pool.all_channels[f"{pool.id}:0"]
+                        try:
+                            pool = self._channels.pools[0]
+                            basic_ch = pool.all_channels[f"{pool.id}:0x0000"]
+                        except KeyError:
+                            self.debug("%s %s does not have a mandatory basic cluster")
+                            return
                         self.hass.async_create_task(
                             basic_ch.get_attribute_value(
                                 ATTR_MANUFACTURER, from_cache=False
@@ -337,6 +343,11 @@ class ZHADevice(LogMixin):
         self.debug("completed configuration")
         entry = self.gateway.zha_storage.async_create_or_update(self)
         self.debug("stored in registry: %s", entry)
+
+        if self._channels.identify_ch is not None:
+            await self._channels.identify_ch.trigger_effect(
+                EFFECT_OKAY, EFFECT_DEFAULT_VARIANT
+            )
 
     async def async_initialize(self, from_cache=False):
         """Initialize channels."""

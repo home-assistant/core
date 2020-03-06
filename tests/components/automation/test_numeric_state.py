@@ -3,8 +3,10 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+import voluptuous as vol
 
 import homeassistant.components.automation as automation
+from homeassistant.components.automation import numeric_state
 from homeassistant.core import Context
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -1229,3 +1231,11 @@ async def test_if_fires_on_entities_change_overlap_for_template(hass, calls):
         await hass.async_block_till_done()
         assert 2 == len(calls)
         assert "test.entity_2 - 0:00:10" == calls[1].data["some"]
+
+
+def test_below_above():
+    """Test above cannot be above below."""
+    with pytest.raises(vol.Invalid):
+        numeric_state.TRIGGER_SCHEMA(
+            {"platform": "numeric_state", "above": 1200, "below": 1000}
+        )

@@ -69,6 +69,7 @@ homeassistant/components/config/* @home-assistant/core
 homeassistant/components/configurator/* @home-assistant/core
 homeassistant/components/conversation/* @home-assistant/core
 homeassistant/components/coolmaster/* @OnFreund
+homeassistant/components/coronavirus/* @home_assistant/core
 homeassistant/components/counter/* @fabaff
 homeassistant/components/cover/* @home-assistant/core
 homeassistant/components/cpuspeed/* @fabaff
@@ -89,11 +90,13 @@ homeassistant/components/dynalite/* @ziv1234
 homeassistant/components/dyson/* @etheralm
 homeassistant/components/ecobee/* @marthoc
 homeassistant/components/ecovacs/* @OverloadUT
+homeassistant/components/edl21/* @mtdcr
 homeassistant/components/egardia/* @jeroenterheerdt
 homeassistant/components/eight_sleep/* @mezz64
 homeassistant/components/elgato/* @frenck
 homeassistant/components/elv/* @majuss
 homeassistant/components/emby/* @mezz64
+homeassistant/components/emoncms/* @borpin
 homeassistant/components/enigma2/* @fbradyirl
 homeassistant/components/enocean/* @bdurrer
 homeassistant/components/entur_public_transport/* @hfurubotten
@@ -277,6 +280,7 @@ homeassistant/components/pvoutput/* @fabaff
 homeassistant/components/qld_bushfire/* @exxamalte
 homeassistant/components/qnap/* @colinodell
 homeassistant/components/quantum_gateway/* @cisasteelersfan
+homeassistant/components/qvr_pro/* @oblogic7
 homeassistant/components/qwikswitch/* @kellerza
 homeassistant/components/rainbird/* @konikvranik
 homeassistant/components/raincloud/* @vanstinator
@@ -347,6 +351,7 @@ homeassistant/components/synology_srm/* @aerialls
 homeassistant/components/syslog/* @fabaff
 homeassistant/components/tado/* @michaelarnauts
 homeassistant/components/tahoma/* @philklei
+homeassistant/components/tankerkoenig/* @guillempages
 homeassistant/components/tautulli/* @ludeeus
 homeassistant/components/tellduslive/* @fredrike
 homeassistant/components/template/* @PhracturedBlue @tetienne

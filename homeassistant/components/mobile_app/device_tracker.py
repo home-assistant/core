@@ -101,11 +101,6 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         return self._entry.data[ATTR_DEVICE_NAME]
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def source_type(self):
         """Return the source type, eg gps or router, of the device."""
         return SOURCE_TYPE_GPS
