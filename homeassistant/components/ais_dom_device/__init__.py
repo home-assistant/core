@@ -195,8 +195,13 @@ async def _async_remove_ais_dom_entity(hass, entity_id):
             # remove this code and his name from json
             G_RF_CODES_DATA.async_remove_code(unique_id)
         elif platform == "ais_drives_service":
-            pass
-            # TODO remove drive, unmount and remove symlincs
+            # remove drive, unmount and remove symlincs
+            await hass.services.async_call(
+                "ais_drives_service", "rclone_remove_drive", {"name": unique_id}
+            )
+
+    if entity_id in registry.entities:
+        registry.async_remove(entity_id)
     hass.states.async_remove(entity_id)
 
 

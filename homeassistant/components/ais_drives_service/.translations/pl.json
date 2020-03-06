@@ -42,7 +42,7 @@
         },
         "error": {
             "identifier_exists": "Dysk z taką nazwą jest już dodany",
-            "drive_name_error": "Nazwa dysku nie może zawierać spacji i znaków specjalnych",
+            "drive_name_error": "Nazwa dysku nie może zawierać tylko małe litery i cyfry (bez spacji i znaków specjalnych)",
             "token_error": "Błędny token",
             "rclone_error": "Błąd połączenia"
         }

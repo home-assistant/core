@@ -42,7 +42,7 @@
         },
         "error": {
             "identifier_exists": "Name already registered",
-            "drive_name_error": "Drive name cannot contain spaces or special characters",
+            "drive_name_error": "The drive name cannot contain only lowercase letters and numbers (without spaces and special characters)",
             "token_error": "Bad token",
             "rclone_error": "Connection error"
         }

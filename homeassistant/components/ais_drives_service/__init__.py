@@ -764,7 +764,7 @@ class LocalData:
         )
 
         # delete drive folder
-        os.system("rm - rf -p /data/data/pl.sviete.dom/dom_cloud_drives/" + name)
+        os.system("rm -rf /data/data/pl.sviete.dom/dom_cloud_drives/" + name)
 
     def sync_locations(self, call):
         if "source_path" not in call.data:
