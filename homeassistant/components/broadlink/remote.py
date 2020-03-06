@@ -25,7 +25,7 @@ from homeassistant.components.remote import (
     SUPPORT_LEARN_COMMAND,
     RemoteDevice,
 )
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -41,6 +41,7 @@ DEFAULT_NAME = "Broadlink"
 DEFAULT_PORT = 80
 DEFAULT_RETRY = 3
 DEFAULT_TIMEOUT = 5
+DEFAULT_TYPE = 0x272A
 
 SCAN_INTERVAL = timedelta(minutes=2)
 
@@ -73,6 +74,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): vol.All(vol.Any(hostname, ip_address), cv.string),
         vol.Required(CONF_MAC): mac_address,
+        vol.Optional(CONF_TYPE, default=DEFAULT_TYPE): int,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
@@ -83,6 +85,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the Broadlink remote."""
     host = config[CONF_HOST]
     mac_addr = config[CONF_MAC]
+    devtype = config[CONF_TYPE]
     timeout = config[CONF_TIMEOUT]
     name = config[CONF_NAME]
     unique_id = f"remote_{hexlify(mac_addr).decode('utf-8')}"
@@ -92,7 +95,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return
     hass.data[DOMAIN][COMPONENT].append(unique_id)
 
-    api = broadlink.rm((host, DEFAULT_PORT), mac_addr, None)
+    api = broadlink.rm((host, DEFAULT_PORT), mac_addr, devtype)
     api.timeout = timeout
     code_storage = Store(hass, CODE_STORAGE_VERSION, f"broadlink_{unique_id}_codes")
     flag_storage = Store(hass, FLAG_STORAGE_VERSION, f"broadlink_{unique_id}_flags")
