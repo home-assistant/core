@@ -50,6 +50,10 @@ async def test_lg_tv(hass):
         SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_SELECT_SOURCE
     )
 
+    # The LG TV doesn't (at least at this patch level) report its media state via
+    # CURRENT_MEDIA_STATE. Therefore "ok" is the best we can say.
+    assert state.state == "ok"
+
     device_registry = await hass.helpers.device_registry.async_get_registry()
 
     device = device_registry.async_get(entry.device_id)
