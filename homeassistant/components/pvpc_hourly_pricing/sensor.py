@@ -280,6 +280,8 @@ class ElecPriceSensor(RestoreEntity):
             ts_local = _local(ts_utc)
             if ts_local.day > actual_time.day:
                 attr_key = f"price_next_day_{ts_local.hour:02d}h"
+            elif ts_local.day < actual_time.day:
+                attr_key = f"price_last_day_{ts_local.hour:02d}h"
             else:
                 attr_key = f"price_{ts_local.hour:02d}h"
             if attr_key in attributes:  # DST change with duplicated hour :)

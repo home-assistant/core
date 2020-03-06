@@ -31,7 +31,7 @@ async def _test_setup_from_yaml_config(
     config: dict,
     tariff: str = "discrimination",
 ):
-    hass.config.time_zone = timezone("Europe/Madrid")
+    hass.config.time_zone = timezone("Atlantic/Canary")
     mock_data = {"return_time": datetime(2019, 3, 30, 14, 0, tzinfo=date_util.UTC)}
 
     def mock_now():
@@ -41,7 +41,7 @@ async def _test_setup_from_yaml_config(
         assert await async_setup_component(hass, domain, config)
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test")
-        check_valid_state(state, tariff=tariff, key_attr="price_15h")
+        check_valid_state(state, tariff=tariff, key_attr="price_14h")
 
     assert aioclient_mock.call_count == 1
 

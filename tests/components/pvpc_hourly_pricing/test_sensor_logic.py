@@ -89,7 +89,7 @@ async def _process_time_step(
 
 async def test_dst_spring_change(hass, pvpc_aioclient_mock: AiohttpClientMocker):
     """Test price sensor behavior in DST change day with 23 local hours."""
-    hass.config.time_zone = timezone("Europe/Madrid")
+    hass.config.time_zone = timezone("Atlantic/Canary")
     config = {DOMAIN: [{CONF_NAME: "test_dst", ATTR_TARIFF: "discrimination"}]}
     mock_data = {"return_time": datetime(2019, 3, 30, 22, 0, tzinfo=date_util.UTC)}
 
@@ -100,20 +100,21 @@ async def test_dst_spring_change(hass, pvpc_aioclient_mock: AiohttpClientMocker)
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
-        state = await _process_time_step(hass, mock_data, "price_23h", 0.07022)
-        assert "price_02h" in state.attributes
+        state = await _process_time_step(hass, mock_data, "price_22h", 0.07022)
+        assert "price_01h" in state.attributes
 
-        state = await _process_time_step(hass, mock_data, "price_00h", 0.07328)
-        assert abs(state.attributes["price_01h"] - 0.07151) < 1e-6
-        assert "price_02h" not in state.attributes  # that hour doesn't exist :)
-        assert abs(state.attributes["price_03h"] - 0.0671) < 1e-6
+        state = await _process_time_step(hass, mock_data, "price_23h", 0.07328)
+        assert abs(state.attributes["price_next_day_00h"] - 0.07151) < 1e-6
+        # this local hour doesn't exist:
+        assert "price_next_day_01h" not in state.attributes
+        assert abs(state.attributes["price_next_day_02h"] - 0.0671) < 1e-6
 
     assert pvpc_aioclient_mock.call_count == 3
 
 
 async def test_dst_autumn_change(hass, pvpc_aioclient_mock: AiohttpClientMocker):
     """Test price sensor behavior in DST change day with 25 local hours."""
-    hass.config.time_zone = timezone("Europe/Madrid")
+    hass.config.time_zone = timezone("Atlantic/Canary")
     config = {DOMAIN: [{CONF_NAME: "test_dst", ATTR_TARIFF: "discrimination"}]}
     mock_data = {"return_time": datetime(2019, 10, 26, 22, 0, 0, tzinfo=date_util.UTC)}
 
@@ -124,11 +125,11 @@ async def test_dst_autumn_change(hass, pvpc_aioclient_mock: AiohttpClientMocker)
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
-        state = await _process_time_step(hass, mock_data, "price_00h", 0.06595)
-        assert abs(state.attributes["price_01h"] - 0.0606) < 1e-6
-        assert abs(state.attributes["price_02h"] - 0.05938) < 1e-6
-        assert abs(state.attributes["price_02h_d"] - 0.05931) < 1e-6
-        assert abs(state.attributes["price_03h"] - 0.05816) < 1e-6
+        state = await _process_time_step(hass, mock_data, "price_23h", 0.06595)
+        assert abs(state.attributes["price_next_day_00h"] - 0.0606) < 1e-6
+        assert abs(state.attributes["price_next_day_01h"] - 0.05938) < 1e-6
+        assert abs(state.attributes["price_next_day_01h_d"] - 0.05931) < 1e-6
+        assert abs(state.attributes["price_next_day_02h"] - 0.05816) < 1e-6
 
     assert pvpc_aioclient_mock.call_count == 1
 
