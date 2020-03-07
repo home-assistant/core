@@ -20,34 +20,14 @@ from homeassistant.data_entry_flow import (
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
-
-HOST = "1.2.3.4"
-NAME = "Roku 3"
-SSDP_LOCATION = "http://1.2.3.4/"
-UPNP_FRIENDLY_NAME = "My Roku 3"
-UPNP_SERIAL = "1GU48T017973"
-
-
-class MockDeviceInfo(object):
-    """Mock DeviceInfo for Roku."""
-
-    model_name = NAME
-    model_num = "4200X"
-    software_version = "7.5.0.09021"
-    serial_num = UPNP_SERIAL
-    user_device_name = UPNP_FRIENDLY_NAME
-    roku_type = "Box"
-
-    def __repr__(self):
-        """Return the object representation of DeviceInfo."""
-        return "<DeviceInfo: %s-%s, SW v%s, Ser# %s (%s)>" % (
-            self.model_name,
-            self.model_num,
-            self.software_version,
-            self.serial_num,
-            self.roku_type,
-        )
+from tests.components.roku import (
+    HOST,
+    SSDP_LOCATION,
+    UPNP_FRIENDLY_NAME,
+    UPNP_SERIAL,
+    MockDeviceInfo,
+    setup_integration,
+)
 
 
 async def async_configure_flow(
@@ -85,9 +65,7 @@ async def async_init_flow(
 
 async def test_duplicate_error(hass: HomeAssistantType) -> None:
     """Test that errors are shown when duplicates are added."""
-    MockConfigEntry(
-        domain=DOMAIN, unique_id=UPNP_SERIAL, data={CONF_HOST: HOST}
-    ).add_to_hass(hass)
+    await setup_integration(hass, skip_entry_setup=True)
 
     result = await async_init_flow(
         hass, context={CONF_SOURCE: SOURCE_IMPORT}, data={CONF_HOST: HOST}
