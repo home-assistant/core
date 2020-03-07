@@ -2,6 +2,7 @@
 import functools
 import logging
 import numbers
+from typing import Callable, List
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
@@ -12,6 +13,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_TEMPERATURE,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     POWER_WATT,
@@ -19,8 +21,9 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     UNIT_PERCENTAGE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 from homeassistant.util.temperature import fahrenheit_to_celsius
 
 from .core import discovery
@@ -66,7 +69,11 @@ CHANNEL_ST_HUMIDITY_CLUSTER = f"channel_0x{SMARTTHINGS_HUMIDITY_CLUSTER:04x}"
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity], bool], None],
+) -> None:
     """Set up the Zigbee Home Automation sensor from config entry."""
     entities_to_create = hass.data[DATA_ZHA][DOMAIN] = []
 

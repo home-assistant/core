@@ -2,11 +2,14 @@
 import functools
 import logging
 import time
+from typing import Callable, List
 
 from homeassistant.components.device_tracker import DOMAIN, SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 
 from .core import discovery
 from .core.const import (
@@ -24,7 +27,11 @@ STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity], bool], None],
+) -> None:
     """Set up the Zigbee Home Automation device tracker from config entry."""
     entities_to_create = hass.data[DATA_ZHA][DOMAIN] = []
 

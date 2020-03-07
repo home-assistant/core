@@ -1,6 +1,7 @@
 """Binary sensors on Zigbee Home Automation networks."""
 import functools
 import logging
+from typing import Callable, List
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_GAS,
@@ -14,9 +15,11 @@ from homeassistant.components.binary_sensor import (
     DOMAIN,
     BinarySensorDevice,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 
 from .core import discovery
 from .core.const import (
@@ -47,7 +50,11 @@ CLASS_MAPPING = {
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity], bool], None],
+) -> None:
     """Set up the Zigbee Home Automation binary sensor from config entry."""
     entities_to_create = hass.data[DATA_ZHA][DOMAIN] = []
 

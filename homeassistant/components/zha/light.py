@@ -2,13 +2,16 @@
 from datetime import timedelta
 import functools
 import logging
+from typing import Callable, List
 
 from zigpy.zcl.foundation import Status
 
 from homeassistant.components import light
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.color as color_util
 
@@ -49,7 +52,11 @@ STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, light.DOMAIN)
 PARALLEL_UPDATES = 5
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity], bool], None],
+) -> None:
     """Set up the Zigbee Home Automation light from config entry."""
     entities_to_create = hass.data[DATA_ZHA][light.DOMAIN] = []
 

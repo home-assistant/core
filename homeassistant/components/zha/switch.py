@@ -1,13 +1,16 @@
 """Switches on Zigbee Home Automation networks."""
 import functools
 import logging
+from typing import Callable, List
 
 from zigpy.zcl.foundation import Status
 
 from homeassistant.components.switch import DOMAIN, SwitchDevice
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 
 from .core import discovery
 from .core.const import (
@@ -24,7 +27,11 @@ _LOGGER = logging.getLogger(__name__)
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity], bool], None],
+) -> None:
     """Set up the Zigbee Home Automation switch from config entry."""
     entities_to_create = hass.data[DATA_ZHA][DOMAIN] = []
 

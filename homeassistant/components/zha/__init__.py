@@ -6,6 +6,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries, const as ha_const
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 
@@ -83,7 +84,9 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+) -> None:
     """Set up ZHA.
 
     Will automatically load components to support devices found on the network.
