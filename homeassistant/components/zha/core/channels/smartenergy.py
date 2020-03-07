@@ -1,5 +1,6 @@
 """Smart energy channels module for Zigbee Home Automation."""
 import logging
+from typing import Optional
 
 import zigpy.zcl.clusters.smartenergy as smartenergy
 
@@ -117,7 +118,7 @@ class Metering(ZigbeeChannel):
         super().attribute_updated(attrid, value * self._multiplier / self._divisor)
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> Optional[str]:
         """Return unit of measurement."""
         return self.unit_of_measure_map.get(self._unit_enum & 0x7F, "unknown")
 

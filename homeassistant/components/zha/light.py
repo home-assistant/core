@@ -2,14 +2,14 @@
 from datetime import timedelta
 import functools
 import logging
-from typing import Callable, List
+from typing import Any, Callable, Dict, List, Optional
 
 from zigpy.zcl.foundation import Status
 
 from homeassistant.components import light
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
@@ -30,7 +30,7 @@ from .core.const import (
     SIGNAL_SET_LEVEL,
 )
 from .core.registries import ZHA_ENTITIES
-from .core.typing import ZhaDeviceType
+from .core.typing import ChannelType, ZhaDeviceType
 from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,7 +74,13 @@ async def async_setup_entry(
 class Light(ZhaEntity, light.Light):
     """Representation of a ZHA or ZLL light."""
 
-    def __init__(self, unique_id, zha_device: ZhaDeviceType, channels, **kwargs):
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: List[ChannelType],
+        **kwargs,
+    ):
         """Initialize the ZHA light."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._supported_features = 0
@@ -123,12 +129,12 @@ class Light(ZhaEntity, light.Light):
         return self._brightness
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return state attributes."""
         attributes = {"off_brightness": self._off_brightness}
         return attributes
 
-    def set_level(self, value):
+    def set_level(self, value) -> None:
         """Set the brightness of this light between 0..254.
 
         brightness level 255 is a special value instructing the device to come
@@ -165,14 +171,14 @@ class Light(ZhaEntity, light.Light):
         return self._supported_features
 
     @callback
-    def async_set_state(self, attr_id, attr_name, value):
+    def async_set_state(self, attr_id: int, attr_name: str, value: Any):
         """Set the state."""
         self._state = bool(value)
         if value:
             self._off_brightness = None
         self.async_schedule_update_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         await self.async_accept_signal(
@@ -185,7 +191,7 @@ class Light(ZhaEntity, light.Light):
         async_track_time_interval(self.hass, self.refresh, SCAN_INTERVAL)
 
     @callback
-    def async_restore_last_state(self, last_state):
+    def async_restore_last_state(self, last_state: Optional[State]) -> None:
         """Restore previous state."""
         self._state = last_state.state == STATE_ON
         if "brightness" in last_state.attributes:
@@ -199,7 +205,7 @@ class Light(ZhaEntity, light.Light):
         if "effect" in last_state.attributes:
             self._effect = last_state.attributes["effect"]
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
         transition = kwargs.get(light.ATTR_TRANSITION)
         duration = transition * 10 if transition else 0
@@ -305,7 +311,7 @@ class Light(ZhaEntity, light.Light):
         self.debug("turned on: %s", t_log)
         self.async_schedule_update_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
         duration = kwargs.get(light.ATTR_TRANSITION)
         supports_level = self.supported_features & light.SUPPORT_BRIGHTNESS
@@ -327,12 +333,12 @@ class Light(ZhaEntity, light.Light):
 
         self.async_schedule_update_ha_state()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Attempt to retrieve on off state from the light."""
         await super().async_update()
         await self.async_get_state()
 
-    async def async_get_state(self, from_cache: bool = True):
+    async def async_get_state(self, from_cache: bool = True) -> None:
         """Attempt to retrieve on off state from the light."""
         self.debug("polling current state")
         if self._on_off_channel:

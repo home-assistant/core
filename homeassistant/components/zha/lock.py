@@ -1,7 +1,7 @@
 """Locks on Zigbee Home Automation networks."""
 import functools
 import logging
-from typing import Callable, List
+from typing import Any, Callable, Dict, List, Optional
 
 from zigpy.zcl.foundation import Status
 
@@ -12,7 +12,7 @@ from homeassistant.components.lock import (
     LockDevice,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
@@ -25,6 +25,7 @@ from .core.const import (
     SIGNAL_ATTR_UPDATED,
 )
 from .core.registries import ZHA_ENTITIES
+from .core.typing import ChannelType, ZhaDeviceType
 from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,7 +60,13 @@ async def async_setup_entry(
 class ZhaDoorLock(ZhaEntity, LockDevice):
     """Representation of a ZHA lock."""
 
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: List[ChannelType],
+        **kwargs,
+    ):
         """Init this sensor."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._doorlock_channel = self.cluster_channels.get(CHANNEL_DOORLOCK)
@@ -72,7 +79,7 @@ class ZhaDoorLock(ZhaEntity, LockDevice):
         )
 
     @callback
-    def async_restore_last_state(self, last_state):
+    def async_restore_last_state(self, last_state: Optional[State]):
         """Restore previous state."""
         self._state = VALUE_TO_STATE.get(last_state.state, last_state.state)
 
@@ -84,11 +91,11 @@ class ZhaDoorLock(ZhaEntity, LockDevice):
         return self._state == STATE_LOCKED
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return state attributes."""
         return self.state_attributes
 
-    async def async_lock(self, **kwargs):
+    async def async_lock(self, **kwargs) -> None:
         """Lock the lock."""
         result = await self._doorlock_channel.lock_door()
         if not isinstance(result, list) or result[0] is not Status.SUCCESS:
@@ -96,7 +103,7 @@ class ZhaDoorLock(ZhaEntity, LockDevice):
             return
         self.async_schedule_update_ha_state()
 
-    async def async_unlock(self, **kwargs):
+    async def async_unlock(self, **kwargs) -> None:
         """Unlock the lock."""
         result = await self._doorlock_channel.unlock_door()
         if not isinstance(result, list) or result[0] is not Status.SUCCESS:
@@ -104,18 +111,18 @@ class ZhaDoorLock(ZhaEntity, LockDevice):
             return
         self.async_schedule_update_ha_state()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Attempt to retrieve state from the lock."""
         await super().async_update()
         await self.async_get_state()
 
     @callback
-    def async_set_state(self, attr_id, attr_name, value):
+    def async_set_state(self, attr_id: int, attr_name: str, value: Any) -> None:
         """Handle state update from channel."""
         self._state = VALUE_TO_STATE.get(value, self._state)
         self.async_schedule_update_ha_state()
 
-    async def async_get_state(self, from_cache: bool = True):
+    async def async_get_state(self, from_cache: bool = True) -> None:
         """Attempt to retrieve state from the lock."""
         if self._doorlock_channel:
             state = await self._doorlock_channel.get_attribute_value(
@@ -124,6 +131,6 @@ class ZhaDoorLock(ZhaEntity, LockDevice):
             if state is not None:
                 self._state = VALUE_TO_STATE.get(state, self._state)
 
-    async def refresh(self, time):
+    async def refresh(self, time) -> None:
         """Call async_get_state at an interval."""
         await self.async_get_state(from_cache=False)

@@ -1,14 +1,14 @@
 """Switches on Zigbee Home Automation networks."""
 import functools
 import logging
-from typing import Callable, List
+from typing import Any, Callable, Dict, List, Optional
 
 from zigpy.zcl.foundation import Status
 
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
@@ -21,6 +21,7 @@ from .core.const import (
     SIGNAL_ATTR_UPDATED,
 )
 from .core.registries import ZHA_ENTITIES
+from .core.typing import ChannelType, ZhaDeviceType
 from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +50,13 @@ async def async_setup_entry(
 class Switch(ZhaEntity, SwitchDevice):
     """ZHA switch."""
 
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: List[ChannelType],
+        **kwargs,
+    ):
         """Initialize the ZHA switch."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._on_off_channel = self.cluster_channels.get(CHANNEL_ON_OFF)
@@ -61,7 +68,7 @@ class Switch(ZhaEntity, SwitchDevice):
             return False
         return self._state
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
         result = await self._on_off_channel.on()
         if not isinstance(result, list) or result[1] is not Status.SUCCESS:
@@ -69,7 +76,7 @@ class Switch(ZhaEntity, SwitchDevice):
         self._state = True
         self.async_schedule_update_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
         result = await self._on_off_channel.off()
         if not isinstance(result, list) or result[1] is not Status.SUCCESS:
@@ -78,17 +85,17 @@ class Switch(ZhaEntity, SwitchDevice):
         self.async_schedule_update_ha_state()
 
     @callback
-    def async_set_state(self, attr_id, attr_name, value):
+    def async_set_state(self, attr_id: int, attr_name: str, value: Any) -> None:
         """Handle state update from channel."""
         self._state = bool(value)
         self.async_schedule_update_ha_state()
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return state attributes."""
         return self.state_attributes
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         await self.async_accept_signal(
@@ -96,11 +103,11 @@ class Switch(ZhaEntity, SwitchDevice):
         )
 
     @callback
-    def async_restore_last_state(self, last_state):
+    def async_restore_last_state(self, last_state: Optional[State]) -> None:
         """Restore previous state."""
         self._state = last_state.state == STATE_ON
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Attempt to retrieve on off state from the switch."""
         await super().async_update()
         if self._on_off_channel:

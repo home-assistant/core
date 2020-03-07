@@ -1,7 +1,7 @@
 """Binary sensors on Zigbee Home Automation networks."""
 import functools
 import logging
-from typing import Callable, List
+from typing import Any, Callable, List, Optional
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_GAS,
@@ -17,7 +17,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
@@ -79,11 +79,11 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
         self._channel = channels[0]
         self._device_class = self.DEVICE_CLASS
 
-    async def get_device_class(self):
+    async def get_device_class(self) -> None:
         """Get the HA device class from the channel."""
         pass
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         await self.get_device_class()
@@ -92,7 +92,7 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
         )
 
     @callback
-    def async_restore_last_state(self, last_state):
+    def async_restore_last_state(self, last_state: Optional[State]) -> None:
         """Restore previous state."""
         super().async_restore_last_state(last_state)
         self._state = last_state.state == STATE_ON
@@ -105,17 +105,17 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
         return self._state
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> Optional[str]:
         """Return device class from component DEVICE_CLASSES."""
         return self._device_class
 
     @callback
-    def async_set_state(self, attr_id, attr_name, value):
+    def async_set_state(self, attr_id: int, attr_name: str, value: Any) -> None:
         """Set the state."""
         self._state = bool(value)
         self.async_schedule_update_ha_state()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Attempt to retrieve on off state from the binary sensor."""
         await super().async_update()
         attribute = getattr(self._channel, "value_attribute", "on_off")
@@ -154,7 +154,7 @@ class IASZone(BinarySensor):
         zone_type = await self._channel.get_attribute_value("zone_type")
         self._device_class = CLASS_MAPPING.get(zone_type)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Attempt to retrieve on off state from the binary sensor."""
         await super().async_update()
         value = await self._channel.get_attribute_value("zone_status")

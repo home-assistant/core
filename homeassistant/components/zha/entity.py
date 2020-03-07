@@ -3,8 +3,9 @@
 import asyncio
 import logging
 import time
+from typing import Any, Dict, List, Optional
 
-from homeassistant.core import callback
+from homeassistant.core import State, callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -20,6 +21,7 @@ from .core.const import (
     SIGNAL_REMOVE,
 )
 from .core.helpers import LogMixin
+from .core.typing import ChannelType, ZhaDeviceType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +32,14 @@ RESTART_GRACE_PERIOD = 7200  # 2 hours
 class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
     """A base class for ZHA entities."""
 
-    def __init__(self, unique_id, zha_device, channels, skip_entity_id=False, **kwargs):
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: List[ChannelType],
+        skip_entity_id: bool = False,
+        **kwargs,
+    ):
         """Init ZHA entity."""
         self._force_update = False
         self._should_poll = False
@@ -65,7 +74,7 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
         return self._zha_device
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return device specific state attributes."""
         return self._device_state_attributes
 
@@ -105,13 +114,13 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
         self.async_schedule_update_ha_state()
 
     @callback
-    def async_update_state_attribute(self, key, value):
+    def async_update_state_attribute(self, key: str, value: Any):
         """Update a single device state attribute."""
         self._device_state_attributes.update({key: value})
         self.async_schedule_update_ha_state()
 
     @callback
-    def async_set_state(self, attr_id, attr_name, value):
+    def async_set_state(self, attr_id: int, attr_name: str, value: Any):
         """Set the entity state."""
         pass
 
@@ -164,7 +173,7 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
         self.remove_future.set_result(True)
 
     @callback
-    def async_restore_last_state(self, last_state):
+    def async_restore_last_state(self, last_state: Optional[State]):
         """Restore previous state."""
         pass
 

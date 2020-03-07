@@ -1,7 +1,7 @@
 """Fans on Zigbee Home Automation networks."""
 import functools
 import logging
-from typing import Callable, List
+from typing import Any, Callable, Dict, List, Optional
 
 from homeassistant.components.fan import (
     DOMAIN,
@@ -13,7 +13,7 @@ from homeassistant.components.fan import (
     FanEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
@@ -26,6 +26,7 @@ from .core.const import (
     SIGNAL_ATTR_UPDATED,
 )
 from .core.registries import ZHA_ENTITIES
+from .core.typing import ChannelType, ZhaDeviceType
 from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,12 +77,18 @@ async def async_setup_entry(
 class ZhaFan(ZhaEntity, FanEntity):
     """Representation of a ZHA fan."""
 
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: List[ChannelType],
+        **kwargs,
+    ):
         """Init this sensor."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._fan_channel = self.cluster_channels.get(CHANNEL_FAN)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         await self.async_accept_signal(
@@ -89,7 +96,7 @@ class ZhaFan(ZhaEntity, FanEntity):
         )
 
     @callback
-    def async_restore_last_state(self, last_state):
+    def async_restore_last_state(self, last_state: Optional[State]):
         """Restore previous state."""
         self._state = VALUE_TO_SPEED.get(last_state.state, last_state.state)
 
@@ -116,12 +123,12 @@ class ZhaFan(ZhaEntity, FanEntity):
         return self._state != SPEED_OFF
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return state attributes."""
         return self.state_attributes
 
     @callback
-    def async_set_state(self, attr_id, attr_name, value):
+    def async_set_state(self, attr_id: int, attr_name: str, value: Any):
         """Handle state update from channel."""
         self._state = VALUE_TO_SPEED.get(value, self._state)
         self.async_schedule_update_ha_state()

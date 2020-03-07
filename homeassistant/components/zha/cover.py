@@ -2,14 +2,14 @@
 from datetime import timedelta
 import functools
 import logging
-from typing import Callable, List
+from typing import Any, Callable, List, Optional
 
 from zigpy.zcl.foundation import Status
 
 from homeassistant.components.cover import ATTR_POSITION, DOMAIN, CoverDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
@@ -22,6 +22,7 @@ from .core.const import (
     SIGNAL_ATTR_UPDATED,
 )
 from .core.registries import ZHA_ENTITIES
+from .core.typing import ChannelType, ZhaDeviceType
 from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,13 +53,19 @@ async def async_setup_entry(
 class ZhaCover(ZhaEntity, CoverDevice):
     """Representation of a ZHA cover."""
 
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: List[ChannelType],
+        **kwargs,
+    ):
         """Init this sensor."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._cover_channel = self.cluster_channels.get(CHANNEL_COVER)
         self._current_position = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         await self.async_accept_signal(
@@ -66,26 +73,26 @@ class ZhaCover(ZhaEntity, CoverDevice):
         )
 
     @callback
-    def async_restore_last_state(self, last_state):
+    def async_restore_last_state(self, last_state: Optional[State]) -> None:
         """Restore previous state."""
         self._state = last_state.state
         if "current_position" in last_state.attributes:
             self._current_position = last_state.attributes["current_position"]
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if the cover is closed."""
         if self.current_cover_position is None:
             return None
         return self.current_cover_position == 0
 
     @property
-    def is_opening(self):
+    def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return self._state == STATE_OPENING
 
     @property
-    def is_closing(self):
+    def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return self._state == STATE_CLOSING
 
@@ -98,7 +105,7 @@ class ZhaCover(ZhaEntity, CoverDevice):
         return self._current_position
 
     @callback
-    def async_set_position(self, attr_id, attr_name, value):
+    def async_set_position(self, attr_id: int, attr_name: str, value: Any) -> None:
         """Handle position update from channel."""
         _LOGGER.debug("setting position: %s", value)
         self._current_position = 100 - value
@@ -109,25 +116,25 @@ class ZhaCover(ZhaEntity, CoverDevice):
         self.async_schedule_update_ha_state()
 
     @callback
-    def async_update_state(self, state):
+    def async_update_state(self, state) -> None:
         """Handle state update from channel."""
         _LOGGER.debug("state=%s", state)
         self._state = state
         self.async_schedule_update_ha_state()
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs) -> None:
         """Open the window cover."""
         res = await self._cover_channel.up_open()
         if isinstance(res, list) and res[1] is Status.SUCCESS:
             self.async_update_state(STATE_OPENING)
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs) -> None:
         """Close the window cover."""
         res = await self._cover_channel.down_close()
         if isinstance(res, list) and res[1] is Status.SUCCESS:
             self.async_update_state(STATE_CLOSING)
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs) -> None:
         """Move the roller shutter to a specific position."""
         new_pos = kwargs[ATTR_POSITION]
         res = await self._cover_channel.go_to_lift_percentage(100 - new_pos)
@@ -136,19 +143,19 @@ class ZhaCover(ZhaEntity, CoverDevice):
                 STATE_CLOSING if new_pos < self._current_position else STATE_OPENING
             )
 
-    async def async_stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs) -> None:
         """Stop the window cover."""
         res = await self._cover_channel.stop()
         if isinstance(res, list) and res[1] is Status.SUCCESS:
             self._state = STATE_OPEN if self._current_position > 0 else STATE_CLOSED
             self.async_schedule_update_ha_state()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Attempt to retrieve the open/close state of the cover."""
         await super().async_update()
         await self.async_get_state()
 
-    async def async_get_state(self, from_cache: bool = True):
+    async def async_get_state(self, from_cache: bool = True) -> None:
         """Fetch the current state."""
         _LOGGER.debug("polling current state")
         if self._cover_channel:

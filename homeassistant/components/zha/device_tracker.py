@@ -2,7 +2,7 @@
 import functools
 import logging
 import time
-from typing import Callable, List
+from typing import Any, Callable, List
 
 from homeassistant.components.device_tracker import DOMAIN, SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
@@ -20,6 +20,7 @@ from .core.const import (
     SIGNAL_ATTR_UPDATED,
 )
 from .core.registries import ZHA_ENTITIES
+from .core.typing import ChannelType, ZhaDeviceType
 from .entity import ZhaEntity
 from .sensor import Battery
 
@@ -49,7 +50,13 @@ async def async_setup_entry(
 class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
     """Represent a tracked device."""
 
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: List[ChannelType],
+        **kwargs,
+    ):
         """Initialize the ZHA device tracker."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._battery_channel = self.cluster_channels.get(CHANNEL_POWER_CONFIGURATION)
@@ -58,7 +65,7 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
         self._should_poll = True
         self._battery_level = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         if self._battery_channel:
@@ -68,7 +75,7 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
                 self.async_battery_percentage_remaining_updated,
             )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Handle polling."""
         if self.zha_device.last_seen is None:
             self._connected = False
@@ -80,7 +87,7 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
                 self._connected = True
 
     @property
-    def is_connected(self):
+    def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return self._connected
 
@@ -90,7 +97,9 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
         return SOURCE_TYPE_ROUTER
 
     @callback
-    def async_battery_percentage_remaining_updated(self, attr_id, attr_name, value):
+    def async_battery_percentage_remaining_updated(
+        self, attr_id: int, attr_name: str, value: Any
+    ):
         """Handle tracking."""
         if not attr_name == "battery_percentage_remaining":
             return
@@ -100,7 +109,7 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
         self.async_schedule_update_ha_state()
 
     @property
-    def battery_level(self):
+    def battery_level(self) -> float:
         """Return the battery level of the device.
 
         Percentage from 0-100.
