@@ -271,37 +271,40 @@ class ZHADevice(LogMixin):
         zha_dev.channels = channels.Channels.new(zha_dev)
         return zha_dev
 
-    def _check_available(self, *_):
+    async def _check_available(self, *_):
         if self.last_seen is None:
             self.update_available(False)
-        else:
-            difference = time.time() - self.last_seen
-            if difference > _KEEP_ALIVE_INTERVAL:
-                if self._checkins_missed_count < _CHECKIN_GRACE_PERIODS:
-                    self._checkins_missed_count += 1
-                    if self.manufacturer != "LUMI":
-                        self.debug(
-                            "Attempting to checkin with device - missed checkins: %s",
-                            self._checkins_missed_count,
-                        )
-                        if not self._channels.pools:
-                            return
-                        try:
-                            pool = self._channels.pools[0]
-                            basic_ch = pool.all_channels[f"{pool.id}:0x0000"]
-                        except KeyError:
-                            self.debug("%s %s does not have a mandatory basic cluster")
-                            return
-                        self.hass.async_create_task(
-                            basic_ch.get_attribute_value(
-                                ATTR_MANUFACTURER, from_cache=False
-                            )
-                        )
-                else:
-                    self.update_available(False)
-            else:
-                self.update_available(True)
-                self._checkins_missed_count = 0
+            return
+
+        difference = time.time() - self.last_seen
+        if difference < _KEEP_ALIVE_INTERVAL:
+            self.update_available(True)
+            self._checkins_missed_count = 0
+            return
+
+        if (
+            self._checkins_missed_count >= _CHECKIN_GRACE_PERIODS
+            or self.manufacturer == "LUMI"
+            or not self._channels.pools
+        ):
+            self.update_available(False)
+            return
+
+        self._checkins_missed_count += 1
+        self.debug(
+            "Attempting to checkin with device - missed checkins: %s",
+            self._checkins_missed_count,
+        )
+        try:
+            pool = self._channels.pools[0]
+            basic_ch = pool.all_channels[f"{pool.id}:0x0000"]
+        except KeyError:
+            self.debug("does not have a mandatory basic cluster")
+            self.update_available(False)
+            return
+        res = await basic_ch.get_attribute_value(ATTR_MANUFACTURER, from_cache=False)
+        if res is not None:
+            self._checkins_missed_count = 0
 
     def update_available(self, available):
         """Set sensor availability."""
