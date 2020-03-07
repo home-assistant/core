@@ -1,6 +1,6 @@
 """The tests for the DirecTV Media player platform."""
 from datetime import datetime, timedelta
-from typing import Dict, Optional
+from typing import Optional
 from unittest.mock import call
 
 from asynctest import patch
@@ -12,8 +12,6 @@ from homeassistant.components.directv.media_player import (
     ATTR_MEDIA_RATING,
     ATTR_MEDIA_RECORDED,
     ATTR_MEDIA_START_TIME,
-    DEFAULT_DEVICE,
-    DOMAIN,
 )
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
@@ -40,7 +38,6 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_HOST,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -54,176 +51,29 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
+from tests.components.directv import (
+    CLIENT_ADDRESS,
+    HOST,
+    RECORDING,
+    MOCK_GET_LOCATIONS_MULTIPLE,
+    MockDirectvClass,
+    setup_integration,
+)
 
 ATTR_UNIQUE_ID = "unique_id"
 CLIENT_ENTITY_ID = f"{MP_DOMAIN}.bedroom_client"
-CLIENT_NAME = "Bedroom Client"
-CLIENT_ADDRESS = "2CA17D1CD30X"
 MAIN_ENTITY_ID = f"{MP_DOMAIN}.main_dvr"
-MAIN_NAME = "Main DVR"
-IP_ADDRESS = "127.0.0.1"
-
-LIVE = {
-    "callsign": "HASSTV",
-    "date": "20181110",
-    "duration": 3600,
-    "isOffAir": False,
-    "isPclocked": 1,
-    "isPpv": False,
-    "isRecording": False,
-    "isVod": False,
-    "major": 202,
-    "minor": 65535,
-    "offset": 1,
-    "programId": "102454523",
-    "rating": "No Rating",
-    "startTime": 1541876400,
-    "stationId": 3900947,
-    "title": "Using Home Assistant to automate your home",
-}
-
-RECORDING = {
-    "callsign": "HASSTV",
-    "date": "20181110",
-    "duration": 3600,
-    "isOffAir": False,
-    "isPclocked": 1,
-    "isPpv": False,
-    "isRecording": True,
-    "isVod": False,
-    "major": 202,
-    "minor": 65535,
-    "offset": 1,
-    "programId": "102454523",
-    "rating": "No Rating",
-    "startTime": 1541876400,
-    "stationId": 3900947,
-    "title": "Using Home Assistant to automate your home",
-    "uniqueId": "12345",
-    "episodeTitle": "Configure DirecTV platform.",
-}
-
-MOCK_CONFIG = {DOMAIN: [{CONF_HOST: IP_ADDRESS}]}
-
-MOCK_GET_LOCATIONS = {
-    "locations": [{"locationName": MAIN_NAME, "clientAddr": DEFAULT_DEVICE}],
-    "status": {
-        "code": 200,
-        "commandResult": 0,
-        "msg": "OK.",
-        "query": "/info/getLocations",
-    },
-}
-
-MOCK_GET_LOCATIONS_MULTIPLE = {
-    "locations": [
-        {"locationName": MAIN_NAME, "clientAddr": DEFAULT_DEVICE},
-        {"locationName": CLIENT_NAME, "clientAddr": CLIENT_ADDRESS},
-    ],
-    "status": {
-        "code": 200,
-        "commandResult": 0,
-        "msg": "OK.",
-        "query": "/info/getLocations",
-    },
-}
-
-MOCK_GET_VERSION = {
-    "accessCardId": "0021-1495-6572",
-    "receiverId": "0288 7745 5858",
-    "status": {
-        "code": 200,
-        "commandResult": 0,
-        "msg": "OK.",
-        "query": "/info/getVersion",
-    },
-    "stbSoftwareVersion": "0x4ed7",
-    "systemTime": 1281625203,
-    "version": "1.2",
-}
 
 # pylint: disable=redefined-outer-name
-
-
-class MockDirectvClass:
-    """A fake DirecTV DVR device."""
-
-    def __init__(self, ip, port=8080, clientAddr="0"):
-        """Initialize the fake DirecTV device."""
-        self._host = ip
-        self._port = port
-        self._device = clientAddr
-        self._standby = True
-        self._play = False
-
-        self.attributes = LIVE
-
-    def get_locations(self):
-        """Mock for get_locations method."""
-        return MOCK_GET_LOCATIONS
-
-    def get_serial_num(self):
-        """Mock for get_serial_num method."""
-        test_serial_num = {
-            "serialNum": "9999999999",
-            "status": {
-                "code": 200,
-                "commandResult": 0,
-                "msg": "OK.",
-                "query": "/info/getSerialNum",
-            },
-        }
-
-        return test_serial_num
-
-    def get_standby(self):
-        """Mock for get_standby method."""
-        return self._standby
-
-    def get_tuned(self):
-        """Mock for get_tuned method."""
-        if self._play:
-            self.attributes["offset"] = self.attributes["offset"] + 1
-
-        test_attributes = self.attributes
-        test_attributes["status"] = {
-            "code": 200,
-            "commandResult": 0,
-            "msg": "OK.",
-            "query": "/tv/getTuned",
-        }
-        return test_attributes
-
-    def get_version(self):
-        """Mock for get_version method."""
-        return MOCK_GET_VERSION
-
-    def key_press(self, keypress):
-        """Mock for key_press method."""
-        if keypress == "poweron":
-            self._standby = False
-            self._play = True
-        elif keypress == "poweroff":
-            self._standby = True
-            self._play = False
-        elif keypress == "play":
-            self._play = True
-        elif keypress == "pause" or keypress == "stop":
-            self._play = False
-
-    def tune_channel(self, source):
-        """Mock for tune_channel method."""
-        self.attributes["major"] = int(source)
 
 
 @fixture
 def client_dtv() -> MockDirectvClass:
     """Fixture for a client device."""
-    mocked_dtv = MockDirectvClass(IP_ADDRESS, clientAddr=CLIENT_ADDRESS)
+    mocked_dtv = MockDirectvClass(HOST, clientAddr=CLIENT_ADDRESS)
     mocked_dtv.attributes = RECORDING
     mocked_dtv._standby = False  # pylint: disable=protected-access
     return mocked_dtv
@@ -232,7 +82,7 @@ def client_dtv() -> MockDirectvClass:
 @fixture
 def main_dtv() -> MockDirectvClass:
     """Fixture for main DVR."""
-    return MockDirectvClass(IP_ADDRESS)
+    return MockDirectvClass(HOST)
 
 
 @fixture
@@ -241,82 +91,41 @@ def mock_now() -> datetime:
     return dt_util.utcnow()
 
 
-async def setup_directv(
-    hass: HomeAssistantType, config: Dict, main_dtv: MockDirectvClass
-) -> None:
+async def setup_directv(hass: HomeAssistantType, main_dtv: MockDirectvClass) -> None:
     """Set up mock DirecTV integration."""
     with patch(
-        "homeassistant.components.directv.config_flow.get_ip", return_value=IP_ADDRESS
-    ), patch(
-        "homeassistant.components.directv.config_flow.get_dtv_version",
-        return_value=MOCK_GET_VERSION,
-    ), patch(
         "homeassistant.components.directv.get_dtv_instance", return_value=main_dtv,
-    ), patch(
-        "homeassistant.components.directv.get_dtv_locations",
-        return_value=MOCK_GET_LOCATIONS,
-    ), patch(
-        "homeassistant.components.directv.get_dtv_version",
-        return_value=MOCK_GET_VERSION,
     ):
-        await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
+        await setup_integration(hass)
 
 
 async def setup_directv_with_instance_error(
-    hass: HomeAssistantType,
-    config: Dict,
-    main_dtv: MockDirectvClass,
-    client_dtv: Optional[MockDirectvClass] = None,
+    hass: HomeAssistantType, main_dtv: MockDirectvClass,
 ) -> None:
     """Set up mock DirecTV integration."""
     with patch(
-        "homeassistant.components.directv.config_flow.get_ip", return_value=IP_ADDRESS
-    ), patch(
-        "homeassistant.components.directv.config_flow.get_dtv_version",
-        return_value=MOCK_GET_VERSION,
-    ), patch(
         "homeassistant.components.directv.get_dtv_instance", return_value=main_dtv,
-    ), patch(
-        "homeassistant.components.directv.get_dtv_locations",
-        return_value=MOCK_GET_LOCATIONS_MULTIPLE,
-    ), patch(
-        "homeassistant.components.directv.get_dtv_version",
-        return_value=MOCK_GET_VERSION,
     ), patch(
         "homeassistant.components.directv.media_player.get_dtv_instance",
         return_value=None,
     ):
-        await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
+        await setup_integration(hass)
 
 
 async def setup_directv_with_locations(
-    hass: HomeAssistantType,
-    config: Dict,
-    main_dtv: MockDirectvClass,
-    client_dtv: Optional[MockDirectvClass] = None,
+    hass: HomeAssistantType, main_dtv: MockDirectvClass, client_dtv: MockDirectvClass,
 ) -> None:
     """Set up mock DirecTV integration."""
     with patch(
-        "homeassistant.components.directv.config_flow.get_ip", return_value=IP_ADDRESS
-    ), patch(
-        "homeassistant.components.directv.config_flow.get_dtv_version",
-        return_value=MOCK_GET_VERSION,
-    ), patch(
         "homeassistant.components.directv.get_dtv_instance", return_value=main_dtv,
     ), patch(
         "homeassistant.components.directv.get_dtv_locations",
         return_value=MOCK_GET_LOCATIONS_MULTIPLE,
     ), patch(
-        "homeassistant.components.directv.get_dtv_version",
-        return_value=MOCK_GET_VERSION,
-    ), patch(
         "homeassistant.components.directv.media_player.get_dtv_instance",
         return_value=client_dtv,
     ):
-        await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
+        await setup_integration(hass)
 
 
 async def async_turn_on(
@@ -396,7 +205,7 @@ async def async_play_media(
 
 async def test_setup(hass: HomeAssistantType, main_dtv) -> None:
     """Test setup with basic config."""
-    await setup_directv(hass, MOCK_CONFIG, main_dtv)
+    await setup_directv(hass, main_dtv)
     assert hass.states.get(MAIN_ENTITY_ID)
 
 
@@ -404,17 +213,17 @@ async def test_setup_with_multiple_locations(
     hass: HomeAssistantType, main_dtv: MockDirectvClass, client_dtv: MockDirectvClass
 ) -> None:
     """Test setup with basic config with client location."""
-    await setup_directv_with_locations(hass, MOCK_CONFIG, main_dtv, client_dtv)
+    await setup_directv_with_locations(hass, main_dtv, client_dtv)
 
     assert hass.states.get(MAIN_ENTITY_ID)
     assert hass.states.get(CLIENT_ENTITY_ID)
 
 
 async def test_setup_with_instance_error(
-    hass: HomeAssistantType, main_dtv: MockDirectvClass, client_dtv: MockDirectvClass
+    hass: HomeAssistantType, main_dtv: MockDirectvClass
 ) -> None:
     """Test setup with basic config with client location that results in instance error."""
-    await setup_directv_with_instance_error(hass, MOCK_CONFIG, main_dtv, client_dtv)
+    await setup_directv_with_instance_error(hass, main_dtv)
 
     assert hass.states.get(MAIN_ENTITY_ID)
     assert hass.states.async_entity_ids(MP_DOMAIN) == [MAIN_ENTITY_ID]
@@ -424,7 +233,7 @@ async def test_unique_id(
     hass: HomeAssistantType, main_dtv: MockDirectvClass, client_dtv: MockDirectvClass
 ) -> None:
     """Test unique id."""
-    await setup_directv_with_locations(hass, MOCK_CONFIG, main_dtv, client_dtv)
+    await setup_directv_with_locations(hass, main_dtv, client_dtv)
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
@@ -439,7 +248,7 @@ async def test_supported_features(
     hass: HomeAssistantType, main_dtv: MockDirectvClass, client_dtv: MockDirectvClass
 ) -> None:
     """Test supported features."""
-    await setup_directv_with_locations(hass, MOCK_CONFIG, main_dtv, client_dtv)
+    await setup_directv_with_locations(hass, main_dtv, client_dtv)
 
     # Features supported for main DVR
     state = hass.states.get(MAIN_ENTITY_ID)
@@ -475,7 +284,7 @@ async def test_check_attributes(
     client_dtv: MockDirectvClass,
 ) -> None:
     """Test attributes."""
-    await setup_directv_with_locations(hass, MOCK_CONFIG, main_dtv, client_dtv)
+    await setup_directv_with_locations(hass, main_dtv, client_dtv)
 
     next_update = mock_now + timedelta(minutes=5)
     with patch("homeassistant.util.dt.utcnow", return_value=next_update):
@@ -530,7 +339,7 @@ async def test_main_services(
     client_dtv: MockDirectvClass,
 ) -> None:
     """Test the different services."""
-    await setup_directv_with_locations(hass, MOCK_CONFIG, main_dtv, client_dtv)
+    await setup_directv_with_locations(hass, main_dtv, client_dtv)
 
     next_update = mock_now + timedelta(minutes=5)
     with patch("homeassistant.util.dt.utcnow", return_value=next_update):
@@ -616,7 +425,7 @@ async def test_available(
     client_dtv: MockDirectvClass,
 ) -> None:
     """Test available status."""
-    await setup_directv_with_locations(hass, MOCK_CONFIG, main_dtv, client_dtv)
+    await setup_directv_with_locations(hass, main_dtv, client_dtv)
 
     next_update = mock_now + timedelta(minutes=5)
     with patch("homeassistant.util.dt.utcnow", return_value=next_update):

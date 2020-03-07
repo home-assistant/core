@@ -17,25 +17,13 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-
-HOST = "127.0.0.1"
-RECEIVER_ID = "028877455858"
-SSDP_LOCATION = "http://127.0.0.1/"
-UPNP_SERIAL = "RID=028877455858"
-
-MOCK_GET_VERSION = {
-    "accessCardId": "0021-1495-6572",
-    "receiverId": "0288 7745 5858",
-    "status": {
-        "code": 200,
-        "commandResult": 0,
-        "msg": "OK.",
-        "query": "/info/getVersion",
-    },
-    "stbSoftwareVersion": "0x4ed7",
-    "systemTime": 1281625203,
-    "version": "1.2",
-}
+from tests.components.directv import (
+    HOST,
+    RECEIVER_ID,
+    SSDP_LOCATION,
+    UPNP_SERIAL,
+    MOCK_GET_VERSION,
+)
 
 
 async def async_configure_flow(

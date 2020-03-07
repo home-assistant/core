@@ -5,10 +5,13 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from tests.common import MockConfigEntry
 
+CLIENT_NAME = "Bedroom Client"
+CLIENT_ADDRESS = "2CA17D1CD30X"
 DEFAULT_DEVICE = "0"
 HOST = "127.0.0.1"
 MAIN_NAME = "Main DVR"
 RECEIVER_ID = "028877455858"
+SSDP_LOCATION = "http://127.0.0.1/"
 UPNP_SERIAL = "RID=028877455858"
 
 LIVE = {
@@ -51,8 +54,23 @@ RECORDING = {
     "episodeTitle": "Configure DirecTV platform.",
 }
 
+MOCK_CONFIG = {DOMAIN: [{CONF_HOST: HOST}]}
+
 MOCK_GET_LOCATIONS = {
     "locations": [{"locationName": MAIN_NAME, "clientAddr": DEFAULT_DEVICE}],
+    "status": {
+        "code": 200,
+        "commandResult": 0,
+        "msg": "OK.",
+        "query": "/info/getLocations",
+    },
+}
+
+MOCK_GET_LOCATIONS_MULTIPLE = {
+    "locations": [
+        {"locationName": MAIN_NAME, "clientAddr": DEFAULT_DEVICE},
+        {"locationName": CLIENT_NAME, "clientAddr": CLIENT_ADDRESS},
+    ],
     "status": {
         "code": 200,
         "commandResult": 0,
