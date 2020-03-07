@@ -738,8 +738,11 @@ class VacuumCapabilities(AlexaEntity):
     def interfaces(self):
         """Yield the supported interfaces."""
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if (supported & vacuum.SUPPORT_TURN_ON) and (
-            supported & vacuum.SUPPORT_TURN_OFF
+        if (
+            (supported & vacuum.SUPPORT_TURN_ON)
+            and (supported & vacuum.SUPPORT_TURN_OFF)
+            or (supported & vacuum.SUPPORT_START)
+            and (supported & vacuum.SUPPORT_STOP)
         ):
             yield AlexaPowerController(self.entity)
 
