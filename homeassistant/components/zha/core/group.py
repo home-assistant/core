@@ -1,10 +1,14 @@
 """Group for Zigbee Home Automation."""
 import asyncio
 import logging
+from typing import Any, Dict, List
 
-from homeassistant.core import callback
+from zigpy.groups import Group
+
+from homeassistant.core import HomeAssistant, callback
 
 from .helpers import LogMixin
+from .typing import ZhaDeviceType, ZhaGatewayType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -12,29 +16,31 @@ _LOGGER = logging.getLogger(__name__)
 class ZHAGroup(LogMixin):
     """ZHA Zigbee group object."""
 
-    def __init__(self, hass, zha_gateway, zigpy_group):
+    def __init__(
+        self, hass: HomeAssistant, zha_gateway: ZhaGatewayType, zigpy_group: Group
+    ):
         """Initialize the group."""
         self.hass = hass
         self._zigpy_group = zigpy_group
         self._zha_gateway = zha_gateway
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return group name."""
         return self._zigpy_group.name
 
     @property
-    def group_id(self):
+    def group_id(self) -> int:
         """Return group name."""
         return self._zigpy_group.group_id
 
     @property
-    def endpoint(self):
+    def endpoint(self) -> int:
         """Return the endpoint for this group."""
         return self._zigpy_group.endpoint
 
     @property
-    def members(self):
+    def members(self) -> List[ZhaDeviceType]:
         """Return the ZHA devices that are members of this group."""
         return [
             self._zha_gateway.devices.get(member_ieee[0])
@@ -42,7 +48,7 @@ class ZHAGroup(LogMixin):
             if member_ieee[0] in self._zha_gateway.devices
         ]
 
-    async def async_add_members(self, member_ieee_addresses):
+    async def async_add_members(self, member_ieee_addresses: List[str]) -> None:
         """Add members to this group."""
         if len(member_ieee_addresses) > 1:
             tasks = []
@@ -56,7 +62,7 @@ class ZHAGroup(LogMixin):
                 member_ieee_addresses[0]
             ].async_add_to_group(self.group_id)
 
-    async def async_remove_members(self, member_ieee_addresses):
+    async def async_remove_members(self, member_ieee_addresses: List[str]) -> None:
         """Remove members from this group."""
         if len(member_ieee_addresses) > 1:
             tasks = []
@@ -73,7 +79,7 @@ class ZHAGroup(LogMixin):
             ].async_remove_from_group(self.group_id)
 
     @callback
-    def async_get_info(self):
+    def async_get_info(self) -> Dict[str, Any]:
         """Get ZHA group info."""
         group_info = {}
         group_info["group_id"] = self.group_id
@@ -83,7 +89,7 @@ class ZHAGroup(LogMixin):
         ]
         return group_info
 
-    def log(self, level, msg, *args):
+    def log(self, level: str, msg: str, *args):
         """Log a message."""
         msg = f"[%s](%s): {msg}"
         args = (self.name, self.group_id) + args

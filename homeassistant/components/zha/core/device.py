@@ -5,11 +5,13 @@ from enum import Enum
 import logging
 import random
 import time
+from typing import Any, Dict, Union
 
 from zigpy import types
 import zigpy.exceptions
 from zigpy.profiles import zha, zll
 import zigpy.quirks
+from zigpy.types.named import EUI64
 from zigpy.zcl.clusters.general import Groups
 import zigpy.zdo.types as zdo_types
 
@@ -108,11 +110,11 @@ class ZHADevice(LogMixin):
         self._channels = channels.Channels(self)
 
     @property
-    def device_id(self):
+    def device_id(self) -> str:
         """Return the HA device registry device id."""
         return self._ha_device_id
 
-    def set_device_id(self, device_id):
+    def set_device_id(self, device_id: str):
         """Set the HA device registry device id."""
         self._ha_device_id = device_id
 
@@ -133,48 +135,48 @@ class ZHADevice(LogMixin):
         self._channels = value
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return device name."""
         return f"{self.manufacturer} {self.model}"
 
     @property
-    def ieee(self):
+    def ieee(self) -> EUI64:
         """Return ieee address for device."""
         return self._zigpy_device.ieee
 
     @property
-    def manufacturer(self):
+    def manufacturer(self) -> str:
         """Return manufacturer for device."""
         if self._zigpy_device.manufacturer is None:
             return UNKNOWN_MANUFACTURER
         return self._zigpy_device.manufacturer
 
     @property
-    def model(self):
+    def model(self) -> str:
         """Return model for device."""
         if self._zigpy_device.model is None:
             return UNKNOWN_MODEL
         return self._zigpy_device.model
 
     @property
-    def manufacturer_code(self):
+    def manufacturer_code(self) -> Union[int, None]:
         """Return the manufacturer code for the device."""
         if self._zigpy_device.node_desc.is_valid:
             return self._zigpy_device.node_desc.manufacturer_code
         return None
 
     @property
-    def nwk(self):
+    def nwk(self) -> int:
         """Return nwk for device."""
         return self._zigpy_device.nwk
 
     @property
-    def lqi(self):
+    def lqi(self) -> int:
         """Return lqi for device."""
         return self._zigpy_device.lqi
 
     @property
-    def rssi(self):
+    def rssi(self) -> int:
         """Return rssi for device."""
         return self._zigpy_device.rssi
 
@@ -184,12 +186,12 @@ class ZHADevice(LogMixin):
         return self._zigpy_device.last_seen
 
     @property
-    def is_mains_powered(self):
+    def is_mains_powered(self) -> bool:
         """Return true if device is mains powered."""
         return self._zigpy_device.node_desc.is_mains_powered
 
     @property
-    def device_type(self):
+    def device_type(self) -> str:
         """Return the logical device type for the device."""
         node_descriptor = self._zigpy_device.node_desc
         return (
@@ -197,29 +199,29 @@ class ZHADevice(LogMixin):
         )
 
     @property
-    def power_source(self):
+    def power_source(self) -> str:
         """Return the power source for the device."""
         return (
             POWER_MAINS_POWERED if self.is_mains_powered else POWER_BATTERY_OR_UNKNOWN
         )
 
     @property
-    def is_router(self):
+    def is_router(self) -> bool:
         """Return true if this is a routing capable device."""
         return self._zigpy_device.node_desc.is_router
 
     @property
-    def is_coordinator(self):
+    def is_coordinator(self) -> bool:
         """Return true if this device represents the coordinator."""
         return self._zigpy_device.node_desc.is_coordinator
 
     @property
-    def is_end_device(self):
+    def is_end_device(self) -> bool:
         """Return true if this device is an end device."""
         return self._zigpy_device.node_desc.is_end_device
 
     @property
-    def is_groupable(self):
+    def is_groupable(self) -> bool:
         """Return true if this device has a group cluster."""
         if not self.available:
             return False
@@ -230,12 +232,12 @@ class ZHADevice(LogMixin):
                     return True
 
     @property
-    def skip_configuration(self):
+    def skip_configuration(self) -> bool:
         """Return true if the device should not issue configuration related commands."""
         return self._zigpy_device.skip_configuration
 
     @property
-    def gateway(self):
+    def gateway(self) -> zha_typing.ZhaGatewayType:
         """Return the gateway for this device."""
         return self._zha_gateway
 
@@ -252,11 +254,11 @@ class ZHADevice(LogMixin):
         return self._available_signal
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if sensor is available."""
         return self._available
 
-    def set_available(self, available):
+    def set_available(self, available: bool) -> None:
         """Set availability from restore and prevent signals."""
         self._available = available
 
@@ -273,7 +275,7 @@ class ZHADevice(LogMixin):
         zha_dev.channels = channels.Channels.new(zha_dev)
         return zha_dev
 
-    async def _check_available(self, *_):
+    async def _check_available(self, *_) -> None:
         if self.last_seen is None:
             self.update_available(False)
             return
@@ -308,7 +310,7 @@ class ZHADevice(LogMixin):
         if res is not None:
             self._checkins_missed_count = 0
 
-    def update_available(self, available):
+    def update_available(self, available: bool) -> None:
         """Set sensor availability."""
         if self._available != available and available:
             # Update the state the first time the device comes online
@@ -319,7 +321,7 @@ class ZHADevice(LogMixin):
         self._available = available
 
     @property
-    def device_info(self):
+    def device_info(self) -> Dict[str, Any]:
         """Return a device description for device."""
         ieee = str(self.ieee)
         time_struct = time.localtime(self.last_seen)
@@ -341,7 +343,7 @@ class ZHADevice(LogMixin):
             ATTR_DEVICE_TYPE: self.device_type,
         }
 
-    async def async_configure(self):
+    async def async_configure(self) -> None:
         """Configure the device."""
         self.debug("started configuration")
         await self._channels.async_configure()
@@ -354,7 +356,7 @@ class ZHADevice(LogMixin):
                 EFFECT_OKAY, EFFECT_DEFAULT_VARIANT
             )
 
-    async def async_initialize(self, from_cache: bool = False):
+    async def async_initialize(self, from_cache: bool = False) -> None:
         """Initialize channels."""
         self.debug("started initialization")
         await self._channels.async_initialize(from_cache)
@@ -363,17 +365,17 @@ class ZHADevice(LogMixin):
         self.debug("completed initialization")
 
     @callback
-    def async_unsub_dispatcher(self):
+    def async_unsub_dispatcher(self) -> None:
         """Unsubscribe the dispatcher."""
         self._unsub()
 
     @callback
-    def async_update_last_seen(self, last_seen):
+    def async_update_last_seen(self, last_seen) -> None:
         """Set last seen on the zigpy device."""
         self._zigpy_device.last_seen = last_seen
 
     @callback
-    def async_get_info(self):
+    def async_get_info(self) -> Dict[str, Any]:
         """Get ZHA device information."""
         device_info = {}
         device_info.update(self.device_info)

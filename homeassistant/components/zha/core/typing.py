@@ -17,6 +17,7 @@ ZDOChannelType = "ZDOChannel"
 ZhaDeviceType = "ZHADevice"
 ZhaEntityType = "ZHAEntity"
 ZhaGatewayType = "ZHAGateway"
+ZHAGroupType = "ZHAGroup"
 ZigpyClusterType = zigpy.zcl.Cluster
 ZigpyDeviceType = zigpy.device.Device
 ZigpyEndpointType = zigpy.endpoint.Endpoint
@@ -38,3 +39,4 @@ if TYPE_CHECKING:
     ZhaDeviceType = homeassistant.components.zha.core.device.ZHADevice
     ZhaEntityType = homeassistant.components.zha.entity.ZhaEntity
     ZhaGatewayType = homeassistant.components.zha.core.gateway.ZHAGateway
+    ZHAGroupType = homeassistant.components.zha.core.group.ZHAGroup

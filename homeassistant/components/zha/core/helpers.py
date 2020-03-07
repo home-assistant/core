@@ -1,13 +1,16 @@
 """Helpers for Zigbee Home Automation."""
 import collections
 import logging
+from typing import Any, Dict, List, Union
 
 import zigpy.types
+from zigpy.zcl import Cluster
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 from .const import CLUSTER_TYPE_IN, CLUSTER_TYPE_OUT, DATA_ZHA, DATA_ZHA_GATEWAY
 from .registries import BINDABLE_CLUSTERS
+from .typing import ZhaDeviceType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,8 +18,12 @@ ClusterPair = collections.namedtuple("ClusterPair", "source_cluster target_clust
 
 
 async def safe_read(
-    cluster, attributes, allow_cache=True, only_cache=False, manufacturer=None
-):
+    cluster: Cluster,
+    attributes: List[Union[str, int]],
+    allow_cache: bool = True,
+    only_cache: bool = False,
+    manufacturer: int = None,
+) -> Dict[str, Any]:
     """Swallow all exceptions from network read.
 
     If we throw during initialization, setup fails. Rather have an entity that
@@ -35,7 +42,9 @@ async def safe_read(
         return {}
 
 
-async def get_matched_clusters(source_zha_device, target_zha_device):
+async def get_matched_clusters(
+    source_zha_device: ZhaDeviceType, target_zha_device: ZhaDeviceType
+) -> List[Cluster]:
     """Get matched input/output cluster pairs for 2 devices."""
     source_clusters = source_zha_device.async_get_std_clusters()
     target_clusters = target_zha_device.async_get_std_clusters()
@@ -60,7 +69,9 @@ async def get_matched_clusters(source_zha_device, target_zha_device):
 
 
 @callback
-def async_is_bindable_target(source_zha_device, target_zha_device):
+def async_is_bindable_target(
+    source_zha_device: ZhaDeviceType, target_zha_device: ZhaDeviceType
+) -> bool:
     """Determine if target is bindable to source."""
     source_clusters = source_zha_device.async_get_std_clusters()
     target_clusters = target_zha_device.async_get_std_clusters()
@@ -75,7 +86,7 @@ def async_is_bindable_target(source_zha_device, target_zha_device):
     return False
 
 
-async def async_get_zha_device(hass, device_id):
+async def async_get_zha_device(hass: HomeAssistant, device_id: str) -> ZhaDeviceType:
     """Get a ZHA device for the given device registry id."""
     device_registry = await hass.helpers.device_registry.async_get_registry()
     registry_device = device_registry.async_get(device_id)
