@@ -21,7 +21,9 @@ ZHAGroupType = "ZHAGroup"
 ZigpyClusterType = zigpy.zcl.Cluster
 ZigpyDeviceType = zigpy.device.Device
 ZigpyEndpointType = zigpy.endpoint.Endpoint
+ZigpyGroupType = zigpy.group.Group
 ZigpyZdoType = zigpy.zdo.ZDO
+ZigpyEUI64Type = zigpy.types.named.EUI64
 
 if TYPE_CHECKING:
     import homeassistant.components.zha.core.channels as channels

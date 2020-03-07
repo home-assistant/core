@@ -4,13 +4,12 @@ import logging
 from typing import Any, Dict, List, Union
 
 import zigpy.types
-from zigpy.zcl import Cluster
 
 from homeassistant.core import HomeAssistant, callback
 
 from .const import CLUSTER_TYPE_IN, CLUSTER_TYPE_OUT, DATA_ZHA, DATA_ZHA_GATEWAY
 from .registries import BINDABLE_CLUSTERS
-from .typing import ZhaDeviceType
+from .typing import ZhaDeviceType, ZigpyClusterType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +17,7 @@ ClusterPair = collections.namedtuple("ClusterPair", "source_cluster target_clust
 
 
 async def safe_read(
-    cluster: Cluster,
+    cluster: ZigpyClusterType,
     attributes: List[Union[str, int]],
     allow_cache: bool = True,
     only_cache: bool = False,
@@ -44,7 +43,7 @@ async def safe_read(
 
 async def get_matched_clusters(
     source_zha_device: ZhaDeviceType, target_zha_device: ZhaDeviceType
-) -> List[Cluster]:
+) -> List[ZigpyClusterType]:
     """Get matched input/output cluster pairs for 2 devices."""
     source_clusters = source_zha_device.async_get_std_clusters()
     target_clusters = target_zha_device.async_get_std_clusters()

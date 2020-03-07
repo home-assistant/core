@@ -9,8 +9,6 @@ import traceback
 from typing import Dict, List, Union
 
 import zigpy.device as zigpy_dev
-from zigpy.groups import Group
-from zigpy.types.named import EUI64
 
 from homeassistant.components.system_log import LogEntry, _figure_out_source
 from homeassistant.config_entries import ConfigEntry
@@ -79,7 +77,6 @@ from .group import ZHAGroup
 from .patches import apply_application_controller_patch
 from .registries import RADIO_TYPES
 from .store import async_get_registry
-from .typing import ZhaDeviceType, ZigpyDeviceType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -174,7 +171,7 @@ class ZHAGateway:
         )
         async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES)
 
-    def device_joined(self, device: ZigpyDeviceType) -> None:
+    def device_joined(self, device: zha_typing.ZigpyDeviceType) -> None:
         """Handle device joined.
 
         At this point, no information about the device is known other than its
@@ -190,7 +187,7 @@ class ZHAGateway:
             },
         )
 
-    def raw_device_initialized(self, device: ZigpyDeviceType) -> None:
+    def raw_device_initialized(self, device: zha_typing.ZigpyDeviceType) -> None:
         """Handle a device initialization without quirks loaded."""
         manuf = device.manufacturer
         async_dispatcher_send(
@@ -206,43 +203,47 @@ class ZHAGateway:
             },
         )
 
-    def device_initialized(self, device: ZigpyDeviceType) -> None:
+    def device_initialized(self, device: zha_typing.ZigpyDeviceType) -> None:
         """Handle device joined and basic information discovered."""
         self._hass.async_create_task(self.async_device_initialized(device))
 
-    def device_left(self, device: ZigpyDeviceType) -> None:
+    def device_left(self, device: zha_typing.ZigpyDeviceType) -> None:
         """Handle device leaving the network."""
         self.async_update_device(device, False)
 
-    def group_member_removed(self, zigpy_group: Group, endpoint) -> None:
+    def group_member_removed(
+        self, zigpy_group: zha_typing.ZigpyGroupType, endpoint
+    ) -> None:
         """Handle zigpy group member removed event."""
         # need to handle endpoint correctly on groups
         zha_group = self._async_get_or_create_group(zigpy_group)
         zha_group.info("group_member_removed - endpoint: %s", endpoint)
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_MEMBER_REMOVED)
 
-    def group_member_added(self, zigpy_group: Group, endpoint) -> None:
+    def group_member_added(
+        self, zigpy_group: zha_typing.ZigpyGroupType, endpoint
+    ) -> None:
         """Handle zigpy group member added event."""
         # need to handle endpoint correctly on groups
         zha_group = self._async_get_or_create_group(zigpy_group)
         zha_group.info("group_member_added - endpoint: %s", endpoint)
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_MEMBER_ADDED)
 
-    def group_added(self, zigpy_group: Group) -> None:
+    def group_added(self, zigpy_group: zha_typing.ZigpyGroupType) -> None:
         """Handle zigpy group added event."""
         zha_group = self._async_get_or_create_group(zigpy_group)
         zha_group.info("group_added")
         # need to dispatch for entity creation here
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_ADDED)
 
-    def group_removed(self, zigpy_group: Group) -> None:
+    def group_removed(self, zigpy_group: zha_typing.ZigpyGroupType) -> None:
         """Handle zigpy group added event."""
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_REMOVED)
         zha_group = self._groups.pop(zigpy_group.group_id, None)
         zha_group.info("group_removed")
 
     def _send_group_gateway_message(
-        self, zigpy_group: Group, gateway_message_type: str
+        self, zigpy_group: zha_typing.ZigpyGroupType, gateway_message_type: str
     ) -> None:
         """Send the gareway event for a zigpy group event."""
         zha_group = self._groups.get(zigpy_group.group_id, None)
@@ -268,7 +269,7 @@ class ZHAGateway:
         if reg_device is not None:
             self.ha_device_registry.async_remove_device(reg_device.id)
 
-    def device_removed(self, device: ZigpyDeviceType) -> None:
+    def device_removed(self, device: zha_typing.ZigpyDeviceType) -> None:
         """Handle device being removed from the network."""
         zha_device = self._devices.pop(device.ieee, None)
         entity_refs = self._device_registry.pop(device.ieee, None)
@@ -289,7 +290,7 @@ class ZHAGateway:
                     },
                 )
 
-    def get_device(self, ieee: EUI64) -> ZhaDeviceType:
+    def get_device(self, ieee: zha_typing.ZigpyEUI64Type) -> zha_typing.ZhaDeviceType:
         """Return ZHADevice for given ieee."""
         return self._devices.get(ieee)
 
@@ -324,7 +325,7 @@ class ZHAGateway:
             ]
 
     @property
-    def devices(self) -> Dict[EUI64, zha_typing.ZhaDeviceType]:
+    def devices(self) -> Dict[zha_typing.ZigpyEUI64Type, zha_typing.ZhaDeviceType]:
         """Return devices."""
         return self._devices
 
@@ -334,13 +335,13 @@ class ZHAGateway:
         return self._groups
 
     @property
-    def device_registry(self) -> Dict[EUI64, List[EntityReference]]:
+    def device_registry(self) -> Dict[zha_typing.ZigpyEUI64Type, List[EntityReference]]:
         """Return entities by ieee."""
         return self._device_registry
 
     def register_entity_reference(
         self,
-        ieee: EUI64,
+        ieee: zha_typing.ZigpyEUI64Type,
         reference_id: str,
         zha_device: zha_typing.ZHADeviceType,
         cluster_channels,
@@ -518,7 +519,7 @@ class ZHAGateway:
         zha_device.update_available(True)
 
     async def async_create_zigpy_group(
-        self, name: str, members: List[EUI64]
+        self, name: str, members: List[zha_typing.ZigpyEUI64Type]
     ) -> zha_typing.ZHAGroupType:
         """Create a new Zigpy Zigbee group."""
         # we start with one to fill any gaps from a user removing existing groups

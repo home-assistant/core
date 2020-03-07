@@ -3,12 +3,10 @@ import asyncio
 import logging
 from typing import Any, Dict, List
 
-from zigpy.groups import Group
-
 from homeassistant.core import HomeAssistant, callback
 
 from .helpers import LogMixin
-from .typing import ZhaDeviceType, ZhaGatewayType
+from .typing import ZhaDeviceType, ZhaGatewayType, ZigpyEUI64Type, ZigpyGroupType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +15,10 @@ class ZHAGroup(LogMixin):
     """ZHA Zigbee group object."""
 
     def __init__(
-        self, hass: HomeAssistant, zha_gateway: ZhaGatewayType, zigpy_group: Group
+        self,
+        hass: HomeAssistant,
+        zha_gateway: ZhaGatewayType,
+        zigpy_group: ZigpyGroupType,
     ):
         """Initialize the group."""
         self.hass = hass
@@ -48,7 +49,9 @@ class ZHAGroup(LogMixin):
             if member_ieee[0] in self._zha_gateway.devices
         ]
 
-    async def async_add_members(self, member_ieee_addresses: List[str]) -> None:
+    async def async_add_members(
+        self, member_ieee_addresses: List[ZigpyEUI64Type]
+    ) -> None:
         """Add members to this group."""
         if len(member_ieee_addresses) > 1:
             tasks = []
@@ -62,7 +65,9 @@ class ZHAGroup(LogMixin):
                 member_ieee_addresses[0]
             ].async_add_to_group(self.group_id)
 
-    async def async_remove_members(self, member_ieee_addresses: List[str]) -> None:
+    async def async_remove_members(
+        self, member_ieee_addresses: List[ZigpyEUI64Type]
+    ) -> None:
         """Remove members from this group."""
         if len(member_ieee_addresses) > 1:
             tasks = []
