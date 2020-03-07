@@ -1,16 +1,16 @@
 """Support for ThinkingCleaner switches."""
-import time
-import logging
 from datetime import timedelta
+import logging
+import time
+
+from pythinkingcleaner import Discovery, ThinkingCleaner
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant import util
-from homeassistant.const import STATE_ON, STATE_OFF
-from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.switch import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST
-from pythinkingcleaner import ThinkingCleaner, Discovery
+from homeassistant.const import CONF_HOST, STATE_OFF, STATE_ON
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
