@@ -40,9 +40,10 @@ class FanChannel(ZigbeeChannel):
     async def async_update(self):
         """Retrieve latest state."""
         result = await self.get_attribute_value("fan_mode", from_cache=True)
-        self.async_send_signal(
-            f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", 0, "fan_mode", result
-        )
+        if result is not None:
+            self.async_send_signal(
+                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", 0, "fan_mode", result
+            )
 
     @callback
     def attribute_updated(self, attrid, value):

@@ -52,7 +52,7 @@ def patch_cluster(cluster):
     cluster.configure_reporting = CoroutineMock(return_value=[0])
     cluster.deserialize = Mock()
     cluster.handle_cluster_request = Mock()
-    cluster.read_attributes = CoroutineMock()
+    cluster.read_attributes = CoroutineMock(return_value=[{}, {}])
     cluster.read_attributes_raw = Mock()
     cluster.unbind = CoroutineMock(return_value=[0])
     cluster.write_attributes = CoroutineMock(return_value=[0])
