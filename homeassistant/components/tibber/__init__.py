@@ -50,7 +50,7 @@ async def async_setup(hass, config):
         )
 
         async def retry_setup(now):
-            """Retry setup if a connection/timeout happens on Slide API."""
+            """Retry setup if a timeout happens on Tibber API."""
             await async_setup(hass, config)
 
         async_call_later(hass, DEFAULT_RETRY, retry_setup)
