@@ -21,7 +21,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_ON,
 )
 from homeassistant.config_entries import ConfigEntry
-
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_HOST,
@@ -158,6 +157,7 @@ class DirecTvDevice(MediaPlayerDevice):
         self._is_client = device != "0"
         self._assumed_state = None
         self._available = False
+        self._enabled_default = enabled_default
         self._first_error_timestamp = None
         self._model = None
         self._receiver_id = None
@@ -282,6 +282,11 @@ class DirecTvDevice(MediaPlayerDevice):
             "sw_version": self._software_version,
             "via_device": (DOMAIN, self._receiver_id),
         }
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._enabled_default
 
     # MediaPlayerDevice properties and methods
     @property

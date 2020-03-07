@@ -413,7 +413,7 @@ async def test_setup_with_multiple_locations(
 async def test_setup_with_instance_error(
     hass: HomeAssistantType, main_dtv: MockDirectvClass, client_dtv: MockDirectvClass
 ) -> None:
-    """Test setup with basic config with client location that results in instance error"""
+    """Test setup with basic config with client location that results in instance error."""
     await setup_directv_with_instance_error(hass, MOCK_CONFIG, main_dtv, client_dtv)
 
     assert hass.states.get(MAIN_ENTITY_ID)
