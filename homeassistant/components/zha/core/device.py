@@ -3,6 +3,7 @@ import asyncio
 from datetime import timedelta
 from enum import Enum
 import logging
+import random
 import time
 
 from zigpy import types
@@ -61,7 +62,7 @@ from .helpers import LogMixin
 
 _LOGGER = logging.getLogger(__name__)
 _KEEP_ALIVE_INTERVAL = 7200
-_UPDATE_ALIVE_INTERVAL = timedelta(seconds=60)
+_UPDATE_ALIVE_INTERVAL = (60, 90)
 _CHECKIN_GRACE_PERIODS = 2
 
 
@@ -98,8 +99,9 @@ class ZHADevice(LogMixin):
             self._zigpy_device.__class__.__module__,
             self._zigpy_device.__class__.__name__,
         )
+        keep_alive_interval = random.randint(*_UPDATE_ALIVE_INTERVAL)
         self._available_check = async_track_time_interval(
-            self.hass, self._check_available, _UPDATE_ALIVE_INTERVAL
+            self.hass, self._check_available, timedelta(seconds=keep_alive_interval)
         )
         self._ha_device_id = None
         self.status = DeviceStatus.CREATED
