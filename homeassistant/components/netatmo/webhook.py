@@ -1,6 +1,8 @@
 """The Netatmo integration."""
 import logging
 
+from homeassistant.core import callback
+
 from .const import (
     ATTR_EVENT_TYPE,
     ATTR_FACE_URL,
@@ -33,20 +35,19 @@ async def handle_webhook(hass, webhook_id, request):
             event_type=NETATMO_EVENT, event_data={"type": event_type, "data": data}
         )
         for event_data in data.get("event_list"):
-            evaluate_event(hass, event_data)
+            async_evaluate_event(hass, event_data)
     else:
-        evaluate_event(hass, data)
+        async_evaluate_event(hass, data)
 
 
-def evaluate_event(hass, event_data):
+@callback
+def async_evaluate_event(hass, event_data):
     """Evaluate events from webhook."""
-    published_data = dict(event_data)
-
-    event_type = published_data.get(ATTR_EVENT_TYPE)
+    event_type = event_data.get(ATTR_EVENT_TYPE)
 
     if event_type == "person":
-        for person in published_data.get(ATTR_PERSONS):
-            person_event_data = dict(published_data)
+        for person in event_data.get(ATTR_PERSONS):
+            person_event_data = dict(event_data)
             person_event_data[ATTR_ID] = person.get(ATTR_ID)
             person_event_data[ATTR_NAME] = hass.data[DOMAIN][DATA_PERSONS].get(
                 person_event_data[ATTR_ID], DEFAULT_PERSON
@@ -60,5 +61,5 @@ def evaluate_event(hass, event_data):
     else:
         hass.bus.async_fire(
             event_type=NETATMO_EVENT,
-            event_data={"type": event_type, "data": published_data},
+            event_data={"type": event_type, "data": event_data},
         )
