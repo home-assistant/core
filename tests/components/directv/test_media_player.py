@@ -106,6 +106,9 @@ async def setup_directv_with_instance_error(
     with patch(
         "homeassistant.components.directv.get_dtv_instance", return_value=main_dtv,
     ), patch(
+        "homeassistant.components.directv.get_dtv_locations",
+        return_value=MOCK_GET_LOCATIONS_MULTIPLE,
+    ), patch(
         "homeassistant.components.directv.media_player.get_dtv_instance",
         return_value=None,
     ):
