@@ -26,7 +26,7 @@ from ..const import (
     REPORT_CONFIG_RPT_CHANGE,
     SIGNAL_ATTR_UPDATED,
 )
-from ..helpers import LogMixin, get_attr_id_by_name, safe_read
+from ..helpers import LogMixin, safe_read
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,7 +98,7 @@ class ZigbeeChannel(LogMixin):
         if not hasattr(self, "_value_attribute") and len(self._report_config) > 0:
             attr = self._report_config[0].get("attr")
             if isinstance(attr, str):
-                self.value_attribute = get_attr_id_by_name(self.cluster, attr)
+                self.value_attribute = self.cluster.attridx.get(attr)
             else:
                 self.value_attribute = attr
         self._status = ChannelStatus.CREATED
@@ -212,8 +212,11 @@ class ZigbeeChannel(LogMixin):
     async def async_initialize(self, from_cache):
         """Initialize channel."""
         self.debug("initializing channel: from_cache: %s", from_cache)
+        attributes = []
         for report_config in self._report_config:
-            await self.get_attribute_value(report_config["attr"], from_cache=from_cache)
+            attributes.append(report_config["attr"])
+        if len(attributes) > 0:
+            await self.get_attributes(attributes, from_cache=from_cache)
         self._status = ChannelStatus.INITIALIZED
 
     @callback
@@ -266,6 +269,30 @@ class ZigbeeChannel(LogMixin):
             manufacturer=manufacturer,
         )
         return result.get(attribute)
+
+    async def get_attributes(self, attributes, from_cache=True):
+        """Get the values for a list of attributes."""
+        manufacturer = None
+        manufacturer_code = self._ch_pool.manufacturer_code
+        if self.cluster.cluster_id >= 0xFC00 and manufacturer_code:
+            manufacturer = manufacturer_code
+        try:
+            result, _ = await self.cluster.read_attributes(
+                attributes,
+                allow_cache=from_cache,
+                only_cache=from_cache,
+                manufacturer=manufacturer,
+            )
+            results = {attribute: result.get(attribute) for attribute in attributes}
+        except (asyncio.TimeoutError, zigpy.exceptions.DeliveryError) as ex:
+            self.debug(
+                "failed to get attributes '%s' on '%s' cluster: %s",
+                attributes,
+                self.cluster.ep_attribute,
+                str(ex),
+            )
+            results = {}
+        return results
 
     def log(self, level, msg, *args):
         """Log a message."""
