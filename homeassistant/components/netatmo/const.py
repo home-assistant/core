@@ -26,8 +26,11 @@ DEFAULT_DISCOVERY = True
 DEFAULT_WEBHOOKS = False
 
 ATTR_ID = "id"
+ATTR_PSEUDO = "pseudo"
 ATTR_NAME = "name"
 ATTR_EVENT_TYPE = "event_type"
+ATTR_HOME_ID = "home_id"
+ATTR_HOME_NAME = "home_name"
 ATTR_PERSONS = "persons"
 ATTR_IS_KNOWN = "is_known"
 ATTR_FACE_URL = "face_url"
