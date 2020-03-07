@@ -1,5 +1,6 @@
 """Tests for the Heos Media Player platform."""
 import asyncio
+from unittest.mock import patch
 
 from pyheos import CommandFailedError, const
 
@@ -10,6 +11,7 @@ from homeassistant.components.heos.const import (
     SIGNAL_HEOS_UPDATED,
 )
 from homeassistant.components.media_player.const import (
+    ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_ALBUM_NAME,
@@ -29,8 +31,10 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_URL,
     SERVICE_CLEAR_PLAYLIST,
+    SERVICE_JOIN,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
+    SERVICE_UNJOIN,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -264,10 +268,10 @@ async def test_updates_from_players_changed_new_ids(
     await event.wait()
 
     # Assert device registry identifiers were updated
-    assert len(device_registry.devices) == 1
+    assert len(device_registry.devices) == 2
     assert device_registry.async_get_device({(DOMAIN, 101)})
     # Assert entity registry unique id was updated
-    assert len(entity_registry.entities) == 1
+    assert len(entity_registry.entities) == 2
     assert (
         entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "101")
         == "media_player.test_player"
@@ -805,3 +809,68 @@ async def test_play_media_invalid_type(hass, config_entry, config, controller, c
         blocking=True,
     )
     assert "Unable to play media: Unsupported media type 'Other'" in caplog.text
+
+
+async def test_media_player_join_group(hass, config_entry, config, controller):
+    """Test grouping of media players through the join service."""
+    await setup_platform(hass, config_entry, config)
+    with patch.object(controller, "create_group") as mock_create_group:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_JOIN,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player",
+                ATTR_GROUP_MEMBERS: ["media_player.test_player_2"],
+            },
+            blocking=True,
+        )
+    mock_create_group.assert_called_once_with(
+        1,
+        [
+            2,
+        ],
+    )
+
+
+async def test_media_player_group_members(
+    hass, config_entry, config, controller, group
+):
+    """Test group_members attribute."""
+    await setup_platform(hass, config_entry, config)
+    with patch.object(controller, "get_groups", return_value=group) as mock_get_groups:
+        player = controller.players[1]
+        player.heos.dispatcher.send(
+            const.SIGNAL_PLAYER_EVENT,
+            player.player_id,
+            const.EVENT_PLAYER_STATE_CHANGED,
+        )
+        await hass.async_block_till_done()
+        player_entity = hass.states.get("media_player.test_player")
+        assert player_entity.attributes[ATTR_GROUP_MEMBERS] == [
+            "media_player.test_player",
+            "media_player.test_player_2",
+        ]
+    mock_get_groups.assert_called_once()
+
+
+async def test_media_player_unjoin_group(hass, config_entry, config, controller, group):
+    """Test ungrouping of media players through the join service."""
+    await setup_platform(hass, config_entry, config)
+    with patch.object(controller, "get_groups", return_value=group):
+        player = controller.players[1]
+        player.heos.dispatcher.send(
+            const.SIGNAL_PLAYER_EVENT,
+            player.player_id,
+            const.EVENT_PLAYER_STATE_CHANGED,
+        )
+        await hass.async_block_till_done()
+        with patch.object(controller, "create_group") as mock_create_group:
+            await hass.services.async_call(
+                MEDIA_PLAYER_DOMAIN,
+                SERVICE_UNJOIN,
+                {
+                    ATTR_ENTITY_ID: "media_player.test_player",
+                },
+                blocking=True,
+            )
+        mock_create_group.assert_called_once_with(1, [])
