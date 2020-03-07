@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PAGE_ACCESS_TOKEN = "page_access_token"
-BASE_URL = "https://graph.facebook.com/v6.0/me/messages"
+BASE_URL = "https://graph.facebook.com/v2.6/me/messages"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_PAGE_ACCESS_TOKEN): cv.string}
