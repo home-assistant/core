@@ -3,12 +3,12 @@
 import asyncio
 import logging
 
-from august.api import Api
-from august.authenticator import AuthenticationState, Authenticator
-from requests import RequestException, Session
+from aiohttp import ClientError
+from august.api_async import ApiAsync
+from august.authenticator_async import AuthenticationState, AuthenticatorAsync
 
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
-from homeassistant.core import callback
+from homeassistant.helpers import aiohttp_client
 
 from .const import (
     CONF_ACCESS_TOKEN_CACHE_FILE,
@@ -27,7 +27,7 @@ class AugustGateway:
 
     def __init__(self, hass):
         """Init the connection."""
-        self._api_http_session = Session()
+        self._aiohttp_session = aiohttp_client.async_get_clientsession(hass)
         self._token_refresh_lock = asyncio.Lock()
         self._hass = hass
         self._config = None
@@ -66,8 +66,7 @@ class AugustGateway:
             CONF_ACCESS_TOKEN_CACHE_FILE: self._config[CONF_ACCESS_TOKEN_CACHE_FILE],
         }
 
-    @callback
-    def async_setup(self, conf):
+    async def async_setup(self, conf):
         """Create the api and authenticator objects."""
         if conf.get(VERIFICATION_CODE_KEY):
             return
@@ -77,11 +76,11 @@ class AugustGateway:
             ] = f".{conf[CONF_USERNAME]}{DEFAULT_AUGUST_CONFIG_FILE}"
         self._config = conf
 
-        self._api = Api(
-            timeout=self._config.get(CONF_TIMEOUT), http_session=self._api_http_session,
+        self._api = ApiAsync(
+            self._aiohttp_session, timeout=self._config.get(CONF_TIMEOUT)
         )
 
-        self._authenticator = Authenticator(
+        self._authenticator = AuthenticatorAsync(
             self._api,
             self._config[CONF_LOGIN_METHOD],
             self._config[CONF_USERNAME],
@@ -92,12 +91,14 @@ class AugustGateway:
             ),
         )
 
-    def authenticate(self):
+        await self._authenticator.async_setup_authentication()
+
+    async def async_authenticate(self):
         """Authenticate with the details provided to setup."""
         self._authentication = None
         try:
-            self._authentication = self.authenticator.authenticate()
-        except RequestException as ex:
+            self._authentication = await self.authenticator.async_authenticate()
+        except ClientError as ex:
             _LOGGER.error("Unable to connect to August service: %s", str(ex))
             raise CannotConnect
 
@@ -119,25 +120,12 @@ class AugustGateway:
         """Refresh the august access token if needed."""
         if self.authenticator.should_refresh():
             async with self._token_refresh_lock:
-                await self._hass.async_add_executor_job(self._refresh_access_token)
-
-    def _refresh_access_token(self):
-        refreshed_authentication = self.authenticator.refresh_access_token(force=False)
-        _LOGGER.info(
-            "Refreshed august access token. The old token expired at %s, and the new token expires at %s",
-            self.authentication.access_token_expires,
-            refreshed_authentication.access_token_expires,
-        )
-        self._authentication = refreshed_authentication
-
-    def _close_http_session(self):
-        """Close API sessions used to connect to August."""
-        if self._api_http_session:
-            try:
-                self._api_http_session.close()
-            except RequestException:
-                pass
-
-    def __del__(self):
-        """Close out the http session on destroy."""
-        self._close_http_session()
+                refreshed_authentication = await self.authenticator.async_refresh_access_token(
+                    force=False
+                )
+                _LOGGER.info(
+                    "Refreshed august access token. The old token expired at %s, and the new token expires at %s",
+                    self.authentication.access_token_expires,
+                    refreshed_authentication.access_token_expires,
+                )
+                self._authentication = refreshed_authentication

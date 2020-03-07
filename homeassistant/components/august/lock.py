@@ -38,21 +38,22 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockDevice):
         self._device = device
         self._lock_status = None
         self._changed_by = None
+        self._operated_remote = None
+        self._operated_keypad = None
+        self._operated_autorelock = None
         self._available = False
         self._update_from_data()
 
     async def async_lock(self, **kwargs):
         """Lock the device."""
-        await self._call_lock_operation(self._data.lock)
+        await self._call_lock_operation(self._data.async_lock)
 
     async def async_unlock(self, **kwargs):
         """Unlock the device."""
-        await self._call_lock_operation(self._data.unlock)
+        await self._call_lock_operation(self._data.async_unlock)
 
     async def _call_lock_operation(self, lock_operation):
-        activities = await self.hass.async_add_executor_job(
-            lock_operation, self._device_id
-        )
+        activities = await lock_operation(self._device_id)
         for lock_activity in activities:
             update_lock_detail_from_activity(self._detail, lock_activity)
 
@@ -79,8 +80,12 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockDevice):
         )
 
         if lock_activity is not None:
-            self._changed_by = lock_activity.operated_by
             update_lock_detail_from_activity(self._detail, lock_activity)
+
+            self._changed_by = lock_activity.operated_by
+            self._operated_remote = lock_activity.operated_remote
+            self._operated_keypad = lock_activity.operated_keypad
+            self._operated_autorelock = lock_activity.operated_autorelock
 
         self._update_lock_status_from_detail()
 
@@ -113,6 +118,12 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockDevice):
 
         if self._detail.keypad is not None:
             attributes["keypad_battery_level"] = self._detail.keypad.battery_level
+        if self._operated_remote is not None:
+            attributes["operated_remote"] = self._operated_remote
+        if self._operated_keypad is not None:
+            attributes["operated_keypad"] = self._operated_keypad
+        if self._operated_autorelock is not None:
+            attributes["operated_autorelock"] = self._operated_autorelock
 
         return attributes
 
@@ -126,6 +137,12 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockDevice):
 
         if ATTR_CHANGED_BY in last_state.attributes:
             self._changed_by = last_state.attributes[ATTR_CHANGED_BY]
+        if "operated_remote" in last_state.attributes:
+            self._operated_remote = last_state.attributes["operated_remote"]
+        if "operated_keypad" in last_state.attributes:
+            self._operated_keypad = last_state.attributes["operated_keypad"]
+        if "operated_autorelock" in last_state.attributes:
+            self._operated_autorelock = last_state.attributes["operated_autorelock"]
 
     @property
     def unique_id(self) -> str:
