@@ -66,15 +66,20 @@ class Light(HomeAccessory):
         self._features = self.hass.states.get(self.entity_id).attributes.get(
             ATTR_SUPPORTED_FEATURES
         )
+
         if self._features & SUPPORT_BRIGHTNESS:
             self.chars.append(CHAR_BRIGHTNESS)
-        if self._features & SUPPORT_COLOR_TEMP:
-            self.chars.append(CHAR_COLOR_TEMPERATURE)
+
         if self._features & SUPPORT_COLOR:
             self.chars.append(CHAR_HUE)
             self.chars.append(CHAR_SATURATION)
             self._hue = None
             self._saturation = None
+        elif self._features & SUPPORT_COLOR_TEMP:
+            # ColorTemperature and Hue characteristic should not be
+            # exposed both. Both states are tracked separately in HomeKit,
+            # causing "source of truth" problems.
+            self.chars.append(CHAR_COLOR_TEMPERATURE)
 
         serv_light = self.add_preload_service(SERV_LIGHTBULB, self.chars)
         self.char_on = serv_light.configure_char(
@@ -88,6 +93,7 @@ class Light(HomeAccessory):
             self.char_brightness = serv_light.configure_char(
                 CHAR_BRIGHTNESS, value=100, setter_callback=self.set_brightness
             )
+
         if CHAR_COLOR_TEMPERATURE in self.chars:
             min_mireds = self.hass.states.get(self.entity_id).attributes.get(
                 ATTR_MIN_MIREDS, 153
@@ -101,10 +107,12 @@ class Light(HomeAccessory):
                 properties={PROP_MIN_VALUE: min_mireds, PROP_MAX_VALUE: max_mireds},
                 setter_callback=self.set_color_temperature,
             )
+
         if CHAR_HUE in self.chars:
             self.char_hue = serv_light.configure_char(
                 CHAR_HUE, value=0, setter_callback=self.set_hue
             )
+
         if CHAR_SATURATION in self.chars:
             self.char_saturation = serv_light.configure_char(
                 CHAR_SATURATION, value=75, setter_callback=self.set_saturation
@@ -193,7 +201,7 @@ class Light(HomeAccessory):
                     # But if it is set to 0, HomeKit will update the brightness to 100 as
                     # it thinks 0 is off.
                     #
-                    # Therefore, if the the brighness is 0 and the device is still on,
+                    # Therefore, if the the brightness is 0 and the device is still on,
                     # the brightness is mapped to 1 otherwise the update is ignored in
                     # order to avoid this incorrect behavior.
                     if brightness == 0:

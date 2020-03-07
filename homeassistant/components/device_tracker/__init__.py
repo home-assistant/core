@@ -53,11 +53,14 @@ SOURCE_TYPES = (
 
 NEW_DEVICE_DEFAULTS_SCHEMA = vol.Any(
     None,
-    vol.Schema(
-        {
-            vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean,
-            vol.Optional(CONF_AWAY_HIDE, default=DEFAULT_AWAY_HIDE): cv.boolean,
-        }
+    vol.All(
+        cv.deprecated(CONF_AWAY_HIDE, invalidation_version="0.107.0"),
+        vol.Schema(
+            {
+                vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean,
+                vol.Optional(CONF_AWAY_HIDE, default=DEFAULT_AWAY_HIDE): cv.boolean,
+            }
+        ),
     ),
 )
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(

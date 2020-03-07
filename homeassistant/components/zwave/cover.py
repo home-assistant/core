@@ -3,7 +3,6 @@ import logging
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    ATTR_TILT_POSITION,
     DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
@@ -15,13 +14,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import (
     CONF_INVERT_OPENCLOSE_BUTTONS,
     CONF_INVERT_PERCENT,
-    CONF_TILT_OPEN_POSITION,
     ZWaveDeviceEntity,
     workaround,
 )
 from .const import (
     COMMAND_CLASS_BARRIER_OPERATOR,
-    COMMAND_CLASS_MANUFACTURER_PROPRIETARY,
     COMMAND_CLASS_SWITCH_BINARY,
     COMMAND_CLASS_SWITCH_MULTILEVEL,
     DATA_NETWORK,
@@ -30,28 +27,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
-
-
-def _to_hex_str(id_in_bytes):
-    """Convert a two byte value to a hex string.
-
-    Example: 0x1234 --> '0x1234'
-    """
-    return f"0x{id_in_bytes:04x}"
-
-
-# For some reason node.manufacturer_id is of type string. So we need to convert
-# the values.
-FIBARO = _to_hex_str(workaround.FIBARO)
-FIBARO222_SHUTTERS = [
-    _to_hex_str(workaround.FGR222_SHUTTER2),
-    _to_hex_str(workaround.FGRM222_SHUTTER2),
-]
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old method of setting up Z-Wave covers."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -73,17 +48,6 @@ def get_device(hass, values, node_config, **kwargs):
         values.primary.command_class == COMMAND_CLASS_SWITCH_MULTILEVEL
         and values.primary.index == 0
     ):
-        if (
-            values.primary.node.manufacturer_id == FIBARO
-            and values.primary.node.product_type in FIBARO222_SHUTTERS
-        ):
-            return FibaroFGRM222(
-                hass,
-                values,
-                invert_buttons,
-                invert_percent,
-                node_config.get(CONF_TILT_OPEN_POSITION),
-            )
         return ZwaveRollershutter(hass, values, invert_buttons, invert_percent)
     if values.primary.command_class == COMMAND_CLASS_SWITCH_BINARY:
         return ZwaveGarageDoorSwitch(values)
@@ -243,116 +207,3 @@ class ZwaveGarageDoorBarrier(ZwaveGarageDoorBase):
     def open_cover(self, **kwargs):
         """Open the garage door."""
         self.values.primary.data = "Opened"
-
-
-class FibaroFGRM222(ZwaveRollershutter):
-    """Implementation of proprietary features for Fibaro FGR-222 / FGRM-222.
-
-    This adds support for the tilt feature for the ventian blind mode.
-    To enable this you need to configure the devices to use the venetian blind
-    mode and to enable the proprietary command class:
-    * Set "3: Reports type to Blind position reports sent"
-        to value "the main controller using Fibaro Command Class"
-    * Set "10: Roller Shutter operating modes"
-        to  value "2 - Venetian Blind Mode, with positioning"
-    """
-
-    def __init__(
-        self, hass, values, invert_buttons, invert_percent, open_tilt_position: int
-    ):
-        """Initialize the FGRM-222."""
-        self._value_blinds = None
-        self._value_tilt = None
-        self._has_tilt_mode = False  # type: bool
-        self._open_tilt_position = 50  # type: int
-        if open_tilt_position is not None:
-            self._open_tilt_position = open_tilt_position
-        super().__init__(hass, values, invert_buttons, invert_percent)
-
-    @property
-    def current_cover_tilt_position(self) -> int:
-        """Get the tilt of the blinds.
-
-        Saturate values <5 and >94 so that it's easier to detect the end
-        positions in automations.
-        """
-        if not self._has_tilt_mode:
-            return None
-        if self._value_tilt.data <= 5:
-            return 0
-        if self._value_tilt.data >= 95:
-            return 100
-        return self._value_tilt.data
-
-    def set_cover_tilt_position(self, **kwargs):
-        """Move the cover tilt to a specific position."""
-        if not self._has_tilt_mode:
-            _LOGGER.error("Can't set cover tilt as device is not yet set up.")
-        else:
-            # Limit the range to [0-99], as this what that the ZWave command
-            # accepts.
-            tilt_position = max(0, min(99, kwargs.get(ATTR_TILT_POSITION)))
-            _LOGGER.debug("setting tilt to %d", tilt_position)
-            self._value_tilt.data = tilt_position
-
-    def open_cover_tilt(self, **kwargs):
-        """Set slats to horizontal position."""
-        self.set_cover_tilt_position(tilt_position=self._open_tilt_position)
-
-    def close_cover_tilt(self, **kwargs):
-        """Close the slats."""
-        self.set_cover_tilt_position(tilt_position=0)
-
-    def set_cover_position(self, **kwargs):
-        """Move the roller shutter to a specific position.
-
-        If the venetian blinds mode is not activated, fall back to
-        the behavior of the parent class.
-        """
-        if not self._has_tilt_mode:
-            super().set_cover_position(**kwargs)
-        else:
-            _LOGGER.debug("Setting cover position to %s", kwargs.get(ATTR_POSITION))
-            self._value_blinds.data = kwargs.get(ATTR_POSITION)
-
-    def _configure_values(self):
-        """Get the value objects from the node."""
-        for value in self.node.get_values(
-            class_id=COMMAND_CLASS_MANUFACTURER_PROPRIETARY
-        ).values():
-            if value is None:
-                continue
-            if value.index == 0:
-                self._value_blinds = value
-            elif value.index == 1:
-                self._value_tilt = value
-            else:
-                _LOGGER.warning(
-                    "Undefined index %d for this command class", value.index
-                )
-
-        if self._value_tilt is not None:
-            # We reached here because the user has configured the Fibaro to
-            # report using the MANUFACTURER_PROPRIETARY command class. The only
-            # reason for the user to configure this way is if tilt support is
-            # needed (aka venetian blind mode). Therefore, turn it on.
-            #
-            # Note: This is safe to do even if the user has accidentally set
-            # this configuration parameter, or configuration parameter 10 to
-            # something other than venetian blind mode. The controller will just
-            # ignore potential tilt settings sent from Home Assistant in this
-            # case.
-            self._has_tilt_mode = True
-            _LOGGER.info(
-                "Zwave node %s is a Fibaro FGR-222/FGRM-222 with tilt support.",
-                self.node_id,
-            )
-
-    def update_properties(self):
-        """React on properties being updated."""
-        if not self._has_tilt_mode:
-            self._configure_values()
-        if self._value_blinds is not None:
-            self._current_position = self._value_blinds.data
-        else:
-            super().update_properties()

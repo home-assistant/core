@@ -3,13 +3,14 @@ from datetime import datetime
 
 from asynctest import patch
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.wled.const import (
     ATTR_LED_COUNT,
     ATTR_MAX_POWER,
     CURRENT_MA,
-    DATA_BYTES,
+    DOMAIN,
 )
-from homeassistant.const import ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT, DATA_BYTES
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -22,11 +23,31 @@ async def test_sensors(
 ) -> None:
     """Test the creation and values of the WLED sensors."""
 
+    entry = await init_integration(hass, aioclient_mock, skip_setup=True)
+    registry = await hass.helpers.entity_registry.async_get_registry()
+
+    # Pre-create registry entries for disabled by default sensors
+    registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "aabbccddeeff_uptime",
+        suggested_object_id="wled_rgb_light_uptime",
+        disabled_by=None,
+    )
+
+    registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "aabbccddeeff_free_heap",
+        suggested_object_id="wled_rgb_light_free_memory",
+        disabled_by=None,
+    )
+
+    # Setup
     test_time = datetime(2019, 11, 11, 9, 10, 32, tzinfo=dt_util.UTC)
     with patch("homeassistant.components.wled.sensor.utcnow", return_value=test_time):
-        await init_integration(hass, aioclient_mock)
-
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     state = hass.states.get("sensor.wled_rgb_light_estimated_current")
     assert state
@@ -36,7 +57,7 @@ async def test_sensors(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == CURRENT_MA
     assert state.state == "470"
 
-    entry = entity_registry.async_get("sensor.wled_rgb_light_estimated_current")
+    entry = registry.async_get("sensor.wled_rgb_light_estimated_current")
     assert entry
     assert entry.unique_id == "aabbccddeeff_estimated_current"
 
@@ -46,7 +67,7 @@ async def test_sensors(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     assert state.state == "2019-11-11T09:10:00+00:00"
 
-    entry = entity_registry.async_get("sensor.wled_rgb_light_uptime")
+    entry = registry.async_get("sensor.wled_rgb_light_uptime")
     assert entry
     assert entry.unique_id == "aabbccddeeff_uptime"
 
@@ -56,6 +77,30 @@ async def test_sensors(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == DATA_BYTES
     assert state.state == "14600"
 
-    entry = entity_registry.async_get("sensor.wled_rgb_light_free_memory")
+    entry = registry.async_get("sensor.wled_rgb_light_free_memory")
     assert entry
     assert entry.unique_id == "aabbccddeeff_free_heap"
+
+
+async def test_disabled_by_default_sensors(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test the disabled by default WLED sensors."""
+    await init_integration(hass, aioclient_mock)
+    registry = await hass.helpers.entity_registry.async_get_registry()
+
+    state = hass.states.get("sensor.wled_rgb_light_uptime")
+    assert state is None
+
+    entry = registry.async_get("sensor.wled_rgb_light_uptime")
+    assert entry
+    assert entry.disabled
+    assert entry.disabled_by == "integration"
+
+    state = hass.states.get("sensor.wled_rgb_light_free_memory")
+    assert state is None
+
+    entry = registry.async_get("sensor.wled_rgb_light_free_memory")
+    assert entry
+    assert entry.disabled
+    assert entry.disabled_by == "integration"

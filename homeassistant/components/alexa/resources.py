@@ -190,7 +190,12 @@ class AlexaGlobalCatalog:
 
 
 class AlexaCapabilityResource:
-    """Base class for Alexa capabilityResources, ModeResources, and presetResources objects.
+    """Base class for Alexa capabilityResources, modeResources, and presetResources objects.
+
+    Resources objects labels must be unique across all modeResources and presetResources within the same device.
+    To provide support for all supported locales, include one label from the AlexaGlobalCatalog in the labels array.
+    You cannot use any words from the following list as friendly names:
+    https://developer.amazon.com/docs/alexa/device-apis/resources-and-assets.html#names-you-cannot-use
 
     https://developer.amazon.com/docs/device-apis/resources-and-assets.html#capability-resources
     """
@@ -311,6 +316,14 @@ class AlexaSemantics:
     you manually map the phrases "open", "close", "raise", and "lower" to directives.
 
     Semantics is supported for the following interfaces only: ModeController, RangeController, and ToggleController.
+
+    Semantics stateMappings are only supported for one interface of the same type on the same device. If a device has
+    multiple RangeControllers only one interface may use stateMappings otherwise discovery will fail.
+
+    You can support semantics actionMappings on different controllers for the same device, however each controller must
+    support different phrases. For example, you can support "raise" on a RangeController, and "open" on a ModeController,
+    but you can't support "open" on both RangeController and ModeController. Semantics stateMappings are only supported
+    for one interface on the same device.
 
     https://developer.amazon.com/docs/device-apis/alexa-discovery.html#semantics-object
     """

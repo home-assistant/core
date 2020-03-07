@@ -294,6 +294,7 @@ class StatisticsSensor(Entity):
                 """Timer callback for sensor update."""
                 _LOGGER.debug("%s: executing scheduled update", self.entity_id)
                 self.async_schedule_update_ha_state(True)
+                self._update_listener = None
 
             self._update_listener = async_track_point_in_utc_time(
                 self.hass, _scheduled_update, next_to_purge_timestamp

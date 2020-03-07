@@ -1,5 +1,6 @@
 """Helpers for device automations."""
 import asyncio
+from functools import wraps
 import logging
 from types import ModuleType
 from typing import Any, List, MutableMapping
@@ -14,7 +15,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
-from .exceptions import InvalidDeviceAutomationConfig
+from .exceptions import DeviceNotFound, InvalidDeviceAutomationConfig
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -117,6 +118,10 @@ async def _async_get_device_automations(hass, automation_type, device_id):
     domains = set()
     automations: List[MutableMapping[str, Any]] = []
     device = device_registry.async_get(device_id)
+
+    if device is None:
+        raise DeviceNotFound
+
     for entry_id in device.config_entries:
         config_entry = hass.config_entries.async_get_entry(entry_id)
         domains.add(config_entry.domain)
@@ -173,6 +178,21 @@ async def _async_get_device_automation_capabilities(hass, automation_type, autom
     return capabilities
 
 
+def handle_device_errors(func):
+    """Handle device automation errors."""
+
+    @wraps(func)
+    async def with_error_handling(hass, connection, msg):
+        try:
+            await func(hass, connection, msg)
+        except DeviceNotFound:
+            connection.send_error(
+                msg["id"], websocket_api.const.ERR_NOT_FOUND, "Device not found"
+            )
+
+    return with_error_handling
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "device_automation/action/list",
@@ -180,6 +200,7 @@ async def _async_get_device_automation_capabilities(hass, automation_type, autom
     }
 )
 @websocket_api.async_response
+@handle_device_errors
 async def websocket_device_automation_list_actions(hass, connection, msg):
     """Handle request for device actions."""
     device_id = msg["device_id"]
@@ -194,6 +215,7 @@ async def websocket_device_automation_list_actions(hass, connection, msg):
     }
 )
 @websocket_api.async_response
+@handle_device_errors
 async def websocket_device_automation_list_conditions(hass, connection, msg):
     """Handle request for device conditions."""
     device_id = msg["device_id"]
@@ -208,6 +230,7 @@ async def websocket_device_automation_list_conditions(hass, connection, msg):
     }
 )
 @websocket_api.async_response
+@handle_device_errors
 async def websocket_device_automation_list_triggers(hass, connection, msg):
     """Handle request for device triggers."""
     device_id = msg["device_id"]
@@ -222,6 +245,7 @@ async def websocket_device_automation_list_triggers(hass, connection, msg):
     }
 )
 @websocket_api.async_response
+@handle_device_errors
 async def websocket_device_automation_get_action_capabilities(hass, connection, msg):
     """Handle request for device action capabilities."""
     action = msg["action"]
@@ -238,6 +262,7 @@ async def websocket_device_automation_get_action_capabilities(hass, connection, 
     }
 )
 @websocket_api.async_response
+@handle_device_errors
 async def websocket_device_automation_get_condition_capabilities(hass, connection, msg):
     """Handle request for device condition capabilities."""
     condition = msg["condition"]
@@ -254,6 +279,7 @@ async def websocket_device_automation_get_condition_capabilities(hass, connectio
     }
 )
 @websocket_api.async_response
+@handle_device_errors
 async def websocket_device_automation_get_trigger_capabilities(hass, connection, msg):
     """Handle request for device trigger capabilities."""
     trigger = msg["trigger"]

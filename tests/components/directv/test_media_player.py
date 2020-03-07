@@ -60,6 +60,7 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
 
+ATTR_UNIQUE_ID = "unique_id"
 CLIENT_ENTITY_ID = "media_player.client_dvr"
 MAIN_ENTITY_ID = "media_player.main_dvr"
 IP_ADDRESS = "127.0.0.1"
@@ -138,7 +139,7 @@ def main_dtv():
 def dtv_side_effect(client_dtv, main_dtv):
     """Fixture to create DIRECTV instance for main and client."""
 
-    def mock_dtv(ip, port, client_addr):
+    def mock_dtv(ip, port, client_addr="0"):
         if client_addr != "0":
             mocked_dtv = client_dtv
         else:
@@ -174,7 +175,7 @@ def platforms(hass, dtv_side_effect, mock_now):
                 "name": "Client DVR",
                 "host": IP_ADDRESS,
                 "port": DEFAULT_PORT,
-                "device": "1",
+                "device": "2CA17D1CD30X",
             },
         ]
     }
@@ -272,6 +273,20 @@ class MockDirectvClass:
 
         return test_locations
 
+    def get_serial_num(self):
+        """Mock for get_serial_num method."""
+        test_serial_num = {
+            "serialNum": "9999999999",
+            "status": {
+                "code": 200,
+                "commandResult": 0,
+                "msg": "OK.",
+                "query": "/info/getSerialNum",
+            },
+        }
+
+        return test_serial_num
+
     def get_standby(self):
         """Mock for get_standby method."""
         return self._standby
@@ -289,6 +304,24 @@ class MockDirectvClass:
             "query": "/tv/getTuned",
         }
         return test_attributes
+
+    def get_version(self):
+        """Mock for get_version method."""
+        test_version = {
+            "accessCardId": "0021-1495-6572",
+            "receiverId": "0288 7745 5858",
+            "status": {
+                "code": 200,
+                "commandResult": 0,
+                "msg": "OK.",
+                "query": "/info/getVersion",
+            },
+            "stbSoftwareVersion": "0x4ed7",
+            "systemTime": 1281625203,
+            "version": "1.2",
+        }
+
+        return test_version
 
     def key_press(self, keypress):
         """Mock for key_press method."""
@@ -389,6 +422,17 @@ async def test_setup_platform_discover_client(hass):
     assert state
 
     assert len(hass.states.async_entity_ids("media_player")) == 3
+
+
+async def test_unique_id(hass, platforms):
+    """Test unique id."""
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+
+    main = entity_registry.async_get(MAIN_ENTITY_ID)
+    assert main.unique_id == "028877455858"
+
+    client = entity_registry.async_get(CLIENT_ENTITY_ID)
+    assert client.unique_id == "2CA17D1CD30X"
 
 
 async def test_supported_features(hass, platforms):

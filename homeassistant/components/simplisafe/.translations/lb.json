@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "D\u00ebse SimpliSafe Kont g\u00ebtt scho benotzt."
+        },
         "error": {
             "identifier_exists": "Konto ass scho registr\u00e9iert",
             "invalid_credentials": "Ong\u00eblteg Login Informatioune"

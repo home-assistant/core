@@ -1,5 +1,6 @@
 """Helper to check the configuration file."""
 from collections import OrderedDict
+import os
 from typing import List, NamedTuple, Optional
 
 import attr
@@ -10,10 +11,10 @@ from homeassistant.config import (
     CONF_CORE,
     CONF_PACKAGES,
     CORE_CONFIG_SCHEMA,
+    YAML_CONFIG_FILE,
     _format_config_error,
     config_per_platform,
     extract_domain_configs,
-    find_config_file,
     load_yaml_config_file,
     merge_packages_config,
 )
@@ -62,7 +63,6 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
 
     This method is a coroutine.
     """
-    config_dir = hass.config.config_dir
     result = HomeAssistantConfig()
 
     def _pack_error(
@@ -79,9 +79,9 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
         result.add_error(_format_config_error(ex, domain, config), domain, config)
 
     # Load configuration.yaml
+    config_path = hass.config.path(YAML_CONFIG_FILE)
     try:
-        config_path = await hass.async_add_executor_job(find_config_file, config_dir)
-        if not config_path:
+        if not await hass.async_add_executor_job(os.path.isfile, config_path):
             return result.add_error("File configuration.yaml not found.")
         config = await hass.async_add_executor_job(load_yaml_config_file, config_path)
     except FileNotFoundError:

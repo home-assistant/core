@@ -183,7 +183,7 @@ class ConfigEntry:
             component = integration.get_component()
         except ImportError as err:
             _LOGGER.error(
-                "Error importing integration %s to set up %s config entry: %s",
+                "Error importing integration %s to set up %s configuration entry: %s",
                 integration.domain,
                 self.domain,
                 err,
@@ -197,7 +197,7 @@ class ConfigEntry:
                 integration.get_platform("config_flow")
             except ImportError as err:
                 _LOGGER.error(
-                    "Error importing platform config_flow from integration %s to set up %s config entry: %s",
+                    "Error importing platform config_flow from integration %s to set up %s configuration entry: %s",
                     integration.domain,
                     self.domain,
                     err,
@@ -503,7 +503,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
             integration.get_platform("config_flow")
         except ImportError as err:
             _LOGGER.error(
-                "Error occurred loading config flow for integration %s: %s",
+                "Error occurred loading configuration flow for integration %s: %s",
                 handler_key,
                 err,
             )
@@ -775,6 +775,7 @@ class ConfigEntries:
 
         return await entry.async_unload(self.hass, integration=integration)
 
+    @callback
     def _async_schedule_save(self) -> None:
         """Save the entity registry to a file."""
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
@@ -817,13 +818,19 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         raise data_entry_flow.UnknownHandler
 
     @callback
-    def _abort_if_unique_id_configured(self) -> None:
+    def _abort_if_unique_id_configured(self, updates: Dict[Any, Any] = None) -> None:
         """Abort if the unique ID is already configured."""
+        assert self.hass
         if self.unique_id is None:
             return
 
-        if self.unique_id in self._async_current_ids():
-            raise data_entry_flow.AbortFlow("already_configured")
+        for entry in self._async_current_entries():
+            if entry.unique_id == self.unique_id:
+                if updates is not None and not updates.items() <= entry.data.items():
+                    self.hass.config_entries.async_update_entry(
+                        entry, data={**entry.data, **updates}
+                    )
+                raise data_entry_flow.AbortFlow("already_configured")
 
     async def async_set_unique_id(
         self, unique_id: str, *, raise_on_progress: bool = True
@@ -941,7 +948,7 @@ class SystemOptions:
         self.disable_new_entities = disable_new_entities
 
     def as_dict(self) -> Dict[str, Any]:
-        """Return dictionary version of this config entrys system options."""
+        """Return dictionary version of this config entries system options."""
         return {"disable_new_entities": self.disable_new_entities}
 
 
@@ -1018,7 +1025,7 @@ class EntityRegistryDisabledHandler:
         self.changed = set()
 
         _LOGGER.info(
-            "Reloading config entries because disabled_by changed in entity registry: %s",
+            "Reloading configuration entries because disabled_by changed in entity registry: %s",
             ", ".join(self.changed),
         )
 

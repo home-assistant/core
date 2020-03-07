@@ -44,7 +44,9 @@ def test_query_state_value(rs):
         result = rs._query_state_value("runme")
         assert "foo bar" == result
         assert mock_run.call_count == 1
-        assert mock_run.call_args == mock.call("runme", shell=True)
+        assert mock_run.call_args == mock.call(
+            "runme", shell=True,  # nosec # shell by design
+        )
 
 
 async def test_state_value(hass):

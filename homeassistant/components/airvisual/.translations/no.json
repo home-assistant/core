@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Denne API-n\u00f8kkelen er allerede i bruk."
+        },
+        "error": {
+            "invalid_api_key": "Ugyldig API-n\u00f8kkel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel",
+                    "latitude": "Breddegrad",
+                    "longitude": "Lengdegrad",
+                    "show_on_map": "Vis overv\u00e5ket geografi p\u00e5 kartet"
+                },
+                "description": "Overv\u00e5k luftkvaliteten p\u00e5 et geografisk sted.",
+                "title": "Konfigurer AirVisual"
+            }
+        },
+        "title": "AirVisual"
+    }
+}

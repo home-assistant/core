@@ -77,26 +77,28 @@ class NukiLock(LockDevice):
     def __init__(self, nuki_lock):
         """Initialize the lock."""
         self._nuki_lock = nuki_lock
-        self._locked = nuki_lock.is_locked
-        self._name = nuki_lock.name
-        self._battery_critical = nuki_lock.battery_critical
         self._available = nuki_lock.state not in ERROR_STATES
 
     @property
     def name(self):
         """Return the name of the lock."""
-        return self._name
+        return self._nuki_lock.name
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._nuki_lock.nuki_id
 
     @property
     def is_locked(self):
         """Return true if lock is locked."""
-        return self._locked
+        return self._nuki_lock.is_locked
 
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         data = {
-            ATTR_BATTERY_CRITICAL: self._battery_critical,
+            ATTR_BATTERY_CRITICAL: self._nuki_lock.battery_critical,
             ATTR_NUKI_ID: self._nuki_lock.nuki_id,
         }
         return data
@@ -119,16 +121,12 @@ class NukiLock(LockDevice):
             except RequestException:
                 _LOGGER.warning("Network issues detect with %s", self.name)
                 self._available = False
-                return
+                continue
 
             # If in error state, we force an update and repoll data
             self._available = self._nuki_lock.state not in ERROR_STATES
             if self._available:
                 break
-
-        self._name = self._nuki_lock.name
-        self._locked = self._nuki_lock.is_locked
-        self._battery_critical = self._nuki_lock.battery_critical
 
     def lock(self, **kwargs):
         """Lock the device."""

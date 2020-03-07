@@ -3,6 +3,7 @@ import datetime as dt
 import re
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
+import ciso8601
 import pytz
 import pytz.exceptions as pytzexceptions
 import pytz.tzinfo as pytzinfo
@@ -122,6 +123,10 @@ def parse_datetime(dt_str: str) -> Optional[dt.datetime]:
     Raises ValueError if the input is well formatted but not a valid datetime.
     Returns None if the input isn't well formatted.
     """
+    try:
+        return ciso8601.parse_datetime(dt_str)
+    except (ValueError, IndexError):
+        pass
     match = DATETIME_RE.match(dt_str)
     if not match:
         return None

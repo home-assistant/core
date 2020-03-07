@@ -27,5 +27,27 @@
             }
         },
         "title": "MQTT"
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Primo pulsante",
+            "button_2": "Secondo pulsante",
+            "button_3": "Terzo pulsante",
+            "button_4": "Quarto pulsante",
+            "button_5": "Quinto pulsante",
+            "button_6": "Sesto pulsante",
+            "turn_off": "Spegni",
+            "turn_on": "Accendi"
+        },
+        "trigger_type": {
+            "button_double_press": "\"{subtype}\" cliccato due volte",
+            "button_long_press": "\"{subtype}\" premuto continuamente",
+            "button_long_release": "\"{subtype}\" rilasciato dopo una lunga pressione",
+            "button_quadruple_press": "\"{subtype}\" cliccato quattro volte",
+            "button_quintuple_press": "\"{subtype}\" cliccato cinque volte",
+            "button_short_press": "\"{subtype}\" premuto",
+            "button_short_release": "\"{subtype}\" rilasciato",
+            "button_triple_press": "\"{subtype}\" cliccato tre volte"
+        }
     }
 }

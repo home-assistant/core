@@ -26,6 +26,9 @@ async def async_enable_proactive_mode(hass, smart_home_config):
     await smart_home_config.async_get_access_token()
 
     async def async_entity_state_listener(changed_entity, old_state, new_state):
+        if not hass.is_running:
+            return
+
         if not new_state:
             return
 

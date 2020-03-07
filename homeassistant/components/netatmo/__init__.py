@@ -5,7 +5,12 @@ import logging
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_DISCOVERY,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 
@@ -14,12 +19,19 @@ from .const import AUTH, DATA_PERSONS, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_SECRET_KEY = "secret_key"
+CONF_WEBHOOKS = "webhooks"
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
                 vol.Required(CONF_CLIENT_ID): cv.string,
                 vol.Required(CONF_CLIENT_SECRET): cv.string,
+                cv.deprecated(CONF_SECRET_KEY): cv.match_all,
+                cv.deprecated(CONF_USERNAME): cv.match_all,
+                cv.deprecated(CONF_WEBHOOKS): cv.match_all,
+                cv.deprecated(CONF_DISCOVERY): cv.match_all,
             }
         )
     },

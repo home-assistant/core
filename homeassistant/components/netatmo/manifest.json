@@ -3,7 +3,7 @@
   "name": "Netatmo",
   "documentation": "https://www.home-assistant.io/integrations/netatmo",
   "requirements": [
-    "pyatmo==3.2.0"
+    "pyatmo==3.2.4"
   ],
   "dependencies": [
     "webhook"

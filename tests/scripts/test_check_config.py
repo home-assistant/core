@@ -120,7 +120,7 @@ def test_secrets(isfile_patch, loop):
 
 @patch("os.path.isfile", return_value=True)
 def test_package_invalid(isfile_patch, loop):
-    """Test a valid platform setup."""
+    """Test an invalid package."""
     files = {
         YAML_CONFIG_FILE: BASE_CONFIG + ("  packages:\n    p1:\n" '      group: ["a"]')
     }

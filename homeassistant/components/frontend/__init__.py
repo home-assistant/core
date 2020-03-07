@@ -13,9 +13,10 @@ from yarl import URL
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.config import find_config_file, load_yaml_config_file
+from homeassistant.config import async_hass_config_yaml
 from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
+from homeassistant.helpers import service
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
@@ -49,8 +50,8 @@ MANIFEST_JSON = {
     "display": "standalone",
     "icons": [
         {
-            "src": "/static/icons/favicon-{size}x{size}.png".format(size=size),
-            "sizes": "{size}x{size}".format(size=size),
+            "src": f"/static/icons/favicon-{size}x{size}.png",
+            "sizes": f"{size}x{size}",
             "type": "image/png",
             "purpose": "maskable any",
         }
@@ -61,6 +62,10 @@ MANIFEST_JSON = {
     "short_name": "Assistant",
     "start_url": "/?homescreen=1",
     "theme_color": DEFAULT_THEME_COLOR,
+    "prefer_related_applications": True,
+    "related_applications": [
+        {"platform": "play", "id": "io.homeassistant.companion.android"}
+    ],
 }
 
 DATA_PANELS = "frontend_panels"
@@ -103,19 +108,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 SERVICE_SET_THEME = "set_theme"
 SERVICE_RELOAD_THEMES = "reload_themes"
-SERVICE_SET_THEME_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
-WS_TYPE_GET_PANELS = "get_panels"
-SCHEMA_GET_PANELS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_GET_PANELS}
-)
-WS_TYPE_GET_THEMES = "frontend/get_themes"
-SCHEMA_GET_THEMES = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_GET_THEMES}
-)
-WS_TYPE_GET_TRANSLATIONS = "frontend/get_translations"
-SCHEMA_GET_TRANSLATIONS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_GET_TRANSLATIONS, vol.Required("language"): str}
-)
 
 
 class Panel:
@@ -179,6 +171,8 @@ def async_register_built_in_panel(
     frontend_url_path=None,
     config=None,
     require_admin=False,
+    *,
+    update=False,
 ):
     """Register a built-in panel."""
     panel = Panel(
@@ -192,8 +186,8 @@ def async_register_built_in_panel(
 
     panels = hass.data.setdefault(DATA_PANELS, {})
 
-    if panel.frontend_url_path in panels:
-        _LOGGER.warning("Overwriting integration %s", panel.frontend_url_path)
+    if not update and panel.frontend_url_path in panels:
+        raise ValueError(f"Overwriting panel {panel.frontend_url_path}")
 
     panels[panel.frontend_url_path] = panel
 
@@ -251,15 +245,9 @@ def _frontend_root(dev_repo_path):
 async def async_setup(hass, config):
     """Set up the serving of the frontend."""
     await async_setup_frontend_storage(hass)
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_GET_PANELS, websocket_get_panels, SCHEMA_GET_PANELS
-    )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_GET_THEMES, websocket_get_themes, SCHEMA_GET_THEMES
-    )
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_GET_TRANSLATIONS, websocket_get_translations, SCHEMA_GET_TRANSLATIONS
-    )
+    hass.components.websocket_api.async_register_command(websocket_get_panels)
+    hass.components.websocket_api.async_register_command(websocket_get_themes)
+    hass.components.websocket_api.async_register_command(websocket_get_translations)
     hass.http.register_view(ManifestJSONView)
 
     conf = config.get(DOMAIN, {})
@@ -331,24 +319,20 @@ async def async_setup(hass, config):
 def _async_setup_themes(hass, themes):
     """Set up themes data and services."""
     hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME
-    if themes is None:
-        hass.data[DATA_THEMES] = {}
-        return
-
-    hass.data[DATA_THEMES] = themes
+    hass.data[DATA_THEMES] = themes or {}
 
     @callback
     def update_theme_and_fire_event():
         """Update theme_color in manifest."""
         name = hass.data[DATA_DEFAULT_THEME]
         themes = hass.data[DATA_THEMES]
-        if name != DEFAULT_THEME and PRIMARY_COLOR in themes[name]:
-            MANIFEST_JSON["theme_color"] = themes[name][PRIMARY_COLOR]
-        else:
-            MANIFEST_JSON["theme_color"] = DEFAULT_THEME_COLOR
-        hass.bus.async_fire(
-            EVENT_THEMES_UPDATED, {"themes": themes, "default_theme": name}
-        )
+        MANIFEST_JSON["theme_color"] = DEFAULT_THEME_COLOR
+        if name != DEFAULT_THEME:
+            MANIFEST_JSON["theme_color"] = themes[name].get(
+                "app-header-background-color",
+                themes[name].get(PRIMARY_COLOR, DEFAULT_THEME_COLOR),
+            )
+        hass.bus.async_fire(EVENT_THEMES_UPDATED)
 
     @callback
     def set_theme(call):
@@ -362,20 +346,26 @@ def _async_setup_themes(hass, themes):
         else:
             _LOGGER.warning("Theme %s is not defined.", name)
 
-    @callback
-    def reload_themes(_):
+    async def reload_themes(_):
         """Reload themes."""
-        path = find_config_file(hass.config.config_dir)
-        new_themes = load_yaml_config_file(path)[DOMAIN].get(CONF_THEMES, {})
+        config = await async_hass_config_yaml(hass)
+        new_themes = config[DOMAIN].get(CONF_THEMES, {})
         hass.data[DATA_THEMES] = new_themes
         if hass.data[DATA_DEFAULT_THEME] not in new_themes:
             hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME
         update_theme_and_fire_event()
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_THEME, set_theme, schema=SERVICE_SET_THEME_SCHEMA
+    service.async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_SET_THEME,
+        set_theme,
+        vol.Schema({vol.Required(CONF_NAME): cv.string}),
     )
-    hass.services.async_register(DOMAIN, SERVICE_RELOAD_THEMES, reload_themes)
+
+    service.async_register_admin_service(
+        hass, DOMAIN, SERVICE_RELOAD_THEMES, reload_themes
+    )
 
 
 class IndexView(web_urldispatcher.AbstractResource):
@@ -497,6 +487,7 @@ class ManifestJSONView(HomeAssistantView):
 
 
 @callback
+@websocket_api.websocket_command({"type": "get_panels"})
 def websocket_get_panels(hass, connection, msg):
     """Handle get panels command.
 
@@ -513,11 +504,29 @@ def websocket_get_panels(hass, connection, msg):
 
 
 @callback
+@websocket_api.websocket_command({"type": "frontend/get_themes"})
 def websocket_get_themes(hass, connection, msg):
     """Handle get themes command.
 
     Async friendly.
     """
+    if hass.config.safe_mode:
+        connection.send_message(
+            websocket_api.result_message(
+                msg["id"],
+                {
+                    "themes": {
+                        "safe_mode": {
+                            "primary-color": "#db4437",
+                            "accent-color": "#eeee02",
+                        }
+                    },
+                    "default_theme": "safe_mode",
+                },
+            )
+        )
+        return
+
     connection.send_message(
         websocket_api.result_message(
             msg["id"],
@@ -529,6 +538,9 @@ def websocket_get_themes(hass, connection, msg):
     )
 
 
+@websocket_api.websocket_command(
+    {"type": "frontend/get_translations", vol.Required("language"): str}
+)
 @websocket_api.async_response
 async def websocket_get_translations(hass, connection, msg):
     """Handle get translations command.

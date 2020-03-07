@@ -53,6 +53,8 @@
         "step": {
             "plex_mp_settings": {
                 "data": {
+                    "ignore_new_shared_users": "Ignorieren neuer verwalteter/freigegebener Benutzer",
+                    "monitored_users": "\u00dcberwachte Benutzer",
                     "show_all_controls": "Alle Steuerelemente anzeigen",
                     "use_episode_art": "Episode-Bilder verwenden"
                 },

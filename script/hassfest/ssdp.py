@@ -43,6 +43,7 @@ def generate_and_validate(integrations: Dict[str, Integration]):
                 content = fp.read()
                 if (
                     " async_step_ssdp" not in content
+                    and "AbstractOAuth2FlowHandler" not in content
                     and "register_discovery_flow" not in content
                 ):
                     integration.add_error("ssdp", "Config flow has no async_step_ssdp")

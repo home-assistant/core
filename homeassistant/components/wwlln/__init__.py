@@ -1,24 +1,19 @@
 """Support for World Wide Lightning Location Network."""
-import logging
-
 from aiowwlln import Client
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_RADIUS,
-    CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
-)
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .config_flow import configured_instances
-from .const import CONF_WINDOW, DATA_CLIENT, DEFAULT_RADIUS, DEFAULT_WINDOW, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    CONF_WINDOW,
+    DATA_CLIENT,
+    DEFAULT_RADIUS,
+    DEFAULT_WINDOW,
+    DOMAIN,
+    LOGGER,
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -28,7 +23,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_LONGITUDE): cv.longitude,
                 vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): cv.positive_int,
                 vol.Optional(CONF_WINDOW, default=DEFAULT_WINDOW): vol.All(
-                    cv.time_period, cv.positive_timedelta
+                    cv.time_period,
+                    cv.positive_timedelta,
+                    lambda value: value.total_seconds(),
                 ),
             }
         )
@@ -44,36 +41,9 @@ async def async_setup(hass, config):
 
     conf = config[DOMAIN]
 
-    latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
-
-    identifier = f"{latitude}, {longitude}"
-    if identifier in configured_instances(hass):
-        return True
-
-    if conf[CONF_WINDOW] < DEFAULT_WINDOW:
-        _LOGGER.warning(
-            "Setting a window smaller than %s seconds may cause Home Assistant \
-            to miss events",
-            DEFAULT_WINDOW.total_seconds(),
-        )
-
-    if hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
-        unit_system = CONF_UNIT_SYSTEM_IMPERIAL
-    else:
-        unit_system = CONF_UNIT_SYSTEM_METRIC
-
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_LATITUDE: latitude,
-                CONF_LONGITUDE: longitude,
-                CONF_RADIUS: conf[CONF_RADIUS],
-                CONF_WINDOW: conf[CONF_WINDOW],
-                CONF_UNIT_SYSTEM: unit_system,
-            },
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
         )
     )
 
@@ -82,6 +52,15 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up the WWLLN as config entry."""
+    if not config_entry.unique_id:
+        hass.config_entries.async_update_entry(
+            config_entry,
+            unique_id=(
+                f"{config_entry.data[CONF_LATITUDE]}, "
+                f"{config_entry.data[CONF_LONGITUDE]}"
+            ),
+        )
+
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][DATA_CLIENT] = {}
 
@@ -112,7 +91,7 @@ async def async_migrate_entry(hass, config_entry):
 
     default_total_seconds = DEFAULT_WINDOW.total_seconds()
 
-    _LOGGER.debug("Migrating from version %s", version)
+    LOGGER.debug("Migrating from version %s", version)
 
     # 1 -> 2: Expanding the default window to 1 hour (if needed):
     if version == 1:
@@ -120,6 +99,6 @@ async def async_migrate_entry(hass, config_entry):
             data[CONF_WINDOW] = default_total_seconds
         version = config_entry.version = 2
         hass.config_entries.async_update_entry(config_entry, data=data)
-        _LOGGER.info("Migration to version %s successful", version)
+        LOGGER.info("Migration to version %s successful", version)
 
     return True

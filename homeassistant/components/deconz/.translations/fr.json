@@ -77,15 +77,21 @@
             "remote_button_short_release": "Bouton \"{subtype}\" rel\u00e2ch\u00e9",
             "remote_button_triple_press": "Bouton \"{subtype}\" triple cliqu\u00e9",
             "remote_double_tap": "Appareil \"{subtype}\" tapot\u00e9 deux fois",
+            "remote_double_tap_any_side": "Appareil double tap\u00e9 de n\u2019importe quel c\u00f4t\u00e9",
             "remote_falling": "Appareil en chute libre",
+            "remote_flip_180_degrees": "Dispositif retourn\u00e9 \u00e0 180 degr\u00e9s",
+            "remote_flip_90_degrees": "Dispositif retourn\u00e9 \u00e0 90 degr\u00e9s",
             "remote_gyro_activated": "Appareil secou\u00e9",
             "remote_moved": "Appareil d\u00e9plac\u00e9 avec \"{subtype}\" vers le haut",
+            "remote_moved_any_side": "Dispositif d\u00e9plac\u00e9 avec un c\u00f4t\u00e9 quelconque vers le haut",
             "remote_rotate_from_side_1": "Appareil tourn\u00e9 de \"c\u00f4t\u00e9 1\" \u00e0 \"{subtype}\"",
             "remote_rotate_from_side_2": "Appareil tourn\u00e9 de \"c\u00f4t\u00e9 2\" \u00e0 \"{subtype}\"",
             "remote_rotate_from_side_3": "Appareil tourn\u00e9 de \"c\u00f4t\u00e9 3\" \u00e0 \"{subtype}\"",
             "remote_rotate_from_side_4": "Appareil tourn\u00e9 de \"c\u00f4t\u00e9 4\" \u00e0 \"{subtype}\"",
             "remote_rotate_from_side_5": "Appareil tourn\u00e9 de \"c\u00f4t\u00e9 5\" \u00e0 \"{subtype}\"",
-            "remote_rotate_from_side_6": "Appareil tourn\u00e9 de \"c\u00f4t\u00e9 6\" \u00e0 \"{subtype}\""
+            "remote_rotate_from_side_6": "Appareil tourn\u00e9 de \"c\u00f4t\u00e9 6\" \u00e0 \"{subtype}\"",
+            "remote_turned_clockwise": "Appareil tourn\u00e9 dans le sens horaire",
+            "remote_turned_counter_clockwise": "Appareil tourn\u00e9 dans le sens antihoraire"
         }
     },
     "options": {

@@ -20,6 +20,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,9 +56,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     _LOGGER.info("Provisioning Anthem AVR device at %s:%d", host, port)
 
+    @callback
     def async_anthemav_update_callback(message):
         """Receive notification from transport that new data exists."""
-        _LOGGER.info("Received update callback from AVR: %s", message)
+        _LOGGER.debug("Received update callback from AVR: %s", message)
         hass.async_create_task(device.async_update_ha_state())
 
     avr = await anthemav.Connection.create(

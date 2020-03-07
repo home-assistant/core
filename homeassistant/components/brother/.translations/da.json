@@ -9,6 +9,7 @@
             "snmp_error": "SNMP-server er sl\u00e5et fra, eller printeren underst\u00f8ttes ikke.",
             "wrong_host": "Ugyldigt v\u00e6rtsnavn eller IP-adresse."
         },
+        "flow_title": "Brother-printer: {model} {serial_number}",
         "step": {
             "user": {
                 "data": {
@@ -17,6 +18,13 @@
                 },
                 "description": "Konfigurer Brother-printerintegration. Hvis du har problemer med konfiguration, kan du g\u00e5 til: https://www.home-assistant.io/integrations/brother",
                 "title": "Brother-printer"
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "type": "Type af printer"
+                },
+                "description": "Vil du tilf\u00f8je Brother-printeren {model} med serienummeret `{serial_number}` til Home Assistant?",
+                "title": "Fandt Brother-printer"
             }
         },
         "title": "Brother-printer"

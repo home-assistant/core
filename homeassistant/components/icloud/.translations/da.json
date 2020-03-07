@@ -1,12 +1,11 @@
 {
     "config": {
         "abort": {
-            "username_exists": "Kontoen er allerede konfigureret"
+            "already_configured": "Kontoen er allerede konfigureret"
         },
         "error": {
             "login": "Loginfejl: Kontroller din email og adgangskode",
             "send_verification_code": "Bekr\u00e6ftelseskoden kunne ikke sendes",
-            "username_exists": "Kontoen er allerede konfigureret",
             "validate_verification_code": "Bekr\u00e6ftelseskoden kunne ikke bekr\u00e6ftes, V\u00e6lg en betroet enhed, og start bekr\u00e6ftelsen igen"
         },
         "step": {

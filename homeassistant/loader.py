@@ -41,7 +41,6 @@ DATA_INTEGRATIONS = "integrations"
 DATA_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_BUILTIN = "homeassistant.components"
-LOOKUP_PATHS = [PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]
 CUSTOM_WARNING = (
     "You are using a custom integration for %s which has not "
     "been tested by Home Assistant. This component might "
@@ -67,6 +66,9 @@ async def _async_get_custom_components(
     hass: "HomeAssistant",
 ) -> Dict[str, "Integration"]:
     """Return list of custom integrations."""
+    if hass.config.safe_mode:
+        return {}
+
     try:
         import custom_components
     except ImportError:
@@ -178,7 +180,7 @@ class Integration:
 
         Will create a stub manifest.
         """
-        comp = _load_file(hass, domain, LOOKUP_PATHS)
+        comp = _load_file(hass, domain, _lookup_path(hass))
 
         if comp is None:
             return None
@@ -243,6 +245,16 @@ class Integration:
     def quality_scale(self) -> Optional[str]:
         """Return Integration Quality Scale."""
         return cast(str, self.manifest.get("quality_scale"))
+
+    @property
+    def logo(self) -> Optional[str]:
+        """Return Integration Logo."""
+        return cast(str, self.manifest.get("logo"))
+
+    @property
+    def icon(self) -> Optional[str]:
+        """Return Integration Icon."""
+        return cast(str, self.manifest.get("icon"))
 
     @property
     def is_built_in(self) -> bool:
@@ -454,7 +466,7 @@ class Components:
             component: Optional[ModuleType] = integration.get_component()
         else:
             # Fallback to importing old-school
-            component = _load_file(self._hass, comp_name, LOOKUP_PATHS)
+            component = _load_file(self._hass, comp_name, _lookup_path(self._hass))
 
         if component is None:
             raise ImportError(f"Unable to load {comp_name}")
@@ -531,8 +543,15 @@ def _async_mount_config_dir(hass: "HomeAssistant") -> bool:
     Async friendly but not a coroutine.
     """
     if hass.config.config_dir is None:
-        _LOGGER.error("Can't load integrations - config dir is not set")
+        _LOGGER.error("Can't load integrations - configuration directory is not set")
         return False
     if hass.config.config_dir not in sys.path:
         sys.path.insert(0, hass.config.config_dir)
     return True
+
+
+def _lookup_path(hass: "HomeAssistant") -> List[str]:
+    """Return the lookup paths for legacy lookups."""
+    if hass.config.safe_mode:
+        return [PACKAGE_BUILTIN]
+    return [PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]

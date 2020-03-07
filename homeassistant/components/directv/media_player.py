@@ -31,16 +31,18 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
+from .const import (
+    ATTR_MEDIA_CURRENTLY_RECORDING,
+    ATTR_MEDIA_RATING,
+    ATTR_MEDIA_RECORDED,
+    ATTR_MEDIA_START_TIME,
+    DATA_DIRECTV,
+    DEFAULT_DEVICE,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_MEDIA_CURRENTLY_RECORDING = "media_currently_recording"
-ATTR_MEDIA_RATING = "media_rating"
-ATTR_MEDIA_RECORDED = "media_recorded"
-ATTR_MEDIA_START_TIME = "media_start_time"
-
-DEFAULT_DEVICE = "0"
-DEFAULT_NAME = "DirecTV Receiver"
-DEFAULT_PORT = 8080
 
 SUPPORT_DTV = (
     SUPPORT_PAUSE
@@ -62,8 +64,6 @@ SUPPORT_DTV_CLIENT = (
     | SUPPORT_PLAY
 )
 
-DATA_DIRECTV = "data_directv"
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
@@ -77,32 +77,35 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DirecTV platform."""
     known_devices = hass.data.get(DATA_DIRECTV, set())
-    hosts = []
+    entities = []
 
     if CONF_HOST in config:
+        name = config[CONF_NAME]
+        host = config[CONF_HOST]
+        port = config[CONF_PORT]
+        device = config[CONF_DEVICE]
+
         _LOGGER.debug(
-            "Adding configured device %s with client address %s ",
-            config.get(CONF_NAME),
-            config.get(CONF_DEVICE),
+            "Adding configured device %s with client address %s", name, device,
         )
-        hosts.append(
-            [
-                config.get(CONF_NAME),
-                config.get(CONF_HOST),
-                config.get(CONF_PORT),
-                config.get(CONF_DEVICE),
-            ]
-        )
+
+        dtv = DIRECTV(host, port, device)
+        dtv_version = _get_receiver_version(dtv)
+
+        entities.append(DirecTvDevice(name, device, dtv, dtv_version,))
+        known_devices.add((host, device))
 
     elif discovery_info:
         host = discovery_info.get("host")
-        name = "DirecTV_{}".format(discovery_info.get("serial", ""))
+        name = f"DirecTV_{discovery_info.get('serial', '')}"
 
         # Attempt to discover additional RVU units
         _LOGGER.debug("Doing discovery of DirecTV devices on %s", host)
 
         dtv = DIRECTV(host, DEFAULT_PORT)
+
         try:
+            dtv_version = _get_receiver_version(dtv)
             resp = dtv.get_locations()
         except requests.exceptions.RequestException as ex:
             # Bail out and just go forward with uPnP data
@@ -116,6 +119,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             if "locationName" not in loc or "clientAddr" not in loc:
                 continue
 
+            loc_name = str.title(loc["locationName"])
+
             # Make sure that this device is not already configured
             # Comparing based on host (IP) and clientAddr.
             if (host, loc["clientAddr"]) in known_devices:
@@ -123,42 +128,47 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     "Discovered device %s on host %s with "
                     "client address %s is already "
                     "configured",
-                    str.title(loc["locationName"]),
+                    loc_name,
                     host,
                     loc["clientAddr"],
                 )
             else:
                 _LOGGER.debug(
                     "Adding discovered device %s with client address %s",
-                    str.title(loc["locationName"]),
+                    loc_name,
                     loc["clientAddr"],
                 )
-                hosts.append(
-                    [
-                        str.title(loc["locationName"]),
-                        host,
-                        DEFAULT_PORT,
+
+                entities.append(
+                    DirecTvDevice(
+                        loc_name,
                         loc["clientAddr"],
-                    ]
+                        DIRECTV(host, DEFAULT_PORT, loc["clientAddr"]),
+                        dtv_version,
+                    )
                 )
+                known_devices.add((host, loc["clientAddr"]))
 
-    dtvs = []
+    add_entities(entities)
 
-    for host in hosts:
-        dtvs.append(DirecTvDevice(*host))
-        hass.data.setdefault(DATA_DIRECTV, set()).add((host[1], host[3]))
 
-    add_entities(dtvs)
+def _get_receiver_version(client):
+    """Return the version of the DirectTV receiver."""
+    try:
+        return client.get_version()
+    except requests.exceptions.RequestException as ex:
+        _LOGGER.debug("Request exception %s trying to get receiver version", ex)
+        return None
 
 
 class DirecTvDevice(MediaPlayerDevice):
     """Representation of a DirecTV receiver on the network."""
 
-    def __init__(self, name, host, port, device):
+    def __init__(self, name, device, dtv, version_info=None):
         """Initialize the device."""
-
-        self.dtv = DIRECTV(host, port, device)
+        self.dtv = dtv
         self._name = name
+        self._unique_id = None
         self._is_standby = True
         self._current = None
         self._last_update = None
@@ -169,6 +179,11 @@ class DirecTvDevice(MediaPlayerDevice):
         self._assumed_state = None
         self._available = False
         self._first_error_timestamp = None
+
+        if device != "0":
+            self._unique_id = device
+        elif version_info:
+            self._unique_id = "".join(version_info.get("receiverId").split())
 
         if self._is_client:
             _LOGGER.debug("Created DirecTV client %s for device %s", self._name, device)
@@ -204,9 +219,7 @@ class DirecTvDevice(MediaPlayerDevice):
                 else:
                     # If an error is received then only set to unavailable if
                     # this started at least 1 minute ago.
-                    log_message = "{}: Invalid status {} received".format(
-                        self.entity_id, self._current["status"]["code"]
-                    )
+                    log_message = f"{self.entity_id}: Invalid status {self._current['status']['code']} received"
                     if self._check_state_available():
                         _LOGGER.debug(log_message)
                     else:
@@ -256,6 +269,11 @@ class DirecTvDevice(MediaPlayerDevice):
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return a unique ID to use for this media player."""
+        return self._unique_id
 
     # MediaPlayerDevice properties and methods
     @property
@@ -350,7 +368,7 @@ class DirecTvDevice(MediaPlayerDevice):
         if self._is_standby:
             return None
 
-        return "{} ({})".format(self._current["callsign"], self._current["major"])
+        return f"{self._current['callsign']} ({self._current['major']})"
 
     @property
     def source(self):

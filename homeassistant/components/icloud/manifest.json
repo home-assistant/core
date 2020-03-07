@@ -3,7 +3,7 @@
   "name": "Apple iCloud",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/icloud",
-  "requirements": ["pyicloud==0.9.1"],
+  "requirements": ["pyicloud==0.9.2"],
   "dependencies": [],
   "codeowners": ["@Quentame"]
 }

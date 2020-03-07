@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "MELCloud-integration redan konfigurerad f\u00f6r den h\u00e4r e-postadressen. \u00c5tkomsttoken har uppdaterats."
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta, f\u00f6rs\u00f6k igen",
+            "invalid_auth": "Ogiltig autentisering",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "MELCloud-l\u00f6senord.",
+                    "username": "E-post som anv\u00e4nds f\u00f6r att logga in p\u00e5 MELCloud."
+                },
+                "description": "Anslut med ditt MELCloud-konto.",
+                "title": "Anslut till MELCloud"
+            }
+        },
+        "title": "MELCloud"
+    }
+}

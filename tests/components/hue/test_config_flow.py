@@ -2,7 +2,9 @@
 import asyncio
 from unittest.mock import Mock
 
+from aiohttp import client_exceptions
 import aiohue
+from aiohue.discovery import URL_NUPNP
 from asynctest import CoroutineMock, patch
 import pytest
 import voluptuous as vol
@@ -77,6 +79,7 @@ async def test_flow_works(hass):
     assert result["data"] == {
         "host": "1.2.3.4",
         "username": "home-assistant#test-home",
+        "allow_hue_groups": False,
     }
 
     assert len(mock_bridge.initialize.mock_calls) == 1
@@ -84,7 +87,7 @@ async def test_flow_works(hass):
 
 async def test_flow_no_discovered_bridges(hass, aioclient_mock):
     """Test config flow discovers no bridges."""
-    aioclient_mock.get(const.API_NUPNP, json=[])
+    aioclient_mock.get(URL_NUPNP, json=[])
 
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": "user"}
@@ -95,9 +98,7 @@ async def test_flow_no_discovered_bridges(hass, aioclient_mock):
 
 async def test_flow_all_discovered_bridges_exist(hass, aioclient_mock):
     """Test config flow discovers only already configured bridges."""
-    aioclient_mock.get(
-        const.API_NUPNP, json=[{"internalipaddress": "1.2.3.4", "id": "bla"}]
-    )
+    aioclient_mock.get(URL_NUPNP, json=[{"internalipaddress": "1.2.3.4", "id": "bla"}])
     MockConfigEntry(
         domain="hue", unique_id="bla", data={"host": "1.2.3.4"}
     ).add_to_hass(hass)
@@ -111,9 +112,7 @@ async def test_flow_all_discovered_bridges_exist(hass, aioclient_mock):
 
 async def test_flow_one_bridge_discovered(hass, aioclient_mock):
     """Test config flow discovers one bridge."""
-    aioclient_mock.get(
-        const.API_NUPNP, json=[{"internalipaddress": "1.2.3.4", "id": "bla"}]
-    )
+    aioclient_mock.get(URL_NUPNP, json=[{"internalipaddress": "1.2.3.4", "id": "bla"}])
 
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": "user"}
@@ -130,7 +129,7 @@ async def test_flow_two_bridges_discovered(hass, aioclient_mock):
     ).add_to_hass(hass)
 
     aioclient_mock.get(
-        const.API_NUPNP,
+        URL_NUPNP,
         json=[
             {"internalipaddress": "1.2.3.4", "id": "bla"},
             {"internalipaddress": "5.6.7.8", "id": "beer"},
@@ -153,7 +152,7 @@ async def test_flow_two_bridges_discovered(hass, aioclient_mock):
 async def test_flow_two_bridges_discovered_one_new(hass, aioclient_mock):
     """Test config flow discovers two bridges."""
     aioclient_mock.get(
-        const.API_NUPNP,
+        URL_NUPNP,
         json=[
             {"internalipaddress": "1.2.3.4", "id": "bla"},
             {"internalipaddress": "5.6.7.8", "id": "beer"},
@@ -214,6 +213,26 @@ async def test_flow_link_timeout(hass):
     assert result["errors"] == {"base": "linking"}
 
 
+async def test_flow_link_unknown_error(hass):
+    """Test if a unknown error happened during the linking processes."""
+    mock_bridge = get_mock_bridge(mock_create_user=CoroutineMock(side_effect=OSError),)
+    with patch(
+        "homeassistant.components.hue.config_flow.discover_nupnp",
+        return_value=[mock_bridge],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN, context={"source": "user"}
+        )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "link"
+    assert result["errors"] == {"base": "linking"}
+
+
 async def test_flow_link_button_not_pressed(hass):
     """Test config flow ."""
     mock_bridge = get_mock_bridge(
@@ -239,7 +258,7 @@ async def test_flow_link_button_not_pressed(hass):
 async def test_flow_link_unknown_host(hass):
     """Test config flow ."""
     mock_bridge = get_mock_bridge(
-        mock_create_user=CoroutineMock(side_effect=aiohue.RequestError),
+        mock_create_user=CoroutineMock(side_effect=client_exceptions.ClientOSError),
     )
     with patch(
         "homeassistant.components.hue.config_flow.discover_nupnp",
@@ -296,6 +315,36 @@ async def test_bridge_ssdp_emulated_hue(hass):
             ssdp.ATTR_UPNP_FRIENDLY_NAME: "Home Assistant Bridge",
             ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
             ssdp.ATTR_UPNP_SERIAL: "1234",
+        },
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_hue_bridge"
+
+
+async def test_bridge_ssdp_missing_location(hass):
+    """Test if discovery info is missing a location attribute."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": "ssdp"},
+        data={
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_SERIAL: "1234",
+        },
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_hue_bridge"
+
+
+async def test_bridge_ssdp_missing_serial(hass):
+    """Test if discovery info is a serial attribute."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": "ssdp"},
+        data={
+            ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
         },
     )
 
@@ -392,6 +441,7 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(hass):
     assert result["data"] == {
         "host": "2.2.2.2",
         "username": "username-abc",
+        "allow_hue_groups": False,
     }
     entries = hass.config_entries.async_entries("hue")
     assert len(entries) == 2
@@ -417,6 +467,22 @@ async def test_bridge_homekit(hass):
     assert result["step_id"] == "link"
 
 
+async def test_bridge_import_already_configured(hass):
+    """Test if a import flow aborts if host is already configured."""
+    MockConfigEntry(
+        domain="hue", unique_id="aabbccddeeff", data={"host": "0.0.0.0"}
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": "import"},
+        data={"host": "0.0.0.0", "properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
+
 async def test_bridge_homekit_already_configured(hass):
     """Test if a HomeKit discovered bridge has already been configured."""
     MockConfigEntry(
@@ -431,3 +497,43 @@ async def test_bridge_homekit_already_configured(hass):
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
+
+
+async def test_ssdp_discovery_update_configuration(hass):
+    """Test if a discovered bridge is configured and updated with new host."""
+    entry = MockConfigEntry(
+        domain="hue", unique_id="aabbccddeeff", data={"host": "0.0.0.0"}
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": "ssdp"},
+        data={
+            ssdp.ATTR_SSDP_LOCATION: "http://1.1.1.1/",
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_SERIAL: "aabbccddeeff",
+        },
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert entry.data["host"] == "1.1.1.1"
+
+
+async def test_homekit_discovery_update_configuration(hass):
+    """Test if a discovered bridge is configured and updated with new host."""
+    entry = MockConfigEntry(
+        domain="hue", unique_id="aabbccddeeff", data={"host": "0.0.0.0"}
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": "homekit"},
+        data={"host": "1.1.1.1", "properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert entry.data["host"] == "1.1.1.1"

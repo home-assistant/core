@@ -2,14 +2,14 @@
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONF_NAME,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     PRESSURE_HPA,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.entity import Entity
 
@@ -28,21 +28,18 @@ ATTR_ICON = "icon"
 ATTR_LABEL = "label"
 ATTR_UNIT = "unit"
 
-HUMI_PERCENT = "%"
-VOLUME_MICROGRAMS_PER_CUBIC_METER = "µg/m³"
-
 SENSOR_TYPES = {
     ATTR_API_PM1: {
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:blur",
         ATTR_LABEL: ATTR_API_PM1,
-        ATTR_UNIT: VOLUME_MICROGRAMS_PER_CUBIC_METER,
+        ATTR_UNIT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     },
     ATTR_API_HUMIDITY: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
         ATTR_ICON: None,
         ATTR_LABEL: ATTR_API_HUMIDITY.capitalize(),
-        ATTR_UNIT: HUMI_PERCENT,
+        ATTR_UNIT: UNIT_PERCENTAGE,
     },
     ATTR_API_PRESSURE: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_PRESSURE,
@@ -62,14 +59,12 @@ SENSOR_TYPES = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Airly sensor entities based on a config entry."""
     name = config_entry.data[CONF_NAME]
-    latitude = config_entry.data[CONF_LATITUDE]
-    longitude = config_entry.data[CONF_LONGITUDE]
 
     data = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id]
 
     sensors = []
     for sensor in SENSOR_TYPES:
-        unique_id = f"{latitude}-{longitude}-{sensor.lower()}"
+        unique_id = f"{config_entry.unique_id}-{sensor.lower()}"
         sensors.append(AirlySensor(data, name, sensor, unique_id))
 
     async_add_entities(sensors, True)

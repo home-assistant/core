@@ -13,22 +13,49 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema({"host": str, "username": str, "password": str})
 
 
+class PlaceholderHub:
+    """Placeholder class to make tests pass.
+
+    TODO Remove this placeholder class and replace with things from your PyPI package.
+    """
+
+    def __init__(self, host):
+        """Initialize."""
+        self.host = host
+
+    async def authenticate(self, username, password) -> bool:
+        """Test if we can authenticate with the host."""
+        return True
+
+
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     # TODO validate the data can be used to set up a connection.
+
+    # If your PyPI package is not built with async, pass your methods
+    # to the executor:
+    # await hass.async_add_executor_job(
+    #     your_validate_func, data["username"], data["password"]
+    # )
+
+    hub = PlaceholderHub(data["host"])
+
+    if not await hub.authenticate(data["username"], data["password"]):
+        raise InvalidAuth
+
     # If you cannot connect:
     # throw CannotConnect
     # If the authentication is wrong:
     # InvalidAuth
 
-    # Return some info we want to store in the config entry.
+    # Return info that you want to store in the config entry.
     return {"title": "Name of the device"}
 
 
-class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NEW_NAME."""
 
     VERSION = 1

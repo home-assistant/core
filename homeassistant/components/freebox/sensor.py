@@ -1,6 +1,7 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 import logging
 
+from homeassistant.const import DATA_RATE_KILOBYTES_PER_SECOND
 from homeassistant.helpers.entity import Entity
 
 from . import DATA_FREEBOX
@@ -56,7 +57,7 @@ class FbxRXSensor(FbxSensor):
     """Update the Freebox RxSensor."""
 
     _name = "Freebox download speed"
-    _unit = "KB/s"
+    _unit = DATA_RATE_KILOBYTES_PER_SECOND
     _icon = "mdi:download-network"
 
     async def async_update(self):
@@ -70,7 +71,7 @@ class FbxTXSensor(FbxSensor):
     """Update the Freebox TxSensor."""
 
     _name = "Freebox upload speed"
-    _unit = "KB/s"
+    _unit = DATA_RATE_KILOBYTES_PER_SECOND
     _icon = "mdi:upload-network"
 
     async def async_update(self):

@@ -1,8 +1,9 @@
 """Support for Homekit device discovery."""
 import logging
+import os
 
-import homekit
-from homekit.model.characteristics import CharacteristicsTypes
+import aiohomekit
+from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -45,10 +46,12 @@ class HomeKitEntity(Entity):
         )
 
         self._accessory.add_pollable_characteristics(self.pollable_characteristics)
+        self._accessory.add_watchable_characteristics(self.watchable_characteristics)
 
     async def async_will_remove_from_hass(self):
         """Prepare to be removed from hass."""
         self._accessory.remove_pollable_characteristics(self._aid)
+        self._accessory.remove_watchable_characteristics(self._aid)
 
         for signal_remove in self._signals:
             signal_remove()
@@ -63,13 +66,14 @@ class HomeKitEntity(Entity):
         return False
 
     def setup(self):
-        """Configure an entity baed on its HomeKit characterstics metadata."""
+        """Configure an entity baed on its HomeKit characteristics metadata."""
         accessories = self._accessory.accessories
 
         get_uuid = CharacteristicsTypes.get_uuid
         characteristic_types = [get_uuid(c) for c in self.get_characteristic_types()]
 
         self.pollable_characteristics = []
+        self.watchable_characteristics = []
         self._chars = {}
         self._char_names = {}
 
@@ -91,10 +95,25 @@ class HomeKitEntity(Entity):
                         continue
                     self._setup_characteristic(char)
 
+                accessory = self._accessory.entity_map.aid(self._aid)
+                this_service = accessory.services.iid(self._iid)
+                for child_service in accessory.services.filter(
+                    parent_service=this_service
+                ):
+                    for char in child_service.characteristics:
+                        if char.type not in characteristic_types:
+                            continue
+                        self._setup_characteristic(char.to_accessory_and_service_list())
+
     def _setup_characteristic(self, char):
         """Configure an entity based on a HomeKit characteristics metadata."""
         # Build up a list of (aid, iid) tuples to poll on update()
-        self.pollable_characteristics.append((self._aid, char["iid"]))
+        if "pr" in char["perms"]:
+            self.pollable_characteristics.append((self._aid, char["iid"]))
+
+        # Build up a list of (aid, iid) tuples to subscribe to
+        if "ev" in char["perms"]:
+            self.watchable_characteristics.append((self._aid, char["iid"]))
 
         # Build a map of ctype -> iid
         short_name = CharacteristicsTypes.get_short(char["type"])
@@ -124,7 +143,7 @@ class HomeKitEntity(Entity):
         """Collect new data from bridge and update the entity state in hass."""
         accessory_state = self._accessory.current_state.get(self._aid, {})
         for iid, result in accessory_state.items():
-            # No value so dont process this result
+            # No value so don't process this result
             if "value" not in result:
                 continue
 
@@ -223,8 +242,18 @@ async def async_setup(hass, config):
     map_storage = hass.data[ENTITY_MAP] = EntityMapStorage(hass)
     await map_storage.async_initialize()
 
-    hass.data[CONTROLLER] = homekit.Controller()
+    hass.data[CONTROLLER] = aiohomekit.Controller()
     hass.data[KNOWN_DEVICES] = {}
+
+    dothomekit_dir = hass.config.path(".homekit")
+    if os.path.exists(dothomekit_dir):
+        _LOGGER.warning(
+            (
+                "Legacy homekit_controller state found in %s. Support for reading "
+                "the folder is deprecated and will be removed in 0.109.0."
+            ),
+            dothomekit_dir,
+        )
 
     return True
 

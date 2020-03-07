@@ -1,8 +1,0 @@
-{
-  "domain": "duke_energy",
-  "name": "Duke Energy",
-  "documentation": "https://www.home-assistant.io/integrations/duke_energy",
-  "requirements": ["pydukeenergy==0.0.6"],
-  "dependencies": [],
-  "codeowners": []
-}

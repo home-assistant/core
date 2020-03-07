@@ -21,6 +21,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import CoreState
 from homeassistant.helpers import entity_registry
@@ -127,7 +128,7 @@ async def test_light_brightness(hass, hk_driver, cls, events):
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_turn_on[0].data[ATTR_BRIGHTNESS_PCT] == 20
     assert len(events) == 1
-    assert events[-1].data[ATTR_VALUE] == "brightness at 20%"
+    assert events[-1].data[ATTR_VALUE] == f"brightness at 20{UNIT_PERCENTAGE}"
 
     await hass.async_add_job(acc.char_on.client_update_value, 1)
     await hass.async_add_job(acc.char_brightness.client_update_value, 40)
@@ -136,7 +137,7 @@ async def test_light_brightness(hass, hk_driver, cls, events):
     assert call_turn_on[1].data[ATTR_ENTITY_ID] == entity_id
     assert call_turn_on[1].data[ATTR_BRIGHTNESS_PCT] == 40
     assert len(events) == 2
-    assert events[-1].data[ATTR_VALUE] == "brightness at 40%"
+    assert events[-1].data[ATTR_VALUE] == f"brightness at 40{UNIT_PERCENTAGE}"
 
     await hass.async_add_job(acc.char_on.client_update_value, 1)
     await hass.async_add_job(acc.char_brightness.client_update_value, 0)
@@ -175,6 +176,25 @@ async def test_light_color_temperature(hass, hk_driver, cls, events):
     assert call_turn_on[0].data[ATTR_COLOR_TEMP] == 250
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] == "color temperature at 250"
+
+
+async def test_light_color_temperature_and_rgb_color(hass, hk_driver, cls, events):
+    """Test light with color temperature and rgb color not exposing temperature."""
+    entity_id = "light.demo"
+
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_FEATURES: SUPPORT_COLOR_TEMP | SUPPORT_COLOR,
+            ATTR_COLOR_TEMP: 190,
+            ATTR_HS_COLOR: (260, 90),
+        },
+    )
+    await hass.async_block_till_done()
+    acc = cls.light(hass, hk_driver, "Light", entity_id, 2, None)
+
+    assert not hasattr(acc, "char_color_temperature")
 
 
 async def test_light_rgb_color(hass, hk_driver, cls, events):
@@ -216,9 +236,7 @@ async def test_light_restore(hass, hk_driver, cls, events):
 
     registry = await entity_registry.async_get_registry(hass)
 
-    registry.async_get_or_create(
-        "light", "hue", "1234", suggested_object_id="simple",
-    )
+    registry.async_get_or_create("light", "hue", "1234", suggested_object_id="simple")
     registry.async_get_or_create(
         "light",
         "hue",

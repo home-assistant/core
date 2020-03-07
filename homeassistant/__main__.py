@@ -6,12 +6,9 @@ import platform
 import subprocess
 import sys
 import threading
-from typing import TYPE_CHECKING, Any, Dict, List
+from typing import List
 
 from homeassistant.const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE, __version__
-
-if TYPE_CHECKING:
-    from homeassistant import core
 
 
 def set_loop() -> None:
@@ -78,19 +75,6 @@ def ensure_config_path(config_dir: str) -> None:
             sys.exit(1)
 
 
-async def ensure_config_file(hass: "core.HomeAssistant", config_dir: str) -> str:
-    """Ensure configuration file exists."""
-    import homeassistant.config as config_util
-
-    config_path = await config_util.async_ensure_config_exists(hass, config_dir)
-
-    if config_path is None:
-        print("Error getting configuration path")
-        sys.exit(1)
-
-    return config_path
-
-
 def get_arguments() -> argparse.Namespace:
     """Get parsed passed in arguments."""
     import homeassistant.config as config_util
@@ -107,7 +91,7 @@ def get_arguments() -> argparse.Namespace:
         help="Directory that contains the Home Assistant configuration",
     )
     parser.add_argument(
-        "--demo-mode", action="store_true", help="Start Home Assistant in demo mode"
+        "--safe-mode", action="store_true", help="Start Home Assistant in safe mode"
     )
     parser.add_argument(
         "--debug", action="store_true", help="Start Home Assistant in debug mode"
@@ -253,34 +237,20 @@ def cmdline() -> List[str]:
 
 async def setup_and_run_hass(config_dir: str, args: argparse.Namespace) -> int:
     """Set up Home Assistant and run."""
-    from homeassistant import bootstrap, core
+    from homeassistant import bootstrap
 
-    hass = core.HomeAssistant()
+    hass = await bootstrap.async_setup_hass(
+        config_dir=config_dir,
+        verbose=args.verbose,
+        log_rotate_days=args.log_rotate_days,
+        log_file=args.log_file,
+        log_no_color=args.log_no_color,
+        skip_pip=args.skip_pip,
+        safe_mode=args.safe_mode,
+    )
 
-    if args.demo_mode:
-        config: Dict[str, Any] = {"frontend": {}, "demo": {}}
-        bootstrap.async_from_config_dict(
-            config,
-            hass,
-            config_dir=config_dir,
-            verbose=args.verbose,
-            skip_pip=args.skip_pip,
-            log_rotate_days=args.log_rotate_days,
-            log_file=args.log_file,
-            log_no_color=args.log_no_color,
-        )
-    else:
-        config_file = await ensure_config_file(hass, config_dir)
-        print("Config directory:", config_dir)
-        await bootstrap.async_from_config_file(
-            config_file,
-            hass,
-            verbose=args.verbose,
-            skip_pip=args.skip_pip,
-            log_rotate_days=args.log_rotate_days,
-            log_file=args.log_file,
-            log_no_color=args.log_no_color,
-        )
+    if hass is None:
+        return 1
 
     if args.open_ui and hass.config.api is not None:
         import webbrowser
@@ -358,7 +328,7 @@ def main() -> int:
 
         return scripts.run(args.script)
 
-    config_dir = os.path.join(os.getcwd(), args.config)
+    config_dir = os.path.abspath(os.path.join(os.getcwd(), args.config))
     ensure_config_path(config_dir)
 
     # Daemon functions

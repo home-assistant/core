@@ -32,7 +32,7 @@ def hassio_stubs(hassio_env, hass, hass_client, aioclient_mock):
     with patch(
         "homeassistant.components.hassio.HassIO.update_hass_api",
         return_value=mock_coro({"result": "ok"}),
-    ), patch(
+    ) as hass_api, patch(
         "homeassistant.components.hassio.HassIO.update_hass_timezone",
         return_value=mock_coro({"result": "ok"}),
     ), patch(
@@ -41,6 +41,8 @@ def hassio_stubs(hassio_env, hass, hass_client, aioclient_mock):
     ):
         hass.state = CoreState.starting
         hass.loop.run_until_complete(async_setup_component(hass, "hassio", {}))
+
+    return hass_api.call_args[0][1]
 
 
 @pytest.fixture
@@ -53,6 +55,15 @@ def hassio_client(hassio_stubs, hass, hass_client):
 def hassio_noauth_client(hassio_stubs, hass, aiohttp_client):
     """Return a Hass.io HTTP client without auth."""
     return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
+
+
+@pytest.fixture
+async def hassio_client_supervisor(hass, aiohttp_client, hassio_stubs):
+    """Return an authenticated HTTP client."""
+    access_token = hass.auth.async_create_access_token(hassio_stubs)
+    return await aiohttp_client(
+        hass.http.app, headers={"Authorization": f"Bearer {access_token}"},
+    )
 
 
 @pytest.fixture

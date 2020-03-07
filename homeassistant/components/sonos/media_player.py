@@ -11,6 +11,7 @@ import pysonos
 from pysonos import alarms
 from pysonos.exceptions import SoCoException, SoCoUPnPException
 import pysonos.snapshot
+import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
@@ -30,42 +31,16 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
-from homeassistant.const import (
-    ENTITY_MATCH_ALL,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.const import ATTR_TIME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
+from homeassistant.core import ServiceCall, callback
+from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.util.dt import utcnow
 
 from . import (
-    ATTR_ALARM_ID,
-    ATTR_ENABLED,
-    ATTR_INCLUDE_LINKED_ZONES,
-    ATTR_MASTER,
-    ATTR_NIGHT_SOUND,
-    ATTR_QUEUE_POSITION,
-    ATTR_SLEEP_TIME,
-    ATTR_SPEECH_ENHANCE,
-    ATTR_TIME,
-    ATTR_VOLUME,
-    ATTR_WITH_GROUP,
     CONF_ADVERTISE_ADDR,
     CONF_HOSTS,
     CONF_INTERFACE_ADDR,
-    DATA_SERVICE_EVENT,
     DOMAIN as SONOS_DOMAIN,
-    SERVICE_CLEAR_TIMER,
-    SERVICE_JOIN,
-    SERVICE_PLAY_QUEUE,
-    SERVICE_RESTORE,
-    SERVICE_SET_OPTION,
-    SERVICE_SET_TIMER,
-    SERVICE_SNAPSHOT,
-    SERVICE_UNJOIN,
-    SERVICE_UPDATE_ALARM,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -97,6 +72,27 @@ ATTR_SONOS_GROUP = "sonos_group"
 
 UPNP_ERRORS_TO_IGNORE = ["701", "711", "712"]
 
+SERVICE_JOIN = "join"
+SERVICE_UNJOIN = "unjoin"
+SERVICE_SNAPSHOT = "snapshot"
+SERVICE_RESTORE = "restore"
+SERVICE_SET_TIMER = "set_sleep_timer"
+SERVICE_CLEAR_TIMER = "clear_sleep_timer"
+SERVICE_UPDATE_ALARM = "update_alarm"
+SERVICE_SET_OPTION = "set_option"
+SERVICE_PLAY_QUEUE = "play_queue"
+
+ATTR_SLEEP_TIME = "sleep_time"
+ATTR_ALARM_ID = "alarm_id"
+ATTR_VOLUME = "volume"
+ATTR_ENABLED = "enabled"
+ATTR_INCLUDE_LINKED_ZONES = "include_linked_zones"
+ATTR_MASTER = "master"
+ATTR_WITH_GROUP = "with_group"
+ATTR_NIGHT_SOUND = "night_sound"
+ATTR_SPEECH_ENHANCE = "speech_enhance"
+ATTR_QUEUE_POSITION = "queue_position"
+
 
 class SonosData:
     """Storage class for platform global data."""
@@ -111,7 +107,7 @@ class SonosData:
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Sonos platform. Obsolete."""
     _LOGGER.error(
-        "Loading Sonos by media_player platform config is no longer supported"
+        "Loading Sonos by media_player platform configuration is no longer supported"
     )
 
 
@@ -176,46 +172,100 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     _LOGGER.debug("Adding discovery job")
     hass.async_add_executor_job(_discovery)
 
-    async def async_service_handle(service, data):
+    platform = entity_platform.current_platform.get()
+
+    @service.verify_domain_control(hass, SONOS_DOMAIN)
+    async def async_service_handle(service_call: ServiceCall):
         """Handle dispatched services."""
-        entity_ids = data.get("entity_id")
-        entities = hass.data[DATA_SONOS].entities
-        if entity_ids and entity_ids != ENTITY_MATCH_ALL:
-            entities = [e for e in entities if e.entity_id in entity_ids]
+        entities = await platform.async_extract_from_service(service_call)
 
-        if service == SERVICE_JOIN:
-            master = [
-                e
-                for e in hass.data[DATA_SONOS].entities
-                if e.entity_id == data[ATTR_MASTER]
-            ]
+        if not entities:
+            return
+
+        if service_call.service == SERVICE_JOIN:
+            master = platform.entities.get(service_call.data[ATTR_MASTER])
             if master:
-                await SonosEntity.join_multi(hass, master[0], entities)
-        elif service == SERVICE_UNJOIN:
+                await SonosEntity.join_multi(hass, master, entities)
+            else:
+                _LOGGER.error(
+                    "Invalid master specified for join service: %s",
+                    service_call.data[ATTR_MASTER],
+                )
+        elif service_call.service == SERVICE_UNJOIN:
             await SonosEntity.unjoin_multi(hass, entities)
-        elif service == SERVICE_SNAPSHOT:
-            await SonosEntity.snapshot_multi(hass, entities, data[ATTR_WITH_GROUP])
-        elif service == SERVICE_RESTORE:
-            await SonosEntity.restore_multi(hass, entities, data[ATTR_WITH_GROUP])
-        else:
-            for entity in entities:
-                if service == SERVICE_SET_TIMER:
-                    call = entity.set_sleep_timer
-                elif service == SERVICE_CLEAR_TIMER:
-                    call = entity.clear_sleep_timer
-                elif service == SERVICE_UPDATE_ALARM:
-                    call = entity.set_alarm
-                elif service == SERVICE_SET_OPTION:
-                    call = entity.set_option
-                elif service == SERVICE_PLAY_QUEUE:
-                    call = entity.play_queue
+        elif service_call.service == SERVICE_SNAPSHOT:
+            await SonosEntity.snapshot_multi(
+                hass, entities, service_call.data[ATTR_WITH_GROUP]
+            )
+        elif service_call.service == SERVICE_RESTORE:
+            await SonosEntity.restore_multi(
+                hass, entities, service_call.data[ATTR_WITH_GROUP]
+            )
 
-                hass.async_add_executor_job(call, data)
+    hass.services.async_register(
+        SONOS_DOMAIN,
+        SERVICE_JOIN,
+        async_service_handle,
+        cv.make_entity_service_schema({vol.Required(ATTR_MASTER): cv.entity_id}),
+    )
 
-        # We are ready for the next service call
-        hass.data[DATA_SERVICE_EVENT].set()
+    hass.services.async_register(
+        SONOS_DOMAIN,
+        SERVICE_UNJOIN,
+        async_service_handle,
+        cv.make_entity_service_schema({}),
+    )
 
-    async_dispatcher_connect(hass, SONOS_DOMAIN, async_service_handle)
+    join_unjoin_schema = cv.make_entity_service_schema(
+        {vol.Optional(ATTR_WITH_GROUP, default=True): cv.boolean}
+    )
+
+    hass.services.async_register(
+        SONOS_DOMAIN, SERVICE_SNAPSHOT, async_service_handle, join_unjoin_schema
+    )
+
+    hass.services.async_register(
+        SONOS_DOMAIN, SERVICE_RESTORE, async_service_handle, join_unjoin_schema
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_SET_TIMER,
+        {
+            vol.Required(ATTR_SLEEP_TIME): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=86399)
+            )
+        },
+        "set_sleep_timer",
+    )
+
+    platform.async_register_entity_service(SERVICE_CLEAR_TIMER, {}, "clear_sleep_timer")
+
+    platform.async_register_entity_service(
+        SERVICE_UPDATE_ALARM,
+        {
+            vol.Required(ATTR_ALARM_ID): cv.positive_int,
+            vol.Optional(ATTR_TIME): cv.time,
+            vol.Optional(ATTR_VOLUME): cv.small_float,
+            vol.Optional(ATTR_ENABLED): cv.boolean,
+            vol.Optional(ATTR_INCLUDE_LINKED_ZONES): cv.boolean,
+        },
+        "set_alarm",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_SET_OPTION,
+        {
+            vol.Optional(ATTR_NIGHT_SOUND): cv.boolean,
+            vol.Optional(ATTR_SPEECH_ENHANCE): cv.boolean,
+        },
+        "set_option",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_PLAY_QUEUE,
+        {vol.Optional(ATTR_QUEUE_POSITION): cv.positive_int},
+        "play_queue",
+    )
 
 
 class _ProcessSonosEventQueue:
@@ -480,10 +530,10 @@ class SonosEntity(MediaPlayerDevice):
 
             player = self.soco
 
-            def subscribe(service, action):
+            def subscribe(sonos_service, action):
                 """Add a subscription to a pysonos service."""
                 queue = _ProcessSonosEventQueue(action)
-                sub = service.subscribe(auto_renew=True, event_queue=queue)
+                sub = sonos_service.subscribe(auto_renew=True, event_queue=queue)
                 self._subscriptions.append(sub)
 
             subscribe(player.avTransport, self.update_media)
@@ -712,6 +762,7 @@ class SonosEntity(MediaPlayerDevice):
 
             return await self.hass.async_add_executor_job(_get_soco_group)
 
+        @callback
         def _async_regroup(group):
             """Rebuild internal group layout."""
             sonos_group = []
@@ -1147,52 +1198,53 @@ class SonosEntity(MediaPlayerDevice):
 
     @soco_error()
     @soco_coordinator
-    def set_sleep_timer(self, data):
+    def set_sleep_timer(self, sleep_time):
         """Set the timer on the player."""
-        self.soco.set_sleep_timer(data[ATTR_SLEEP_TIME])
+        self.soco.set_sleep_timer(sleep_time)
 
     @soco_error()
     @soco_coordinator
-    def clear_sleep_timer(self, data):
+    def clear_sleep_timer(self):
         """Clear the timer on the player."""
         self.soco.set_sleep_timer(None)
 
     @soco_error()
     @soco_coordinator
-    def set_alarm(self, data):
+    def set_alarm(
+        self, alarm_id, time=None, volume=None, enabled=None, include_linked_zones=None
+    ):
         """Set the alarm clock on the player."""
-
         alarm = None
         for one_alarm in alarms.get_alarms(self.soco):
             # pylint: disable=protected-access
-            if one_alarm._alarm_id == str(data[ATTR_ALARM_ID]):
+            if one_alarm._alarm_id == str(alarm_id):
                 alarm = one_alarm
         if alarm is None:
-            _LOGGER.warning("did not find alarm with id %s", data[ATTR_ALARM_ID])
+            _LOGGER.warning("did not find alarm with id %s", alarm_id)
             return
-        if ATTR_TIME in data:
-            alarm.start_time = data[ATTR_TIME]
-        if ATTR_VOLUME in data:
-            alarm.volume = int(data[ATTR_VOLUME] * 100)
-        if ATTR_ENABLED in data:
-            alarm.enabled = data[ATTR_ENABLED]
-        if ATTR_INCLUDE_LINKED_ZONES in data:
-            alarm.include_linked_zones = data[ATTR_INCLUDE_LINKED_ZONES]
+        if time is not None:
+            alarm.start_time = time
+        if volume is not None:
+            alarm.volume = int(volume * 100)
+        if enabled is not None:
+            alarm.enabled = enabled
+        if include_linked_zones is not None:
+            alarm.include_linked_zones = include_linked_zones
         alarm.save()
 
     @soco_error()
-    def set_option(self, data):
+    def set_option(self, night_sound=None, speech_enhance=None):
         """Modify playback options."""
-        if ATTR_NIGHT_SOUND in data and self._night_sound is not None:
-            self.soco.night_mode = data[ATTR_NIGHT_SOUND]
+        if night_sound is not None and self._night_sound is not None:
+            self.soco.night_mode = night_sound
 
-        if ATTR_SPEECH_ENHANCE in data and self._speech_enhance is not None:
-            self.soco.dialog_mode = data[ATTR_SPEECH_ENHANCE]
+        if speech_enhance is not None and self._speech_enhance is not None:
+            self.soco.dialog_mode = speech_enhance
 
     @soco_error()
-    def play_queue(self, data):
+    def play_queue(self, queue_position=0):
         """Start playing the queue."""
-        self.soco.play_from_queue(data[ATTR_QUEUE_POSITION])
+        self.soco.play_from_queue(queue_position)
 
     @property
     def device_state_attributes(self):

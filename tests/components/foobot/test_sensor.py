@@ -8,7 +8,13 @@ import pytest
 
 from homeassistant.components.foobot import sensor as foobot
 import homeassistant.components.sensor as sensor
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
+    TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
+)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import async_setup_component
 
@@ -33,12 +39,12 @@ async def test_default_setup(hass, aioclient_mock):
     assert await async_setup_component(hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
 
     metrics = {
-        "co2": ["1232.0", "ppm"],
+        "co2": ["1232.0", CONCENTRATION_PARTS_PER_MILLION],
         "temperature": ["21.1", TEMP_CELSIUS],
-        "humidity": ["49.5", "%"],
-        "pm2_5": ["144.8", "µg/m3"],
-        "voc": ["340.7", "ppb"],
-        "index": ["138.9", "%"],
+        "humidity": ["49.5", UNIT_PERCENTAGE],
+        "pm2_5": ["144.8", CONCENTRATION_MICROGRAMS_PER_CUBIC_METER],
+        "voc": ["340.7", CONCENTRATION_PARTS_PER_BILLION],
+        "index": ["138.9", UNIT_PERCENTAGE],
     }
 
     for name, value in metrics.items():

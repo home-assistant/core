@@ -1,5 +1,11 @@
 """Integrates Native Apps to Home Assistant."""
-from homeassistant.components.webhook import async_register as webhook_register
+import asyncio
+
+from homeassistant.components import cloud
+from homeassistant.components.webhook import (
+    async_register as webhook_register,
+    async_unregister as webhook_unregister,
+)
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.helpers import device_registry as dr, discovery
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -10,6 +16,7 @@ from .const import (
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_OS_VERSION,
+    CONF_CLOUDHOOK_URL,
     DATA_BINARY_SENSOR,
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
@@ -20,9 +27,9 @@ from .const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
+from .helpers import savable_state
 from .http_api import RegistrationsView
 from .webhook import handle_webhook
-from .websocket_api import register_websocket_handlers
 
 PLATFORMS = "sensor", "binary_sensor", "device_tracker"
 
@@ -49,7 +56,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     }
 
     hass.http.register_view(RegistrationsView())
-    register_websocket_handlers(hass)
 
     for deleted_id in hass.data[DOMAIN][DATA_DELETED_IDS]:
         try:
@@ -96,3 +102,34 @@ async def async_setup_entry(hass, entry):
         )
 
     return True
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a mobile app entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+    if not unload_ok:
+        return False
+
+    webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+
+    return True
+
+
+async def async_remove_entry(hass, entry):
+    """Cleanup when entry is removed."""
+    hass.data[DOMAIN][DATA_DELETED_IDS].append(entry.data[CONF_WEBHOOK_ID])
+    store = hass.data[DOMAIN][DATA_STORE]
+    await store.async_save(savable_state(hass))
+
+    if CONF_CLOUDHOOK_URL in entry.data:
+        try:
+            await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])
+        except cloud.CloudNotAvailable:
+            pass

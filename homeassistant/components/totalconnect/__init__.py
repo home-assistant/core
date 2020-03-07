@@ -24,7 +24,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-TOTALCONNECT_PLATFORMS = ["alarm_control_panel"]
+TOTALCONNECT_PLATFORMS = ["alarm_control_panel", "binary_sensor"]
 
 
 def setup(hass, config):

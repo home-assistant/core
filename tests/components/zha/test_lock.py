@@ -1,6 +1,8 @@
 """Test zha lock."""
 from unittest.mock import patch
 
+import pytest
+import zigpy.profiles.zha
 import zigpy.zcl.clusters.closures as closures
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.foundation as zcl_f
@@ -10,7 +12,6 @@ from homeassistant.const import STATE_LOCKED, STATE_UNAVAILABLE, STATE_UNLOCKED
 
 from .common import (
     async_enable_traffic,
-    async_init_zigpy_device,
     find_entity_id,
     make_attribute,
     make_zcl_header,
@@ -22,24 +23,28 @@ LOCK_DOOR = 0
 UNLOCK_DOOR = 1
 
 
-async def test_lock(hass, config_entry, zha_gateway):
-    """Test zha lock platform."""
+@pytest.fixture
+async def lock(hass, zigpy_device_mock, zha_device_joined_restored):
+    """Lock cluster fixture."""
 
-    # create zigpy device
-    zigpy_device = await async_init_zigpy_device(
-        hass,
-        [closures.DoorLock.cluster_id, general.Basic.cluster_id],
-        [],
-        None,
-        zha_gateway,
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                "in_clusters": [closures.DoorLock.cluster_id, general.Basic.cluster_id],
+                "out_clusters": [],
+                "device_type": zigpy.profiles.zha.DeviceType.DOOR_LOCK,
+            }
+        },
     )
 
-    # load up lock domain
-    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
-    await hass.async_block_till_done()
+    zha_device = await zha_device_joined_restored(zigpy_device)
+    return zha_device, zigpy_device.endpoints[1].door_lock
 
-    cluster = zigpy_device.endpoints.get(1).door_lock
-    zha_device = zha_gateway.get_device(zigpy_device.ieee)
+
+async def test_lock(hass, lock):
+    """Test zha lock platform."""
+
+    zha_device, cluster = lock
     entity_id = await find_entity_id(DOMAIN, zha_device, hass)
     assert entity_id is not None
 
@@ -47,7 +52,7 @@ async def test_lock(hass, config_entry, zha_gateway):
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # allow traffic to flow through the gateway and device
-    await async_enable_traffic(hass, zha_gateway, [zha_device])
+    await async_enable_traffic(hass, [zha_device])
 
     # test that the state has changed from unavailable to unlocked
     assert hass.states.get(entity_id).state == STATE_UNLOCKED

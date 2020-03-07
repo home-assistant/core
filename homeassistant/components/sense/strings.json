@@ -1,0 +1,22 @@
+{
+  "config": {
+    "title": "Sense",
+    "step": {
+      "user": {
+        "title": "Connect to your Sense Energy Monitor",
+        "data": {
+          "email": "Email Address",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  }
+}

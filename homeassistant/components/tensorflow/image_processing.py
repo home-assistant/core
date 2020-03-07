@@ -4,7 +4,7 @@ import logging
 import os
 import sys
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, UnidentifiedImageError
 import numpy as np
 import voluptuous as vol
 
@@ -287,7 +287,11 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
             inp = img[:, :, [2, 1, 0]]  # BGR->RGB
             inp_expanded = inp.reshape(1, inp.shape[0], inp.shape[1], 3)
         except ImportError:
-            img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
+            try:
+                img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
+            except UnidentifiedImageError:
+                _LOGGER.warning("Unable to process image, bad data")
+                return
             img.thumbnail((460, 460), Image.ANTIALIAS)
             img_width, img_height = img.size
             inp = (

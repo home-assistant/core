@@ -3,7 +3,8 @@
   "name": "HomematicIP Cloud",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/homematicip_cloud",
-  "requirements": ["homematicip==0.10.15"],
+  "requirements": ["homematicip==0.10.17"],
   "dependencies": [],
-  "codeowners": ["@SukramJ"]
+  "codeowners": ["@SukramJ"],
+  "quality_scale": "platinum"
 }

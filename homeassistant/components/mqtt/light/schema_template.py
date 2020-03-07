@@ -1,9 +1,4 @@
-"""
-Support for MQTT Template lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.mqtt_template/
-"""
+"""Support for MQTT Template lights."""
 import logging
 
 import voluptuous as vol
@@ -98,13 +93,12 @@ PLATFORM_SCHEMA_TEMPLATE = (
 
 
 async def async_setup_entity_template(
-    config, async_add_entities, config_entry, discovery_hash
+    config, async_add_entities, config_entry, discovery_data
 ):
     """Set up a MQTT Template light."""
-    async_add_entities([MqttTemplate(config, config_entry, discovery_hash)])
+    async_add_entities([MqttTemplate(config, config_entry, discovery_data)])
 
 
-# pylint: disable=too-many-ancestors
 class MqttTemplate(
     MqttAttributes,
     MqttAvailability,
@@ -115,7 +109,7 @@ class MqttTemplate(
 ):
     """Representation of a MQTT Template light."""
 
-    def __init__(self, config, config_entry, discovery_hash):
+    def __init__(self, config, config_entry, discovery_data):
         """Initialize a MQTT Template light."""
         self._state = False
         self._sub_state = None
@@ -139,7 +133,7 @@ class MqttTemplate(
 
         MqttAttributes.__init__(self, config)
         MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_hash, self.discovery_update)
+        MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
         MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
 
     async def async_added_to_hass(self):
@@ -329,6 +323,7 @@ class MqttTemplate(
         )
         await MqttAttributes.async_will_remove_from_hass(self)
         await MqttAvailability.async_will_remove_from_hass(self)
+        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
 
     @property
     def brightness(self):

@@ -1,15 +1,17 @@
 """Support for the Netatmo Weather Service."""
 from datetime import timedelta
 import logging
-from time import time
 
 import pyatmo
 
 from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -53,24 +55,39 @@ SENSOR_TYPES = {
         "mdi:thermometer",
         DEVICE_CLASS_TEMPERATURE,
     ],
-    "co2": ["CO2", "ppm", "mdi:periodic-table-co2", None],
+    "co2": ["CO2", CONCENTRATION_PARTS_PER_MILLION, "mdi:periodic-table-co2", None],
     "pressure": ["Pressure", "mbar", "mdi:gauge", None],
     "noise": ["Noise", "dB", "mdi:volume-high", None],
-    "humidity": ["Humidity", "%", "mdi:water-percent", DEVICE_CLASS_HUMIDITY],
+    "humidity": [
+        "Humidity",
+        UNIT_PERCENTAGE,
+        "mdi:water-percent",
+        DEVICE_CLASS_HUMIDITY,
+    ],
     "rain": ["Rain", "mm", "mdi:weather-rainy", None],
     "sum_rain_1": ["sum_rain_1", "mm", "mdi:weather-rainy", None],
     "sum_rain_24": ["sum_rain_24", "mm", "mdi:weather-rainy", None],
     "battery_vp": ["Battery", "", "mdi:battery", None],
     "battery_lvl": ["Battery_lvl", "", "mdi:battery", None],
-    "battery_percent": ["battery_percent", "%", None, DEVICE_CLASS_BATTERY],
+    "battery_percent": ["battery_percent", UNIT_PERCENTAGE, None, DEVICE_CLASS_BATTERY],
     "min_temp": ["Min Temp.", TEMP_CELSIUS, "mdi:thermometer", None],
     "max_temp": ["Max Temp.", TEMP_CELSIUS, "mdi:thermometer", None],
     "windangle": ["Angle", "", "mdi:compass", None],
     "windangle_value": ["Angle Value", "º", "mdi:compass", None],
-    "windstrength": ["Wind Strength", "km/h", "mdi:weather-windy", None],
+    "windstrength": [
+        "Wind Strength",
+        SPEED_KILOMETERS_PER_HOUR,
+        "mdi:weather-windy",
+        None,
+    ],
     "gustangle": ["Gust Angle", "", "mdi:compass", None],
     "gustangle_value": ["Gust Angle Value", "º", "mdi:compass", None],
-    "guststrength": ["Gust Strength", "km/h", "mdi:weather-windy", None],
+    "guststrength": [
+        "Gust Strength",
+        SPEED_KILOMETERS_PER_HOUR,
+        "mdi:weather-windy",
+        None,
+    ],
     "reachable": ["Reachability", "", "mdi:signal", None],
     "rf_status": ["Radio", "", "mdi:signal", None],
     "rf_status_lvl": ["Radio_lvl", "", "mdi:signal", None],
@@ -217,7 +234,7 @@ class NetatmoSensor(Entity):
 
         if data is None:
             _LOGGER.info("No data found for %s (%s)", self.module_name, self._module_id)
-            _LOGGER.error("data: %s", self.netatmo_data.data)
+            _LOGGER.debug("data: %s", self.netatmo_data.data)
             self._state = None
             return
 
@@ -427,6 +444,11 @@ class NetatmoPublicSensor(Entity):
         """Return the unit of measurement of this entity."""
         return self._unit_of_measurement
 
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return bool(self._state)
+
     def update(self):
         """Get the latest data from Netatmo API and updates the states."""
         self.netatmo_data.update()
@@ -514,7 +536,6 @@ class NetatmoData:
         """Initialize the data object."""
         self.data = {}
         self.station_data = station_data
-        self._next_update = time()
         self.auth = auth
 
     def get_module_infos(self):

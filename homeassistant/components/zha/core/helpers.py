@@ -1,9 +1,4 @@
-"""
-Helpers for Zigbee Home Automation.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/integrations/zha/
-"""
+"""Helpers for Zigbee Home Automation."""
 import collections
 import logging
 
@@ -11,14 +6,7 @@ import zigpy.types
 
 from homeassistant.core import callback
 
-from .const import (
-    ATTR_NAME,
-    CLUSTER_TYPE_IN,
-    CLUSTER_TYPE_OUT,
-    DATA_ZHA,
-    DATA_ZHA_GATEWAY,
-    DOMAIN,
-)
+from .const import CLUSTER_TYPE_IN, CLUSTER_TYPE_OUT, DATA_ZHA, DATA_ZHA_GATEWAY
 from .registries import BINDABLE_CLUSTERS
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,18 +33,6 @@ async def safe_read(
         return result
     except Exception:  # pylint: disable=broad-except
         return {}
-
-
-def get_attr_id_by_name(cluster, attr_name):
-    """Get the attribute id for a cluster attribute by its name."""
-    return next(
-        (
-            attrid
-            for attrid, (attrname, datatype) in cluster.attributes.items()
-            if attr_name == attrname
-        ),
-        None,
-    )
 
 
 async def get_matched_clusters(source_zha_device, target_zha_device):
@@ -131,28 +107,3 @@ class LogMixin:
     def error(self, msg, *args):
         """Error level log."""
         return self.log(logging.ERROR, msg, *args)
-
-
-@callback
-def async_get_device_info(hass, device, ha_device_registry=None):
-    """Get ZHA device."""
-    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
-    ret_device = {}
-    ret_device.update(device.device_info)
-    ret_device["entities"] = [
-        {
-            "entity_id": entity_ref.reference_id,
-            ATTR_NAME: entity_ref.device_info[ATTR_NAME],
-        }
-        for entity_ref in zha_gateway.device_registry[device.ieee]
-    ]
-
-    if ha_device_registry is not None:
-        reg_device = ha_device_registry.async_get_device(
-            {(DOMAIN, str(device.ieee))}, set()
-        )
-        if reg_device is not None:
-            ret_device["user_given_name"] = reg_device.name_by_user
-            ret_device["device_reg_id"] = reg_device.id
-            ret_device["area_id"] = reg_device.area_id
-    return ret_device

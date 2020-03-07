@@ -6,7 +6,7 @@ CONF_ZIP_CODE = "zip_code"
 DATA_CLIENT = "client"
 DATA_LISTENER = "listener"
 
-TOPIC_DATA_UPDATE = "data_update"
+TOPIC_DATA_UPDATE = f"{DOMAIN}_data_update"
 
 TYPE_ALLERGY_FORECAST = "allergy_average_forecasted"
 TYPE_ALLERGY_INDEX = "allergy_index"

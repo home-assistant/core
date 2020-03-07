@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "connection_error": "Nem siker\u00fclt csatlakozni a SOMA Connecthez.",
+            "missing_configuration": "A Soma \u00f6sszetev\u0151 nincs konfigur\u00e1lva. K\u00e9rj\u00fck, k\u00f6vesse a dokument\u00e1ci\u00f3t.",
+            "result_error": "A SOMA Connect hiba\u00e1llapottal v\u00e1laszolt."
+        },
+        "create_entry": {
+            "default": "Soma sikeresen hiteles\u00edtett."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Kiszolg\u00e1l\u00f3",
+                    "port": "Port"
+                },
+                "description": "K\u00e9rj\u00fck, adja meg a SOMA Connect csatlakoz\u00e1si be\u00e1ll\u00edt\u00e1sait.",
+                "title": "SOMA csatlakoz\u00e1s"
+            }
+        },
+        "title": "Soma"
+    }
+}

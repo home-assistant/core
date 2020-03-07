@@ -22,7 +22,7 @@
                 "data": {
                     "discovery": "Aktivera uppt\u00e4ckt"
                 },
-                "description": "Vill du konfigurera Home Assistant f\u00f6r att ansluta till MQTT Broker som tillhandah\u00e5lls av hass.io-till\u00e4gget {addon} ?",
+                "description": "Vill du konfigurera Home Assistant att ansluta till den MQTT-broker som tillhandah\u00e5lls av Hass.io-till\u00e4gget \"{addon}\"?",
                 "title": "MQTT Broker via Hass.io till\u00e4gg"
             }
         },

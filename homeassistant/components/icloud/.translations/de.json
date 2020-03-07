@@ -1,12 +1,11 @@
 {
     "config": {
         "abort": {
-            "username_exists": "Konto bereits konfiguriert"
+            "already_configured": "Konto bereits konfiguriert"
         },
         "error": {
             "login": "Login-Fehler: Bitte \u00fcberpr\u00fcfe deine E-Mail & Passwort",
             "send_verification_code": "Fehler beim Senden des Best\u00e4tigungscodes",
-            "username_exists": "Konto bereits konfiguriert",
             "validate_verification_code": "Verifizierung des Verifizierungscodes fehlgeschlagen. W\u00e4hle ein vertrauensw\u00fcrdiges Ger\u00e4t aus und starte die Verifizierung erneut"
         },
         "step": {

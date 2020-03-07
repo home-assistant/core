@@ -32,7 +32,7 @@ MOCK_CONFIG = {
 }
 REMOTE_CALL = {
     "name": "HomeAssistant",
-    "description": MOCK_CONFIG[SAMSUNGTV_DOMAIN][0][CONF_NAME],
+    "description": "HomeAssistant",
     "id": "ha.component.samsung",
     "method": "websocket",
     "port": MOCK_CONFIG[SAMSUNGTV_DOMAIN][0][CONF_PORT],
@@ -44,11 +44,13 @@ REMOTE_CALL = {
 @pytest.fixture(name="remote")
 def remote_fixture():
     """Patch the samsungctl Remote."""
-    with patch("homeassistant.components.samsungtv.socket"), patch(
+    with patch("homeassistant.components.samsungtv.socket") as socket1, patch(
         "homeassistant.components.samsungtv.config_flow.socket"
-    ), patch("homeassistant.components.samsungtv.config_flow.Remote"), patch(
+    ) as socket2, patch("homeassistant.components.samsungtv.config_flow.Remote"), patch(
         "homeassistant.components.samsungtv.media_player.SamsungRemote"
     ) as remote:
+        socket1.gethostbyname.return_value = "FAKE_IP_ADDRESS"
+        socket2.gethostbyname.return_value = "FAKE_IP_ADDRESS"
         yield remote
 
 

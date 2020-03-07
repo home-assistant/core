@@ -42,7 +42,7 @@ class KeywordStyleAdapter(logging.LoggerAdapter):
     def process(
         self, msg: Any, kwargs: MutableMapping[str, Any]
     ) -> Tuple[Any, MutableMapping[str, Any]]:
-        """Process the keyward args in preparation for logging."""
+        """Process the keyword args in preparation for logging."""
         return (
             msg,
             {

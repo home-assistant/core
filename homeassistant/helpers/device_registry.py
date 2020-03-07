@@ -260,6 +260,7 @@ class DeviceRegistry:
 
         return new
 
+    @callback
     def async_remove_device(self, device_id: str) -> None:
         """Remove a device from the device registry."""
         del self.devices[device_id]

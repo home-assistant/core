@@ -2,7 +2,7 @@
   "domain": "soma",
   "name": "Soma Connect",
   "config_flow": true,
-  "documentation": "",
+  "documentation": "https://www.home-assistant.io/integrations/soma",
   "dependencies": [],
   "codeowners": ["@ratsept"],
   "requirements": ["pysoma==0.0.10"]
