@@ -1,15 +1,15 @@
 """Support for ThinkingCleaner sensors."""
-import logging
 from datetime import timedelta
+import logging
+
+from pythinkingcleaner import Discovery, ThinkingCleaner
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant import util
-from homeassistant.const import UNIT_PERCENTAGE, CONF_HOST
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-
-from pythinkingcleaner import ThinkingCleaner, Discovery
+from homeassistant.const import CONF_HOST, UNIT_PERCENTAGE
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
