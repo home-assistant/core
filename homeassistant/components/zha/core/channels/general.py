@@ -17,7 +17,6 @@ from ..const import (
     SIGNAL_SET_LEVEL,
     SIGNAL_STATE_ATTR,
 )
-from ..helpers import get_attr_id_by_name
 from .base import ZigbeeChannel, parse_and_log_command
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,9 +89,11 @@ class BasicChannel(ZigbeeChannel):
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
-        self._power_source = await self.get_attribute_value(
+        power_source = await self.get_attribute_value(
             "power_source", from_cache=from_cache
         )
+        if power_source is not None:
+            self._power_source = power_source
         await super().async_initialize(from_cache)
 
     def get_power_source(self):
@@ -269,7 +270,7 @@ class OnOffChannel(ZigbeeChannel):
                 self.attribute_updated(self.ON_OFF, True)
                 if on_time > 0:
                     self._off_listener = async_call_later(
-                        self.device.hass,
+                        self._ch_pool.hass,
                         (on_time / 10),  # value is in 10ths of a second
                         self.set_to_off,
                     )
@@ -293,19 +294,20 @@ class OnOffChannel(ZigbeeChannel):
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
-        self._state = bool(
-            await self.get_attribute_value(self.ON_OFF, from_cache=from_cache)
-        )
+        state = await self.get_attribute_value(self.ON_OFF, from_cache=from_cache)
+        if state is not None:
+            self._state = bool(state)
         await super().async_initialize(from_cache)
 
     async def async_update(self):
         """Initialize channel."""
         if self.cluster.is_client:
             return
-        self.debug("attempting to update onoff state - from cache: False")
-        self._state = bool(
-            await self.get_attribute_value(self.ON_OFF, from_cache=False)
-        )
+        from_cache = not self._ch_pool.is_mains_powered
+        self.debug("attempting to update onoff state - from cache: %s", from_cache)
+        state = await self.get_attribute_value(self.ON_OFF, from_cache=from_cache)
+        if state is not None:
+            self._state = bool(state)
         await super().async_update()
 
 
@@ -352,7 +354,7 @@ class PowerConfigurationChannel(ZigbeeChannel):
         """Handle attribute updates on this cluster."""
         attr = self._report_config[1].get("attr")
         if isinstance(attr, str):
-            attr_id = get_attr_id_by_name(self.cluster, attr)
+            attr_id = self.cluster.attridx.get(attr)
         else:
             attr_id = attr
         if attrid == attr_id:
@@ -379,12 +381,13 @@ class PowerConfigurationChannel(ZigbeeChannel):
 
     async def async_read_state(self, from_cache):
         """Read data from the cluster."""
-        await self.get_attribute_value("battery_size", from_cache=from_cache)
-        await self.get_attribute_value(
-            "battery_percentage_remaining", from_cache=from_cache
-        )
-        await self.get_attribute_value("battery_voltage", from_cache=from_cache)
-        await self.get_attribute_value("battery_quantity", from_cache=from_cache)
+        attributes = [
+            "battery_size",
+            "battery_percentage_remaining",
+            "battery_voltage",
+            "battery_quantity",
+        ]
+        await self.get_attributes(attributes, from_cache=from_cache)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.PowerProfile.cluster_id)

@@ -112,7 +112,9 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
         """Attempt to retrieve on off state from the binary sensor."""
         await super().async_update()
         attribute = getattr(self._channel, "value_attribute", "on_off")
-        self._state = await self._channel.get_attribute_value(attribute)
+        attr_value = await self._channel.get_attribute_value(attribute)
+        if attr_value is not None:
+            self._state = attr_value
 
 
 @STRICT_MATCH(channel_names=CHANNEL_ACCELEROMETER)

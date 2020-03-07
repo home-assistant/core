@@ -73,9 +73,13 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
 
         # This is a polling channel. Don't allow cache.
         result = await self.get_attribute_value("active_power", from_cache=False)
-        self.async_send_signal(
-            f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", 0x050B, "active_power", result
-        )
+        if result is not None:
+            self.async_send_signal(
+                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
+                0x050B,
+                "active_power",
+                result,
+            )
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
@@ -92,6 +96,8 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
             divisor = await self.get_attribute_value(
                 "power_divisor", from_cache=from_cache
             )
+            if divisor is None:
+                divisor = 1
         self._divisor = divisor
 
         mult = await self.get_attribute_value(
@@ -101,6 +107,8 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
             mult = await self.get_attribute_value(
                 "power_multiplier", from_cache=from_cache
             )
+            if mult is None:
+                mult = 1
         self._multiplier = mult
 
     @property
