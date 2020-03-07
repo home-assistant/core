@@ -86,12 +86,12 @@ async def async_setup_entry(
 
 
 def _return_on_connection_error(ret=None):
-    def wrap(f):
+    def wrap(func):
         def wrapped_f(*args, **kwargs):
             if not args[0].available:
                 return ret
             try:
-                return f(*args, **kwargs)
+                return func(*args, **kwargs)
             except ConnectionError:
                 return ret
 
