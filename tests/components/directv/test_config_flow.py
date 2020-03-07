@@ -19,10 +19,10 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 from tests.components.directv import (
     HOST,
+    MOCK_GET_VERSION,
     RECEIVER_ID,
     SSDP_LOCATION,
     UPNP_SERIAL,
-    MOCK_GET_VERSION,
 )
 
 

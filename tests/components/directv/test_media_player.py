@@ -57,8 +57,8 @@ from tests.common import async_fire_time_changed
 from tests.components.directv import (
     CLIENT_ADDRESS,
     HOST,
-    RECORDING,
     MOCK_GET_LOCATIONS_MULTIPLE,
+    RECORDING,
     MockDirectvClass,
     setup_integration,
 )
