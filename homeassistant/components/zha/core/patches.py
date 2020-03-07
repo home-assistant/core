@@ -1,7 +1,8 @@
 """Patch functions for Zigbee Home Automation."""
+from .typing import ZhaGatewayType
 
 
-def apply_application_controller_patch(zha_gateway):
+def apply_application_controller_patch(zha_gateway: ZhaGatewayType) -> None:
     """Apply patches to ZHA objects."""
     # Patch handle_message until zigpy can provide an event here
     def handle_message(sender, profile, cluster, src_ep, dst_ep, message):

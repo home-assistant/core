@@ -6,9 +6,7 @@ import itertools
 import logging
 import os
 import traceback
-from typing import Dict, List, Union
-
-import zigpy.device as zigpy_dev
+from typing import Any, Awaitable, Dict, List, Union
 
 from homeassistant.components.system_log import LogEntry, _figure_out_source
 from homeassistant.config_entries import ConfigEntry
@@ -344,9 +342,9 @@ class ZHAGateway:
         ieee: zha_typing.ZigpyEUI64Type,
         reference_id: str,
         zha_device: zha_typing.ZHADeviceType,
-        cluster_channels,
-        device_info,
-        remove_future,
+        cluster_channels: Dict[str, zha_typing.ChannelType],
+        device_info: Dict[str, Any],
+        remove_future: Awaitable,
     ) -> None:
         """Record the creation of a hass entity associated with ieee."""
         self._device_registry[ieee].append(
@@ -409,7 +407,9 @@ class ZHAGateway:
         return zha_device
 
     @callback
-    def _async_get_or_create_group(self, zigpy_group) -> zha_typing.ZHAGroupType:
+    def _async_get_or_create_group(
+        self, zigpy_group: zha_typing.ZigpyGroupType
+    ) -> zha_typing.ZHAGroupType:
         """Get or create a ZHA group."""
         zha_group = self._groups.get(zigpy_group.group_id)
         if zha_group is None:
@@ -419,14 +419,20 @@ class ZHAGateway:
 
     @callback
     def async_device_became_available(
-        self, sender, profile, cluster, src_ep, dst_ep, message
+        self,
+        sender: zha_typing.ZigpyDeviceType,
+        profile: int,
+        cluster: zha_typing.ZigpyClusterType,
+        src_ep: int,
+        dst_ep: int,
+        message: Any,
     ) -> None:
         """Handle tasks when a device becomes available."""
         self.async_update_device(sender)
 
     @callback
     def async_update_device(
-        self, sender: zigpy_dev.Device, available: bool = True
+        self, sender: zha_typing.ZigpyDeviceType, available: bool = True
     ) -> None:
         """Update device that has just become available."""
         if sender.ieee in self.devices:
@@ -507,7 +513,9 @@ class ZHAGateway:
         else:
             await zha_device.async_initialize(from_cache=True)
 
-    async def _async_device_rejoined(self, zha_device) -> None:
+    async def _async_device_rejoined(
+        self, zha_device: zha_typing.ZhaDeviceType
+    ) -> None:
         _LOGGER.debug(
             "skipping discovery for previously discovered device - %s:%s",
             zha_device.nwk,
