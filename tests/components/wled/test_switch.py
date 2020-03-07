@@ -1,5 +1,6 @@
 """Tests for the WLED switch platform."""
 import aiohttp
+from asynctest.mock import patch
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.wled.const import (
@@ -7,6 +8,7 @@ from homeassistant.components.wled.const import (
     ATTR_FADE,
     ATTR_TARGET_BRIGHTNESS,
     ATTR_UDP_PORT,
+    DOMAIN,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -15,7 +17,6 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
-    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 
@@ -71,82 +72,67 @@ async def test_switch_change_state(
     await init_integration(hass, aioclient_mock)
 
     # Nightlight
-    state = hass.states.get("switch.wled_rgb_light_nightlight")
-    assert state.state == STATE_OFF
+    with patch("wled.WLED.nightlight") as nightlight_mock:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        nightlight_mock.assert_called_once_with(on=True)
 
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("switch.wled_rgb_light_nightlight")
-    assert state.state == STATE_ON
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("switch.wled_rgb_light_nightlight")
-    assert state.state == STATE_OFF
+    with patch("wled.WLED.nightlight") as nightlight_mock:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        nightlight_mock.assert_called_once_with(on=False)
 
     # Sync send
-    state = hass.states.get("switch.wled_rgb_light_sync_send")
-    assert state.state == STATE_OFF
+    with patch("wled.WLED.sync") as sync_mock:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.wled_rgb_light_sync_send"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        sync_mock.assert_called_once_with(send=True)
 
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.wled_rgb_light_sync_send"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("switch.wled_rgb_light_sync_send")
-    assert state.state == STATE_ON
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.wled_rgb_light_sync_send"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("switch.wled_rgb_light_sync_send")
-    assert state.state == STATE_OFF
+    with patch("wled.WLED.sync") as sync_mock:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.wled_rgb_light_sync_send"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        sync_mock.assert_called_once_with(send=False)
 
     # Sync receive
-    state = hass.states.get("switch.wled_rgb_light_sync_receive")
-    assert state.state == STATE_ON
+    with patch("wled.WLED.sync") as sync_mock:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.wled_rgb_light_sync_receive"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        sync_mock.assert_called_once_with(receive=False)
 
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.wled_rgb_light_sync_receive"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("switch.wled_rgb_light_sync_receive")
-    assert state.state == STATE_OFF
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.wled_rgb_light_sync_receive"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("switch.wled_rgb_light_sync_receive")
-    assert state.state == STATE_ON
+    with patch("wled.WLED.sync") as sync_mock:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.wled_rgb_light_sync_receive"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        sync_mock.assert_called_once_with(receive=True)
 
 
 async def test_switch_error(
@@ -154,34 +140,15 @@ async def test_switch_error(
 ) -> None:
     """Test error handling of the WLED switches."""
     aioclient_mock.post("http://example.local:80/json/state", exc=aiohttp.ClientError)
-    await init_integration(hass, aioclient_mock)
+    entry = await init_integration(hass, aioclient_mock)
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    state = hass.states.get("switch.wled_rgb_light_nightlight")
-    assert state.state == STATE_UNAVAILABLE
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.wled_rgb_light_sync_send"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    state = hass.states.get("switch.wled_rgb_light_sync_send")
-    assert state.state == STATE_UNAVAILABLE
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.wled_rgb_light_sync_receive"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    state = hass.states.get("switch.wled_rgb_light_sync_receive")
-    assert state.state == STATE_UNAVAILABLE
+    with patch("homeassistant.components.wled.WLEDDataUpdateCoordinator.async_refresh"):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        assert not coordinator.last_update_success
