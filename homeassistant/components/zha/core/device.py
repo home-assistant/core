@@ -11,7 +11,6 @@ from zigpy import types
 import zigpy.exceptions
 from zigpy.profiles import zha, zll
 import zigpy.quirks
-from zigpy.types.named import EUI64
 from zigpy.zcl.clusters.general import Groups
 import zigpy.zdo.types as zdo_types
 
@@ -140,7 +139,7 @@ class ZHADevice(LogMixin):
         return f"{self.manufacturer} {self.model}"
 
     @property
-    def ieee(self) -> EUI64:
+    def ieee(self) -> zha_typing.ZigpyEUI64Type:
         """Return ieee address for device."""
         return self._zigpy_device.ieee
 
