@@ -3,18 +3,21 @@ import asyncio
 import logging
 
 from total_connect_client import TotalConnectClient
-import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
 
+# import voluptuous as vol
+
+# import homeassistant.helpers.config_validation as cv
+
+
 _LOGGER = logging.getLogger(__name__)
 
-
+"""
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -26,12 +29,21 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
+"""
 PLATFORMS = ["alarm_control_panel", "binary_sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Old way to set up."""
+    """Set up by configuration file."""
+    if DOMAIN not in config:
+        return True
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN],
+        )
+    )
+
     return True
 
 
