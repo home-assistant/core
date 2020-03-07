@@ -47,8 +47,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
 
-    _LOGGER.error(coordinator.data)
-
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
