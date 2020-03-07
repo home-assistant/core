@@ -15,7 +15,7 @@ from homeassistant.util import dt as dt_util
 
 DOMAIN = "tibber"
 
-DEFAULT_RETRY = 120
+FIRST_RETRY_TIME = 60
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_ACCESS_TOKEN): cv.string})},
@@ -25,7 +25,7 @@ CONFIG_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass, config, retry_delay=FIRST_RETRY_TIME):
     """Set up the Tibber component."""
     conf = config.get(DOMAIN)
 
@@ -44,15 +44,13 @@ async def async_setup(hass, config):
     try:
         await tibber_connection.update_info()
     except asyncio.TimeoutError:
-        _LOGGER.warning(
-            "Timeout connecting to Tibber. Will retry in %ss", DEFAULT_RETRY
-        )
+        _LOGGER.warning("Timeout connecting to Tibber. Will retry in %ss", retry_delay)
 
         async def retry_setup(now):
             """Retry setup if a timeout happens on Tibber API."""
-            await async_setup(hass, config)
+            await async_setup(hass, config, retry_delay=min(2 * retry_delay, 300))
 
-        async_call_later(hass, DEFAULT_RETRY, retry_setup)
+        async_call_later(hass, retry_delay, retry_setup)
 
         return True
     except aiohttp.ClientError as err:
