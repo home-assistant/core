@@ -209,7 +209,7 @@ class ZigbeeChannel(LogMixin):
             self.debug("skipping channel configuration")
         self._status = ChannelStatus.CONFIGURED
 
-    async def async_initialize(self, from_cache):
+    async def async_initialize(self, from_cache: bool):
         """Initialize channel."""
         self.debug("initializing channel: from_cache: %s", from_cache)
         attributes = []
@@ -255,7 +255,7 @@ class ZigbeeChannel(LogMixin):
         """Retrieve latest state from cluster."""
         pass
 
-    async def get_attribute_value(self, attribute, from_cache=True):
+    async def get_attribute_value(self, attribute, from_cache: bool = True):
         """Get the value for an attribute."""
         manufacturer = None
         manufacturer_code = self._ch_pool.manufacturer_code
@@ -270,7 +270,7 @@ class ZigbeeChannel(LogMixin):
         )
         return result.get(attribute)
 
-    async def get_attributes(self, attributes, from_cache=True):
+    async def get_attributes(self, attributes, from_cache: bool = True):
         """Get the values for a list of attributes."""
         manufacturer = None
         manufacturer_code = self._ch_pool.manufacturer_code
@@ -346,7 +346,7 @@ class ZDOChannel(LogMixin):
         """Permit handler."""
         pass
 
-    async def async_initialize(self, from_cache):
+    async def async_initialize(self, from_cache: bool):
         """Initialize channel."""
         self._status = ChannelStatus.INITIALIZED
 

@@ -106,7 +106,7 @@ class Metering(ZigbeeChannel):
         await self.fetch_config(False)
         await super().async_configure()
 
-    async def async_initialize(self, from_cache):
+    async def async_initialize(self, from_cache: bool):
         """Initialize channel."""
         await self.fetch_config(True)
         await super().async_initialize(from_cache)
@@ -121,7 +121,7 @@ class Metering(ZigbeeChannel):
         """Return unit of measurement."""
         return self.unit_of_measure_map.get(self._unit_enum & 0x7F, "unknown")
 
-    async def fetch_config(self, from_cache):
+    async def fetch_config(self, from_cache: bool):
         """Fetch config from device and updates format specifier."""
         self._divisor = await self.get_attribute_value("divisor", from_cache=from_cache)
         self._multiplier = await self.get_attribute_value(

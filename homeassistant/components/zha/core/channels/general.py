@@ -87,7 +87,7 @@ class BasicChannel(ZigbeeChannel):
         await super().async_configure()
         await self.async_initialize(False)
 
-    async def async_initialize(self, from_cache):
+    async def async_initialize(self, from_cache: bool):
         """Initialize channel."""
         power_source = await self.get_attribute_value(
             "power_source", from_cache=from_cache
@@ -203,7 +203,7 @@ class LevelControlChannel(ZigbeeChannel):
         """Dispatch level change."""
         self.async_send_signal(f"{self.unique_id}_{command}", level)
 
-    async def async_initialize(self, from_cache):
+    async def async_initialize(self, from_cache: bool):
         """Initialize channel."""
         await self.get_attribute_value(self.CURRENT_LEVEL, from_cache=from_cache)
         await super().async_initialize(from_cache)
@@ -292,7 +292,7 @@ class OnOffChannel(ZigbeeChannel):
             )
             self._state = bool(value)
 
-    async def async_initialize(self, from_cache):
+    async def async_initialize(self, from_cache: bool):
         """Initialize channel."""
         state = await self.get_attribute_value(self.ON_OFF, from_cache=from_cache)
         if state is not None:
@@ -370,7 +370,7 @@ class PowerConfigurationChannel(ZigbeeChannel):
             f"{self.unique_id}_{SIGNAL_STATE_ATTR}", attr_name, value
         )
 
-    async def async_initialize(self, from_cache):
+    async def async_initialize(self, from_cache: bool):
         """Initialize channel."""
         await self.async_read_state(from_cache)
         await super().async_initialize(from_cache)
@@ -379,7 +379,7 @@ class PowerConfigurationChannel(ZigbeeChannel):
         """Retrieve latest state."""
         await self.async_read_state(True)
 
-    async def async_read_state(self, from_cache):
+    async def async_read_state(self, from_cache: bool):
         """Read data from the cluster."""
         attributes = [
             "battery_size",

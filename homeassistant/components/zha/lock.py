@@ -108,7 +108,7 @@ class ZhaDoorLock(ZhaEntity, LockDevice):
         self._state = VALUE_TO_STATE.get(value, self._state)
         self.async_schedule_update_ha_state()
 
-    async def async_get_state(self, from_cache=True):
+    async def async_get_state(self, from_cache: bool = True):
         """Attempt to retrieve state from the lock."""
         if self._doorlock_channel:
             state = await self._doorlock_channel.get_attribute_value(

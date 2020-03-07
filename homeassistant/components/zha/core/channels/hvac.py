@@ -57,7 +57,7 @@ class FanChannel(ZigbeeChannel):
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", attrid, attr_name, value
             )
 
-    async def async_initialize(self, from_cache):
+    async def async_initialize(self, from_cache: bool):
         """Initialize channel."""
         await self.get_attribute_value(self._value_attribute, from_cache=from_cache)
         await super().async_initialize(from_cache)

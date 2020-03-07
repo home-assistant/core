@@ -354,7 +354,7 @@ class ZHADevice(LogMixin):
                 EFFECT_OKAY, EFFECT_DEFAULT_VARIANT
             )
 
-    async def async_initialize(self, from_cache=False):
+    async def async_initialize(self, from_cache: bool = False):
         """Initialize channels."""
         self.debug("started initialization")
         await self._channels.async_initialize(from_cache)
