@@ -3,7 +3,7 @@ import asyncio
 import logging
 from typing import Any, Dict, List, Optional, Union
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import (  # noqa: F401 # pylint: disable=unused-import
@@ -88,7 +88,7 @@ class Channels:
         return self._zha_device
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique id for this channel."""
         return self._unique_id
 
@@ -207,7 +207,7 @@ class ChannelPool:
         return self._channels.zha_device.manufacturer_code
 
     @property
-    def hass(self):
+    def hass(self) -> HomeAssistant:
         """Return hass."""
         return self._channels.zha_device.hass
 
@@ -227,7 +227,7 @@ class ChannelPool:
         return self._channels.zha_device.skip_configuration
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique id for this channel."""
         return self._unique_id
 
@@ -309,7 +309,7 @@ class ChannelPool:
         entity_class: zha_typing.CALLABLE_T,
         unique_id: str,
         channels: List[zha_typing.ChannelType],
-    ):
+    ) -> None:
         """Signal new entity addition."""
         self._channels.async_new_entity(component, entity_class, unique_id, channels)
 

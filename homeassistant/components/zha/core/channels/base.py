@@ -4,7 +4,7 @@ import asyncio
 from enum import Enum
 from functools import wraps
 import logging
-from typing import Any, Union
+from typing import Any, Dict, List, Union
 
 import zigpy.exceptions
 
@@ -110,12 +110,12 @@ class ZigbeeChannel(LogMixin):
         return self._id
 
     @property
-    def generic_id(self):
+    def generic_id(self) -> str:
         """Return the generic id for this channel."""
         return self._generic_id
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique id for this channel."""
         return self._unique_id
 
@@ -130,7 +130,7 @@ class ZigbeeChannel(LogMixin):
         return self._channel_name
 
     @property
-    def status(self):
+    def status(self) -> ChannelStatus:
         """Return the status of the channel."""
         return self._status
 
@@ -139,7 +139,7 @@ class ZigbeeChannel(LogMixin):
         """Send a signal through hass dispatcher."""
         self._ch_pool.async_send_signal(signal, *args)
 
-    async def bind(self):
+    async def bind(self) -> None:
         """Bind a zigbee cluster.
 
         This also swallows DeliveryError exceptions that are thrown when
@@ -195,7 +195,7 @@ class ZigbeeChannel(LogMixin):
                 str(ex),
             )
 
-    async def async_configure(self):
+    async def async_configure(self) -> None:
         """Set cluster binding and attribute reporting."""
         if not self._ch_pool.skip_configuration:
             await self.bind()
@@ -209,7 +209,7 @@ class ZigbeeChannel(LogMixin):
             self.debug("skipping channel configuration")
         self._status = ChannelStatus.CONFIGURED
 
-    async def async_initialize(self, from_cache: bool):
+    async def async_initialize(self, from_cache: bool) -> None:
         """Initialize channel."""
         self.debug("initializing channel: from_cache: %s", from_cache)
         attributes = []
@@ -220,12 +220,12 @@ class ZigbeeChannel(LogMixin):
         self._status = ChannelStatus.INITIALIZED
 
     @callback
-    def cluster_command(self, tsn, command_id, args):
+    def cluster_command(self, tsn, command_id, args) -> None:
         """Handle commands received to this cluster."""
         pass
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid, value) -> None:
         """Handle attribute updates on this cluster."""
         self.async_send_signal(
             f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
@@ -235,7 +235,7 @@ class ZigbeeChannel(LogMixin):
         )
 
     @callback
-    def zdo_command(self, *args, **kwargs):
+    def zdo_command(self, *args, **kwargs) -> None:
         """Handle ZDO commands on this cluster."""
         pass
 
@@ -251,7 +251,7 @@ class ZigbeeChannel(LogMixin):
             }
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Retrieve latest state from cluster."""
         pass
 
@@ -270,7 +270,9 @@ class ZigbeeChannel(LogMixin):
         )
         return result.get(attribute)
 
-    async def get_attributes(self, attributes, from_cache: bool = True):
+    async def get_attributes(
+        self, attributes: List[str], from_cache: bool = True
+    ) -> Dict[str, Any]:
         """Get the values for a list of attributes."""
         manufacturer = None
         manufacturer_code = self._ch_pool.manufacturer_code
@@ -294,7 +296,7 @@ class ZigbeeChannel(LogMixin):
             results = {}
         return results
 
-    def log(self, level, msg, *args):
+    def log(self, level, msg, *args) -> None:
         """Log a message."""
         msg = f"[%s:%s]: {msg}"
         args = (self._ch_pool.nwk, self._id) + args
