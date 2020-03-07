@@ -5,7 +5,7 @@ from enum import Enum
 import logging
 import random
 import time
-from typing import Any, Dict, Union
+from typing import Any, Dict, List, Union
 
 from zigpy import types
 import zigpy.exceptions
@@ -180,7 +180,7 @@ class ZHADevice(LogMixin):
         return self._zigpy_device.rssi
 
     @property
-    def last_seen(self):
+    def last_seen(self) -> float:
         """Return last_seen for device."""
         return self._zigpy_device.last_seen
 
@@ -241,14 +241,14 @@ class ZHADevice(LogMixin):
         return self._zha_gateway
 
     @property
-    def device_automation_triggers(self):
+    def device_automation_triggers(self) -> List[dict]:
         """Return the device automation triggers for this device."""
         if hasattr(self._zigpy_device, "device_automation_triggers"):
             return self._zigpy_device.device_automation_triggers
         return None
 
     @property
-    def available_signal(self):
+    def available_signal(self) -> str:
         """Signal to use to subscribe to device availability changes."""
         return self._available_signal
 
@@ -369,7 +369,7 @@ class ZHADevice(LogMixin):
         self._unsub()
 
     @callback
-    def async_update_last_seen(self, last_seen) -> None:
+    def async_update_last_seen(self, last_seen: float) -> None:
         """Set last seen on the zigpy device."""
         self._zigpy_device.last_seen = last_seen
 
@@ -393,7 +393,9 @@ class ZHADevice(LogMixin):
         return device_info
 
     @callback
-    def async_get_clusters(self):
+    def async_get_clusters(
+        self,
+    ) -> Dict[int, Dict[str, List[zha_typing.ZigpyClusterType]]]:
         """Get all clusters for this device."""
         return {
             ep_id: {
@@ -405,7 +407,9 @@ class ZHADevice(LogMixin):
         }
 
     @callback
-    def async_get_std_clusters(self):
+    def async_get_std_clusters(
+        self,
+    ) -> Dict[int, Dict[str, List[zha_typing.ZigpyClusterType]]]:
         """Get ZHA and ZLL clusters for this device."""
 
         return {
@@ -418,15 +422,17 @@ class ZHADevice(LogMixin):
         }
 
     @callback
-    def async_get_cluster(self, endpoint_id, cluster_id, cluster_type=CLUSTER_TYPE_IN):
+    def async_get_cluster(
+        self, endpoint_id: int, cluster_id: int, cluster_type: str = CLUSTER_TYPE_IN
+    ) -> zha_typing.ZigpyClusterType:
         """Get zigbee cluster from this entity."""
         clusters = self.async_get_clusters()
         return clusters[endpoint_id][cluster_type][cluster_id]
 
     @callback
     def async_get_cluster_attributes(
-        self, endpoint_id, cluster_id, cluster_type=CLUSTER_TYPE_IN
-    ):
+        self, endpoint_id: int, cluster_id: int, cluster_type: str = CLUSTER_TYPE_IN
+    ) -> Union[None, Dict[int, Any]]:
         """Get zigbee attributes for specified cluster."""
         cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
         if cluster is None:
@@ -435,8 +441,8 @@ class ZHADevice(LogMixin):
 
     @callback
     def async_get_cluster_commands(
-        self, endpoint_id, cluster_id, cluster_type=CLUSTER_TYPE_IN
-    ):
+        self, endpoint_id: int, cluster_id: int, cluster_type: str = CLUSTER_TYPE_IN
+    ) -> Union[None, Dict[str, Dict[int, Any]]]:
         """Get zigbee commands for specified cluster."""
         cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
         if cluster is None:
@@ -448,13 +454,13 @@ class ZHADevice(LogMixin):
 
     async def write_zigbee_attribute(
         self,
-        endpoint_id,
-        cluster_id,
-        attribute,
-        value,
-        cluster_type=CLUSTER_TYPE_IN,
-        manufacturer=None,
-    ):
+        endpoint_id: int,
+        cluster_id: int,
+        attribute: Union[int, str],
+        value: Any,
+        cluster_type: str = CLUSTER_TYPE_IN,
+        manufacturer: int = None,
+    ) -> Any:
         """Write a value to a zigbee attribute for a cluster in this entity."""
         cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
         if cluster is None:
@@ -486,14 +492,14 @@ class ZHADevice(LogMixin):
 
     async def issue_cluster_command(
         self,
-        endpoint_id,
-        cluster_id,
-        command,
-        command_type,
+        endpoint_id: int,
+        cluster_id: int,
+        command: int,
+        command_type: str,
         *args,
-        cluster_type=CLUSTER_TYPE_IN,
-        manufacturer=None,
-    ):
+        cluster_type: str = CLUSTER_TYPE_IN,
+        manufacturer: int = None,
+    ) -> Any:
         """Issue a command against specified zigbee cluster on this entity."""
         cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
         if cluster is None:
@@ -517,29 +523,29 @@ class ZHADevice(LogMixin):
         )
         return response
 
-    async def async_add_to_group(self, group_id):
+    async def async_add_to_group(self, group_id: int) -> None:
         """Add this device to the provided zigbee group."""
         await self._zigpy_device.add_to_group(group_id)
 
-    async def async_remove_from_group(self, group_id):
+    async def async_remove_from_group(self, group_id: int) -> None:
         """Remove this device from the provided zigbee group."""
         await self._zigpy_device.remove_from_group(group_id)
 
-    async def async_bind_to_group(self, group_id, cluster_bindings):
+    async def async_bind_to_group(self, group_id: int, cluster_bindings) -> None:
         """Directly bind this device to a group for the given clusters."""
         await self._async_group_binding_operation(
             group_id, zdo_types.ZDOCmd.Bind_req, cluster_bindings
         )
 
-    async def async_unbind_from_group(self, group_id, cluster_bindings):
+    async def async_unbind_from_group(self, group_id: int, cluster_bindings) -> None:
         """Unbind this device from a group for the given clusters."""
         await self._async_group_binding_operation(
             group_id, zdo_types.ZDOCmd.Unbind_req, cluster_bindings
         )
 
     async def _async_group_binding_operation(
-        self, group_id, operation, cluster_bindings
-    ):
+        self, group_id: int, operation: int, cluster_bindings
+    ) -> None:
         """Create or remove a direct zigbee binding between a device and a group."""
 
         zdo = self._zigpy_device.zdo
