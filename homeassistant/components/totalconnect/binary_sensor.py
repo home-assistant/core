@@ -17,7 +17,7 @@ async def async_setup_entry(hass, entry, async_add_entities) -> None:
     """Set up TotalConnect device sensors based on a config entry."""
     sensors = []
 
-    client_locations = hass.data[DOMAIN][entry.entry_id].client.locations
+    client_locations = hass.data[DOMAIN][entry.entry_id].locations
 
     for location_id, location in client_locations.items():
         for zone_id, zone in location.zones.items():

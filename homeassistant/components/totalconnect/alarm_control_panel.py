@@ -27,7 +27,7 @@ async def async_setup_entry(hass, entry, async_add_entities) -> None:
     """Set up TotalConnect alarm panels based on a config entry."""
     alarms = []
 
-    client = hass.data[DOMAIN][entry.entry_id].client
+    client = hass.data[DOMAIN][entry.entry_id]
 
     for location_id, location in client.locations.items():
         location_name = location.location_name

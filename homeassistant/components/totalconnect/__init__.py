@@ -63,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.error("TotalConnect authentication failed")
         return False
 
-    hass.data[DOMAIN][entry.entry_id] = TotalConnectSystem(username, password, client)
+    hass.data[DOMAIN][entry.entry_id] = client
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -87,13 +87,3 @@ async def async_unload_entry(hass, entry: ConfigEntry):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-class TotalConnectSystem:
-    """TotalConnect System class."""
-
-    def __init__(self, username, password, client):
-        """Initialize the TotalConnect system."""
-        self._username = username
-        self._password = password
-        self.client = client
