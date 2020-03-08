@@ -6,7 +6,7 @@ import itertools
 import logging
 import os
 import traceback
-from typing import Any, Awaitable, Dict, List, Union
+from typing import Any, Awaitable, Dict, List, Optional
 
 from homeassistant.components.system_log import LogEntry, _figure_out_source
 from homeassistant.config_entries import ConfigEntry
@@ -91,24 +91,26 @@ class ZHAGateway:
         self, hass: HomeAssistant, config: ConfigType, config_entry: ConfigEntry
     ):
         """Initialize the gateway."""
-        self._hass = hass
-        self._config = config
-        self._devices = {}
-        self._groups = {}
-        self._device_registry = collections.defaultdict(list)
+        self._hass: HomeAssistant = hass
+        self._config: ConfigType = config
+        self._devices: Dict[zha_typing.ZigpyEUI64Type, zha_typing.ZhaDeviceType] = {}
+        self._groups: Dict[int, zha_typing.ZhaGroupType] = {}
+        self._device_registry: Dict[
+            zha_typing.ZigpyEUI64Type, List[EntityReference]
+        ] = collections.defaultdict(list)
         self.zha_storage = None
         self.ha_device_registry = None
         self.ha_entity_registry = None
         self.application_controller = None
         self.radio_description = None
         hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
-        self._log_levels = {
+        self._log_levels: Dict[str, Dict[str, int]] = {
             DEBUG_LEVEL_ORIGINAL: async_capture_log_levels(),
             DEBUG_LEVEL_CURRENT: async_capture_log_levels(),
         }
-        self.debug_enabled = False
-        self._log_relay_handler = LogRelayHandler(hass, self)
-        self._config_entry = config_entry
+        self.debug_enabled: bool = False
+        self._log_relay_handler: LogRelayHandler = LogRelayHandler(hass, self)
+        self._config_entry: ConfigEntry = config_entry
 
     async def async_initialize(self) -> None:
         """Initialize controller and connect radio."""
@@ -288,25 +290,27 @@ class ZHAGateway:
                     },
                 )
 
-    def get_device(self, ieee: zha_typing.ZigpyEUI64Type) -> zha_typing.ZhaDeviceType:
+    def get_device(
+        self, ieee: zha_typing.ZigpyEUI64Type
+    ) -> Optional[zha_typing.ZhaDeviceType]:
         """Return ZHADevice for given ieee."""
         return self._devices.get(ieee)
 
-    def get_group(self, group_id: int):
+    def get_group(self, group_id: int) -> Optional[zha_typing.ZhaGroupType]:
         """Return Group for given group id."""
         return self.groups.get(group_id)
 
     @callback
     def async_get_group_by_name(
         self, group_name: str
-    ) -> Union[zha_typing.ZHAGroupType, None]:
+    ) -> Optional[zha_typing.ZhaGroupType]:
         """Get ZHA group by name."""
         for group in self.groups.values():
             if group.name == group_name:
                 return group
         return None
 
-    def get_entity_reference(self, entity_id: str) -> EntityReference:
+    def get_entity_reference(self, entity_id: str) -> Optional[EntityReference]:
         """Return entity reference for given entity_id if found."""
         for entity_reference in itertools.chain.from_iterable(
             self.device_registry.values()
@@ -328,7 +332,7 @@ class ZHAGateway:
         return self._devices
 
     @property
-    def groups(self) -> Dict[int, zha_typing.ZHAGroupType]:
+    def groups(self) -> Dict[int, zha_typing.ZhaGroupType]:
         """Return groups."""
         return self._groups
 
@@ -409,7 +413,7 @@ class ZHAGateway:
     @callback
     def _async_get_or_create_group(
         self, zigpy_group: zha_typing.ZigpyGroupType
-    ) -> zha_typing.ZHAGroupType:
+    ) -> zha_typing.ZhaGroupType:
         """Get or create a ZHA group."""
         zha_group = self._groups.get(zigpy_group.group_id)
         if zha_group is None:
@@ -528,7 +532,7 @@ class ZHAGateway:
 
     async def async_create_zigpy_group(
         self, name: str, members: List[zha_typing.ZigpyEUI64Type]
-    ) -> zha_typing.ZHAGroupType:
+    ) -> Optional[zha_typing.ZhaGroupType]:
         """Create a new Zigpy Zigbee group."""
         # we start with one to fill any gaps from a user removing existing groups
         group_id = 1
@@ -567,7 +571,7 @@ class ZHAGateway:
 
 
 @callback
-def async_capture_log_levels() -> None:
+def async_capture_log_levels() -> Dict[str, int]:
     """Capture current logger levels for ZHA."""
     return {
         DEBUG_COMP_BELLOWS: logging.getLogger(DEBUG_COMP_BELLOWS).getEffectiveLevel(),
@@ -587,7 +591,7 @@ def async_capture_log_levels() -> None:
 
 
 @callback
-def async_set_logger_levels(levels: Dict[str, str]) -> None:
+def async_set_logger_levels(levels: Dict[str, int]) -> None:
     """Set logger levels for ZHA."""
     logging.getLogger(DEBUG_COMP_BELLOWS).setLevel(levels[DEBUG_COMP_BELLOWS])
     logging.getLogger(DEBUG_COMP_ZHA).setLevel(levels[DEBUG_COMP_ZHA])

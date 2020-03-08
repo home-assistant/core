@@ -5,7 +5,7 @@ from enum import Enum
 import logging
 import random
 import time
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 from zigpy import types
 import zigpy.exceptions
@@ -84,36 +84,38 @@ class ZHADevice(LogMixin):
         zha_gateway: zha_typing.ZhaGatewayType,
     ):
         """Initialize the gateway."""
-        self.hass = hass
-        self._zigpy_device = zigpy_device
-        self._zha_gateway = zha_gateway
-        self._available = False
-        self._available_signal = "{}_{}_{}".format(
+        self.hass: HomeAssistantType = hass
+        self._zigpy_device: zha_typing.ZigpyDeviceType = zigpy_device
+        self._zha_gateway: zha_typing.ZhaGatewayType = zha_gateway
+        self._available: bool = False
+        self._available_signal: str = "{}_{}_{}".format(
             self.name, self.ieee, SIGNAL_AVAILABLE
         )
-        self._checkins_missed_count = 0
+        self._checkins_missed_count: int = 0
         self._unsub = async_dispatcher_connect(
             self.hass, self._available_signal, self.async_initialize
         )
-        self.quirk_applied = isinstance(self._zigpy_device, zigpy.quirks.CustomDevice)
-        self.quirk_class = "{}.{}".format(
+        self.quirk_applied: bool = isinstance(
+            self._zigpy_device, zigpy.quirks.CustomDevice
+        )
+        self.quirk_class: str = "{}.{}".format(
             self._zigpy_device.__class__.__module__,
             self._zigpy_device.__class__.__name__,
         )
-        keep_alive_interval = random.randint(*_UPDATE_ALIVE_INTERVAL)
+        keep_alive_interval: int = random.randint(*_UPDATE_ALIVE_INTERVAL)
         self._available_check = async_track_time_interval(
             self.hass, self._check_available, timedelta(seconds=keep_alive_interval)
         )
-        self._ha_device_id = None
-        self.status = DeviceStatus.CREATED
-        self._channels = channels.Channels(self)
+        self._ha_device_id: Optional[str] = None
+        self.status: DeviceStatus = DeviceStatus.CREATED
+        self._channels: zha_typing.ChannelsType = channels.Channels(self)
 
     @property
-    def device_id(self) -> str:
+    def device_id(self) -> Optional[str]:
         """Return the HA device registry device id."""
         return self._ha_device_id
 
-    def set_device_id(self, device_id: str):
+    def set_device_id(self, device_id: str) -> None:
         """Set the HA device registry device id."""
         self._ha_device_id = device_id
 
@@ -158,7 +160,7 @@ class ZHADevice(LogMixin):
         return self._zigpy_device.model
 
     @property
-    def manufacturer_code(self) -> Union[int, None]:
+    def manufacturer_code(self) -> Optional[int]:
         """Return the manufacturer code for the device."""
         if self._zigpy_device.node_desc.is_valid:
             return self._zigpy_device.node_desc.manufacturer_code
@@ -170,22 +172,22 @@ class ZHADevice(LogMixin):
         return self._zigpy_device.nwk
 
     @property
-    def lqi(self) -> int:
+    def lqi(self) -> Optional[int]:
         """Return lqi for device."""
         return self._zigpy_device.lqi
 
     @property
-    def rssi(self) -> int:
+    def rssi(self) -> Optional[int]:
         """Return rssi for device."""
         return self._zigpy_device.rssi
 
     @property
-    def last_seen(self) -> float:
+    def last_seen(self) -> Optional[float]:
         """Return last_seen for device."""
         return self._zigpy_device.last_seen
 
     @property
-    def is_mains_powered(self) -> bool:
+    def is_mains_powered(self) -> Optional[bool]:
         """Return true if device is mains powered."""
         return self._zigpy_device.node_desc.is_mains_powered
 
@@ -205,17 +207,17 @@ class ZHADevice(LogMixin):
         )
 
     @property
-    def is_router(self) -> bool:
+    def is_router(self) -> Optional[bool]:
         """Return true if this is a routing capable device."""
         return self._zigpy_device.node_desc.is_router
 
     @property
-    def is_coordinator(self) -> bool:
+    def is_coordinator(self) -> Optional[bool]:
         """Return true if this device represents the coordinator."""
         return self._zigpy_device.node_desc.is_coordinator
 
     @property
-    def is_end_device(self) -> bool:
+    def is_end_device(self) -> Optional[bool]:
         """Return true if this device is an end device."""
         return self._zigpy_device.node_desc.is_end_device
 
@@ -229,6 +231,7 @@ class ZHADevice(LogMixin):
             for clusters in cluster_map.values():
                 if Groups.cluster_id in clusters:
                     return True
+        return False
 
     @property
     def skip_configuration(self) -> bool:
@@ -241,7 +244,7 @@ class ZHADevice(LogMixin):
         return self._zha_gateway
 
     @property
-    def device_automation_triggers(self) -> List[dict]:
+    def device_automation_triggers(self) -> Optional[List[dict]]:
         """Return the device automation triggers for this device."""
         if hasattr(self._zigpy_device, "device_automation_triggers"):
             return self._zigpy_device.device_automation_triggers
@@ -395,7 +398,7 @@ class ZHADevice(LogMixin):
     @callback
     def async_get_clusters(
         self,
-    ) -> Dict[int, Dict[str, List[zha_typing.ZigpyClusterType]]]:
+    ) -> Dict[int, Dict[str, Dict[int, zha_typing.ZigpyClusterType]]]:
         """Get all clusters for this device."""
         return {
             ep_id: {
@@ -409,7 +412,7 @@ class ZHADevice(LogMixin):
     @callback
     def async_get_std_clusters(
         self,
-    ) -> Dict[int, Dict[str, List[zha_typing.ZigpyClusterType]]]:
+    ) -> Dict[int, Dict[str, Dict[int, zha_typing.ZigpyClusterType]]]:
         """Get ZHA and ZLL clusters for this device."""
 
         return {
@@ -432,7 +435,7 @@ class ZHADevice(LogMixin):
     @callback
     def async_get_cluster_attributes(
         self, endpoint_id: int, cluster_id: int, cluster_type: str = CLUSTER_TYPE_IN
-    ) -> Union[None, Dict[int, Any]]:
+    ) -> Optional[Dict[int, Any]]:
         """Get zigbee attributes for specified cluster."""
         cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
         if cluster is None:
@@ -442,7 +445,7 @@ class ZHADevice(LogMixin):
     @callback
     def async_get_cluster_commands(
         self, endpoint_id: int, cluster_id: int, cluster_type: str = CLUSTER_TYPE_IN
-    ) -> Union[None, Dict[str, Dict[int, Any]]]:
+    ) -> Optional[Dict[str, Dict[int, Any]]]:
         """Get zigbee commands for specified cluster."""
         cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
         if cluster is None:
@@ -544,7 +547,7 @@ class ZHADevice(LogMixin):
         )
 
     async def _async_group_binding_operation(
-        self, group_id: int, operation: int, cluster_bindings
+        self, group_id: int, operation: zha_typing.ZigpyZDOCommandType, cluster_bindings
     ) -> None:
         """Create or remove a direct zigbee binding between a device and a group."""
 
