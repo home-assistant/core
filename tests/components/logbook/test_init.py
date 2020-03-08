@@ -568,14 +568,35 @@ class TestComponentLogbook(unittest.TestCase):
 
     def test_exclude_attribute_changes(self):
         """Test if events of attribute changes are filtered."""
-        entity_id = "switch.bla"
-        entity_id2 = "switch.blu"
         pointA = dt_util.utcnow()
         pointB = pointA + timedelta(minutes=1)
+        pointC = pointB + timedelta(minutes=1)
 
-        eventA = self.create_state_changed_event(pointA, entity_id, 10)
-        eventB = self.create_state_changed_event(
-            pointA, entity_id2, 20, last_changed=pointA, last_updated=pointB
+        state_off = ha.State("light.kitchen", "off", {}, pointA, pointA).as_dict()
+        state_100 = ha.State(
+            "light.kitchen", "on", {"brightness": 100}, pointB, pointB
+        ).as_dict()
+        state_200 = ha.State(
+            "light.kitchen", "on", {"brightness": 200}, pointB, pointC
+        ).as_dict()
+
+        eventA = ha.Event(
+            EVENT_STATE_CHANGED,
+            {
+                "entity_id": "light.kitchen",
+                "old_state": state_off,
+                "new_state": state_100,
+            },
+            time_fired=pointB,
+        )
+        eventB = ha.Event(
+            EVENT_STATE_CHANGED,
+            {
+                "entity_id": "light.kitchen",
+                "old_state": state_100,
+                "new_state": state_200,
+            },
+            time_fired=pointC,
         )
 
         entities_filter = logbook._generate_filter_from_config({})
@@ -588,7 +609,7 @@ class TestComponentLogbook(unittest.TestCase):
 
         assert 1 == len(entries)
         self.assert_entry(
-            entries[0], pointA, "bla", domain="switch", entity_id=entity_id
+            entries[0], pointB, "kitchen", domain="light", entity_id="light.kitchen"
         )
 
     def test_home_assistant_start_stop_grouped(self):
@@ -1231,15 +1252,16 @@ class TestComponentLogbook(unittest.TestCase):
         last_updated=None,
     ):
         """Create state changed event."""
-        # Logbook only cares about state change events that
-        # contain an old state but will not actually act on it.
-        state = ha.State(
+        old_state = ha.State(
+            entity_id, "old", attributes, last_changed, last_updated
+        ).as_dict()
+        new_state = ha.State(
             entity_id, state, attributes, last_changed, last_updated
         ).as_dict()
 
         return ha.Event(
             EVENT_STATE_CHANGED,
-            {"entity_id": entity_id, "old_state": state, "new_state": state},
+            {"entity_id": entity_id, "old_state": old_state, "new_state": new_state},
             time_fired=event_time_fired,
         )
 
@@ -1433,39 +1455,6 @@ async def test_humanify_script_started_event(hass):
     assert event2["domain"] == "script"
     assert event2["message"] == "started"
     assert event2["entity_id"] == "script.bye"
-
-
-async def test_humanify_same_state(hass):
-    """Test humanifying Script Run event."""
-    state_50 = ha.State("light.kitchen", "on", {"brightness": 50}).as_dict()
-    state_100 = ha.State("light.kitchen", "on", {"brightness": 100}).as_dict()
-    state_200 = ha.State("light.kitchen", "on", {"brightness": 200}).as_dict()
-
-    events = list(
-        logbook.humanify(
-            hass,
-            [
-                ha.Event(
-                    EVENT_STATE_CHANGED,
-                    {
-                        "entity_id": "light.kitchen",
-                        "old_state": state_50,
-                        "new_state": state_100,
-                    },
-                ),
-                ha.Event(
-                    EVENT_STATE_CHANGED,
-                    {
-                        "entity_id": "light.kitchen",
-                        "old_state": state_100,
-                        "new_state": state_200,
-                    },
-                ),
-            ],
-        )
-    )
-
-    assert len(events) == 1
 
 
 async def test_logbook_describe_event(hass, hass_client):
