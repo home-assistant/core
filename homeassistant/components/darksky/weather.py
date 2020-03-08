@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MODE,
     CONF_NAME,
+    CONF_SCAN_INTERVAL,
     PRESSURE_HPA,
     PRESSURE_INHG,
     TEMP_CELSIUS,
@@ -59,6 +60,8 @@ CONF_UNITS = "units"
 
 DEFAULT_NAME = "Dark Sky"
 
+DEFAULT_SCAN_INTERVAL = 3  # in minutes
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
@@ -67,10 +70,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_MODE, default="hourly"): vol.In(FORECAST_MODE),
         vol.Optional(CONF_UNITS): vol.In(["auto", "si", "us", "ca", "uk", "uk2"]),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(
+            CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+        ): cv.positive_int,
     }
 )
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=3)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=CONF_SCAN_INTERVAL)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
