@@ -60,7 +60,7 @@ CONF_UNITS = "units"
 
 DEFAULT_NAME = "Dark Sky"
 
-DEFAULT_SCAN_INTERVAL = 3  # in minutes
+DEFAULT_SCAN_INTERVAL = 180  # in second
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -70,21 +70,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_MODE, default="hourly"): vol.In(FORECAST_MODE),
         vol.Optional(CONF_UNITS): vol.In(["auto", "si", "us", "ca", "uk", "uk2"]),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(
-            CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-        ): cv.positive_int,
     }
 )
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=CONF_SCAN_INTERVAL)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dark Sky weather."""
+    global MIN_TIME_BETWEEN_UPDATES
+
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     name = config.get(CONF_NAME)
     mode = config.get(CONF_MODE)
+
+    MIN_TIME_BETWEEN_UPDATES = config.get(CONF_SCAN_INTERVAL) or timedelta(
+        seconds=DEFAULT_SCAN_INTERVAL
+    )
 
     units = config.get(CONF_UNITS)
     if not units:
