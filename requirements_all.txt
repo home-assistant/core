@@ -641,6 +641,9 @@ greeneye_monitor==2.0
 # homeassistant.components.greenwave
 greenwavereality==0.5.1
 
+# homeassistant.components.griddy
+griddypower==0.1.0
+
 # homeassistant.components.growatt_server
 growattServer==0.0.1
 

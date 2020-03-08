@@ -1,0 +1,22 @@
+{
+  "config": {
+    "title": "Griddy",
+    "step": {
+      "user": {
+        "title": "Setup your Griddy Load Zone",
+		"description" : "Your Load Zone is in your Griddy account under “Account > Meter > Load Zone.”",
+        "data": {
+          "loadzone": "Load Zone (Settlement Point)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Griddy is already configured"
+    }
+  }
+}
