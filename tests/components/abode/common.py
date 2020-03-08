@@ -10,13 +10,16 @@ from tests.common import MockConfigEntry
 
 async def setup_platform(hass, platform):
     """Set up the Abode platform."""
-    MockConfigEntry(
+    mock_entry = MockConfigEntry(
         domain=ABODE_DOMAIN,
         data={CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"},
-    ).add_to_hass(hass)
+    )
+    mock_entry.add_to_hass(hass)
 
     with patch("homeassistant.components.abode.ABODE_PLATFORMS", [platform]), patch(
         "abodepy.event_controller.sio"
-    ):
+    ), patch("abodepy.utils.save_cache"):
         assert await async_setup_component(hass, ABODE_DOMAIN, {})
     await hass.async_block_till_done()
+
+    return mock_entry

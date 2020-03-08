@@ -11,7 +11,7 @@ from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 
-from .common import MockConfigEntry, setup_platform
+from .common import setup_platform
 
 
 async def test_abode_setup_from_config(hass):
@@ -23,8 +23,8 @@ async def test_abode_setup_from_config(hass):
             "polling": True,
         }
     }
-    response = await async_setup_component(hass, ABODE_DOMAIN, config)
-    assert response
+    with patch("abodepy.utils.save_cache"):
+        assert await async_setup_component(hass, ABODE_DOMAIN, config)
 
 
 async def test_change_settings(hass):
@@ -44,13 +44,7 @@ async def test_change_settings(hass):
 
 async def test_unload_entry(hass):
     """Test unloading the Abode entry."""
-    mock_entry = MockConfigEntry(
-        domain=ABODE_DOMAIN,
-        data={CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"},
-    )
-    mock_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_entry.entry_id)
+    mock_entry = await setup_platform(hass, ALARM_DOMAIN)
 
     with patch("abodepy.Abode.logout") as mock_logout, patch(
         "abodepy.event_controller.AbodeEventController.stop"
@@ -58,8 +52,7 @@ async def test_unload_entry(hass):
         assert await hass.config_entries.async_unload(mock_entry.entry_id)
         mock_logout.assert_called_once()
         mock_events_stop.assert_called_once()
-        assert hass.services.has_service(ABODE_DOMAIN, SERVICE_SETTINGS) is False
-        assert hass.services.has_service(ABODE_DOMAIN, SERVICE_CAPTURE_IMAGE) is False
-        assert (
-            hass.services.has_service(ABODE_DOMAIN, SERVICE_TRIGGER_AUTOMATION) is False
-        )
+
+        assert not hass.services.has_service(ABODE_DOMAIN, SERVICE_SETTINGS)
+        assert not hass.services.has_service(ABODE_DOMAIN, SERVICE_CAPTURE_IMAGE)
+        assert not hass.services.has_service(ABODE_DOMAIN, SERVICE_TRIGGER_AUTOMATION)
