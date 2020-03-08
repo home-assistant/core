@@ -130,14 +130,6 @@ class BayesianBinarySensor(BinarySensorDevice):
 
         self.observations_by_entity = self._build_observations_by_entity()
 
-        # for obs in self._observations:
-        # if "entity_id" in obs:
-        # self.entity_obs_dict.append([obs.get("entity_id")])
-        # if "value_template" in obs:
-        # self.entity_obs_dict.append(
-        # list(obs.get(CONF_VALUE_TEMPLATE).extract_entities())
-        # )
-
         self.observation_handlers = {
             "numeric_state": self._process_numeric_state,
             "state": self._process_state,
