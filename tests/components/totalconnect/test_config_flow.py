@@ -30,7 +30,7 @@ async def test_user(hass):
     with patch(
         "homeassistant.components.totalconnect.config_flow.TotalConnectClient.TotalConnectClient"
     ) as client_mock:
-    client_mock.return_value.is_logged_in.return_value = True
+        client_mock.return_value.is_valid_credentials.return_value = True
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},

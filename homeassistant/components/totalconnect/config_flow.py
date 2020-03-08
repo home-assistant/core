@@ -58,4 +58,4 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         client = await self.hass.async_add_executor_job(
             TotalConnectClient.TotalConnectClient, username, password
         )
-        return client.is_logged_in()
+        return client.is_valid_credentials()
