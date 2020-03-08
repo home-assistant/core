@@ -436,7 +436,7 @@ defusedxml==0.6.0
 deluge-client==1.7.1
 
 # homeassistant.components.denonavr
-denonavr==0.7.12
+denonavr==0.8.0
 
 # homeassistant.components.directv
 directpy==0.6
