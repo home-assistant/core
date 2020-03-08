@@ -3394,6 +3394,7 @@ async def test_vacuum_discovery(hass):
             | vacuum.SUPPORT_TURN_OFF
             | vacuum.SUPPORT_START
             | vacuum.SUPPORT_STOP
+            | vacuum.SUPPORT_RETURN_HOME
             | vacuum.SUPPORT_PAUSE,
         },
     )
@@ -3618,26 +3619,22 @@ async def test_vacuum_resume(hass):
     )
 
 
-async def test_vacuum_discovery_state(hass):
-    """Test vacuum discovery for state vacuums."""
+async def test_vacuum_discovery_no_turn_on(hass):
+    """Test vacuum discovery for vacuums without turn_on."""
     device = (
         "vacuum.test_5",
         "cleaning",
         {
             "friendly_name": "Test vacuum 5",
-            "supported_features": vacuum.SUPPORT_START
-            | vacuum.SUPPORT_STOP
-            | vacuum.SUPPORT_PAUSE,
+            "supported_features": vacuum.SUPPORT_TURN_OFF
+            | vacuum.SUPPORT_START
+            | vacuum.SUPPORT_RETURN_HOME,
         },
     )
     appliance = await discovery_test(device, hass)
 
     assert_endpoint_capabilities(
-        appliance,
-        "Alexa.PowerController",
-        "Alexa.TimeHoldController",
-        "Alexa.EndpointHealth",
-        "Alexa",
+        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa",
     )
 
     properties = await reported_properties(hass, "vacuum#test_5")
@@ -3648,9 +3645,65 @@ async def test_vacuum_discovery_state(hass):
     )
 
     await assert_request_calls_service(
+        "Alexa.PowerController", "TurnOff", "vacuum#test_5", "vacuum.turn_off", hass,
+    )
+
+
+async def test_vacuum_discovery_no_turn_off(hass):
+    """Test vacuum discovery for vacuums without turn_off."""
+    device = (
+        "vacuum.test_6",
+        "cleaning",
+        {
+            "friendly_name": "Test vacuum 6",
+            "supported_features": vacuum.SUPPORT_TURN_ON
+            | vacuum.SUPPORT_START
+            | vacuum.SUPPORT_RETURN_HOME,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert_endpoint_capabilities(
+        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa",
+    )
+
+    await assert_request_calls_service(
+        "Alexa.PowerController", "TurnOn", "vacuum#test_6", "vacuum.turn_on", hass,
+    )
+
+    await assert_request_calls_service(
         "Alexa.PowerController",
         "TurnOff",
-        "vacuum#test_5",
+        "vacuum#test_6",
+        "vacuum.return_to_base",
+        hass,
+    )
+
+
+async def test_vacuum_discovery_no_turn_on_or_off(hass):
+    """Test vacuum discovery vacuums without on or off."""
+    device = (
+        "vacuum.test_7",
+        "cleaning",
+        {
+            "friendly_name": "Test vacuum 7",
+            "supported_features": vacuum.SUPPORT_START | vacuum.SUPPORT_RETURN_HOME,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert_endpoint_capabilities(
+        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa",
+    )
+
+    await assert_request_calls_service(
+        "Alexa.PowerController", "TurnOn", "vacuum#test_7", "vacuum.start", hass,
+    )
+
+    await assert_request_calls_service(
+        "Alexa.PowerController",
+        "TurnOff",
+        "vacuum#test_7",
         "vacuum.return_to_base",
         hass,
     )

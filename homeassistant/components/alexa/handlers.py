@@ -123,8 +123,7 @@ async def async_api_turn_on(hass, config, directive, context):
         service = cover.SERVICE_OPEN_COVER
     elif domain == vacuum.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        power_features = vacuum.SUPPORT_TURN_ON | vacuum.SUPPORT_TURN_OFF
-        if not supported & power_features:
+        if not supported & vacuum.SUPPORT_TURN_ON and supported & vacuum.SUPPORT_START:
             service = vacuum.SERVICE_START
     elif domain == media_player.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
@@ -156,8 +155,10 @@ async def async_api_turn_off(hass, config, directive, context):
         service = cover.SERVICE_CLOSE_COVER
     elif domain == vacuum.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        power_features = vacuum.SUPPORT_TURN_ON | vacuum.SUPPORT_TURN_OFF
-        if not supported & power_features:
+        if (
+            not supported & vacuum.SUPPORT_TURN_OFF
+            and supported & vacuum.SUPPORT_RETURN_HOME
+        ):
             service = vacuum.SERVICE_RETURN_TO_BASE
     elif domain == media_player.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
