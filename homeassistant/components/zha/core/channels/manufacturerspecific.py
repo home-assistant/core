@@ -25,10 +25,10 @@ class SmartThingsHumidity(ZigbeeChannel):
     """Smart Things Humidity channel."""
 
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {
-            "attr": "measured_value",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
-        },
+        zha_typing.AttributeReportConfig(
+            attr="measured_value",
+            config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
+        ),
     )
 
 
@@ -55,10 +55,12 @@ class SmartThingsAcceleration(ZigbeeChannel):
     """Smart Things Acceleration channel."""
 
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {"attr": "acceleration", "config": REPORT_CONFIG_ASAP},
-        {"attr": "x_axis", "config": REPORT_CONFIG_ASAP},
-        {"attr": "y_axis", "config": REPORT_CONFIG_ASAP},
-        {"attr": "z_axis", "config": REPORT_CONFIG_ASAP},
+        zha_typing.AttributeReportConfig(
+            attr="acceleration", config=REPORT_CONFIG_ASAP
+        ),
+        zha_typing.AttributeReportConfig(attr="x_axis", config=REPORT_CONFIG_ASAP),
+        zha_typing.AttributeReportConfig(attr="y_axis", config=REPORT_CONFIG_ASAP),
+        zha_typing.AttributeReportConfig(attr="z_axis", config=REPORT_CONFIG_ASAP),
     )
 
     @callback

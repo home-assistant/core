@@ -19,7 +19,9 @@ class DoorLockChannel(ZigbeeChannel):
 
     _value_attribute = 0
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {"attr": "lock_state", "config": REPORT_CONFIG_IMMEDIATE},
+        zha_typing.AttributeReportConfig(
+            attr="lock_state", config=REPORT_CONFIG_IMMEDIATE
+        ),
     )
 
     async def async_update(self) -> None:
@@ -61,7 +63,9 @@ class WindowCovering(ZigbeeChannel):
 
     _value_attribute = 8
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {"attr": "current_position_lift_percentage", "config": REPORT_CONFIG_IMMEDIATE},
+        zha_typing.AttributeReportConfig(
+            attr="current_position_lift_percentage", config=REPORT_CONFIG_IMMEDIATE
+        ),
     )
 
     async def async_update(self) -> None:

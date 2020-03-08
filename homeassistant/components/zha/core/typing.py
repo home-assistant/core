@@ -1,6 +1,6 @@
 """Typing helpers for ZHA component."""
 
-from typing import TYPE_CHECKING, Callable, Tuple, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Callable, NamedTuple, Tuple, TypeVar
 
 import zigpy.device
 import zigpy.endpoint
@@ -24,7 +24,7 @@ ZhaGroupType = "ZHAGroup"
 ReportConfigType = Tuple[int, int, int]
 
 
-class AttributeReportConfig(TypedDict):
+class AttributeReportConfig(NamedTuple):
     """Attribute reporting configuration."""
 
     attr: str

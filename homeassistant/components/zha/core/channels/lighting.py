@@ -29,9 +29,15 @@ class ColorChannel(ZigbeeChannel):
     CAPABILITIES_COLOR_TEMP = 0x10
     UNSUPPORTED_ATTRIBUTE = 0x86
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {"attr": "current_x", "config": REPORT_CONFIG_DEFAULT},
-        {"attr": "current_y", "config": REPORT_CONFIG_DEFAULT},
-        {"attr": "color_temperature", "config": REPORT_CONFIG_DEFAULT},
+        zha_typing.AttributeReportConfig(
+            attr="current_x", config=REPORT_CONFIG_DEFAULT
+        ),
+        zha_typing.AttributeReportConfig(
+            attr="current_y", config=REPORT_CONFIG_DEFAULT
+        ),
+        zha_typing.AttributeReportConfig(
+            attr="color_temperature", config=REPORT_CONFIG_DEFAULT
+        ),
     )
 
     def __init__(

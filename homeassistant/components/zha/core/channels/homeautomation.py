@@ -58,7 +58,9 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
     CHANNEL_NAME: str = CHANNEL_ELECTRICAL_MEASUREMENT
 
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {"attr": "active_power", "config": REPORT_CONFIG_DEFAULT},
+        zha_typing.AttributeReportConfig(
+            attr="active_power", config=REPORT_CONFIG_DEFAULT
+        ),
     )
 
     def __init__(

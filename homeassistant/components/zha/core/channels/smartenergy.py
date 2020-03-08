@@ -75,7 +75,9 @@ class Metering(ZigbeeChannel):
     """Metering channel."""
 
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {"attr": "instantaneous_demand", "config": REPORT_CONFIG_DEFAULT},
+        zha_typing.AttributeReportConfig(
+            attr="instantaneous_demand", config=REPORT_CONFIG_DEFAULT
+        ),
     )
 
     unit_of_measure_map: Dict[int, str] = {

@@ -20,7 +20,9 @@ class FlowMeasurement(ZigbeeChannel):
     """Flow Measurement channel."""
 
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {"attr": "measured_value", "config": REPORT_CONFIG_DEFAULT},
+        zha_typing.AttributeReportConfig(
+            attr="measured_value", config=REPORT_CONFIG_DEFAULT
+        ),
     )
 
 
@@ -31,7 +33,9 @@ class IlluminanceLevelSensing(ZigbeeChannel):
     """Illuminance Level Sensing channel."""
 
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {"attr": "level_status", "config": REPORT_CONFIG_DEFAULT},
+        zha_typing.AttributeReportConfig(
+            attr="level_status", config=REPORT_CONFIG_DEFAULT
+        ),
     )
 
 
@@ -42,7 +46,9 @@ class IlluminanceMeasurement(ZigbeeChannel):
     """Illuminance Measurement channel."""
 
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {"attr": "measured_value", "config": REPORT_CONFIG_DEFAULT},
+        zha_typing.AttributeReportConfig(
+            attr="measured_value", config=REPORT_CONFIG_DEFAULT
+        ),
     )
 
 
@@ -52,7 +58,9 @@ class OccupancySensing(ZigbeeChannel):
     """Occupancy Sensing channel."""
 
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {"attr": "occupancy", "config": REPORT_CONFIG_IMMEDIATE},
+        zha_typing.AttributeReportConfig(
+            attr="occupancy", config=REPORT_CONFIG_IMMEDIATE
+        ),
     )
 
 
@@ -61,7 +69,9 @@ class PressureMeasurement(ZigbeeChannel):
     """Pressure measurement channel."""
 
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {"attr": "measured_value", "config": REPORT_CONFIG_DEFAULT},
+        zha_typing.AttributeReportConfig(
+            attr="measured_value", config=REPORT_CONFIG_DEFAULT
+        ),
     )
 
 
@@ -70,10 +80,10 @@ class RelativeHumidity(ZigbeeChannel):
     """Relative Humidity measurement channel."""
 
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {
-            "attr": "measured_value",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
-        },
+        zha_typing.AttributeReportConfig(
+            attr="measured_value",
+            config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
+        ),
     )
 
 
@@ -84,8 +94,8 @@ class TemperatureMeasurement(ZigbeeChannel):
     """Temperature measurement channel."""
 
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {
-            "attr": "measured_value",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
-        },
+        zha_typing.AttributeReportConfig(
+            attr="measured_value",
+            config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
+        ),
     )

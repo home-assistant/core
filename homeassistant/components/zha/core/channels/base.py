@@ -96,7 +96,7 @@ class ZigbeeChannel(LogMixin):
         self._unique_id: str = f"{unique_id}:0x{cluster.cluster_id:04x}"
         self._report_config: zha_typing.AttributeReportConfigType = self.REPORT_CONFIG
         if not hasattr(self, "_value_attribute") and len(self._report_config) > 0:
-            attr = self._report_config[0].get("attr")
+            attr = self._report_config[0].attr
             if isinstance(attr, str):
                 self.value_attribute: int = self.cluster.attridx.get(attr)
             else:
@@ -202,7 +202,7 @@ class ZigbeeChannel(LogMixin):
             if self.cluster.is_server:
                 for report_config in self._report_config:
                     await self.configure_reporting(
-                        report_config["attr"], report_config["config"]
+                        report_config.attr, report_config.config
                     )
             self.debug("finished channel configuration")
         else:
@@ -214,7 +214,7 @@ class ZigbeeChannel(LogMixin):
         self.debug("initializing channel: from_cache: %s", from_cache)
         attributes = []
         for report_config in self._report_config:
-            attributes.append(report_config["attr"])
+            attributes.append(report_config.attr)
         if len(attributes) > 0:
             await self.get_attributes(attributes, from_cache=from_cache)
         self._status = ChannelStatus.INITIALIZED

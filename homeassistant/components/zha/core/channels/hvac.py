@@ -28,7 +28,7 @@ class FanChannel(ZigbeeChannel):
     _value_attribute: int = 0
 
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {"attr": "fan_mode", "config": REPORT_CONFIG_OP},
+        zha_typing.AttributeReportConfig(attr="fan_mode", config=REPORT_CONFIG_OP),
     )
 
     async def async_set_speed(self, value: int) -> None:

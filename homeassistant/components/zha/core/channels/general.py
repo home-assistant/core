@@ -35,7 +35,9 @@ class AnalogInput(ZigbeeChannel):
     """Analog Input channel."""
 
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {"attr": "present_value", "config": REPORT_CONFIG_DEFAULT},
+        zha_typing.AttributeReportConfig(
+            attr="present_value", config=REPORT_CONFIG_DEFAULT
+        ),
     )
 
 
@@ -44,7 +46,9 @@ class AnalogOutput(ZigbeeChannel):
     """Analog Output channel."""
 
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {"attr": "present_value", "config": REPORT_CONFIG_DEFAULT},
+        zha_typing.AttributeReportConfig(
+            attr="present_value", config=REPORT_CONFIG_DEFAULT
+        ),
     )
 
 
@@ -53,7 +57,9 @@ class AnalogValue(ZigbeeChannel):
     """Analog Value channel."""
 
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {"attr": "present_value", "config": REPORT_CONFIG_DEFAULT},
+        zha_typing.AttributeReportConfig(
+            attr="present_value", config=REPORT_CONFIG_DEFAULT
+        ),
     )
 
 
@@ -113,7 +119,9 @@ class BinaryInput(ZigbeeChannel):
     """Binary Input channel."""
 
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {"attr": "present_value", "config": REPORT_CONFIG_DEFAULT},
+        zha_typing.AttributeReportConfig(
+            attr="present_value", config=REPORT_CONFIG_DEFAULT
+        ),
     )
 
 
@@ -122,7 +130,9 @@ class BinaryOutput(ZigbeeChannel):
     """Binary Output channel."""
 
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {"attr": "present_value", "config": REPORT_CONFIG_DEFAULT},
+        zha_typing.AttributeReportConfig(
+            attr="present_value", config=REPORT_CONFIG_DEFAULT
+        ),
     )
 
 
@@ -131,7 +141,9 @@ class BinaryValue(ZigbeeChannel):
     """Binary Value channel."""
 
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {"attr": "present_value", "config": REPORT_CONFIG_DEFAULT},
+        zha_typing.AttributeReportConfig(
+            attr="present_value", config=REPORT_CONFIG_DEFAULT
+        ),
     )
 
 
@@ -185,7 +197,9 @@ class LevelControlChannel(ZigbeeChannel):
 
     CURRENT_LEVEL: int = 0
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {"attr": "current_level", "config": REPORT_CONFIG_ASAP},
+        zha_typing.AttributeReportConfig(
+            attr="current_level", config=REPORT_CONFIG_ASAP
+        ),
     )
 
     @callback
@@ -229,7 +243,9 @@ class MultistateInput(ZigbeeChannel):
     """Multistate Input channel."""
 
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {"attr": "present_value", "config": REPORT_CONFIG_DEFAULT},
+        zha_typing.AttributeReportConfig(
+            attr="present_value", config=REPORT_CONFIG_DEFAULT
+        ),
     )
 
 
@@ -238,7 +254,9 @@ class MultistateOutput(ZigbeeChannel):
     """Multistate Output channel."""
 
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {"attr": "present_value", "config": REPORT_CONFIG_DEFAULT},
+        zha_typing.AttributeReportConfig(
+            attr="present_value", config=REPORT_CONFIG_DEFAULT
+        ),
     )
 
 
@@ -247,7 +265,9 @@ class MultistateValue(ZigbeeChannel):
     """Multistate Value channel."""
 
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {"attr": "present_value", "config": REPORT_CONFIG_DEFAULT},
+        zha_typing.AttributeReportConfig(
+            attr="present_value", config=REPORT_CONFIG_DEFAULT
+        ),
     )
 
 
@@ -262,7 +282,7 @@ class OnOffChannel(ZigbeeChannel):
 
     ON_OFF = 0
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {"attr": "on_off", "config": REPORT_CONFIG_IMMEDIATE},
+        zha_typing.AttributeReportConfig(attr="on_off", config=REPORT_CONFIG_IMMEDIATE),
     )
 
     def __init__(
@@ -368,14 +388,18 @@ class PowerConfigurationChannel(ZigbeeChannel):
     """Channel for the zigbee power configuration cluster."""
 
     REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
-        {"attr": "battery_voltage", "config": REPORT_CONFIG_BATTERY_SAVE},
-        {"attr": "battery_percentage_remaining", "config": REPORT_CONFIG_BATTERY_SAVE},
+        zha_typing.AttributeReportConfig(
+            attr="battery_voltage", config=REPORT_CONFIG_BATTERY_SAVE
+        ),
+        zha_typing.AttributeReportConfig(
+            attr="battery_percentage_remaining", config=REPORT_CONFIG_BATTERY_SAVE
+        ),
     )
 
     @callback
     def attribute_updated(self, attrid: int, value: Any) -> None:
         """Handle attribute updates on this cluster."""
-        attr = self._report_config[1].get("attr")
+        attr = self._report_config[1].attr
         if isinstance(attr, str):
             attr_id = self.cluster.attridx.get(attr)
         else:
