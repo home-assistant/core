@@ -1,6 +1,6 @@
 """General channels module for Zigbee Home Automation."""
 import logging
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 import zigpy.zcl.clusters.general as general
 
@@ -66,7 +66,7 @@ class BasicChannel(ZigbeeChannel):
     UNKNOWN = 0
     BATTERY = 3
 
-    POWER_SOURCES = {
+    POWER_SOURCES: Dict[int, str] = {
         UNKNOWN: "Unknown",
         1: "Mains (single phase)",
         2: "Mains (3 phase)",
@@ -171,7 +171,7 @@ class Identify(ZigbeeChannel):
 class LevelControlChannel(ZigbeeChannel):
     """Channel for the LevelControl Zigbee cluster."""
 
-    CURRENT_LEVEL = 0
+    CURRENT_LEVEL: int = 0
     REPORT_CONFIG = ({"attr": "current_level", "config": REPORT_CONFIG_ASAP},)
 
     @callback
@@ -200,7 +200,7 @@ class LevelControlChannel(ZigbeeChannel):
         if attrid == self.CURRENT_LEVEL:
             self.dispatch_level_change(SIGNAL_SET_LEVEL, value)
 
-    def dispatch_level_change(self, command: int, level: int) -> None:
+    def dispatch_level_change(self, command: str, level: int) -> None:
         """Dispatch level change."""
         self.async_send_signal(f"{self.unique_id}_{command}", level)
 
