@@ -1,5 +1,6 @@
 """HVAC channels module for Zigbee Home Automation."""
 import logging
+from typing import Any
 
 from zigpy.exceptions import DeliveryError
 import zigpy.zcl.clusters.hvac as hvac
@@ -24,11 +25,11 @@ class Dehumidification(ZigbeeChannel):
 class FanChannel(ZigbeeChannel):
     """Fan channel."""
 
-    _value_attribute = 0
+    _value_attribute: int = 0
 
     REPORT_CONFIG = ({"attr": "fan_mode", "config": REPORT_CONFIG_OP},)
 
-    async def async_set_speed(self, value) -> None:
+    async def async_set_speed(self, value: int) -> None:
         """Set the speed of the fan."""
 
         try:
@@ -37,7 +38,7 @@ class FanChannel(ZigbeeChannel):
             self.error("Could not set speed: %s", ex)
             return
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Retrieve latest state."""
         result = await self.get_attribute_value("fan_mode", from_cache=True)
         if result is not None:
@@ -46,7 +47,7 @@ class FanChannel(ZigbeeChannel):
             )
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: Any) -> None:
         """Handle attribute update from fan cluster."""
         attr_name = self.cluster.attributes.get(attrid, [attrid])[0]
         self.debug(
@@ -57,7 +58,7 @@ class FanChannel(ZigbeeChannel):
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", attrid, attr_name, value
             )
 
-    async def async_initialize(self, from_cache: bool):
+    async def async_initialize(self, from_cache: bool) -> None:
         """Initialize channel."""
         await self.get_attribute_value(self._value_attribute, from_cache=from_cache)
         await super().async_initialize(from_cache)

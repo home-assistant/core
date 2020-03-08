@@ -67,7 +67,7 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
         self._divisor = None
         self._multiplier = None
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Retrieve latest state."""
         self.debug("async_update")
 
@@ -81,13 +81,13 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
                 result,
             )
 
-    async def async_initialize(self, from_cache: bool):
+    async def async_initialize(self, from_cache: bool) -> None:
         """Initialize channel."""
         await self.get_attribute_value("active_power", from_cache=from_cache)
         await self.fetch_config(from_cache)
         await super().async_initialize(from_cache)
 
-    async def fetch_config(self, from_cache: bool):
+    async def fetch_config(self, from_cache: bool) -> None:
         """Fetch config from device and updates format specifier."""
         divisor = await self.get_attribute_value(
             "ac_power_divisor", from_cache=from_cache

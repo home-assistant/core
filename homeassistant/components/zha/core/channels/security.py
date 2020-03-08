@@ -6,6 +6,7 @@ https://home-assistant.io/integrations/zha/
 """
 import asyncio
 import logging
+from typing import Any
 
 from zigpy.exceptions import DeliveryError
 import zigpy.zcl.clusters.security as security
@@ -39,7 +40,9 @@ class IasWd(ZigbeeChannel):
     """IAS Warning Device channel."""
 
     @staticmethod
-    def set_bit(destination_value, destination_bit, source_value, source_bit):
+    def set_bit(
+        destination_value: int, destination_bit: int, source_value: int, source_bit: int
+    ) -> int:
         """Set the specified bit in the value."""
 
         if IasWd.get_bit(source_value, source_bit):
@@ -47,7 +50,7 @@ class IasWd(ZigbeeChannel):
         return destination_value
 
     @staticmethod
-    def get_bit(value, bit):
+    def get_bit(value: int, bit: int) -> int:
         """Get the specified bit from the value."""
         return (value & (1 << bit)) != 0
 
@@ -78,12 +81,12 @@ class IasWd(ZigbeeChannel):
 
     async def start_warning(
         self,
-        mode=WARNING_DEVICE_MODE_EMERGENCY,
-        strobe=WARNING_DEVICE_STROBE_YES,
-        siren_level=WARNING_DEVICE_SOUND_HIGH,
-        warning_duration=5,  # seconds
-        strobe_duty_cycle=0x00,
-        strobe_intensity=WARNING_DEVICE_STROBE_HIGH,
+        mode: int = WARNING_DEVICE_MODE_EMERGENCY,
+        strobe: int = WARNING_DEVICE_STROBE_YES,
+        siren_level: int = WARNING_DEVICE_SOUND_HIGH,
+        warning_duration: int = 5,  # seconds
+        strobe_duty_cycle: int = 0x00,
+        strobe_intensity: int = WARNING_DEVICE_STROBE_HIGH,
     ):
         """Issue a start warning command.
 
@@ -120,7 +123,7 @@ class IASZoneChannel(ZigbeeChannel):
     """Channel for the IASZone Zigbee cluster."""
 
     @callback
-    def cluster_command(self, tsn, command_id, args):
+    def cluster_command(self, tsn: int, command_id: int, args) -> None:
         """Handle commands received to this cluster."""
         if command_id == 0:
             state = args[0] & 3
@@ -133,7 +136,7 @@ class IASZoneChannel(ZigbeeChannel):
             res = self._cluster.enroll_response(0, 0)
             asyncio.create_task(res)
 
-    async def async_configure(self):
+    async def async_configure(self) -> None:
         """Configure IAS device."""
         await self.get_attribute_value("zone_type", from_cache=False)
         if self._ch_pool.skip_configuration:
@@ -163,7 +166,7 @@ class IASZoneChannel(ZigbeeChannel):
         self.debug("finished IASZoneChannel configuration")
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: Any):
         """Handle attribute updates on this cluster."""
         if attrid == 2:
             value = value & 3
@@ -174,7 +177,7 @@ class IASZoneChannel(ZigbeeChannel):
                 value,
             )
 
-    async def async_initialize(self, from_cache: bool):
+    async def async_initialize(self, from_cache: bool) -> None:
         """Initialize channel."""
         attributes = ["zone_status", "zone_state"]
         await self.get_attributes(attributes, from_cache=from_cache)

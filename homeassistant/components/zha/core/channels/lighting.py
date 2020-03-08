@@ -1,5 +1,6 @@
 """Lighting channels module for Zigbee Home Automation."""
 import logging
+from typing import Optional
 
 import zigpy.zcl.clusters.lighting as lighting
 
@@ -38,24 +39,24 @@ class ColorChannel(ZigbeeChannel):
     ) -> None:
         """Initialize ColorChannel."""
         super().__init__(cluster, ch_pool)
-        self._color_capabilities = None
+        self._color_capabilities: Optional[int] = None
 
-    def get_color_capabilities(self):
+    def get_color_capabilities(self) -> Optional[int]:
         """Return the color capabilities."""
         return self._color_capabilities
 
-    async def async_configure(self):
+    async def async_configure(self) -> None:
         """Configure channel."""
         await self.fetch_color_capabilities(False)
         await super().async_configure()
 
-    async def async_initialize(self, from_cache: bool):
+    async def async_initialize(self, from_cache: bool) -> None:
         """Initialize channel."""
         await self.fetch_color_capabilities(True)
         attributes = ["color_temperature", "current_x", "current_y"]
         await self.get_attributes(attributes, from_cache=from_cache)
 
-    async def fetch_color_capabilities(self, from_cache: bool):
+    async def fetch_color_capabilities(self, from_cache: bool) -> None:
         """Get the color configuration."""
         capabilities = await self.get_attribute_value(
             "color_capabilities", from_cache=from_cache

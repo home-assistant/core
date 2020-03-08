@@ -38,20 +38,22 @@ class Channels:
     def __init__(self, zha_device: zha_typing.ZhaDeviceType) -> None:
         """Initialize instance."""
         self._pools: List[zha_typing.ChannelPoolType] = []
-        self._power_config = None
-        self._identify = None
-        self._semaphore = asyncio.Semaphore(3)
-        self._unique_id = str(zha_device.ieee)
-        self._zdo_channel = base.ZDOChannel(zha_device.device.endpoints[0], zha_device)
-        self._zha_device = zha_device
+        self._power_config: Optional[zha_typing.ChannelType] = None
+        self._identify: Optional[zha_typing.ChannelType] = None
+        self._semaphore: asyncio.Semaphore = asyncio.Semaphore(3)
+        self._unique_id: str = str(zha_device.ieee)
+        self._zdo_channel: zha_typing.ZDOChannelType = base.ZDOChannel(
+            zha_device.device.endpoints[0], zha_device
+        )
+        self._zha_device: zha_typing.ZhaDeviceType = zha_device
 
     @property
-    def pools(self) -> List["ChannelPool"]:
+    def pools(self) -> List[zha_typing.ChannelPoolType]:
         """Return channel pools list."""
         return self._pools
 
     @property
-    def power_configuration_ch(self) -> zha_typing.ChannelType:
+    def power_configuration_ch(self) -> Optional[zha_typing.ChannelType]:
         """Return power configuration channel."""
         return self._power_config
 
@@ -62,7 +64,7 @@ class Channels:
             self._power_config = channel
 
     @property
-    def identify_ch(self) -> zha_typing.ChannelType:
+    def identify_ch(self) -> Optional[zha_typing.ChannelType]:
         """Return power configuration channel."""
         return self._identify
 
@@ -93,7 +95,7 @@ class Channels:
         return self._unique_id
 
     @classmethod
-    def new(cls, zha_device: zha_typing.ZhaDeviceType) -> "Channels":
+    def new(cls, zha_device: zha_typing.ZhaDeviceType) -> zha_typing.ChannelsType:
         """Create new instance."""
         channels = cls(zha_device)
         for ep_id in sorted(zha_device.device.endpoints):
@@ -192,7 +194,7 @@ class ChannelPool:
         return self._channels.zha_device.nwk
 
     @property
-    def is_mains_powered(self) -> bool:
+    def is_mains_powered(self) -> Optional[bool]:
         """Device is_mains_powered."""
         return self._channels.zha_device.is_mains_powered
 

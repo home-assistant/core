@@ -1,5 +1,6 @@
 """General channels module for Zigbee Home Automation."""
 import logging
+from typing import Any, Optional
 
 import zigpy.zcl.clusters.general as general
 
@@ -80,14 +81,14 @@ class BasicChannel(ZigbeeChannel):
     ) -> None:
         """Initialize BasicChannel."""
         super().__init__(cluster, ch_pool)
-        self._power_source = None
+        self._power_source: Optional[int] = None
 
-    async def async_configure(self):
+    async def async_configure(self) -> None:
         """Configure this channel."""
         await super().async_configure()
         await self.async_initialize(False)
 
-    async def async_initialize(self, from_cache: bool):
+    async def async_initialize(self, from_cache: bool) -> None:
         """Initialize channel."""
         power_source = await self.get_attribute_value(
             "power_source", from_cache=from_cache
@@ -96,7 +97,7 @@ class BasicChannel(ZigbeeChannel):
             self._power_source = power_source
         await super().async_initialize(from_cache)
 
-    def get_power_source(self):
+    def get_power_source(self) -> Optional[int]:
         """Get the power source."""
         return self._power_source
 
@@ -155,7 +156,7 @@ class Identify(ZigbeeChannel):
     """Identify channel."""
 
     @callback
-    def cluster_command(self, tsn, command_id, args):
+    def cluster_command(self, tsn: int, command_id: int, args) -> None:
         """Handle commands received to this cluster."""
         cmd = parse_and_log_command(self, tsn, command_id, args)
 
@@ -174,7 +175,7 @@ class LevelControlChannel(ZigbeeChannel):
     REPORT_CONFIG = ({"attr": "current_level", "config": REPORT_CONFIG_ASAP},)
 
     @callback
-    def cluster_command(self, tsn, command_id, args):
+    def cluster_command(self, tsn: int, command_id: int, args) -> None:
         """Handle commands received to this cluster."""
         cmd = parse_and_log_command(self, tsn, command_id, args)
 
@@ -193,17 +194,17 @@ class LevelControlChannel(ZigbeeChannel):
             )
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: Any) -> None:
         """Handle attribute updates on this cluster."""
         self.debug("received attribute: %s update with value: %s", attrid, value)
         if attrid == self.CURRENT_LEVEL:
             self.dispatch_level_change(SIGNAL_SET_LEVEL, value)
 
-    def dispatch_level_change(self, command, level):
+    def dispatch_level_change(self, command: int, level: int) -> None:
         """Dispatch level change."""
         self.async_send_signal(f"{self.unique_id}_{command}", level)
 
-    async def async_initialize(self, from_cache: bool):
+    async def async_initialize(self, from_cache: bool) -> None:
         """Initialize channel."""
         await self.get_attribute_value(self.CURRENT_LEVEL, from_cache=from_cache)
         await super().async_initialize(from_cache)
@@ -247,11 +248,11 @@ class OnOffChannel(ZigbeeChannel):
     ) -> None:
         """Initialize OnOffChannel."""
         super().__init__(cluster, ch_pool)
-        self._state = None
+        self._state: Optional[bool] = None
         self._off_listener = None
 
     @callback
-    def cluster_command(self, tsn, command_id, args):
+    def cluster_command(self, tsn: int, command_id: int, args) -> None:
         """Handle commands received to this cluster."""
         cmd = parse_and_log_command(self, tsn, command_id, args)
 
@@ -278,13 +279,13 @@ class OnOffChannel(ZigbeeChannel):
             self.attribute_updated(self.ON_OFF, not bool(self._state))
 
     @callback
-    def set_to_off(self, *_):
+    def set_to_off(self, *_) -> None:
         """Set the state to off."""
         self._off_listener = None
         self.attribute_updated(self.ON_OFF, False)
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: Any) -> None:
         """Handle attribute updates on this cluster."""
         if attrid == self.ON_OFF:
             self.async_send_signal(
@@ -292,14 +293,14 @@ class OnOffChannel(ZigbeeChannel):
             )
             self._state = bool(value)
 
-    async def async_initialize(self, from_cache: bool):
+    async def async_initialize(self, from_cache: bool) -> None:
         """Initialize channel."""
         state = await self.get_attribute_value(self.ON_OFF, from_cache=from_cache)
         if state is not None:
             self._state = bool(state)
         await super().async_initialize(from_cache)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Initialize channel."""
         if self.cluster.is_client:
             return
@@ -350,7 +351,7 @@ class PowerConfigurationChannel(ZigbeeChannel):
     )
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: Any) -> None:
         """Handle attribute updates on this cluster."""
         attr = self._report_config[1].get("attr")
         if isinstance(attr, str):
@@ -370,16 +371,16 @@ class PowerConfigurationChannel(ZigbeeChannel):
             f"{self.unique_id}_{SIGNAL_STATE_ATTR}", attr_name, value
         )
 
-    async def async_initialize(self, from_cache: bool):
+    async def async_initialize(self, from_cache: bool) -> None:
         """Initialize channel."""
         await self.async_read_state(from_cache)
         await super().async_initialize(from_cache)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Retrieve latest state."""
         await self.async_read_state(True)
 
-    async def async_read_state(self, from_cache: bool):
+    async def async_read_state(self, from_cache: bool) -> None:
         """Read data from the cluster."""
         attributes = [
             "battery_size",

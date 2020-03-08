@@ -1,5 +1,6 @@
 """Manufacturer specific channels module for Zigbee Home Automation."""
 import logging
+from typing import Any
 
 from homeassistant.core import callback
 
@@ -61,7 +62,7 @@ class SmartThingsAcceleration(ZigbeeChannel):
     ]
 
     @callback
-    def attribute_updated(self, attrid, value):
+    def attribute_updated(self, attrid: int, value: Any) -> None:
         """Handle attribute updates on this cluster."""
         if attrid == self.value_attribute:
             self.async_send_signal(
