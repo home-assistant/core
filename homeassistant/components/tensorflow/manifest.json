@@ -3,7 +3,7 @@
   "name": "TensorFlow",
   "documentation": "https://www.home-assistant.io/integrations/tensorflow",
   "requirements": [
-    "tensorflow==1.13.2",
+    "tensorflow>=1.13.2,<2.0.0",
     "numpy==1.18.1",
     "protobuf==3.6.1",
     "pillow==7.0.0"
