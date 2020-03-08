@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
+    CONF_TYPE,
     TEMP_CELSIUS,
     UNIT_PERCENTAGE,
 )
@@ -25,6 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEVICE_DEFAULT_NAME = "Broadlink sensor"
 DEFAULT_TIMEOUT = 10
+DEFAULT_TYPE = 0x272A
 SCAN_INTERVAL = timedelta(seconds=300)
 
 SENSOR_TYPES = {
@@ -43,6 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         ),
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_MAC): cv.string,
+        vol.Optional(CONF_TYPE, default=DEFAULT_TYPE): cv.positive_int,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }
 )
@@ -54,9 +57,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     mac = config.get(CONF_MAC).encode().replace(b":", b"")
     mac_addr = binascii.unhexlify(mac)
     name = config.get(CONF_NAME)
+    dev_type = config.get(CONF_TYPE)
     timeout = config.get(CONF_TIMEOUT)
     update_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
-    broadlink_data = BroadlinkData(update_interval, host, mac_addr, timeout)
+    broadlink_data = BroadlinkData(update_interval, host, mac_addr, dev_type, timeout)
     dev = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
         dev.append(BroadlinkSensor(name, broadlink_data, variable))
@@ -109,11 +113,12 @@ class BroadlinkSensor(Entity):
 class BroadlinkData:
     """Representation of a Broadlink data object."""
 
-    def __init__(self, interval, ip_addr, mac_addr, timeout):
+    def __init__(self, interval, ip_addr, mac_addr, dev_type, timeout):
         """Initialize the data object."""
         self.data = None
         self.ip_addr = ip_addr
         self.mac_addr = mac_addr
+        self.dev_type = dev_type
         self.timeout = timeout
         self._connect()
         self._schema = vol.Schema(
@@ -131,7 +136,7 @@ class BroadlinkData:
 
     def _connect(self):
 
-        self._device = broadlink.a1((self.ip_addr, 80), self.mac_addr, None)
+        self._device = broadlink.a1((self.ip_addr, 80), self.mac_addr, self.dev_type)
         self._device.timeout = self.timeout
 
     def _update(self, retry=3):
