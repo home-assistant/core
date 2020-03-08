@@ -197,6 +197,9 @@ class AugustData(AugustSubscriberMixin):
         self.activity_stream = None
         self._api = august_gateway.api
         self._device_detail_by_id = {}
+        self._doorbells_by_id = {}
+        self._locks_by_id = {}
+        self._house_ids = set()
 
     async def async_setup(self):
         """Async setup of august device data and activities."""
