@@ -48,7 +48,7 @@ async def async_setup(hass, config, retry_delay=FIRST_RETRY_TIME):
 
         async def retry_setup(now):
             """Retry setup if a timeout happens on Tibber API."""
-            await async_setup(hass, config, retry_delay=min(2 * retry_delay, 300))
+            await async_setup(hass, config, retry_delay=min(2 * retry_delay, 900))
 
         async_call_later(hass, retry_delay, retry_setup)
 
