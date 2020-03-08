@@ -28,9 +28,9 @@ async def test_user(hass):
 
     # now data is provided, so check if login is correct and create the entry
     with patch(
-        "homeassistant.components.totalconnect.config_flow.TotalConnectConfigFlow.is_valid",
-        return_value=mock_coro(True),
-    ):
+        "homeassistant.components.totalconnect.config_flow.TotalConnectClient.TotalConnectClient"
+    ) as client_mock:
+    client_mock.return_value.is_logged_in.return_value = True
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
