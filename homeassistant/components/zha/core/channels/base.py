@@ -155,7 +155,7 @@ class ZigbeeChannel(LogMixin):
 
     async def configure_reporting(
         self,
-        attr: Union[int, str]
+        attr: Union[int, str],
         report_config=(
             REPORT_CONFIG_MIN_INT,
             REPORT_CONFIG_MAX_INT,
