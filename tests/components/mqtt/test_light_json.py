@@ -108,7 +108,6 @@ from .common import (
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_attr,
-    help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
     help_test_entity_device_info_with_identifier,
     help_test_entity_id_update,
@@ -1111,20 +1110,6 @@ async def test_entity_device_info_update(hass, mqtt_mock):
         "unique_id": "veryunique",
     }
     await help_test_entity_device_info_update(hass, mqtt_mock, light.DOMAIN, config)
-
-
-async def test_entity_device_info_remove(hass, mqtt_mock):
-    """Test device registry remove."""
-    config = {
-        "platform": "mqtt",
-        "name": "Test 1",
-        "schema": "json",
-        "state_topic": "test-topic",
-        "command_topic": "test-command-topic",
-        "device": {"identifiers": ["helloworld"]},
-        "unique_id": "veryunique",
-    }
-    await help_test_entity_device_info_remove(hass, mqtt_mock, light.DOMAIN, config)
 
 
 async def test_entity_id_update(hass, mqtt_mock):

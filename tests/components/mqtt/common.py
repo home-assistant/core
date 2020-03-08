@@ -170,30 +170,6 @@ async def help_test_entity_device_info_with_identifier(hass, mqtt_mock, domain, 
     assert device.sw_version == "0.1-beta"
 
 
-async def help_test_entity_device_info_remove(hass, mqtt_mock, domain, config):
-    """Test device registry remove."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    entry.add_to_hass(hass)
-    await async_start(hass, "homeassistant", {}, entry)
-    dev_registry = await hass.helpers.device_registry.async_get_registry()
-    ent_registry = await hass.helpers.entity_registry.async_get_registry()
-
-    data = json.dumps(config)
-    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
-    await hass.async_block_till_done()
-
-    device = dev_registry.async_get_device({("mqtt", "helloworld")}, set())
-    assert device is not None
-    assert ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique")
-
-    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", "")
-    await hass.async_block_till_done()
-
-    device = dev_registry.async_get_device({("mqtt", "helloworld")}, set())
-    assert device is None
-    assert not ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique")
-
-
 async def help_test_entity_device_info_update(hass, mqtt_mock, domain, config):
     """Test device registry update."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN)
