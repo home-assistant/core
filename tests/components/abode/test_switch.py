@@ -26,7 +26,7 @@ DEVICE_ID = "switch.test_switch"
 DEVICE_UID = "0012a4d3614cb7e2b8c9abea31d2fb2a"
 
 
-async def test_entity_registry(hass, requests_mock):
+async def test_entity_registry(hass):
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, SWITCH_DOMAIN)
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
@@ -38,7 +38,7 @@ async def test_entity_registry(hass, requests_mock):
     assert entry.unique_id == DEVICE_UID
 
 
-async def test_switch_attributes(hass, requests_mock):
+async def test_switch_attributes(hass):
     """Test the switch attributes are correct."""
     await setup_platform(hass, SWITCH_DOMAIN)
 
@@ -46,7 +46,7 @@ async def test_switch_attributes(hass, requests_mock):
     assert state.state == STATE_OFF
 
 
-async def test_automation_attributes(hass, requests_mock):
+async def test_automation_attributes(hass):
     """Test the automation attributes are correct."""
     await setup_platform(hass, SWITCH_DOMAIN)
 

@@ -11,7 +11,8 @@ from tests.common import MockConfigEntry
 async def setup_platform(hass, platform):
     """Set up the Abode platform."""
     MockConfigEntry(
-        domain=ABODE_DOMAIN, data={CONF_USERNAME: "foo", CONF_PASSWORD: "bar"}
+        domain=ABODE_DOMAIN,
+        data={CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"},
     ).add_to_hass(hass)
 
     with patch("homeassistant.components.abode.ABODE_PLATFORMS", [platform]), patch(

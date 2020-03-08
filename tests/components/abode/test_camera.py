@@ -8,7 +8,7 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_IDLE
 from .common import setup_platform
 
 
-async def test_entity_registry(hass, requests_mock):
+async def test_entity_registry(hass):
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, CAMERA_DOMAIN)
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
@@ -17,7 +17,7 @@ async def test_entity_registry(hass, requests_mock):
     assert entry.unique_id == "d0a3a1c316891ceb00c20118aae2a133"
 
 
-async def test_camera_attributes(hass, requests_mock):
+async def test_camera_attributes(hass):
     """Test the camera attributes are correct."""
     await setup_platform(hass, CAMERA_DOMAIN)
 
@@ -25,7 +25,7 @@ async def test_camera_attributes(hass, requests_mock):
     assert state.state == STATE_IDLE
 
 
-async def test_capture_image(hass, requests_mock):
+async def test_capture_image(hass):
     """Test the camera capture image service."""
     await setup_platform(hass, CAMERA_DOMAIN)
 

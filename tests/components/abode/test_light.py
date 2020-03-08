@@ -22,7 +22,7 @@ from .common import setup_platform
 DEVICE_ID = "light.living_room_lamp"
 
 
-async def test_entity_registry(hass, requests_mock):
+async def test_entity_registry(hass):
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, LIGHT_DOMAIN)
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
@@ -31,7 +31,7 @@ async def test_entity_registry(hass, requests_mock):
     assert entry.unique_id == "741385f4388b2637df4c6b398fe50581"
 
 
-async def test_attributes(hass, requests_mock):
+async def test_attributes(hass):
     """Test the light attributes are correct."""
     await setup_platform(hass, LIGHT_DOMAIN)
 
@@ -48,7 +48,7 @@ async def test_attributes(hass, requests_mock):
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 19
 
 
-async def test_switch_off(hass, requests_mock):
+async def test_switch_off(hass):
     """Test the light can be turned off."""
     await setup_platform(hass, LIGHT_DOMAIN)
 
@@ -60,7 +60,7 @@ async def test_switch_off(hass, requests_mock):
         mock_switch_off.assert_called_once()
 
 
-async def test_switch_on(hass, requests_mock):
+async def test_switch_on(hass):
     """Test the light can be turned on."""
     await setup_platform(hass, LIGHT_DOMAIN)
 
@@ -72,7 +72,7 @@ async def test_switch_on(hass, requests_mock):
         mock_switch_on.assert_called_once()
 
 
-async def test_set_brightness(hass, requests_mock):
+async def test_set_brightness(hass):
     """Test the brightness can be set."""
     await setup_platform(hass, LIGHT_DOMAIN)
 
@@ -88,7 +88,7 @@ async def test_set_brightness(hass, requests_mock):
         mock_set_level.assert_called_once_with(39)
 
 
-async def test_set_color(hass, requests_mock):
+async def test_set_color(hass):
     """Test the color can be set."""
     await setup_platform(hass, LIGHT_DOMAIN)
 
@@ -103,7 +103,7 @@ async def test_set_color(hass, requests_mock):
         mock_set_color.assert_called_once_with((240.0, 100.0))
 
 
-async def test_set_color_temp(hass, requests_mock):
+async def test_set_color_temp(hass):
     """Test the color temp can be set."""
     await setup_platform(hass, LIGHT_DOMAIN)
 
