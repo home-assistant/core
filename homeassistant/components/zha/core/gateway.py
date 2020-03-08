@@ -341,7 +341,7 @@ class ZHAGateway:
         self,
         ieee: zha_typing.ZigpyEUI64Type,
         reference_id: str,
-        zha_device: zha_typing.ZHADeviceType,
+        zha_device: zha_typing.ZhaDeviceType,
         cluster_channels: Dict[str, zha_typing.ChannelType],
         device_info: Dict[str, Any],
         remove_future: Awaitable,
