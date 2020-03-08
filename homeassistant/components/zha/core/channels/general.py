@@ -1,6 +1,6 @@
 """General channels module for Zigbee Home Automation."""
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import zigpy.zcl.clusters.general as general
 
@@ -34,21 +34,27 @@ class Alarms(ZigbeeChannel):
 class AnalogInput(ZigbeeChannel):
     """Analog Input channel."""
 
-    REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
+        {"attr": "present_value", "config": REPORT_CONFIG_DEFAULT},
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.AnalogOutput.cluster_id)
 class AnalogOutput(ZigbeeChannel):
     """Analog Output channel."""
 
-    REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
+        {"attr": "present_value", "config": REPORT_CONFIG_DEFAULT},
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.AnalogValue.cluster_id)
 class AnalogValue(ZigbeeChannel):
     """Analog Value channel."""
 
-    REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
+        {"attr": "present_value", "config": REPORT_CONFIG_DEFAULT},
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.ApplianceControl.cluster_id)
@@ -63,8 +69,8 @@ class ApplianceContorl(ZigbeeChannel):
 class BasicChannel(ZigbeeChannel):
     """Channel to interact with the basic cluster."""
 
-    UNKNOWN = 0
-    BATTERY = 3
+    UNKNOWN: int = 0
+    BATTERY: int = 3
 
     POWER_SOURCES: Dict[int, str] = {
         UNKNOWN: "Unknown",
@@ -106,21 +112,27 @@ class BasicChannel(ZigbeeChannel):
 class BinaryInput(ZigbeeChannel):
     """Binary Input channel."""
 
-    REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
+        {"attr": "present_value", "config": REPORT_CONFIG_DEFAULT},
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.BinaryOutput.cluster_id)
 class BinaryOutput(ZigbeeChannel):
     """Binary Output channel."""
 
-    REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
+        {"attr": "present_value", "config": REPORT_CONFIG_DEFAULT},
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.BinaryValue.cluster_id)
 class BinaryValue(ZigbeeChannel):
     """Binary Value channel."""
 
-    REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
+        {"attr": "present_value", "config": REPORT_CONFIG_DEFAULT},
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Commissioning.cluster_id)
@@ -156,7 +168,7 @@ class Identify(ZigbeeChannel):
     """Identify channel."""
 
     @callback
-    def cluster_command(self, tsn: int, command_id: int, args) -> None:
+    def cluster_command(self, tsn: int, command_id: int, args: List[Any]) -> None:
         """Handle commands received to this cluster."""
         cmd = parse_and_log_command(self, tsn, command_id, args)
 
@@ -172,10 +184,12 @@ class LevelControlChannel(ZigbeeChannel):
     """Channel for the LevelControl Zigbee cluster."""
 
     CURRENT_LEVEL: int = 0
-    REPORT_CONFIG = ({"attr": "current_level", "config": REPORT_CONFIG_ASAP},)
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
+        {"attr": "current_level", "config": REPORT_CONFIG_ASAP},
+    )
 
     @callback
-    def cluster_command(self, tsn: int, command_id: int, args) -> None:
+    def cluster_command(self, tsn: int, command_id: int, args: List[Any]) -> None:
         """Handle commands received to this cluster."""
         cmd = parse_and_log_command(self, tsn, command_id, args)
 
@@ -214,21 +228,27 @@ class LevelControlChannel(ZigbeeChannel):
 class MultistateInput(ZigbeeChannel):
     """Multistate Input channel."""
 
-    REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
+        {"attr": "present_value", "config": REPORT_CONFIG_DEFAULT},
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.MultistateOutput.cluster_id)
 class MultistateOutput(ZigbeeChannel):
     """Multistate Output channel."""
 
-    REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
+        {"attr": "present_value", "config": REPORT_CONFIG_DEFAULT},
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.MultistateValue.cluster_id)
 class MultistateValue(ZigbeeChannel):
     """Multistate Value channel."""
 
-    REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
+        {"attr": "present_value", "config": REPORT_CONFIG_DEFAULT},
+    )
 
 
 @registries.BINARY_SENSOR_CLUSTERS.register(general.OnOff.cluster_id)
@@ -241,7 +261,9 @@ class OnOffChannel(ZigbeeChannel):
     """Channel for the OnOff Zigbee cluster."""
 
     ON_OFF = 0
-    REPORT_CONFIG = ({"attr": "on_off", "config": REPORT_CONFIG_IMMEDIATE},)
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
+        {"attr": "on_off", "config": REPORT_CONFIG_IMMEDIATE},
+    )
 
     def __init__(
         self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
@@ -249,10 +271,10 @@ class OnOffChannel(ZigbeeChannel):
         """Initialize OnOffChannel."""
         super().__init__(cluster, ch_pool)
         self._state: Optional[bool] = None
-        self._off_listener = None
+        self._off_listener: Optional[Callable[..., None]] = None
 
     @callback
-    def cluster_command(self, tsn: int, command_id: int, args) -> None:
+    def cluster_command(self, tsn: int, command_id: int, args: List[Any]) -> None:
         """Handle commands received to this cluster."""
         cmd = parse_and_log_command(self, tsn, command_id, args)
 
@@ -345,7 +367,7 @@ class PollControl(ZigbeeChannel):
 class PowerConfigurationChannel(ZigbeeChannel):
     """Channel for the zigbee power configuration cluster."""
 
-    REPORT_CONFIG = (
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
         {"attr": "battery_voltage", "config": REPORT_CONFIG_BATTERY_SAVE},
         {"attr": "battery_percentage_remaining", "config": REPORT_CONFIG_BATTERY_SAVE},
     )
@@ -382,7 +404,7 @@ class PowerConfigurationChannel(ZigbeeChannel):
 
     async def async_read_state(self, from_cache: bool) -> None:
         """Read data from the cluster."""
-        attributes = [
+        attributes: List[Union[int, str]] = [
             "battery_size",
             "battery_percentage_remaining",
             "battery_voltage",

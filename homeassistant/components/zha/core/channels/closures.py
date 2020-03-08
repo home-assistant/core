@@ -6,7 +6,7 @@ import zigpy.zcl.clusters.closures as closures
 
 from homeassistant.core import callback
 
-from .. import registries
+from .. import registries, typing as zha_typing
 from ..const import REPORT_CONFIG_IMMEDIATE, SIGNAL_ATTR_UPDATED
 from .base import ZigbeeChannel
 
@@ -18,7 +18,9 @@ class DoorLockChannel(ZigbeeChannel):
     """Door lock channel."""
 
     _value_attribute = 0
-    REPORT_CONFIG = ({"attr": "lock_state", "config": REPORT_CONFIG_IMMEDIATE},)
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
+        {"attr": "lock_state", "config": REPORT_CONFIG_IMMEDIATE},
+    )
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
@@ -58,7 +60,7 @@ class WindowCovering(ZigbeeChannel):
     """Window channel."""
 
     _value_attribute = 8
-    REPORT_CONFIG = (
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
         {"attr": "current_position_lift_percentage", "config": REPORT_CONFIG_IMMEDIATE},
     )
 

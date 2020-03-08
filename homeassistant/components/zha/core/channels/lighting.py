@@ -1,6 +1,6 @@
 """Lighting channels module for Zigbee Home Automation."""
 import logging
-from typing import Optional
+from typing import List, Optional, Union
 
 import zigpy.zcl.clusters.lighting as lighting
 
@@ -28,7 +28,7 @@ class ColorChannel(ZigbeeChannel):
     CAPABILITIES_COLOR_XY = 0x08
     CAPABILITIES_COLOR_TEMP = 0x10
     UNSUPPORTED_ATTRIBUTE = 0x86
-    REPORT_CONFIG = (
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
         {"attr": "current_x", "config": REPORT_CONFIG_DEFAULT},
         {"attr": "current_y", "config": REPORT_CONFIG_DEFAULT},
         {"attr": "color_temperature", "config": REPORT_CONFIG_DEFAULT},
@@ -53,7 +53,11 @@ class ColorChannel(ZigbeeChannel):
     async def async_initialize(self, from_cache: bool) -> None:
         """Initialize channel."""
         await self.fetch_color_capabilities(True)
-        attributes = ["color_temperature", "current_x", "current_y"]
+        attributes: List[Union[int, str]] = [
+            "color_temperature",
+            "current_x",
+            "current_y",
+        ]
         await self.get_attributes(attributes, from_cache=from_cache)
 
     async def fetch_color_capabilities(self, from_cache: bool) -> None:

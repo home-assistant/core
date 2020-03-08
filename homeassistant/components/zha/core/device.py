@@ -598,7 +598,7 @@ class ZHADevice(LogMixin):
                 fmt = log_msg[1] + " completed: %s"
             zdo.debug(fmt, *(log_msg[2] + (outcome,)))
 
-    def log(self, level, msg, *args):
+    def log(self, level: int, msg: str, *args) -> None:
         """Log a message."""
         msg = f"[%s](%s): {msg}"
         args = (self.nwk, self.model) + args

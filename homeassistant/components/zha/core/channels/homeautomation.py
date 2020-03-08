@@ -55,9 +55,11 @@ class Diagnostic(ZigbeeChannel):
 class ElectricalMeasurementChannel(ZigbeeChannel):
     """Channel that polls active power level."""
 
-    CHANNEL_NAME = CHANNEL_ELECTRICAL_MEASUREMENT
+    CHANNEL_NAME: str = CHANNEL_ELECTRICAL_MEASUREMENT
 
-    REPORT_CONFIG = ({"attr": "active_power", "config": REPORT_CONFIG_DEFAULT},)
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
+        {"attr": "active_power", "config": REPORT_CONFIG_DEFAULT},
+    )
 
     def __init__(
         self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType

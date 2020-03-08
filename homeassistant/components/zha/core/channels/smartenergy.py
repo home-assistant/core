@@ -74,7 +74,9 @@ class Messaging(ZigbeeChannel):
 class Metering(ZigbeeChannel):
     """Metering channel."""
 
-    REPORT_CONFIG = [{"attr": "instantaneous_demand", "config": REPORT_CONFIG_DEFAULT}]
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
+        {"attr": "instantaneous_demand", "config": REPORT_CONFIG_DEFAULT},
+    )
 
     unit_of_measure_map: Dict[int, str] = {
         0x00: "kW",

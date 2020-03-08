@@ -4,7 +4,7 @@ import asyncio
 from enum import Enum
 from functools import wraps
 import logging
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, cast
 
 import zigpy.exceptions
 
@@ -78,8 +78,8 @@ class ChannelStatus(Enum):
 class ZigbeeChannel(LogMixin):
     """Base channel for a Zigbee cluster."""
 
-    CHANNEL_NAME = None
-    REPORT_CONFIG = ()
+    CHANNEL_NAME: Optional[str] = None
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = ()
 
     def __init__(
         self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
@@ -94,13 +94,13 @@ class ZigbeeChannel(LogMixin):
         self._id: str = f"{ch_pool.id}:0x{cluster.cluster_id:04x}"
         unique_id = ch_pool.unique_id.replace("-", ":")
         self._unique_id: str = f"{unique_id}:0x{cluster.cluster_id:04x}"
-        self._report_config = self.REPORT_CONFIG
+        self._report_config: zha_typing.AttributeReportConfigType = self.REPORT_CONFIG
         if not hasattr(self, "_value_attribute") and len(self._report_config) > 0:
             attr = self._report_config[0].get("attr")
             if isinstance(attr, str):
                 self.value_attribute: int = self.cluster.attridx.get(attr)
             else:
-                self.value_attribute: int = attr
+                self.value_attribute: int = cast(int, attr)
         self._status: ChannelStatus = ChannelStatus.CREATED
         self._cluster.add_listener(self)
 
@@ -156,7 +156,7 @@ class ZigbeeChannel(LogMixin):
     async def configure_reporting(
         self,
         attr: Union[int, str],
-        report_config=(
+        report_config: zha_typing.ReportConfigType = (
             REPORT_CONFIG_MIN_INT,
             REPORT_CONFIG_MAX_INT,
             REPORT_CONFIG_RPT_CHANGE,
@@ -220,7 +220,7 @@ class ZigbeeChannel(LogMixin):
         self._status = ChannelStatus.INITIALIZED
 
     @callback
-    def cluster_command(self, tsn: int, command_id: int, args) -> None:
+    def cluster_command(self, tsn: int, command_id: int, args: List[Any]) -> None:
         """Handle commands received to this cluster."""
         pass
 
@@ -257,7 +257,7 @@ class ZigbeeChannel(LogMixin):
 
     async def get_attribute_value(
         self, attribute: Union[str, int], from_cache: bool = True
-    ):
+    ) -> Any:
         """Get the value for an attribute."""
         manufacturer = None
         manufacturer_code = self._ch_pool.manufacturer_code
@@ -273,8 +273,8 @@ class ZigbeeChannel(LogMixin):
         return result.get(attribute)
 
     async def get_attributes(
-        self, attributes: List[str], from_cache: bool = True
-    ) -> Dict[str, Any]:
+        self, attributes: List[Union[int, str]], from_cache: bool = True
+    ) -> Dict[Union[int, str], Any]:
         """Get the values for a list of attributes."""
         manufacturer = None
         manufacturer_code = self._ch_pool.manufacturer_code
@@ -360,7 +360,7 @@ class ZDOChannel(LogMixin):
         """Configure channel."""
         self._status = ChannelStatus.CONFIGURED
 
-    def log(self, level, msg, *args):
+    def log(self, level: int, msg: str, *args) -> None:
         """Log a message."""
         msg = f"[%s:ZDO](%s): {msg}"
         args = (self._zha_device.nwk, self._zha_device.model) + args

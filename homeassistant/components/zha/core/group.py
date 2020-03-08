@@ -47,7 +47,7 @@ class ZHAGroup(LogMixin):
             self._zha_gateway.devices.get(member_ieee[0])
             for member_ieee in self._zigpy_group.members.keys()
             if member_ieee[0] in self._zha_gateway.devices
-        ]
+        ]  # typing: List[ZhaDeviceType]
 
     async def async_add_members(
         self, member_ieee_addresses: List[ZigpyEUI64Type]
@@ -94,7 +94,7 @@ class ZHAGroup(LogMixin):
         ]
         return group_info
 
-    def log(self, level: str, msg: str, *args):
+    def log(self, level: int, msg: str, *args) -> None:
         """Log a message."""
         msg = f"[%s](%s): {msg}"
         args = (self.name, self.group_id) + args

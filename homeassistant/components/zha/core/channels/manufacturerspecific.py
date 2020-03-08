@@ -4,7 +4,7 @@ from typing import Any
 
 from homeassistant.core import callback
 
-from .. import registries
+from .. import registries, typing as zha_typing
 from ..const import (
     ATTR_ATTRIBUTE_ID,
     ATTR_ATTRIBUTE_NAME,
@@ -24,12 +24,12 @@ _LOGGER = logging.getLogger(__name__)
 class SmartThingsHumidity(ZigbeeChannel):
     """Smart Things Humidity channel."""
 
-    REPORT_CONFIG = [
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
         {
             "attr": "measured_value",
             "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
-        }
-    ]
+        },
+    )
 
 
 @registries.CHANNEL_ONLY_CLUSTERS.register(0xFD00)
@@ -37,7 +37,7 @@ class SmartThingsHumidity(ZigbeeChannel):
 class OsramButton(ZigbeeChannel):
     """Osram button channel."""
 
-    REPORT_CONFIG = []
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = ()
 
 
 @registries.CHANNEL_ONLY_CLUSTERS.register(0xFCC0)
@@ -45,7 +45,7 @@ class OsramButton(ZigbeeChannel):
 class OppleRemote(ZigbeeChannel):
     """Opple button channel."""
 
-    REPORT_CONFIG = []
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = ()
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
@@ -54,12 +54,12 @@ class OppleRemote(ZigbeeChannel):
 class SmartThingsAcceleration(ZigbeeChannel):
     """Smart Things Acceleration channel."""
 
-    REPORT_CONFIG = [
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
         {"attr": "acceleration", "config": REPORT_CONFIG_ASAP},
         {"attr": "x_axis", "config": REPORT_CONFIG_ASAP},
         {"attr": "y_axis", "config": REPORT_CONFIG_ASAP},
         {"attr": "z_axis", "config": REPORT_CONFIG_ASAP},
-    ]
+    )
 
     @callback
     def attribute_updated(self, attrid: int, value: Any) -> None:

@@ -6,7 +6,7 @@ https://home-assistant.io/integrations/zha/
 """
 import asyncio
 import logging
-from typing import Any
+from typing import Any, List, Union
 
 from zigpy.exceptions import DeliveryError
 import zigpy.zcl.clusters.security as security
@@ -123,7 +123,7 @@ class IASZoneChannel(ZigbeeChannel):
     """Channel for the IASZone Zigbee cluster."""
 
     @callback
-    def cluster_command(self, tsn: int, command_id: int, args) -> None:
+    def cluster_command(self, tsn: int, command_id: int, args: List[Any]) -> None:
         """Handle commands received to this cluster."""
         if command_id == 0:
             state = args[0] & 3
@@ -179,6 +179,6 @@ class IASZoneChannel(ZigbeeChannel):
 
     async def async_initialize(self, from_cache: bool) -> None:
         """Initialize channel."""
-        attributes = ["zone_status", "zone_state"]
+        attributes: List[Union[int, str]] = ["zone_status", "zone_state"]
         await self.get_attributes(attributes, from_cache=from_cache)
         await super().async_initialize(from_cache)

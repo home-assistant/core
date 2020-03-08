@@ -3,7 +3,7 @@ import logging
 
 import zigpy.zcl.clusters.measurement as measurement
 
-from .. import registries
+from .. import registries, typing as zha_typing
 from ..const import (
     REPORT_CONFIG_DEFAULT,
     REPORT_CONFIG_IMMEDIATE,
@@ -19,7 +19,9 @@ _LOGGER = logging.getLogger(__name__)
 class FlowMeasurement(ZigbeeChannel):
     """Flow Measurement channel."""
 
-    REPORT_CONFIG = [{"attr": "measured_value", "config": REPORT_CONFIG_DEFAULT}]
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
+        {"attr": "measured_value", "config": REPORT_CONFIG_DEFAULT},
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
@@ -28,7 +30,9 @@ class FlowMeasurement(ZigbeeChannel):
 class IlluminanceLevelSensing(ZigbeeChannel):
     """Illuminance Level Sensing channel."""
 
-    REPORT_CONFIG = [{"attr": "level_status", "config": REPORT_CONFIG_DEFAULT}]
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
+        {"attr": "level_status", "config": REPORT_CONFIG_DEFAULT},
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
@@ -37,7 +41,9 @@ class IlluminanceLevelSensing(ZigbeeChannel):
 class IlluminanceMeasurement(ZigbeeChannel):
     """Illuminance Measurement channel."""
 
-    REPORT_CONFIG = [{"attr": "measured_value", "config": REPORT_CONFIG_DEFAULT}]
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
+        {"attr": "measured_value", "config": REPORT_CONFIG_DEFAULT},
+    )
 
 
 @registries.BINARY_SENSOR_CLUSTERS.register(measurement.OccupancySensing.cluster_id)
@@ -45,26 +51,30 @@ class IlluminanceMeasurement(ZigbeeChannel):
 class OccupancySensing(ZigbeeChannel):
     """Occupancy Sensing channel."""
 
-    REPORT_CONFIG = [{"attr": "occupancy", "config": REPORT_CONFIG_IMMEDIATE}]
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
+        {"attr": "occupancy", "config": REPORT_CONFIG_IMMEDIATE},
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.PressureMeasurement.cluster_id)
 class PressureMeasurement(ZigbeeChannel):
     """Pressure measurement channel."""
 
-    REPORT_CONFIG = [{"attr": "measured_value", "config": REPORT_CONFIG_DEFAULT}]
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
+        {"attr": "measured_value", "config": REPORT_CONFIG_DEFAULT},
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.RelativeHumidity.cluster_id)
 class RelativeHumidity(ZigbeeChannel):
     """Relative Humidity measurement channel."""
 
-    REPORT_CONFIG = [
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
         {
             "attr": "measured_value",
             "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
-        }
-    ]
+        },
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
@@ -73,9 +83,9 @@ class RelativeHumidity(ZigbeeChannel):
 class TemperatureMeasurement(ZigbeeChannel):
     """Temperature measurement channel."""
 
-    REPORT_CONFIG = [
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
         {
             "attr": "measured_value",
             "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
-        }
-    ]
+        },
+    )

@@ -7,7 +7,7 @@ import zigpy.zcl.clusters.hvac as hvac
 
 from homeassistant.core import callback
 
-from .. import registries
+from .. import registries, typing as zha_typing
 from ..const import REPORT_CONFIG_OP, SIGNAL_ATTR_UPDATED
 from .base import ZigbeeChannel
 
@@ -27,7 +27,9 @@ class FanChannel(ZigbeeChannel):
 
     _value_attribute: int = 0
 
-    REPORT_CONFIG = ({"attr": "fan_mode", "config": REPORT_CONFIG_OP},)
+    REPORT_CONFIG: zha_typing.AttributeReportConfigType = (
+        {"attr": "fan_mode", "config": REPORT_CONFIG_OP},
+    )
 
     async def async_set_speed(self, value: int) -> None:
         """Set the speed of the fan."""

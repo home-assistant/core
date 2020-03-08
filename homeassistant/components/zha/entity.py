@@ -200,7 +200,7 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
             )
         self._unsubs.append(unsub)
 
-    def log(self, level, msg, *args) -> None:
+    def log(self, level: int, msg: str, *args) -> None:
         """Log a message."""
         msg = f"%s: {msg}"
         args = (self.entity_id,) + args
