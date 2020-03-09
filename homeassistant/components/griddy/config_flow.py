@@ -28,10 +28,7 @@ class GriddyGateway:
         data = await AsyncGriddy(
             self._clientsession, settlement_point=settlement_point
         ).async_getnow()
-        if data.now.datetime:
-            return True
-
-        return False
+        return bool(data.now.datetime)
 
 
 async def validate_input(hass: core.HomeAssistant, data):
