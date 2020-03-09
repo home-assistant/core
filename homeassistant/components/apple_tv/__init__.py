@@ -193,6 +193,8 @@ class AppleTVManager:
             if self._task:
                 self._task.cancel()
                 self._task = None
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("An error occurred while disconnecting")
         finally:
             self._update_state(disconnected=False)
 
