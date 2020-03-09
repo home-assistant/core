@@ -1,8 +1,5 @@
 """Define constants for the WWLLN integration."""
 from datetime import timedelta
-import logging
-
-LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "wwlln"
 

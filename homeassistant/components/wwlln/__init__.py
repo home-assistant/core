@@ -1,4 +1,6 @@
 """Support for World Wide Lightning Location Network."""
+import logging
+
 from aiowwlln import Client
 import voluptuous as vol
 
@@ -6,14 +8,9 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import (
-    CONF_WINDOW,
-    DATA_CLIENT,
-    DEFAULT_RADIUS,
-    DEFAULT_WINDOW,
-    DOMAIN,
-    LOGGER,
-)
+from .const import CONF_WINDOW, DATA_CLIENT, DEFAULT_RADIUS, DEFAULT_WINDOW, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -26,6 +23,7 @@ CONFIG_SCHEMA = vol.Schema(
                     cv.time_period,
                     cv.positive_timedelta,
                     lambda value: value.total_seconds(),
+                    vol.Range(min=DEFAULT_WINDOW.total_seconds()),
                 ),
             }
         )
@@ -91,7 +89,7 @@ async def async_migrate_entry(hass, config_entry):
 
     default_total_seconds = DEFAULT_WINDOW.total_seconds()
 
-    LOGGER.debug("Migrating from version %s", version)
+    _LOGGER.debug("Migrating from version %s", version)
 
     # 1 -> 2: Expanding the default window to 1 hour (if needed):
     if version == 1:
@@ -99,6 +97,6 @@ async def async_migrate_entry(hass, config_entry):
             data[CONF_WINDOW] = default_total_seconds
         version = config_entry.version = 2
         hass.config_entries.async_update_entry(config_entry, data=data)
-        LOGGER.info("Migration to version %s successful", version)
+        _LOGGER.info("Migration to version %s successful", version)
 
     return True
