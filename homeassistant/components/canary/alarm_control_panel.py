@@ -49,7 +49,6 @@ class CanaryAlarm(AlarmControlPanel):
     @property
     def state(self):
         """Return the state of the device."""
-
         location = self._data.get_location(self._location_id)
 
         if location.is_private:
@@ -82,17 +81,14 @@ class CanaryAlarm(AlarmControlPanel):
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-
         self._data.set_location_mode(self._location_id, LOCATION_MODE_HOME)
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-
         self._data.set_location_mode(self._location_id, LOCATION_MODE_AWAY)
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
-
         self._data.set_location_mode(self._location_id, LOCATION_MODE_NIGHT)
 
     def update(self):
