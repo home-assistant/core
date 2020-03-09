@@ -256,12 +256,12 @@ class TadoZoneData:
                 "heatingPower" in activity_data
                 and activity_data["heatingPower"] is not None
             ):
-                self._heating_power = activity_data["heatingPower"]["value"]
+                self._heating_power = activity_data["heatingPower"].get("value", None)
                 self._heating_power_timestamp = activity_data["heatingPower"][
                     "timestamp"
                 ]
                 self._heating_power_percentage = float(
-                    activity_data["heatingPower"]["percentage"]
+                    activity_data["heatingPower"].get("percentage", 0)
                 )
 
                 if self._heating_power_percentage > 0.0 and self._power == "ON":

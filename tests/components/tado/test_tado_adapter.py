@@ -389,3 +389,35 @@ async def test_smartac3_turning_off(hass):
     assert smartac3_turning_off.target_temp is None
     assert smartac3_turning_off.available is True
     assert smartac3_turning_off.precision == 0.1
+
+
+async def test_michael_heat_mode(hass):
+    """Test michael's tado."""
+    michael_heat_mode = await _mock_tado_climate_zone_from_fixture(
+        hass, "michael_heat_mode.json"
+    )
+    assert michael_heat_mode.preparation is False
+    assert michael_heat_mode.open_window is False
+    assert michael_heat_mode.open_window_attr == {}
+    assert michael_heat_mode.current_temp == 20.06
+    assert michael_heat_mode.current_temp_timestamp == "2020-03-09T08:16:49.271Z"
+    assert michael_heat_mode.connection is None
+    assert michael_heat_mode.tado_mode == "HOME"
+    assert michael_heat_mode.overlay_active is False
+    assert michael_heat_mode.overlay_termination_type is None
+    assert michael_heat_mode.current_humidity == 41.8
+    assert michael_heat_mode.current_humidity_timestamp == "2020-03-09T08:16:49.271Z"
+    assert michael_heat_mode.ac_power_timestamp is None
+    assert michael_heat_mode.heating_power_timestamp == "2020-03-09T08:20:47.299Z"
+    assert michael_heat_mode.ac_power is None
+    assert michael_heat_mode.heating_power is None
+    assert michael_heat_mode.heating_power_percentage == 0.0
+    assert michael_heat_mode.is_away is False
+    assert michael_heat_mode.power == "ON"
+    assert michael_heat_mode.current_hvac_action == "idle"
+    assert michael_heat_mode.current_tado_fan_speed == "AUTO"
+    assert michael_heat_mode.link == "ONLINE"
+    assert michael_heat_mode.current_tado_hvac_mode == "SMART_SCHEDULE"
+    assert michael_heat_mode.target_temp == 20.0
+    assert michael_heat_mode.available is True
+    assert michael_heat_mode.precision == 0.1
