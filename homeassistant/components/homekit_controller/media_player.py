@@ -17,7 +17,13 @@ from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_STOP,
 )
-from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
+from homeassistant.const import (
+    STATE_IDLE,
+    STATE_OK,
+    STATE_PAUSED,
+    STATE_PLAYING,
+    STATE_PROBLEM,
+)
 from homeassistant.core import callback
 
 from . import KNOWN_DEVICES, HomeKitEntity
@@ -62,6 +68,7 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerDevice):
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
         return [
+            CharacteristicsTypes.ACTIVE,
             CharacteristicsTypes.CURRENT_MEDIA_STATE,
             CharacteristicsTypes.TARGET_MEDIA_STATE,
             CharacteristicsTypes.REMOTE_KEY,
@@ -143,10 +150,15 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerDevice):
     @property
     def state(self):
         """State of the tv."""
+        active = self.get_hk_char_value(CharacteristicsTypes.ACTIVE)
+        if not active:
+            return STATE_PROBLEM
+
         homekit_state = self.get_hk_char_value(CharacteristicsTypes.CURRENT_MEDIA_STATE)
-        if homekit_state is None:
-            return None
-        return HK_TO_HA_STATE[homekit_state]
+        if homekit_state is not None:
+            return HK_TO_HA_STATE[homekit_state]
+
+        return STATE_OK
 
     async def async_media_play(self):
         """Send play command."""
