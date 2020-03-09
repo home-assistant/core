@@ -7,6 +7,7 @@ from pyicloud.exceptions import (
     PyiCloudException,
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
+    PyiCloudServiceNotActivatedException,
 )
 import voluptuous as vol
 
@@ -111,7 +112,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             if not devices:
                 raise PyiCloudNoDevicesException()
-        except (KeyError, PyiCloudNoDevicesException):
+        except (PyiCloudServiceNotActivatedException, PyiCloudNoDevicesException):
             _LOGGER.error("No device found in the iCloud account: %s", self._username)
             self.api = None
             return self.async_abort(reason="no_device")
