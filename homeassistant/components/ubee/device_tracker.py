@@ -24,7 +24,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Optional(CONF_MODEL, default=DEFAULT_MODEL): vol.Any(
-            "EVW32C-0N", "EVW320B", "EVW321B", "EVW3200-Wifi", "EVW3226@UPC"
+            "EVW32C-0N", "EVW320B", "EVW321B", "EVW3200-Wifi", "EVW3226@UPC", "DVW32CB"
         ),
     }
 )
