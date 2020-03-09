@@ -16,7 +16,7 @@
       "unknown": "Unexpected error"
     },
     "abort": {
-      "already_configured": "Griddy is already configured"
+      "already_configured": "This Load Zone is already configured"
     }
   }
 }
