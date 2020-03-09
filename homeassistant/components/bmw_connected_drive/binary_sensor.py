@@ -110,7 +110,6 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
         vehicle_state = self._vehicle.state
         result = {
             "car": self._vehicle.name,
-            "update_time": vehicle_state.timestamp,
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
