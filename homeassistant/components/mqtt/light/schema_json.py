@@ -81,6 +81,9 @@ CONF_FLASH_TIME_LONG = "flash_time_long"
 CONF_FLASH_TIME_SHORT = "flash_time_short"
 CONF_HS = "hs"
 
+CONF_MAX_MIREDS = "max_mireds"
+CONF_MIN_MIREDS = "min_mireds"
+
 # Stealing some of these from the base MQTT configs.
 PLATFORM_SCHEMA_JSON = (
     mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
@@ -100,6 +103,8 @@ PLATFORM_SCHEMA_JSON = (
                 CONF_FLASH_TIME_SHORT, default=DEFAULT_FLASH_TIME_SHORT
             ): cv.positive_int,
             vol.Optional(CONF_HS, default=DEFAULT_HS): cv.boolean,
+            vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
+            vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_QOS, default=mqtt.DEFAULT_QOS): vol.All(
@@ -357,6 +362,16 @@ class MqttLightJson(
     def color_temp(self):
         """Return the color temperature in mired."""
         return self._color_temp
+
+    @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        return self._config.get(CONF_MIN_MIREDS, super().min_mireds)
+
+    @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        return self._config.get(CONF_MAX_MIREDS, super().max_mireds)
 
     @property
     def effect(self):
