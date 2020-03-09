@@ -22,7 +22,7 @@ from tests.common import (
 
 
 def _trigger_db_commit(hass):
-    for _ in range(1):
+    for _ in range(50):
         # We only commit on time change
         fire_time_changed(hass, dt_util.utcnow())
 
