@@ -165,7 +165,7 @@ async def async_start(
                 # state_topic not specified, infer from discovery topic
                 payload[CONF_STATE_TOPIC] = (
                     f"{discovery_topic}/{component}/"
-                    f"{'%s/' % node_id if node_id else ''}{object_id}/state"
+                    f"{node_id or ''}/{object_id}/state"
                 )
                 _LOGGER.warning(
                     'implicit %s is deprecated, add "%s":"%s" to '
