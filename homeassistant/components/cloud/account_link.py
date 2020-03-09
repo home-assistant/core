@@ -7,13 +7,12 @@ from hass_nabucasa import account_link
 
 from homeassistant.const import MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import event, config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow, event
 
 from .const import DOMAIN
 
 DATA_SERVICES = "cloud_account_link_services"
 CACHE_TIMEOUT = 3600
-PATCH_VERSION = int(PATCH_VERSION.split(".")[0])
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -49,7 +48,20 @@ def _is_older(version: str) -> bool:
     except ValueError:
         return False
 
-    cur_version_parts = [MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION]
+    patch_number_str = ""
+
+    for char in PATCH_VERSION:
+        if char.isnumeric():
+            patch_number_str += char
+        else:
+            break
+
+    try:
+        patch_number = int(patch_number_str)
+    except ValueError:
+        patch_number = 0
+
+    cur_version_parts = [MAJOR_VERSION, MINOR_VERSION, patch_number]
 
     return version_parts <= cur_version_parts
 

@@ -3,15 +3,16 @@
 It shows list of users if access from trusted network.
 Abort login flow if not access from trusted network.
 """
-from ipaddress import ip_network, IPv4Address, IPv6Address, IPv4Network, IPv6Network
+from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network, ip_network
 from typing import Any, Dict, List, Optional, Union, cast
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, LoginFlow
+import homeassistant.helpers.config_validation as cv
+
+from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
 
 IPAddress = Union[IPv4Address, IPv6Address]

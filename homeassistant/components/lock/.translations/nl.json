@@ -8,6 +8,10 @@
         "condition_type": {
             "is_locked": "{entity_name} is vergrendeld",
             "is_unlocked": "{entity_name} is ontgrendeld"
+        },
+        "trigger_type": {
+            "locked": "{entity_name} vergrendeld",
+            "unlocked": "{entity_name} ontgrendeld"
         }
     }
 }

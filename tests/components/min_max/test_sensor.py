@@ -1,14 +1,15 @@
 """The test for the min/max sensor platform."""
 import unittest
 
-from homeassistant.setup import setup_component
 from homeassistant.const import (
-    STATE_UNKNOWN,
-    STATE_UNAVAILABLE,
     ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.setup import setup_component
+
 from tests.common import get_test_home_assistant
 
 

@@ -1,17 +1,30 @@
 """Helpers for config validation using voluptuous."""
-import inspect
-import logging
-import os
-import re
 from datetime import (
-    timedelta,
+    date as date_sys,
     datetime as datetime_sys,
     time as time_sys,
-    date as date_sys,
+    timedelta,
 )
-from socket import _GLOBAL_DEFAULT_TIMEOUT
+from enum import Enum
+import inspect
+import logging
 from numbers import Number
-from typing import Any, Union, TypeVar, Callable, List, Dict, Optional
+import os
+import re
+from socket import _GLOBAL_DEFAULT_TIMEOUT  # type: ignore # private, not in typeshed
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Hashable,
+    List,
+    Optional,
+    Pattern,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+)
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -19,8 +32,9 @@ from pkg_resources import parse_version
 import voluptuous as vol
 import voluptuous_serialize
 
-import homeassistant.util.dt as dt_util
 from homeassistant.const import (
+    ATTR_AREA_ID,
+    ATTR_ENTITY_ID,
     CONF_ABOVE,
     CONF_ALIAS,
     CONF_BELOW,
@@ -33,28 +47,26 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_SCAN_INTERVAL,
     CONF_STATE,
+    CONF_TIMEOUT,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
     CONF_VALUE_TEMPLATE,
-    CONF_TIMEOUT,
     ENTITY_MATCH_ALL,
+    ENTITY_MATCH_NONE,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     WEEKDAYS,
     __version__,
-    ATTR_AREA_ID,
-    ATTR_ENTITY_ID,
 )
-from homeassistant.core import valid_entity_id, split_entity_id
+from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
+from homeassistant.helpers import template as template_helper
 from homeassistant.helpers.logging import KeywordStyleAdapter
 from homeassistant.util import slugify as util_slugify
+import homeassistant.util.dt as dt_util
 
-
-# mypy: allow-untyped-calls, allow-untyped-defs
-# mypy: no-check-untyped-defs, no-warn-return-any
 # pylint: disable=invalid-name
 
 TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM' or 'HH:MM:SS'"
@@ -124,32 +136,30 @@ def boolean(value: Any) -> bool:
     elif isinstance(value, Number):
         # type ignore: https://github.com/python/mypy/issues/3186
         return value != 0  # type: ignore
-    raise vol.Invalid("invalid boolean value {}".format(value))
+    raise vol.Invalid(f"invalid boolean value {value}")
 
 
-def isdevice(value):
+def isdevice(value: Any) -> str:
     """Validate that value is a real device."""
     try:
         os.stat(value)
         return str(value)
     except OSError:
-        raise vol.Invalid("No device at {} found".format(value))
+        raise vol.Invalid(f"No device at {value} found")
 
 
-def matches_regex(regex):
+def matches_regex(regex: str) -> Callable[[Any], str]:
     """Validate that the value is a string that matches a regex."""
-    regex = re.compile(regex)
+    compiled = re.compile(regex)
 
     def validator(value: Any) -> str:
         """Validate that value matches the given regex."""
         if not isinstance(value, str):
-            raise vol.Invalid("not a string value: {}".format(value))
+            raise vol.Invalid(f"not a string value: {value}")
 
-        if not regex.match(value):
+        if not compiled.match(value):
             raise vol.Invalid(
-                "value {} does not match regular expression {}".format(
-                    value, regex.pattern
-                )
+                f"value {value} does not match regular expression {compiled.pattern}"
             )
 
         return value
@@ -157,17 +167,17 @@ def matches_regex(regex):
     return validator
 
 
-def is_regex(value):
+def is_regex(value: Any) -> Pattern[Any]:
     """Validate that a string is a valid regular expression."""
     try:
         r = re.compile(value)
         return r
     except TypeError:
         raise vol.Invalid(
-            "value {} is of the wrong type for a regular " "expression".format(value)
+            f"value {value} is of the wrong type for a regular expression"
         )
     except re.error:
-        raise vol.Invalid("value {} is not a valid regular expression".format(value))
+        raise vol.Invalid(f"value {value} is not a valid regular expression")
 
 
 def isfile(value: Any) -> str:
@@ -205,11 +215,11 @@ def ensure_list(value: Union[T, List[T], None]) -> List[T]:
 
 def entity_id(value: Any) -> str:
     """Validate Entity ID."""
-    value = string(value).lower()
-    if valid_entity_id(value):
-        return value
+    str_value = string(value).lower()
+    if valid_entity_id(str_value):
+        return str_value
 
-    raise vol.Invalid("Entity ID {} is an invalid entity id".format(value))
+    raise vol.Invalid(f"Entity ID {value} is an invalid entity id")
 
 
 def entity_ids(value: Union[str, List]) -> List[str]:
@@ -222,7 +232,9 @@ def entity_ids(value: Union[str, List]) -> List[str]:
     return [entity_id(ent_id) for ent_id in value]
 
 
-comp_entity_ids = vol.Any(vol.All(vol.Lower, ENTITY_MATCH_ALL), entity_ids)
+comp_entity_ids = vol.Any(
+    vol.All(vol.Lower, vol.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_NONE)), entity_ids
+)
 
 
 def entity_domain(domain: str) -> Callable[[Any], str]:
@@ -245,26 +257,24 @@ def entities_domain(domain: str) -> Callable[[Union[str, List]], List[str]]:
         for ent_id in values:
             if split_entity_id(ent_id)[0] != domain:
                 raise vol.Invalid(
-                    "Entity ID '{}' does not belong to domain '{}'".format(
-                        ent_id, domain
-                    )
+                    f"Entity ID '{ent_id}' does not belong to domain '{domain}'"
                 )
         return values
 
     return validate
 
 
-def enum(enumClass):
+def enum(enumClass: Type[Enum]) -> vol.All:
     """Create validator for specified enum."""
     return vol.All(vol.In(enumClass.__members__), enumClass.__getitem__)
 
 
-def icon(value):
+def icon(value: Any) -> str:
     """Validate icon."""
-    value = str(value)
+    str_value = str(value)
 
-    if ":" in value:
-        return value
+    if ":" in str_value:
+        return str_value
 
     raise vol.Invalid('Icons should be specified in the form "prefix:name"')
 
@@ -296,7 +306,7 @@ def time(value: Any) -> time_sys:
         raise vol.Invalid("Not a parseable type")
 
     if time_val is None:
-        raise vol.Invalid("Invalid time specified: {}".format(value))
+        raise vol.Invalid(f"Invalid time specified: {value}")
 
     return time_val
 
@@ -357,13 +367,13 @@ def time_period_seconds(value: Union[int, str]) -> timedelta:
     try:
         return timedelta(seconds=int(value))
     except (ValueError, TypeError):
-        raise vol.Invalid("Expected seconds, got {}".format(value))
+        raise vol.Invalid(f"Expected seconds, got {value}")
 
 
 time_period = vol.Any(time_period_str, time_period_seconds, timedelta, time_period_dict)
 
 
-def match_all(value):
+def match_all(value: T) -> T:
     """Validate that matches all values."""
     return value
 
@@ -383,13 +393,13 @@ def remove_falsy(value: List[T]) -> List[T]:
     return [v for v in value if v]
 
 
-def service(value):
+def service(value: Any) -> str:
     """Validate service."""
     # Services use same format as entities so we can use same helper.
-    value = string(value).lower()
-    if valid_entity_id(value):
-        return value
-    raise vol.Invalid("Service {} does not match format <domain>.<name>".format(value))
+    str_value = string(value).lower()
+    if valid_entity_id(str_value):
+        return str_value
+    raise vol.Invalid(f"Service {value} does not match format <domain>.<name>")
 
 
 def schema_with_slug_keys(value_schema: Union[T, Callable]) -> Callable:
@@ -408,7 +418,7 @@ def schema_with_slug_keys(value_schema: Union[T, Callable]) -> Callable:
         for key in value.keys():
             slug(key)
 
-        return schema(value)
+        return cast(Dict, schema(value))
 
     return verify
 
@@ -417,11 +427,11 @@ def slug(value: Any) -> str:
     """Validate value is a valid slug."""
     if value is None:
         raise vol.Invalid("Slug should not be None")
-    value = str(value)
-    slg = util_slugify(value)
-    if value == slg:
-        return value
-    raise vol.Invalid("invalid slug {} (try {})".format(value, slg))
+    str_value = str(value)
+    slg = util_slugify(str_value)
+    if str_value == slg:
+        return str_value
+    raise vol.Invalid(f"invalid slug {value} (try {slg})")
 
 
 def slugify(value: Any) -> str:
@@ -431,7 +441,7 @@ def slugify(value: Any) -> str:
     slg = util_slugify(str(value))
     if slg:
         return slg
-    raise vol.Invalid("Unable to slugify {}".format(value))
+    raise vol.Invalid(f"Unable to slugify {value}")
 
 
 def string(value: Any) -> str:
@@ -459,41 +469,41 @@ unit_system = vol.All(
 )
 
 
-def template(value):
+def template(value: Optional[Any]) -> template_helper.Template:
     """Validate a jinja2 template."""
-    from homeassistant.helpers import template as template_helper
 
     if value is None:
         raise vol.Invalid("template value is None")
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
 
-    value = template_helper.Template(str(value))
+    template_value = template_helper.Template(str(value))  # type: ignore
 
     try:
-        value.ensure_valid()
-        return value
+        template_value.ensure_valid()
+        return cast(template_helper.Template, template_value)
     except TemplateError as ex:
-        raise vol.Invalid("invalid template ({})".format(ex))
+        raise vol.Invalid(f"invalid template ({ex})")
 
 
-def template_complex(value):
+def template_complex(value: Any) -> Any:
     """Validate a complex jinja2 template."""
     if isinstance(value, list):
-        return_value = value.copy()
-        for idx, element in enumerate(return_value):
-            return_value[idx] = template_complex(element)
-        return return_value
+        return_list = value.copy()
+        for idx, element in enumerate(return_list):
+            return_list[idx] = template_complex(element)
+        return return_list
     if isinstance(value, dict):
-        return_value = value.copy()
-        for key, element in return_value.items():
-            return_value[key] = template_complex(element)
-        return return_value
+        return_dict = value.copy()
+        for key, element in return_dict.items():
+            return_dict[key] = template_complex(element)
+        return return_dict
+    if isinstance(value, str):
+        return template(value)
+    return value
 
-    return template(value)
 
-
-def datetime(value):
+def datetime(value: Any) -> datetime_sys:
     """Validate datetime."""
     if isinstance(value, datetime_sys):
         return value
@@ -504,12 +514,12 @@ def datetime(value):
         date_val = None
 
     if date_val is None:
-        raise vol.Invalid("Invalid datetime specified: {}".format(value))
+        raise vol.Invalid(f"Invalid datetime specified: {value}")
 
     return date_val
 
 
-def time_zone(value):
+def time_zone(value: str) -> str:
     """Validate timezone."""
     if dt_util.get_time_zone(value) is not None:
         return value
@@ -522,7 +532,7 @@ def time_zone(value):
 weekdays = vol.All(ensure_list, [vol.In(WEEKDAYS)])
 
 
-def socket_timeout(value):
+def socket_timeout(value: Optional[Any]) -> object:
     """Validate timeout float > 0.0.
 
     None coerced to socket._GLOBAL_DEFAULT_TIMEOUT bare object.
@@ -533,9 +543,9 @@ def socket_timeout(value):
         float_value = float(value)
         if float_value > 0.0:
             return float_value
-        raise vol.Invalid("Invalid socket timeout value." " float > 0.0 required.")
-    except Exception as _:
-        raise vol.Invalid("Invalid socket timeout: {err}".format(err=_))
+        raise vol.Invalid("Invalid socket timeout value. float > 0.0 required.")
+    except Exception as err:
+        raise vol.Invalid(f"Invalid socket timeout: {err}")
 
 
 # pylint: disable=no-value-for-parameter
@@ -544,12 +554,12 @@ def url(value: Any) -> str:
     url_in = str(value)
 
     if urlparse(url_in).scheme in ["http", "https"]:
-        return vol.Schema(vol.Url())(url_in)
+        return cast(str, vol.Schema(vol.Url())(url_in))
 
     raise vol.Invalid("invalid url")
 
 
-def x10_address(value):
+def x10_address(value: str) -> str:
     """Validate an x10 address."""
     regex = re.compile(r"([A-Pa-p]{1})(?:[2-9]|1[0-6]?)$")
     if not regex.match(value):
@@ -557,7 +567,7 @@ def x10_address(value):
     return str(value).lower()
 
 
-def uuid4_hex(value):
+def uuid4_hex(value: Any) -> str:
     """Validate a v4 UUID in hex format."""
     try:
         result = UUID(value, version=4)
@@ -576,6 +586,25 @@ def ensure_list_csv(value: Any) -> List:
     if isinstance(value, str):
         return [member.strip() for member in value.split(",")]
     return ensure_list(value)
+
+
+class multi_select:
+    """Multi select validator returning list of selected values."""
+
+    def __init__(self, options: dict) -> None:
+        """Initialize multi select."""
+        self.options = options
+
+    def __call__(self, selected: list) -> list:
+        """Validate input."""
+        if not isinstance(selected, list):
+            raise vol.Invalid("Not a list")
+
+        for value in selected:
+            if value not in self.options:
+                raise vol.Invalid(f"{value} is not a valid option")
+
+        return selected
 
 
 def deprecated(
@@ -678,17 +707,19 @@ def deprecated(
 # Validator helpers
 
 
-def key_dependency(key, dependency):
+def key_dependency(
+    key: Hashable, dependency: Hashable
+) -> Callable[[Dict[Hashable, Any]], Dict[Hashable, Any]]:
     """Validate that all dependencies exist for key."""
 
-    def validator(value):
+    def validator(value: Dict[Hashable, Any]) -> Dict[Hashable, Any]:
         """Test dependencies."""
         if not isinstance(value, dict):
             raise vol.Invalid("key dependencies require a dict")
         if key in value and dependency not in value:
             raise vol.Invalid(
-                'dependency violation - key "{}" requires '
-                'key "{}" to exist'.format(key, dependency)
+                f'dependency violation - key "{key}" requires '
+                f'key "{dependency}" to exist'
             )
 
         return value
@@ -696,10 +727,13 @@ def key_dependency(key, dependency):
     return validator
 
 
-def custom_serializer(schema):
+def custom_serializer(schema: Any) -> Any:
     """Serialize additional types for voluptuous_serialize."""
     if schema is positive_time_period_dict:
         return {"type": "positive_time_period_dict"}
+
+    if isinstance(schema, multi_select):
+        return {"type": "multi_select", "options": schema.options}
 
     return voluptuous_serialize.UNSUPPORTED
 
@@ -715,12 +749,27 @@ PLATFORM_SCHEMA = vol.Schema(
 
 PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
-ENTITY_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_ENTITY_ID): comp_entity_ids,
-        vol.Optional(ATTR_AREA_ID): vol.All(ensure_list, [str]),
-    }
-)
+ENTITY_SERVICE_FIELDS = (ATTR_ENTITY_ID, ATTR_AREA_ID)
+
+
+def make_entity_service_schema(
+    schema: dict, *, extra: int = vol.PREVENT_EXTRA
+) -> vol.All:
+    """Create an entity service schema."""
+    return vol.All(
+        vol.Schema(
+            {
+                **schema,
+                vol.Optional(ATTR_ENTITY_ID): comp_entity_ids,
+                vol.Optional(ATTR_AREA_ID): vol.Any(
+                    ENTITY_MATCH_NONE, vol.All(ensure_list, [str])
+                ),
+            },
+            extra=extra,
+        ),
+        has_at_least_one_key(*ENTITY_SERVICE_FIELDS),
+    )
+
 
 EVENT_SCHEMA = vol.Schema(
     {

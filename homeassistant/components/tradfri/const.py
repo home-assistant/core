@@ -1,6 +1,6 @@
 """Consts used by Tradfri."""
-from homeassistant.components.light import SUPPORT_TRANSITION, SUPPORT_BRIGHTNESS
-from homeassistant.const import CONF_HOST  # noqa pylint: disable=unused-import
+from homeassistant.components.light import SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION
+from homeassistant.const import CONF_HOST  # noqa: F401 pylint: disable=unused-import
 
 ATTR_DIMMER = "dimmer"
 ATTR_HUE = "hue"

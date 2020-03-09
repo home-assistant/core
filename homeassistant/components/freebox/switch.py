@@ -18,7 +18,7 @@ class FbxWifiSwitch(SwitchDevice):
     """Representation of a freebox wifi switch."""
 
     def __init__(self, fbx):
-        """Initilize the Wifi switch."""
+        """Initialize the Wifi switch."""
         self._name = "Freebox WiFi"
         self._state = None
         self._fbx = fbx

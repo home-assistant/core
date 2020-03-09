@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Z-Wave jest ju\u017c skonfigurowany",
+            "already_configured": "Z-Wave jest ju\u017c skonfigurowany.",
             "one_instance_only": "Komponent obs\u0142uguje tylko jedn\u0105 instancj\u0119 Z-Wave"
         },
         "error": {

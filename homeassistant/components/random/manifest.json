@@ -4,7 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/random",
   "requirements": [],
   "dependencies": [],
-  "codeowners": [
-    "@fabaff"
-  ]
+  "codeowners": ["@fabaff"],
+  "quality_scale": "internal"
 }

@@ -8,17 +8,12 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER, _LOGGER
+from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 SENSOR_TYPES = {
     "temperature": ["Temperature", TEMP_FAHRENHEIT],
     "humidity": ["Humidity", "%"],
 }
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up ecobee sensors."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

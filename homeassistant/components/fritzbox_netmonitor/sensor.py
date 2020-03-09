@@ -2,10 +2,8 @@
 from datetime import timedelta
 import logging
 
-from fritzconnection import FritzStatus  # pylint: disable=import-error
-from fritzconnection.fritzconnection import (  # pylint: disable=import-error
-    FritzConnectionException,
-)
+from fritzconnection.core.exceptions import FritzConnectionException
+from fritzconnection.lib.fritzstatus import FritzStatus
 from requests.exceptions import RequestException
 import voluptuous as vol
 
@@ -30,7 +28,6 @@ ATTR_IS_LINKED = "is_linked"
 ATTR_MAX_BYTE_RATE_DOWN = "max_byte_rate_down"
 ATTR_MAX_BYTE_RATE_UP = "max_byte_rate_up"
 ATTR_UPTIME = "uptime"
-ATTR_WAN_ACCESS_TYPE = "wan_access_type"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
@@ -73,7 +70,7 @@ class FritzboxMonitorSensor(Entity):
         self._name = name
         self._fstatus = fstatus
         self._state = STATE_UNAVAILABLE
-        self._is_linked = self._is_connected = self._wan_access_type = None
+        self._is_linked = self._is_connected = None
         self._external_ip = self._uptime = None
         self._bytes_sent = self._bytes_received = None
         self._transmission_rate_up = None
@@ -104,7 +101,6 @@ class FritzboxMonitorSensor(Entity):
         attr = {
             ATTR_IS_LINKED: self._is_linked,
             ATTR_IS_CONNECTED: self._is_connected,
-            ATTR_WAN_ACCESS_TYPE: self._wan_access_type,
             ATTR_EXTERNAL_IP: self._external_ip,
             ATTR_UPTIME: self._uptime,
             ATTR_BYTES_SENT: self._bytes_sent,
@@ -122,7 +118,6 @@ class FritzboxMonitorSensor(Entity):
         try:
             self._is_linked = self._fstatus.is_linked
             self._is_connected = self._fstatus.is_connected
-            self._wan_access_type = self._fstatus.wan_access_type
             self._external_ip = self._fstatus.external_ip
             self._uptime = self._fstatus.uptime
             self._bytes_sent = self._fstatus.bytes_sent

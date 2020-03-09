@@ -4,9 +4,9 @@ import logging
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_ACCESS_TOKEN, HTTP_BAD_REQUEST
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.const import CONF_ACCESS_TOKEN, HTTP_BAD_REQUEST
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,7 +103,7 @@ class FoursquarePushReceiver(HomeAssistantView):
 
         if self.push_secret != secret:
             _LOGGER.error(
-                "Received Foursquare push with invalid" "push secret: %s", secret
+                "Received Foursquare push with invalid push secret: %s", secret
             )
             return self.json_message("Incorrect secret", HTTP_BAD_REQUEST)
 

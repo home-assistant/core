@@ -1,6 +1,12 @@
 """Support for the Mailgun mail notifications."""
 import logging
 
+from pymailgunner import (
+    Client,
+    MailgunCredentialsError,
+    MailgunDomainError,
+    MailgunError,
+)
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -58,7 +64,6 @@ class MailgunNotificationService(BaseNotificationService):
 
     def initialize_client(self):
         """Initialize the connection to Mailgun."""
-        from pymailgunner import Client
 
         self._client = Client(self._api_key, self._domain, self._sandbox)
         _LOGGER.debug("Mailgun domain: %s", self._client.domain)
@@ -68,7 +73,6 @@ class MailgunNotificationService(BaseNotificationService):
 
     def connection_is_valid(self):
         """Check whether the provided credentials are valid."""
-        from pymailgunner import MailgunCredentialsError, MailgunDomainError
 
         try:
             self.initialize_client()
@@ -82,7 +86,6 @@ class MailgunNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a mail to the recipient."""
-        from pymailgunner import MailgunError
 
         subject = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data = kwargs.get(ATTR_DATA)

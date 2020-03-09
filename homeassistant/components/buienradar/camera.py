@@ -1,7 +1,7 @@
 """Provide animated GIF loops of Buienradar imagery."""
 import asyncio
-import logging
 from datetime import datetime, timedelta
+import logging
 from typing import Optional
 
 import aiohttp
@@ -9,22 +9,23 @@ import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.const import CONF_NAME
-
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
 from homeassistant.util import dt as dt_util
-
 
 CONF_DIMENSION = "dimension"
 CONF_DELTA = "delta"
+CONF_COUNTRY = "country_code"
 
-RADAR_MAP_URL_TEMPLATE = "https://api.buienradar.nl/image/1.0/" "RadarMapNL?w={w}&h={h}"
+RADAR_MAP_URL_TEMPLATE = "https://api.buienradar.nl/image/1.0/RadarMap{c}?w={w}&h={h}"
 
 _LOG = logging.getLogger(__name__)
 
 # Maximum range according to docs
 DIM_RANGE = vol.All(vol.Coerce(int), vol.Range(min=120, max=700))
+
+# Multiple choice for available Radar Map URL
+SUPPORTED_COUNTRY_CODES = ["NL", "BE"]
 
 PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend(
@@ -34,6 +35,9 @@ PLATFORM_SCHEMA = vol.All(
                 vol.Coerce(float), vol.Range(min=0)
             ),
             vol.Optional(CONF_NAME, default="Buienradar loop"): cv.string,
+            vol.Optional(CONF_COUNTRY, default="NL"): vol.All(
+                vol.Coerce(str), vol.In(SUPPORTED_COUNTRY_CODES)
+            ),
         }
     )
 )
@@ -44,8 +48,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     dimension = config[CONF_DIMENSION]
     delta = config[CONF_DELTA]
     name = config[CONF_NAME]
+    country = config[CONF_COUNTRY]
 
-    async_add_entities([BuienradarCam(name, dimension, delta)])
+    async_add_entities([BuienradarCam(name, dimension, delta, country)])
 
 
 class BuienradarCam(Camera):
@@ -57,7 +62,7 @@ class BuienradarCam(Camera):
     [0]: https://www.buienradar.nl/overbuienradar/gratis-weerdata
     """
 
-    def __init__(self, name: str, dimension: int, delta: float):
+    def __init__(self, name: str, dimension: int, delta: float, country: str):
         """
         Initialize the component.
 
@@ -72,6 +77,9 @@ class BuienradarCam(Camera):
 
         # time a cached image stays valid for
         self._delta = delta
+
+        # country location
+        self._country = country
 
         # Condition that guards the loading indicator.
         #
@@ -104,7 +112,9 @@ class BuienradarCam(Camera):
         """Retrieve new radar image and return whether this succeeded."""
         session = async_get_clientsession(self.hass)
 
-        url = RADAR_MAP_URL_TEMPLATE.format(w=self._dimension, h=self._dimension)
+        url = RADAR_MAP_URL_TEMPLATE.format(
+            c=self._country, w=self._dimension, h=self._dimension
+        )
 
         if self._last_modified:
             headers = {"If-Modified-Since": self._last_modified}
@@ -137,7 +147,7 @@ class BuienradarCam(Camera):
 
         Uses ayncio conditions to make sure only one task enters the critical
         section at the same time. Otherwise, two http requests would start
-        when two tabs with home assistant are open.
+        when two tabs with Home Assistant are open.
 
         The condition is entered in two sections because otherwise the lock
         would be held while doing the http request.

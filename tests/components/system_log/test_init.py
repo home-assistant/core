@@ -2,9 +2,9 @@
 import logging
 from unittest.mock import MagicMock, patch
 
-from homeassistant.core import callback
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import system_log
+from homeassistant.core import callback
 
 _LOGGER = logging.getLogger("test_logger")
 BASIC_CONFIG = {"system_log": {"max_entries": 2}}
@@ -30,6 +30,7 @@ def _generate_and_log_exception(exception, log):
 
 def assert_log(log, exception, message, level):
     """Assert that specified values are in a specific log entry."""
+    assert log["name"] == "test_logger"
     assert exception in log["exception"]
     assert message == log["message"]
     assert level == log["level"]
@@ -241,7 +242,7 @@ def log_error_from_test_path(path):
 
 
 async def test_homeassistant_path(hass, hass_client):
-    """Test error logged from homeassistant path."""
+    """Test error logged from Home Assistant path."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     with patch(
         "homeassistant.components.system_log.HOMEASSISTANT_PATH",

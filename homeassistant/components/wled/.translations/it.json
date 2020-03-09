@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Questo dispositivo WLED \u00e8 gi\u00e0 configurato.",
             "connection_error": "Impossibile connettersi al dispositivo WLED."
         },
         "error": {

@@ -3,8 +3,8 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.const import ATTR_ENTITY_ID, CONF_ENTITIES, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_ENTITIES, CONF_NAME, ATTR_ENTITY_ID
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
@@ -35,6 +35,11 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Load graph configurations."""
+    _LOGGER.warning(
+        "The history_graph integration has been deprecated and is pending for removal "
+        "in Home Assistant 0.107.0."
+    )
+
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     graphs = []
 

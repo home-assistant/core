@@ -36,10 +36,16 @@ _LOGGER = logging.getLogger(__name__)
 CONF_PAYLOAD_LOCK = "payload_lock"
 CONF_PAYLOAD_UNLOCK = "payload_unlock"
 
+CONF_STATE_LOCKED = "state_locked"
+CONF_STATE_UNLOCKED = "state_unlocked"
+
 DEFAULT_NAME = "MQTT Lock"
 DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_LOCK = "LOCK"
 DEFAULT_PAYLOAD_UNLOCK = "UNLOCK"
+DEFAULT_STATE_LOCKED = "LOCKED"
+DEFAULT_STATE_UNLOCKED = "UNLOCKED"
+
 PLATFORM_SCHEMA = (
     mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         {
@@ -49,6 +55,10 @@ PLATFORM_SCHEMA = (
             vol.Optional(CONF_PAYLOAD_LOCK, default=DEFAULT_PAYLOAD_LOCK): cv.string,
             vol.Optional(
                 CONF_PAYLOAD_UNLOCK, default=DEFAULT_PAYLOAD_UNLOCK
+            ): cv.string,
+            vol.Optional(CONF_STATE_LOCKED, default=DEFAULT_STATE_LOCKED): cv.string,
+            vol.Optional(
+                CONF_STATE_UNLOCKED, default=DEFAULT_STATE_UNLOCKED
             ): cv.string,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
@@ -152,9 +162,9 @@ class MqttLock(
             payload = msg.payload
             if value_template is not None:
                 payload = value_template.async_render_with_possible_json_value(payload)
-            if payload == self._config[CONF_PAYLOAD_LOCK]:
+            if payload == self._config[CONF_STATE_LOCKED]:
                 self._state = True
-            elif payload == self._config[CONF_PAYLOAD_UNLOCK]:
+            elif payload == self._config[CONF_STATE_UNLOCKED]:
                 self._state = False
 
             self.async_write_ha_state()

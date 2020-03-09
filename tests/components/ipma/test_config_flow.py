@@ -1,10 +1,10 @@
 """Tests for IPMA config flow."""
 from unittest.mock import Mock, patch
 
-from tests.common import mock_coro
-
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.components.ipma import config_flow
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+
+from tests.common import mock_coro
 
 
 async def test_show_config_form():

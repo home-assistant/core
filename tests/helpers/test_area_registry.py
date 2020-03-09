@@ -6,7 +6,8 @@ import pytest
 
 from homeassistant.core import callback
 from homeassistant.helpers import area_registry
-from tests.common import mock_area_registry, flush_store
+
+from tests.common import flush_store, mock_area_registry
 
 
 @pytest.fixture

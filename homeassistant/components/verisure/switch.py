@@ -1,6 +1,6 @@
 """Support for Verisure Smartplugs."""
 import logging
-from time import time
+from time import monotonic
 
 from homeassistant.components.switch import SwitchDevice
 
@@ -44,7 +44,7 @@ class VerisureSmartplug(SwitchDevice):
     @property
     def is_on(self):
         """Return true if on."""
-        if time() - self._change_timestamp < 10:
+        if monotonic() - self._change_timestamp < 10:
             return self._state
         self._state = (
             hub.get_first(
@@ -67,13 +67,13 @@ class VerisureSmartplug(SwitchDevice):
         """Set smartplug status on."""
         hub.session.set_smartplug_state(self._device_label, True)
         self._state = True
-        self._change_timestamp = time()
+        self._change_timestamp = monotonic()
 
     def turn_off(self, **kwargs):
         """Set smartplug status off."""
         hub.session.set_smartplug_state(self._device_label, False)
         self._state = False
-        self._change_timestamp = time()
+        self._change_timestamp = monotonic()
 
     # pylint: disable=no-self-use
     def update(self):

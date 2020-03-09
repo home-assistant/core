@@ -1,26 +1,27 @@
 """Runtime entry data for ESPHome stored in hass.data."""
 import asyncio
-from typing import Any, Callable, Dict, List, Optional, Tuple, Set
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from aioesphomeapi import (
     COMPONENT_TYPE_TO_INFO,
-    DeviceInfo,
-    EntityInfo,
-    EntityState,
-    UserService,
     BinarySensorInfo,
     CameraInfo,
     ClimateInfo,
     CoverInfo,
+    DeviceInfo,
+    EntityInfo,
+    EntityState,
     FanInfo,
     LightInfo,
     SensorInfo,
     SwitchInfo,
     TextSensorInfo,
+    UserService,
 )
 import attr
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import HomeAssistantType
@@ -71,6 +72,7 @@ class RuntimeEntryData:
     loaded_platforms = attr.ib(type=Set[str], factory=set)
     platform_load_lock = attr.ib(type=asyncio.Lock, factory=asyncio.Lock)
 
+    @callback
     def async_update_entity(
         self, hass: HomeAssistantType, component_key: str, key: int
     ) -> None:
@@ -80,6 +82,7 @@ class RuntimeEntryData:
         )
         async_dispatcher_send(hass, signal)
 
+    @callback
     def async_remove_entity(
         self, hass: HomeAssistantType, component_key: str, key: int
     ) -> None:
@@ -120,11 +123,13 @@ class RuntimeEntryData:
         signal = DISPATCHER_ON_LIST.format(entry_id=self.entry_id)
         async_dispatcher_send(hass, signal, infos)
 
+    @callback
     def async_update_state(self, hass: HomeAssistantType, state: EntityState) -> None:
         """Distribute an update of state information to all platforms."""
         signal = DISPATCHER_ON_STATE.format(entry_id=self.entry_id)
         async_dispatcher_send(hass, signal, state)
 
+    @callback
     def async_update_device_state(self, hass: HomeAssistantType) -> None:
         """Distribute an update of a core device state like availability."""
         signal = DISPATCHER_ON_DEVICE_UPDATE.format(entry_id=self.entry_id)

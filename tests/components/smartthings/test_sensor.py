@@ -31,11 +31,6 @@ async def test_mapping_integrity():
                 ), sensor_map.device_class
 
 
-async def test_async_setup_platform():
-    """Test setup platform does nothing (it uses config entries)."""
-    await sensor.async_setup_platform(None, None, None)
-
-
 async def test_entity_state(hass, device_factory):
     """Tests the state attributes properly match the sensor types."""
     device = device_factory("Sensor 1", [Capability.battery], {Attribute.battery: 100})

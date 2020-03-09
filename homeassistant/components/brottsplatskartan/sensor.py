@@ -5,7 +5,6 @@ import logging
 import uuid
 
 import brottsplatskartan
-
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA

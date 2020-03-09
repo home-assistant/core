@@ -8,7 +8,15 @@
         "data": {
           "profile": "Profile"
         }
-      }
+      },
+      "pick_implementation": { "title": "Pick Authentication Method" }
+    },
+    "abort": {
+      "authorize_url_timeout": "Timeout generating authorize url.",
+      "missing_configuration": "The Withings integration is not configured. Please follow the documentation."
+    },
+    "create_entry": {
+      "default": "Successfully authenticated with Withings."
     }
   }
 }

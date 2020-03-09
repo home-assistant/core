@@ -5,11 +5,11 @@ from unittest.mock import patch
 import pytest
 import voluptuous as vol
 
-import homeassistant.components.notify as notify
-from homeassistant.setup import setup_component
 import homeassistant.components.demo.notify as demo
+import homeassistant.components.notify as notify
 from homeassistant.core import callback
 from homeassistant.helpers import discovery, script
+from homeassistant.setup import setup_component
 
 from tests.common import assert_setup_component, get_test_home_assistant
 from tests.components.notify import common

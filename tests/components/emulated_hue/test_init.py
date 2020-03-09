@@ -1,5 +1,5 @@
 """Test the Emulated Hue component."""
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import MagicMock, Mock, patch
 
 from homeassistant.components.emulated_hue import Config
 
@@ -14,7 +14,7 @@ def test_config_google_home_entity_id_to_number():
         "homeassistant.components.emulated_hue.load_json",
         return_value={"1": "light.test2"},
     ) as json_loader:
-        with patch("homeassistant.components.emulated_hue" ".save_json") as json_saver:
+        with patch("homeassistant.components.emulated_hue.save_json") as json_saver:
             number = conf.entity_id_to_number("light.test")
             assert number == "2"
 
@@ -48,7 +48,7 @@ def test_config_google_home_entity_id_to_number_altered():
         "homeassistant.components.emulated_hue.load_json",
         return_value={"21": "light.test2"},
     ) as json_loader:
-        with patch("homeassistant.components.emulated_hue" ".save_json") as json_saver:
+        with patch("homeassistant.components.emulated_hue.save_json") as json_saver:
             number = conf.entity_id_to_number("light.test")
             assert number == "22"
             assert json_saver.call_count == 1
@@ -80,7 +80,7 @@ def test_config_google_home_entity_id_to_number_empty():
     with patch(
         "homeassistant.components.emulated_hue.load_json", return_value={}
     ) as json_loader:
-        with patch("homeassistant.components.emulated_hue" ".save_json") as json_saver:
+        with patch("homeassistant.components.emulated_hue.save_json") as json_saver:
             number = conf.entity_id_to_number("light.test")
             assert number == "1"
             assert json_saver.call_count == 1

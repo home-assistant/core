@@ -1,9 +1,12 @@
 """Config flow to configure Heos."""
+from urllib.parse import urlparse
+
 from pyheos import Heos, HeosError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.components import ssdp
+from homeassistant.const import CONF_HOST
 
 from .const import DATA_DISCOVERED_HOSTS, DOMAIN
 
@@ -23,11 +26,12 @@ class HeosFlowHandler(config_entries.ConfigFlow):
     async def async_step_ssdp(self, discovery_info):
         """Handle a discovered Heos device."""
         # Store discovered host
+        hostname = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
         friendly_name = "{} ({})".format(
-            discovery_info[CONF_NAME], discovery_info[CONF_HOST]
+            discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME], hostname
         )
         self.hass.data.setdefault(DATA_DISCOVERED_HOSTS, {})
-        self.hass.data[DATA_DISCOVERED_HOSTS][friendly_name] = discovery_info[CONF_HOST]
+        self.hass.data[DATA_DISCOVERED_HOSTS][friendly_name] = hostname
         # Abort if other flows in progress or an entry already exists
         if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="already_setup")

@@ -6,7 +6,7 @@ import re
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_SENSORS
+from homeassistant.const import CONF_SENSORS, DATA_GIGABYTES
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -26,8 +26,13 @@ SENSORS = {
     SENSOR_NETWORK: ("signal strength", "Network", None, "mdi:access-point-network"),
     SENSOR_SIGNAL: ("signal strength", "Signal Strength", "%", "mdi:signal"),
     SENSOR_SMS_UNREAD: ("sms unread", "SMS unread", "", "mdi:message-text-outline"),
-    SENSOR_UPLOAD: ("traffic modem tx", "Sent", "GB", "mdi:cloud-upload"),
-    SENSOR_DOWNLOAD: ("traffic modem rx", "Received", "GB", "mdi:cloud-download"),
+    SENSOR_UPLOAD: ("traffic modem tx", "Sent", DATA_GIGABYTES, "mdi:cloud-upload"),
+    SENSOR_DOWNLOAD: (
+        "traffic modem rx",
+        "Received",
+        DATA_GIGABYTES,
+        "mdi:cloud-download",
+    ),
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

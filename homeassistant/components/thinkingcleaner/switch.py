@@ -1,10 +1,12 @@
 """Support for ThinkingCleaner switches."""
-import time
-import logging
 from datetime import timedelta
+import logging
+import time
+
+from pythinkingcleaner import Discovery
 
 from homeassistant import util
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,7 +26,6 @@ SWITCH_TYPES = {
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ThinkingCleaner platform."""
-    from pythinkingcleaner import Discovery
 
     discovery = Discovery()
     devices = discovery.discover()

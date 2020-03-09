@@ -395,7 +395,7 @@ def test_template_complex():
     """Test template_complex validator."""
     schema = vol.Schema(cv.template_complex)
 
-    for value in (None, "{{ partial_print }", "{% if True %}Hello"):
+    for value in ("{{ partial_print }", "{% if True %}Hello"):
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
@@ -419,6 +419,10 @@ def test_template_complex():
         {"test": 1, "test2": "{{ beer }}"},
         ["{{ beer }}", 1],
     )
+
+    # Ensure we don't mutate non-string types that cannot be templates.
+    for value in (1, True, None):
+        assert schema(value) == value
 
 
 def test_time_zone():
@@ -466,6 +470,30 @@ def test_datetime():
 
     schema(datetime.now())
     schema("2016-11-23T18:59:08")
+
+
+def test_multi_select():
+    """Test multi select validation.
+
+    Expected behavior:
+        - Will not accept any input but a list
+        - Will not accept selections outside of configured scope
+    """
+    schema = vol.Schema(cv.multi_select({"paulus": "Paulus", "robban": "Robban"}))
+
+    with pytest.raises(vol.Invalid):
+        schema("robban")
+        schema(["paulus", "martinhj"])
+
+    schema(["robban", "paulus"])
+
+
+def test_multi_select_in_serializer():
+    """Test multi_select with custom_serializer."""
+    assert cv.custom_serializer(cv.multi_select({"paulus": "Paulus"})) == {
+        "type": "multi_select",
+        "options": {"paulus": "Paulus"},
+    }
 
 
 @pytest.fixture

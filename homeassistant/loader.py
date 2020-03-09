@@ -13,24 +13,24 @@ import pathlib
 import sys
 from types import ModuleType
 from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
     Optional,
     Set,
-    TYPE_CHECKING,
-    Callable,
-    Any,
     TypeVar,
-    List,
-    Dict,
     Union,
     cast,
 )
 
 # Typing imports that create a circular dependency
-# pylint: disable=using-constant-test,unused-import
+# pylint: disable=unused-import
 if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant  # noqa
+    from homeassistant.core import HomeAssistant
 
-CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # noqa pylint: disable=invalid-name
+CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
 
 DEPENDENCY_BLACKLIST = {"config"}
 
@@ -41,7 +41,6 @@ DATA_INTEGRATIONS = "integrations"
 DATA_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_BUILTIN = "homeassistant.components"
-LOOKUP_PATHS = [PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]
 CUSTOM_WARNING = (
     "You are using a custom integration for %s which has not "
     "been tested by Home Assistant. This component might "
@@ -67,6 +66,9 @@ async def _async_get_custom_components(
     hass: "HomeAssistant",
 ) -> Dict[str, "Integration"]:
     """Return list of custom integrations."""
+    if hass.config.safe_mode:
+        return {}
+
     try:
         import custom_components
     except ImportError:
@@ -178,7 +180,7 @@ class Integration:
 
         Will create a stub manifest.
         """
-        comp = _load_file(hass, domain, LOOKUP_PATHS)
+        comp = _load_file(hass, domain, _lookup_path(hass))
 
         if comp is None:
             return None
@@ -195,21 +197,64 @@ class Integration:
         hass: "HomeAssistant",
         pkg_path: str,
         file_path: pathlib.Path,
-        manifest: Dict,
+        manifest: Dict[str, Any],
     ):
         """Initialize an integration."""
         self.hass = hass
         self.pkg_path = pkg_path
         self.file_path = file_path
-        self.name: str = manifest["name"]
-        self.domain: str = manifest["domain"]
-        self.dependencies: List[str] = manifest["dependencies"]
-        self.after_dependencies: Optional[List[str]] = manifest.get(
-            "after_dependencies"
-        )
-        self.requirements: List[str] = manifest["requirements"]
-        self.config_flow: bool = manifest.get("config_flow", False)
+        self.manifest = manifest
         _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
+
+    @property
+    def name(self) -> str:
+        """Return name."""
+        return cast(str, self.manifest["name"])
+
+    @property
+    def domain(self) -> str:
+        """Return domain."""
+        return cast(str, self.manifest["domain"])
+
+    @property
+    def dependencies(self) -> List[str]:
+        """Return dependencies."""
+        return cast(List[str], self.manifest.get("dependencies", []))
+
+    @property
+    def after_dependencies(self) -> List[str]:
+        """Return after_dependencies."""
+        return cast(List[str], self.manifest.get("after_dependencies", []))
+
+    @property
+    def requirements(self) -> List[str]:
+        """Return requirements."""
+        return cast(List[str], self.manifest.get("requirements", []))
+
+    @property
+    def config_flow(self) -> bool:
+        """Return config_flow."""
+        return cast(bool, self.manifest.get("config_flow", False))
+
+    @property
+    def documentation(self) -> Optional[str]:
+        """Return documentation."""
+        return cast(str, self.manifest.get("documentation"))
+
+    @property
+    def quality_scale(self) -> Optional[str]:
+        """Return Integration Quality Scale."""
+        return cast(str, self.manifest.get("quality_scale"))
+
+    @property
+    def logo(self) -> Optional[str]:
+        """Return Integration Logo."""
+        return cast(str, self.manifest.get("logo"))
+
+    @property
+    def icon(self) -> Optional[str]:
+        """Return Integration Icon."""
+        return cast(str, self.manifest.get("icon"))
 
     @property
     def is_built_in(self) -> bool:
@@ -379,7 +424,7 @@ def _load_file(
 
             if str(err) not in white_listed_errors:
                 _LOGGER.exception(
-                    ("Error loading %s. Make sure all " "dependencies are installed"),
+                    ("Error loading %s. Make sure all dependencies are installed"),
                     path,
                 )
 
@@ -421,7 +466,7 @@ class Components:
             component: Optional[ModuleType] = integration.get_component()
         else:
             # Fallback to importing old-school
-            component = _load_file(self._hass, comp_name, LOOKUP_PATHS)
+            component = _load_file(self._hass, comp_name, _lookup_path(self._hass))
 
         if component is None:
             raise ImportError(f"Unable to load {comp_name}")
@@ -498,8 +543,15 @@ def _async_mount_config_dir(hass: "HomeAssistant") -> bool:
     Async friendly but not a coroutine.
     """
     if hass.config.config_dir is None:
-        _LOGGER.error("Can't load integrations - config dir is not set")
+        _LOGGER.error("Can't load integrations - configuration directory is not set")
         return False
     if hass.config.config_dir not in sys.path:
         sys.path.insert(0, hass.config.config_dir)
     return True
+
+
+def _lookup_path(hass: "HomeAssistant") -> List[str]:
+    """Return the lookup paths for legacy lookups."""
+    if hass.config.safe_mode:
+        return [PACKAGE_BUILTIN]
+    return [PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]

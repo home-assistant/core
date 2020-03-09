@@ -3,9 +3,9 @@ import os
 import unittest
 from unittest.mock import call, mock_open, patch
 
-from homeassistant.setup import setup_component
 import homeassistant.components.notify as notify
 from homeassistant.components.notify import ATTR_TITLE_DEFAULT
+from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import assert_setup_component, get_test_home_assistant

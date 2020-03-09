@@ -5,7 +5,7 @@ from datetime import timedelta
 from axis.event_stream import CLASS_INPUT, CLASS_OUTPUT
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.const import CONF_MAC, CONF_TRIGGER_TIME
+from homeassistant.const import CONF_TRIGGER_TIME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -17,8 +17,7 @@ from .const import DOMAIN as AXIS_DOMAIN
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a Axis binary sensor."""
-    serial_number = config_entry.data[CONF_MAC]
-    device = hass.data[AXIS_DOMAIN][serial_number]
+    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
 
     @callback
     def async_add_sensor(event_id):

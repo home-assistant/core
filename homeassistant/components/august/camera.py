@@ -7,10 +7,10 @@ from homeassistant.components.camera import Camera
 
 from . import DATA_AUGUST, DEFAULT_TIMEOUT
 
-SCAN_INTERVAL = timedelta(seconds=5)
+SCAN_INTERVAL = timedelta(seconds=10)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up August cameras."""
     data = hass.data[DATA_AUGUST]
     devices = []
@@ -18,14 +18,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for doorbell in data.doorbells:
         devices.append(AugustCamera(data, doorbell, DEFAULT_TIMEOUT))
 
-    add_entities(devices, True)
+    async_add_entities(devices, True)
 
 
 class AugustCamera(Camera):
-    """An implementation of a Canary security camera."""
+    """An implementation of a August security camera."""
 
     def __init__(self, data, doorbell, timeout):
-        """Initialize a Canary security camera."""
+        """Initialize a August security camera."""
         super().__init__()
         self._data = data
         self._doorbell = doorbell
@@ -58,17 +58,22 @@ class AugustCamera(Camera):
         """Return the camera model."""
         return "Doorbell"
 
-    def camera_image(self):
+    async def async_camera_image(self):
         """Return bytes of camera image."""
-        latest = self._data.get_doorbell_detail(self._doorbell.device_id)
+        latest = await self._data.async_get_doorbell_detail(self._doorbell.device_id)
 
         if self._image_url is not latest.image_url:
             self._image_url = latest.image_url
-            self._image_content = requests.get(
-                self._image_url, timeout=self._timeout
-            ).content
+            self._image_content = await self.hass.async_add_executor_job(
+                self._camera_image
+            )
 
         return self._image_content
+
+    def _camera_image(self):
+        """Return bytes of camera image via http get."""
+        # Move this to py-august: see issue#32048
+        return requests.get(self._image_url, timeout=self._timeout).content
 
     @property
     def unique_id(self) -> str:

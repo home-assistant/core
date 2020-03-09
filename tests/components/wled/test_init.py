@@ -33,6 +33,14 @@ async def test_unload_config_entry(
     assert not hass.data.get(DOMAIN)
 
 
+async def test_setting_unique_id(hass, aioclient_mock):
+    """Test we set unique ID if not set yet."""
+    entry = await init_integration(hass, aioclient_mock)
+
+    assert hass.data[DOMAIN]
+    assert entry.unique_id == "aabbccddeeff"
+
+
 async def test_interval_update(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:

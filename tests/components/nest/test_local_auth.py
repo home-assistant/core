@@ -1,10 +1,10 @@
 """Test Nest local auth."""
-from homeassistant.components.nest import const, config_flow, local_auth
 from urllib.parse import parse_qsl
 
 import pytest
-
 import requests_mock as rmock
+
+from homeassistant.components.nest import config_flow, const, local_auth
 
 
 @pytest.fixture

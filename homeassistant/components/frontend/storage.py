@@ -1,9 +1,9 @@
 """API for persistent storage for the frontend."""
 from functools import wraps
+
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 

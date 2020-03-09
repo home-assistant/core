@@ -7,6 +7,10 @@ import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+)
 from homeassistant.const import (
     CONF_CODE,
     CONF_NAME,
@@ -96,6 +100,11 @@ class AlarmDotCom(alarm.AlarmControlPanel):
         return None
 
     @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return {"sensor_status": self._alarm.sensor_status}
@@ -106,7 +115,7 @@ class AlarmDotCom(alarm.AlarmControlPanel):
             await self._alarm.async_alarm_disarm()
 
     async def async_alarm_arm_home(self, code=None):
-        """Send arm hom command."""
+        """Send arm home command."""
         if self._validate_code(code):
             await self._alarm.async_alarm_arm_home()
 

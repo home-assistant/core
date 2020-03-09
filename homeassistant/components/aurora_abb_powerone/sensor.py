@@ -2,8 +2,8 @@
 
 import logging
 
+from aurorapy.client import AuroraError, AuroraSerialClient
 import voluptuous as vol
-from aurorapy.client import AuroraSerialClient, AuroraError
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (

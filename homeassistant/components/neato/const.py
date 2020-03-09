@@ -11,6 +11,8 @@ NEATO_ROBOTS = "neato_robots"
 
 SCAN_INTERVAL_MINUTES = 5
 
+SERVICE_NEATO_CUSTOM_CLEANING = "custom_cleaning"
+
 VALID_VENDORS = ["neato", "vorwerk"]
 
 MODE = {1: "Eco", 2: "Turbo"}

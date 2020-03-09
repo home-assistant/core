@@ -1,10 +1,10 @@
 """Test the Lovelace initialization."""
 from unittest.mock import patch
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import frontend, lovelace
+from homeassistant.setup import async_setup_component
 
-from tests.common import get_system_health_info, async_capture_events
+from tests.common import async_capture_events, get_system_health_info
 
 
 async def test_lovelace_from_storage(hass, hass_ws_client, hass_storage):
@@ -38,6 +38,23 @@ async def test_lovelace_from_storage(hass, hass_ws_client, hass_storage):
 
     assert response["result"] == {"yo": "hello"}
 
+    # Test with safe mode
+    hass.config.safe_mode = True
+    await client.send_json({"id": 8, "type": "lovelace/config"})
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "config_not_found"
+
+    await client.send_json(
+        {"id": 9, "type": "lovelace/config/save", "config": {"yo": "hello"}}
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+
+    await client.send_json({"id": 10, "type": "lovelace/config/delete"})
+    response = await client.receive_json()
+    assert not response["success"]
+
 
 async def test_lovelace_from_storage_save_before_load(
     hass, hass_ws_client, hass_storage
@@ -53,6 +70,32 @@ async def test_lovelace_from_storage_save_before_load(
     response = await client.receive_json()
     assert response["success"]
     assert hass_storage[lovelace.STORAGE_KEY]["data"] == {"config": {"yo": "hello"}}
+
+
+async def test_lovelace_from_storage_delete(hass, hass_ws_client, hass_storage):
+    """Test we delete lovelace config from storage."""
+    assert await async_setup_component(hass, "lovelace", {})
+    client = await hass_ws_client(hass)
+
+    # Store new config
+    await client.send_json(
+        {"id": 6, "type": "lovelace/config/save", "config": {"yo": "hello"}}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert hass_storage[lovelace.STORAGE_KEY]["data"] == {"config": {"yo": "hello"}}
+
+    # Delete config
+    await client.send_json({"id": 7, "type": "lovelace/config/delete"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert hass_storage[lovelace.STORAGE_KEY]["data"] == {"config": None}
+
+    # Fetch data
+    await client.send_json({"id": 8, "type": "lovelace/config"})
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "config_not_found"
 
 
 async def test_lovelace_from_yaml(hass, hass_ws_client):

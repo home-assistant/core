@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+from london_tube_status import TubeData
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -43,7 +44,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tube sensor."""
-    from london_tube_status import TubeData
 
     data = TubeData()
     data.update()

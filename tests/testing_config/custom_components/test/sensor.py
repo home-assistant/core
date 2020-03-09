@@ -4,8 +4,8 @@ Provide a mock sensor platform.
 Call init before using it in your tests to ensure clean test data.
 """
 import homeassistant.components.sensor as sensor
-from tests.common import MockEntity
 
+from tests.common import MockEntity
 
 DEVICE_CLASSES = list(sensor.DEVICE_CLASSES)
 DEVICE_CLASSES.append("none")

@@ -59,7 +59,7 @@
             "remote_button_long_release": "Bouton \" {subtype} \" rel\u00e2ch\u00e9 apr\u00e8s un appui long",
             "remote_button_quadruple_press": "bouton \" {subtype} \" quadruple clics",
             "remote_button_quintuple_press": "bouton \" {subtype} \" quintuple clics",
-            "remote_button_short_press": "bouton \" {subtype} \" enfonc\u00e9",
+            "remote_button_short_press": "bouton \"{subtype}\" est press\u00e9",
             "remote_button_short_release": "Bouton \" {subtype} \" est rel\u00e2ch\u00e9",
             "remote_button_triple_press": "Bouton \"{subtype}\" \u00e0 trois clics"
         }

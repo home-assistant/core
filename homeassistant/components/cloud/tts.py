@@ -1,7 +1,7 @@
 """Support for the cloud for text to speech service."""
 
-from hass_nabucasa.voice import VoiceError
 from hass_nabucasa import Cloud
+from hass_nabucasa.voice import VoiceError
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider

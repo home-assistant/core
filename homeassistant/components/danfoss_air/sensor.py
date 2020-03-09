@@ -48,10 +48,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ["Danfoss Air Remaining Filter", "%", ReadCommand.filterPercent, None],
         ["Danfoss Air Humidity", "%", ReadCommand.humidity, DEVICE_CLASS_HUMIDITY],
         ["Danfoss Air Fan Step", "%", ReadCommand.fan_step, None],
-        ["Dandoss Air Exhaust Fan Speed", "RPM", ReadCommand.exhaust_fan_speed, None],
-        ["Dandoss Air Supply Fan Speed", "RPM", ReadCommand.supply_fan_speed, None],
+        ["Danfoss Air Exhaust Fan Speed", "RPM", ReadCommand.exhaust_fan_speed, None],
+        ["Danfoss Air Supply Fan Speed", "RPM", ReadCommand.supply_fan_speed, None],
         [
-            "Dandoss Air Dial Battery",
+            "Danfoss Air Dial Battery",
             "%",
             ReadCommand.battery_percent,
             DEVICE_CLASS_BATTERY,

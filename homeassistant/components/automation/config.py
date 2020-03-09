@@ -7,8 +7,8 @@ import voluptuous as vol
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.const import CONF_PLATFORM
 from homeassistant.config import async_log_exception, config_without_domain
+from homeassistant.const import CONF_PLATFORM
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition, config_per_platform, script
 from homeassistant.loader import IntegrationNotFound

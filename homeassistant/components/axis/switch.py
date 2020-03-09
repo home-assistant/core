@@ -3,7 +3,6 @@
 from axis.event_stream import CLASS_OUTPUT
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import CONF_MAC
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -13,8 +12,7 @@ from .const import DOMAIN as AXIS_DOMAIN
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a Axis switch."""
-    serial_number = config_entry.data[CONF_MAC]
-    device = hass.data[AXIS_DOMAIN][serial_number]
+    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
 
     @callback
     def async_add_switch(event_id):

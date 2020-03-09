@@ -2,9 +2,8 @@
   "domain": "roku",
   "name": "Roku",
   "documentation": "https://www.home-assistant.io/integrations/roku",
-  "requirements": [
-    "roku==3.1"
-  ],
+  "requirements": ["roku==4.0.0"],
   "dependencies": [],
+  "after_dependencies": ["discovery"],
   "codeowners": []
 }

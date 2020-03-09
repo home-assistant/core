@@ -6,6 +6,7 @@ from typing import Dict
 from homeassistant.const import __version__ as current_version
 from homeassistant.loader import bind_hass
 from homeassistant.util.package import is_virtual_env
+
 from .typing import HomeAssistantType
 
 

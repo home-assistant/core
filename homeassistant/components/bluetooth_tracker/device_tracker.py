@@ -1,7 +1,7 @@
 """Tracking for bluetooth devices."""
 import asyncio
 import logging
-from typing import List, Set, Tuple, Optional
+from typing import List, Optional, Set, Tuple
 
 # pylint: disable=import-error
 import bluetooth
@@ -13,7 +13,6 @@ from homeassistant.components.device_tracker.const import (
     CONF_SCAN_INTERVAL,
     CONF_TRACK_NEW,
     DEFAULT_TRACK_NEW,
-    DOMAIN,
     SCAN_INTERVAL,
     SOURCE_TYPE_BLUETOOTH,
 )
@@ -25,6 +24,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 
+from .const import DOMAIN, SERVICE_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -184,8 +184,6 @@ async def async_setup_scanner(
     hass.async_create_task(update_bluetooth())
     async_track_time_interval(hass, update_bluetooth, interval)
 
-    hass.services.async_register(
-        DOMAIN, "bluetooth_tracker_update", handle_manual_update_bluetooth
-    )
+    hass.services.async_register(DOMAIN, SERVICE_UPDATE, handle_manual_update_bluetooth)
 
     return True

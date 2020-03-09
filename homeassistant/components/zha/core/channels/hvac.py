@@ -6,6 +6,7 @@ https://home-assistant.io/integrations/zha/
 """
 import logging
 
+from zigpy.exceptions import DeliveryError
 import zigpy.zcl.clusters.hvac as hvac
 
 from homeassistant.core import callback
@@ -35,7 +36,6 @@ class FanChannel(ZigbeeChannel):
 
     async def async_set_speed(self, value) -> None:
         """Set the speed of the fan."""
-        from zigpy.exceptions import DeliveryError
 
         try:
             await self.cluster.write_attributes({"fan_mode": value})

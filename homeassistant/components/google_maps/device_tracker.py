@@ -53,6 +53,7 @@ class GoogleMapsScanner:
         self.username = config[CONF_USERNAME]
         self.max_gps_accuracy = config[CONF_MAX_GPS_ACCURACY]
         self.scan_interval = config.get(CONF_SCAN_INTERVAL) or timedelta(seconds=60)
+        self._prev_seen = {}
 
         credfile = "{}.{}".format(
             hass.config.path(CREDENTIALS_FILE), slugify(self.username)
@@ -92,11 +93,22 @@ class GoogleMapsScanner:
                 )
                 continue
 
+            last_seen = dt_util.as_utc(person.datetime)
+            if last_seen < self._prev_seen.get(dev_id, last_seen):
+                _LOGGER.warning(
+                    "Ignoring %s update because timestamp "
+                    "is older than last timestamp",
+                    person.nickname,
+                )
+                _LOGGER.debug("%s < %s", last_seen, self._prev_seen[dev_id])
+                continue
+            self._prev_seen[dev_id] = last_seen
+
             attrs = {
                 ATTR_ADDRESS: person.address,
                 ATTR_FULL_NAME: person.full_name,
                 ATTR_ID: person.id,
-                ATTR_LAST_SEEN: dt_util.as_utc(person.datetime),
+                ATTR_LAST_SEEN: last_seen,
                 ATTR_NICKNAME: person.nickname,
                 ATTR_BATTERY_CHARGING: person.charging,
                 ATTR_BATTERY_LEVEL: person.battery_level,

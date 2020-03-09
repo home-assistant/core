@@ -2,23 +2,22 @@
 import copy
 from datetime import timedelta
 import logging
-import voluptuous as vol
 
 from pyfronius import Fronius
+import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_RESOURCE,
-    CONF_SENSOR_TYPE,
     CONF_DEVICE,
     CONF_MONITORED_CONDITIONS,
+    CONF_RESOURCE,
     CONF_SCAN_INTERVAL,
+    CONF_SENSOR_TYPE,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 from typing import Optional
 
+from geojson_client.generic_feed import GenericFeedManager
 import voluptuous as vol
 
 from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
@@ -71,7 +72,6 @@ class GeoJsonFeedEntityManager:
         self, hass, add_entities, scan_interval, coordinates, url, radius_in_km
     ):
         """Initialize the GeoJSON Feed Manager."""
-        from geojson_client.generic_feed import GenericFeedManager
 
         self._hass = hass
         self._feed_manager = GenericFeedManager(

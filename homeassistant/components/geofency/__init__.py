@@ -18,8 +18,8 @@ from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import slugify
-from .const import DOMAIN
 
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

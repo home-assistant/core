@@ -134,14 +134,14 @@ class MobileAppNotificationService(BaseNotificationService):
                     response = await self._session.post(push_url, json=data)
                     result = await response.json()
 
-                if response.status == 201:
+                if response.status in [200, 201, 202]:
                     log_rate_limits(self.hass, entry_data[ATTR_DEVICE_NAME], result)
-                    return
+                    continue
 
                 fallback_error = result.get("errorMessage", "Unknown error")
-                fallback_message = (
-                    "Internal server error, " "please try again later: " "{}"
-                ).format(fallback_error)
+                fallback_message = "Internal server error, please try again later: {}".format(
+                    fallback_error
+                )
                 message = result.get("message", fallback_message)
                 if response.status == 429:
                     _LOGGER.warning(message)

@@ -1,13 +1,11 @@
 """Package to test the get_accessory method."""
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.core import State
-import homeassistant.components.cover as cover
 import homeassistant.components.climate as climate
-import homeassistant.components.media_player.const as media_player_c
-from homeassistant.components.homekit import get_accessory, TYPES
+import homeassistant.components.cover as cover
+from homeassistant.components.homekit import TYPES, get_accessory
 from homeassistant.components.homekit.const import (
     CONF_FEATURE_LIST,
     FEATURE_ON_OFF,
@@ -18,6 +16,7 @@ from homeassistant.components.homekit.const import (
     TYPE_SWITCH,
     TYPE_VALVE,
 )
+import homeassistant.components.media_player.const as media_player_c
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_DEVICE_CLASS,
@@ -28,6 +27,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import State
 
 
 def test_not_supported(caplog):

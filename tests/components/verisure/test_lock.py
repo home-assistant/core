@@ -1,16 +1,16 @@
 """Tests for the Verisure platform."""
 
 from contextlib import contextmanager
-from unittest.mock import patch, call
-from homeassistant.const import STATE_UNLOCKED
-from homeassistant.setup import async_setup_component
+from unittest.mock import call, patch
+
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
 )
 from homeassistant.components.verisure import DOMAIN as VERISURE_DOMAIN
-
+from homeassistant.const import STATE_UNLOCKED
+from homeassistant.setup import async_setup_component
 
 NO_DEFAULT_LOCK_CODE_CONFIG = {
     "verisure": {
@@ -50,6 +50,9 @@ LOCKS = ["door_lock"]
 def mock_hub(config, get_response=LOCKS[0]):
     """Extensively mock out a verisure hub."""
     hub_prefix = "homeassistant.components.verisure.lock.hub"
+    # Since there is no conf to disable ethernet status, mock hub for
+    # binary sensor too
+    hub_binary_sensor = "homeassistant.components.verisure.binary_sensor.hub"
     verisure_prefix = "verisure.Session"
     with patch(verisure_prefix) as session, patch(hub_prefix) as hub:
         session.login.return_value = True
@@ -62,7 +65,8 @@ def mock_hub(config, get_response=LOCKS[0]):
         }
         hub.session.get_lock_state_transaction.return_value = {"result": "OK"}
 
-        yield hub
+        with patch(hub_binary_sensor, hub):
+            yield hub
 
 
 async def setup_verisure_locks(hass, config):
@@ -70,7 +74,7 @@ async def setup_verisure_locks(hass, config):
     with mock_hub(config):
         await async_setup_component(hass, VERISURE_DOMAIN, config)
         await hass.async_block_till_done()
-        # lock.door_lock, group.all_locks
+        # lock.door_lock, ethernet_status
         assert len(hass.states.async_all()) == 2
 
 

@@ -1,20 +1,19 @@
 """Tracks devices by sending a ICMP echo request (ping)."""
+from datetime import timedelta
 import logging
 import subprocess
 import sys
-from datetime import timedelta
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
+from homeassistant import const, util
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.components.device_tracker.const import (
     CONF_SCAN_INTERVAL,
     SCAN_INTERVAL,
     SOURCE_TYPE_ROUTER,
 )
-from homeassistant import util
-from homeassistant import const
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +21,7 @@ CONF_PING_COUNT = "count"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(const.CONF_HOSTS): {cv.string: cv.string},
+        vol.Required(const.CONF_HOSTS): {cv.slug: cv.string},
         vol.Optional(CONF_PING_COUNT, default=1): cv.positive_int,
     }
 )

@@ -4,8 +4,8 @@ Provide a mock cover platform.
 Call init before using it in your tests to ensure clean test data.
 """
 from homeassistant.components.cover import CoverDevice
-from tests.common import MockEntity
 
+from tests.common import MockEntity
 
 ENTITIES = {}
 

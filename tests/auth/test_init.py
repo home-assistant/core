@@ -7,16 +7,17 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import auth, data_entry_flow
-from homeassistant.auth import models as auth_models, auth_store, const as auth_const
+from homeassistant.auth import auth_store, const as auth_const, models as auth_models
 from homeassistant.auth.const import MFA_SESSION_EXPIRATION
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
-from tests.common import MockUser, ensure_auth_manager_loaded, flush_store, CLIENT_ID
+
+from tests.common import CLIENT_ID, MockUser, ensure_auth_manager_loaded, flush_store
 
 
 @pytest.fixture
 def mock_hass(loop):
-    """Hass mock with minimum amount of data set to make it work with auth."""
+    """Home Assistant mock with minimum amount of data set to make it work with auth."""
     hass = Mock()
     hass.config.skip_pip = True
     return hass
@@ -30,7 +31,7 @@ async def test_auth_manager_from_config_validates_config(mock_hass):
             [
                 {"name": "Test Name", "type": "insecure_example", "users": []},
                 {
-                    "name": "Invalid config because no users",
+                    "name": "Invalid configuration because no users",
                     "type": "insecure_example",
                     "id": "invalid_config",
                 },
@@ -80,7 +81,7 @@ async def test_auth_manager_from_config_auth_modules(mock_hass):
             [
                 {"name": "Module 1", "type": "insecure_example", "data": []},
                 {
-                    "name": "Invalid config because no data",
+                    "name": "Invalid configuration because no data",
                     "type": "insecure_example",
                     "id": "another",
                 },
@@ -452,7 +453,7 @@ async def test_refresh_token_type_long_lived_access_token(hass):
 
 
 async def test_cannot_deactive_owner(mock_hass):
-    """Test that we cannot deactive the owner."""
+    """Test that we cannot deactivate the owner."""
     manager = await auth.auth_manager_from_config(mock_hass, [], [])
     owner = MockUser(is_owner=True).add_to_auth_manager(manager)
 

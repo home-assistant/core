@@ -1,7 +1,7 @@
 """Support to export sensor values via RSS feed."""
 from html import escape
-from aiohttp import web
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView

@@ -1,4 +1,4 @@
-"""Bitcoin information service that uses blockchain.info."""
+"""Bitcoin information service that uses blockchain.com."""
 from datetime import timedelta
 import logging
 
@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by blockchain.info"
+ATTRIBUTION = "Data provided by blockchain.com"
 
 DEFAULT_CURRENCY = "USD"
 
@@ -148,7 +148,7 @@ class BitcoinSensor(Entity):
         elif self.type == "total_btc":
             self._state = "{0:.2f}".format(stats.total_btc * 0.00000001)
         elif self.type == "total_blocks":
-            self._state = "{0:.2f}".format(stats.total_blocks)
+            self._state = "{0:.0f}".format(stats.total_blocks)
         elif self.type == "next_retarget":
             self._state = "{0:.2f}".format(stats.next_retarget)
         elif self.type == "estimated_transaction_volume_usd":
@@ -168,7 +168,7 @@ class BitcoinData:
         self.ticker = None
 
     def update(self):
-        """Get the latest data from blockchain.info."""
+        """Get the latest data from blockchain.com."""
 
         self.stats = statistics.get()
         self.ticker = exchangerates.get_ticker()

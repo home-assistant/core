@@ -30,7 +30,7 @@ jobs:
 - template: templates/azp-job-wheels.yaml@azure
   parameters:
     builderVersion: '$(versionWheels)'
-    builderApk: 'build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev'
+    builderApk: 'build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev'
     builderPip: 'Cython;numpy'
     wheelsRequirement: 'requirements_wheels.txt'
     wheelsRequirementDiff: 'requirements_diff.txt'
@@ -68,6 +68,7 @@ jobs:
           sed -i "s|# face_recognition|face_recognition|g" ${requirement_file}
           sed -i "s|# py_noaa|py_noaa|g" ${requirement_file}
           sed -i "s|# bme680|bme680|g" ${requirement_file}
+          sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
 
           if [[ "$(buildArch)" =~ arm ]]; then
             sed -i "s|# VL53L1X|VL53L1X|g" ${requirement_file}

@@ -3,10 +3,10 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME, CONF_ICON, CONF_URL
+from homeassistant.const import CONF_ICON, CONF_NAME, CONF_URL
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +36,12 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the weblink component."""
+    _LOGGER.warning(
+        "The weblink integration has been deprecated and is pending for removal "
+        "in Home Assistant 0.107.0. Please use this instead: "
+        "https://www.home-assistant.io/lovelace/entities/#weblink"
+    )
+
     links = config.get(DOMAIN)
 
     for link in links.get(CONF_ENTITIES):

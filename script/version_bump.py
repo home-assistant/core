@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Helper script to bump the current version."""
 import argparse
+from datetime import datetime
 import re
 import subprocess
-from datetime import datetime
 
 from packaging.version import Version
 

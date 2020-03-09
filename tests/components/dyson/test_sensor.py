@@ -8,9 +8,10 @@ from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
 
 from homeassistant.components import dyson as dyson_parent
 from homeassistant.components.dyson import sensor as dyson
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, STATE_OFF
+from homeassistant.const import STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
+
 from tests.common import get_test_home_assistant
 
 

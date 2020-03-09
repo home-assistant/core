@@ -1,8 +1,8 @@
 """Adds a simulated sensor."""
+from datetime import datetime
 import logging
 import math
 from random import Random
-from datetime import datetime
 
 import voluptuous as vol
 

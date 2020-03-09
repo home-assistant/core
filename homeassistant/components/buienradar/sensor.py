@@ -33,10 +33,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 
-
 from .const import DEFAULT_TIMEFRAME
 from .util import BrData
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -205,7 +203,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     timeframe = config.get(CONF_TIMEFRAME, DEFAULT_TIMEFRAME)
 
     if None in (latitude, longitude):
-        _LOGGER.error("Latitude or longitude not set in HomeAssistant config")
+        _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
 
     coordinates = {CONF_LATITUDE: float(latitude), CONF_LONGITUDE: float(longitude)}

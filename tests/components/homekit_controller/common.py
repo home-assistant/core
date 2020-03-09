@@ -1,28 +1,29 @@
 """Code to support homekit_controller tests."""
+from datetime import timedelta
 import json
 import os
-from datetime import timedelta
 from unittest import mock
 
-from homekit.model.services import AbstractService, ServicesTypes
+from homekit.exceptions import AccessoryNotFoundError
+from homekit.model import Accessory, get_id
 from homekit.model.characteristics import (
     AbstractCharacteristic,
     CharacteristicPermissions,
     CharacteristicsTypes,
 )
-from homekit.model import Accessory, get_id
-from homekit.exceptions import AccessoryNotFoundError
+from homekit.model.services import AbstractService, ServicesTypes
 
 from homeassistant import config_entries
+from homeassistant.components.homekit_controller import config_flow
 from homeassistant.components.homekit_controller.const import (
     CONTROLLER,
     DOMAIN,
     HOMEKIT_ACCESSORY_DISPATCH,
 )
-from homeassistant.components.homekit_controller import config_flow
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-from tests.common import async_fire_time_changed, load_fixture, MockConfigEntry
+
+from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 
 
 class FakePairing:
@@ -250,7 +251,7 @@ async def setup_test_accessories(hass, accessories):
 
     config_entry.add_to_hass(hass)
 
-    pairing_cls_loc = "homekit.controller.ip_implementation.IpPairing"
+    pairing_cls_loc = "homeassistant.components.homekit_controller.connection.IpPairing"
     with mock.patch(pairing_cls_loc) as pairing_cls:
         pairing_cls.return_value = pairing
         await config_entry.async_setup(hass)
@@ -260,7 +261,7 @@ async def setup_test_accessories(hass, accessories):
 
 
 async def device_config_changed(hass, accessories):
-    """Discover new devices added to HomeAssistant at runtime."""
+    """Discover new devices added to Home Assistant at runtime."""
     # Update the accessories our FakePairing knows about
     controller = hass.data[CONTROLLER]
     pairing = controller.pairings["00:00:00:00:00:00"]
@@ -306,7 +307,7 @@ async def setup_test_component(hass, services, capitalize=False, suffix=None):
             domain = HOMEKIT_ACCESSORY_DISPATCH[service_name]
             break
 
-    assert domain, "Cannot map test homekit services to homeassistant domain"
+    assert domain, "Cannot map test homekit services to Home Assistant domain"
 
     accessory = Accessory("TestDevice", "example.com", "Test", "0001", "0.1")
     accessory.services.extend(services)

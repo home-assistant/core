@@ -13,7 +13,7 @@ from miio import (  # pylint: disable=import-error
 from miio.powerstrip import PowerMode  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant.components.switch import DOMAIN, PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -23,6 +23,14 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+
+from .const import (
+    DOMAIN,
+    SERVICE_SET_POWER_MODE,
+    SERVICE_SET_POWER_PRICE,
+    SERVICE_SET_WIFI_LED_OFF,
+    SERVICE_SET_WIFI_LED_ON,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 "chuangmi.plug.v2",
                 "chuangmi.plug.v3",
                 "chuangmi.plug.hmi205",
+                "chuangmi.plug.hmi206",
                 "lumi.acpartner.v3",
             ]
         ),
@@ -78,11 +87,6 @@ FEATURE_FLAGS_POWER_STRIP_V1 = (
 FEATURE_FLAGS_POWER_STRIP_V2 = FEATURE_SET_WIFI_LED | FEATURE_SET_POWER_PRICE
 
 FEATURE_FLAGS_PLUG_V3 = FEATURE_SET_WIFI_LED
-
-SERVICE_SET_WIFI_LED_ON = "xiaomi_miio_set_wifi_led_on"
-SERVICE_SET_WIFI_LED_OFF = "xiaomi_miio_set_wifi_led_off"
-SERVICE_SET_POWER_MODE = "xiaomi_miio_set_power_mode"
-SERVICE_SET_POWER_PRICE = "xiaomi_miio_set_power_price"
 
 SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 
@@ -158,6 +162,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         "chuangmi.plug.m3",
         "chuangmi.plug.v2",
         "chuangmi.plug.hmi205",
+        "chuangmi.plug.hmi206",
     ]:
         plug = ChuangmiPlug(host, token, model=model)
         device = XiaomiPlugGenericSwitch(name, plug, model, unique_id)

@@ -3,14 +3,14 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant.auth.models import Credentials
+from homeassistant.components import auth
 from homeassistant.components.auth import RESULT_TYPE_USER
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
-from homeassistant.components import auth
-
-from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI, MockUser
 
 from . import async_setup_auth
+
+from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI, MockUser
 
 
 async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
@@ -102,7 +102,7 @@ def test_auth_code_store_expiration():
 
 
 async def test_ws_current_user(hass, hass_ws_client, hass_access_token):
-    """Test the current user command with homeassistant creds."""
+    """Test the current user command with Home Assistant creds."""
     assert await async_setup_component(hass, "auth", {})
 
     refresh_token = await hass.auth.async_validate_access_token(hass_access_token)

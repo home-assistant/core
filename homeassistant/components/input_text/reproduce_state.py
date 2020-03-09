@@ -7,7 +7,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, State
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import DOMAIN, SERVICE_SET_VALUE, ATTR_VALUE
+from . import ATTR_VALUE, DOMAIN, SERVICE_SET_VALUE
 
 _LOGGER = logging.getLogger(__name__)
 

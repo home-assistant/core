@@ -2,6 +2,7 @@
 from http.client import HTTPException
 import logging
 
+from pycsspeechtts import pycsspeechtts
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
@@ -142,7 +143,6 @@ class MicrosoftProvider(Provider):
         """Load TTS from Microsoft."""
         if language is None:
             language = self._lang
-        from pycsspeechtts import pycsspeechtts
 
         try:
             trans = pycsspeechtts.TTSTranslator(self._apikey, self._region)

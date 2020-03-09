@@ -15,17 +15,12 @@ from homeassistant.components.weather import (
 from homeassistant.const import TEMP_FAHRENHEIT
 
 from .const import (
+    _LOGGER,
     DOMAIN,
     ECOBEE_MODEL_TO_NAME,
     ECOBEE_WEATHER_SYMBOL_TO_HASS,
     MANUFACTURER,
-    _LOGGER,
 )
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up the ecobee weather platform."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

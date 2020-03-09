@@ -1,26 +1,26 @@
 """Entity class that represents Z-Wave node."""
-import logging
 from itertools import count
+import logging
 
+from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, ATTR_WAKEUP
 from homeassistant.core import callback
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_WAKEUP, ATTR_ENTITY_ID
-from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_registry import async_get_registry
 
 from .const import (
-    ATTR_NODE_ID,
-    COMMAND_CLASS_WAKE_UP,
-    ATTR_SCENE_ID,
-    ATTR_SCENE_DATA,
     ATTR_BASIC_LEVEL,
-    EVENT_NODE_EVENT,
-    EVENT_SCENE_ACTIVATED,
+    ATTR_NODE_ID,
+    ATTR_SCENE_DATA,
+    ATTR_SCENE_ID,
     COMMAND_CLASS_CENTRAL_SCENE,
     COMMAND_CLASS_VERSION,
+    COMMAND_CLASS_WAKE_UP,
     DOMAIN,
+    EVENT_NODE_EVENT,
+    EVENT_SCENE_ACTIVATED,
 )
-from .util import node_name, is_node_parsed, node_device_id_and_name
+from .util import is_node_parsed, node_device_id_and_name, node_name
 
 _LOGGER = logging.getLogger(__name__)
 

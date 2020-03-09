@@ -1,5 +1,6 @@
 """Support for the Roku remote."""
 import requests.exceptions
+from roku import Roku
 
 from homeassistant.components import remote
 from homeassistant.const import CONF_HOST
@@ -19,7 +20,6 @@ class RokuRemote(remote.RemoteDevice):
 
     def __init__(self, host):
         """Initialize the Roku device."""
-        from roku import Roku
 
         self.roku = Roku(host)
         self._device_info = {}

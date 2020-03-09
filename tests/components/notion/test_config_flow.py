@@ -1,4 +1,6 @@
 """Define tests for the Notion config flow."""
+from unittest.mock import patch
+
 import aionotion
 import pytest
 
@@ -6,7 +8,7 @@ from homeassistant import data_entry_flow
 from homeassistant.components.notion import DOMAIN, config_flow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from tests.common import MockConfigEntry, MockDependency, mock_coro
+from tests.common import MockConfigEntry, mock_coro
 
 
 @pytest.fixture
@@ -18,8 +20,8 @@ def mock_client_coro():
 @pytest.fixture
 def mock_aionotion(mock_client_coro):
     """Mock the aionotion library."""
-    with MockDependency("aionotion") as mock_:
-        mock_.async_get_client.return_value = mock_client_coro
+    with patch("homeassistant.components.notion.config_flow.async_get_client") as mock_:
+        mock_.return_value = mock_client_coro
         yield mock_
 
 

@@ -13,18 +13,15 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DOMAIN as KONNECTED_DOMAIN, PIN_TO_ZONE, SIGNAL_SENSOR_UPDATE
+from .const import DOMAIN as KONNECTED_DOMAIN, SIGNAL_SENSOR_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up binary sensors attached to a Konnected device."""
-    if discovery_info is None:
-        return
-
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up binary sensors attached to a Konnected device from a config entry."""
     data = hass.data[KONNECTED_DOMAIN]
-    device_id = discovery_info["device_id"]
+    device_id = config_entry.data["id"]
     sensors = [
         KonnectedBinarySensor(device_id, pin_num, pin_data)
         for pin_num, pin_data in data[CONF_DEVICES][device_id][
@@ -37,14 +34,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class KonnectedBinarySensor(BinarySensorDevice):
     """Representation of a Konnected binary sensor."""
 
-    def __init__(self, device_id, pin_num, data):
+    def __init__(self, device_id, zone_num, data):
         """Initialize the Konnected binary sensor."""
         self._data = data
         self._device_id = device_id
-        self._pin_num = pin_num
+        self._zone_num = zone_num
         self._state = self._data.get(ATTR_STATE)
         self._device_class = self._data.get(CONF_TYPE)
-        self._unique_id = "{}-{}".format(device_id, PIN_TO_ZONE[pin_num])
+        self._unique_id = f"{device_id}-{zone_num}"
         self._name = self._data.get(CONF_NAME)
 
     @property
@@ -71,6 +68,13 @@ class KonnectedBinarySensor(BinarySensorDevice):
     def device_class(self):
         """Return the device class."""
         return self._device_class
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(KONNECTED_DOMAIN, self._device_id)},
+        }
 
     async def async_added_to_hass(self):
         """Store entity_id and register state change callback."""

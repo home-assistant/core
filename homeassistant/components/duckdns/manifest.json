@@ -1,6 +1,6 @@
 {
   "domain": "duckdns",
-  "name": "Duckdns",
+  "name": "Duck DNS",
   "documentation": "https://www.home-assistant.io/integrations/duckdns",
   "requirements": [],
   "dependencies": [],
