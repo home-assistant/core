@@ -2,6 +2,7 @@
 import asyncio
 import functools
 import logging
+from types import MappingProxyType
 from typing import Any, Callable, Dict, List, Optional, Set, Union, cast
 import uuid
 import weakref
@@ -139,7 +140,7 @@ class ConfigEntry:
         self.title = title
 
         # Config data
-        self.data = data
+        self.data = MappingProxyType(data)
 
         # Entry options
         self.options = options or {}
@@ -396,7 +397,7 @@ class ConfigEntry:
             "version": self.version,
             "domain": self.domain,
             "title": self.title,
-            "data": self.data,
+            "data": dict(self.data),
             "options": self.options,
             "system_options": self.system_options.as_dict(),
             "source": self.source,
@@ -729,7 +730,7 @@ class ConfigEntries:
             entry.unique_id = cast(Optional[str], unique_id)
 
         if data is not _UNDEF:
-            entry.data = data
+            entry.data = MappingProxyType(data)
 
         if options is not _UNDEF:
             entry.options = options
