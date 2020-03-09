@@ -62,23 +62,6 @@ async def test_step_import(hass):
     }
 
 
-async def test_step_import_too_small_window(hass):
-    """Test that the import step with a too-small window is aborted."""
-    conf = {
-        CONF_LATITUDE: 39.128712,
-        CONF_LONGITUDE: -104.9812612,
-        CONF_RADIUS: 25,
-        CONF_WINDOW: 60,
-    }
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "window_too_small"
-
-
 async def test_step_user(hass):
     """Test that the user step works."""
     conf = {CONF_LATITUDE: 39.128712, CONF_LONGITUDE: -104.9812612, CONF_RADIUS: 25}
