@@ -2,8 +2,8 @@
 from typing import Any, Dict, Optional
 
 from asynctest import patch
+from requests.exceptions import RequestException
 
-from homeassistant.components.directv.config_flow import CannotConnect
 from homeassistant.components.directv.const import DOMAIN
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_SERIAL
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
@@ -118,13 +118,36 @@ async def test_form_cannot_connect(hass: HomeAssistantType) -> None:
     )
 
     with patch(
-        "homeassistant.components.directv.config_flow.validate_input",
-        side_effect=CannotConnect,
+        "homeassistant.components.directv.config_flow.DIRECTV", new=MockDirectvClass,
+    ), patch(
+        "homeassistant.components.directv.config_flow.DIRECTV.get_version",
+        side_effect=RequestException,
     ) as mock_validate_input:
         result = await async_configure_flow(hass, result["flow_id"], {CONF_HOST: HOST},)
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    await hass.async_block_till_done()
+    assert len(mock_validate_input.mock_calls) == 1
+
+
+async def test_form_unknown_error(hass: HomeAssistantType) -> None:
+    """Test we handle unknown error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.directv.config_flow.DIRECTV", new=MockDirectvClass,
+    ), patch(
+        "homeassistant.components.directv.config_flow.DIRECTV.get_version",
+        side_effect=Exception,
+    ) as mock_validate_input:
+        result = await async_configure_flow(hass, result["flow_id"], {CONF_HOST: HOST},)
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "unknown"}
 
     await hass.async_block_till_done()
     assert len(mock_validate_input.mock_calls) == 1
@@ -175,3 +198,47 @@ async def test_ssdp_discovery(hass: HomeAssistantType) -> None:
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_ssdp_discovery_confirm_abort(hass: HomeAssistantType) -> None:
+    """Test we handle SSDP confirm cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_SSDP},
+        data={ATTR_SSDP_LOCATION: SSDP_LOCATION, ATTR_UPNP_SERIAL: UPNP_SERIAL},
+    )
+
+    with patch(
+        "homeassistant.components.directv.config_flow.DIRECTV", new=MockDirectvClass,
+    ), patch(
+        "homeassistant.components.directv.config_flow.DIRECTV.get_version",
+        side_effect=RequestException,
+    ) as mock_validate_input:
+        result = await async_configure_flow(hass, result["flow_id"], {})
+
+    assert result["type"] == RESULT_TYPE_ABORT
+
+    await hass.async_block_till_done()
+    assert len(mock_validate_input.mock_calls) == 1
+
+
+async def test_ssdp_discovery_confirm_unknown_error(hass: HomeAssistantType) -> None:
+    """Test we handle SSDP confirm unknown error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_SSDP},
+        data={ATTR_SSDP_LOCATION: SSDP_LOCATION, ATTR_UPNP_SERIAL: UPNP_SERIAL},
+    )
+
+    with patch(
+        "homeassistant.components.directv.config_flow.DIRECTV", new=MockDirectvClass,
+    ), patch(
+        "homeassistant.components.directv.config_flow.DIRECTV.get_version",
+        side_effect=Exception,
+    ) as mock_validate_input:
+        result = await async_configure_flow(hass, result["flow_id"], {})
+
+    assert result["type"] == RESULT_TYPE_ABORT
+
+    await hass.async_block_till_done()
+    assert len(mock_validate_input.mock_calls) == 1

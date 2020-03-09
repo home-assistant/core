@@ -28,19 +28,16 @@ DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 def get_ip(host: str) -> str:
     """Translate hostname to IP address."""
     if host is None:
-        return None
+        return None  # pragma: no cover
 
     return socket.gethostbyname(host)
 
 
 def get_dtv_version(host: str, port: int = DEFAULT_PORT) -> Any:
     """Test the device connection by retrieving the receiver version info."""
-    try:
-        # directpy does IO in constructor.
-        dtv = DIRECTV(host, port)
-        return dtv.get_version()
-    except (OSError, RequestException) as exception:
-        raise CannotConnect from exception
+    # directpy does IO in constructor.
+    dtv = DIRECTV(host, port)
+    return dtv.get_version()
 
 
 async def validate_input(hass: HomeAssistantType, data: Dict) -> Dict:
@@ -89,7 +86,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             info = await validate_input(self.hass, user_input)
             user_input[CONF_HOST] = info[CONF_HOST]
-        except CannotConnect:
+        except (OSError, RequestException):
             errors["base"] = ERROR_CANNOT_CONNECT
             return await self._show_form(errors)
         except Exception:  # pylint: disable=broad-except
@@ -134,7 +131,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await validate_input(self.hass, user_input)
                 return self.async_create_entry(title=name, data=user_input)
-            except CannotConnect:
+            except (OSError, RequestException):
                 return self.async_abort(reason=ERROR_CANNOT_CONNECT)
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
