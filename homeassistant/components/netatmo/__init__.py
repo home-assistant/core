@@ -23,7 +23,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 
 from . import api, config_flow
-from .const import AUTH, DATA_PERSONS, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from .const import (
+    AUTH,
+    CONF_CLOUDHOOK_URL,
+    DATA_PERSONS,
+    DOMAIN,
+    OAUTH2_AUTHORIZE,
+    OAUTH2_TOKEN,
+)
 from .webhook import handle_webhook
 
 _LOGGER = logging.getLogger(__name__)
@@ -89,13 +96,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
 
     if CONF_WEBHOOK_ID not in entry.data:
-        entry.data[CONF_WEBHOOK_ID] = secrets.token_hex()
-        hass.config_entries.async_update_entry(entry, data=entry.data)
+        data = {**entry.data, CONF_WEBHOOK_ID: secrets.token_hex()}
+        hass.config_entries.async_update_entry(entry, data=data)
 
     if hass.components.cloud.async_active_subscription():
-        webhook_url = await hass.components.cloud.async_create_cloudhook(
-            entry.data[CONF_WEBHOOK_ID]
-        )
+        if CONF_CLOUDHOOK_URL not in entry.data:
+            webhook_url = await hass.components.cloud.async_create_cloudhook(
+                entry.data[CONF_WEBHOOK_ID]
+            )
+            data = {**entry.data, CONF_CLOUDHOOK_URL: webhook_url}
+            hass.config_entries.async_update_entry(entry, data=data)
+        else:
+            webhook_url = entry.data[CONF_CLOUDHOOK_URL]
     else:
         webhook_url = hass.components.webhook.async_generate_url(
             entry.data[CONF_WEBHOOK_ID]
@@ -108,7 +120,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         webhook_register(
             hass, DOMAIN, "Netatmo", entry.data[CONF_WEBHOOK_ID], handle_webhook
         )
-        _LOGGER.info("Netatmo webhook url: %s", webhook_url)
+        _LOGGER.info("Register Netatmo webhook: %s", webhook_url)
     except pyatmo.ApiError as err:
         _LOGGER.error("Error during webhook registration - %s", err)
 
@@ -129,6 +141,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     if CONF_WEBHOOK_ID in entry.data:
+        _LOGGER.debug("Unregister Netatmo webhook (%s)", entry.data[CONF_WEBHOOK_ID])
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
         await hass.async_add_executor_job(
             hass.data[DOMAIN][entry.entry_id][AUTH].dropwebhook()
@@ -141,6 +154,9 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Cleanup when entry is removed."""
     if CONF_WEBHOOK_ID in entry.data:
         try:
+            _LOGGER.debug(
+                "Removing Netatmo cloudhook (%s)", entry.data[CONF_WEBHOOK_ID]
+            )
             await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])
         except cloud.CloudNotAvailable:
             pass
