@@ -400,7 +400,10 @@ class CoverCapabilities(AlexaEntity):
 
     def interfaces(self):
         """Yield the supported interfaces."""
-        yield AlexaPowerController(self.entity)
+        device_class = self.entity.attributes.get(ATTR_DEVICE_CLASS)
+        if device_class != cover.DEVICE_CLASS_GARAGE:
+            yield AlexaPowerController(self.entity)
+
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & cover.SUPPORT_SET_POSITION:
             yield AlexaRangeController(

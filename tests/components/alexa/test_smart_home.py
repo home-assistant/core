@@ -2592,33 +2592,25 @@ async def test_mode_unsupported_domain(hass):
     assert msg["payload"]["type"] == "INVALID_DIRECTIVE"
 
 
-async def test_cover(hass):
-    """Test garage cover discovery and powerController."""
+async def test_cover_garage_door(hass):
+    """Test garage door cover discovery."""
     device = (
-        "cover.test",
+        "cover.test_garage_door",
         "off",
         {
-            "friendly_name": "Test cover",
+            "friendly_name": "Test cover garage door",
             "supported_features": 3,
             "device_class": "garage",
         },
     )
     appliance = await discovery_test(device, hass)
 
-    assert appliance["endpointId"] == "cover#test"
+    assert appliance["endpointId"] == "cover#test_garage_door"
     assert appliance["displayCategories"][0] == "GARAGE_DOOR"
-    assert appliance["friendlyName"] == "Test cover"
+    assert appliance["friendlyName"] == "Test cover garage door"
 
     assert_endpoint_capabilities(
-        appliance,
-        "Alexa.ModeController",
-        "Alexa.PowerController",
-        "Alexa.EndpointHealth",
-        "Alexa",
-    )
-
-    await assert_power_controller_works(
-        "cover#test", "cover.open_cover", "cover.close_cover", hass
+        appliance, "Alexa.ModeController", "Alexa.EndpointHealth", "Alexa"
     )
 
 
