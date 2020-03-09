@@ -242,7 +242,7 @@ class HMHub(Entity):
         """Return the state attributes."""
         attr = self._variables.copy()
         if self._duty_cycle is not None:
-            attr['duty_cycle'] = self._duty_cycle
+            attr['DutyCycle'] = self._duty_cycle
         return attr
 
     @property
@@ -279,6 +279,10 @@ class HMHub(Entity):
 
     def _update_duty_cycle(self, now):
         """Retrieve duty cycle."""
+        if "DutyCycle" in self._variables:
+            # e.g. RaspberryMatic already sets DutyCycle system variable
+            self._duty_cycle = None
+            return
         bidcos_interfaces = self._homematic.listBidcosInterfaces(self._name)
         if bidcos_interfaces is None:
             return
