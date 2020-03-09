@@ -12,8 +12,19 @@ from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
-from tests.common import get_test_home_assistant, init_recorder_component
+from tests.common import (
+    fire_time_changed,
+    get_test_home_assistant,
+    init_recorder_component,
+)
+
+
+def _trigger_db_commit(hass):
+    for _ in range(50):
+        # We only commit on time change
+        fire_time_changed(hass, dt_util.utcnow())
 
 
 class TestRecorder(unittest.TestCase):
@@ -36,6 +47,8 @@ class TestRecorder(unittest.TestCase):
         attributes = {"test_attr": 5, "test_attr_10": "nice"}
 
         self.hass.states.set(entity_id, state, attributes)
+
+        _trigger_db_commit(self.hass)
 
         self.hass.block_till_done()
         self.hass.data[DATA_INSTANCE].block_till_done()
@@ -64,6 +77,8 @@ class TestRecorder(unittest.TestCase):
         self.hass.bus.listen(MATCH_ALL, event_listener)
 
         self.hass.bus.fire(event_type, event_data)
+
+        _trigger_db_commit(self.hass)
 
         self.hass.block_till_done()
 
@@ -109,7 +124,8 @@ def _add_entities(hass, entity_ids):
     attributes = {"test_attr": 5, "test_attr_10": "nice"}
     for idx, entity_id in enumerate(entity_ids):
         hass.states.set(entity_id, "state{}".format(idx), attributes)
-        hass.block_till_done()
+    _trigger_db_commit(hass)
+    hass.block_till_done()
     hass.data[DATA_INSTANCE].block_till_done()
 
     with session_scope(hass=hass) as session:
@@ -121,7 +137,8 @@ def _add_events(hass, events):
         session.query(Events).delete(synchronize_session=False)
     for event_type in events:
         hass.bus.fire(event_type)
-        hass.block_till_done()
+    _trigger_db_commit(hass)
+    hass.block_till_done()
     hass.data[DATA_INSTANCE].block_till_done()
 
     with session_scope(hass=hass) as session:
