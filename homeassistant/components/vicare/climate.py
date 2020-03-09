@@ -172,6 +172,9 @@ class ViCareClimate(ClimateDevice):
                 self._attributes[
                     "return_temperature"
                 ] = self._api.getReturnTemperature()
+                
+                self._attributes["heatpump_supply_temperature"] = self._api.getSupplyTemperaturePrimaryCircuit()
+                self._attributes["heatpump_return_temperature"] = self._api.getReturnTemperaturePrimaryCircuit()
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
         except ValueError:
