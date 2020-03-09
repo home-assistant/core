@@ -79,15 +79,22 @@ def create_climate_entity(hass, tado, name: str, zone_id: int):
     if zone_type == TYPE_AIR_CONDITIONING:
         # Heat is preferred as it generally has a lower minimum temperature
         for mode in ORDERED_KNOWN_TADO_MODES:
-            if mode in capabilities:
-                supported_hvac_modes.append(TADO_TO_HA_HVAC_MODE_MAP[mode])
-                if capabilities[mode].get("fanSpeeds"):
-                    support_flags |= SUPPORT_FAN_MODE
-                    if supported_fan_modes is None:
-                        supported_fan_modes = [
-                            TADO_TO_HA_FAN_MODE_MAP[speed]
-                            for speed in capabilities[mode]["fanSpeeds"]
-                        ]
+            if mode not in capabilities:
+                continue
+
+            supported_hvac_modes.append(TADO_TO_HA_HVAC_MODE_MAP[mode])
+            if not capabilities[mode].get("fanSpeeds"):
+                continue
+
+            support_flags |= SUPPORT_FAN_MODE
+
+            if supported_fan_modes:
+                continue
+
+            supported_fan_modes = [
+                TADO_TO_HA_FAN_MODE_MAP[speed]
+                for speed in capabilities[mode]["fanSpeeds"]
+            ]
 
         cool_temperatures = capabilities[CONST_MODE_COOL]["temperatures"]
     else:
