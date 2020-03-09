@@ -29,7 +29,7 @@ class GriddyPriceSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "¢/kwh"
+        return "¢/kWh"
 
     @property
     def device_class(self):
