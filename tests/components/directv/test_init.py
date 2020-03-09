@@ -11,7 +11,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.components.directv import HOST, MockDirectvClass, setup_integration
+from tests.components.directv import MockDirectvClass, setup_integration
 
 # pylint: disable=redefined-outer-name
 
