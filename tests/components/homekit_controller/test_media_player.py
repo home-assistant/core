@@ -4,6 +4,7 @@ from aiohomekit.model.characteristics import (
     CharacteristicsTypes,
 )
 from aiohomekit.model.services import ServicesTypes
+import pytest
 
 from tests.components.homekit_controller.common import setup_test_component
 
@@ -20,6 +21,8 @@ def create_tv_service(accessory):
     The TV is not currently documented publicly - this is based on observing really TV's that have HomeKit support.
     """
     tv_service = accessory.add_service(ServicesTypes.TELEVISION)
+
+    tv_service.add_char(CharacteristicsTypes.ACTIVE, value=True)
 
     cur_state = tv_service.add_char(CharacteristicsTypes.CURRENT_MEDIA_STATE)
     cur_state.value = 0
@@ -245,3 +248,19 @@ async def test_tv_set_source(hass, utcnow):
 
     state = await helper.poll_and_get_state()
     assert state.attributes["source"] == "HDMI 2"
+
+
+async def test_tv_set_source_fail(hass, utcnow):
+    """Test that we can set the input source of a HomeKit TV."""
+    helper = await setup_test_component(hass, create_tv_service)
+
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            "media_player",
+            "select_source",
+            {"entity_id": "media_player.testdevice", "source": "HDMI 999"},
+            blocking=True,
+        )
+
+    state = await helper.poll_and_get_state()
+    assert state.attributes["source"] == "HDMI 1"
