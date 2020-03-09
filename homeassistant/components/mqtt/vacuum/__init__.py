@@ -4,7 +4,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.mqtt import ATTR_DISCOVERY_HASH
-from homeassistant.components.mqtt.discovery import clear_discovery_hash
+from homeassistant.components.mqtt.discovery import (
+    MQTT_DISCOVERY_NEW,
+    clear_discovery_hash,
+)
 from homeassistant.components.vacuum import DOMAIN
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -46,7 +49,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             clear_discovery_hash(hass, discovery_data[ATTR_DISCOVERY_HASH])
             raise
 
-    async_dispatcher_connect(hass, f"mqtt_discovery_new_{DOMAIN}_mqtt", async_discover)
+    async_dispatcher_connect(
+        hass, MQTT_DISCOVERY_NEW.format(DOMAIN, "mqtt"), async_discover
+    )
 
 
 async def _async_setup_entity(

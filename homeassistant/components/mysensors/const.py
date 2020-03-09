@@ -16,9 +16,12 @@ CONF_TOPIC_OUT_PREFIX = "topic_out_prefix"
 CONF_VERSION = "version"
 
 DOMAIN = "mysensors"
+MYSENSORS_GATEWAY_READY = "mysensors_gateway_ready_{}"
 MYSENSORS_GATEWAYS = "mysensors_gateways"
 PLATFORM = "platform"
 SCHEMA = "schema"
+CHILD_CALLBACK = "mysensors_child_callback_{}_{}_{}_{}"
+NODE_CALLBACK = "mysensors_node_callback_{}_{}"
 TYPE = "type"
 UPDATE_DELAY = 0.1
 

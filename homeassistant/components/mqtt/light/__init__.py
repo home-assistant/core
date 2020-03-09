@@ -5,7 +5,10 @@ import voluptuous as vol
 
 from homeassistant.components import light
 from homeassistant.components.mqtt import ATTR_DISCOVERY_HASH
-from homeassistant.components.mqtt.discovery import clear_discovery_hash
+from homeassistant.components.mqtt.discovery import (
+    MQTT_DISCOVERY_NEW,
+    clear_discovery_hash,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
@@ -55,7 +58,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             raise
 
     async_dispatcher_connect(
-        hass, f"mqtt_discovery_new_{light.DOMAIN}_mqtt", async_discover
+        hass, MQTT_DISCOVERY_NEW.format(light.DOMAIN, "mqtt"), async_discover
     )
 
 

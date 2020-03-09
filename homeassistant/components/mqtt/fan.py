@@ -40,7 +40,7 @@ from . import (
     MqttEntityDeviceInfo,
     subscription,
 )
-from .discovery import clear_discovery_hash
+from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -129,7 +129,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             raise
 
     async_dispatcher_connect(
-        hass, f"mqtt_discovery_new_{fan.DOMAIN}_mqtt", async_discover
+        hass, MQTT_DISCOVERY_NEW.format(fan.DOMAIN, "mqtt"), async_discover
     )
 
 

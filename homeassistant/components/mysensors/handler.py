@@ -5,6 +5,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import decorator
 
+from .const import CHILD_CALLBACK, MYSENSORS_GATEWAY_READY, NODE_CALLBACK
 from .device import get_mysensors_devices
 from .helpers import discover_mysensors_platform, validate_set_msg
 
@@ -59,7 +60,7 @@ async def handle_gateway_ready(hass, hass_config, msg):
 
     Set asyncio future result if gateway is ready.
     """
-    gateway_ready = hass.data.get(f"mysensors_gateway_ready_{id(msg.gateway)}")
+    gateway_ready = hass.data.get(MYSENSORS_GATEWAY_READY.format(id(msg.gateway)))
     if gateway_ready is None or gateway_ready.cancelled():
         return
     gateway_ready.set_result(True)
@@ -77,9 +78,7 @@ def _handle_child_update(hass, hass_config, validated):
         new_dev_ids = []
         for dev_id in dev_ids:
             if dev_id in devices:
-                signals.append(
-                    f"mysensors_child_callback_{dev_id[0]}_{dev_id[1]}_{dev_id[2]}_{dev_id[3]}"
-                )
+                signals.append(CHILD_CALLBACK.format(*dev_id))
             else:
                 new_dev_ids.append(dev_id)
         if new_dev_ids:
@@ -93,5 +92,5 @@ def _handle_child_update(hass, hass_config, validated):
 @callback
 def _handle_node_update(hass, msg):
     """Handle a node update."""
-    signal = f"mysensors_node_callback_{id(msg.gateway)}_{msg.node_id}"
+    signal = NODE_CALLBACK.format(id(msg.gateway), msg.node_id)
     async_dispatcher_send(hass, signal)

@@ -62,6 +62,8 @@ IMPLICIT_STATE_TOPIC_COMPONENTS = ["alarm_control_panel", "binary_sensor", "sens
 ALREADY_DISCOVERED = "mqtt_discovered_components"
 DATA_CONFIG_ENTRY_LOCK = "mqtt_config_entry_lock"
 CONFIG_ENTRY_IS_SETUP = "mqtt_config_entry_is_setup"
+MQTT_DISCOVERY_UPDATED = "mqtt_discovery_updated_{}"
+MQTT_DISCOVERY_NEW = "mqtt_discovery_new_{}_{}"
 
 TOPIC_BASE = "~"
 
@@ -184,7 +186,7 @@ async def async_start(
                 discovery_id,
             )
             async_dispatcher_send(
-                hass, f"mqtt_discovery_updated_{discovery_hash}", payload
+                hass, MQTT_DISCOVERY_UPDATED.format(discovery_hash), payload
             )
         elif payload:
             # Add component
@@ -209,7 +211,9 @@ async def async_start(
                         )
                     hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
 
-            async_dispatcher_send(hass, f"mqtt_discovery_new_{component}_mqtt", payload)
+            async_dispatcher_send(
+                hass, MQTT_DISCOVERY_NEW.format(component, "mqtt"), payload
+            )
 
     hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()

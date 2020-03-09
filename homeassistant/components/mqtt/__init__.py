@@ -57,7 +57,7 @@ from .const import (
     DEFAULT_QOS,
     PROTOCOL_311,
 )
-from .discovery import clear_discovery_hash
+from .discovery import MQTT_DISCOVERY_UPDATED, clear_discovery_hash
 from .models import Message, MessageCallbackType, PublishPayloadType
 from .subscription import async_subscribe_topics, async_unsubscribe_topics
 
@@ -1193,7 +1193,7 @@ class MqttDiscoveryUpdate(Entity):
         if discovery_hash:
             self._remove_signal = async_dispatcher_connect(
                 self.hass,
-                f"mqtt_discovery_updated_{discovery_hash}",
+                MQTT_DISCOVERY_UPDATED.format(discovery_hash),
                 discovery_callback,
             )
 

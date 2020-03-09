@@ -20,7 +20,7 @@ from .const import (
     ATTR_DEVICE_NAME,
     ATTR_SPEED,
     ATTR_VERTICAL_ACCURACY,
-    DOMAIN,
+    SIGNAL_LOCATION_UPDATE,
 )
 from .helpers import device_info
 
@@ -119,7 +119,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         """Call when entity about to be added to Home Assistant."""
         await super().async_added_to_hass()
         self._dispatch_unsub = self.hass.helpers.dispatcher.async_dispatcher_connect(
-            f"{DOMAIN}_location_update_{self._entry.entry_id}", self.update_data
+            SIGNAL_LOCATION_UPDATE.format(self._entry.entry_id), self.update_data
         )
 
         # Don't restore if we got set up with data.

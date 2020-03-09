@@ -7,7 +7,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import UPDATE_DELAY
+from .const import CHILD_CALLBACK, NODE_CALLBACK, UPDATE_DELAY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,13 +16,14 @@ ATTR_DESCRIPTION = "description"
 ATTR_DEVICE = "device"
 ATTR_NODE_ID = "node_id"
 ATTR_HEARTBEAT = "heartbeat"
+MYSENSORS_PLATFORM_DEVICES = "mysensors_devices_{}"
 
 
 def get_mysensors_devices(hass, domain):
     """Return MySensors devices for a platform."""
-    if f"mysensors_devices_{domain}" not in hass.data:
-        hass.data[f"mysensors_devices_{domain}"] = {}
-    return hass.data[f"mysensors_devices_{domain}"]
+    if MYSENSORS_PLATFORM_DEVICES.format(domain) not in hass.data:
+        hass.data[MYSENSORS_PLATFORM_DEVICES.format(domain)] = {}
+    return hass.data[MYSENSORS_PLATFORM_DEVICES.format(domain)]
 
 
 class MySensorsDevice:
@@ -137,12 +138,10 @@ class MySensorsEntity(MySensorsDevice, Entity):
         gateway_id = id(self.gateway)
         dev_id = gateway_id, self.node_id, self.child_id, self.value_type
         async_dispatcher_connect(
-            self.hass,
-            f"mysensors_child_callback_{dev_id[0]}_{dev_id[1]}_{dev_id[2]}_{dev_id[3]}",
-            self.async_update_callback,
+            self.hass, CHILD_CALLBACK.format(*dev_id), self.async_update_callback
         )
         async_dispatcher_connect(
             self.hass,
-            f"mysensors_node_callback_{gateway_id}_{self.node_id}",
+            NODE_CALLBACK.format(gateway_id, self.node_id),
             self.async_update_callback,
         )

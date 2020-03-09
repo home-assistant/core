@@ -27,6 +27,7 @@ from .const import (
     CONF_TOPIC_OUT_PREFIX,
     CONF_VERSION,
     DOMAIN,
+    MYSENSORS_GATEWAY_READY,
     MYSENSORS_GATEWAYS,
 )
 from .handler import HANDLERS
@@ -213,7 +214,7 @@ async def _gw_start(hass, gateway):
         # Gatways connected via mqtt doesn't send gateway ready message.
         return
     gateway_ready = asyncio.Future()
-    gateway_ready_key = f"mysensors_gateway_ready_{id(gateway)}"
+    gateway_ready_key = MYSENSORS_GATEWAY_READY.format(id(gateway))
     hass.data[gateway_ready_key] = gateway_ready
 
     try:

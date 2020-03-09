@@ -22,12 +22,12 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
         dev_id = (gateway_id, device.node_id, device.child_id, device.value_type)
         async_dispatcher_connect(
             hass,
-            f"mysensors_child_callback_{dev_id[0]}_{dev_id[1]}_{dev_id[2]}_{dev_id[3]}",
+            mysensors.const.CHILD_CALLBACK.format(*dev_id),
             device.async_update_callback,
         )
         async_dispatcher_connect(
             hass,
-            f"mysensors_node_callback_{gateway_id}_{device.node_id}",
+            mysensors.const.NODE_CALLBACK.format(gateway_id, device.node_id),
             device.async_update_callback,
         )
 

@@ -25,7 +25,7 @@ from . import (
     CONF_QOS,
     DOMAIN,
 )
-from .discovery import clear_discovery_hash
+from .discovery import MQTT_DISCOVERY_UPDATED, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -196,7 +196,7 @@ async def async_setup_trigger(hass, config, config_entry, discovery_data):
             await device_trigger.update_trigger(config, discovery_hash, remove_signal)
 
     remove_signal = async_dispatcher_connect(
-        hass, f"mqtt_discovery_updated_{discovery_hash}", discovery_update
+        hass, MQTT_DISCOVERY_UPDATED.format(discovery_hash), discovery_update
     )
 
     await _update_device(hass, config_entry, config)

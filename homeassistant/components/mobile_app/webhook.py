@@ -78,6 +78,7 @@ from .const import (
     ERR_ENCRYPTION_REQUIRED,
     ERR_SENSOR_DUPLICATE_UNIQUE_ID,
     ERR_SENSOR_NOT_REGISTERED,
+    SIGNAL_LOCATION_UPDATE,
     SIGNAL_SENSOR_UPDATE,
 )
 from .helpers import (
@@ -273,7 +274,7 @@ async def webhook_render_template(hass, config_entry, data):
 async def webhook_update_location(hass, config_entry, data):
     """Handle an update location webhook."""
     hass.helpers.dispatcher.async_dispatcher_send(
-        f"{DOMAIN}_location_update_{config_entry.entry_id}", data
+        SIGNAL_LOCATION_UPDATE.format(config_entry.entry_id), data
     )
     return empty_okay_response()
 
