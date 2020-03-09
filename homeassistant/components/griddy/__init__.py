@@ -70,7 +70,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not coordinator.last_update_success:
         raise PlatformNotReady
 
-    hass.data[DOMAIN].setdefault(entry.entry_id, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     for component in PLATFORMS:
