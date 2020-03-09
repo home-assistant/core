@@ -282,11 +282,19 @@ class HMHub(Entity):
         bidcos_interfaces = self._homematic.listBidcosInterfaces(self._name)
         if bidcos_interfaces is None:
             return
-        _LOGGER.info("bidcos_interfaces: %s", bidcos_interfaces)
+        _LOGGER.debug("bidcos_interfaces: %s", bidcos_interfaces)
         if len(bidcos_interfaces) == 0:
             return
-        duty_cycle = bidcos_interfaces[0]['DUTY_CYCLE']
+        if len(bidcos_interfaces) > 1:
+            _LOGGER.warn("Found more than one bidcos interface - cannot retrieve duty cycle.")
+            return
+        bidcos_interface = bidcos_interfaces[0]
+        if not 'DUTY_CYCLE' in bidcos_interface:
+            _LOGGER.warn("DUTY_CYCLE not found in %s.", bidcos_interface)
+            return
+        duty_cycle = bidcos_interface['DUTY_CYCLE']
         if self._duty_cycle != duty_cycle:
+            _LOGGER.info("Retrieved new duty_cycle: %d", duty_cycle)
             self._duty_cycle = duty_cycle
             self.schedule_update_ha_state()
 
