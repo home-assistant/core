@@ -298,7 +298,7 @@ class HMHub(Entity):
             return
         duty_cycle = bidcos_interface['DUTY_CYCLE']
         if self._duty_cycle != duty_cycle:
-            _LOGGER.info("Retrieved new duty_cycle: %d", duty_cycle)
+            _LOGGER.info("Retrieved new DutyCycle: %d", duty_cycle)
             self._duty_cycle = duty_cycle
             self.schedule_update_ha_state()
 
