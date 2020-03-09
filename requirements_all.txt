@@ -436,7 +436,7 @@ defusedxml==0.6.0
 deluge-client==1.7.1
 
 # homeassistant.components.denonavr
-denonavr==0.7.12
+denonavr==0.8.0
 
 # homeassistant.components.directv
 directpy==0.6
@@ -1309,7 +1309,7 @@ pyhomeworks==0.0.6
 pyialarm==0.3
 
 # homeassistant.components.icloud
-pyicloud==0.9.2
+pyicloud==0.9.3
 
 # homeassistant.components.intesishome
 pyintesishome==1.6
@@ -1699,7 +1699,7 @@ pytradfri[async]==6.4.0
 pytrafikverket==0.1.6.1
 
 # homeassistant.components.ubee
-pyubee==0.8
+pyubee==0.9
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==0.0.5
@@ -1771,7 +1771,7 @@ restrictedpython==5.0
 rfk101py==0.0.1
 
 # homeassistant.components.rflink
-rflink==0.0.51
+rflink==0.0.52
 
 # homeassistant.components.ring
 ring_doorbell==0.6.0
@@ -2140,7 +2140,7 @@ yeelight==0.5.0
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2020.03.06
+youtube_dl==2020.03.08
 
 # homeassistant.components.zengge
 zengge==0.2
