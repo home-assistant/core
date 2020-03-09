@@ -22,6 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL_HUB = timedelta(seconds=300)
 SCAN_INTERVAL_VARIABLES = timedelta(seconds=30)
+SCAN_INTERVAL_DUTY_CYCLE = timedelta(seconds=90)
 
 
 class HMDevice(Entity):
@@ -205,6 +206,7 @@ class HMHub(Entity):
         self._variables = {}
         self._name = name
         self._state = None
+        self._duty_cycle = None
 
         # Load data
         self.hass.helpers.event.track_time_interval(self._update_hub, SCAN_INTERVAL_HUB)
@@ -214,6 +216,11 @@ class HMHub(Entity):
             self._update_variables, SCAN_INTERVAL_VARIABLES
         )
         self.hass.add_job(self._update_variables, None)
+
+        self.hass.helpers.event.track_time_interval(
+            self._update_duty_cycle, SCAN_INTERVAL_DUTY_CYCLE
+        )
+        self.hass.add_job(self._update_duty_cycle, None)
 
     @property
     def name(self):
@@ -234,6 +241,8 @@ class HMHub(Entity):
     def state_attributes(self):
         """Return the state attributes."""
         attr = self._variables.copy()
+        if self._duty_cycle is not None:
+            attr['duty_cycle'] = self._duty_cycle
         return attr
 
     @property
@@ -266,6 +275,19 @@ class HMHub(Entity):
             self._variables.update({key: value})
 
         if state_change:
+            self.schedule_update_ha_state()
+
+    def _update_duty_cycle(self, now):
+        """Retrieve duty cycle."""
+        bidcos_interfaces = self._homematic.listBidcosInterfaces(self._name)
+        if bidcos_interfaces is None:
+            return
+        _LOGGER.info("bidcos_interfaces: %s", bidcos_interfaces)
+        if len(bidcos_interfaces) == 0:
+            return
+        duty_cycle = bidcos_interfaces[0]['DUTY_CYCLE']
+        if self._duty_cycle != duty_cycle:
+            self._duty_cycle = duty_cycle
             self.schedule_update_ha_state()
 
     def hm_set_variable(self, name, value):
