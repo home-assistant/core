@@ -8,12 +8,9 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Coroutine
-import collections
-import enum
 import logging
 
 from zigpy.exceptions import ZigbeeException
-import zigpy.types as t
 import zigpy.zcl.clusters.security as security
 
 from homeassistant.core import callback
@@ -45,72 +42,6 @@ IAS_ACE_GET_ZONE_STATUS = (
 _LOGGER = logging.getLogger(__name__)
 
 
-class IasAceArmMode(t.enum8, enum.Enum):
-    """IAS ACE arm mode enum."""
-
-    Disarm = 0x00
-    Arm_Day_Home_Only = 0x01
-    Arm_Night_Sleep_Only = 0x02
-    Arm_All_Zones = 0x03
-
-
-class IasAceArmNotification(t.enum8, enum.Enum):
-    """IAS ACE arm notification enum."""
-
-    All_Zones_Disarmed = 0x00
-    Only_Day_Home_Zones_Armed = 0x01
-    Only_Night_Sleep_Zones_Armed = 0x02
-    All_Zones_Armed = 0x03
-    Invalid_Arm_Disarm_Code = 0x04
-    Not_Ready_To_Arm = 0x05
-    Already_Disarmed = 0x06
-
-
-class IasAceAudibleNotification(t.enum8, enum.Enum):
-    """IAS ACE audible notification enum."""
-
-    Mute = 0x00
-    Default_Sound = 0x01
-
-    @classmethod
-    def deserialize(cls, data):
-        """Deserialize the audible notification enum."""
-        try:
-            return super().deserialize(data)
-        except ValueError:
-            fake = collections.namedtuple(cls.__name__, "name, value")
-            val, data = t.uint8_t.deserialize(data)
-            return fake("manufacturer_specific_0x{:02x}".format(val), val), data
-
-
-class IasAcePanelStatus(t.enum8, enum.Enum):
-    """IAS ACE panel status enum."""
-
-    Panel_Disarmed = 0x00
-    Armed_Stay = 0x01
-    Armed_Night = 0x02
-    Armed_Away = 0x03
-    Exit_Delay = 0x04
-    Entry_Delay = 0x05
-    Not_Ready_To_Arm = 0x06
-    In_Alarm = 0x07
-    Arming_Stay = 0x08
-    Arming_Night = 0x09
-    Arming_Away = 0x0A
-
-
-class IasAceAlarmStatus(t.enum8, enum.Enum):
-    """IAS ACE alarm status enum."""
-
-    No_Alarm = 0x00
-    Burglar = 0x01
-    Fire = 0x02
-    Emergency = 0x03
-    Police_Panic = 0x04
-    Fire_Panic = 0x05
-    Emergency_Panic = 0x06
-
-
 @registries.ALARM_CONTROL_PANEL_CLUSTERS.register(security.IasAce.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(security.IasAce.cluster_id)
 class IasAce(ZigbeeChannel):
@@ -134,7 +65,7 @@ class IasAce(ZigbeeChannel):
             IAS_ACE_GET_ZONE_STATUS: self.get_zone_status,
         }
         self.armed_state = (
-            IasAcePanelStatus.Panel_Disarmed
+            security.IasAce.PanelStatus.Panel_Disarmed
         )  # where do we store this to handle restarts
         self.panel_code = "1234"  # need to figure out how to handle this ( > 1 code, multi users etc.)
 
@@ -148,7 +79,7 @@ class IasAce(ZigbeeChannel):
 
     def arm(self, arm_mode, code, zone_id):
         """Handle the IAS ACE arm command."""
-        mode = IasAceArmMode(arm_mode)
+        mode = security.IasAce.ArmMode(arm_mode)
         self.zha_send_event(
             self._cluster.server_commands.get(IAS_ACE_ARM)[0],
             {
@@ -161,22 +92,28 @@ class IasAce(ZigbeeChannel):
 
         if code != self.panel_code:
             self.warning("Invalid code supplied to IAS ACE")
-            response = self.arm_response(IasAceArmNotification.Invalid_Arm_Disarm_Code)
+            response = self.arm_response(
+                security.IasAce.ArmNotification.Invalid_Arm_Disarm_Code
+            )
         else:
-            if mode == IasAceArmMode.Disarm:
-                if self.armed_state == IasAcePanelStatus.Panel_Disarmed:
+            if mode == security.IasAce.ArmMode.Disarm:
+                if self.armed_state == security.IasAce.PanelStatus.Panel_Disarmed:
                     self.warning("IAS ACE already disarmed")
-                    response = self.arm_response(IasAceArmNotification.Already_Disarmed)
+                    response = self.arm_response(
+                        security.IasAce.ArmNotification.Already_Disarmed
+                    )
                 else:
                     self.warning("Disarming all IAS ACE zones")
-                    self.armed_state = IasAcePanelStatus.Panel_Disarmed
+                    self.armed_state = security.IasAce.PanelStatus.Panel_Disarmed
                     response = self.arm_response(
-                        IasAceArmNotification.All_Zones_Disarmed
+                        security.IasAce.ArmNotification.All_Zones_Disarmed
                     )
-            elif mode == IasAceArmMode.Arm_All_Zones:
+            elif mode == security.IasAce.ArmMode.Arm_All_Zones:
                 self.warning("Arming all IAS ACE zones")
-                self.armed_state = IasAcePanelStatus.Armed_Away
-                response = self.arm_response(IasAceArmNotification.All_Zones_Armed)
+                self.armed_state = security.IasAce.PanelStatus.Armed_Away
+                response = self.arm_response(
+                    security.IasAce.ArmNotification.All_Zones_Armed
+                )
 
         asyncio.create_task(response)
         self.async_send_signal(
@@ -216,8 +153,8 @@ class IasAce(ZigbeeChannel):
         response = self.panel_status_response(
             self.armed_state,
             0x00,
-            IasAceAudibleNotification.Default_Sound,
-            IasAceAlarmStatus.No_Alarm,
+            security.IasAce.AudibleNotification.Default_Sound,
+            security.IasAce.AlarmStatus.No_Alarm,
         )
         asyncio.create_task(response)
 
