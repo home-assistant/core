@@ -15,13 +15,12 @@ from .router import FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
 
+FREEBOX_SCHEMA = vol.Schema(
+    {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_PORT): cv.port}
+)
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_PORT): cv.port}
-        )
-    },
+    {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [FREEBOX_SCHEMA]))},
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -48,11 +47,12 @@ async def async_setup(hass, config):
     if conf is None:
         return True
 
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf,
+    for freebox_conf in conf:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=freebox_conf,
+            )
         )
-    )
 
     return True
 
