@@ -34,7 +34,7 @@ async def test_setting_up_magichome(hass):
         {
             "magichome": {
                 "username": "test@user.com",
-                "password": "1234",
+                "password": "123456",
                 "company": "ZG001",
                 "platform": "ZG001",
             }
