@@ -36,6 +36,7 @@ class TestComponentHistory(unittest.TestCase):
 
     def wait_recording_done(self):
         """Block till recording is done."""
+        _trigger_db_commit(self.hass)
         self.hass.block_till_done()
         self.hass.data[recorder.DATA_INSTANCE].block_till_done()
 
@@ -180,7 +181,6 @@ class TestComponentHistory(unittest.TestCase):
         ):
             states.append(set_state("3"))
 
-        _trigger_db_commit(self.hass)
         hist = history.get_last_state_changes(self.hass, 2, entity_id)
 
         assert states == hist[entity_id]
@@ -617,6 +617,7 @@ class TestComponentHistory(unittest.TestCase):
             )
             # state will be skipped since entity is hidden
             set_state(therm, 22, attributes={"current_temperature": 21, "hidden": True})
+
         return zero, four, states
 
 

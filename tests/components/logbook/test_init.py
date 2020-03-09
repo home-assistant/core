@@ -1290,9 +1290,9 @@ async def test_logbook_view_period_entity(hass, hass_client):
     entity_id_second = "switch.second"
     hass.states.async_set(entity_id_second, STATE_OFF)
     hass.states.async_set(entity_id_second, STATE_ON)
+    await hass.async_add_job(partial(_trigger_db_commit, hass))
     await hass.async_block_till_done()
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
-    await hass.async_add_job(partial(_trigger_db_commit, hass))
 
     client = await hass_client()
 
