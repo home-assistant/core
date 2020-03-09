@@ -364,6 +364,8 @@ class AlexaPowerController(AlexaCapability):
 
         if self.entity.domain == climate.DOMAIN:
             is_on = self.entity.state != climate.HVAC_MODE_OFF
+        elif self.entity.domain == vacuum.DOMAIN:
+            is_on = self.entity.state == vacuum.STATE_CLEANING
 
         else:
             is_on = self.entity.state != STATE_OFF
