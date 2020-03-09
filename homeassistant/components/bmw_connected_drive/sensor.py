@@ -132,7 +132,6 @@ class BMWConnectedDriveSensor(Entity):
         vehicle_state = self._vehicle.state
         return {
             "car": self._vehicle.name,
-            "update_time": vehicle_state.timestamp,
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
