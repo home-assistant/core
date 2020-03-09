@@ -21,7 +21,7 @@ class AugustSubscriberMixin:
         """Add an callback subscriber."""
         if not self._subscriptions:
             self._unsub_interval = async_track_time_interval(
-                self._hass, self._refresh, self._update_interval
+                self._hass, self._async_refresh, self._update_interval
             )
         self._subscriptions.setdefault(device_id, []).append(update_callback)
 
@@ -43,11 +43,3 @@ class AugustSubscriberMixin:
 
         for update_callback in self._subscriptions[device_id]:
             update_callback()
-
-    def signal_device_id_update(self, device_id):
-        """Call the callbacks for a device_id."""
-        if not self._subscriptions.get(device_id):
-            return
-
-        for update_callback in self._subscriptions[device_id]:
-            self._hass.loop.call_soon_threadsafe(update_callback)
