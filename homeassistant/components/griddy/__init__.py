@@ -60,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        name="getnow",
+        name="Griddy getnow",
         update_method=async_update_data,
         update_interval=timedelta(seconds=UPDATE_INTERVAL),
     )
