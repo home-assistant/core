@@ -1,7 +1,6 @@
 """Support for August sensors."""
 import logging
 
-from homeassistant.components.sensor import DEVICE_CLASS_POWER
 from homeassistant.helpers.entity import Entity
 
 from .const import CONF_LOADZONE, DOMAIN
@@ -30,11 +29,6 @@ class GriddyPriceSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return "¢/kWh"
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_POWER
 
     @property
     def name(self):
