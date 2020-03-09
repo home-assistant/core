@@ -5,12 +5,8 @@ import logging
 from aiounifi.api import SOURCE_EVENT
 from aiounifi.events import (
     WIRED_CLIENT_BLOCKED,
-    WIRED_CLIENT_CONNECTED,
-    WIRED_CLIENT_DISCONNECTED,
     WIRED_CLIENT_UNBLOCKED,
     WIRELESS_CLIENT_BLOCKED,
-    WIRELESS_CLIENT_CONNECTED,
-    WIRELESS_CLIENT_DISCONNECTED,
     WIRELESS_CLIENT_UNBLOCKED,
 )
 
@@ -23,8 +19,6 @@ LOGGER = logging.getLogger(__name__)
 
 CLIENT_BLOCKED = (WIRED_CLIENT_BLOCKED, WIRELESS_CLIENT_BLOCKED)
 CLIENT_UNBLOCKED = (WIRED_CLIENT_UNBLOCKED, WIRELESS_CLIENT_UNBLOCKED)
-WIRED_CLIENT = (WIRED_CLIENT_CONNECTED, WIRED_CLIENT_DISCONNECTED)
-WIRELESS_CLIENT = (WIRELESS_CLIENT_CONNECTED, WIRELESS_CLIENT_DISCONNECTED)
 
 
 class UniFiClient(Entity):
@@ -38,9 +32,6 @@ class UniFiClient(Entity):
 
         self.is_wired = self.client.mac not in controller.wireless_clients
         self.is_blocked = self.client.blocked
-        self.connected = None
-        self.wired_connection = None
-        self.wireless_connection = None
 
     async def async_added_to_hass(self) -> None:
         """Client entity created."""
@@ -68,19 +59,6 @@ class UniFiClient(Entity):
 
             if self.client.event.event in CLIENT_BLOCKED + CLIENT_UNBLOCKED:
                 self.is_blocked = self.client.event.event in CLIENT_BLOCKED
-
-            elif self.client.event.event in WIRED_CLIENT:
-                self.wired_connection = (
-                    self.client.event.event == WIRED_CLIENT_CONNECTED
-                )
-
-            elif self.client.event.event in WIRELESS_CLIENT:
-                self.wireless_connection = (
-                    self.client.event.event == WIRELESS_CLIENT_CONNECTED
-                )
-
-            self.connected = self.wired_connection or self.wireless_connection
-            print(self.client.event.event, self.name, self.is_blocked, self.connected)
 
         LOGGER.debug("Updating client %s %s", self.entity_id, self.client.mac)
         self.async_schedule_update_ha_state()
