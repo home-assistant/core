@@ -107,6 +107,7 @@ async def test_devices(
                 0,
                 expect_reply=True,
                 manufacturer=None,
+                tsn=None,
             )
 
     event_channels = {
