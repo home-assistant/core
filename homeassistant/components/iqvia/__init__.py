@@ -17,7 +17,6 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util.decorator import Registry
 
 from .config_flow import configured_instances
 from .const import (
@@ -78,9 +77,7 @@ CONFIG_SCHEMA = vol.Schema(
 @callback
 def async_get_api_category(sensor_type):
     """Return the API category that a particular sensor type should use."""
-    if sensor_type in API_CATEGORY_MAPPING:
-        return API_CATEGORY_MAPPING[sensor_type]
-    return sensor_type
+    return API_CATEGORY_MAPPING.get(sensor_type, sensor_type)
 
 
 async def async_setup(hass, config):
@@ -110,8 +107,9 @@ async def async_setup_entry(hass, config_entry):
     """Set up IQVIA as config entry."""
     websession = aiohttp_client.async_get_clientsession(hass)
 
+    iqvia = IQVIAData(hass, Client(config_entry.data[CONF_ZIP_CODE], websession))
+
     try:
-        iqvia = IQVIAData(hass, Client(config_entry.data[CONF_ZIP_CODE], websession))
         await iqvia.async_update()
     except InvalidZipError:
         _LOGGER.error("Invalid ZIP code provided: %s", config_entry.data[CONF_ZIP_CODE])
@@ -149,15 +147,15 @@ class IQVIAData:
         self.data = {}
         self.zip_code = client.zip_code
 
-        # Define a registry to hold onto API coroutines:
-        self.api_coros = Registry()
-        self.api_coros.register(TYPE_ALLERGY_FORECAST)(client.allergens.extended)
-        self.api_coros.register(TYPE_ALLERGY_INDEX)(client.allergens.current)
-        self.api_coros.register(TYPE_ALLERGY_OUTLOOK)(client.allergens.outlook)
-        self.api_coros.register(TYPE_ASTHMA_FORECAST)(client.asthma.extended)
-        self.api_coros.register(TYPE_ASTHMA_INDEX)(client.asthma.current)
-        self.api_coros.register(TYPE_DISEASE_FORECAST)(client.disease.extended)
-        self.api_coros.register(TYPE_DISEASE_INDEX)(client.disease.current)
+        self.api_coros = {
+            TYPE_ALLERGY_FORECAST: client.allergens.extended,
+            TYPE_ALLERGY_INDEX: client.allergens.current,
+            TYPE_ALLERGY_OUTLOOK: client.allergens.outlook,
+            TYPE_ASTHMA_FORECAST: client.asthma.extended,
+            TYPE_ASTHMA_INDEX: client.asthma.current,
+            TYPE_DISEASE_FORECAST: client.disease.extended,
+            TYPE_DISEASE_INDEX: client.disease.current,
+        }
 
         self._api_category_count = {
             TYPE_ALLERGY_FORECAST: 0,
@@ -187,7 +185,7 @@ class IQVIAData:
             self.data[api_category] = await self.api_coros[api_category]()
         except IQVIAError as err:
             _LOGGER.error("Unable to get %s data: %s", api_category, err)
-            self.data[api_category] = {}
+            self.data[api_category] = None
 
     async def _async_update_listener_action(self, now):
         """Define an async_track_time_interval action to update data."""
@@ -312,8 +310,6 @@ class IQVIAEntity(Entity):
             # Entities that express interest in allergy forecast data should also
             # express interest in allergy outlook data:
             await self._iqvia.async_register_api_interest(TYPE_ALLERGY_OUTLOOK)
-
-        await self.async_update()
 
     async def async_update(self):
         """Update the entity's state."""
