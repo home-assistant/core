@@ -242,7 +242,7 @@ class HMHub(Entity):
         """Return the state attributes."""
         attr = self._variables.copy()
         if self._duty_cycle is not None:
-            attr['DutyCycle'] = self._duty_cycle
+            attr["DutyCycle"] = self._duty_cycle
         return attr
 
     @property
@@ -293,10 +293,10 @@ class HMHub(Entity):
             _LOGGER.warn("Found more than one bidcos interface - cannot retrieve duty cycle.")
             return
         bidcos_interface = bidcos_interfaces[0]
-        if not 'DUTY_CYCLE' in bidcos_interface:
+        if "DUTY_CYCLE" not in bidcos_interface:
             _LOGGER.warn("DUTY_CYCLE not found in %s.", bidcos_interface)
             return
-        duty_cycle = bidcos_interface['DUTY_CYCLE']
+        duty_cycle = bidcos_interface["DUTY_CYCLE"]
         if self._duty_cycle != duty_cycle:
             _LOGGER.info("Retrieved new DutyCycle: %d", duty_cycle)
             self._duty_cycle = duty_cycle
