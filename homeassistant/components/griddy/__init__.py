@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -68,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await coordinator.async_refresh()
 
     if not coordinator.last_update_success:
-        raise PlatformNotReady
+        raise ConfigEntryNotReady
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
