@@ -162,7 +162,7 @@ datadog==0.15.0
 defusedxml==0.6.0
 
 # homeassistant.components.denonavr
-denonavr==0.7.12
+denonavr==0.8.0
 
 # homeassistant.components.directv
 directpy==0.6
@@ -483,7 +483,7 @@ pyheos==0.6.0
 pyhomematic==0.1.65
 
 # homeassistant.components.icloud
-pyicloud==0.9.2
+pyicloud==0.9.3
 
 # homeassistant.components.ipma
 pyipma==2.0.5
@@ -617,7 +617,7 @@ regenmaschine==1.5.1
 restrictedpython==5.0
 
 # homeassistant.components.rflink
-rflink==0.0.51
+rflink==0.0.52
 
 # homeassistant.components.ring
 ring_doorbell==0.6.0
