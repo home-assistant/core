@@ -14,6 +14,7 @@ from tests.common import (
     init_recorder_component,
     mock_state_change_event,
 )
+from tests.components.recorder.test_init import _trigger_db_commit
 
 
 class TestComponentHistory(unittest.TestCase):
@@ -179,6 +180,7 @@ class TestComponentHistory(unittest.TestCase):
         ):
             states.append(set_state("3"))
 
+        _trigger_db_commit(self.hass)
         hist = history.get_last_state_changes(self.hass, 2, entity_id)
 
         assert states == hist[entity_id]

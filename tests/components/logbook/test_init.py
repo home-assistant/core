@@ -1,6 +1,7 @@
 """The tests for the logbook component."""
 # pylint: disable=protected-access,invalid-name
 from datetime import datetime, timedelta
+from functools import partial
 import logging
 import unittest
 
@@ -35,6 +36,7 @@ from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import get_test_home_assistant, init_recorder_component
+from tests.components.recorder.test_init import _trigger_db_commit
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -1290,6 +1292,7 @@ async def test_logbook_view_period_entity(hass, hass_client):
     hass.states.async_set(entity_id_second, STATE_ON)
     await hass.async_block_till_done()
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    await hass.async_add_job(partial(_trigger_db_commit, hass))
 
     client = await hass_client()
 

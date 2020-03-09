@@ -22,7 +22,7 @@ from tests.common import (
 
 
 def _trigger_db_commit(hass):
-    for _ in range(50):
+    for _ in range(1):
         # We only commit on time change
         fire_time_changed(hass, dt_util.utcnow())
 
@@ -218,6 +218,7 @@ def test_recorder_setup_failure():
             hass,
             keep_days=7,
             purge_interval=2,
+            commit_interval=1,
             uri="sqlite://",
             db_max_retries=10,
             db_retry_wait=3,
