@@ -19,10 +19,10 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 from tests.components.directv import (
     HOST,
-    MOCK_GET_VERSION,
     RECEIVER_ID,
     SSDP_LOCATION,
     UPNP_SERIAL,
+    MockDirecTVClass,
 )
 
 
@@ -33,8 +33,8 @@ async def async_configure_flow(
     with patch(
         "homeassistant.components.directv.config_flow.get_ip", return_value=HOST
     ), patch(
-        "homeassistant.components.directv.config_flow.get_dtv_version",
-        return_value=MOCK_GET_VERSION,
+        "homeassistant.components.directv.config_flow.DIRECTV",
+        new=MockDirecTVClass,
     ):
         return await hass.config_entries.flow.async_configure(
             flow_id=flow_id, user_input=user_input
@@ -51,8 +51,8 @@ async def async_init_flow(
     with patch(
         "homeassistant.components.directv.config_flow.get_ip", return_value=HOST
     ), patch(
-        "homeassistant.components.directv.config_flow.get_dtv_version",
-        return_value=MOCK_GET_VERSION,
+        "homeassistant.components.directv.config_flow.DIRECTV",
+        new=MockDirecTVClass,
     ):
         return await hass.config_entries.flow.async_init(
             handler=handler, context=context, data=data
