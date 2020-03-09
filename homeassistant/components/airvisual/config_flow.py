@@ -37,6 +37,16 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
+    async def _async_test_client_api_key(self, api_key):
+        """Test that a client API key works."""
+        websession = aiohttp_client.async_get_clientsession(self.hass)
+        client = Client(websession, api_key=api_key)
+
+        try:
+            await client.api.nearest_city()
+        except InvalidKeyError:
+            return await self._show_form(errors={CONF_API_KEY: "invalid_api_key"})
+
     @callback
     async def _show_form(self, errors=None):
         """Show the form to the user."""
@@ -47,6 +57,8 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
         await self._async_set_unique_id(import_config[CONF_API_KEY])
+
+        await self._async_test_client_api_key(import_config[CONF_API_KEY])
 
         data = {**import_config}
         if not data.get(CONF_GEOGRAPHIES):
@@ -69,14 +81,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         await self._async_set_unique_id(user_input[CONF_API_KEY])
 
-        websession = aiohttp_client.async_get_clientsession(self.hass)
-
-        client = Client(websession, api_key=user_input[CONF_API_KEY])
-
-        try:
-            await client.api.nearest_city()
-        except InvalidKeyError:
-            return await self._show_form(errors={CONF_API_KEY: "invalid_api_key"})
+        await self._async_test_client_api_key(user_input[CONF_API_KEY])
 
         return self.async_create_entry(
             title=f"Cloud API (API key: {user_input[CONF_API_KEY][:4]}...)",
