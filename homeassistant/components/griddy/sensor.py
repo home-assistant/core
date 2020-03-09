@@ -66,6 +66,13 @@ class GriddyPriceSensor(Entity):
         """Return False, updates are controlled via coordinator."""
         return False
 
+    async def async_update(self):
+        """Update the entity.
+
+        Only used by the generic entity update service.
+        """
+        await self._coordinator.async_request_refresh()
+
     async def async_added_to_hass(self):
         """Subscribe to updates."""
         self._coordinator.async_add_listener(self.async_write_ha_state)
