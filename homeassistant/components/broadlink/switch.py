@@ -47,6 +47,7 @@ RM_TYPES = [
     "rm2_pro_plus_bl",
     "rm_mini_shate",
     "rm_mini3_5f36",
+    "rm4",
 ]
 SP1_TYPES = ["sp1"]
 SP2_TYPES = ["sp2", "honeywell_sp2", "sp3", "spmini2", "spminiplus"]
@@ -97,7 +98,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     mac_addr = binascii.unhexlify(config.get(CONF_MAC).encode().replace(b":", b""))
     switch_type = config.get(CONF_TYPE)
     retry_times = config.get(CONF_RETRY)
-    devtype = 0x5F36 if switch_type == "rm_mini3_5f36" else 0x272A
+    devtype = 0x5F36 if switch_type in ["rm_mini3_5f36", "rm4"] else 0x272A
 
     def _get_mp1_slot_name(switch_friendly_name, slot):
         """Get slot name."""
