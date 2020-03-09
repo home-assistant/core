@@ -341,6 +341,7 @@ class PollControl(ZigbeeChannel):
     """Poll Control channel."""
 
     CHECKIN_INTERVAL = 55 * 60 * 4  # 55min
+    CHECKIN_FAST_POLL_TIMEOUT = 2 * 4  # 2s
     LONG_POLL = 6 * 4  # 6s
 
     async def async_configure(self) -> None:
@@ -367,7 +368,7 @@ class PollControl(ZigbeeChannel):
 
     async def check_in_response(self, tsn: int) -> None:
         """Respond to checkin command."""
-        await self.checkin_response(True, 8, tsn=tsn)
+        await self.checkin_response(True, self.CHECKIN_FAST_POLL_TIMEOUT, tsn=tsn)
         await self.set_long_poll_interval(self.LONG_POLL)
 
 
