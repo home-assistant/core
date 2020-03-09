@@ -1,6 +1,5 @@
 """Define tests for the AirVisual config flow."""
-from unittest.mock import patch
-
+from asynctest import patch
 from pyairvisual.errors import InvalidKeyError
 
 from homeassistant import data_entry_flow
@@ -8,7 +7,7 @@ from homeassistant.components.airvisual import CONF_GEOGRAPHIES, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 
 
 async def test_duplicate_error(hass):
@@ -30,8 +29,7 @@ async def test_invalid_api_key(hass):
     conf = {CONF_API_KEY: "abcde12345"}
 
     with patch(
-        "pyairvisual.api.API.nearest_city",
-        return_value=mock_coro(exception=InvalidKeyError),
+        "pyairvisual.api.API.nearest_city", side_effect=InvalidKeyError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=conf
@@ -53,16 +51,17 @@ async def test_step_import(hass):
     """Test that the import step works."""
     conf = {CONF_API_KEY: "abcde12345"}
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-    )
+    with patch("homeassistant.components.wwlln.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+        )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "Cloud API (API key: abcd...)"
-    assert result["data"] == {
-        CONF_API_KEY: "abcde12345",
-        CONF_GEOGRAPHIES: [{CONF_LATITUDE: 32.87336, CONF_LONGITUDE: -117.22743}],
-    }
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == "Cloud API (API key: abcd...)"
+        assert result["data"] == {
+            CONF_API_KEY: "abcde12345",
+            CONF_GEOGRAPHIES: [{CONF_LATITUDE: 32.87336, CONF_LONGITUDE: -117.22743}],
+        }
 
 
 async def test_step_user(hass):
@@ -74,8 +73,8 @@ async def test_step_user(hass):
     }
 
     with patch(
-        "pyairvisual.api.API.nearest_city", return_value=mock_coro(),
-    ):
+        "homeassistant.components.wwlln.async_setup_entry", return_value=True
+    ), patch("pyairvisual.api.API.nearest_city"):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=conf
         )
