@@ -2,8 +2,7 @@
    "config" : {
       "error" : {
          "cannot_connect" : "Failed to connect, please try again",
-         "unknown" : "Unexpected error",
-         "invalid_auth" : "Invalid authentication"
+         "unknown" : "Unexpected error"
       },
       "title" : "Griddy",
       "step" : {

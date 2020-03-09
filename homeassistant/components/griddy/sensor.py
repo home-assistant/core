@@ -43,7 +43,7 @@ class GriddyPriceSensor(Entity):
     @property
     def unique_id(self):
         """Device Uniqueid."""
-        return f"{self._settlement_point} price now"
+        return f"{self._settlement_point}_price_now"
 
     @property
     def available(self):
