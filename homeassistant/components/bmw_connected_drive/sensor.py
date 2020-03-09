@@ -129,7 +129,6 @@ class BMWConnectedDriveSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        vehicle_state = self._vehicle.state
         return {
             "car": self._vehicle.name,
             ATTR_ATTRIBUTION: ATTRIBUTION,
