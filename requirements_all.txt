@@ -1085,7 +1085,7 @@ pushover_complete==1.1.1
 pwmled==1.5.0
 
 # homeassistant.components.august
-py-august==0.22.0
+py-august==0.24.0
 
 # homeassistant.components.canary
 py-canary==0.5.0
