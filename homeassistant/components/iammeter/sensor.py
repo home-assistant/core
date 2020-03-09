@@ -44,11 +44,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     except asyncio.TimeoutError:
         _LOGGER.error("Device is not ready")
         raise PlatformNotReady
+    except:
+        raise IamMeterError("Device error")
 
     async def async_update_data():
         try:
-            return await api.get_data()
-        except IamMeterError:
+            with async_timeout.timeout(PLATFORM_TIMEOUT):
+                return await api.get_data()
+        except (IamMeterError, asyncio.TimeoutError):
             raise UpdateFailed
 
     coordinator = DataUpdateCoordinator(
@@ -64,9 +67,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     await coordinator.async_refresh()
     entities = []
     for sensor_name, (row, idx, unit) in api.iammeter.sensor_map().items():
-        mac = api.iammeter.mac
         serial_number = api.iammeter.serial_number
-        uid = f"{mac}-{serial_number}-{row}-{idx}"
+        uid = f"{serial_number}-{row}-{idx}"
         entities.append(IamMeter(coordinator, uid, sensor_name, unit, config_name))
     async_add_entities(entities)
 
