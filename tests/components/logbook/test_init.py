@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import logging
 import unittest
 
+from asynctest import patch
 import pytest
 import voluptuous as vol
 
@@ -169,7 +170,7 @@ class TestComponentLogbook(unittest.TestCase):
         events = [
             e
             for e in (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB)
-            if logbook._keep_event(e, entities_filter)
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events))
 
@@ -196,7 +197,7 @@ class TestComponentLogbook(unittest.TestCase):
         events = [
             e
             for e in (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB)
-            if logbook._keep_event(e, entities_filter)
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events))
 
@@ -224,7 +225,7 @@ class TestComponentLogbook(unittest.TestCase):
         events = [
             e
             for e in (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB)
-            if logbook._keep_event(e, entities_filter)
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events))
 
@@ -258,7 +259,7 @@ class TestComponentLogbook(unittest.TestCase):
         events = [
             e
             for e in (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB)
-            if logbook._keep_event(e, entities_filter)
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events))
 
@@ -300,7 +301,7 @@ class TestComponentLogbook(unittest.TestCase):
                 eventA,
                 eventB,
             )
-            if logbook._keep_event(e, entities_filter)
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events))
 
@@ -341,7 +342,7 @@ class TestComponentLogbook(unittest.TestCase):
         events = [
             e
             for e in (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB)
-            if logbook._keep_event(e, entities_filter)
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events))
 
@@ -380,7 +381,7 @@ class TestComponentLogbook(unittest.TestCase):
         events = [
             e
             for e in (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB)
-            if logbook._keep_event(e, entities_filter)
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events))
 
@@ -412,7 +413,7 @@ class TestComponentLogbook(unittest.TestCase):
         events = [
             e
             for e in (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB)
-            if logbook._keep_event(e, entities_filter)
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events))
 
@@ -426,6 +427,7 @@ class TestComponentLogbook(unittest.TestCase):
 
     def test_include_events_domain(self):
         """Test if events are filtered if domain is included in config."""
+        assert setup_component(self.hass, "alexa", {})
         entity_id = "switch.bla"
         entity_id2 = "sensor.blu"
         pointA = dt_util.utcnow()
@@ -467,7 +469,7 @@ class TestComponentLogbook(unittest.TestCase):
                 eventA,
                 eventB,
             )
-            if logbook._keep_event(e, entities_filter)
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events))
 
@@ -521,7 +523,7 @@ class TestComponentLogbook(unittest.TestCase):
                 eventB1,
                 eventB2,
             )
-            if logbook._keep_event(e, entities_filter)
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events))
 
@@ -553,7 +555,9 @@ class TestComponentLogbook(unittest.TestCase):
 
         entities_filter = logbook._generate_filter_from_config({})
         events = [
-            e for e in (eventA, eventB) if logbook._keep_event(e, entities_filter)
+            e
+            for e in (eventA, eventB)
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events))
 
@@ -564,25 +568,48 @@ class TestComponentLogbook(unittest.TestCase):
 
     def test_exclude_attribute_changes(self):
         """Test if events of attribute changes are filtered."""
-        entity_id = "switch.bla"
-        entity_id2 = "switch.blu"
         pointA = dt_util.utcnow()
         pointB = pointA + timedelta(minutes=1)
+        pointC = pointB + timedelta(minutes=1)
 
-        eventA = self.create_state_changed_event(pointA, entity_id, 10)
-        eventB = self.create_state_changed_event(
-            pointA, entity_id2, 20, last_changed=pointA, last_updated=pointB
+        state_off = ha.State("light.kitchen", "off", {}, pointA, pointA).as_dict()
+        state_100 = ha.State(
+            "light.kitchen", "on", {"brightness": 100}, pointB, pointB
+        ).as_dict()
+        state_200 = ha.State(
+            "light.kitchen", "on", {"brightness": 200}, pointB, pointC
+        ).as_dict()
+
+        eventA = ha.Event(
+            EVENT_STATE_CHANGED,
+            {
+                "entity_id": "light.kitchen",
+                "old_state": state_off,
+                "new_state": state_100,
+            },
+            time_fired=pointB,
+        )
+        eventB = ha.Event(
+            EVENT_STATE_CHANGED,
+            {
+                "entity_id": "light.kitchen",
+                "old_state": state_100,
+                "new_state": state_200,
+            },
+            time_fired=pointC,
         )
 
         entities_filter = logbook._generate_filter_from_config({})
         events = [
-            e for e in (eventA, eventB) if logbook._keep_event(e, entities_filter)
+            e
+            for e in (eventA, eventB)
+            if logbook._keep_event(self.hass, e, entities_filter)
         ]
         entries = list(logbook.humanify(self.hass, events))
 
         assert 1 == len(entries)
         self.assert_entry(
-            entries[0], pointA, "bla", domain="switch", entity_id=entity_id
+            entries[0], pointB, "kitchen", domain="light", entity_id="light.kitchen"
         )
 
     def test_home_assistant_start_stop_grouped(self):
@@ -1225,15 +1252,16 @@ class TestComponentLogbook(unittest.TestCase):
         last_updated=None,
     ):
         """Create state changed event."""
-        # Logbook only cares about state change events that
-        # contain an old state but will not actually act on it.
-        state = ha.State(
+        old_state = ha.State(
+            entity_id, "old", attributes, last_changed, last_updated
+        ).as_dict()
+        new_state = ha.State(
             entity_id, state, attributes, last_changed, last_updated
         ).as_dict()
 
         return ha.Event(
             EVENT_STATE_CHANGED,
-            {"entity_id": entity_id, "old_state": state, "new_state": state},
+            {"entity_id": entity_id, "old_state": old_state, "new_state": new_state},
             time_fired=event_time_fired,
         )
 
@@ -1333,63 +1361,6 @@ async def test_logbook_view_period_entity(hass, hass_client):
     assert json[0]["entity_id"] == entity_id_test
 
 
-async def test_humanify_alexa_event(hass):
-    """Test humanifying Alexa event."""
-    hass.states.async_set("light.kitchen", "on", {"friendly_name": "Kitchen Light"})
-
-    results = list(
-        logbook.humanify(
-            hass,
-            [
-                ha.Event(
-                    EVENT_ALEXA_SMART_HOME,
-                    {"request": {"namespace": "Alexa.Discovery", "name": "Discover"}},
-                ),
-                ha.Event(
-                    EVENT_ALEXA_SMART_HOME,
-                    {
-                        "request": {
-                            "namespace": "Alexa.PowerController",
-                            "name": "TurnOn",
-                            "entity_id": "light.kitchen",
-                        }
-                    },
-                ),
-                ha.Event(
-                    EVENT_ALEXA_SMART_HOME,
-                    {
-                        "request": {
-                            "namespace": "Alexa.PowerController",
-                            "name": "TurnOn",
-                            "entity_id": "light.non_existing",
-                        }
-                    },
-                ),
-            ],
-        )
-    )
-
-    event1, event2, event3 = results
-
-    assert event1["name"] == "Amazon Alexa"
-    assert event1["message"] == "send command Alexa.Discovery/Discover"
-    assert event1["entity_id"] is None
-
-    assert event2["name"] == "Amazon Alexa"
-    assert (
-        event2["message"]
-        == "send command Alexa.PowerController/TurnOn for Kitchen Light"
-    )
-    assert event2["entity_id"] == "light.kitchen"
-
-    assert event3["name"] == "Amazon Alexa"
-    assert (
-        event3["message"]
-        == "send command Alexa.PowerController/TurnOn for light.non_existing"
-    )
-    assert event3["entity_id"] == "light.non_existing"
-
-
 async def test_humanify_homekit_changed_event(hass):
     """Test humanifying HomeKit changed event."""
     event1, event2 = list(
@@ -1484,3 +1455,33 @@ async def test_humanify_script_started_event(hass):
     assert event2["domain"] == "script"
     assert event2["message"] == "started"
     assert event2["entity_id"] == "script.bye"
+
+
+async def test_logbook_describe_event(hass, hass_client):
+    """Test teaching logbook about a new event."""
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    assert await async_setup_component(hass, "logbook", {})
+    with patch(
+        "homeassistant.util.dt.utcnow",
+        return_value=dt_util.utcnow() - timedelta(seconds=5),
+    ):
+        hass.bus.async_fire("some_event")
+        await hass.async_block_till_done()
+        await hass.async_add_executor_job(
+            hass.data[recorder.DATA_INSTANCE].block_till_done
+        )
+
+    def _describe(event):
+        """Describe an event."""
+        return {"name": "Test Name", "message": "tested a message"}
+
+    hass.components.logbook.async_describe_event("test_domain", "some_event", _describe)
+
+    client = await hass_client()
+    response = await client.get("/api/logbook")
+    results = await response.json()
+    assert len(results) == 1
+    event = results[0]
+    assert event["name"] == "Test Name"
+    assert event["message"] == "tested a message"
+    assert event["domain"] == "test_domain"

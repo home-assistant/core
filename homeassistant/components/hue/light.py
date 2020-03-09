@@ -1,5 +1,4 @@
 """Support for the Philips Hue lights."""
-import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
@@ -171,9 +170,9 @@ async def async_safe_fetch(bridge, fetch_method):
             return await bridge.async_request_call(fetch_method)
     except aiohue.Unauthorized:
         await bridge.handle_unauthorized_error()
-        raise UpdateFailed
-    except (asyncio.TimeoutError, aiohue.AiohueException):
-        raise UpdateFailed
+        raise UpdateFailed("Unauthorized")
+    except (aiohue.AiohueException,) as err:
+        raise UpdateFailed(f"Hue error: {err}")
 
 
 @callback

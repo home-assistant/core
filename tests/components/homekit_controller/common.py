@@ -67,7 +67,7 @@ async def setup_accessories_from_file(hass, path):
         load_fixture, os.path.join("homekit_controller", path)
     )
     accessories_json = json.loads(accessories_fixture)
-    accessories = Accessory.setup_accessories_from_list(accessories_json)
+    accessories = Accessories.from_list(accessories_json)
     return accessories
 
 
@@ -153,7 +153,9 @@ async def setup_test_component(hass, setup_accessory, capitalize=False, suffix=N
 
     If suffix is set, entityId will include the suffix
     """
-    accessory = Accessory("TestDevice", "example.com", "Test", "0001", "0.1")
+    accessory = Accessory.create_with_info(
+        "TestDevice", "example.com", "Test", "0001", "0.1"
+    )
     setup_accessory(accessory)
 
     domain = None
@@ -166,5 +168,5 @@ async def setup_test_component(hass, setup_accessory, capitalize=False, suffix=N
     assert domain, "Cannot map test homekit services to Home Assistant domain"
 
     config_entry, pairing = await setup_test_accessories(hass, [accessory])
-    entity = "testdevice" if suffix is None else "testdevice_{}".format(suffix)
+    entity = "testdevice" if suffix is None else f"testdevice_{suffix}"
     return Helper(hass, ".".join((domain, entity)), pairing, accessory, config_entry)

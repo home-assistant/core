@@ -2,7 +2,12 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT, VOLUME_CUBIC_METERS
+from homeassistant.const import (
+    ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
+    UNIT_PERCENTAGE,
+    VOLUME_CUBIC_METERS,
+)
 from homeassistant.helpers.entity import Entity
 
 from . import DATA_SMAPPEE
@@ -21,7 +26,13 @@ SENSOR_TYPES = {
     ],
     "current": ["Current", "mdi:gauge", "local", "A", "current"],
     "voltage": ["Voltage", "mdi:gauge", "local", "V", "voltage"],
-    "active_cosfi": ["Power Factor", "mdi:gauge", "local", "%", "active_cosfi"],
+    "active_cosfi": [
+        "Power Factor",
+        "mdi:gauge",
+        "local",
+        UNIT_PERCENTAGE,
+        "active_cosfi",
+    ],
     "alwayson_today": [
         "Always On Today",
         "mdi:gauge",
@@ -68,14 +79,14 @@ SENSOR_TYPES = {
         "Water Sensor Humidity",
         "mdi:water-percent",
         "water",
-        "%",
+        UNIT_PERCENTAGE,
         "humidity",
     ],
     "water_sensor_battery": [
         "Water Sensor Battery",
         "mdi:battery",
         "water",
-        "%",
+        UNIT_PERCENTAGE,
         "battery",
     ],
 }

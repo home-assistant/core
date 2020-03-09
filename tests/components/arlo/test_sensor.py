@@ -9,6 +9,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    UNIT_PERCENTAGE,
 )
 
 
@@ -168,7 +169,7 @@ def test_sensor_icon(temperature_sensor):
 def test_unit_of_measure(default_sensor, battery_sensor):
     """Test the unit_of_measurement property."""
     assert default_sensor.unit_of_measurement is None
-    assert battery_sensor.unit_of_measurement == "%"
+    assert battery_sensor.unit_of_measurement == UNIT_PERCENTAGE
 
 
 def test_device_class(default_sensor, temperature_sensor, humidity_sensor):

@@ -83,8 +83,10 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
         return SOURCE_TYPE_ROUTER
 
     @callback
-    def async_battery_percentage_remaining_updated(self, value):
+    def async_battery_percentage_remaining_updated(self, attr_id, attr_name, value):
         """Handle tracking."""
+        if not attr_name == "battery_percentage_remaining":
+            return
         self.debug("battery_percentage_remaining updated: %s", value)
         self._connected = True
         self._battery_level = Battery.formatter(value)

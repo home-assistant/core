@@ -166,7 +166,7 @@ async def test_controller_setup(hass):
         controller.option_allow_bandwidth_sensors
         == unifi.const.DEFAULT_ALLOW_BANDWIDTH_SENSORS
     )
-    assert controller.option_block_clients == unifi.const.DEFAULT_BLOCK_CLIENTS
+    assert isinstance(controller.option_block_clients, list)
     assert controller.option_track_clients == unifi.const.DEFAULT_TRACK_CLIENTS
     assert controller.option_track_devices == unifi.const.DEFAULT_TRACK_DEVICES
     assert (
@@ -175,7 +175,7 @@ async def test_controller_setup(hass):
     assert controller.option_detection_time == timedelta(
         seconds=unifi.const.DEFAULT_DETECTION_TIME
     )
-    assert controller.option_ssid_filter == unifi.const.DEFAULT_SSID_FILTER
+    assert isinstance(controller.option_ssid_filter, list)
 
     assert controller.mac is None
 
@@ -235,7 +235,7 @@ async def test_reset_after_successful_setup(hass):
     """Calling reset when the entry has been setup."""
     controller = await setup_unifi_integration(hass)
 
-    assert len(controller.listeners) == 5
+    assert len(controller.listeners) == 6
 
     result = await controller.async_reset()
     await hass.async_block_till_done()

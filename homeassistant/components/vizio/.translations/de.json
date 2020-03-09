@@ -15,6 +15,18 @@
             "tv_needs_token": "Wenn der Ger\u00e4tetyp \"TV\" ist, wird ein g\u00fcltiger Zugriffstoken ben\u00f6tigt."
         },
         "step": {
+            "pair_tv": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "title": "Schlie\u00dfen Sie den Pairing-Prozess ab"
+            },
+            "pairing_complete": {
+                "title": "Kopplung abgeschlossen"
+            },
+            "pairing_complete_import": {
+                "title": "Kopplung abgeschlossen"
+            },
             "user": {
                 "data": {
                     "access_token": "Zugangstoken",

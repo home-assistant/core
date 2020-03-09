@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     TIME_DAYS,
     TIME_MINUTES,
+    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
@@ -58,7 +59,7 @@ ICON_MAP = {
 
 UNIT_OF_MEASUREMENT_MAP = {
     "auto_watering": "",
-    "battery": "%",
+    "battery": UNIT_PERCENTAGE,
     "is_watering": "",
     "manual_watering": "",
     "next_cycle": "",

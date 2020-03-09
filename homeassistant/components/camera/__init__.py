@@ -136,7 +136,13 @@ async def async_request_stream(hass, entity_id, fmt):
             f"{camera.entity_id} does not support play stream service"
         )
 
-    return request_stream(hass, source, fmt=fmt, keepalive=camera_prefs.preload_stream)
+    return request_stream(
+        hass,
+        source,
+        fmt=fmt,
+        keepalive=camera_prefs.preload_stream,
+        options=camera.options,
+    )
 
 
 @bind_hass
@@ -256,7 +262,7 @@ async def async_setup(hass, config):
             if not source:
                 continue
 
-            request_stream(hass, source, keepalive=True)
+            request_stream(hass, source, keepalive=True, options=camera.stream_options)
 
     async_when_setup(hass, DOMAIN_STREAM, preload_stream)
 
@@ -312,6 +318,7 @@ class Camera(Entity):
     def __init__(self):
         """Initialize a camera."""
         self.is_streaming = False
+        self.stream_options = {}
         self.content_type = DEFAULT_CONTENT_TYPE
         self.access_tokens: collections.deque = collections.deque([], 2)
         self.async_update_token()
@@ -535,6 +542,7 @@ async def websocket_camera_thumbnail(hass, connection, msg):
 
     Async friendly.
     """
+    _LOGGER.warning("The websocket command 'camera_thumbnail' has been deprecated.")
     try:
         image = await async_get_image(hass, msg["entity_id"])
         await connection.send_big_result(
@@ -580,7 +588,11 @@ async def ws_camera_stream(hass, connection, msg):
 
         fmt = msg["format"]
         url = request_stream(
-            hass, source, fmt=fmt, keepalive=camera_prefs.preload_stream
+            hass,
+            source,
+            fmt=fmt,
+            keepalive=camera_prefs.preload_stream,
+            options=camera.stream_options,
         )
         connection.send_result(msg["id"], {"url": url})
     except HomeAssistantError as ex:
@@ -665,7 +677,13 @@ async def async_handle_play_stream_service(camera, service_call):
     fmt = service_call.data[ATTR_FORMAT]
     entity_ids = service_call.data[ATTR_MEDIA_PLAYER]
 
-    url = request_stream(hass, source, fmt=fmt, keepalive=camera_prefs.preload_stream)
+    url = request_stream(
+        hass,
+        source,
+        fmt=fmt,
+        keepalive=camera_prefs.preload_stream,
+        options=camera.stream_options,
+    )
     data = {
         ATTR_ENTITY_ID: entity_ids,
         ATTR_MEDIA_CONTENT_ID: f"{hass.config.api.base_url}{url}",

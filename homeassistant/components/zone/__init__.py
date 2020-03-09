@@ -189,9 +189,7 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
-    async def _collection_changed(
-        change_type: str, item_id: str, config: Optional[Dict]
-    ) -> None:
+    async def _collection_changed(change_type: str, item_id: str, config: Dict) -> None:
         """Handle a collection change: clean up entity registry on removals."""
         if change_type != collection.CHANGE_REMOVED:
             return

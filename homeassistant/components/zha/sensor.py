@@ -17,6 +17,7 @@ from homeassistant.const import (
     POWER_WATT,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -123,11 +124,11 @@ class Sensor(ZhaEntity):
         return self._state
 
     @callback
-    def async_set_state(self, state):
+    def async_set_state(self, attr_id, attr_name, value):
         """Handle state update from channel."""
-        if state is not None:
-            state = self.formatter(state)
-        self._state = state
+        if value is not None:
+            value = self.formatter(value)
+        self._state = value
         self.async_schedule_update_ha_state()
 
     @callback
@@ -161,7 +162,7 @@ class Battery(Sensor):
     """Battery sensor of power configuration cluster."""
 
     _device_class = DEVICE_CLASS_BATTERY
-    _unit = "%"
+    _unit = UNIT_PERCENTAGE
 
     @staticmethod
     def formatter(value):
@@ -175,10 +176,12 @@ class Battery(Sensor):
     async def async_state_attr_provider(self):
         """Return device state attrs for battery sensors."""
         state_attrs = {}
-        battery_size = await self._channel.get_attribute_value("battery_size")
+        attributes = ["battery_size", "battery_quantity"]
+        results = await self._channel.get_attributes(attributes)
+        battery_size = results.get("battery_size", None)
         if battery_size is not None:
             state_attrs["battery_size"] = BATTERY_SIZES.get(battery_size, "Unknown")
-        battery_quantity = await self._channel.get_attribute_value("battery_quantity")
+        battery_quantity = results.get("battery_quantity", None)
         if battery_quantity is not None:
             state_attrs["battery_quantity"] = battery_quantity
         return state_attrs
@@ -231,7 +234,7 @@ class Humidity(Sensor):
 
     _device_class = DEVICE_CLASS_HUMIDITY
     _divisor = 100
-    _unit = "%"
+    _unit = UNIT_PERCENTAGE
 
 
 @STRICT_MATCH(channel_names=CHANNEL_ILLUMINANCE)

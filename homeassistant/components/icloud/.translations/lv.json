@@ -1,0 +1,18 @@
+{
+    "config": {
+        "step": {
+            "trusted_device": {
+                "data": {
+                    "trusted_device": "Uzticama ier\u012bce"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Parole",
+                    "username": "E-pasts"
+                }
+            }
+        },
+        "title": "Apple iCloud"
+    }
+}

@@ -200,7 +200,7 @@ class HMHub(Entity):
     def __init__(self, hass, homematic, name):
         """Initialize HomeMatic hub."""
         self.hass = hass
-        self.entity_id = "{}.{}".format(DOMAIN, name.lower())
+        self.entity_id = f"{DOMAIN}.{name.lower()}"
         self._homematic = homematic
         self._variables = {}
         self._name = name

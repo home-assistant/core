@@ -28,7 +28,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the GDACS Feed platform."""
     manager = hass.data[DOMAIN][FEED][entry.entry_id]
-    sensor = GdacsSensor(entry.entry_id, entry.title, manager)
+    sensor = GdacsSensor(entry.entry_id, entry.unique_id, entry.title, manager)
     async_add_entities([sensor])
     _LOGGER.debug("Sensor setup done")
 
@@ -36,9 +36,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class GdacsSensor(Entity):
     """This is a status sensor for the GDACS integration."""
 
-    def __init__(self, config_entry_id, config_title, manager):
+    def __init__(self, config_entry_id, config_unique_id, config_title, manager):
         """Initialize entity."""
         self._config_entry_id = config_entry_id
+        self._config_unique_id = config_unique_id
         self._config_title = config_title
         self._manager = manager
         self._status = None
@@ -106,6 +107,11 @@ class GdacsSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         return self._total
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID containing latitude/longitude."""
+        return self._config_unique_id
 
     @property
     def name(self) -> Optional[str]:

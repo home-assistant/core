@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import UNIT_PERCENTAGE
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
@@ -25,7 +26,9 @@ SENSORS = [
     EVSensorConfig("Electric Range", "electricRange", "miles", "mdi:speedometer"),
     EVSensorConfig("Charged By", "estimatedFullChargeBy"),
     EVSensorConfig("Charge Mode", "chargeMode"),
-    EVSensorConfig("Battery Level", BATTERY_SENSOR, "%", "mdi:battery", ["charging"]),
+    EVSensorConfig(
+        "Battery Level", BATTERY_SENSOR, UNIT_PERCENTAGE, "mdi:battery", ["charging"]
+    ),
 ]
 
 

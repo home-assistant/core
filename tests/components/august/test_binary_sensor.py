@@ -23,16 +23,14 @@ async def test_doorsense(hass):
     lock_one = await _mock_lock_from_fixture(
         hass, "get_lock.online_with_doorsense.json"
     )
-    lock_details = [lock_one]
-    await _create_august_with_devices(hass, lock_details)
+    await _create_august_with_devices(hass, [lock_one])
 
     binary_sensor_online_with_doorsense_name = hass.states.get(
         "binary_sensor.online_with_doorsense_name_open"
     )
     assert binary_sensor_online_with_doorsense_name.state == STATE_ON
 
-    data = {}
-    data[ATTR_ENTITY_ID] = "lock.online_with_doorsense_name"
+    data = {ATTR_ENTITY_ID: "lock.online_with_doorsense_name"}
     assert await hass.services.async_call(
         LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True
     )
@@ -57,8 +55,7 @@ async def test_doorsense(hass):
 async def test_create_doorbell(hass):
     """Test creation of a doorbell."""
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.json")
-    doorbell_details = [doorbell_one]
-    await _create_august_with_devices(hass, doorbell_details)
+    await _create_august_with_devices(hass, [doorbell_one])
 
     binary_sensor_k98gidt45gul_name_motion = hass.states.get(
         "binary_sensor.k98gidt45gul_name_motion"
@@ -81,8 +78,7 @@ async def test_create_doorbell(hass):
 async def test_create_doorbell_offline(hass):
     """Test creation of a doorbell that is offline."""
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.offline.json")
-    doorbell_details = [doorbell_one]
-    await _create_august_with_devices(hass, doorbell_details)
+    await _create_august_with_devices(hass, [doorbell_one])
 
     binary_sensor_tmt100_name_motion = hass.states.get(
         "binary_sensor.tmt100_name_motion"
@@ -99,11 +95,10 @@ async def test_create_doorbell_offline(hass):
 async def test_create_doorbell_with_motion(hass):
     """Test creation of a doorbell."""
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.json")
-    doorbell_details = [doorbell_one]
     activities = await _mock_activities_from_fixture(
         hass, "get_activity.doorbell_motion.json"
     )
-    await _create_august_with_devices(hass, doorbell_details, activities=activities)
+    await _create_august_with_devices(hass, [doorbell_one], activities=activities)
 
     binary_sensor_k98gidt45gul_name_motion = hass.states.get(
         "binary_sensor.k98gidt45gul_name_motion"
@@ -122,13 +117,14 @@ async def test_create_doorbell_with_motion(hass):
 async def test_doorbell_device_registry(hass):
     """Test creation of a lock with doorsense and bridge ands up in the registry."""
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.offline.json")
-    doorbell_details = [doorbell_one]
-    await _create_august_with_devices(hass, doorbell_details)
+    await _create_august_with_devices(hass, [doorbell_one])
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
 
     reg_device = device_registry.async_get_device(
         identifiers={("august", "tmt100")}, connections=set()
     )
-    assert "hydra1" == reg_device.model
-    assert "3.1.0-HYDRC75+201909251139" == reg_device.sw_version
+    assert reg_device.model == "hydra1"
+    assert reg_device.name == "tmt100 Name"
+    assert reg_device.manufacturer == "August"
+    assert reg_device.sw_version == "3.1.0-HYDRC75+201909251139"

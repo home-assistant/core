@@ -200,6 +200,11 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
 
         else:
             self.wired_bug = None
+
+            # A client that has never been seen cannot be connected.
+            if self.client.last_seen is None:
+                return False
+
             since_last_seen = dt_util.utcnow() - dt_util.utc_from_timestamp(
                 float(self.client.last_seen)
             )
@@ -333,4 +338,4 @@ class UniFiDeviceTracker(ScannerEntity):
     @property
     def should_poll(self):
         """No polling needed."""
-        return False
+        return True
