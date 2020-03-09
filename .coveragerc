@@ -316,6 +316,7 @@ omit =
     homeassistant/components/hydrawise/*
     homeassistant/components/hyperion/light.py
     homeassistant/components/ialarm/alarm_control_panel.py
+    homeassistant/components/iammeter/sensor.py
     homeassistant/components/iaqualink/binary_sensor.py
     homeassistant/components/iaqualink/climate.py
     homeassistant/components/iaqualink/light.py
