@@ -94,3 +94,7 @@ class CanaryAlarm(AlarmControlPanel):
         """Send arm night command."""
 
         self._data.set_location_mode(self._location_id, LOCATION_MODE_NIGHT)
+
+    def update(self):
+        """Get the latest state of the sensor."""
+        self._data.update()

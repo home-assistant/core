@@ -41,9 +41,9 @@ class TestCanarySensorSetup(unittest.TestCase):
 
     def test_setup_sensors(self):
         """Test the sensor setup."""
-        online_device_at_home = mock_device(20, "Dining Room", True, "Canary")
-        offline_device_at_home = mock_device(21, "Front Yard", False, "Canary")
-        online_device_at_work = mock_device(22, "Office", True, "Canary")
+        online_device_at_home = mock_device(20, "Dining Room", True, "Canary Pro")
+        offline_device_at_home = mock_device(21, "Front Yard", False, "Canary Pro")
+        online_device_at_work = mock_device(22, "Office", True, "Canary Pro")
 
         self.hass.data[DATA_CANARY] = Mock()
         self.hass.data[DATA_CANARY].locations = [
@@ -59,7 +59,7 @@ class TestCanarySensorSetup(unittest.TestCase):
 
     def test_temperature_sensor(self):
         """Test temperature sensor with fahrenheit."""
-        device = mock_device(10, "Family Room", "Canary")
+        device = mock_device(10, "Family Room", "Canary Pro")
         location = mock_location("Home", False)
 
         data = Mock()
@@ -75,7 +75,7 @@ class TestCanarySensorSetup(unittest.TestCase):
 
     def test_temperature_sensor_with_none_sensor_value(self):
         """Test temperature sensor with fahrenheit."""
-        device = mock_device(10, "Family Room", "Canary")
+        device = mock_device(10, "Family Room", "Canary Pro")
         location = mock_location("Home", False)
 
         data = Mock()
@@ -88,7 +88,7 @@ class TestCanarySensorSetup(unittest.TestCase):
 
     def test_humidity_sensor(self):
         """Test humidity sensor."""
-        device = mock_device(10, "Family Room", "Canary")
+        device = mock_device(10, "Family Room", "Canary Pro")
         location = mock_location("Home")
 
         data = Mock()
@@ -104,7 +104,7 @@ class TestCanarySensorSetup(unittest.TestCase):
 
     def test_air_quality_sensor_with_very_abnormal_reading(self):
         """Test air quality sensor."""
-        device = mock_device(10, "Family Room", "Canary")
+        device = mock_device(10, "Family Room", "Canary Pro")
         location = mock_location("Home")
 
         data = Mock()
@@ -123,7 +123,7 @@ class TestCanarySensorSetup(unittest.TestCase):
 
     def test_air_quality_sensor_with_abnormal_reading(self):
         """Test air quality sensor."""
-        device = mock_device(10, "Family Room", "Canary")
+        device = mock_device(10, "Family Room", "Canary Pro")
         location = mock_location("Home")
 
         data = Mock()
@@ -142,7 +142,7 @@ class TestCanarySensorSetup(unittest.TestCase):
 
     def test_air_quality_sensor_with_normal_reading(self):
         """Test air quality sensor."""
-        device = mock_device(10, "Family Room", "Canary")
+        device = mock_device(10, "Family Room", "Canary Pro")
         location = mock_location("Home")
 
         data = Mock()
@@ -161,7 +161,7 @@ class TestCanarySensorSetup(unittest.TestCase):
 
     def test_air_quality_sensor_with_none_sensor_value(self):
         """Test air quality sensor."""
-        device = mock_device(10, "Family Room", "Canary")
+        device = mock_device(10, "Family Room", "Canary Pro")
         location = mock_location("Home")
 
         data = Mock()
