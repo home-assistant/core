@@ -82,21 +82,21 @@ async def test_check_available_success(
     basic_ch.read_attributes.side_effect = _update_last_seen
 
     # successfully ping zigpy device, but zha_device is not yet available
-    _send_time_changed(hass, 61)
+    _send_time_changed(hass, 91)
     await hass.async_block_till_done()
     assert basic_ch.read_attributes.await_count == 1
     assert basic_ch.read_attributes.await_args[0][0] == ["manufacturer"]
     assert zha_device.available is False
 
     # There was traffic from the device: pings, but not yet available
-    _send_time_changed(hass, 61)
+    _send_time_changed(hass, 91)
     await hass.async_block_till_done()
     assert basic_ch.read_attributes.await_count == 2
     assert basic_ch.read_attributes.await_args[0][0] == ["manufacturer"]
     assert zha_device.available is False
 
     # There was traffic from the device: don't try to ping, marked as available
-    _send_time_changed(hass, 61)
+    _send_time_changed(hass, 91)
     await hass.async_block_till_done()
     assert basic_ch.read_attributes.await_count == 2
     assert basic_ch.read_attributes.await_args[0][0] == ["manufacturer"]
@@ -125,22 +125,48 @@ async def test_check_available_unsuccessful(
     )
 
     # unsuccessfuly ping zigpy device, but zha_device is still available
-    _send_time_changed(hass, 61)
+    _send_time_changed(hass, 91)
     await hass.async_block_till_done()
     assert basic_ch.read_attributes.await_count == 1
     assert basic_ch.read_attributes.await_args[0][0] == ["manufacturer"]
     assert zha_device.available is True
 
     # still no traffic, but zha_device is still available
-    _send_time_changed(hass, 61)
+    _send_time_changed(hass, 91)
     await hass.async_block_till_done()
     assert basic_ch.read_attributes.await_count == 2
     assert basic_ch.read_attributes.await_args[0][0] == ["manufacturer"]
     assert zha_device.available is True
 
     # not even trying to update, device is unavailble
-    _send_time_changed(hass, 61)
+    _send_time_changed(hass, 91)
     await hass.async_block_till_done()
     assert basic_ch.read_attributes.await_count == 2
     assert basic_ch.read_attributes.await_args[0][0] == ["manufacturer"]
     assert zha_device.available is False
+
+
+@asynctest.patch(
+    "homeassistant.components.zha.core.channels.general.BasicChannel.async_initialize",
+    new=mock.MagicMock(),
+)
+async def test_check_available_no_basic_channel(
+    hass, device_without_basic_channel, zha_device_restored, caplog
+):
+    """Check device availability for a device without basic cluster."""
+
+    # pylint: disable=protected-access
+    zha_device = await zha_device_restored(device_without_basic_channel)
+    await async_enable_traffic(hass, [zha_device])
+
+    assert zha_device.available is True
+
+    device_without_basic_channel.last_seen = (
+        time.time() - zha_core_device._KEEP_ALIVE_INTERVAL - 2
+    )
+
+    assert "does not have a mandatory basic cluster" not in caplog.text
+    _send_time_changed(hass, 91)
+    await hass.async_block_till_done()
+    assert zha_device.available is False
+    assert "does not have a mandatory basic cluster" in caplog.text

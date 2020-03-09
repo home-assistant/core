@@ -203,9 +203,6 @@ def humanify(hass, events):
     """
     domain_prefixes = tuple(f"{dom}." for dom in CONTINUOUS_DOMAINS)
 
-    # Track last states to filter out duplicates
-    last_state = {}
-
     # Group events in batches of GROUP_BY_MINUTES
     for _, g_events in groupby(
         events, lambda event: event.time_fired.minute // GROUP_BY_MINUTES
@@ -254,13 +251,6 @@ def humanify(hass, events):
 
             if event.event_type == EVENT_STATE_CHANGED:
                 to_state = State.from_dict(event.data.get("new_state"))
-
-                # Filter out states that become same state again (force_update=True)
-                # or light becoming different color
-                if last_state.get(to_state.entity_id) == to_state.state:
-                    continue
-
-                last_state[to_state.entity_id] = to_state.state
 
                 domain = to_state.domain
 
@@ -468,25 +458,21 @@ def _keep_event(hass, event, entities_filter):
             return False
 
         # Do not report on new entities
-        if event.data.get("old_state") is None:
+        old_state = event.data.get("old_state")
+        if old_state is None:
             return False
-
-        new_state = event.data.get("new_state")
 
         # Do not report on entity removal
-        if not new_state:
+        new_state = event.data.get("new_state")
+        if new_state is None:
             return False
 
-        attributes = new_state.get("attributes", {})
-
-        # If last_changed != last_updated only attributes have changed
-        # we do not report on that yet.
-        last_changed = new_state.get("last_changed")
-        last_updated = new_state.get("last_updated")
-        if last_changed != last_updated:
+        # Do not report on only attribute changes
+        if new_state.get("state") == old_state.get("state"):
             return False
 
         domain = split_entity_id(entity_id)[0]
+        attributes = new_state.get("attributes", {})
 
         # Also filter auto groups.
         if domain == "group" and attributes.get("auto", False):

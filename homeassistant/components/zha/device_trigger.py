@@ -47,6 +47,10 @@ async def async_attach_trigger(hass, config, action, automation_info):
         zha_device = await async_get_zha_device(hass, config[CONF_DEVICE_ID])
     except (KeyError, AttributeError):
         return None
+
+    if trigger not in zha_device.device_automation_triggers:
+        return None
+
     trigger = zha_device.device_automation_triggers[trigger]
 
     event_config = {

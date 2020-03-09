@@ -88,7 +88,7 @@ async def test_cover(m1, hass, zha_device_joined_restored, zigpy_cover_device):
         )
         assert cluster.request.call_count == 1
         assert cluster.request.call_args == call(
-            False, 0x1, (), expect_reply=True, manufacturer=None
+            False, 0x1, (), expect_reply=True, manufacturer=None, tsn=None
         )
 
     # open from UI
@@ -100,7 +100,7 @@ async def test_cover(m1, hass, zha_device_joined_restored, zigpy_cover_device):
         )
         assert cluster.request.call_count == 1
         assert cluster.request.call_args == call(
-            False, 0x0, (), expect_reply=True, manufacturer=None
+            False, 0x0, (), expect_reply=True, manufacturer=None, tsn=None
         )
 
     # set position UI
@@ -115,7 +115,13 @@ async def test_cover(m1, hass, zha_device_joined_restored, zigpy_cover_device):
         )
         assert cluster.request.call_count == 1
         assert cluster.request.call_args == call(
-            False, 0x5, (zigpy.types.uint8_t,), 53, expect_reply=True, manufacturer=None
+            False,
+            0x5,
+            (zigpy.types.uint8_t,),
+            53,
+            expect_reply=True,
+            manufacturer=None,
+            tsn=None,
         )
 
     # stop from UI
@@ -127,7 +133,7 @@ async def test_cover(m1, hass, zha_device_joined_restored, zigpy_cover_device):
         )
         assert cluster.request.call_count == 1
         assert cluster.request.call_args == call(
-            False, 0x2, (), expect_reply=True, manufacturer=None
+            False, 0x2, (), expect_reply=True, manufacturer=None, tsn=None
         )
 
     # test rejoin
