@@ -342,7 +342,6 @@ class Recorder(threading.Thread):
         # has changed.  This reduces the disk io.
         while True:
             event = self.queue.get()
-            _LOGGER.debug("EVENT: %s", event)
 
             if event is None:
                 self._close_run()
