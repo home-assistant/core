@@ -225,10 +225,19 @@ class HomeAccessory(Accessory):
     """Adapter class for Accessory."""
 
     def __init__(
-        self, hass, driver, name, entity_id, aid, config, category=CATEGORY_OTHER
+        self,
+        hass,
+        driver,
+        name,
+        entity_id,
+        aid,
+        config,
+        *args,
+        category=CATEGORY_OTHER,
+        **kwargs,
     ):
         """Initialize a Accessory object."""
-        super().__init__(driver, name, aid=aid)
+        super().__init__(driver=driver, display_name=name, aid=aid, *args, **kwargs)
         model = split_entity_id(entity_id)[0].replace("_", " ").title()
         self.set_info_service(
             firmware_revision=__version__,

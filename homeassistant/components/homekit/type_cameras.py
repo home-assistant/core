@@ -1,28 +1,15 @@
 """Class to hold all camera accessories."""
 import asyncio
-import ipaddress
 import logging
-import os
-import struct
-from uuid import UUID
 
 from haffmpeg.core import HAFFmpeg
-from pyhap import tlv
 from pyhap.camera import (
     AUDIO_CODEC_TYPES,
-    NO_SRTP,
-    SETUP_ADDR_INFO,
-    SETUP_SRTP_PARAM,
-    SETUP_STATUS,
-    SETUP_TYPES,
-    SRTP_CRYPTO_SUITES,
-    STREAMING_STATUS,
     VIDEO_CODEC_PARAM_LEVEL_TYPES,
     VIDEO_CODEC_PARAM_PROFILE_ID_TYPES,
     Camera as PyhapCamera,
 )
 from pyhap.const import CATEGORY_CAMERA
-from pyhap.util import to_base64_str
 
 from homeassistant.components.camera.const import DOMAIN as DOMAIN_CAMERA
 from homeassistant.components.ffmpeg import DATA_FFMPEG
@@ -31,12 +18,6 @@ from homeassistant.util import get_local_ip
 from . import TYPES
 from .accessories import HomeAccessory
 from .const import (
-    CHAR_SELECTED_RTP_STREAM_CONFIGURATION,
-    CHAR_SETUP_ENDPOINTS,
-    CHAR_STREAMING_STATUS,
-    CHAR_SUPPORTED_AUDIO_STREAM_CONFIGURATION,
-    CHAR_SUPPORTED_RTP_CONFIGURATION,
-    CHAR_SUPPORTED_VIDEO_STREAM_CONFIGURATION,
     CONF_AUDIO_MAP,
     CONF_AUDIO_PACKET_SIZE,
     CONF_MAX_FPS,
@@ -47,8 +28,6 @@ from .const import (
     CONF_SUPPORT_AUDIO,
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
-    SERV_CAMERA_RTP_STREAM_MANAGEMENT,
-    SERV_MICROPHONE,
 )
 from .util import CAMERA_SCHEMA
 
@@ -106,16 +85,15 @@ VIDEO_PROFILE_NAMES = ["baseline", "main", "high"]
 
 
 @TYPES.register("Camera")
-class Camera(HomeAccessory):
+class Camera(HomeAccessory, PyhapCamera):
     """Generate a Camera accessory."""
 
-    def __init__(self, *args):
+    def __init__(self, hass, driver, name, entity_id, aid, config):
         """Initialize a Camera accessory object."""
-        super().__init__(*args, category=CATEGORY_CAMERA)
-        self._ffmpeg = self.hass.data[DATA_FFMPEG]
-        self._camera = self.hass.data[DOMAIN_CAMERA]
+        self._ffmpeg = hass.data[DATA_FFMPEG]
+        self._camera = hass.data[DOMAIN_CAMERA]
 
-        self.config = CAMERA_SCHEMA(self.config)
+        self.config = CAMERA_SCHEMA(config)
 
         max_fps = self.config[CONF_MAX_FPS]
         max_width = self.config[CONF_MAX_WIDTH]
@@ -152,183 +130,28 @@ class Camera(HomeAccessory):
             ]
         }
 
-        self.streaming_status = STREAMING_STATUS["AVAILABLE"]
-        self.has_srtp = True
-        self.stream_address = self.config.get(CONF_STREAM_ADDRESS) or get_local_ip()
-        try:
-            ipaddress.IPv4Address(self.stream_address)
-            self.stream_address_isv6 = b"\x00"
-        except ValueError:
-            self.stream_address_isv6 = b"\x01"
-        self.sessions = {}
+        stream_address = self.config.get(CONF_STREAM_ADDRESS) or get_local_ip()
 
-        if self.config[CONF_SUPPORT_AUDIO]:
-            self.add_preload_service(SERV_MICROPHONE)
-        management = self.add_preload_service(SERV_CAMERA_RTP_STREAM_MANAGEMENT)
-        management.configure_char(
-            CHAR_STREAMING_STATUS, getter_callback=self._get_streaming_status
-        )
-        management.configure_char(
-            CHAR_SUPPORTED_RTP_CONFIGURATION,
-            value=PyhapCamera.get_supported_rtp_config(True),
-        )
-        management.configure_char(
-            CHAR_SUPPORTED_VIDEO_STREAM_CONFIGURATION,
-            value=PyhapCamera.get_supported_video_stream_config(video_options),
-        )
-        management.configure_char(
-            CHAR_SUPPORTED_AUDIO_STREAM_CONFIGURATION,
-            value=PyhapCamera.get_supported_audio_stream_config(audio_options),
-        )
-        management.configure_char(
-            CHAR_SELECTED_RTP_STREAM_CONFIGURATION,
-            setter_callback=self.set_selected_stream_configuration,
-        )
-        management.configure_char(
-            CHAR_SETUP_ENDPOINTS, setter_callback=self.set_endpoints
+        options = {
+            "video": video_options,
+            "audio": audio_options,
+            "address": stream_address,
+        }
+
+        super().__init__(
+            hass,
+            driver,
+            name,
+            entity_id,
+            aid,
+            config,
+            category=CATEGORY_CAMERA,
+            options=options,
         )
 
     def update_state(self, new_state):
         """Handle state change to update HomeKit value."""
         pass
-
-    def _get_streaming_status(self):
-        return PyhapCamera._get_streaimg_status(self)
-
-    async def _start_stream(self, objs, reconfigure):
-        return await PyhapCamera._start_stream(self, objs, reconfigure)
-
-    async def _stop_stream(self, objs):
-        return await PyhapCamera._stop_stream(self, objs)
-
-    def set_selected_stream_configuration(self, value):
-        """Set the selected stream configuration."""
-        return PyhapCamera.set_selected_stream_configuration(self, value)
-
-    def set_endpoints(self, value):
-        """Configure streaming endpoints."""
-        objs = tlv.decode(value, from_base64=True)
-        session_id = UUID(bytes=objs[SETUP_TYPES["SESSION_ID"]])
-
-        # Extract address info
-        address_tlv = objs[SETUP_TYPES["ADDRESS"]]
-        address_info_objs = tlv.decode(address_tlv)
-        is_ipv6 = struct.unpack("?", address_info_objs[SETUP_ADDR_INFO["ADDRESS_VER"]])[
-            0
-        ]
-        address = address_info_objs[SETUP_ADDR_INFO["ADDRESS"]].decode("utf8")
-        target_video_port = struct.unpack(
-            "<H", address_info_objs[SETUP_ADDR_INFO["VIDEO_RTP_PORT"]]
-        )[0]
-        target_audio_port = struct.unpack(
-            "<H", address_info_objs[SETUP_ADDR_INFO["AUDIO_RTP_PORT"]]
-        )[0]
-
-        # Video SRTP Params
-        video_srtp_tlv = objs[SETUP_TYPES["VIDEO_SRTP_PARAM"]]
-        video_info_objs = tlv.decode(video_srtp_tlv)
-        video_crypto_suite = video_info_objs[SETUP_SRTP_PARAM["CRYPTO"]][0]
-        video_master_key = video_info_objs[SETUP_SRTP_PARAM["MASTER_KEY"]]
-        video_master_salt = video_info_objs[SETUP_SRTP_PARAM["MASTER_SALT"]]
-
-        # Audio SRTP Params
-        audio_srtp_tlv = objs[SETUP_TYPES["AUDIO_SRTP_PARAM"]]
-        audio_info_objs = tlv.decode(audio_srtp_tlv)
-        audio_crypto_suite = audio_info_objs[SETUP_SRTP_PARAM["CRYPTO"]][0]
-        audio_master_key = audio_info_objs[SETUP_SRTP_PARAM["MASTER_KEY"]]
-        audio_master_salt = audio_info_objs[SETUP_SRTP_PARAM["MASTER_SALT"]]
-
-        _LOGGER.debug(
-            "Received endpoint configuration:"
-            "\nsession_id: %s\naddress: %s\nis_ipv6: %s"
-            "\ntarget_video_port: %s\ntarget_audio_port: %s"
-            "\nvideo_crypto_suite: %s\nvideo_srtp: %s"
-            "\naudio_crypto_suite: %s\naudio_srtp: %s",
-            session_id,
-            address,
-            is_ipv6,
-            target_video_port,
-            target_audio_port,
-            video_crypto_suite,
-            to_base64_str(video_master_key + video_master_salt),
-            audio_crypto_suite,
-            to_base64_str(audio_master_key + audio_master_salt),
-        )
-
-        # Configure the SetupEndpoints response
-
-        if self.has_srtp:
-            video_srtp_tlv = tlv.encode(
-                SETUP_SRTP_PARAM["CRYPTO"],
-                SRTP_CRYPTO_SUITES["AES_CM_128_HMAC_SHA1_80"],
-                SETUP_SRTP_PARAM["MASTER_KEY"],
-                video_master_key,
-                SETUP_SRTP_PARAM["MASTER_SALT"],
-                video_master_salt,
-            )
-
-            audio_srtp_tlv = tlv.encode(
-                SETUP_SRTP_PARAM["CRYPTO"],
-                SRTP_CRYPTO_SUITES["AES_CM_128_HMAC_SHA1_80"],
-                SETUP_SRTP_PARAM["MASTER_KEY"],
-                audio_master_key,
-                SETUP_SRTP_PARAM["MASTER_SALT"],
-                audio_master_salt,
-            )
-        else:
-            video_srtp_tlv = NO_SRTP
-            audio_srtp_tlv = NO_SRTP
-
-        video_ssrc = int.from_bytes(os.urandom(3), byteorder="big")
-        audio_ssrc = int.from_bytes(os.urandom(3), byteorder="big")
-
-        res_address_tlv = tlv.encode(
-            SETUP_ADDR_INFO["ADDRESS_VER"],
-            self.stream_address_isv6,
-            SETUP_ADDR_INFO["ADDRESS"],
-            self.stream_address.encode("utf-8"),
-            SETUP_ADDR_INFO["VIDEO_RTP_PORT"],
-            struct.pack("<H", target_video_port),
-            SETUP_ADDR_INFO["AUDIO_RTP_PORT"],
-            struct.pack("<H", target_audio_port),
-        )
-
-        response_tlv = tlv.encode(
-            SETUP_TYPES["SESSION_ID"],
-            session_id.bytes,
-            SETUP_TYPES["STATUS"],
-            SETUP_STATUS["SUCCESS"],
-            SETUP_TYPES["ADDRESS"],
-            res_address_tlv,
-            SETUP_TYPES["VIDEO_SRTP_PARAM"],
-            video_srtp_tlv,
-            SETUP_TYPES["AUDIO_SRTP_PARAM"],
-            audio_srtp_tlv,
-            SETUP_TYPES["VIDEO_SSRC"],
-            struct.pack("<I", video_ssrc),
-            SETUP_TYPES["AUDIO_SSRC"],
-            struct.pack("<I", audio_ssrc),
-            to_base64=True,
-        )
-
-        self.sessions[session_id] = {
-            "id": session_id,
-            "address": address,
-            "v_port": target_video_port,
-            "v_srtp_key": to_base64_str(video_master_key + video_master_salt),
-            "v_ssrc": video_ssrc,
-            "a_port": target_audio_port,
-            "a_srtp_key": to_base64_str(audio_master_key + audio_master_salt),
-            "a_ssrc": audio_ssrc,
-        }
-
-        self.get_service(SERV_CAMERA_RTP_STREAM_MANAGEMENT).get_characteristic(
-            CHAR_SETUP_ENDPOINTS
-        ).set_value(response_tlv)
-
-    async def stop(self):
-        """Stop all streaming sessions."""
-        return await PyhapCamera.stop(self)
 
     def _get_stream_source(self):
         camera = self._camera.get_entity(self.entity_id)
