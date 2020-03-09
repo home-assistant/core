@@ -108,7 +108,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by discovery."""
         host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
         host = await self.hass.async_add_executor_job(get_ip, host)
-        receiver_id = discovery_info[ATTR_UPNP_SERIAL][4:]  # strips off RID=
+        receiver_id = discovery_info[ATTR_UPNP_SERIAL][4:]  # strips off RID-
 
         await self.async_set_unique_id(receiver_id)
         self._abort_if_unique_id_configured()
