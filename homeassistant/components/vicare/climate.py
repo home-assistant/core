@@ -165,7 +165,11 @@ class ViCareClimate(ClimateDevice):
                 
                 self._attributes["burner_hours"] = self._api.getBurnerHours()
                 self._attributes["burner_starts"] = self._api.getBurnerStarts()
-
+                self._attributes["burner_power"] = self._api.getCurrentPower()
+                
+                self._attributes["heating_gas_consumption_today"] = self._api.getGasConsumptionHeatingToday()                           
+                self._attributes["hotwater_gas_consumption_today"] = self._api.getGasConsumptionDomesticHotWaterToday()
+                
             elif self._heating_type == HeatingType.heatpump:
                 self._current_action = self._api.getCompressorActive()
 
