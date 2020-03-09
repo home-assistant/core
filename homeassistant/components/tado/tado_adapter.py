@@ -51,6 +51,7 @@ class TadoZoneData:
         self._preparation = None
         self._open_window = None
         self._open_window_attr = None
+        self._precision = DEFAULT_TADO_PRECISION
         self.update_data(data)
 
     @property
@@ -181,7 +182,6 @@ class TadoZoneData:
     def update_data(self, data):
         """Handle update callbacks."""
         _LOGGER.debug("Updating climate platform for zone %d", self._zone_id)
-        self._precision = DEFAULT_TADO_PRECISION
         if "sensorDataPoints" in data:
             sensor_data = data["sensorDataPoints"]
 

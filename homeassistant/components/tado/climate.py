@@ -167,7 +167,6 @@ class TadoClimate(ClimateDevice):
         support_flags,
     ):
         """Initialize of Tado climate entity."""
-        self.hass = hass
         self._tado = tado
 
         self.zone_name = zone_name
