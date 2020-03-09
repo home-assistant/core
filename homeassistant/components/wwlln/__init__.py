@@ -1,5 +1,4 @@
 """Support for World Wide Lightning Location Network."""
-from datetime import timedelta
 import logging
 
 from aiowwlln import Client
@@ -9,12 +8,9 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import CONF_WINDOW, DATA_CLIENT, DOMAIN
+from .const import CONF_WINDOW, DATA_CLIENT, DEFAULT_RADIUS, DEFAULT_WINDOW, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_RADIUS = 25
-DEFAULT_WINDOW = timedelta(hours=1)
 
 CONFIG_SCHEMA = vol.Schema(
     {
