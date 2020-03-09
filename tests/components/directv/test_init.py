@@ -16,12 +16,6 @@ from tests.components.directv import HOST, MockDirectvClass, setup_integration
 # pylint: disable=redefined-outer-name
 
 
-@fixture
-def main_dtv() -> MockDirectvClass:
-    """Fixture for main DVR."""
-    return MockDirectvClass(HOST)
-
-
 async def test_config_entry_not_ready(hass: HomeAssistantType) -> None:
     """Test the DirecTV configuration entry not ready."""
     with patch(
@@ -33,12 +27,10 @@ async def test_config_entry_not_ready(hass: HomeAssistantType) -> None:
     assert entry.state == ENTRY_STATE_SETUP_RETRY
 
 
-async def test_unload_config_entry(
-    hass: HomeAssistantType, main_dtv: MockDirectvClass
-) -> None:
+async def test_unload_config_entry(hass: HomeAssistantType) -> None:
     """Test the DirecTV configuration entry unloading."""
     with patch(
-        "homeassistant.components.directv.get_dtv_instance", return_value=main_dtv,
+        "homeassistant.components.directv.DIRECTV", new=MockDirectvClass,
     ), patch(
         "homeassistant.components.directv.media_player.async_setup_entry",
         return_value=True,
