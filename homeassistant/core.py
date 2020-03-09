@@ -1218,12 +1218,16 @@ class ServiceRegistry:
             self._hass.async_create_task(self._safe_execute(handler, service_call))
             return None
 
+        task = self._hass.loop.create_task(self._execute_service(handler, service_call))
         try:
             async with timeout(limit):
-                await asyncio.shield(self._execute_service(handler, service_call))
+                await asyncio.shield(task)
             return True
         except asyncio.TimeoutError:
             return False
+        except asyncio.CancelledError:
+            task.cancel()
+            raise
 
     async def _safe_execute(self, handler: Service, service_call: ServiceCall) -> None:
         """Execute a service and catch exceptions."""

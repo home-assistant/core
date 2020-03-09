@@ -804,6 +804,7 @@ class Script:
                 await asyncio.shield(run.async_run())
         except asyncio.CancelledError:
             await run.async_stop()
+            self._changed()
             raise
 
     async def async_stop(self, update_state: bool = True) -> None:
