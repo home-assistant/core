@@ -44,16 +44,15 @@ class FreeboxRouter:
 
         self._api: Freepybox = None
         self._name = None
-        self._mac = None
+        self.mac = None
         self._sw_v = None
         self._attrs = {}
 
         # Devices
-        self._devices: Dict[str, any] = {}
+        self.devices: Dict[str, any] = {}
 
         # Sensors
-        self._temperature_sensors: Dict[str, any] = {}
-        self._connection_sensors: Dict[str, any] = {}
+        self.sensors: Dict[str, any] = {}
 
         self.listeners = []
 
@@ -69,7 +68,7 @@ class FreeboxRouter:
 
         # System
         fbx_config = await self._api.system.get_config()
-        self._mac = fbx_config["mac"]
+        self.mac = fbx_config["mac"]
         self._name = fbx_config["model_info"]["pretty_name"]
         self._sw_v = fbx_config["firmware_version"]
 
@@ -90,9 +89,9 @@ class FreeboxRouter:
         # Adds the Freebox itself
         fbx_devices.append(
             {
-                "primary_name": self.name,
+                "primary_name": self._name,
                 "l2ident": {"id": self.mac},
-                "vendor_name": self.manufacturer,
+                "vendor_name": "Freebox SAS",
                 "host_type": "router",
                 "active": True,
                 "attrs": self._attrs,
@@ -102,10 +101,10 @@ class FreeboxRouter:
         for fbx_device in fbx_devices:
             device_mac = fbx_device["l2ident"]["id"]
 
-            if self._devices.get(device_mac) is None:
+            if self.devices.get(device_mac) is None:
                 new_device = True
 
-            self._devices[device_mac] = fbx_device
+            self.devices[device_mac] = fbx_device
 
         async_dispatcher_send(self.hass, self.signal_device_update)
 
@@ -116,17 +115,16 @@ class FreeboxRouter:
         """Update Freebox sensors."""
         # System sensors
         syst_datas: Dict[str, any] = await self._api.system.get_config()
-        temperature_datas = {item["id"]: item for item in syst_datas["sensors"]}
-        # According to the doc it is only temperature sensors in celsius degree.
-        # Name and id of the sensors may vary under Freebox devices.
 
-        for sensor_key, sensor_attrs in temperature_datas.items():
-            self._temperature_sensors[sensor_key] = sensor_attrs["value"]
+        # According to the doc `syst_datas["sensors"]` is temperature sensors in celsius degree.
+        # Name and id of sensors may vary under Freebox devices.
+        for sensor in syst_datas["sensors"]:
+            self.sensors[sensor["id"]] = sensor["value"]
 
         # Connection sensors
         connection_datas: Dict[str, any] = await self._api.connection.get_status()
-        for sensor_key, sensor_attrs in CONNECTION_SENSORS.items():
-            self._connection_sensors[sensor_key] = connection_datas[sensor_key]
+        for sensor_key in CONNECTION_SENSORS:
+            self.sensors[sensor_key] = connection_datas[sensor_key]
 
         self._attrs = {
             "IPv4": connection_datas.get("ipv4"),
@@ -135,7 +133,7 @@ class FreeboxRouter:
             "uptime": datetime.fromtimestamp(
                 round(datetime.now().timestamp()) - syst_datas["uptime_val"]
             ),
-            "firmware_version": self.firmware_version,
+            "firmware_version": self._sw_v,
             "serial": syst_datas["serial"],
         }
 
@@ -152,45 +150,15 @@ class FreeboxRouter:
         self._api = None
 
     @property
-    def name(self) -> str:
-        """Return the router name."""
-        return self._name
-
-    @property
-    def manufacturer(self) -> str:
-        """Return the router manufacturer."""
-        return "Freebox SAS"
-
-    @property
-    def mac(self) -> str:
-        """Return the router MAC address."""
-        return self._mac
-
-    @property
-    def firmware_version(self) -> str:
-        """Return the router software version."""
-        return self._sw_v
-
-    @property
     def device_info(self) -> Dict[str, any]:
         """Return the device information."""
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self.mac)},
             "identifiers": {(DOMAIN, self.mac)},
-            "name": self.name,
-            "manufacturer": self.manufacturer,
-            "sw_version": self.firmware_version,
+            "name": self._name,
+            "manufacturer": "Freebox SAS",
+            "sw_version": self._sw_v,
         }
-
-    @property
-    def devices(self) -> Dict[str, any]:
-        """Return all devices."""
-        return self._devices
-
-    @property
-    def sensors(self) -> Dict[str, any]:
-        """Return all sensors."""
-        return {**self._temperature_sensors, **self._connection_sensors}
 
     @property
     def signal_device_new(self) -> str:

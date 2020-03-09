@@ -31,18 +31,17 @@ async def async_setup_entry(
 
     # System sensors
     syst_datas: Dict[str, any] = await router.system.get_config()
-    temperature_datas = {item["id"]: item for item in syst_datas["sensors"]}
-    # According to the doc it is only temperature sensors in celsius degree.
-    # Name and id of the sensors may vary under Freebox devices.
 
-    for sensor_key, sensor_attrs in temperature_datas.items():
+    # According to the doc `syst_datas["sensors"]` is temperature sensors in celsius degree.
+    # Name and id of sensors may vary under Freebox devices.
+    for sensor in syst_datas["sensors"]:
         entities.append(
             FreeboxSensor(
                 router,
-                sensor_key,
+                sensor["id"],
                 {
                     **TEMPERATURE_SENSOR_TEMPLATE,
-                    **{SENSOR_NAME: f"Freebox {sensor_attrs['name']}"},
+                    **{SENSOR_NAME: f"Freebox {sensor['name']}"},
                 },
             )
         )
