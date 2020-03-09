@@ -1,6 +1,5 @@
 """Tests for the Roku integration."""
 from asynctest import patch
-from pytest import fixture
 from requests.exceptions import RequestException
 
 from homeassistant.components.directv.const import DOMAIN
