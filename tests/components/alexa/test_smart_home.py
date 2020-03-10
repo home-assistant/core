@@ -3348,7 +3348,7 @@ async def test_timer_hold(hass):
     assert appliance["friendlyName"] == "Laundry"
 
     capabilities = assert_endpoint_capabilities(
-        appliance, "Alexa", "Alexa.TimeHoldController"
+        appliance, "Alexa", "Alexa.TimeHoldController", "Alexa.PowerController"
     )
 
     time_hold_capability = get_capability(capabilities, "Alexa.TimeHoldController")
@@ -3370,8 +3370,45 @@ async def test_timer_resume(hass):
     )
     await discovery_test(device, hass)
 
+    properties = await reported_properties(hass, "timer#laundry")
+    properties.assert_equal("Alexa.PowerController", "powerState", "ON")
+
     await assert_request_calls_service(
         "Alexa.TimeHoldController", "Resume", "timer#laundry", "timer.start", hass
+    )
+
+
+async def test_timer_start(hass):
+    """Test timer start."""
+    device = (
+        "timer.laundry",
+        "idle",
+        {"friendly_name": "Laundry", "duration": "00:01:00", "remaining": "00:50:00"},
+    )
+    await discovery_test(device, hass)
+
+    properties = await reported_properties(hass, "timer#laundry")
+    properties.assert_equal("Alexa.PowerController", "powerState", "OFF")
+
+    await assert_request_calls_service(
+        "Alexa.PowerController", "TurnOn", "timer#laundry", "timer.start", hass
+    )
+
+
+async def test_timer_cancel(hass):
+    """Test timer cancel."""
+    device = (
+        "timer.laundry",
+        "active",
+        {"friendly_name": "Laundry", "duration": "00:01:00", "remaining": "00:50:00"},
+    )
+    await discovery_test(device, hass)
+
+    properties = await reported_properties(hass, "timer#laundry")
+    properties.assert_equal("Alexa.PowerController", "powerState", "ON")
+
+    await assert_request_calls_service(
+        "Alexa.PowerController", "TurnOff", "timer#laundry", "timer.cancel", hass
     )
 
 
