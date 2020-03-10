@@ -83,8 +83,8 @@ class NextcloudSensor(Entity):
 
     def __init__(self, item):
         """Initialize the Nextcloud sensor."""
-        self.item = item
-        self.value = None
+        self._name = item
+        self._state = None
 
     @property
     def icon(self):
@@ -94,18 +94,18 @@ class NextcloudSensor(Entity):
     @property
     def name(self):
         """Return the name for this sensor."""
-        return self.item
+        return self._name
 
     @property
     def state(self):
         """Return the state for this sensor."""
-        return self.value
+        return self._state
 
     @property
     def unique_id(self):
         """Return the unique ID for this sensor."""
-        return self.name
+        return self._name
 
     def update(self):
         """Update the sensor."""
-        self.value = self.hass.data[DOMAIN][self.item]
+        self._state = self.hass.data[DOMAIN][self.item]
