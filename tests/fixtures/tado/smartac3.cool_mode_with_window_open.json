@@ -1,0 +1,73 @@
+{
+   "setting" : {
+      "mode" : "COOL",
+      "power" : "ON",
+      "type" : "AIR_CONDITIONING",
+      "fanSpeed" : "AUTO",
+      "temperature" : {
+         "fahrenheit" : 64,
+         "celsius" : 17.78
+      }
+   },
+   "nextTimeBlock" : {
+      "start" : "2020-03-05T08:00:00.000Z"
+   },
+   "nextScheduleChange" : null,
+   "overlay" : {
+      "setting" : {
+         "mode" : "COOL",
+         "power" : "ON",
+         "type" : "AIR_CONDITIONING",
+         "fanSpeed" : "AUTO",
+         "temperature" : {
+            "fahrenheit" : 64,
+            "celsius" : 17.78
+         }
+      },
+      "type" : "MANUAL",
+      "termination" : {
+         "type" : "TADO_MODE",
+         "typeSkillBasedApp" : "TADO_MODE",
+         "projectedExpiry" : null
+      }
+   },
+   "openWindowDetected" : true,
+   "overlayType" : "MANUAL",
+   "preparation" : null,
+   "geolocationOverrideDisableTime" : null,
+   "link" : {
+      "state" : "ONLINE"
+   },
+   "sensorDataPoints" : {
+      "humidity" : {
+         "timestamp" : "2020-03-05T03:57:38.850Z",
+         "type" : "PERCENTAGE",
+         "percentage" : 60.9
+      },
+      "insideTemperature" : {
+         "celsius" : 24.76,
+         "type" : "TEMPERATURE",
+         "fahrenheit" : 76.57,
+         "timestamp" : "2020-03-05T03:57:38.850Z",
+         "precision" : {
+            "fahrenheit" : 0.1,
+            "celsius" : 0.1
+         }
+      }
+   },
+   "geolocationOverride" : false,
+   "tadoMode" : "HOME",
+   "activityDataPoints" : {
+      "acPower" : {
+         "value" : "ON",
+         "type" : "POWER",
+         "timestamp" : "2020-03-05T04:01:07.162Z"
+      }
+   },
+   "openWindow" : {
+      "durationInSeconds" : 900,
+      "remainingTimeInSeconds" : 824,
+      "expiry" : "2020-01-20T09:32:45Z",
+      "detectedTime" : "2020-01-20T09:17:45Z"
+   }
+}

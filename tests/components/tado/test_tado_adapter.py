@@ -421,3 +421,49 @@ async def test_michael_heat_mode(hass):
     assert michael_heat_mode.target_temp == 20.0
     assert michael_heat_mode.available is True
     assert michael_heat_mode.precision == 0.1
+
+
+async def test_smartac3_cool_mode_with_window_open(hass):
+    """Test smart ac cool mode."""
+    smartac3_cool_mode_with_window_open = await _mock_tado_climate_zone_from_fixture(
+        hass, "smartac3.cool_mode_with_window_open.json"
+    )
+    assert smartac3_cool_mode_with_window_open.preparation is False
+    assert smartac3_cool_mode_with_window_open.open_window is True
+    assert smartac3_cool_mode_with_window_open.open_window_attr == {
+        "detectedTime": "2020-01-20T09:17:45Z",
+        "durationInSeconds": 900,
+        "expiry": "2020-01-20T09:32:45Z",
+        "remainingTimeInSeconds": 824,
+    }
+    assert smartac3_cool_mode_with_window_open.current_temp == 24.76
+    assert (
+        smartac3_cool_mode_with_window_open.current_temp_timestamp
+        == "2020-03-05T03:57:38.850Z"
+    )
+    assert smartac3_cool_mode_with_window_open.connection is None
+    assert smartac3_cool_mode_with_window_open.tado_mode == "HOME"
+    assert smartac3_cool_mode_with_window_open.overlay_active is True
+    assert smartac3_cool_mode_with_window_open.overlay_termination_type == "TADO_MODE"
+    assert smartac3_cool_mode_with_window_open.current_humidity == 60.9
+    assert (
+        smartac3_cool_mode_with_window_open.current_humidity_timestamp
+        == "2020-03-05T03:57:38.850Z"
+    )
+    assert (
+        smartac3_cool_mode_with_window_open.ac_power_timestamp
+        == "2020-03-05T04:01:07.162Z"
+    )
+    assert smartac3_cool_mode_with_window_open.heating_power_timestamp is None
+    assert smartac3_cool_mode_with_window_open.ac_power == "ON"
+    assert smartac3_cool_mode_with_window_open.heating_power is None
+    assert smartac3_cool_mode_with_window_open.heating_power_percentage is None
+    assert smartac3_cool_mode_with_window_open.is_away is False
+    assert smartac3_cool_mode_with_window_open.power == "ON"
+    assert smartac3_cool_mode_with_window_open.current_hvac_action == "cooling"
+    assert smartac3_cool_mode_with_window_open.current_tado_fan_speed == "AUTO"
+    assert smartac3_cool_mode_with_window_open.link == "ONLINE"
+    assert smartac3_cool_mode_with_window_open.current_tado_hvac_mode == "COOL"
+    assert smartac3_cool_mode_with_window_open.target_temp == 17.78
+    assert smartac3_cool_mode_with_window_open.available is True
+    assert smartac3_cool_mode_with_window_open.precision == 0.1
