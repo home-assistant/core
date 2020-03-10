@@ -125,10 +125,6 @@ class HomeKitEntity(Entity):
             return
         setup_fn(char.to_accessory_and_service_list())
 
-    def get_hk_char_value(self, characteristic_type):
-        """Return the value for a given characteristic type enum."""
-        return self.service.value(characteristic_type)
-
     @callback
     def async_state_changed(self):
         """Collect new data from bridge and update the entity state in hass."""
