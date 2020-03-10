@@ -136,12 +136,12 @@ class RTorrentSensor(Entity):
 
         uploading_torrents = 0
         for up_torrent in self.data[5]:
-            if up_torrent[0] > 0:
+            if up_torrent[0]:
                 uploading_torrents += 1
 
         downloading_torrents = 0
         for down_torrent in self.data[6]:
-            if down_torrent[0] > 0:
+            if down_torrent[0]:
                 downloading_torrents += 1
 
         active_torrents = uploading_torrents + downloading_torrents
