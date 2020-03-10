@@ -9,6 +9,7 @@ from homeassistant.components.plex.const import (
     CONF_MONITORED_USERS,
     DOMAIN,
     PLEX_UPDATE_PLATFORMS_SIGNAL,
+    SERVERS,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -46,12 +47,10 @@ async def test_new_users_available(hass):
     async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
     await hass.async_block_till_done()
 
-    ignored_users = [
-        x
-        for x in mock_plex_server.option_monitored_users
-        if not mock_plex_server.option_monitored_users[x]["enabled"]
-    ]
-    assert len(mock_plex_server.option_monitored_users) == 1
+    monitored_users = hass.data[DOMAIN][SERVERS][server_id].option_monitored_users
+
+    ignored_users = [x for x in monitored_users if not monitored_users[x]["enabled"]]
+    assert len(monitored_users) == 1
     assert len(ignored_users) == 0
 
     sensor = hass.states.get("sensor.plex_plex_server_1")
@@ -87,12 +86,10 @@ async def test_new_ignored_users_available(hass, caplog):
     async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
     await hass.async_block_till_done()
 
-    ignored_users = [
-        x
-        for x in mock_plex_server.accounts
-        if x not in mock_plex_server.option_monitored_users
-    ]
-    assert len(mock_plex_server.option_monitored_users) == 1
+    monitored_users = hass.data[DOMAIN][SERVERS][server_id].option_monitored_users
+
+    ignored_users = [x for x in mock_plex_server.accounts if x not in monitored_users]
+    assert len(monitored_users) == 1
     assert len(ignored_users) == 2
     for ignored_user in ignored_users:
         assert f"Ignoring Plex client owned by {ignored_user}" in caplog.text

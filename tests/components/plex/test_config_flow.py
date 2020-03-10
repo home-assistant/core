@@ -68,7 +68,7 @@ async def test_import_success(hass):
     )
     assert (
         result["data"][config_flow.PLEX_SERVER_CONFIG][CONF_URL]
-        == mock_plex_server.url_in_use
+        == mock_plex_server._baseurl
     )
     assert result["data"][config_flow.PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
@@ -176,7 +176,7 @@ async def test_single_available_server(hass):
         )
         assert (
             result["data"][config_flow.PLEX_SERVER_CONFIG][CONF_URL]
-            == mock_plex_server.url_in_use
+            == mock_plex_server._baseurl
         )
         assert result["data"][config_flow.PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
@@ -226,7 +226,7 @@ async def test_multiple_servers_with_selection(hass):
         )
         assert (
             result["data"][config_flow.PLEX_SERVER_CONFIG][CONF_URL]
-            == mock_plex_server.url_in_use
+            == mock_plex_server._baseurl
         )
         assert result["data"][config_flow.PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
@@ -277,7 +277,7 @@ async def test_adding_last_unconfigured_server(hass):
         )
         assert (
             result["data"][config_flow.PLEX_SERVER_CONFIG][CONF_URL]
-            == mock_plex_server.url_in_use
+            == mock_plex_server._baseurl
         )
         assert result["data"][config_flow.PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
@@ -438,12 +438,12 @@ async def test_option_flow_new_users_available(hass, caplog):
     async_dispatcher_send(hass, const.PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
     await hass.async_block_till_done()
 
-    new_users = [
-        x
-        for x in mock_plex_server.accounts
-        if x not in mock_plex_server.option_monitored_users
-    ]
-    assert len(mock_plex_server.option_monitored_users) == 1
+    monitored_users = hass.data[config_flow.DOMAIN][config_flow.SERVERS][
+        server_id
+    ].option_monitored_users
+
+    new_users = [x for x in mock_plex_server.accounts if x not in monitored_users]
+    assert len(monitored_users) == 1
     assert len(new_users) == 2
 
     sensor = hass.states.get("sensor.plex_plex_server_1")

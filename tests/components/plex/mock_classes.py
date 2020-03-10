@@ -1,17 +1,12 @@
 """Mock classes used in tests."""
-import itertools
-
-from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
 from homeassistant.components.plex.const import (
-    CONF_IGNORE_NEW_SHARED_USERS,
-    CONF_MONITORED_USERS,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
     PLEX_SERVER_CONFIG,
 )
 from homeassistant.const import CONF_URL
 
-from .const import DEFAULT_DATA, DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_USERS
+from .const import DEFAULT_DATA, MOCK_SERVERS, MOCK_USERS
 
 
 class MockResource:
@@ -66,31 +61,20 @@ class MockPlexServer:
         self,
         index=0,
         config_entry=None,
-        load_users=True,
         num_users=len(MOCK_USERS),
         session_type="video",
     ):
         """Initialize the object."""
         if config_entry:
             self._data = config_entry.data
-            self._options = config_entry.options
         else:
             self._data = DEFAULT_DATA
-            self._options = DEFAULT_OPTIONS
 
         self._baseurl = self._data[PLEX_SERVER_CONFIG][CONF_URL]
         self.friendlyName = self._data[CONF_SERVER]
         self.machineIdentifier = self._data[CONF_SERVER_IDENTIFIER]
 
         self._systemAccounts = list(map(MockPlexSystemAccount, range(num_users)))
-        self._ignore_new_users = self._options[MP_DOMAIN][CONF_IGNORE_NEW_SHARED_USERS]
-
-        self._option_monitored_users = {}
-        if load_users:
-            user_list = self._options[MP_DOMAIN][CONF_MONITORED_USERS]
-            self._option_monitored_users = dict(
-                itertools.islice(user_list.items(), num_users)
-            )
 
         self._clients = []
         self._sessions = []
@@ -138,19 +122,9 @@ class MockPlexServer:
         return set(MOCK_USERS)
 
     @property
-    def url_in_use(self):
-        """Return URL used by PlexServer."""
-        return self._baseurl
-
-    @property
     def version(self):
         """Mock version of PlexServer."""
         return "1.0"
-
-    @property
-    def option_monitored_users(self):
-        """Mock loaded config option for monitored users."""
-        return self._option_monitored_users
 
 
 class MockPlexClient:
