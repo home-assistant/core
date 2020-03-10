@@ -39,6 +39,23 @@ SCAN_INTERVAL = timedelta(seconds=60)
 _LOGGER = logging.getLogger(__name__)
 
 
+ATA_HVAC_MODE_LOOKUP = {
+    ata.OPERATION_MODE_HEAT: HVAC_MODE_HEAT,
+    ata.OPERATION_MODE_DRY: HVAC_MODE_DRY,
+    ata.OPERATION_MODE_COOL: HVAC_MODE_COOL,
+    ata.OPERATION_MODE_FAN_ONLY: HVAC_MODE_FAN_ONLY,
+    ata.OPERATION_MODE_HEAT_COOL: HVAC_MODE_HEAT_COOL,
+}
+ATA_HVAC_MODE_REVERSE_LOOKUP = {v: k for k, v in ATA_HVAC_MODE_LOOKUP.items()}
+
+
+ATW_ZONE_HVAC_MODE_LOOKUP = {
+    atw.ZONE_OPERATION_MODE_HEAT: HVAC_MODE_HEAT,
+    atw.ZONE_OPERATION_MODE_COOL: HVAC_MODE_COOL,
+}
+ATW_ZONE_HVAC_MODE_REVERSE_LOOKUP = {v: k for k, v in ATW_ZONE_HVAC_MODE_LOOKUP.items()}
+
+
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ):
@@ -80,16 +97,6 @@ class MelCloudClimate(ClimateDevice, ABC):
     def target_temperature_step(self) -> Optional[float]:
         """Return the supported step of target temperature."""
         return self._base_device.temperature_increment
-
-
-ATA_HVAC_MODE_LOOKUP = {
-    ata.OPERATION_MODE_HEAT: HVAC_MODE_HEAT,
-    ata.OPERATION_MODE_DRY: HVAC_MODE_DRY,
-    ata.OPERATION_MODE_COOL: HVAC_MODE_COOL,
-    ata.OPERATION_MODE_FAN_ONLY: HVAC_MODE_FAN_ONLY,
-    ata.OPERATION_MODE_HEAT_COOL: HVAC_MODE_HEAT_COOL,
-}
-ATA_HVAC_MODE_REVERSE_LOOKUP = {v: k for k, v in ATA_HVAC_MODE_LOOKUP.items()}
 
 
 class AtaDeviceClimate(MelCloudClimate):
@@ -209,13 +216,6 @@ class AtaDeviceClimate(MelCloudClimate):
         return convert_temperature(
             DEFAULT_MAX_TEMP, TEMP_CELSIUS, self.temperature_unit
         )
-
-
-ATW_ZONE_HVAC_MODE_LOOKUP = {
-    atw.ZONE_OPERATION_MODE_HEAT: HVAC_MODE_HEAT,
-    atw.ZONE_OPERATION_MODE_COOL: HVAC_MODE_COOL,
-}
-ATW_ZONE_HVAC_MODE_REVERSE_LOOKUP = {v: k for k, v in ATW_ZONE_HVAC_MODE_LOOKUP.items()}
 
 
 class AtwDeviceZoneClimate(MelCloudClimate):
