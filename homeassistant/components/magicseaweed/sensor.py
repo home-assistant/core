@@ -154,18 +154,12 @@ class MagicSeaweedSensor(Entity):
         elif self.type == "max_breaking_swell":
             self._state = forecast.swell_maxBreakingHeight
         elif self.type == "swell_forecast":
-            summary = "{} - {}".format(
-                forecast.swell_minBreakingHeight, forecast.swell_maxBreakingHeight
-            )
+            summary = f"{forecast.swell_minBreakingHeight} - {forecast.swell_maxBreakingHeight}"
             self._state = summary
             if self.hour is None:
                 for hour, data in self.data.hourly.items():
                     occurs = hour
-                    hr_summary = "{} - {} {}".format(
-                        data.swell_minBreakingHeight,
-                        data.swell_maxBreakingHeight,
-                        data.swell_unit,
-                    )
+                    hr_summary = f"{data.swell_minBreakingHeight} - {data.swell_maxBreakingHeight} {data.swell_unit}"
                     self._attrs[occurs] = hr_summary
 
         if self.type != "swell_forecast":
