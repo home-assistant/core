@@ -1,5 +1,4 @@
 """Platform for climate integration."""
-from abc import ABC
 from datetime import timedelta
 import logging
 from typing import Any, Dict, List, Optional
@@ -75,7 +74,7 @@ async def async_setup_entry(
     )
 
 
-class MelCloudClimate(ClimateDevice, ABC):
+class MelCloudClimate(ClimateDevice):
     """Base climate device."""
 
     def __init__(self, device: MelCloudDevice):
