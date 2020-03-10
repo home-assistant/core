@@ -98,7 +98,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     mac_addr = binascii.unhexlify(config.get(CONF_MAC).encode().replace(b":", b""))
     switch_type = config.get(CONF_TYPE)
     retry_times = config.get(CONF_RETRY)
-    devtype = 0x5F36 if switch_type in ["rm_mini3_5f36", "rm4"] else 0x272A
+    dev_type = 0x5F36 if switch_type in ["rm_mini3_5f36", "rm4"] else 0x272A
 
     def _get_mp1_slot_name(switch_friendly_name, slot):
         """Get slot name."""
@@ -107,7 +107,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return slots[f"slot_{slot}"]
 
     if switch_type in RM_TYPES:
-        broadlink_device = broadlink.rm((ip_addr, 80), mac_addr, devtype)
+        broadlink_device = broadlink.rm((ip_addr, 80), mac_addr, dev_type)
         hass.add_job(async_setup_service, hass, ip_addr, broadlink_device)
 
         switches = []
@@ -123,14 +123,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 )
             )
     elif switch_type in SP1_TYPES:
-        broadlink_device = broadlink.sp1((ip_addr, 80), mac_addr, devtype)
+        broadlink_device = broadlink.sp1((ip_addr, 80), mac_addr, dev_type)
         switches = [BroadlinkSP1Switch(friendly_name, broadlink_device, retry_times)]
     elif switch_type in SP2_TYPES:
-        broadlink_device = broadlink.sp2((ip_addr, 80), mac_addr, devtype)
+        broadlink_device = broadlink.sp2((ip_addr, 80), mac_addr, dev_type)
         switches = [BroadlinkSP2Switch(friendly_name, broadlink_device, retry_times)]
     elif switch_type in MP1_TYPES:
         switches = []
-        broadlink_device = broadlink.mp1((ip_addr, 80), mac_addr, devtype)
+        broadlink_device = broadlink.mp1((ip_addr, 80), mac_addr, dev_type)
         parent_device = BroadlinkMP1Switch(broadlink_device, retry_times)
         for i in range(1, 5):
             slot = BroadlinkMP1Slot(
