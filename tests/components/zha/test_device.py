@@ -8,10 +8,11 @@ import pytest
 import zigpy.zcl.clusters.general as general
 
 import homeassistant.components.zha.core.device as zha_core_device
-import homeassistant.core as ha
 import homeassistant.util.dt as dt_util
 
 from .common import async_enable_traffic
+
+from tests.common import async_fire_time_changed
 
 
 @pytest.fixture
@@ -64,8 +65,8 @@ def device_without_basic_channel(zigpy_device):
 
 def _send_time_changed(hass, seconds):
     """Send a time changed event."""
-    now = dt_util.utcnow() + timedelta(seconds)
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: now})
+    now = dt_util.utcnow() + timedelta(seconds=seconds)
+    async_fire_time_changed(hass, now)
 
 
 @asynctest.patch(
@@ -85,7 +86,7 @@ async def test_check_available_success(
     basic_ch.read_attributes.reset_mock()
     device_with_basic_channel.last_seen = None
     assert zha_device.available is True
-    _send_time_changed(hass, 61)
+    _send_time_changed(hass, zha_core_device._CONSIDER_UNAVAILABLE_MAINS + 2)
     await hass.async_block_till_done()
     assert zha_device.available is False
     assert basic_ch.read_attributes.await_count == 0
