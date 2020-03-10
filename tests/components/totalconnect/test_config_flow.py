@@ -6,7 +6,7 @@ from homeassistant.components.totalconnect.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 
 USERNAME = "username@me.com"
 PASSWORD = "password"
