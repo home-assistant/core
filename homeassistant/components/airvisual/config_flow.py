@@ -1,4 +1,6 @@
 """Define a config flow manager for AirVisual."""
+import logging
+
 from pyairvisual import Client
 from pyairvisual.errors import InvalidKeyError
 import voluptuous as vol
@@ -9,6 +11,8 @@ from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import CONF_GEOGRAPHIES, DOMAIN  # pylint: disable=unused-import
+
+_LOGGER = logging.getLogger("homeassistant.components.airvisual")
 
 
 class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -46,21 +50,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
-        await self._async_set_unique_id(import_config[CONF_API_KEY])
-
-        data = {**import_config}
-        if not data.get(CONF_GEOGRAPHIES):
-            data[CONF_GEOGRAPHIES] = [
-                {
-                    CONF_LATITUDE: self.hass.config.latitude,
-                    CONF_LONGITUDE: self.hass.config.longitude,
-                }
-            ]
-
-        return self.async_create_entry(
-            title=f"Cloud API (API key: {import_config[CONF_API_KEY][:4]}...)",
-            data=data,
-        )
+        return await self.async_step_user(import_config)
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
@@ -70,7 +60,6 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self._async_set_unique_id(user_input[CONF_API_KEY])
 
         websession = aiohttp_client.async_get_clientsession(self.hass)
-
         client = Client(websession, api_key=user_input[CONF_API_KEY])
 
         try:
@@ -78,15 +67,21 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except InvalidKeyError:
             return await self._show_form(errors={CONF_API_KEY: "invalid_api_key"})
 
+        data = {CONF_API_KEY: user_input[CONF_API_KEY]}
+        if user_input.get(CONF_GEOGRAPHIES):
+            data[CONF_GEOGRAPHIES] = user_input[CONF_GEOGRAPHIES]
+        else:
+            data[CONF_GEOGRAPHIES] = [
+                {
+                    CONF_LATITUDE: user_input.get(
+                        CONF_LATITUDE, self.hass.config.latitude
+                    ),
+                    CONF_LONGITUDE: user_input.get(
+                        CONF_LONGITUDE, self.hass.config.longitude
+                    ),
+                }
+            ]
+
         return self.async_create_entry(
-            title=f"Cloud API (API key: {user_input[CONF_API_KEY][:4]}...)",
-            data={
-                CONF_API_KEY: user_input[CONF_API_KEY],
-                CONF_GEOGRAPHIES: [
-                    {
-                        CONF_LATITUDE: user_input[CONF_LATITUDE],
-                        CONF_LONGITUDE: user_input[CONF_LONGITUDE],
-                    }
-                ],
-            },
+            title=f"Cloud API (API key: {user_input[CONF_API_KEY][:4]}...)", data=data
         )
