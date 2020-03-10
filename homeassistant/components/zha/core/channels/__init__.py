@@ -192,6 +192,11 @@ class ChannelPool:
         return self._channels.zha_device.nwk
 
     @property
+    def is_mains_powered(self) -> bool:
+        """Device is_mains_powered."""
+        return self._channels.zha_device.is_mains_powered
+
+    @property
     def manufacturer(self) -> Optional[str]:
         """Return device manufacturer."""
         return self._channels.zha_device.manufacturer
@@ -200,6 +205,11 @@ class ChannelPool:
     def manufacturer_code(self) -> Optional[int]:
         """Return device manufacturer."""
         return self._channels.zha_device.manufacturer_code
+
+    @property
+    def hass(self):
+        """Return hass."""
+        return self._channels.zha_device.hass
 
     @property
     def model(self) -> Optional[str]:
@@ -235,7 +245,7 @@ class ChannelPool:
         """Create and add channels for all input clusters."""
         for cluster_id, cluster in self.endpoint.in_clusters.items():
             channel_class = zha_regs.ZIGBEE_CHANNEL_REGISTRY.get(
-                cluster_id, base.AttributeListeningChannel
+                cluster_id, base.ZigbeeChannel
             )
             # really ugly hack to deal with xiaomi using the door lock cluster
             # incorrectly.
@@ -243,7 +253,7 @@ class ChannelPool:
                 hasattr(cluster, "ep_attribute")
                 and cluster.ep_attribute == "multistate_input"
             ):
-                channel_class = base.AttributeListeningChannel
+                channel_class = base.ZigbeeChannel
             # end of ugly hack
             channel = channel_class(cluster, self)
             if channel.name == const.CHANNEL_POWER_CONFIGURATION:

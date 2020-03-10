@@ -71,9 +71,9 @@ class Switch(ZhaEntity, SwitchDevice):
         self.async_schedule_update_ha_state()
 
     @callback
-    def async_set_state(self, state):
+    def async_set_state(self, attr_id, attr_name, value):
         """Handle state update from channel."""
-        self._state = bool(state)
+        self._state = bool(value)
         self.async_schedule_update_ha_state()
 
     @property
@@ -97,4 +97,6 @@ class Switch(ZhaEntity, SwitchDevice):
         """Attempt to retrieve on off state from the switch."""
         await super().async_update()
         if self._on_off_channel:
-            self._state = await self._on_off_channel.get_attribute_value("on_off")
+            state = await self._on_off_channel.get_attribute_value("on_off")
+            if state is not None:
+                self._state = state

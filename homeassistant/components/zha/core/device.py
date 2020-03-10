@@ -3,6 +3,7 @@ import asyncio
 from datetime import timedelta
 from enum import Enum
 import logging
+import random
 import time
 
 from zigpy import types
@@ -48,6 +49,8 @@ from .const import (
     CLUSTER_COMMANDS_SERVER,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
+    EFFECT_DEFAULT_VARIANT,
+    EFFECT_OKAY,
     POWER_BATTERY_OR_UNKNOWN,
     POWER_MAINS_POWERED,
     SIGNAL_AVAILABLE,
@@ -59,7 +62,7 @@ from .helpers import LogMixin
 
 _LOGGER = logging.getLogger(__name__)
 _KEEP_ALIVE_INTERVAL = 7200
-_UPDATE_ALIVE_INTERVAL = timedelta(seconds=60)
+_UPDATE_ALIVE_INTERVAL = (60, 90)
 _CHECKIN_GRACE_PERIODS = 2
 
 
@@ -87,7 +90,7 @@ class ZHADevice(LogMixin):
         self._available_signal = "{}_{}_{}".format(
             self.name, self.ieee, SIGNAL_AVAILABLE
         )
-        self._checkins_missed_count = 2
+        self._checkins_missed_count = 0
         self._unsub = async_dispatcher_connect(
             self.hass, self._available_signal, self.async_initialize
         )
@@ -96,8 +99,9 @@ class ZHADevice(LogMixin):
             self._zigpy_device.__class__.__module__,
             self._zigpy_device.__class__.__name__,
         )
+        keep_alive_interval = random.randint(*_UPDATE_ALIVE_INTERVAL)
         self._available_check = async_track_time_interval(
-            self.hass, self._check_available, _UPDATE_ALIVE_INTERVAL
+            self.hass, self._check_available, timedelta(seconds=keep_alive_interval)
         )
         self._ha_device_id = None
         self.status = DeviceStatus.CREATED
@@ -269,33 +273,40 @@ class ZHADevice(LogMixin):
         zha_dev.channels = channels.Channels.new(zha_dev)
         return zha_dev
 
-    def _check_available(self, *_):
+    async def _check_available(self, *_):
         if self.last_seen is None:
             self.update_available(False)
-        else:
-            difference = time.time() - self.last_seen
-            if difference > _KEEP_ALIVE_INTERVAL:
-                if self._checkins_missed_count < _CHECKIN_GRACE_PERIODS:
-                    self._checkins_missed_count += 1
-                    if self.manufacturer != "LUMI":
-                        self.debug(
-                            "Attempting to checkin with device - missed checkins: %s",
-                            self._checkins_missed_count,
-                        )
-                        if not self._channels.pools:
-                            return
-                        pool = self._channels.pools[0]
-                        basic_ch = pool.all_channels[f"{pool.id}:0"]
-                        self.hass.async_create_task(
-                            basic_ch.get_attribute_value(
-                                ATTR_MANUFACTURER, from_cache=False
-                            )
-                        )
-                else:
-                    self.update_available(False)
-            else:
-                self.update_available(True)
-                self._checkins_missed_count = 0
+            return
+
+        difference = time.time() - self.last_seen
+        if difference < _KEEP_ALIVE_INTERVAL:
+            self.update_available(True)
+            self._checkins_missed_count = 0
+            return
+
+        if (
+            self._checkins_missed_count >= _CHECKIN_GRACE_PERIODS
+            or self.manufacturer == "LUMI"
+            or not self._channels.pools
+        ):
+            self.update_available(False)
+            return
+
+        self._checkins_missed_count += 1
+        self.debug(
+            "Attempting to checkin with device - missed checkins: %s",
+            self._checkins_missed_count,
+        )
+        try:
+            pool = self._channels.pools[0]
+            basic_ch = pool.all_channels[f"{pool.id}:0x0000"]
+        except KeyError:
+            self.debug("does not have a mandatory basic cluster")
+            self.update_available(False)
+            return
+        res = await basic_ch.get_attribute_value(ATTR_MANUFACTURER, from_cache=False)
+        if res is not None:
+            self._checkins_missed_count = 0
 
     def update_available(self, available):
         """Set sensor availability."""
@@ -337,6 +348,11 @@ class ZHADevice(LogMixin):
         self.debug("completed configuration")
         entry = self.gateway.zha_storage.async_create_or_update(self)
         self.debug("stored in registry: %s", entry)
+
+        if self._channels.identify_ch is not None:
+            await self._channels.identify_ch.trigger_effect(
+                EFFECT_OKAY, EFFECT_DEFAULT_VARIANT
+            )
 
     async def async_initialize(self, from_cache=False):
         """Initialize channels."""

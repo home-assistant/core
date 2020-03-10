@@ -8,7 +8,7 @@ from homeassistant.core import callback
 
 from .. import registries, typing as zha_typing
 from ..const import REPORT_CONFIG_DEFAULT
-from .base import AttributeListeningChannel, ZigbeeChannel
+from .base import ZigbeeChannel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,7 +70,7 @@ class Messaging(ZigbeeChannel):
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Metering.cluster_id)
-class Metering(AttributeListeningChannel):
+class Metering(ZigbeeChannel):
     """Metering channel."""
 
     REPORT_CONFIG = [{"attr": "instantaneous_demand", "config": REPORT_CONFIG_DEFAULT}]
@@ -92,7 +92,7 @@ class Metering(AttributeListeningChannel):
     }
 
     def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType,
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
     ) -> None:
         """Initialize Metering."""
         super().__init__(cluster, ch_pool)

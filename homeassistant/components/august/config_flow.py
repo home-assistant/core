@@ -42,15 +42,15 @@ async def async_validate_input(
     code = data.get(VERIFICATION_CODE_KEY)
 
     if code is not None:
-        result = await hass.async_add_executor_job(
-            august_gateway.authenticator.validate_verification_code, code
+        result = await august_gateway.authenticator.async_validate_verification_code(
+            code
         )
         _LOGGER.debug("Verification code validation: %s", result)
         if result != ValidationResult.VALIDATED:
             raise RequireValidation
 
     try:
-        august_gateway.authenticate()
+        await august_gateway.async_authenticate()
     except RequireValidation:
         _LOGGER.debug(
             "Requesting new verification code for %s via %s",
@@ -58,9 +58,7 @@ async def async_validate_input(
             data.get(CONF_LOGIN_METHOD),
         )
         if code is None:
-            await hass.async_add_executor_job(
-                august_gateway.authenticator.send_verification_code
-            )
+            await august_gateway.authenticator.async_send_verification_code()
         raise
 
     return {
@@ -87,7 +85,7 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._august_gateway = AugustGateway(self.hass)
         errors = {}
         if user_input is not None:
-            self._august_gateway.async_setup(user_input)
+            await self._august_gateway.async_setup(user_input)
 
             try:
                 info = await async_validate_input(

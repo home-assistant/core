@@ -1,6 +1,9 @@
 """General channels module for Zigbee Home Automation."""
+import asyncio
 import logging
+from typing import Any, List, Optional
 
+import zigpy.exceptions
 import zigpy.zcl.clusters.general as general
 
 from homeassistant.core import callback
@@ -17,8 +20,7 @@ from ..const import (
     SIGNAL_SET_LEVEL,
     SIGNAL_STATE_ATTR,
 )
-from ..helpers import get_attr_id_by_name
-from .base import AttributeListeningChannel, ZigbeeChannel, parse_and_log_command
+from .base import ZigbeeChannel, parse_and_log_command
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,21 +33,21 @@ class Alarms(ZigbeeChannel):
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.AnalogInput.cluster_id)
-class AnalogInput(AttributeListeningChannel):
+class AnalogInput(ZigbeeChannel):
     """Analog Input channel."""
 
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.AnalogOutput.cluster_id)
-class AnalogOutput(AttributeListeningChannel):
+class AnalogOutput(ZigbeeChannel):
     """Analog Output channel."""
 
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.AnalogValue.cluster_id)
-class AnalogValue(AttributeListeningChannel):
+class AnalogValue(ZigbeeChannel):
     """Analog Value channel."""
 
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
@@ -77,7 +79,7 @@ class BasicChannel(ZigbeeChannel):
     }
 
     def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType,
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
     ) -> None:
         """Initialize BasicChannel."""
         super().__init__(cluster, ch_pool)
@@ -90,9 +92,11 @@ class BasicChannel(ZigbeeChannel):
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
-        self._power_source = await self.get_attribute_value(
+        power_source = await self.get_attribute_value(
             "power_source", from_cache=from_cache
         )
+        if power_source is not None:
+            self._power_source = power_source
         await super().async_initialize(from_cache)
 
     def get_power_source(self):
@@ -101,21 +105,21 @@ class BasicChannel(ZigbeeChannel):
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.BinaryInput.cluster_id)
-class BinaryInput(AttributeListeningChannel):
+class BinaryInput(ZigbeeChannel):
     """Binary Input channel."""
 
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.BinaryOutput.cluster_id)
-class BinaryOutput(AttributeListeningChannel):
+class BinaryOutput(ZigbeeChannel):
     """Binary Output channel."""
 
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.BinaryValue.cluster_id)
-class BinaryValue(AttributeListeningChannel):
+class BinaryValue(ZigbeeChannel):
     """Binary Value channel."""
 
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
@@ -209,21 +213,21 @@ class LevelControlChannel(ZigbeeChannel):
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.MultistateInput.cluster_id)
-class MultistateInput(AttributeListeningChannel):
+class MultistateInput(ZigbeeChannel):
     """Multistate Input channel."""
 
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.MultistateOutput.cluster_id)
-class MultistateOutput(AttributeListeningChannel):
+class MultistateOutput(ZigbeeChannel):
     """Multistate Output channel."""
 
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.MultistateValue.cluster_id)
-class MultistateValue(AttributeListeningChannel):
+class MultistateValue(ZigbeeChannel):
     """Multistate Value channel."""
 
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
@@ -242,7 +246,7 @@ class OnOffChannel(ZigbeeChannel):
     REPORT_CONFIG = ({"attr": "on_off", "config": REPORT_CONFIG_IMMEDIATE},)
 
     def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType,
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
     ) -> None:
         """Initialize OnOffChannel."""
         super().__init__(cluster, ch_pool)
@@ -269,7 +273,7 @@ class OnOffChannel(ZigbeeChannel):
                 self.attribute_updated(self.ON_OFF, True)
                 if on_time > 0:
                     self._off_listener = async_call_later(
-                        self.device.hass,
+                        self._ch_pool.hass,
                         (on_time / 10),  # value is in 10ths of a second
                         self.set_to_off,
                     )
@@ -286,24 +290,27 @@ class OnOffChannel(ZigbeeChannel):
     def attribute_updated(self, attrid, value):
         """Handle attribute updates on this cluster."""
         if attrid == self.ON_OFF:
-            self.async_send_signal(f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value)
+            self.async_send_signal(
+                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", attrid, "on_off", value
+            )
             self._state = bool(value)
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
-        self._state = bool(
-            await self.get_attribute_value(self.ON_OFF, from_cache=from_cache)
-        )
+        state = await self.get_attribute_value(self.ON_OFF, from_cache=from_cache)
+        if state is not None:
+            self._state = bool(state)
         await super().async_initialize(from_cache)
 
     async def async_update(self):
         """Initialize channel."""
         if self.cluster.is_client:
             return
-        self.debug("attempting to update onoff state - from cache: False")
-        self._state = bool(
-            await self.get_attribute_value(self.ON_OFF, from_cache=False)
-        )
+        from_cache = not self._ch_pool.is_mains_powered
+        self.debug("attempting to update onoff state - from cache: %s", from_cache)
+        state = await self.get_attribute_value(self.ON_OFF, from_cache=from_cache)
+        if state is not None:
+            self._state = bool(state)
         await super().async_update()
 
 
@@ -328,11 +335,41 @@ class Partition(ZigbeeChannel):
     pass
 
 
+@registries.CHANNEL_ONLY_CLUSTERS.register(general.PollControl.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.PollControl.cluster_id)
 class PollControl(ZigbeeChannel):
     """Poll Control channel."""
 
-    pass
+    CHECKIN_INTERVAL = 55 * 60 * 4  # 55min
+    CHECKIN_FAST_POLL_TIMEOUT = 2 * 4  # 2s
+    LONG_POLL = 6 * 4  # 6s
+
+    async def async_configure(self) -> None:
+        """Configure channel: set check-in interval."""
+        try:
+            res = await self.cluster.write_attributes(
+                {"checkin_interval": self.CHECKIN_INTERVAL}
+            )
+            self.debug("%ss check-in interval set: %s", self.CHECKIN_INTERVAL / 4, res)
+        except (asyncio.TimeoutError, zigpy.exceptions.ZigbeeException) as ex:
+            self.debug("Couldn't set check-in interval: %s", ex)
+        await super().async_configure()
+
+    @callback
+    def cluster_command(
+        self, tsn: int, command_id: int, args: Optional[List[Any]]
+    ) -> None:
+        """Handle commands received to this cluster."""
+        cmd_name = self.cluster.client_commands.get(command_id, [command_id])[0]
+        self.debug("Received %s tsn command '%s': %s", tsn, cmd_name, args)
+        self.zha_send_event(cmd_name, args)
+        if cmd_name == "checkin":
+            self.cluster.create_catching_task(self.check_in_response(tsn))
+
+    async def check_in_response(self, tsn: int) -> None:
+        """Respond to checkin command."""
+        await self.checkin_response(True, self.CHECKIN_FAST_POLL_TIMEOUT, tsn=tsn)
+        await self.set_long_poll_interval(self.LONG_POLL)
 
 
 @registries.DEVICE_TRACKER_CLUSTERS.register(general.PowerConfiguration.cluster_id)
@@ -350,11 +387,16 @@ class PowerConfigurationChannel(ZigbeeChannel):
         """Handle attribute updates on this cluster."""
         attr = self._report_config[1].get("attr")
         if isinstance(attr, str):
-            attr_id = get_attr_id_by_name(self.cluster, attr)
+            attr_id = self.cluster.attridx.get(attr)
         else:
             attr_id = attr
         if attrid == attr_id:
-            self.async_send_signal(f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value)
+            self.async_send_signal(
+                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
+                attrid,
+                self.cluster.attributes.get(attrid, [attrid])[0],
+                value,
+            )
             return
         attr_name = self.cluster.attributes.get(attrid, [attrid])[0]
         self.async_send_signal(
@@ -372,12 +414,13 @@ class PowerConfigurationChannel(ZigbeeChannel):
 
     async def async_read_state(self, from_cache):
         """Read data from the cluster."""
-        await self.get_attribute_value("battery_size", from_cache=from_cache)
-        await self.get_attribute_value(
-            "battery_percentage_remaining", from_cache=from_cache
-        )
-        await self.get_attribute_value("battery_voltage", from_cache=from_cache)
-        await self.get_attribute_value("battery_quantity", from_cache=from_cache)
+        attributes = [
+            "battery_size",
+            "battery_percentage_remaining",
+            "battery_voltage",
+            "battery_quantity",
+        ]
+        await self.get_attributes(attributes, from_cache=from_cache)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.PowerProfile.cluster_id)
@@ -394,7 +437,7 @@ class RSSILocation(ZigbeeChannel):
     pass
 
 
-@registries.OUTPUT_CHANNEL_ONLY_CLUSTERS.register(general.Scenes.cluster_id)
+@registries.EVENT_RELAY_CLUSTERS.register(general.Scenes.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Scenes.cluster_id)
 class Scenes(ZigbeeChannel):
     """Scenes channel."""

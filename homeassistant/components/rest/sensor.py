@@ -5,6 +5,7 @@ from xml.parsers.expat import ExpatError
 
 from jsonpath import jsonpath
 import requests
+from requests import Session
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 import xmltodict
@@ -271,8 +272,13 @@ class RestData:
         self._request_data = data
         self._verify_ssl = verify_ssl
         self._timeout = timeout
+        self._http_session = Session()
         self.data = None
         self.headers = None
+
+    def __del__(self):
+        """Destroy the http session on destroy."""
+        self._http_session.close()
 
     def set_url(self, url):
         """Set url."""
@@ -282,7 +288,7 @@ class RestData:
         """Get the latest data from REST service with provided method."""
         _LOGGER.debug("Updating from %s", self._resource)
         try:
-            response = requests.request(
+            response = self._http_session.request(
                 self._method,
                 self._resource,
                 headers=self._headers,

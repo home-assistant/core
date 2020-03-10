@@ -316,9 +316,10 @@ async def test_ssdp_already_configured(hass, remote):
         DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
     )
     assert result["type"] == "create_entry"
-    assert result["data"][CONF_MANUFACTURER] is None
-    assert result["data"][CONF_MODEL] is None
-    assert result["data"][CONF_ID] is None
+    entry = result["result"]
+    assert entry.data[CONF_MANUFACTURER] is None
+    assert entry.data[CONF_MODEL] is None
+    assert entry.data[CONF_ID] is None
 
     # failed as already configured
     result2 = await hass.config_entries.flow.async_init(
@@ -328,9 +329,9 @@ async def test_ssdp_already_configured(hass, remote):
     assert result2["reason"] == "already_configured"
 
     # check updated device info
-    assert result["data"][CONF_MANUFACTURER] == "fake_manufacturer"
-    assert result["data"][CONF_MODEL] == "fake_model"
-    assert result["data"][CONF_ID] == "fake_uuid"
+    assert entry.data[CONF_MANUFACTURER] == "fake_manufacturer"
+    assert entry.data[CONF_MODEL] == "fake_model"
+    assert entry.data[CONF_ID] == "fake_uuid"
 
 
 async def test_autodetect_websocket(hass, remote):

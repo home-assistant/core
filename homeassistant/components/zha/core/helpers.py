@@ -35,18 +35,6 @@ async def safe_read(
         return {}
 
 
-def get_attr_id_by_name(cluster, attr_name):
-    """Get the attribute id for a cluster attribute by its name."""
-    return next(
-        (
-            attrid
-            for attrid, (attrname, datatype) in cluster.attributes.items()
-            if attr_name == attrname
-        ),
-        None,
-    )
-
-
 async def get_matched_clusters(source_zha_device, target_zha_device):
     """Get matched input/output cluster pairs for 2 devices."""
     source_clusters = source_zha_device.async_get_std_clusters()

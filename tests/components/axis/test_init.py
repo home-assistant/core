@@ -38,7 +38,7 @@ async def test_setup_entry(hass):
 async def test_setup_entry_fails(hass):
     """Test successful setup of entry."""
     config_entry = MockConfigEntry(
-        domain=axis.DOMAIN, data={axis.CONF_MAC: "0123"}, options=True, version=2
+        domain=axis.DOMAIN, data={axis.CONF_MAC: "0123"}, version=2
     )
     config_entry.add_to_hass(hass)
 

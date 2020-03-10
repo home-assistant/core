@@ -16,10 +16,11 @@ from .const import (
     CONF_MODE,
     CONF_REQUIRE_ADMIN,
     CONF_RESOURCES,
-    CONF_SIDEBAR,
+    CONF_SHOW_IN_SIDEBAR,
     CONF_TITLE,
     CONF_URL_PATH,
     DASHBOARD_BASE_CREATE_FIELDS,
+    DEFAULT_ICON,
     DOMAIN,
     MODE_STORAGE,
     MODE_YAML,
@@ -171,6 +172,7 @@ async def async_setup(hass, config):
 
             update = False
         else:
+            hass.data[DOMAIN]["dashboards"][url_path].config = item
             update = True
 
         try:
@@ -207,8 +209,8 @@ def _register_panel(hass, url_path, mode, config, update):
         "update": update,
     }
 
-    if CONF_SIDEBAR in config:
-        kwargs["sidebar_title"] = config[CONF_SIDEBAR][CONF_TITLE]
-        kwargs["sidebar_icon"] = config[CONF_SIDEBAR][CONF_ICON]
+    if config[CONF_SHOW_IN_SIDEBAR]:
+        kwargs["sidebar_title"] = config[CONF_TITLE]
+        kwargs["sidebar_icon"] = config.get(CONF_ICON, DEFAULT_ICON)
 
     frontend.async_register_built_in_panel(hass, DOMAIN, **kwargs)

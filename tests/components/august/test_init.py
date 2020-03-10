@@ -1,6 +1,6 @@
 """The tests for the august platform."""
 from asynctest import patch
-from august.exceptions import AugustApiHTTPError
+from august.exceptions import AugustApiAIOHTTPError
 
 from homeassistant import setup
 from homeassistant.components.august.const import (
@@ -38,7 +38,7 @@ async def test_unlock_throws_august_api_http_error(hass):
     mocked_lock_detail = await _mock_operative_august_lock_detail(hass)
 
     def _unlock_return_activities_side_effect(access_token, device_id):
-        raise AugustApiHTTPError("This should bubble up as its user consumable")
+        raise AugustApiAIOHTTPError("This should bubble up as its user consumable")
 
     await _create_august_with_devices(
         hass,
@@ -64,7 +64,7 @@ async def test_lock_throws_august_api_http_error(hass):
     mocked_lock_detail = await _mock_operative_august_lock_detail(hass)
 
     def _lock_return_activities_side_effect(access_token, device_id):
-        raise AugustApiHTTPError("This should bubble up as its user consumable")
+        raise AugustApiAIOHTTPError("This should bubble up as its user consumable")
 
     await _create_august_with_devices(
         hass,
@@ -124,7 +124,7 @@ async def test_set_up_from_yaml(hass):
     with patch(
         "homeassistant.components.august.async_setup_august", return_value=True,
     ) as mock_setup_august, patch(
-        "homeassistant.components.august.config_flow.AugustGateway.authenticate",
+        "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
         return_value=True,
     ):
         mocked_config = _mock_get_config()

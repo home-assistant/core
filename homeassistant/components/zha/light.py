@@ -19,6 +19,9 @@ from .core.const import (
     CHANNEL_ON_OFF,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
+    EFFECT_BLINK,
+    EFFECT_BREATHE,
+    EFFECT_DEFAULT_VARIANT,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_SET_LEVEL,
@@ -38,7 +41,7 @@ UPDATE_COLORLOOP_DIRECTION = 0x2
 UPDATE_COLORLOOP_TIME = 0x4
 UPDATE_COLORLOOP_HUE = 0x8
 
-FLASH_EFFECTS = {light.FLASH_SHORT: 0x00, light.FLASH_LONG: 0x01}
+FLASH_EFFECTS = {light.FLASH_SHORT: EFFECT_BLINK, light.FLASH_LONG: EFFECT_BREATHE}
 
 UNSUPPORTED_ATTRIBUTE = 0x86
 SCAN_INTERVAL = timedelta(minutes=60)
@@ -155,10 +158,10 @@ class Light(ZhaEntity, light.Light):
         return self._supported_features
 
     @callback
-    def async_set_state(self, state):
+    def async_set_state(self, attr_id, attr_name, value):
         """Set the state."""
-        self._state = bool(state)
-        if state:
+        self._state = bool(value)
+        if value:
             self._off_brightness = None
         self.async_schedule_update_ha_state()
 
@@ -287,7 +290,7 @@ class Light(ZhaEntity, light.Light):
 
         if flash is not None and self._supported_features & light.SUPPORT_FLASH:
             result = await self._identify_channel.trigger_effect(
-                FLASH_EFFECTS[flash], 0  # effect identifier, effect variant
+                FLASH_EFFECTS[flash], EFFECT_DEFAULT_VARIANT
             )
             t_log["trigger_effect"] = result
 
@@ -326,44 +329,59 @@ class Light(ZhaEntity, light.Light):
         """Attempt to retrieve on off state from the light."""
         self.debug("polling current state")
         if self._on_off_channel:
-            self._state = await self._on_off_channel.get_attribute_value(
+            state = await self._on_off_channel.get_attribute_value(
                 "on_off", from_cache=from_cache
             )
+            if state is not None:
+                self._state = state
         if self._level_channel:
-            self._brightness = await self._level_channel.get_attribute_value(
+            level = await self._level_channel.get_attribute_value(
                 "current_level", from_cache=from_cache
             )
+            if level is not None:
+                self._brightness = level
         if self._color_channel:
+            attributes = []
             color_capabilities = self._color_channel.get_color_capabilities()
             if (
                 color_capabilities is not None
                 and color_capabilities & CAPABILITIES_COLOR_TEMP
             ):
-                self._color_temp = await self._color_channel.get_attribute_value(
-                    "color_temperature", from_cache=from_cache
-                )
+                attributes.append("color_temperature")
             if (
                 color_capabilities is not None
                 and color_capabilities & CAPABILITIES_COLOR_XY
             ):
-                color_x = await self._color_channel.get_attribute_value(
-                    "current_x", from_cache=from_cache
-                )
-                color_y = await self._color_channel.get_attribute_value(
-                    "current_y", from_cache=from_cache
-                )
-                if color_x is not None and color_y is not None:
-                    self._hs_color = color_util.color_xy_to_hs(
-                        float(color_x / 65535), float(color_y / 65535)
-                    )
+                attributes.append("current_x")
+                attributes.append("current_y")
             if (
                 color_capabilities is not None
                 and color_capabilities & CAPABILITIES_COLOR_LOOP
             ):
-                color_loop_active = await self._color_channel.get_attribute_value(
-                    "color_loop_active", from_cache=from_cache
+                attributes.append("color_loop_active")
+
+            results = await self._color_channel.get_attributes(
+                attributes, from_cache=from_cache
+            )
+
+            if (
+                "color_temperature" in results
+                and results["color_temperature"] is not None
+            ):
+                self._color_temp = results["color_temperature"]
+
+            color_x = results.get("color_x", None)
+            color_y = results.get("color_y", None)
+            if color_x is not None and color_y is not None:
+                self._hs_color = color_util.color_xy_to_hs(
+                    float(color_x / 65535), float(color_y / 65535)
                 )
-                if color_loop_active is not None and color_loop_active == 1:
+            if (
+                "color_loop_active" in results
+                and results["color_loop_active"] is not None
+            ):
+                color_loop_active = results["color_loop_active"]
+                if color_loop_active == 1:
                     self._effect = light.EFFECT_COLORLOOP
 
     async def refresh(self, time):
