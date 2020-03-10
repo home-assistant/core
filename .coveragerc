@@ -414,7 +414,9 @@ omit =
     homeassistant/components/mediaroom/media_player.py
     homeassistant/components/melcloud/__init__.py
     homeassistant/components/melcloud/climate.py
+    homeassistant/components/melcloud/const.py
     homeassistant/components/melcloud/sensor.py
+    homeassistant/components/melcloud/water_heater.py
     homeassistant/components/message_bird/notify.py
     homeassistant/components/met/weather.py
     homeassistant/components/meteo_france/__init__.py
