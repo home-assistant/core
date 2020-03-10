@@ -38,7 +38,7 @@ async def async_setup_entry(
 class AtwWaterHeater(WaterHeaterDevice):
     """Air-to-Water water heater."""
 
-    def __init__(self, api: MelCloudDevice, device: AtwDevice):
+    def __init__(self, api: MelCloudDevice, device: AtwDevice) -> None:
         """Initialize water heater device."""
         self._api = api
         self._device = device
