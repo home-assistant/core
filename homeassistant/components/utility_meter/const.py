@@ -23,6 +23,7 @@ CONF_TARIFF = "tariff"
 CONF_TARIFF_ENTITY = "tariff_entity"
 
 ATTR_TARIFF = "tariff"
+ATTR_VALUE = "value"
 
 SIGNAL_START_PAUSE_METER = "utility_meter_start_pause"
 SIGNAL_RESET_METER = "utility_meter_reset"

@@ -23,6 +23,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.dt as dt_util
 
 from .const import (
+    ATTR_VALUE,
     CONF_METER,
     CONF_METER_NET_CONSUMPTION,
     CONF_METER_OFFSET,
@@ -49,7 +50,6 @@ ATTR_PERIOD = "meter_period"
 ATTR_LAST_PERIOD = "last_period"
 ATTR_LAST_RESET = "last_reset"
 ATTR_TARIFF = "tariff"
-ATTR_VALUE = "value"
 
 ICON = "mdi:counter"
 
