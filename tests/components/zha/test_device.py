@@ -32,9 +32,28 @@ def zigpy_device(zigpy_device_mock):
 
 
 @pytest.fixture
-def device_with_basic_channel(zigpy_device):
+def zigpy_device_mains(zigpy_device_mock):
+    """Device tracker zigpy device."""
+
+    def _dev(with_basic_channel: bool = True):
+        in_clusters = [general.OnOff.cluster_id]
+        if with_basic_channel:
+            in_clusters.append(general.Basic.cluster_id)
+
+        endpoints = {
+            3: {"in_clusters": in_clusters, "out_clusters": [], "device_type": 0}
+        }
+        return zigpy_device_mock(
+            endpoints, node_descriptor=b"\x02@\x84_\x11\x7fd\x00\x00,d\x00\x00"
+        )
+
+    return _dev
+
+
+@pytest.fixture
+def device_with_basic_channel(zigpy_device_mains):
     """Return a zha device with a basic channel present."""
-    return zigpy_device(with_basic_channel=True)
+    return zigpy_device_mains(with_basic_channel=True)
 
 
 @pytest.fixture
@@ -72,7 +91,7 @@ async def test_check_available_success(
     assert basic_ch.read_attributes.await_count == 0
 
     device_with_basic_channel.last_seen = (
-        time.time() - zha_core_device._KEEP_ALIVE_INTERVAL - 2
+        time.time() - zha_core_device._CONSIDER_UNAVAILABLE_MAINS - 2
     )
     _seens = [time.time(), device_with_basic_channel.last_seen]
 
@@ -121,7 +140,7 @@ async def test_check_available_unsuccessful(
     assert basic_ch.read_attributes.await_count == 0
 
     device_with_basic_channel.last_seen = (
-        time.time() - zha_core_device._KEEP_ALIVE_INTERVAL - 2
+        time.time() - zha_core_device._CONSIDER_UNAVAILABLE_MAINS - 2
     )
 
     # unsuccessfuly ping zigpy device, but zha_device is still available
@@ -162,7 +181,7 @@ async def test_check_available_no_basic_channel(
     assert zha_device.available is True
 
     device_without_basic_channel.last_seen = (
-        time.time() - zha_core_device._KEEP_ALIVE_INTERVAL - 2
+        time.time() - zha_core_device._CONSIDER_UNAVAILABLE_BATTERY - 2
     )
 
     assert "does not have a mandatory basic cluster" not in caplog.text
