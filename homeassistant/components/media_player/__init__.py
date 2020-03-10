@@ -104,7 +104,6 @@ _RND = SystemRandom()
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-ENTITY_IMAGE_URL = "/api/media_player_proxy/{0}?token={1}&cache={2}"
 CACHE_IMAGES = "images"
 CACHE_MAXSIZE = "maxsize"
 CACHE_LOCK = "lock"
@@ -767,7 +766,10 @@ class MediaPlayerDevice(Entity):
         if image_hash is None:
             return None
 
-        return ENTITY_IMAGE_URL.format(self.entity_id, self.access_token, image_hash)
+        return (
+            f"/api/media_player_proxy/{self.entity_id}?"
+            f"token={self.access_token}&cache={image_hash}"
+        )
 
     @property
     def capability_attributes(self):
