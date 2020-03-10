@@ -51,7 +51,7 @@ class AtwWaterHeater(WaterHeaterDevice):
     @property
     def unique_id(self) -> Optional[str]:
         """Return a unique ID."""
-        return f"{self._api.device.serial}-{self._api.device.mac}"
+        return f"{self._api.device.serial}"
 
     @property
     def name(self):

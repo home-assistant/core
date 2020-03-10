@@ -232,7 +232,7 @@ class AtwDeviceZoneClimate(MelCloudClimate):
     @property
     def unique_id(self) -> Optional[str]:
         """Return a unique ID."""
-        return f"{self.api.device.serial}-{self.api.device.mac}-{self._zone.zone_index}"
+        return f"{self.api.device.serial}-{self._zone.zone_index}"
 
     @property
     def name(self) -> str:
