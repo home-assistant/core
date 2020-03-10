@@ -2,6 +2,8 @@
 import functools
 import logging
 
+from zigpy.zcl.clusters.security import IasAce
+
 from homeassistant.components.alarm_control_panel import (
     ATTR_CHANGED_BY,
     ATTR_CODE_ARM_REQUIRED,
@@ -27,7 +29,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .core import discovery
-from .core.channels.security import IasAcePanelStatus
 from .core.const import (
     CHANNEL_IAS_ACE,
     DATA_ZHA,
@@ -43,10 +44,10 @@ _LOGGER = logging.getLogger(__name__)
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 IAS_ACE_STATE_MAP = {
-    IasAcePanelStatus.Panel_Disarmed: STATE_ALARM_DISARMED,
-    IasAcePanelStatus.Armed_Stay: STATE_ALARM_ARMED_HOME,
-    IasAcePanelStatus.Armed_Night: STATE_ALARM_ARMED_NIGHT,
-    IasAcePanelStatus.Armed_Away: STATE_ALARM_ARMED_AWAY,
+    IasAce.PanelStatus.Panel_Disarmed: STATE_ALARM_DISARMED,
+    IasAce.PanelStatus.Armed_Stay: STATE_ALARM_ARMED_HOME,
+    IasAce.PanelStatus.Armed_Night: STATE_ALARM_ARMED_NIGHT,
+    IasAce.PanelStatus.Armed_Away: STATE_ALARM_ARMED_AWAY,
 }
 
 
