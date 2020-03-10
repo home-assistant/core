@@ -2,7 +2,7 @@
 import asyncio
 
 from pyairvisual import Client
-from pyairvisual.errors import InvalidKeyError
+from pyairvisual.errors import InvalidKeyError, NotFoundError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -16,7 +16,13 @@ from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from . import async_get_geography_id
-from .const import CONF_GEOGRAPHIES, DOMAIN  # pylint: disable=unused-import
+from .const import (  # pylint: disable=unused-import
+    CONF_GEOGRAPHIES,
+    CONF_NODE_PRO_ID,
+    DOMAIN,
+    INTEGRATION_TYPE_GEOGRAPHY,
+    INTEGRATION_TYPE_NODE_PRO,
+)
 
 
 class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -26,7 +32,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @property
-    def cloud_api_schema(self):
+    def geography_schema(self):
         """Return the data schema for the cloud API."""
         return vol.Schema(
             {
@@ -40,17 +46,26 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
+    @property
+    def pick_integration_type_schema(self):
+        """Return the data schema for picking the integration type."""
+        return vol.Schema(
+            {
+                vol.Required("type"): vol.In(
+                    [INTEGRATION_TYPE_GEOGRAPHY, INTEGRATION_TYPE_NODE_PRO]
+                )
+            }
+        )
+
+    @property
+    def node_pro_schema(self):
+        """Return the data schema for a Node/Pro."""
+        return vol.Schema({vol.Required(CONF_NODE_PRO_ID): str})
+
     async def _async_set_unique_id(self, unique_id):
         """Set the unique ID of the config flow and abort if it already exists."""
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
-
-    @callback
-    async def _show_form(self, errors=None):
-        """Show the form to the user."""
-        return self.async_show_form(
-            step_id="user", data_schema=self.cloud_api_schema, errors=errors or {},
-        )
 
     @staticmethod
     @callback
@@ -58,14 +73,12 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Define the config flow to handle options."""
         return AirVisualOptionsFlowHandler(config_entry)
 
-    async def async_step_import(self, import_config):
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
-
-    async def async_step_user(self, user_input=None):
-        """Handle the start of the config flow."""
+    async def async_step_geography(self, user_input=None):
+        """Handle the initialization of the integration via the cloud API."""
         if not user_input:
-            return await self._show_form()
+            return self.async_show_form(
+                step_id="geography", data_schema=self.geography_schema,
+            )
 
         geo_id = async_get_geography_id(user_input)
         await self._async_set_unique_id(geo_id)
@@ -97,8 +110,10 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 try:
                     await client.api.nearest_city()
                 except InvalidKeyError:
-                    return await self._show_form(
-                        errors={CONF_API_KEY: "invalid_api_key"}
+                    return self.async_show_form(
+                        step_id="geography",
+                        data_schema=self.geography_schema,
+                        errors={CONF_API_KEY: "invalid_api_key"},
                     )
 
                 checked_keys.add(user_input[CONF_API_KEY])
@@ -106,6 +121,48 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=f"Cloud API ({geo_id})", data=user_input
             )
+
+    async def async_step_import(self, import_config):
+        """Import a config entry from configuration.yaml."""
+        if CONF_NODE_PRO_ID in import_config:
+            return await self.async_step_node_pro(import_config)
+        return await self.async_step_geography(import_config)
+
+    async def async_step_node_pro(self, user_input=None):
+        """Handle the initialization of the integration via the cloud API."""
+        await self._async_set_unique_id(user_input[CONF_NODE_PRO_ID])
+
+        websession = aiohttp_client.async_get_clientsession(self.hass)
+        client = Client(websession)
+
+        try:
+            await client.api.node(user_input[CONF_NODE_PRO_ID])
+        except NotFoundError:
+            return self.async_show_form(
+                step_id="node_pro",
+                data_schema=self.node_pro_schema,
+                errors={CONF_NODE_PRO_ID: "invalid_node_id"},
+            )
+
+        return self.async_create_entry(
+            title=f"Node/Pro ({user_input[CONF_NODE_PRO_ID]})",
+            data={CONF_NODE_PRO_ID: user_input[CONF_NODE_PRO_ID]},
+        )
+
+    async def async_step_user(self, user_input=None):
+        """Handle the start of the config flow."""
+        if not user_input:
+            return self.async_show_form(
+                step_id="user", data_schema=self.pick_integration_type_schema
+            )
+
+        if user_input["type"] == INTEGRATION_TYPE_GEOGRAPHY:
+            return self.async_show_form(
+                step_id="geography", data_schema=self.geography_schema
+            )
+        return self.async_show_form(
+            step_id="node_pro", data_schema=self.node_pro_schema
+        )
 
 
 class AirVisualOptionsFlowHandler(config_entries.OptionsFlow):

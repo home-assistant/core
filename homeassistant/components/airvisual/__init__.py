@@ -1,12 +1,14 @@
 """The airvisual component."""
+from datetime import timedelta
 import logging
 
 from pyairvisual import Client
-from pyairvisual.errors import AirVisualError, InvalidKeyError
+from pyairvisual.errors import AirVisualError, InvalidKeyError, NotFoundError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
+    ATTR_ATTRIBUTION,
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -16,16 +18,22 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     CONF_CITY,
     CONF_COUNTRY,
     CONF_GEOGRAPHIES,
+    CONF_NODE_PRO_ID,
     DATA_CLIENT,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    INTEGRATION_TYPE_GEOGRAPHY,
+    INTEGRATION_TYPE_NODE_PRO,
     TOPIC_UPDATE,
 )
 
@@ -33,6 +41,9 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_LISTENER = "listener"
 
+DEFAULT_ATTRIBUTION = "Data provided by AirVisual"
+DEFAULT_GEOGRAPHY_SCAN_INTERVAL = timedelta(minutes=10)
+DEFAULT_NODE_PRO_SCAN_INTERVAL = timedelta(minutes=1)
 DEFAULT_OPTIONS = {CONF_SHOW_ON_MAP: True}
 
 GEOGRAPHY_COORDINATES_SCHEMA = vol.Schema(
@@ -60,7 +71,12 @@ CLOUD_API_SCHEMA = vol.Schema(
     }
 )
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: CLOUD_API_SCHEMA}, extra=vol.ALLOW_EXTRA)
+NODE_PRO_SCHEMA = vol.Schema({vol.Required(CONF_NODE_PRO_ID): cv.string})
+
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.All(cv.ensure_list, [vol.Any(CLOUD_API_SCHEMA, NODE_PRO_SCHEMA)])},
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 @callback
@@ -86,47 +102,74 @@ async def async_setup(hass, config):
     if DOMAIN not in config:
         return True
 
-    conf = config[DOMAIN]
-
-    for geography in conf.get(
-        CONF_GEOGRAPHIES,
-        [{CONF_LATITUDE: hass.config.latitude, CONF_LONGITUDE: hass.config.longitude}],
-    ):
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={CONF_API_KEY: conf[CONF_API_KEY], **geography},
+    for observable in config[DOMAIN]:
+        if CONF_NODE_PRO_ID in observable:
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=observable
+                )
             )
-        )
+        else:
+            for geography in observable.get(
+                CONF_GEOGRAPHIES,
+                [
+                    {
+                        CONF_LATITUDE: hass.config.latitude,
+                        CONF_LONGITUDE: hass.config.longitude,
+                    }
+                ],
+            ):
+                hass.async_create_task(
+                    hass.config_entries.flow.async_init(
+                        DOMAIN,
+                        context={"source": SOURCE_IMPORT},
+                        data={CONF_API_KEY: observable[CONF_API_KEY], **geography},
+                    )
+                )
 
     return True
 
 
-async def async_setup_entry(hass, config_entry):
-    """Set up AirVisual as config entry."""
+@callback
+def _standardize_geography_config_entry(hass, config_entry):
+    """Ensure that geography observables have appropriate properties."""
     entry_updates = {}
     if not config_entry.unique_id:
         # If the config entry doesn't already have a unique ID, set one:
         entry_updates["unique_id"] = config_entry.data[CONF_API_KEY]
     if not config_entry.options:
         # If the config entry doesn't already have any options set, set defaults:
-        entry_updates["options"] = DEFAULT_OPTIONS
-
+        entry_updates["options"] = {CONF_SHOW_ON_MAP: True}
     if entry_updates:
         hass.config_entries.async_update_entry(config_entry, **entry_updates)
 
+
+async def async_setup_entry(hass, config_entry):
+    """Set up AirVisual as config entry."""
     websession = aiohttp_client.async_get_clientsession(hass)
 
-    hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = AirVisualData(
-        hass, Client(websession, api_key=config_entry.data[CONF_API_KEY]), config_entry
-    )
+    if CONF_API_KEY in config_entry.data:
+        _standardize_geography_config_entry(hass, config_entry)
+        airvisual = AirVisualGeographyData(
+            hass,
+            Client(websession, api_key=config_entry.data[CONF_API_KEY]),
+            config_entry,
+        )
+    else:
+        airvisual = AirVisualNodeProData(
+            hass, Client(websession), config_entry.data[CONF_NODE_PRO_ID]
+        )
 
     try:
-        await hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id].async_update()
+        await airvisual.async_update()
     except InvalidKeyError:
         _LOGGER.error("Invalid API key provided")
         raise ConfigEntryNotReady
+    except NotFoundError:
+        _LOGGER.error("Invalid Node/Pro ID provided")
+        raise ConfigEntryNotReady
+
+    hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = airvisual
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
@@ -134,10 +177,10 @@ async def async_setup_entry(hass, config_entry):
 
     async def refresh(event_time):
         """Refresh data from AirVisual."""
-        await hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id].async_update()
+        await airvisual.async_update()
 
     hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id] = async_track_time_interval(
-        hass, refresh, DEFAULT_SCAN_INTERVAL
+        hass, refresh, airvisual.scan_interval
     )
 
     config_entry.add_update_listener(async_update_options)
@@ -201,7 +244,52 @@ async def async_update_options(hass, config_entry):
     airvisual.async_update_options(config_entry.options)
 
 
-class AirVisualData:
+class AirVisualEntity(Entity):
+    """Define a generic AirVisual entity."""
+
+    def __init__(self, airvisual):
+        """Initialize."""
+        self._airvisual = airvisual
+        self._async_unsub_dispatcher_connect = None
+        self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._icon = None
+        self._unit = None
+
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        return self._attrs
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return self._icon
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return self._unit
+
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+
+        @callback
+        def update():
+            """Update the state."""
+            self.async_write_ha_state()
+
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, self._airvisual.topic_update, update)
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect dispatcher listener when removed."""
+        if self._async_unsub_dispatcher_connect:
+            self._async_unsub_dispatcher_connect()
+            self._async_unsub_dispatcher_connect = None
+
+
+class AirVisualGeographyData:
     """Define a class to manage data from the AirVisual cloud API."""
 
     def __init__(self, hass, client, config_entry):
@@ -211,7 +299,10 @@ class AirVisualData:
         self.data = {}
         self.geography_data = config_entry.data
         self.geography_id = config_entry.unique_id
+        self.integration_type = INTEGRATION_TYPE_GEOGRAPHY
         self.options = config_entry.options
+        self.scan_interval = DEFAULT_GEOGRAPHY_SCAN_INTERVAL
+        self.topic_update = TOPIC_UPDATE.format(config_entry.unique_id)
 
     async def async_update(self):
         """Get new data for all locations from the AirVisual cloud API."""
@@ -232,11 +323,36 @@ class AirVisualData:
             _LOGGER.error("Error while retrieving data: %s", err)
             self.data[self.geography_id] = {}
 
-        _LOGGER.debug("Received new data")
-        async_dispatcher_send(self._hass, TOPIC_UPDATE)
+        _LOGGER.debug("Received new geography data")
+        async_dispatcher_send(self._hass, self.topic_update)
 
     @callback
     def async_update_options(self, options):
         """Update the data manager's options."""
         self.options = options
-        async_dispatcher_send(self._hass, TOPIC_UPDATE)
+        async_dispatcher_send(self._hass, self.topic_update)
+
+
+class AirVisualNodeProData:
+    """Define a class to manage data from an AirVisual Node/Pro."""
+
+    def __init__(self, hass, client, node_pro_id):
+        """Initialize."""
+        self._client = client
+        self._hass = hass
+        self.data = {}
+        self.integration_type = INTEGRATION_TYPE_NODE_PRO
+        self.node_pro_id = node_pro_id
+        self.scan_interval = DEFAULT_NODE_PRO_SCAN_INTERVAL
+        self.topic_update = TOPIC_UPDATE.format(node_pro_id)
+
+    async def async_update(self):
+        """Get new data from the Node/Pro."""
+        try:
+            self.data = await self._client.api.node(self.node_pro_id)
+        except AirVisualError as err:
+            _LOGGER.error("Error while retrieving Node/Pro data: %s", err)
+            self.data = {}
+
+        _LOGGER.debug("Received new Node/Pro data")
+        async_dispatcher_send(self._hass, self.topic_update)
