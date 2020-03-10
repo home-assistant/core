@@ -178,7 +178,7 @@ class Light(ZhaEntity, light.Light):
             )
         refresh_interval = random.randint(*_REFRESH_INTERVAL)
         self._cancel_refresh_handle = async_track_time_interval(
-            self.hass, self.refresh, timedelta(minutes=refresh_interval)
+            self.hass, self._refresh, timedelta(minutes=refresh_interval)
         )
 
     async def async_will_remove_from_hass(self) -> None:
@@ -393,6 +393,6 @@ class Light(ZhaEntity, light.Light):
                 if color_loop_active == 1:
                     self._effect = light.EFFECT_COLORLOOP
 
-    async def refresh(self, time):
+    async def _refresh(self, time):
         """Call async_get_state at an interval."""
         await self.async_get_state(from_cache=False)

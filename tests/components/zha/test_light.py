@@ -1,4 +1,5 @@
 """Test zha light."""
+from datetime import timedelta
 from unittest.mock import call, sentinel
 
 import asynctest
@@ -12,6 +13,8 @@ import zigpy.zcl.foundation as zcl_f
 from homeassistant.components.light import DOMAIN, FLASH_LONG, FLASH_SHORT
 from homeassistant.components.zha.light import FLASH_EFFECTS
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+import homeassistant.core as ha
+import homeassistant.util.dt as dt_util
 
 from .common import (
     async_enable_traffic,
@@ -84,7 +87,7 @@ LIGHT_COLOR = {
     [(LIGHT_ON_OFF, (1, 0, 0)), (LIGHT_LEVEL, (1, 1, 0)), (LIGHT_COLOR, (1, 1, 3))],
 )
 async def test_light(
-    hass, zigpy_device_mock, zha_device_joined_restored, device, reporting,
+    hass, zigpy_device_mock, zha_device_joined_restored, device, reporting
 ):
     """Test zha light platform."""
 
@@ -304,3 +307,33 @@ async def async_test_flash_from_hass(hass, cluster, entity_id, flash):
         manufacturer=None,
         tsn=None,
     )
+
+
+@asynctest.patch(
+    "homeassistant.components.zha.light.Light._refresh", new=asynctest.CoroutineMock()
+)
+async def test_light_refresh(hass, zigpy_device_mock, zha_device_joined_restored):
+    """Test zha light platform refresh."""
+
+    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: dt_util.utcnow()})
+    await hass.async_block_till_done()
+
+    # create zigpy devices
+    zigpy_device = zigpy_device_mock(LIGHT_ON_OFF)
+    zha_device = await zha_device_joined_restored(zigpy_device)
+    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
+    assert entity_id is not None
+
+    light_entity = hass.data[DOMAIN].get_entity(entity_id)
+    assert light_entity is not None
+
+    # allow traffic to flow through the gateway and device
+    await async_enable_traffic(hass, [zha_device])
+    assert zha_device.available
+    assert light_entity._refresh.call_count == 0
+
+    # test that the refresh fires within the expected time frame
+    now = dt_util.utcnow() + timedelta(minutes=80)
+    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: now})
+    await hass.async_block_till_done()
+    assert light_entity._refresh.call_count == 1
