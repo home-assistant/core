@@ -128,16 +128,6 @@ class HomeKitEntity(Entity):
     @callback
     def async_state_changed(self):
         """Collect new data from bridge and update the entity state in hass."""
-        char_types = self.get_characteristic_types()
-        for char in self.service.characteristics.filter(char_types=char_types):
-            # Callback to update the entity with this characteristic value
-            char_name = escape_characteristic_name(char.type_name)
-            update_fn = getattr(self, f"_update_{char_name}", None)
-            if not update_fn:
-                continue
-
-            update_fn(char.value)
-
         self.async_write_ha_state()
 
     @property
