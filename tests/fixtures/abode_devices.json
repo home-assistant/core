@@ -60,10 +60,10 @@
         "status_ex": "",
         "actions": [],
         "status_icons": {
-            "Open": "assets\/icons\/WindowOpened.svg",
-            "Closed": "assets\/icons\/WindowClosed.svg"
+            "Open": "assets/icons/WindowOpened.svg",
+            "Closed": "assets/icons/WindowClosed.svg"
         },
-        "icon": "assets\/icons\/doorsensor-a.svg",
+        "icon": "assets/icons/doorsensor-a.svg",
         "sresp_trigger": "0",
         "sresp_restore": "0"
     },
@@ -128,7 +128,7 @@
         "status_ex": "",
         "actions": [],
         "status_icons": [],
-        "icon": "assets\/icons\/motioncamera-a.svg",
+        "icon": "assets/icons/motioncamera-a.svg",
         "sresp_trigger": "0",
         "sresp_restore": "0",
         "occupancy_timer": null,
@@ -195,7 +195,7 @@
         "status_ex": "",
         "actions": [],
         "status_icons": [],
-        "icon": "assets\/icons\/motioncamera-a.svg",
+        "icon": "assets/icons/motioncamera-a.svg",
         "schar_obpir_sens": "15",
         "schar_obpir_pulse": "2",
         "sensitivity": "15",
@@ -242,7 +242,7 @@
         "s2_propty": "",
         "s2_keys_valid": "",
         "zwave_secure_protocol": "",
-        "control_url": "api\/v1\/control\/light\/ZB:db5b1a",
+        "control_url": "api/v1/control/light/ZB:db5b1a",
         "deep_link": null,
         "status_color": "#5cb85c",
         "faults": {
@@ -267,7 +267,7 @@
         "status_ex": "",
         "actions": [],
         "status_icons": [],
-        "icon": "assets\/icons\/bulb-1.svg",
+        "icon": "assets/icons/bulb-1.svg",
         "statusEx": "0"
     },
     {
@@ -311,7 +311,7 @@
         "s2_propty": "",
         "s2_keys_valid": "",
         "zwave_secure_protocol": "",
-        "control_url": "api\/v1\/control\/light\/ZB:db5b1b",
+        "control_url": "api/v1/control/light/ZB:db5b1b",
         "deep_link": null,
         "status_color": "#5cb85c",
         "faults": {
@@ -336,7 +336,7 @@
         "status_ex": "",
         "actions": [],
         "status_icons": [],
-        "icon": "assets\/icons\/bulb-1.svg",
+        "icon": "assets/icons/bulb-1.svg",
         "statusEx": "0"
     },
     {
@@ -380,7 +380,7 @@
         "s2_propty": "",
         "s2_keys_valid": "",
         "zwave_secure_protocol": "",
-        "control_url": "api\/v1\/control\/light\/ZB:db5b1c",
+        "control_url": "api/v1/control/light/ZB:db5b1c",
         "deep_link": null,
         "status_color": "#5cb85c",
         "faults": {
@@ -400,7 +400,7 @@
         "status_ex": "",
         "actions": [],
         "status_icons": [],
-        "icon": "assets\/icons\/bulb-1.svg",
+        "icon": "assets/icons/bulb-1.svg",
         "statusEx": "0"
     },
     {
@@ -484,7 +484,7 @@
             }
         ],
         "status_icons": [],
-        "icon": "assets\/icons\/occupancy-sensor.svg",
+        "icon": "assets/icons/occupancy-sensor.svg",
         "statusEx": "1"
     },
     {
@@ -528,7 +528,7 @@
         "s2_propty": "",
         "s2_keys_valid": "",
         "zwave_secure_protocol": "",
-        "control_url": "api\/v1\/control\/power_switch\/ZW:0000000b",
+        "control_url": "api/v1/control/power_switch/ZW:0000000b",
         "deep_link": null,
         "status_color": "#5cb85c",
         "faults": {
@@ -548,7 +548,7 @@
         "status_ex": "",
         "actions": [],
         "status_icons": [],
-        "icon": "assets\/icons\/plug.svg"
+        "icon": "assets/icons/plug.svg"
     },
     {
         "id": "XF:b0c5ba27592a",
@@ -591,7 +591,7 @@
         "s2_propty": "",
         "s2_keys_valid": "",
         "zwave_secure_protocol": "",
-        "control_url": "api\/v1\/cams\/XF:b0c5ba27592a\/record",
+        "control_url": "api/v1/cams/XF:b0c5ba27592a/record",
         "deep_link": null,
         "status_color": "#5cb85c",
         "faults": {
@@ -622,8 +622,8 @@
             }
         ],
         "status_icons": [],
-        "icon": "assets\/icons\/streaming-camaera-new.svg",
-        "control_url_snapshot": "api\/v1\/cams\/XF:b0c5ba27592a\/capture",
+        "icon": "assets/icons/streaming-camaera-new.svg",
+        "control_url_snapshot": "api/v1/cams/XF:b0c5ba27592a/capture",
         "ptt_supported": true,
         "is_new_camera": 1,
         "stream_quality": 2,
@@ -662,5 +662,138 @@
         },
         "video_flip": "0",
         "hframe": "480P"
+    },
+    {
+        "id": "ZW:00000004",
+        "type_tag": "device_type.door_lock",
+        "type": "Door Lock",
+        "name": "Test Lock",
+        "area": "1",
+        "zone": "16",
+        "sort_order": "",
+        "is_window": "",
+        "bypass": "0",
+        "schar_24hr": "0",
+        "sresp_24hr": "0",
+        "sresp_mode_0": "0",
+        "sresp_entry_0": "0",
+        "sresp_exit_0": "0",
+        "group_name": "Doors/Windows",
+        "group_id": "377028",
+        "default_group_id": "1",
+        "sort_id": "1",
+        "sresp_mode_1": "0",
+        "sresp_entry_1": "0",
+        "sresp_exit_1": "0",
+        "sresp_mode_2": "0",
+        "sresp_entry_2": "0",
+        "sresp_exit_2": "0",
+        "sresp_mode_3": "0",
+        "uuid": "51cab3b545d2o34ed7fz02731bda5324",
+        "sresp_entry_3": "0",
+        "sresp_exit_3": "0",
+        "sresp_mode_4": "0",
+        "sresp_entry_4": "0",
+        "sresp_exit_4": "0",
+        "version": "",
+        "origin": "abode",
+        "has_subscription": null,
+        "onboard": "0",
+        "s2_grnt_keys": "",
+        "s2_dsk": "",
+        "s2_propty": "",
+        "s2_keys_valid": "",
+        "zwave_secure_protocol": "",
+        "control_url": "api/v1/control/lock/ZW:00000004",
+        "deep_link": null,
+        "status_color": "#5cb85c",
+        "faults": {
+            "low_battery": 0,
+            "tempered": 0,
+            "supervision": 0,
+            "out_of_order": 0,
+            "no_response": 0,
+            "jammed": 0,
+            "zwave_fault": 0
+        },
+        "status": "LockClosed",
+        "status_display": "LockClosed",
+        "statuses": {
+            "open": "0"
+        },
+        "status_ex": "",
+        "actions": [
+            {
+                "label": "Lock",
+                "value": "a=1&z=16&sw=on;"
+            },
+            {
+                "label": "Unlock",
+                "value": "a=1&z=16&sw=off;"
+            }
+        ],
+        "status_icons": {
+            "LockOpen": "assets/icons/unlocked-red.svg",
+            "LockClosed": "assets/icons/locked-green.svg"
+        },
+        "icon": "assets/icons/automation-lock.svg",
+        "automation_settings": null
+    },
+    {
+        "id": "ZW:00000007",
+        "type_tag": "device_type.secure_barrier",
+        "type": "Secure Barrier",
+        "name": "Garage Door",
+        "area": "1",
+        "zone": "11",
+        "sort_order": "0",
+        "is_window": "0",
+        "bypass": "0",
+        "schar_24hr": "0",
+        "sresp_mode_0": "0",
+        "sresp_entry_0": "0",
+        "sresp_exit_0": "0",
+        "sresp_mode_1": "0",
+        "sresp_entry_1": "0",
+        "sresp_exit_1": "0",
+        "sresp_mode_2": "0",
+        "sresp_entry_2": "0",
+        "sresp_exit_2": "0",
+        "sresp_mode_3": "0",
+        "uuid": "61cbz3b542d2o33ed2fz02721bda3324",
+        "sresp_entry_3": "0",
+        "sresp_exit_3": "0",
+        "capture_mode": null,
+        "origin": "abode",
+        "control_url": "api/v1/control/power_switch/ZW:00000007",
+        "deep_link": null,
+        "status_color": "#5cb85c",
+        "faults": {
+            "low_battery": 0,
+            "tempered": 0,
+            "supervision": 0,
+            "out_of_order": 0,
+            "no_response": 0
+        },
+        "status": "Closed",
+        "statuses": {
+            "hvac_mode": null
+        },
+        "status_ex": "",
+        "actions": [
+            {
+                "label": "Close",
+                "value": "a=1&z=11&sw=off;"
+            },
+            {
+                "label": "Open",
+                "value": "a=1&z=11&sw=on;"
+            }
+        ],
+        "status_icons": {
+            "Open": "assets/icons/garage-door-red.svg",
+            "Closed": "assets/icons/garage-door-green.svg"
+        },
+        "icon": "assets/icons/garage-door.svg"
     }
 ]
