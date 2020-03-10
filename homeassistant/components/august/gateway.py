@@ -29,6 +29,7 @@ class AugustGateway:
         """Init the connection."""
         self._aiohttp_session = aiohttp_client.async_get_clientsession(hass)
         self._token_refresh_lock = asyncio.Lock()
+        self._access_token_cache_file = None
         self._hass = hass
         self._config = None
         self._api = None
