@@ -119,13 +119,13 @@ class MoonSensor(Entity):
         # Astral doesn't provide the next dates, so let's iterate the
         # next 31 days (full moon phase lasts about 29,5 days)
         # to find the next new and full moon days
-        a = Astral()
+        astral = Astral()
         end = today + timedelta(days=31)
         new_moon = None
         full_moon = None
         for i in range((end - today).days):
             day = today + timedelta(days=i)
-            phase = round(a.moon_phase(date=day, rtype=float), 0)
+            phase = round(astral.moon_phase(date=day, rtype=float), 0)
             if phase == 0:
                 new_moon = day
             if phase == 14:
