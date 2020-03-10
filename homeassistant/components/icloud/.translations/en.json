@@ -20,7 +20,8 @@
             "user": {
                 "data": {
                     "password": "Password",
-                    "username": "Email"
+                    "username": "Email",
+                    "with_family": "With family"
                 },
                 "description": "Enter your credentials",
                 "title": "iCloud credentials"
