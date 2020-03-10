@@ -81,6 +81,7 @@ class Light(ZhaEntity, light.Light):
         self._level_channel = self.cluster_channels.get(CHANNEL_LEVEL)
         self._color_channel = self.cluster_channels.get(CHANNEL_COLOR)
         self._identify_channel = self.zha_device.channels.identify_ch
+        self._cancel_refresh_handle = None
 
         if self._level_channel:
             self._supported_features |= light.SUPPORT_BRIGHTNESS
@@ -175,7 +176,14 @@ class Light(ZhaEntity, light.Light):
             await self.async_accept_signal(
                 self._level_channel, SIGNAL_SET_LEVEL, self.set_level
             )
-        async_track_time_interval(self.hass, self.refresh, SCAN_INTERVAL)
+        self._cancel_refresh_handle = async_track_time_interval(
+            self.hass, self.refresh, SCAN_INTERVAL
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect entity object when removed."""
+        self._cancel_refresh_handle()
+        await super().async_will_remove_from_hass()
 
     @callback
     def async_restore_last_state(self, last_state):
