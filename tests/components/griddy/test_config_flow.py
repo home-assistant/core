@@ -1,5 +1,5 @@
 """Test the Griddy Power config flow."""
-from asynctest import patch
+from asynctest import MagicMock, patch
 
 from homeassistant import config_entries, setup
 from homeassistant.components.griddy.config_flow import CannotConnect
@@ -16,8 +16,7 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.griddy.config_flow.GriddyGateway.async_verify_connection",
-        return_value=True,
+        "griddypower.async_api.AsyncGriddy.async_getnow", return_value=MagicMock(),
     ), patch(
         "homeassistant.components.griddy.async_setup", return_value=True
     ) as mock_setup, patch(
