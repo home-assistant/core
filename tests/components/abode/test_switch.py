@@ -46,6 +46,30 @@ async def test_switch_attributes(hass):
     assert state.state == STATE_OFF
 
 
+async def test_switch_on(hass):
+    """Test the switch can be turned on."""
+    await setup_platform(hass, SWITCH_DOMAIN)
+
+    with patch("abodepy.AbodeSwitch.switch_on") as mock_switch_on:
+        assert await hass.services.async_call(
+            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
+        )
+        await hass.async_block_till_done()
+        mock_switch_on.assert_called_once()
+
+
+async def test_switch_off(hass):
+    """Test the switch can be turned off."""
+    await setup_platform(hass, SWITCH_DOMAIN)
+
+    with patch("abodepy.AbodeSwitch.switch_off") as mock_switch_off:
+        assert await hass.services.async_call(
+            SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
+        )
+        await hass.async_block_till_done()
+        mock_switch_off.assert_called_once()
+
+
 async def test_automation_attributes(hass):
     """Test the automation attributes are correct."""
     await setup_platform(hass, SWITCH_DOMAIN)
