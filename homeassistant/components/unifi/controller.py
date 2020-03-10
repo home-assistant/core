@@ -162,7 +162,7 @@ class UniFiController:
                     WIRELESS_GUEST_CONNECTED,
                 ):
                     self.update_wireless_clients()
-            elif data.get("clients") or data.get("devices"):
+            elif "clients" in data or "devices" in data:
                 async_dispatcher_send(self.hass, self.signal_update)
 
     @property
