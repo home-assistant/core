@@ -132,7 +132,7 @@ class Light(ZhaEntity, light.Light):
         """
         value = max(0, min(254, value))
         self._brightness = value
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def hs_color(self):
@@ -165,7 +165,7 @@ class Light(ZhaEntity, light.Light):
         self._state = bool(value)
         if value:
             self._off_brightness = None
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
@@ -306,7 +306,7 @@ class Light(ZhaEntity, light.Light):
 
         self._off_brightness = None
         self.debug("turned on: %s", t_log)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
@@ -328,7 +328,7 @@ class Light(ZhaEntity, light.Light):
             # store current brightness so that the next turn_on uses it.
             self._off_brightness = self._brightness
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_update(self):
         """Attempt to retrieve on off state from the light."""

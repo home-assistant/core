@@ -102,13 +102,13 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
     def async_set_available(self, available):
         """Set entity availability."""
         self._available = available
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def async_update_state_attribute(self, key, value):
         """Update a single device state attribute."""
         self._device_state_attributes.update({key: value})
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def async_set_state(self, attr_id, attr_name, value):

@@ -129,7 +129,7 @@ class Sensor(ZhaEntity):
         if value is not None:
             value = self.formatter(value)
         self._state = value
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def async_restore_last_state(self, last_state):
@@ -191,7 +191,7 @@ class Battery(Sensor):
         """Update a single device state attribute."""
         if key == "battery_voltage":
             self._device_state_attributes[key] = round(value / 10, 1)
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
 
 @STRICT_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
