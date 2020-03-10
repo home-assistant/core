@@ -71,7 +71,7 @@ class BMWLock(LockDevice):
         if self.door_lock_state_available:
             result["door_lock_state"] = vehicle_state.door_lock_state.value
             result["last_update_reason"] = vehicle_state.last_update_reason
-        return sorted(result.items())
+        return result
 
     @property
     def is_locked(self):
