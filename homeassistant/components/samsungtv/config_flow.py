@@ -167,7 +167,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._manufacturer = user_input.get(CONF_MANUFACTURER)
         self._model = user_input.get(CONF_MODEL)
         self._name = user_input.get(CONF_NAME)
-        # self._port = user_input.get(CONF_PORT)
         self._title = self._model or self._name
 
         await self.async_set_unique_id(self._ip)
