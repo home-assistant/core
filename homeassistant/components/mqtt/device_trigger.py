@@ -18,6 +18,7 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import (
     ATTR_DISCOVERY_HASH,
+    ATTR_DISCOVERY_TOPIC,
     CONF_CONNECTIONS,
     CONF_DEVICE,
     CONF_IDENTIFIERS,
@@ -99,7 +100,7 @@ class Trigger:
     """Device trigger settings."""
 
     device_id = attr.ib(type=str)
-    discovery_hash = attr.ib(type=tuple)
+    discovery_data = attr.ib(type=dict)
     hass = attr.ib(type=HomeAssistantType)
     payload = attr.ib(type=str)
     qos = attr.ib(type=int)
@@ -132,7 +133,6 @@ class Trigger:
 
     async def update_trigger(self, config, discovery_hash, remove_signal):
         """Update MQTT device trigger."""
-        self.discovery_hash = discovery_hash
         self.remove_signal = remove_signal
         self.type = config[CONF_TYPE]
         self.subtype = config[CONF_SUBTYPE]
@@ -216,7 +216,7 @@ async def async_setup_trigger(hass, config, config_entry, discovery_data):
         hass.data[DEVICE_TRIGGERS][discovery_id] = Trigger(
             hass=hass,
             device_id=device.id,
-            discovery_hash=discovery_hash,
+            discovery_data=discovery_data,
             type=config[CONF_TYPE],
             subtype=config[CONF_SUBTYPE],
             topic=config[CONF_TOPIC],
@@ -236,9 +236,15 @@ async def async_device_removed(hass: HomeAssistant, device_id: str):
     for trig in triggers:
         device_trigger = hass.data[DEVICE_TRIGGERS].pop(trig[CONF_DISCOVERY_ID])
         if device_trigger:
+            discovery_hash = device_trigger.discovery_data[ATTR_DISCOVERY_HASH]
+            discovery_topic = device_trigger.discovery_data[ATTR_DISCOVERY_TOPIC]
+
             device_trigger.detach_trigger()
-            clear_discovery_hash(hass, device_trigger.discovery_hash)
+            clear_discovery_hash(hass, discovery_hash)
             device_trigger.remove_signal()
+            mqtt.publish(
+                hass, discovery_topic, "", retain=True,
+            )
 
 
 async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
@@ -281,7 +287,7 @@ async def async_attach_trigger(
         hass.data[DEVICE_TRIGGERS][discovery_id] = Trigger(
             hass=hass,
             device_id=device_id,
-            discovery_hash=None,
+            discovery_data=None,
             remove_signal=None,
             type=config[CONF_TYPE],
             subtype=config[CONF_SUBTYPE],

@@ -262,7 +262,7 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchDevice, RestoreEntity):
         """Shortcut to the switch port that client is connected to."""
         try:
             return self.device.ports[self.client.sw_port]
-        except TypeError:
+        except (AttributeError, KeyError, TypeError):
             LOGGER.warning(
                 "Entity %s reports faulty device %s or port %s",
                 self.entity_id,
@@ -282,7 +282,7 @@ class UniFiBlockClientSwitch(UniFiClient, SwitchDevice):
     @property
     def is_on(self):
         """Return true if client is allowed to connect."""
-        return not self.client.blocked
+        return not self.is_blocked
 
     async def async_turn_on(self, **kwargs):
         """Turn on connectivity for client."""
@@ -291,3 +291,10 @@ class UniFiBlockClientSwitch(UniFiClient, SwitchDevice):
     async def async_turn_off(self, **kwargs):
         """Turn off connectivity for client."""
         await self.controller.api.clients.async_block(self.client.mac)
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        if self.is_blocked:
+            return "mdi:network-off"
+        return "mdi:network"

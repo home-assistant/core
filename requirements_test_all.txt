@@ -62,7 +62,7 @@ aiobotocore==0.11.1
 aioesphomeapi==2.6.1
 
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.24
+aiohomekit[IP]==0.2.25
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -81,7 +81,7 @@ aiopylgtv==0.3.3
 aioswitcher==2019.4.26
 
 # homeassistant.components.unifi
-aiounifi==14
+aiounifi==15
 
 # homeassistant.components.wwlln
 aiowwlln==2.0.2
@@ -147,7 +147,7 @@ colorlog==4.1.0
 construct==2.9.45
 
 # homeassistant.components.coronavirus
-coronavirus==1.0.1
+coronavirus==1.1.0
 
 # homeassistant.scripts.credstash
 # credstash==1.15.0
@@ -480,7 +480,7 @@ pyheos==0.6.0
 pyhomematic==0.1.65
 
 # homeassistant.components.icloud
-pyicloud==0.9.3
+pyicloud==0.9.4
 
 # homeassistant.components.ipma
 pyipma==2.0.5
@@ -501,7 +501,7 @@ pylitejet==0.1
 pymailgunner==1.4
 
 # homeassistant.components.melcloud
-pymelcloud==2.1.0
+pymelcloud==2.4.0
 
 # homeassistant.components.somfy
 pymfy==0.7.1
@@ -580,9 +580,6 @@ python-miio==0.4.8
 # homeassistant.components.nest
 python-nest==4.1.0
 
-# homeassistant.components.tado
-python-tado==0.4.0
-
 # homeassistant.components.twitch
 python-twitch-client==0.6.0
 
@@ -627,6 +624,9 @@ rxv==0.6.0
 
 # homeassistant.components.samsungtv
 samsungctl[websocket]==0.7.1
+
+# homeassistant.components.samsungtv
+samsungtvws[websocket]==1.4.0
 
 # homeassistant.components.sense
 sense_energy==0.7.0
