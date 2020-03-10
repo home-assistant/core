@@ -29,6 +29,7 @@ omit =
     homeassistant/components/airly/air_quality.py
     homeassistant/components/airly/sensor.py
     homeassistant/components/airly/const.py
+    homeassistant/components/airvisual/__init__.py
     homeassistant/components/airvisual/sensor.py
     homeassistant/components/aladdin_connect/cover.py
     homeassistant/components/alarmdecoder/*
@@ -65,6 +66,7 @@ omit =
     homeassistant/components/automatic/device_tracker.py
     homeassistant/components/avea/light.py
     homeassistant/components/avion/light.py
+    homeassistant/components/avri/sensor.py
     homeassistant/components/azure_event_hub/*
     homeassistant/components/azure_service_bus/*
     homeassistant/components/baidu/tts.py
@@ -107,7 +109,6 @@ omit =
     homeassistant/components/canary/alarm_control_panel.py
     homeassistant/components/canary/camera.py
     homeassistant/components/cast/*
-    homeassistant/components/cert_expiry/sensor.py
     homeassistant/components/cert_expiry/helper.py
     homeassistant/components/channels/*
     homeassistant/components/cisco_ios/device_tracker.py
@@ -179,6 +180,7 @@ omit =
     homeassistant/components/ecobee/weather.py
     homeassistant/components/econet/*
     homeassistant/components/ecovacs/*
+    homeassistant/components/edl21/*
     homeassistant/components/eddystone_temperature/sensor.py
     homeassistant/components/edimax/switch.py
     homeassistant/components/egardia/*
@@ -217,6 +219,7 @@ omit =
     homeassistant/components/eufy/*
     homeassistant/components/everlights/light.py
     homeassistant/components/evohome/*
+    homeassistant/components/ezviz/*
     homeassistant/components/familyhub/camera.py
     homeassistant/components/fastdotcom/*
     homeassistant/components/ffmpeg/camera.py
@@ -313,6 +316,7 @@ omit =
     homeassistant/components/hydrawise/*
     homeassistant/components/hyperion/light.py
     homeassistant/components/ialarm/alarm_control_panel.py
+    homeassistant/components/iammeter/sensor.py
     homeassistant/components/iaqualink/binary_sensor.py
     homeassistant/components/iaqualink/climate.py
     homeassistant/components/iaqualink/light.py
@@ -479,6 +483,7 @@ omit =
     homeassistant/components/nissan_leaf/*
     homeassistant/components/nmap_tracker/device_tracker.py
     homeassistant/components/nmbs/sensor.py
+    homeassistant/components/notion/__init__.py
     homeassistant/components/notion/binary_sensor.py
     homeassistant/components/notion/sensor.py
     homeassistant/components/noaa_tides/sensor.py
@@ -564,6 +569,7 @@ omit =
     homeassistant/components/qnap/sensor.py
     homeassistant/components/qrcode/image_processing.py
     homeassistant/components/quantum_gateway/device_tracker.py
+    homeassistant/components/qvr_pro/*
     homeassistant/components/qwikswitch/*
     homeassistant/components/rachio/*
     homeassistant/components/radarr/sensor.py
@@ -697,6 +703,7 @@ omit =
     homeassistant/components/tado/device_tracker.py
     homeassistant/components/tahoma/*
     homeassistant/components/tank_utility/sensor.py
+    homeassistant/components/tankerkoenig/*
     homeassistant/components/tapsaff/binary_sensor.py
     homeassistant/components/tautulli/sensor.py
     homeassistant/components/ted5000/sensor.py

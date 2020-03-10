@@ -26,7 +26,6 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceC
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "input_text"
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 CONF_INITIAL = "initial"
 CONF_MIN = "min"
@@ -212,7 +211,7 @@ class InputText(RestoreEntity):
             **config,
         }
         input_text = cls(config)
-        input_text.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])
+        input_text.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         input_text.editable = False
         return input_text
 

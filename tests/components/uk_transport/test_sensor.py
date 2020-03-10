@@ -2,6 +2,7 @@
 import re
 import unittest
 
+from asynctest import patch
 import requests_mock
 
 from homeassistant.components.uk_transport.sensor import (
@@ -17,6 +18,7 @@ from homeassistant.components.uk_transport.sensor import (
     UkTransportSensor,
 )
 from homeassistant.setup import setup_component
+from homeassistant.util.dt import now
 
 from tests.common import get_test_home_assistant, load_fixture
 
@@ -77,7 +79,9 @@ class TestUkTransportSensor(unittest.TestCase):
     @requests_mock.Mocker()
     def test_train(self, mock_req):
         """Test for operational uk_transport sensor with proper attributes."""
-        with requests_mock.Mocker() as mock_req:
+        with requests_mock.Mocker() as mock_req, patch(
+            "homeassistant.util.dt.now", return_value=now().replace(hour=13)
+        ):
             uri = re.compile(UkTransportSensor.TRANSPORT_API_URL_BASE + "*")
             mock_req.get(uri, text=load_fixture("uk_transport_train.json"))
             assert setup_component(self.hass, "sensor", {"sensor": self.config})

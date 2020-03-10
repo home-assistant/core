@@ -84,9 +84,7 @@ def setup(hass, config):
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Hydrawise cloud service: %s", str(ex))
         hass.components.persistent_notification.create(
-            "Error: {}<br />"
-            "You will need to restart hass after fixing."
-            "".format(ex),
+            f"Error: {ex}<br />You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
@@ -119,10 +117,7 @@ class HydrawiseEntity(Entity):
         """Initialize the Hydrawise entity."""
         self.data = data
         self._sensor_type = sensor_type
-        self._name = "{0} {1}".format(
-            self.data["name"],
-            DEVICE_MAP[self._sensor_type][DEVICE_MAP_INDEX.index("KEY_INDEX")],
-        )
+        self._name = f"{self.data['name']} {DEVICE_MAP[self._sensor_type][DEVICE_MAP_INDEX.index('KEY_INDEX')]}"
         self._state = None
 
     @property

@@ -10,7 +10,6 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
-    CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
@@ -49,7 +48,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entry.data[CONF_LONGITUDE],
         entry.data[CONF_RADIUS],
         entry.data[CONF_WINDOW],
-        entry.data[CONF_UNIT_SYSTEM],
     )
     await manager.async_init()
 
@@ -66,7 +64,6 @@ class WWLLNEventManager:
         longitude,
         radius,
         window_seconds,
-        unit_system,
     ):
         """Initialize."""
         self._async_add_entities = async_add_entities
@@ -79,8 +76,7 @@ class WWLLNEventManager:
         self._strikes = {}
         self._window = timedelta(seconds=window_seconds)
 
-        self._unit_system = unit_system
-        if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+        if hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
             self._unit = LENGTH_MILES
         else:
             self._unit = LENGTH_KILOMETERS
@@ -130,7 +126,7 @@ class WWLLNEventManager:
                 self._latitude,
                 self._longitude,
                 self._radius,
-                unit=self._unit_system,
+                unit=self._hass.config.units.name,
                 window=self._window,
             )
         except WWLLNError as err:

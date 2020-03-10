@@ -4,7 +4,13 @@ import unittest
 from unittest import mock
 
 import homeassistant.components.influxdb as influxdb
-from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON, STATE_STANDBY
+from homeassistant.const import (
+    EVENT_STATE_CHANGED,
+    STATE_OFF,
+    STATE_ON,
+    STATE_STANDBY,
+    UNIT_PERCENTAGE,
+)
 from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
@@ -102,7 +108,7 @@ class TestInfluxDB(unittest.TestCase):
                 "unit_of_measurement": "foobars",
                 "longitude": "1.1",
                 "latitude": "2.2",
-                "battery_level": "99%",
+                "battery_level": f"99{UNIT_PERCENTAGE}",
                 "temperature": "20c",
                 "last_seen": "Last seen 23 minutes ago",
                 "updated_at": datetime.datetime(2017, 1, 1, 0, 0),
@@ -124,7 +130,7 @@ class TestInfluxDB(unittest.TestCase):
                     "fields": {
                         "longitude": 1.1,
                         "latitude": 2.2,
-                        "battery_level_str": "99%",
+                        "battery_level_str": f"99{UNIT_PERCENTAGE}",
                         "battery_level": 99.0,
                         "temperature_str": "20c",
                         "temperature": 20.0,

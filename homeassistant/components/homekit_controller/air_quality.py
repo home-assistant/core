@@ -1,5 +1,5 @@
 """Support for HomeKit Controller air quality sensors."""
-from homekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.air_quality import AirQualityEntity
 from homeassistant.core import callback

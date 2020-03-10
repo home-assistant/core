@@ -15,7 +15,7 @@ PROJECT_URL = "https://www.home-assistant.io/"
 PROJECT_EMAIL = "hello@home-assistant.io"
 
 PROJECT_GITHUB_USERNAME = "home-assistant"
-PROJECT_GITHUB_REPOSITORY = "home-assistant"
+PROJECT_GITHUB_REPOSITORY = "core"
 
 PYPI_URL = "https://pypi.python.org/pypi/{}".format(PROJECT_PACKAGE_NAME)
 GITHUB_PATH = "{}/{}".format(PROJECT_GITHUB_USERNAME, PROJECT_GITHUB_REPOSITORY)
@@ -38,6 +38,7 @@ REQUIRES = [
     "attrs==19.3.0",
     "bcrypt==3.1.7",
     "certifi>=2019.11.28",
+    "ciso8601==2.1.3",
     "importlib-metadata==1.5.0",
     "jinja2>=2.10.3",
     "PyJWT==1.7.1",

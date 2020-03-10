@@ -43,10 +43,7 @@ class TestComponentsGroup(unittest.TestCase):
         )
 
         assert (
-            STATE_ON
-            == self.hass.states.get(
-                group.ENTITY_ID_FORMAT.format("person_and_light")
-            ).state
+            STATE_ON == self.hass.states.get(f"{group.DOMAIN}.person_and_light").state
         )
 
     def test_setup_group_with_a_non_existing_state(self):
@@ -296,9 +293,7 @@ class TestComponentsGroup(unittest.TestCase):
 
         setup_component(self.hass, "group", {"group": group_conf})
 
-        group_state = self.hass.states.get(
-            group.ENTITY_ID_FORMAT.format("second_group")
-        )
+        group_state = self.hass.states.get(f"{group.DOMAIN}.second_group")
         assert STATE_ON == group_state.state
         assert set((test_group.entity_id, "light.bowl")) == set(
             group_state.attributes["entity_id"]
@@ -307,7 +302,7 @@ class TestComponentsGroup(unittest.TestCase):
         assert "mdi:work" == group_state.attributes.get(ATTR_ICON)
         assert 1 == group_state.attributes.get(group.ATTR_ORDER)
 
-        group_state = self.hass.states.get(group.ENTITY_ID_FORMAT.format("test_group"))
+        group_state = self.hass.states.get(f"{group.DOMAIN}.test_group")
         assert STATE_UNKNOWN == group_state.state
         assert set(("sensor.happy", "hello.world")) == set(
             group_state.attributes["entity_id"]
@@ -373,10 +368,7 @@ class TestComponentsGroup(unittest.TestCase):
         )
         self.hass.states.set("device_tracker.Adam", "cool_state_not_home")
         self.hass.block_till_done()
-        assert (
-            STATE_NOT_HOME
-            == self.hass.states.get(group.ENTITY_ID_FORMAT.format("peeps")).state
-        )
+        assert STATE_NOT_HOME == self.hass.states.get(f"{group.DOMAIN}.peeps").state
 
     def test_reloading_groups(self):
         """Test reloading the group config."""
@@ -431,9 +423,7 @@ class TestComponentsGroup(unittest.TestCase):
         common.set_group(self.hass, "modify_group", icon="mdi:play")
         self.hass.block_till_done()
 
-        group_state = self.hass.states.get(
-            group.ENTITY_ID_FORMAT.format("modify_group")
-        )
+        group_state = self.hass.states.get(f"{group.DOMAIN}.modify_group")
 
         assert self.hass.states.entity_ids() == ["group.modify_group"]
         assert group_state.attributes.get(ATTR_ICON) == "mdi:play"
@@ -463,9 +453,7 @@ async def test_service_group_set_group_remove_group(hass):
     assert group_state.attributes[group.ATTR_AUTO]
     assert group_state.attributes["friendly_name"] == "Test"
 
-    common.async_set_group(
-        hass, "user_test_group", entity_ids=["test.entity_bla1"],
-    )
+    common.async_set_group(hass, "user_test_group", entity_ids=["test.entity_bla1"])
     await hass.async_block_till_done()
 
     group_state = hass.states.get("group.user_test_group")

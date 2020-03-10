@@ -203,7 +203,7 @@ async def finish_setup(hass, config):
         {
             "script": {
                 "demo": {
-                    "alias": "Toggle {}".format(lights[0].split(".")[1]),
+                    "alias": f"Toggle {lights[0].split('.')[1]}",
                     "sequence": [
                         {
                             "service": "light.turn_off",

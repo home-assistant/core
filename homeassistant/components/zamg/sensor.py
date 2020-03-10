@@ -17,7 +17,8 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
-    TIME_HOURS,
+    SPEED_KILOMETERS_PER_HOUR,
+    UNIT_PERCENTAGE,
     __version__,
 )
 import homeassistant.helpers.config_validation as cv
@@ -39,17 +40,22 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 SENSOR_TYPES = {
     "pressure": ("Pressure", "hPa", "LDstat hPa", float),
     "pressure_sealevel": ("Pressure at Sea Level", "hPa", "LDred hPa", float),
-    "humidity": ("Humidity", "%", "RF %", int),
-    "wind_speed": ("Wind Speed", f"km/{TIME_HOURS}", f"WG km/{TIME_HOURS}", float),
+    "humidity": ("Humidity", UNIT_PERCENTAGE, "RF %", int),
+    "wind_speed": (
+        "Wind Speed",
+        SPEED_KILOMETERS_PER_HOUR,
+        f"WG {SPEED_KILOMETERS_PER_HOUR}",
+        float,
+    ),
     "wind_bearing": ("Wind Bearing", "°", "WR °", int),
     "wind_max_speed": (
         "Top Wind Speed",
-        f"km/{TIME_HOURS}",
-        f"WSG km/{TIME_HOURS}",
+        SPEED_KILOMETERS_PER_HOUR,
+        f"WSG {SPEED_KILOMETERS_PER_HOUR}",
         float,
     ),
     "wind_max_bearing": ("Top Wind Bearing", "°", "WSR °", int),
-    "sun_last_hour": ("Sun Last Hour", "%", "SO %", int),
+    "sun_last_hour": ("Sun Last Hour", UNIT_PERCENTAGE, f"SO {UNIT_PERCENTAGE}", int),
     "temperature": ("Temperature", "°C", "T °C", float),
     "precipitation": ("Precipitation", "l/m²", "N l/m²", float),
     "dewpoint": ("Dew Point", "°C", "TP °C", float),

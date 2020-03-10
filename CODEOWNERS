@@ -41,6 +41,7 @@ homeassistant/components/auth/* @home-assistant/core
 homeassistant/components/automatic/* @armills
 homeassistant/components/automation/* @home-assistant/core
 homeassistant/components/avea/* @pattyland
+homeassistant/components/avri/* @timvancann
 homeassistant/components/awair/* @danielsjf
 homeassistant/components/aws/* @awarecan @robbiet480
 homeassistant/components/axis/* @kane610
@@ -68,6 +69,7 @@ homeassistant/components/config/* @home-assistant/core
 homeassistant/components/configurator/* @home-assistant/core
 homeassistant/components/conversation/* @home-assistant/core
 homeassistant/components/coolmaster/* @OnFreund
+homeassistant/components/coronavirus/* @home_assistant/core
 homeassistant/components/counter/* @fabaff
 homeassistant/components/cover/* @home-assistant/core
 homeassistant/components/cpuspeed/* @fabaff
@@ -88,11 +90,13 @@ homeassistant/components/dynalite/* @ziv1234
 homeassistant/components/dyson/* @etheralm
 homeassistant/components/ecobee/* @marthoc
 homeassistant/components/ecovacs/* @OverloadUT
+homeassistant/components/edl21/* @mtdcr
 homeassistant/components/egardia/* @jeroenterheerdt
 homeassistant/components/eight_sleep/* @mezz64
 homeassistant/components/elgato/* @frenck
 homeassistant/components/elv/* @majuss
 homeassistant/components/emby/* @mezz64
+homeassistant/components/emoncms/* @borpin
 homeassistant/components/enigma2/* @fbradyirl
 homeassistant/components/enocean/* @bdurrer
 homeassistant/components/entur_public_transport/* @hfurubotten
@@ -103,6 +107,7 @@ homeassistant/components/eq3btsmart/* @rytilahti
 homeassistant/components/esphome/* @OttoWinter
 homeassistant/components/essent/* @TheLastProject
 homeassistant/components/evohome/* @zxdavb
+homeassistant/components/ezviz/* @baqs
 homeassistant/components/fastdotcom/* @rohankapoorcom
 homeassistant/components/file/* @fabaff
 homeassistant/components/filter/* @dgomes
@@ -158,6 +163,7 @@ homeassistant/components/http/* @home-assistant/core
 homeassistant/components/huawei_lte/* @scop
 homeassistant/components/huawei_router/* @abmantis
 homeassistant/components/hue/* @balloob
+homeassistant/components/iammeter/* @lewei50
 homeassistant/components/iaqualink/* @flz
 homeassistant/components/icloud/* @Quentame
 homeassistant/components/ign_sismologia/* @exxamalte
@@ -275,6 +281,7 @@ homeassistant/components/pvoutput/* @fabaff
 homeassistant/components/qld_bushfire/* @exxamalte
 homeassistant/components/qnap/* @colinodell
 homeassistant/components/quantum_gateway/* @cisasteelersfan
+homeassistant/components/qvr_pro/* @oblogic7
 homeassistant/components/qwikswitch/* @kellerza
 homeassistant/components/rainbird/* @konikvranik
 homeassistant/components/raincloud/* @vanstinator
@@ -343,8 +350,9 @@ homeassistant/components/switchmate/* @danielhiversen
 homeassistant/components/syncthru/* @nielstron
 homeassistant/components/synology_srm/* @aerialls
 homeassistant/components/syslog/* @fabaff
-homeassistant/components/tado/* @michaelarnauts
+homeassistant/components/tado/* @michaelarnauts @bdraco
 homeassistant/components/tahoma/* @philklei
+homeassistant/components/tankerkoenig/* @guillempages
 homeassistant/components/tautulli/* @ludeeus
 homeassistant/components/tellduslive/* @fredrike
 homeassistant/components/template/* @PhracturedBlue @tetienne

@@ -5,7 +5,6 @@ import logging
 LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "device_tracker"
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 PLATFORM_TYPE_LEGACY = "legacy"
 PLATFORM_TYPE_ENTITY = "entity_platform"

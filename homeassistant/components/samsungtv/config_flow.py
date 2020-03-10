@@ -158,13 +158,14 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._id.startswith("uuid:"):
             self._id = self._id[5:]
 
-        config_entry = await self.async_set_unique_id(ip_address)
-        if config_entry:
-            config_entry.data[CONF_ID] = self._id
-            config_entry.data[CONF_MANUFACTURER] = self._manufacturer
-            config_entry.data[CONF_MODEL] = self._model
-            self.hass.config_entries.async_update_entry(config_entry)
-            return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(ip_address)
+        self._abort_if_unique_id_configured(
+            {
+                CONF_ID: self._id,
+                CONF_MANUFACTURER: self._manufacturer,
+                CONF_MODEL: self._model,
+            }
+        )
 
         self.context["title_placeholders"] = {"model": self._model}
         return await self.async_step_confirm()

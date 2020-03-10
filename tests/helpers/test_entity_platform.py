@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, Mock, patch
 import asynctest
 import pytest
 
+from homeassistant.const import UNIT_PERCENTAGE
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import entity_platform, entity_registry
 from homeassistant.helpers.entity import async_generate_entity_id
@@ -800,7 +801,7 @@ async def test_entity_info_added_to_entity_registry(hass):
         capability_attributes={"max": 100},
         supported_features=5,
         device_class="mock-device-class",
-        unit_of_measurement="%",
+        unit_of_measurement=UNIT_PERCENTAGE,
     )
 
     await component.async_add_entities([entity_default])
@@ -812,7 +813,7 @@ async def test_entity_info_added_to_entity_registry(hass):
     assert entry_default.capabilities == {"max": 100}
     assert entry_default.supported_features == 5
     assert entry_default.device_class == "mock-device-class"
-    assert entry_default.unit_of_measurement == "%"
+    assert entry_default.unit_of_measurement == UNIT_PERCENTAGE
 
 
 async def test_override_restored_entities(hass):

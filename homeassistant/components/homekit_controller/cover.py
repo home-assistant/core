@@ -1,7 +1,7 @@
 """Support for Homekit covers."""
 import logging
 
-from homekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.cover import (
     ATTR_POSITION,

@@ -157,13 +157,12 @@ PLATFORM_SCHEMA_STATE = (
 
 
 async def async_setup_entity_state(
-    config, async_add_entities, config_entry, discovery_hash
+    config, async_add_entities, config_entry, discovery_data
 ):
     """Set up a State MQTT Vacuum."""
-    async_add_entities([MqttStateVacuum(config, config_entry, discovery_hash)])
+    async_add_entities([MqttStateVacuum(config, config_entry, discovery_data)])
 
 
-# pylint: disable=too-many-ancestors
 class MqttStateVacuum(
     MqttAttributes,
     MqttAvailability,
@@ -232,9 +231,12 @@ class MqttStateVacuum(
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
-        await subscription.async_unsubscribe_topics(self.hass, self._sub_state)
+        self._sub_state = await subscription.async_unsubscribe_topics(
+            self.hass, self._sub_state
+        )
         await MqttAttributes.async_will_remove_from_hass(self)
         await MqttAvailability.async_will_remove_from_hass(self)
+        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""

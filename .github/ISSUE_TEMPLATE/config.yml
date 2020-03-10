@@ -1,7 +1,7 @@
 blank_issues_enabled: false
 contact_links:
   - name: Report a bug with the UI, Frontend or Lovelace
-    url: https://github.com/home-assistant/home-assistant-polymer/issues
+    url: https://github.com/home-assistant/frontend/issues
     about: This is the issue tracker for our backend. Please report issues with the UI in the frontend repository.
   - name: Report incorrect or missing information on our website
     url: https://github.com/home-assistant/home-assistant.io/issues

@@ -1,7 +1,7 @@
 """Support for HomeKit Controller locks."""
 import logging
 
-from homekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_LOCKED, STATE_UNLOCKED

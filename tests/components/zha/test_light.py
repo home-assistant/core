@@ -9,7 +9,8 @@ import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.lighting as lighting
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.light import DOMAIN
+from homeassistant.components.light import DOMAIN, FLASH_LONG, FLASH_SHORT
+from homeassistant.components.zha.light import FLASH_EFFECTS
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 
 from .common import (
@@ -26,7 +27,11 @@ OFF = 0
 LIGHT_ON_OFF = {
     1: {
         "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT,
-        "in_clusters": [general.Basic.cluster_id, general.OnOff.cluster_id],
+        "in_clusters": [
+            general.Basic.cluster_id,
+            general.Identify.cluster_id,
+            general.OnOff.cluster_id,
+        ],
         "out_clusters": [general.Ota.cluster_id],
     }
 }
@@ -48,6 +53,7 @@ LIGHT_COLOR = {
         "device_type": zigpy.profiles.zha.DeviceType.COLOR_DIMMABLE_LIGHT,
         "in_clusters": [
             general.Basic.cluster_id,
+            general.Identify.cluster_id,
             general.LevelControl.cluster_id,
             general.OnOff.cluster_id,
             lighting.Color.cluster_id,
@@ -59,6 +65,10 @@ LIGHT_COLOR = {
 
 @asynctest.patch(
     "zigpy.zcl.clusters.lighting.Color.request",
+    new=asynctest.CoroutineMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
+)
+@asynctest.patch(
+    "zigpy.zcl.clusters.general.Identify.request",
     new=asynctest.CoroutineMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
 )
 @asynctest.patch(
@@ -88,6 +98,7 @@ async def test_light(
     cluster_on_off = zigpy_device.endpoints[1].on_off
     cluster_level = getattr(zigpy_device.endpoints[1], "level", None)
     cluster_color = getattr(zigpy_device.endpoints[1], "light_color", None)
+    cluster_identify = getattr(zigpy_device.endpoints[1], "identify", None)
 
     # test that the lights were created and that they are unavailable
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
@@ -104,6 +115,11 @@ async def test_light(
     # test turning the lights on and off from the HA
     await async_test_on_off_from_hass(hass, cluster_on_off, entity_id)
 
+    # test short flashing the lights from the HA
+    if cluster_identify:
+        await async_test_flash_from_hass(hass, cluster_identify, entity_id, FLASH_SHORT)
+
+    # test turning the lights on and off from the HA
     if cluster_level:
         await async_test_level_on_off_from_hass(
             hass, cluster_on_off, cluster_level, entity_id
@@ -123,6 +139,10 @@ async def test_light(
     if cluster_color:
         clusters.append(cluster_color)
     await async_test_rejoin(hass, zigpy_device, clusters, reporting)
+
+    # test long flashing the lights from the HA
+    if cluster_identify:
+        await async_test_flash_from_hass(hass, cluster_identify, entity_id, FLASH_LONG)
 
 
 async def async_test_on_off_from_light(hass, cluster, entity_id):
@@ -161,7 +181,7 @@ async def async_test_on_off_from_hass(hass, cluster, entity_id):
     assert cluster.request.call_count == 1
     assert cluster.request.await_count == 1
     assert cluster.request.call_args == call(
-        False, ON, (), expect_reply=True, manufacturer=None
+        False, ON, (), expect_reply=True, manufacturer=None, tsn=None
     )
 
     await async_test_off_from_hass(hass, cluster, entity_id)
@@ -178,7 +198,7 @@ async def async_test_off_from_hass(hass, cluster, entity_id):
     assert cluster.request.call_count == 1
     assert cluster.request.await_count == 1
     assert cluster.request.call_args == call(
-        False, OFF, (), expect_reply=True, manufacturer=None
+        False, OFF, (), expect_reply=True, manufacturer=None, tsn=None
     )
 
 
@@ -188,6 +208,7 @@ async def async_test_level_on_off_from_hass(
     """Test on off functionality from hass."""
 
     on_off_cluster.request.reset_mock()
+    level_cluster.request.reset_mock()
     # turn on via UI
     await hass.services.async_call(
         DOMAIN, "turn_on", {"entity_id": entity_id}, blocking=True
@@ -197,7 +218,7 @@ async def async_test_level_on_off_from_hass(
     assert level_cluster.request.call_count == 0
     assert level_cluster.request.await_count == 0
     assert on_off_cluster.request.call_args == call(
-        False, 1, (), expect_reply=True, manufacturer=None
+        False, ON, (), expect_reply=True, manufacturer=None, tsn=None
     )
     on_off_cluster.request.reset_mock()
     level_cluster.request.reset_mock()
@@ -210,7 +231,7 @@ async def async_test_level_on_off_from_hass(
     assert level_cluster.request.call_count == 1
     assert level_cluster.request.await_count == 1
     assert on_off_cluster.request.call_args == call(
-        False, 1, (), expect_reply=True, manufacturer=None
+        False, ON, (), expect_reply=True, manufacturer=None, tsn=None
     )
     assert level_cluster.request.call_args == call(
         False,
@@ -220,6 +241,7 @@ async def async_test_level_on_off_from_hass(
         100.0,
         expect_reply=True,
         manufacturer=None,
+        tsn=None,
     )
     on_off_cluster.request.reset_mock()
     level_cluster.request.reset_mock()
@@ -232,7 +254,7 @@ async def async_test_level_on_off_from_hass(
     assert level_cluster.request.call_count == 1
     assert level_cluster.request.await_count == 1
     assert on_off_cluster.request.call_args == call(
-        False, 1, (), expect_reply=True, manufacturer=None
+        False, ON, (), expect_reply=True, manufacturer=None, tsn=None
     )
     assert level_cluster.request.call_args == call(
         False,
@@ -242,6 +264,7 @@ async def async_test_level_on_off_from_hass(
         0,
         expect_reply=True,
         manufacturer=None,
+        tsn=None,
     )
     on_off_cluster.request.reset_mock()
     level_cluster.request.reset_mock()
@@ -260,3 +283,24 @@ async def async_test_dimmer_from_light(hass, cluster, entity_id, level, expected
     if level == 0:
         level = None
     assert hass.states.get(entity_id).attributes.get("brightness") == level
+
+
+async def async_test_flash_from_hass(hass, cluster, entity_id, flash):
+    """Test flash functionality from hass."""
+    # turn on via UI
+    cluster.request.reset_mock()
+    await hass.services.async_call(
+        DOMAIN, "turn_on", {"entity_id": entity_id, "flash": flash}, blocking=True
+    )
+    assert cluster.request.call_count == 1
+    assert cluster.request.await_count == 1
+    assert cluster.request.call_args == call(
+        False,
+        64,
+        (zigpy.types.uint8_t, zigpy.types.uint8_t),
+        FLASH_EFFECTS[flash],
+        0,
+        expect_reply=True,
+        manufacturer=None,
+        tsn=None,
+    )
