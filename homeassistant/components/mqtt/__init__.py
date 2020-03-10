@@ -437,8 +437,9 @@ async def async_subscribe(
         topic,
         catch_log_exception(
             wrapped_msg_callback,
-            lambda msg: "Exception in {} when handling msg on '{}': '{}'".format(
-                msg_callback.__name__, msg.topic, msg.payload
+            lambda msg: (
+                f"Exception in {msg_callback.__name__} when handling msg on "
+                f"'{msg.topic}': '{msg.payload}'"
             ),
         ),
         qos,
@@ -1014,7 +1015,7 @@ def _raise_on_error(result_code: int) -> None:
 
     if result_code != 0:
         raise HomeAssistantError(
-            "Error talking to MQTT: {}".format(mqtt.error_string(result_code))
+            f"Error talking to MQTT: {mqtt.error_string(result_code)}"
         )
 
 

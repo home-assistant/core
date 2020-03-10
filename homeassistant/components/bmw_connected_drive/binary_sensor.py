@@ -4,9 +4,10 @@ import logging
 from bimmer_connected.state import ChargingState, LockState
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.const import LENGTH_KILOMETERS
+from homeassistant.const import ATTR_ATTRIBUTION, LENGTH_KILOMETERS
 
 from . import DOMAIN as BMW_DOMAIN
+from .const import ATTRIBUTION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,7 +108,10 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
     def device_state_attributes(self):
         """Return the state attributes of the binary sensor."""
         vehicle_state = self._vehicle.state
-        result = {"car": self._vehicle.name}
+        result = {
+            "car": self._vehicle.name,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+        }
 
         if self._attribute == "lids":
             for lid in vehicle_state.lids:
@@ -143,7 +147,6 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
 
     def update(self):
         """Read new state data from the library."""
-
         vehicle_state = self._vehicle.state
 
         # device class opening: On means open, Off means closed
@@ -152,7 +155,7 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             self._state = not vehicle_state.all_lids_closed
         if self._attribute == "windows":
             self._state = not vehicle_state.all_windows_closed
-        # device class safety: On means unsafe, Off means safe
+        # device class lock: On means unlocked, Off means locked
         if self._attribute == "door_lock_state":
             # Possible values: LOCKED, SECURED, SELECTIVE_LOCKED, UNLOCKED
             self._state = vehicle_state.door_lock_state not in [
