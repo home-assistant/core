@@ -363,9 +363,10 @@ class ZHADevice(LogMixin):
         self.debug("completed initialization")
 
     @callback
-    def async_unsub_dispatcher(self):
+    def async_cleanup_handles(self) -> None:
         """Unsubscribe the dispatcher."""
         self._unsub()
+        self._available_check()
 
     @callback
     def async_update_last_seen(self, last_seen):
