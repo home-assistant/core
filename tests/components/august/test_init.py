@@ -1,13 +1,18 @@
 """The tests for the august platform."""
+import asyncio
+
 from asynctest import patch
 from august.exceptions import AugustApiAIOHTTPError
+import pytest
 
 from homeassistant import setup
+from homeassistant.components import august
 from homeassistant.components.august.const import (
     CONF_ACCESS_TOKEN_CACHE_FILE,
     CONF_INSTALL_ID,
     CONF_LOGIN_METHOD,
     DEFAULT_AUGUST_CONFIG_FILE,
+    DOMAIN,
 )
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.const import (
@@ -20,9 +25,10 @@ from homeassistant.const import (
     STATE_LOCKED,
     STATE_ON,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry
 from tests.components.august.mocks import (
     _create_august_with_devices,
     _mock_doorsense_enabled_august_lock_detail,
@@ -31,6 +37,40 @@ from tests.components.august.mocks import (
     _mock_inoperative_august_lock_detail,
     _mock_operative_august_lock_detail,
 )
+
+
+@pytest.fixture(name="config_entry")
+def config_entry_fixture():
+    """Create a mock HEOS config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_LOGIN_METHOD: "email",
+            CONF_TIMEOUT: 1,
+            CONF_USERNAME: "august",
+            CONF_ACCESS_TOKEN_CACHE_FILE: "mock.file",
+            CONF_PASSWORD: "hidden",
+        },
+        title="August august",
+    )
+
+
+async def test_august_is_offline(hass, config_entry):
+    """Throw ConfigEntryNotReady when august is down."""
+    # Assert setup returns false
+    hass.data[DOMAIN] = {}
+
+    lastex = None
+    with patch(
+        "august.authenticator_async.AuthenticatorAsync.async_authenticate",
+        side_effect=asyncio.TimeoutError,
+    ):
+        try:
+            await august.async_setup_entry(hass, config_entry)
+        except ConfigEntryNotReady as ex:
+            lastex = ex
+
+    assert isinstance(lastex, ConfigEntryNotReady)
 
 
 async def test_unlock_throws_august_api_http_error(hass):

@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
 from .activity import ActivityStream
@@ -164,9 +164,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up August from a config entry."""
 
     august_gateway = AugustGateway(hass)
-    await august_gateway.async_setup(entry.data)
 
-    return await async_setup_august(hass, entry, august_gateway)
+    try:
+        await august_gateway.async_setup(entry.data)
+        return await async_setup_august(hass, entry, august_gateway)
+    except asyncio.TimeoutError:
+        raise ConfigEntryNotReady
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
