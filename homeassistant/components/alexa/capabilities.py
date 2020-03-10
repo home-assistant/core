@@ -7,6 +7,7 @@ from homeassistant.components import (
     image_processing,
     input_number,
     light,
+    timer,
     vacuum,
 )
 from homeassistant.components.alarm_control_panel import ATTR_CODE_FORMAT, FORMAT_NUMBER
@@ -25,6 +26,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_IDLE,
     STATE_LOCKED,
     STATE_OFF,
     STATE_ON,
@@ -365,6 +367,8 @@ class AlexaPowerController(AlexaCapability):
             is_on = self.entity.state != climate.HVAC_MODE_OFF
         elif self.entity.domain == vacuum.DOMAIN:
             is_on = self.entity.state == vacuum.STATE_CLEANING
+        elif self.entity.domain == timer.DOMAIN:
+            is_on = self.entity.state != STATE_IDLE
 
         else:
             is_on = self.entity.state != STATE_OFF

@@ -163,7 +163,7 @@ aioftp==0.12.0
 aioharmony==0.1.13
 
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.24
+aiohomekit[IP]==0.2.25
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -203,7 +203,7 @@ aiopylgtv==0.3.3
 aioswitcher==2019.4.26
 
 # homeassistant.components.unifi
-aiounifi==14
+aiounifi==15
 
 # homeassistant.components.wwlln
 aiowwlln==2.0.2
@@ -406,7 +406,7 @@ connect-box==0.2.5
 construct==2.9.45
 
 # homeassistant.components.coronavirus
-coronavirus==1.0.1
+coronavirus==1.1.0
 
 # homeassistant.scripts.credstash
 # credstash==1.15.0
@@ -663,7 +663,7 @@ habitipy==0.2.0
 hangups==0.4.9
 
 # homeassistant.components.cloud
-hass-nabucasa==0.32
+hass-nabucasa==0.32.2
 
 # homeassistant.components.mqtt
 hbmqtt==0.9.5
@@ -1312,7 +1312,7 @@ pyhomeworks==0.0.6
 pyialarm==0.3
 
 # homeassistant.components.icloud
-pyicloud==0.9.3
+pyicloud==0.9.4
 
 # homeassistant.components.intesishome
 pyintesishome==1.6
@@ -1372,7 +1372,7 @@ pymailgunner==1.4
 pymediaroom==0.6.4
 
 # homeassistant.components.melcloud
-pymelcloud==2.1.0
+pymelcloud==2.4.0
 
 # homeassistant.components.somfy
 pymfy==0.7.1
@@ -1814,6 +1814,9 @@ saltbox==0.1.3
 
 # homeassistant.components.samsungtv
 samsungctl[websocket]==0.7.1
+
+# homeassistant.components.samsungtv
+samsungtvws[websocket]==1.4.0
 
 # homeassistant.components.satel_integra
 satel_integra==0.3.4
