@@ -181,7 +181,7 @@ async def async_test_on_off_from_hass(hass, cluster, entity_id):
     assert cluster.request.call_count == 1
     assert cluster.request.await_count == 1
     assert cluster.request.call_args == call(
-        False, ON, (), expect_reply=True, manufacturer=None
+        False, ON, (), expect_reply=True, manufacturer=None, tsn=None
     )
 
     await async_test_off_from_hass(hass, cluster, entity_id)
@@ -198,7 +198,7 @@ async def async_test_off_from_hass(hass, cluster, entity_id):
     assert cluster.request.call_count == 1
     assert cluster.request.await_count == 1
     assert cluster.request.call_args == call(
-        False, OFF, (), expect_reply=True, manufacturer=None
+        False, OFF, (), expect_reply=True, manufacturer=None, tsn=None
     )
 
 
@@ -208,6 +208,7 @@ async def async_test_level_on_off_from_hass(
     """Test on off functionality from hass."""
 
     on_off_cluster.request.reset_mock()
+    level_cluster.request.reset_mock()
     # turn on via UI
     await hass.services.async_call(
         DOMAIN, "turn_on", {"entity_id": entity_id}, blocking=True
@@ -217,7 +218,7 @@ async def async_test_level_on_off_from_hass(
     assert level_cluster.request.call_count == 0
     assert level_cluster.request.await_count == 0
     assert on_off_cluster.request.call_args == call(
-        False, ON, (), expect_reply=True, manufacturer=None
+        False, ON, (), expect_reply=True, manufacturer=None, tsn=None
     )
     on_off_cluster.request.reset_mock()
     level_cluster.request.reset_mock()
@@ -230,7 +231,7 @@ async def async_test_level_on_off_from_hass(
     assert level_cluster.request.call_count == 1
     assert level_cluster.request.await_count == 1
     assert on_off_cluster.request.call_args == call(
-        False, ON, (), expect_reply=True, manufacturer=None
+        False, ON, (), expect_reply=True, manufacturer=None, tsn=None
     )
     assert level_cluster.request.call_args == call(
         False,
@@ -240,6 +241,7 @@ async def async_test_level_on_off_from_hass(
         100.0,
         expect_reply=True,
         manufacturer=None,
+        tsn=None,
     )
     on_off_cluster.request.reset_mock()
     level_cluster.request.reset_mock()
@@ -252,7 +254,7 @@ async def async_test_level_on_off_from_hass(
     assert level_cluster.request.call_count == 1
     assert level_cluster.request.await_count == 1
     assert on_off_cluster.request.call_args == call(
-        False, ON, (), expect_reply=True, manufacturer=None
+        False, ON, (), expect_reply=True, manufacturer=None, tsn=None
     )
     assert level_cluster.request.call_args == call(
         False,
@@ -262,6 +264,7 @@ async def async_test_level_on_off_from_hass(
         0,
         expect_reply=True,
         manufacturer=None,
+        tsn=None,
     )
     on_off_cluster.request.reset_mock()
     level_cluster.request.reset_mock()
@@ -299,4 +302,5 @@ async def async_test_flash_from_hass(hass, cluster, entity_id, flash):
         0,
         expect_reply=True,
         manufacturer=None,
+        tsn=None,
     )
