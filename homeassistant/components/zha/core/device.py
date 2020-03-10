@@ -106,7 +106,7 @@ class ZHADevice(LogMixin):
             else _CONSIDER_UNAVAILABLE_BATTERY
         )
         keep_alive_interval = random.randint(*_UPDATE_ALIVE_INTERVAL)
-        self._available_check = async_track_time_interval(
+        self._cancel_available_check = async_track_time_interval(
             self.hass, self._check_available, timedelta(seconds=keep_alive_interval)
         )
         self._ha_device_id = None
@@ -372,7 +372,7 @@ class ZHADevice(LogMixin):
     def async_cleanup_handles(self) -> None:
         """Unsubscribe the dispatchers and timers."""
         self._unsub()
-        self._available_check()
+        self._cancel_available_check()
 
     @callback
     def async_update_last_seen(self, last_seen):
