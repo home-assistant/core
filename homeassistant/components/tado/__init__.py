@@ -1,13 +1,12 @@
 """Support for the (unofficial) Tado API."""
 from datetime import timedelta
 import logging
+import urllib
 
 from PyTado.interface import Tado
-from requests import RequestException
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -110,7 +109,7 @@ class TadoConnector:
         """Connect to Tado and fetch the zones."""
         try:
             self.tado = Tado(self._username, self._password)
-        except (RuntimeError, RequestException) as exc:
+        except (RuntimeError, urllib.error.HTTPError) as exc:
             _LOGGER.error("Unable to connect: %s", exc)
             return False
 
@@ -137,12 +136,7 @@ class TadoConnector:
             if sensor_type == "zone":
                 data = self.tado.getState(sensor)
             elif sensor_type == "device":
-                devices_data = self.tado.getDevices()
-                if not devices_data:
-                    _LOGGER.info("There are no devices to setup on this tado account.")
-                    return
-
-                data = devices_data[0]
+                data = self.tado.getDevices()[0]
             else:
                 _LOGGER.debug("Unknown sensor: %s", sensor_type)
                 return
@@ -168,62 +162,31 @@ class TadoConnector:
         self.tado.resetZoneOverlay(zone_id)
         self.update_sensor("zone", zone_id)
 
-    def set_home(self):
-        """Put tado in home mode."""
-        response_json = None
-        try:
-            response_json = self.tado.setHome()
-        except RequestException as exc:
-            _LOGGER.error("Could not set home: %s", exc)
-
-        _raise_home_away_errors(response_json)
-
-    def set_away(self):
-        """Put tado in away mode."""
-        response_json = None
-        try:
-            response_json = self.tado.setAway()
-        except RequestException as exc:
-            _LOGGER.error("Could not set away: %s", exc)
-
-        _raise_home_away_errors(response_json)
-
     def set_zone_overlay(
         self,
-        zone_id=None,
-        overlay_mode=None,
+        zone_id,
+        overlay_mode,
         temperature=None,
         duration=None,
         device_type="HEATING",
         mode=None,
-        fan_speed=None,
     ):
         """Set a zone overlay."""
         _LOGGER.debug(
-            "Set overlay for zone %s: overlay_mode=%s, temp=%s, duration=%s, type=%s, mode=%s fan_speed=%s",
+            "Set overlay for zone %s: mode=%s, temp=%s, duration=%s, type=%s, mode=%s",
             zone_id,
             overlay_mode,
             temperature,
             duration,
             device_type,
             mode,
-            fan_speed,
         )
-
         try:
             self.tado.setZoneOverlay(
-                zone_id,
-                overlay_mode,
-                temperature,
-                duration,
-                device_type,
-                "ON",
-                mode,
-                fan_speed,
+                zone_id, overlay_mode, temperature, duration, device_type, "ON", mode
             )
-
-        except RequestException as exc:
-            _LOGGER.error("Could not set zone overlay: %s", exc)
+        except urllib.error.HTTPError as exc:
+            _LOGGER.error("Could not set zone overlay: %s", exc.read())
 
         self.update_sensor("zone", zone_id)
 
@@ -233,18 +196,7 @@ class TadoConnector:
             self.tado.setZoneOverlay(
                 zone_id, overlay_mode, None, None, device_type, "OFF"
             )
-        except RequestException as exc:
-            _LOGGER.error("Could not set zone overlay: %s", exc)
+        except urllib.error.HTTPError as exc:
+            _LOGGER.error("Could not set zone overlay: %s", exc.read())
 
         self.update_sensor("zone", zone_id)
-
-
-def _raise_home_away_errors(response_json):
-    if response_json is None:
-        return
-
-    # Likely we are displaying to the user:
-    # Tried to update to HOME though all mobile devices are detected outside the home fence
-    if "errors" in response_json and len(response_json["errors"]) > 0:
-        error_list = response_json["errors"]
-        raise HomeAssistantError(error_list[0]["title"])
