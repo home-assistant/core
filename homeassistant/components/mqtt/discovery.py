@@ -163,13 +163,10 @@ async def async_start(
                 and component in IMPLICIT_STATE_TOPIC_COMPONENTS
             ):
                 # state_topic not specified, infer from discovery topic
+                fmt_node_id = f"{node_id}/" if node_id else ""
                 payload[CONF_STATE_TOPIC] = (
                     f"{discovery_topic}/{component}/"
-                    fmt_node_id = f"{node_id}/" if node_id else ""
-                    payload[CONF_STATE_TOPIC] = (
-                        f"{discovery_topic}/{component}/"
-                        f"{fmt_node_id}{object_id}/state"
-                    )
+                    f"{fmt_node_id}{object_id}/state"
                 )
                 _LOGGER.warning(
                     'implicit %s is deprecated, add "%s":"%s" to '
