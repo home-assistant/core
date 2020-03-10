@@ -68,6 +68,7 @@ TOPIC_UPDATE = "simplisafe_update_data_{0}"
 EVENT_SIMPLISAFE_EVENT = "SIMPLISAFE_EVENT"
 EVENT_SIMPLISAFE_NOTIFICATION = "SIMPLISAFE_NOTIFICATION"
 
+DEFAULT_OPTIONS = {CONF_CODE: None}
 DEFAULT_SOCKET_MIN_RETRY = 15
 
 WEBSOCKET_EVENTS_REQUIRING_SERIAL = [EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED]
@@ -207,11 +208,14 @@ async def async_setup_entry(hass, config_entry):
         entry_updates["unique_id"] = config_entry.data[CONF_USERNAME]
     if not config_entry.options:
         # If the config entry's options dict doesn't exist, initialize it:
+        entry_updates["options"] = DEFAULT_OPTIONS
+    if CONF_CODE in config_entry.data:
+        # If an alarm code was provided as part of configuration.yaml, pop it out of
+        # the config entry's data and move it to options:
         data = {**config_entry.data}
-        code = data.pop(CONF_CODE, None)
+        code = data.pop(CONF_CODE)
         entry_updates["data"] = data
-        entry_updates["options"] = {CONF_CODE: code}
-
+        entry_updates["options"][CONF_CODE] = code
     if entry_updates:
         hass.config_entries.async_update_entry(config_entry, **entry_updates)
 
@@ -318,6 +322,8 @@ async def async_setup_entry(hass, config_entry):
     ]:
         async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
 
+    config_entry.add_update_listener(async_update_options)
+
     return True
 
 
@@ -335,6 +341,12 @@ async def async_unload_entry(hass, entry):
     remove_listener()
 
     return True
+
+
+async def async_update_options(hass, config_entry):
+    """Handle an options update."""
+    simplisafe = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id]
+    simplisafe.options = config_entry.options
 
 
 class SimpliSafeWebsocket:
@@ -403,7 +415,7 @@ class SimpliSafe:
         self._emergency_refresh_token_used = False
         self._hass = hass
         self._system_notifications = {}
-        self.code = config_entry.options.get(CONF_CODE)
+        self.options = config_entry.options
         self.initial_event_to_use = {}
         self.systems = {}
         self.websocket = SimpliSafeWebsocket(hass, api.websocket)

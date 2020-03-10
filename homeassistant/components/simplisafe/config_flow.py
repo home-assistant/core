@@ -5,6 +5,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN  # pylint: disable=unused-import
@@ -34,6 +35,12 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors if errors else {},
         )
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Define the config flow to handle options."""
+        return SimpliSafeOptionsFlowHandler(config_entry)
+
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
         return await self.async_step_user(import_config)
@@ -62,4 +69,28 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_TOKEN: simplisafe.refresh_token,
                 CONF_CODE: user_input.get(CONF_CODE),
             },
+        )
+
+
+class SimpliSafeOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a SimpliSafe options flow."""
+
+    def __init__(self, config_entry):
+        """Initialize."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_CODE, default=self.config_entry.options.get(CONF_CODE),
+                    ): str
+                }
+            ),
         )

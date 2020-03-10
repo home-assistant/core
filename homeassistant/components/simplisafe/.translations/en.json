@@ -10,7 +10,6 @@
         "step": {
             "user": {
                 "data": {
-                    "code": "Code (for Home Assistant)",
                     "password": "Password",
                     "username": "Email Address"
                 },
@@ -18,5 +17,16 @@
             }
         },
         "title": "SimpliSafe"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Code (used in Home Assistant UI)"
+                },
+                "description": "Set various options for the AirVisual integration.",
+                "title": "Configure SimpliSafe"
+            }
+        }
     }
 }

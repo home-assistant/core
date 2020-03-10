@@ -28,6 +28,7 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_HOME,
 )
 from homeassistant.const import (
+    CONF_CODE,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMING,
@@ -120,10 +121,10 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
     @property
     def code_format(self):
         """Return one or more digits/characters."""
-        if not self._simplisafe.code:
+        if not self._simplisafe.options[CONF_CODE]:
             return None
-        if isinstance(self._simplisafe.code, str) and re.search(
-            "^\\d+$", self._simplisafe.code
+        if isinstance(self._simplisafe.options[CONF_CODE], str) and re.search(
+            "^\\d+$", self._simplisafe.options[CONF_CODE]
         ):
             return FORMAT_NUMBER
         return FORMAT_TEXT
@@ -141,10 +142,10 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
     @callback
     def _is_code_valid(self, code, state):
         """Validate that a code matches the required one."""
-        if not self._simplisafe.code:
+        if not self._simplisafe.options[CONF_CODE]:
             return True
 
-        if not code or code != self._simplisafe.code:
+        if not code or code != self._simplisafe.options[CONF_CODE]:
             _LOGGER.warning(
                 "Incorrect alarm code entered (target state: %s): %s", state, code
             )
