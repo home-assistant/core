@@ -290,13 +290,13 @@ class HMHub(Entity):
         if len(bidcos_interfaces) == 0:
             return
         if len(bidcos_interfaces) > 1:
-            _LOGGER.warn(
+            _LOGGER.warning(
                 "Found more than one bidcos interface - cannot retrieve duty cycle."
             )
             return
         bidcos_interface = bidcos_interfaces[0]
         if "DUTY_CYCLE" not in bidcos_interface:
-            _LOGGER.warn("DUTY_CYCLE not found in %s.", bidcos_interface)
+            _LOGGER.warning("DUTY_CYCLE not found in %s.", bidcos_interface)
             return
         duty_cycle = bidcos_interface["DUTY_CYCLE"]
         if self._duty_cycle != duty_cycle:
