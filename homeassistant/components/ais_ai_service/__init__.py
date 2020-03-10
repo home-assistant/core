@@ -2497,22 +2497,20 @@ async def async_setup(hass, config):
 
         def apply_night_mode():
             _LOGGER.info("Start Night ")
-            ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL = hass.states.get(
-                "media_player.wbudowany_glosnik"
-            ).attributes["volume_level"]
-            # set volume as min from (0.2, curr_volume_level)
-            hass.async_add_job(
-                hass.services.async_call(
-                    "media_player",
-                    "volume_set",
-                    {
-                        "entity_id": "media_player.wbudowany_glosnik",
-                        "volume_level": min(
-                            0.2, ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL
-                        ),
-                    },
+            if ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL is not None:
+                # set volume as min from (0.2, curr_volume_level)
+                hass.async_add_job(
+                    hass.services.async_call(
+                        "media_player",
+                        "volume_set",
+                        {
+                            "entity_id": "media_player.wbudowany_glosnik",
+                            "volume_level": min(
+                                0.2, ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL
+                            ),
+                        },
+                    )
                 )
-            )
             hass.async_add_job(
                 hass.services.async_call("frontend", "set_theme", {"name": "night"})
             )
@@ -2524,7 +2522,6 @@ async def async_setup(hass, config):
             ).attributes["volume_level"]
             # get volume level
             if ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL is not None:
-                # TODO get the volume level on start
                 hass.async_add_job(
                     hass.services.async_call(
                         "media_player",
@@ -2534,6 +2531,7 @@ async def async_setup(hass, config):
                             "volume_level": max(
                                 ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL,
                                 curr_volume_level,
+                                0.2,
                             ),
                         },
                     )
