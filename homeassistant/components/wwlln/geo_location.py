@@ -1,5 +1,6 @@
 """Support for WWLLN geo location events."""
 from datetime import timedelta
+import logging
 
 from aiowwlln.errors import WWLLNError
 
@@ -21,7 +22,9 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.dt import utc_from_timestamp
 
-from .const import CONF_WINDOW, DATA_CLIENT, DOMAIN, LOGGER
+from .const import CONF_WINDOW, DATA_CLIENT, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_EXTERNAL_ID = "external_id"
 ATTR_PUBLICATION_DATE = "publication_date"
@@ -81,7 +84,7 @@ class WWLLNEventManager:
     @callback
     def _create_events(self, ids_to_create):
         """Create new geo location events."""
-        LOGGER.debug("Going to create %s", ids_to_create)
+        _LOGGER.debug("Going to create %s", ids_to_create)
         events = []
         for strike_id in ids_to_create:
             strike = self._strikes[strike_id]
@@ -100,7 +103,7 @@ class WWLLNEventManager:
     @callback
     def _remove_events(self, ids_to_remove):
         """Remove old geo location events."""
-        LOGGER.debug("Going to remove %s", ids_to_remove)
+        _LOGGER.debug("Going to remove %s", ids_to_remove)
         for strike_id in ids_to_remove:
             async_dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(strike_id))
 
@@ -116,7 +119,7 @@ class WWLLNEventManager:
 
     async def async_update(self):
         """Refresh data."""
-        LOGGER.debug("Refreshing WWLLN data")
+        _LOGGER.debug("Refreshing WWLLN data")
 
         try:
             self._strikes = await self._client.within_radius(
@@ -127,7 +130,7 @@ class WWLLNEventManager:
                 window=self._window,
             )
         except WWLLNError as err:
-            LOGGER.error("Error while updating WWLLN data: %s", err)
+            _LOGGER.error("Error while updating WWLLN data: %s", err)
             return
 
         new_strike_ids = set(self._strikes)
