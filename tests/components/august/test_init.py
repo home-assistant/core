@@ -3,10 +3,8 @@ import asyncio
 
 from asynctest import patch
 from august.exceptions import AugustApiAIOHTTPError
-import pytest
 
 from homeassistant import setup
-from homeassistant.components import august
 from homeassistant.components.august.const import (
     CONF_ACCESS_TOKEN_CACHE_FILE,
     CONF_INSTALL_ID,
@@ -15,6 +13,7 @@ from homeassistant.components.august.const import (
     DOMAIN,
 )
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PASSWORD,
@@ -25,7 +24,7 @@ from homeassistant.const import (
     STATE_LOCKED,
     STATE_ON,
 )
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -39,38 +38,23 @@ from tests.components.august.mocks import (
 )
 
 
-@pytest.fixture(name="config_entry")
-def config_entry_fixture():
-    """Create a mock HEOS config entry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_LOGIN_METHOD: "email",
-            CONF_TIMEOUT: 1,
-            CONF_USERNAME: "august",
-            CONF_ACCESS_TOKEN_CACHE_FILE: "mock.file",
-            CONF_PASSWORD: "hidden",
-        },
-        title="August august",
+async def test_august_is_offline(hass):
+    """Config entry state is ENTRY_STATE_SETUP_RETRY when august is offline."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=_mock_get_config()[DOMAIN], title="August august",
     )
+    config_entry.add_to_hass(hass)
 
-
-async def test_august_is_offline(hass, config_entry):
-    """Throw ConfigEntryNotReady when august is down."""
-    # Assert setup returns false
-    hass.data[DOMAIN] = {}
-
-    lastex = None
+    await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
         "august.authenticator_async.AuthenticatorAsync.async_authenticate",
         side_effect=asyncio.TimeoutError,
     ):
-        try:
-            await august.async_setup_entry(hass, config_entry)
-        except ConfigEntryNotReady as ex:
-            lastex = ex
+        await hass.config_entries.async_setup(config_entry.entry_id)
 
-    assert isinstance(lastex, ConfigEntryNotReady)
+    await hass.async_block_till_done()
+    assert config_entry.state == ENTRY_STATE_SETUP_RETRY
 
 
 async def test_unlock_throws_august_api_http_error(hass):
@@ -167,8 +151,7 @@ async def test_set_up_from_yaml(hass):
         "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
         return_value=True,
     ):
-        mocked_config = _mock_get_config()
-        assert await async_setup_component(hass, "august", mocked_config)
+        assert await async_setup_component(hass, DOMAIN, _mock_get_config())
     await hass.async_block_till_done()
     assert len(mock_setup_august.mock_calls) == 1
     call = mock_setup_august.call_args

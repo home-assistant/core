@@ -63,17 +63,18 @@ class AugustGateway:
             CONF_PASSWORD: self._config[CONF_PASSWORD],
             CONF_INSTALL_ID: self._config.get(CONF_INSTALL_ID),
             CONF_TIMEOUT: self._config.get(CONF_TIMEOUT),
-            CONF_ACCESS_TOKEN_CACHE_FILE: self._config[CONF_ACCESS_TOKEN_CACHE_FILE],
+            CONF_ACCESS_TOKEN_CACHE_FILE: self._access_token_cache_file,
         }
 
     async def async_setup(self, conf):
         """Create the api and authenticator objects."""
         if conf.get(VERIFICATION_CODE_KEY):
             return
-        if conf.get(CONF_ACCESS_TOKEN_CACHE_FILE) is None:
-            conf[
-                CONF_ACCESS_TOKEN_CACHE_FILE
-            ] = f".{conf[CONF_USERNAME]}{DEFAULT_AUGUST_CONFIG_FILE}"
+
+        self._access_token_cache_file = conf.get(
+            CONF_ACCESS_TOKEN_CACHE_FILE,
+            f".{conf[CONF_USERNAME]}{DEFAULT_AUGUST_CONFIG_FILE}",
+        )
         self._config = conf
 
         self._api = ApiAsync(
@@ -87,7 +88,7 @@ class AugustGateway:
             self._config[CONF_PASSWORD],
             install_id=self._config.get(CONF_INSTALL_ID),
             access_token_cache_file=self._hass.config.path(
-                self._config[CONF_ACCESS_TOKEN_CACHE_FILE]
+                self._access_token_cache_file
             ),
         )
 
