@@ -2,6 +2,7 @@
 from datetime import timedelta
 import functools
 import logging
+import random
 
 from zigpy.zcl.foundation import Status
 
@@ -44,8 +45,8 @@ UPDATE_COLORLOOP_HUE = 0x8
 FLASH_EFFECTS = {light.FLASH_SHORT: EFFECT_BLINK, light.FLASH_LONG: EFFECT_BREATHE}
 
 UNSUPPORTED_ATTRIBUTE = 0x86
-REFRESH_INTERVAL = timedelta(minutes=60)
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, light.DOMAIN)
+_REFRESH_INTERVAL = (45, 75)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -175,8 +176,9 @@ class Light(ZhaEntity, light.Light):
             await self.async_accept_signal(
                 self._level_channel, SIGNAL_SET_LEVEL, self.set_level
             )
+        refresh_interval = random.randint(*_REFRESH_INTERVAL)
         self._cancel_refresh_handle = async_track_time_interval(
-            self.hass, self.refresh, REFRESH_INTERVAL
+            self.hass, self.refresh, timedelta(minutes=refresh_interval)
         )
 
     async def async_will_remove_from_hass(self) -> None:
