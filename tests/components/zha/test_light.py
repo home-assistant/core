@@ -87,9 +87,18 @@ async def test_light_refresh(hass, zigpy_device_mock, zha_device_joined_restored
     light_entity._refresh.reset_mock()
 
     # test that the refresh fires within the expected time frame
+
+    # not enough time passed
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
+    await hass.async_block_till_done()
+    assert light_entity._refresh.call_count == 0
+
+    # 1 interval - 1 call
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=80))
     await hass.async_block_till_done()
     assert light_entity._refresh.call_count == 1
+
+    # 2 intervals - 2 calls
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=80))
     await hass.async_block_till_done()
     assert light_entity._refresh.call_count == 2
