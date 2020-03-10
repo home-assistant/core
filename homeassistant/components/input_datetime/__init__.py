@@ -237,11 +237,11 @@ class InputDatetime(RestoreEntity):
             return
 
         if self.has_date and self.has_time:
-            datetime = dt_util.parse_datetime(old_state.state)
-            if datetime is None:
+            date_time = dt_util.parse_datetime(old_state.state)
+            if date_time is None:
                 self._current_datetime = dt_util.parse_datetime(DEFAULT_VALUE)
                 return
-            self._current_datetime = datetime
+            self._current_datetime = date_time
         elif self.has_date:
             date = dt_util.parse_date(old_state.state)
             if date is None:
