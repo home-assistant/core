@@ -126,9 +126,9 @@ async def async_start(
             for key, value in payload.items():
                 if isinstance(value, str) and value:
                     if value[0] == TOPIC_BASE and key.endswith("_topic"):
-                        payload[key] = "{}{}".format(base, value[1:])
+                        payload[key] = f"{base}{value[1:]}"
                     if value[-1] == TOPIC_BASE and key.endswith("_topic"):
-                        payload[key] = "{}{}".format(value[:-1], base)
+                        payload[key] = f"{value[:-1]}{base}"
 
         # If present, the node_id will be included in the discovered object id
         discovery_id = " ".join((node_id, object_id)) if node_id else object_id
@@ -163,12 +163,10 @@ async def async_start(
                 and component in IMPLICIT_STATE_TOPIC_COMPONENTS
             ):
                 # state_topic not specified, infer from discovery topic
-                payload[CONF_STATE_TOPIC] = "{}/{}/{}{}/state".format(
-                    discovery_topic,
-                    component,
-                    "%s/" % node_id if node_id else "",
-                    object_id,
-                )
+                fmt_node_id = f"{node_id}/" if node_id else ""
+                payload[
+                    CONF_STATE_TOPIC
+                ] = f"{discovery_topic}/{component}/{fmt_node_id}{object_id}/state"
                 _LOGGER.warning(
                     'implicit %s is deprecated, add "%s":"%s" to '
                     "%s discovery message",
@@ -199,7 +197,7 @@ async def async_start(
                 await async_load_platform(hass, component, "mqtt", payload, hass_config)
                 return
 
-            config_entries_key = "{}.{}".format(component, "mqtt")
+            config_entries_key = f"{component}.mqtt"
             async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
                 if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
                     if component == "device_automation":
