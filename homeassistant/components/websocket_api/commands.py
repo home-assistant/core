@@ -178,7 +178,8 @@ def handle_get_states(hass, connection, msg):
             if entity_perm(state.entity_id, "read")
         ]
 
-    connection.send_message(messages.result_message(msg["id"], states))
+    cmd = connection.send_big_result if len(states) > 500 else connection.send_message
+    cmd(messages.result_message(msg["id"], states))
 
 
 @decorators.websocket_command({vol.Required("type"): "get_services"})
