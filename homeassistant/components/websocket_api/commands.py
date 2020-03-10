@@ -161,9 +161,9 @@ async def handle_call_service(hass, connection, msg):
         )
 
 
-@callback
 @decorators.websocket_command({vol.Required("type"): "get_states"})
-def handle_get_states(hass, connection, msg):
+@decorators.async_response
+async def handle_get_states(hass, connection, msg):
     """Handle get states command.
 
     Async friendly.
@@ -178,8 +178,10 @@ def handle_get_states(hass, connection, msg):
             if entity_perm(state.entity_id, "read")
         ]
 
-    cmd = connection.send_big_result if len(states) > 500 else connection.send_message
-    cmd(messages.result_message(msg["id"], states))
+    if len(states) > 500:
+        await connection.send_big_result(messages.result_message(msg["id"], states))
+    else:
+        connection.send_result(messages.result_message(msg["id"], states))
 
 
 @decorators.websocket_command({vol.Required("type"): "get_services"})
