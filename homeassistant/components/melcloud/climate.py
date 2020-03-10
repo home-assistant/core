@@ -306,22 +306,6 @@ class AtwDeviceZoneClimate(MelCloudClimate):
         """Return the list of supported features."""
         return SUPPORT_TARGET_TEMPERATURE
 
-    async def async_turn_on(self) -> None:
-        """Turn the entity on.
-
-        Individual radiator zone is not allowed to control the power state of the
-        entire system.
-        """
-        raise NotImplementedError()
-
-    async def async_turn_off(self) -> None:
-        """Turn the entity off.
-
-        Individual radiator zone is not allowed to control the power state of the
-        entire system.
-        """
-        raise NotImplementedError()
-
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature.
