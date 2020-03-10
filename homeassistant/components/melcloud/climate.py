@@ -221,7 +221,9 @@ ATW_ZONE_HVAC_MODE_REVERSE_LOOKUP = {v: k for k, v in ATW_ZONE_HVAC_MODE_LOOKUP.
 class AtwDeviceZoneClimate(MelCloudClimate):
     """Air-to-Water zone climate device."""
 
-    def __init__(self, device: MelCloudDevice, atw_device: AtwDevice, atw_zone: Zone) -> None:
+    def __init__(
+        self, device: MelCloudDevice, atw_device: AtwDevice, atw_zone: Zone
+    ) -> None:
         """Initialize the climate."""
         super().__init__(device)
         self._device = atw_device
@@ -238,7 +240,7 @@ class AtwDeviceZoneClimate(MelCloudClimate):
         return f"{self._name} {self._zone.name}"
 
     @property
-    def state_attributes(self) -> Dict[str, Any]:
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the optional state attributes with device specific additions."""
         data = {
             ATTR_STATUS: ATW_ZONE_HVAC_MODE_LOOKUP.get(
