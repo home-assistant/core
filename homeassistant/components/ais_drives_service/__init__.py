@@ -575,7 +575,7 @@ class LocalData:
             },
         )
         if say:
-            self.say("Dysk wewnętrzny")
+            self.say("Wszystkie Dyski")
 
     def dispalay_current_path(self):
         state = self.hass.states.get("sensor.ais_drives")
