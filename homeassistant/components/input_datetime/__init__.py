@@ -240,9 +240,15 @@ class InputDatetime(RestoreEntity):
             self._current_datetime = dt_util.parse_datetime(old_state.state)
         elif self.has_date:
             date = dt_util.parse_date(old_state.state)
+            if date is None:
+                self._current_datetime = dt_util.parse_datetime(DEFAULT_VALUE)
+                return
             self._current_datetime = datetime.datetime.combine(date, DEFAULT_TIME)
         else:
             time = dt_util.parse_time(old_state.state)
+            if time is None:
+                self._current_datetime = dt_util.parse_datetime(DEFAULT_VALUE)
+                return
             self._current_datetime = datetime.datetime.combine(DEFAULT_DATE, time)
 
     @property
