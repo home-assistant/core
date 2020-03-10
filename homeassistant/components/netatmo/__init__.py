@@ -19,7 +19,8 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_WEBHOOK_ID,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 
 from . import api, config_flow
@@ -82,6 +83,9 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Netatmo from a config entry."""
+    if hass.state == CoreState.not_running:
+        raise ConfigEntryNotReady
+
     implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
         hass, entry
     )
