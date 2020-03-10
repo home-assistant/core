@@ -1,4 +1,5 @@
 """Config flow for Griddy Power integration."""
+import asyncio
 import logging
 
 from aiohttp import ClientError
@@ -16,31 +17,18 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_LOADZONE): vol.In(LOAD_ZONES)})
 
 
-class GriddyGateway:
-    """A griddy gateway object."""
-
-    def __init__(self, clientsession):
-        """Gateway with a clientsession."""
-        self._clientsession = clientsession
-
-    async def async_verify_connection(self, settlement_point):
-        """Connect to griddy and make a basic request."""
-        data = await AsyncGriddy(
-            self._clientsession, settlement_point=settlement_point
-        ).async_getnow()
-        return bool(data.now.datetime)
-
-
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    griddy_gateway = GriddyGateway(aiohttp_client.async_get_clientsession(hass))
+    client_session = aiohttp_client.async_get_clientsession(hass)
 
     try:
-        await griddy_gateway.async_verify_connection(data[CONF_LOADZONE])
-    except ClientError:
+        await AsyncGriddy(
+            client_session, settlement_point=data[CONF_LOADZONE]
+        ).async_getnow()
+    except (asyncio.TimeoutError, ClientError):
         raise CannotConnect
 
     # Return info that you want to store in the config entry.

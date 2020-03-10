@@ -1,8 +1,9 @@
 """Test the Griddy Power config flow."""
+import asyncio
+
 from asynctest import MagicMock, patch
 
 from homeassistant import config_entries, setup
-from homeassistant.components.griddy.config_flow import CannotConnect
 from homeassistant.components.griddy.const import DOMAIN
 
 
@@ -41,8 +42,8 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.griddy.config_flow.GriddyGateway.async_verify_connection",
-        side_effect=CannotConnect,
+        "griddypower.async_api.AsyncGriddy.async_getnow",
+        side_effect=asyncio.TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"loadzone": "LZ_NORTH"},
