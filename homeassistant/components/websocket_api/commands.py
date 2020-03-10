@@ -181,7 +181,7 @@ async def handle_get_states(hass, connection, msg):
     if len(states) > 500:
         await connection.send_big_result(messages.result_message(msg["id"], states))
     else:
-        connection.send_result(messages.result_message(msg["id"], states))
+        connection.send_result(msg["id"], states)
 
 
 @decorators.websocket_command({vol.Required("type"): "get_services"})
