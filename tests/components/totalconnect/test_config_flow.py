@@ -9,7 +9,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from tests.common import MockConfigEntry, mock_coro
 
 USERNAME = "username@me.com"
-USERNAME_2 = "second_username@icloud.com"
 PASSWORD = "password"
 
 
@@ -40,9 +39,9 @@ async def test_user(hass):
 async def test_import(hass):
     """Test import step with good username and password."""
     with patch(
-        "homeassistant.components.totalconnect.config_flow.TotalConnectConfigFlow.is_valid",
-        return_value=mock_coro(True),
-    ):
+        "homeassistant.components.totalconnect.config_flow.TotalConnectClient.TotalConnectClient"
+    ) as client_mock:
+        client_mock.return_value.is_valid_credentials.return_value = True
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -62,9 +61,9 @@ async def test_abort_if_already_setup(hass):
 
     # Should fail, same USERNAME (import)
     with patch(
-        "homeassistant.components.totalconnect.config_flow.TotalConnectConfigFlow.is_valid",
-        return_value=mock_coro(True),
-    ):
+        "homeassistant.components.totalconnect.config_flow.TotalConnectClient.TotalConnectClient"
+    ) as client_mock:
+        client_mock.return_value.is_valid_credentials.return_value = True
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -76,9 +75,9 @@ async def test_abort_if_already_setup(hass):
 
     # Should fail, same USERNAME (flow)
     with patch(
-        "homeassistant.components.totalconnect.config_flow.TotalConnectConfigFlow.is_valid",
-        return_value=mock_coro(True),
-    ):
+        "homeassistant.components.totalconnect.config_flow.TotalConnectClient.TotalConnectClient"
+    ) as client_mock:
+        client_mock.return_value.is_valid_credentials.return_value = True
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -92,9 +91,9 @@ async def test_abort_if_already_setup(hass):
 async def test_login_failed(hass):
     """Test when we have errors during login."""
     with patch(
-        "homeassistant.components.totalconnect.config_flow.TotalConnectConfigFlow.is_valid",
-        return_value=mock_coro(False),
-    ):
+        "homeassistant.components.totalconnect.config_flow.TotalConnectClient.TotalConnectClient"
+    ) as client_mock:
+        client_mock.return_value.is_valid_credentials.return_value = False
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
