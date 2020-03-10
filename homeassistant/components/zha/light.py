@@ -44,7 +44,7 @@ UPDATE_COLORLOOP_HUE = 0x8
 FLASH_EFFECTS = {light.FLASH_SHORT: EFFECT_BLINK, light.FLASH_LONG: EFFECT_BREATHE}
 
 UNSUPPORTED_ATTRIBUTE = 0x86
-SCAN_INTERVAL = timedelta(minutes=60)
+REFRESH_INTERVAL = timedelta(minutes=60)
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, light.DOMAIN)
 
 
@@ -176,7 +176,7 @@ class Light(ZhaEntity, light.Light):
                 self._level_channel, SIGNAL_SET_LEVEL, self.set_level
             )
         self._cancel_refresh_handle = async_track_time_interval(
-            self.hass, self.refresh, SCAN_INTERVAL
+            self.hass, self.refresh, REFRESH_INTERVAL
         )
 
     async def async_will_remove_from_hass(self) -> None:
