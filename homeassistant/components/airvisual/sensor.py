@@ -192,7 +192,7 @@ class AirVisualSensor(Entity):
             )
 
         geography = self._airvisual.geographies[self._geography_id]
-        if geography.get(CONF_LATITUDE):
+        if CONF_LATITUDE in geography:
             if self._airvisual.options[CONF_SHOW_ON_MAP]:
                 self._attrs[ATTR_LATITUDE] = geography[CONF_LATITUDE]
                 self._attrs[ATTR_LONGITUDE] = geography[CONF_LONGITUDE]
