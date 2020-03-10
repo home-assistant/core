@@ -5,7 +5,11 @@ import operator
 from typing import Dict
 
 from pyicloud import PyiCloudService
-from pyicloud.exceptions import PyiCloudFailedLoginException, PyiCloudNoDevicesException
+from pyicloud.exceptions import (
+    PyiCloudFailedLoginException,
+    PyiCloudNoDevicesException,
+    PyiCloudServiceNotActivatedException,
+)
 from pyicloud.services.findmyiphone import AppleDevice
 
 from homeassistant.components.zone import async_active_zone
@@ -109,7 +113,7 @@ class IcloudAccount:
             api_devices = self.api.devices
             # Gets device owners infos
             user_info = api_devices.response["userInfo"]
-        except (KeyError, PyiCloudNoDevicesException):
+        except (PyiCloudServiceNotActivatedException, PyiCloudNoDevicesException):
             _LOGGER.error("No iCloud device found")
             raise ConfigEntryNotReady
 
