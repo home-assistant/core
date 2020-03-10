@@ -13,6 +13,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_TOKEN, CONF_USERNAME
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
 
@@ -128,6 +129,7 @@ class MelCloudDevice:
     def device_info(self):
         """Return a device description for device registry."""
         _device_info = {
+            "connections": {(CONNECTION_NETWORK_MAC, self.device.mac)},
             "identifiers": {(DOMAIN, f"{self.device.mac}-{self.device.serial}")},
             "manufacturer": "Mitsubishi Electric",
             "name": self.name,
