@@ -17,7 +17,8 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "griddypower.async_api.AsyncGriddy.async_getnow", return_value=MagicMock(),
+        "homeassistant.components.griddy.config_flow.AsyncGriddy.async_getnow",
+        return_value=MagicMock(),
     ), patch(
         "homeassistant.components.griddy.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -42,7 +43,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "griddypower.async_api.AsyncGriddy.async_getnow",
+        "homeassistant.components.griddy.config_flow.AsyncGriddy.async_getnow",
         side_effect=asyncio.TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
