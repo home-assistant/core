@@ -4,7 +4,7 @@ import logging
 from august.activity import ActivityType
 
 from homeassistant.components.sensor import DEVICE_CLASS_BATTERY
-from homeassistant.const import ATTR_ENTITY_PICTURE
+from homeassistant.const import ATTR_ENTITY_PICTURE, UNIT_PERCENTAGE
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -106,6 +106,7 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, Entity):
         self._operated_autorelock = None
         self._operated_time = None
         self._available = False
+        self._entity_picture = None
         self._update_from_data()
 
     @property
@@ -216,7 +217,7 @@ class AugustBatterySensor(AugustEntityMixin, Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "%"
+        return UNIT_PERCENTAGE
 
     @property
     def device_class(self):
