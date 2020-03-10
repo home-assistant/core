@@ -203,7 +203,7 @@ aiopylgtv==0.3.3
 aioswitcher==2019.4.26
 
 # homeassistant.components.unifi
-aiounifi==14
+aiounifi==15
 
 # homeassistant.components.wwlln
 aiowwlln==2.0.2
