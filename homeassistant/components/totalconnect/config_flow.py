@@ -12,7 +12,6 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-@config_entries.HANDLERS.register(DOMAIN)
 class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Total Connect config flow."""
 

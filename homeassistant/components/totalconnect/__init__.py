@@ -10,26 +10,8 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
-# import voluptuous as vol
-
-# import homeassistant.helpers.config_validation as cv
-
-
 _LOGGER = logging.getLogger(__name__)
 
-"""
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-"""
 PLATFORMS = ["alarm_control_panel", "binary_sensor"]
 
 
