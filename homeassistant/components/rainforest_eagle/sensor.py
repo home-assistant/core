@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_IP_ADDRESS,
+    CONF_MONITORED_CONDITIONS,
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
 )
@@ -46,6 +47,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_IP_ADDRESS): cv.string,
         vol.Required(CONF_CLOUD_ID): cv.string,
         vol.Required(CONF_INSTALL_CODE): cv.string,
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSORS)): vol.All(
+            cv.ensure_list, [vol.In(list(SENSORS))]
+        ),
     }
 )
 
@@ -83,7 +87,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     eagle_data = EagleData(eagle_reader)
     eagle_data.update()
-    monitored_conditions = list(SENSORS)
+    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
     sensors = []
     for condition in monitored_conditions:
         sensors.append(
