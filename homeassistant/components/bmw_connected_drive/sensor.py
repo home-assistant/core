@@ -4,6 +4,7 @@ import logging
 from bimmer_connected.state import ChargingState
 
 from homeassistant.const import (
+    ATTR_ATTRIBUTION,
     CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
@@ -16,6 +17,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import DOMAIN as BMW_DOMAIN
+from .const import ATTRIBUTION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,7 +103,6 @@ class BMWConnectedDriveSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-
         vehicle_state = self._vehicle.state
         charging_state = vehicle_state.charging_status in [ChargingState.CHARGING]
 
@@ -130,7 +131,10 @@ class BMWConnectedDriveSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        return {"car": self._vehicle.name}
+        return {
+            "car": self._vehicle.name,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+        }
 
     def update(self) -> None:
         """Read new state data from the library."""
