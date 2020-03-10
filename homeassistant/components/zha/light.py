@@ -46,7 +46,6 @@ FLASH_EFFECTS = {light.FLASH_SHORT: EFFECT_BLINK, light.FLASH_LONG: EFFECT_BREAT
 UNSUPPORTED_ATTRIBUTE = 0x86
 SCAN_INTERVAL = timedelta(minutes=60)
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, light.DOMAIN)
-PARALLEL_UPDATES = 5
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
