@@ -54,6 +54,7 @@ from .const import (
     POWER_BATTERY_OR_UNKNOWN,
     POWER_MAINS_POWERED,
     SIGNAL_AVAILABLE,
+    SIGNAL_UPDATE_DEVICE,
     UNKNOWN,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
@@ -276,7 +277,21 @@ class ZHADevice(LogMixin):
         """Create new device."""
         zha_dev = cls(hass, zigpy_dev, gateway)
         zha_dev.channels = channels.Channels.new(zha_dev)
+        async_dispatcher_connect(
+            hass,
+            SIGNAL_UPDATE_DEVICE.format(zha_dev.channels.unique_id),
+            zha_dev.async_update_sw_build_id,
+        )
         return zha_dev
+
+    @callback
+    def async_update_sw_build_id(self, sw_version: int):
+        """Update device sw version."""
+        if self.device_id is None:
+            return
+        self._zha_gateway.ha_device_registry.async_update_device(
+            self.device_id, sw_version=f"0x{sw_version:08x}"
+        )
 
     async def _check_available(self, *_):
         if self.last_seen is None:
