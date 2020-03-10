@@ -40,6 +40,8 @@ _LOGGER = logging.getLogger(__name__)
 CONF_SECRET_KEY = "secret_key"
 CONF_WEBHOOKS = "webhooks"
 
+WAIT_FOR_CLOUD = 5
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -102,6 +104,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
 
     async def register_webhook(event):
+        # Wait for the could integration to be ready
+        await asyncio.sleep(WAIT_FOR_CLOUD)
+
         if CONF_WEBHOOK_ID not in entry.data:
             data = {**entry.data, CONF_WEBHOOK_ID: secrets.token_hex()}
             hass.config_entries.async_update_entry(entry, data=data)
