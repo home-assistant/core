@@ -46,17 +46,20 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(user_input[CONF_USERNAME])
         self._abort_if_unique_id_configured()
 
-        username = user_input[CONF_USERNAME]
         websession = aiohttp_client.async_get_clientsession(self.hass)
 
         try:
             simplisafe = await API.login_via_credentials(
-                username, user_input[CONF_PASSWORD], websession
+                user_input[CONF_USERNAME], user_input[CONF_PASSWORD], websession
             )
         except SimplipyError:
             return await self._show_form(errors={"base": "invalid_credentials"})
 
         return self.async_create_entry(
             title=user_input[CONF_USERNAME],
-            data={CONF_USERNAME: username, CONF_TOKEN: simplisafe.refresh_token},
+            data={
+                CONF_USERNAME: user_input[CONF_USERNAME],
+                CONF_TOKEN: simplisafe.refresh_token,
+                CONF_CODE: user_input.get(CONF_CODE),
+            },
         )

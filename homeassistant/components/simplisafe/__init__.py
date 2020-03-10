@@ -201,10 +201,19 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up SimpliSafe as config entry."""
+    entry_updates = {}
     if not config_entry.unique_id:
-        hass.config_entries.async_update_entry(
-            config_entry, unique_id=config_entry.data[CONF_USERNAME]
-        )
+        # If the config entry doesn't already have a unique ID, set one:
+        entry_updates["unique_id"] = config_entry.data[CONF_USERNAME]
+    if not config_entry.options:
+        # If the config entry's options dict doesn't exist, initialize it:
+        data = {**config_entry.data}
+        code = data.pop(CONF_CODE, None)
+        entry_updates["data"] = data
+        entry_updates["options"] = {CONF_CODE: code}
+
+    if entry_updates:
+        hass.config_entries.async_update_entry(config_entry, **entry_updates)
 
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
@@ -394,6 +403,7 @@ class SimpliSafe:
         self._emergency_refresh_token_used = False
         self._hass = hass
         self._system_notifications = {}
+        self.code = config_entry.options.get(CONF_CODE)
         self.initial_event_to_use = {}
         self.systems = {}
         self.websocket = SimpliSafeWebsocket(hass, api.websocket)
