@@ -7,7 +7,7 @@ from simplipy.errors import SimplipyError
 from homeassistant import data_entry_flow
 from homeassistant.components.simplisafe import DOMAIN, config_flow
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 
 from tests.common import MockConfigEntry, mock_coro
 
@@ -87,6 +87,7 @@ async def test_step_import(hass):
                     assert result["data"] == {
                         CONF_USERNAME: "user@email.com",
                         CONF_TOKEN: "12345abc",
+                        CONF_CODE: None,
                     }
 
 
@@ -117,4 +118,5 @@ async def test_step_user(hass):
                     assert result["data"] == {
                         CONF_USERNAME: "user@email.com",
                         CONF_TOKEN: "12345abc",
+                        CONF_CODE: None,
                     }
