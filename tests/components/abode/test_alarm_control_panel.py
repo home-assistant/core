@@ -60,7 +60,7 @@ async def test_set_alarm_home(hass):
 
     with patch("abodepy.ALARM.AbodeAlarm.set_home") as mock_set_home:
         await hass.services.async_call(
-            "alarm_control_panel",
+            ALARM_DOMAIN,
             SERVICE_ALARM_ARM_HOME,
             {ATTR_ENTITY_ID: "alarm_control_panel.abode_alarm"},
             blocking=True,
@@ -75,7 +75,7 @@ async def test_set_alarm_standby(hass):
 
     with patch("abodepy.ALARM.AbodeAlarm.set_standby") as mock_set_standby:
         await hass.services.async_call(
-            "alarm_control_panel",
+            ALARM_DOMAIN,
             SERVICE_ALARM_DISARM,
             {ATTR_ENTITY_ID: "alarm_control_panel.abode_alarm"},
             blocking=True,

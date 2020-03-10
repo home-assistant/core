@@ -8,23 +8,8 @@ from homeassistant.components.abode import (
     SERVICE_TRIGGER_AUTOMATION,
 )
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.setup import async_setup_component
 
 from .common import setup_platform
-
-
-async def test_abode_setup_from_config(hass):
-    """Test setup from configuration yaml file."""
-    config = {
-        ABODE_DOMAIN: {
-            CONF_USERNAME: "user@email.com",
-            CONF_PASSWORD: "password",
-            "polling": True,
-        }
-    }
-    with patch("abodepy.utils.save_cache"):
-        assert await async_setup_component(hass, ABODE_DOMAIN, config)
 
 
 async def test_change_settings(hass):
