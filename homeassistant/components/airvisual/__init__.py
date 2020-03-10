@@ -139,6 +139,8 @@ async def async_setup_entry(hass, config_entry):
         hass, refresh, DEFAULT_SCAN_INTERVAL
     )
 
+    config_entry.add_update_listener(async_update_options)
+
     return True
 
 
@@ -154,6 +156,12 @@ async def async_unload_entry(hass, config_entry):
     return True
 
 
+async def async_update_options(hass, config_entry):
+    """Handle an options update."""
+    airvisual = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id]
+    airvisual.async_update_options(config_entry.options)
+
+
 class AirVisualData:
     """Define a class to manage data from the AirVisual cloud API."""
 
@@ -162,7 +170,7 @@ class AirVisualData:
         self._client = client
         self._hass = hass
         self.data = {}
-        self.show_on_map = config_entry.options[CONF_SHOW_ON_MAP]
+        self.options = config_entry.options
 
         self.geographies = {
             async_get_geography_id(geography): geography
@@ -198,4 +206,10 @@ class AirVisualData:
             self.data[geography_id] = result
 
         _LOGGER.debug("Received new data")
+        async_dispatcher_send(self._hass, TOPIC_UPDATE)
+
+    @callback
+    def async_update_options(self, options):
+        """Update the data manager's options."""
+        self.options = options
         async_dispatcher_send(self._hass, TOPIC_UPDATE)
