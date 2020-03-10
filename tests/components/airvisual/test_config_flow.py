@@ -51,7 +51,9 @@ async def test_step_import(hass):
     """Test that the import step works."""
     conf = {CONF_API_KEY: "abcde12345"}
 
-    with patch("homeassistant.components.wwlln.async_setup_entry", return_value=True):
+    with patch(
+        "homeassistant.components.wwlln.async_setup_entry", return_value=True
+    ), patch("pyairvisual.api.API.nearest_city"):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
         )
