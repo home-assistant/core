@@ -199,7 +199,7 @@ aiopylgtv==0.3.3
 aioswitcher==2019.4.26
 
 # homeassistant.components.unifi
-aiounifi==13
+aiounifi==14
 
 # homeassistant.components.wwlln
 aiowwlln==2.0.2
@@ -399,7 +399,7 @@ connect-box==0.2.5
 construct==2.9.45
 
 # homeassistant.components.coronavirus
-coronavirus==1.0.1
+coronavirus==1.1.0
 
 # homeassistant.scripts.credstash
 # credstash==1.15.0
@@ -1643,7 +1643,7 @@ python-telnet-vlc==1.0.4
 python-twitch-client==0.6.0
 
 # homeassistant.components.velbus
-python-velbus==2.0.41
+python-velbus==2.0.42
 
 # homeassistant.components.vlc
 python-vlc==1.1.2
