@@ -1,4 +1,5 @@
 """The tests for the  MQTT binary sensor platform."""
+import copy
 from datetime import datetime, timedelta
 import json
 from unittest.mock import patch
@@ -29,6 +30,38 @@ from .common import (
 )
 
 from tests.common import async_fire_mqtt_message, async_fire_time_changed
+
+DEFAULT_CONFIG = {
+    binary_sensor.DOMAIN: {
+        "platform": "mqtt",
+        "name": "test",
+        "state_topic": "test-topic",
+    }
+}
+
+DEFAULT_CONFIG_ATTR = {
+    binary_sensor.DOMAIN: {
+        "platform": "mqtt",
+        "name": "test",
+        "state_topic": "test-topic",
+        "json_attributes_topic": "attr-topic",
+    }
+}
+
+DEFAULT_CONFIG_DEVICE_INFO = {
+    "platform": "mqtt",
+    "name": "test",
+    "state_topic": "test-topic",
+    "device": {
+        "identifiers": ["helloworld"],
+        "connections": [["mac", "02:5b:26:a8:dc:12"]],
+        "manufacturer": "Whatever",
+        "name": "Beer",
+        "model": "Glass",
+        "sw_version": "0.1-beta",
+    },
+    "unique_id": "veryunique",
+}
 
 
 async def test_setting_sensor_value_expires_availability_topic(hass, mqtt_mock, caplog):
@@ -424,61 +457,34 @@ async def test_off_delay(hass, mqtt_mock):
 
 async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
-    config = {
-        binary_sensor.DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "state_topic": "test-topic",
-            "json_attributes_topic": "attr-topic",
-        }
-    }
     await help_test_setting_attribute_via_mqtt_json_message(
-        hass, mqtt_mock, binary_sensor.DOMAIN, config
+        hass, mqtt_mock, binary_sensor.DOMAIN, DEFAULT_CONFIG_ATTR
     )
 
 
 async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
     """Test attributes get extracted from a JSON result."""
-    config = {
-        binary_sensor.DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "state_topic": "test-topic",
-            "json_attributes_topic": "attr-topic",
-        }
-    }
     await help_test_update_with_json_attrs_not_dict(
-        hass, mqtt_mock, caplog, binary_sensor.DOMAIN, config
+        hass, mqtt_mock, caplog, binary_sensor.DOMAIN, DEFAULT_CONFIG_ATTR
     )
 
 
 async def test_update_with_json_attrs_bad_JSON(hass, mqtt_mock, caplog):
     """Test attributes get extracted from a JSON result."""
-    config = {
-        binary_sensor.DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "state_topic": "test-topic",
-            "json_attributes_topic": "attr-topic",
-        }
-    }
     await help_test_update_with_json_attrs_bad_JSON(
-        hass, mqtt_mock, caplog, binary_sensor.DOMAIN, config
+        hass, mqtt_mock, caplog, binary_sensor.DOMAIN, DEFAULT_CONFIG_ATTR
     )
 
 
 async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     """Test update of discovered MQTTAttributes."""
-    data1 = (
-        '{ "name": "Beer",'
-        '  "state_topic": "test_topic",'
-        '  "json_attributes_topic": "attr-topic1" }'
-    )
-    data2 = (
-        '{ "name": "Beer",'
-        '  "state_topic": "test_topic",'
-        '  "json_attributes_topic": "attr-topic2" }'
-    )
+    config1 = copy.deepcopy(DEFAULT_CONFIG_ATTR[binary_sensor.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG_ATTR[binary_sensor.DOMAIN])
+    config1["json_attributes_topic"] = "attr-topic1"
+    config2["json_attributes_topic"] = "attr-topic2"
+    data1 = json.dumps(config1)
+    data2 = json.dumps(config2)
+
     await help_test_discovery_update_attr(
         hass, mqtt_mock, caplog, binary_sensor.DOMAIN, data1, data2
     )
@@ -507,11 +513,7 @@ async def test_unique_id(hass):
 
 async def test_discovery_removal_binary_sensor(hass, mqtt_mock, caplog):
     """Test removal of discovered binary_sensor."""
-    data = (
-        '{ "name": "Beer",'
-        '  "state_topic": "test_topic",'
-        '  "availability_topic": "availability_topic" }'
-    )
+    data = json.dumps(DEFAULT_CONFIG[binary_sensor.DOMAIN])
     await help_test_discovery_removal(
         hass, mqtt_mock, caplog, binary_sensor.DOMAIN, data
     )
@@ -519,16 +521,13 @@ async def test_discovery_removal_binary_sensor(hass, mqtt_mock, caplog):
 
 async def test_discovery_update_binary_sensor(hass, mqtt_mock, caplog):
     """Test update of discovered binary_sensor."""
-    data1 = (
-        '{ "name": "Beer",'
-        '  "state_topic": "test_topic",'
-        '  "availability_topic": "availability_topic1" }'
-    )
-    data2 = (
-        '{ "name": "Milk",'
-        '  "state_topic": "test_topic2",'
-        '  "availability_topic": "availability_topic2" }'
-    )
+    config1 = copy.deepcopy(DEFAULT_CONFIG[binary_sensor.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[binary_sensor.DOMAIN])
+    config1["name"] = "Beer"
+    config2["name"] = "Milk"
+
+    data1 = json.dumps(config1)
+    data2 = json.dumps(config2)
     await help_test_discovery_update(
         hass, mqtt_mock, caplog, binary_sensor.DOMAIN, data1, data2
     )
@@ -545,45 +544,15 @@ async def test_discovery_broken(hass, mqtt_mock, caplog):
 
 async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     """Test MQTT binary sensor device registry integration."""
-    data = json.dumps(
-        {
-            "platform": "mqtt",
-            "name": "Test 1",
-            "state_topic": "test-topic",
-            "device": {
-                "identifiers": ["helloworld"],
-                "connections": [["mac", "02:5b:26:a8:dc:12"]],
-                "manufacturer": "Whatever",
-                "name": "Beer",
-                "model": "Glass",
-                "sw_version": "0.1-beta",
-            },
-            "unique_id": "veryunique",
-        }
-    )
     await help_test_entity_device_info_with_identifier(
-        hass, mqtt_mock, binary_sensor.DOMAIN, data
+        hass, mqtt_mock, binary_sensor.DOMAIN, DEFAULT_CONFIG_DEVICE_INFO
     )
 
 
 async def test_entity_device_info_update(hass, mqtt_mock):
     """Test device registry update."""
-    config = {
-        "platform": "mqtt",
-        "name": "Test 1",
-        "state_topic": "test-topic",
-        "device": {
-            "identifiers": ["helloworld"],
-            "connections": [["mac", "02:5b:26:a8:dc:12"]],
-            "manufacturer": "Whatever",
-            "name": "Beer",
-            "model": "Glass",
-            "sw_version": "0.1-beta",
-        },
-        "unique_id": "veryunique",
-    }
     await help_test_entity_device_info_update(
-        hass, mqtt_mock, binary_sensor.DOMAIN, config
+        hass, mqtt_mock, binary_sensor.DOMAIN, DEFAULT_CONFIG_DEVICE_INFO
     )
 
 
