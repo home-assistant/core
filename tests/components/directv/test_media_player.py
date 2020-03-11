@@ -390,9 +390,7 @@ async def test_available(
     with patch(
         "homeassistant.components.directv.DIRECTV.get_standby",
         side_effect=RequestException
-    ), patch(
-        "homeassistant.util.dt.utcnow", return_value=next_update
-    ):
+    ), patch("homeassistant.util.dt.utcnow", return_value=next_update):
         async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
 
@@ -402,11 +400,9 @@ async def test_available(
     # Make update fail 2nd time within 1 minute
     next_update = next_update + timedelta(seconds=30)
     with patch(
-        "homeassistant.components.directv.DIRECTV.get_standby", 
+        "homeassistant.components.directv.DIRECTV.get_standby",
         side_effect=RequestException
-    ), patch(
-        "homeassistant.util.dt.utcnow", return_value=next_update
-    ):
+    ), patch("homeassistant.util.dt.utcnow", return_value=next_update):
         async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
 
@@ -418,9 +414,7 @@ async def test_available(
     with patch(
         "homeassistant.components.directv.DIRECTV.get_standby",
         side_effect=RequestException
-    ), patch(
-        "homeassistant.util.dt.utcnow", return_value=next_update
-    ):
+    ), patch("homeassistant.util.dt.utcnow", return_value=next_update):
         async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
 
