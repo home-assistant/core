@@ -68,7 +68,7 @@ LIGHT_COLOR = {
 
 
 @asynctest.mock.patch(
-    "homeassistant.components.zha.light.Light._refresh", new=MagicMock()
+    "zigpy.zcl.clusters.general.OnOff.read_attributes", new=MagicMock()
 )
 async def test_light_refresh(hass, zigpy_device_mock, zha_device_joined_restored):
     """Test zha light platform refresh."""
@@ -76,32 +76,28 @@ async def test_light_refresh(hass, zigpy_device_mock, zha_device_joined_restored
     # create zigpy devices
     zigpy_device = zigpy_device_mock(LIGHT_ON_OFF)
     zha_device = await zha_device_joined_restored(zigpy_device)
-    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
-    assert entity_id is not None
+    on_off_cluster = zigpy_device.endpoints[1].on_off
 
-    light_entity = hass.data[DOMAIN].get_entity(entity_id)
-    assert light_entity is not None
     # allow traffic to flow through the gateway and device
     await async_enable_traffic(hass, [zha_device])
-    assert zha_device.available
-    light_entity._refresh.reset_mock()
-
-    # test that the refresh fires within the expected time frame
+    on_off_cluster.read_attributes.reset_mock()
 
     # not enough time passed
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
     await hass.async_block_till_done()
-    assert light_entity._refresh.call_count == 0
+    assert on_off_cluster.read_attributes.call_count == 0
 
     # 1 interval - 1 call
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=80))
     await hass.async_block_till_done()
-    assert light_entity._refresh.call_count == 1
+    assert on_off_cluster.read_attributes.call_count == 1
+    assert on_off_cluster.read_attributes.await_count == 1
 
     # 2 intervals - 2 calls
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=80))
     await hass.async_block_till_done()
-    assert light_entity._refresh.call_count == 2
+    assert on_off_cluster.read_attributes.call_count == 2
+    assert on_off_cluster.read_attributes.await_count == 2
 
 
 @asynctest.patch(
