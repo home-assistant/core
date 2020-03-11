@@ -110,14 +110,9 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverDevice):
 
     async def set_door_state(self, state):
         """Send state command."""
-        characteristics = [
-            {
-                "aid": self._aid,
-                "iid": self._chars["door-state.target"],
-                "value": TARGET_GARAGE_STATE_MAP[state],
-            }
-        ]
-        await self._accessory.put_characteristics(characteristics)
+        await self.async_put_characteristics(
+            {CharacteristicsTypes.DOOR_STATE_TARGET: TARGET_GARAGE_STATE_MAP[state]}
+        )
 
     @property
     def device_state_attributes(self):
@@ -199,6 +194,20 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
         return state == STATE_OPENING
 
     @property
+    def is_horizontal_tilt(self):
+        """Return True if the service has a horizontal tilt characteristic."""
+        return (
+            self.service.value(CharacteristicsTypes.HORIZONTAL_TILT_CURRENT) is not None
+        )
+
+    @property
+    def is_vertical_tilt(self):
+        """Return True if the service has a vertical tilt characteristic."""
+        return (
+            self.service.value(CharacteristicsTypes.VERTICAL_TILT_CURRENT) is not None
+        )
+
+    @property
     def current_cover_tilt_position(self):
         """Return current position of cover tilt."""
         tilt_position = self.service.value(CharacteristicsTypes.VERTICAL_TILT_CURRENT)
@@ -210,10 +219,7 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
 
     async def async_stop_cover(self, **kwargs):
         """Send hold command."""
-        characteristics = [
-            {"aid": self._aid, "iid": self._chars["position.hold"], "value": 1}
-        ]
-        await self._accessory.put_characteristics(characteristics)
+        await self.async_put_characteristics({CharacteristicsTypes.POSITION_HOLD: 1})
 
     async def async_open_cover(self, **kwargs):
         """Send open command."""
@@ -226,32 +232,21 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
     async def async_set_cover_position(self, **kwargs):
         """Send position command."""
         position = kwargs[ATTR_POSITION]
-        characteristics = [
-            {"aid": self._aid, "iid": self._chars["position.target"], "value": position}
-        ]
-        await self._accessory.put_characteristics(characteristics)
+        await self.async_put_characteristics(
+            {CharacteristicsTypes.POSITION_TARGET: position}
+        )
 
     async def async_set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
         tilt_position = kwargs[ATTR_TILT_POSITION]
-        if "vertical-tilt.target" in self._chars:
-            characteristics = [
-                {
-                    "aid": self._aid,
-                    "iid": self._chars["vertical-tilt.target"],
-                    "value": tilt_position,
-                }
-            ]
-            await self._accessory.put_characteristics(characteristics)
-        elif "horizontal-tilt.target" in self._chars:
-            characteristics = [
-                {
-                    "aid": self._aid,
-                    "iid": self._chars["horizontal-tilt.target"],
-                    "value": tilt_position,
-                }
-            ]
-            await self._accessory.put_characteristics(characteristics)
+        if self.is_vertical_tilt:
+            await self.async_put_characteristics(
+                {CharacteristicsTypes.VERTICAL_TILT_TARGET: tilt_position}
+            )
+        elif self.is_horizontal_tilt:
+            await self.async_put_characteristics(
+                {CharacteristicsTypes.HORIZONTAL_TILT_TARGET: tilt_position}
+            )
 
     @property
     def device_state_attributes(self):

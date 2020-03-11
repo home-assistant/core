@@ -103,14 +103,9 @@ class HomeKitAlarmControlPanel(HomeKitEntity, AlarmControlPanel):
 
     async def set_alarm_state(self, state, code=None):
         """Send state command."""
-        characteristics = [
-            {
-                "aid": self._aid,
-                "iid": self._chars["security-system-state.target"],
-                "value": TARGET_STATE_MAP[state],
-            }
-        ]
-        await self._accessory.put_characteristics(characteristics)
+        await self.async_put_characteristics(
+            {CharacteristicsTypes.SECURITY_SYSTEM_STATE_TARGET: TARGET_STATE_MAP[state]}
+        )
 
     @property
     def device_state_attributes(self):
