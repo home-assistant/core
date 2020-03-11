@@ -24,7 +24,6 @@
                 "data": {
                     "code": "Code (used in Home Assistant UI)"
                 },
-                "description": "Set various options for the AirVisual integration.",
                 "title": "Configure SimpliSafe"
             }
         }

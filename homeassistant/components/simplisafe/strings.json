@@ -22,7 +22,6 @@
     "step": {
       "init": {
         "title": "Configure SimpliSafe",
-        "description": "Set various options for the AirVisual integration.",
         "data": {
           "code": "Code (used in Home Assistant UI)"
         }
