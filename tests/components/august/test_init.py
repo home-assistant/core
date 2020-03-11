@@ -1,4 +1,6 @@
 """The tests for the august platform."""
+import asyncio
+
 from asynctest import patch
 from august.exceptions import AugustApiAIOHTTPError
 
@@ -8,8 +10,10 @@ from homeassistant.components.august.const import (
     CONF_INSTALL_ID,
     CONF_LOGIN_METHOD,
     DEFAULT_AUGUST_CONFIG_FILE,
+    DOMAIN,
 )
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PASSWORD,
@@ -23,6 +27,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry
 from tests.components.august.mocks import (
     _create_august_with_devices,
     _mock_doorsense_enabled_august_lock_detail,
@@ -31,6 +36,25 @@ from tests.components.august.mocks import (
     _mock_inoperative_august_lock_detail,
     _mock_operative_august_lock_detail,
 )
+
+
+async def test_august_is_offline(hass):
+    """Config entry state is ENTRY_STATE_SETUP_RETRY when august is offline."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=_mock_get_config()[DOMAIN], title="August august",
+    )
+    config_entry.add_to_hass(hass)
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    with patch(
+        "august.authenticator_async.AuthenticatorAsync.async_authenticate",
+        side_effect=asyncio.TimeoutError,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.async_block_till_done()
+    assert config_entry.state == ENTRY_STATE_SETUP_RETRY
 
 
 async def test_unlock_throws_august_api_http_error(hass):
@@ -127,8 +151,7 @@ async def test_set_up_from_yaml(hass):
         "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
         return_value=True,
     ):
-        mocked_config = _mock_get_config()
-        assert await async_setup_component(hass, "august", mocked_config)
+        assert await async_setup_component(hass, DOMAIN, _mock_get_config())
     await hass.async_block_till_done()
     assert len(mock_setup_august.mock_calls) == 1
     call = mock_setup_august.call_args
