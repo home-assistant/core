@@ -82,14 +82,15 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     def set_memo_text(service):
         """Handle Memo Text service call."""
+        module_address service.data[CONF_ADDRESS]
         memo_text = service.data[CONF_MEMO_TEXT]
         memo_text.hass = hass
         try:
-            controller.get_module(service.data[CONF_ADDRESS]).set_memo_text(
+            controller.get_module(module_address).set_memo_text(
                 memo_text.async_render()
             )
         except velbus.util.VelbusException as err:
-            _LOGGER.error("An error occurred: %s", err)
+            _LOGGER.error("An error occurred while setting memo text: %s", err)
 
     hass.services.async_register(
         DOMAIN,
