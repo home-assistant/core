@@ -87,7 +87,7 @@ async def test_light_refresh(hass, zigpy_device_mock, zha_device_joined_restored
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
     await hass.async_block_till_done()
     assert on_off_cluster.read_attributes.call_count == 0
-    assert on_off_cluster.read_attributes.call_count == 0
+    assert on_off_cluster.read_attributes.await_count == 0
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # 1 interval - 1 call
