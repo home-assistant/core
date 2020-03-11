@@ -2,7 +2,7 @@
 from datetime import timedelta
 from unittest.mock import MagicMock, call, sentinel
 
-import asynctest
+from asynctest import CoroutineMock, patch
 import pytest
 import zigpy.profiles.zha
 import zigpy.types
@@ -67,9 +67,7 @@ LIGHT_COLOR = {
 }
 
 
-@asynctest.mock.patch(
-    "zigpy.zcl.clusters.general.OnOff.read_attributes", new=MagicMock()
-)
+@patch("zigpy.zcl.clusters.general.OnOff.read_attributes", new=MagicMock())
 async def test_light_refresh(hass, zigpy_device_mock, zha_device_joined_restored):
     """Test zha light platform refresh."""
 
@@ -107,21 +105,21 @@ async def test_light_refresh(hass, zigpy_device_mock, zha_device_joined_restored
     assert hass.states.get(entity_id).state == STATE_OFF
 
 
-@asynctest.patch(
+@patch(
     "zigpy.zcl.clusters.lighting.Color.request",
-    new=asynctest.CoroutineMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
+    new=CoroutineMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
 )
-@asynctest.patch(
+@patch(
     "zigpy.zcl.clusters.general.Identify.request",
-    new=asynctest.CoroutineMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
+    new=CoroutineMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
 )
-@asynctest.patch(
+@patch(
     "zigpy.zcl.clusters.general.LevelControl.request",
-    new=asynctest.CoroutineMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
+    new=CoroutineMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
 )
-@asynctest.patch(
+@patch(
     "zigpy.zcl.clusters.general.OnOff.request",
-    new=asynctest.CoroutineMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
+    new=CoroutineMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
 )
 @pytest.mark.parametrize(
     "device, reporting",

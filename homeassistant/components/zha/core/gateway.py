@@ -235,7 +235,7 @@ class ZHAGateway:
 
     def _send_group_gateway_message(self, zigpy_group, gateway_message_type):
         """Send the gareway event for a zigpy group event."""
-        zha_group = self._groups.get(zigpy_group.group_id, None)
+        zha_group = self._groups.get(zigpy_group.group_id)
         if zha_group is not None:
             async_dispatcher_send(
                 self._hass,
