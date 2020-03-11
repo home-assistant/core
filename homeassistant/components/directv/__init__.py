@@ -64,10 +64,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         dtv_data = await hass.async_add_executor_job(
             get_dtv_data, hass, entry.data[CONF_HOST]
         )
-    except (OSError, RequestException) as exception:
-        raise ConfigEntryNotReady from exception
-    except Exception as exception:  # pylint: disable=broad-except
-        raise ConfigEntryNotReady from exception
+    except RequestException:
+        raise ConfigEntryNotReady
 
     hass.data[DOMAIN][entry.entry_id] = dtv_data
 
