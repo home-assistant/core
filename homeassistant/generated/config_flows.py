@@ -29,6 +29,7 @@ FLOWS = [
     "elgato",
     "emulated_roku",
     "esphome",
+    "freebox",
     "garmin_connect",
     "gdacs",
     "geofency",
