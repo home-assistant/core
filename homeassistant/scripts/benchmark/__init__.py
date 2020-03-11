@@ -8,7 +8,6 @@ from timeit import default_timer as timer
 from typing import Callable, Dict
 
 from homeassistant import core
-from homeassistant.components import logbook
 from homeassistant.components.websocket_api.const import JSON_DUMP
 from homeassistant.const import ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED
 from homeassistant.util import dt as dt_util
@@ -154,6 +153,8 @@ async def logbook_filtering_attributes(hass):
 
 @benchmark
 async def _logbook_filtering(hass, last_changed, last_updated):
+    from homeassistant.components import logbook
+
     entity_id = "test.entity"
 
     old_state = {"entity_id": entity_id, "state": "off"}
