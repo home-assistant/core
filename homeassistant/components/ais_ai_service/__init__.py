@@ -2502,7 +2502,6 @@ async def async_setup(hass, config):
             ).attributes["volume_level"]
             # set volume as min from (0.2, curr_volume_level)
             vl = min(0.2, ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL)
-            _LOGGER.warning("Night VL: " + str(vl))
             hass.async_add_job(
                 hass.services.async_call(
                     "media_player",
@@ -2522,9 +2521,8 @@ async def async_setup(hass, config):
             # get volume level
             if ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL is not None:
                 vl = max(
-                    0.2, ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL, curr_volume_level
+                    0.1, ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL, curr_volume_level
                 )
-                _LOGGER.warning("Day VL: " + str(vl))
                 hass.async_add_job(
                     hass.services.async_call(
                         "media_player",
