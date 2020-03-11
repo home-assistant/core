@@ -39,7 +39,6 @@ def setup(hass, config):
     conf = config["sensor"][0]
     try:
         ncm = NextcloudMonitor(conf[CONF_URL], conf[CONF_USERNAME], conf[CONF_PASSWORD])
-        raise
     except Exception:
         raise PlatformNotReady("Nextcloud setup failed.")
 
