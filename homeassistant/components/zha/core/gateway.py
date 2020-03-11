@@ -262,7 +262,7 @@ class ZHAGateway:
         entity_refs = self._device_registry.pop(device.ieee, None)
         if zha_device is not None:
             device_info = zha_device.async_get_info()
-            zha_device.async_unsub_dispatcher()
+            zha_device.async_cleanup_handles()
             async_dispatcher_send(
                 self._hass, "{}_{}".format(SIGNAL_REMOVE, str(zha_device.ieee))
             )

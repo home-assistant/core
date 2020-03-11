@@ -60,7 +60,7 @@ class Switch(ZhaEntity, SwitchDevice):
         if not isinstance(result, list) or result[1] is not Status.SUCCESS:
             return
         self._state = True
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
@@ -68,13 +68,13 @@ class Switch(ZhaEntity, SwitchDevice):
         if not isinstance(result, list) or result[1] is not Status.SUCCESS:
             return
         self._state = False
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def async_set_state(self, attr_id, attr_name, value):
         """Handle state update from channel."""
         self._state = bool(value)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def device_state_attributes(self):
