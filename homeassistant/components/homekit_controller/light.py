@@ -94,41 +94,28 @@ class HomeKitLight(HomeKitEntity, Light):
         temperature = kwargs.get(ATTR_COLOR_TEMP)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
 
-        characteristics = []
+        characteristics = {}
+
         if hs_color is not None:
-            characteristics.append(
-                {"aid": self._aid, "iid": self._chars["hue"], "value": hs_color[0]}
-            )
-            characteristics.append(
+            characteristics.update(
                 {
-                    "aid": self._aid,
-                    "iid": self._chars["saturation"],
-                    "value": hs_color[1],
+                    CharacteristicsTypes.HUE: hs_color[0],
+                    CharacteristicsTypes.SATURATION: hs_color[1],
                 }
             )
+
         if brightness is not None:
-            characteristics.append(
-                {
-                    "aid": self._aid,
-                    "iid": self._chars["brightness"],
-                    "value": int(brightness * 100 / 255),
-                }
+            characteristics[CharacteristicsTypes.BRIGHTNESS] = int(
+                brightness * 100 / 255
             )
 
         if temperature is not None:
-            characteristics.append(
-                {
-                    "aid": self._aid,
-                    "iid": self._chars["color-temperature"],
-                    "value": int(temperature),
-                }
-            )
-        characteristics.append(
-            {"aid": self._aid, "iid": self._chars["on"], "value": True}
-        )
-        await self._accessory.put_characteristics(characteristics)
+            characteristics[CharacteristicsTypes.COLOR_TEMPERATURE] = int(temperature)
+
+        characteristics[CharacteristicsTypes.ON] = True
+
+        await self.async_put_characteristics(characteristics)
 
     async def async_turn_off(self, **kwargs):
         """Turn the specified light off."""
-        characteristics = [{"aid": self._aid, "iid": self._chars["on"], "value": False}]
-        await self._accessory.put_characteristics(characteristics)
+        await self.async_put_characteristics({CharacteristicsTypes.ON: False})
