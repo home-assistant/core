@@ -267,7 +267,7 @@ class StatisticsSensor(Entity):
 
                     time_diff = (self.max_age - self.min_age).total_seconds()
                     if time_diff > 0:
-                        self.change_rate = self.average_change / time_diff
+                        self.change_rate = self.change / time_diff
 
                 self.change = round(self.change, self._precision)
                 self.average_change = round(self.average_change, self._precision)
