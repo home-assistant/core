@@ -43,13 +43,11 @@ class HomeKitSwitch(HomeKitEntity, SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Turn the specified switch on."""
-        characteristics = [{"aid": self._aid, "iid": self._chars["on"], "value": True}]
-        await self._accessory.put_characteristics(characteristics)
+        await self.async_put_characteristics({CharacteristicsTypes.ON: True})
 
     async def async_turn_off(self, **kwargs):
         """Turn the specified switch off."""
-        characteristics = [{"aid": self._aid, "iid": self._chars["on"], "value": False}]
-        await self._accessory.put_characteristics(characteristics)
+        await self.async_put_characteristics({CharacteristicsTypes.ON: False})
 
     @property
     def device_state_attributes(self):

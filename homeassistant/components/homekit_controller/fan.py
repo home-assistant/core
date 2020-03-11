@@ -55,6 +55,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
             CharacteristicsTypes.SWING_MODE,
             CharacteristicsTypes.ROTATION_DIRECTION,
             CharacteristicsTypes.ROTATION_SPEED,
+            self.on_characteristic,
         ]
 
     def _setup_rotation_direction(self, char):
@@ -65,6 +66,11 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
 
     def _setup_swing_mode(self, char):
         self._features |= SUPPORT_OSCILLATE
+
+    @property
+    def is_on(self):
+        """Return true if device is on."""
+        return self.service.value(self.on_characteristic) == 1
 
     @property
     def speed(self):
@@ -111,14 +117,8 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
 
     async def async_set_direction(self, direction):
         """Set the direction of the fan."""
-        await self._accessory.put_characteristics(
-            [
-                {
-                    "aid": self._aid,
-                    "iid": self._chars["rotation.direction"],
-                    "value": DIRECTION_TO_HK[direction],
-                }
-            ]
+        await self.async_put_characteristics(
+            {CharacteristicsTypes.ROTATION_DIRECTION: DIRECTION_TO_HK[direction]}
         )
 
     async def async_set_speed(self, speed):
@@ -126,96 +126,45 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         if speed == SPEED_OFF:
             return await self.async_turn_off()
 
-        await self._accessory.put_characteristics(
-            [
-                {
-                    "aid": self._aid,
-                    "iid": self._chars["rotation.speed"],
-                    "value": SPEED_TO_PCNT[speed],
-                }
-            ]
+        await self.async_put_characteristics(
+            {CharacteristicsTypes.ROTATION_SPEED: SPEED_TO_PCNT[speed]}
         )
 
     async def async_oscillate(self, oscillating: bool):
         """Oscillate the fan."""
-        await self._accessory.put_characteristics(
-            [
-                {
-                    "aid": self._aid,
-                    "iid": self._chars["swing-mode"],
-                    "value": 1 if oscillating else 0,
-                }
-            ]
+        await self.async_put_characteristics(
+            {CharacteristicsTypes.SWING_MODE: 1 if oscillating else 0}
         )
 
     async def async_turn_on(self, speed=None, **kwargs):
         """Turn the specified fan on."""
 
-        characteristics = []
+        characteristics = {}
 
         if not self.is_on:
-            characteristics.append(
-                {
-                    "aid": self._aid,
-                    "iid": self._chars[self.on_characteristic],
-                    "value": True,
-                }
-            )
+            characteristics[self.on_characteristic] = True
 
         if self.supported_features & SUPPORT_SET_SPEED and speed:
-            characteristics.append(
-                {
-                    "aid": self._aid,
-                    "iid": self._chars["rotation.speed"],
-                    "value": SPEED_TO_PCNT[speed],
-                },
-            )
+            characteristics[CharacteristicsTypes.ROTATION_SPEED] = SPEED_TO_PCNT[speed]
 
-        if not characteristics:
-            return
-
-        await self._accessory.put_characteristics(characteristics)
+        if characteristics:
+            await self.async_put_characteristics(characteristics)
 
     async def async_turn_off(self, **kwargs):
         """Turn the specified fan off."""
-        characteristics = [
-            {
-                "aid": self._aid,
-                "iid": self._chars[self.on_characteristic],
-                "value": False,
-            }
-        ]
-        await self._accessory.put_characteristics(characteristics)
+        await self.async_put_characteristics({self.on_characteristic: False})
 
 
 class HomeKitFanV1(BaseHomeKitFan):
     """Implement fan support for public.hap.service.fan."""
 
-    on_characteristic = "on"
-
-    def get_characteristic_types(self):
-        """Define the homekit characteristics the entity cares about."""
-        return [CharacteristicsTypes.ON] + super().get_characteristic_types()
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self.service.value(CharacteristicsTypes.ON) == 1
+    on_characteristic = CharacteristicsTypes.ON
 
 
 class HomeKitFanV2(BaseHomeKitFan):
     """Implement fan support for public.hap.service.fanv2."""
 
-    on_characteristic = "active"
-
-    def get_characteristic_types(self):
-        """Define the homekit characteristics the entity cares about."""
-        return [CharacteristicsTypes.ACTIVE] + super().get_characteristic_types()
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self.service.value(CharacteristicsTypes.ACTIVE) == 1
+    on_characteristic = CharacteristicsTypes.ACTIVE
 
 
 ENTITY_TYPES = {

@@ -127,32 +127,25 @@ class HomeKitClimateDevice(HomeKitEntity, ClimateDevice):
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
 
-        characteristics = [
-            {"aid": self._aid, "iid": self._chars["temperature.target"], "value": temp}
-        ]
-        await self._accessory.put_characteristics(characteristics)
+        await self.async_put_characteristics(
+            {CharacteristicsTypes.TEMPERATURE_TARGET: temp}
+        )
 
     async def async_set_humidity(self, humidity):
         """Set new target humidity."""
-        characteristics = [
-            {
-                "aid": self._aid,
-                "iid": self._chars["relative-humidity.target"],
-                "value": humidity,
-            }
-        ]
-        await self._accessory.put_characteristics(characteristics)
+        await self.async_put_characteristics(
+            {CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET: humidity}
+        )
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target operation mode."""
-        characteristics = [
+        await self.async_put_characteristics(
             {
-                "aid": self._aid,
-                "iid": self._chars["heating-cooling.target"],
-                "value": MODE_HASS_TO_HOMEKIT[hvac_mode],
+                CharacteristicsTypes.HEATING_COOLING_TARGET: MODE_HASS_TO_HOMEKIT[
+                    hvac_mode
+                ],
             }
-        ]
-        await self._accessory.put_characteristics(characteristics)
+        )
 
     @property
     def current_temperature(self):

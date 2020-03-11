@@ -165,23 +165,13 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerDevice):
             return
 
         if TargetMediaStateValues.PLAY in self._supported_target_media_state:
-            characteristics = [
-                {
-                    "aid": self._aid,
-                    "iid": self._chars["target-media-state"],
-                    "value": TargetMediaStateValues.PLAY,
-                }
-            ]
-            await self._accessory.put_characteristics(characteristics)
+            await self.async_put_characteristics(
+                {CharacteristicsTypes.TARGET_MEDIA_STATE: TargetMediaStateValues.PLAY}
+            )
         elif RemoteKeyValues.PLAY_PAUSE in self._supported_remote_key:
-            characteristics = [
-                {
-                    "aid": self._aid,
-                    "iid": self._chars["remote-key"],
-                    "value": RemoteKeyValues.PLAY_PAUSE,
-                }
-            ]
-            await self._accessory.put_characteristics(characteristics)
+            await self.async_put_characteristics(
+                {CharacteristicsTypes.REMOTE_KEY: RemoteKeyValues.PLAY_PAUSE}
+            )
 
     async def async_media_pause(self):
         """Send pause command."""
@@ -190,23 +180,13 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerDevice):
             return
 
         if TargetMediaStateValues.PAUSE in self._supported_target_media_state:
-            characteristics = [
-                {
-                    "aid": self._aid,
-                    "iid": self._chars["target-media-state"],
-                    "value": TargetMediaStateValues.PAUSE,
-                }
-            ]
-            await self._accessory.put_characteristics(characteristics)
+            await self.async_put_characteristics(
+                {CharacteristicsTypes.TARGET_MEDIA_STATE: TargetMediaStateValues.PAUSE}
+            )
         elif RemoteKeyValues.PLAY_PAUSE in self._supported_remote_key:
-            characteristics = [
-                {
-                    "aid": self._aid,
-                    "iid": self._chars["remote-key"],
-                    "value": RemoteKeyValues.PLAY_PAUSE,
-                }
-            ]
-            await self._accessory.put_characteristics(characteristics)
+            await self.async_put_characteristics(
+                {CharacteristicsTypes.REMOTE_KEY: RemoteKeyValues.PLAY_PAUSE}
+            )
 
     async def async_media_stop(self):
         """Send stop command."""
@@ -215,14 +195,9 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerDevice):
             return
 
         if TargetMediaStateValues.STOP in self._supported_target_media_state:
-            characteristics = [
-                {
-                    "aid": self._aid,
-                    "iid": self._chars["target-media-state"],
-                    "value": TargetMediaStateValues.STOP,
-                }
-            ]
-            await self._accessory.put_characteristics(characteristics)
+            await self.async_put_characteristics(
+                {CharacteristicsTypes.TARGET_MEDIA_STATE: TargetMediaStateValues.STOP}
+            )
 
     async def async_select_source(self, source):
         """Switch to a different media source."""
@@ -240,11 +215,6 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerDevice):
 
         identifier = input_source[CharacteristicsTypes.IDENTIFIER]
 
-        characteristics = [
-            {
-                "aid": self._aid,
-                "iid": self._chars["active-identifier"],
-                "value": identifier.value,
-            }
-        ]
-        await self._accessory.put_characteristics(characteristics)
+        await self.async_put_characteristics(
+            {CharacteristicsTypes.ACTIVE_IDENTIFIER: identifier.value}
+        )
