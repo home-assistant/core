@@ -71,7 +71,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             info = await self.hass.async_add_executor_job(validate_input, user_input)
             user_input[CONF_HOST] = info[CONF_HOST]
-        except (OSError, RequestException):
+        except RequestException:
             errors["base"] = ERROR_CANNOT_CONNECT
             return self._show_form(errors)
         except Exception:  # pylint: disable=broad-except
