@@ -22,11 +22,8 @@ from .const import (
     APP_DESC,
     CONNECTION_SENSORS,
     DOMAIN,
-    SENSOR_NAME,
-    SENSOR_VALUE,
     STORAGE_KEY,
     STORAGE_VERSION,
-    TEMPERATURE_SENSOR_TEMPLATE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,7 +48,8 @@ class FreeboxRouter:
         self._attrs = {}
 
         self.devices: Dict[str, any] = {}
-        self.sensors: Dict[str, any] = {}
+        self.sensors_temperature: Dict[str, int] = {}
+        self.sensors_connection: Dict[str, float] = {}
 
         self.listeners = []
 
@@ -118,21 +116,12 @@ class FreeboxRouter:
         # According to the doc `syst_datas["sensors"]` is temperature sensors in celsius degree.
         # Name and id of sensors may vary under Freebox devices.
         for sensor in syst_datas["sensors"]:
-            self.sensors[sensor["id"]] = {
-                **TEMPERATURE_SENSOR_TEMPLATE,
-                **{
-                    SENSOR_NAME: f"Freebox {sensor['name']}",
-                    SENSOR_VALUE: sensor["value"],
-                },
-            }
+            self.sensors_temperature[sensor["name"]] = sensor["value"]
 
         # Connection sensors
         connection_datas: Dict[str, any] = await self._api.connection.get_status()
         for sensor_key in CONNECTION_SENSORS:
-            self.sensors[sensor_key] = {
-                **CONNECTION_SENSORS[sensor_key],
-                **{SENSOR_VALUE: connection_datas[sensor_key]},
-            }
+            self.sensors_connection[sensor_key] = connection_datas[sensor_key]
 
         self._attrs = {
             "IPv4": connection_datas.get("ipv4"),
@@ -182,6 +171,11 @@ class FreeboxRouter:
     def signal_sensor_update(self) -> str:
         """Event specific per Freebox entry to signal updates in sensors."""
         return f"{DOMAIN}-{self._host}-sensor-update"
+
+    @property
+    def sensors(self) -> Wifi:
+        """Return the wifi."""
+        return {**self.sensors_temperature, **self.sensors_connection}
 
     @property
     def wifi(self) -> Wifi:

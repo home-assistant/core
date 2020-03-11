@@ -9,12 +9,13 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
+    CONNECTION_SENSORS,
     DOMAIN,
     SENSOR_DEVICE_CLASS,
     SENSOR_ICON,
     SENSOR_NAME,
     SENSOR_UNIT,
-    SENSOR_VALUE,
+    TEMPERATURE_SENSOR_TEMPLATE,
 )
 from .router import FreeboxRouter
 
@@ -28,8 +29,19 @@ async def async_setup_entry(
     router = hass.data[DOMAIN][entry.unique_id]
     entities = []
 
-    for sensor_key, sensor_attrs in router.sensors.items():
-        entities.append(FreeboxSensor(router, sensor_key, sensor_attrs))
+    for sensor_name in router.sensors_temperature:
+        entities.append(
+            FreeboxSensor(
+                router,
+                sensor_name,
+                {**TEMPERATURE_SENSOR_TEMPLATE, SENSOR_NAME: f"Freebox {sensor_name}"},
+            )
+        )
+
+    for sensor_key in CONNECTION_SENSORS:
+        entities.append(
+            FreeboxSensor(router, sensor_key, CONNECTION_SENSORS[sensor_key])
+        )
 
     async_add_entities(entities, True)
 
@@ -54,7 +66,7 @@ class FreeboxSensor(Entity):
 
     def update(self) -> None:
         """Update the Freebox sensor."""
-        state = self._router.sensors[self._sensor_type][SENSOR_VALUE]
+        state = self._router.sensors[self._sensor_type]
         if self._unit == DATA_RATE_KILOBYTES_PER_SECOND:
             self._state = round(state / 1000, 2)
         else:
