@@ -91,13 +91,15 @@ async def test_light_refresh(hass, zigpy_device_mock, zha_device_joined_restored
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # 1 interval - 1 call
+    on_off_cluster.read_attributes.return_value = [{"on_off": 1}, {}]
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=80))
     await hass.async_block_till_done()
     assert on_off_cluster.read_attributes.call_count == 1
     assert on_off_cluster.read_attributes.await_count == 1
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(entity_id).state == STATE_ON
 
     # 2 intervals - 2 calls
+    on_off_cluster.read_attributes.return_value = [{"on_off": 0}, {}]
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=80))
     await hass.async_block_till_done()
     assert on_off_cluster.read_attributes.call_count == 2
