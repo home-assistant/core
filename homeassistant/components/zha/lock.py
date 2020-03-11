@@ -87,7 +87,7 @@ class ZhaDoorLock(ZhaEntity, LockDevice):
         if not isinstance(result, list) or result[0] is not Status.SUCCESS:
             self.error("Error with lock_door: %s", result)
             return
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_unlock(self, **kwargs):
         """Unlock the lock."""
@@ -95,7 +95,7 @@ class ZhaDoorLock(ZhaEntity, LockDevice):
         if not isinstance(result, list) or result[0] is not Status.SUCCESS:
             self.error("Error with unlock_door: %s", result)
             return
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_update(self):
         """Attempt to retrieve state from the lock."""
@@ -106,7 +106,7 @@ class ZhaDoorLock(ZhaEntity, LockDevice):
     def async_set_state(self, attr_id, attr_name, value):
         """Handle state update from channel."""
         self._state = VALUE_TO_STATE.get(value, self._state)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_get_state(self, from_cache=True):
         """Attempt to retrieve state from the lock."""
