@@ -1,0 +1,9 @@
+{
+  "domain": "blebox",
+  "name": "BleBox devices",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/blebox",
+  "requirements": ["blebox_uniapi==0.1.0", "semver==2.9.1"],
+  "dependencies": [],
+  "codeowners": [ "@gadgetmobile" ]
+}

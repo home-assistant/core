@@ -335,6 +335,9 @@ bimmer_connected==0.7.5
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
 
+# homeassistant.components.blebox
+blebox_uniapi==0.1.0
+
 # homeassistant.components.blink
 blinkpy==0.14.3
 
@@ -1871,6 +1874,9 @@ schiene==0.23
 
 # homeassistant.components.scsgate
 scsgate==0.1.0
+
+# homeassistant.components.blebox
+semver==2.9.1
 
 # homeassistant.components.sendgrid
 sendgrid==6.2.1

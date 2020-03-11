@@ -143,6 +143,9 @@ base36==0.1.1
 # homeassistant.components.zha
 bellows-homeassistant==0.15.2
 
+# homeassistant.components.blebox
+blebox_uniapi==0.1.0
+
 # homeassistant.components.bom
 bomradarloop==0.1.4
 
@@ -723,6 +726,9 @@ samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
 samsungtvws[websocket]==1.4.0
+
+# homeassistant.components.blebox
+semver==2.9.1
 
 # homeassistant.components.sense
 sense_energy==0.7.1

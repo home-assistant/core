@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "No BleBox devices devices found on the network.",
+            "single_instance_allowed": "Only a single configuration of BleBox devices is possible."
+        },
+        "flow_title": "BleBox device: {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "username": "Username"
+                },
+                "title": "Set up BleBox device"
+            }
+        },
+        "title": "BleBox devices"
+    }
+}
