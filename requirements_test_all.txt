@@ -334,9 +334,6 @@ nessclient==0.9.15
 # homeassistant.components.ssdp
 netdisco==2.6.0
 
-# homeassistant.components.nextcloud
-nextcloudmonitor==0.0.3
-
 # homeassistant.components.nsw_fuel_station
 nsw-fuel-api-client==1.0.10
 
