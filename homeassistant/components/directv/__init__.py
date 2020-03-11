@@ -33,7 +33,7 @@ def get_dtv_data(hass: HomeAssistant, host: str, port: int = DEFAULT_PORT, clien
     dtv = DIRECTV(host, port, client_addr)
     locations = dtv.get_locations()
     version_info = dtv.get_version()
-    
+
     return {
         DATA_CLIENT: dtv,
         DATA_LOCATIONS: locations,
