@@ -61,14 +61,9 @@ class HomeKitLock(HomeKitEntity, LockDevice):
 
     async def _set_lock_state(self, state):
         """Send state command."""
-        characteristics = [
-            {
-                "aid": self._aid,
-                "iid": self._chars["lock-mechanism.target-state"],
-                "value": TARGET_STATE_MAP[state],
-            }
-        ]
-        await self._accessory.put_characteristics(characteristics)
+        await self.async_put_characteristics(
+            {CharacteristicsTypes.LOCK_MECHANISM_TARGET_STATE: TARGET_STATE_MAP[state]}
+        )
 
     @property
     def device_state_attributes(self):

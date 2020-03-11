@@ -1,6 +1,7 @@
 """Support for Homekit device discovery."""
 import logging
 import os
+from typing import Any, Dict
 
 import aiohomekit
 from aiohomekit.model import Accessory
@@ -37,7 +38,6 @@ class HomeKitEntity(Entity):
         self._aid = devinfo["aid"]
         self._iid = devinfo["iid"]
         self._features = 0
-        self._chars = {}
         self.setup()
 
         self._signals = []
@@ -79,6 +79,24 @@ class HomeKitEntity(Entity):
             signal_remove()
         self._signals.clear()
 
+    async def async_put_characteristics(self, characteristics: Dict[str, Any]):
+        """
+        Write characteristics to the device.
+
+        A characteristic type is unique within a service, but in order to write
+        to a named characteristic on a bridge we need to turn its type into
+        an aid and iid, and send it as a list of tuples, which is what this
+        helper does.
+
+        E.g. you can do:
+
+            await entity.async_put_characteristics({
+                CharacteristicsTypes.ON: True
+            })
+        """
+        payload = self.service.build_update(characteristics)
+        return await self._accessory.put_characteristics(payload)
+
     @property
     def should_poll(self) -> bool:
         """Return False.
@@ -91,8 +109,6 @@ class HomeKitEntity(Entity):
         """Configure an entity baed on its HomeKit characteristics metadata."""
         self.pollable_characteristics = []
         self.watchable_characteristics = []
-        self._chars = {}
-        self._char_names = {}
 
         char_types = self.get_characteristic_types()
 
@@ -115,10 +131,6 @@ class HomeKitEntity(Entity):
         # Build up a list of (aid, iid) tuples to subscribe to
         if CharacteristicPermissions.events in char.perms:
             self.watchable_characteristics.append((self._aid, char.iid))
-
-        # Build a map of ctype -> iid
-        self._chars[char.type_name] = char.iid
-        self._char_names[char.iid] = char.type_name
 
         # Callback to allow entity to configure itself based on this
         # characteristics metadata (valid values, value ranges, features, etc)
