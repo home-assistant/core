@@ -66,7 +66,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
                     ): str,
-                    vol.Required(
+                    vol.Optional(
                         CONF_WITH_FAMILY,
                         default=user_input.get(CONF_WITH_FAMILY, DEFAULT_WITH_FAMILY),
                     ): bool,
