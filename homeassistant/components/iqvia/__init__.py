@@ -147,7 +147,7 @@ class IQVIAData:
         self.data = {}
         self.zip_code = client.zip_code
 
-        self.api_coros = {
+        self._api_coros = {
             TYPE_ALLERGY_FORECAST: client.allergens.extended,
             TYPE_ALLERGY_INDEX: client.allergens.current,
             TYPE_ALLERGY_OUTLOOK: client.allergens.outlook,
@@ -156,7 +156,6 @@ class IQVIAData:
             TYPE_DISEASE_FORECAST: client.disease.extended,
             TYPE_DISEASE_INDEX: client.disease.current,
         }
-
         self._api_category_count = {
             TYPE_ALLERGY_FORECAST: 0,
             TYPE_ALLERGY_INDEX: 0,
@@ -182,7 +181,7 @@ class IQVIAData:
             return
 
         try:
-            self.data[api_category] = await self.api_coros[api_category]()
+            self.data[api_category] = await self._api_coros[api_category]()
         except IQVIAError as err:
             _LOGGER.error("Unable to get %s data: %s", api_category, err)
             self.data[api_category] = None
@@ -226,7 +225,7 @@ class IQVIAData:
         """Update IQVIA data."""
         tasks = [
             self._async_get_data_from_api(api_category)
-            for api_category in self.api_coros
+            for api_category in self._api_coros
         ]
 
         await asyncio.gather(*tasks)
