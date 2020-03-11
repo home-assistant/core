@@ -9,13 +9,12 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
-    CONNECTION_SENSORS,
     DOMAIN,
     SENSOR_DEVICE_CLASS,
     SENSOR_ICON,
     SENSOR_NAME,
     SENSOR_UNIT,
-    TEMPERATURE_SENSOR_TEMPLATE,
+    SENSOR_VALUE,
 )
 from .router import FreeboxRouter
 
@@ -29,25 +28,7 @@ async def async_setup_entry(
     router = hass.data[DOMAIN][entry.unique_id]
     entities = []
 
-    # System sensors
-    syst_datas: Dict[str, any] = await router.system.get_config()
-
-    # According to the doc `syst_datas["sensors"]` is temperature sensors in celsius degree.
-    # Name and id of sensors may vary under Freebox devices.
-    for sensor in syst_datas["sensors"]:
-        entities.append(
-            FreeboxSensor(
-                router,
-                sensor["id"],
-                {
-                    **TEMPERATURE_SENSOR_TEMPLATE,
-                    **{SENSOR_NAME: f"Freebox {sensor['name']}"},
-                },
-            )
-        )
-
-    # Connection sensors
-    for sensor_key, sensor_attrs in CONNECTION_SENSORS.items():
+    for sensor_key, sensor_attrs in router.sensors.items():
         entities.append(FreeboxSensor(router, sensor_key, sensor_attrs))
 
     async_add_entities(entities, True)
@@ -73,7 +54,7 @@ class FreeboxSensor(Entity):
 
     def update(self) -> None:
         """Update the Freebox sensor."""
-        state = self._router.sensors[self._sensor_type]
+        state = self._router.sensors[self._sensor_type][SENSOR_VALUE]
         if self._unit == DATA_RATE_KILOBYTES_PER_SECOND:
             self._state = round(state / 1000, 2)
         else:

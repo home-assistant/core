@@ -30,6 +30,7 @@ SENSOR_NAME = "name"
 SENSOR_UNIT = "unit"
 SENSOR_ICON = "icon"
 SENSOR_DEVICE_CLASS = "device_class"
+SENSOR_VALUE = "value"
 
 CONNECTION_SENSORS = {
     "rate_down": {

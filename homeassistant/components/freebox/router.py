@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Dict, Optional
 
 from aiofreepybox import Freepybox
-from aiofreepybox.api.system import System
 from aiofreepybox.api.wifi import Wifi
 from aiofreepybox.exceptions import HttpRequestError
 
@@ -23,8 +22,11 @@ from .const import (
     APP_DESC,
     CONNECTION_SENSORS,
     DOMAIN,
+    SENSOR_NAME,
+    SENSOR_VALUE,
     STORAGE_KEY,
     STORAGE_VERSION,
+    TEMPERATURE_SENSOR_TEMPLATE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,10 +50,7 @@ class FreeboxRouter:
         self._sw_v = None
         self._attrs = {}
 
-        # Devices
         self.devices: Dict[str, any] = {}
-
-        # Sensors
         self.sensors: Dict[str, any] = {}
 
         self.listeners = []
@@ -119,12 +118,21 @@ class FreeboxRouter:
         # According to the doc `syst_datas["sensors"]` is temperature sensors in celsius degree.
         # Name and id of sensors may vary under Freebox devices.
         for sensor in syst_datas["sensors"]:
-            self.sensors[sensor["id"]] = sensor["value"]
+            self.sensors[sensor["id"]] = {
+                **TEMPERATURE_SENSOR_TEMPLATE,
+                **{
+                    SENSOR_NAME: f"Freebox {sensor['name']}",
+                    SENSOR_VALUE: sensor["value"],
+                },
+            }
 
         # Connection sensors
         connection_datas: Dict[str, any] = await self._api.connection.get_status()
         for sensor_key in CONNECTION_SENSORS:
-            self.sensors[sensor_key] = connection_datas[sensor_key]
+            self.sensors[sensor_key] = {
+                **CONNECTION_SENSORS[sensor_key],
+                **{SENSOR_VALUE: connection_datas[sensor_key]},
+            }
 
         self._attrs = {
             "IPv4": connection_datas.get("ipv4"),
@@ -174,11 +182,6 @@ class FreeboxRouter:
     def signal_sensor_update(self) -> str:
         """Event specific per Freebox entry to signal updates in sensors."""
         return f"{DOMAIN}-{self._host}-sensor-update"
-
-    @property
-    def system(self) -> System:
-        """Return the system."""
-        return self._api.system
 
     @property
     def wifi(self) -> Wifi:
