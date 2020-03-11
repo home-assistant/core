@@ -61,7 +61,8 @@ from .const import (
 from .helpers import LogMixin
 
 _LOGGER = logging.getLogger(__name__)
-_KEEP_ALIVE_INTERVAL = 7200
+_CONSIDER_UNAVAILABLE_MAINS = 60 * 60 * 2  # 2 hours
+_CONSIDER_UNAVAILABLE_BATTERY = 60 * 60 * 6  # 6 hours
 _UPDATE_ALIVE_INTERVAL = (60, 90)
 _CHECKIN_GRACE_PERIODS = 2
 
@@ -99,8 +100,12 @@ class ZHADevice(LogMixin):
             self._zigpy_device.__class__.__module__,
             self._zigpy_device.__class__.__name__,
         )
+        if self.is_mains_powered:
+            self._consider_unavailable_time = _CONSIDER_UNAVAILABLE_MAINS
+        else:
+            self._consider_unavailable_time = _CONSIDER_UNAVAILABLE_BATTERY
         keep_alive_interval = random.randint(*_UPDATE_ALIVE_INTERVAL)
-        self._available_check = async_track_time_interval(
+        self._cancel_available_check = async_track_time_interval(
             self.hass, self._check_available, timedelta(seconds=keep_alive_interval)
         )
         self._ha_device_id = None
@@ -279,7 +284,7 @@ class ZHADevice(LogMixin):
             return
 
         difference = time.time() - self.last_seen
-        if difference < _KEEP_ALIVE_INTERVAL:
+        if difference < self._consider_unavailable_time:
             self.update_available(True)
             self._checkins_missed_count = 0
             return
@@ -363,9 +368,10 @@ class ZHADevice(LogMixin):
         self.debug("completed initialization")
 
     @callback
-    def async_unsub_dispatcher(self):
-        """Unsubscribe the dispatcher."""
+    def async_cleanup_handles(self) -> None:
+        """Unsubscribe the dispatchers and timers."""
         self._unsub()
+        self._cancel_available_check()
 
     @callback
     def async_update_last_seen(self, last_seen):

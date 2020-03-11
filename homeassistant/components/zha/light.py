@@ -2,6 +2,7 @@
 from datetime import timedelta
 import functools
 import logging
+import random
 
 from zigpy.zcl.foundation import Status
 
@@ -44,9 +45,9 @@ UPDATE_COLORLOOP_HUE = 0x8
 FLASH_EFFECTS = {light.FLASH_SHORT: EFFECT_BLINK, light.FLASH_LONG: EFFECT_BREATHE}
 
 UNSUPPORTED_ATTRIBUTE = 0x86
-SCAN_INTERVAL = timedelta(minutes=60)
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, light.DOMAIN)
-PARALLEL_UPDATES = 5
+PARALLEL_UPDATES = 0
+_REFRESH_INTERVAL = (45, 75)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -81,6 +82,7 @@ class Light(ZhaEntity, light.Light):
         self._level_channel = self.cluster_channels.get(CHANNEL_LEVEL)
         self._color_channel = self.cluster_channels.get(CHANNEL_COLOR)
         self._identify_channel = self.zha_device.channels.identify_ch
+        self._cancel_refresh_handle = None
 
         if self._level_channel:
             self._supported_features |= light.SUPPORT_BRIGHTNESS
@@ -130,7 +132,7 @@ class Light(ZhaEntity, light.Light):
         """
         value = max(0, min(254, value))
         self._brightness = value
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def hs_color(self):
@@ -163,7 +165,7 @@ class Light(ZhaEntity, light.Light):
         self._state = bool(value)
         if value:
             self._off_brightness = None
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
@@ -175,7 +177,15 @@ class Light(ZhaEntity, light.Light):
             await self.async_accept_signal(
                 self._level_channel, SIGNAL_SET_LEVEL, self.set_level
             )
-        async_track_time_interval(self.hass, self.refresh, SCAN_INTERVAL)
+        refresh_interval = random.randint(*_REFRESH_INTERVAL)
+        self._cancel_refresh_handle = async_track_time_interval(
+            self.hass, self._refresh, timedelta(minutes=refresh_interval)
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect entity object when removed."""
+        self._cancel_refresh_handle()
+        await super().async_will_remove_from_hass()
 
     @callback
     def async_restore_last_state(self, last_state):
@@ -296,7 +306,7 @@ class Light(ZhaEntity, light.Light):
 
         self._off_brightness = None
         self.debug("turned on: %s", t_log)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
@@ -318,7 +328,7 @@ class Light(ZhaEntity, light.Light):
             # store current brightness so that the next turn_on uses it.
             self._off_brightness = self._brightness
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_update(self):
         """Attempt to retrieve on off state from the light."""
@@ -384,6 +394,7 @@ class Light(ZhaEntity, light.Light):
                 if color_loop_active == 1:
                     self._effect = light.EFFECT_COLORLOOP
 
-    async def refresh(self, time):
+    async def _refresh(self, time):
         """Call async_get_state at an interval."""
         await self.async_get_state(from_cache=False)
+        self.async_write_ha_state()
