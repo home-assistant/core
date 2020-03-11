@@ -569,7 +569,7 @@ pysonos==0.0.24
 pyspcwebgw==0.4.0
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.1
+python-ecobee-api==0.2.2
 
 # homeassistant.components.darksky
 python-forecastio==1.4.0
