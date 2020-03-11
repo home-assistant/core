@@ -97,7 +97,12 @@ class FacebookNotificationService(BaseNotificationService):
                 else:
                     recipient = {"id": target}
 
-                body = {"recipient": recipient, "message": body_message}
+                body = {
+                    "recipient": recipient,
+                    "message": body_message,
+                    "messaging_type": "MESSAGE_TAG",
+                    "tag": "ACCOUNT_UPDATE",
+                }
                 resp = requests.post(
                     BASE_URL,
                     data=json.dumps(body),
