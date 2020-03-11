@@ -77,6 +77,7 @@ async def test_light_refresh(hass, zigpy_device_mock, zha_device_joined_restored
     zigpy_device = zigpy_device_mock(LIGHT_ON_OFF)
     zha_device = await zha_device_joined_restored(zigpy_device)
     on_off_cluster = zigpy_device.endpoints[1].on_off
+    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
 
     # allow traffic to flow through the gateway and device
     await async_enable_traffic(hass, [zha_device])
@@ -86,18 +87,22 @@ async def test_light_refresh(hass, zigpy_device_mock, zha_device_joined_restored
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
     await hass.async_block_till_done()
     assert on_off_cluster.read_attributes.call_count == 0
+    assert on_off_cluster.read_attributes.call_count == 0
+    assert hass.states.get(entity_id).state == STATE_OFF
 
     # 1 interval - 1 call
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=80))
     await hass.async_block_till_done()
     assert on_off_cluster.read_attributes.call_count == 1
     assert on_off_cluster.read_attributes.await_count == 1
+    assert hass.states.get(entity_id).state == STATE_OFF
 
     # 2 intervals - 2 calls
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=80))
     await hass.async_block_till_done()
     assert on_off_cluster.read_attributes.call_count == 2
     assert on_off_cluster.read_attributes.await_count == 2
+    assert hass.states.get(entity_id).state == STATE_OFF
 
 
 @asynctest.patch(

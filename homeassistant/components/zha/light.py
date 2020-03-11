@@ -397,3 +397,4 @@ class Light(ZhaEntity, light.Light):
     async def _refresh(self, time):
         """Call async_get_state at an interval."""
         await self.async_get_state(from_cache=False)
+        self.async_write_ha_state()
