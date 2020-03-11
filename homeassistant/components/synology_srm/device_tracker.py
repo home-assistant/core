@@ -62,7 +62,7 @@ class SynologySrmDeviceScanner(DeviceScanner):
         if not config[CONF_VERIFY_SSL]:
             self.client.http.disable_https_verify()
 
-        self.last_results = []
+        self.devices = []
         self.success_init = self._update_info()
 
         _LOGGER.info("Synology SRM scanner initialized")
@@ -71,22 +71,19 @@ class SynologySrmDeviceScanner(DeviceScanner):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
 
-        return [device["mac"] for device in self.last_results]
+        return [device["mac"] for device in self.devices]
 
     def get_extra_attributes(self, device) -> dict:
         """Get the extra attributes of a device."""
-        filter_result = [
-            result for result in self.last_results if result["mac"] == device
-        ]
+        filter_result = [result for result in self.devices if result["mac"] == device]
         if filter_result:
             return filter_result[0]
+        return {}
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         filter_named = [
-            result["hostname"]
-            for result in self.last_results
-            if result["mac"] == device
+            result["hostname"] for result in self.devices if result["mac"] == device
         ]
 
         if filter_named:
@@ -98,9 +95,8 @@ class SynologySrmDeviceScanner(DeviceScanner):
         """Check the router for connected devices."""
         _LOGGER.debug("Scanning for connected devices")
 
-        devices = self.client.core.network_nsm_device({"is_online": True})
+        self.devices = self.client.core.network_nsm_device({"is_online": True})
 
-        _LOGGER.debug("Found %d device(s) connected to the router", len(devices))
+        _LOGGER.debug("Found %d device(s) connected to the router", len(self.devices))
 
-        self.last_results = devices
         return True
