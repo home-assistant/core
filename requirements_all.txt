@@ -1933,7 +1933,7 @@ surepy==0.1.10
 swisshydrodata==0.0.3
 
 # homeassistant.components.synology_srm
-synology-srm==0.0.7
+synology-srm==0.1.4
 
 # homeassistant.components.tahoma
 tahoma-api==0.0.16
