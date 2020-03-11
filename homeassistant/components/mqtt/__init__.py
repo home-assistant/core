@@ -1200,7 +1200,7 @@ class MqttDiscoveryUpdate(Entity):
                 await cleanup_device_registry(self.hass, entity_entry.device_id)
 
         @callback
-        def discovery_callback(payload):
+        async def discovery_callback(payload):
             """Handle discovery update."""
             _LOGGER.info(
                 "Got update for entity with hash: %s '%s'", discovery_hash, payload,
@@ -1209,12 +1209,12 @@ class MqttDiscoveryUpdate(Entity):
                 # Empty payload: Remove component
                 _LOGGER.info("Removing component: %s", self.entity_id)
                 self._cleanup_on_remove()
-                self.hass.async_create_task(async_remove_from_registry(self))
-                self.hass.async_create_task(self.async_remove())
+                await async_remove_from_registry(self)
+                await self.async_remove()
             elif self._discovery_update:
                 # Non-empty payload: Notify component
                 _LOGGER.info("Updating component: %s", self.entity_id)
-                self.hass.async_create_task(self._discovery_update(payload))
+                await self._discovery_update(payload)
 
         if discovery_hash:
             self._remove_signal = async_dispatcher_connect(
