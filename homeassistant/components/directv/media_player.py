@@ -188,9 +188,9 @@ class DirecTvDevice(MediaPlayerDevice):
         """Retrieve latest state."""
         _LOGGER.debug("%s: Updating status", self.entity_id)
         try:
+            self._available = True
             self._is_standby = self.dtv.get_standby()
             if self._is_standby:
-                self._available = True
                 self._current = None
                 self._is_recorded = None
                 self._paused = None
@@ -200,7 +200,6 @@ class DirecTvDevice(MediaPlayerDevice):
             else:
                 self._current = self.dtv.get_tuned()
                 if self._current["status"]["code"] == 200:
-                    self._available = True
                     self._first_error_timestamp = None
                     self._is_recorded = self._current.get("uniqueId") is not None
                     self._paused = self._last_position == self._current["offset"]
