@@ -38,15 +38,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class HomeKitLight(HomeKitEntity, Light):
     """Representation of a Homekit light."""
 
-    def __init__(self, *args):
-        """Initialise the light."""
-        super().__init__(*args)
-        self._on = False
-        self._brightness = 0
-        self._color_temperature = 0
-        self._hue = 0
-        self._saturation = 0
-
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
         return [
@@ -69,40 +60,28 @@ class HomeKitLight(HomeKitEntity, Light):
     def _setup_saturation(self, char):
         self._features |= SUPPORT_COLOR
 
-    def _update_on(self, value):
-        self._on = value
-
-    def _update_brightness(self, value):
-        self._brightness = value
-
-    def _update_color_temperature(self, value):
-        self._color_temperature = value
-
-    def _update_hue(self, value):
-        self._hue = value
-
-    def _update_saturation(self, value):
-        self._saturation = value
-
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._on
+        return self.service.value(CharacteristicsTypes.ON)
 
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return self._brightness * 255 / 100
+        return self.service.value(CharacteristicsTypes.BRIGHTNESS) * 255 / 100
 
     @property
     def hs_color(self):
         """Return the color property."""
-        return (self._hue, self._saturation)
+        return (
+            self.service.value(CharacteristicsTypes.HUE),
+            self.service.value(CharacteristicsTypes.SATURATION),
+        )
 
     @property
     def color_temp(self):
         """Return the color temperature."""
-        return self._color_temperature
+        return self.service.value(CharacteristicsTypes.COLOR_TEMPERATURE)
 
     @property
     def supported_features(self):
