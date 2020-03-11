@@ -82,7 +82,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     def set_memo_text(service):
         """Handle Memo Text service call."""
-        module_address service.data[CONF_ADDRESS]
+        module_address = service.data[CONF_ADDRESS]
         memo_text = service.data[CONF_MEMO_TEXT]
         memo_text.hass = hass
         try:
