@@ -28,7 +28,9 @@ PLATFORMS = ["media_player"]
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-def get_dtv_data(hass: HomeAssistant, host: str, port: int = DEFAULT_PORT, client_addr: str = "0") -> dict:
+def get_dtv_data(
+    hass: HomeAssistant, host: str, port: int = DEFAULT_PORT, client_addr: str = "0"
+) -> dict:
     """Retrieve a DIRECTV instance, locations list, and version info for the receiver device."""
     dtv = DIRECTV(host, port, client_addr)
     locations = dtv.get_locations()
@@ -59,7 +61,9 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up DirecTV from a config entry."""
     try:
-        dtv_data = await hass.async_add_executor_job(get_dtv_data, hass, entry.data[CONF_HOST])
+        dtv_data = await hass.async_add_executor_job(
+            get_dtv_data, hass, entry.data[CONF_HOST]
+        )
     except (OSError, RequestException) as exception:
         raise ConfigEntryNotReady from exception
     except Exception as exception:  # pylint: disable=broad-except
