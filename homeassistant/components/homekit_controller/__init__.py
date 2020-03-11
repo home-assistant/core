@@ -3,7 +3,9 @@ import logging
 import os
 
 import aiohomekit
+from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -11,7 +13,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 
 from .config_flow import normalize_hkid
-from .connection import HKDevice, get_accessory_information
+from .connection import HKDevice
 from .const import CONTROLLER, DOMAIN, ENTITY_MAP, KNOWN_DEVICES
 from .storage import EntityMapStorage
 
@@ -36,6 +38,23 @@ class HomeKitEntity(Entity):
         self.setup()
 
         self._signals = []
+
+    @property
+    def accessory(self) -> Accessory:
+        """Return an Accessory model that this entity is attached to."""
+        return self._accessory.entity_map.aid(self._aid)
+
+    @property
+    def accessory_info(self) -> Service:
+        """Information about the make and model of an accessory."""
+        return self.accessory.services.first(
+            service_type=ServicesTypes.ACCESSORY_INFORMATION
+        )
+
+    @property
+    def service(self) -> Service:
+        """Return a Service model that this entity is attached to."""
+        return self.accessory.services.iid(self._iid)
 
     async def async_added_to_hass(self):
         """Entity added to hass."""
@@ -67,8 +86,6 @@ class HomeKitEntity(Entity):
 
     def setup(self):
         """Configure an entity baed on its HomeKit characteristics metadata."""
-        accessories = self._accessory.accessories
-
         get_uuid = CharacteristicsTypes.get_uuid
         characteristic_types = [get_uuid(c) for c in self.get_characteristic_types()]
 
@@ -77,23 +94,19 @@ class HomeKitEntity(Entity):
         self._chars = {}
         self._char_names = {}
 
-        for accessory in accessories:
-            if accessory["aid"] != self._aid:
+        # Setup events and/or polling for characteristics directly attached to this entity
+        for char in self.service.characteristics:
+            if char.type not in characteristic_types:
                 continue
-            self._accessory_info = get_accessory_information(accessory)
-            for service in accessory["services"]:
-                if service["iid"] != self._iid:
+            self._setup_characteristic(char.to_accessory_and_service_list())
+
+        # Setup events and/or polling for characteristics attached to sub-services of this
+        # entity (like an INPUT_SOURCE).
+        for service in self.accessory.services.filter(parent_service=self.service):
+            for char in service.characteristics:
+                if char.type not in characteristic_types:
                     continue
-                for char in service["characteristics"]:
-                    try:
-                        uuid = CharacteristicsTypes.get_uuid(char["type"])
-                    except KeyError:
-                        # If a KeyError is raised its a non-standard
-                        # characteristic. We must ignore it in this case.
-                        continue
-                    if uuid not in characteristic_types:
-                        continue
-                    self._setup_characteristic(char)
+                self._setup_characteristic(char.to_accessory_and_service_list())
 
     def _setup_characteristic(self, char):
         """Configure an entity based on a HomeKit characteristics metadata."""
@@ -155,13 +168,13 @@ class HomeKitEntity(Entity):
     @property
     def unique_id(self):
         """Return the ID of this device."""
-        serial = self._accessory_info["serial-number"]
+        serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
         return f"homekit-{serial}-{self._iid}"
 
     @property
     def name(self):
         """Return the name of the device if any."""
-        return self._accessory_info.get("name")
+        return self.accessory_info.value(CharacteristicsTypes.NAME)
 
     @property
     def available(self) -> bool:
@@ -171,14 +184,15 @@ class HomeKitEntity(Entity):
     @property
     def device_info(self):
         """Return the device info."""
-        accessory_serial = self._accessory_info["serial-number"]
+        info = self.accessory_info
+        accessory_serial = info.value(CharacteristicsTypes.SERIAL_NUMBER)
 
         device_info = {
             "identifiers": {(DOMAIN, "serial-number", accessory_serial)},
-            "name": self._accessory_info["name"],
-            "manufacturer": self._accessory_info.get("manufacturer", ""),
-            "model": self._accessory_info.get("model", ""),
-            "sw_version": self._accessory_info.get("firmware.revision", ""),
+            "name": info.value(CharacteristicsTypes.NAME),
+            "manufacturer": info.value(CharacteristicsTypes.MANUFACTURER, ""),
+            "model": info.value(CharacteristicsTypes.MODEL, ""),
+            "sw_version": info.value(CharacteristicsTypes.FIRMWARE_REVISION, ""),
         }
 
         # Some devices only have a single accessory - we don't add a

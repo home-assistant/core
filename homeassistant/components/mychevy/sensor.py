@@ -1,7 +1,7 @@
 """Support for MyChevy sensors."""
 import logging
 
-from homeassistant.components.sensor import ENTITY_ID_FORMAT
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import UNIT_PERCENTAGE
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
@@ -123,11 +123,7 @@ class EVSensor(Entity):
         self._state_attributes = {}
         self._car_vid = car_vid
 
-        self.entity_id = ENTITY_ID_FORMAT.format(
-            "{}_{}_{}".format(
-                MYCHEVY_DOMAIN, slugify(self._car.name), slugify(self._name)
-            )
-        )
+        self.entity_id = f"{SENSOR_DOMAIN}.{MYCHEVY_DOMAIN}_{slugify(self._car.name)}_{slugify(self._name)}"
 
     async def async_added_to_hass(self):
         """Register callbacks."""

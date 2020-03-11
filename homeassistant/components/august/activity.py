@@ -1,8 +1,7 @@
 """Consume the august activity stream."""
-from functools import partial
 import logging
 
-from requests import RequestException
+from aiohttp import ClientError
 
 from homeassistant.util.dt import utcnow
 
@@ -12,7 +11,7 @@ from .subscriber import AugustSubscriberMixin
 _LOGGER = logging.getLogger(__name__)
 
 ACTIVITY_STREAM_FETCH_LIMIT = 10
-ACTIVITY_CATCH_UP_FETCH_LIMIT = 200
+ACTIVITY_CATCH_UP_FETCH_LIMIT = 1000
 
 
 class ActivityStream(AugustSubscriberMixin):
@@ -31,7 +30,7 @@ class ActivityStream(AugustSubscriberMixin):
 
     async def async_setup(self):
         """Token refresh check and catch up the activity stream."""
-        await self._refresh(utcnow)
+        await self._async_refresh(utcnow)
 
     def get_latest_device_activity(self, device_id, activity_types):
         """Return latest activity that is one of the acitivty_types."""
@@ -53,7 +52,7 @@ class ActivityStream(AugustSubscriberMixin):
 
         return latest_activity
 
-    async def _refresh(self, time):
+    async def _async_refresh(self, time):
         """Update the activity stream from August."""
 
         # This is the only place we refresh the api token
@@ -72,15 +71,10 @@ class ActivityStream(AugustSubscriberMixin):
         for house_id in self._house_ids:
             _LOGGER.debug("Updating device activity for house id %s", house_id)
             try:
-                activities = await self._hass.async_add_executor_job(
-                    partial(
-                        self._api.get_house_activities,
-                        self._august_gateway.access_token,
-                        house_id,
-                        limit=limit,
-                    )
+                activities = await self._api.async_get_house_activities(
+                    self._august_gateway.access_token, house_id, limit=limit
                 )
-            except RequestException as ex:
+            except ClientError as ex:
                 _LOGGER.error(
                     "Request error trying to retrieve activity for house id %s: %s",
                     house_id,

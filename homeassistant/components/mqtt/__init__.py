@@ -437,8 +437,9 @@ async def async_subscribe(
         topic,
         catch_log_exception(
             wrapped_msg_callback,
-            lambda msg: "Exception in {} when handling msg on '{}': '{}'".format(
-                msg_callback.__name__, msg.topic, msg.payload
+            lambda msg: (
+                f"Exception in {msg_callback.__name__} when handling msg on "
+                f"'{msg.topic}': '{msg.payload}'"
             ),
         ),
         qos,
@@ -568,7 +569,7 @@ async def async_setup_entry(hass, entry):
 
     # If user didn't have configuration.yaml config, generate defaults
     if conf is None:
-        conf = CONFIG_SCHEMA({DOMAIN: entry.data})[DOMAIN]
+        conf = CONFIG_SCHEMA({DOMAIN: dict(entry.data)})[DOMAIN]
     elif any(key in conf for key in entry.data):
         _LOGGER.warning(
             "Data in your configuration entry is going to override your "
@@ -1014,7 +1015,7 @@ def _raise_on_error(result_code: int) -> None:
 
     if result_code != 0:
         raise HomeAssistantError(
-            "Error talking to MQTT: {}".format(mqtt.error_string(result_code))
+            f"Error talking to MQTT: {mqtt.error_string(result_code)}"
         )
 
 

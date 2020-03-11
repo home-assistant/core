@@ -15,7 +15,7 @@ async def test_create_doorbell(hass, aiohttp_client):
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.json")
 
     with mock.patch.object(
-        doorbell_one, "get_doorbell_image", create=False, return_value="image"
+        doorbell_one, "async_get_doorbell_image", create=False, return_value="image"
     ):
         await _create_august_with_devices(hass, [doorbell_one])
 

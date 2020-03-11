@@ -114,9 +114,9 @@ class ZhaFan(ZhaEntity, FanEntity):
         return self.state_attributes
 
     @callback
-    def async_set_state(self, state):
+    def async_set_state(self, attr_id, attr_name, value):
         """Handle state update from channel."""
-        self._state = VALUE_TO_SPEED.get(state, self._state)
+        self._state = VALUE_TO_SPEED.get(value, self._state)
         self.async_schedule_update_ha_state()
 
     async def async_turn_on(self, speed: str = None, **kwargs) -> None:
@@ -133,7 +133,7 @@ class ZhaFan(ZhaEntity, FanEntity):
     async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
         await self._fan_channel.async_set_speed(SPEED_TO_VALUE[speed])
-        self.async_set_state(speed)
+        self.async_set_state(0, "fan_mode", speed)
 
     async def async_update(self):
         """Attempt to retrieve on off state from the fan."""

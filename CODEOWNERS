@@ -52,6 +52,7 @@ homeassistant/components/bitcoin/* @fabaff
 homeassistant/components/bizkaibus/* @UgaitzEtxebarria
 homeassistant/components/blink/* @fronzbot
 homeassistant/components/bmw_connected_drive/* @gerard33
+homeassistant/components/bom/* @maddenp
 homeassistant/components/braviatv/* @robbiet480
 homeassistant/components/broadlink/* @danielhiversen @felipediel
 homeassistant/components/brother/* @bieniu
@@ -82,6 +83,7 @@ homeassistant/components/demo/* @home-assistant/core
 homeassistant/components/derivative/* @afaucogney
 homeassistant/components/device_automation/* @home-assistant/core
 homeassistant/components/digital_ocean/* @fabaff
+homeassistant/components/directv/* @ctalkington
 homeassistant/components/discogs/* @thibmaek
 homeassistant/components/doorbird/* @oblogic7
 homeassistant/components/dsmr_reader/* @depl0y
@@ -90,11 +92,13 @@ homeassistant/components/dynalite/* @ziv1234
 homeassistant/components/dyson/* @etheralm
 homeassistant/components/ecobee/* @marthoc
 homeassistant/components/ecovacs/* @OverloadUT
+homeassistant/components/edl21/* @mtdcr
 homeassistant/components/egardia/* @jeroenterheerdt
 homeassistant/components/eight_sleep/* @mezz64
 homeassistant/components/elgato/* @frenck
 homeassistant/components/elv/* @majuss
 homeassistant/components/emby/* @mezz64
+homeassistant/components/emoncms/* @borpin
 homeassistant/components/enigma2/* @fbradyirl
 homeassistant/components/enocean/* @bdurrer
 homeassistant/components/entur_public_transport/* @hfurubotten
@@ -138,6 +142,7 @@ homeassistant/components/google_translate/* @awarecan
 homeassistant/components/google_travel_time/* @robbiet480
 homeassistant/components/gpsd/* @fabaff
 homeassistant/components/greeneye_monitor/* @jkeljo
+homeassistant/components/griddy/* @bdraco
 homeassistant/components/group/* @home-assistant/core
 homeassistant/components/growatt_server/* @indykoning
 homeassistant/components/gtfs/* @robbiet480
@@ -161,6 +166,7 @@ homeassistant/components/http/* @home-assistant/core
 homeassistant/components/huawei_lte/* @scop
 homeassistant/components/huawei_router/* @abmantis
 homeassistant/components/hue/* @balloob
+homeassistant/components/iammeter/* @lewei50
 homeassistant/components/iaqualink/* @flz
 homeassistant/components/icloud/* @Quentame
 homeassistant/components/ign_sismologia/* @exxamalte

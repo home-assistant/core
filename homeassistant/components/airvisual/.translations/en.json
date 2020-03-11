@@ -11,13 +11,23 @@
                 "data": {
                     "api_key": "API Key",
                     "latitude": "Latitude",
-                    "longitude": "Longitude",
-                    "show_on_map": "Show monitored geography on the map"
+                    "longitude": "Longitude"
                 },
                 "description": "Monitor air quality in a geographical location.",
                 "title": "Configure AirVisual"
             }
         },
         "title": "AirVisual"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Show monitored geography on the map"
+                },
+                "description": "Set various options for the AirVisual integration.",
+                "title": "Configure AirVisual"
+            }
+        }
     }
 }
