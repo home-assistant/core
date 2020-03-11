@@ -18,7 +18,9 @@ from tests.components.directv import MockDirectvClass, setup_integration
 async def test_config_entry_not_ready(hass: HomeAssistantType) -> None:
     """Test the DirecTV configuration entry not ready."""
     with patch(
-        "homeassistant.components.directv.get_dtv_instance",
+        "homeassistant.components.directv.DIRECTV", new=MockDirectvClass,
+    ), patch(
+        "homeassistant.components.directv.DIRECTV.get_standby",
         side_effect=RequestException,
     ):
         entry = await setup_integration(hass)
