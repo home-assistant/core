@@ -44,9 +44,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 effect_list=LIGHT_EFFECT_LIST,
                 effect=LIGHT_EFFECT_LIST[0],
             ),
-            DemoLight(
-                "light_2", "Ceiling Lights", True, True, LIGHT_COLORS[0], LIGHT_TEMPS[1]
-            ),
+            DemoLight("light_2", "Ceiling Lights", True, True, ct=LIGHT_TEMPS[1]),
             DemoLight(
                 "light_3", "Kitchen Lights", True, True, LIGHT_COLORS[1], LIGHT_TEMPS[0]
             ),
@@ -86,7 +84,10 @@ class DemoLight(Light):
         self._effect_list = effect_list
         self._effect = effect
         self._available = True
-        self._color_mode = "hs"
+        if ct is not None and hs_color is None:
+            self._color_mode = "ct"
+        else:
+            self._color_mode = "hs"
 
     @property
     def device_info(self):

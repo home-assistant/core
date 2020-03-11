@@ -229,7 +229,7 @@ async def test_emulated_color_temp_group(hass):
     state = hass.states.get("light.ceiling_lights")
     assert state.state == "on"
     assert state.attributes["color_temp"] == 200
-    assert "hs_color" in state.attributes.keys()
+    assert "hs_color" not in state.attributes.keys()
 
     state = hass.states.get("light.kitchen_lights")
     assert state.state == "on"
