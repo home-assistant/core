@@ -62,8 +62,8 @@ class test_NextcloudSensor(TestCase):
 
     def test_init(self):
         """Tests initialization of NextcloudSensor class."""
-        assert self.ncs.item == "nextcloud_system_version"
-        assert self.ncs.value is None
+        assert self.ncs._name == "nextcloud_system_version"
+        assert self.ncs._state is None
 
     def test_icon(self):
         """Tests icon property."""
@@ -86,4 +86,4 @@ class test_NextcloudSensor(TestCase):
         self.ncs.hass.data["nextcloud"] = API_RESPONSE
         self.ncs.update()
 
-        assert self.ncs.value == "17.0.3.1"
+        assert self.ncs._state == "17.0.3.1"
