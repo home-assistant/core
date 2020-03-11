@@ -528,7 +528,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     if model in PURIFIER_MIOT:
         air_purifier = AirPurifierMiot(host, token)
-        device = XiaomiAirPurifier(name, air_purifier, model, unique_id)
+        device = XiaomiAirPurifierMiot(name, air_purifier, model, unique_id)
     elif model.startswith("zhimi.airpurifier."):
         air_purifier = AirPurifier(host, token)
         device = XiaomiAirPurifier(name, air_purifier, model, unique_id)
@@ -797,10 +797,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
     def speed(self):
         """Return the current speed."""
         if self._state:
-            if isinstance(self._device, AirPurifierMiot):
-                return AirpurifierMiotOperationMode(self._state_attrs[ATTR_MODE]).name
-            else:
-                return AirpurifierOperationMode(self._state_attrs[ATTR_MODE]).name
+            return AirpurifierOperationMode(self._state_attrs[ATTR_MODE]).name
 
         return None
 
@@ -814,9 +811,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
         await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
-            AirpurifierMiotOperationMode[speed.title()]
-            if isinstance(self._device, AirPurifierMiot)
-            else AirpurifierOperationMode[speed.title()],
+            AirpurifierOperationMode[speed.title()],
         )
 
     async def async_set_led_on(self):
@@ -847,9 +842,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
         await self._try_command(
             "Setting the led brightness of the miio device failed.",
             self._device.set_led_brightness,
-            AirpurifierMiotLedBrightness(brightness)
-            if isinstance(self._device, AirPurifierMiot)
-            else AirpurifierLedBrightness(brightness),
+            AirpurifierLedBrightness(brightness),
         )
 
     async def async_set_favorite_level(self, level: int = 1):
@@ -948,6 +941,40 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
         await self._try_command(
             "Resetting the filter lifetime of the miio device failed.",
             self._device.reset_filter,
+        )
+
+
+class XiaomiAirPurifierMiot(XiaomiAirPurifier):
+    @property
+    def speed(self):
+        """Return the current speed."""
+        if self._state:
+            return AirpurifierMiotOperationMode(self._state_attrs[ATTR_MODE]).name
+
+        return None
+
+    async def async_set_speed(self, speed: str) -> None:
+        """Set the speed of the fan."""
+        if self.supported_features & SUPPORT_SET_SPEED == 0:
+            return
+
+        _LOGGER.debug("Setting the operation mode to: %s", speed)
+
+        await self._try_command(
+            "Setting operation mode of the miio device failed.",
+            self._device.set_mode,
+            AirpurifierMiotOperationMode[speed.title()],
+        )
+
+    async def async_set_led_brightness(self, brightness: int = 2):
+        """Set the led brightness."""
+        if self._device_features & FEATURE_SET_LED_BRIGHTNESS == 0:
+            return
+
+        await self._try_command(
+            "Setting the led brightness of the miio device failed.",
+            self._device.set_led_brightness,
+            AirpurifierMiotLedBrightness(brightness),
         )
 
 
