@@ -135,7 +135,7 @@ class SynologySrm(Entity):
                 attrib = getattr(attrib, parts[1])()
                 attribs[conditionname] = attrib
                 if condition == EXTERNALIP_CONDITION:
-                    firstWan = next(iter(attrib), None)
-                    self._state = firstWan and firstWan["ip"]
+                    first_wan = next(iter(attrib), None)
+                    self._state = first_wan and first_wan["ip"]
 
         self._attribs = attribs
