@@ -7,7 +7,6 @@ from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 
-from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
@@ -60,7 +59,7 @@ class HomeKitEntity(Entity):
         """Entity added to hass."""
         self._signals.append(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
-                self._accessory.signal_state_updated, self.async_state_changed
+                self._accessory.signal_state_updated, self.async_write_ha_state
             )
         )
 
@@ -124,11 +123,6 @@ class HomeKitEntity(Entity):
         if not setup_fn:
             return
         setup_fn(char.to_accessory_and_service_list())
-
-    @callback
-    def async_state_changed(self):
-        """Collect new data from bridge and update the entity state in hass."""
-        self.async_write_ha_state()
 
     @property
     def unique_id(self) -> str:
