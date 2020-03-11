@@ -272,10 +272,10 @@ class ChannelPool:
     @callback
     def add_relay_channels(self) -> None:
         """Create relay channels for all output clusters if in the registry."""
-        for cluster_id in zha_regs.EVENT_RELAY_CLUSTERS:
+        for cluster_id, channel_class in zha_regs.OUTPUT_CHANNELS_REGISTRY.items():
             cluster = self.endpoint.out_clusters.get(cluster_id)
             if cluster is not None:
-                channel = base.EventRelayChannel(cluster, self)
+                channel = channel_class(cluster, self)
                 self.relay_channels[channel.id] = channel
 
     async def async_initialize(self, from_cache: bool = False) -> None:
