@@ -89,7 +89,7 @@ def get_dtv_instance(
     """Retrieve a DIRECTV instance for the receiver or client device."""
     try:
         return DIRECTV(host, port, client_addr)
-    except (OSError, RequestException) as exception:
+    except RequestException as exception:
         _LOGGER.debug(
             "Request exception %s trying to retrieve DIRECTV instance for client address %s on device %s",
             exception,
