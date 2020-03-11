@@ -131,12 +131,14 @@ class DemoLight(Light):
         """Return the hs color value."""
         if self._color_mode == "hs":
             return self._hs_color
+        return None
 
     @property
     def color_temp(self) -> int:
         """Return the CT color temperature."""
         if self._color_mode == "ct":
             return self._ct
+        return None
 
     @property
     def white_value(self) -> int:
