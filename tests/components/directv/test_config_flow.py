@@ -31,8 +31,6 @@ async def async_configure_flow(
 ) -> Any:
     """Set up mock DirecTV integration flow."""
     with patch(
-        "homeassistant.components.directv.config_flow.get_ip", return_value=HOST
-    ), patch(
         "homeassistant.components.directv.config_flow.DIRECTV", new=MockDirectvClass,
     ):
         return await hass.config_entries.flow.async_configure(
@@ -48,8 +46,6 @@ async def async_init_flow(
 ) -> Any:
     """Set up mock DirecTV integration flow."""
     with patch(
-        "homeassistant.components.directv.config_flow.get_ip", return_value=HOST
-    ), patch(
         "homeassistant.components.directv.config_flow.DIRECTV", new=MockDirectvClass,
     ):
         return await hass.config_entries.flow.async_init(

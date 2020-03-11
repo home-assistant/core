@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_SERIAL
 from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -25,33 +26,18 @@ ERROR_UNKNOWN = "unknown"
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
 
-def get_ip(host: str) -> str:
-    """Translate hostname to IP address."""
-    if host is None:
-        return None  # pragma: no cover
-
-    return socket.gethostbyname(host)
-
-
-def get_dtv_version(host: str, port: int = DEFAULT_PORT) -> Any:
-    """Test the device connection by retrieving the receiver version info."""
-    # directpy does IO in constructor.
-    dtv = DIRECTV(host, port)
-    return dtv.get_version()
-
-
-async def validate_input(hass: HomeAssistantType, data: Dict) -> Dict:
+def validate_input(hass: HomeAssistantType, data: Dict) -> Dict:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-
-    host = await hass.async_add_executor_job(get_ip, data["host"])
-    version_info = await hass.async_add_executor_job(get_dtv_version, host)
+    # directpy does IO in constructor.
+    dtv = DIRECTV(data["host"], DEFAULT_PORT)
+    version_info = dtv.get_version()
 
     return {
-        "title": host,
-        "host": host,
+        "title": data["host"],
+        "host": data["host"],
         "receiver_id": "".join(version_info["receiverId"].split()),
     }
 
@@ -62,7 +48,8 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
-    async def _show_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
+    @callback
+    def _show_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
         """Show the form to the user."""
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors or {},
@@ -78,21 +65,23 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: Optional[Dict] = None
     ) -> Dict[str, Any]:
         """Handle a flow initialized by user."""
+        if not user_input:
+            return self._show_form()
+
         errors = {}
 
-        if not user_input:
-            return await self._show_form()
-
         try:
-            info = await validate_input(self.hass, user_input)
+            info = await self.hass.async_add_executor_job(
+                validate_input, self.hass, user_input
+            )
             user_input[CONF_HOST] = info[CONF_HOST]
         except (OSError, RequestException):
             errors["base"] = ERROR_CANNOT_CONNECT
-            return await self._show_form(errors)
+            return self._show_form(errors)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = ERROR_UNKNOWN
-            return await self._show_form(errors)
+            return self._show_form(errors)
 
         await self.async_set_unique_id(info["receiver_id"])
         self._abort_if_unique_id_configured()
@@ -104,11 +93,10 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> Dict[str, Any]:
         """Handle a flow initialized by discovery."""
         host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
-        host = await self.hass.async_add_executor_job(get_ip, host)
         receiver_id = discovery_info[ATTR_UPNP_SERIAL][4:]  # strips off RID-
 
         await self.async_set_unique_id(receiver_id)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update(
@@ -129,7 +117,9 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input[CONF_HOST] = self.context.get(CONF_HOST)
 
             try:
-                await validate_input(self.hass, user_input)
+                await self.hass.async_add_executor_job(
+                    validate_input, self.hass, user_input
+                )
                 return self.async_create_entry(title=name, data=user_input)
             except (OSError, RequestException):
                 return self.async_abort(reason=ERROR_CANNOT_CONNECT)
