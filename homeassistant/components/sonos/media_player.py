@@ -366,6 +366,7 @@ class SonosEntity(MediaPlayerDevice):
         self._coordinator = None
         self._sonos_group = [self]
         self._status = None
+        self._uri = None
         self._media_duration = None
         self._media_position = None
         self._media_position_updated_at = None
@@ -570,6 +571,7 @@ class SonosEntity(MediaPlayerDevice):
             return
 
         self._shuffle = self.soco.shuffle
+        self._uri = None
 
         update_position = new_status != self._status
         self._status = new_status
@@ -580,6 +582,7 @@ class SonosEntity(MediaPlayerDevice):
             self.update_media_linein(SOURCE_LINEIN)
         else:
             track_info = self.soco.get_current_track_info()
+            self._uri = track_info["uri"]
 
             if _is_radio_uri(track_info["uri"]):
                 variables = event and event.variables
@@ -825,6 +828,11 @@ class SonosEntity(MediaPlayerDevice):
     def shuffle(self):
         """Shuffling state."""
         return self._shuffle
+
+    @property
+    def media_content_id(self):
+        """Content id of current playing media."""
+        return self._uri
 
     @property
     def media_content_type(self):

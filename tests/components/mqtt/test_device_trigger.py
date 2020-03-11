@@ -831,3 +831,42 @@ async def test_entity_device_info_update(hass, mqtt_mock):
     device = registry.async_get_device({("mqtt", "helloworld")}, set())
     assert device is not None
     assert device.name == "Milk"
+
+
+async def test_cleanup_device(hass, device_reg, entity_reg, mqtt_mock):
+    """Test discovered device is cleaned up when removed from registry."""
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    config_entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, config_entry)
+
+    config = {
+        "automation_type": "trigger",
+        "topic": "test-topic",
+        "type": "foo",
+        "subtype": "bar",
+        "device": {"identifiers": ["helloworld"]},
+    }
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data)
+    await hass.async_block_till_done()
+
+    # Verify device registry entry is created
+    device_entry = device_reg.async_get_device({("mqtt", "helloworld")}, set())
+    assert device_entry is not None
+
+    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    assert triggers[0]["type"] == "foo"
+
+    device_reg.async_remove_device(device_entry.id)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    # Verify device registry entry is cleared
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    assert device_entry is None
+
+    # Verify retained discovery topic has been cleared
+    mqtt_mock.async_publish.assert_called_once_with(
+        "homeassistant/device_automation/bla/config", "", 0, True
+    )

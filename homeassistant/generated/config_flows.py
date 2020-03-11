@@ -37,6 +37,7 @@ FLOWS = [
     "gios",
     "glances",
     "gpslogger",
+    "griddy",
     "hangouts",
     "heos",
     "hisense_aehw4a1",

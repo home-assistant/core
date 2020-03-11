@@ -46,12 +46,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
 
     def __init__(self, *args):
         """Initialise the fan."""
-        self._on = None
         self._features = 0
-        self._rotation_direction = 0
-        self._rotation_speed = 0
-        self._swing_mode = 0
-
         super().__init__(*args)
 
     def get_characteristic_types(self):
@@ -71,31 +66,23 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
     def _setup_swing_mode(self, char):
         self._features |= SUPPORT_OSCILLATE
 
-    def _update_rotation_direction(self, value):
-        self._rotation_direction = value
-
-    def _update_rotation_speed(self, value):
-        self._rotation_speed = value
-
-    def _update_swing_mode(self, value):
-        self._swing_mode = value
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._on
-
     @property
     def speed(self):
         """Return the current speed."""
         if not self.is_on:
             return SPEED_OFF
-        if self._rotation_speed > SPEED_TO_PCNT[SPEED_MEDIUM]:
+
+        rotation_speed = self.service.value(CharacteristicsTypes.ROTATION_SPEED)
+
+        if rotation_speed > SPEED_TO_PCNT[SPEED_MEDIUM]:
             return SPEED_HIGH
-        if self._rotation_speed > SPEED_TO_PCNT[SPEED_LOW]:
+
+        if rotation_speed > SPEED_TO_PCNT[SPEED_LOW]:
             return SPEED_MEDIUM
-        if self._rotation_speed > SPEED_TO_PCNT[SPEED_OFF]:
+
+        if rotation_speed > SPEED_TO_PCNT[SPEED_OFF]:
             return SPEED_LOW
+
         return SPEED_OFF
 
     @property
@@ -108,12 +95,14 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
     @property
     def current_direction(self):
         """Return the current direction of the fan."""
-        return HK_DIRECTION_TO_HA[self._rotation_direction]
+        direction = self.service.value(CharacteristicsTypes.ROTATION_DIRECTION)
+        return HK_DIRECTION_TO_HA[direction]
 
     @property
     def oscillating(self):
         """Return whether or not the fan is currently oscillating."""
-        return self._swing_mode == 1
+        oscillating = self.service.value(CharacteristicsTypes.SWING_MODE)
+        return oscillating == 1
 
     @property
     def supported_features(self):
@@ -208,8 +197,10 @@ class HomeKitFanV1(BaseHomeKitFan):
         """Define the homekit characteristics the entity cares about."""
         return [CharacteristicsTypes.ON] + super().get_characteristic_types()
 
-    def _update_on(self, value):
-        self._on = value == 1
+    @property
+    def is_on(self):
+        """Return true if device is on."""
+        return self.service.value(CharacteristicsTypes.ON) == 1
 
 
 class HomeKitFanV2(BaseHomeKitFan):
@@ -221,8 +212,10 @@ class HomeKitFanV2(BaseHomeKitFan):
         """Define the homekit characteristics the entity cares about."""
         return [CharacteristicsTypes.ACTIVE] + super().get_characteristic_types()
 
-    def _update_active(self, value):
-        self._on = value == 1
+    @property
+    def is_on(self):
+        """Return true if device is on."""
+        return self.service.value(CharacteristicsTypes.ACTIVE) == 1
 
 
 ENTITY_TYPES = {

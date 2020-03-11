@@ -10,7 +10,6 @@ from .const import (  # pylint: disable=unused-import
     DEFAULT_RADIUS,
     DEFAULT_WINDOW,
     DOMAIN,
-    LOGGER,
 )
 
 
@@ -43,18 +42,6 @@ class WWLLNFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
-        default_window_seconds = DEFAULT_WINDOW.total_seconds()
-        if (
-            CONF_WINDOW in import_config
-            and import_config[CONF_WINDOW] < default_window_seconds
-        ):
-            LOGGER.error(
-                "Refusing to use too-small window (%s < %s)",
-                import_config[CONF_WINDOW],
-                default_window_seconds,
-            )
-            return self.async_abort(reason="window_too_small")
-
         return await self.async_step_user(import_config)
 
     async def async_step_user(self, user_input=None):
