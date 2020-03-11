@@ -52,9 +52,10 @@ from homeassistant.const import (
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, MockConfigEntry
 from tests.components.directv import (
     CLIENT_ADDRESS,
+    DOMAIN,
     HOST,
     MOCK_GET_LOCATIONS_MULTIPLE,
     RECORDING,
@@ -84,15 +85,15 @@ def mock_now() -> datetime:
     return dt_util.utcnow()
 
 
-async def setup_directv(hass: HomeAssistantType) -> None:
+async def setup_directv(hass: HomeAssistantType) -> MockConfigEntry:
     """Set up mock DirecTV integration."""
     with patch(
         "homeassistant.components.directv.DIRECTV", new=MockDirectvClass,
     ):
-        await setup_integration(hass)
+        return await setup_integration(hass)
 
 
-async def setup_directv_with_instance_error(hass: HomeAssistantType) -> None:
+async def setup_directv_with_instance_error(hass: HomeAssistantType) -> MockConfigEntry:
     """Set up mock DirecTV integration."""
     with patch(
         "homeassistant.components.directv.DIRECTV", new=MockDirectvClass,
@@ -103,12 +104,12 @@ async def setup_directv_with_instance_error(hass: HomeAssistantType) -> None:
         "homeassistant.components.directv.media_player.get_dtv_instance",
         return_value=None,
     ):
-        await setup_integration(hass)
+        return await setup_integration(hass)
 
 
 async def setup_directv_with_locations(
     hass: HomeAssistantType, client_dtv: MockDirectvClass,
-) -> None:
+) -> MockConfigEntry:
     """Set up mock DirecTV integration."""
     with patch(
         "homeassistant.components.directv.DIRECTV", new=MockDirectvClass,
@@ -119,7 +120,7 @@ async def setup_directv_with_locations(
         "homeassistant.components.directv.media_player.get_dtv_instance",
         return_value=client_dtv,
     ):
-        await setup_integration(hass)
+        return await setup_integration(hass)
 
 
 async def async_turn_on(
@@ -360,6 +361,7 @@ async def test_main_services(
 
     # Stop live TV.
     await async_media_stop(hass, MAIN_ENTITY_ID)
+    await hass.async_block_till_done()
     state = hass.states.get(MAIN_ENTITY_ID)
     assert state.state == STATE_PAUSED
 
@@ -374,7 +376,7 @@ async def test_available(
     hass: HomeAssistantType, mock_now: dt_util.dt.datetime, client_dtv: MockDirectvClass
 ) -> None:
     """Test available status."""
-    await setup_directv_with_locations(hass, client_dtv)
+    entry = await setup_directv_with_locations(hass, client_dtv)
 
     next_update = mock_now + timedelta(minutes=5)
     with patch("homeassistant.util.dt.utcnow", return_value=next_update):
@@ -385,12 +387,17 @@ async def test_available(
     state = hass.states.get(MAIN_ENTITY_ID)
     assert state.state != STATE_UNAVAILABLE
 
+    assert hass.data[DOMAIN]
+    assert hass.data[DOMAIN][entry.entry_id]
+    assert hass.data[DOMAIN][entry.entry_id]["client"]
+
+    main_dtv = hass.data[DOMAIN][entry.entry_id]["client"]
+
     # Make update fail 1st time
     next_update = next_update + timedelta(minutes=5)
-    with patch(
-        "homeassistant.components.directv.DIRECTV.get_standby",
-        side_effect=RequestException,
-    ), patch("homeassistant.util.dt.utcnow", return_value=next_update):
+    with patch.object(main_dtv, "get_standby", side_effect=RequestException), patch(
+        "homeassistant.util.dt.utcnow", return_value=next_update
+    ):
         async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
 
@@ -399,10 +406,9 @@ async def test_available(
 
     # Make update fail 2nd time within 1 minute
     next_update = next_update + timedelta(seconds=30)
-    with patch(
-        "homeassistant.components.directv.DIRECTV.get_standby",
-        side_effect=RequestException,
-    ), patch("homeassistant.util.dt.utcnow", return_value=next_update):
+    with patch.object(main_dtv, "get_standby", side_effect=RequestException), patch(
+        "homeassistant.util.dt.utcnow", return_value=next_update
+    ):
         async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
 
@@ -411,10 +417,9 @@ async def test_available(
 
     # Make update fail 3rd time more then a minute after 1st failure
     next_update = next_update + timedelta(minutes=1)
-    with patch(
-        "homeassistant.components.directv.DIRECTV.get_standby",
-        side_effect=RequestException,
-    ), patch("homeassistant.util.dt.utcnow", return_value=next_update):
+    with patch.object(main_dtv, "get_standby", side_effect=RequestException), patch(
+        "homeassistant.util.dt.utcnow", return_value=next_update
+    ):
         async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
 
@@ -426,5 +431,6 @@ async def test_available(
     with patch("homeassistant.util.dt.utcnow", return_value=next_update):
         async_fire_time_changed(hass, next_update)
         await hass.async_block_till_done()
+
     state = hass.states.get(MAIN_ENTITY_ID)
     assert state.state != STATE_UNAVAILABLE
