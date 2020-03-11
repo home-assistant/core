@@ -20,7 +20,7 @@ async def test_config_entry_not_ready(hass: HomeAssistantType) -> None:
     with patch(
         "homeassistant.components.directv.DIRECTV", new=MockDirectvClass,
     ), patch(
-        "homeassistant.components.directv.DIRECTV.get_standby",
+        "homeassistant.components.directv.DIRECTV.get_locations",
         side_effect=RequestException,
     ):
         entry = await setup_integration(hass)
