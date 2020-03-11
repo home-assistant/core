@@ -1,7 +1,6 @@
 """The tests for the DirecTV Media player platform."""
 from datetime import datetime, timedelta
 from typing import Optional
-from unittest.mock import call
 
 from asynctest import patch
 from pytest import fixture
@@ -222,9 +221,7 @@ async def test_setup_with_instance_error(hass: HomeAssistantType) -> None:
     assert hass.states.async_entity_ids(MP_DOMAIN) == [MAIN_ENTITY_ID]
 
 
-async def test_unique_id(
-    hass: HomeAssistantType, client_dtv: MockDirectvClass
-) -> None:
+async def test_unique_id(hass: HomeAssistantType, client_dtv: MockDirectvClass) -> None:
     """Test unique id."""
     await setup_directv_with_locations(hass, client_dtv)
 
@@ -390,8 +387,10 @@ async def test_available(
 
     # Make update fail 1st time
     next_update = next_update + timedelta(minutes=5)
-    
-    with patch("homeassistant.components.directv.DIRECTV.get_standby", side_effect=RequestException), patch(
+    with patch(
+        "homeassistant.components.directv.DIRECTV.get_standby",
+        side_effect=RequestException
+    ), patch(
         "homeassistant.util.dt.utcnow", return_value=next_update
     ):
         async_fire_time_changed(hass, next_update)
@@ -402,7 +401,10 @@ async def test_available(
 
     # Make update fail 2nd time within 1 minute
     next_update = next_update + timedelta(seconds=30)
-    with patch("homeassistant.components.directv.DIRECTV.get_standby", side_effect=RequestException), patch(
+    with patch(
+        "homeassistant.components.directv.DIRECTV.get_standby", 
+        side_effect=RequestException
+    ), patch(
         "homeassistant.util.dt.utcnow", return_value=next_update
     ):
         async_fire_time_changed(hass, next_update)
@@ -413,7 +415,10 @@ async def test_available(
 
     # Make update fail 3rd time more then a minute after 1st failure
     next_update = next_update + timedelta(minutes=1)
-    with patch("homeassistant.components.directv.DIRECTV.get_standby", side_effect=RequestException), patch(
+    with patch(
+        "homeassistant.components.directv.DIRECTV.get_standby",
+        side_effect=RequestException
+    ), patch(
         "homeassistant.util.dt.utcnow", return_value=next_update
     ):
         async_fire_time_changed(hass, next_update)
