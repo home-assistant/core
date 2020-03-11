@@ -28,8 +28,8 @@ calibrate:
   description: calibrates an utility meter.
   fields:
     entity_id:
-      description: Name of the entity to set the tariff for
+      description: Name of the entity to calibrate
       example: 'utility_meter.energy'
     value:
-      description: Value to increment the meter
+      description: Value to which set the meter
       example: '100'
