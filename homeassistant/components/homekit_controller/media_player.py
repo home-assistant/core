@@ -130,9 +130,7 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerDevice):
     @property
     def source(self):
         """Name of the current input source."""
-        active_identifier = self.get_hk_char_value(
-            CharacteristicsTypes.ACTIVE_IDENTIFIER
-        )
+        active_identifier = self.service.value(CharacteristicsTypes.ACTIVE_IDENTIFIER)
         if not active_identifier:
             return None
 
@@ -150,11 +148,11 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerDevice):
     @property
     def state(self):
         """State of the tv."""
-        active = self.get_hk_char_value(CharacteristicsTypes.ACTIVE)
+        active = self.service.value(CharacteristicsTypes.ACTIVE)
         if not active:
             return STATE_PROBLEM
 
-        homekit_state = self.get_hk_char_value(CharacteristicsTypes.CURRENT_MEDIA_STATE)
+        homekit_state = self.service.value(CharacteristicsTypes.CURRENT_MEDIA_STATE)
         if homekit_state is not None:
             return HK_TO_HA_STATE[homekit_state]
 
