@@ -467,7 +467,6 @@ omit =
     homeassistant/components/nello/lock.py
     homeassistant/components/nest/*
     homeassistant/components/netatmo/__init__.py
-    homeassistant/components/netatmo/binary_sensor.py
     homeassistant/components/netatmo/api.py
     homeassistant/components/netatmo/camera.py
     homeassistant/components/netatmo/climate.py
