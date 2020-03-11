@@ -100,11 +100,10 @@ class ZHADevice(LogMixin):
             self._zigpy_device.__class__.__module__,
             self._zigpy_device.__class__.__name__,
         )
-        self._consider_unavailable_time = (
-            _CONSIDER_UNAVAILABLE_MAINS
-            if self.is_mains_powered
-            else _CONSIDER_UNAVAILABLE_BATTERY
-        )
+        if self.is_mains_powered:
+            self._consider_unavailable_time = _CONSIDER_UNAVAILABLE_MAINS
+        else:
+            self._consider_unavailable_time = _CONSIDER_UNAVAILABLE_BATTERY
         keep_alive_interval = random.randint(*_UPDATE_ALIVE_INTERVAL)
         self._cancel_available_check = async_track_time_interval(
             self.hass, self._check_available, timedelta(seconds=keep_alive_interval)
