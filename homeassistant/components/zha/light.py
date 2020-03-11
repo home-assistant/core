@@ -380,8 +380,8 @@ class Light(ZhaEntity, light.Light):
             ):
                 self._color_temp = results["color_temperature"]
 
-            color_x = results.get("color_x", None)
-            color_y = results.get("color_y", None)
+            color_x = results.get("color_x")
+            color_y = results.get("color_y")
             if color_x is not None and color_y is not None:
                 self._hs_color = color_util.color_xy_to_hs(
                     float(color_x / 65535), float(color_y / 65535)
