@@ -542,10 +542,8 @@ omit =
     homeassistant/components/pioneer/media_player.py
     homeassistant/components/pjlink/media_player.py
     homeassistant/components/plaato/*
-    homeassistant/components/plex/__init__.py
     homeassistant/components/plex/media_player.py
     homeassistant/components/plex/sensor.py
-    homeassistant/components/plex/server.py
     homeassistant/components/plugwise/*
     homeassistant/components/plum_lightpad/*
     homeassistant/components/pocketcasts/sensor.py
