@@ -78,6 +78,7 @@ class IcloudAccount:
         username: str,
         password: str,
         icloud_dir: Store,
+        with_family: bool,
         max_interval: int,
         gps_accuracy_threshold: int,
     ):
@@ -85,6 +86,7 @@ class IcloudAccount:
         self.hass = hass
         self._username = username
         self._password = password
+        self._with_family = with_family
         self._fetch_interval = max_interval
         self._max_interval = max_interval
         self._gps_accuracy_threshold = gps_accuracy_threshold
@@ -102,7 +104,10 @@ class IcloudAccount:
         """Set up an iCloud account."""
         try:
             self.api = PyiCloudService(
-                self._username, self._password, self._icloud_dir.path
+                self._username,
+                self._password,
+                self._icloud_dir.path,
+                with_family=self._with_family,
             )
         except PyiCloudFailedLoginException as error:
             self.api = None

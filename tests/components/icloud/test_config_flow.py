@@ -12,8 +12,10 @@ from homeassistant.components.icloud.config_flow import (
 from homeassistant.components.icloud.const import (
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,
+    CONF_WITH_FAMILY,
     DEFAULT_GPS_ACCURACY_THRESHOLD,
     DEFAULT_MAX_INTERVAL,
+    DEFAULT_WITH_FAMILY,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
@@ -25,6 +27,7 @@ from tests.common import MockConfigEntry
 USERNAME = "username@me.com"
 USERNAME_2 = "second_username@icloud.com"
 PASSWORD = "password"
+WITH_FAMILY = True
 MAX_INTERVAL = 15
 GPS_ACCURACY_THRESHOLD = 250
 
@@ -106,7 +109,7 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
-    # test with all provided
+    # test with required
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -124,20 +127,25 @@ async def test_user_with_cookie(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        data={
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+            CONF_WITH_FAMILY: WITH_FAMILY,
+        },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["result"].unique_id == USERNAME
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_WITH_FAMILY] == WITH_FAMILY
     assert result["data"][CONF_MAX_INTERVAL] == DEFAULT_MAX_INTERVAL
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
 
 async def test_import(hass: HomeAssistantType, service: MagicMock):
     """Test import step."""
-    # import with username and password
+    # import with required
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
@@ -153,6 +161,7 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
         data={
             CONF_USERNAME: USERNAME_2,
             CONF_PASSWORD: PASSWORD,
+            CONF_WITH_FAMILY: WITH_FAMILY,
             CONF_MAX_INTERVAL: MAX_INTERVAL,
             CONF_GPS_ACCURACY_THRESHOLD: GPS_ACCURACY_THRESHOLD,
         },
@@ -165,7 +174,7 @@ async def test_import_with_cookie(
     hass: HomeAssistantType, service_authenticated: MagicMock
 ):
     """Test import step with presence of a cookie."""
-    # import with username and password
+    # import with required
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
@@ -176,6 +185,7 @@ async def test_import_with_cookie(
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_WITH_FAMILY] == DEFAULT_WITH_FAMILY
     assert result["data"][CONF_MAX_INTERVAL] == DEFAULT_MAX_INTERVAL
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
@@ -186,6 +196,7 @@ async def test_import_with_cookie(
         data={
             CONF_USERNAME: USERNAME_2,
             CONF_PASSWORD: PASSWORD,
+            CONF_WITH_FAMILY: WITH_FAMILY,
             CONF_MAX_INTERVAL: MAX_INTERVAL,
             CONF_GPS_ACCURACY_THRESHOLD: GPS_ACCURACY_THRESHOLD,
         },
@@ -195,6 +206,7 @@ async def test_import_with_cookie(
     assert result["title"] == USERNAME_2
     assert result["data"][CONF_USERNAME] == USERNAME_2
     assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_WITH_FAMILY] == WITH_FAMILY
     assert result["data"][CONF_MAX_INTERVAL] == MAX_INTERVAL
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == GPS_ACCURACY_THRESHOLD
 
@@ -209,7 +221,7 @@ async def test_two_accounts_setup(
         unique_id=USERNAME,
     ).add_to_hass(hass)
 
-    # import with username and password
+    # import with required
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
@@ -220,6 +232,7 @@ async def test_two_accounts_setup(
     assert result["title"] == USERNAME_2
     assert result["data"][CONF_USERNAME] == USERNAME_2
     assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_WITH_FAMILY] == DEFAULT_WITH_FAMILY
     assert result["data"][CONF_MAX_INTERVAL] == DEFAULT_MAX_INTERVAL
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
@@ -361,6 +374,7 @@ async def test_verification_code_success(hass: HomeAssistantType, service: Magic
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_WITH_FAMILY] == DEFAULT_WITH_FAMILY
     assert result["data"][CONF_MAX_INTERVAL] == DEFAULT_MAX_INTERVAL
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
