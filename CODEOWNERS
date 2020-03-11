@@ -82,6 +82,7 @@ homeassistant/components/demo/* @home-assistant/core
 homeassistant/components/derivative/* @afaucogney
 homeassistant/components/device_automation/* @home-assistant/core
 homeassistant/components/digital_ocean/* @fabaff
+homeassistant/components/directv/* @ctalkington
 homeassistant/components/discogs/* @thibmaek
 homeassistant/components/doorbird/* @oblogic7
 homeassistant/components/dsmr_reader/* @depl0y
