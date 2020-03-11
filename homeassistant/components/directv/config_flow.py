@@ -1,6 +1,5 @@
 """Config flow for DirecTV."""
 import logging
-import socket
 from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
@@ -13,7 +12,6 @@ from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DEFAULT_PORT
 from .const import DOMAIN  # pylint: disable=unused-import
@@ -26,7 +24,7 @@ ERROR_UNKNOWN = "unknown"
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
 
-def validate_input(hass: HomeAssistantType, data: Dict) -> Dict:
+def validate_input(data: Dict) -> Dict:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -71,9 +69,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            info = await self.hass.async_add_executor_job(
-                validate_input, self.hass, user_input
-            )
+            info = await self.hass.async_add_executor_job(validate_input, user_input)
             user_input[CONF_HOST] = info[CONF_HOST]
         except (OSError, RequestException):
             errors["base"] = ERROR_CANNOT_CONNECT
@@ -117,9 +113,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input[CONF_HOST] = self.context.get(CONF_HOST)
 
             try:
-                await self.hass.async_add_executor_job(
-                    validate_input, self.hass, user_input
-                )
+                await self.hass.async_add_executor_job(validate_input, user_input)
                 return self.async_create_entry(title=name, data=user_input)
             except (OSError, RequestException):
                 return self.async_abort(reason=ERROR_CANNOT_CONNECT)
