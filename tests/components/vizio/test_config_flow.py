@@ -441,10 +441,8 @@ async def test_import_flow_update_options(
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "updated_entry"
-    assert (
-        hass.config_entries.async_get_entry(entry_id).options[CONF_VOLUME_STEP]
-        == VOLUME_STEP + 1
-    )
+    config_entry = hass.config_entries.async_get_entry(entry_id)
+    assert config_entry.options[CONF_VOLUME_STEP] == VOLUME_STEP + 1
 
 
 async def test_import_flow_update_name_and_apps(
@@ -475,13 +473,10 @@ async def test_import_flow_update_name_and_apps(
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "updated_entry"
-    assert hass.config_entries.async_get_entry(entry_id).data[CONF_NAME] == NAME2
-    assert hass.config_entries.async_get_entry(entry_id).data[CONF_APPS] == {
-        CONF_INCLUDE: [CURRENT_APP]
-    }
-    assert hass.config_entries.async_get_entry(entry_id).options[CONF_APPS] == {
-        CONF_INCLUDE: [CURRENT_APP]
-    }
+    config_entry = hass.config_entries.async_get_entry(entry_id)
+    assert config_entry.data[CONF_NAME] == NAME2
+    assert config_entry.data[CONF_APPS] == {CONF_INCLUDE: [CURRENT_APP]}
+    assert config_entry.options[CONF_APPS] == {CONF_INCLUDE: [CURRENT_APP]}
 
 
 async def test_import_flow_update_remove_apps(
@@ -499,9 +494,9 @@ async def test_import_flow_update_remove_apps(
 
     assert result["result"].data[CONF_NAME] == NAME
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    entry_id = result["result"].entry_id
-    assert CONF_APPS in hass.config_entries.async_get_entry(entry_id).data
-    assert CONF_APPS in hass.config_entries.async_get_entry(entry_id).options
+    config_entry = hass.config_entries.async_get_entry(result["result"].entry_id)
+    assert CONF_APPS in config_entry.data
+    assert CONF_APPS in config_entry.options
 
     updated_config = MOCK_TV_WITH_EXCLUDE_CONFIG.copy()
     updated_config.pop(CONF_APPS)
@@ -513,8 +508,8 @@ async def test_import_flow_update_remove_apps(
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "updated_entry"
-    assert CONF_APPS not in hass.config_entries.async_get_entry(entry_id).data
-    assert CONF_APPS not in hass.config_entries.async_get_entry(entry_id).options
+    assert CONF_APPS not in config_entry.data
+    assert CONF_APPS not in config_entry.options
 
 
 async def test_import_needs_pairing(
@@ -612,9 +607,9 @@ async def test_import_flow_additional_configs(
 
     assert result["result"].data[CONF_NAME] == NAME
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    entry_id = result["result"].entry_id
-    assert CONF_APPS in hass.config_entries.async_get_entry(entry_id).data
-    assert CONF_APPS not in hass.config_entries.async_get_entry(entry_id).options
+    config_entry = hass.config_entries.async_get_entry(result["result"].entry_id)
+    assert CONF_APPS in config_entry.data
+    assert CONF_APPS not in config_entry.options
 
 
 async def test_import_error(
