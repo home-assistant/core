@@ -28,21 +28,17 @@ PLATFORMS = ["media_player"]
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-def get_dtv_instance(
-    host: str, port: int = DEFAULT_PORT, client_addr: str = "0"
-) -> DIRECTV:
-    """Retrieve a DIRECTV instance for the receiver device."""
-    return DIRECTV(host, port, client_addr)
-
-
-def get_dtv_locations(dtv: DIRECTV) -> Dict:
-    """Retrieve the receiver locations list."""
-    return dtv.get_locations()
-
-
-def get_dtv_version(dtv: DIRECTV) -> Dict:
-    """Retrieve the receiver version info."""
-    return dtv.get_version()
+def get_dtv_data(hass: HomeAssistant, host: str, port: int = DEFAULT_PORT, client_addr: str = "0") -> dict:
+    """Retrieve a DIRECTV instance, locations list, and version info for the receiver device."""
+    dtv = DIRECTV(host, port, client_addr)
+    locations = dtv.get_locations()
+    version_info = dtv.get_version()
+    
+    return {
+        DATA_CLIENT: dtv,
+        DATA_LOCATIONS: locations,
+        DATA_VERSION_INFO: version_info,
+    }
 
 
 async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
@@ -63,20 +59,13 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up DirecTV from a config entry."""
     try:
-        # directpy does IO in constructor.
-        dtv = await hass.async_add_executor_job(get_dtv_instance, entry.data[CONF_HOST])
-        dtv_locations = await hass.async_add_executor_job(get_dtv_locations, dtv)
-        dtv_version = await hass.async_add_executor_job(get_dtv_version, dtv)
+        dtv_data = await hass.async_add_executor_job(get_dtv_data, hass, entry.data[CONF_HOST])
     except (OSError, RequestException) as exception:
         raise ConfigEntryNotReady from exception
     except Exception as exception:  # pylint: disable=broad-except
         raise ConfigEntryNotReady from exception
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_CLIENT: dtv,
-        DATA_LOCATIONS: dtv_locations,
-        DATA_VERSION_INFO: dtv_version,
-    }
+    hass.data[DOMAIN][entry.entry_id] = dtv_data
 
     for component in PLATFORMS:
         hass.async_create_task(
