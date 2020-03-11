@@ -336,73 +336,41 @@ async def test_main_services(
     state = hass.states.get(MAIN_ENTITY_ID)
     assert state.state == STATE_OFF
 
-    # All these should call key_press in our class.
-    with patch.object(
-        main_dtv, "key_press", wraps=main_dtv.key_press
-    ) as mock_key_press, patch.object(
-        main_dtv, "tune_channel", wraps=main_dtv.tune_channel
-    ) as mock_tune_channel, patch.object(
-        main_dtv, "get_tuned", wraps=main_dtv.get_tuned
-    ) as mock_get_tuned, patch.object(
-        main_dtv, "get_standby", wraps=main_dtv.get_standby
-    ) as mock_get_standby:
+    # Turn main DVR on. When turning on DVR is playing.
+    await async_turn_on(hass, MAIN_ENTITY_ID)
+    await hass.async_block_till_done()
+    state = hass.states.get(MAIN_ENTITY_ID)
+    assert state.state == STATE_PLAYING
 
-        # Turn main DVR on. When turning on DVR is playing.
-        await async_turn_on(hass, MAIN_ENTITY_ID)
-        await hass.async_block_till_done()
-        assert mock_key_press.called
-        assert mock_key_press.call_args == call("poweron")
-        state = hass.states.get(MAIN_ENTITY_ID)
-        assert state.state == STATE_PLAYING
+    # Pause live TV.
+    await async_media_pause(hass, MAIN_ENTITY_ID)
+    await hass.async_block_till_done()
+    state = hass.states.get(MAIN_ENTITY_ID)
+    assert state.state == STATE_PAUSED
 
-        # Pause live TV.
-        await async_media_pause(hass, MAIN_ENTITY_ID)
-        await hass.async_block_till_done()
-        assert mock_key_press.called
-        assert mock_key_press.call_args == call("pause")
-        state = hass.states.get(MAIN_ENTITY_ID)
-        assert state.state == STATE_PAUSED
+    # Start play again for live TV.
+    await async_media_play(hass, MAIN_ENTITY_ID)
+    await hass.async_block_till_done()
+    state = hass.states.get(MAIN_ENTITY_ID)
+    assert state.state == STATE_PLAYING
 
-        # Start play again for live TV.
-        await async_media_play(hass, MAIN_ENTITY_ID)
-        await hass.async_block_till_done()
-        assert mock_key_press.called
-        assert mock_key_press.call_args == call("play")
-        state = hass.states.get(MAIN_ENTITY_ID)
-        assert state.state == STATE_PLAYING
+    # Change channel, currently it should be 202
+    assert state.attributes.get("source") == 202
+    await async_play_media(hass, "channel", 7, MAIN_ENTITY_ID)
+    await hass.async_block_till_done()
+    state = hass.states.get(MAIN_ENTITY_ID)
+    assert state.attributes.get("source") == 7
 
-        # Change channel, currently it should be 202
-        assert state.attributes.get("source") == 202
-        await async_play_media(hass, "channel", 7, MAIN_ENTITY_ID)
-        await hass.async_block_till_done()
-        assert mock_tune_channel.called
-        assert mock_tune_channel.call_args == call("7")
-        state = hass.states.get(MAIN_ENTITY_ID)
-        assert state.attributes.get("source") == 7
+    # Stop live TV.
+    await async_media_stop(hass, MAIN_ENTITY_ID)
+    state = hass.states.get(MAIN_ENTITY_ID)
+    assert state.state == STATE_PAUSED
 
-        # Stop live TV.
-        await async_media_stop(hass, MAIN_ENTITY_ID)
-        await hass.async_block_till_done()
-        assert mock_key_press.called
-        assert mock_key_press.call_args == call("stop")
-        state = hass.states.get(MAIN_ENTITY_ID)
-        assert state.state == STATE_PAUSED
-
-        # Turn main DVR off.
-        await async_turn_off(hass, MAIN_ENTITY_ID)
-        await hass.async_block_till_done()
-        assert mock_key_press.called
-        assert mock_key_press.call_args == call("poweroff")
-        state = hass.states.get(MAIN_ENTITY_ID)
-        assert state.state == STATE_OFF
-
-        # There should have been 6 calls to check if DVR is in standby
-        assert main_dtv.get_standby.call_count == 6
-        assert mock_get_standby.call_count == 6
-        # There should be 5 calls to get current info (only 1 time it will
-        # not be called as DVR is in standby.)
-        assert main_dtv.get_tuned.call_count == 5
-        assert mock_get_tuned.call_count == 5
+    # Turn main DVR off.
+    await async_turn_off(hass, MAIN_ENTITY_ID)
+    await hass.async_block_till_done()
+    state = hass.states.get(MAIN_ENTITY_ID)
+    assert state.state == STATE_OFF
 
 
 async def test_available(
@@ -422,7 +390,8 @@ async def test_available(
 
     # Make update fail 1st time
     next_update = next_update + timedelta(minutes=5)
-    with patch.object(main_dtv, "get_standby", side_effect=RequestException), patch(
+    
+    with patch("homeassistant.components.directv.DIRECTV.get_standby", side_effect=RequestException), patch(
         "homeassistant.util.dt.utcnow", return_value=next_update
     ):
         async_fire_time_changed(hass, next_update)
@@ -433,7 +402,7 @@ async def test_available(
 
     # Make update fail 2nd time within 1 minute
     next_update = next_update + timedelta(seconds=30)
-    with patch.object(main_dtv, "get_standby", side_effect=RequestException), patch(
+    with patch("homeassistant.components.directv.DIRECTV.get_standby", side_effect=RequestException), patch(
         "homeassistant.util.dt.utcnow", return_value=next_update
     ):
         async_fire_time_changed(hass, next_update)
@@ -444,7 +413,7 @@ async def test_available(
 
     # Make update fail 3rd time more then a minute after 1st failure
     next_update = next_update + timedelta(minutes=1)
-    with patch.object(main_dtv, "get_standby", side_effect=RequestException), patch(
+    with patch("homeassistant.components.directv.DIRECTV.get_standby", side_effect=RequestException), patch(
         "homeassistant.util.dt.utcnow", return_value=next_update
     ):
         async_fire_time_changed(hass, next_update)
