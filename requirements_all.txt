@@ -1345,7 +1345,7 @@ pykwb==0.0.8
 pylacrosse==0.4.0
 
 # homeassistant.components.lastfm
-pylast==3.2.0
+pylast==3.2.1
 
 # homeassistant.components.launch_library
 pylaunches==0.2.0
