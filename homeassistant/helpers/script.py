@@ -154,9 +154,9 @@ class _ScriptRunBase(ABC):
                 self, f"_async_{cv.determine_script_action(self._action)}_step"
             )()
         except Exception as ex:
-            if not isinstance(ex, (_SuspendScript, _StopScript)) and (
-                self._log_exceptions or log_exceptions
-            ):
+            if not isinstance(
+                ex, (_SuspendScript, _StopScript, asyncio.CancelledError)
+            ) and (self._log_exceptions or log_exceptions):
                 self._log_exception(ex)
             raise
 
@@ -650,7 +650,7 @@ class Script:
         self.sequence = sequence
         template.attach(hass, self.sequence)
         self.name = name
-        self._change_listener = change_listener
+        self.change_listener = change_listener
         self._script_mode = script_mode
         if logger:
             self._logger = logger
@@ -658,7 +658,7 @@ class Script:
             logger_name = __name__
             if name:
                 logger_name = ".".join([logger_name, slugify(name)])
-            self._logger = logging.getLogger(name)
+            self._logger = logging.getLogger(logger_name)
         self._log_exceptions = log_exceptions
 
         self.last_action = None
@@ -678,11 +678,11 @@ class Script:
         self._referenced_devices: Optional[Set[str]] = None
 
     def _changed(self):
-        if self._change_listener:
-            if is_callback(self._change_listener):
-                self._change_listener()
+        if self.change_listener:
+            if is_callback(self.change_listener):
+                self.change_listener()
             else:
-                self._hass.async_add_job(self._change_listener)
+                self._hass.async_add_job(self.change_listener)
 
     @property
     def is_running(self) -> bool:
