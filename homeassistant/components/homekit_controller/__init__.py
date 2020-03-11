@@ -4,7 +4,11 @@ import os
 
 import aiohomekit
 from aiohomekit.model import Accessory
-from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
+from aiohomekit.model.characteristics import (
+    Characteristic,
+    CharacteristicPermissions,
+    CharacteristicsTypes,
+)
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -105,11 +109,11 @@ class HomeKitEntity(Entity):
     def _setup_characteristic(self, char: Characteristic):
         """Configure an entity based on a HomeKit characteristics metadata."""
         # Build up a list of (aid, iid) tuples to poll on update()
-        if "pr" in char.perms:
+        if CharacteristicPermissions.paired_read in char.perms:
             self.pollable_characteristics.append((self._aid, char.iid))
 
         # Build up a list of (aid, iid) tuples to subscribe to
-        if "ev" in char.perms:
+        if CharacteristicPermissions.events in char.perms:
             self.watchable_characteristics.append((self._aid, char.iid))
 
         # Build a map of ctype -> iid
