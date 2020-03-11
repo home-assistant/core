@@ -114,27 +114,27 @@ class EnvoySensor(Entity):
 
     def __init__(self, envoy_data, sensor_type, name, unit):
         """Initialize the sensor."""
-        self._envoy_data = envoy_data
-        self._type = sensor_type
-        self._name = name
-        self._unit_of_measurement = unit
-        self._state = None
-        self._last_reported = None
+        self.envoy_data = envoy_data
+        self.sensor_type = sensor_type
+        self.sensor_name = name
+        self.sensor_unit_of_measurement = unit
+        self.sensor_state = None
+        self.last_reported = None
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        return self.sensor_name
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state
+        return self.sensor_state
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
+        return self.sensor_unit_of_measurement
 
     @property
     def icon(self):
@@ -144,16 +144,16 @@ class EnvoySensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self._type == "inverters":
-            return {"last_reported": self._last_reported}
+        if self.sensor_type == "inverters":
+            return {"last_reported": self.last_reported}
 
         return None
 
     async def async_update(self):
         """Get the latest data from the Enphase Envoy device."""
-        await self._envoy_data.update()
-        self._envoy_data.set_state(self)
-        self._envoy_data.set_entity_attributes(self)
+        await self.envoy_data.update()
+        self.envoy_data.set_state(self)
+        self.envoy_data.set_entity_attributes(self)
 
 
 class EnvoyData:
@@ -186,34 +186,36 @@ class EnvoyData:
 
     def set_state(self, envoy_data):
         """Set the sensor value from the dictionary."""
-        if envoy_data._type != "inverters":
-            if isinstance(self.data.get(envoy_data._type), int):
-                envoy_data._state = self.data.get(envoy_data._type)
-                _LOGGER.debug("Updating: %s - %s", envoy_data._type, envoy_data._state)
+        if envoy_data.sensor_type != "inverters":
+            if isinstance(self.data.get(envoy_data.sensor_type), int):
+                envoy_data.sensor_state = self.data.get(envoy_data.sensor_type)
+                _LOGGER.debug(
+                    "Updating: %s - %s", envoy_data.sensor_type, envoy_data.sensor_state
+                )
             else:
                 _LOGGER.debug(
                     "Sensor %s isInstance(int) was %s.  Returning None for state.",
-                    envoy_data._type,
-                    isinstance(self.data.get(envoy_data._type), int),
+                    envoy_data.type,
+                    isinstance(self.data.get(envoy_data.sensor_type), int),
                 )
-        elif envoy_data._type == "inverters":
-            serial_number = envoy_data._name.split(" ")[2]
+        elif envoy_data.sensor_type == "inverters":
+            serial_number = envoy_data.sensor_name.split(" ")[2]
             if isinstance(self.data.get("inverters_production"), dict):
-                envoy_data._state = self.data.get("inverters_production").get(
+                envoy_data.sensor_state = self.data.get("inverters_production").get(
                     serial_number
                 )[0]
                 _LOGGER.debug(
                     "Updating: %s (%s) - %s",
-                    envoy_data._type,
+                    envoy_data.sensor_type,
                     serial_number,
-                    envoy_data._state,
+                    envoy_data.sensor_state,
                 )
             else:
                 _LOGGER.debug(
                     "Data inverter (%s) isInstance(dict) was %s.  Using previous state: %s",
                     serial_number,
                     isinstance(self.data.get("inverters_production"), dict),
-                    envoy_data._state,
+                    envoy_data.sensor_state,
                 )
                 # Sometimes the HTTP connection for Inverters to the Envoy will fail which will cause a None value
                 # to be returned.  When this occurs the HA sensor will just return the previously
@@ -221,17 +223,17 @@ class EnvoyData:
 
     def set_entity_attributes(self, envoy_data):
         """Set attribute data for Inverters."""
-        if envoy_data._type == "inverters":
-            serial_number = envoy_data._name.split(" ")[2]
+        if envoy_data.sensor_type == "inverters":
+            serial_number = envoy_data.sensor_name.split(" ")[2]
             if isinstance(self.data.get("inverters_production"), dict):
-                envoy_data._last_reported = self.data.get("inverters_production").get(
+                envoy_data.last_reported = self.data.get("inverters_production").get(
                     serial_number
                 )[1]
                 _LOGGER.debug(
                     "Updating: %s (%s) - %s",
-                    envoy_data._type,
+                    envoy_data.sensor_type,
                     serial_number,
-                    envoy_data._last_reported,
+                    envoy_data.last_reported,
                 )
             else:
                 _LOGGER.debug(
@@ -240,4 +242,4 @@ class EnvoyData:
                     isinstance(self.data.get("inverters_production"), dict),
                 )
         else:
-            _LOGGER.debug("Skipping, no attributes for: %s", envoy_data._type)
+            _LOGGER.debug("Skipping, no attributes for: %s", envoy_data.sensor_type)
