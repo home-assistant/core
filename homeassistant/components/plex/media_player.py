@@ -333,6 +333,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
 
     def force_idle(self):
         """Force client to idle."""
+        self._player_state = STATE_IDLE
         self._state = STATE_IDLE
         self.session = None
         self._clear_media_details()
