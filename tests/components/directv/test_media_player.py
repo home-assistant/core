@@ -52,7 +52,7 @@ from homeassistant.const import (
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed, MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.directv import (
     CLIENT_ADDRESS,
     DOMAIN,
