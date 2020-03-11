@@ -1,0 +1,25 @@
+{
+    "config": {
+        "title": "Synology DSM",
+        "step": {
+            "user": {
+                "title": "Synology DSM",
+                "data": {
+                    "name": "Name",
+                    "host": "Host",
+                    "port":"Port",
+                    "ssl":"Use SSL/TLS to connect to your NAS",
+                    "username": "Username",
+                    "password":"Password"
+                }
+            }
+        },
+        "error":{
+            "already_configured": "Host already configured",
+            "unknown": "Unknown error: please retry later or an other configuration"
+        },
+        "abort":{
+            "already_configured": "Host already configured"
+        }
+    }
+}
