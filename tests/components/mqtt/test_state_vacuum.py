@@ -63,6 +63,31 @@ DEFAULT_CONFIG = {
     mqttvacuum.CONF_FAN_SPEED_LIST: ["min", "medium", "high", "max"],
 }
 
+DEFAULT_CONFIG_ATTR = {
+    vacuum.DOMAIN: {
+        "platform": "mqtt",
+        "schema": "state",
+        "name": "test",
+        "json_attributes_topic": "attr-topic",
+    }
+}
+
+DEFAULT_CONFIG_DEVICE_INFO = {
+    "platform": "mqtt",
+    "schema": "state",
+    "name": "Test 1",
+    "command_topic": "test-command-topic",
+    "device": {
+        "identifiers": ["helloworld"],
+        "connections": [["mac", "02:5b:26:a8:dc:12"]],
+        "manufacturer": "Whatever",
+        "name": "Beer",
+        "model": "Glass",
+        "sw_version": "0.1-beta",
+    },
+    "unique_id": "veryunique",
+}
+
 
 async def test_default_supported_features(hass, mqtt_mock):
     """Test that the correct supported features."""
@@ -351,59 +376,35 @@ async def test_custom_availability_payload(hass, mqtt_mock):
 
 async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
-    config = {
-        vacuum.DOMAIN: {
-            "platform": "mqtt",
-            "schema": "state",
-            "name": "test",
-            "json_attributes_topic": "attr-topic",
-        }
-    }
     await help_test_setting_attribute_via_mqtt_json_message(
-        hass, mqtt_mock, vacuum.DOMAIN, config
+        hass, mqtt_mock, vacuum.DOMAIN, DEFAULT_CONFIG_ATTR
     )
 
 
 async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
     """Test attributes get extracted from a JSON result."""
-    config = {
-        vacuum.DOMAIN: {
-            "platform": "mqtt",
-            "schema": "state",
-            "name": "test",
-            "json_attributes_topic": "attr-topic",
-        }
-    }
     await help_test_update_with_json_attrs_not_dict(
-        hass, mqtt_mock, caplog, vacuum.DOMAIN, config
+        hass, mqtt_mock, caplog, vacuum.DOMAIN, DEFAULT_CONFIG_ATTR
     )
 
 
 async def test_update_with_json_attrs_bad_json(hass, mqtt_mock, caplog):
     """Test attributes get extracted from a JSON result."""
-    config = {
-        vacuum.DOMAIN: {
-            "platform": "mqtt",
-            "schema": "state",
-            "name": "test",
-            "json_attributes_topic": "attr-topic",
-        }
-    }
     await help_test_update_with_json_attrs_bad_JSON(
-        hass, mqtt_mock, caplog, vacuum.DOMAIN, config
+        hass, mqtt_mock, caplog, vacuum.DOMAIN, DEFAULT_CONFIG_ATTR
     )
 
 
 async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     """Test update of discovered MQTTAttributes."""
     data1 = (
-        '{ "name": "Beer",'
+        '{ "name": "test",'
         '  "schema": "state",'
         '  "command_topic": "test_topic",'
         '  "json_attributes_topic": "attr-topic1" }'
     )
     data2 = (
-        '{ "name": "Beer",'
+        '{ "name": "test",'
         '  "schema": "state",'
         '  "command_topic": "test_topic",'
         '  "json_attributes_topic": "attr-topic2" }'
@@ -438,7 +439,7 @@ async def test_unique_id(hass, mqtt_mock):
 
 async def test_discovery_removal_vacuum(hass, mqtt_mock, caplog):
     """Test removal of discovered vacuum."""
-    data = '{ "schema": "state", "name": "Beer",' '  "command_topic": "test_topic"}'
+    data = '{ "schema": "state", "name": "test",' '  "command_topic": "test_topic"}'
     await help_test_discovery_removal(hass, mqtt_mock, caplog, vacuum.DOMAIN, data)
 
 
@@ -462,46 +463,16 @@ async def test_discovery_broken(hass, mqtt_mock, caplog):
 
 async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     """Test MQTT vacuum device registry integration."""
-    data = json.dumps(
-        {
-            "platform": "mqtt",
-            "schema": "state",
-            "name": "Test 1",
-            "command_topic": "test-command-topic",
-            "device": {
-                "identifiers": ["helloworld"],
-                "connections": [["mac", "02:5b:26:a8:dc:12"]],
-                "manufacturer": "Whatever",
-                "name": "Beer",
-                "model": "Glass",
-                "sw_version": "0.1-beta",
-            },
-            "unique_id": "veryunique",
-        }
-    )
     await help_test_entity_device_info_with_identifier(
-        hass, mqtt_mock, vacuum.DOMAIN, data
+        hass, mqtt_mock, vacuum.DOMAIN, DEFAULT_CONFIG_DEVICE_INFO
     )
 
 
 async def test_entity_device_info_update(hass, mqtt_mock):
     """Test device registry update."""
-    config = {
-        "platform": "mqtt",
-        "schema": "state",
-        "name": "Test 1",
-        "command_topic": "test-command-topic",
-        "device": {
-            "identifiers": ["helloworld"],
-            "connections": [["mac", "02:5b:26:a8:dc:12"]],
-            "manufacturer": "Whatever",
-            "name": "Beer",
-            "model": "Glass",
-            "sw_version": "0.1-beta",
-        },
-        "unique_id": "veryunique",
-    }
-    await help_test_entity_device_info_update(hass, mqtt_mock, vacuum.DOMAIN, config)
+    await help_test_entity_device_info_update(
+        hass, mqtt_mock, vacuum.DOMAIN, DEFAULT_CONFIG_DEVICE_INFO
+    )
 
 
 async def test_entity_id_update(hass, mqtt_mock):

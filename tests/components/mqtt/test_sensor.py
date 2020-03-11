@@ -31,6 +31,30 @@ from tests.common import (
     async_fire_time_changed,
 )
 
+DEFAULT_CONFIG_ATTR = {
+    sensor.DOMAIN: {
+        "platform": "mqtt",
+        "name": "test",
+        "state_topic": "test-topic",
+        "json_attributes_topic": "attr-topic",
+    }
+}
+
+DEFAULT_CONFIG_DEVICE_INFO = {
+    "platform": "mqtt",
+    "name": "Test 1",
+    "state_topic": "test-topic",
+    "device": {
+        "identifiers": ["helloworld"],
+        "connections": [["mac", "02:5b:26:a8:dc:12"]],
+        "manufacturer": "Whatever",
+        "name": "Beer",
+        "model": "Glass",
+        "sw_version": "0.1-beta",
+    },
+    "unique_id": "veryunique",
+}
+
 
 async def test_setting_sensor_value_via_mqtt_message(hass, mqtt_mock):
     """Test the setting of the value via MQTT."""
@@ -447,43 +471,27 @@ async def test_setting_attribute_with_template(hass, mqtt_mock):
 
 async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
     """Test attributes get extracted from a JSON result."""
-    config = {
-        sensor.DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "state_topic": "test-topic",
-            "json_attributes_topic": "attr-topic",
-        }
-    }
     await help_test_update_with_json_attrs_not_dict(
-        hass, mqtt_mock, caplog, sensor.DOMAIN, config
+        hass, mqtt_mock, caplog, sensor.DOMAIN, DEFAULT_CONFIG_ATTR
     )
 
 
 async def test_update_with_json_attrs_bad_JSON(hass, mqtt_mock, caplog):
     """Test attributes get extracted from a JSON result."""
-    config = {
-        sensor.DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "state_topic": "test-topic",
-            "json_attributes_topic": "attr-topic",
-        }
-    }
     await help_test_update_with_json_attrs_bad_JSON(
-        hass, mqtt_mock, caplog, sensor.DOMAIN, config
+        hass, mqtt_mock, caplog, sensor.DOMAIN, DEFAULT_CONFIG_ATTR
     )
 
 
 async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     """Test update of discovered MQTTAttributes."""
     data1 = (
-        '{ "name": "Beer",'
+        '{ "name": "test",'
         '  "state_topic": "test_topic",'
         '  "json_attributes_topic": "attr-topic1" }'
     )
     data2 = (
-        '{ "name": "Beer",'
+        '{ "name": "test",'
         '  "state_topic": "test_topic",'
         '  "json_attributes_topic": "attr-topic2" }'
     )
@@ -515,7 +523,7 @@ async def test_unique_id(hass):
 
 async def test_discovery_removal_sensor(hass, mqtt_mock, caplog):
     """Test removal of discovered sensor."""
-    data = '{ "name": "Beer",' '  "state_topic": "test_topic" }'
+    data = '{ "name": "test",' '  "state_topic": "test_topic" }'
     await help_test_discovery_removal(hass, mqtt_mock, caplog, sensor.DOMAIN, data)
 
 
@@ -539,44 +547,16 @@ async def test_discovery_broken(hass, mqtt_mock, caplog):
 
 async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     """Test MQTT sensor device registry integration."""
-    data = json.dumps(
-        {
-            "platform": "mqtt",
-            "name": "Test 1",
-            "state_topic": "test-topic",
-            "device": {
-                "identifiers": ["helloworld"],
-                "connections": [["mac", "02:5b:26:a8:dc:12"]],
-                "manufacturer": "Whatever",
-                "name": "Beer",
-                "model": "Glass",
-                "sw_version": "0.1-beta",
-            },
-            "unique_id": "veryunique",
-        }
-    )
     await help_test_entity_device_info_with_identifier(
-        hass, mqtt_mock, sensor.DOMAIN, data
+        hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG_DEVICE_INFO
     )
 
 
 async def test_entity_device_info_update(hass, mqtt_mock):
     """Test device registry update."""
-    config = {
-        "platform": "mqtt",
-        "name": "Test 1",
-        "state_topic": "test-topic",
-        "device": {
-            "identifiers": ["helloworld"],
-            "connections": [["mac", "02:5b:26:a8:dc:12"]],
-            "manufacturer": "Whatever",
-            "name": "Beer",
-            "model": "Glass",
-            "sw_version": "0.1-beta",
-        },
-        "unique_id": "veryunique",
-    }
-    await help_test_entity_device_info_update(hass, mqtt_mock, sensor.DOMAIN, config)
+    await help_test_entity_device_info_update(
+        hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG_DEVICE_INFO
+    )
 
 
 async def test_entity_id_update(hass, mqtt_mock):
