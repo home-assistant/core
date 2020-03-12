@@ -104,7 +104,7 @@ class DataUpdateCoordinator:
         """
         await self._debounced_refresh.async_call()
 
-    async def async_update_data(self) -> Optional[Any]:
+    async def _async_update_data(self) -> Optional[Any]:
         """Fetch the latest data from the source."""
         if self.update_method is None:
             raise UpdateFailed("Update method not implemented")
@@ -120,7 +120,7 @@ class DataUpdateCoordinator:
 
         try:
             start = monotonic()
-            self.data = await self.async_update_data()
+            self.data = await self._async_update_data()
 
         except asyncio.TimeoutError:
             if self.last_update_success:
