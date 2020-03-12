@@ -65,7 +65,7 @@ aioesphomeapi==2.6.1
 aiofreepybox==0.0.8
 
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.29.1
+aiohomekit[IP]==0.2.34
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
