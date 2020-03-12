@@ -429,10 +429,11 @@ class SonosEntity(MediaPlayerDevice):
     @soco_coordinator
     def state(self):
         """Return the state of the entity."""
-        if self._media_title is not None and self._status in (
-            "PAUSED_PLAYBACK",
-            "STOPPED",
-        ):
+        if self._status in ("PAUSED_PLAYBACK", "STOPPED",):
+            # Sonos can consider itself "paused" but without having media loaded
+            # (happens if playing Spotify and via Spotify app you pick another device to play on)
+            if self._media_title is None:
+                return STATE_IDLE
             return STATE_PAUSED
         if self._status in ("PLAYING", "TRANSITIONING"):
             return STATE_PLAYING
@@ -609,9 +610,9 @@ class SonosEntity(MediaPlayerDevice):
 
         self._media_image_url = None
 
-        self._media_artist = source
+        self._media_artist = None
         self._media_album_name = None
-        self._media_title = None
+        self._media_title = source
 
         self._source_name = source
 
