@@ -6,6 +6,21 @@ API = "api"
 DOMAIN = "netatmo"
 MANUFACTURER = "Netatmo"
 
+MODELS = {
+    "NAPlug": "Relay",
+    "NATherm1": "Smart Thermostat",
+    "NRV": "Smart Radiator Valves",
+    "NACamera": "Smart Indoor Camera",
+    "NOC": "Smart Outdoor Camera",
+    "NSD": "Smart Smoke Alarm",
+    "NACamDoorTag": "Smart Door and Window Sensors",
+    "NAMain": "Smart Home Weather station – indoor module",
+    "NAModule1": "Smart Home Weather station – outdoor module",
+    "NAModule4": "Smart Additional Indoor module",
+    "NAModule3": "Smart Rain Gauge",
+    "NAModule2": "Smart Anemometer",
+}
+
 AUTH = "netatmo_auth"
 CONF_PUBLIC = "public_sensor_config"
 CAMERA_DATA = "netatmo_camera"

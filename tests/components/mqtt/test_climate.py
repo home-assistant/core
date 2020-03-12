@@ -30,6 +30,7 @@ from .common import (
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_attr,
+    help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
     help_test_entity_device_info_with_identifier,
     help_test_entity_id_update,
@@ -58,6 +59,32 @@ DEFAULT_CONFIG = {
         "hold_command_topic": "hold-topic",
         "aux_command_topic": "aux-topic",
     }
+}
+
+DEFAULT_CONFIG_ATTR = {
+    CLIMATE_DOMAIN: {
+        "platform": "mqtt",
+        "name": "test",
+        "power_state_topic": "test-topic",
+        "power_command_topic": "test_topic",
+        "json_attributes_topic": "attr-topic",
+    }
+}
+
+DEFAULT_CONFIG_DEVICE_INFO = {
+    "platform": "mqtt",
+    "name": "Test 1",
+    "power_state_topic": "test-topic",
+    "power_command_topic": "test-command-topic",
+    "device": {
+        "identifiers": ["helloworld"],
+        "connections": [["mac", "02:5b:26:a8:dc:12"]],
+        "manufacturer": "Whatever",
+        "name": "Beer",
+        "model": "Glass",
+        "sw_version": "0.1-beta",
+    },
+    "unique_id": "veryunique",
 }
 
 
@@ -773,66 +800,34 @@ async def test_temp_step_custom(hass, mqtt_mock):
 
 async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
-    config = {
-        CLIMATE_DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "power_state_topic": "test-topic",
-            "power_command_topic": "test_topic",
-            "json_attributes_topic": "attr-topic",
-        }
-    }
     await help_test_setting_attribute_via_mqtt_json_message(
-        hass, mqtt_mock, CLIMATE_DOMAIN, config
+        hass, mqtt_mock, CLIMATE_DOMAIN, DEFAULT_CONFIG_ATTR
     )
 
 
 async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
     """Test attributes get extracted from a JSON result."""
-    config = {
-        CLIMATE_DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "power_state_topic": "test-topic",
-            "power_command_topic": "test_topic",
-            "json_attributes_topic": "attr-topic",
-        }
-    }
     await help_test_update_with_json_attrs_not_dict(
-        hass, mqtt_mock, caplog, CLIMATE_DOMAIN, config
+        hass, mqtt_mock, caplog, CLIMATE_DOMAIN, DEFAULT_CONFIG_ATTR
     )
 
 
 async def test_update_with_json_attrs_bad_JSON(hass, mqtt_mock, caplog):
     """Test attributes get extracted from a JSON result."""
-    config = {
-        CLIMATE_DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "power_state_topic": "test-topic",
-            "power_command_topic": "test_topic",
-            "json_attributes_topic": "attr-topic",
-        }
-    }
     await help_test_update_with_json_attrs_bad_JSON(
-        hass, mqtt_mock, caplog, CLIMATE_DOMAIN, config
+        hass, mqtt_mock, caplog, CLIMATE_DOMAIN, DEFAULT_CONFIG_ATTR
     )
 
 
 async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     """Test update of discovered MQTTAttributes."""
-    data1 = (
-        '{ "name": "Beer",'
-        '  "power_state_topic": "test-topic",'
-        '  "power_command_topic": "test_topic",'
-        '  "json_attributes_topic": "attr-topic1" }'
-    )
-    data2 = (
-        '{ "name": "Beer",'
-        '  "power_state_topic": "test-topic",'
-        '  "power_command_topic": "test_topic",'
-        '  "json_attributes_topic": "attr-topic2" }'
-    )
+    config1 = copy.deepcopy(DEFAULT_CONFIG[CLIMATE_DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[CLIMATE_DOMAIN])
+    config1["json_attributes_topic"] = "attr-topic1"
+    config2["json_attributes_topic"] = "attr-topic2"
+    data1 = json.dumps(config1)
+    data2 = json.dumps(config2)
+
     await help_test_discovery_update_attr(
         hass, mqtt_mock, caplog, CLIMATE_DOMAIN, data1, data2
     )
@@ -863,7 +858,7 @@ async def test_unique_id(hass):
 
 async def test_discovery_removal_climate(hass, mqtt_mock, caplog):
     """Test removal of discovered climate."""
-    data = '{ "name": "Beer" }'
+    data = json.dumps(DEFAULT_CONFIG[CLIMATE_DOMAIN])
     await help_test_discovery_removal(hass, mqtt_mock, caplog, CLIMATE_DOMAIN, data)
 
 
@@ -887,44 +882,29 @@ async def test_discovery_broken(hass, mqtt_mock, caplog):
 
 async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     """Test MQTT climate device registry integration."""
-    data = json.dumps(
-        {
-            "platform": "mqtt",
-            "name": "Test 1",
-            "device": {
-                "identifiers": ["helloworld"],
-                "connections": [["mac", "02:5b:26:a8:dc:12"]],
-                "manufacturer": "Whatever",
-                "name": "Beer",
-                "model": "Glass",
-                "sw_version": "0.1-beta",
-            },
-            "unique_id": "veryunique",
-        }
-    )
     await help_test_entity_device_info_with_identifier(
-        hass, mqtt_mock, CLIMATE_DOMAIN, data
+        hass, mqtt_mock, CLIMATE_DOMAIN, DEFAULT_CONFIG_DEVICE_INFO
     )
 
 
 async def test_entity_device_info_update(hass, mqtt_mock):
     """Test device registry update."""
+    await help_test_entity_device_info_update(
+        hass, mqtt_mock, CLIMATE_DOMAIN, DEFAULT_CONFIG_DEVICE_INFO
+    )
+
+
+async def test_entity_device_info_remove(hass, mqtt_mock):
+    """Test device registry remove."""
     config = {
         "platform": "mqtt",
         "name": "Test 1",
         "power_state_topic": "test-topic",
         "power_command_topic": "test-command-topic",
-        "device": {
-            "identifiers": ["helloworld"],
-            "connections": [["mac", "02:5b:26:a8:dc:12"]],
-            "manufacturer": "Whatever",
-            "name": "Beer",
-            "model": "Glass",
-            "sw_version": "0.1-beta",
-        },
+        "device": {"identifiers": ["helloworld"]},
         "unique_id": "veryunique",
     }
-    await help_test_entity_device_info_update(hass, mqtt_mock, CLIMATE_DOMAIN, config)
+    await help_test_entity_device_info_remove(hass, mqtt_mock, CLIMATE_DOMAIN, config)
 
 
 async def test_entity_id_update(hass, mqtt_mock):

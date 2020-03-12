@@ -1,13 +1,17 @@
 """Support for Homekit device discovery."""
 import logging
 import os
+from typing import Any, Dict
 
 import aiohomekit
 from aiohomekit.model import Accessory
-from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics import (
+    Characteristic,
+    CharacteristicPermissions,
+    CharacteristicsTypes,
+)
 from aiohomekit.model.services import Service, ServicesTypes
 
-from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
@@ -34,7 +38,6 @@ class HomeKitEntity(Entity):
         self._aid = devinfo["aid"]
         self._iid = devinfo["iid"]
         self._features = 0
-        self._chars = {}
         self.setup()
 
         self._signals = []
@@ -60,7 +63,7 @@ class HomeKitEntity(Entity):
         """Entity added to hass."""
         self._signals.append(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
-                self._accessory.signal_state_updated, self.async_state_changed
+                self._accessory.signal_state_updated, self.async_write_ha_state
             )
         )
 
@@ -76,6 +79,24 @@ class HomeKitEntity(Entity):
             signal_remove()
         self._signals.clear()
 
+    async def async_put_characteristics(self, characteristics: Dict[str, Any]):
+        """
+        Write characteristics to the device.
+
+        A characteristic type is unique within a service, but in order to write
+        to a named characteristic on a bridge we need to turn its type into
+        an aid and iid, and send it as a list of tuples, which is what this
+        helper does.
+
+        E.g. you can do:
+
+            await entity.async_put_characteristics({
+                CharacteristicsTypes.ON: True
+            })
+        """
+        payload = self.service.build_update(characteristics)
+        return await self._accessory.put_characteristics(payload)
+
     @property
     def should_poll(self) -> bool:
         """Return False.
@@ -86,93 +107,47 @@ class HomeKitEntity(Entity):
 
     def setup(self):
         """Configure an entity baed on its HomeKit characteristics metadata."""
-        get_uuid = CharacteristicsTypes.get_uuid
-        characteristic_types = [get_uuid(c) for c in self.get_characteristic_types()]
-
         self.pollable_characteristics = []
         self.watchable_characteristics = []
-        self._chars = {}
-        self._char_names = {}
+
+        char_types = self.get_characteristic_types()
 
         # Setup events and/or polling for characteristics directly attached to this entity
-        for char in self.service.characteristics:
-            if char.type not in characteristic_types:
-                continue
-            self._setup_characteristic(char.to_accessory_and_service_list())
+        for char in self.service.characteristics.filter(char_types=char_types):
+            self._setup_characteristic(char)
 
         # Setup events and/or polling for characteristics attached to sub-services of this
         # entity (like an INPUT_SOURCE).
         for service in self.accessory.services.filter(parent_service=self.service):
-            for char in service.characteristics:
-                if char.type not in characteristic_types:
-                    continue
-                self._setup_characteristic(char.to_accessory_and_service_list())
+            for char in service.characteristics.filter(char_types=char_types):
+                self._setup_characteristic(char)
 
-    def _setup_characteristic(self, char):
+    def _setup_characteristic(self, char: Characteristic):
         """Configure an entity based on a HomeKit characteristics metadata."""
         # Build up a list of (aid, iid) tuples to poll on update()
-        if "pr" in char["perms"]:
-            self.pollable_characteristics.append((self._aid, char["iid"]))
+        if CharacteristicPermissions.paired_read in char.perms:
+            self.pollable_characteristics.append((self._aid, char.iid))
 
         # Build up a list of (aid, iid) tuples to subscribe to
-        if "ev" in char["perms"]:
-            self.watchable_characteristics.append((self._aid, char["iid"]))
-
-        # Build a map of ctype -> iid
-        short_name = CharacteristicsTypes.get_short(char["type"])
-        self._chars[short_name] = char["iid"]
-        self._char_names[char["iid"]] = short_name
+        if CharacteristicPermissions.events in char.perms:
+            self.watchable_characteristics.append((self._aid, char.iid))
 
         # Callback to allow entity to configure itself based on this
         # characteristics metadata (valid values, value ranges, features, etc)
-        setup_fn_name = escape_characteristic_name(short_name)
+        setup_fn_name = escape_characteristic_name(char.type_name)
         setup_fn = getattr(self, f"_setup_{setup_fn_name}", None)
         if not setup_fn:
             return
-        setup_fn(char)
-
-    def get_hk_char_value(self, characteristic_type):
-        """Return the value for a given characteristic type enum."""
-        state = self._accessory.current_state.get(self._aid)
-        if not state:
-            return None
-        char = self._chars.get(CharacteristicsTypes.get_short(characteristic_type))
-        if not char:
-            return None
-        return state.get(char, {}).get("value")
-
-    @callback
-    def async_state_changed(self):
-        """Collect new data from bridge and update the entity state in hass."""
-        accessory_state = self._accessory.current_state.get(self._aid, {})
-        for iid, result in accessory_state.items():
-            # No value so don't process this result
-            if "value" not in result:
-                continue
-
-            # Unknown iid - this is probably for a sibling service that is part
-            # of the same physical accessory. Ignore it.
-            if iid not in self._char_names:
-                continue
-
-            # Callback to update the entity with this characteristic value
-            char_name = escape_characteristic_name(self._char_names[iid])
-            update_fn = getattr(self, f"_update_{char_name}", None)
-            if not update_fn:
-                continue
-
-            update_fn(result["value"])
-
-        self.async_write_ha_state()
+        setup_fn(char.to_accessory_and_service_list())
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the ID of this device."""
         serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
         return f"homekit-{serial}-{self._iid}"
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device if any."""
         return self.accessory_info.value(CharacteristicsTypes.NAME)
 
