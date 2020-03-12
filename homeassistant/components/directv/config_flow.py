@@ -29,8 +29,7 @@ def validate_input(data: Dict) -> Dict:
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    # directpy does IO in constructor.
-    dtv = DIRECTV(data["host"], DEFAULT_PORT)
+    dtv = DIRECTV(data["host"], DEFAULT_PORT, determine_state=False)
     version_info = dtv.get_version()
 
     return {
