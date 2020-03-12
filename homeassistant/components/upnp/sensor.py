@@ -1,7 +1,6 @@
 """Support for UPnP/IGD Sensors."""
-import logging
-
 from datetime import timedelta
+import logging
 
 from homeassistant.const import DATA_BYTES, DATA_KIBIBYTES, TIME_SECONDS
 from homeassistant.core import callback
