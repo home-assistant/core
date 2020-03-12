@@ -97,6 +97,8 @@ class StibMivbSensor(Entity):
         self._unit = TIME_MINUTES
         self.__icon = None
         self._attributes["stop_id"] = self.stop_id
+        self._name = None
+        self.direction = None
 
     @Throttle(datetime.timedelta(seconds=30))
     async def async_update(self):
