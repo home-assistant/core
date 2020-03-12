@@ -47,6 +47,7 @@ class DataUpdateCoordinator:
         self._unsub_refresh: Optional[CALLBACK_TYPE] = None
         self._request_refresh_task: Optional[asyncio.TimerHandle] = None
         self.last_update_success = True
+        self.last_update_tic = monotonic()
 
         if request_refresh_debouncer is None:
             request_refresh_debouncer = Debouncer(
@@ -123,17 +124,17 @@ class DataUpdateCoordinator:
             self.data = await self._async_update_data()
 
         except asyncio.TimeoutError:
-            if self.last_update_success:
+            if self.last_update_success and self.last_update_tic < start:
                 self.logger.error("Timeout fetching %s data", self.name)
                 self.last_update_success = False
 
         except aiohttp.ClientError as err:
-            if self.last_update_success:
+            if self.last_update_success and self.last_update_tic < start:
                 self.logger.error("Error requesting %s data: %s", self.name, err)
                 self.last_update_success = False
 
         except UpdateFailed as err:
-            if self.last_update_success:
+            if self.last_update_success and self.last_update_tic < start:
                 self.logger.error("Error fetching %s data: %s", self.name, err)
                 self.last_update_success = False
 
@@ -147,6 +148,7 @@ class DataUpdateCoordinator:
             )
 
         else:
+            self.last_update_tic = monotonic()
             if not self.last_update_success:
                 self.last_update_success = True
                 self.logger.info("Fetching %s data recovered", self.name)
