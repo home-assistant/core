@@ -106,6 +106,7 @@ class MockDirectvClass(DIRECTV):
         )
 
         self._play = False
+        self._standby = False
 
         if self.clientAddr == CLIENT_ADDRESS:
             self.attributes = RECORDING
