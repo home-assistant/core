@@ -1,9 +1,8 @@
 """Support for the Broadlink RM2 Pro (only temperature) and A1 devices."""
-import binascii
 from datetime import timedelta
 import logging
 
-import broadlink
+import broadlink as blk
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -22,11 +21,13 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
+from . import hostname, mac_address
+from .const import DEFAULT_PORT, DEFAULT_TIMEOUT
+
 _LOGGER = logging.getLogger(__name__)
 
 DEVICE_DEFAULT_NAME = "Broadlink sensor"
-DEFAULT_TIMEOUT = 10
-DEFAULT_TYPE = 0x272A
+DEFAULT_TYPE = 0x2714
 SCAN_INTERVAL = timedelta(seconds=300)
 
 SENSOR_TYPES = {
@@ -43,8 +44,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
             cv.ensure_list, [vol.In(SENSOR_TYPES)]
         ),
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_MAC): cv.string,
+        vol.Required(CONF_HOST): hostname,
+        vol.Required(CONF_MAC): mac_address,
         vol.Optional(CONF_TYPE, default=DEFAULT_TYPE): cv.positive_int,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }
@@ -54,8 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Broadlink device sensors."""
     host = config.get(CONF_HOST)
-    mac = config.get(CONF_MAC).encode().replace(b":", b"")
-    mac_addr = binascii.unhexlify(mac)
+    mac_addr = config.get(CONF_MAC)
     name = config.get(CONF_NAME)
     dev_type = config.get(CONF_TYPE)
     timeout = config.get(CONF_TIMEOUT)
@@ -113,10 +113,10 @@ class BroadlinkSensor(Entity):
 class BroadlinkData:
     """Representation of a Broadlink data object."""
 
-    def __init__(self, interval, ip_addr, mac_addr, dev_type, timeout):
+    def __init__(self, interval, host, mac_addr, dev_type, timeout):
         """Initialize the data object."""
         self.data = None
-        self.ip_addr = ip_addr
+        self.host = host
         self.mac_addr = mac_addr
         self.dev_type = dev_type
         self.timeout = timeout
@@ -135,8 +135,9 @@ class BroadlinkData:
             _LOGGER.warning("Failed to connect to device")
 
     def _connect(self):
-
-        self._device = broadlink.a1((self.ip_addr, 80), self.mac_addr, self.dev_type)
+        self._device = blk.gendevice(
+            self.dev_type, (self.host, DEFAULT_PORT), self.mac_addr
+        )
         self._device.timeout = self.timeout
 
     def _update(self, retry=3):

@@ -9,7 +9,7 @@ from itertools import product
 import logging
 import socket
 
-import broadlink
+import broadlink as blk
 import voluptuous as vol
 
 from homeassistant.components.remote import (
@@ -33,14 +33,12 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util.dt import utcnow
 
 from . import DOMAIN, data_packet, hostname, mac_address
+from .const import DEFAULT_PORT, DEFAULT_RETRY, DEFAULT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_LEARNING_TIMEOUT = 20
 DEFAULT_NAME = "Broadlink"
-DEFAULT_PORT = 80
-DEFAULT_RETRY = 3
-DEFAULT_TIMEOUT = 5
 DEFAULT_TYPE = 0x272A
 
 SCAN_INTERVAL = timedelta(minutes=2)
@@ -95,7 +93,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return
     hass.data[DOMAIN][COMPONENT].append(unique_id)
 
-    api = broadlink.rm((host, DEFAULT_PORT), mac_addr, dev_type)
+    api = await hass.async_add_executor_job(
+        blk.gendevice, dev_type, (host, DEFAULT_PORT), mac_addr
+    )
     api.timeout = timeout
     code_storage = Store(hass, CODE_STORAGE_VERSION, f"broadlink_{unique_id}_codes")
     flag_storage = Store(hass, FLAG_STORAGE_VERSION, f"broadlink_{unique_id}_flags")

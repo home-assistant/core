@@ -1,10 +1,9 @@
 """Support for Broadlink RM devices."""
-import binascii
 from datetime import timedelta
 import logging
 import socket
 
-import broadlink
+import broadlink as blk
 import voluptuous as vol
 
 from homeassistant.components.switch import DOMAIN, PLATFORM_SCHEMA, SwitchDevice
@@ -23,15 +22,14 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import Throttle, slugify
 
-from . import async_setup_service, data_packet
+from . import async_setup_service, data_packet, hostname, mac_address
+from .const import DEFAULT_PORT, DEFAULT_RETRY, DEFAULT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
 TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 DEFAULT_NAME = "Broadlink switch"
-DEFAULT_TIMEOUT = 10
-DEFAULT_RETRY = 2
 CONF_SLOTS = "slots"
 CONF_RETRY = "retry"
 
@@ -78,8 +76,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             SWITCH_SCHEMA
         ),
         vol.Optional(CONF_SLOTS, default={}): MP1_SWITCH_SLOT_SCHEMA,
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_MAC): cv.string,
+        vol.Required(CONF_HOST): hostname,
+        vol.Required(CONF_MAC): mac_address,
         vol.Optional(CONF_FRIENDLY_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_TYPE, default=SWITCH_TYPES[0]): vol.In(SWITCH_TYPES),
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
@@ -93,9 +91,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     devices = config.get(CONF_SWITCHES)
     slots = config.get("slots", {})
-    ip_addr = config.get(CONF_HOST)
+    host = config.get(CONF_HOST)
+    mac_addr = config.get(CONF_MAC)
     friendly_name = config.get(CONF_FRIENDLY_NAME)
-    mac_addr = binascii.unhexlify(config.get(CONF_MAC).encode().replace(b":", b""))
     switch_type = config.get(CONF_TYPE)
     retry_times = config.get(CONF_RETRY)
     dev_type = 0x5F36 if switch_type in ["rm_mini3_5f36", "rm4"] else 0x272A
@@ -107,8 +105,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return slots[f"slot_{slot}"]
 
     if switch_type in RM_TYPES:
-        broadlink_device = broadlink.rm((ip_addr, 80), mac_addr, dev_type)
-        hass.add_job(async_setup_service, hass, ip_addr, broadlink_device)
+        broadlink_device = blk.gendevice(dev_type, (host, DEFAULT_PORT), mac_addr)
+        hass.add_job(async_setup_service, hass, host, broadlink_device)
 
         switches = []
         for object_id, device_config in devices.items():
@@ -123,14 +121,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 )
             )
     elif switch_type in SP1_TYPES:
-        broadlink_device = broadlink.sp1((ip_addr, 80), mac_addr, dev_type)
+        broadlink_device = blk.sp1((host, DEFAULT_PORT), mac_addr, dev_type)
         switches = [BroadlinkSP1Switch(friendly_name, broadlink_device, retry_times)]
     elif switch_type in SP2_TYPES:
-        broadlink_device = broadlink.sp2((ip_addr, 80), mac_addr, dev_type)
+        broadlink_device = blk.sp2((host, DEFAULT_PORT), mac_addr, dev_type)
         switches = [BroadlinkSP2Switch(friendly_name, broadlink_device, retry_times)]
     elif switch_type in MP1_TYPES:
         switches = []
-        broadlink_device = broadlink.mp1((ip_addr, 80), mac_addr, dev_type)
+        broadlink_device = blk.mp1((host, DEFAULT_PORT), mac_addr, dev_type)
         parent_device = BroadlinkMP1Switch(broadlink_device, retry_times)
         for i in range(1, 5):
             slot = BroadlinkMP1Slot(
