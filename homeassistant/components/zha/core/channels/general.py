@@ -168,7 +168,7 @@ class Identify(ZigbeeChannel):
 
 @registries.CLIENT_CHANNELS_REGISTRY.register(general.LevelControl.cluster_id)
 class LevelControlClientChannel(ClientChannel):
-    """Event Relay channel for LevelControl cluster."""
+    """LevelControl client cluster."""
 
     pass
 
