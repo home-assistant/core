@@ -54,9 +54,7 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.directv import (
-    CLIENT_ADDRESS,
     DOMAIN,
-    HOST,
     MOCK_GET_LOCATIONS_MULTIPLE,
     RECORDING,
     MockDirectvClass,
