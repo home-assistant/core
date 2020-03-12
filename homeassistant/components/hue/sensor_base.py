@@ -62,9 +62,9 @@ class SensorManager:
         except AiohueException as err:
             raise UpdateFailed(f"Hue error: {err}")
 
-    async def async_register_component(self, binary, async_add_entities):
+    async def async_register_component(self, platform, async_add_entities):
         """Register async_add_entities methods for components."""
-        self._component_add_entities[binary] = async_add_entities
+        self._component_add_entities[platform] = async_add_entities
 
         if len(self._component_add_entities) < 2:
             return
@@ -129,9 +129,9 @@ class SensorManager:
             current[api[item_id].uniqueid] = sensor_config["class"](
                 api[item_id], name, self.bridge, primary_sensor=primary_sensor
             )
-            if sensor_config["binary"]:
+            if sensor_config["platform"] == "binary_sensor":
                 new_binary_sensors.append(current[api[item_id].uniqueid])
-            else:
+            elif sensor_config["platform"] == "sensor":
                 new_sensors.append(current[api[item_id].uniqueid])
 
         self.bridge.hass.async_create_task(
@@ -141,9 +141,9 @@ class SensorManager:
         )
 
         if new_sensors:
-            self._component_add_entities[False](new_sensors)
+            self._component_add_entities["sensor"](new_sensors)
         if new_binary_sensors:
-            self._component_add_entities[True](new_binary_sensors)
+            self._component_add_entities["binary_sensor"](new_binary_sensors)
 
 
 class GenericHueSensor(entity.Entity):
