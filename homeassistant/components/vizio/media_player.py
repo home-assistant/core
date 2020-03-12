@@ -190,6 +190,7 @@ class VizioDevice(MediaPlayerDevice):
             self._is_muted = None
             self._current_input = None
             self._available_inputs = None
+            self._current_app = None
             self._available_apps = None
             return
 
