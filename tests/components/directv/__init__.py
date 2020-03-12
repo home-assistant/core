@@ -106,12 +106,12 @@ class MockDirectvClass(DIRECTV):
         )
 
         self._play = False
-        self._standby = False
+        self._standby = True
 
         if self.clientAddr == CLIENT_ADDRESS:
             self.attributes = RECORDING
-        else:
             self._standby = True
+        else:
             self.attributes = LIVE
 
     def get_locations(self):
