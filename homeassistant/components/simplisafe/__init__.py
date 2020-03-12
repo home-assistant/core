@@ -68,7 +68,6 @@ TOPIC_UPDATE = "simplisafe_update_data_{0}"
 EVENT_SIMPLISAFE_EVENT = "SIMPLISAFE_EVENT"
 EVENT_SIMPLISAFE_NOTIFICATION = "SIMPLISAFE_NOTIFICATION"
 
-DEFAULT_OPTIONS = {CONF_CODE: None}
 DEFAULT_SOCKET_MIN_RETRY = 15
 
 WEBSOCKET_EVENTS_REQUIRING_SERIAL = [EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED]
@@ -206,16 +205,15 @@ async def async_setup_entry(hass, config_entry):
     if not config_entry.unique_id:
         # If the config entry doesn't already have a unique ID, set one:
         entry_updates["unique_id"] = config_entry.data[CONF_USERNAME]
-    if not config_entry.options:
-        # If the config entry's options dict doesn't exist, initialize it:
-        entry_updates["options"] = DEFAULT_OPTIONS
     if CONF_CODE in config_entry.data:
         # If an alarm code was provided as part of configuration.yaml, pop it out of
         # the config entry's data and move it to options:
         data = {**config_entry.data}
-        code = data.pop(CONF_CODE)
         entry_updates["data"] = data
-        entry_updates["options"][CONF_CODE] = code
+        entry_updates["options"] = {
+            **config_entry.options,
+            CONF_CODE: data.pop(CONF_CODE),
+        }
     if entry_updates:
         hass.config_entries.async_update_entry(config_entry, **entry_updates)
 
