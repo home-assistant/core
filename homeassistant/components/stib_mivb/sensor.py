@@ -99,6 +99,7 @@ class StibMivbSensor(Entity):
         self._attributes["stop_id"] = self.stop_id
         self._name = DEFAULT_NAME
         self.direction = None
+        self._available = False
 
     @Throttle(datetime.timedelta(seconds=30))
     async def async_update(self):
@@ -153,84 +154,100 @@ class StibMivbSensor(Entity):
             )
         next_passages = []
         now = pytz.utc.normalize(pytz.utc.localize(datetime.datetime.utcnow()))
-        for passing_time in waiting_time_response["points"][0]["passingTimes"]:
-            for line_id in self.line_ids:
-                if passing_time["lineId"] == line_id:
-                    next_passage = {}
-                    try:
-                        next_passage["next_passing_time"] = passing_time[
-                            "expectedArrivalTime"
-                        ]
-                        next_passage["next_passing_destination"] = passing_time[
-                            "destination"
-                        ][self.lang]
-                        tmp = pytz.utc.normalize(
-                            datetime.datetime.fromisoformat(
-                                next_passage["next_passing_time"]
-                            )
-                        )
-                        next_passage["waiting_time"] = round(
-                            (tmp - now).total_seconds() / 60
-                        )
-
-                    except KeyError:
-                        _LOGGER.debug(
-                            "No arrivaltime for line %s, might be end of service",
-                            line_id,
-                        )
+        try:
+            for passing_time in waiting_time_response["points"][0]["passingTimes"]:
+                for line_id in self.line_ids:
+                    if passing_time["lineId"] == line_id:
+                        next_passage = {}
                         try:
-                            next_passage["next_passing_message"] = passing_time[
-                                "message"
+                            next_passage["next_passing_time"] = passing_time[
+                                "expectedArrivalTime"
+                            ]
+                            next_passage["next_passing_destination"] = passing_time[
+                                "destination"
                             ][self.lang]
-                        except KeyError:
-                            _LOGGER.error(
-                                "No arrivaltime and no message for line %s", line_id
+                            tmp = pytz.utc.normalize(
+                                datetime.datetime.fromisoformat(
+                                    next_passage["next_passing_time"]
+                                )
                             )
-                    line_name = await self.api.get_line_long_name(line_id)
-                    if self.lang == "nl":
-                        try:
-                            line_name = await self.api.get_translation_nl(line_name)
+                            next_passage["waiting_time"] = round(
+                                (tmp - now).total_seconds() / 60
+                            )
+
                         except KeyError:
-                            _LOGGER.warning("No translation found for %s", line_name)
+                            _LOGGER.debug(
+                                "No arrivaltime for line %s, might be end of service",
+                                line_id,
+                            )
+                            try:
+                                next_passage["next_passing_message"] = passing_time[
+                                    "message"
+                                ][self.lang]
+                            except KeyError:
+                                _LOGGER.error(
+                                    "No arrivaltime and no message for line %s", line_id
+                                )
+                        line_name = await self.api.get_line_long_name(line_id)
+                        if self.lang == "nl":
+                            try:
+                                line_name = await self.api.get_translation_nl(line_name)
+                            except KeyError:
+                                _LOGGER.warning(
+                                    "No translation found for %s", line_name
+                                )
 
-                    next_passage["line_number"] = line_id
-                    next_passage["line_name"] = line_name
+                        next_passage["line_number"] = line_id
+                        next_passage["line_name"] = line_name
 
-                    messages = []
-                    for message in messages_response["messages"]:
-                        for line in message["lines"]:
-                            if line["id"] == line_id:
-                                for stop in message["points"]:
-                                    if stop["id"] == self.stop_id:
-                                        messages.append(
-                                            message["content"][0]["text"][0][
-                                                self.message_lang
-                                            ]
-                                        )
-                    line_type = await self.api.get_line_type(line_id)
-                    next_passage["messages"] = messages
-                    next_passage["line_type"] = TYPES[line_type]
-                    next_passage["line_color"] = await self.api.get_line_color(line_id)
-                    next_passage[
-                        "line_text_color"
-                    ] = await self.api.get_line_text_color(line_id)
+                        messages = []
+                        for message in messages_response["messages"]:
+                            for line in message["lines"]:
+                                if line["id"] == line_id:
+                                    for stop in message["points"]:
+                                        if stop["id"] == self.stop_id:
+                                            messages.append(
+                                                message["content"][0]["text"][0][
+                                                    self.message_lang
+                                                ]
+                                            )
+                        line_type = await self.api.get_line_type(line_id)
+                        next_passage["messages"] = messages
+                        next_passage["line_type"] = TYPES[line_type]
+                        next_passage["line_color"] = await self.api.get_line_color(
+                            line_id
+                        )
+                        next_passage[
+                            "line_text_color"
+                        ] = await self.api.get_line_text_color(line_id)
 
-                    next_passages.append(next_passage)
-        self._next_passages = sorted(
-            next_passages, key=lambda i: i.get("waiting_time", math.inf)
-        )
-        self._attributes["line_name"] = self._next_passages[0]["line_name"]
-        self._attributes["line_type"] = self._next_passages[0]["line_type"]
-        self._attributes["line_color"] = self._next_passages[0]["line_color"]
-        self._attributes["line_text_color"] = self._next_passages[0]["line_text_color"]
-        self._attributes["messages"] = self._next_passages[0]["messages"]
-        self._attributes["next_passages"] = self._next_passages
-        if self._next_passages[0].get("next_passing_time"):
-            self._state = self._next_passages[0]["next_passing_time"]
-            self.__icon = f"mdi:{next_passages[0]['line_type']}"
-        else:
-            self._state = self._next_passages[0].get("next_passing_message")
-            self.__icon = "mdi:bus-alert"
+                        next_passages.append(next_passage)
+                        self._available = True
+            self._next_passages = sorted(
+                next_passages, key=lambda i: i.get("waiting_time", math.inf)
+            )
+            self._attributes["line_name"] = self._next_passages[0]["line_name"]
+            self._attributes["line_type"] = self._next_passages[0]["line_type"]
+            self._attributes["line_color"] = self._next_passages[0]["line_color"]
+            self._attributes["line_text_color"] = self._next_passages[0][
+                "line_text_color"
+            ]
+            self._attributes["messages"] = self._next_passages[0]["messages"]
+            self._attributes["next_passages"] = self._next_passages
+            if self._next_passages[0].get("next_passing_time"):
+                self._state = self._next_passages[0]["next_passing_time"]
+                self.__icon = f"mdi:{next_passages[0]['line_type']}"
+            else:
+                self._state = self._next_passages[0].get("next_passing_message")
+                self.__icon = "mdi:bus-alert"
+        except IndexError:
+            self._available = False
+            _LOGGER.warning("Empty data received from stib-mivb")
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
 
     @property
     def device_class(self):
