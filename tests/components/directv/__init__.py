@@ -107,7 +107,7 @@ class MockDirectvClass(DIRECTV):
             clientAddr=clientAddr,
             determine_state=determine_state,
         )
-        
+
         self._play = False
 
         if self.clientAddr == CLIENT_ADDRESS:
