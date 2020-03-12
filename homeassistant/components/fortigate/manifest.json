@@ -1,12 +1,8 @@
 {
-    "domain": "fortigate",
-    "name": "Fortigate",
-    "documentation": "https://www.home-assistant.io/components/fortigate",
-    "dependencies": [],
-    "codeowners": [
-        "@kifeo"
-    ],
-    "requirements": [
-        "pyfgt==0.5.1"
-    ]
+  "domain": "fortigate",
+  "name": "FortiGate",
+  "documentation": "https://www.home-assistant.io/integrations/fortigate",
+  "dependencies": [],
+  "codeowners": ["@kifeo"],
+  "requirements": ["pyfgt==0.5.1"]
 }

@@ -1,13 +1,14 @@
 """Support for MySensors switches."""
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components import mysensors
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+import homeassistant.helpers.config_validation as cv
+
+from .const import DOMAIN as MYSENSORS_DOMAIN, SERVICE_SEND_IR_CODE
 
 ATTR_IR_CODE = "V_IR_SEND"
-SERVICE_SEND_IR_CODE = "mysensors_send_ir_code"
 
 SEND_IR_CODE_SERVICE_SCHEMA = vol.Schema(
     {vol.Optional(ATTR_ENTITY_ID): cv.entity_ids, vol.Required(ATTR_IR_CODE): cv.string}
@@ -64,7 +65,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             await device.async_turn_on(**kwargs)
 
     hass.services.async_register(
-        DOMAIN,
+        MYSENSORS_DOMAIN,
         SERVICE_SEND_IR_CODE,
         async_send_ir_code_service,
         schema=SEND_IR_CODE_SERVICE_SCHEMA,
@@ -92,7 +93,9 @@ class MySensorsSwitch(mysensors.device.MySensorsEntity, SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
-        self.gateway.set_child_value(self.node_id, self.child_id, self.value_type, 1)
+        self.gateway.set_child_value(
+            self.node_id, self.child_id, self.value_type, 1, ack=1
+        )
         if self.gateway.optimistic:
             # Optimistically assume that switch has changed state
             self._values[self.value_type] = STATE_ON
@@ -100,7 +103,9 @@ class MySensorsSwitch(mysensors.device.MySensorsEntity, SwitchDevice):
 
     async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
-        self.gateway.set_child_value(self.node_id, self.child_id, self.value_type, 0)
+        self.gateway.set_child_value(
+            self.node_id, self.child_id, self.value_type, 0, ack=1
+        )
         if self.gateway.optimistic:
             # Optimistically assume that switch has changed state
             self._values[self.value_type] = STATE_OFF
@@ -129,7 +134,9 @@ class MySensorsIRSwitch(MySensorsSwitch):
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, self._ir_code
         )
-        self.gateway.set_child_value(self.node_id, self.child_id, set_req.V_LIGHT, 1)
+        self.gateway.set_child_value(
+            self.node_id, self.child_id, set_req.V_LIGHT, 1, ack=1
+        )
         if self.gateway.optimistic:
             # Optimistically assume that switch has changed state
             self._values[self.value_type] = self._ir_code
@@ -141,7 +148,9 @@ class MySensorsIRSwitch(MySensorsSwitch):
     async def async_turn_off(self, **kwargs):
         """Turn the IR switch off."""
         set_req = self.gateway.const.SetReq
-        self.gateway.set_child_value(self.node_id, self.child_id, set_req.V_LIGHT, 0)
+        self.gateway.set_child_value(
+            self.node_id, self.child_id, set_req.V_LIGHT, 0, ack=1
+        )
         if self.gateway.optimistic:
             # Optimistically assume that switch has changed state
             self._values[set_req.V_LIGHT] = STATE_OFF

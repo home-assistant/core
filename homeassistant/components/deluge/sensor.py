@@ -1,21 +1,23 @@
 """Support for monitoring the Deluge BitTorrent client API."""
 import logging
 
+from deluge_client import DelugeRPCClient, FailedToReconnectException
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    CONF_NAME,
-    CONF_PORT,
     CONF_MONITORED_VARIABLES,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    DATA_RATE_KILOBYTES_PER_SECOND,
     STATE_IDLE,
 )
-from homeassistant.helpers.entity import Entity
 from homeassistant.exceptions import PlatformNotReady
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 _THROTTLED_REFRESH = None
@@ -26,8 +28,8 @@ DHT_UPLOAD = 1000
 DHT_DOWNLOAD = 1000
 SENSOR_TYPES = {
     "current_status": ["Status", None],
-    "download_speed": ["Down Speed", "kB/s"],
-    "upload_speed": ["Up Speed", "kB/s"],
+    "download_speed": ["Down Speed", DATA_RATE_KILOBYTES_PER_SECOND],
+    "upload_speed": ["Up Speed", DATA_RATE_KILOBYTES_PER_SECOND],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -46,7 +48,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Deluge sensors."""
-    from deluge_client import DelugeRPCClient
 
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -84,7 +85,7 @@ class DelugeSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self.client_name, self._name)
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):
@@ -103,7 +104,6 @@ class DelugeSensor(Entity):
 
     def update(self):
         """Get the latest data from Deluge and updates the state."""
-        from deluge_client import FailedToReconnectException
 
         try:
             self.data = self.client.call(

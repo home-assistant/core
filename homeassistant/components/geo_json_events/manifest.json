@@ -1,10 +1,8 @@
 {
   "domain": "geo_json_events",
-  "name": "Geo json events",
-  "documentation": "https://www.home-assistant.io/components/geo_json_events",
-  "requirements": [
-    "geojson_client==0.4"
-  ],
+  "name": "GeoJSON",
+  "documentation": "https://www.home-assistant.io/integrations/geo_json_events",
+  "requirements": ["geojson_client==0.4"],
   "dependencies": [],
   "codeowners": []
 }

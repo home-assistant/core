@@ -1,7 +1,7 @@
 {
   "domain": "rtorrent",
-  "name": "Rtorrent",
-  "documentation": "https://www.home-assistant.io/components/rtorrent",
+  "name": "rTorrent",
+  "documentation": "https://www.home-assistant.io/integrations/rtorrent",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

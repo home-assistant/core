@@ -5,22 +5,23 @@ from itertools import groupby
 import logging
 import time
 
+from sqlalchemy import and_, func
 import voluptuous as vol
 
+from homeassistant.components import recorder
+from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.recorder.models import States
+from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.const import (
-    HTTP_BAD_REQUEST,
+    ATTR_HIDDEN,
     CONF_DOMAINS,
     CONF_ENTITIES,
     CONF_EXCLUDE,
     CONF_INCLUDE,
+    HTTP_BAD_REQUEST,
 )
-import homeassistant.util.dt as dt_util
-from homeassistant.components import recorder, script
-from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import ATTR_HIDDEN
-from homeassistant.components.recorder.util import session_scope, execute
 import homeassistant.helpers.config_validation as cv
-
+import homeassistant.util.dt as dt_util
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -58,7 +59,6 @@ def get_significant_states(
     thermostat so that we get current temperature in our graphs).
     """
     timer_start = time.perf_counter()
-    from homeassistant.components.recorder.models import States
 
     with session_scope(hass=hass) as session:
         query = session.query(States).filter(
@@ -94,7 +94,6 @@ def get_significant_states(
 
 def state_changes_during_period(hass, start_time, end_time=None, entity_id=None):
     """Return states changes during UTC period start_time - end_time."""
-    from homeassistant.components.recorder.models import States
 
     with session_scope(hass=hass) as session:
         query = session.query(States).filter(
@@ -117,7 +116,6 @@ def state_changes_during_period(hass, start_time, end_time=None, entity_id=None)
 
 def get_last_state_changes(hass, number_of_states, entity_id):
     """Return the last number_of_states."""
-    from homeassistant.components.recorder.models import States
 
     start_time = dt_util.utcnow()
 
@@ -142,7 +140,6 @@ def get_last_state_changes(hass, number_of_states, entity_id):
 
 def get_states(hass, utc_point_in_time, entity_ids=None, run=None, filters=None):
     """Return the states at a specific point in time."""
-    from homeassistant.components.recorder.models import States
 
     if run is None:
         run = recorder.run_information(hass, utc_point_in_time)
@@ -151,22 +148,21 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None, filters=None)
         if run is None:
             return []
 
-    from sqlalchemy import and_, func
-
     with session_scope(hass=hass) as session:
+        query = session.query(States)
+
         if entity_ids and len(entity_ids) == 1:
             # Use an entirely different (and extremely fast) query if we only
             # have a single entity id
-            most_recent_state_ids = (
-                session.query(States.state_id.label("max_state_id"))
-                .filter(
-                    (States.last_updated < utc_point_in_time)
-                    & (States.entity_id.in_(entity_ids))
+            query = (
+                query.filter(
+                    States.last_updated >= run.start,
+                    States.last_updated < utc_point_in_time,
+                    States.entity_id.in_(entity_ids),
                 )
                 .order_by(States.last_updated.desc())
+                .limit(1)
             )
-
-            most_recent_state_ids = most_recent_state_ids.limit(1)
 
         else:
             # We have more than one entity to look at (most commonly we want
@@ -203,19 +199,15 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None, filters=None)
 
             most_recent_state_ids = most_recent_state_ids.group_by(States.entity_id)
 
-        most_recent_state_ids = most_recent_state_ids.subquery()
+            most_recent_state_ids = most_recent_state_ids.subquery()
 
-        query = (
-            session.query(States)
-            .join(
+            query = query.join(
                 most_recent_state_ids,
                 States.state_id == most_recent_state_ids.c.max_state_id,
-            )
-            .filter((~States.domain.in_(IGNORE_DOMAINS)))
-        )
+            ).filter(~States.domain.in_(IGNORE_DOMAINS))
 
-        if filters:
-            query = filters.apply(query, entity_ids)
+            if filters:
+                query = filters.apply(query, entity_ids)
 
         return [
             state
@@ -389,7 +381,6 @@ class Filters:
         * if include and exclude is defined - select the entities specified in
           the include and filter out the ones from the exclude list.
         """
-        from homeassistant.components.recorder.models import States
 
         # specific entities requested - do not in/exclude anything
         if entity_ids is not None:
@@ -439,4 +430,4 @@ def _is_significant(state):
     Will only test for things that are not filtered out in SQL.
     """
     # scripts that are not cancellable will never change state
-    return state.domain != "script" or state.attributes.get(script.ATTR_CAN_CANCEL)
+    return state.domain != "script" or state.attributes.get("can_cancel")

@@ -4,7 +4,7 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
@@ -14,11 +14,11 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SEEK,
+    SUPPORT_SHUFFLE_SET,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
-    SUPPORT_SHUFFLE_SET,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -84,13 +84,13 @@ class Itunes:
             uri_scheme = "http://"
 
         if self.port:
-            return "{}{}:{}".format(uri_scheme, self.host, self.port)
+            return f"{uri_scheme}{self.host}:{self.port}"
 
-        return "{}{}".format(uri_scheme, self.host)
+        return f"{uri_scheme}{self.host}"
 
     def _request(self, method, path, params=None):
         """Make the actual request and return the parsed response."""
-        url = "{}{}".format(self._base_url, path)
+        url = f"{self._base_url}{path}"
 
         try:
             if method == "GET":
@@ -110,7 +110,7 @@ class Itunes:
 
     def _command(self, named_command):
         """Make a request for a controlling command."""
-        return self._request("PUT", "/" + named_command)
+        return self._request("PUT", f"/{named_command}")
 
     def now_playing(self):
         """Return the current state."""
@@ -168,7 +168,7 @@ class Itunes:
 
     def artwork_url(self):
         """Return a URL of the current track's album art."""
-        return self._base_url + "/artwork"
+        return f"{self._base_url}/artwork"
 
     def airplay_devices(self):
         """Return a list of AirPlay devices."""
@@ -176,17 +176,17 @@ class Itunes:
 
     def airplay_device(self, device_id):
         """Return an AirPlay device."""
-        return self._request("GET", "/airplay_devices/" + device_id)
+        return self._request("GET", f"/airplay_devices/{device_id}")
 
     def toggle_airplay_device(self, device_id, toggle):
         """Toggle airplay device on or off, id, toggle True or False."""
         command = "on" if toggle else "off"
-        path = "/airplay_devices/" + device_id + "/" + command
+        path = f"/airplay_devices/{device_id}/{command}"
         return self._request("PUT", path)
 
     def set_volume_airplay_device(self, device_id, level):
         """Set volume, returns current state of device, id,level 0-100."""
-        path = "/airplay_devices/" + device_id + "/volume"
+        path = f"/airplay_devices/{device_id}/volume"
         return self._request("PUT", path, {"level": level})
 
 
@@ -431,7 +431,7 @@ class AirPlayDevice(MediaPlayerDevice):
 
         if "name" in state_hash:
             name = state_hash.get("name", "")
-            self.device_name = (name + " AirTunes Speaker").strip()
+            self.device_name = f"{name} AirTunes Speaker".strip()
 
         if "kind" in state_hash:
             self.kind = state_hash.get("kind", None)

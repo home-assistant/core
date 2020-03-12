@@ -17,7 +17,6 @@ from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import Context, is_callback
 from homeassistant.helpers.json import JSONEncoder
 
-from .ban import process_success_login
 from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_REAL_IP
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,8 +34,8 @@ class HomeAssistantView:
     requires_auth = True
     cors_allowed = False
 
-    # pylint: disable=no-self-use
-    def context(self, request):
+    @staticmethod
+    def context(request):
         """Generate a context from a request."""
         user = request.get("hass_user")
         if user is None:
@@ -44,7 +43,8 @@ class HomeAssistantView:
 
         return Context(user_id=user.id)
 
-    def json(self, result, status_code=200, headers=None):
+    @staticmethod
+    def json(result, status_code=200, headers=None):
         """Return a JSON response."""
         try:
             msg = json.dumps(
@@ -106,13 +106,8 @@ def request_handler_factory(view, handler):
 
         authenticated = request.get(KEY_AUTHENTICATED, False)
 
-        if view.requires_auth:
-            if authenticated:
-                if "deprecate_warning_message" in request:
-                    _LOGGER.warning(request["deprecate_warning_message"])
-                await process_success_login(request)
-            else:
-                raise HTTPUnauthorized()
+        if view.requires_auth and not authenticated:
+            raise HTTPUnauthorized()
 
         _LOGGER.debug(
             "Serving %s to %s (auth: %s)",
@@ -147,9 +142,9 @@ def request_handler_factory(view, handler):
         elif result is None:
             result = b""
         elif not isinstance(result, bytes):
-            assert False, (
-                "Result should be None, string, bytes or Response. " "Got: {}"
-            ).format(result)
+            assert (
+                False
+            ), f"Result should be None, string, bytes or Response. Got: {result}"
 
         return web.Response(body=result, status=status_code)
 

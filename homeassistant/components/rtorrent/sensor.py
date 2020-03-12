@@ -6,14 +6,15 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_URL,
-    CONF_NAME,
     CONF_MONITORED_VARIABLES,
+    CONF_NAME,
+    CONF_URL,
+    DATA_RATE_KILOBYTES_PER_SECOND,
     STATE_IDLE,
 )
-from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,8 +25,8 @@ SENSOR_TYPE_UPLOAD_SPEED = "upload_speed"
 DEFAULT_NAME = "rtorrent"
 SENSOR_TYPES = {
     SENSOR_TYPE_CURRENT_STATUS: ["Status", None],
-    SENSOR_TYPE_DOWNLOAD_SPEED: ["Down Speed", "kB/s"],
-    SENSOR_TYPE_UPLOAD_SPEED: ["Up Speed", "kB/s"],
+    SENSOR_TYPE_DOWNLOAD_SPEED: ["Down Speed", DATA_RATE_KILOBYTES_PER_SECOND],
+    SENSOR_TYPE_UPLOAD_SPEED: ["Up Speed", DATA_RATE_KILOBYTES_PER_SECOND],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -79,7 +80,7 @@ class RTorrentSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self.client_name, self._name)
+        return f"{self.client_name} {self._name}"
 
     @property
     def state(self):

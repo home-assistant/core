@@ -3,6 +3,7 @@ import datetime as dt
 from datetime import timedelta
 import logging
 
+from prezzibenzina import PrezziBenzinaPy
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_TIME, CONF_NAME
@@ -43,7 +44,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the PrezziBenzina sensor platform."""
-    from prezzibenzina import PrezziBenzinaPy
 
     station = config[CONF_STATION]
     name = config.get(CONF_NAME)
@@ -77,7 +77,7 @@ class PrezziBenzinaSensor(Entity):
         self._index = index
         self._data = None
         self._station = station
-        self._name = "{} {} {}".format(name, ft, srv)
+        self._name = f"{name} {ft} {srv}"
 
     @property
     def name(self):

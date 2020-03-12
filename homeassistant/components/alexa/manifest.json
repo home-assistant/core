@@ -1,10 +1,9 @@
 {
   "domain": "alexa",
-  "name": "Alexa",
-  "documentation": "https://www.home-assistant.io/components/alexa",
+  "name": "Amazon Alexa",
+  "documentation": "https://www.home-assistant.io/integrations/alexa",
   "requirements": [],
-  "dependencies": [
-    "http"
-  ],
-  "codeowners": []
+  "dependencies": ["http"],
+  "after_dependencies": ["logbook"],
+  "codeowners": ["@home-assistant/cloud", "@ochlocracy"]
 }

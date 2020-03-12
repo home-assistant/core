@@ -2,10 +2,10 @@
 
 import voluptuous as vol
 
+from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config import async_check_ha_config_file
-from homeassistant.components import websocket_api
-from homeassistant.const import CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL
+from homeassistant.const import CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import location
 

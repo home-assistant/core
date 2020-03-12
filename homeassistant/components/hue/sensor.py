@@ -1,15 +1,15 @@
 """Hue sensor entities."""
+from aiohue.sensors import TYPE_ZLL_LIGHTLEVEL, TYPE_ZLL_TEMPERATURE
+
 from homeassistant.const import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.hue.sensor_base import (
-    GenericZLLSensor,
-    async_setup_entry as shared_async_setup_entry,
-)
 
+from .const import DOMAIN as HUE_DOMAIN
+from .sensor_base import SENSOR_CONFIG_MAP, GenericZLLSensor
 
 LIGHT_LEVEL_NAME_FORMAT = "{} light level"
 TEMPERATURE_NAME_FORMAT = "{} temperature"
@@ -17,7 +17,9 @@ TEMPERATURE_NAME_FORMAT = "{} temperature"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer sensor setup to the shared sensor module."""
-    await shared_async_setup_entry(hass, config_entry, async_add_entities, binary=False)
+    await hass.data[HUE_DOMAIN][
+        config_entry.entry_id
+    ].sensor_manager.async_register_component(False, async_add_entities)
 
 
 class GenericHueGaugeSensorEntity(GenericZLLSensor, Entity):
@@ -75,3 +77,19 @@ class HueTemperature(GenericHueGaugeSensorEntity):
             return None
 
         return self.sensor.temperature / 100
+
+
+SENSOR_CONFIG_MAP.update(
+    {
+        TYPE_ZLL_LIGHTLEVEL: {
+            "binary": False,
+            "name_format": LIGHT_LEVEL_NAME_FORMAT,
+            "class": HueLightLevel,
+        },
+        TYPE_ZLL_TEMPERATURE: {
+            "binary": False,
+            "name_format": TEMPERATURE_NAME_FORMAT,
+            "class": HueTemperature,
+        },
+    }
+)

@@ -1,7 +1,7 @@
 {
   "domain": "wsdot",
-  "name": "Wsdot",
-  "documentation": "https://www.home-assistant.io/components/wsdot",
+  "name": "Washington State Department of Transportation (WSDOT)",
+  "documentation": "https://www.home-assistant.io/integrations/wsdot",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

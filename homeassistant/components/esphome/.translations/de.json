@@ -4,9 +4,9 @@
             "already_configured": "ESP ist bereits konfiguriert"
         },
         "error": {
-            "connection_error": "Keine Verbindung zum ESP m\u00f6glich. Achten Sie darauf, dass Ihre YAML-Datei eine Zeile 'api:' enth\u00e4lt.",
+            "connection_error": "Keine Verbindung zum ESP m\u00f6glich. Achte darauf, dass deine YAML-Datei eine Zeile 'api:' enth\u00e4lt.",
             "invalid_password": "Ung\u00fcltiges Passwort!",
-            "resolve_error": "Adresse des ESP kann nicht aufgel\u00f6st werden. Wenn dieser Fehler weiterhin besteht, legen Sie eine statische IP-Adresse fest: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
+            "resolve_error": "Adresse des ESP kann nicht aufgel\u00f6st werden. Wenn dieser Fehler weiterhin besteht, lege eine statische IP-Adresse fest: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
         "flow_title": "ESPHome: {name}",
         "step": {
@@ -14,7 +14,7 @@
                 "data": {
                     "password": "Passwort"
                 },
-                "description": "Bitte geben Sie das Passwort der ESPHome-Konfiguration f\u00fcr {name} ein:",
+                "description": "Bitte gebe das Passwort der ESPHome-Konfiguration f\u00fcr {name} ein:",
                 "title": "Passwort eingeben"
             },
             "discovery_confirm": {
@@ -26,7 +26,7 @@
                     "host": "Host",
                     "port": "Port"
                 },
-                "description": "Bitte geben Sie die Verbindungseinstellungen Ihres [ESPHome](https://esphomelib.com/)-Knotens ein.",
+                "description": "Bitte gib die Verbindungseinstellungen deines [ESPHome](https://esphomelib.com/)-Knotens ein.",
                 "title": "ESPHome"
             }
         },

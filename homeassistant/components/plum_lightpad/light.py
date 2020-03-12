@@ -94,7 +94,7 @@ class GlowRing(Light):
     def __init__(self, lightpad):
         """Initialize the light."""
         self._lightpad = lightpad
-        self._name = "{} Glow Ring".format(lightpad.friendly_name)
+        self._name = f"{lightpad.friendly_name} Glow Ring"
 
         self._state = lightpad.glow_enabled
         self._brightness = lightpad.glow_intensity * 255.0

@@ -10,7 +10,6 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
-    CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
@@ -35,7 +34,7 @@ DEFAULT_EVENT_NAME = "Lightning Strike: {0}"
 DEFAULT_ICON = "mdi:flash"
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=10)
 
-SIGNAL_DELETE_ENTITY = "delete_entity_{0}"
+SIGNAL_DELETE_ENTITY = "wwlln_delete_entity_{0}"
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -49,7 +48,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entry.data[CONF_LONGITUDE],
         entry.data[CONF_RADIUS],
         entry.data[CONF_WINDOW],
-        entry.data[CONF_UNIT_SYSTEM],
     )
     await manager.async_init()
 
@@ -66,7 +64,6 @@ class WWLLNEventManager:
         longitude,
         radius,
         window_seconds,
-        unit_system,
     ):
         """Initialize."""
         self._async_add_entities = async_add_entities
@@ -79,8 +76,7 @@ class WWLLNEventManager:
         self._strikes = {}
         self._window = timedelta(seconds=window_seconds)
 
-        self._unit_system = unit_system
-        if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+        if hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
             self._unit = LENGTH_MILES
         else:
             self._unit = LENGTH_KILOMETERS
@@ -88,6 +84,7 @@ class WWLLNEventManager:
     @callback
     def _create_events(self, ids_to_create):
         """Create new geo location events."""
+        _LOGGER.debug("Going to create %s", ids_to_create)
         events = []
         for strike_id in ids_to_create:
             strike = self._strikes[strike_id]
@@ -106,6 +103,7 @@ class WWLLNEventManager:
     @callback
     def _remove_events(self, ids_to_remove):
         """Remove old geo location events."""
+        _LOGGER.debug("Going to remove %s", ids_to_remove)
         for strike_id in ids_to_remove:
             async_dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(strike_id))
 
@@ -128,7 +126,7 @@ class WWLLNEventManager:
                 self._latitude,
                 self._longitude,
                 self._radius,
-                unit=self._unit_system,
+                unit=self._hass.config.units.name,
                 window=self._window,
             )
         except WWLLNError as err:
@@ -136,11 +134,16 @@ class WWLLNEventManager:
             return
 
         new_strike_ids = set(self._strikes)
+        # Remove all managed entities that are not in the latest update anymore.
         ids_to_remove = self._managed_strike_ids.difference(new_strike_ids)
         self._remove_events(ids_to_remove)
 
+        # Create new entities for all strikes that are not managed entities yet.
         ids_to_create = new_strike_ids.difference(self._managed_strike_ids)
         self._create_events(ids_to_create)
+
+        # Store all external IDs of all managed strikes.
+        self._managed_strike_ids = new_strike_ids
 
 
 class WWLLNEvent(GeolocationEvent):

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Punkt dost\u0119pu jest ju\u017c skonfigurowany",
+            "already_configured": "Punkt dost\u0119pu jest ju\u017c skonfigurowany.",
             "connection_aborted": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z serwerem HMIP",
             "unknown": "Wyst\u0105pi\u0142 nieznany b\u0142\u0105d"
         },

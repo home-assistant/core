@@ -7,6 +7,11 @@ from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA,
     AlarmControlPanel,
 )
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_ARM_NIGHT,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     STATE_ALARM_ARMED_AWAY,
@@ -91,6 +96,11 @@ class ArloBaseStation(AlarmControlPanel):
         """Return the state of the device."""
         return self._state
 
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
+
     def update(self):
         """Update the state of the device."""
         _LOGGER.debug("Updating Arlo Alarm Control Panel %s", self.name)
@@ -100,19 +110,19 @@ class ArloBaseStation(AlarmControlPanel):
         else:
             self._state = None
 
-    async def async_alarm_disarm(self, code=None):
+    def alarm_disarm(self, code=None):
         """Send disarm command."""
         self._base_station.mode = DISARMED
 
-    async def async_alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code=None):
         """Send arm away command. Uses custom mode."""
         self._base_station.mode = self._away_mode_name
 
-    async def async_alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code=None):
         """Send arm home command. Uses custom mode."""
         self._base_station.mode = self._home_mode_name
 
-    async def async_alarm_arm_night(self, code=None):
+    def alarm_arm_night(self, code=None):
         """Send arm night command. Uses custom mode."""
         self._base_station.mode = self._night_mode_name
 

@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+import pylacrosse
+from serial import SerialException
 import voluptuous as vol
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
@@ -13,6 +15,7 @@ from homeassistant.const import (
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -61,8 +64,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LaCrosse sensors."""
-    import pylacrosse
-    from serial import SerialException
 
     usb_device = config.get(CONF_DEVICE)
     baud = int(config.get(CONF_BAUD))
@@ -193,7 +194,7 @@ class LaCrosseHumidity(LaCrosseSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "%"
+        return UNIT_PERCENTAGE
 
     @property
     def state(self):

@@ -1,20 +1,21 @@
 """Support for Amcrest IP cameras."""
 import asyncio
 from datetime import timedelta
+from functools import partial
 import logging
-from urllib3.exceptions import HTTPError
 
 from amcrest import AmcrestError
+from haffmpeg.camera import CameraMjpeg
 import voluptuous as vol
 
 from homeassistant.components.camera import (
-    Camera,
     CAMERA_SERVICE_SCHEMA,
     SUPPORT_ON_OFF,
     SUPPORT_STREAM,
+    Camera,
 )
 from homeassistant.components.ffmpeg import DATA_FFMPEG
-from homeassistant.const import CONF_NAME, STATE_ON, STATE_OFF
+from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream,
     async_aiohttp_proxy_web,
@@ -25,9 +26,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import (
     CAMERA_WEB_SESSION_TIMEOUT,
     CAMERAS,
+    COMM_TIMEOUT,
     DATA_AMCREST,
     DEVICES,
     SERVICE_UPDATE,
+    SNAPSHOT_TIMEOUT,
 )
 from .helpers import log_update_error, service_signal
 
@@ -89,6 +92,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([AmcrestCam(name, device, hass.data[DATA_FFMPEG])], True)
 
 
+class CannotSnapshot(Exception):
+    """Conditions are not valid for taking a snapshot."""
+
+
 class AmcrestCam(Camera):
     """An implementation of an Amcrest IP camera."""
 
@@ -111,28 +118,58 @@ class AmcrestCam(Camera):
         self._motion_recording_enabled = None
         self._color_bw = None
         self._rtsp_url = None
-        self._snapshot_lock = asyncio.Lock()
+        self._snapshot_task = None
         self._unsub_dispatcher = []
         self._update_succeeded = False
 
-    async def async_camera_image(self):
-        """Return a still image response from the camera."""
+    def _check_snapshot_ok(self):
         available = self.available
         if not available or not self.is_on:
             _LOGGER.warning(
-                "Attempt to take snaphot when %s camera is %s",
+                "Attempt to take snapshot when %s camera is %s",
                 self.name,
                 "offline" if not available else "off",
             )
+            raise CannotSnapshot
+
+    async def _async_get_image(self):
+        try:
+            # Send the request to snap a picture and return raw jpg data
+            # Snapshot command needs a much longer read timeout than other commands.
+            return await self.hass.async_add_executor_job(
+                partial(
+                    self._api.snapshot,
+                    timeout=(COMM_TIMEOUT, SNAPSHOT_TIMEOUT),
+                    stream=False,
+                )
+            )
+        except AmcrestError as error:
+            log_update_error(_LOGGER, "get image from", self.name, "camera", error)
             return None
-        async with self._snapshot_lock:
-            try:
-                # Send the request to snap a picture and return raw jpg data
-                response = await self.hass.async_add_executor_job(self._api.snapshot)
-                return response.data
-            except (AmcrestError, HTTPError) as error:
-                log_update_error(_LOGGER, "get image from", self.name, "camera", error)
-                return None
+        finally:
+            self._snapshot_task = None
+
+    async def async_camera_image(self):
+        """Return a still image response from the camera."""
+        _LOGGER.debug("Take snapshot from %s", self._name)
+        try:
+            # Amcrest cameras only support one snapshot command at a time.
+            # Hence need to wait if a previous snapshot has not yet finished.
+            # Also need to check that camera is online and turned on before each wait
+            # and before initiating shapshot.
+            while self._snapshot_task:
+                self._check_snapshot_ok()
+                _LOGGER.debug("Waiting for previous snapshot from %s ...", self._name)
+                await self._snapshot_task
+            self._check_snapshot_ok()
+            # Run snapshot command in separate Task that can't be cancelled so
+            # 1) it's not possible to send another snapshot command while camera is
+            #    still working on a previous one, and
+            # 2) someone will be around to catch any exceptions.
+            self._snapshot_task = self.hass.async_create_task(self._async_get_image())
+            return await asyncio.shield(self._snapshot_task)
+        except CannotSnapshot:
+            return None
 
     async def handle_async_mjpeg_stream(self, request):
         """Return an MJPEG stream."""
@@ -159,7 +196,6 @@ class AmcrestCam(Camera):
             return await async_aiohttp_proxy_web(self.hass, request, stream_coro)
 
         # streaming via ffmpeg
-        from haffmpeg.camera import CameraMjpeg
 
         streaming_url = self._rtsp_url
         stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
@@ -455,9 +491,7 @@ class AmcrestCam(Camera):
         """Enable or disable indicator light."""
         try:
             self._api.command(
-                "configManager.cgi?action=setConfig&LightGlobal[0].Enable={}".format(
-                    str(enable).lower()
-                )
+                f"configManager.cgi?action=setConfig&LightGlobal[0].Enable={str(enable).lower()}"
             )
         except AmcrestError as error:
             log_update_error(
@@ -490,7 +524,7 @@ class AmcrestCam(Camera):
             self._api.go_to_preset(action="start", preset_point_number=preset)
         except AmcrestError as error:
             log_update_error(
-                _LOGGER, "move", self.name, "camera to preset {}".format(preset), error
+                _LOGGER, "move", self.name, f"camera to preset {preset}", error
             )
 
     def _set_color_bw(self, cbw):
@@ -499,7 +533,7 @@ class AmcrestCam(Camera):
             self._api.day_night_color = _CBW.index(cbw)
         except AmcrestError as error:
             log_update_error(
-                _LOGGER, "set", self.name, "camera color mode to {}".format(cbw), error
+                _LOGGER, "set", self.name, f"camera color mode to {cbw}", error
             )
         else:
             self._color_bw = cbw

@@ -1,41 +1,46 @@
 """Support for Solax inverter via local API."""
 import asyncio
-
 from datetime import timedelta
 import logging
 
+from solax import real_time_api
+from solax.inverter import InverterError
 import voluptuous as vol
 
-from homeassistant.const import TEMP_CELSIUS, CONF_IP_ADDRESS
-from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, TEMP_CELSIUS
 from homeassistant.exceptions import PlatformNotReady
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_IP_ADDRESS): cv.string})
+DEFAULT_PORT = 80
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_IP_ADDRESS): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    }
+)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Platform setup."""
-    import solax
-
-    api = solax.RealTimeAPI(config[CONF_IP_ADDRESS])
+    api = await real_time_api(config[CONF_IP_ADDRESS], config[CONF_PORT])
     endpoint = RealTimeDataEndpoint(hass, api)
     resp = await api.get_data()
     serial = resp.serial_number
     hass.async_add_job(endpoint.async_refresh)
     async_track_time_interval(hass, endpoint.async_refresh, SCAN_INTERVAL)
     devices = []
-    for sensor in solax.INVERTER_SENSORS:
-        idx, unit = solax.INVERTER_SENSORS[sensor]
+    for sensor, (idx, unit) in api.inverter.sensor_map().items():
         if unit == "C":
             unit = TEMP_CELSIUS
-        uid = "{}-{}".format(serial, idx)
+        uid = f"{serial}-{idx}"
         devices.append(Inverter(uid, serial, sensor, unit))
     endpoint.sensors = devices
     async_add_entities(devices)
@@ -56,16 +61,14 @@ class RealTimeDataEndpoint:
 
         This is the only method that should fetch new data for Home Assistant.
         """
-        from solax import SolaxRequestError
-
         try:
             api_response = await self.api.get_data()
             self.ready.set()
-        except SolaxRequestError:
+        except InverterError:
             if now is not None:
                 self.ready.clear()
-            else:
-                raise PlatformNotReady
+                return
+            raise PlatformNotReady
         data = api_response.data
         for sensor in self.sensors:
             if sensor.key in data:
@@ -97,7 +100,7 @@ class Inverter(Entity):
     @property
     def name(self):
         """Name of this inverter attribute."""
-        return "Solax {} {}".format(self.serial, self.key)
+        return f"Solax {self.serial} {self.key}"
 
     @property
     def unit_of_measurement(self):

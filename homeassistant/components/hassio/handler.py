@@ -80,7 +80,7 @@ class HassIO:
 
         This method return a coroutine.
         """
-        return self.send_command("/addons/{}/info".format(addon), method="get")
+        return self.send_command(f"/addons/{addon}/info", method="get")
 
     @_api_data
     def get_ingress_panels(self):
@@ -120,7 +120,7 @@ class HassIO:
 
         This method return a coroutine.
         """
-        return self.send_command("/discovery/{}".format(uuid), method="get")
+        return self.send_command(f"/discovery/{uuid}", method="get")
 
     @_api_bool
     async def update_hass_api(self, http_config, refresh_token):
@@ -130,7 +130,7 @@ class HassIO:
             "ssl": CONF_SSL_CERTIFICATE in http_config,
             "port": port,
             "watchdog": True,
-            "refresh_token": refresh_token,
+            "refresh_token": refresh_token.token,
         }
 
         if CONF_SERVER_HOST in http_config:
@@ -156,7 +156,7 @@ class HassIO:
             with async_timeout.timeout(timeout):
                 request = await self.websession.request(
                     method,
-                    "http://{}{}".format(self._ip, command),
+                    f"http://{self._ip}{command}",
                     json=payload,
                     headers={X_HASSIO: os.environ.get("HASSIO_TOKEN", "")},
                 )

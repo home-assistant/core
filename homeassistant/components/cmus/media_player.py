@@ -1,9 +1,10 @@
 """Support for interacting with and controlling the cmus music player."""
 import logging
 
+from pycmus import exceptions, remote
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
@@ -57,7 +58,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discover_info=None):
     """Set up the CMUS platform."""
-    from pycmus import exceptions
 
     host = config.get(CONF_HOST)
     password = config.get(CONF_PASSWORD)
@@ -78,11 +78,10 @@ class CmusDevice(MediaPlayerDevice):
     # pylint: disable=no-member
     def __init__(self, server, password, port, name):
         """Initialize the CMUS device."""
-        from pycmus import remote
 
         if server:
             self.cmus = remote.PyCmus(server=server, password=password, port=port)
-            auto_name = "cmus-{}".format(server)
+            auto_name = f"cmus-{server}"
         else:
             self.cmus = remote.PyCmus()
             auto_name = "cmus-local"

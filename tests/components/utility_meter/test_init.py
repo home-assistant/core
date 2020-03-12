@@ -1,20 +1,19 @@
 """The tests for the utility_meter component."""
-import logging
-
 from datetime import timedelta
+import logging
 from unittest.mock import patch
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START, ATTR_ENTITY_ID
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.utility_meter.const import (
-    SERVICE_RESET,
-    SERVICE_SELECT_TARIFF,
-    SERVICE_SELECT_NEXT_TARIFF,
     ATTR_TARIFF,
+    DOMAIN,
+    SERVICE_RESET,
+    SERVICE_SELECT_NEXT_TARIFF,
+    SERVICE_SELECT_TARIFF,
 )
+from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-from homeassistant.components.utility_meter.const import DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

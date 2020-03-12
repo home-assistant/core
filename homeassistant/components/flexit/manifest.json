@@ -1,12 +1,8 @@
 {
   "domain": "flexit",
   "name": "Flexit",
-  "documentation": "https://www.home-assistant.io/components/flexit",
-  "requirements": [
-    "pyflexit==0.3"
-  ],
-  "dependencies": [
-    "modbus"
-  ],
+  "documentation": "https://www.home-assistant.io/integrations/flexit",
+  "requirements": ["pyflexit==0.3"],
+  "dependencies": ["modbus"],
   "codeowners": []
 }

@@ -7,7 +7,8 @@ import pytest
 
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry
-from tests.common import mock_device_registry, flush_store
+
+from tests.common import flush_store, mock_device_registry
 
 
 @pytest.fixture
@@ -339,7 +340,7 @@ async def test_no_unnecessary_changes(registry):
         identifiers={("hue", "456"), ("bla", "123")},
     )
     with patch(
-        "homeassistant.helpers.device_registry" ".DeviceRegistry.async_schedule_save"
+        "homeassistant.helpers.device_registry.DeviceRegistry.async_schedule_save"
     ) as mock_save:
         entry2 = registry.async_get_or_create(
             config_entry_id="1234", identifiers={("hue", "456")}
@@ -409,6 +410,64 @@ async def test_update(registry):
     assert updated_entry.via_device_id == "98765B"
 
 
+async def test_update_remove_config_entries(hass, registry, update_events):
+    """Make sure we do not get duplicate entries."""
+    entry = registry.async_get_or_create(
+        config_entry_id="123",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    entry2 = registry.async_get_or_create(
+        config_entry_id="456",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    entry3 = registry.async_get_or_create(
+        config_entry_id="123",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "34:56:78:CD:EF:12")},
+        identifiers={("bridgeid", "4567")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    assert len(registry.devices) == 2
+    assert entry.id == entry2.id
+    assert entry.id != entry3.id
+    assert entry2.config_entries == {"123", "456"}
+
+    updated_entry = registry.async_update_device(
+        entry2.id, remove_config_entry_id="123"
+    )
+    removed_entry = registry.async_update_device(
+        entry3.id, remove_config_entry_id="123"
+    )
+
+    assert updated_entry.config_entries == {"456"}
+    assert removed_entry is None
+
+    removed_entry = registry.async_get_device({("bridgeid", "4567")}, set())
+
+    assert removed_entry is None
+
+    await hass.async_block_till_done()
+
+    assert len(update_events) == 5
+    assert update_events[0]["action"] == "create"
+    assert update_events[0]["device_id"] == entry.id
+    assert update_events[1]["action"] == "update"
+    assert update_events[1]["device_id"] == entry2.id
+    assert update_events[2]["action"] == "create"
+    assert update_events[2]["device_id"] == entry3.id
+    assert update_events[3]["action"] == "update"
+    assert update_events[3]["device_id"] == entry.id
+    assert update_events[4]["action"] == "remove"
+    assert update_events[4]["device_id"] == entry3.id
+
+
 async def test_loading_race_condition(hass):
     """Test only one storage load called when concurrent loading occurred ."""
     with asynctest.patch(
@@ -421,3 +480,21 @@ async def test_loading_race_condition(hass):
 
         mock_load.assert_called_once_with()
         assert results[0] == results[1]
+
+
+async def test_update_sw_version(registry):
+    """Verify that we can update software version of a device."""
+    entry = registry.async_get_or_create(
+        config_entry_id="1234",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bla", "123")},
+    )
+    assert not entry.sw_version
+    sw_version = "0x20020263"
+
+    with patch.object(registry, "async_schedule_save") as mock_save:
+        updated_entry = registry.async_update_device(entry.id, sw_version=sw_version)
+
+    assert mock_save.call_count == 1
+    assert updated_entry != entry
+    assert updated_entry.sw_version == sw_version

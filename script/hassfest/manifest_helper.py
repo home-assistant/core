@@ -2,7 +2,6 @@
 import json
 import pathlib
 
-
 component_dir = pathlib.Path("homeassistant/components")
 
 

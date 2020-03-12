@@ -61,6 +61,9 @@ class EsphomeLight(EsphomeEntity, Light):
     def _state(self) -> Optional[LightState]:
         return super()._state
 
+    # https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
+    # pylint: disable=invalid-overridden-method
+
     @esphome_state_property
     def is_on(self) -> Optional[bool]:
         """Return true if the switch is on."""
@@ -74,7 +77,7 @@ class EsphomeLight(EsphomeEntity, Light):
             red, green, blue = color_util.color_hsv_to_RGB(hue, sat, 100)
             data["rgb"] = (red / 255, green / 255, blue / 255)
         if ATTR_FLASH in kwargs:
-            data["flash"] = FLASH_LENGTHS[kwargs[ATTR_FLASH]]
+            data["flash_length"] = FLASH_LENGTHS[kwargs[ATTR_FLASH]]
         if ATTR_TRANSITION in kwargs:
             data["transition_length"] = kwargs[ATTR_TRANSITION]
         if ATTR_BRIGHTNESS in kwargs:
@@ -91,7 +94,7 @@ class EsphomeLight(EsphomeEntity, Light):
         """Turn the entity off."""
         data = {"key": self._static_info.key, "state": False}
         if ATTR_FLASH in kwargs:
-            data["flash"] = FLASH_LENGTHS[kwargs[ATTR_FLASH]]
+            data["flash_length"] = FLASH_LENGTHS[kwargs[ATTR_FLASH]]
         if ATTR_TRANSITION in kwargs:
             data["transition_length"] = kwargs[ATTR_TRANSITION]
         await self._client.light_command(**data)

@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+import socialbladeclient
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -71,7 +72,6 @@ class SocialBladeSensor(Entity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Social Blade."""
-        import socialbladeclient
 
         try:
             data = socialbladeclient.get_data(self.channel_id)

@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
-from . import CONF_ADS_VAR, DATA_ADS, AdsEntity, STATE_KEY_STATE
+from . import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE, AdsEntity
 
 _LOGGER = logging.getLogger(__name__)
 

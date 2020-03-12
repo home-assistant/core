@@ -1,20 +1,19 @@
 """Support for the Philips Hue sensors as a platform."""
-import asyncio
 from datetime import timedelta
 import logging
-from time import monotonic
 
+from aiohue import AiohueException, Unauthorized
+from aiohue.sensors import TYPE_ZLL_PRESENCE
 import async_timeout
 
-from homeassistant.components import hue
-from homeassistant.exceptions import NoEntitySpecifiedError
-from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.util.dt import utcnow
+from homeassistant.core import callback
+from homeassistant.helpers import debounce, entity
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import DOMAIN as HUE_DOMAIN, REQUEST_REFRESH_DELAY
+from .helpers import remove_devices
 
-CURRENT_SENSORS = "current_sensors"
-SENSOR_MANAGER_FORMAT = "{}_sensor_manager"
-
+SENSOR_CONFIG_MAP = {}
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -26,21 +25,6 @@ def _device_id(aiohue_sensor):
     return device_id
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities, binary=False):
-    """Set up the Hue sensors from a config entry."""
-    bridge = hass.data[hue.DOMAIN][config_entry.data["host"]]
-    hass.data[hue.DOMAIN].setdefault(CURRENT_SENSORS, {})
-
-    sm_key = SENSOR_MANAGER_FORMAT.format(config_entry.data["host"])
-    manager = hass.data[hue.DOMAIN].get(sm_key)
-    if manager is None:
-        manager = SensorManager(hass, bridge)
-        hass.data[hue.DOMAIN][sm_key] = manager
-
-    manager.register_component(binary, async_add_entities)
-    await manager.start()
-
-
 class SensorManager:
     """Class that handles registering and updating Hue sensor entities.
 
@@ -48,105 +32,62 @@ class SensorManager:
     """
 
     SCAN_INTERVAL = timedelta(seconds=5)
-    sensor_config_map = {}
 
-    def __init__(self, hass, bridge):
+    def __init__(self, bridge):
         """Initialize the sensor manager."""
-        import aiohue
-        from .binary_sensor import HuePresence, PRESENCE_NAME_FORMAT
-        from .sensor import (
-            HueLightLevel,
-            HueTemperature,
-            LIGHT_LEVEL_NAME_FORMAT,
-            TEMPERATURE_NAME_FORMAT,
-        )
-
-        self.hass = hass
         self.bridge = bridge
         self._component_add_entities = {}
-        self._started = False
-
-        self.sensor_config_map.update(
-            {
-                aiohue.sensors.TYPE_ZLL_LIGHTLEVEL: {
-                    "binary": False,
-                    "name_format": LIGHT_LEVEL_NAME_FORMAT,
-                    "class": HueLightLevel,
-                },
-                aiohue.sensors.TYPE_ZLL_TEMPERATURE: {
-                    "binary": False,
-                    "name_format": TEMPERATURE_NAME_FORMAT,
-                    "class": HueTemperature,
-                },
-                aiohue.sensors.TYPE_ZLL_PRESENCE: {
-                    "binary": True,
-                    "name_format": PRESENCE_NAME_FORMAT,
-                    "class": HuePresence,
-                },
-            }
+        self.current = {}
+        self.coordinator = DataUpdateCoordinator(
+            bridge.hass,
+            _LOGGER,
+            name="sensor",
+            update_method=self.async_update_data,
+            update_interval=self.SCAN_INTERVAL,
+            request_refresh_debouncer=debounce.Debouncer(
+                bridge.hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True
+            ),
         )
 
-    def register_component(self, binary, async_add_entities):
+    async def async_update_data(self):
+        """Update sensor data."""
+        try:
+            with async_timeout.timeout(4):
+                return await self.bridge.async_request_call(
+                    self.bridge.api.sensors.update
+                )
+        except Unauthorized:
+            await self.bridge.handle_unauthorized_error()
+            raise UpdateFailed("Unauthorized")
+        except AiohueException as err:
+            raise UpdateFailed(f"Hue error: {err}")
+
+    async def async_register_component(self, binary, async_add_entities):
         """Register async_add_entities methods for components."""
         self._component_add_entities[binary] = async_add_entities
 
-    async def start(self):
-        """Start updating sensors from the bridge on a schedule."""
-        # but only if it's not already started, and when we've got both
-        # async_add_entities methods
-        if self._started or len(self._component_add_entities) < 2:
+        if len(self._component_add_entities) < 2:
             return
 
-        self._started = True
-        _LOGGER.info(
-            "Starting sensor polling loop with %s second interval",
-            self.SCAN_INTERVAL.total_seconds(),
+        # We have all components available, start the updating.
+        self.coordinator.async_add_listener(self.async_update_items)
+        self.bridge.reset_jobs.append(
+            lambda: self.coordinator.async_remove_listener(self.async_update_items)
         )
+        await self.coordinator.async_refresh()
 
-        async def async_update_bridge(now):
-            """Will update sensors from the bridge."""
-            await self.async_update_items()
-
-            async_track_point_in_utc_time(
-                self.hass, async_update_bridge, utcnow() + self.SCAN_INTERVAL
-            )
-
-        await async_update_bridge(None)
-
-    async def async_update_items(self):
+    @callback
+    def async_update_items(self):
         """Update sensors from the bridge."""
-        import aiohue
-
         api = self.bridge.api.sensors
 
-        try:
-            start = monotonic()
-            with async_timeout.timeout(4):
-                await api.update()
-        except (asyncio.TimeoutError, aiohue.AiohueException) as err:
-            _LOGGER.debug("Failed to fetch sensor: %s", err)
-
-            if not self.bridge.available:
-                return
-
-            _LOGGER.error("Unable to reach bridge %s (%s)", self.bridge.host, err)
-            self.bridge.available = False
-
+        if len(self._component_add_entities) < 2:
             return
-
-        finally:
-            _LOGGER.debug(
-                "Finished sensor request in %.3f seconds", monotonic() - start
-            )
-
-        if not self.bridge.available:
-            _LOGGER.info("Reconnected to bridge %s", self.bridge.host)
-            self.bridge.available = True
 
         new_sensors = []
         new_binary_sensors = []
         primary_sensor_devices = {}
-        current = self.hass.data[hue.DOMAIN][CURRENT_SENSORS]
+        current = self.current
 
         # Physical Hue motion sensors present as three sensors in the API: a
         # presence sensor, a temperature sensor, and a light level sensor. Of
@@ -162,7 +103,7 @@ class SensorManager:
         # finding the remaining ones that may or may not be related to the
         # presence sensors.
         for item_id in api:
-            if api[item_id].type != aiohue.sensors.TYPE_ZLL_PRESENCE:
+            if api[item_id].type != TYPE_ZLL_PRESENCE:
                 continue
 
             primary_sensor_devices[_device_id(api[item_id])] = api[item_id]
@@ -172,11 +113,10 @@ class SensorManager:
         for item_id in api:
             existing = current.get(api[item_id].uniqueid)
             if existing is not None:
-                self.hass.async_create_task(existing.async_maybe_update_ha_state())
                 continue
 
             primary_sensor = None
-            sensor_config = self.sensor_config_map.get(api[item_id].type)
+            sensor_config = SENSOR_CONFIG_MAP.get(api[item_id].type)
             if sensor_config is None:
                 continue
 
@@ -194,15 +134,19 @@ class SensorManager:
             else:
                 new_sensors.append(current[api[item_id].uniqueid])
 
-        async_add_sensor_entities = self._component_add_entities.get(False)
-        async_add_binary_entities = self._component_add_entities.get(True)
-        if new_sensors and async_add_sensor_entities:
-            async_add_sensor_entities(new_sensors)
-        if new_binary_sensors and async_add_binary_entities:
-            async_add_binary_entities(new_binary_sensors)
+        self.bridge.hass.async_create_task(
+            remove_devices(
+                self.bridge, [value.uniqueid for value in api.values()], current,
+            )
+        )
+
+        if new_sensors:
+            self._component_add_entities[False](new_sensors)
+        if new_binary_sensors:
+            self._component_add_entities[True](new_binary_sensors)
 
 
-class GenericHueSensor:
+class GenericHueSensor(entity.Entity):
     """Representation of a Hue sensor."""
 
     should_poll = False
@@ -240,7 +184,7 @@ class GenericHueSensor:
     @property
     def available(self):
         """Return if sensor is available."""
-        return self.bridge.available and (
+        return self.bridge.sensor_manager.coordinator.last_update_success and (
             self.bridge.allow_unreachable or self.sensor.config["reachable"]
         )
 
@@ -249,15 +193,24 @@ class GenericHueSensor:
         """Return detail of available software updates for this device."""
         return self.primary_sensor.raw.get("swupdate", {}).get("state")
 
-    async def async_maybe_update_ha_state(self):
-        """Try to update Home Assistant with current state of entity.
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        self.bridge.sensor_manager.coordinator.async_add_listener(
+            self.async_write_ha_state
+        )
 
-        But if it's not been added to hass yet, then don't throw an error.
+    async def async_will_remove_from_hass(self):
+        """When entity will be removed from hass."""
+        self.bridge.sensor_manager.coordinator.async_remove_listener(
+            self.async_write_ha_state
+        )
+
+    async def async_update(self):
+        """Update the entity.
+
+        Only used by the generic entity update service.
         """
-        try:
-            await self._async_update_ha_state()
-        except (RuntimeError, NoEntitySpecifiedError):
-            _LOGGER.debug("Hue sensor update requested before it has been added.")
+        await self.bridge.sensor_manager.coordinator.async_request_refresh()
 
     @property
     def device_info(self):
@@ -266,12 +219,12 @@ class GenericHueSensor:
         Links individual entities together in the hass device registry.
         """
         return {
-            "identifiers": {(hue.DOMAIN, self.device_id)},
+            "identifiers": {(HUE_DOMAIN, self.device_id)},
             "name": self.primary_sensor.name,
             "manufacturer": self.primary_sensor.manufacturername,
             "model": (self.primary_sensor.productname or self.primary_sensor.modelid),
             "sw_version": self.primary_sensor.swversion,
-            "via_device": (hue.DOMAIN, self.bridge.api.config.bridgeid),
+            "via_device": (HUE_DOMAIN, self.bridge.api.config.bridgeid),
         }
 
 

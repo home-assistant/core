@@ -1,9 +1,13 @@
 """Support for Home Assistant iOS app sensors."""
 from homeassistant.components import ios
+from homeassistant.const import UNIT_PERCENTAGE
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
-SENSOR_TYPES = {"level": ["Battery Level", "%"], "state": ["Battery State", None]}
+SENSOR_TYPES = {
+    "level": ["Battery Level", UNIT_PERCENTAGE],
+    "state": ["Battery State", None],
+}
 
 DEFAULT_ICON_LEVEL = "mdi:battery"
 DEFAULT_ICON_STATE = "mdi:power-plug"
@@ -30,7 +34,7 @@ class IOSSensor(Entity):
     def __init__(self, sensor_type, device_name, device):
         """Initialize the sensor."""
         self._device_name = device_name
-        self._name = "{} {}".format(device_name, SENSOR_TYPES[sensor_type][0])
+        self._name = f"{device_name} {SENSOR_TYPES[sensor_type][0]}"
         self._device = device
         self.type = sensor_type
         self._state = None
@@ -56,7 +60,7 @@ class IOSSensor(Entity):
     def name(self):
         """Return the name of the iOS sensor."""
         device_name = self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_NAME]
-        return "{} {}".format(device_name, SENSOR_TYPES[self.type][0])
+        return f"{device_name} {SENSOR_TYPES[self.type][0]}"
 
     @property
     def state(self):
@@ -67,7 +71,7 @@ class IOSSensor(Entity):
     def unique_id(self):
         """Return the unique ID of this sensor."""
         device_id = self._device[ios.ATTR_DEVICE_ID]
-        return "{}_{}".format(self.type, device_id)
+        return f"{self.type}_{device_id}"
 
     @property
     def unit_of_measurement(self):
@@ -100,11 +104,11 @@ class IOSSensor(Entity):
             ios.ATTR_BATTERY_STATE_UNPLUGGED,
         ):
             charging = False
-            icon_state = "{}-off".format(DEFAULT_ICON_STATE)
+            icon_state = f"{DEFAULT_ICON_STATE}-off"
         elif battery_state == ios.ATTR_BATTERY_STATE_UNKNOWN:
             battery_level = None
             charging = False
-            icon_state = "{}-unknown".format(DEFAULT_ICON_LEVEL)
+            icon_state = f"{DEFAULT_ICON_LEVEL}-unknown"
 
         if self.type == "state":
             return icon_state

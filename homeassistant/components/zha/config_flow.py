@@ -1,4 +1,5 @@
 """Config flow for ZHA."""
+import asyncio
 from collections import OrderedDict
 import os
 
@@ -9,11 +10,14 @@ from homeassistant import config_entries
 from .core.const import (
     CONF_RADIO_TYPE,
     CONF_USB_PATH,
+    CONTROLLER,
+    DEFAULT_BAUDRATE,
     DEFAULT_DATABASE_NAME,
     DOMAIN,
+    ZHA_GW_RADIO,
     RadioType,
 )
-from .core.helpers import check_zigpy_connection
+from .core.registries import RADIO_TYPES
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -57,3 +61,20 @@ class ZhaFlowHandler(config_entries.ConfigFlow):
         return self.async_create_entry(
             title=import_info[CONF_USB_PATH], data=import_info
         )
+
+
+async def check_zigpy_connection(usb_path, radio_type, database_path):
+    """Test zigpy radio connection."""
+    try:
+        radio = RADIO_TYPES[radio_type][ZHA_GW_RADIO]()
+        controller_application = RADIO_TYPES[radio_type][CONTROLLER]
+    except KeyError:
+        return False
+    try:
+        await radio.connect(usb_path, DEFAULT_BAUDRATE)
+        controller = controller_application(radio, database_path)
+        await asyncio.wait_for(controller.startup(auto_form=True), timeout=30)
+        await controller.shutdown()
+    except Exception:  # pylint: disable=broad-except
+        return False
+    return True

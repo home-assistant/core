@@ -1,6 +1,7 @@
 """Auth models."""
 from datetime import datetime, timedelta
-from typing import Dict, List, NamedTuple, Optional  # noqa: F401
+import secrets
+from typing import Dict, List, NamedTuple, Optional
 import uuid
 
 import attr
@@ -9,7 +10,6 @@ from homeassistant.util import dt as dt_util
 
 from . import permissions as perm_mdl
 from .const import GROUP_ID_ADMIN
-from .util import generate_secret
 
 TOKEN_TYPE_NORMAL = "normal"
 TOKEN_TYPE_SYSTEM = "system"
@@ -20,7 +20,7 @@ TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN = "long_lived_access_token"
 class Group:
     """A group."""
 
-    name = attr.ib(type=str)  # type: Optional[str]
+    name = attr.ib(type=Optional[str])
     policy = attr.ib(type=perm_mdl.PolicyType)
     id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
     system_generated = attr.ib(type=bool, default=False)
@@ -30,27 +30,29 @@ class Group:
 class User:
     """A user."""
 
-    name = attr.ib(type=str)  # type: Optional[str]
-    perm_lookup = attr.ib(
-        type=perm_mdl.PermissionLookup, cmp=False
-    )  # type: perm_mdl.PermissionLookup
+    name = attr.ib(type=Optional[str])
+    perm_lookup = attr.ib(type=perm_mdl.PermissionLookup, eq=False, order=False)
     id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
     is_owner = attr.ib(type=bool, default=False)
     is_active = attr.ib(type=bool, default=False)
     system_generated = attr.ib(type=bool, default=False)
 
-    groups = attr.ib(type=List, factory=list, cmp=False)  # type: List[Group]
+    groups = attr.ib(type=List[Group], factory=list, eq=False, order=False)
 
     # List of credentials of a user.
-    credentials = attr.ib(type=list, factory=list, cmp=False)  # type: List[Credentials]
+    credentials = attr.ib(type=List["Credentials"], factory=list, eq=False, order=False)
 
     # Tokens associated with a user.
     refresh_tokens = attr.ib(
-        type=dict, factory=dict, cmp=False
-    )  # type: Dict[str, RefreshToken]
+        type=Dict[str, "RefreshToken"], factory=dict, eq=False, order=False
+    )
 
     _permissions = attr.ib(
-        type=Optional[perm_mdl.PolicyPermissions], init=False, cmp=False, default=None
+        type=Optional[perm_mdl.PolicyPermissions],
+        init=False,
+        eq=False,
+        order=False,
+        default=None,
     )
 
     @property
@@ -100,8 +102,8 @@ class RefreshToken:
     )
     id = attr.ib(type=str, factory=lambda: uuid.uuid4().hex)
     created_at = attr.ib(type=datetime, factory=dt_util.utcnow)
-    token = attr.ib(type=str, factory=lambda: generate_secret(64))
-    jwt_key = attr.ib(type=str, factory=lambda: generate_secret(64))
+    token = attr.ib(type=str, factory=lambda: secrets.token_hex(64))
+    jwt_key = attr.ib(type=str, factory=lambda: secrets.token_hex(64))
 
     last_used_at = attr.ib(type=Optional[datetime], default=None)
     last_used_ip = attr.ib(type=Optional[str], default=None)

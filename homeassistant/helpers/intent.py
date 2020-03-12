@@ -5,13 +5,12 @@ from typing import Any, Callable, Dict, Iterable, Optional
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_SUPPORTED_FEATURES
-from homeassistant.core import callback, State, T
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
+from homeassistant.core import Context, State, T, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
-from homeassistant.const import ATTR_ENTITY_ID
 
 _LOGGER = logging.getLogger(__name__)
 _SlotsType = Dict[str, Any]
@@ -53,14 +52,18 @@ async def async_handle(
     intent_type: str,
     slots: Optional[_SlotsType] = None,
     text_input: Optional[str] = None,
+    context: Optional[Context] = None,
 ) -> "IntentResponse":
     """Handle an intent."""
-    handler = hass.data.get(DATA_KEY, {}).get(intent_type)  # type: IntentHandler
+    handler: IntentHandler = hass.data.get(DATA_KEY, {}).get(intent_type)
 
     if handler is None:
-        raise UnknownIntent("Unknown intent {}".format(intent_type))
+        raise UnknownIntent(f"Unknown intent {intent_type}")
 
-    intent = Intent(hass, platform, intent_type, slots or {}, text_input)
+    if context is None:
+        context = Context()
+
+    intent = Intent(hass, platform, intent_type, slots or {}, text_input, context)
 
     try:
         _LOGGER.info("Triggering intent handler %s", handler)
@@ -68,13 +71,11 @@ async def async_handle(
         return result
     except vol.Invalid as err:
         _LOGGER.warning("Received invalid slot info for %s: %s", intent_type, err)
-        raise InvalidSlotInfo(
-            "Received invalid slot info for {}".format(intent_type)
-        ) from err
+        raise InvalidSlotInfo(f"Received invalid slot info for {intent_type}") from err
     except IntentHandleError:
         raise
     except Exception as err:
-        raise IntentUnexpectedError("Error handling {}".format(intent_type)) from err
+        raise IntentUnexpectedError(f"Error handling {intent_type}") from err
 
 
 class IntentError(HomeAssistantError):
@@ -109,7 +110,7 @@ def async_match_state(
     state = _fuzzymatch(name, states, lambda state: state.name)
 
     if state is None:
-        raise IntentHandleError("Unable to find an entity called {}".format(name))
+        raise IntentHandleError(f"Unable to find an entity called {name}")
 
     return state
 
@@ -118,18 +119,16 @@ def async_match_state(
 def async_test_feature(state: State, feature: int, feature_name: str) -> None:
     """Test is state supports a feature."""
     if state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & feature == 0:
-        raise IntentHandleError(
-            "Entity {} does not support {}".format(state.name, feature_name)
-        )
+        raise IntentHandleError(f"Entity {state.name} does not support {feature_name}")
 
 
 class IntentHandler:
     """Intent handler registration."""
 
-    intent_type = None  # type: Optional[str]
-    slot_schema = None  # type: Optional[vol.Schema]
-    _slot_schema = None
-    platforms = []  # type: Optional[Iterable[str]]
+    intent_type: Optional[str] = None
+    slot_schema: Optional[vol.Schema] = None
+    _slot_schema: Optional[vol.Schema] = None
+    platforms: Optional[Iterable[str]] = []
 
     @callback
     def async_can_handle(self, intent_obj: "Intent") -> bool:
@@ -159,7 +158,7 @@ class IntentHandler:
 
     def __repr__(self) -> str:
         """Represent a string of an intent handler."""
-        return "<{} - {}>".format(self.__class__.__name__, self.intent_type)
+        return f"<{self.__class__.__name__} - {self.intent_type}>"
 
 
 def _fuzzymatch(name: str, items: Iterable[T], key: Callable[[T], str]) -> Optional[T]:
@@ -200,7 +199,10 @@ class ServiceIntentHandler(IntentHandler):
         state = async_match_state(hass, slots["name"]["value"])
 
         await hass.services.async_call(
-            self.domain, self.service, {ATTR_ENTITY_ID: state.entity_id}
+            self.domain,
+            self.service,
+            {ATTR_ENTITY_ID: state.entity_id},
+            context=intent_obj.context,
         )
 
         response = intent_obj.create_response()
@@ -211,7 +213,7 @@ class ServiceIntentHandler(IntentHandler):
 class Intent:
     """Hold the intent."""
 
-    __slots__ = ["hass", "platform", "intent_type", "slots", "text_input"]
+    __slots__ = ["hass", "platform", "intent_type", "slots", "text_input", "context"]
 
     def __init__(
         self,
@@ -220,6 +222,7 @@ class Intent:
         intent_type: str,
         slots: _SlotsType,
         text_input: Optional[str],
+        context: Context,
     ) -> None:
         """Initialize an intent."""
         self.hass = hass
@@ -227,6 +230,7 @@ class Intent:
         self.intent_type = intent_type
         self.slots = slots
         self.text_input = text_input
+        self.context = context
 
     @callback
     def create_response(self) -> "IntentResponse":
@@ -240,8 +244,8 @@ class IntentResponse:
     def __init__(self, intent: Optional[Intent] = None) -> None:
         """Initialize an IntentResponse."""
         self.intent = intent
-        self.speech = {}  # type: Dict[str, Dict[str, Any]]
-        self.card = {}  # type: Dict[str, Dict[str, str]]
+        self.speech: Dict[str, Dict[str, Any]] = {}
+        self.card: Dict[str, Dict[str, str]] = {}
 
     @callback
     def async_set_speech(

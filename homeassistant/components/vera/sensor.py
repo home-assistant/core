@@ -2,8 +2,10 @@
 from datetime import timedelta
 import logging
 
+import pyvera as veraApi
+
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_PERCENTAGE
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import convert
 
@@ -44,7 +46,6 @@ class VeraSensor(VeraDevice, Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        import pyvera as veraApi
 
         if self.vera_device.category == veraApi.CATEGORY_TEMPERATURE_SENSOR:
             return self._temperature_units
@@ -53,13 +54,12 @@ class VeraSensor(VeraDevice, Entity):
         if self.vera_device.category == veraApi.CATEGORY_UV_SENSOR:
             return "level"
         if self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:
-            return "%"
+            return UNIT_PERCENTAGE
         if self.vera_device.category == veraApi.CATEGORY_POWER_METER:
             return "watts"
 
     def update(self):
         """Update the state."""
-        import pyvera as veraApi
 
         if self.vera_device.category == veraApi.CATEGORY_TEMPERATURE_SENSOR:
             self.current_value = self.vera_device.temperature

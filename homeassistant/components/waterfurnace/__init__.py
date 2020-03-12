@@ -1,15 +1,15 @@
 """Support for Waterfurnaces."""
 from datetime import timedelta
 import logging
-import time
 import threading
+import time
 
 import voluptuous as vol
+from waterfurnace.waterfurnace import WaterFurnace, WFCredentialError, WFException
 
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import discovery
+from homeassistant.helpers import config_validation as cv, discovery
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,19 +37,18 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, base_config):
     """Set up waterfurnace platform."""
-    import waterfurnace.waterfurnace as wf
 
     config = base_config.get(DOMAIN)
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    wfconn = wf.WaterFurnace(username, password)
+    wfconn = WaterFurnace(username, password)
     # NOTE(sdague): login will throw an exception if this doesn't
     # work, which will abort the setup.
     try:
         wfconn.login()
-    except wf.WFCredentialError:
+    except WFCredentialError:
         _LOGGER.error("Invalid credentials for waterfurnace login.")
         return False
 
@@ -83,7 +82,6 @@ class WaterFurnaceData(threading.Thread):
 
     def _reconnect(self):
         """Reconnect on a failure."""
-        import waterfurnace.waterfurnace as wf
 
         self._fails += 1
         if self._fails > MAX_FAILS:
@@ -105,7 +103,7 @@ class WaterFurnaceData(threading.Thread):
         try:
             self.client.login()
             self.data = self.client.read()
-        except wf.WFException:
+        except WFException:
             _LOGGER.exception("Failed to reconnect attempt %s", self._fails)
         else:
             _LOGGER.debug("Reconnected to furnace")
@@ -113,7 +111,6 @@ class WaterFurnaceData(threading.Thread):
 
     def run(self):
         """Thread run loop."""
-        import waterfurnace.waterfurnace as wf
 
         @callback
         def register():
@@ -143,7 +140,7 @@ class WaterFurnaceData(threading.Thread):
             try:
                 self.data = self.client.read()
 
-            except wf.WFException:
+            except WFException:
                 # WFExceptions are things the WF library understands
                 # that pretty much can all be solved by logging in and
                 # back out again.

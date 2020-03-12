@@ -3,9 +3,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
-from homeassistant.const import DEVICE_DEFAULT_NAME, CONF_HOST
-
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.const import CONF_HOST, DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 
 from . import CONF_INVERT_LOGIC, DEFAULT_INVERT_LOGIC
@@ -36,7 +35,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for port, name in ports.items():
         try:
             led = remote_rpi_gpio.setup_output(address, port, invert_logic)
-        except (ValueError, IndexError, KeyError, IOError):
+        except (ValueError, IndexError, KeyError, OSError):
             return
         new_switch = RemoteRPiGPIOSwitch(name, led, invert_logic)
         devices.append(new_switch)

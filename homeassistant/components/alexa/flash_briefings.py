@@ -1,12 +1,12 @@
 """Support for Alexa skill service end point."""
 import copy
-from datetime import datetime
 import logging
 import uuid
 
 from homeassistant.components import http
 from homeassistant.core import callback
 from homeassistant.helpers import template
+import homeassistant.util.dt as dt_util
 
 from .const import (
     ATTR_MAIN_TEXT,
@@ -89,7 +89,7 @@ class AlexaFlashBriefingView(http.HomeAssistantView):
                 else:
                     output[ATTR_REDIRECTION_URL] = item.get(CONF_DISPLAY_URL)
 
-            output[ATTR_UPDATE_DATE] = datetime.now().strftime(DATE_FORMAT)
+            output[ATTR_UPDATE_DATE] = dt_util.utcnow().strftime(DATE_FORMAT)
 
             briefing.append(output)
 

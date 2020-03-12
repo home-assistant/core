@@ -1,20 +1,22 @@
 """Tracking for bluetooth low energy devices."""
+import asyncio
 import logging
 
-from homeassistant.helpers.event import track_point_in_utc_time
+import pygatt  # pylint: disable=import-error
+
+from homeassistant.components.device_tracker.const import (
+    CONF_SCAN_INTERVAL,
+    CONF_TRACK_NEW,
+    SCAN_INTERVAL,
+    SOURCE_TYPE_BLUETOOTH_LE,
+)
 from homeassistant.components.device_tracker.legacy import (
     YAML_DEVICES,
     async_load_config,
 )
-from homeassistant.components.device_tracker.const import (
-    CONF_TRACK_NEW,
-    CONF_SCAN_INTERVAL,
-    SCAN_INTERVAL,
-    SOURCE_TYPE_BLUETOOTH_LE,
-)
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.helpers.event import track_point_in_utc_time
 import homeassistant.util.dt as dt_util
-from homeassistant.util.async_ import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,8 +28,6 @@ MIN_SEEN_NEW = 5
 
 def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the Bluetooth LE Scanner."""
-    # pylint: disable=import-error
-    import pygatt
 
     new_devices = {}
     hass.data.setdefault(DATA_BLE, {DATA_BLE_ADAPTER: None})
@@ -44,22 +44,25 @@ def setup_scanner(hass, config, see, discovery_info=None):
 
     def see_device(address, name, new_device=False):
         """Mark a device as seen."""
-        if new_device:
-            if address in new_devices:
-                _LOGGER.debug("Seen %s %s times", address, new_devices[address])
-                new_devices[address] += 1
-                if new_devices[address] >= MIN_SEEN_NEW:
-                    _LOGGER.debug("Adding %s to tracked devices", address)
-                    devs_to_track.append(address)
-                else:
-                    return
-            else:
-                _LOGGER.debug("Seen %s for the first time", address)
-                new_devices[address] = 1
-                return
-
         if name is not None:
             name = name.strip("\x00")
+
+        if new_device:
+            if address in new_devices:
+                new_devices[address]["seen"] += 1
+                if name:
+                    new_devices[address]["name"] = name
+                else:
+                    name = new_devices[address]["name"]
+                _LOGGER.debug("Seen %s %s times", address, new_devices[address]["seen"])
+                if new_devices[address]["seen"] < MIN_SEEN_NEW:
+                    return
+                _LOGGER.debug("Adding %s to tracked devices", address)
+                devs_to_track.append(address)
+            else:
+                _LOGGER.debug("Seen %s for the first time", address)
+                new_devices[address] = {"seen": 1, "name": name}
+                return
 
         see(
             mac=BLE_PREFIX + address,
@@ -77,7 +80,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
 
             devices = {x["address"]: x["name"] for x in devs}
             _LOGGER.debug("Bluetooth LE devices discovered = %s", devices)
-        except RuntimeError as error:
+        except (RuntimeError, pygatt.exceptions.BLEError) as error:
             _LOGGER.error("Error during Bluetooth LE scan: %s", error)
             return {}
         return devices
@@ -89,7 +92,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
     # Load all known devices.
     # We just need the devices so set consider_home and home range
     # to 0
-    for device in run_coroutine_threadsafe(
+    for device in asyncio.run_coroutine_threadsafe(
         async_load_config(yaml_path, hass, 0), hass.loop
     ).result():
         # check if device is a valid bluetooth device

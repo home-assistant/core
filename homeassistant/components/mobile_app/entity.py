@@ -7,6 +7,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import (
+    ATTR_DEVICE_NAME,
     ATTR_SENSOR_ATTRIBUTES,
     ATTR_SENSOR_DEVICE_CLASS,
     ATTR_SENSOR_ICON,
@@ -21,7 +22,7 @@ from .helpers import device_info
 
 def sensor_id(webhook_id, unique_id):
     """Return a unique sensor ID."""
-    return "{}_{}".format(webhook_id, unique_id)
+    return f"{webhook_id}_{unique_id}"
 
 
 class MobileAppEntity(Entity):
@@ -38,6 +39,7 @@ class MobileAppEntity(Entity):
         )
         self._entity_type = config[ATTR_SENSOR_TYPE]
         self.unsub_dispatcher = None
+        self._name = f"{entry.data[ATTR_DEVICE_NAME]} {config[ATTR_SENSOR_NAME]}"
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -58,7 +60,7 @@ class MobileAppEntity(Entity):
     @property
     def name(self):
         """Return the name of the mobile app sensor."""
-        return self._config[ATTR_SENSOR_NAME]
+        return self._name
 
     @property
     def device_class(self):

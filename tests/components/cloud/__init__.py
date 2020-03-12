@@ -1,9 +1,9 @@
 """Tests for the cloud component."""
 from unittest.mock import patch
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import cloud
 from homeassistant.components.cloud import const
+from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro
 
@@ -25,4 +25,4 @@ def mock_cloud_prefs(hass, prefs={}):
     }
     prefs_to_set.update(prefs)
     hass.data[cloud.DOMAIN].client._prefs._prefs = prefs_to_set
-    return prefs_to_set
+    return hass.data[cloud.DOMAIN].client._prefs

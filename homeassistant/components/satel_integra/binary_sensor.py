@@ -10,9 +10,9 @@ from . import (
     CONF_ZONE_NAME,
     CONF_ZONE_TYPE,
     CONF_ZONES,
+    DATA_SATEL,
     SIGNAL_OUTPUTS_UPDATED,
     SIGNAL_ZONES_UPDATED,
-    DATA_SATEL,
 )
 
 _LOGGER = logging.getLogger(__name__)

@@ -3,7 +3,7 @@ import velbus
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PORT, CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
@@ -18,8 +18,7 @@ def velbus_entries(hass: HomeAssistant):
     )
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class VelbusConfigFlow(config_entries.ConfigFlow):
+class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
@@ -50,7 +49,7 @@ class VelbusConfigFlow(config_entries.ConfigFlow):
         return False
 
     async def async_step_user(self, user_input=None):
-        """Step when user intializes a integration."""
+        """Step when user initializes a integration."""
         self._errors = {}
         if user_input is not None:
             name = slugify(user_input[CONF_NAME])

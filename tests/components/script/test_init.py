@@ -1,7 +1,7 @@
 """The tests for the Script component."""
 # pylint: disable=protected-access
 import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -10,19 +10,19 @@ from homeassistant.components.script import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
+    EVENT_SCRIPT_STARTED,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    EVENT_SCRIPT_STARTED,
 )
 from homeassistant.core import Context, callback, split_entity_id
-from homeassistant.loader import bind_hass
-from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.exceptions import ServiceNotFound
+from homeassistant.helpers.service import async_get_all_descriptions
+from homeassistant.loader import bind_hass
+from homeassistant.setup import async_setup_component, setup_component
 
 from tests.common import get_test_home_assistant
-
 
 ENTITY_ID = "script.test"
 
@@ -135,10 +135,6 @@ class TestScriptComponent(unittest.TestCase):
         assert not script.is_on(self.hass, ENTITY_ID)
         assert 0 == len(events)
 
-        state = self.hass.states.get("group.all_scripts")
-        assert state is not None
-        assert state.attributes.get("entity_id") == (ENTITY_ID,)
-
     def test_toggle_service(self):
         """Test the toggling of a service."""
         event = "test_event"
@@ -233,15 +229,67 @@ class TestScriptComponent(unittest.TestCase):
                 "script": {"test2": {"sequence": [{"delay": {"seconds": 5}}]}}
             },
         ):
-            with patch("homeassistant.config.find_config_file", return_value=""):
-                reload(self.hass)
-                self.hass.block_till_done()
+            reload(self.hass)
+            self.hass.block_till_done()
 
         assert self.hass.states.get(ENTITY_ID) is None
         assert not self.hass.services.has_service(script.DOMAIN, "test")
 
         assert self.hass.states.get("script.test2") is not None
         assert self.hass.services.has_service(script.DOMAIN, "test2")
+
+
+async def test_service_descriptions(hass):
+    """Test that service descriptions are loaded and reloaded correctly."""
+    # Test 1: has "description" but no "fields"
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "test": {
+                    "description": "test description",
+                    "sequence": [{"delay": {"seconds": 5}}],
+                }
+            }
+        },
+    )
+
+    descriptions = await async_get_all_descriptions(hass)
+
+    assert descriptions[DOMAIN]["test"]["description"] == "test description"
+    assert not descriptions[DOMAIN]["test"]["fields"]
+
+    # Test 2: has "fields" but no "description"
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        return_value={
+            "script": {
+                "test": {
+                    "fields": {
+                        "test_param": {
+                            "description": "test_param description",
+                            "example": "test_param example",
+                        }
+                    },
+                    "sequence": [{"delay": {"seconds": 5}}],
+                }
+            }
+        },
+    ):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    descriptions = await async_get_all_descriptions(hass)
+
+    assert descriptions[script.DOMAIN]["test"]["description"] == ""
+    assert (
+        descriptions[script.DOMAIN]["test"]["fields"]["test_param"]["description"]
+        == "test_param description"
+    )
+    assert (
+        descriptions[script.DOMAIN]["test"]["fields"]["test_param"]["example"]
+        == "test_param example"
+    )
 
 
 async def test_shared_context(hass):
@@ -306,3 +354,116 @@ async def test_turning_no_scripts_off(hass):
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {"entity_id": []}, blocking=True
     )
+
+
+async def test_async_get_descriptions_script(hass):
+    """Test async_set_service_schema for the script integration."""
+    script_config = {
+        DOMAIN: {
+            "test1": {"sequence": [{"service": "homeassistant.restart"}]},
+            "test2": {
+                "description": "test2",
+                "fields": {
+                    "param": {
+                        "description": "param_description",
+                        "example": "param_example",
+                    }
+                },
+                "sequence": [{"service": "homeassistant.restart"}],
+            },
+        }
+    }
+
+    await async_setup_component(hass, DOMAIN, script_config)
+    descriptions = await hass.helpers.service.async_get_all_descriptions()
+
+    assert descriptions[DOMAIN]["test1"]["description"] == ""
+    assert not descriptions[DOMAIN]["test1"]["fields"]
+
+    assert descriptions[DOMAIN]["test2"]["description"] == "test2"
+    assert (
+        descriptions[DOMAIN]["test2"]["fields"]["param"]["description"]
+        == "param_description"
+    )
+    assert (
+        descriptions[DOMAIN]["test2"]["fields"]["param"]["example"] == "param_example"
+    )
+
+
+async def test_extraction_functions(hass):
+    """Test extraction functions."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "test1": {
+                    "sequence": [
+                        {
+                            "service": "test.script",
+                            "data": {"entity_id": "light.in_both"},
+                        },
+                        {
+                            "service": "test.script",
+                            "data": {"entity_id": "light.in_first"},
+                        },
+                        {"domain": "light", "device_id": "device-in-both"},
+                    ]
+                },
+                "test2": {
+                    "sequence": [
+                        {
+                            "service": "test.script",
+                            "data": {"entity_id": "light.in_both"},
+                        },
+                        {
+                            "condition": "state",
+                            "entity_id": "sensor.condition",
+                            "state": "100",
+                        },
+                        {"scene": "scene.hello"},
+                        {"domain": "light", "device_id": "device-in-both"},
+                        {"domain": "light", "device_id": "device-in-last"},
+                    ],
+                },
+            }
+        },
+    )
+
+    assert set(script.scripts_with_entity(hass, "light.in_both")) == {
+        "script.test1",
+        "script.test2",
+    }
+    assert set(script.entities_in_script(hass, "script.test1")) == {
+        "light.in_both",
+        "light.in_first",
+    }
+    assert set(script.scripts_with_device(hass, "device-in-both")) == {
+        "script.test1",
+        "script.test2",
+    }
+    assert set(script.devices_in_script(hass, "script.test2")) == {
+        "device-in-both",
+        "device-in-last",
+    }
+
+
+async def test_config(hass):
+    """Test passing info in config."""
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "test_script": {
+                    "alias": "Script Name",
+                    "icon": "mdi:party",
+                    "sequence": [],
+                }
+            }
+        },
+    )
+
+    test_script = hass.states.get("script.test_script")
+    assert test_script.name == "Script Name"
+    assert test_script.attributes["icon"] == "mdi:party"

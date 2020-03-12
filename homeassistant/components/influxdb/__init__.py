@@ -1,11 +1,12 @@
 """Support for sending data to an Influx database."""
 import logging
-import re
+import math
 import queue
+import re
 import threading
 import time
-import math
 
+from influxdb import InfluxDBClient, exceptions
 import requests.exceptions
 import voluptuous as vol
 
@@ -20,12 +21,12 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
-    EVENT_STATE_CHANGED,
     EVENT_HOMEASSISTANT_STOP,
+    EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.helpers import state as state_helper, event as event_helper
+from homeassistant.helpers import event as event_helper, state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_values import EntityValues
 
@@ -118,7 +119,6 @@ RE_DECIMAL = re.compile(r"[^\d.]+")
 
 def setup(hass, config):
     """Set up the InfluxDB component."""
-    from influxdb import InfluxDBClient, exceptions
 
     conf = config[DOMAIN]
 
@@ -247,7 +247,7 @@ def setup(hass, config):
                 try:
                     json["fields"][key] = float(value)
                 except (ValueError, TypeError):
-                    new_key = "{}_str".format(key)
+                    new_key = f"{key}_str"
                     new_value = str(value)
                     json["fields"][new_key] = new_value
 
@@ -341,7 +341,6 @@ class InfluxThread(threading.Thread):
 
     def write_to_influxdb(self, json):
         """Write preprocessed events to influxdb, with retry."""
-        from influxdb import exceptions
 
         for retry in range(self.max_tries + 1):
             try:
@@ -353,7 +352,11 @@ class InfluxThread(threading.Thread):
 
                 _LOGGER.debug("Wrote %d events", len(json))
                 break
-            except (exceptions.InfluxDBClientError, IOError) as err:
+            except (
+                exceptions.InfluxDBClientError,
+                exceptions.InfluxDBServerError,
+                IOError,
+            ) as err:
                 if retry < self.max_tries:
                     time.sleep(RETRY_DELAY)
                 else:

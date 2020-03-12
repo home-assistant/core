@@ -1,36 +1,35 @@
 """Support for the Xiaomi IR Remote (Chuangmi IR)."""
 import asyncio
+from datetime import timedelta
 import logging
 import time
 
-from datetime import timedelta
-
+from miio import ChuangmiIr, DeviceException  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.remote import (
-    PLATFORM_SCHEMA,
-    DOMAIN,
-    ATTR_NUM_REPEATS,
     ATTR_DELAY_SECS,
+    ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
+    PLATFORM_SCHEMA,
     RemoteDevice,
 )
 from homeassistant.const import (
-    CONF_NAME,
-    CONF_HOST,
-    CONF_TOKEN,
-    CONF_TIMEOUT,
     ATTR_ENTITY_ID,
-    ATTR_HIDDEN,
     CONF_COMMAND,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_TIMEOUT,
+    CONF_TOKEN,
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
+from .const import DOMAIN, SERVICE_LEARN
+
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_LEARN = "xiaomi_miio_learn_command"
 DATA_KEY = "remote.xiaomi_miio"
 
 CONF_SLOT = "slot"
@@ -61,7 +60,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_SLOT, default=DEFAULT_SLOT): vol.All(
             int, vol.Range(min=1, max=1000000)
         ),
-        vol.Optional(ATTR_HIDDEN, default=True): cv.boolean,
         vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
         vol.Optional(CONF_COMMANDS, default={}): cv.schema_with_slug_keys(
             COMMAND_SCHEMA
@@ -73,10 +71,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Xiaomi IR Remote (Chuangmi IR) platform."""
-    from miio import ChuangmiIr, DeviceException
-
-    host = config.get(CONF_HOST)
-    token = config.get(CONF_TOKEN)
+    host = config[CONF_HOST]
+    token = config[CONF_TOKEN]
 
     # Create handler
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
@@ -88,9 +84,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     # Check that we can communicate with device.
     try:
-        device_info = device.info()
+        device_info = await hass.async_add_executor_job(device.info)
         model = device_info.model
-        unique_id = "{}-{}".format(model, device_info.mac_address)
+        unique_id = f"{model}-{device_info.mac_address}"
         _LOGGER.info(
             "%s %s %s detected",
             model,
@@ -108,16 +104,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     slot = config.get(CONF_SLOT)
     timeout = config.get(CONF_TIMEOUT)
 
-    hidden = config.get(ATTR_HIDDEN)
-
     xiaomi_miio_remote = XiaomiMiioRemote(
-        friendly_name,
-        device,
-        unique_id,
-        slot,
-        timeout,
-        hidden,
-        config.get(CONF_COMMANDS),
+        friendly_name, device, unique_id, slot, timeout, config.get(CONF_COMMANDS),
     )
 
     hass.data[DATA_KEY][host] = xiaomi_miio_remote
@@ -180,14 +168,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class XiaomiMiioRemote(RemoteDevice):
     """Representation of a Xiaomi Miio Remote device."""
 
-    def __init__(
-        self, friendly_name, device, unique_id, slot, timeout, hidden, commands
-    ):
+    def __init__(self, friendly_name, device, unique_id, slot, timeout, commands):
         """Initialize the remote."""
         self._name = friendly_name
         self._device = device
         self._unique_id = unique_id
-        self._is_hidden = hidden
         self._slot = slot
         self._timeout = timeout
         self._state = False
@@ -209,11 +194,6 @@ class XiaomiMiioRemote(RemoteDevice):
         return self._device
 
     @property
-    def hidden(self):
-        """Return if we should hide entity."""
-        return self._is_hidden
-
-    @property
     def slot(self):
         """Return the slot to save learned command."""
         return self._slot
@@ -226,8 +206,6 @@ class XiaomiMiioRemote(RemoteDevice):
     @property
     def is_on(self):
         """Return False if device is unreachable, else True."""
-        from miio import DeviceException
-
         try:
             self.device.info()
             return True
@@ -238,13 +216,6 @@ class XiaomiMiioRemote(RemoteDevice):
     def should_poll(self):
         """We should not be polled for device up state."""
         return False
-
-    @property
-    def device_state_attributes(self):
-        """Hide remote by default."""
-        if self._is_hidden:
-            return {"hidden": "true"}
-        return
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
@@ -262,8 +233,6 @@ class XiaomiMiioRemote(RemoteDevice):
 
     def _send_command(self, payload):
         """Send a command."""
-        from miio import DeviceException
-
         _LOGGER.debug("Sending payload: '%s'", payload)
         try:
             self.device.play(payload)

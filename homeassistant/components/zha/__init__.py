@@ -1,4 +1,6 @@
 """Support for Zigbee Home Automation devices."""
+
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -7,8 +9,6 @@ from homeassistant import config_entries, const as ha_const
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 
-# Loading the config flow file will register the flow
-from . import config_flow  # noqa  # pylint: disable=unused-import
 from . import api
 from .core import ZHAGateway
 from .core.const import (
@@ -23,12 +23,12 @@ from .core.const import (
     DATA_ZHA_CONFIG,
     DATA_ZHA_DISPATCHERS,
     DATA_ZHA_GATEWAY,
+    DATA_ZHA_PLATFORM_LOADED,
     DEFAULT_BAUDRATE,
     DEFAULT_RADIO_TYPE,
     DOMAIN,
     RadioType,
 )
-from .core.registries import establish_device_mappings
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(ha_const.CONF_TYPE): cv.string})
 
@@ -88,20 +88,30 @@ async def async_setup_entry(hass, config_entry):
 
     Will automatically load components to support devices found on the network.
     """
-    establish_device_mappings()
-
-    for component in COMPONENTS:
-        hass.data[DATA_ZHA][component] = hass.data[DATA_ZHA].get(component, {})
 
     hass.data[DATA_ZHA] = hass.data.get(DATA_ZHA, {})
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS] = []
+    hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED] = asyncio.Event()
+    platforms = []
+    for component in COMPONENTS:
+        platforms.append(
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(config_entry, component)
+            )
+        )
+
+    async def _platforms_loaded():
+        await asyncio.gather(*platforms)
+        hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED].set()
+
+    hass.async_create_task(_platforms_loaded())
+
     config = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {})
 
     if config.get(CONF_ENABLE_QUIRKS, True):
         # needs to be done here so that the ZHA module is finished loading
         # before zhaquirks is imported
-        # pylint: disable=W0611, W0612
-        import zhaquirks  # noqa
+        import zhaquirks  # noqa: F401 pylint: disable=unused-import, import-outside-toplevel, import-error
 
     zha_gateway = ZHAGateway(hass, config, config_entry)
     await zha_gateway.async_initialize()
@@ -116,11 +126,6 @@ async def async_setup_entry(hass, config_entry):
         model=zha_gateway.radio_description,
     )
 
-    for component in COMPONENTS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
-        )
-
     api.async_load_api(hass)
 
     async def async_zha_shutdown(event):
@@ -129,6 +134,7 @@ async def async_setup_entry(hass, config_entry):
         await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].async_update_device_storage()
 
     hass.bus.async_listen_once(ha_const.EVENT_HOMEASSISTANT_STOP, async_zha_shutdown)
+    hass.async_create_task(zha_gateway.async_load_devices())
     return True
 
 
@@ -145,5 +151,4 @@ async def async_unload_entry(hass, config_entry):
     for component in COMPONENTS:
         await hass.config_entries.async_forward_entry_unload(config_entry, component)
 
-    del hass.data[DATA_ZHA]
     return True

@@ -5,9 +5,10 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import DATA_MEGABYTES
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,8 +28,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if not hass.config.is_allowed_path(path):
             _LOGGER.error("Filepath %s is not valid or allowed", path)
             continue
-        else:
-            sensors.append(Filesize(path))
+        sensors.append(Filesize(path))
 
     if sensors:
         add_entities(sensors, True)
@@ -43,7 +43,7 @@ class Filesize(Entity):
         self._size = None
         self._last_updated = None
         self._name = path.split("/")[-1]
-        self._unit_of_measurement = "MB"
+        self._unit_of_measurement = DATA_MEGABYTES
 
     def update(self):
         """Update the sensor."""

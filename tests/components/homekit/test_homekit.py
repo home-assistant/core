@@ -1,35 +1,34 @@
 """Tests for the HomeKit component."""
-from unittest.mock import patch, ANY, Mock
+from unittest.mock import ANY, Mock, patch
 
 import pytest
 
 from homeassistant import setup
-
 from homeassistant.components.homekit import (
-    generate_aid,
-    HomeKit,
     MAX_DEVICES,
     STATUS_READY,
     STATUS_RUNNING,
     STATUS_STOPPED,
     STATUS_WAIT,
+    HomeKit,
+    generate_aid,
 )
 from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
+    BRIDGE_NAME,
     CONF_AUTO_START,
     CONF_SAFE_MODE,
-    BRIDGE_NAME,
     DEFAULT_PORT,
     DEFAULT_SAFE_MODE,
     DOMAIN,
     HOMEKIT_FILE,
-    SERVICE_HOMEKIT_START,
     SERVICE_HOMEKIT_RESET_ACCESSORY,
+    SERVICE_HOMEKIT_START,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_NAME,
     CONF_IP_ADDRESS,
+    CONF_NAME,
     CONF_PORT,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
@@ -38,7 +37,6 @@ from homeassistant.core import State
 from homeassistant.helpers.entityfilter import generate_filter
 
 from tests.components.homekit.common import patch_debounce
-
 
 IP_ADDRESS = "127.0.0.1"
 PATH_HOMEKIT = "homeassistant.components.homekit"
@@ -69,7 +67,7 @@ async def test_setup_min(hass):
         assert await setup.async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
     mock_homekit.assert_any_call(
-        hass, BRIDGE_NAME, DEFAULT_PORT, None, ANY, {}, DEFAULT_SAFE_MODE
+        hass, BRIDGE_NAME, DEFAULT_PORT, None, ANY, {}, DEFAULT_SAFE_MODE, None
     )
     assert mock_homekit().setup.called is True
 
@@ -98,7 +96,7 @@ async def test_setup_auto_start_disabled(hass):
         assert await setup.async_setup_component(hass, DOMAIN, config)
 
     mock_homekit.assert_any_call(
-        hass, "Test Name", 11111, "172.0.0.0", ANY, {}, DEFAULT_SAFE_MODE
+        hass, "Test Name", 11111, "172.0.0.0", ANY, {}, DEFAULT_SAFE_MODE, None
     )
     assert mock_homekit().setup.called is True
 
@@ -136,7 +134,11 @@ async def test_homekit_setup(hass, hk_driver):
     path = hass.config.path(HOMEKIT_FILE)
     assert isinstance(homekit.bridge, HomeBridge)
     mock_driver.assert_called_with(
-        hass, address=IP_ADDRESS, port=DEFAULT_PORT, persist_file=path
+        hass,
+        address=IP_ADDRESS,
+        port=DEFAULT_PORT,
+        persist_file=path,
+        advertised_address=None,
     )
     assert homekit.driver.safe_mode is False
 
@@ -153,7 +155,30 @@ async def test_homekit_setup_ip_address(hass, hk_driver):
     ) as mock_driver:
         await hass.async_add_job(homekit.setup)
     mock_driver.assert_called_with(
-        hass, address="172.0.0.0", port=DEFAULT_PORT, persist_file=ANY
+        hass,
+        address="172.0.0.0",
+        port=DEFAULT_PORT,
+        persist_file=ANY,
+        advertised_address=None,
+    )
+
+
+async def test_homekit_setup_advertise_ip(hass, hk_driver):
+    """Test setup with given IP address to advertise."""
+    homekit = HomeKit(
+        hass, BRIDGE_NAME, DEFAULT_PORT, "0.0.0.0", {}, {}, None, "192.168.1.100"
+    )
+
+    with patch(
+        PATH_HOMEKIT + ".accessories.HomeDriver", return_value=hk_driver
+    ) as mock_driver:
+        await hass.async_add_job(homekit.setup)
+    mock_driver.assert_called_with(
+        hass,
+        address="0.0.0.0",
+        port=DEFAULT_PORT,
+        persist_file=ANY,
+        advertised_address="192.168.1.100",
     )
 
 

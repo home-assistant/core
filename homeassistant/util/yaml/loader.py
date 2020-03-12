@@ -1,12 +1,17 @@
 """Custom loader."""
+from collections import OrderedDict
+import fnmatch
 import logging
 import os
 import sys
-import fnmatch
-from collections import OrderedDict
-from typing import Union, List, Dict, Iterator, overload, TypeVar
+from typing import Dict, Iterator, List, TypeVar, Union, overload
 
 import yaml
+
+from homeassistant.exceptions import HomeAssistantError
+
+from .const import _SECRET_NAMESPACE, SECRET_YAML
+from .objects import NodeListClass, NodeStrClass
 
 try:
     import keyring
@@ -18,19 +23,14 @@ try:
 except ImportError:
     credstash = None
 
-from homeassistant.exceptions import HomeAssistantError
-
-from .const import _SECRET_NAMESPACE, SECRET_YAML
-from .objects import NodeListClass, NodeStrClass
-
 
 # mypy: allow-untyped-calls, no-warn-return-any
 
-_LOGGER = logging.getLogger(__name__)
-__SECRET_CACHE = {}  # type: Dict[str, JSON_TYPE]
-
 JSON_TYPE = Union[List, Dict, str]  # pylint: disable=invalid-name
 DICT_T = TypeVar("DICT_T", bound=Dict)  # pylint: disable=invalid-name
+
+_LOGGER = logging.getLogger(__name__)
+__SECRET_CACHE: Dict[str, JSON_TYPE] = {}
 
 
 def clear_secret_cache() -> None:
@@ -41,16 +41,13 @@ def clear_secret_cache() -> None:
     __SECRET_CACHE.clear()
 
 
-# pylint: disable=too-many-ancestors
 class SafeLineLoader(yaml.SafeLoader):
     """Loader class that keeps track of line numbers."""
 
     def compose_node(self, parent: yaml.nodes.Node, index: int) -> yaml.nodes.Node:
         """Annotate a node with the first line it was seen."""
-        last_line = self.line  # type: int
-        node = super(SafeLineLoader, self).compose_node(
-            parent, index
-        )  # type: yaml.nodes.Node
+        last_line: int = self.line
+        node: yaml.nodes.Node = super().compose_node(parent, index)
         node.__line__ = last_line + 1  # type: ignore
         return node
 
@@ -70,7 +67,6 @@ def load_yaml(fname: str) -> JSON_TYPE:
         raise HomeAssistantError(exc)
 
 
-# pylint: disable=pointless-statement
 @overload
 def _add_reference(
     obj: Union[list, NodeListClass], loader: yaml.SafeLoader, node: yaml.nodes.Node
@@ -78,14 +74,14 @@ def _add_reference(
     ...
 
 
-@overload  # noqa: F811
+@overload
 def _add_reference(
     obj: Union[str, NodeStrClass], loader: yaml.SafeLoader, node: yaml.nodes.Node
 ) -> NodeStrClass:
     ...
 
 
-@overload  # noqa: F811
+@overload
 def _add_reference(
     obj: DICT_T, loader: yaml.SafeLoader, node: yaml.nodes.Node
 ) -> DICT_T:
@@ -95,7 +91,7 @@ def _add_reference(
 # pylint: enable=pointless-statement
 
 
-def _add_reference(  # type: ignore # noqa: F811
+def _add_reference(  # type: ignore
     obj, loader: SafeLineLoader, node: yaml.nodes.Node
 ):
     """Add file reference information to an object."""
@@ -141,7 +137,7 @@ def _include_dir_named_yaml(
     loader: SafeLineLoader, node: yaml.nodes.Node
 ) -> OrderedDict:
     """Load multiple files from directory as a dictionary."""
-    mapping = OrderedDict()  # type: OrderedDict
+    mapping: OrderedDict = OrderedDict()
     loc = os.path.join(os.path.dirname(loader.name), node.value)
     for fname in _find_files(loc, "*.yaml"):
         filename = os.path.splitext(os.path.basename(fname))[0]
@@ -155,7 +151,7 @@ def _include_dir_merge_named_yaml(
     loader: SafeLineLoader, node: yaml.nodes.Node
 ) -> OrderedDict:
     """Load multiple files from directory as a merged dictionary."""
-    mapping = OrderedDict()  # type: OrderedDict
+    mapping: OrderedDict = OrderedDict()
     loc = os.path.join(os.path.dirname(loader.name), node.value)
     for fname in _find_files(loc, "*.yaml"):
         if os.path.basename(fname) == SECRET_YAML:
@@ -182,8 +178,8 @@ def _include_dir_merge_list_yaml(
     loader: SafeLineLoader, node: yaml.nodes.Node
 ) -> JSON_TYPE:
     """Load multiple files from directory as a merged list."""
-    loc = os.path.join(os.path.dirname(loader.name), node.value)  # type: str
-    merged_list = []  # type: List[JSON_TYPE]
+    loc: str = os.path.join(os.path.dirname(loader.name), node.value)
+    merged_list: List[JSON_TYPE] = []
     for fname in _find_files(loc, "*.yaml"):
         if os.path.basename(fname) == SECRET_YAML:
             continue
@@ -198,7 +194,7 @@ def _ordered_dict(loader: SafeLineLoader, node: yaml.nodes.MappingNode) -> Order
     loader.flatten_mapping(node)
     nodes = loader.construct_pairs(node)
 
-    seen = {}  # type: Dict
+    seen: Dict = {}
     for (key, _), (child_node, _) in zip(nodes, node.value):
         line = child_node.start_mark.line
 
@@ -207,13 +203,13 @@ def _ordered_dict(loader: SafeLineLoader, node: yaml.nodes.MappingNode) -> Order
         except TypeError:
             fname = getattr(loader.stream, "name", "")
             raise yaml.MarkedYAMLError(
-                context='invalid key: "{}"'.format(key),
+                context=f'invalid key: "{key}"',
                 context_mark=yaml.Mark(fname, 0, line, -1, None, None),
             )
 
         if key in seen:
             fname = getattr(loader.stream, "name", "")
-            _LOGGER.error(
+            _LOGGER.warning(
                 'YAML file %s contains duplicate key "%s". ' "Check lines %d and %d.",
                 fname,
                 key,
@@ -227,7 +223,7 @@ def _ordered_dict(loader: SafeLineLoader, node: yaml.nodes.MappingNode) -> Order
 
 def _construct_seq(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
     """Add line number and file name to Load YAML sequence."""
-    obj, = loader.construct_yaml_seq(node)
+    (obj,) = loader.construct_yaml_seq(node)
     return _add_reference(obj, loader, node)
 
 
@@ -261,7 +257,7 @@ def _load_secret_yaml(secret_path: str) -> JSON_TYPE:
                 _LOGGER.setLevel(logging.DEBUG)
             else:
                 _LOGGER.error(
-                    "secrets.yaml: 'logger: debug' expected," " but 'logger: %s' found",
+                    "secrets.yaml: 'logger: debug' expected, but 'logger: %s' found",
                     logger,
                 )
             del secrets["logger"]
@@ -279,7 +275,7 @@ def secret_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
 
         if node.value in secrets:
             _LOGGER.debug(
-                "Secret %s retrieved from secrets.yaml in " "folder %s",
+                "Secret %s retrieved from secrets.yaml in folder %s",
                 node.value,
                 secret_path,
             )
@@ -314,7 +310,7 @@ def secret_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
             # Catch if package installed and no config
             credstash = None
 
-    raise HomeAssistantError("Secret {} not defined".format(node.value))
+    raise HomeAssistantError(f"Secret {node.value} not defined")
 
 
 yaml.SafeLoader.add_constructor("!include", _include_yaml)

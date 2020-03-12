@@ -72,7 +72,7 @@ class RachioSwitch(SwitchDevice):
     @property
     def name(self) -> str:
         """Get a name for this switch."""
-        return "Switch on {}".format(self._controller.name)
+        return f"Switch on {self._controller.name}"
 
     @property
     def is_on(self) -> bool:
@@ -107,18 +107,18 @@ class RachioStandbySwitch(RachioSwitch):
         dispatcher_connect(
             hass, SIGNAL_RACHIO_CONTROLLER_UPDATE, self._handle_any_update
         )
-        super().__init__(controller, poll=False)
+        super().__init__(controller, poll=True)
         self._poll_update(controller.init_data)
 
     @property
     def name(self) -> str:
         """Return the name of the standby switch."""
-        return "{} in standby mode".format(self._controller.name)
+        return f"{self._controller.name} in standby mode"
 
     @property
     def unique_id(self) -> str:
         """Return a unique id by combining controller id and purpose."""
-        return "{}-standby".format(self._controller.controller_id)
+        return f"{self._controller.controller_id}-standby"
 
     @property
     def icon(self) -> str:
@@ -134,9 +134,9 @@ class RachioStandbySwitch(RachioSwitch):
 
     def _handle_update(self, *args, **kwargs) -> None:
         """Update the state using webhook data."""
-        if args[0][KEY_SUBTYPE] == SUBTYPE_SLEEP_MODE_ON:
+        if args[0][0][KEY_SUBTYPE] == SUBTYPE_SLEEP_MODE_ON:
             self._state = True
-        elif args[0][KEY_SUBTYPE] == SUBTYPE_SLEEP_MODE_OFF:
+        elif args[0][0][KEY_SUBTYPE] == SUBTYPE_SLEEP_MODE_OFF:
             self._state = False
 
         self.schedule_update_ha_state()
@@ -183,7 +183,7 @@ class RachioZone(RachioSwitch):
     @property
     def unique_id(self) -> str:
         """Return a unique id by combining controller id and zone number."""
-        return "{}-zone-{}".format(self._controller.controller_id, self.zone_id)
+        return f"{self._controller.controller_id}-zone-{self.zone_id}"
 
     @property
     def icon(self) -> str:

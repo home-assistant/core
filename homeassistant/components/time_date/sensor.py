@@ -4,13 +4,13 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_DISPLAY_OPTIONS
-from homeassistant.helpers.entity import Entity
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +20,8 @@ OPTION_TYPES = {
     "time": "Time",
     "date": "Date",
     "date_time": "Date & Time",
-    "date_time_iso": "Date & Time ISO",
+    "date_time_utc": "Date & Time (UTC)",
+    "date_time_iso": "Date & Time (ISO)",
     "time_date": "Time & Date",
     "beat": "Internet Time",
     "time_utc": "Time (UTC)",
@@ -102,6 +103,7 @@ class TimeDateSensor(Entity):
         time = dt_util.as_local(time_date).strftime(TIME_STR_FORMAT)
         time_utc = time_date.strftime(TIME_STR_FORMAT)
         date = dt_util.as_local(time_date).date().isoformat()
+        date_utc = time_date.date().isoformat()
 
         # Calculate Swatch Internet Time.
         time_bmt = time_date + timedelta(hours=1)
@@ -118,15 +120,17 @@ class TimeDateSensor(Entity):
         elif self.type == "date":
             self._state = date
         elif self.type == "date_time":
-            self._state = "{}, {}".format(date, time)
+            self._state = f"{date}, {time}"
+        elif self.type == "date_time_utc":
+            self._state = f"{date_utc}, {time_utc}"
         elif self.type == "time_date":
-            self._state = "{}, {}".format(time, date)
+            self._state = f"{time}, {date}"
         elif self.type == "time_utc":
             self._state = time_utc
         elif self.type == "beat":
-            self._state = "@{0:03d}".format(beat)
+            self._state = f"@{beat:03d}"
         elif self.type == "date_time_iso":
-            self._state = dt_util.parse_datetime("{} {}".format(date, time)).isoformat()
+            self._state = dt_util.parse_datetime(f"{date} {time}").isoformat()
 
     @callback
     def point_in_time_listener(self, time_date):

@@ -4,10 +4,12 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
 from .const import (
+    DATA_CONNECTIONS,
     SIGNAL_WEBSOCKET_CONNECTED,
     SIGNAL_WEBSOCKET_DISCONNECTED,
-    DATA_CONNECTIONS,
 )
+
+# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

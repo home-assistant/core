@@ -1,12 +1,16 @@
 """Sensor for Xbox Live account status."""
+from datetime import timedelta
 import logging
 
 import voluptuous as vol
+from xboxapi import xbox_api
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_API_KEY, STATE_UNKNOWN
+from homeassistant.const import CONF_API_KEY, CONF_SCAN_INTERVAL
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,64 +28,75 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Xbox platform."""
-    from xboxapi import xbox_api
-
-    api = xbox_api.XboxApi(config.get(CONF_API_KEY))
-    devices = []
+    api = xbox_api.XboxApi(config[CONF_API_KEY])
+    entities = []
 
     # request personal profile to check api connection
     profile = api.get_profile()
     if profile.get("error_code") is not None:
         _LOGGER.error(
             "Can't setup XboxAPI connection. Check your account or "
-            " api key on xboxapi.com. Code: %s Description: %s ",
-            profile.get("error_code", STATE_UNKNOWN),
-            profile.get("error_message", STATE_UNKNOWN),
+            "api key on xboxapi.com. Code: %s Description: %s ",
+            profile.get("error_code", "unknown"),
+            profile.get("error_message", "unknown"),
         )
         return
 
-    for xuid in config.get(CONF_XUID):
-        new_device = XboxSensor(hass, api, xuid)
-        if new_device.success_init:
-            devices.append(new_device)
+    users = config[CONF_XUID]
 
-    if devices:
-        add_entities(devices, True)
+    interval = timedelta(minutes=1 * len(users))
+    interval = config.get(CONF_SCAN_INTERVAL, interval)
+
+    for xuid in users:
+        gamercard = get_user_gamercard(api, xuid)
+        if gamercard is None:
+            continue
+        entities.append(XboxSensor(api, xuid, gamercard, interval))
+
+    if entities:
+        add_entities(entities, True)
+
+
+def get_user_gamercard(api, xuid):
+    """Get profile info."""
+    gamercard = api.get_user_gamercard(xuid)
+    _LOGGER.debug("User gamercard: %s", gamercard)
+
+    if gamercard.get("success", True) and gamercard.get("code") is None:
+        return gamercard
+    _LOGGER.error(
+        "Can't get user profile %s. Error Code: %s Description: %s",
+        xuid,
+        gamercard.get("code", "unknown"),
+        gamercard.get("description", "unknown"),
+    )
+    return None
 
 
 class XboxSensor(Entity):
     """A class for the Xbox account."""
 
-    def __init__(self, hass, api, xuid):
+    def __init__(self, api, xuid, gamercard, interval):
         """Initialize the sensor."""
-        self._hass = hass
         self._state = None
-        self._presence = {}
+        self._presence = []
         self._xuid = xuid
         self._api = api
-
-        # get profile info
-        profile = self._api.get_user_gamercard(self._xuid)
-
-        if profile.get("success", True) and profile.get("code") is None:
-            self.success_init = True
-            self._gamertag = profile.get("gamertag")
-            self._gamerscore = profile.get("gamerscore")
-            self._picture = profile.get("gamerpicSmallSslImagePath")
-            self._tier = profile.get("tier")
-        else:
-            _LOGGER.error(
-                "Can't get user profile %s. " "Error Code: %s Description: %s",
-                self._xuid,
-                profile.get("code", STATE_UNKNOWN),
-                profile.get("description", STATE_UNKNOWN),
-            )
-            self.success_init = False
+        self._gamertag = gamercard.get("gamertag")
+        self._gamerscore = gamercard.get("gamerscore")
+        self._interval = interval
+        self._picture = gamercard.get("gamerpicSmallSslImagePath")
+        self._tier = gamercard.get("tier")
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return self._gamertag
+
+    @property
+    def should_poll(self):
+        """Return False as this entity has custom polling."""
+        return False
 
     @property
     def state(self):
@@ -98,7 +113,7 @@ class XboxSensor(Entity):
         for device in self._presence:
             for title in device.get("titles"):
                 attributes[
-                    "{} {}".format(device.get("type"), title.get("placement"))
+                    f'{device.get("type")} {title.get("placement")}'
                 ] = title.get("name")
 
         return attributes
@@ -113,8 +128,19 @@ class XboxSensor(Entity):
         """Return the icon to use in the frontend."""
         return ICON
 
+    async def async_added_to_hass(self):
+        """Start custom polling."""
+
+        @callback
+        def async_update(event_time=None):
+            """Update the entity."""
+            self.async_schedule_update_ha_state(True)
+
+        async_track_time_interval(self.hass, async_update, self._interval)
+
     def update(self):
         """Update state data from Xbox API."""
         presence = self._api.get_user_presence(self._xuid)
+        _LOGGER.debug("User presence: %s", presence)
         self._state = presence.get("state")
-        self._presence = presence.get("devices", {})
+        self._presence = presence.get("devices", [])

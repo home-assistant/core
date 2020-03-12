@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+from pycfdns import CloudflareUpdater
 import voluptuous as vol
 
 from homeassistant.const import CONF_API_KEY, CONF_EMAIL, CONF_ZONE
@@ -33,7 +34,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the Cloudflare component."""
-    from pycfdns import CloudflareUpdater
 
     cfupdate = CloudflareUpdater()
     email = config[DOMAIN][CONF_EMAIL]

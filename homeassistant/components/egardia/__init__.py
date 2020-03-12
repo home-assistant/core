@@ -1,6 +1,7 @@
 """Interfaces with Egardia/Woonveilig alarm control panel."""
 import logging
 
+from pythonegardia import egardiadevice, egardiaserver
 import requests
 import voluptuous as vol
 
@@ -78,8 +79,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the Egardia platform."""
-    from pythonegardia import egardiadevice
-    from pythonegardia import egardiaserver
 
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
@@ -110,8 +109,8 @@ def setup(hass, config):
                 server = egardiaserver.EgardiaServer("", rs_port)
                 bound = server.bind()
                 if not bound:
-                    raise IOError(
-                        "Binding error occurred while " + "starting EgardiaServer."
+                    raise OSError(
+                        "Binding error occurred while starting EgardiaServer."
                     )
                 hass.data[EGARDIA_SERVER] = server
                 server.start()
@@ -120,10 +119,10 @@ def setup(hass, config):
                 """Handle Home Assistant stop event."""
                 server.stop()
 
-            # listen to home assistant stop event
+            # listen to Home Assistant stop event
             hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop_event)
 
-        except IOError:
+        except OSError:
             _LOGGER.error("Binding error occurred while starting EgardiaServer")
             return False
 

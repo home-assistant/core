@@ -49,7 +49,7 @@ class BOMWeather(WeatherEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "BOM {}".format(self.stationname or "(unknown station)")
+        return f"BOM {self.stationname or '(unknown station)'}"
 
     @property
     def condition(self):

@@ -1,20 +1,30 @@
 """HTML5 Push Messaging notification service."""
 from datetime import datetime, timedelta
-
 from functools import partial
-from urllib.parse import urlparse
 import json
 import logging
 import time
+from urllib.parse import urlparse
 import uuid
 
 from aiohttp.hdrs import AUTHORIZATION
+import jwt
+from py_vapid import Vapid
+from pywebpush import WebPusher
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant.components import websocket_api
 from homeassistant.components.frontend import add_manifest_json_key
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.notify import (
+    ATTR_DATA,
+    ATTR_TARGET,
+    ATTR_TITLE,
+    ATTR_TITLE_DEFAULT,
+    PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 from homeassistant.const import (
     HTTP_BAD_REQUEST,
     HTTP_INTERNAL_SERVER_ERROR,
@@ -26,21 +36,11 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.util import ensure_unique_string
 from homeassistant.util.json import load_json, save_json
 
-from homeassistant.components.notify import (
-    ATTR_DATA,
-    ATTR_TARGET,
-    ATTR_TITLE,
-    ATTR_TITLE_DEFAULT,
-    DOMAIN,
-    PLATFORM_SCHEMA,
-    BaseNotificationService,
-)
+from .const import DOMAIN, SERVICE_DISMISS
 
 _LOGGER = logging.getLogger(__name__)
 
 REGISTRATIONS_FILE = "html5_push_registrations.conf"
-
-SERVICE_DISMISS = "html5_dismiss"
 
 ATTR_GCM_SENDER_ID = "gcm_sender_id"
 ATTR_GCM_API_KEY = "gcm_api_key"
@@ -56,7 +56,7 @@ def gcm_api_deprecated(value):
             "Configuring html5_push_notifications via the GCM api"
             " has been deprecated and will stop working after April 11,"
             " 2019. Use the VAPID configuration instead. For instructions,"
-            " see https://www.home-assistant.io/components/notify.html5/"
+            " see https://www.home-assistant.io/integrations/html5/"
         )
     return value
 
@@ -311,7 +311,6 @@ class HTML5PushCallbackView(HomeAssistantView):
 
     def decode_jwt(self, token):
         """Find the registration that signed this JWT and return it."""
-        import jwt
 
         # 1.  Check claims w/o verifying to see if a target is in there.
         # 2.  If target in claims, attempt to verify against the given name.
@@ -335,7 +334,6 @@ class HTML5PushCallbackView(HomeAssistantView):
     # https://auth0.com/docs/quickstart/backend/python
     def check_authorization_header(self, request):
         """Check the authorization header."""
-        import jwt
 
         auth = request.headers.get(AUTHORIZATION, None)
         if not auth:
@@ -347,12 +345,12 @@ class HTML5PushCallbackView(HomeAssistantView):
 
         if parts[0].lower() != "bearer":
             return self.json_message(
-                "Authorization header must " "start with Bearer",
+                "Authorization header must start with Bearer",
                 status_code=HTTP_UNAUTHORIZED,
             )
         if len(parts) != 2:
             return self.json_message(
-                "Authorization header must " "be Bearer token",
+                "Authorization header must be Bearer token",
                 status_code=HTTP_UNAUTHORIZED,
             )
 
@@ -394,7 +392,7 @@ class HTML5PushCallbackView(HomeAssistantView):
                 humanize_error(event_payload, ex),
             )
 
-        event_name = "{}.{}".format(NOTIFY_CALLBACK_EVENT, event_payload[ATTR_TYPE])
+        event_name = f"{NOTIFY_CALLBACK_EVENT}.{event_payload[ATTR_TYPE]}"
         request.app["hass"].bus.fire(event_name, event_payload)
         return self.json({"status": "ok", "event": event_payload[ATTR_TYPE]})
 
@@ -491,7 +489,6 @@ class HTML5NotificationService(BaseNotificationService):
 
     def _push_message(self, payload, **kwargs):
         """Send the message."""
-        from pywebpush import WebPusher
 
         timestamp = int(time.time())
         ttl = int(kwargs.get(ATTR_TTL, DEFAULT_TTL))
@@ -510,7 +507,7 @@ class HTML5NotificationService(BaseNotificationService):
                 info = REGISTER_SCHEMA(info)
             except vol.Invalid:
                 _LOGGER.error(
-                    "%s is not a valid HTML5 push notification" " target", target
+                    "%s is not a valid HTML5 push notification target", target
                 )
                 continue
             payload[ATTR_DATA][ATTR_JWT] = add_jwt(
@@ -550,7 +547,6 @@ class HTML5NotificationService(BaseNotificationService):
 
 def add_jwt(timestamp, target, tag, jwt_secret):
     """Create JWT json to put into payload."""
-    import jwt
 
     jwt_exp = datetime.fromtimestamp(timestamp) + timedelta(days=JWT_VALID_DAYS)
     jwt_claims = {
@@ -565,13 +561,12 @@ def add_jwt(timestamp, target, tag, jwt_secret):
 
 def create_vapid_headers(vapid_email, subscription_info, vapid_private_key):
     """Create encrypted headers to send to WebPusher."""
-    from py_vapid import Vapid
 
     if vapid_email and vapid_private_key and ATTR_ENDPOINT in subscription_info:
         url = urlparse(subscription_info.get(ATTR_ENDPOINT))
         vapid_claims = {
-            "sub": "mailto:{}".format(vapid_email),
-            "aud": "{}://{}".format(url.scheme, url.netloc),
+            "sub": f"mailto:{vapid_email}",
+            "aud": f"{url.scheme}://{url.netloc}",
         }
         vapid = Vapid.from_string(private_key=vapid_private_key)
         return vapid.sign(vapid_claims)

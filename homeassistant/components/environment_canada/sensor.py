@@ -1,25 +1,21 @@
-"""
-Support for the Environment Canada weather service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.environment_canada/
-"""
+"""Support for the Environment Canada weather service."""
 from datetime import datetime, timedelta
 import logging
 import re
 
+from env_canada import ECData
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    TEMP_CELSIUS,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
     ATTR_ATTRIBUTION,
     ATTR_LOCATION,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    TEMP_CELSIUS,
 )
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +23,6 @@ SCAN_INTERVAL = timedelta(minutes=10)
 
 ATTR_UPDATED = "updated"
 ATTR_STATION = "station"
-ATTR_DETAIL = "alert detail"
 ATTR_TIME = "alert time"
 
 CONF_ATTRIBUTION = "Data provided by Environment Canada"
@@ -56,7 +51,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Environment Canada sensor."""
-    from env_canada import ECData
 
     if config.get(CONF_STATION):
         ec_data = ECData(
@@ -68,7 +62,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ec_data = ECData(coordinates=(lat, lon), language=config.get(CONF_LANGUAGE))
 
     sensor_list = list(ec_data.conditions.keys()) + list(ec_data.alerts.keys())
-    sensor_list.remove("icon_code")
     add_entities([ECSensor(sensor_type, ec_data) for sensor_type in sensor_list], True)
 
 
@@ -120,21 +113,21 @@ class ECSensor(Entity):
         metadata = self.ec_data.metadata
         sensor_data = conditions.get(self.sensor_type)
 
-        self._unique_id = "{}-{}".format(metadata["location"], self.sensor_type)
+        self._unique_id = f"{metadata['location']}-{self.sensor_type}"
         self._attr = {}
         self._name = sensor_data.get("label")
         value = sensor_data.get("value")
 
         if isinstance(value, list):
-            self._state = " | ".join([str(s.get("title")) for s in value])
+            self._state = " | ".join([str(s.get("title")) for s in value])[:255]
             self._attr.update(
-                {
-                    ATTR_DETAIL: " | ".join([str(s.get("detail")) for s in value]),
-                    ATTR_TIME: " | ".join([str(s.get("date")) for s in value]),
-                }
+                {ATTR_TIME: " | ".join([str(s.get("date")) for s in value])}
             )
         elif self.sensor_type == "tendency":
             self._state = str(value).capitalize()
+        elif value is not None and len(value) > 255:
+            self._state = value[:255]
+            _LOGGER.info("Value for %s truncated to 255 characters", self._unique_id)
         else:
             self._state = value
 

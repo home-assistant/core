@@ -1,19 +1,13 @@
 {
   "domain": "tradfri",
-  "name": "Tradfri",
+  "name": "IKEA TRÅDFRI (TRADFRI)",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/tradfri",
-  "requirements": [
-    "pytradfri[async]==6.0.1"
-  ],
+  "documentation": "https://www.home-assistant.io/integrations/tradfri",
+  "requirements": ["pytradfri[async]==6.4.0"],
   "homekit": {
-    "models": [
-      "TRADFRI"
-    ]
+    "models": ["TRADFRI"]
   },
   "dependencies": [],
   "zeroconf": ["_coap._udp.local."],
-  "codeowners": [
-    "@ggravlingen"
-  ]
+  "codeowners": ["@ggravlingen"]
 }

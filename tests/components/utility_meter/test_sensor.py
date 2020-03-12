@@ -1,20 +1,22 @@
 """The tests for the utility_meter sensor platform."""
-import logging
-
-from datetime import timedelta
-from unittest.mock import patch
 from contextlib import contextmanager
+from datetime import timedelta
+import logging
+from unittest.mock import patch
 
-from tests.common import async_fire_time_changed
-from homeassistant.const import EVENT_HOMEASSISTANT_START, ATTR_ENTITY_ID
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.utility_meter.const import (
+    ATTR_TARIFF,
+    ATTR_VALUE,
+    DOMAIN,
+    SERVICE_CALIBRATE_METER,
+    SERVICE_SELECT_TARIFF,
+)
+from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-from homeassistant.components.utility_meter.const import (
-    DOMAIN,
-    SERVICE_SELECT_TARIFF,
-    ATTR_TARIFF,
-)
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+
+from tests.common import async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,6 +97,17 @@ async def test_state(hass):
     state = hass.states.get("sensor.energy_bill_offpeak")
     assert state is not None
     assert state.state == "3"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CALIBRATE_METER,
+        {ATTR_ENTITY_ID: "sensor.energy_bill_midpeak", ATTR_VALUE: "100"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.energy_bill_midpeak")
+    assert state is not None
+    assert state.state == "100"
 
 
 async def test_net_consumption(hass):
@@ -237,6 +250,13 @@ async def test_self_reset_monthly(hass):
     """Test monthly reset of meter."""
     await _test_self_reset(
         hass, gen_config("monthly"), "2017-12-31T23:59:00.000000+00:00"
+    )
+
+
+async def test_self_reset_quarterly(hass):
+    """Test quarterly reset of meter."""
+    await _test_self_reset(
+        hass, gen_config("quarterly"), "2017-03-31T23:59:00.000000+00:00"
     )
 
 

@@ -17,8 +17,7 @@ from homeassistant.util.yaml import dump
 
 from .const import KEY_REAL_IP
 
-
-# mypy: allow-incomplete-defs, allow-untyped-defs, no-check-untyped-defs
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,9 +96,7 @@ async def process_wrong_login(request):
     """
     remote_addr = request[KEY_REAL_IP]
 
-    msg = "Login attempt or request with invalid authentication " "from {}".format(
-        remote_addr
-    )
+    msg = f"Login attempt or request with invalid authentication from {remote_addr}"
     _LOGGER.warning(msg)
 
     hass = request.app["hass"]
@@ -127,7 +124,7 @@ async def process_wrong_login(request):
         _LOGGER.warning("Banned IP %s for too many login attempts", remote_addr)
 
         hass.components.persistent_notification.async_create(
-            "Too many login attempts from {}".format(remote_addr),
+            f"Too many login attempts from {remote_addr}",
             "Banning IP address",
             NOTIFICATION_ID_BAN,
         )
@@ -151,7 +148,7 @@ async def process_success_login(request):
         and request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] > 0
     ):
         _LOGGER.debug(
-            "Login success, reset failed login attempts counter" " from %s", remote_addr
+            "Login success, reset failed login attempts counter from %s", remote_addr
         )
         request.app[KEY_FAILED_LOGIN_ATTEMPTS].pop(remote_addr)
 
@@ -165,7 +162,7 @@ class IpBan:
         self.banned_at = banned_at or datetime.utcnow()
 
 
-async def async_load_ip_bans_config(hass: HomeAssistant, path: str):
+async def async_load_ip_bans_config(hass: HomeAssistant, path: str) -> List[IpBan]:
     """Load list of banned IPs from config file."""
     ip_list: List[IpBan] = []
 
@@ -188,7 +185,7 @@ async def async_load_ip_bans_config(hass: HomeAssistant, path: str):
     return ip_list
 
 
-def update_ip_bans_config(path: str, ip_ban: IpBan):
+def update_ip_bans_config(path: str, ip_ban: IpBan) -> None:
     """Update config file with new banned IP address."""
     with open(path, "a") as out:
         ip_ = {

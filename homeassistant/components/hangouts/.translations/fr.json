@@ -14,6 +14,7 @@
                 "data": {
                     "2fa": "Code PIN d'authentification \u00e0 2 facteurs"
                 },
+                "description": "Vide",
                 "title": "Authentification \u00e0 2 facteurs"
             },
             "user": {
@@ -22,6 +23,7 @@
                     "email": "Adresse e-mail",
                     "password": "Mot de passe"
                 },
+                "description": "Vide",
                 "title": "Connexion \u00e0 Google Hangouts"
             }
         },

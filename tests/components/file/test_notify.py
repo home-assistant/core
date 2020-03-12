@@ -3,9 +3,9 @@ import os
 import unittest
 from unittest.mock import call, mock_open, patch
 
-from homeassistant.setup import setup_component
 import homeassistant.components.notify as notify
 from homeassistant.components.notify import ATTR_TITLE_DEFAULT
+from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import assert_setup_component, get_test_home_assistant
@@ -56,8 +56,9 @@ class TestNotifyFile(unittest.TestCase):
         ):
 
             mock_st.return_value.st_size = 0
-            title = "{} notifications (Log started: {})\n{}\n".format(
-                ATTR_TITLE_DEFAULT, dt_util.utcnow().isoformat(), "-" * 80
+            title = (
+                f"{ATTR_TITLE_DEFAULT} notifications "
+                f"(Log started: {dt_util.utcnow().isoformat()})\n{'-' * 80}\n"
             )
 
             self.hass.services.call(
@@ -72,12 +73,12 @@ class TestNotifyFile(unittest.TestCase):
             if not timestamp:
                 assert m_open.return_value.write.call_args_list == [
                     call(title),
-                    call("{}\n".format(message)),
+                    call(f"{message}\n"),
                 ]
             else:
                 assert m_open.return_value.write.call_args_list == [
                     call(title),
-                    call("{} {}\n".format(dt_util.utcnow().isoformat(), message)),
+                    call(f"{dt_util.utcnow().isoformat()} {message}\n"),
                 ]
 
     def test_notify_file(self):

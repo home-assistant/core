@@ -2,11 +2,14 @@
 
 from homeassistant.bootstrap import async_setup_component
 
+from .test_auth import test_auth_active_with_token
+
 from tests.common import assert_setup_component
-from .test_auth import test_auth_via_msg
 
 
-async def test_websocket_api(hass, no_auth_websocket_client, legacy_auth):
+async def test_websocket_api(
+    hass, no_auth_websocket_client, hass_access_token, legacy_auth
+):
     """Test API streams."""
     with assert_setup_component(1):
         await async_setup_component(
@@ -16,7 +19,7 @@ async def test_websocket_api(hass, no_auth_websocket_client, legacy_auth):
     state = hass.states.get("sensor.connected_clients")
     assert state.state == "0"
 
-    await test_auth_via_msg(no_auth_websocket_client, legacy_auth)
+    await test_auth_active_with_token(hass, no_auth_websocket_client, hass_access_token)
 
     state = hass.states.get("sensor.connected_clients")
     assert state.state == "1"

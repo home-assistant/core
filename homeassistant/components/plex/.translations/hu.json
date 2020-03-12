@@ -1,0 +1,57 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Az \u00f6sszes \u00f6sszekapcsolt szerver m\u00e1r konfigur\u00e1lva van",
+            "already_configured": "Ez a Plex szerver m\u00e1r konfigur\u00e1lva van",
+            "already_in_progress": "A Plex konfigur\u00e1l\u00e1sa folyamatban van",
+            "discovery_no_file": "Nem tal\u00e1lhat\u00f3 r\u00e9gi konfigur\u00e1ci\u00f3s f\u00e1jl",
+            "invalid_import": "Az import\u00e1lt konfigur\u00e1ci\u00f3 \u00e9rv\u00e9nytelen",
+            "non-interactive": "Nem interakt\u00edv import\u00e1l\u00e1s",
+            "token_request_timeout": "Token k\u00e9r\u00e9sre sz\u00e1nt id\u0151 lej\u00e1rt",
+            "unknown": "Ismeretlen okb\u00f3l nem siker\u00fclt"
+        },
+        "error": {
+            "faulty_credentials": "A hiteles\u00edt\u00e9s sikertelen",
+            "no_servers": "Nincs szerver csatlakoztatva a fi\u00f3khoz",
+            "not_found": "A Plex szerver nem tal\u00e1lhat\u00f3"
+        },
+        "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "Kiszolg\u00e1l\u00f3",
+                    "port": "Port"
+                }
+            },
+            "select_server": {
+                "data": {
+                    "server": "szerver"
+                },
+                "description": "T\u00f6bb szerver el\u00e9rhet\u0151, v\u00e1lasszon egyet:",
+                "title": "Plex-kiszolg\u00e1l\u00f3 kiv\u00e1laszt\u00e1sa"
+            },
+            "start_website_auth": {
+                "description": "Folytassa az enged\u00e9lyez\u00e9st a plex.tv webhelyen.",
+                "title": "Plex-kiszolg\u00e1l\u00f3 csatlakoztat\u00e1sa"
+            },
+            "user": {
+                "data": {
+                    "token": "Plex token"
+                },
+                "description": "Folytassa az enged\u00e9lyez\u00e9st a plex.tv webhelyen, vagy manu\u00e1lisan konfigur\u00e1lja a szervert.",
+                "title": "Plex-kiszolg\u00e1l\u00f3 csatlakoztat\u00e1sa"
+            }
+        },
+        "title": "Plex"
+    },
+    "options": {
+        "step": {
+            "plex_mp_settings": {
+                "data": {
+                    "show_all_controls": "Az \u00f6sszes vez\u00e9rl\u0151 megjelen\u00edt\u00e9se",
+                    "use_episode_art": "Haszn\u00e1lja az epiz\u00f3d bor\u00edt\u00f3j\u00e1t"
+                },
+                "description": "Plex media lej\u00e1tsz\u00f3k be\u00e1ll\u00edt\u00e1sai"
+            }
+        }
+    }
+}

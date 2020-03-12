@@ -6,15 +6,15 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import (
     CONF_HEADERS,
+    CONF_METHOD,
     CONF_NAME,
+    CONF_PASSWORD,
     CONF_RESOURCE,
     CONF_TIMEOUT,
-    CONF_METHOD,
     CONF_USERNAME,
-    CONF_PASSWORD,
     CONF_VERIFY_SSL,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession

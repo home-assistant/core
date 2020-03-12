@@ -1,11 +1,12 @@
 """Config flow to configure the AdGuard Home integration."""
+from distutils.version import LooseVersion
 import logging
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.adguard.const import DOMAIN
+from homeassistant.components.adguard.const import DOMAIN, MIN_ADGUARD_HOME_VERSION
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
     CONF_HOST,
@@ -78,15 +79,23 @@ class AdGuardHomeFlowHandler(ConfigFlow):
             password=user_input.get(CONF_PASSWORD),
             tls=user_input[CONF_SSL],
             verify_ssl=user_input[CONF_VERIFY_SSL],
-            loop=self.hass.loop,
             session=session,
         )
 
         try:
-            await adguard.version()
+            version = await adguard.version()
         except AdGuardHomeConnectionError:
             errors["base"] = "connection_error"
             return await self._show_setup_form(errors)
+
+        if LooseVersion(MIN_ADGUARD_HOME_VERSION) > LooseVersion(version):
+            return self.async_abort(
+                reason="adguard_home_outdated",
+                description_placeholders={
+                    "current_version": version,
+                    "minimal_version": MIN_ADGUARD_HOME_VERSION,
+                },
+            )
 
         return self.async_create_entry(
             title=user_input[CONF_HOST],
@@ -151,15 +160,23 @@ class AdGuardHomeFlowHandler(ConfigFlow):
             self._hassio_discovery[CONF_HOST],
             port=self._hassio_discovery[CONF_PORT],
             tls=False,
-            loop=self.hass.loop,
             session=session,
         )
 
         try:
-            await adguard.version()
+            version = await adguard.version()
         except AdGuardHomeConnectionError:
             errors["base"] = "connection_error"
             return await self._show_hassio_form(errors)
+
+        if LooseVersion(MIN_ADGUARD_HOME_VERSION) > LooseVersion(version):
+            return self.async_abort(
+                reason="adguard_home_addon_outdated",
+                description_placeholders={
+                    "current_version": version,
+                    "minimal_version": MIN_ADGUARD_HOME_VERSION,
+                },
+            )
 
         return self.async_create_entry(
             title=self._hassio_discovery["addon"],

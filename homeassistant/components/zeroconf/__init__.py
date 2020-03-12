@@ -1,18 +1,25 @@
 """Support for exposing Home Assistant via Zeroconf."""
-# PyLint bug confuses absolute/relative imports
-# https://github.com/PyCQA/pylint/issues/1931
-# pylint: disable=no-name-in-module
+import ipaddress
 import logging
 import socket
 
-import ipaddress
 import voluptuous as vol
-
-from zeroconf import ServiceBrowser, ServiceInfo, ServiceStateChange, Zeroconf
+from zeroconf import (
+    NonUniqueNameException,
+    ServiceBrowser,
+    ServiceInfo,
+    ServiceStateChange,
+    Zeroconf,
+)
 
 from homeassistant import util
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, __version__
-from homeassistant.generated.zeroconf import ZEROCONF, HOMEKIT
+from homeassistant.const import (
+    ATTR_NAME,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+    __version__,
+)
+from homeassistant.generated.zeroconf import HOMEKIT, ZEROCONF
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +29,6 @@ ATTR_HOST = "host"
 ATTR_PORT = "port"
 ATTR_HOSTNAME = "hostname"
 ATTR_TYPE = "type"
-ATTR_NAME = "name"
 ATTR_PROPERTIES = "properties"
 
 ZEROCONF_TYPE = "_home-assistant._tcp.local."
@@ -33,12 +39,13 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 def setup(hass, config):
     """Set up Zeroconf and make Home Assistant discoverable."""
-    zeroconf_name = "{}.{}".format(hass.config.location_name, ZEROCONF_TYPE)
+    zeroconf = Zeroconf()
+    zeroconf_name = f"{hass.config.location_name}.{ZEROCONF_TYPE}"
 
     params = {
         "version": __version__,
         "base_url": hass.config.api.base_url,
-        # always needs authentication
+        # Always needs authentication
         "requires_api_password": True,
     }
 
@@ -58,9 +65,20 @@ def setup(hass, config):
         properties=params,
     )
 
-    zeroconf = Zeroconf()
+    def zeroconf_hass_start(_event):
+        """Expose Home Assistant on zeroconf when it starts.
 
-    zeroconf.register_service(info)
+        Wait till started or otherwise HTTP is not up and running.
+        """
+        _LOGGER.info("Starting Zeroconf broadcast")
+        try:
+            zeroconf.register_service(info)
+        except NonUniqueNameException:
+            _LOGGER.error(
+                "Home Assistant instance with identical name present in the local network"
+            )
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, zeroconf_hass_start)
 
     def service_update(zeroconf, service_type, name, state_change):
         """Service state changed."""
@@ -90,7 +108,6 @@ def setup(hass, config):
 
     def stop_zeroconf(_):
         """Stop Zeroconf."""
-        zeroconf.unregister_service(info)
         zeroconf.close()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zeroconf)
@@ -130,15 +147,20 @@ def handle_homekit(hass, info) -> bool:
 
 def info_from_service(service):
     """Return prepared info from mDNS entries."""
-    properties = {}
+    properties = {"_raw": {}}
 
     for key, value in service.properties.items():
+        # See https://ietf.org/rfc/rfc6763.html#section-6.4 and
+        # https://ietf.org/rfc/rfc6763.html#section-6.5 for expected encodings
+        # for property keys and values
+        key = key.decode("ascii")
+        properties["_raw"][key] = value
+
         try:
             if isinstance(value, bytes):
-                value = value.decode("utf-8")
-            properties[key.decode("utf-8")] = value
+                properties[key] = value.decode("utf-8")
         except UnicodeDecodeError:
-            _LOGGER.warning("Unicode decode error on %s: %s", key, value)
+            pass
 
     address = service.addresses[0]
 

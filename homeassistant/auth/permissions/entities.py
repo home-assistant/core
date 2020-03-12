@@ -1,15 +1,13 @@
 """Entity permissions."""
 from collections import OrderedDict
-from typing import Callable, Optional  # noqa: F401
+from typing import Callable, Optional
 
 import voluptuous as vol
 
-from .const import SUBCAT_ALL, POLICY_READ, POLICY_CONTROL, POLICY_EDIT
+from .const import POLICY_CONTROL, POLICY_EDIT, POLICY_READ, SUBCAT_ALL
 from .models import PermissionLookup
 from .types import CategoryType, SubCategoryDict, ValueType
-
-# pylint: disable=unused-import
-from .util import SubCatLookupType, lookup_all, compile_policy  # noqa
+from .util import SubCatLookupType, compile_policy, lookup_all
 
 SINGLE_ENTITY_SCHEMA = vol.Any(
     True,
@@ -90,7 +88,7 @@ def compile_entities(
     policy: CategoryType, perm_lookup: PermissionLookup
 ) -> Callable[[str, str], bool]:
     """Compile policy into a function that tests policy."""
-    subcategories = OrderedDict()  # type: SubCatLookupType
+    subcategories: SubCatLookupType = OrderedDict()
     subcategories[ENTITY_ENTITY_IDS] = _lookup_entity_id
     subcategories[ENTITY_DEVICE_IDS] = _lookup_device
     subcategories[ENTITY_AREAS] = _lookup_area

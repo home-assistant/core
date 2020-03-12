@@ -3,13 +3,14 @@ from datetime import timedelta
 import logging
 import socket
 
+import ebusdpy
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_NAME,
     CONF_HOST,
-    CONF_PORT,
     CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
+    CONF_PORT,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -33,7 +34,7 @@ def verify_ebusd_config(config):
     circuit = config[CONF_CIRCUIT]
     for condition in config[CONF_MONITORED_CONDITIONS]:
         if condition not in SENSOR_TYPES[circuit]:
-            raise vol.Invalid("Condition '" + condition + "' not in '" + circuit + "'.")
+            raise vol.Invalid(f"Condition '{condition}' not in '{circuit}'.")
     return config
 
 
@@ -66,7 +67,6 @@ def setup(hass, config):
 
     try:
         _LOGGER.debug("Ebusd integration setup started")
-        import ebusdpy
 
         ebusdpy.init(server_address)
         hass.data[DOMAIN] = EbusdData(server_address, circuit)
@@ -98,8 +98,6 @@ class EbusdData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, name, stype):
         """Call the Ebusd API to update the data."""
-        import ebusdpy
-
         try:
             _LOGGER.debug("Opening socket to ebusd %s", name)
             command_result = ebusdpy.read(
@@ -116,8 +114,6 @@ class EbusdData:
 
     def write(self, call):
         """Call write methon on ebusd."""
-        import ebusdpy
-
         name = call.data.get("name")
         value = call.data.get("value")
 

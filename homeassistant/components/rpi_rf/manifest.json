@@ -1,10 +1,8 @@
 {
   "domain": "rpi_rf",
-  "name": "Rpi rf",
-  "documentation": "https://www.home-assistant.io/components/rpi_rf",
-  "requirements": [
-    "rpi-rf==0.9.7"
-  ],
+  "name": "Raspberry Pi RF",
+  "documentation": "https://www.home-assistant.io/integrations/rpi_rf",
+  "requirements": ["rpi-rf==0.9.7"],
   "dependencies": [],
   "codeowners": []
 }

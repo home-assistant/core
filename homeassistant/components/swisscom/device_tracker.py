@@ -74,15 +74,28 @@ class SwisscomDeviceScanner(DeviceScanner):
 
     def get_swisscom_data(self):
         """Retrieve data from Swisscom and return parsed result."""
-        url = "http://{}/ws".format(self.host)
+        url = f"http://{self.host}/ws"
         headers = {CONTENT_TYPE: "application/x-sah-ws-4-call+json"}
         data = """
         {"service":"Devices", "method":"get",
         "parameters":{"expression":"lan and not self"}}"""
 
-        request = requests.post(url, headers=headers, data=data, timeout=10)
-
         devices = {}
+
+        try:
+            request = requests.post(url, headers=headers, data=data, timeout=10)
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.Timeout,
+            requests.exceptions.ConnectTimeout,
+        ):
+            _LOGGER.info("No response from Swisscom Internet Box")
+            return devices
+
+        if "status" not in request.json():
+            _LOGGER.info("No status in response from Swisscom Internet Box")
+            return devices
+
         for device in request.json()["status"]:
             try:
                 devices[device["Key"]] = {

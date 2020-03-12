@@ -1,10 +1,8 @@
 {
   "domain": "luci",
-  "name": "Luci",
-  "documentation": "https://www.home-assistant.io/components/luci",
-  "requirements": [
-    "openwrt-luci-rpc==1.1.0"
-  ],
+  "name": "OpenWRT (luci)",
+  "documentation": "https://www.home-assistant.io/integrations/luci",
+  "requirements": ["openwrt-luci-rpc==1.1.2"],
   "dependencies": [],
-  "codeowners": ["@fbradyirl"]
+  "codeowners": ["@fbradyirl", "@mzdrale"]
 }

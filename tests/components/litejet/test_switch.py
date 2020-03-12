@@ -21,7 +21,7 @@ ENTITY_OTHER_SWITCH_NUMBER = 2
 class TestLiteJetSwitch(unittest.TestCase):
     """Test the litejet component."""
 
-    @mock.patch("pylitejet.LiteJet")
+    @mock.patch("homeassistant.components.litejet.LiteJet")
     def setup_method(self, method, mock_pylitejet):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
@@ -48,7 +48,7 @@ class TestLiteJetSwitch(unittest.TestCase):
         self.mock_lj.on_switch_pressed.side_effect = on_switch_pressed
         self.mock_lj.on_switch_released.side_effect = on_switch_released
 
-        config = {"litejet": {"port": "/tmp/this_will_be_mocked"}}
+        config = {"litejet": {"port": "/dev/serial/by-id/mock-litejet"}}
         if method == self.test_include_switches_False:
             config["litejet"]["include_switches"] = False
         elif method != self.test_include_switches_unspecified:

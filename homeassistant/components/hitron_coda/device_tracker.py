@@ -1,17 +1,17 @@
 """Support for the Hitron CODA-4582U, provided by Rogers."""
-import logging
 from collections import namedtuple
+import logging
 
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN,
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TYPE, CONF_USERNAME
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,8 +44,8 @@ class HitronCODADeviceScanner(DeviceScanner):
         """Initialize the scanner."""
         self.last_results = []
         host = config[CONF_HOST]
-        self._url = "http://{}/data/getConnectInfo.asp".format(host)
-        self._loginurl = "http://{}/goform/login".format(host)
+        self._url = f"http://{host}/data/getConnectInfo.asp"
+        self._loginurl = f"http://{host}/goform/login"
 
         self._username = config.get(CONF_USERNAME)
         self._password = config.get(CONF_PASSWORD)

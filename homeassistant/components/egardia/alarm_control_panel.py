@@ -4,6 +4,10 @@ import logging
 import requests
 
 import homeassistant.components.alarm_control_panel as alarm
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -80,6 +84,11 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
         return self._status
 
     @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
+
+    @property
     def should_poll(self):
         """Poll if no report server is enabled."""
         if not self._rs_enabled:
@@ -130,7 +139,7 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
             self._egardiasystem.alarm_disarm()
         except requests.exceptions.RequestException as err:
             _LOGGER.error(
-                "Egardia device exception occurred when " "sending disarm command: %s",
+                "Egardia device exception occurred when sending disarm command: %s",
                 err,
             )
 

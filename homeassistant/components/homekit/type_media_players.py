@@ -6,16 +6,16 @@ from pyhap.const import CATEGORY_SWITCH, CATEGORY_TELEVISION
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
-    ATTR_MEDIA_VOLUME_MUTED,
     ATTR_MEDIA_VOLUME_LEVEL,
-    SERVICE_SELECT_SOURCE,
+    ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN,
+    SERVICE_SELECT_SOURCE,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
+    SUPPORT_SELECT_SOURCE,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
-    SUPPORT_SELECT_SOURCE,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -26,13 +26,13 @@ from homeassistant.const import (
     SERVICE_MEDIA_STOP,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_UP,
     SERVICE_VOLUME_DOWN,
+    SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_UP,
     STATE_OFF,
-    STATE_PLAYING,
     STATE_PAUSED,
+    STATE_PLAYING,
     STATE_UNKNOWN,
 )
 
@@ -46,23 +46,23 @@ from .const import (
     CHAR_IDENTIFIER,
     CHAR_INPUT_SOURCE_TYPE,
     CHAR_IS_CONFIGURED,
-    CHAR_NAME,
-    CHAR_SLEEP_DISCOVER_MODE,
     CHAR_MUTE,
+    CHAR_NAME,
     CHAR_ON,
     CHAR_REMOTE_KEY,
+    CHAR_SLEEP_DISCOVER_MODE,
+    CHAR_VOLUME,
     CHAR_VOLUME_CONTROL_TYPE,
     CHAR_VOLUME_SELECTOR,
-    CHAR_VOLUME,
     CONF_FEATURE_LIST,
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
+    SERV_INPUT_SOURCE,
     SERV_SWITCH,
     SERV_TELEVISION,
     SERV_TELEVISION_SPEAKER,
-    SERV_INPUT_SOURCE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -146,7 +146,7 @@ class MediaPlayer(HomeAccessory):
 
     def generate_service_name(self, mode):
         """Generate name for individual service."""
-        return "{} {}".format(self.display_name, MODE_FRIENDLY_NAME[mode])
+        return f"{self.display_name} {MODE_FRIENDLY_NAME[mode]}"
 
     def set_on_off(self, value):
         """Move switch state to value if call came from HomeKit."""
@@ -287,7 +287,7 @@ class TelevisionMediaPlayer(HomeAccessory):
             )
             serv_tv.add_linked_service(serv_speaker)
 
-            name = "{} {}".format(self.display_name, "Volume")
+            name = f"{self.display_name} Volume"
             serv_speaker.configure_char(CHAR_NAME, value=name)
             serv_speaker.configure_char(CHAR_ACTIVE, value=1)
 
@@ -422,7 +422,7 @@ class TelevisionMediaPlayer(HomeAccessory):
                     self.char_input_source.set_value(index)
                 else:
                     _LOGGER.warning(
-                        "%s: Sources out of sync. " "Restart HomeAssistant",
+                        "%s: Sources out of sync. Restart Home Assistant",
                         self.entity_id,
                     )
                     self.char_input_source.set_value(0)

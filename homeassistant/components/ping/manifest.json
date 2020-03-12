@@ -1,8 +1,9 @@
 {
   "domain": "ping",
-  "name": "Ping",
-  "documentation": "https://www.home-assistant.io/components/ping",
+  "name": "Ping (ICMP)",
+  "documentation": "https://www.home-assistant.io/integrations/ping",
   "requirements": [],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "quality_scale": "internal"
 }

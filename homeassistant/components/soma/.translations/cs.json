@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "\u010casov\u00fd limit autoriza\u010dn\u00edho URL vypr\u0161el"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostitel",
+                    "port": "Port"
+                },
+                "description": "Zadejte pros\u00edm nastaven\u00ed p\u0159ipojen\u00ed va\u0161eho SOMA Connect.",
+                "title": "SOMA Connect"
+            }
+        }
+    }
+}

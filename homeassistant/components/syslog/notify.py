@@ -1,5 +1,6 @@
 """Syslog notification service."""
 import logging
+import syslog
 
 import voluptuous as vol
 
@@ -67,7 +68,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_service(hass, config, discovery_info=None):
     """Get the syslog notification service."""
-    import syslog
 
     facility = getattr(syslog, SYSLOG_FACILITY[config.get(CONF_FACILITY)])
     option = getattr(syslog, SYSLOG_OPTION[config.get(CONF_OPTION)])
@@ -87,7 +87,6 @@ class SyslogNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        import syslog
 
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 

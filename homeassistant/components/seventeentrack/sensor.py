@@ -1,7 +1,9 @@
 """Support for package tracking sensors from 17track.net."""
-import logging
 from datetime import timedelta
+import logging
 
+from py17track import Client as SeventeenTrackClient
+from py17track.errors import SeventeenTrackError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -43,7 +45,7 @@ ENTITY_ID_TEMPLATE = "sensor.seventeentrack_package_{0}"
 NOTIFICATION_DELIVERED_ID = "package_delivered_{0}"
 NOTIFICATION_DELIVERED_TITLE = "Package {0} delivered"
 NOTIFICATION_DELIVERED_MESSAGE = (
-    "Package Delivered: {0}<br />" + "Visit 17.track for more information: "
+    "Package Delivered: {0}<br />Visit 17.track for more information: "
     "https://t.17track.net/track#nums={1}"
 )
 
@@ -61,12 +63,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Configure the platform and add the sensors."""
-    from py17track import Client
-    from py17track.errors import SeventeenTrackError
 
     websession = aiohttp_client.async_get_clientsession(hass)
 
-    client = Client(websession)
+    client = SeventeenTrackClient(websession)
 
     try:
         login_result = await client.profile.login(
@@ -120,7 +120,7 @@ class SeventeenTrackSummarySensor(Entity):
     @property
     def name(self):
         """Return the name."""
-        return "Seventeentrack Packages {0}".format(self._status)
+        return f"Seventeentrack Packages {self._status}"
 
     @property
     def state(self):
@@ -129,7 +129,7 @@ class SeventeenTrackSummarySensor(Entity):
 
     @property
     def unique_id(self):
-        """Return a unique, HASS-friendly identifier for this entity."""
+        """Return a unique, Home Assistant friendly identifier for this entity."""
         return "summary_{0}_{1}".format(self._data.account_id, slugify(self._status))
 
     @property
@@ -203,7 +203,7 @@ class SeventeenTrackPackageSensor(Entity):
         name = self._friendly_name
         if not name:
             name = self._tracking_number
-        return "Seventeentrack Package: {0}".format(name)
+        return f"Seventeentrack Package: {name}"
 
     @property
     def state(self):
@@ -212,7 +212,7 @@ class SeventeenTrackPackageSensor(Entity):
 
     @property
     def unique_id(self):
-        """Return a unique, HASS-friendly identifier for this entity."""
+        """Return a unique, Home Assistant friendly identifier for this entity."""
         return UNIQUE_ID_TEMPLATE.format(self._data.account_id, self._tracking_number)
 
     async def async_update(self):
@@ -290,7 +290,6 @@ class SeventeenTrackData:
 
     async def _async_update(self):
         """Get updated data from 17track.net."""
-        from py17track.errors import SeventeenTrackError
 
         try:
             packages = await self._client.profile.packages(

@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+import hpilo
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -89,9 +90,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         new_device = HpIloSensor(
             hass=hass,
             hp_ilo_data=hp_ilo_data,
-            sensor_name="{} {}".format(
-                config.get(CONF_NAME), monitored_variable[CONF_NAME]
-            ),
+            sensor_name=f"{config.get(CONF_NAME)} {monitored_variable[CONF_NAME]}",
             sensor_type=monitored_variable[CONF_SENSOR_TYPE],
             sensor_value_template=monitored_variable.get(CONF_VALUE_TEMPLATE),
             unit_of_measurement=monitored_variable.get(CONF_UNIT_OF_MEASUREMENT),
@@ -180,8 +179,6 @@ class HpIloData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from HP iLO."""
-        import hpilo
-
         try:
             self.data = hpilo.Ilo(
                 hostname=self._host,
@@ -194,4 +191,4 @@ class HpIloData:
             hpilo.IloCommunicationError,
             hpilo.IloLoginFailed,
         ) as error:
-            raise ValueError("Unable to init HP ILO, {}".format(error))
+            raise ValueError(f"Unable to init HP ILO, {error}")

@@ -1,6 +1,7 @@
 """Support for Abode Security System lights."""
-import logging
 from math import ceil
+
+import abodepy.helpers.constants as CONST
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -16,31 +17,20 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin,
 )
 
-from . import DOMAIN as ABODE_DOMAIN, AbodeDevice
+from . import AbodeDevice
+from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Abode light devices."""
-    import abodepy.helpers.constants as CONST
+    data = hass.data[DOMAIN]
 
-    data = hass.data[ABODE_DOMAIN]
+    entities = []
 
-    device_types = [CONST.TYPE_LIGHT, CONST.TYPE_SWITCH]
+    for device in data.abode.get_devices(generic_type=CONST.TYPE_LIGHT):
+        entities.append(AbodeLight(data, device))
 
-    devices = []
-
-    # Get all regular lights that are not excluded or switches marked as lights
-    for device in data.abode.get_devices(generic_type=device_types):
-        if data.is_excluded(device) or not data.is_light(device):
-            continue
-
-        devices.append(AbodeLight(data, device))
-
-    data.devices.extend(devices)
-
-    add_entities(devices)
+    async_add_entities(entities)
 
 
 class AbodeLight(AbodeDevice, Light):
@@ -52,16 +42,19 @@ class AbodeLight(AbodeDevice, Light):
             self._device.set_color_temp(
                 int(color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP]))
             )
+            return
 
         if ATTR_HS_COLOR in kwargs and self._device.is_color_capable:
             self._device.set_color(kwargs[ATTR_HS_COLOR])
+            return
 
         if ATTR_BRIGHTNESS in kwargs and self._device.is_dimmable:
-            # Convert HASS brightness (0-255) to Abode brightness (0-99)
+            # Convert Home Assistant brightness (0-255) to Abode brightness (0-99)
             # If 100 is sent to Abode, response is 99 causing an error
             self._device.set_level(ceil(kwargs[ATTR_BRIGHTNESS] * 99 / 255.0))
-        else:
-            self._device.switch_on()
+            return
+
+        self._device.switch_on()
 
     def turn_off(self, **kwargs):
         """Turn off the light."""
@@ -80,7 +73,7 @@ class AbodeLight(AbodeDevice, Light):
             # Abode returns 100 during device initialization and device refresh
             if brightness == 100:
                 return 255
-            # Convert Abode brightness (0-99) to HASS brightness (0-255)
+            # Convert Abode brightness (0-99) to Home Assistant brightness (0-255)
             return ceil(brightness * 255 / 99.0)
 
     @property

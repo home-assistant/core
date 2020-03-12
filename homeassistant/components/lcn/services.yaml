@@ -14,7 +14,7 @@ output_abs:
       example: 50
     transition:
       description: Transition time in seconds
-      example: 5  
+      example: 5
 
 output_rel:
   description: Set relative brightness of output port in percent.
@@ -30,7 +30,7 @@ output_rel:
       example: 50
     transition:
       description: Transition time in seconds
-      example: 5  
+      example: 5
 
 output_toggle:
   description: Toggle output port.
@@ -43,7 +43,7 @@ output_toggle:
       example: "output1"
     transition:
       description: Transition time in seconds
-      example: 5  
+      example: 5
 
 relays:
   description: Set the relays status.
@@ -72,7 +72,7 @@ led:
         - off
         - blink
         - flicker
-  
+
 var_abs:
   description: Set absolute value of a variable or setpoint.
   fields:
@@ -88,7 +88,7 @@ var_abs:
     unit_of_measurement:
       description: Unit of value
       example: 'celsius'
-      
+
 var_reset:
   description: Reset value of variable or setpoint.
   fields:
@@ -98,7 +98,7 @@ var_reset:
     variable:
       description: Variable or setpoint name
       example: 'var1'
-      
+
 var_rel:
   description: Shift value of a variable, setpoint or threshold.
   fields:
@@ -188,7 +188,7 @@ dyn_text:
     text:
       description: Text to send (up to 60 characters encoded as UTF-8)
       example: 'text up to 60 characters'
- 
+
 pck:
   description: Send arbitrary PCK command.
   fields:
@@ -198,4 +198,3 @@ pck:
     pck:
       description: PCK command (without address header)
       example: 'PIN4'
-  

@@ -8,10 +8,11 @@
                 "data": {
                     "latitude": "Breddegrad",
                     "longitude": "L\u00e6ngdegrad",
+                    "mode": "Tilstand",
                     "name": "Navn"
                 },
                 "description": "Instituto Portugu\u00eas do Mar e Atmosfera",
-                "title": "Beliggenhed"
+                "title": "Lokalitet"
             }
         },
         "title": "Portugisisk vejrservice (IPMA)"

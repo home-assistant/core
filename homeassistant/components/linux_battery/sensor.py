@@ -2,10 +2,16 @@
 import logging
 import os
 
+from batinfo import Batteries
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_NAME, CONF_NAME, DEVICE_CLASS_BATTERY
+from homeassistant.const import (
+    ATTR_NAME,
+    CONF_NAME,
+    DEVICE_CLASS_BATTERY,
+    UNIT_PERCENTAGE,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -59,7 +65,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if system == "android":
             os.listdir(os.path.join(DEFAULT_PATH, "battery"))
         else:
-            os.listdir(os.path.join(DEFAULT_PATH, "BAT{}".format(battery_id)))
+            os.listdir(os.path.join(DEFAULT_PATH, f"BAT{battery_id}"))
     except FileNotFoundError:
         _LOGGER.error("No battery found")
         return False
@@ -72,15 +78,12 @@ class LinuxBatterySensor(Entity):
 
     def __init__(self, name, battery_id, system):
         """Initialize the battery sensor."""
-        import batinfo
-
-        self._battery = batinfo.Batteries()
+        self._battery = Batteries()
 
         self._name = name
         self._battery_stat = None
         self._battery_id = battery_id - 1
         self._system = system
-        self._unit_of_measurement = "%"
 
     @property
     def name(self):
@@ -100,7 +103,7 @@ class LinuxBatterySensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
+        return UNIT_PERCENTAGE
 
     @property
     def device_state_attributes(self):

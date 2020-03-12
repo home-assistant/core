@@ -5,11 +5,12 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.const import EVENT_COMPONENT_LOADED, CONF_ID
-from homeassistant.setup import ATTR_COMPONENT
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.util.yaml import load_yaml, dump
+from homeassistant.const import CONF_ID, EVENT_COMPONENT_LOADED
+from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.setup import ATTR_COMPONENT
+from homeassistant.util.yaml import dump, load_yaml
 
 DOMAIN = "config"
 SECTIONS = (
@@ -24,8 +25,11 @@ SECTIONS = (
     "entity_registry",
     "group",
     "script",
+    "scene",
 )
 ON_DEMAND = ("zwave",)
+ACTION_CREATE_UPDATE = "create_update"
+ACTION_DELETE = "delete"
 
 
 async def async_setup(hass, config):
@@ -36,7 +40,7 @@ async def async_setup(hass, config):
 
     async def setup_panel(panel_name):
         """Set up a panel."""
-        panel = importlib.import_module(".{}".format(panel_name), __name__)
+        panel = importlib.import_module(f".{panel_name}", __name__)
 
         if not panel:
             return
@@ -44,7 +48,7 @@ async def async_setup(hass, config):
         success = await panel.async_setup(hass)
 
         if success:
-            key = "{}.{}".format(DOMAIN, panel_name)
+            key = f"{DOMAIN}.{panel_name}"
             hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: key})
 
     @callback
@@ -80,14 +84,17 @@ class BaseEditConfigView(HomeAssistantView):
         data_schema,
         *,
         post_write_hook=None,
+        data_validator=None,
     ):
         """Initialize a config view."""
-        self.url = "/api/config/%s/%s/{config_key}" % (component, config_type)
-        self.name = "api:config:%s:%s" % (component, config_type)
+        self.url = f"/api/config/{component}/{config_type}/{{config_key}}"
+        self.name = f"api:config:{component}:{config_type}"
         self.path = path
         self.key_schema = key_schema
         self.data_schema = data_schema
         self.post_write_hook = post_write_hook
+        self.data_validator = data_validator
+        self.mutation_lock = asyncio.Lock()
 
     def _empty_config(self):
         """Empty config if file not found."""
@@ -108,8 +115,9 @@ class BaseEditConfigView(HomeAssistantView):
     async def get(self, request, config_key):
         """Fetch device specific config."""
         hass = request.app["hass"]
-        current = await self.read_config(hass)
-        value = self._get_value(hass, current, config_key)
+        async with self.mutation_lock:
+            current = await self.read_config(hass)
+            value = self._get_value(hass, current, config_key)
 
         if value is None:
             return self.json_message("Resource not found", 404)
@@ -126,43 +134,51 @@ class BaseEditConfigView(HomeAssistantView):
         try:
             self.key_schema(config_key)
         except vol.Invalid as err:
-            return self.json_message("Key malformed: {}".format(err), 400)
+            return self.json_message(f"Key malformed: {err}", 400)
+
+        hass = request.app["hass"]
 
         try:
             # We just validate, we don't store that data because
             # we don't want to store the defaults.
-            self.data_schema(data)
-        except vol.Invalid as err:
-            return self.json_message("Message malformed: {}".format(err), 400)
+            if self.data_validator:
+                await self.data_validator(hass, data)
+            else:
+                self.data_schema(data)
+        except (vol.Invalid, HomeAssistantError) as err:
+            return self.json_message(f"Message malformed: {err}", 400)
 
-        hass = request.app["hass"]
         path = hass.config.path(self.path)
 
-        current = await self.read_config(hass)
-        self._write_value(hass, current, config_key, data)
+        async with self.mutation_lock:
+            current = await self.read_config(hass)
+            self._write_value(hass, current, config_key, data)
 
-        await hass.async_add_executor_job(_write, path, current)
+            await hass.async_add_executor_job(_write, path, current)
 
         if self.post_write_hook is not None:
-            hass.async_create_task(self.post_write_hook(hass))
+            hass.async_create_task(
+                self.post_write_hook(ACTION_CREATE_UPDATE, config_key)
+            )
 
         return self.json({"result": "ok"})
 
     async def delete(self, request, config_key):
         """Remove an entry."""
         hass = request.app["hass"]
-        current = await self.read_config(hass)
-        value = self._get_value(hass, current, config_key)
-        path = hass.config.path(self.path)
+        async with self.mutation_lock:
+            current = await self.read_config(hass)
+            value = self._get_value(hass, current, config_key)
+            path = hass.config.path(self.path)
 
-        if value is None:
-            return self.json_message("Resource not found", 404)
+            if value is None:
+                return self.json_message("Resource not found", 404)
 
-        self._delete_value(hass, current, config_key)
-        await hass.async_add_executor_job(_write, path, current)
+            self._delete_value(hass, current, config_key)
+            await hass.async_add_executor_job(_write, path, current)
 
         if self.post_write_hook is not None:
-            hass.async_create_task(self.post_write_hook(hass))
+            hass.async_create_task(self.post_write_hook(ACTION_DELETE, config_key))
 
         return self.json({"result": "ok"})
 

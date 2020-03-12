@@ -1,19 +1,21 @@
 """Support for user- and CDC-based flu info sensors from Flu Near You."""
-import logging
 from datetime import timedelta
+import logging
 
+from pyflunearyou import Client
+from pyflunearyou.errors import FluNearYouError
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_STATE,
     CONF_LATITUDE,
-    CONF_MONITORED_CONDITIONS,
     CONF_LONGITUDE,
+    CONF_MONITORED_CONDITIONS,
 )
 from homeassistant.helpers import aiohttp_client
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -80,8 +82,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Configure the platform and add the sensors."""
-    from pyflunearyou import Client
-
     websession = aiohttp_client.async_get_clientsession(hass)
 
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
@@ -142,8 +142,8 @@ class FluNearYouSensor(Entity):
 
     @property
     def unique_id(self):
-        """Return a unique, HASS-friendly identifier for this entity."""
-        return "{0},{1}_{2}".format(self.fny.latitude, self.fny.longitude, self._kind)
+        """Return a unique, Home Assistant friendly identifier for this entity."""
+        return f"{self.fny.latitude},{self.fny.longitude}_{self._kind}"
 
     @property
     def unit_of_measurement(self):
@@ -219,8 +219,6 @@ class FluNearYouData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Update Flu Near You data."""
-        from pyflunearyou.errors import FluNearYouError
-
         for key, method in [
             (CATEGORY_CDC_REPORT, self._client.cdc_reports.status_by_coordinates),
             (CATEGORY_USER_REPORT, self._client.user_reports.status_by_coordinates),

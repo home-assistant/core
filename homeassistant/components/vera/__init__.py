@@ -1,24 +1,24 @@
 """Support for Vera devices."""
-import logging
 from collections import defaultdict
+import logging
 
-import voluptuous as vol
+import pyvera as veraApi
 from requests.exceptions import RequestException
+import voluptuous as vol
 
-from homeassistant.util.dt import utc_from_timestamp
-from homeassistant.util import convert, slugify
-from homeassistant.helpers import discovery
-from homeassistant.helpers import config_validation as cv
 from homeassistant.const import (
     ATTR_ARMED,
     ATTR_BATTERY_LEVEL,
     ATTR_LAST_TRIP_TIME,
     ATTR_TRIPPED,
-    EVENT_HOMEASSISTANT_STOP,
-    CONF_LIGHTS,
     CONF_EXCLUDE,
+    CONF_LIGHTS,
+    EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import convert, slugify
+from homeassistant.util.dt import utc_from_timestamp
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +65,6 @@ VERA_COMPONENTS = [
 
 def setup(hass, base_config):
     """Set up for Vera devices."""
-    import pyvera as veraApi
 
     def stop_subscription(event):
         """Shutdown Vera subscriptions and subscription thread on exit."""
@@ -118,7 +117,6 @@ def setup(hass, base_config):
 
 def map_vera_device(vera_device, remap):
     """Map vera classes to Home Assistant types."""
-    import pyvera as veraApi
 
     if isinstance(vera_device, veraApi.VeraDimmer):
         return "light"

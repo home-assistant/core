@@ -4,16 +4,16 @@ import socket
 
 from maxcube.device import (
     MAX_DEVICE_MODE_AUTOMATIC,
+    MAX_DEVICE_MODE_BOOST,
     MAX_DEVICE_MODE_MANUAL,
     MAX_DEVICE_MODE_VACATION,
-    MAX_DEVICE_MODE_BOOST,
 )
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
-    SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for handler in hass.data[DATA_KEY].values():
         cube = handler.cube
         for device in cube.devices:
-            name = "{} {}".format(cube.room_by_id(device.room_id).name, device.name)
+            name = f"{cube.room_by_id(device.room_id).name} {device.name}"
 
             if cube.is_thermostat(device) or cube.is_wallthermostat(device):
                 devices.append(MaxCubeClimate(handler, name, device.rf_address))
@@ -155,7 +155,7 @@ class MaxCubeClimate(ClimateDevice):
 
     @staticmethod
     def map_temperature_max_hass(temperature):
-        """Map Temperature from MAX! to HASS."""
+        """Map Temperature from MAX! to Home Assistant."""
         if temperature is None:
             return 0.0
 

@@ -1,23 +1,23 @@
 """Support for TCP socket based sensors."""
 import logging
-import socket
 import select
+import socket
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME,
     CONF_HOST,
-    CONF_PORT,
+    CONF_NAME,
     CONF_PAYLOAD,
+    CONF_PORT,
     CONF_TIMEOUT,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ class TcpSensor(Entity):
         name = self._config[CONF_NAME]
         if name is not None:
             return name
-        return super(TcpSensor, self).name
+        return super().name
 
     @property
     def state(self):

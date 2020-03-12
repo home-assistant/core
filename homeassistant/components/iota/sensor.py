@@ -46,7 +46,7 @@ class IotaBalanceSensor(IotaDevice):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} Balance".format(self._name)
+        return f"{self._name} Balance"
 
     @property
     def state(self):

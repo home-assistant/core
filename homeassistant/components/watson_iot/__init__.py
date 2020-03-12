@@ -4,6 +4,8 @@ import queue
 import threading
 import time
 
+from ibmiotf import MissingMessageEncoderException
+from ibmiotf.gateway import Client
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -67,7 +69,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the Watson IoT Platform component."""
-    from ibmiotf import gateway
 
     conf = config[DOMAIN]
 
@@ -85,7 +86,7 @@ def setup(hass, config):
         "auth-method": "token",
         "auth-token": conf[CONF_TOKEN],
     }
-    watson_gateway = gateway.Client(client_args)
+    watson_gateway = Client(client_args)
 
     def event_to_json(event):
         """Add an event to the outgoing list."""
@@ -126,7 +127,7 @@ def setup(hass, config):
             if key != "unit_of_measurement":
                 # If the key is already in fields
                 if key in out_event["fields"]:
-                    key = "{}_".format(key)
+                    key = f"{key}_"
                 # For each value we try to cast it as float
                 # But if we can not do it we store the value
                 # as string
@@ -190,7 +191,6 @@ class WatsonIOTThread(threading.Thread):
 
     def write_to_watson(self, events):
         """Write preprocessed events to watson."""
-        import ibmiotf
 
         for event in events:
             for retry in range(MAX_TRIES + 1):
@@ -208,7 +208,7 @@ class WatsonIOTThread(threading.Thread):
                         _LOGGER.error("Failed to publish message to Watson IoT")
                         continue
                     break
-                except (ibmiotf.MissingMessageEncoderException, IOError):
+                except (MissingMessageEncoderException, IOError):
                     if retry < MAX_TRIES:
                         time.sleep(RETRY_DELAY)
                     else:

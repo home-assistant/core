@@ -1,8 +1,8 @@
 """Test emulated_roku component setup process."""
 from unittest.mock import Mock, patch
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import emulated_roku
+from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro_func
 
@@ -10,7 +10,7 @@ from tests.common import mock_coro_func
 async def test_config_required_fields(hass):
     """Test that configuration is successful with required fields."""
     with patch.object(emulated_roku, "configured_servers", return_value=[]), patch(
-        "emulated_roku.EmulatedRokuServer",
+        "homeassistant.components.emulated_roku.binding.EmulatedRokuServer",
         return_value=Mock(start=mock_coro_func(), close=mock_coro_func()),
     ):
         assert (
@@ -35,7 +35,7 @@ async def test_config_required_fields(hass):
 async def test_config_already_registered_not_configured(hass):
     """Test that an already registered name causes the entry to be ignored."""
     with patch(
-        "emulated_roku.EmulatedRokuServer",
+        "homeassistant.components.emulated_roku.binding.EmulatedRokuServer",
         return_value=Mock(start=mock_coro_func(), close=mock_coro_func()),
     ) as instantiate, patch.object(
         emulated_roku, "configured_servers", return_value=["Emulated Roku Test"]
@@ -74,7 +74,7 @@ async def test_setup_entry_successful(hass):
     }
 
     with patch(
-        "emulated_roku.EmulatedRokuServer",
+        "homeassistant.components.emulated_roku.binding.EmulatedRokuServer",
         return_value=Mock(start=mock_coro_func(), close=mock_coro_func()),
     ) as instantiate:
         assert await emulated_roku.async_setup_entry(hass, entry) is True
@@ -98,7 +98,7 @@ async def test_unload_entry(hass):
     entry.data = {"name": "Emulated Roku Test", "listen_port": 8060}
 
     with patch(
-        "emulated_roku.EmulatedRokuServer",
+        "homeassistant.components.emulated_roku.binding.EmulatedRokuServer",
         return_value=Mock(start=mock_coro_func(), close=mock_coro_func()),
     ):
         assert await emulated_roku.async_setup_entry(hass, entry) is True

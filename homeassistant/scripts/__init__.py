@@ -5,15 +5,14 @@ import importlib
 import logging
 import os
 import sys
-from typing import List
+from typing import List, Optional, Sequence, Text
 
 from homeassistant.bootstrap import async_mount_local_lib_path
 from homeassistant.config import get_default_config_dir
 from homeassistant.requirements import pip_kwargs
-from homeassistant.util.package import install_package, is_virtual_env, is_installed
+from homeassistant.util.package import install_package, is_installed, is_virtual_env
 
-
-# mypy: allow-untyped-defs, allow-incomplete-defs, no-warn-return-any
+# mypy: allow-untyped-defs, no-warn-return-any
 
 
 def run(args: List) -> int:
@@ -23,7 +22,8 @@ def run(args: List) -> int:
     for fil in os.listdir(path):
         if fil == "__pycache__":
             continue
-        elif os.path.isdir(os.path.join(path, fil)):
+
+        if os.path.isdir(os.path.join(path, fil)):
             scripts.append(fil)
         elif fil != "__init__.py" and fil.endswith(".py"):
             scripts.append(fil[:-3])
@@ -38,7 +38,7 @@ def run(args: List) -> int:
         print("Available scripts:", ", ".join(scripts))
         return 1
 
-    script = importlib.import_module("homeassistant.scripts." + args[0])
+    script = importlib.import_module(f"homeassistant.scripts.{args[0]}")
 
     config_dir = extract_config_dir()
 
@@ -62,13 +62,13 @@ def run(args: List) -> int:
     return script.run(args[1:])  # type: ignore
 
 
-def extract_config_dir(args=None) -> str:
+def extract_config_dir(args: Optional[Sequence[Text]] = None) -> str:
     """Extract the config dir from the arguments or get the default."""
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("-c", "--config", default=None)
-    args = parser.parse_known_args(args)[0]
+    parsed_args = parser.parse_known_args(args)[0]
     return (
-        os.path.join(os.getcwd(), args.config)
-        if args.config
+        os.path.join(os.getcwd(), parsed_args.config)
+        if parsed_args.config
         else get_default_config_dir()
     )

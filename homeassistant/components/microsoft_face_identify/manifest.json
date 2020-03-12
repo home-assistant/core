@@ -1,7 +1,7 @@
 {
   "domain": "microsoft_face_identify",
-  "name": "Microsoft face identify",
-  "documentation": "https://www.home-assistant.io/components/microsoft_face_identify",
+  "name": "Microsoft Face Identify",
+  "documentation": "https://www.home-assistant.io/integrations/microsoft_face_identify",
   "requirements": [],
   "dependencies": ["microsoft_face"],
   "codeowners": []

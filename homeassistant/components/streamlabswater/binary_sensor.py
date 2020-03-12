@@ -58,7 +58,7 @@ class StreamlabsAwayMode(BinarySensorDevice):
     @property
     def name(self):
         """Return the name for away mode."""
-        return "{} {}".format(self._location_name, NAME_AWAY_MODE)
+        return f"{self._location_name} {NAME_AWAY_MODE}"
 
     @property
     def is_on(self):

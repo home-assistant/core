@@ -5,6 +5,7 @@ import json
 import logging
 import os
 
+import aioautomatic
 from aiohttp import web
 import voluptuous as vol
 
@@ -27,7 +28,6 @@ from homeassistant.helpers.event import async_track_time_interval
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_FUEL_LEVEL = "fuel_level"
-AUTOMATIC_CONFIG_FILE = ".automatic/session-{}.json"
 
 CONF_CLIENT_ID = "client_id"
 CONF_CURRENT_LOCATION = "current_location"
@@ -82,7 +82,6 @@ def _write_refresh_token_to_file(hass, filename, refresh_token):
 @asyncio.coroutine
 def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Validate the configuration and return an Automatic scanner."""
-    import aioautomatic
 
     hass.http.register_view(AutomaticAuthCallbackView())
 
@@ -95,7 +94,7 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
         request_kwargs={"timeout": DEFAULT_TIMEOUT},
     )
 
-    filename = AUTOMATIC_CONFIG_FILE.format(config[CONF_CLIENT_ID])
+    filename = f".automatic/session-{config[CONF_CLIENT_ID]}.json"
     refresh_token = yield from hass.async_add_job(
         _get_refresh_token_from_file, hass, filename
     )
@@ -215,7 +214,6 @@ class AutomaticData:
     @asyncio.coroutine
     def handle_event(self, name, event):
         """Coroutine to update state for a real time event."""
-        import aioautomatic
 
         self.hass.bus.async_fire(EVENT_AUTOMATIC_UPDATE, event.data)
 
@@ -233,7 +231,7 @@ class AutomaticData:
         if event.created_at < self.vehicle_seen[event.vehicle.id]:
             # Skip events received out of order
             _LOGGER.debug(
-                "Skipping out of order event. Event Created %s. " "Last seen event: %s",
+                "Skipping out of order event. Event Created %s. Last seen event: %s",
                 event.created_at,
                 self.vehicle_seen[event.vehicle.id],
             )
@@ -261,7 +259,6 @@ class AutomaticData:
     @asyncio.coroutine
     def ws_connect(self, now=None):
         """Open the websocket connection."""
-        import aioautomatic
 
         self.ws_close_requested = False
 
@@ -321,7 +318,6 @@ class AutomaticData:
     @asyncio.coroutine
     def get_vehicle_info(self, vehicle):
         """Fetch the latest vehicle info from automatic."""
-        import aioautomatic
 
         name = vehicle.display_name
         if name is None:

@@ -25,7 +25,9 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_VALUE_TEMPLATE,
     STATE_CLOSED,
+    STATE_CLOSING,
     STATE_OPEN,
+    STATE_OPENING,
     STATE_UNKNOWN,
 )
 from homeassistant.core import callback
@@ -64,7 +66,9 @@ CONF_PAYLOAD_STOP = "payload_stop"
 CONF_POSITION_CLOSED = "position_closed"
 CONF_POSITION_OPEN = "position_open"
 CONF_STATE_CLOSED = "state_closed"
+CONF_STATE_CLOSING = "state_closing"
 CONF_STATE_OPEN = "state_open"
+CONF_STATE_OPENING = "state_opening"
 CONF_TILT_CLOSED_POSITION = "tilt_closed_value"
 CONF_TILT_INVERT_STATE = "tilt_invert_state"
 CONF_TILT_MAX = "tilt_max"
@@ -90,7 +94,7 @@ DEFAULT_TILT_MIN = 0
 DEFAULT_TILT_OPEN_POSITION = 100
 DEFAULT_TILT_OPTIMISTIC = False
 
-OPEN_CLOSE_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
+OPEN_CLOSE_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE
 TILT_FEATURES = (
     SUPPORT_OPEN_TILT
     | SUPPORT_CLOSE_TILT
@@ -122,14 +126,18 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_PAYLOAD_CLOSE, default=DEFAULT_PAYLOAD_CLOSE): cv.string,
             vol.Optional(CONF_PAYLOAD_OPEN, default=DEFAULT_PAYLOAD_OPEN): cv.string,
-            vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): cv.string,
+            vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): vol.Any(
+                cv.string, None
+            ),
             vol.Optional(CONF_POSITION_CLOSED, default=DEFAULT_POSITION_CLOSED): int,
             vol.Optional(CONF_POSITION_OPEN, default=DEFAULT_POSITION_OPEN): int,
             vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
             vol.Optional(CONF_SET_POSITION_TEMPLATE): cv.template,
             vol.Optional(CONF_SET_POSITION_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(CONF_STATE_CLOSED, default=STATE_CLOSED): cv.string,
+            vol.Optional(CONF_STATE_CLOSING, default=STATE_CLOSING): cv.string,
             vol.Optional(CONF_STATE_OPEN, default=STATE_OPEN): cv.string,
+            vol.Optional(CONF_STATE_OPENING, default=STATE_OPENING): cv.string,
             vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(
                 CONF_TILT_CLOSED_POSITION, default=DEFAULT_TILT_CLOSED_POSITION
@@ -170,15 +178,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async def async_discover(discovery_payload):
         """Discover and add an MQTT cover."""
+        discovery_data = discovery_payload.discovery_data
         try:
-            discovery_hash = discovery_payload.pop(ATTR_DISCOVERY_HASH)
             config = PLATFORM_SCHEMA(discovery_payload)
             await _async_setup_entity(
-                config, async_add_entities, config_entry, discovery_hash
+                config, async_add_entities, config_entry, discovery_data
             )
         except Exception:
-            if discovery_hash:
-                clear_discovery_hash(hass, discovery_hash)
+            clear_discovery_hash(hass, discovery_data[ATTR_DISCOVERY_HASH])
             raise
 
     async_dispatcher_connect(
@@ -187,10 +194,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 async def _async_setup_entity(
-    config, async_add_entities, config_entry=None, discovery_hash=None
+    config, async_add_entities, config_entry=None, discovery_data=None
 ):
     """Set up the MQTT Cover."""
-    async_add_entities([MqttCover(config, config_entry, discovery_hash)])
+    async_add_entities([MqttCover(config, config_entry, discovery_data)])
 
 
 class MqttCover(
@@ -202,7 +209,7 @@ class MqttCover(
 ):
     """Representation of a cover that can be controlled using MQTT."""
 
-    def __init__(self, config, config_entry, discovery_hash):
+    def __init__(self, config, config_entry, discovery_data):
         """Initialize the cover."""
         self._unique_id = config.get(CONF_UNIQUE_ID)
         self._position = None
@@ -220,7 +227,7 @@ class MqttCover(
 
         MqttAttributes.__init__(self, config)
         MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_hash, self.discovery_update)
+        MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
         MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
 
     async def async_added_to_hass(self):
@@ -287,12 +294,20 @@ class MqttCover(
                 payload = template.async_render_with_possible_json_value(payload)
 
             if payload == self._config[CONF_STATE_OPEN]:
-                self._state = False
+                self._state = STATE_OPEN
+            elif payload == self._config[CONF_STATE_OPENING]:
+                self._state = STATE_OPENING
             elif payload == self._config[CONF_STATE_CLOSED]:
-                self._state = True
+                self._state = STATE_CLOSED
+            elif payload == self._config[CONF_STATE_CLOSING]:
+                self._state = STATE_CLOSING
             else:
-                _LOGGER.warning("Payload is not True or False: %s", payload)
+                _LOGGER.warning(
+                    "Payload is not supported (e.g. open, closed, opening, closing): %s",
+                    payload,
+                )
                 return
+
             self.async_write_ha_state()
 
         @callback
@@ -307,7 +322,11 @@ class MqttCover(
                     float(payload), COVER_PAYLOAD
                 )
                 self._position = percentage_payload
-                self._state = percentage_payload == DEFAULT_POSITION_CLOSED
+                self._state = (
+                    STATE_CLOSED
+                    if percentage_payload == DEFAULT_POSITION_CLOSED
+                    else STATE_OPEN
+                )
             else:
                 _LOGGER.warning("Payload is not integer within range: %s", payload)
                 return
@@ -350,6 +369,7 @@ class MqttCover(
         )
         await MqttAttributes.async_will_remove_from_hass(self)
         await MqttAvailability.async_will_remove_from_hass(self)
+        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
 
     @property
     def should_poll(self):
@@ -368,8 +388,21 @@ class MqttCover(
 
     @property
     def is_closed(self):
-        """Return if the cover is closed."""
-        return self._state
+        """Return true if the cover is closed or None if the status is unknown."""
+        if self._state is None:
+            return None
+
+        return self._state == STATE_CLOSED
+
+    @property
+    def is_opening(self):
+        """Return true if the cover is actively opening."""
+        return self._state == STATE_OPENING
+
+    @property
+    def is_closing(self):
+        """Return true if the cover is actively closing."""
+        return self._state == STATE_CLOSING
 
     @property
     def current_cover_position(self):
@@ -396,6 +429,9 @@ class MqttCover(
         if self._config.get(CONF_COMMAND_TOPIC) is not None:
             supported_features = OPEN_CLOSE_FEATURES
 
+            if self._config.get(CONF_PAYLOAD_STOP) is not None:
+                supported_features |= SUPPORT_STOP
+
         if self._config.get(CONF_SET_POSITION_TOPIC) is not None:
             supported_features |= SUPPORT_SET_POSITION
 
@@ -418,7 +454,7 @@ class MqttCover(
         )
         if self._optimistic:
             # Optimistically assume that cover has changed state.
-            self._state = False
+            self._state = STATE_OPEN
             if self._config.get(CONF_GET_POSITION_TOPIC):
                 self._position = self.find_percentage_in_range(
                     self._config[CONF_POSITION_OPEN], COVER_PAYLOAD
@@ -439,7 +475,7 @@ class MqttCover(
         )
         if self._optimistic:
             # Optimistically assume that cover has changed state.
-            self._state = True
+            self._state = STATE_CLOSED
             if self._config.get(CONF_GET_POSITION_TOPIC):
                 self._position = self.find_percentage_in_range(
                     self._config[CONF_POSITION_CLOSED], COVER_PAYLOAD
@@ -533,7 +569,11 @@ class MqttCover(
                 self._config[CONF_RETAIN],
             )
             if self._optimistic:
-                self._state = percentage_position == self._config[CONF_POSITION_CLOSED]
+                self._state = (
+                    STATE_CLOSED
+                    if percentage_position == self._config[CONF_POSITION_CLOSED]
+                    else STATE_OPEN
+                )
                 self._position = percentage_position
                 self.async_write_ha_state()
 

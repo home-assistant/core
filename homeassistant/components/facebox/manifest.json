@@ -1,7 +1,7 @@
 {
   "domain": "facebox",
   "name": "Facebox",
-  "documentation": "https://www.home-assistant.io/components/facebox",
+  "documentation": "https://www.home-assistant.io/integrations/facebox",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

@@ -1,19 +1,23 @@
 """This component provides support for Xiaomi Cameras."""
 import asyncio
+from ftplib import FTP, error_perm
 import logging
 
+from haffmpeg.camera import CameraMjpeg
+from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 import voluptuous as vol
 
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
-    CONF_PATH,
     CONF_PASSWORD,
+    CONF_PATH,
     CONF_PORT,
     CONF_USERNAME,
 )
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 
@@ -34,7 +38,7 @@ MODEL_XIAOFANG = "xiaofang"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_HOST): cv.template,
         vol.Required(CONF_MODEL): vol.Any(MODEL_YI, MODEL_XIAOFANG),
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
@@ -63,6 +67,7 @@ class XiaomiCamera(Camera):
         self._manager = hass.data[DATA_FFMPEG]
         self._name = config[CONF_NAME]
         self.host = config[CONF_HOST]
+        self.host.hass = hass
         self._model = config[CONF_MODEL]
         self.port = config[CONF_PORT]
         self.path = config[CONF_PATH]
@@ -84,11 +89,10 @@ class XiaomiCamera(Camera):
         """Return the camera model."""
         return self._model
 
-    def get_latest_video_url(self):
+    def get_latest_video_url(self, host):
         """Retrieve the latest video file from the Xiaomi Camera FTP server."""
-        from ftplib import FTP, error_perm
 
-        ftp = FTP(self.host)
+        ftp = FTP(host)
         try:
             ftp.login(self.user, self.passwd)
         except error_perm as exc:
@@ -133,14 +137,19 @@ class XiaomiCamera(Camera):
             video = videos[-1]
 
         return "ftp://{0}:{1}@{2}:{3}{4}/{5}".format(
-            self.user, self.passwd, self.host, self.port, ftp.pwd(), video
+            self.user, self.passwd, host, self.port, ftp.pwd(), video
         )
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
-        from haffmpeg.tools import ImageFrame, IMAGE_JPEG
 
-        url = await self.hass.async_add_job(self.get_latest_video_url)
+        try:
+            host = self.host.async_render()
+        except TemplateError as exc:
+            _LOGGER.error("Error parsing template %s: %s", self.host, exc)
+            return self._last_image
+
+        url = await self.hass.async_add_executor_job(self.get_latest_video_url, host)
         if url != self._last_url:
             ffmpeg = ImageFrame(self._manager.binary, loop=self.hass.loop)
             self._last_image = await asyncio.shield(
@@ -154,7 +163,6 @@ class XiaomiCamera(Camera):
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
-        from haffmpeg.camera import CameraMjpeg
 
         stream = CameraMjpeg(self._manager.binary, loop=self.hass.loop)
         await stream.open_camera(self._last_url, extra_cmd=self._extra_arguments)

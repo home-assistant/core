@@ -8,11 +8,11 @@
             "no_flows": "Du m\u00e5 konfigurere Point f\u00f8r du kan autentisere med den. [Vennligst les instruksjonene](https://www.home-assistant.io/components/point/)."
         },
         "create_entry": {
-            "default": "Vellykket godkjenning med Minut for din(e) Point enhet(er)"
+            "default": "Vellykket autentisering med Minut for din(e) Point enhet(er)"
         },
         "error": {
-            "follow_link": "Vennligst f\u00f8lg lenken og godkjen f\u00f8r du trykker p\u00e5 Send",
-            "no_token": "Ikke godkjent med Minut"
+            "follow_link": "Vennligst f\u00f8lg lenken og autentiser f\u00f8r du trykker p\u00e5 Send",
+            "no_token": "Ikke autentisert med Minut"
         },
         "step": {
             "auth": {

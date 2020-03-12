@@ -25,13 +25,14 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
+    ENTITY_MATCH_ALL,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
 from homeassistant.loader import bind_hass
 
 
-async def async_set_preset_mode(hass, preset_mode, entity_id=None):
+async def async_set_preset_mode(hass, preset_mode, entity_id=ENTITY_MATCH_ALL):
     """Set new preset mode."""
     data = {ATTR_PRESET_MODE: preset_mode}
 
@@ -42,7 +43,7 @@ async def async_set_preset_mode(hass, preset_mode, entity_id=None):
 
 
 @bind_hass
-def set_preset_mode(hass, preset_mode, entity_id=None):
+def set_preset_mode(hass, preset_mode, entity_id=ENTITY_MATCH_ALL):
     """Set new preset mode."""
     data = {ATTR_PRESET_MODE: preset_mode}
 
@@ -52,7 +53,7 @@ def set_preset_mode(hass, preset_mode, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SET_PRESET_MODE, data)
 
 
-async def async_set_aux_heat(hass, aux_heat, entity_id=None):
+async def async_set_aux_heat(hass, aux_heat, entity_id=ENTITY_MATCH_ALL):
     """Turn all or specified climate devices auxiliary heater on."""
     data = {ATTR_AUX_HEAT: aux_heat}
 
@@ -63,7 +64,7 @@ async def async_set_aux_heat(hass, aux_heat, entity_id=None):
 
 
 @bind_hass
-def set_aux_heat(hass, aux_heat, entity_id=None):
+def set_aux_heat(hass, aux_heat, entity_id=ENTITY_MATCH_ALL):
     """Turn all or specified climate devices auxiliary heater on."""
     data = {ATTR_AUX_HEAT: aux_heat}
 
@@ -76,7 +77,7 @@ def set_aux_heat(hass, aux_heat, entity_id=None):
 async def async_set_temperature(
     hass,
     temperature=None,
-    entity_id=None,
+    entity_id=ENTITY_MATCH_ALL,
     target_temp_high=None,
     target_temp_low=None,
     hvac_mode=None,
@@ -103,7 +104,7 @@ async def async_set_temperature(
 def set_temperature(
     hass,
     temperature=None,
-    entity_id=None,
+    entity_id=ENTITY_MATCH_ALL,
     target_temp_high=None,
     target_temp_low=None,
     hvac_mode=None,
@@ -124,7 +125,7 @@ def set_temperature(
     hass.services.call(DOMAIN, SERVICE_SET_TEMPERATURE, kwargs)
 
 
-async def async_set_humidity(hass, humidity, entity_id=None):
+async def async_set_humidity(hass, humidity, entity_id=ENTITY_MATCH_ALL):
     """Set new target humidity."""
     data = {ATTR_HUMIDITY: humidity}
 
@@ -135,7 +136,7 @@ async def async_set_humidity(hass, humidity, entity_id=None):
 
 
 @bind_hass
-def set_humidity(hass, humidity, entity_id=None):
+def set_humidity(hass, humidity, entity_id=ENTITY_MATCH_ALL):
     """Set new target humidity."""
     data = {ATTR_HUMIDITY: humidity}
 
@@ -145,7 +146,7 @@ def set_humidity(hass, humidity, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SET_HUMIDITY, data)
 
 
-async def async_set_fan_mode(hass, fan, entity_id=None):
+async def async_set_fan_mode(hass, fan, entity_id=ENTITY_MATCH_ALL):
     """Set all or specified climate devices fan mode on."""
     data = {ATTR_FAN_MODE: fan}
 
@@ -156,7 +157,7 @@ async def async_set_fan_mode(hass, fan, entity_id=None):
 
 
 @bind_hass
-def set_fan_mode(hass, fan, entity_id=None):
+def set_fan_mode(hass, fan, entity_id=ENTITY_MATCH_ALL):
     """Set all or specified climate devices fan mode on."""
     data = {ATTR_FAN_MODE: fan}
 
@@ -166,7 +167,7 @@ def set_fan_mode(hass, fan, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SET_FAN_MODE, data)
 
 
-async def async_set_hvac_mode(hass, hvac_mode, entity_id=None):
+async def async_set_hvac_mode(hass, hvac_mode, entity_id=ENTITY_MATCH_ALL):
     """Set new target operation mode."""
     data = {ATTR_HVAC_MODE: hvac_mode}
 
@@ -177,7 +178,7 @@ async def async_set_hvac_mode(hass, hvac_mode, entity_id=None):
 
 
 @bind_hass
-def set_operation_mode(hass, hvac_mode, entity_id=None):
+def set_operation_mode(hass, hvac_mode, entity_id=ENTITY_MATCH_ALL):
     """Set new target operation mode."""
     data = {ATTR_HVAC_MODE: hvac_mode}
 
@@ -187,7 +188,7 @@ def set_operation_mode(hass, hvac_mode, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SET_HVAC_MODE, data)
 
 
-async def async_set_swing_mode(hass, swing_mode, entity_id=None):
+async def async_set_swing_mode(hass, swing_mode, entity_id=ENTITY_MATCH_ALL):
     """Set new target swing mode."""
     data = {ATTR_SWING_MODE: swing_mode}
 
@@ -198,7 +199,7 @@ async def async_set_swing_mode(hass, swing_mode, entity_id=None):
 
 
 @bind_hass
-def set_swing_mode(hass, swing_mode, entity_id=None):
+def set_swing_mode(hass, swing_mode, entity_id=ENTITY_MATCH_ALL):
     """Set new target swing mode."""
     data = {ATTR_SWING_MODE: swing_mode}
 
@@ -208,7 +209,7 @@ def set_swing_mode(hass, swing_mode, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SET_SWING_MODE, data)
 
 
-async def async_turn_on(hass, entity_id=None):
+async def async_turn_on(hass, entity_id=ENTITY_MATCH_ALL):
     """Turn on device."""
     data = {}
 
@@ -218,7 +219,7 @@ async def async_turn_on(hass, entity_id=None):
     await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data, blocking=True)
 
 
-async def async_turn_off(hass, entity_id=None):
+async def async_turn_off(hass, entity_id=ENTITY_MATCH_ALL):
     """Turn off device."""
     data = {}
 

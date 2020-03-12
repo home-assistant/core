@@ -1,14 +1,11 @@
-"""Pencom relay control.
-
-For more details about this component, please refer to the documentation at
-http://home-assistant.io/components/switch.pencom
-"""
+"""Pencom relay control."""
 import logging
 
+from pencompy.pencompy import Pencompy
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_NAME
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
@@ -39,7 +36,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Pencom relay platform (pencompy)."""
-    from pencompy.pencompy import Pencompy
 
     # Assign configuration variables.
     host = config[CONF_HOST]

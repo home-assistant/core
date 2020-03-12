@@ -4,8 +4,8 @@ from urllib.parse import urlparse
 
 import pytest
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components.stream import request_stream
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
@@ -47,7 +47,7 @@ async def test_hls_stream(hass, hass_client):
     # Stop stream, if it hasn't quit already
     stream.stop()
 
-    # Ensure playlist not accessable after stream ends
+    # Ensure playlist not accessible after stream ends
     fail_response = await http_client.get(parsed_url.path)
     assert fail_response.status == 404
 
@@ -84,7 +84,7 @@ async def test_stream_timeout(hass, hass_client):
     future = dt_util.utcnow() + timedelta(minutes=5)
     async_fire_time_changed(hass, future)
 
-    # Ensure playlist not accessable
+    # Ensure playlist not accessible
     fail_response = await http_client.get(parsed_url.path)
     assert fail_response.status == 404
 

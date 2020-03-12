@@ -1,7 +1,9 @@
 """Support for the Fibaro devices."""
-import logging
 from collections import defaultdict
+import logging
 from typing import Optional
+
+from fiblary3.client.v4.client import Client as FibaroClient, StateHandler
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -109,7 +111,6 @@ class FibaroController:
 
     def __init__(self, config):
         """Initialize the Fibaro controller."""
-        from fiblary3.client.v4.client import Client as FibaroClient
 
         self._client = FibaroClient(
             config[CONF_URL], config[CONF_USERNAME], config[CONF_PASSWORD]
@@ -133,11 +134,11 @@ class FibaroController:
             info = self._client.info.get()
             self.hub_serial = slugify(info.serialNumber)
         except AssertionError:
-            _LOGGER.error("Can't connect to Fibaro HC. " "Please check URL.")
+            _LOGGER.error("Can't connect to Fibaro HC. Please check URL.")
             return False
         if login is None or login.status is False:
             _LOGGER.error(
-                "Invalid login for Fibaro HC. " "Please check username and password"
+                "Invalid login for Fibaro HC. Please check username and password"
             )
             return False
 
@@ -148,8 +149,6 @@ class FibaroController:
 
     def enable_state_handler(self):
         """Start StateHandler thread for monitoring updates."""
-        from fiblary3.client.v4.client import StateHandler
-
         self._state_handler = StateHandler(self._client, self._on_state_change)
 
     def disable_state_handler(self):
@@ -247,11 +246,11 @@ class FibaroController:
             else:
                 room_name = self._room_map[device.roomID].name
             device.room_name = room_name
-            device.friendly_name = "{} {}".format(room_name, device.name)
-            device.ha_id = "scene_{}_{}_{}".format(
-                slugify(room_name), slugify(device.name), device.id
+            device.friendly_name = f"{room_name} {device.name}"
+            device.ha_id = (
+                f"scene_{slugify(room_name)}_{slugify(device.name)}_{device.id}"
             )
-            device.unique_id_str = "{}.scene.{}".format(self.hub_serial, device.id)
+            device.unique_id_str = f"{self.hub_serial}.scene.{device.id}"
             self._scene_map[device.id] = device
             self.fibaro_devices["scene"].append(device)
 
@@ -269,9 +268,9 @@ class FibaroController:
                 else:
                     room_name = self._room_map[device.roomID].name
                 device.room_name = room_name
-                device.friendly_name = room_name + " " + device.name
-                device.ha_id = "{}_{}_{}".format(
-                    slugify(room_name), slugify(device.name), device.id
+                device.friendly_name = f"{room_name} {device.name}"
+                device.ha_id = (
+                    f"{slugify(room_name)}_{slugify(device.name)}_{device.id}"
                 )
                 if (
                     device.enabled
@@ -287,7 +286,7 @@ class FibaroController:
                     device.mapped_type = None
                 dtype = device.mapped_type
                 if dtype:
-                    device.unique_id_str = "{}.{}".format(self.hub_serial, device.id)
+                    device.unique_id_str = f"{self.hub_serial}.{device.id}"
                     self._device_map[device.id] = device
                     if dtype != "climate":
                         self.fibaro_devices[dtype].append(device)
@@ -381,7 +380,7 @@ class FibaroDevice(Entity):
     def dont_know_message(self, action):
         """Make a warning in case we don't know how to perform an action."""
         _LOGGER.warning(
-            "Not sure how to setValue: %s " "(available actions: %s)",
+            "Not sure how to setValue: %s (available actions: %s)",
             str(self.ha_id),
             str(self.fibaro_device.actions),
         )
@@ -414,7 +413,7 @@ class FibaroDevice(Entity):
         green = int(max(0, min(255, green)))
         blue = int(max(0, min(255, blue)))
         white = int(max(0, min(255, white)))
-        color_str = "{},{},{},{}".format(red, green, blue, white)
+        color_str = f"{red},{green},{blue},{white}"
         self.fibaro_device.properties.color = color_str
         self.action("setColor", str(red), str(green), str(blue), str(white))
 
@@ -425,11 +424,6 @@ class FibaroDevice(Entity):
             _LOGGER.debug("-> %s.%s%s called", str(self.ha_id), str(cmd), str(args))
         else:
             self.dont_know_message(cmd)
-
-    @property
-    def hidden(self) -> bool:
-        """Return True if the entity should be hidden from UIs."""
-        return self.fibaro_device.visible is False
 
     @property
     def current_power_w(self):
