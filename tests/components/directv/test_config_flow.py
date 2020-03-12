@@ -114,9 +114,7 @@ async def test_form_cannot_connect(hass: HomeAssistantType) -> None:
     )
 
     with patch(
-        "homeassistant.components.directv.config_flow.DIRECTV", new=MockDirectvClass,
-    ), patch(
-        "homeassistant.components.directv.config_flow.DIRECTV.get_version",
+        "homeassistant.components.directv.config_flow.DIRECTV.return_value.get_version",
         side_effect=RequestException,
     ) as mock_validate_input:
         result = await async_configure_flow(hass, result["flow_id"], {CONF_HOST: HOST},)
@@ -135,8 +133,6 @@ async def test_form_unknown_error(hass: HomeAssistantType) -> None:
     )
 
     with patch(
-        "homeassistant.components.directv.config_flow.DIRECTV", new=MockDirectvClass,
-    ), patch(
         "homeassistant.components.directv.config_flow.DIRECTV.get_version",
         side_effect=Exception,
     ) as mock_validate_input:
@@ -224,9 +220,7 @@ async def test_ssdp_discovery_confirm_unknown_error(hass: HomeAssistantType) -> 
     )
 
     with patch(
-        "homeassistant.components.directv.config_flow.DIRECTV", new=MockDirectvClass,
-    ), patch(
-        "homeassistant.components.directv.config_flow.DIRECTV.get_version",
+        "homeassistant.components.directv.config_flow.DIRECTV.return_value.get_version",
         side_effect=Exception,
     ) as mock_validate_input:
         result = await async_configure_flow(hass, result["flow_id"], {})
