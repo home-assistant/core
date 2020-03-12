@@ -204,9 +204,7 @@ async def test_ssdp_discovery_confirm_abort(hass: HomeAssistantType) -> None:
     )
 
     with patch(
-        "homeassistant.components.directv.config_flow.DIRECTV", new=MockDirectvClass,
-    ), patch(
-        "homeassistant.components.directv.config_flow.DIRECTV.get_version",
+        "homeassistant.components.directv.config_flow.DIRECTV.return_value.get_version",
         side_effect=RequestException,
     ) as mock_validate_input:
         result = await async_configure_flow(hass, result["flow_id"], {})
