@@ -5,7 +5,7 @@ from contextlib import suppress
 from datetime import datetime
 import logging
 from timeit import default_timer as timer
-from typing import Callable, Dict
+from typing import Callable, Dict, TypeVar
 
 from homeassistant import core
 from homeassistant.components.websocket_api.const import JSON_DUMP
@@ -14,6 +14,8 @@ from homeassistant.util import dt as dt_util
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 # mypy: no-warn-return-any
+
+CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
 
 BENCHMARKS: Dict[str, Callable] = {}
 
@@ -44,7 +46,7 @@ def run(args):
             loop.close()
 
 
-def benchmark(func):
+def benchmark(func: CALLABLE_T) -> CALLABLE_T:
     """Decorate to mark a benchmark."""
     BENCHMARKS[func.__name__] = func
     return func
