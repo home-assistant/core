@@ -1,10 +1,8 @@
 {
   "domain": "nut",
-  "name": "Nut",
-  "documentation": "https://www.home-assistant.io/components/nut",
-  "requirements": [
-    "pynut2==2.1.2"
-  ],
+  "name": "Network UPS Tools (NUT)",
+  "documentation": "https://www.home-assistant.io/integrations/nut",
+  "requirements": ["pynut2==2.1.2"],
   "dependencies": [],
   "codeowners": []
 }

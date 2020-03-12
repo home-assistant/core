@@ -5,8 +5,12 @@ import logging
 
 import aiohttp
 import attr
+import eternalegypt
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
@@ -16,14 +20,11 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import callback
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_send,
     async_dispatcher_connect,
+    async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
@@ -139,7 +140,6 @@ class ModemData:
 
     async def async_update(self):
         """Call the API to update the data."""
-        import eternalegypt
 
         try:
             self.data = await self.modem.information()
@@ -264,7 +264,6 @@ async def async_setup(hass, config):
 
 async def _setup_lte(hass, lte_config):
     """Set up a Netgear LTE modem."""
-    import eternalegypt
 
     host = lte_config[CONF_HOST]
     password = lte_config[CONF_PASSWORD]
@@ -322,7 +321,6 @@ async def _login(hass, modem_data, password):
 
 async def _retry_login(hass, modem_data, password):
     """Sleep and retry setup."""
-    import eternalegypt
 
     _LOGGER.warning("Could not connect to %s. Will keep trying", modem_data.host)
 
@@ -350,7 +348,7 @@ class LTEEntity(Entity):
     @_unique_id.default
     def _init_unique_id(self):
         """Register unique_id while we know data is valid."""
-        return "{}_{}".format(self.sensor_type, self.modem_data.data.serial_number)
+        return f"{self.sensor_type}_{self.modem_data.data.serial_number}"
 
     async def async_added_to_hass(self):
         """Register callback."""
@@ -380,4 +378,4 @@ class LTEEntity(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "Netgear LTE {}".format(self.sensor_type)
+        return f"Netgear LTE {self.sensor_type}"

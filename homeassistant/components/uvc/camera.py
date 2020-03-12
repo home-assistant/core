@@ -3,12 +3,13 @@ import logging
 import socket
 
 import requests
+from uvcclient import camera as uvc_camera, nvr
 import voluptuous as vol
 
+from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.const import CONF_PORT, CONF_SSL
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,8 +39,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     password = config[CONF_PASSWORD]
     port = config[CONF_PORT]
     ssl = config[CONF_SSL]
-
-    from uvcclient import nvr
 
     try:
         # Exceptions may be raised in all method calls to the nvr library.
@@ -76,10 +75,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class UnifiVideoCamera(Camera):
     """A Ubiquiti Unifi Video Camera."""
 
-    def __init__(self, nvr, uuid, name, password):
+    def __init__(self, camera, uuid, name, password):
         """Initialize an Unifi camera."""
-        super(UnifiVideoCamera, self).__init__()
-        self._nvr = nvr
+        super().__init__()
+        self._nvr = camera
         self._uuid = uuid
         self._name = name
         self._password = password
@@ -92,6 +91,17 @@ class UnifiVideoCamera(Camera):
     def name(self):
         """Return the name of this camera."""
         return self._name
+
+    @property
+    def supported_features(self):
+        """Return supported features."""
+        caminfo = self._nvr.get_camera(self._uuid)
+        channels = caminfo["channels"]
+        for channel in channels:
+            if channel["isRtspEnabled"]:
+                return SUPPORT_STREAM
+
+        return 0
 
     @property
     def is_recording(self):
@@ -118,7 +128,6 @@ class UnifiVideoCamera(Camera):
 
     def _login(self):
         """Login to the camera."""
-        from uvcclient import camera as uvc_camera
 
         caminfo = self._nvr.get_camera(self._uuid)
         if self._connect_addr:
@@ -160,7 +169,6 @@ class UnifiVideoCamera(Camera):
 
     def camera_image(self):
         """Return the image of this camera."""
-        from uvcclient import camera as uvc_camera
 
         if not self._camera:
             if not self._login():
@@ -182,7 +190,6 @@ class UnifiVideoCamera(Camera):
 
     def set_motion_detection(self, mode):
         """Set motion detection on or off."""
-        from uvcclient.nvr import NvrError
 
         if mode is True:
             set_mode = "motion"
@@ -192,7 +199,7 @@ class UnifiVideoCamera(Camera):
         try:
             self._nvr.set_recordmode(self._uuid, set_mode)
             self._motion_status = mode
-        except NvrError as err:
+        except nvr.NvrError as err:
             _LOGGER.error("Unable to set recordmode to %s", set_mode)
             _LOGGER.debug(err)
 
@@ -203,3 +210,13 @@ class UnifiVideoCamera(Camera):
     def disable_motion_detection(self):
         """Disable motion detection in camera."""
         self.set_motion_detection(False)
+
+    async def stream_source(self):
+        """Return the source of the stream."""
+        caminfo = self._nvr.get_camera(self._uuid)
+        channels = caminfo["channels"]
+        for channel in channels:
+            if channel["isRtspEnabled"]:
+                return channel["rtspUris"][0]
+
+        return None

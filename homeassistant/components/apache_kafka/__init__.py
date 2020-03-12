@@ -64,7 +64,7 @@ class DateTimeJSONEncoder(json.JSONEncoder):
     Additionally add encoding for datetime objects as isoformat.
     """
 
-    def default(self, o):  # pylint: disable=E0202
+    def default(self, o):  # pylint: disable=method-hidden
         """Implement encoding logic."""
         if isinstance(o, datetime):
             return o.isoformat()
@@ -81,7 +81,7 @@ class KafkaManager:
         self._hass = hass
         self._producer = AIOKafkaProducer(
             loop=hass.loop,
-            bootstrap_servers="{0}:{1}".format(ip_address, port),
+            bootstrap_servers=f"{ip_address}:{port}",
             compression_type="gzip",
         )
         self._topic = topic

@@ -1,10 +1,8 @@
 {
   "domain": "vallox",
-  "name": "Vallox",
-  "documentation": "https://www.home-assistant.io/components/vallox",
-  "requirements": [
-    "vallox-websocket-api==2.2.0"
-  ],
+  "name": "Valloxs",
+  "documentation": "https://www.home-assistant.io/integrations/vallox",
+  "requirements": ["vallox-websocket-api==2.4.0"],
   "dependencies": [],
   "codeowners": []
 }

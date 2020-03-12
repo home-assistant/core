@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.components.mopar import DOMAIN as MOPAR_DOMAIN
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.const import STATE_OFF, STATE_ON
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class MoparSwitch(SwitchDevice):
     def __init__(self, data, index):
         """Initialize the Switch."""
         self._index = index
-        self._name = "{} Switch".format(data.get_vehicle_name(self._index))
+        self._name = f"{data.get_vehicle_name(self._index)} Switch"
         self._actuate = data.actuate
         self._state = None
 

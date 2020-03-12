@@ -1,12 +1,13 @@
 """Support for monitoring energy usage using the DTE energy bridge."""
 import logging
 
+import requests
 import voluptuous as vol
 
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,11 +47,9 @@ class DteEnergyBridgeSensor(Entity):
         self._version = version
 
         if self._version == 1:
-            url_template = "http://{}/instantaneousdemand"
+            self._url = f"http://{ip_address}/instantaneousdemand"
         elif self._version == 2:
-            url_template = "http://{}:8888/zigbee/se/instantaneousdemand"
-
-        self._url = url_template.format(ip_address)
+            self._url = f"http://{ip_address}:8888/zigbee/se/instantaneousdemand"
 
         self._name = name
         self._unit_of_measurement = "kW"
@@ -78,8 +77,6 @@ class DteEnergyBridgeSensor(Entity):
 
     def update(self):
         """Get the energy usage data from the DTE energy bridge."""
-        import requests
-
         try:
             response = requests.get(self._url, timeout=5)
         except (requests.exceptions.RequestException, ValueError):

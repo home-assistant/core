@@ -2,8 +2,8 @@
 from pylutron import OccupancyGroup
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice,
     DEVICE_CLASS_OCCUPANCY,
+    BinarySensorDevice,
 )
 
 from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice

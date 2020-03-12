@@ -1,6 +1,8 @@
 """Config flow to configure the Luftdaten component."""
 from collections import OrderedDict
 
+from luftdaten import Luftdaten
+from luftdaten.exceptions import LuftdatenConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -60,7 +62,6 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
-        from luftdaten import Luftdaten, exceptions
 
         if not user_input:
             return self._show_form()
@@ -75,7 +76,7 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow):
         try:
             await luftdaten.get_data()
             valid = await luftdaten.validate_sensor()
-        except exceptions.LuftdatenConnectionError:
+        except LuftdatenConnectionError:
             return self._show_form({CONF_SENSOR_ID: "communication_error"})
 
         if not valid:

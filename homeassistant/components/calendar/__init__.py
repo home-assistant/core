@@ -7,7 +7,7 @@ from aiohttp import web
 
 from homeassistant.components import http
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.helpers.config_validation import (  # noqa
+from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
     time_period_str,
@@ -16,7 +16,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.util import dt
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -30,7 +29,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 async def async_setup(hass, config):
     """Track states and offer events for calendars."""
     component = hass.data[DOMAIN] = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DOMAIN
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
     hass.http.register_view(CalendarListView(component))

@@ -2,8 +2,11 @@
 from datetime import timedelta
 import logging
 
+from sqlalchemy.exc import SQLAlchemyError
+
 import homeassistant.util.dt as dt_util
 
+from .models import Events, States
 from .util import session_scope
 
 _LOGGER = logging.getLogger(__name__)
@@ -11,9 +14,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def purge_old_data(instance, purge_days, repack):
     """Purge events and states older than purge_days ago."""
-    from .models import States, Events
-    from sqlalchemy.exc import SQLAlchemyError
-
     purge_before = dt_util.utcnow() - timedelta(days=purge_days)
     _LOGGER.debug("Purging events before %s", purge_before)
 
@@ -34,8 +34,8 @@ def purge_old_data(instance, purge_days, repack):
             _LOGGER.debug("Deleted %s events", deleted_rows)
 
         # Execute sqlite vacuum command to free up space on disk
-        if repack and instance.engine.driver == "pysqlite":
-            _LOGGER.debug("Vacuuming SQLite to free space")
+        if repack and instance.engine.driver in ("pysqlite", "postgresql"):
+            _LOGGER.debug("Vacuuming SQL DB to free space")
             instance.engine.execute("VACUUM")
 
     except SQLAlchemyError as err:

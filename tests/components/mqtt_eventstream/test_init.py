@@ -2,19 +2,19 @@
 import json
 from unittest.mock import ANY, patch
 
-from homeassistant.setup import setup_component
 import homeassistant.components.mqtt_eventstream as eventstream
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import State, callback
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
+    fire_mqtt_message,
+    fire_time_changed,
     get_test_home_assistant,
     mock_mqtt_component,
-    fire_mqtt_message,
     mock_state_change_event,
-    fire_time_changed,
 )
 
 

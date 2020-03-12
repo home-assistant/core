@@ -1,10 +1,9 @@
 """Provide a way to connect devices to one physical location."""
-import logging
-import uuid
 from asyncio import Event
 from collections import OrderedDict
-from typing import MutableMapping  # noqa: F401
-from typing import Iterable, Optional, cast
+import logging
+from typing import Iterable, MutableMapping, Optional, cast
+import uuid
 
 import attr
 
@@ -36,7 +35,7 @@ class AreaRegistry:
     def __init__(self, hass: HomeAssistantType) -> None:
         """Initialize the area registry."""
         self.hass = hass
-        self.areas = {}  # type: MutableMapping[str, AreaEntry]
+        self.areas: MutableMapping[str, AreaEntry] = {}
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     @callback
@@ -119,7 +118,7 @@ class AreaRegistry:
         """Load the area registry."""
         data = await self._store.async_load()
 
-        areas = OrderedDict()  # type: OrderedDict[str, AreaEntry]
+        areas: MutableMapping[str, AreaEntry] = OrderedDict()
 
         if data is not None:
             for area in data["areas"]:

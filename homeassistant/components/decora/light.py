@@ -1,30 +1,49 @@
 """Support for Decora dimmers."""
-import importlib
-import logging
+import copy
 from functools import wraps
+import logging
 import time
 
+from bluepy.btle import BTLEException  # pylint: disable=import-error, no-member
+import decora  # pylint: disable=import-error, no-member
 import voluptuous as vol
 
-from homeassistant.const import CONF_API_KEY, CONF_DEVICES, CONF_NAME
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     Light,
-    PLATFORM_SCHEMA,
 )
+from homeassistant.const import CONF_API_KEY, CONF_DEVICES, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util as util
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_DECORA_LED = SUPPORT_BRIGHTNESS
 
+
+def _name_validator(config):
+    """Validate the name."""
+    config = copy.deepcopy(config)
+    for address, device_config in config[CONF_DEVICES].items():
+        if CONF_NAME not in device_config:
+            device_config[CONF_NAME] = util.slugify(address)
+
+    return config
+
+
 DEVICE_SCHEMA = vol.Schema(
     {vol.Optional(CONF_NAME): cv.string, vol.Required(CONF_API_KEY): cv.string}
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA}}
+PLATFORM_SCHEMA = vol.Schema(
+    vol.All(
+        PLATFORM_SCHEMA.extend(
+            {vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA}}
+        ),
+        _name_validator,
+    )
 )
 
 
@@ -34,9 +53,6 @@ def retry(method):
     @wraps(method)
     def wrapper_retry(device, *args, **kwargs):
         """Try send command and retry on error."""
-        # pylint: disable=import-error, no-member
-        import decora
-        import bluepy
 
         initial = time.monotonic()
         while True:
@@ -44,10 +60,9 @@ def retry(method):
                 return None
             try:
                 return method(device, *args, **kwargs)
-            except (decora.decoraException, AttributeError, bluepy.btle.BTLEException):
+            except (decora.decoraException, AttributeError, BTLEException):
                 _LOGGER.warning(
-                    "Decora connect error for device %s. " "Reconnecting...",
-                    device.name,
+                    "Decora connect error for device %s. Reconnecting...", device.name,
                 )
                 # pylint: disable=protected-access
                 device._switch.connect()
@@ -74,8 +89,6 @@ class DecoraLight(Light):
 
     def __init__(self, device):
         """Initialize the light."""
-        # pylint: disable=no-member
-        decora = importlib.import_module("decora")
 
         self._name = device["name"]
         self._address = device["address"]

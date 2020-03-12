@@ -1,12 +1,8 @@
 {
   "domain": "twilio_call",
-  "name": "Twilio call",
-  "documentation": "https://www.home-assistant.io/components/twilio_call",
+  "name": "Twilio Call",
+  "documentation": "https://www.home-assistant.io/integrations/twilio_call",
   "requirements": [],
-  "dependencies": [
-    "twilio"
-  ],
-  "codeowners": [
-    "@robbiet480"
-  ]
+  "dependencies": ["twilio"],
+  "codeowners": ["@robbiet480"]
 }

@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+from aioimaplib import IMAP4_SSL, AioImapException
 import async_timeout
 import voluptuous as vol
 
@@ -22,6 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_SERVER = "server"
 CONF_FOLDER = "folder"
 CONF_SEARCH = "search"
+CONF_CHARSET = "charset"
 
 DEFAULT_PORT = 993
 
@@ -34,6 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_SERVER): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_CHARSET, default="utf-8"): cv.string,
         vol.Optional(CONF_FOLDER, default="INBOX"): cv.string,
         vol.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): cv.string,
     }
@@ -48,6 +51,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         config.get(CONF_PASSWORD),
         config.get(CONF_SERVER),
         config.get(CONF_PORT),
+        config.get(CONF_CHARSET),
         config.get(CONF_FOLDER),
         config.get(CONF_SEARCH),
     )
@@ -61,13 +65,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class ImapSensor(Entity):
     """Representation of an IMAP sensor."""
 
-    def __init__(self, name, user, password, server, port, folder, search):
+    def __init__(self, name, user, password, server, port, charset, folder, search):
         """Initialize the sensor."""
         self._name = name or user
         self._user = user
         self._password = password
         self._server = server
         self._port = port
+        self._charset = charset
         self._folder = folder
         self._email_count = None
         self._search = search
@@ -107,24 +112,20 @@ class ImapSensor(Entity):
 
     async def connection(self):
         """Return a connection to the server, establishing it if necessary."""
-        import aioimaplib
-
         if self._connection is None:
             try:
-                self._connection = aioimaplib.IMAP4_SSL(self._server, self._port)
+                self._connection = IMAP4_SSL(self._server, self._port)
                 await self._connection.wait_hello_from_server()
                 await self._connection.login(self._user, self._password)
                 await self._connection.select(self._folder)
                 self._does_push = self._connection.has_capability("IDLE")
-            except (aioimaplib.AioImapException, asyncio.TimeoutError):
+            except (AioImapException, asyncio.TimeoutError):
                 self._connection = None
 
         return self._connection
 
     async def idle_loop(self):
         """Wait for data pushed from server."""
-        import aioimaplib
-
         while True:
             try:
                 if await self.connection():
@@ -138,30 +139,30 @@ class ImapSensor(Entity):
                         await idle
                 else:
                     await self.async_update_ha_state()
-            except (aioimaplib.AioImapException, asyncio.TimeoutError):
+            except (AioImapException, asyncio.TimeoutError):
                 self.disconnected()
 
     async def async_update(self):
         """Periodic polling of state."""
-        import aioimaplib
-
         try:
             if await self.connection():
                 await self.refresh_email_count()
-        except (aioimaplib.AioImapException, asyncio.TimeoutError):
+        except (AioImapException, asyncio.TimeoutError):
             self.disconnected()
 
     async def refresh_email_count(self):
         """Check the number of found emails."""
         if self._connection:
             await self._connection.noop()
-            result, lines = await self._connection.search(self._search)
+            result, lines = await self._connection.search(
+                self._search, charset=self._charset
+            )
 
             if result == "OK":
                 self._email_count = len(lines[0].split())
             else:
                 _LOGGER.error(
-                    "Can't parse IMAP server response to search " "'%s':  %s / %s",
+                    "Can't parse IMAP server response to search '%s':  %s / %s",
                     self._search,
                     result,
                     lines[0],

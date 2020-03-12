@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.components.alarm_control_panel import DOMAIN, AlarmControlPanel
+from homeassistant.components.alarm_control_panel.const import SUPPORT_ALARM_ARM_AWAY
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_DISARMED,
@@ -89,6 +90,11 @@ class MinutPointAlarmControl(AlarmControlPanel):
         return EVENT_MAP.get(self._home["alarm_status"], STATE_ALARM_ARMED_AWAY)
 
     @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_AWAY
+
+    @property
     def changed_by(self):
         """Return the user the last change was triggered by."""
         return self._changed_by
@@ -108,7 +114,7 @@ class MinutPointAlarmControl(AlarmControlPanel):
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return "point.{}".format(self._home_id)
+        return f"point.{self._home_id}"
 
     @property
     def device_info(self):

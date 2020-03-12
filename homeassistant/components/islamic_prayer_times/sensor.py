@@ -1,15 +1,16 @@
 """Platform to retrieve Islamic prayer times information for Home Assistant."""
-import logging
 from datetime import datetime, timedelta
+import logging
 
+from prayer_times_calculator import PrayerTimesCalculator
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_time
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,7 +97,7 @@ async def schedule_future_update(hass, sensors, midnight_time, prayer_times_data
     now = dt_util.as_local(dt_util.now())
     today = now.date()
 
-    midnight_dt_str = "{}::{}".format(str(today), midnight_time)
+    midnight_dt_str = f"{today}::{midnight_time}"
     midnight_dt = datetime.strptime(midnight_dt_str, "%Y-%m-%d::%H:%M")
 
     if now > dt_util.as_local(midnight_dt):
@@ -148,7 +149,6 @@ class IslamicPrayerTimesData:
 
     def get_new_prayer_times(self):
         """Fetch prayer times for today."""
-        from prayer_times_calculator import PrayerTimesCalculator
 
         today = datetime.today().strftime("%Y-%m-%d")
 
@@ -166,12 +166,10 @@ class IslamicPrayerTimesData:
 class IslamicPrayerTimeSensor(Entity):
     """Representation of an Islamic prayer time sensor."""
 
-    ENTITY_ID_FORMAT = "sensor.islamic_prayer_time_{}"
-
     def __init__(self, sensor_type, prayer_times_data):
         """Initialize the Islamic prayer time sensor."""
         self.sensor_type = sensor_type
-        self.entity_id = self.ENTITY_ID_FORMAT.format(self.sensor_type)
+        self.entity_id = f"sensor.islamic_prayer_time_{self.sensor_type}"
         self.prayer_times_data = prayer_times_data
         self._name = self.sensor_type.capitalize()
         self._device_class = DEVICE_CLASS_TIMESTAMP
@@ -208,7 +206,7 @@ class IslamicPrayerTimeSensor(Entity):
     def get_prayer_time_as_dt(prayer_time):
         """Create a datetime object for the respective prayer time."""
         today = datetime.today().strftime("%Y-%m-%d")
-        date_time_str = "{} {}".format(str(today), prayer_time)
+        date_time_str = f"{today} {prayer_time}"
         pt_dt = dt_util.parse_datetime(date_time_str)
         return pt_dt
 

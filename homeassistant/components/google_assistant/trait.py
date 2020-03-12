@@ -2,15 +2,16 @@
 import logging
 
 from homeassistant.components import (
+    alarm_control_panel,
     binary_sensor,
     camera,
     cover,
-    group,
     fan,
+    group,
     input_boolean,
-    media_player,
     light,
     lock,
+    media_player,
     scene,
     script,
     sensor,
@@ -19,32 +20,50 @@ from homeassistant.components import (
 )
 from homeassistant.components.climate import const as climate
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
+    ATTR_ASSUMED_STATE,
+    ATTR_CODE,
     ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    ATTR_TEMPERATURE,
+    SERVICE_ALARM_ARM_AWAY,
+    SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+    SERVICE_ALARM_ARM_HOME,
+    SERVICE_ALARM_ARM_NIGHT,
+    SERVICE_ALARM_DISARM,
+    SERVICE_ALARM_TRIGGER,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_PENDING,
+    STATE_ALARM_TRIGGERED,
     STATE_LOCKED,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    ATTR_SUPPORTED_FEATURES,
-    ATTR_TEMPERATURE,
-    ATTR_ASSUMED_STATE,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.util import color as color_util, temperature as temp_util
+
 from .const import (
-    ERR_VALUE_OUT_OF_RANGE,
-    ERR_NOT_SUPPORTED,
-    ERR_FUNCTION_NOT_SUPPORTED,
-    ERR_CHALLENGE_NOT_SETUP,
     CHALLENGE_ACK_NEEDED,
-    CHALLENGE_PIN_NEEDED,
     CHALLENGE_FAILED_PIN_NEEDED,
+    CHALLENGE_PIN_NEEDED,
+    ERR_ALREADY_ARMED,
+    ERR_ALREADY_DISARMED,
+    ERR_CHALLENGE_NOT_SETUP,
+    ERR_FUNCTION_NOT_SUPPORTED,
+    ERR_NOT_SUPPORTED,
+    ERR_VALUE_OUT_OF_RANGE,
 )
-from .error import SmartHomeError, ChallengeNeeded
+from .error import ChallengeNeeded, SmartHomeError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,6 +81,8 @@ TRAIT_FANSPEED = PREFIX_TRAITS + "FanSpeed"
 TRAIT_MODES = PREFIX_TRAITS + "Modes"
 TRAIT_OPENCLOSE = PREFIX_TRAITS + "OpenClose"
 TRAIT_VOLUME = PREFIX_TRAITS + "Volume"
+TRAIT_ARMDISARM = PREFIX_TRAITS + "ArmDisarm"
+TRAIT_HUMIDITY_SETTING = PREFIX_TRAITS + "HumiditySetting"
 
 PREFIX_COMMANDS = "action.devices.commands."
 COMMAND_ONOFF = PREFIX_COMMANDS + "OnOff"
@@ -85,6 +106,7 @@ COMMAND_MODES = PREFIX_COMMANDS + "SetModes"
 COMMAND_OPENCLOSE = PREFIX_COMMANDS + "OpenClose"
 COMMAND_SET_VOLUME = PREFIX_COMMANDS + "setVolume"
 COMMAND_VOLUME_RELATIVE = PREFIX_COMMANDS + "volumeRelative"
+COMMAND_ARMDISARM = PREFIX_COMMANDS + "ArmDisarm"
 
 TRAITS = []
 
@@ -166,6 +188,8 @@ class BrightnessTrait(_Trait):
             brightness = self.state.attributes.get(light.ATTR_BRIGHTNESS)
             if brightness is not None:
                 response["brightness"] = int(100 * (brightness / 255))
+            else:
+                response["brightness"] = 0
 
         return response
 
@@ -308,7 +332,7 @@ class ColorSettingTrait(_Trait):
 
         if features & light.SUPPORT_COLOR_TEMP:
             # Max Kelvin is Min Mireds K = 1000000 / mireds
-            # Min Kevin is Max Mireds K = 1000000 / mireds
+            # Min Kelvin is Max Mireds K = 1000000 / mireds
             response["colorTemperatureRange"] = {
                 "temperatureMaxK": color_util.color_temperature_mired_to_kelvin(
                     attrs.get(light.ATTR_MIN_MIREDS)
@@ -368,9 +392,7 @@ class ColorSettingTrait(_Trait):
             if temp < min_temp or temp > max_temp:
                 raise SmartHomeError(
                     ERR_VALUE_OUT_OF_RANGE,
-                    "Temperature should be between {} and {}".format(
-                        min_temp, max_temp
-                    ),
+                    f"Temperature should be between {min_temp} and {max_temp}",
                 )
 
             await self.hass.services.async_call(
@@ -383,7 +405,7 @@ class ColorSettingTrait(_Trait):
 
         elif "spectrumRGB" in params["color"]:
             # Convert integer to hex format and left pad with 0's till length 6
-            hex_value = "{0:06x}".format(params["color"]["spectrumRGB"])
+            hex_value = f"{params['color']['spectrumRGB']:06x}"
             color = color_util.color_RGB_to_hs(
                 *color_util.rgb_hex_to_rgb_list(hex_value)
             )
@@ -643,7 +665,7 @@ class TemperatureSettingTrait(_Trait):
             device_class = attrs.get(ATTR_DEVICE_CLASS)
             if device_class == sensor.DEVICE_CLASS_TEMPERATURE:
                 current_temp = self.state.state
-                if current_temp is not None:
+                if current_temp not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                     response["thermostatTemperatureAmbient"] = round(
                         temp_util.convert(float(current_temp), unit, TEMP_CELSIUS), 1
                     )
@@ -722,9 +744,7 @@ class TemperatureSettingTrait(_Trait):
             if temp < min_temp or temp > max_temp:
                 raise SmartHomeError(
                     ERR_VALUE_OUT_OF_RANGE,
-                    "Temperature should be between {} and {}".format(
-                        min_temp, max_temp
-                    ),
+                    f"Temperature should be between {min_temp} and {max_temp}",
                 )
 
             await self.hass.services.async_call(
@@ -745,8 +765,10 @@ class TemperatureSettingTrait(_Trait):
             if temp_high < min_temp or temp_high > max_temp:
                 raise SmartHomeError(
                     ERR_VALUE_OUT_OF_RANGE,
-                    "Upper bound for temperature range should be between "
-                    "{} and {}".format(min_temp, max_temp),
+                    (
+                        f"Upper bound for temperature range should be between "
+                        f"{min_temp} and {max_temp}"
+                    ),
                 )
 
             temp_low = temp_util.convert(
@@ -758,8 +780,10 @@ class TemperatureSettingTrait(_Trait):
             if temp_low < min_temp or temp_low > max_temp:
                 raise SmartHomeError(
                     ERR_VALUE_OUT_OF_RANGE,
-                    "Lower bound for temperature range should be between "
-                    "{} and {}".format(min_temp, max_temp),
+                    (
+                        f"Lower bound for temperature range should be between "
+                        f"{min_temp} and {max_temp}"
+                    ),
                 )
 
             supported = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
@@ -829,6 +853,56 @@ class TemperatureSettingTrait(_Trait):
 
 
 @register_trait
+class HumiditySettingTrait(_Trait):
+    """Trait to offer humidity setting functionality.
+
+    https://developers.google.com/actions/smarthome/traits/humiditysetting
+    """
+
+    name = TRAIT_HUMIDITY_SETTING
+    commands = []
+
+    @staticmethod
+    def supported(domain, features, device_class):
+        """Test if state is supported."""
+        return domain == sensor.DOMAIN and device_class == sensor.DEVICE_CLASS_HUMIDITY
+
+    def sync_attributes(self):
+        """Return humidity attributes for a sync request."""
+        response = {}
+        attrs = self.state.attributes
+        domain = self.state.domain
+        if domain == sensor.DOMAIN:
+            device_class = attrs.get(ATTR_DEVICE_CLASS)
+            if device_class == sensor.DEVICE_CLASS_HUMIDITY:
+                response["queryOnlyHumiditySetting"] = True
+
+        return response
+
+    def query_attributes(self):
+        """Return humidity query attributes."""
+        response = {}
+        attrs = self.state.attributes
+        domain = self.state.domain
+        if domain == sensor.DOMAIN:
+            device_class = attrs.get(ATTR_DEVICE_CLASS)
+            if device_class == sensor.DEVICE_CLASS_HUMIDITY:
+                current_humidity = self.state.state
+                if current_humidity not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+                    response["humidityAmbientPercent"] = round(float(current_humidity))
+
+        return response
+
+    async def execute(self, command, data, params, challenge):
+        """Execute a humidity command."""
+        domain = self.state.domain
+        if domain == sensor.DOMAIN:
+            raise SmartHomeError(
+                ERR_NOT_SUPPORTED, "Execute is not supported by sensor"
+            )
+
+
+@register_trait
 class LockUnlockTrait(_Trait):
     """Trait to lock or unlock a lock.
 
@@ -868,6 +942,98 @@ class LockUnlockTrait(_Trait):
             lock.DOMAIN,
             service,
             {ATTR_ENTITY_ID: self.state.entity_id},
+            blocking=True,
+            context=data.context,
+        )
+
+
+@register_trait
+class ArmDisArmTrait(_Trait):
+    """Trait to Arm or Disarm a Security System.
+
+    https://developers.google.com/actions/smarthome/traits/armdisarm
+    """
+
+    name = TRAIT_ARMDISARM
+    commands = [COMMAND_ARMDISARM]
+
+    state_to_service = {
+        STATE_ALARM_ARMED_HOME: SERVICE_ALARM_ARM_HOME,
+        STATE_ALARM_ARMED_AWAY: SERVICE_ALARM_ARM_AWAY,
+        STATE_ALARM_ARMED_NIGHT: SERVICE_ALARM_ARM_NIGHT,
+        STATE_ALARM_ARMED_CUSTOM_BYPASS: SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+        STATE_ALARM_TRIGGERED: SERVICE_ALARM_TRIGGER,
+    }
+
+    @staticmethod
+    def supported(domain, features, device_class):
+        """Test if state is supported."""
+        return domain == alarm_control_panel.DOMAIN
+
+    @staticmethod
+    def might_2fa(domain, features, device_class):
+        """Return if the trait might ask for 2FA."""
+        return True
+
+    def sync_attributes(self):
+        """Return ArmDisarm attributes for a sync request."""
+        response = {}
+        levels = []
+        for state in self.state_to_service:
+            # level synonyms are generated from state names
+            # 'armed_away' becomes 'armed away' or 'away'
+            level_synonym = [state.replace("_", " ")]
+            if state != STATE_ALARM_TRIGGERED:
+                level_synonym.append(state.split("_")[1])
+
+            level = {
+                "level_name": state,
+                "level_values": [{"level_synonym": level_synonym, "lang": "en"}],
+            }
+            levels.append(level)
+        response["availableArmLevels"] = {"levels": levels, "ordered": False}
+        return response
+
+    def query_attributes(self):
+        """Return ArmDisarm query attributes."""
+        if "post_pending_state" in self.state.attributes:
+            armed_state = self.state.attributes["post_pending_state"]
+        else:
+            armed_state = self.state.state
+        response = {"isArmed": armed_state in self.state_to_service}
+        if response["isArmed"]:
+            response.update({"currentArmLevel": armed_state})
+        return response
+
+    async def execute(self, command, data, params, challenge):
+        """Execute an ArmDisarm command."""
+        if params["arm"] and not params.get("cancel"):
+            if self.state.state == params["armLevel"]:
+                raise SmartHomeError(ERR_ALREADY_ARMED, "System is already armed")
+            if self.state.attributes["code_arm_required"]:
+                _verify_pin_challenge(data, self.state, challenge)
+            service = self.state_to_service[params["armLevel"]]
+        # disarm the system without asking for code when
+        # 'cancel' arming action is received while current status is pending
+        elif (
+            params["arm"]
+            and params.get("cancel")
+            and self.state.state == STATE_ALARM_PENDING
+        ):
+            service = SERVICE_ALARM_DISARM
+        else:
+            if self.state.state == STATE_ALARM_DISARMED:
+                raise SmartHomeError(ERR_ALREADY_DISARMED, "System is already disarmed")
+            _verify_pin_challenge(data, self.state, challenge)
+            service = SERVICE_ALARM_DISARM
+
+        await self.hass.services.async_call(
+            alarm_control_panel.DOMAIN,
+            service,
+            {
+                ATTR_ENTITY_ID: self.state.entity_id,
+                ATTR_CODE: data.config.secure_devices_pin,
+            },
             blocking=True,
             context=data.context,
         )
@@ -955,98 +1121,9 @@ class ModesTrait(_Trait):
     name = TRAIT_MODES
     commands = [COMMAND_MODES]
 
-    # Google requires specific mode names and settings. Here is the full list.
-    # https://developers.google.com/actions/reference/smarthome/traits/modes
-    # All settings are mapped here as of 2018-11-28 and can be used for other
-    # entity types.
-
-    HA_TO_GOOGLE = {media_player.ATTR_INPUT_SOURCE: "input source"}
-    SUPPORTED_MODE_SETTINGS = {
-        "xsmall": ["xsmall", "extra small", "min", "minimum", "tiny", "xs"],
-        "small": ["small", "half"],
-        "large": ["large", "big", "full"],
-        "xlarge": ["extra large", "xlarge", "xl"],
-        "Cool": ["cool", "rapid cool", "rapid cooling"],
-        "Heat": ["heat"],
-        "Low": ["low"],
-        "Medium": ["medium", "med", "mid", "half"],
-        "High": ["high"],
-        "Auto": ["auto", "automatic"],
-        "Bake": ["bake"],
-        "Roast": ["roast"],
-        "Convection Bake": ["convection bake", "convect bake"],
-        "Convection Roast": ["convection roast", "convect roast"],
-        "Favorite": ["favorite"],
-        "Broil": ["broil"],
-        "Warm": ["warm"],
-        "Off": ["off"],
-        "On": ["on"],
-        "Normal": [
-            "normal",
-            "normal mode",
-            "normal setting",
-            "standard",
-            "schedule",
-            "original",
-            "default",
-            "old settings",
-        ],
-        "None": ["none"],
-        "Tap Cold": ["tap cold"],
-        "Cold Warm": ["cold warm"],
-        "Hot": ["hot"],
-        "Extra Hot": ["extra hot"],
-        "Eco": ["eco"],
-        "Wool": ["wool", "fleece"],
-        "Turbo": ["turbo"],
-        "Rinse": ["rinse", "rinsing", "rinse wash"],
-        "Away": ["away", "holiday"],
-        "maximum": ["maximum"],
-        "media player": ["media player"],
-        "chromecast": ["chromecast"],
-        "tv": [
-            "tv",
-            "television",
-            "tv position",
-            "television position",
-            "watching tv",
-            "watching tv position",
-            "entertainment",
-            "entertainment position",
-        ],
-        "am fm": ["am fm", "am radio", "fm radio"],
-        "internet radio": ["internet radio"],
-        "satellite": ["satellite"],
-        "game console": ["game console"],
-        "antifrost": ["antifrost", "anti-frost"],
-        "boost": ["boost"],
-        "Clock": ["clock"],
-        "Message": ["message"],
-        "Messages": ["messages"],
-        "News": ["news"],
-        "Disco": ["disco"],
-        "antifreeze": ["antifreeze", "anti-freeze", "anti freeze"],
-        "balanced": ["balanced", "normal"],
-        "swing": ["swing"],
-        "media": ["media", "media mode"],
-        "panic": ["panic"],
-        "ring": ["ring"],
-        "frozen": ["frozen", "rapid frozen", "rapid freeze"],
-        "cotton": ["cotton", "cottons"],
-        "blend": ["blend", "mix"],
-        "baby wash": ["baby wash"],
-        "synthetics": ["synthetic", "synthetics", "compose"],
-        "hygiene": ["hygiene", "sterilization"],
-        "smart": ["smart", "intelligent", "intelligence"],
-        "comfortable": ["comfortable", "comfort"],
-        "manual": ["manual"],
-        "energy saving": ["energy saving"],
-        "sleep": ["sleep"],
-        "quick wash": ["quick wash", "fast wash"],
-        "cold": ["cold"],
-        "airsupply": ["airsupply", "air supply"],
-        "dehumidification": ["dehumidication", "dehumidify"],
-        "game": ["game", "game mode"],
+    SYNONYMS = {
+        "input source": ["input source", "input", "source"],
+        "sound mode": ["sound mode", "effects"],
     }
 
     @staticmethod
@@ -1055,42 +1132,51 @@ class ModesTrait(_Trait):
         if domain != media_player.DOMAIN:
             return False
 
-        return features & media_player.SUPPORT_SELECT_SOURCE
+        return (
+            features & media_player.SUPPORT_SELECT_SOURCE
+            or features & media_player.SUPPORT_SELECT_SOUND_MODE
+        )
 
     def sync_attributes(self):
         """Return mode attributes for a sync request."""
-        sources_list = self.state.attributes.get(
-            media_player.ATTR_INPUT_SOURCE_LIST, []
-        )
-        modes = []
-        sources = {}
 
-        if sources_list:
-            sources = {
-                "name": self.HA_TO_GOOGLE.get(media_player.ATTR_INPUT_SOURCE),
-                "name_values": [{"name_synonym": ["input source"], "lang": "en"}],
+        def _generate(name, settings):
+            mode = {
+                "name": name,
+                "name_values": [
+                    {"name_synonym": self.SYNONYMS.get(name, [name]), "lang": "en"}
+                ],
                 "settings": [],
                 "ordered": False,
             }
-            for source in sources_list:
-                if source in self.SUPPORTED_MODE_SETTINGS:
-                    src = source
-                    synonyms = self.SUPPORTED_MODE_SETTINGS.get(src)
-                elif source.lower() in self.SUPPORTED_MODE_SETTINGS:
-                    src = source.lower()
-                    synonyms = self.SUPPORTED_MODE_SETTINGS.get(src)
-
-                else:
-                    continue
-
-                sources["settings"].append(
+            for setting in settings:
+                mode["settings"].append(
                     {
-                        "setting_name": src,
-                        "setting_values": [{"setting_synonym": synonyms, "lang": "en"}],
+                        "setting_name": setting,
+                        "setting_values": [
+                            {
+                                "setting_synonym": self.SYNONYMS.get(
+                                    setting, [setting]
+                                ),
+                                "lang": "en",
+                            }
+                        ],
                     }
                 )
-        if sources:
-            modes.append(sources)
+            return mode
+
+        attrs = self.state.attributes
+        modes = []
+        if media_player.ATTR_INPUT_SOURCE_LIST in attrs:
+            modes.append(
+                _generate("input source", attrs[media_player.ATTR_INPUT_SOURCE_LIST])
+            )
+
+        if media_player.ATTR_SOUND_MODE_LIST in attrs:
+            modes.append(
+                _generate("sound mode", attrs[media_player.ATTR_SOUND_MODE_LIST])
+            )
+
         payload = {"availableModes": modes}
 
         return payload
@@ -1101,14 +1187,12 @@ class ModesTrait(_Trait):
         response = {}
         mode_settings = {}
 
-        if attrs.get(media_player.ATTR_INPUT_SOURCE_LIST):
-            mode_settings.update(
-                {
-                    media_player.ATTR_INPUT_SOURCE: attrs.get(
-                        media_player.ATTR_INPUT_SOURCE
-                    )
-                }
-            )
+        if media_player.ATTR_INPUT_SOURCE_LIST in attrs:
+            mode_settings["input source"] = attrs.get(media_player.ATTR_INPUT_SOURCE)
+
+        if media_player.ATTR_SOUND_MODE_LIST in attrs:
+            mode_settings["sound mode"] = attrs.get(media_player.ATTR_SOUND_MODE)
+
         if mode_settings:
             response["on"] = self.state.state != STATE_OFF
             response["online"] = True
@@ -1119,25 +1203,32 @@ class ModesTrait(_Trait):
     async def execute(self, command, data, params, challenge):
         """Execute an SetModes command."""
         settings = params.get("updateModeSettings")
-        requested_source = settings.get(
-            self.HA_TO_GOOGLE.get(media_player.ATTR_INPUT_SOURCE)
-        )
+        requested_source = settings.get("input source")
+        sound_mode = settings.get("sound mode")
 
         if requested_source:
-            for src in self.state.attributes.get(media_player.ATTR_INPUT_SOURCE_LIST):
-                if src.lower() == requested_source.lower():
-                    source = src
+            await self.hass.services.async_call(
+                media_player.DOMAIN,
+                media_player.SERVICE_SELECT_SOURCE,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    media_player.ATTR_INPUT_SOURCE: requested_source,
+                },
+                blocking=True,
+                context=data.context,
+            )
 
-                    await self.hass.services.async_call(
-                        media_player.DOMAIN,
-                        media_player.SERVICE_SELECT_SOURCE,
-                        {
-                            ATTR_ENTITY_ID: self.state.entity_id,
-                            media_player.ATTR_INPUT_SOURCE: source,
-                        },
-                        blocking=True,
-                        context=data.context,
-                    )
+        if sound_mode:
+            await self.hass.services.async_call(
+                media_player.DOMAIN,
+                media_player.SERVICE_SELECT_SOUND_MODE,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    media_player.ATTR_SOUND_MODE: sound_mode,
+                },
+                blocking=True,
+                context=data.context,
+            )
 
 
 @register_trait
@@ -1343,7 +1434,6 @@ def _verify_pin_challenge(data, state, challenge):
     """Verify a pin challenge."""
     if not data.config.should_2fa(state):
         return
-
     if not data.config.secure_devices_pin:
         raise SmartHomeError(ERR_CHALLENGE_NOT_SETUP, "Challenge is not set up")
 
@@ -1357,6 +1447,8 @@ def _verify_pin_challenge(data, state, challenge):
 
 
 def _verify_ack_challenge(data, state, challenge):
-    """Verify a pin challenge."""
+    """Verify an ack challenge."""
+    if not data.config.should_2fa(state):
+        return
     if not challenge or not challenge.get("ack"):
         raise ChallengeNeeded(CHALLENGE_ACK_NEEDED)

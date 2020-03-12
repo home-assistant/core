@@ -1,31 +1,32 @@
 """Arcam component."""
-import logging
 import asyncio
+import logging
 
-import voluptuous as vol
-import async_timeout
-from arcam.fmj.client import Client
 from arcam.fmj import ConnectionFailed
+from arcam.fmj.client import Client
+import async_timeout
+import voluptuous as vol
 
 from homeassistant import config_entries
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_ZONE,
+    EVENT_HOMEASSISTANT_STOP,
     SERVICE_TURN_ON,
 )
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+
 from .const import (
-    DOMAIN,
-    DOMAIN_DATA_ENTRIES,
-    DOMAIN_DATA_CONFIG,
     DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    DOMAIN_DATA_CONFIG,
+    DOMAIN_DATA_ENTRIES,
     SIGNAL_CLIENT_DATA,
     SIGNAL_CLIENT_STARTED,
     SIGNAL_CLIENT_STOPPED,
@@ -43,9 +44,9 @@ def _optional_zone(value):
 def _zone_name_validator(config):
     for zone, zone_config in config[CONF_ZONE].items():
         if CONF_NAME not in zone_config:
-            zone_config[CONF_NAME] = "{} ({}:{}) - {}".format(
-                DEFAULT_NAME, config[CONF_HOST], config[CONF_PORT], zone
-            )
+            zone_config[
+                CONF_NAME
+            ] = f"{DEFAULT_NAME} ({config[CONF_HOST]}:{config[CONF_PORT]}) - {zone}"
     return config
 
 

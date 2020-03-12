@@ -20,7 +20,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_engine(hass, config):
+def get_engine(hass, config, discovery_info=None):
     """Set up Pico speech component."""
     if shutil.which("pico2wave") is None:
         _LOGGER.error("'pico2wave' was not found")

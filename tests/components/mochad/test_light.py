@@ -14,8 +14,8 @@ from tests.common import get_test_home_assistant
 @pytest.fixture(autouse=True)
 def pymochad_mock():
     """Mock pymochad."""
-    with mock.patch.dict("sys.modules", {"pymochad": mock.MagicMock()}):
-        yield
+    with mock.patch("homeassistant.components.mochad.light.device") as device:
+        yield device
 
 
 class TestMochadSwitchSetup(unittest.TestCase):

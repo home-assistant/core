@@ -1,7 +1,7 @@
 """Battery Charge and Range Support for the Nissan Leaf."""
 import logging
 
-from homeassistant.const import DEVICE_CLASS_BATTERY
+from homeassistant.const import DEVICE_CLASS_BATTERY, UNIT_PERCENTAGE
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util.distance import LENGTH_KILOMETERS, LENGTH_MILES
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
@@ -56,7 +56,7 @@ class LeafBatterySensor(LeafEntity):
     @property
     def unit_of_measurement(self):
         """Battery state measured in percentage."""
-        return "%"
+        return UNIT_PERCENTAGE
 
     @property
     def icon(self):
@@ -69,7 +69,7 @@ class LeafRangeSensor(LeafEntity):
     """Nissan Leaf Range Sensor."""
 
     def __init__(self, car, ac_on):
-        """Set-up range sensor. Store if AC on."""
+        """Set up range sensor. Store if AC on."""
         self._ac_on = ac_on
         super().__init__(car)
 
@@ -83,7 +83,7 @@ class LeafRangeSensor(LeafEntity):
     def log_registration(self):
         """Log registration."""
         _LOGGER.debug(
-            "Registered LeafRangeSensor integration with HASS for VIN %s",
+            "Registered LeafRangeSensor integration with Home Assistant for VIN %s",
             self.car.leaf.vin,
         )
 

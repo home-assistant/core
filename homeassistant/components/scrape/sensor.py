@@ -1,27 +1,28 @@
 """Support for getting data from websites with scraping."""
 import logging
 
-import voluptuous as vol
+from bs4 import BeautifulSoup
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
+import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.components.rest.sensor import RestData
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
+    CONF_AUTHENTICATION,
+    CONF_HEADERS,
     CONF_NAME,
+    CONF_PASSWORD,
     CONF_RESOURCE,
     CONF_UNIT_OF_MEASUREMENT,
+    CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
-    CONF_USERNAME,
-    CONF_HEADERS,
-    CONF_PASSWORD,
-    CONF_AUTHENTICATION,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
-from homeassistant.helpers.entity import Entity
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -123,8 +124,6 @@ class ScrapeSensor(Entity):
         if self.rest.data is None:
             _LOGGER.error("Unable to retrieve data")
             return
-
-        from bs4 import BeautifulSoup
 
         raw_data = BeautifulSoup(self.rest.data, "html.parser")
         _LOGGER.debug(raw_data)

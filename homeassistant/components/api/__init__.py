@@ -8,6 +8,7 @@ from aiohttp.web_exceptions import HTTPBadRequest
 import async_timeout
 import voluptuous as vol
 
+from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.bootstrap import DATA_LOGGING
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
@@ -25,18 +26,16 @@ from homeassistant.const import (
     URL_API_EVENTS,
     URL_API_SERVICES,
     URL_API_STATES,
-    URL_API_STATES_ENTITY,
     URL_API_STREAM,
     URL_API_TEMPLATE,
     __version__,
 )
 import homeassistant.core as ha
-from homeassistant.auth.permissions.const import POLICY_READ
-from homeassistant.exceptions import TemplateError, Unauthorized, ServiceNotFound
+from homeassistant.exceptions import ServiceNotFound, TemplateError, Unauthorized
 from homeassistant.helpers import template
+from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.state import AsyncTrackStates
-from homeassistant.helpers.json import JSONEncoder
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -138,7 +137,7 @@ class APIEventStream(HomeAssistantView):
                     if payload is stop_obj:
                         break
 
-                    msg = "data: {}\n\n".format(payload)
+                    msg = f"data: {payload}\n\n"
                     _LOGGER.debug("STREAM %s WRITING %s", id(stop_obj), msg.strip())
                     await response.write(msg.encode("UTF-8"))
                 except asyncio.TimeoutError:
@@ -254,7 +253,7 @@ class APIEntityStateView(HomeAssistantView):
         status_code = HTTP_CREATED if is_new_state else 200
         resp = self.json(hass.states.get(entity_id), status_code)
 
-        resp.headers.add("Location", URL_API_STATES_ENTITY.format(entity_id))
+        resp.headers.add("Location", f"/api/states/{entity_id}")
 
         return resp
 
@@ -316,7 +315,7 @@ class APIEventView(HomeAssistantView):
             event_type, event_data, ha.EventOrigin.remote, self.context(request)
         )
 
-        return self.json_message("Event {} fired.".format(event_type))
+        return self.json_message(f"Event {event_type} fired.")
 
 
 class APIServicesView(HomeAssistantView):
@@ -388,7 +387,7 @@ class APITemplateView(HomeAssistantView):
             return tpl.async_render(data.get("variables"))
         except (ValueError, TemplateError) as ex:
             return self.json_message(
-                "Error rendering template: {}".format(ex), HTTP_BAD_REQUEST
+                f"Error rendering template: {ex}", HTTP_BAD_REQUEST
             )
 
 
@@ -411,6 +410,7 @@ async def async_services_json(hass):
     return [{"domain": key, "services": value} for key, value in descriptions.items()]
 
 
+@ha.callback
 def async_events_json(hass):
     """Generate event data to JSONify."""
     return [

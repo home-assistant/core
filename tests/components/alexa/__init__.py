@@ -1,19 +1,25 @@
 """Tests for the Alexa integration."""
 from uuid import uuid4
 
-from homeassistant.core import Context
 from homeassistant.components.alexa import config, smart_home
+from homeassistant.core import Context
 
 from tests.common import async_mock_service
 
 TEST_URL = "https://api.amazonalexa.com/v3/events"
 TEST_TOKEN_URL = "https://api.amazon.com/auth/o2/token"
+TEST_LOCALE = "en-US"
 
 
 class MockConfig(config.AbstractConfig):
     """Mock Alexa config."""
 
-    entity_config = {}
+    entity_config = {
+        "binary_sensor.test_doorbell": {"display_categories": "DOORBELL"},
+        "binary_sensor.test_contact_forced": {"display_categories": "CONTACT_SENSOR"},
+        "binary_sensor.test_motion_forced": {"display_categories": "MOTION_SENSOR"},
+        "binary_sensor.test_motion_camera_event": {"display_categories": "CAMERA"},
+    }
 
     @property
     def supports_auth(self):
@@ -24,6 +30,11 @@ class MockConfig(config.AbstractConfig):
     def endpoint(self):
         """Endpoint for report state."""
         return TEST_URL
+
+    @property
+    def locale(self):
+        """Return config locale."""
+        return TEST_LOCALE
 
     def should_expose(self, entity_id):
         """If an entity should be exposed."""
@@ -67,13 +78,22 @@ def get_new_request(namespace, name, endpoint=None):
 
 
 async def assert_request_calls_service(
-    namespace, name, endpoint, service, hass, response_type="Response", payload=None
+    namespace,
+    name,
+    endpoint,
+    service,
+    hass,
+    response_type="Response",
+    payload=None,
+    instance=None,
 ):
     """Assert an API request calls a hass service."""
     context = Context()
     request = get_new_request(namespace, name, endpoint)
     if payload:
         request["directive"]["payload"] = payload
+    if instance:
+        request["directive"]["header"]["instance"] = instance
 
     domain, service_name = service.split(".")
     calls = async_mock_service(hass, domain, service_name)
@@ -170,6 +190,12 @@ class ReportedProperties:
     def __init__(self, properties):
         """Initialize class."""
         self.properties = properties
+
+    def assert_not_has_property(self, namespace, name):
+        """Assert a property does not exist."""
+        for prop in self.properties:
+            if prop["namespace"] == namespace and prop["name"] == name:
+                assert False, "Property %s:%s exists"
 
     def assert_equal(self, namespace, name, value):
         """Assert a property is equal to a given value."""

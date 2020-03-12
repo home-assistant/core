@@ -5,13 +5,15 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.core import callback
-from homeassistant.const import MATCH_ALL
-from homeassistant.setup import async_setup_component
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.const import DATA_INSTANCE
+from homeassistant.components.recorder.models import Events, States
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.components.recorder.models import States, Events
+from homeassistant.const import MATCH_ALL
+from homeassistant.core import callback
+from homeassistant.setup import async_setup_component
+
+from .common import wait_recording_done
 
 from tests.common import get_test_home_assistant, init_recorder_component
 
@@ -37,8 +39,7 @@ class TestRecorder(unittest.TestCase):
 
         self.hass.states.set(entity_id, state, attributes)
 
-        self.hass.block_till_done()
-        self.hass.data[DATA_INSTANCE].block_till_done()
+        wait_recording_done(self.hass)
 
         with session_scope(hass=self.hass) as session:
             db_states = list(session.query(States))
@@ -65,7 +66,7 @@ class TestRecorder(unittest.TestCase):
 
         self.hass.bus.fire(event_type, event_data)
 
-        self.hass.block_till_done()
+        wait_recording_done(self.hass)
 
         assert len(events) == 1
         event = events[0]
@@ -89,7 +90,7 @@ class TestRecorder(unittest.TestCase):
 
 @pytest.fixture
 def hass_recorder():
-    """HASS fixture with in-memory recorder."""
+    """Home Assistant fixture with in-memory recorder."""
     hass = get_test_home_assistant()
 
     def setup_recorder(config=None):
@@ -109,8 +110,7 @@ def _add_entities(hass, entity_ids):
     attributes = {"test_attr": 5, "test_attr_10": "nice"}
     for idx, entity_id in enumerate(entity_ids):
         hass.states.set(entity_id, "state{}".format(idx), attributes)
-        hass.block_till_done()
-    hass.data[DATA_INSTANCE].block_till_done()
+    wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
         return [st.to_native() for st in session.query(States)]
@@ -121,8 +121,7 @@ def _add_events(hass, events):
         session.query(Events).delete(synchronize_session=False)
     for event_type in events:
         hass.bus.fire(event_type)
-        hass.block_till_done()
-    hass.data[DATA_INSTANCE].block_till_done()
+    wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:
         return [ev.to_native() for ev in session.query(Events)]
@@ -198,7 +197,15 @@ def test_recorder_setup_failure():
     ):
         setup.side_effect = ImportError("driver not found")
         rec = Recorder(
-            hass, keep_days=7, purge_interval=2, uri="sqlite://", include={}, exclude={}
+            hass,
+            keep_days=7,
+            purge_interval=2,
+            commit_interval=1,
+            uri="sqlite://",
+            db_max_retries=10,
+            db_retry_wait=3,
+            include={},
+            exclude={},
         )
         rec.start()
         rec.join()

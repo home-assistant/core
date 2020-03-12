@@ -1,11 +1,14 @@
 """Sensor for Last.fm account status."""
+import hashlib
 import logging
 import re
 
+import pylast as lastfm
+from pylast import WSError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_API_KEY, ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -30,9 +33,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Last.fm sensor platform."""
-    import pylast as lastfm
-    from pylast import WSError
-
     api_key = config[CONF_API_KEY]
     users = config.get(CONF_USERS)
 
@@ -53,11 +53,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class LastfmSensor(Entity):
     """A class for the Last.fm account."""
 
-    def __init__(self, user, lastfm):
+    def __init__(self, user, lastfm_api):
         """Initialize the sensor."""
-        self._user = lastfm.get_user(user)
+        self._unique_id = hashlib.sha256(user.encode("utf-8")).hexdigest()
+        self._user = lastfm_api.get_user(user)
         self._name = user
-        self._lastfm = lastfm
+        self._lastfm = lastfm_api
         self._state = "Not Scrobbling"
         self._playcount = None
         self._lastplayed = None
@@ -65,14 +66,14 @@ class LastfmSensor(Entity):
         self._cover = None
 
     @property
+    def unique_id(self):
+        """Return the unique ID of the sensor."""
+        return self._unique_id
+
+    @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def entity_id(self):
-        """Return the entity ID."""
-        return "sensor.lastfm_{}".format(self._name)
 
     @property
     def state(self):
@@ -84,16 +85,16 @@ class LastfmSensor(Entity):
         self._cover = self._user.get_image()
         self._playcount = self._user.get_playcount()
         last = self._user.get_recent_tracks(limit=2)[0]
-        self._lastplayed = "{} - {}".format(last.track.artist, last.track.title)
+        self._lastplayed = f"{last.track.artist} - {last.track.title}"
         top = self._user.get_top_tracks(limit=1)[0]
         toptitle = re.search("', '(.+?)',", str(top))
         topartist = re.search("'(.+?)',", str(top))
-        self._topplayed = "{} - {}".format(topartist.group(1), toptitle.group(1))
+        self._topplayed = f"{topartist.group(1)} - {toptitle.group(1)}"
         if self._user.get_now_playing() is None:
             self._state = "Not Scrobbling"
             return
         now = self._user.get_now_playing()
-        self._state = "{} - {}".format(now.artist, now.title)
+        self._state = f"{now.artist} - {now.title}"
 
     @property
     def device_state_attributes(self):

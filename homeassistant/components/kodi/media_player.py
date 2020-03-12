@@ -7,11 +7,14 @@ import socket
 import urllib
 
 import aiohttp
+import jsonrpc_async
+import jsonrpc_base
+import jsonrpc_websocket
 import voluptuous as vol
 
 from homeassistant.components.kodi import SERVICE_CALL_METHOD
 from homeassistant.components.kodi.const import DOMAIN
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MOVIE,
@@ -48,12 +51,11 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import script
+from homeassistant.helpers import config_validation as cv, script
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.template import Template
-from homeassistant.util.yaml import dump
 import homeassistant.util.dt as dt_util
+from homeassistant.util.yaml import dump
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,7 +142,7 @@ def _check_deprecated_turn_off(hass, turn_off_action):
         method = DEPRECATED_TURN_OFF_ACTIONS[turn_off_action]
         new_config = OrderedDict(
             [
-                ("service", "{}.{}".format(DOMAIN, SERVICE_CALL_METHOD)),
+                ("service", f"{DOMAIN}.{SERVICE_CALL_METHOD}"),
                 (
                     "data_template",
                     OrderedDict([("entity_id", "{{ entity_id }}"), ("method", method)]),
@@ -181,7 +183,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         encryption = config.get(CONF_PROXY_SSL)
         websocket = config.get(CONF_ENABLE_WEBSOCKET)
     else:
-        name = "{} ({})".format(DEFAULT_NAME, discovery_info.get("hostname"))
+        name = f"{DEFAULT_NAME} ({discovery_info.get('hostname')})"
         host = discovery_info.get("host")
         port = discovery_info.get("port")
         tcp_port = DEFAULT_TCP_PORT
@@ -231,8 +233,6 @@ def cmd(func):
     @wraps(func)
     async def wrapper(obj, *args, **kwargs):
         """Wrap all command methods."""
-        import jsonrpc_base
-
         try:
             await func(obj, *args, **kwargs)
         except jsonrpc_base.jsonrpc.TransportError as exc:
@@ -268,9 +268,6 @@ class KodiDevice(MediaPlayerDevice):
         unique_id=None,
     ):
         """Initialize the Kodi device."""
-        import jsonrpc_async
-        import jsonrpc_websocket
-
         self.hass = hass
         self._name = name
         self._unique_id = unique_id
@@ -281,18 +278,16 @@ class KodiDevice(MediaPlayerDevice):
 
         if username is not None:
             kwargs["auth"] = aiohttp.BasicAuth(username, password)
-            image_auth_string = "{}:{}@".format(username, password)
+            image_auth_string = f"{username}:{password}@"
         else:
             image_auth_string = ""
 
         http_protocol = "https" if encryption else "http"
         ws_protocol = "wss" if encryption else "ws"
 
-        self._http_url = "{}://{}:{}/jsonrpc".format(http_protocol, host, port)
-        self._image_url = "{}://{}{}:{}/image".format(
-            http_protocol, image_auth_string, host, port
-        )
-        self._ws_url = "{}://{}:{}/jsonrpc".format(ws_protocol, host, tcp_port)
+        self._http_url = f"{http_protocol}://{host}:{port}/jsonrpc"
+        self._image_url = f"{http_protocol}://{image_auth_string}{host}:{port}/image"
+        self._ws_url = f"{ws_protocol}://{host}:{tcp_port}/jsonrpc"
 
         self._http_server = jsonrpc_async.Server(self._http_url, **kwargs)
         if websocket:
@@ -326,14 +321,14 @@ class KodiDevice(MediaPlayerDevice):
             turn_on_action = script.Script(
                 self.hass,
                 turn_on_action,
-                "{} turn ON script".format(self.name),
+                f"{self.name} turn ON script",
                 self.async_update_ha_state(True),
             )
         if turn_off_action is not None:
             turn_off_action = script.Script(
                 self.hass,
                 _check_deprecated_turn_off(hass, turn_off_action),
-                "{} turn OFF script".format(self.name),
+                f"{self.name} turn OFF script",
             )
         self._turn_on_action = turn_on_action
         self._turn_off_action = turn_off_action
@@ -389,8 +384,6 @@ class KodiDevice(MediaPlayerDevice):
 
     async def _get_players(self):
         """Return the active player objects or None."""
-        import jsonrpc_base
-
         try:
             return await self.server.Player.GetActivePlayers()
         except jsonrpc_base.jsonrpc.TransportError:
@@ -420,8 +413,6 @@ class KodiDevice(MediaPlayerDevice):
 
     async def async_ws_connect(self):
         """Connect to Kodi via websocket protocol."""
-        import jsonrpc_base
-
         try:
             ws_loop_future = await self._ws_server.ws_connect()
         except jsonrpc_base.jsonrpc.TransportError:
@@ -584,7 +575,7 @@ class KodiDevice(MediaPlayerDevice):
 
         url_components = urllib.parse.urlparse(thumbnail)
         if url_components.scheme == "image":
-            return "{}/{}".format(self._image_url, urllib.parse.quote_plus(thumbnail))
+            return f"{self._image_url}/{urllib.parse.quote_plus(thumbnail)}"
 
     @property
     def media_title(self):
@@ -675,20 +666,14 @@ class KodiDevice(MediaPlayerDevice):
         assert (await self.server.Input.ExecuteAction("volumedown")) == "OK"
 
     @cmd
-    def async_set_volume_level(self, volume):
-        """Set volume level, range 0..1.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.server.Application.SetVolume(int(volume * 100))
+    async def async_set_volume_level(self, volume):
+        """Set volume level, range 0..1."""
+        await self.server.Application.SetVolume(int(volume * 100))
 
     @cmd
-    def async_mute_volume(self, mute):
-        """Mute (true) or unmute (false) media player.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.server.Application.SetMute(mute)
+    async def async_mute_volume(self, mute):
+        """Mute (true) or unmute (false) media player."""
+        await self.server.Application.SetMute(mute)
 
     async def async_set_play_state(self, state):
         """Handle play/pause/toggle."""
@@ -698,28 +683,19 @@ class KodiDevice(MediaPlayerDevice):
             await self.server.Player.PlayPause(players[0]["playerid"], state)
 
     @cmd
-    def async_media_play_pause(self):
-        """Pause media on media player.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.async_set_play_state("toggle")
+    async def async_media_play_pause(self):
+        """Pause media on media player."""
+        await self.async_set_play_state("toggle")
 
     @cmd
-    def async_media_play(self):
-        """Play media.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.async_set_play_state(True)
+    async def async_media_play(self):
+        """Play media."""
+        await self.async_set_play_state(True)
 
     @cmd
-    def async_media_pause(self):
-        """Pause the media player.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.async_set_play_state(False)
+    async def async_media_pause(self):
+        """Pause the media player."""
+        await self.async_set_play_state(False)
 
     @cmd
     async def async_media_stop(self):
@@ -742,20 +718,14 @@ class KodiDevice(MediaPlayerDevice):
             await self.server.Player.GoTo(players[0]["playerid"], direction)
 
     @cmd
-    def async_media_next_track(self):
-        """Send next track command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self._goto("next")
+    async def async_media_next_track(self):
+        """Send next track command."""
+        await self._goto("next")
 
     @cmd
-    def async_media_previous_track(self):
-        """Send next track command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self._goto("previous")
+    async def async_media_previous_track(self):
+        """Send next track command."""
+        await self._goto("previous")
 
     @cmd
     async def async_media_seek(self, position):
@@ -779,17 +749,18 @@ class KodiDevice(MediaPlayerDevice):
             await self.server.Player.Seek(players[0]["playerid"], time)
 
     @cmd
-    def async_play_media(self, media_type, media_id, **kwargs):
-        """Send the play_media command to the media player.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_play_media(self, media_type, media_id, **kwargs):
+        """Send the play_media command to the media player."""
         if media_type == "CHANNEL":
-            return self.server.Player.Open({"item": {"channelid": int(media_id)}})
-        if media_type == "PLAYLIST":
-            return self.server.Player.Open({"item": {"playlistid": int(media_id)}})
-
-        return self.server.Player.Open({"item": {"file": str(media_id)}})
+            await self.server.Player.Open({"item": {"channelid": int(media_id)}})
+        elif media_type == "PLAYLIST":
+            await self.server.Player.Open({"item": {"playlistid": int(media_id)}})
+        elif media_type == "DIRECTORY":
+            await self.server.Player.Open({"item": {"directory": str(media_id)}})
+        elif media_type == "PLUGIN":
+            await self.server.Player.Open({"item": {"file": str(media_id)}})
+        else:
+            await self.server.Player.Open({"item": {"file": str(media_id)}})
 
     async def async_set_shuffle(self, shuffle):
         """Set shuffle mode, for the first player."""
@@ -801,8 +772,6 @@ class KodiDevice(MediaPlayerDevice):
 
     async def async_call_method(self, method, **kwargs):
         """Run Kodi JSONRPC API method with params."""
-        import jsonrpc_base
-
         _LOGGER.debug("Run API method %s, kwargs=%s", method, kwargs)
         result_ok = False
         try:
@@ -820,7 +789,7 @@ class KodiDevice(MediaPlayerDevice):
         except jsonrpc_base.jsonrpc.TransportError:
             result = None
             _LOGGER.warning(
-                "TransportError trying to run API method " "%s.%s(%s)",
+                "TransportError trying to run API method %s.%s(%s)",
                 self.entity_id,
                 method,
                 kwargs,
@@ -850,8 +819,6 @@ class KodiDevice(MediaPlayerDevice):
         All the albums of an artist can be added with
         media_name="ALL"
         """
-        import jsonrpc_base
-
         params = {"playlistid": 0}
         if media_type == "SONG":
             if media_id is None:
@@ -974,7 +941,7 @@ class KodiDevice(MediaPlayerDevice):
     @staticmethod
     def _find(key_word, words):
         key_word = key_word.split(" ")
-        patt = [re.compile("(^| )" + k + "( |$)", re.IGNORECASE) for k in key_word]
+        patt = [re.compile(f"(^| ){k}( |$)", re.IGNORECASE) for k in key_word]
 
         out = [[i, 0] for i in range(len(words))]
         for i in range(len(words)):

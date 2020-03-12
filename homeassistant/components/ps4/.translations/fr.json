@@ -4,8 +4,8 @@
             "credential_error": "Erreur lors de l'extraction des informations d'identification.",
             "devices_configured": "Tous les p\u00e9riph\u00e9riques trouv\u00e9s sont d\u00e9j\u00e0 configur\u00e9s.",
             "no_devices_found": "Aucun appareil PlayStation 4 trouv\u00e9 sur le r\u00e9seau.",
-            "port_987_bind_error": "Impossible de se connecter au port 997.",
-            "port_997_bind_error": "Impossible de se connecter au port 997."
+            "port_987_bind_error": "Impossible de se connecter au port 997. Reportez-vous \u00e0 la [documentation] (https://www.home-assistant.io/components/ps4/) pour plus d'informations.",
+            "port_997_bind_error": "Impossible de se connecter au port 997. Reportez-vous \u00e0 la [documentation] (https://www.home-assistant.io/components/ps4/) pour plus d'informations."
         },
         "error": {
             "credential_timeout": "Le service d'informations d'identification a expir\u00e9. Appuyez sur soumettre pour red\u00e9marrer.",
@@ -25,7 +25,7 @@
                     "name": "Nom",
                     "region": "R\u00e9gion"
                 },
-                "description": "Entrez vos informations PlayStation 4. Pour \"Code PIN\", acc\u00e9dez \u00e0 \"Param\u00e8tres\" sur votre console PlayStation 4. Ensuite, acc\u00e9dez \u00e0 \"Param\u00e8tres de connexion de l'application mobile\" et s\u00e9lectionnez \"Ajouter un p\u00e9riph\u00e9rique\". Entrez le code PIN qui est affich\u00e9.",
+                "description": "Entrez vos informations PlayStation 4. Pour \"Code PIN\", acc\u00e9dez \u00e0 \"Param\u00e8tres\" sur votre console PlayStation 4. Ensuite, acc\u00e9dez \u00e0 \"Param\u00e8tres de connexion de l'application mobile\" et s\u00e9lectionnez \"Ajouter un p\u00e9riph\u00e9rique\". Entrez le code PIN qui est affich\u00e9. Consultez la documentation pour plus d'informations.",
                 "title": "PlayStation 4"
             },
             "mode": {

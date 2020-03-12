@@ -1,6 +1,7 @@
 """Support for Roku."""
 import logging
 
+from roku import Roku, RokuException
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_ROKU
@@ -64,7 +65,6 @@ def setup(hass, config):
 
 def scan_for_rokus(hass):
     """Scan for devices and present a notification of the ones found."""
-    from roku import Roku, RokuException
 
     rokus = Roku.discover()
 
@@ -78,7 +78,7 @@ def scan_for_rokus(hass):
             "Name: {0}<br />Host: {1}<br />".format(
                 r_info.userdevicename
                 if r_info.userdevicename
-                else "{} {}".format(r_info.modelname, r_info.serial_num),
+                else f"{r_info.modelname} {r_info.serial_num}",
                 roku.host,
             )
         )
@@ -94,7 +94,6 @@ def scan_for_rokus(hass):
 
 def _setup_roku(hass, hass_config, roku_config):
     """Set up a Roku."""
-    from roku import Roku
 
     host = roku_config[CONF_HOST]
 

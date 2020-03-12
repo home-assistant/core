@@ -3,8 +3,9 @@ import logging
 import socket
 
 import voluptuous as vol
+from ziggo_mediabox_xl import ZiggoMediaboxXL
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -44,7 +45,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ziggo Mediabox XL platform."""
-    from ziggo_mediabox_xl import ZiggoMediaboxXL
 
     hass.data[DATA_KNOWN_DEVICES] = known_devices = set()
 
@@ -206,5 +206,5 @@ class ZiggoMediaboxXLDevice(MediaPlayerDevice):
         if digits is None:
             return
 
-        self.send_keys(["NUM_{}".format(digit) for digit in str(digits)])
+        self.send_keys([f"NUM_{digit}" for digit in str(digits)])
         self._state = STATE_PLAYING

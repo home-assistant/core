@@ -152,7 +152,7 @@ class ValloxStateProxy:
             raise OSError("Device state out of sync.")
 
         if metric_key not in vlxDevConstants.__dict__:
-            raise KeyError("Unknown metric key: {}".format(metric_key))
+            raise KeyError(f"Unknown metric key: {metric_key}")
 
         return self._metric_cache[metric_key]
 
@@ -252,7 +252,7 @@ class ValloxServiceHandler:
     async def async_handle(self, service):
         """Dispatch a service call."""
         method = SERVICE_TO_METHOD.get(service.service)
-        params = {key: value for key, value in service.data.items()}
+        params = service.data.copy()
 
         if not hasattr(self, method["method"]):
             _LOGGER.error("Service not implemented: %s", method["method"])

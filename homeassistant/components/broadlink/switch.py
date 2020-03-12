@@ -4,13 +4,10 @@ from datetime import timedelta
 import logging
 import socket
 
+import broadlink
 import voluptuous as vol
 
-from homeassistant.components.switch import (
-    ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA,
-    SwitchDevice,
-)
+from homeassistant.components.switch import DOMAIN, PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
@@ -23,8 +20,8 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle, slugify
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.util import Throttle, slugify
 
 from . import async_setup_service, data_packet
 
@@ -91,7 +88,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Broadlink switches."""
-    import broadlink
 
     devices = config.get(CONF_SWITCHES)
     slots = config.get("slots", {})
@@ -103,9 +99,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     def _get_mp1_slot_name(switch_friendly_name, slot):
         """Get slot name."""
-        if not slots["slot_{}".format(slot)]:
-            return "{} slot {}".format(switch_friendly_name, slot)
-        return slots["slot_{}".format(slot)]
+        if not slots[f"slot_{slot}"]:
+            return f"{switch_friendly_name} slot {slot}"
+        return slots[f"slot_{slot}"]
 
     if switch_type in RM_TYPES:
         broadlink_device = broadlink.rm((ip_addr, 80), mac_addr, None)
@@ -159,7 +155,7 @@ class BroadlinkRMSwitch(SwitchDevice, RestoreEntity):
         self, name, friendly_name, device, command_on, command_off, retry_times
     ):
         """Initialize the switch."""
-        self.entity_id = ENTITY_ID_FORMAT.format(slugify(name))
+        self.entity_id = f"{DOMAIN}.{slugify(name)}"
         self._name = friendly_name
         self._state = False
         self._command_on = command_on
@@ -371,7 +367,7 @@ class BroadlinkMP1Switch:
         """Get status of outlet from cached status list."""
         if self._states is None:
             return None
-        return self._states["s{}".format(slot)]
+        return self._states[f"s{slot}"]
 
     @Throttle(TIME_BETWEEN_UPDATES)
     def update(self):

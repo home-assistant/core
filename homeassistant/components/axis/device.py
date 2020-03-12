@@ -1,12 +1,13 @@
 """Axis network device abstraction."""
 
 import asyncio
+
 import async_timeout
+import axis
+from axis.streammanager import SIGNAL_PLAYING
 
 from homeassistant.const import (
-    CONF_DEVICE,
     CONF_HOST,
-    CONF_MAC,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
@@ -18,7 +19,6 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import CONF_CAMERA, CONF_EVENTS, CONF_MODEL, DOMAIN, LOGGER
-
 from .errors import AuthenticationRequired, CannotConnect
 
 
@@ -40,7 +40,7 @@ class AxisNetworkDevice:
     @property
     def host(self):
         """Return the host of this device."""
-        return self.config_entry.data[CONF_DEVICE][CONF_HOST]
+        return self.config_entry.data[CONF_HOST]
 
     @property
     def model(self):
@@ -54,8 +54,8 @@ class AxisNetworkDevice:
 
     @property
     def serial(self):
-        """Return the mac of this device."""
-        return self.config_entry.data[CONF_MAC]
+        """Return the serial number of this device."""
+        return self.config_entry.unique_id
 
     async def async_update_device_registry(self):
         """Update device registry."""
@@ -65,7 +65,7 @@ class AxisNetworkDevice:
             connections={(CONNECTION_NETWORK_MAC, self.serial)},
             identifiers={(DOMAIN, self.serial)},
             manufacturer="Axis Communications AB",
-            model="{} {}".format(self.model, self.product_type),
+            model=f"{self.model} {self.product_type}",
             name=self.name,
             sw_version=self.fw_version,
         )
@@ -73,7 +73,13 @@ class AxisNetworkDevice:
     async def async_setup(self):
         """Set up the device."""
         try:
-            self.api = await get_device(self.hass, self.config_entry.data[CONF_DEVICE])
+            self.api = await get_device(
+                self.hass,
+                host=self.config_entry.data[CONF_HOST],
+                port=self.config_entry.data[CONF_PORT],
+                username=self.config_entry.data[CONF_USERNAME],
+                password=self.config_entry.data[CONF_PASSWORD],
+            )
 
         except CannotConnect:
             raise ConfigEntryNotReady
@@ -115,7 +121,7 @@ class AxisNetworkDevice:
     @property
     def event_new_address(self):
         """Device specific event to signal new device address."""
-        return "axis_new_address_{}".format(self.serial)
+        return f"axis_new_address_{self.serial}"
 
     @staticmethod
     async def async_new_address_callback(hass, entry):
@@ -124,14 +130,14 @@ class AxisNetworkDevice:
         This is a static method because a class method (bound method),
         can not be used with weak references.
         """
-        device = hass.data[DOMAIN][entry.data[CONF_MAC]]
+        device = hass.data[DOMAIN][entry.unique_id]
         device.api.config.host = device.host
         async_dispatcher_send(hass, device.event_new_address)
 
     @property
     def event_reachable(self):
         """Device specific event to signal a change in connection status."""
-        return "axis_reachable_{}".format(self.serial)
+        return f"axis_reachable_{self.serial}"
 
     @callback
     def async_connection_status_callback(self, status):
@@ -140,7 +146,6 @@ class AxisNetworkDevice:
         This is called on every RTSP keep-alive message.
         Only signal state change if state change is true.
         """
-        from axis.streammanager import SIGNAL_PLAYING
 
         if self.available != (status == SIGNAL_PLAYING):
             self.available = not self.available
@@ -149,7 +154,7 @@ class AxisNetworkDevice:
     @property
     def event_new_sensor(self):
         """Device specific event to signal new sensor available."""
-        return "axis_add_sensor_{}".format(self.serial)
+        return f"axis_add_sensor_{self.serial}"
 
     @callback
     def async_event_callback(self, action, event_id):
@@ -196,16 +201,15 @@ class AxisNetworkDevice:
         return True
 
 
-async def get_device(hass, config):
+async def get_device(hass, host, port, username, password):
     """Create a Axis device."""
-    import axis
 
     device = axis.AxisDevice(
         loop=hass.loop,
-        host=config[CONF_HOST],
-        username=config[CONF_USERNAME],
-        password=config[CONF_PASSWORD],
-        port=config[CONF_PORT],
+        host=host,
+        port=port,
+        username=username,
+        password=password,
         web_proto="http",
     )
 
@@ -224,13 +228,11 @@ async def get_device(hass, config):
         return device
 
     except axis.Unauthorized:
-        LOGGER.warning(
-            "Connected to device at %s but not registered.", config[CONF_HOST]
-        )
+        LOGGER.warning("Connected to device at %s but not registered.", host)
         raise AuthenticationRequired
 
     except (asyncio.TimeoutError, axis.RequestError):
-        LOGGER.error("Error connecting to the Axis device at %s", config[CONF_HOST])
+        LOGGER.error("Error connecting to the Axis device at %s", host)
         raise CannotConnect
 
     except axis.AxisException:

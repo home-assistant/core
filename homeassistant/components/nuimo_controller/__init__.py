@@ -3,10 +3,12 @@ import logging
 import threading
 import time
 
+# pylint: disable=import-error
+from nuimo import NuimoController, NuimoDiscoveryManager
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_MAC, CONF_NAME, EVENT_HOMEASSISTANT_STOP
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,7 +78,7 @@ class NuimoThread(threading.Thread):
 
     def __init__(self, hass, mac, name):
         """Initialize thread object."""
-        super(NuimoThread, self).__init__()
+        super().__init__()
         self._hass = hass
         self._mac = mac
         self._name = name
@@ -104,8 +106,6 @@ class NuimoThread(threading.Thread):
 
     def _attach(self):
         """Create a Nuimo object from MAC address or discovery."""
-        # pylint: disable=import-error
-        from nuimo import NuimoController, NuimoDiscoveryManager
 
         if self._nuimo:
             self._nuimo.disconnect()

@@ -1,15 +1,17 @@
 """Support for Sesame, by CANDY HOUSE."""
 from typing import Callable
+
+import pysesame2
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.lock import LockDevice, PLATFORM_SCHEMA
+from homeassistant.components.lock import PLATFORM_SCHEMA, LockDevice
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     CONF_API_KEY,
     STATE_LOCKED,
     STATE_UNLOCKED,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 ATTR_DEVICE_ID = "device_id"
@@ -22,8 +24,6 @@ def setup_platform(
     hass, config: ConfigType, add_entities: Callable[[list], None], discovery_info=None
 ):
     """Set up the Sesame platform."""
-    import pysesame2
-
     api_key = config.get(CONF_API_KEY)
 
     add_entities(

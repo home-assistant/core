@@ -1,27 +1,20 @@
 """Support for Genius Hub water_heater devices."""
-from homeassistant.components.water_heater import (
-    WaterHeaterDevice,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_OPERATION_MODE,
-)
-from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, TEMP_CELSIUS
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from typing import List
 
-from . import DOMAIN
+from homeassistant.components.water_heater import (
+    SUPPORT_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+    WaterHeaterDevice,
+)
+from homeassistant.const import STATE_OFF
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+
+from . import DOMAIN, GeniusHeatingZone
 
 STATE_AUTO = "auto"
 STATE_MANUAL = "manual"
 
-GH_HEATERS = ["hot water temperature"]
-
-GH_SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
-# HA does not have SUPPORT_ON_OFF for water_heater
-
-GH_MAX_TEMP = 80.0
-GH_MIN_TEMP = 30.0
-
-# Genius Hub HW supports only Off, Override/Boost & Timer modes
+# Genius Hub HW zones support only Off, Override/Boost & Timer modes
 HA_OPMODE_TO_GH = {STATE_OFF: "off", STATE_AUTO: "timer", STATE_MANUAL: "override"}
 GH_STATE_TO_HA = {
     "off": STATE_OFF,
@@ -34,103 +27,49 @@ GH_STATE_TO_HA = {
     "linked": None,
     "other": None,
 }
-GH_STATE_ATTRS = ["type", "override"]
+
+GH_HEATERS = ["hot water temperature"]
 
 
 async def async_setup_platform(
-    hass, hass_config, async_add_entities, discovery_info=None
-):
+    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+) -> None:
     """Set up the Genius Hub water_heater entities."""
-    client = hass.data[DOMAIN]["client"]
+    if discovery_info is None:
+        return
 
-    entities = [
-        GeniusWaterHeater(client, z)
-        for z in client.hub.zone_objs
-        if z.type in GH_HEATERS
-    ]
+    broker = hass.data[DOMAIN]["broker"]
 
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            GeniusWaterHeater(broker, z)
+            for z in broker.client.zone_objs
+            if z.data["type"] in GH_HEATERS
+        ]
+    )
 
 
-class GeniusWaterHeater(WaterHeaterDevice):
+class GeniusWaterHeater(GeniusHeatingZone, WaterHeaterDevice):
     """Representation of a Genius Hub water_heater device."""
 
-    def __init__(self, client, boiler):
+    def __init__(self, broker, zone) -> None:
         """Initialize the water_heater device."""
-        self._client = client
-        self._boiler = boiler
+        super().__init__(broker, zone)
 
-        self._operation_list = list(HA_OPMODE_TO_GH)
-
-    async def async_added_to_hass(self):
-        """Run when entity about to be added."""
-        async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
-
-    @callback
-    def _refresh(self):
-        self.async_schedule_update_ha_state(force_refresh=True)
+        self._max_temp = 80.0
+        self._min_temp = 30.0
+        self._supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
     @property
-    def name(self):
-        """Return the name of the water_heater device."""
-        return self._boiler.name
-
-    @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        tmp = self._boiler.data.items()
-        return {"status": {k: v for k, v in tmp if k in GH_STATE_ATTRS}}
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False as the geniushub devices should not be polled."""
-        return False
-
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        return self._boiler.data.get("temperature")
-
-    @property
-    def target_temperature(self):
-        """Return the temperature we try to reach."""
-        return self._boiler.data["setpoint"]
-
-    @property
-    def min_temp(self):
-        """Return max valid temperature that can be set."""
-        return GH_MIN_TEMP
-
-    @property
-    def max_temp(self):
-        """Return max valid temperature that can be set."""
-        return GH_MAX_TEMP
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return GH_SUPPORT_FLAGS
-
-    @property
-    def operation_list(self):
+    def operation_list(self) -> List[str]:
         """Return the list of available operation modes."""
-        return self._operation_list
+        return list(HA_OPMODE_TO_GH)
 
     @property
-    def current_operation(self):
+    def current_operation(self) -> str:
         """Return the current operation mode."""
-        return GH_STATE_TO_HA[self._boiler.data["mode"]]
+        return GH_STATE_TO_HA[self._zone.data["mode"]]
 
-    async def async_set_operation_mode(self, operation_mode):
+    async def async_set_operation_mode(self, operation_mode) -> None:
         """Set a new operation mode for this boiler."""
-        await self._boiler.set_mode(HA_OPMODE_TO_GH[operation_mode])
-
-    async def async_set_temperature(self, **kwargs):
-        """Set a new target temperature for this boiler."""
-        temperature = kwargs[ATTR_TEMPERATURE]
-        await self._boiler.set_override(temperature, 3600)  # 1 hour
+        await self._zone.set_mode(HA_OPMODE_TO_GH[operation_mode])

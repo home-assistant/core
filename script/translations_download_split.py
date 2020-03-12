@@ -4,7 +4,7 @@ import glob
 import json
 import os
 import re
-from typing import Union, List, Dict
+from typing import Dict, List, Union
 
 FILENAME_FORMAT = re.compile(r"strings\.(?P<suffix>\w+)\.json")
 
@@ -40,18 +40,11 @@ def get_component_path(lang, component):
     """Get the component translation path."""
     if os.path.isdir(os.path.join("homeassistant", "components", component)):
         return os.path.join(
-            "homeassistant",
-            "components",
-            component,
-            ".translations",
-            "{}.json".format(lang),
+            "homeassistant", "components", component, ".translations", f"{lang}.json"
         )
     else:
         return os.path.join(
-            "homeassistant",
-            "components",
-            ".translations",
-            "{}.{}.json".format(component, lang),
+            "homeassistant", "components", ".translations", f"{component}.{lang}.json"
         )
 
 
@@ -64,7 +57,7 @@ def get_platform_path(lang, component, platform):
             component,
             platform,
             ".translations",
-            "{}.json".format(lang),
+            f"{lang}.json",
         )
     else:
         return os.path.join(
@@ -72,7 +65,7 @@ def get_platform_path(lang, component, platform):
             "components",
             component,
             ".translations",
-            "{}.{}.json".format(platform, lang),
+            f"{platform}.{lang}.json",
         )
 
 

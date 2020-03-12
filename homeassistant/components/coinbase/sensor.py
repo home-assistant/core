@@ -44,7 +44,7 @@ class AccountSensor(Entity):
     def __init__(self, coinbase_data, name, currency):
         """Initialize the sensor."""
         self._coinbase_data = coinbase_data
-        self._name = "Coinbase {}".format(name)
+        self._name = f"Coinbase {name}"
         self._state = None
         self._unit_of_measurement = currency
         self._native_balance = None
@@ -75,9 +75,7 @@ class AccountSensor(Entity):
         """Return the state attributes of the sensor."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_NATIVE_BALANCE: "{} {}".format(
-                self._native_balance, self._native_currency
-            ),
+            ATTR_NATIVE_BALANCE: f"{self._native_balance} {self._native_currency}",
         }
 
     def update(self):
@@ -97,7 +95,7 @@ class ExchangeRateSensor(Entity):
         """Initialize the sensor."""
         self._coinbase_data = coinbase_data
         self.currency = exchange_currency
-        self._name = "{} Exchange Rate".format(exchange_currency)
+        self._name = f"{exchange_currency} Exchange Rate"
         self._state = None
         self._unit_of_measurement = native_currency
 

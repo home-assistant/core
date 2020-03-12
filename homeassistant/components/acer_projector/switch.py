@@ -2,15 +2,16 @@
 import logging
 import re
 
+import serial
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import (
-    STATE_ON,
-    STATE_OFF,
-    STATE_UNKNOWN,
-    CONF_NAME,
     CONF_FILENAME,
+    CONF_NAME,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNKNOWN,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -73,7 +74,6 @@ class AcerSwitch(SwitchDevice):
 
     def __init__(self, serial_port, name, timeout, write_timeout, **kwargs):
         """Init of the Acer projector."""
-        import serial
 
         self.ser = serial.Serial(
             port=serial_port, timeout=timeout, write_timeout=write_timeout, **kwargs
@@ -90,7 +90,6 @@ class AcerSwitch(SwitchDevice):
 
     def _write_read(self, msg):
         """Write to the projector and read the return."""
-        import serial
 
         ret = ""
         # Sometimes the projector won't answer for no reason or the projector

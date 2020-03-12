@@ -1,12 +1,13 @@
 """Support for RFXtrx switches."""
 import logging
 
+import RFXtrx as rfxtrxmod
 import voluptuous as vol
 
-from homeassistant.components import rfxtrx
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, STATE_ON
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import (
     CONF_AUTOMATIC_ADD,
@@ -14,6 +15,11 @@ from . import (
     CONF_FIRE_EVENT,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
+    RECEIVED_EVT_SUBSCRIBERS,
+    RfxtrxDevice,
+    apply_received_command,
+    get_devices_from_config,
+    get_new_device,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,10 +44,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up the RFXtrx platform."""
-    import RFXtrx as rfxtrxmod
-
     # Add switch from config file
-    switches = rfxtrx.get_devices_from_config(config, RfxtrxSwitch)
+    switches = get_devices_from_config(config, RfxtrxSwitch)
     add_entities_callback(switches)
 
     def switch_update(event):
@@ -53,19 +57,27 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
         ):
             return
 
-        new_device = rfxtrx.get_new_device(event, config, RfxtrxSwitch)
+        new_device = get_new_device(event, config, RfxtrxSwitch)
         if new_device:
             add_entities_callback([new_device])
 
-        rfxtrx.apply_received_command(event)
+        apply_received_command(event)
 
     # Subscribe to main RFXtrx events
-    if switch_update not in rfxtrx.RECEIVED_EVT_SUBSCRIBERS:
-        rfxtrx.RECEIVED_EVT_SUBSCRIBERS.append(switch_update)
+    if switch_update not in RECEIVED_EVT_SUBSCRIBERS:
+        RECEIVED_EVT_SUBSCRIBERS.append(switch_update)
 
 
-class RfxtrxSwitch(rfxtrx.RfxtrxDevice, SwitchDevice):
+class RfxtrxSwitch(RfxtrxDevice, SwitchDevice, RestoreEntity):
     """Representation of a RFXtrx switch."""
+
+    async def async_added_to_hass(self):
+        """Restore RFXtrx switch device state (ON/OFF)."""
+        await super().async_added_to_hass()
+
+        old_state = await self.async_get_last_state()
+        if old_state is not None:
+            self._state = old_state.state == STATE_ON
 
     def turn_on(self, **kwargs):
         """Turn the device on."""

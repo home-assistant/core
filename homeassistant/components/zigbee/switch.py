@@ -5,7 +5,6 @@ from homeassistant.components.switch import SwitchDevice
 
 from . import PLATFORM_SCHEMA, ZigBeeDigitalOut, ZigBeeDigitalOutConfig
 
-
 CONF_ON_STATE = "on_state"
 
 DEFAULT_ON_STATE = "high"

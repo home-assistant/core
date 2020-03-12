@@ -1,24 +1,25 @@
 """Support for Xiaomi Yeelight WiFi color bulb."""
 
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 from yeelight import Bulb, BulbException
+
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.discovery import SERVICE_YEELIGHT
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_DEVICES,
+    CONF_HOST,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
-    CONF_HOST,
-    ATTR_ENTITY_ID,
 )
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.helpers import discovery
-from homeassistant.helpers.discovery import load_platform
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import dispatcher_send, dispatcher_connect
+from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.dispatcher import dispatcher_connect, dispatcher_send
 from homeassistant.helpers.event import track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "yeelight"
 DATA_YEELIGHT = DOMAIN
 DATA_UPDATED = "yeelight_{}_data_updated"
-DEVICE_INITIALIZED = "{}_device_initialized".format(DOMAIN)
+DEVICE_INITIALIZED = f"{DOMAIN}_device_initialized"
 
 DEFAULT_NAME = "Yeelight"
 DEFAULT_TRANSITION = 350
@@ -37,6 +38,7 @@ CONF_SAVE_ON_CHANGE = "save_on_change"
 CONF_MODE_MUSIC = "use_music_mode"
 CONF_FLOW_PARAMS = "flow_params"
 CONF_CUSTOM_EFFECTS = "custom_effects"
+CONF_NIGHTLIGHT_SWITCH_TYPE = "nightlight_switch_type"
 
 ATTR_COUNT = "count"
 ATTR_ACTION = "action"
@@ -47,6 +49,9 @@ ACTION_STAY = "stay"
 ACTION_OFF = "off"
 
 ACTIVE_MODE_NIGHTLIGHT = "1"
+ACTIVE_COLOR_FLOWING = "1"
+
+NIGHTLIGHT_SWITCH_TYPE_LIGHT = "light"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -84,6 +89,9 @@ DEVICE_SCHEMA = vol.Schema(
         vol.Optional(CONF_TRANSITION, default=DEFAULT_TRANSITION): cv.positive_int,
         vol.Optional(CONF_MODE_MUSIC, default=False): cv.boolean,
         vol.Optional(CONF_SAVE_ON_CHANGE, default=False): cv.boolean,
+        vol.Optional(CONF_NIGHTLIGHT_SWITCH_TYPE): vol.Any(
+            NIGHTLIGHT_SWITCH_TYPE_LIGHT
+        ),
         vol.Optional(CONF_MODEL): cv.string,
     }
 )
@@ -117,6 +125,7 @@ UPDATE_REQUEST_PROPERTIES = [
     "hue",
     "sat",
     "color_mode",
+    "flowing",
     "bg_power",
     "bg_lmode",
     "bg_flowing",
@@ -229,24 +238,46 @@ class YeelightDevice:
         return self._model
 
     @property
-    def is_nightlight_enabled(self) -> bool:
-        """Return true / false if nightlight is currently enabled."""
-        if self.bulb is None:
-            return False
-
-        return self._active_mode == ACTIVE_MODE_NIGHTLIGHT
-
-    @property
     def is_nightlight_supported(self) -> bool:
         """Return true / false if nightlight is supported."""
         if self.model:
             return self.bulb.get_model_specs().get("night_light", False)
 
-        return self._active_mode is not None
+        # It should support both ceiling and other lights
+        return self._nightlight_brightness is not None
+
+    @property
+    def is_nightlight_enabled(self) -> bool:
+        """Return true / false if nightlight is currently enabled."""
+        if self.bulb is None:
+            return False
+
+        # Only ceiling lights have active_mode, from SDK docs:
+        # active_mode 0: daylight mode / 1: moonlight mode (ceiling light only)
+        if self._active_mode is not None:
+            return self._active_mode == ACTIVE_MODE_NIGHTLIGHT
+
+        if self._nightlight_brightness is not None:
+            return int(self._nightlight_brightness) > 0
+
+        return False
+
+    @property
+    def is_color_flow_enabled(self) -> bool:
+        """Return true / false if color flow is currently running."""
+        return self._color_flow == ACTIVE_COLOR_FLOWING
 
     @property
     def _active_mode(self):
         return self.bulb.last_properties.get("active_mode")
+
+    @property
+    def _color_flow(self):
+        return self.bulb.last_properties.get("flowing")
+
+    @property
+    def _nightlight_brightness(self):
+        return self.bulb.last_properties.get("nl_br")
 
     @property
     def type(self):
@@ -256,10 +287,12 @@ class YeelightDevice:
 
         return self._device_type
 
-    def turn_on(self, duration=DEFAULT_TRANSITION, light_type=None):
+    def turn_on(self, duration=DEFAULT_TRANSITION, light_type=None, power_mode=None):
         """Turn on device."""
         try:
-            self.bulb.turn_on(duration=duration, light_type=light_type)
+            self.bulb.turn_on(
+                duration=duration, light_type=light_type, power_mode=power_mode
+            )
         except BulbException as ex:
             _LOGGER.error("Unable to turn the bulb on: %s", ex)
 

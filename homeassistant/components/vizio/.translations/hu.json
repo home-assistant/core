@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "already_in_progress": "A vizio komponens konfigur\u00e1ci\u00f3s folyamata m\u00e1r folyamatban van.",
+            "already_setup": "Ez a bejegyz\u00e9s m\u00e1r be van \u00e1ll\u00edtva.",
+            "already_setup_with_diff_host_and_name": "\u00dagy t\u0171nik, hogy ez a bejegyz\u00e9s m\u00e1r be van \u00e1ll\u00edtva egy m\u00e1sik \u00e1llom\u00e1ssal \u00e9s n\u00e9vvel a sorozatsz\u00e1ma alapj\u00e1n. T\u00e1vol\u00edtsa el a r\u00e9gi bejegyz\u00e9seket a configuration.yaml \u00e9s az Integr\u00e1ci\u00f3k men\u00fcb\u0151l, miel\u0151tt \u00fajra megpr\u00f3b\u00e1ln\u00e1 hozz\u00e1adni ezt az eszk\u00f6zt.",
+            "host_exists": "Vizio-\u00f6sszetev\u0151, amelynek az kiszolg\u00e1l\u00f3neve m\u00e1r konfigur\u00e1lva van.",
+            "name_exists": "Vizio-\u00f6sszetev\u0151, amelynek neve m\u00e1r konfigur\u00e1lva van.",
+            "updated_entry": "Ez a bejegyz\u00e9s m\u00e1r be van \u00e1ll\u00edtva, de a konfigur\u00e1ci\u00f3ban defini\u00e1lt n\u00e9v \u00e9s/vagy be\u00e1ll\u00edt\u00e1sok nem egyeznek meg a kor\u00e1bban import\u00e1lt konfigur\u00e1ci\u00f3val, \u00edgy a konfigur\u00e1ci\u00f3s bejegyz\u00e9s ennek megfelel\u0151en friss\u00fclt.",
+            "updated_options": "Ez a bejegyz\u00e9s m\u00e1r be van \u00e1ll\u00edtva, de a konfigur\u00e1ci\u00f3ban megadott be\u00e1ll\u00edt\u00e1sok nem egyeznek meg a kor\u00e1bban import\u00e1lt be\u00e1ll\u00edt\u00e1si \u00e9rt\u00e9kekkel, \u00edgy a konfigur\u00e1ci\u00f3s bejegyz\u00e9s ennek megfelel\u0151en friss\u00fclt.",
+            "updated_volume_step": "Ez a bejegyz\u00e9s m\u00e1r be van \u00e1ll\u00edtva, de a konfigur\u00e1ci\u00f3ban l\u00e9v\u0151 henger\u0151l\u00e9p\u00e9s m\u00e9rete nem egyezik meg a konfigur\u00e1ci\u00f3s bejegyz\u00e9ssel, \u00edgy a konfigur\u00e1ci\u00f3s bejegyz\u00e9s ennek megfelel\u0151en friss\u00fclt."
+        },
+        "error": {
+            "cant_connect": "Nem lehetett csatlakozni az eszk\u00f6zh\u00f6z. [Tekintsd \u00e1t a dokumentumokat] (https://www.home-assistant.io/integrations/vizio/) \u00e9s \u00fajra ellen\u0151rizd, hogy:\n- A k\u00e9sz\u00fcl\u00e9k be van kapcsolva\n- A k\u00e9sz\u00fcl\u00e9k csatlakozik a h\u00e1l\u00f3zathoz\n- A kit\u00f6lt\u00f6tt \u00e9rt\u00e9kek pontosak\nmiel\u0151tt \u00fajra elk\u00fclden\u00e9d.",
+            "host_exists": "A megadott kiszolg\u00e1l\u00f3n\u00e9vvel rendelkez\u0151 Vizio-eszk\u00f6z m\u00e1r konfigur\u00e1lva van.",
+            "name_exists": "A megadott n\u00e9vvel rendelkez\u0151 Vizio-eszk\u00f6z m\u00e1r konfigur\u00e1lva van.",
+            "tv_needs_token": "Ha az eszk\u00f6z t\u00edpusa \"tv\", akkor \u00e9rv\u00e9nyes hozz\u00e1f\u00e9r\u00e9si tokenre van sz\u00fcks\u00e9g."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Hozz\u00e1f\u00e9r\u00e9si token",
+                    "device_class": "Eszk\u00f6zt\u00edpus",
+                    "name": "N\u00e9v"
+                },
+                "title": "A Vizio SmartCast Client be\u00e1ll\u00edt\u00e1sa"
+            }
+        },
+        "title": "Vizio SmartCast"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "API-k\u00e9r\u00e9s id\u0151t\u00fall\u00e9p\u00e9se (m\u00e1sodpercben)",
+                    "volume_step": "Hanger\u0151 l\u00e9p\u00e9s nagys\u00e1ga"
+                },
+                "title": "Friss\u00edtse a Vizo SmartCast be\u00e1ll\u00edt\u00e1sokat"
+            }
+        },
+        "title": "Friss\u00edtse a Vizo SmartCast be\u00e1ll\u00edt\u00e1sokat"
+    }
+}

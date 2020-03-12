@@ -1,13 +1,16 @@
 """Tests for the Google Assistant traits."""
-from unittest.mock import patch, Mock
+import logging
+from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant.components import (
+    alarm_control_panel,
     binary_sensor,
     camera,
     cover,
     fan,
+    group,
     input_boolean,
     light,
     lock,
@@ -17,37 +20,46 @@ from homeassistant.components import (
     sensor,
     switch,
     vacuum,
-    group,
 )
 from homeassistant.components.climate import const as climate
-from homeassistant.components.google_assistant import trait, helpers, const, error
+from homeassistant.components.google_assistant import const, error, helpers, trait
 from homeassistant.const import (
-    STATE_ON,
-    STATE_OFF,
+    ATTR_ASSUMED_STATE,
+    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
-    SERVICE_TURN_ON,
-    SERVICE_TURN_OFF,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
-    ATTR_DEVICE_CLASS,
-    ATTR_ASSUMED_STATE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_PENDING,
+    STATE_OFF,
+    STATE_ON,
     STATE_UNKNOWN,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
 )
-from homeassistant.core import State, DOMAIN as HA_DOMAIN, EVENT_CALL_SERVICE
+from homeassistant.core import DOMAIN as HA_DOMAIN, EVENT_CALL_SERVICE, State
 from homeassistant.util import color
-from tests.common import async_mock_service, mock_coro
+
 from . import BASIC_CONFIG, MockConfig
 
+from tests.common import async_mock_service, mock_coro
+
+_LOGGER = logging.getLogger(__name__)
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
 
-BASIC_DATA = helpers.RequestData(BASIC_CONFIG, "test-agent", REQ_ID)
+BASIC_DATA = helpers.RequestData(
+    BASIC_CONFIG, "test-agent", const.SOURCE_CLOUD, REQ_ID, None
+)
 
 PIN_CONFIG = MockConfig(secure_devices_pin="1234")
 
-PIN_DATA = helpers.RequestData(PIN_CONFIG, "test-agent", REQ_ID)
+PIN_DATA = helpers.RequestData(
+    PIN_CONFIG, "test-agent", const.SOURCE_CLOUD, REQ_ID, None
+)
 
 
 async def test_brightness_light(hass):
@@ -816,6 +828,336 @@ async def test_lock_unlock_unlock(hass):
     assert len(calls) == 2
 
 
+async def test_arm_disarm_arm_away(hass):
+    """Test ArmDisarm trait Arming support for alarm_control_panel domain."""
+    assert helpers.get_google_type(alarm_control_panel.DOMAIN, None) is not None
+    assert trait.ArmDisArmTrait.supported(alarm_control_panel.DOMAIN, 0, None)
+    assert trait.ArmDisArmTrait.might_2fa(alarm_control_panel.DOMAIN, 0, None)
+
+    trt = trait.ArmDisArmTrait(
+        hass,
+        State(
+            "alarm_control_panel.alarm",
+            STATE_ALARM_ARMED_AWAY,
+            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+        ),
+        PIN_CONFIG,
+    )
+    assert trt.sync_attributes() == {
+        "availableArmLevels": {
+            "levels": [
+                {
+                    "level_name": "armed_home",
+                    "level_values": [
+                        {"level_synonym": ["armed home", "home"], "lang": "en"}
+                    ],
+                },
+                {
+                    "level_name": "armed_away",
+                    "level_values": [
+                        {"level_synonym": ["armed away", "away"], "lang": "en"}
+                    ],
+                },
+                {
+                    "level_name": "armed_night",
+                    "level_values": [
+                        {"level_synonym": ["armed night", "night"], "lang": "en"}
+                    ],
+                },
+                {
+                    "level_name": "armed_custom_bypass",
+                    "level_values": [
+                        {
+                            "level_synonym": ["armed custom bypass", "custom"],
+                            "lang": "en",
+                        }
+                    ],
+                },
+                {
+                    "level_name": "triggered",
+                    "level_values": [{"level_synonym": ["triggered"], "lang": "en"}],
+                },
+            ],
+            "ordered": False,
+        }
+    }
+
+    assert trt.query_attributes() == {
+        "isArmed": True,
+        "currentArmLevel": STATE_ALARM_ARMED_AWAY,
+    }
+
+    assert trt.can_execute(
+        trait.COMMAND_ARMDISARM, {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY}
+    )
+
+    calls = async_mock_service(
+        hass, alarm_control_panel.DOMAIN, alarm_control_panel.SERVICE_ALARM_ARM_AWAY
+    )
+
+    # Test with no secure_pin configured
+
+    with pytest.raises(error.SmartHomeError) as err:
+        trt = trait.ArmDisArmTrait(
+            hass,
+            State(
+                "alarm_control_panel.alarm",
+                STATE_ALARM_DISARMED,
+                {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+            ),
+            BASIC_CONFIG,
+        )
+        await trt.execute(
+            trait.COMMAND_ARMDISARM,
+            BASIC_DATA,
+            {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+            {},
+        )
+    assert len(calls) == 0
+    assert err.value.code == const.ERR_CHALLENGE_NOT_SETUP
+
+    trt = trait.ArmDisArmTrait(
+        hass,
+        State(
+            "alarm_control_panel.alarm",
+            STATE_ALARM_DISARMED,
+            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+        ),
+        PIN_CONFIG,
+    )
+    # No challenge data
+    with pytest.raises(error.ChallengeNeeded) as err:
+        await trt.execute(
+            trait.COMMAND_ARMDISARM,
+            PIN_DATA,
+            {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+            {},
+        )
+    assert len(calls) == 0
+    assert err.value.code == const.ERR_CHALLENGE_NEEDED
+    assert err.value.challenge_type == const.CHALLENGE_PIN_NEEDED
+
+    # invalid pin
+    with pytest.raises(error.ChallengeNeeded) as err:
+        await trt.execute(
+            trait.COMMAND_ARMDISARM,
+            PIN_DATA,
+            {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+            {"pin": 9999},
+        )
+    assert len(calls) == 0
+    assert err.value.code == const.ERR_CHALLENGE_NEEDED
+    assert err.value.challenge_type == const.CHALLENGE_FAILED_PIN_NEEDED
+
+    # correct pin
+    await trt.execute(
+        trait.COMMAND_ARMDISARM,
+        PIN_DATA,
+        {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+        {"pin": "1234"},
+    )
+
+    assert len(calls) == 1
+
+    # Test already armed
+    with pytest.raises(error.SmartHomeError) as err:
+        trt = trait.ArmDisArmTrait(
+            hass,
+            State(
+                "alarm_control_panel.alarm",
+                STATE_ALARM_ARMED_AWAY,
+                {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+            ),
+            PIN_CONFIG,
+        )
+        await trt.execute(
+            trait.COMMAND_ARMDISARM,
+            PIN_DATA,
+            {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+            {},
+        )
+    assert len(calls) == 1
+    assert err.value.code == const.ERR_ALREADY_ARMED
+
+    # Test with code_arm_required False
+    trt = trait.ArmDisArmTrait(
+        hass,
+        State(
+            "alarm_control_panel.alarm",
+            STATE_ALARM_DISARMED,
+            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
+        ),
+        PIN_CONFIG,
+    )
+    await trt.execute(
+        trait.COMMAND_ARMDISARM,
+        PIN_DATA,
+        {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+        {},
+    )
+    assert len(calls) == 2
+
+
+async def test_arm_disarm_disarm(hass):
+    """Test ArmDisarm trait Disarming support for alarm_control_panel domain."""
+    assert helpers.get_google_type(alarm_control_panel.DOMAIN, None) is not None
+    assert trait.ArmDisArmTrait.supported(alarm_control_panel.DOMAIN, 0, None)
+    assert trait.ArmDisArmTrait.might_2fa(alarm_control_panel.DOMAIN, 0, None)
+
+    trt = trait.ArmDisArmTrait(
+        hass,
+        State(
+            "alarm_control_panel.alarm",
+            STATE_ALARM_DISARMED,
+            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+        ),
+        PIN_CONFIG,
+    )
+    assert trt.sync_attributes() == {
+        "availableArmLevels": {
+            "levels": [
+                {
+                    "level_name": "armed_home",
+                    "level_values": [
+                        {"level_synonym": ["armed home", "home"], "lang": "en"}
+                    ],
+                },
+                {
+                    "level_name": "armed_away",
+                    "level_values": [
+                        {"level_synonym": ["armed away", "away"], "lang": "en"}
+                    ],
+                },
+                {
+                    "level_name": "armed_night",
+                    "level_values": [
+                        {"level_synonym": ["armed night", "night"], "lang": "en"}
+                    ],
+                },
+                {
+                    "level_name": "armed_custom_bypass",
+                    "level_values": [
+                        {
+                            "level_synonym": ["armed custom bypass", "custom"],
+                            "lang": "en",
+                        }
+                    ],
+                },
+                {
+                    "level_name": "triggered",
+                    "level_values": [{"level_synonym": ["triggered"], "lang": "en"}],
+                },
+            ],
+            "ordered": False,
+        }
+    }
+
+    assert trt.query_attributes() == {"isArmed": False}
+
+    assert trt.can_execute(trait.COMMAND_ARMDISARM, {"arm": False})
+
+    calls = async_mock_service(
+        hass, alarm_control_panel.DOMAIN, alarm_control_panel.SERVICE_ALARM_DISARM
+    )
+
+    # Test without secure_pin configured
+    with pytest.raises(error.SmartHomeError) as err:
+        trt = trait.ArmDisArmTrait(
+            hass,
+            State(
+                "alarm_control_panel.alarm",
+                STATE_ALARM_ARMED_AWAY,
+                {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+            ),
+            BASIC_CONFIG,
+        )
+        await trt.execute(trait.COMMAND_ARMDISARM, BASIC_DATA, {"arm": False}, {})
+
+    assert len(calls) == 0
+    assert err.value.code == const.ERR_CHALLENGE_NOT_SETUP
+
+    trt = trait.ArmDisArmTrait(
+        hass,
+        State(
+            "alarm_control_panel.alarm",
+            STATE_ALARM_ARMED_AWAY,
+            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+        ),
+        PIN_CONFIG,
+    )
+
+    # No challenge data
+    with pytest.raises(error.ChallengeNeeded) as err:
+        await trt.execute(trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": False}, {})
+    assert len(calls) == 0
+    assert err.value.code == const.ERR_CHALLENGE_NEEDED
+    assert err.value.challenge_type == const.CHALLENGE_PIN_NEEDED
+
+    # invalid pin
+    with pytest.raises(error.ChallengeNeeded) as err:
+        await trt.execute(
+            trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": False}, {"pin": 9999}
+        )
+    assert len(calls) == 0
+    assert err.value.code == const.ERR_CHALLENGE_NEEDED
+    assert err.value.challenge_type == const.CHALLENGE_FAILED_PIN_NEEDED
+
+    # correct pin
+    await trt.execute(
+        trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": False}, {"pin": "1234"}
+    )
+
+    assert len(calls) == 1
+
+    # Test already disarmed
+    with pytest.raises(error.SmartHomeError) as err:
+        trt = trait.ArmDisArmTrait(
+            hass,
+            State(
+                "alarm_control_panel.alarm",
+                STATE_ALARM_DISARMED,
+                {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
+            ),
+            PIN_CONFIG,
+        )
+        await trt.execute(trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": False}, {})
+    assert len(calls) == 1
+    assert err.value.code == const.ERR_ALREADY_DISARMED
+
+    # Cancel arming after already armed will require pin
+    with pytest.raises(error.SmartHomeError) as err:
+        trt = trait.ArmDisArmTrait(
+            hass,
+            State(
+                "alarm_control_panel.alarm",
+                STATE_ALARM_ARMED_AWAY,
+                {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
+            ),
+            PIN_CONFIG,
+        )
+        await trt.execute(
+            trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": True, "cancel": True}, {}
+        )
+    assert len(calls) == 1
+    assert err.value.code == const.ERR_CHALLENGE_NEEDED
+    assert err.value.challenge_type == const.CHALLENGE_PIN_NEEDED
+
+    # Cancel arming while pending to arm doesn't require pin
+    trt = trait.ArmDisArmTrait(
+        hass,
+        State(
+            "alarm_control_panel.alarm",
+            STATE_ALARM_PENDING,
+            {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
+        ),
+        PIN_CONFIG,
+    )
+    await trt.execute(
+        trait.COMMAND_ARMDISARM, PIN_DATA, {"arm": True, "cancel": True}, {}
+    )
+    assert len(calls) == 2
+
+
 async def test_fan_speed(hass):
     """Test FanSpeed trait speed control support for fan domain."""
     assert helpers.get_google_type(fan.DOMAIN, None) is not None
@@ -928,24 +1270,99 @@ async def test_modes(hass):
         "availableModes": [
             {
                 "name": "input source",
-                "name_values": [{"name_synonym": ["input source"], "lang": "en"}],
+                "name_values": [
+                    {"name_synonym": ["input source", "input", "source"], "lang": "en"}
+                ],
                 "settings": [
                     {
                         "setting_name": "media",
                         "setting_values": [
-                            {"setting_synonym": ["media", "media mode"], "lang": "en"}
+                            {"setting_synonym": ["media"], "lang": "en"}
                         ],
                     },
                     {
                         "setting_name": "game",
-                        "setting_values": [
-                            {"setting_synonym": ["game", "game mode"], "lang": "en"}
-                        ],
+                        "setting_values": [{"setting_synonym": ["game"], "lang": "en"}],
                     },
                     {
                         "setting_name": "chromecast",
                         "setting_values": [
                             {"setting_synonym": ["chromecast"], "lang": "en"}
+                        ],
+                    },
+                    {
+                        "setting_name": "plex",
+                        "setting_values": [{"setting_synonym": ["plex"], "lang": "en"}],
+                    },
+                ],
+                "ordered": False,
+            }
+        ]
+    }
+
+    assert trt.query_attributes() == {
+        "currentModeSettings": {"input source": "game"},
+        "on": True,
+        "online": True,
+    }
+
+    assert trt.can_execute(
+        trait.COMMAND_MODES, params={"updateModeSettings": {"input source": "media"}},
+    )
+
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOURCE
+    )
+    await trt.execute(
+        trait.COMMAND_MODES,
+        BASIC_DATA,
+        {"updateModeSettings": {"input source": "media"}},
+        {},
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data == {"entity_id": "media_player.living_room", "source": "media"}
+
+
+async def test_sound_modes(hass):
+    """Test Mode trait."""
+    assert helpers.get_google_type(media_player.DOMAIN, None) is not None
+    assert trait.ModesTrait.supported(
+        media_player.DOMAIN, media_player.SUPPORT_SELECT_SOUND_MODE, None
+    )
+
+    trt = trait.ModesTrait(
+        hass,
+        State(
+            "media_player.living_room",
+            media_player.STATE_PLAYING,
+            attributes={
+                media_player.ATTR_SOUND_MODE_LIST: ["stereo", "prologic"],
+                media_player.ATTR_SOUND_MODE: "stereo",
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    attribs = trt.sync_attributes()
+    assert attribs == {
+        "availableModes": [
+            {
+                "name": "sound mode",
+                "name_values": [
+                    {"name_synonym": ["sound mode", "effects"], "lang": "en"}
+                ],
+                "settings": [
+                    {
+                        "setting_name": "stereo",
+                        "setting_values": [
+                            {"setting_synonym": ["stereo"], "lang": "en"}
+                        ],
+                    },
+                    {
+                        "setting_name": "prologic",
+                        "setting_values": [
+                            {"setting_synonym": ["prologic"], "lang": "en"}
                         ],
                     },
                 ],
@@ -955,36 +1372,30 @@ async def test_modes(hass):
     }
 
     assert trt.query_attributes() == {
-        "currentModeSettings": {"source": "game"},
+        "currentModeSettings": {"sound mode": "stereo"},
         "on": True,
         "online": True,
     }
 
     assert trt.can_execute(
-        trait.COMMAND_MODES,
-        params={
-            "updateModeSettings": {
-                trt.HA_TO_GOOGLE.get(media_player.ATTR_INPUT_SOURCE): "media"
-            }
-        },
+        trait.COMMAND_MODES, params={"updateModeSettings": {"sound mode": "stereo"}},
     )
 
     calls = async_mock_service(
-        hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOURCE
+        hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOUND_MODE
     )
     await trt.execute(
         trait.COMMAND_MODES,
         BASIC_DATA,
-        {
-            "updateModeSettings": {
-                trt.HA_TO_GOOGLE.get(media_player.ATTR_INPUT_SOURCE): "media"
-            }
-        },
+        {"updateModeSettings": {"sound mode": "stereo"}},
         {},
     )
 
     assert len(calls) == 1
-    assert calls[0].data == {"entity_id": "media_player.living_room", "source": "media"}
+    assert calls[0].data == {
+        "entity_id": "media_player.living_room",
+        "sound_mode": "stereo",
+    }
 
 
 async def test_openclose_cover(hass):
@@ -1277,20 +1688,70 @@ async def test_temperature_setting_sensor(hass):
         sensor.DOMAIN, 0, sensor.DEVICE_CLASS_TEMPERATURE
     )
 
-    hass.config.units.temperature_unit = TEMP_FAHRENHEIT
+
+@pytest.mark.parametrize(
+    "unit_in,unit_out,state,ambient",
+    [
+        (TEMP_FAHRENHEIT, "F", "70", 21.1),
+        (TEMP_CELSIUS, "C", "21.1", 21.1),
+        (TEMP_FAHRENHEIT, "F", "unavailable", None),
+        (TEMP_FAHRENHEIT, "F", "unknown", None),
+    ],
+)
+async def test_temperature_setting_sensor_data(hass, unit_in, unit_out, state, ambient):
+    """Test TemperatureSetting trait support for temperature sensor."""
+    hass.config.units.temperature_unit = unit_in
 
     trt = trait.TemperatureSettingTrait(
         hass,
         State(
-            "sensor.test", "70", {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TEMPERATURE}
+            "sensor.test", state, {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TEMPERATURE}
         ),
         BASIC_CONFIG,
     )
 
     assert trt.sync_attributes() == {
         "queryOnlyTemperatureSetting": True,
-        "thermostatTemperatureUnit": "F",
+        "thermostatTemperatureUnit": unit_out,
     }
 
-    assert trt.query_attributes() == {"thermostatTemperatureAmbient": 21.1}
+    if ambient:
+        assert trt.query_attributes() == {"thermostatTemperatureAmbient": ambient}
+    else:
+        assert trt.query_attributes() == {}
     hass.config.units.temperature_unit = TEMP_CELSIUS
+
+
+async def test_humidity_setting_sensor(hass):
+    """Test HumiditySetting trait support for humidity sensor."""
+    assert (
+        helpers.get_google_type(sensor.DOMAIN, sensor.DEVICE_CLASS_HUMIDITY) is not None
+    )
+    assert not trait.HumiditySettingTrait.supported(
+        sensor.DOMAIN, 0, sensor.DEVICE_CLASS_TEMPERATURE
+    )
+    assert trait.HumiditySettingTrait.supported(
+        sensor.DOMAIN, 0, sensor.DEVICE_CLASS_HUMIDITY
+    )
+
+
+@pytest.mark.parametrize(
+    "state,ambient", [("70", 70), ("unavailable", None), ("unknown", None)]
+)
+async def test_humidity_setting_sensor_data(hass, state, ambient):
+    """Test HumiditySetting trait support for humidity sensor."""
+    trt = trait.HumiditySettingTrait(
+        hass,
+        State("sensor.test", state, {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_HUMIDITY}),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {"queryOnlyHumiditySetting": True}
+    if ambient:
+        assert trt.query_attributes() == {"humidityAmbientPercent": ambient}
+    else:
+        assert trt.query_attributes() == {}
+
+    with pytest.raises(helpers.SmartHomeError) as err:
+        await trt.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
+    assert err.value.code == const.ERR_NOT_SUPPORTED

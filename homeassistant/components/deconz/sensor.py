@@ -1,18 +1,29 @@
 """Support for deCONZ sensors."""
-from pydeconz.sensor import Consumption, Daylight, LightLevel, Power, Switch
+from pydeconz.sensor import (
+    Battery,
+    Consumption,
+    Daylight,
+    LightLevel,
+    Power,
+    Switch,
+    Thermostat,
+)
 
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
     ATTR_TEMPERATURE,
     ATTR_VOLTAGE,
     DEVICE_CLASS_BATTERY,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.util import slugify
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 
 from .const import ATTR_DARK, ATTR_ON, NEW_SENSOR
 from .deconz_device import DeconzDevice
+from .deconz_event import DeconzEvent
 from .gateway import get_gateway_from_config_entry
 
 ATTR_CURRENT = "current"
@@ -23,51 +34,81 @@ ATTR_EVENT_ID = "event_id"
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up deCONZ platforms."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ sensors."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
+    batteries = set()
+    battery_handler = DeconzBatteryHandler(gateway)
+
     @callback
-    def async_add_sensor(sensors):
-        """Add sensors from deCONZ."""
+    def async_add_sensor(sensors, new=True):
+        """Add sensors from deCONZ.
+
+        Create DeconzEvent if part of ZHAType list.
+        Create DeconzSensor if not a ZHAType and not a binary sensor.
+        Create DeconzBattery if sensor has a battery attribute.
+        If new is false it means an existing sensor has got a battery state reported.
+        """
         entities = []
 
         for sensor in sensors:
 
-            if not sensor.BINARY and not (
-                not gateway.allow_clip_sensor and sensor.type.startswith("CLIP")
+            if new and sensor.type in Switch.ZHATYPE:
+
+                if gateway.option_allow_clip_sensor or not sensor.type.startswith(
+                    "CLIP"
+                ):
+                    new_event = DeconzEvent(sensor, gateway)
+                    hass.async_create_task(new_event.async_update_device_registry())
+                    gateway.events.append(new_event)
+
+            elif (
+                new
+                and sensor.BINARY is False
+                and sensor.type not in Battery.ZHATYPE + Thermostat.ZHATYPE
+                and (
+                    gateway.option_allow_clip_sensor
+                    or not sensor.type.startswith("CLIP")
+                )
             ):
+                entities.append(DeconzSensor(sensor, gateway))
 
-                if sensor.type in Switch.ZHATYPE:
-                    if sensor.battery:
-                        entities.append(DeconzBattery(sensor, gateway))
-
-                else:
-                    entities.append(DeconzSensor(sensor, gateway))
+            if sensor.battery is not None:
+                new_battery = DeconzBattery(sensor, gateway)
+                if new_battery.unique_id not in batteries:
+                    batteries.add(new_battery.unique_id)
+                    entities.append(new_battery)
+                    battery_handler.remove_tracker(sensor)
+            else:
+                battery_handler.create_tracker(sensor)
 
         async_add_entities(entities, True)
 
     gateway.listeners.append(
         async_dispatcher_connect(
-            hass, gateway.async_event_new_device(NEW_SENSOR), async_add_sensor
+            hass, gateway.async_signal_new_device(NEW_SENSOR), async_add_sensor
         )
     )
 
-    async_add_sensor(gateway.api.sensors.values())
+    async_add_sensor(
+        [gateway.api.sensors[key] for key in sorted(gateway.api.sensors, key=int)]
+    )
 
 
 class DeconzSensor(DeconzDevice):
     """Representation of a deCONZ sensor."""
 
     @callback
-    def async_update_callback(self, force_update=False):
+    def async_update_callback(self, force_update=False, ignore_update=False):
         """Update the sensor's state."""
-        changed = set(self._device.changed_keys)
-        keys = {"battery", "on", "reachable", "state"}
-        if force_update or any(key in changed for key in keys):
+        if ignore_update:
+            return
+
+        keys = {"on", "reachable", "state"}
+        if force_update or self._device.changed_keys.intersection(keys):
             self.async_schedule_update_ha_state()
 
     @property
@@ -94,8 +135,6 @@ class DeconzSensor(DeconzDevice):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         attr = {}
-        if self._device.battery:
-            attr[ATTR_BATTERY_LEVEL] = self._device.battery
 
         if self._device.on is not None:
             attr[ATTR_ON] = self._device.on
@@ -109,8 +148,13 @@ class DeconzSensor(DeconzDevice):
         elif self._device.type in Daylight.ZHATYPE:
             attr[ATTR_DAYLIGHT] = self._device.daylight
 
-        elif self._device.type in LightLevel.ZHATYPE and self._device.dark is not None:
-            attr[ATTR_DARK] = self._device.dark
+        elif self._device.type in LightLevel.ZHATYPE:
+
+            if self._device.dark is not None:
+                attr[ATTR_DARK] = self._device.dark
+
+            if self._device.daylight is not None:
+                attr[ATTR_DAYLIGHT] = self._device.daylight
 
         elif self._device.type in Power.ZHATYPE:
             attr[ATTR_CURRENT] = self._device.current
@@ -122,20 +166,20 @@ class DeconzSensor(DeconzDevice):
 class DeconzBattery(DeconzDevice):
     """Battery class for when a device is only represented as an event."""
 
-    def __init__(self, device, gateway):
-        """Register dispatcher callback for update of battery state."""
-        super().__init__(device, gateway)
-
-        self._name = "{} {}".format(self._device.name, "Battery Level")
-        self._unit_of_measurement = "%"
-
     @callback
-    def async_update_callback(self, force_update=False):
+    def async_update_callback(self, force_update=False, ignore_update=False):
         """Update the battery's state, if needed."""
-        changed = set(self._device.changed_keys)
+        if ignore_update:
+            return
+
         keys = {"battery", "reachable"}
-        if force_update or any(key in changed for key in keys):
+        if force_update or self._device.changed_keys.intersection(keys):
             self.async_schedule_update_ha_state()
+
+    @property
+    def unique_id(self):
+        """Return a unique identifier for this device."""
+        return f"{self.serial}-battery"
 
     @property
     def state(self):
@@ -145,7 +189,7 @@ class DeconzBattery(DeconzDevice):
     @property
     def name(self):
         """Return the name of the battery."""
-        return self._name
+        return f"{self._device.name} Battery Level"
 
     @property
     def device_class(self):
@@ -155,10 +199,70 @@ class DeconzBattery(DeconzDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
-        return self._unit_of_measurement
+        return UNIT_PERCENTAGE
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the battery."""
-        attr = {ATTR_EVENT_ID: slugify(self._device.name)}
+        attr = {}
+
+        if self._device.type in Switch.ZHATYPE:
+            for event in self.gateway.events:
+                if self._device == event.device:
+                    attr[ATTR_EVENT_ID] = event.event_id
+
         return attr
+
+
+class DeconzSensorStateTracker:
+    """Track sensors without a battery state and signal when battery state exist."""
+
+    def __init__(self, sensor, gateway):
+        """Set up tracker."""
+        self.sensor = sensor
+        self.gateway = gateway
+        sensor.register_callback(self.async_update_callback)
+
+    @callback
+    def close(self):
+        """Clean up tracker."""
+        self.sensor.remove_callback(self.async_update_callback)
+        self.gateway = None
+        self.sensor = None
+
+    @callback
+    def async_update_callback(self, ignore_update=False):
+        """Sensor state updated."""
+        if "battery" in self.sensor.changed_keys:
+            async_dispatcher_send(
+                self.gateway.hass,
+                self.gateway.async_signal_new_device(NEW_SENSOR),
+                [self.sensor],
+                False,
+            )
+
+
+class DeconzBatteryHandler:
+    """Creates and stores trackers for sensors without a battery state."""
+
+    def __init__(self, gateway):
+        """Set up battery handler."""
+        self.gateway = gateway
+        self._trackers = set()
+
+    @callback
+    def create_tracker(self, sensor):
+        """Create new tracker for battery state."""
+        for tracker in self._trackers:
+            if sensor == tracker.sensor:
+                return
+        self._trackers.add(DeconzSensorStateTracker(sensor, self.gateway))
+
+    @callback
+    def remove_tracker(self, sensor):
+        """Remove tracker of battery state."""
+        for tracker in self._trackers:
+            if sensor == tracker.sensor:
+                tracker.close()
+                self._trackers.remove(tracker)
+                break

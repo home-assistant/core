@@ -44,7 +44,7 @@ def setup(hass, config):
     """Listen for download events to download files."""
     download_path = config[DOMAIN][CONF_DOWNLOAD_DIR]
 
-    # If path is relative, we assume relative to HASS config dir
+    # If path is relative, we assume relative to Home Assistant config dir
     if not os.path.isabs(download_path):
         download_path = hass.config.path(download_path)
 
@@ -81,7 +81,7 @@ def setup(hass, config):
                         "downloading '%s' failed, status_code=%d", url, req.status_code
                     )
                     hass.bus.fire(
-                        "{}_{}".format(DOMAIN, DOWNLOAD_FAILED_EVENT),
+                        f"{DOMAIN}_{DOWNLOAD_FAILED_EVENT}",
                         {"url": url, "filename": filename},
                     )
 
@@ -126,7 +126,7 @@ def setup(hass, config):
                         while os.path.isfile(final_path):
                             tries += 1
 
-                            final_path = "{}_{}.{}".format(path, tries, ext)
+                            final_path = f"{path}_{tries}.{ext}"
 
                     _LOGGER.debug("%s -> %s", url, final_path)
 
@@ -136,14 +136,14 @@ def setup(hass, config):
 
                     _LOGGER.debug("Downloading of %s done", url)
                     hass.bus.fire(
-                        "{}_{}".format(DOMAIN, DOWNLOAD_COMPLETED_EVENT),
+                        f"{DOMAIN}_{DOWNLOAD_COMPLETED_EVENT}",
                         {"url": url, "filename": filename},
                     )
 
             except requests.exceptions.ConnectionError:
                 _LOGGER.exception("ConnectionError occurred for %s", url)
                 hass.bus.fire(
-                    "{}_{}".format(DOMAIN, DOWNLOAD_FAILED_EVENT),
+                    f"{DOMAIN}_{DOWNLOAD_FAILED_EVENT}",
                     {"url": url, "filename": filename},
                 )
 

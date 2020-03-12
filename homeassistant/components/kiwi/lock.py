@@ -1,21 +1,22 @@
 """Support for the KIWI.KI lock platform."""
 import logging
 
+from kiwiki import KiwiClient, KiwiException
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.lock import LockDevice, PLATFORM_SCHEMA
+from homeassistant.components.lock import PLATFORM_SCHEMA, LockDevice
 from homeassistant.const import (
+    ATTR_ID,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
     CONF_PASSWORD,
     CONF_USERNAME,
-    ATTR_ID,
-    ATTR_LONGITUDE,
-    ATTR_LATITUDE,
     STATE_LOCKED,
     STATE_UNLOCKED,
 )
-from homeassistant.helpers.event import async_call_later
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_call_later
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +33,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the KIWI lock platform."""
-    from kiwiki import KiwiClient, KiwiException
 
     try:
         kiwi = KiwiClient(config[CONF_USERNAME], config[CONF_PASSWORD])
@@ -98,7 +98,6 @@ class KiwiLock(LockDevice):
 
     def unlock(self, **kwargs):
         """Unlock the device."""
-        from kiwiki import KiwiException
 
         try:
             self._client.open_door(self.lock_id)

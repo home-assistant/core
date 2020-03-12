@@ -6,6 +6,7 @@ from homeassistant.helpers import config_validation as cv
 
 from . import const
 
+# mypy: allow-untyped-defs
 
 # Minimal requirements of a message
 MINIMAL_MESSAGE_SCHEMA = vol.Schema(

@@ -2,6 +2,9 @@
 from collections import OrderedDict
 import logging
 
+from pyps4_2ndscreen.errors import CredentialTimeout
+from pyps4_2ndscreen.helpers import Helper
+from pyps4_2ndscreen.media_art import COUNTRIES
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -27,6 +30,8 @@ UDP_PORT = 987
 TCP_PORT = 997
 PORT_MSG = {UDP_PORT: "port_987_bind_error", TCP_PORT: "port_997_bind_error"}
 
+PIN_LENGTH = 8
+
 
 @config_entries.HANDLERS.register(DOMAIN)
 class PlayStation4FlowHandler(config_entries.ConfigFlow):
@@ -37,8 +42,6 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
     def __init__(self):
         """Initialize the config flow."""
-        from pyps4_homeassistant import Helper
-
         self.helper = Helper()
         self.creds = None
         self.name = None
@@ -61,8 +64,6 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
     async def async_step_creds(self, user_input=None):
         """Return PS4 credentials from 2nd Screen App."""
-        from pyps4_homeassistant.errors import CredentialTimeout
-
         errors = {}
         if user_input is not None:
             try:
@@ -103,8 +104,6 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
 
     async def async_step_link(self, user_input=None):
         """Prompt user input. Create or edit entry."""
-        from pyps4_homeassistant.media_art import COUNTRIES
-
         regions = sorted(COUNTRIES.keys())
         default_region = None
         errors = {}
@@ -146,7 +145,8 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
         if user_input is not None:
             self.region = user_input[CONF_REGION]
             self.name = user_input[CONF_NAME]
-            self.pin = str(user_input[CONF_CODE])
+            # Assume pin had leading zeros, before coercing to int.
+            self.pin = str(user_input[CONF_CODE]).zfill(PIN_LENGTH)
             self.host = user_input[CONF_IP_ADDRESS]
 
             is_ready, is_login = await self.hass.async_add_executor_job(
@@ -187,7 +187,7 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow):
             list(regions)
         )
         link_schema[vol.Required(CONF_CODE)] = vol.All(
-            vol.Strip, vol.Length(min=8, max=8), vol.Coerce(int)
+            vol.Strip, vol.Length(max=PIN_LENGTH), vol.Coerce(int)
         )
         link_schema[vol.Required(CONF_NAME, default=DEFAULT_NAME)] = str
 

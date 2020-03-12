@@ -1,8 +1,14 @@
 [MASTER]
 ignore=tests
+# Use a conservative default here; 2 should speed up most setups and not hurt
+# any too bad. Override on command line as appropriate.
+jobs=2
+load-plugins=pylint_strict_informational
+persistent=no
+extension-pkg-whitelist=ciso8601
 
 [BASIC]
-good-names=i,j,k,ex,Run,_,fp
+good-names=id,i,j,k,ex,Run,_,fp
 
 [MESSAGES CONTROL]
 # Reasons disabled:
@@ -18,8 +24,10 @@ good-names=i,j,k,ex,Run,_,fp
 # too-few-* - same as too-many-*
 # abstract-method - with intro of async there are always methods missing
 # inconsistent-return-statements - doesn't handle raise
-# not-an-iterable - https://github.com/PyCQA/pylint/issues/2311
 # unnecessary-pass - readability for functions which only contain pass
+# import-outside-toplevel - TODO
+# too-many-ancestors - it's too strict.
+# wrong-import-order - isort guards this
 disable=
   format,
   abstract-class-little-used,
@@ -27,12 +35,13 @@ disable=
   cyclic-import,
   duplicate-code,
   global-statement,
+  import-outside-toplevel,
   inconsistent-return-statements,
   locally-disabled,
-  not-an-iterable,
   not-context-manager,
   redefined-variable-type,
   too-few-public-methods,
+  too-many-ancestors,
   too-many-arguments,
   too-many-branches,
   too-many-instance-attributes,
@@ -41,11 +50,15 @@ disable=
   too-many-public-methods,
   too-many-return-statements,
   too-many-statements,
+  too-many-boolean-expressions,
   unnecessary-pass,
-  unused-argument
+  unused-argument,
+  wrong-import-order
+enable=
+  use-symbolic-message-instead
 
 [REPORTS]
-reports=no
+score=no
 
 [TYPECHECK]
 # For attrs
@@ -55,4 +68,4 @@ ignored-classes=_CountingAttr
 expected-line-ending-format=LF
 
 [EXCEPTIONS]
-overgeneral-exceptions=Exception,HomeAssistantError
+overgeneral-exceptions=BaseException,Exception,HomeAssistantError

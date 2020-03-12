@@ -2,7 +2,6 @@
 import os
 import time
 
-
 # mypy: allow-untyped-calls, allow-untyped-defs
 
 
@@ -27,11 +26,11 @@ def install_osx():
     try:
         with open(path, "w", encoding="utf-8") as outp:
             outp.write(plist)
-    except IOError as err:
-        print("Unable to write to " + path, err)
+    except OSError as err:
+        print(f"Unable to write to {path}", err)
         return
 
-    os.popen("launchctl load -w -F " + path)
+    os.popen(f"launchctl load -w -F {path}")
 
     print(
         "Home Assistant has been installed. \
@@ -42,7 +41,7 @@ def install_osx():
 def uninstall_osx():
     """Unload from launchd on OS X."""
     path = os.path.expanduser("~/Library/LaunchAgents/org.homeassistant.plist")
-    os.popen("launchctl unload " + path)
+    os.popen(f"launchctl unload {path}")
 
     print("Home Assistant has been uninstalled.")
 

@@ -1,10 +1,15 @@
 """Support for reading vehicle status from BMW connected drive portal."""
 import logging
 
+from bimmer_connected.state import ChargingState
+
 from homeassistant.const import (
+    ATTR_ATTRIBUTION,
     CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
+    TIME_HOURS,
+    UNIT_PERCENTAGE,
     VOLUME_GALLONS,
     VOLUME_LITERS,
 )
@@ -12,29 +17,34 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import DOMAIN as BMW_DOMAIN
+from .const import ATTRIBUTION
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_TO_HA_METRIC = {
     "mileage": ["mdi:speedometer", LENGTH_KILOMETERS],
-    "remaining_range_total": ["mdi:ruler", LENGTH_KILOMETERS],
-    "remaining_range_electric": ["mdi:ruler", LENGTH_KILOMETERS],
-    "remaining_range_fuel": ["mdi:ruler", LENGTH_KILOMETERS],
-    "max_range_electric": ["mdi:ruler", LENGTH_KILOMETERS],
+    "remaining_range_total": ["mdi:map-marker-distance", LENGTH_KILOMETERS],
+    "remaining_range_electric": ["mdi:map-marker-distance", LENGTH_KILOMETERS],
+    "remaining_range_fuel": ["mdi:map-marker-distance", LENGTH_KILOMETERS],
+    "max_range_electric": ["mdi:map-marker-distance", LENGTH_KILOMETERS],
     "remaining_fuel": ["mdi:gas-station", VOLUME_LITERS],
-    "charging_time_remaining": ["mdi:update", "h"],
+    "charging_time_remaining": ["mdi:update", TIME_HOURS],
     "charging_status": ["mdi:battery-charging", None],
+    # No icon as this is dealt with directly as a special case in icon()
+    "charging_level_hv": [None, UNIT_PERCENTAGE],
 }
 
 ATTR_TO_HA_IMPERIAL = {
     "mileage": ["mdi:speedometer", LENGTH_MILES],
-    "remaining_range_total": ["mdi:ruler", LENGTH_MILES],
-    "remaining_range_electric": ["mdi:ruler", LENGTH_MILES],
-    "remaining_range_fuel": ["mdi:ruler", LENGTH_MILES],
-    "max_range_electric": ["mdi:ruler", LENGTH_MILES],
+    "remaining_range_total": ["mdi:map-marker-distance", LENGTH_MILES],
+    "remaining_range_electric": ["mdi:map-marker-distance", LENGTH_MILES],
+    "remaining_range_fuel": ["mdi:map-marker-distance", LENGTH_MILES],
+    "max_range_electric": ["mdi:map-marker-distance", LENGTH_MILES],
     "remaining_fuel": ["mdi:gas-station", VOLUME_GALLONS],
-    "charging_time_remaining": ["mdi:update", "h"],
+    "charging_time_remaining": ["mdi:update", TIME_HOURS],
     "charging_status": ["mdi:battery-charging", None],
+    # No icon as this is dealt with directly as a special case in icon()
+    "charging_level_hv": [None, UNIT_PERCENTAGE],
 }
 
 
@@ -51,14 +61,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for account in accounts:
         for vehicle in account.account.vehicles:
             for attribute_name in vehicle.drive_train_attributes:
-                device = BMWConnectedDriveSensor(
-                    account, vehicle, attribute_name, attribute_info
-                )
-                devices.append(device)
-            device = BMWConnectedDriveSensor(
-                account, vehicle, "mileage", attribute_info
-            )
-            devices.append(device)
+                if attribute_name in vehicle.available_attributes:
+                    device = BMWConnectedDriveSensor(
+                        account, vehicle, attribute_name, attribute_info
+                    )
+                    devices.append(device)
     add_entities(devices, True)
 
 
@@ -66,13 +73,13 @@ class BMWConnectedDriveSensor(Entity):
     """Representation of a BMW vehicle sensor."""
 
     def __init__(self, account, vehicle, attribute: str, attribute_info):
-        """Constructor."""
+        """Initialize BMW vehicle sensor."""
         self._vehicle = vehicle
         self._account = account
         self._attribute = attribute
         self._state = None
-        self._name = "{} {}".format(self._vehicle.name, self._attribute)
-        self._unique_id = "{}-{}".format(self._vehicle.vin, self._attribute)
+        self._name = f"{self._vehicle.name} {self._attribute}"
+        self._unique_id = f"{self._vehicle.vin}-{self._attribute}"
         self._attribute_info = attribute_info
 
     @property
@@ -96,8 +103,6 @@ class BMWConnectedDriveSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        from bimmer_connected.state import ChargingState
-
         vehicle_state = self._vehicle.state
         charging_state = vehicle_state.charging_status in [ChargingState.CHARGING]
 
@@ -126,7 +131,10 @@ class BMWConnectedDriveSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        return {"car": self._vehicle.name}
+        return {
+            "car": self._vehicle.name,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+        }
 
     def update(self) -> None:
         """Read new state data from the library."""

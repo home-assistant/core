@@ -8,6 +8,9 @@ from . import VERA_CONTROLLER, VERA_DEVICES, VeraDevice
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_LAST_USER_NAME = "changed_by_name"
+ATTR_LOW_BATTERY = "low_battery"
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Find and return Vera locks."""
@@ -43,6 +46,35 @@ class VeraLock(VeraDevice, LockDevice):
     def is_locked(self):
         """Return true if device is on."""
         return self._state == STATE_LOCKED
+
+    @property
+    def device_state_attributes(self):
+        """Who unlocked the lock and did a low battery alert fire.
+
+        Reports on the previous poll cycle.
+        changed_by_name is a string like 'Bob'.
+        low_battery is 1 if an alert fired, 0 otherwise.
+        """
+        data = super().device_state_attributes
+
+        last_user = self.vera_device.get_last_user_alert()
+        if last_user is not None:
+            data[ATTR_LAST_USER_NAME] = last_user[1]
+
+        data[ATTR_LOW_BATTERY] = self.vera_device.get_low_battery_alert()
+        return data
+
+    @property
+    def changed_by(self):
+        """Who unlocked the lock.
+
+        Reports on the previous poll cycle.
+        changed_by is an integer user ID.
+        """
+        last_user = self.vera_device.get_last_user_alert()
+        if last_user is not None:
+            return last_user[0]
+        return None
 
     def update(self):
         """Update state by the Vera device callback."""

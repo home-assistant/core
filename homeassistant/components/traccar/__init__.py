@@ -1,14 +1,15 @@
 """Support for Traccar."""
 import logging
 
-import voluptuous as vol
 from aiohttp import web
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import HTTP_UNPROCESSABLE_ENTITY, HTTP_OK, CONF_WEBHOOK_ID
-from homeassistant.helpers import config_entry_flow
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
+from homeassistant.const import CONF_WEBHOOK_ID, HTTP_OK, HTTP_UNPROCESSABLE_ENTITY
+from homeassistant.helpers import config_entry_flow
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+
 from .const import (
     ATTR_ACCURACY,
     ATTR_ALTITUDE,
@@ -24,7 +25,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-TRACKER_UPDATE = "{}_tracker_update".format(DOMAIN)
+TRACKER_UPDATE = f"{DOMAIN}_tracker_update"
 
 
 DEFAULT_ACCURACY = 200
@@ -83,7 +84,7 @@ async def handle_webhook(hass, webhook_id, request):
         attrs,
     )
 
-    return web.Response(text="Setting location for {}".format(device), status=HTTP_OK)
+    return web.Response(text=f"Setting location for {device}", status=HTTP_OK)
 
 
 async def async_setup_entry(hass, entry):

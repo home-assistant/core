@@ -1,9 +1,9 @@
 """Binary sensor platform for mobile_app."""
 from functools import partial
 
+from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
-from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
@@ -13,7 +13,6 @@ from .const import (
     DATA_DEVICES,
     DOMAIN,
 )
-
 from .entity import MobileAppEntity, sensor_id
 
 
@@ -53,7 +52,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_dispatcher_connect(
         hass,
-        "{}_{}_register".format(DOMAIN, ENTITY_TYPE),
+        f"{DOMAIN}_{ENTITY_TYPE}_register",
         partial(handle_sensor_registration, webhook_id),
     )
 

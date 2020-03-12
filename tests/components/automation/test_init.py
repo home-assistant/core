@@ -1,35 +1,36 @@
 """The tests for the automation component."""
 from datetime import timedelta
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.core import State, CoreState, Context
-from homeassistant.setup import async_setup_component
 import homeassistant.components.automation as automation
+from homeassistant.components.automation import DOMAIN
 from homeassistant.const import (
-    ATTR_NAME,
     ATTR_ENTITY_ID,
-    STATE_ON,
-    STATE_OFF,
-    EVENT_HOMEASSISTANT_START,
+    ATTR_NAME,
     EVENT_AUTOMATION_TRIGGERED,
+    EVENT_HOMEASSISTANT_START,
+    STATE_OFF,
+    STATE_ON,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import Context, CoreState, State
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
-    mock_restore_cache,
     async_mock_service,
+    mock_restore_cache,
 )
 from tests.components.automation import common
 
 
 @pytest.fixture
 def calls(hass):
-    """Track calls to a mock serivce."""
+    """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
@@ -79,10 +80,6 @@ async def test_service_specify_data(hass, calls):
     state = hass.states.get("automation.hello")
     assert state is not None
     assert state.attributes.get("last_triggered") == time
-
-    state = hass.states.get("group.all_automations")
-    assert state is not None
-    assert state.attributes.get("entity_id") == ("automation.hello",)
 
 
 async def test_action_delay(hass, calls):
@@ -134,9 +131,6 @@ async def test_action_delay(hass, calls):
     state = hass.states.get("automation.hello")
     assert state is not None
     assert state.attributes.get("last_triggered") == time
-    state = hass.states.get("group.all_automations")
-    assert state is not None
-    assert state.attributes.get("entity_id") == ("automation.hello",)
 
 
 async def test_service_specify_entity_id(hass, calls):
@@ -231,6 +225,22 @@ async def test_trigger_service_ignoring_condition(hass, calls):
         "automation", "trigger", {"entity_id": "automation.test"}, blocking=True
     )
     assert len(calls) == 1
+
+    await hass.services.async_call(
+        "automation",
+        "trigger",
+        {"entity_id": "automation.test", "skip_condition": True},
+        blocking=True,
+    )
+    assert len(calls) == 2
+
+    await hass.services.async_call(
+        "automation",
+        "trigger",
+        {"entity_id": "automation.test", "skip_condition": False},
+        blocking=True,
+    )
+    assert len(calls) == 2
 
 
 async def test_two_conditions_with_and(hass, calls):
@@ -445,7 +455,7 @@ async def test_services(hass, calls):
     assert automation.is_on(hass, entity_id)
 
 
-async def test_reload_config_service(hass, calls):
+async def test_reload_config_service(hass, calls, hass_admin_user, hass_read_only_user):
     """Test the reload config service."""
     assert await async_setup_component(
         hass,
@@ -487,11 +497,13 @@ async def test_reload_config_service(hass, calls):
             }
         },
     ):
-        with patch("homeassistant.config.find_config_file", return_value=""):
-            await common.async_reload(hass)
+        with pytest.raises(Unauthorized):
+            await common.async_reload(hass, Context(user_id=hass_read_only_user.id))
             await hass.async_block_till_done()
-            # De-flake ?!
-            await hass.async_block_till_done()
+        await common.async_reload(hass, Context(user_id=hass_admin_user.id))
+        await hass.async_block_till_done()
+        # De-flake ?!
+        await hass.async_block_till_done()
 
     assert hass.states.get("automation.hello") is None
     assert hass.states.get("automation.bye") is not None
@@ -539,9 +551,8 @@ async def test_reload_config_when_invalid_config(hass, calls):
         autospec=True,
         return_value={automation.DOMAIN: "not valid"},
     ):
-        with patch("homeassistant.config.find_config_file", return_value=""):
-            await common.async_reload(hass)
-            await hass.async_block_till_done()
+        await common.async_reload(hass)
+        await hass.async_block_till_done()
 
     assert hass.states.get("automation.hello") is None
 
@@ -578,9 +589,8 @@ async def test_reload_config_handles_load_fails(hass, calls):
         "homeassistant.config.load_yaml_config_file",
         side_effect=HomeAssistantError("bla"),
     ):
-        with patch("homeassistant.config.find_config_file", return_value=""):
-            await common.async_reload(hass)
-            await hass.async_block_till_done()
+        await common.async_reload(hass)
+        await hass.async_block_till_done()
 
     assert hass.states.get("automation.hello") is not None
 
@@ -842,6 +852,25 @@ async def test_automation_with_error_in_script(hass, caplog):
     assert "Service not found" in caplog.text
 
 
+async def test_automation_with_error_in_script_2(hass, caplog):
+    """Test automation with an error in script."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "action": {"service": None, "entity_id": "hello.world"},
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert "string value is None" in caplog.text
+
+
 async def test_automation_restore_last_triggered_with_initial_state(hass):
     """Ensure last_triggered is restored, even when initial state is set."""
     time = dt_util.utcnow()
@@ -894,3 +923,102 @@ async def test_automation_restore_last_triggered_with_initial_state(hass):
     assert state
     assert state.state == STATE_ON
     assert state.attributes["last_triggered"] == time
+
+
+async def test_extraction_functions(hass):
+    """Test extraction functions."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    "alias": "test1",
+                    "trigger": {"platform": "state", "entity_id": "sensor.trigger_1"},
+                    "condition": {
+                        "condition": "state",
+                        "entity_id": "light.condition_state",
+                        "state": "on",
+                    },
+                    "action": [
+                        {
+                            "service": "test.script",
+                            "data": {"entity_id": "light.in_both"},
+                        },
+                        {
+                            "service": "test.script",
+                            "data": {"entity_id": "light.in_first"},
+                        },
+                        {
+                            "domain": "light",
+                            "device_id": "device-in-both",
+                            "entity_id": "light.bla",
+                            "type": "turn_on",
+                        },
+                    ],
+                },
+                {
+                    "alias": "test2",
+                    "trigger": {
+                        "platform": "device",
+                        "domain": "light",
+                        "type": "turned_on",
+                        "entity_id": "light.trigger_2",
+                        "device_id": "trigger-device-2",
+                    },
+                    "condition": {
+                        "condition": "device",
+                        "device_id": "condition-device",
+                        "domain": "light",
+                        "type": "is_on",
+                        "entity_id": "light.bla",
+                    },
+                    "action": [
+                        {
+                            "service": "test.script",
+                            "data": {"entity_id": "light.in_both"},
+                        },
+                        {
+                            "condition": "state",
+                            "entity_id": "sensor.condition",
+                            "state": "100",
+                        },
+                        {"scene": "scene.hello"},
+                        {
+                            "domain": "light",
+                            "device_id": "device-in-both",
+                            "entity_id": "light.bla",
+                            "type": "turn_on",
+                        },
+                        {
+                            "domain": "light",
+                            "device_id": "device-in-last",
+                            "entity_id": "light.bla",
+                            "type": "turn_on",
+                        },
+                    ],
+                },
+            ]
+        },
+    )
+
+    assert set(automation.automations_with_entity(hass, "light.in_both")) == {
+        "automation.test1",
+        "automation.test2",
+    }
+    assert set(automation.entities_in_automation(hass, "automation.test1")) == {
+        "sensor.trigger_1",
+        "light.condition_state",
+        "light.in_both",
+        "light.in_first",
+    }
+    assert set(automation.automations_with_device(hass, "device-in-both")) == {
+        "automation.test1",
+        "automation.test2",
+    }
+    assert set(automation.devices_in_automation(hass, "automation.test2")) == {
+        "trigger-device-2",
+        "condition-device",
+        "device-in-both",
+        "device-in-last",
+    }

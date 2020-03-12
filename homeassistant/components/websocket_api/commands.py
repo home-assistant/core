@@ -2,14 +2,16 @@
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import POLICY_READ
-from homeassistant.const import MATCH_ALL, EVENT_TIME_CHANGED, EVENT_STATE_CHANGED
-from homeassistant.core import callback, DOMAIN as HASS_DOMAIN
-from homeassistant.exceptions import Unauthorized, ServiceNotFound, HomeAssistantError
+from homeassistant.const import EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL
+from homeassistant.core import DOMAIN as HASS_DOMAIN, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, Unauthorized
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.service import async_get_all_descriptions
 
 from . import const, decorators, messages
+
+# mypy: allow-untyped-calls, allow-untyped-defs
 
 
 @callback
@@ -42,6 +44,8 @@ def handle_subscribe_events(hass, connection, msg):
 
     Async friendly.
     """
+    # Circular dep
+    # pylint: disable=import-outside-toplevel
     from .permissions import SUBSCRIBE_WHITELIST
 
     event_type = msg["event_type"]
@@ -103,7 +107,6 @@ def handle_unsubscribe_events(hass, connection, msg):
         )
 
 
-@decorators.async_response
 @decorators.websocket_command(
     {
         vol.Required("type"): "call_service",
@@ -112,6 +115,7 @@ def handle_unsubscribe_events(hass, connection, msg):
         vol.Optional("service_data"): dict,
     }
 )
+@decorators.async_response
 async def handle_call_service(hass, connection, msg):
     """Handle call service command.
 
@@ -129,7 +133,9 @@ async def handle_call_service(hass, connection, msg):
             blocking,
             connection.context(msg),
         )
-        connection.send_message(messages.result_message(msg["id"]))
+        connection.send_message(
+            messages.result_message(msg["id"], {"context": connection.context(msg)})
+        )
     except ServiceNotFound as err:
         if err.domain == msg["domain"] and err.service == msg["service"]:
             connection.send_message(
@@ -175,8 +181,8 @@ def handle_get_states(hass, connection, msg):
     connection.send_message(messages.result_message(msg["id"], states))
 
 
-@decorators.async_response
 @decorators.websocket_command({vol.Required("type"): "get_services"})
+@decorators.async_response
 async def handle_get_services(hass, connection, msg):
     """Handle get services command.
 

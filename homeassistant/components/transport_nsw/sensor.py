@@ -2,12 +2,19 @@
 from datetime import timedelta
 import logging
 
+from TransportNSW import TransportNSW
 import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_MODE,
+    CONF_API_KEY,
+    CONF_NAME,
+    TIME_MINUTES,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_API_KEY, ATTR_ATTRIBUTION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +24,6 @@ ATTR_DUE_IN = "due"
 ATTR_DELAY = "delay"
 ATTR_REAL_TIME = "real_time"
 ATTR_DESTINATION = "destination"
-ATTR_MODE = "mode"
 
 ATTRIBUTION = "Data provided by Transport NSW"
 
@@ -101,7 +107,7 @@ class TransportNSWSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return "min"
+        return TIME_MINUTES
 
     @property
     def icon(self):
@@ -121,8 +127,6 @@ class PublicTransportData:
 
     def __init__(self, stop_id, route, destination, api_key):
         """Initialize the data object."""
-        import TransportNSW
-
         self._stop_id = stop_id
         self._route = route
         self._destination = destination
@@ -135,7 +139,7 @@ class PublicTransportData:
             ATTR_DESTINATION: "n/a",
             ATTR_MODE: None,
         }
-        self.tnsw = TransportNSW.TransportNSW()
+        self.tnsw = TransportNSW()
 
     def update(self):
         """Get the next leave time."""

@@ -16,9 +16,9 @@ from homeassistant.const import (
     CONF_COMMAND_STATE,
     CONF_NAME,
     CONF_PORT,
-    CONF_TIMEOUT,
     CONF_RESOURCE,
     CONF_SWITCHES,
+    CONF_TIMEOUT,
     CONF_VALUE_TEMPLATE,
 )
 import homeassistant.helpers.config_validation as cv
@@ -117,7 +117,7 @@ class TelnetSwitch(SwitchDevice):
             response = telnet.read_until(b"\r", timeout=self._timeout)
             _LOGGER.debug("telnet response: %s", response.decode("ASCII").strip())
             return response.decode("ASCII").strip()
-        except IOError as error:
+        except OSError as error:
             _LOGGER.error(
                 'Command "%s" failed with exception: %s', command, repr(error)
             )

@@ -1,19 +1,19 @@
 """Support for WeMo switches."""
 import asyncio
-import logging
 from datetime import datetime, timedelta
-import requests
+import logging
 
 import async_timeout
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.util import convert
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util import convert
 
-from . import SUBSCRIPTION_REGISTRY, DOMAIN as WEMO_DOMAIN
+from .const import DOMAIN as WEMO_DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=10)
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,25 +30,21 @@ WEMO_OFF = 0
 WEMO_STANDBY = 8
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up discovered WeMo switches."""
-    from pywemo import discovery
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up WeMo switches."""
 
-    if discovery_info is not None:
-        location = discovery_info["ssdp_description"]
-        mac = discovery_info["mac_address"]
+    async def _discovered_wemo(device):
+        """Handle a discovered Wemo device."""
+        async_add_entities([WemoSwitch(device)])
 
-        try:
-            device = discovery.device_from_description(location, mac)
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.Timeout,
-        ) as err:
-            _LOGGER.error("Unable to access %s (%s)", location, err)
-            raise PlatformNotReady
+    async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.switch", _discovered_wemo)
 
-        if device:
-            add_entities([WemoSwitch(device)])
+    await asyncio.gather(
+        *[
+            _discovered_wemo(device)
+            for device in hass.data[WEMO_DOMAIN]["pending"].pop("switch")
+        ]
+    )
 
 
 class WemoSwitch(SwitchDevice):
@@ -96,7 +92,12 @@ class WemoSwitch(SwitchDevice):
     @property
     def device_info(self):
         """Return the device info."""
-        return {"name": self._name, "identifiers": {(WEMO_DOMAIN, self._serialnumber)}}
+        return {
+            "name": self.wemo.name,
+            "identifiers": {(WEMO_DOMAIN, self.wemo.serialnumber)},
+            "model": self.wemo.model_name,
+            "manufacturer": "Belkin",
+        }
 
     @property
     def device_state_attributes(self):
@@ -195,11 +196,11 @@ class WemoSwitch(SwitchDevice):
         self.wemo.off()
 
     async def async_added_to_hass(self):
-        """Wemo switch added to HASS."""
+        """Wemo switch added to Home Assistant."""
         # Define inside async context so we know our event loop
         self._update_lock = asyncio.Lock()
 
-        registry = SUBSCRIPTION_REGISTRY
+        registry = self.hass.data[WEMO_DOMAIN]["registry"]
         await self.hass.async_add_job(registry.register, self.wemo)
         registry.on(self.wemo, None, self._subscription_callback)
 

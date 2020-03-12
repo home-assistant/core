@@ -1,33 +1,38 @@
 """Support for RESTful API sensors."""
-import logging
 import json
+import logging
+from xml.parsers.expat import ExpatError
 
-import voluptuous as vol
+from jsonpath import jsonpath
 import requests
+from requests import Session
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
+import voluptuous as vol
+import xmltodict
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA
+from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_AUTHENTICATION,
+    CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
     CONF_HEADERS,
-    CONF_NAME,
     CONF_METHOD,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_RESOURCE,
+    CONF_RESOURCE_TEMPLATE,
+    CONF_TIMEOUT,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
-    CONF_TIMEOUT,
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
-    CONF_DEVICE_CLASS,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,12 +42,15 @@ DEFAULT_VERIFY_SSL = True
 DEFAULT_FORCE_UPDATE = False
 DEFAULT_TIMEOUT = 10
 
+
 CONF_JSON_ATTRS = "json_attributes"
+CONF_JSON_ATTRS_PATH = "json_attributes_path"
 METHODS = ["POST", "GET"]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_RESOURCE): cv.url,
+        vol.Exclusive(CONF_RESOURCE, CONF_RESOURCE): cv.url,
+        vol.Exclusive(CONF_RESOURCE_TEMPLATE, CONF_RESOURCE): cv.template,
         vol.Optional(CONF_AUTHENTICATION): vol.In(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
@@ -55,6 +63,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_JSON_ATTRS_PATH): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
         vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
@@ -62,11 +71,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+PLATFORM_SCHEMA = vol.All(
+    cv.has_at_least_one_key(CONF_RESOURCE, CONF_RESOURCE_TEMPLATE), PLATFORM_SCHEMA
+)
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RESTful sensor."""
     name = config.get(CONF_NAME)
     resource = config.get(CONF_RESOURCE)
+    resource_template = config.get(CONF_RESOURCE_TEMPLATE)
     method = config.get(CONF_METHOD)
     payload = config.get(CONF_PAYLOAD)
     verify_ssl = config.get(CONF_VERIFY_SSL)
@@ -77,11 +91,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     device_class = config.get(CONF_DEVICE_CLASS)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     json_attrs = config.get(CONF_JSON_ATTRS)
+    json_attrs_path = config.get(CONF_JSON_ATTRS_PATH)
     force_update = config.get(CONF_FORCE_UPDATE)
     timeout = config.get(CONF_TIMEOUT)
 
     if value_template is not None:
         value_template.hass = hass
+
+    if resource_template is not None:
+        resource_template.hass = hass
+        resource = resource_template.render()
 
     if username and password:
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
@@ -108,6 +127,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 value_template,
                 json_attrs,
                 force_update,
+                resource_template,
+                json_attrs_path,
             )
         ],
         True,
@@ -127,6 +148,8 @@ class RestSensor(Entity):
         value_template,
         json_attrs,
         force_update,
+        resource_template,
+        json_attrs_path,
     ):
         """Initialize the REST sensor."""
         self._hass = hass
@@ -139,6 +162,8 @@ class RestSensor(Entity):
         self._json_attrs = json_attrs
         self._attributes = None
         self._force_update = force_update
+        self._resource_template = resource_template
+        self._json_attrs_path = json_attrs_path
 
     @property
     def name(self):
@@ -172,21 +197,51 @@ class RestSensor(Entity):
 
     def update(self):
         """Get the latest data from REST API and update the state."""
+        if self._resource_template is not None:
+            self.rest.set_url(self._resource_template.render())
+
         self.rest.update()
         value = self.rest.data
+        _LOGGER.debug("Data fetched from resource: %s", value)
+        if self.rest.headers is not None:
+            # If the http request failed, headers will be None
+            content_type = self.rest.headers.get("content-type")
+
+            if content_type and (
+                content_type.startswith("text/xml")
+                or content_type.startswith("application/xml")
+            ):
+                try:
+                    value = json.dumps(xmltodict.parse(value))
+                    _LOGGER.debug("JSON converted from XML: %s", value)
+                except ExpatError:
+                    _LOGGER.warning(
+                        "REST xml result could not be parsed and converted to JSON."
+                    )
+                    _LOGGER.debug("Erroneous XML: %s", value)
 
         if self._json_attrs:
             self._attributes = {}
             if value:
                 try:
                     json_dict = json.loads(value)
+                    if self._json_attrs_path is not None:
+                        json_dict = jsonpath(json_dict, self._json_attrs_path)
+                    # jsonpath will always store the result in json_dict[0]
+                    # so the next line happens to work exactly as needed to
+                    # find the result
+                    if isinstance(json_dict, list):
+                        json_dict = json_dict[0]
                     if isinstance(json_dict, dict):
                         attrs = {
                             k: json_dict[k] for k in self._json_attrs if k in json_dict
                         }
                         self._attributes = attrs
                     else:
-                        _LOGGER.warning("JSON result was not a dictionary")
+                        _LOGGER.warning(
+                            "JSON result was not a dictionary"
+                            " or list with 0th element a dictionary"
+                        )
                 except ValueError:
                     _LOGGER.warning("REST result could not be parsed as JSON")
                     _LOGGER.debug("Erroneous JSON: %s", value)
@@ -210,28 +265,41 @@ class RestData:
         self, method, resource, auth, headers, data, verify_ssl, timeout=DEFAULT_TIMEOUT
     ):
         """Initialize the data object."""
-        self._request = requests.Request(
-            method, resource, headers=headers, auth=auth, data=data
-        ).prepare()
+        self._method = method
+        self._resource = resource
+        self._auth = auth
+        self._headers = headers
+        self._request_data = data
         self._verify_ssl = verify_ssl
         self._timeout = timeout
+        self._http_session = Session()
         self.data = None
+        self.headers = None
+
+    def __del__(self):
+        """Destroy the http session on destroy."""
+        self._http_session.close()
+
+    def set_url(self, url):
+        """Set url."""
+        self._resource = url
 
     def update(self):
         """Get the latest data from REST service with provided method."""
-        _LOGGER.debug("Updating from %s", self._request.url)
+        _LOGGER.debug("Updating from %s", self._resource)
         try:
-            with requests.Session() as sess:
-                response = sess.send(
-                    self._request, timeout=self._timeout, verify=self._verify_ssl
-                )
-
-            self.data = response.text
-        except requests.exceptions.RequestException as ex:
-            _LOGGER.error(
-                "Error fetching data: %s from %s failed with %s",
-                self._request,
-                self._request.url,
-                ex,
+            response = self._http_session.request(
+                self._method,
+                self._resource,
+                headers=self._headers,
+                auth=self._auth,
+                data=self._request_data,
+                timeout=self._timeout,
+                verify=self._verify_ssl,
             )
+            self.data = response.text
+            self.headers = response.headers
+        except requests.exceptions.RequestException as ex:
+            _LOGGER.error("Error fetching data: %s failed with %s", self._resource, ex)
             self.data = None
+            self.headers = None

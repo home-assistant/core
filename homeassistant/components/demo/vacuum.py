@@ -76,9 +76,14 @@ DEMO_VACUUM_NONE = "4_Fourth_floor"
 DEMO_VACUUM_STATE = "5_Fifth_floor"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Demo config entry."""
+    await async_setup_platform(hass, {}, async_add_entities)
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Demo vacuums."""
-    add_entities(
+    async_add_entities(
         [
             DemoVacuum(DEMO_VACUUM_COMPLETE, SUPPORT_ALL_SERVICES),
             DemoVacuum(DEMO_VACUUM_MOST, SUPPORT_MOST_SERVICES),
@@ -244,7 +249,7 @@ class DemoVacuum(VacuumDevice):
         if self.supported_features & SUPPORT_SEND_COMMAND == 0:
             return
 
-        self._status = "Executing {}({})".format(command, params)
+        self._status = f"Executing {command}({params})"
         self._state = True
         self.schedule_update_ha_state()
 

@@ -2,6 +2,7 @@
 import logging
 
 import voluptuous as vol
+from zoneminder.monitor import MonitorState
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON
@@ -21,7 +22,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ZoneMinder switch platform."""
-    from zoneminder.monitor import MonitorState
 
     on_state = MonitorState(config.get(CONF_COMMAND_ON))
     off_state = MonitorState(config.get(CONF_COMMAND_OFF))
@@ -53,7 +53,7 @@ class ZMSwitchMonitors(SwitchDevice):
     @property
     def name(self):
         """Return the name of the switch."""
-        return "{} State".format(self._monitor.name)
+        return f"{self._monitor.name} State"
 
     def update(self):
         """Update the switch value."""

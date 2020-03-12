@@ -4,14 +4,17 @@ import base64
 import json
 import logging
 
+import aiobotocore
+
 from homeassistant.components.notify import (
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_PLATFORM, CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers.json import JSONEncoder
+
 from .const import (
     CONF_CONTEXT,
     CONF_CREDENTIAL_NAME,
@@ -26,7 +29,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def get_available_regions(hass, service):
     """Get available regions for a service."""
-    import aiobotocore
 
     session = aiobotocore.get_session()
     # get_available_regions is not a coroutine since it does not perform
@@ -40,8 +42,6 @@ async def async_get_service(hass, config, discovery_info=None):
     if discovery_info is None:
         _LOGGER.error("Please config aws notify platform in aws component")
         return None
-
-    import aiobotocore
 
     session = None
 

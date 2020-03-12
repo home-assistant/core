@@ -1,7 +1,7 @@
 {
   "domain": "rest_command",
-  "name": "Rest command",
-  "documentation": "https://www.home-assistant.io/components/rest_command",
+  "name": "RESTful Command",
+  "documentation": "https://www.home-assistant.io/integrations/rest_command",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

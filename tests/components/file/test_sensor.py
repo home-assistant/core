@@ -6,8 +6,8 @@ from unittest.mock import Mock, patch
 # https://bugs.python.org/issue23004
 from mock_open import MockOpen
 
-from homeassistant.setup import setup_component
 from homeassistant.const import STATE_UNKNOWN
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant, mock_registry
 

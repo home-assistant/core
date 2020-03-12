@@ -4,9 +4,14 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import TEMP_FAHRENHEIT, TEMP_CELSIUS, CONF_MONITORED_CONDITIONS
-from homeassistant.helpers.entity import Entity
+from homeassistant.const import (
+    CONF_MONITORED_CONDITIONS,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
+)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 from . import BLOOMSKY
 
@@ -25,7 +30,7 @@ SENSOR_TYPES = [
 # Sensor units - these do not currently align with the API documentation
 SENSOR_UNITS_IMPERIAL = {
     "Temperature": TEMP_FAHRENHEIT,
-    "Humidity": "%",
+    "Humidity": UNIT_PERCENTAGE,
     "Pressure": "inHg",
     "Luminance": "cd/m²",
     "Voltage": "mV",
@@ -34,7 +39,7 @@ SENSOR_UNITS_IMPERIAL = {
 # Metric units
 SENSOR_UNITS_METRIC = {
     "Temperature": TEMP_CELSIUS,
-    "Humidity": "%",
+    "Humidity": UNIT_PERCENTAGE,
     "Pressure": "mbar",
     "Luminance": "cd/m²",
     "Voltage": "mV",
@@ -70,9 +75,9 @@ class BloomSkySensor(Entity):
         self._bloomsky = bs
         self._device_id = device["DeviceID"]
         self._sensor_name = sensor_name
-        self._name = "{} {}".format(device["DeviceName"], sensor_name)
+        self._name = f"{device['DeviceName']} {sensor_name}"
         self._state = None
-        self._unique_id = "{}-{}".format(self._device_id, self._sensor_name)
+        self._unique_id = f"{self._device_id}-{self._sensor_name}"
 
     @property
     def unique_id(self):
@@ -103,6 +108,6 @@ class BloomSkySensor(Entity):
         state = self._bloomsky.devices[self._device_id]["Data"][self._sensor_name]
 
         if self._sensor_name in FORMAT_NUMBERS:
-            self._state = "{0:.2f}".format(state)
+            self._state = f"{state:.2f}"
         else:
             self._state = state

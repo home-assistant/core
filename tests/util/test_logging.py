@@ -72,12 +72,8 @@ async def test_async_create_catching_coro(hass, caplog):
 
     async def job():
         raise Exception("This is a bad coroutine")
-        pass
 
     hass.async_create_task(logging_util.async_create_catching_coro(job()))
     await hass.async_block_till_done()
     assert "This is a bad coroutine" in caplog.text
-    assert (
-        "hass.async_create_task("
-        "logging_util.async_create_catching_coro(job()))" in caplog.text
-    )
+    assert "in test_async_create_catching_coro" in caplog.text

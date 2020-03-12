@@ -1,9 +1,8 @@
 """Services for the HEOS integration."""
-import asyncio
 import functools
 import logging
 
-from pyheos import CommandError, Heos, const
+from pyheos import CommandFailedError, Heos, HeosError, const
 import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
@@ -57,9 +56,9 @@ async def _sign_in_handler(controller, service):
     password = service.data[ATTR_PASSWORD]
     try:
         await controller.sign_in(username, password)
-    except CommandError as err:
+    except CommandFailedError as err:
         _LOGGER.error("Sign in failed: %s", err)
-    except (asyncio.TimeoutError, ConnectionError) as err:
+    except HeosError as err:
         _LOGGER.error("Unable to sign in: %s", err)
 
 
@@ -70,5 +69,5 @@ async def _sign_out_handler(controller, service):
         return
     try:
         await controller.sign_out()
-    except (asyncio.TimeoutError, ConnectionError, CommandError) as err:
+    except HeosError as err:
         _LOGGER.error("Unable to sign out: %s", err)

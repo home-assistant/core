@@ -3,11 +3,12 @@ import logging
 from typing import Any, Dict, Iterable, Optional
 
 from homeassistant.loader import (
+    async_get_config_flows,
     async_get_integration,
     bind_hass,
-    async_get_config_flows,
 )
 from homeassistant.util.json import load_json
+
 from .typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,9 +21,9 @@ def recursive_flatten(prefix: Any, data: Dict) -> Dict[str, Any]:
     output = {}
     for key, value in data.items():
         if isinstance(value, dict):
-            output.update(recursive_flatten("{}{}.".format(prefix, key), value))
+            output.update(recursive_flatten(f"{prefix}{key}.", value))
         else:
-            output["{}{}".format(prefix, key)] = value
+            output[f"{prefix}{key}"] = value
     return output
 
 
@@ -52,7 +53,7 @@ async def component_translation_file(
     assert integration is not None, domain
 
     if is_platform:
-        filename = "{}.{}.json".format(parts[0], language)
+        filename = f"{parts[0]}.{language}.json"
         return str(integration.file_path / ".translations" / filename)
 
     # If it's a component that is just one file, we don't support translations
@@ -60,7 +61,7 @@ async def component_translation_file(
     if integration.file_path.name != domain:
         return None
 
-    filename = "{}.json".format(language)
+    filename = f"{language}.json"
     return str(integration.file_path / ".translations" / filename)
 
 
@@ -82,7 +83,7 @@ def build_resources(
 ) -> Dict[str, Dict[str, Any]]:
     """Build the resources response for the given components."""
     # Build response
-    resources = {}  # type: Dict[str, Dict[str, Any]]
+    resources: Dict[str, Dict[str, Any]] = {}
     for component in components:
         if "." not in component:
             domain = component

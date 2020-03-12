@@ -1,19 +1,8 @@
 """This platform allows several cover to be grouped into one cover."""
 import logging
+from typing import Dict, Optional, Set
 
 import voluptuous as vol
-
-from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
-    ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
-    CONF_ENTITIES,
-    CONF_NAME,
-    STATE_CLOSED,
-)
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_state_change
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -40,6 +29,20 @@ from homeassistant.components.cover import (
     SUPPORT_STOP_TILT,
     CoverDevice,
 )
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    CONF_ENTITIES,
+    CONF_NAME,
+    STATE_CLOSED,
+)
+from homeassistant.core import State, callback
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_state_change
+
+# mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
+# mypy: no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,19 +73,31 @@ class CoverGroup(CoverDevice):
         """Initialize a CoverGroup entity."""
         self._name = name
         self._is_closed = False
-        self._cover_position = 100
+        self._cover_position: Optional[int] = 100
         self._tilt_position = None
         self._supported_features = 0
         self._assumed_state = True
 
         self._entities = entities
-        self._covers = {KEY_OPEN_CLOSE: set(), KEY_STOP: set(), KEY_POSITION: set()}
-        self._tilts = {KEY_OPEN_CLOSE: set(), KEY_STOP: set(), KEY_POSITION: set()}
+        self._covers: Dict[str, Set[str]] = {
+            KEY_OPEN_CLOSE: set(),
+            KEY_STOP: set(),
+            KEY_POSITION: set(),
+        }
+        self._tilts: Dict[str, Set[str]] = {
+            KEY_OPEN_CLOSE: set(),
+            KEY_STOP: set(),
+            KEY_POSITION: set(),
+        }
 
     @callback
     def update_supported_features(
-        self, entity_id, old_state, new_state, update_state=True
-    ):
+        self,
+        entity_id: str,
+        old_state: Optional[State],
+        new_state: Optional[State],
+        update_state: bool = True,
+    ) -> None:
         """Update dictionaries with supported features."""
         if not new_state:
             for values in self._covers.values():
@@ -162,7 +177,7 @@ class CoverGroup(CoverDevice):
         return self._is_closed
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> Optional[int]:
         """Return current position for all covers."""
         return self._cover_position
 

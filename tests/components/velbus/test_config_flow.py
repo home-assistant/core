@@ -1,11 +1,11 @@
 """Tests for the Velbus config flow."""
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.velbus import config_flow
-from homeassistant.const import CONF_PORT, CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_PORT
 
 from tests.common import MockConfigEntry
 
@@ -22,7 +22,7 @@ def mock_controller_assert():
 
 @pytest.fixture(name="controller")
 def mock_controller():
-    """Mock a successfull velbus controller."""
+    """Mock a successful velbus controller."""
     controller = Mock()
     with patch("velbus.Controller", return_value=controller):
         yield controller

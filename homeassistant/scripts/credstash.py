@@ -4,7 +4,6 @@ import getpass
 
 from homeassistant.util.yaml import _SECRET_NAMESPACE
 
-
 # mypy: allow-untyped-defs
 
 REQUIREMENTS = ["credstash==1.15.0"]
@@ -58,20 +57,18 @@ def run(args):
         if args.value:
             the_secret = args.value
         else:
-            the_secret = getpass.getpass(
-                "Please enter the secret for {}: ".format(args.name)
-            )
+            the_secret = getpass.getpass(f"Please enter the secret for {args.name}: ")
         current_version = credstash.getHighestVersion(args.name, table=table)
         credstash.putSecret(
             args.name, the_secret, version=int(current_version) + 1, table=table
         )
-        print("Secret {} put successfully".format(args.name))
+        print(f"Secret {args.name} put successfully")
     elif args.action == "get":
         the_secret = credstash.getSecret(args.name, table=table)
         if the_secret is None:
-            print("Secret {} not found".format(args.name))
+            print(f"Secret {args.name} not found")
         else:
-            print("Secret {}={}".format(args.name, the_secret))
+            print(f"Secret {args.name}={the_secret}")
     elif args.action == "del":
         credstash.deleteSecrets(args.name, table=table)
-        print("Deleted secret {}".format(args.name))
+        print(f"Deleted secret {args.name}")

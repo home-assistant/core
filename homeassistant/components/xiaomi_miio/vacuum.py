@@ -3,12 +3,18 @@ import asyncio
 from functools import partial
 import logging
 
+from miio import DeviceException, Vacuum  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     ATTR_CLEANED_AREA,
-    DOMAIN,
     PLATFORM_SCHEMA,
+    STATE_CLEANING,
+    STATE_DOCKED,
+    STATE_ERROR,
+    STATE_IDLE,
+    STATE_PAUSED,
+    STATE_RETURNING,
     SUPPORT_BATTERY,
     SUPPORT_CLEAN_SPOT,
     SUPPORT_FAN_SPEED,
@@ -16,16 +22,10 @@ from homeassistant.components.vacuum import (
     SUPPORT_PAUSE,
     SUPPORT_RETURN_HOME,
     SUPPORT_SEND_COMMAND,
-    SUPPORT_STOP,
-    SUPPORT_STATE,
     SUPPORT_START,
+    SUPPORT_STATE,
+    SUPPORT_STOP,
     StateVacuumDevice,
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_PAUSED,
-    STATE_IDLE,
-    STATE_RETURNING,
-    STATE_ERROR,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -36,6 +36,15 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.helpers.config_validation as cv
+
+from .const import (
+    DOMAIN,
+    SERVICE_CLEAN_ZONE,
+    SERVICE_MOVE_REMOTE_CONTROL,
+    SERVICE_MOVE_REMOTE_CONTROL_STEP,
+    SERVICE_START_REMOTE_CONTROL,
+    SERVICE_STOP_REMOTE_CONTROL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,13 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     extra=vol.ALLOW_EXTRA,
 )
 
-SERVICE_MOVE_REMOTE_CONTROL = "xiaomi_remote_control_move"
-SERVICE_MOVE_REMOTE_CONTROL_STEP = "xiaomi_remote_control_move_step"
-SERVICE_START_REMOTE_CONTROL = "xiaomi_remote_control_start"
-SERVICE_STOP_REMOTE_CONTROL = "xiaomi_remote_control_stop"
-SERVICE_CLEAN_ZONE = "xiaomi_clean_zone"
-
-FAN_SPEEDS = {"Quiet": 38, "Balanced": 60, "Turbo": 77, "Max": 90}
+FAN_SPEEDS = {"Silent": 38, "Standard": 60, "Medium": 77, "Turbo": 90, "Gentle": 105}
 
 ATTR_CLEAN_START = "clean_start"
 ATTR_CLEAN_STOP = "clean_stop"
@@ -177,14 +180,12 @@ STATE_CODE_TO_STATE = {
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Xiaomi vacuum cleaner robot platform."""
-    from miio import Vacuum
-
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
 
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
-    token = config.get(CONF_TOKEN)
+    host = config[CONF_HOST]
+    token = config[CONF_TOKEN]
+    name = config[CONF_NAME]
 
     # Create handler
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
@@ -348,8 +349,6 @@ class MiroboVacuum(StateVacuumDevice):
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a vacuum command handling error messages."""
-        from miio import DeviceException
-
         try:
             await self.hass.async_add_executor_job(partial(func, *args, **kwargs))
             return True
@@ -380,7 +379,7 @@ class MiroboVacuum(StateVacuumDevice):
                 fan_speed = int(fan_speed)
             except ValueError as exc:
                 _LOGGER.error(
-                    "Fan speed step not recognized (%s). " "Valid speeds are: %s",
+                    "Fan speed step not recognized (%s). Valid speeds are: %s",
                     exc,
                     self.fan_speed_list,
                 )
@@ -450,8 +449,6 @@ class MiroboVacuum(StateVacuumDevice):
 
     def update(self):
         """Fetch state from the device."""
-        from miio import DeviceException
-
         try:
             state = self._vacuum.status()
             self.vacuum_state = state
@@ -469,8 +466,6 @@ class MiroboVacuum(StateVacuumDevice):
 
     async def async_clean_zone(self, zone, repeats=1):
         """Clean selected area for the number of repeats indicated."""
-        from miio import DeviceException
-
         for _zone in zone:
             _zone.append(repeats)
         _LOGGER.debug("Zone with repeats: %s", zone)

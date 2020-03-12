@@ -47,9 +47,9 @@ class DaikinClimateSensor(Entity):
         self._api = api
         self._sensor = SENSOR_TYPES.get(monitored_state)
         if name is None:
-            name = "{} {}".format(self._sensor[CONF_NAME], api.name)
+            name = f"{self._sensor[CONF_NAME]} {api.name}"
 
-        self._name = "{} {}".format(name, monitored_state.replace("_", " "))
+        self._name = f"{name} {monitored_state.replace('_', ' ')}"
         self._device_attribute = monitored_state
 
         if self._sensor[CONF_TYPE] == SENSOR_TYPE_TEMPERATURE:
@@ -58,7 +58,7 @@ class DaikinClimateSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return "{}-{}".format(self._api.mac, self._device_attribute)
+        return f"{self._api.mac}-{self._device_attribute}"
 
     @property
     def icon(self):

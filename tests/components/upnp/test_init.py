@@ -1,23 +1,21 @@
 """Test UPnP/IGD setup process."""
 
 from ipaddress import ip_address
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import upnp
 from homeassistant.components.upnp.device import Device
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
-from tests.common import MockDependency
-from tests.common import mock_coro
+from tests.common import MockConfigEntry, MockDependency, mock_coro
 
 
 class MockDevice(Device):
     """Mock device for Device."""
 
     def __init__(self, udn):
-        """Initializer."""
+        """Initialize mock device."""
         device = MagicMock()
         device.manufacturer = "mock-manuf"
         device.name = "mock-name"
@@ -59,17 +57,20 @@ async def test_async_setup_entry_default(hass):
     }
     with MockDependency("netdisco.discovery"), patch(
         "homeassistant.components.upnp.get_local_ip", return_value="192.168.1.10"
-    ):
+    ), patch.object(Device, "async_create_device") as create_device, patch.object(
+        Device, "async_create_device"
+    ) as create_device, patch.object(
+        Device, "async_discover", return_value=mock_coro([])
+    ) as async_discover:
         await async_setup_component(hass, "http", config)
         await async_setup_component(hass, "upnp", config)
         await hass.async_block_till_done()
 
-    # mock homeassistant.components.upnp.device.Device
-    mock_device = MockDevice(udn)
-    discovery_infos = [{"udn": udn, "ssdp_description": "http://192.168.1.1/desc.xml"}]
-    with patch.object(Device, "async_create_device") as create_device, patch.object(
-        Device, "async_discover"
-    ) as async_discover:  # noqa:E125
+        # mock homeassistant.components.upnp.device.Device
+        mock_device = MockDevice(udn)
+        discovery_infos = [
+            {"udn": udn, "ssdp_description": "http://192.168.1.1/desc.xml"}
+        ]
 
         create_device.return_value = mock_coro(return_value=mock_device)
         async_discover.return_value = mock_coro(return_value=discovery_infos)
@@ -100,16 +101,17 @@ async def test_async_setup_entry_port_mapping(hass):
     }
     with MockDependency("netdisco.discovery"), patch(
         "homeassistant.components.upnp.get_local_ip", return_value="192.168.1.10"
-    ):
+    ), patch.object(Device, "async_create_device") as create_device, patch.object(
+        Device, "async_discover", return_value=mock_coro([])
+    ) as async_discover:
         await async_setup_component(hass, "http", config)
         await async_setup_component(hass, "upnp", config)
         await hass.async_block_till_done()
 
-    mock_device = MockDevice(udn)
-    discovery_infos = [{"udn": udn, "ssdp_description": "http://192.168.1.1/desc.xml"}]
-    with patch.object(Device, "async_create_device") as create_device, patch.object(
-        Device, "async_discover"
-    ) as async_discover:  # noqa:E125
+        mock_device = MockDevice(udn)
+        discovery_infos = [
+            {"udn": udn, "ssdp_description": "http://192.168.1.1/desc.xml"}
+        ]
 
         create_device.return_value = mock_coro(return_value=mock_device)
         async_discover.return_value = mock_coro(return_value=discovery_infos)

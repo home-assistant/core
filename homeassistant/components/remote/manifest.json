@@ -1,10 +1,8 @@
 {
   "domain": "remote",
   "name": "Remote",
-  "documentation": "https://www.home-assistant.io/components/remote",
+  "documentation": "https://www.home-assistant.io/integrations/remote",
   "requirements": [],
-  "dependencies": [
-    "group"
-  ],
+  "dependencies": ["group"],
   "codeowners": []
 }

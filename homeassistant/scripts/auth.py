@@ -6,9 +6,8 @@ import os
 
 from homeassistant.auth import auth_manager_from_config
 from homeassistant.auth.providers import homeassistant as hass_auth
-from homeassistant.core import HomeAssistant
 from homeassistant.config import get_default_config_dir
-
+from homeassistant.core import HomeAssistant
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 

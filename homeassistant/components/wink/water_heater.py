@@ -1,6 +1,8 @@
 """Support for Wink water heaters."""
 import logging
 
+import pywink
+
 from homeassistant.components.water_heater import (
     ATTR_TEMPERATURE,
     STATE_ECO,
@@ -42,7 +44,6 @@ WINK_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_WINK.items()}
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink water heater devices."""
-    import pywink
 
     for water_heater in pywink.get_water_heaters():
         _id = water_heater.object_id() + water_heater.name()

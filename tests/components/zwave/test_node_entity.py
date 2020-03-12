@@ -1,10 +1,13 @@
 """Test Z-Wave node entity."""
 import unittest
-from unittest.mock import patch, MagicMock
-import tests.mock.zwave as mock_zwave
+from unittest.mock import MagicMock, patch
+
 import pytest
-from homeassistant.components.zwave import node_entity, const
+
+from homeassistant.components.zwave import const, node_entity
 from homeassistant.const import ATTR_ENTITY_ID
+
+import tests.mock.zwave as mock_zwave
 
 
 async def test_maybe_schedule_update(hass, mock_openzwave):
@@ -162,6 +165,73 @@ async def test_central_scene_activated(hass, mock_openzwave):
     assert events[0].data[const.ATTR_NODE_ID] == 11
     assert events[0].data[const.ATTR_SCENE_ID] == scene_id
     assert events[0].data[const.ATTR_SCENE_DATA] == scene_data
+
+
+async def test_application_version(hass, mock_openzwave):
+    """Test application version."""
+    mock_receivers = {}
+
+    signal_mocks = [
+        mock_zwave.MockNetwork.SIGNAL_VALUE_CHANGED,
+        mock_zwave.MockNetwork.SIGNAL_VALUE_ADDED,
+    ]
+
+    def mock_connect(receiver, signal, *args, **kwargs):
+        if signal in signal_mocks:
+            mock_receivers[signal] = receiver
+
+    node = mock_zwave.MockNode(node_id=11)
+
+    with patch("pydispatch.dispatcher.connect", new=mock_connect):
+        entity = node_entity.ZWaveNodeEntity(node, mock_openzwave)
+
+    for signal_mock in signal_mocks:
+        assert signal_mock in mock_receivers.keys()
+
+    events = []
+
+    def listener(event):
+        events.append(event)
+
+    # Make sure application version isn't set before
+    assert (
+        node_entity.ATTR_APPLICATION_VERSION
+        not in entity.device_state_attributes.keys()
+    )
+
+    # Add entity to hass
+    entity.hass = hass
+    entity.entity_id = "zwave.mock_node"
+
+    # Fire off an added value
+    value = mock_zwave.MockValue(
+        command_class=const.COMMAND_CLASS_VERSION,
+        label="Application Version",
+        data="5.10",
+    )
+    hass.async_add_job(
+        mock_receivers[mock_zwave.MockNetwork.SIGNAL_VALUE_ADDED], node, value
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        entity.device_state_attributes[node_entity.ATTR_APPLICATION_VERSION] == "5.10"
+    )
+
+    # Fire off a changed
+    value = mock_zwave.MockValue(
+        command_class=const.COMMAND_CLASS_VERSION,
+        label="Application Version",
+        data="4.14",
+    )
+    hass.async_add_job(
+        mock_receivers[mock_zwave.MockNetwork.SIGNAL_VALUE_CHANGED], node, value
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        entity.device_state_attributes[node_entity.ATTR_APPLICATION_VERSION] == "4.14"
+    )
 
 
 @pytest.mark.usefixtures("mock_openzwave")

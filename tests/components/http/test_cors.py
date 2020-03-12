@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 from aiohttp import web
 from aiohttp.hdrs import (
-    ACCESS_CONTROL_ALLOW_ORIGIN,
     ACCESS_CONTROL_ALLOW_HEADERS,
+    ACCESS_CONTROL_ALLOW_ORIGIN,
     ACCESS_CONTROL_REQUEST_HEADERS,
     ACCESS_CONTROL_REQUEST_METHOD,
     AUTHORIZATION,
@@ -13,11 +13,11 @@ from aiohttp.hdrs import (
 )
 import pytest
 
-from homeassistant.const import HTTP_HEADER_HA_AUTH
-from homeassistant.setup import async_setup_component
 from homeassistant.components.http.cors import setup_cors
 from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.setup import async_setup_component
 
+from . import HTTP_HEADER_HA_AUTH
 
 TRUSTED_ORIGIN = "https://home-assistant.io"
 
@@ -91,13 +91,13 @@ async def test_cors_preflight_allowed(client):
         headers={
             ORIGIN: TRUSTED_ORIGIN,
             ACCESS_CONTROL_REQUEST_METHOD: "GET",
-            ACCESS_CONTROL_REQUEST_HEADERS: "x-ha-access",
+            ACCESS_CONTROL_REQUEST_HEADERS: "x-requested-with",
         },
     )
 
     assert req.status == 200
     assert req.headers[ACCESS_CONTROL_ALLOW_ORIGIN] == TRUSTED_ORIGIN
-    assert req.headers[ACCESS_CONTROL_ALLOW_HEADERS] == HTTP_HEADER_HA_AUTH.upper()
+    assert req.headers[ACCESS_CONTROL_ALLOW_HEADERS] == "X-REQUESTED-WITH"
 
 
 async def test_cors_middleware_with_cors_allowed_view(hass):

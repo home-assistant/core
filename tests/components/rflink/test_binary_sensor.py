@@ -8,14 +8,13 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant.components.rflink import CONF_RECONNECT_INTERVAL
-
-import homeassistant.core as ha
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
-    STATE_ON,
     STATE_OFF,
+    STATE_ON,
     STATE_UNAVAILABLE,
 )
+import homeassistant.core as ha
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
@@ -127,9 +126,10 @@ async def test_off_delay(hass, monkeypatch):
     now = dt_util.utcnow()
     # fake time and turn on sensor
     future = now + timedelta(seconds=0)
-    with patch(("homeassistant.helpers.event." "dt_util.utcnow"), return_value=future):
+    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=future):
         async_fire_time_changed(hass, future)
         event_callback(on_event)
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.test2")
     assert state.state == STATE_ON
@@ -137,9 +137,10 @@ async def test_off_delay(hass, monkeypatch):
 
     # fake time and turn on sensor again
     future = now + timedelta(seconds=15)
-    with patch(("homeassistant.helpers.event." "dt_util.utcnow"), return_value=future):
+    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=future):
         async_fire_time_changed(hass, future)
         event_callback(on_event)
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.test2")
     assert state.state == STATE_ON
@@ -147,8 +148,9 @@ async def test_off_delay(hass, monkeypatch):
 
     # fake time and verify sensor still on (de-bounce)
     future = now + timedelta(seconds=35)
-    with patch(("homeassistant.helpers.event." "dt_util.utcnow"), return_value=future):
+    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=future):
         async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.test2")
     assert state.state == STATE_ON
@@ -156,8 +158,9 @@ async def test_off_delay(hass, monkeypatch):
 
     # fake time and verify sensor is off
     future = now + timedelta(seconds=45)
-    with patch(("homeassistant.helpers.event." "dt_util.utcnow"), return_value=future):
+    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=future):
         async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.test2")
     assert state.state == STATE_OFF

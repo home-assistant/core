@@ -3,6 +3,8 @@ import asyncio
 from collections import OrderedDict
 
 import async_timeout
+from logi_circle import LogiCircle
+from logi_circle.exception import AuthorizationFailed
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -120,7 +122,6 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
 
     def _get_authorization_url(self):
         """Create temporary Circle session and generate authorization url."""
-        from logi_circle import LogiCircle
 
         flow = self.hass.data[DATA_FLOW_IMPL][self.flow_impl]
         client_id = flow[CONF_CLIENT_ID]
@@ -148,8 +149,6 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
 
     async def _async_create_session(self, code):
         """Create Logi Circle session and entries."""
-        from logi_circle import LogiCircle
-        from logi_circle.exception import AuthorizationFailed
 
         flow = self.hass.data[DATA_FLOW_IMPL][DOMAIN]
         client_id = flow[CONF_CLIENT_ID]
@@ -179,7 +178,7 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow):
         account_id = (await logi_session.account)["accountId"]
         await logi_session.close()
         return self.async_create_entry(
-            title="Logi Circle ({})".format(account_id),
+            title=f"Logi Circle ({account_id})",
             data={
                 CONF_CLIENT_ID: client_id,
                 CONF_CLIENT_SECRET: client_secret,
@@ -208,5 +207,5 @@ class LogiCircleAuthCallbackView(HomeAssistantView):
             )
             return self.json_message("Authorisation code saved")
         return self.json_message(
-            "Authorisation code missing " "from query string", status_code=400
+            "Authorisation code missing from query string", status_code=400
         )

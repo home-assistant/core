@@ -3,23 +3,24 @@ import asyncio
 from datetime import timedelta
 import logging
 
+import pysma
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
+    CONF_PATH,
     CONF_SCAN_INTERVAL,
     CONF_SSL,
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
-    CONF_PATH,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.const import MINOR_VERSION, MAJOR_VERSION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,43 +32,17 @@ CONF_SENSORS = "sensors"
 CONF_UNIT = "unit"
 
 GROUPS = ["user", "installer"]
-OLD_CONFIG_DEPRECATED = MAJOR_VERSION > 0 or MINOR_VERSION > 98
 
 
 def _check_sensor_schema(conf):
     """Check sensors and attributes are valid."""
     try:
-        import pysma
-
         valid = [s.name for s in pysma.Sensors()]
     except (ImportError, AttributeError):
         return conf
 
     customs = list(conf[CONF_CUSTOM].keys())
 
-    if isinstance(conf[CONF_SENSORS], dict):
-        msg = '"sensors" should be a simple list from 0.99'
-        if OLD_CONFIG_DEPRECATED:
-            raise vol.Invalid(msg)
-        _LOGGER.warning(msg)
-        valid.extend(customs)
-
-        for sname, attrs in conf[CONF_SENSORS].items():
-            if sname not in valid:
-                raise vol.Invalid("{} does not exist".format(sname))
-            if attrs:
-                _LOGGER.warning(
-                    "Attributes on sensors will be deprecated in 0.99. Start using only individual sensors: %s: %s",
-                    sname,
-                    ", ".join(attrs),
-                )
-            for attr in attrs:
-                if attr in valid:
-                    continue
-                raise vol.Invalid("{} does not exist [{}]".format(attr, sname))
-        return conf
-
-    # Sensors is a list (only option from from 0.99)
     for sensor in conf[CONF_SENSORS]:
         if sensor in customs:
             _LOGGER.warning(
@@ -75,7 +50,7 @@ def _check_sensor_schema(conf):
                 sensor,
             )
         elif sensor not in valid:
-            raise vol.Invalid("{} does not exist".format(sensor))
+            raise vol.Invalid(f"{sensor} does not exist")
     return conf
 
 
@@ -112,7 +87,6 @@ PLATFORM_SCHEMA = vol.All(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up SMA WebConnect sensor."""
-    import pysma
 
     # Check config again during load - dependency available
     config = _check_sensor_schema(config)
@@ -137,13 +111,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         if not config_sensors:  # Use all sensors by default
             config_sensors = {s.name: [] for s in sensor_def}
 
-        # Prepare all HASS sensor entities
+        # Prepare all Home Assistant sensor entities
         for name, attr in config_sensors.items():
             sub_sensors = [sensor_def[s] for s in attr]
             hass_sensors.append(SMAsensor(sensor_def[name], sub_sensors))
             used_sensors.append(name)
             used_sensors.extend(attr)
-        used_sensors = [sensor_def[s] for s in set(used_sensors)]
 
     if isinstance(config_sensors, list):
         if not config_sensors:  # Use all sensors by default
@@ -152,6 +125,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         for sensor in used_sensors:
             hass_sensors.append(SMAsensor(sensor_def[sensor], []))
 
+    used_sensors = [sensor_def[s] for s in set(used_sensors)]
     async_add_entities(hass_sensors)
 
     # Init the SMA interface
@@ -237,12 +211,13 @@ class SMAsensor(Entity):
         """SMA sensors are updated & don't poll."""
         return False
 
+    @callback
     def async_update_values(self):
         """Update this sensor."""
         update = False
 
         for sens in self._sub_sensors:  # Can be remove from 0.99
-            newval = "{} {}".format(sens.value, sens.unit)
+            newval = f"{sens.value} {sens.unit}"
             if self._attr[sens.name] != newval:
                 update = True
                 self._attr[sens.name] = newval
@@ -256,4 +231,4 @@ class SMAsensor(Entity):
     @property
     def unique_id(self):
         """Return a unique identifier for this sensor."""
-        return "sma-{}-{}".format(self._sensor.key, self._sensor.name)
+        return f"sma-{self._sensor.key}-{self._sensor.name}"

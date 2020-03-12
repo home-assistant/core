@@ -1,17 +1,13 @@
 """Allow users to set and activate scenes."""
-import asyncio
 import importlib
 import logging
 
 import voluptuous as vol
 
-from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.const import CONF_PLATFORM, SERVICE_TURN_ON
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
+from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.state import HASS_DOMAIN
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -23,7 +19,7 @@ STATES = "states"
 def _hass_domain_validator(config):
     """Validate platform in config for homeassistant domain."""
     if CONF_PLATFORM not in config:
-        config = {CONF_PLATFORM: HASS_DOMAIN, STATES: config}
+        config = {CONF_PLATFORM: HA_DOMAIN, STATES: config}
 
     return config
 
@@ -65,24 +61,8 @@ async def async_setup(hass, config):
 
     await component.async_setup(config)
     # Ensure Home Assistant platform always loaded.
-    await component.async_setup_platform(
-        HA_DOMAIN, {"platform": "homeasistant", STATES: []}
-    )
-
-    async def async_handle_scene_service(service):
-        """Handle calls to the switch services."""
-        target_scenes = await component.async_extract_from_service(service)
-
-        tasks = [scene.async_activate() for scene in target_scenes]
-        if tasks:
-            await asyncio.wait(tasks)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_TURN_ON,
-        async_handle_scene_service,
-        schema=ENTITY_SERVICE_SCHEMA,
-    )
+    await component.async_setup_platform(HA_DOMAIN, {"platform": HA_DOMAIN, STATES: []})
+    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_activate")
 
     return True
 
@@ -114,9 +94,6 @@ class Scene(Entity):
         """Activate scene. Try to get entities into requested state."""
         raise NotImplementedError()
 
-    def async_activate(self):
-        """Activate scene. Try to get entities into requested state.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.activate)
+    async def async_activate(self):
+        """Activate scene. Try to get entities into requested state."""
+        await self.hass.async_add_job(self.activate)

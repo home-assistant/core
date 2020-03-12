@@ -1,15 +1,16 @@
 """Support for Zyxel Keenetic NDMS2 based routers."""
 import logging
 
+from ndms2_client import Client, ConnectionException, TelnetConnection
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN,
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +46,6 @@ class KeeneticNDMS2DeviceScanner(DeviceScanner):
 
     def __init__(self, config):
         """Initialize the scanner."""
-        from ndms2_client import Client, TelnetConnection
 
         self.last_results = []
 
@@ -87,8 +87,6 @@ class KeeneticNDMS2DeviceScanner(DeviceScanner):
     def _update_info(self):
         """Get ARP from keenetic router."""
         _LOGGER.debug("Fetching devices from router...")
-
-        from ndms2_client import ConnectionException
 
         try:
             self.last_results = [

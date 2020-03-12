@@ -165,7 +165,7 @@ async def async_setup(hass, config):
         panel_path = panel.get(CONF_WEBCOMPONENT_PATH)
 
         if panel_path is None:
-            panel_path = hass.config.path(PANEL_DIR, "{}.html".format(name))
+            panel_path = hass.config.path(PANEL_DIR, f"{name}.html")
 
         if CONF_JS_URL in panel:
             kwargs["js_url"] = panel[CONF_JS_URL]

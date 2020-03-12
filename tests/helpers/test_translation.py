@@ -5,9 +5,10 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.generated import config_flows
 import homeassistant.helpers.translation as translation
 from homeassistant.setup import async_setup_component
-from homeassistant.generated import config_flows
+
 from tests.common import mock_coro
 
 
@@ -95,30 +96,23 @@ async def test_get_translations(hass, mock_config_flows):
     assert await async_setup_component(hass, "switch", {"switch": {"platform": "test"}})
 
     translations = await translation.async_get_translations(hass, "en")
-    assert translations == {
-        "component.switch.state.string1": "Value 1",
-        "component.switch.state.string2": "Value 2",
-    }
+
+    assert translations["component.switch.state.string1"] == "Value 1"
+    assert translations["component.switch.state.string2"] == "Value 2"
 
     translations = await translation.async_get_translations(hass, "de")
-    assert translations == {
-        "component.switch.state.string1": "German Value 1",
-        "component.switch.state.string2": "German Value 2",
-    }
+    assert translations["component.switch.state.string1"] == "German Value 1"
+    assert translations["component.switch.state.string2"] == "German Value 2"
 
     # Test a partial translation
     translations = await translation.async_get_translations(hass, "es")
-    assert translations == {
-        "component.switch.state.string1": "Spanish Value 1",
-        "component.switch.state.string2": "Value 2",
-    }
+    assert translations["component.switch.state.string1"] == "Spanish Value 1"
+    assert translations["component.switch.state.string2"] == "Value 2"
 
     # Test that an untranslated language falls back to English.
     translations = await translation.async_get_translations(hass, "invalid-language")
-    assert translations == {
-        "component.switch.state.string1": "Value 1",
-        "component.switch.state.string2": "Value 2",
-    }
+    assert translations["component.switch.state.string1"] == "Value 1"
+    assert translations["component.switch.state.string2"] == "Value 2"
 
 
 async def test_get_translations_loads_config_flows(hass, mock_config_flows):

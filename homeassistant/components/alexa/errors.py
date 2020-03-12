@@ -40,7 +40,7 @@ class AlexaInvalidEndpointError(AlexaError):
 
     def __init__(self, endpoint_id):
         """Initialize invalid endpoint error."""
-        msg = "The endpoint {} does not exist".format(endpoint_id)
+        msg = f"The endpoint {endpoint_id} does not exist"
         AlexaError.__init__(self, msg)
         self.endpoint_id = endpoint_id
 
@@ -73,7 +73,7 @@ class AlexaTempRangeError(AlexaError):
             "maximumValue": {"value": max_temp, "scale": API_TEMP_UNITS[unit]},
         }
         payload = {"validRange": temp_range}
-        msg = "The requested temperature {} is out of range".format(temp)
+        msg = f"The requested temperature {temp} is out of range"
 
         AlexaError.__init__(self, msg, payload)
 
@@ -83,3 +83,38 @@ class AlexaBridgeUnreachableError(AlexaError):
 
     namespace = "Alexa"
     error_type = "BRIDGE_UNREACHABLE"
+
+
+class AlexaSecurityPanelUnauthorizedError(AlexaError):
+    """Class to represent SecurityPanelController Unauthorized errors."""
+
+    namespace = "Alexa.SecurityPanelController"
+    error_type = "UNAUTHORIZED"
+
+
+class AlexaSecurityPanelAuthorizationRequired(AlexaError):
+    """Class to represent SecurityPanelController AuthorizationRequired errors."""
+
+    namespace = "Alexa.SecurityPanelController"
+    error_type = "AUTHORIZATION_REQUIRED"
+
+
+class AlexaAlreadyInOperationError(AlexaError):
+    """Class to represent AlreadyInOperation errors."""
+
+    namespace = "Alexa"
+    error_type = "ALREADY_IN_OPERATION"
+
+
+class AlexaInvalidDirectiveError(AlexaError):
+    """Class to represent InvalidDirective errors."""
+
+    namespace = "Alexa"
+    error_type = "INVALID_DIRECTIVE"
+
+
+class AlexaVideoActionNotPermittedForContentError(AlexaError):
+    """Class to represent action not permitted for content errors."""
+
+    namespace = "Alexa.Video"
+    error_type = "ACTION_NOT_PERMITTED_FOR_CONTENT"

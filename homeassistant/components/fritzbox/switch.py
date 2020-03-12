@@ -78,9 +78,9 @@ class FritzboxSwitch(SwitchDevice):
         attrs[ATTR_STATE_LOCKED] = self._device.lock
 
         if self._device.has_powermeter:
-            attrs[ATTR_TOTAL_CONSUMPTION] = "{:.3f}".format(
-                (self._device.energy or 0.0) / 1000
-            )
+            attrs[
+                ATTR_TOTAL_CONSUMPTION
+            ] = f"{((self._device.energy or 0.0) / 1000):.3f}"
             attrs[ATTR_TOTAL_CONSUMPTION_UNIT] = ATTR_TOTAL_CONSUMPTION_UNIT_VALUE
         if self._device.has_temperature_sensor:
             attrs[ATTR_TEMPERATURE] = str(

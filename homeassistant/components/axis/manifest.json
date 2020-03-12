@@ -2,7 +2,7 @@
   "domain": "axis",
   "name": "Axis",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/axis",
+  "documentation": "https://www.home-assistant.io/integrations/axis",
   "requirements": ["axis==25"],
   "dependencies": [],
   "zeroconf": ["_axis-video._tcp.local."],

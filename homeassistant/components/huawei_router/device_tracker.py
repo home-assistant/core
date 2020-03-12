@@ -1,19 +1,19 @@
 """Support for HUAWEI routers."""
 import base64
+from collections import namedtuple
 import logging
 import re
-from collections import namedtuple
 
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN,
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,7 +88,7 @@ class HuaweiDeviceScanner(DeviceScanner):
 
         _LOGGER.debug(
             "Active clients: %s",
-            "\n".join((client.mac + " " + client.name) for client in active_clients),
+            "\n".join(f"{client.mac} {client.name}" for client in active_clients),
         )
         return True
 
@@ -119,12 +119,12 @@ class HuaweiDeviceScanner(DeviceScanner):
 
     def _get_devices_response(self):
         """Get the raw string with the devices from the router."""
-        cnt = requests.post("http://{}/asp/GetRandCount.asp".format(self.host))
+        cnt = requests.post(f"http://{self.host}/asp/GetRandCount.asp")
         cnt_str = str(cnt.content, cnt.apparent_encoding, errors="replace")
 
         _LOGGER.debug("Logging in")
         cookie = requests.post(
-            "http://{}/login.cgi".format(self.host),
+            f"http://{self.host}/login.cgi",
             data=[
                 ("UserName", self.username),
                 ("PassWord", self.password),
@@ -136,13 +136,13 @@ class HuaweiDeviceScanner(DeviceScanner):
         _LOGGER.debug("Requesting lan user info update")
         # this request is needed or else some devices' state won't be updated
         requests.get(
-            "http://{}/html/bbsp/common/lanuserinfo.asp".format(self.host),
+            f"http://{self.host}/html/bbsp/common/lanuserinfo.asp",
             cookies=cookie.cookies,
         )
 
         _LOGGER.debug("Requesting lan user info data")
         devices = requests.get(
-            "http://{}/html/bbsp/common/GetLanUserDevInfo.asp".format(self.host),
+            f"http://{self.host}/html/bbsp/common/GetLanUserDevInfo.asp",
             cookies=cookie.cookies,
         )
 
