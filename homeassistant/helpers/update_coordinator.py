@@ -30,7 +30,7 @@ class DataUpdateCoordinator:
         logger: logging.Logger,
         *,
         name: str,
-        update_method: Callable[[], Awaitable],
+        update_method: Optional[Callable[[], Awaitable]] = None,
         update_interval: timedelta,
         request_refresh_debouncer: Optional[Debouncer] = None,
     ):
@@ -104,8 +104,14 @@ class DataUpdateCoordinator:
         """
         await self._debounced_refresh.async_call()
 
-    async def async_refresh(self) -> None:
+    async def async_update_data(self) -> Optional[Any]:
         """Update data."""
+        if self.update_method is None:
+            raise UpdateFailed("Update method not implemented")
+        return await self.update_method()
+
+    async def async_refresh(self) -> None:
+        """Refresh data."""
         if self._unsub_refresh:
             self._unsub_refresh()
             self._unsub_refresh = None
@@ -114,7 +120,7 @@ class DataUpdateCoordinator:
 
         try:
             start = monotonic()
-            self.data = await self.update_method()
+            self.data = await self.async_update_data()
 
         except asyncio.TimeoutError:
             if self.last_update_success:

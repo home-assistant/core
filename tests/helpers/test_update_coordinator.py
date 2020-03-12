@@ -104,6 +104,18 @@ async def test_refresh_fail_unknown(crd, caplog):
     assert "Unexpected error fetching test data" in caplog.text
 
 
+async def test_refresh_no_update_method(crd, caplog):
+    """Test raising error is no update method is provided."""
+    await crd.async_refresh()
+
+    crd.update_method = None
+
+    await crd.async_refresh()
+
+    assert crd.last_update_success is False
+    assert "Update method not implemented" in caplog.text
+
+
 async def test_update_interval(hass, crd):
     """Test update interval works."""
     # Test we don't update without subscriber
@@ -132,3 +144,13 @@ async def test_update_interval(hass, crd):
 
     # Test we stop updating after we lose last subscriber
     assert crd.data == 2
+
+
+async def test_refresh_recover(crd, caplog):
+    """Test recovery of freshing data."""
+    crd.last_update_success = False
+
+    await crd.async_refresh()
+
+    assert crd.last_update_success is True
+    assert "Fetching test data recovered" in caplog.text
