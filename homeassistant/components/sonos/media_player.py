@@ -523,9 +523,7 @@ class SonosEntity(MediaPlayerDevice):
             # If the content is a tts don't try to fetch an image from it.
             return None
 
-        return "http://{host}:{port}/getaa?s=1&u={uri}".format(
-            host=self.soco.ip_address, port=1400, uri=urllib.parse.quote(url, safe=""),
-        )
+        return f"http://{self.soco.ip_address}:1400/getaa?s=1&u={urllib.parse.quote(url, safe='')}"
 
     def _attach_player(self):
         """Get basic information and add event subscriptions."""
