@@ -142,8 +142,7 @@ async def test_form_unknown_error(hass: HomeAssistantType) -> None:
     ) as mock_validate_input:
         result = await async_configure_flow(hass, result["flow_id"], {CONF_HOST: HOST},)
 
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "unknown"}
+    assert result["type"] == RESULT_TYPE_ABORT
 
     await hass.async_block_till_done()
     assert len(mock_validate_input.mock_calls) == 1
