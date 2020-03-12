@@ -104,7 +104,7 @@ async def test_refresh_fail_unknown(crd, caplog):
     assert "Unexpected error fetching test data" in caplog.text
 
 
-async def test_refresh_no_update_method(crd, caplog):
+async def test_refresh_no_update_method(crd):
     """Test raising error is no update method is provided."""
     await crd.async_refresh()
 
