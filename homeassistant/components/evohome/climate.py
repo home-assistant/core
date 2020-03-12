@@ -149,7 +149,7 @@ class EvoZone(EvoChild, EvoClimateDevice):
         """Initialize a Honeywell TCC Zone."""
         super().__init__(evo_broker, evo_device)
 
-        if evo_device.modelType[:13] == "VisionProWifi":
+        if evo_device.modelType.startswith("VisionProWifi"):
             # this system does not have a distinct ID for the zone
             self._unique_id = f"{evo_device.zoneId}z"
         else:
