@@ -110,7 +110,7 @@ class MockDirectvClass(DIRECTV):
 
         if self.clientAddr == CLIENT_ADDRESS:
             self.attributes = RECORDING
-            self._standby = True
+            self._standby = False
         else:
             self.attributes = LIVE
 
