@@ -110,7 +110,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Exclusive(CONF_ORIGIN_ENTITY_ID, "origin"): cv.entity_id,
         vol.Exclusive(CONF_ARRIVAL, "arrival_departure"): cv.time,
         vol.Exclusive(CONF_DEPARTURE, "arrival_departure"): cv.time,
-        vol.Optional(CONF_DEPARTURE, default="now"): cv.time,
+        vol.Optional(CONF_DEPARTURE): cv.time,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_MODE, default=TRAVEL_MODE_CAR): vol.In(TRAVEL_MODE),
         vol.Optional(CONF_ROUTE_MODE, default=ROUTE_MODE_FASTEST): vol.In(ROUTE_MODE),
