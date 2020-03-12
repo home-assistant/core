@@ -30,8 +30,8 @@ class DataUpdateCoordinator:
         logger: logging.Logger,
         *,
         name: str,
-        update_method: Optional[Callable[[], Awaitable]] = None,
         update_interval: timedelta,
+        update_method: Optional[Callable[[], Awaitable]] = None,
         request_refresh_debouncer: Optional[Debouncer] = None,
     ):
         """Initialize global data updater."""
