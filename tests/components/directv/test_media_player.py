@@ -84,19 +84,6 @@ async def setup_directv(hass: HomeAssistantType) -> MockConfigEntry:
         return await setup_integration(hass)
 
 
-async def setup_directv_with_instance_error(hass: HomeAssistantType) -> MockConfigEntry:
-    """Set up mock DirecTV integration."""
-    with patch(
-        "homeassistant.components.directv.DIRECTV", new=MockDirectvClass,
-    ), patch(
-        "homeassistant.components.directv.DIRECTV.get_locations",
-        return_value=MOCK_GET_LOCATIONS_MULTIPLE,
-    ), patch(
-        "homeassistant.components.directv.media_player.DIRECTV", new=MockDirectvClass,
-    ):
-        return await setup_integration(hass)
-
-
 async def setup_directv_with_locations(hass: HomeAssistantType) -> MockConfigEntry:
     """Set up mock DirecTV integration."""
     with patch(
@@ -197,14 +184,6 @@ async def test_setup_with_multiple_locations(hass: HomeAssistantType) -> None:
 
     assert hass.states.get(MAIN_ENTITY_ID)
     assert hass.states.get(CLIENT_ENTITY_ID)
-
-
-async def test_setup_with_instance_error(hass: HomeAssistantType) -> None:
-    """Test setup with basic config with client location that results in instance error."""
-    await setup_directv_with_instance_error(hass)
-
-    assert hass.states.get(MAIN_ENTITY_ID)
-    assert hass.states.async_entity_ids(MP_DOMAIN) == [MAIN_ENTITY_ID]
 
 
 async def test_unique_id(hass: HomeAssistantType) -> None:
