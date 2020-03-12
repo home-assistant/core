@@ -94,18 +94,25 @@ MOCK_GET_VERSION = {
 }
 
 
-class MockDirectvClass:
+class MockDirectvClass(DIRECTV):
     """A fake DirecTV DVR device."""
 
-    def __init__(self, ip, port=8080, clientAddr="0"):
+    def __init__(self, ip, port=8080, clientAddr="0", determine_state=False):
         """Initialize the fake DirecTV device."""
-        self._host = ip
-        self._port = port
-        self._device = clientAddr
-        self._standby = True
+        super().__init__(
+            host=ip,
+            port=port,
+            clientAddr=clientAddr,
+            determine_state=determine_state,
+        )
+        
         self._play = False
 
-        self.attributes = LIVE
+        if self.clientAddr == CLIENT_ADDRESS:
+            self.attributes = RECORDING
+        else:
+            self._standby = True
+            self.attributea = LIVE
 
     def get_locations(self):
         """Mock for get_locations method."""
