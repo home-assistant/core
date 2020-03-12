@@ -344,7 +344,7 @@ class MoldIndicator(Entity):
         elif crit_humidity < 0:
             self._state = "0"
         else:
-            self._state = "{0:d}".format(int(crit_humidity))
+            self._state = f"{int(crit_humidity):d}"
 
         _LOGGER.debug("Mold indicator humidity: %s", self._state)
 

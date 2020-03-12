@@ -10,6 +10,7 @@ from homeassistant import config_entries
 from homeassistant.components import unifi
 import homeassistant.components.device_tracker as device_tracker
 from homeassistant.components.unifi.const import (
+    CONF_BLOCK_CLIENT,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
@@ -456,7 +457,7 @@ async def test_restoring_client(hass):
 
     await setup_unifi_integration(
         hass,
-        options={unifi.CONF_BLOCK_CLIENT: True},
+        options={CONF_BLOCK_CLIENT: True},
         clients_response=[CLIENT_2],
         clients_all_response=[CLIENT_1],
     )

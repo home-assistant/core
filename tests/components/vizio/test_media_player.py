@@ -112,7 +112,9 @@ async def _test_setup(
     ), patch(
         "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
         return_value=vizio_power_state,
-    ):
+    ), patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.get_current_app",
+    ) as service_call:
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -125,6 +127,8 @@ async def _test_setup(
         if ha_power_state == STATE_ON:
             assert attr["source_list"] == INPUT_LIST
             assert attr["source"] == CURRENT_INPUT
+            if ha_device_class == DEVICE_CLASS_SPEAKER:
+                assert not service_call.called
             assert (
                 attr["volume_level"]
                 == float(int(MAX_VOLUME[vizio_device_class] / 2))

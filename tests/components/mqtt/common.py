@@ -17,7 +17,10 @@ from tests.common import (
 async def help_test_setting_attribute_via_mqtt_json_message(
     hass, mqtt_mock, domain, config
 ):
-    """Test the setting of attribute via MQTT with JSON payload."""
+    """Test the setting of attribute via MQTT with JSON payload.
+
+    This is a test helper for the MqttAttributes mixin.
+    """
     assert await async_setup_component(hass, domain, config,)
 
     async_fire_mqtt_message(hass, "attr-topic", '{ "val": "100" }')
@@ -29,7 +32,10 @@ async def help_test_setting_attribute_via_mqtt_json_message(
 async def help_test_update_with_json_attrs_not_dict(
     hass, mqtt_mock, caplog, domain, config
 ):
-    """Test attributes get extracted from a JSON result."""
+    """Test attributes get extracted from a JSON result.
+
+    This is a test helper for the MqttAttributes mixin.
+    """
     assert await async_setup_component(hass, domain, config,)
 
     async_fire_mqtt_message(hass, "attr-topic", '[ "list", "of", "things"]')
@@ -42,7 +48,10 @@ async def help_test_update_with_json_attrs_not_dict(
 async def help_test_update_with_json_attrs_bad_JSON(
     hass, mqtt_mock, caplog, domain, config
 ):
-    """Test attributes get extracted from a JSON result."""
+    """Test JSON validation of attributes.
+
+    This is a test helper for the MqttAttributes mixin.
+    """
     assert await async_setup_component(hass, domain, config,)
 
     async_fire_mqtt_message(hass, "attr-topic", "This is not JSON")
@@ -55,13 +64,16 @@ async def help_test_update_with_json_attrs_bad_JSON(
 async def help_test_discovery_update_attr(
     hass, mqtt_mock, caplog, domain, data1, data2
 ):
-    """Test update of discovered MQTTAttributes."""
+    """Test update of discovered MQTTAttributes.
+
+    This is a test helper for the MqttAttributes mixin.
+    """
     entry = MockConfigEntry(domain=mqtt.DOMAIN)
     await async_start(hass, "homeassistant", {}, entry)
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data1)
     await hass.async_block_till_done()
     async_fire_mqtt_message(hass, "attr-topic1", '{ "val": "100" }')
-    state = hass.states.get(f"{domain}.beer")
+    state = hass.states.get(f"{domain}.test")
     assert state.attributes.get("val") == "100"
 
     # Change json_attributes_topic
@@ -70,17 +82,17 @@ async def help_test_discovery_update_attr(
 
     # Verify we are no longer subscribing to the old topic
     async_fire_mqtt_message(hass, "attr-topic1", '{ "val": "50" }')
-    state = hass.states.get(f"{domain}.beer")
+    state = hass.states.get(f"{domain}.test")
     assert state.attributes.get("val") == "100"
 
     # Verify we are subscribing to the new topic
     async_fire_mqtt_message(hass, "attr-topic2", '{ "val": "75" }')
-    state = hass.states.get(f"{domain}.beer")
+    state = hass.states.get(f"{domain}.test")
     assert state.attributes.get("val") == "75"
 
 
 async def help_test_unique_id(hass, domain, config):
-    """Test unique id option only creates one alarm per unique_id."""
+    """Test unique id option only creates one entity per unique_id."""
     await async_mock_mqtt_component(hass)
     assert await async_setup_component(hass, domain, config,)
     async_fire_mqtt_message(hass, "test-topic", "payload")
@@ -88,26 +100,32 @@ async def help_test_unique_id(hass, domain, config):
 
 
 async def help_test_discovery_removal(hass, mqtt_mock, caplog, domain, data):
-    """Test removal of discovered component."""
+    """Test removal of discovered component.
+
+    This is a test helper for the MqttDiscoveryUpdate mixin.
+    """
     entry = MockConfigEntry(domain=mqtt.DOMAIN)
     await async_start(hass, "homeassistant", {}, entry)
 
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
-    state = hass.states.get(f"{domain}.beer")
+    state = hass.states.get(f"{domain}.test")
     assert state is not None
-    assert state.name == "Beer"
+    assert state.name == "test"
 
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", "")
     await hass.async_block_till_done()
 
-    state = hass.states.get(f"{domain}.beer")
+    state = hass.states.get(f"{domain}.test")
     assert state is None
 
 
 async def help_test_discovery_update(hass, mqtt_mock, caplog, domain, data1, data2):
-    """Test update of discovered component."""
+    """Test update of discovered component.
+
+    This is a test helper for the MqttDiscoveryUpdate mixin.
+    """
     entry = MockConfigEntry(domain=mqtt.DOMAIN)
     await async_start(hass, "homeassistant", {}, entry)
 
@@ -150,13 +168,17 @@ async def help_test_discovery_broken(hass, mqtt_mock, caplog, domain, data1, dat
     assert state is None
 
 
-async def help_test_entity_device_info_with_identifier(hass, mqtt_mock, domain, data):
-    """Test MQTT alarm control panel device registry integration."""
+async def help_test_entity_device_info_with_identifier(hass, mqtt_mock, domain, config):
+    """Test device registry integration.
+
+    This is a test helper for the MqttDiscoveryUpdate mixin.
+    """
     entry = MockConfigEntry(domain=mqtt.DOMAIN)
     entry.add_to_hass(hass)
     await async_start(hass, "homeassistant", {}, entry)
     registry = await hass.helpers.device_registry.async_get_registry()
 
+    data = json.dumps(config)
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
@@ -170,8 +192,35 @@ async def help_test_entity_device_info_with_identifier(hass, mqtt_mock, domain, 
     assert device.sw_version == "0.1-beta"
 
 
+async def help_test_entity_device_info_remove(hass, mqtt_mock, domain, config):
+    """Test device registry remove."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, entry)
+    dev_registry = await hass.helpers.device_registry.async_get_registry()
+    ent_registry = await hass.helpers.entity_registry.async_get_registry()
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
+    await hass.async_block_till_done()
+
+    device = dev_registry.async_get_device({("mqtt", "helloworld")}, set())
+    assert device is not None
+    assert ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique")
+
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", "")
+    await hass.async_block_till_done()
+
+    device = dev_registry.async_get_device({("mqtt", "helloworld")}, set())
+    assert device is None
+    assert not ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique")
+
+
 async def help_test_entity_device_info_update(hass, mqtt_mock, domain, config):
-    """Test device registry update."""
+    """Test device registry update.
+
+    This is a test helper for the MqttDiscoveryUpdate mixin.
+    """
     entry = MockConfigEntry(domain=mqtt.DOMAIN)
     entry.add_to_hass(hass)
     await async_start(hass, "homeassistant", {}, entry)

@@ -151,9 +151,10 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
         return False
 
     # 'register'/save UDN
-    config_entry.data["udn"] = device.udn
     hass.data[DOMAIN]["devices"][device.udn] = device
-    hass.config_entries.async_update_entry(entry=config_entry, data=config_entry.data)
+    hass.config_entries.async_update_entry(
+        entry=config_entry, data={**config_entry.data, "udn": device.udn}
+    )
 
     # create device registry entry
     device_registry = await dr.async_get_registry(hass)

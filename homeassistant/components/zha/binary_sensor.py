@@ -106,7 +106,7 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
     def async_set_state(self, attr_id, attr_name, value):
         """Set the state."""
         self._state = bool(value)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_update(self):
         """Attempt to retrieve on off state from the binary sensor."""

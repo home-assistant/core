@@ -20,17 +20,9 @@ _LOGGER = logging.getLogger(__name__)
 class HomeKitMotionSensor(HomeKitEntity, BinarySensorDevice):
     """Representation of a Homekit motion sensor."""
 
-    def __init__(self, *args):
-        """Initialise the entity."""
-        super().__init__(*args)
-        self._on = False
-
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
         return [CharacteristicsTypes.MOTION_DETECTED]
-
-    def _update_motion_detected(self, value):
-        self._on = value
 
     @property
     def device_class(self):
@@ -40,23 +32,15 @@ class HomeKitMotionSensor(HomeKitEntity, BinarySensorDevice):
     @property
     def is_on(self):
         """Has motion been detected."""
-        return self._on
+        return self.service.value(CharacteristicsTypes.MOTION_DETECTED)
 
 
 class HomeKitContactSensor(HomeKitEntity, BinarySensorDevice):
     """Representation of a Homekit contact sensor."""
 
-    def __init__(self, *args):
-        """Initialise the entity."""
-        super().__init__(*args)
-        self._state = None
-
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
         return [CharacteristicsTypes.CONTACT_STATE]
-
-    def _update_contact_state(self, value):
-        self._state = value
 
     @property
     def device_class(self):
@@ -66,16 +50,11 @@ class HomeKitContactSensor(HomeKitEntity, BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if the binary sensor is on/open."""
-        return self._state == 1
+        return self.service.value(CharacteristicsTypes.CONTACT_STATE) == 1
 
 
 class HomeKitSmokeSensor(HomeKitEntity, BinarySensorDevice):
     """Representation of a Homekit smoke sensor."""
-
-    def __init__(self, *args):
-        """Initialise the entity."""
-        super().__init__(*args)
-        self._state = None
 
     @property
     def device_class(self) -> str:
@@ -86,22 +65,14 @@ class HomeKitSmokeSensor(HomeKitEntity, BinarySensorDevice):
         """Define the homekit characteristics the entity is tracking."""
         return [CharacteristicsTypes.SMOKE_DETECTED]
 
-    def _update_smoke_detected(self, value):
-        self._state = value
-
     @property
     def is_on(self):
         """Return true if smoke is currently detected."""
-        return self._state == 1
+        return self.service.value(CharacteristicsTypes.SMOKE_DETECTED) == 1
 
 
 class HomeKitOccupancySensor(HomeKitEntity, BinarySensorDevice):
-    """Representation of a Homekit smoke sensor."""
-
-    def __init__(self, *args):
-        """Initialise the entity."""
-        super().__init__(*args)
-        self._state = None
+    """Representation of a Homekit occupancy sensor."""
 
     @property
     def device_class(self) -> str:
@@ -112,13 +83,10 @@ class HomeKitOccupancySensor(HomeKitEntity, BinarySensorDevice):
         """Define the homekit characteristics the entity is tracking."""
         return [CharacteristicsTypes.OCCUPANCY_DETECTED]
 
-    def _update_occupancy_detected(self, value):
-        self._state = value
-
     @property
     def is_on(self):
-        """Return true if smoke is currently detected."""
-        return self._state == 1
+        """Return true if occupancy is currently detected."""
+        return self.service.value(CharacteristicsTypes.OCCUPANCY_DETECTED) == 1
 
 
 ENTITY_TYPES = {

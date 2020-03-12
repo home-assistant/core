@@ -11,6 +11,12 @@ SSDP = {
             "manufacturer": "Royal Philips Electronics"
         }
     ],
+    "directv": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
+            "manufacturer": "DIRECTV"
+        }
+    ],
     "heos": [
         {
             "st": "urn:schemas-denon-com:device:ACT-Denon:1"
