@@ -130,10 +130,11 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         super().__init__(method, host, None)
         self.config = {
             CONF_NAME: VALUE_CONF_NAME,
-            CONF_ID: VALUE_CONF_ID,
             CONF_DESCRIPTION: VALUE_CONF_NAME,
-            CONF_METHOD: method,
+            CONF_ID: VALUE_CONF_ID,
             CONF_HOST: host,
+            CONF_METHOD: method,
+            CONF_PORT: None,
             CONF_TIMEOUT: 1,
         }
 
