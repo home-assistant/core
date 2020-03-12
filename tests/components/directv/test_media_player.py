@@ -71,15 +71,6 @@ MAIN_ENTITY_ID = f"{MP_DOMAIN}.main_dvr"
 
 
 @fixture
-def client_dtv() -> MockDirectvClass:
-    """Fixture for a client device."""
-    mocked_dtv = MockDirectvClass(HOST, clientAddr=CLIENT_ADDRESS)
-    mocked_dtv.attributes = RECORDING
-    mocked_dtv._standby = False  # pylint: disable=protected-access
-    return mocked_dtv
-
-
-@fixture
 def mock_now() -> datetime:
     """Fixture for dtutil.now."""
     return dt_util.utcnow()
@@ -101,15 +92,12 @@ async def setup_directv_with_instance_error(hass: HomeAssistantType) -> MockConf
         "homeassistant.components.directv.DIRECTV.get_locations",
         return_value=MOCK_GET_LOCATIONS_MULTIPLE,
     ), patch(
-        "homeassistant.components.directv.media_player.get_dtv_instance",
-        return_value=None,
+        "homeassistant.components.directv.media_player.DIRECTV", new=MockDirectvClass,
     ):
         return await setup_integration(hass)
 
 
-async def setup_directv_with_locations(
-    hass: HomeAssistantType, client_dtv: MockDirectvClass,
-) -> MockConfigEntry:
+async def setup_directv_with_locations(hass: HomeAssistantType) -> MockConfigEntry:
     """Set up mock DirecTV integration."""
     with patch(
         "homeassistant.components.directv.DIRECTV", new=MockDirectvClass,
@@ -117,8 +105,7 @@ async def setup_directv_with_locations(
         "homeassistant.components.directv.DIRECTV.get_locations",
         return_value=MOCK_GET_LOCATIONS_MULTIPLE,
     ), patch(
-        "homeassistant.components.directv.media_player.get_dtv_instance",
-        return_value=client_dtv,
+        "homeassistant.components.directv.media_player.DIRECTV", new=MockDirectvClass,
     ):
         return await setup_integration(hass)
 
@@ -204,11 +191,9 @@ async def test_setup(hass: HomeAssistantType) -> None:
     assert hass.states.get(MAIN_ENTITY_ID)
 
 
-async def test_setup_with_multiple_locations(
-    hass: HomeAssistantType, client_dtv: MockDirectvClass
-) -> None:
+async def test_setup_with_multiple_locations(hass: HomeAssistantType) -> None:
     """Test setup with basic config with client location."""
-    await setup_directv_with_locations(hass, client_dtv)
+    await setup_directv_with_locations(hass)
 
     assert hass.states.get(MAIN_ENTITY_ID)
     assert hass.states.get(CLIENT_ENTITY_ID)
@@ -222,9 +207,9 @@ async def test_setup_with_instance_error(hass: HomeAssistantType) -> None:
     assert hass.states.async_entity_ids(MP_DOMAIN) == [MAIN_ENTITY_ID]
 
 
-async def test_unique_id(hass: HomeAssistantType, client_dtv: MockDirectvClass) -> None:
+async def test_unique_id(hass: HomeAssistantType) -> None:
     """Test unique id."""
-    await setup_directv_with_locations(hass, client_dtv)
+    await setup_directv_with_locations(hass)
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
@@ -235,11 +220,9 @@ async def test_unique_id(hass: HomeAssistantType, client_dtv: MockDirectvClass) 
     assert client.unique_id == "2CA17D1CD30X"
 
 
-async def test_supported_features(
-    hass: HomeAssistantType, client_dtv: MockDirectvClass
-) -> None:
+async def test_supported_features(hass: HomeAssistantType) -> None:
     """Test supported features."""
-    await setup_directv_with_locations(hass, client_dtv)
+    await setup_directv_with_locations(hass)
 
     # Features supported for main DVR
     state = hass.states.get(MAIN_ENTITY_ID)
@@ -269,10 +252,10 @@ async def test_supported_features(
 
 
 async def test_check_attributes(
-    hass: HomeAssistantType, mock_now: dt_util.dt.datetime, client_dtv: MockDirectvClass
+    hass: HomeAssistantType, mock_now: dt_util.dt.datetime
 ) -> None:
     """Test attributes."""
-    await setup_directv_with_locations(hass, client_dtv)
+    await setup_directv_with_locations(hass)
 
     next_update = mock_now + timedelta(minutes=5)
     with patch("homeassistant.util.dt.utcnow", return_value=next_update):
@@ -321,10 +304,10 @@ async def test_check_attributes(
 
 
 async def test_main_services(
-    hass: HomeAssistantType, mock_now: dt_util.dt.datetime, client_dtv: MockDirectvClass
+    hass: HomeAssistantType, mock_now: dt_util.dt.datetime
 ) -> None:
     """Test the different services."""
-    await setup_directv_with_locations(hass, client_dtv)
+    await setup_directv(hass)
 
     next_update = mock_now + timedelta(minutes=5)
     with patch("homeassistant.util.dt.utcnow", return_value=next_update):
@@ -373,10 +356,10 @@ async def test_main_services(
 
 
 async def test_available(
-    hass: HomeAssistantType, mock_now: dt_util.dt.datetime, client_dtv: MockDirectvClass
+    hass: HomeAssistantType, mock_now: dt_util.dt.datetime
 ) -> None:
     """Test available status."""
-    entry = await setup_directv_with_locations(hass, client_dtv)
+    entry = await setup_directv(hass)
 
     next_update = mock_now + timedelta(minutes=5)
     with patch("homeassistant.util.dt.utcnow", return_value=next_update):
