@@ -114,7 +114,7 @@ async def test_form_cannot_connect(hass: HomeAssistantType) -> None:
     )
 
     with patch(
-        "MockDirectvClass.get_version", side_effect=RequestException,
+        "tests.components.directv.config_flow.MockDirectvClass.get_version", side_effect=RequestException,
     ) as mock_validate_input:
         result = await async_configure_flow(hass, result["flow_id"], {CONF_HOST: HOST},)
 
@@ -132,11 +132,12 @@ async def test_form_unknown_error(hass: HomeAssistantType) -> None:
     )
 
     with patch(
-        "MockDirectvClass.get_version", side_effect=Exception,
+        "tests.components.directv.config_flow.MockDirectvClass.get_version", side_effect=Exception,
     ) as mock_validate_input:
         result = await async_configure_flow(hass, result["flow_id"], {CONF_HOST: HOST},)
 
     assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "unknown"
 
     await hass.async_block_till_done()
     assert len(mock_validate_input.mock_calls) == 1
@@ -198,7 +199,7 @@ async def test_ssdp_discovery_confirm_abort(hass: HomeAssistantType) -> None:
     )
 
     with patch(
-        "MockDirectvClass.get_version", side_effect=RequestException,
+        "tests.components.directv.config_flow.MockDirectvClass.get_version", side_effect=RequestException,
     ) as mock_validate_input:
         result = await async_configure_flow(hass, result["flow_id"], {})
 
@@ -217,7 +218,7 @@ async def test_ssdp_discovery_confirm_unknown_error(hass: HomeAssistantType) -> 
     )
 
     with patch(
-        "MockDirectvClass.get_version", side_effect=Exception,
+        "tests.components.directv.config_flow.MockDirectvClass.get_version", side_effect=Exception,
     ) as mock_validate_input:
         result = await async_configure_flow(hass, result["flow_id"], {})
 
