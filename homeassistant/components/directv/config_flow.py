@@ -75,8 +75,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
             return self._show_form(errors)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
-            errors["base"] = ERROR_UNKNOWN
-            return self._show_form(errors)
+            return self.async_abort(reason=ERROR_UNKNOWN)
 
         await self.async_set_unique_id(info["receiver_id"])
         self._abort_if_unique_id_configured()
