@@ -203,6 +203,11 @@ async def test_query_message(hass):
     light2.entity_id = "light.another_light"
     await light2.async_update_ha_state()
 
+    light3 = DemoLight(None, "Color temp Light", state=True, ct=400, brightness=200)
+    light3.hass = hass
+    light3.entity_id = "light.color_temp_light"
+    await light3.async_update_ha_state()
+
     events = []
     hass.bus.async_listen(EVENT_QUERY_RECEIVED, events.append)
 
@@ -219,6 +224,7 @@ async def test_query_message(hass):
                         "devices": [
                             {"id": "light.demo_light"},
                             {"id": "light.another_light"},
+                            {"id": "light.color_temp_light"},
                             {"id": "light.non_existing"},
                         ]
                     },
@@ -244,14 +250,19 @@ async def test_query_message(hass):
                             "saturation": 0.75,
                             "value": 0.3058823529411765,
                         },
-                        "temperatureK": 2500,
                     },
+                },
+                "light.color_temp_light": {
+                    "on": True,
+                    "online": True,
+                    "brightness": 78,
+                    "color": {"temperatureK": 2500},
                 },
             }
         },
     }
 
-    assert len(events) == 3
+    assert len(events) == 4
     assert events[0].event_type == EVENT_QUERY_RECEIVED
     assert events[0].data == {
         "request_id": REQ_ID,
@@ -266,6 +277,12 @@ async def test_query_message(hass):
     }
     assert events[2].event_type == EVENT_QUERY_RECEIVED
     assert events[2].data == {
+        "request_id": REQ_ID,
+        "entity_id": "light.color_temp_light",
+        "source": "cloud",
+    }
+    assert events[3].event_type == EVENT_QUERY_RECEIVED
+    assert events[3].data == {
         "request_id": REQ_ID,
         "entity_id": "light.non_existing",
         "source": "cloud",
@@ -301,6 +318,7 @@ async def test_execute(hass):
                                 "devices": [
                                     {"id": "light.non_existing"},
                                     {"id": "light.ceiling_lights"},
+                                    {"id": "light.kitchen_lights"},
                                 ],
                                 "execution": [
                                     {
@@ -321,6 +339,8 @@ async def test_execute(hass):
         const.SOURCE_CLOUD,
     )
 
+    print(result)
+
     assert result == {
         "requestId": REQ_ID,
         "payload": {
@@ -337,13 +357,22 @@ async def test_execute(hass):
                         "on": True,
                         "online": True,
                         "brightness": 20,
+                        "color": {"temperatureK": 2631},
+                    },
+                },
+                {
+                    "ids": ["light.kitchen_lights"],
+                    "status": "SUCCESS",
+                    "states": {
+                        "on": True,
+                        "online": True,
+                        "brightness": 20,
                         "color": {
                             "spectrumHsv": {
-                                "hue": 56,
-                                "saturation": 0.86,
+                                "hue": 345,
+                                "saturation": 0.75,
                                 "value": 0.2,
                             },
-                            "temperatureK": 2631,
                         },
                     },
                 },
@@ -351,7 +380,7 @@ async def test_execute(hass):
         },
     }
 
-    assert len(events) == 4
+    assert len(events) == 6
     assert events[0].event_type == EVENT_COMMAND_RECEIVED
     assert events[0].data == {
         "request_id": REQ_ID,
@@ -392,21 +421,54 @@ async def test_execute(hass):
         },
         "source": "cloud",
     }
+    assert events[4].event_type == EVENT_COMMAND_RECEIVED
+    assert events[4].data == {
+        "request_id": REQ_ID,
+        "entity_id": "light.kitchen_lights",
+        "execution": {
+            "command": "action.devices.commands.OnOff",
+            "params": {"on": True},
+        },
+        "source": "cloud",
+    }
+    assert events[5].event_type == EVENT_COMMAND_RECEIVED
+    assert events[5].data == {
+        "request_id": REQ_ID,
+        "entity_id": "light.kitchen_lights",
+        "execution": {
+            "command": "action.devices.commands.BrightnessAbsolute",
+            "params": {"brightness": 20},
+        },
+        "source": "cloud",
+    }
 
-    assert len(service_events) == 2
+    assert len(service_events) == 4
     assert service_events[0].data == {
         "domain": "light",
         "service": "turn_on",
         "service_data": {"entity_id": "light.ceiling_lights"},
     }
-    assert service_events[0].context == events[2].context
     assert service_events[1].data == {
         "domain": "light",
         "service": "turn_on",
         "service_data": {"brightness_pct": 20, "entity_id": "light.ceiling_lights"},
     }
+    assert service_events[0].context == events[2].context
     assert service_events[1].context == events[2].context
     assert service_events[1].context == events[3].context
+    assert service_events[2].data == {
+        "domain": "light",
+        "service": "turn_on",
+        "service_data": {"entity_id": "light.kitchen_lights"},
+    }
+    assert service_events[3].data == {
+        "domain": "light",
+        "service": "turn_on",
+        "service_data": {"brightness_pct": 20, "entity_id": "light.kitchen_lights"},
+    }
+    assert service_events[2].context == events[4].context
+    assert service_events[3].context == events[4].context
+    assert service_events[3].context == events[5].context
 
 
 async def test_raising_error_trait(hass):

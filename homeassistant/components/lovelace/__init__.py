@@ -1,64 +1,48 @@
 """Support for the Lovelace UI."""
 import logging
-from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components import frontend
-from homeassistant.const import CONF_FILENAME, CONF_ICON
+from homeassistant.const import CONF_FILENAME
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, config_validation as cv
-from homeassistant.util import sanitize_filename, slugify
+from homeassistant.util import sanitize_filename
 
 from . import dashboard, resources, websocket
 from .const import (
+    CONF_ICON,
+    CONF_MODE,
+    CONF_REQUIRE_ADMIN,
     CONF_RESOURCES,
+    CONF_SHOW_IN_SIDEBAR,
+    CONF_TITLE,
+    CONF_URL_PATH,
+    DASHBOARD_BASE_CREATE_FIELDS,
+    DEFAULT_ICON,
     DOMAIN,
-    LOVELACE_CONFIG_FILE,
     MODE_STORAGE,
     MODE_YAML,
     RESOURCE_CREATE_FIELDS,
     RESOURCE_SCHEMA,
     RESOURCE_UPDATE_FIELDS,
+    STORAGE_DASHBOARD_CREATE_FIELDS,
+    STORAGE_DASHBOARD_UPDATE_FIELDS,
+    url_slug,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_MODE = "mode"
-
 CONF_DASHBOARDS = "dashboards"
-CONF_SIDEBAR = "sidebar"
-CONF_TITLE = "title"
-CONF_REQUIRE_ADMIN = "require_admin"
 
-DASHBOARD_BASE_SCHEMA = vol.Schema(
+YAML_DASHBOARD_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_REQUIRE_ADMIN, default=False): cv.boolean,
-        vol.Optional(CONF_SIDEBAR): {
-            vol.Required(CONF_ICON): cv.icon,
-            vol.Required(CONF_TITLE): cv.string,
-        },
-    }
-)
-
-YAML_DASHBOARD_SCHEMA = DASHBOARD_BASE_SCHEMA.extend(
-    {
+        **DASHBOARD_BASE_CREATE_FIELDS,
         vol.Required(CONF_MODE): MODE_YAML,
         vol.Required(CONF_FILENAME): vol.All(cv.string, sanitize_filename),
     }
 )
-
-
-def url_slug(value: Any) -> str:
-    """Validate value is a valid url slug."""
-    if value is None:
-        raise vol.Invalid("Slug should not be None")
-    str_value = str(value)
-    slg = slugify(str_value, separator="-")
-    if str_value == slg:
-        return str_value
-    raise vol.Invalid(f"invalid slug {value} (try {slg})")
-
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -80,14 +64,13 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Lovelace commands."""
-    # Pass in default to `get` because defaults not set if loaded as dep
     mode = config[DOMAIN][CONF_MODE]
     yaml_resources = config[DOMAIN].get(CONF_RESOURCES)
 
     frontend.async_register_built_in_panel(hass, DOMAIN, config={"mode": mode})
 
     if mode == MODE_YAML:
-        default_config = dashboard.LovelaceYAML(hass, None, LOVELACE_CONFIG_FILE)
+        default_config = dashboard.LovelaceYAML(hass, None, None)
 
         if yaml_resources is None:
             try:
@@ -134,6 +117,10 @@ async def async_setup(hass, config):
         websocket.websocket_lovelace_resources
     )
 
+    hass.components.websocket_api.async_register_command(
+        websocket.websocket_lovelace_dashboards
+    )
+
     hass.components.system_health.async_register_info(DOMAIN, system_health_info)
 
     hass.data[DOMAIN] = {
@@ -142,30 +129,67 @@ async def async_setup(hass, config):
         "resources": resource_collection,
     }
 
-    if hass.config.safe_mode or CONF_DASHBOARDS not in config[DOMAIN]:
+    if hass.config.safe_mode:
         return True
 
-    for url_path, dashboard_conf in config[DOMAIN][CONF_DASHBOARDS].items():
+    # Process YAML dashboards
+    for url_path, dashboard_conf in config[DOMAIN].get(CONF_DASHBOARDS, {}).items():
         # For now always mode=yaml
-        config = dashboard.LovelaceYAML(hass, url_path, dashboard_conf[CONF_FILENAME])
+        config = dashboard.LovelaceYAML(hass, url_path, dashboard_conf)
         hass.data[DOMAIN]["dashboards"][url_path] = config
 
-        kwargs = {
-            "hass": hass,
-            "component_name": DOMAIN,
-            "frontend_url_path": url_path,
-            "require_admin": dashboard_conf[CONF_REQUIRE_ADMIN],
-            "config": {"mode": dashboard_conf[CONF_MODE]},
-        }
-
-        if CONF_SIDEBAR in dashboard_conf:
-            kwargs["sidebar_title"] = dashboard_conf[CONF_SIDEBAR][CONF_TITLE]
-            kwargs["sidebar_icon"] = dashboard_conf[CONF_SIDEBAR][CONF_ICON]
-
         try:
-            frontend.async_register_built_in_panel(**kwargs)
+            _register_panel(hass, url_path, MODE_YAML, dashboard_conf, False)
         except ValueError:
             _LOGGER.warning("Panel url path %s is not unique", url_path)
+
+    # Process storage dashboards
+    dashboards_collection = dashboard.DashboardsCollection(hass)
+
+    async def storage_dashboard_changed(change_type, item_id, item):
+        """Handle a storage dashboard change."""
+        url_path = item[CONF_URL_PATH]
+
+        if change_type == collection.CHANGE_REMOVED:
+            frontend.async_remove_panel(hass, url_path)
+            await hass.data[DOMAIN]["dashboards"].pop(url_path).async_delete()
+            return
+
+        if change_type == collection.CHANGE_ADDED:
+            existing = hass.data[DOMAIN]["dashboards"].get(url_path)
+
+            if existing:
+                _LOGGER.warning(
+                    "Cannot register panel at %s, it is already defined in %s",
+                    url_path,
+                    existing,
+                )
+                return
+
+            hass.data[DOMAIN]["dashboards"][url_path] = dashboard.LovelaceStorage(
+                hass, item
+            )
+
+            update = False
+        else:
+            hass.data[DOMAIN]["dashboards"][url_path].config = item
+            update = True
+
+        try:
+            _register_panel(hass, url_path, MODE_STORAGE, item, update)
+        except ValueError:
+            _LOGGER.warning("Failed to %s panel %s from storage", change_type, url_path)
+
+    dashboards_collection.async_add_listener(storage_dashboard_changed)
+    await dashboards_collection.async_load()
+
+    collection.StorageCollectionWebsocket(
+        dashboards_collection,
+        "lovelace/dashboards",
+        "dashboard",
+        STORAGE_DASHBOARD_CREATE_FIELDS,
+        STORAGE_DASHBOARD_UPDATE_FIELDS,
+    ).async_setup(hass, create_list=False)
 
     return True
 
@@ -173,3 +197,20 @@ async def async_setup(hass, config):
 async def system_health_info(hass):
     """Get info for the info page."""
     return await hass.data[DOMAIN]["dashboards"][None].async_get_info()
+
+
+@callback
+def _register_panel(hass, url_path, mode, config, update):
+    """Register a panel."""
+    kwargs = {
+        "frontend_url_path": url_path,
+        "require_admin": config[CONF_REQUIRE_ADMIN],
+        "config": {"mode": mode},
+        "update": update,
+    }
+
+    if config[CONF_SHOW_IN_SIDEBAR]:
+        kwargs["sidebar_title"] = config[CONF_TITLE]
+        kwargs["sidebar_icon"] = config.get(CONF_ICON, DEFAULT_ICON)
+
+    frontend.async_register_built_in_panel(hass, DOMAIN, **kwargs)

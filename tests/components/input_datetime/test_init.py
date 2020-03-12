@@ -268,12 +268,15 @@ async def test_restore_state(hass):
             State("input_datetime.test_date", "2017-09-07"),
             State("input_datetime.test_datetime", "2017-09-07 19:46:00"),
             State("input_datetime.test_bogus_data", "this is not a date"),
+            State("input_datetime.test_was_time", "19:46:00"),
+            State("input_datetime.test_was_date", "2017-09-07"),
         ),
     )
 
     hass.state = CoreState.starting
 
     initial = datetime.datetime(2017, 1, 1, 23, 42)
+    default = datetime.datetime(1970, 1, 1, 0, 0)
 
     await async_setup_component(
         hass,
@@ -288,6 +291,8 @@ async def test_restore_state(hass):
                     "has_date": True,
                     "initial": str(initial),
                 },
+                "test_was_time": {"has_time": False, "has_date": True},
+                "test_was_date": {"has_time": True, "has_date": False},
             }
         },
     )
@@ -304,6 +309,12 @@ async def test_restore_state(hass):
 
     state_bogus = hass.states.get("input_datetime.test_bogus_data")
     assert state_bogus.state == str(initial)
+
+    state_was_time = hass.states.get("input_datetime.test_was_time")
+    assert state_was_time.state == str(default.date())
+
+    state_was_date = hass.states.get("input_datetime.test_was_date")
+    assert state_was_date.state == str(default.time())
 
 
 async def test_default_value(hass):

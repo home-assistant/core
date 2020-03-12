@@ -157,7 +157,6 @@ def zha_device_restored(hass, zigpy_app_controller, setup_zha):
         zigpy_app_controller.devices[zigpy_dev.ieee] = zigpy_dev
         await setup_zha()
         zha_gateway = hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
-        await zha_gateway.async_load_devices()
         return zha_gateway.get_device(zigpy_dev.ieee)
 
     return _zha_device
@@ -166,7 +165,9 @@ def zha_device_restored(hass, zigpy_app_controller, setup_zha):
 @pytest.fixture(params=["zha_device_joined", "zha_device_restored"])
 def zha_device_joined_restored(request):
     """Join or restore ZHA device."""
-    return request.getfixturevalue(request.param)
+    named_method = request.getfixturevalue(request.param)
+    named_method.name = request.param
+    return named_method
 
 
 @pytest.fixture

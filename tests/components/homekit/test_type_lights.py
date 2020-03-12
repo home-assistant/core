@@ -21,6 +21,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import CoreState
 from homeassistant.helpers import entity_registry
@@ -127,7 +128,7 @@ async def test_light_brightness(hass, hk_driver, cls, events):
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_turn_on[0].data[ATTR_BRIGHTNESS_PCT] == 20
     assert len(events) == 1
-    assert events[-1].data[ATTR_VALUE] == "brightness at 20%"
+    assert events[-1].data[ATTR_VALUE] == f"brightness at 20{UNIT_PERCENTAGE}"
 
     await hass.async_add_job(acc.char_on.client_update_value, 1)
     await hass.async_add_job(acc.char_brightness.client_update_value, 40)
@@ -136,7 +137,7 @@ async def test_light_brightness(hass, hk_driver, cls, events):
     assert call_turn_on[1].data[ATTR_ENTITY_ID] == entity_id
     assert call_turn_on[1].data[ATTR_BRIGHTNESS_PCT] == 40
     assert len(events) == 2
-    assert events[-1].data[ATTR_VALUE] == "brightness at 40%"
+    assert events[-1].data[ATTR_VALUE] == f"brightness at 40{UNIT_PERCENTAGE}"
 
     await hass.async_add_job(acc.char_on.client_update_value, 1)
     await hass.async_add_job(acc.char_brightness.client_update_value, 0)
@@ -235,9 +236,7 @@ async def test_light_restore(hass, hk_driver, cls, events):
 
     registry = await entity_registry.async_get_registry(hass)
 
-    registry.async_get_or_create(
-        "light", "hue", "1234", suggested_object_id="simple",
-    )
+    registry.async_get_or_create("light", "hue", "1234", suggested_object_id="simple")
     registry.async_get_or_create(
         "light",
         "hue",

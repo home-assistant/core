@@ -103,16 +103,18 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
         return self._device_class
 
     @callback
-    def async_set_state(self, state):
+    def async_set_state(self, attr_id, attr_name, value):
         """Set the state."""
-        self._state = bool(state)
-        self.async_schedule_update_ha_state()
+        self._state = bool(value)
+        self.async_write_ha_state()
 
     async def async_update(self):
         """Attempt to retrieve on off state from the binary sensor."""
         await super().async_update()
         attribute = getattr(self._channel, "value_attribute", "on_off")
-        self._state = await self._channel.get_attribute_value(attribute)
+        attr_value = await self._channel.get_attribute_value(attribute)
+        if attr_value is not None:
+            self._state = attr_value
 
 
 @STRICT_MATCH(channel_names=CHANNEL_ACCELEROMETER)

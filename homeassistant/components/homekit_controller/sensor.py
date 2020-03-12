@@ -8,6 +8,7 @@ from homeassistant.const import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 
@@ -18,17 +19,11 @@ TEMP_C_ICON = "mdi:thermometer"
 BRIGHTNESS_ICON = "mdi:brightness-6"
 CO2_ICON = "mdi:periodic-table-co2"
 
-UNIT_PERCENT = "%"
 UNIT_LUX = "lux"
 
 
 class HomeKitHumiditySensor(HomeKitEntity):
     """Representation of a Homekit humidity sensor."""
-
-    def __init__(self, *args):
-        """Initialise the entity."""
-        super().__init__(*args)
-        self._state = None
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
@@ -52,24 +47,16 @@ class HomeKitHumiditySensor(HomeKitEntity):
     @property
     def unit_of_measurement(self):
         """Return units for the sensor."""
-        return UNIT_PERCENT
-
-    def _update_relative_humidity_current(self, value):
-        self._state = value
+        return UNIT_PERCENTAGE
 
     @property
     def state(self):
         """Return the current humidity."""
-        return self._state
+        return self.service.value(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT)
 
 
 class HomeKitTemperatureSensor(HomeKitEntity):
     """Representation of a Homekit temperature sensor."""
-
-    def __init__(self, *args):
-        """Initialise the entity."""
-        super().__init__(*args)
-        self._state = None
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
@@ -95,22 +82,14 @@ class HomeKitTemperatureSensor(HomeKitEntity):
         """Return units for the sensor."""
         return TEMP_CELSIUS
 
-    def _update_temperature_current(self, value):
-        self._state = value
-
     @property
     def state(self):
         """Return the current temperature in Celsius."""
-        return self._state
+        return self.service.value(CharacteristicsTypes.TEMPERATURE_CURRENT)
 
 
 class HomeKitLightSensor(HomeKitEntity):
     """Representation of a Homekit light level sensor."""
-
-    def __init__(self, *args):
-        """Initialise the entity."""
-        super().__init__(*args)
-        self._state = None
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
@@ -136,22 +115,14 @@ class HomeKitLightSensor(HomeKitEntity):
         """Return units for the sensor."""
         return UNIT_LUX
 
-    def _update_light_level_current(self, value):
-        self._state = value
-
     @property
     def state(self):
         """Return the current light level in lux."""
-        return self._state
+        return self.service.value(CharacteristicsTypes.LIGHT_LEVEL_CURRENT)
 
 
 class HomeKitCarbonDioxideSensor(HomeKitEntity):
     """Representation of a Homekit Carbon Dioxide sensor."""
-
-    def __init__(self, *args):
-        """Initialise the entity."""
-        super().__init__(*args)
-        self._state = None
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
@@ -172,24 +143,14 @@ class HomeKitCarbonDioxideSensor(HomeKitEntity):
         """Return units for the sensor."""
         return CONCENTRATION_PARTS_PER_MILLION
 
-    def _update_carbon_dioxide_level(self, value):
-        self._state = value
-
     @property
     def state(self):
         """Return the current CO2 level in ppm."""
-        return self._state
+        return self.service.value(CharacteristicsTypes.CARBON_DIOXIDE_LEVEL)
 
 
 class HomeKitBatterySensor(HomeKitEntity):
     """Representation of a Homekit battery sensor."""
-
-    def __init__(self, *args):
-        """Initialise the entity."""
-        super().__init__(*args)
-        self._state = None
-        self._low_battery = False
-        self._charging = False
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
@@ -218,12 +179,12 @@ class HomeKitBatterySensor(HomeKitEntity):
         # This is similar to the logic in helpers.icon, but we have delegated the
         # decision about what mdi:battery-alert is to the device.
         icon = "mdi:battery"
-        if self._charging and self.state > 10:
+        if self.is_charging and self.state > 10:
             percentage = int(round(self.state / 20 - 0.01)) * 20
             icon += f"-charging-{percentage}"
-        elif self._charging:
+        elif self.is_charging:
             icon += "-outline"
-        elif self._low_battery:
+        elif self.is_low_battery:
             icon += "-alert"
         elif self.state < 95:
             percentage = max(int(round(self.state / 10 - 0.01)) * 10, 10)
@@ -234,24 +195,25 @@ class HomeKitBatterySensor(HomeKitEntity):
     @property
     def unit_of_measurement(self):
         """Return units for the sensor."""
-        return UNIT_PERCENT
+        return UNIT_PERCENTAGE
 
-    def _update_battery_level(self, value):
-        self._state = value
+    @property
+    def is_low_battery(self):
+        """Return true if battery level is low."""
+        return self.service.value(CharacteristicsTypes.STATUS_LO_BATT) == 1
 
-    def _update_status_lo_batt(self, value):
-        self._low_battery = value == 1
-
-    def _update_charging_state(self, value):
+    @property
+    def is_charging(self):
+        """Return true if currently charing."""
         # 0 = not charging
         # 1 = charging
         # 2 = not chargeable
-        self._charging = value == 1
+        return self.service.value(CharacteristicsTypes.CHARGING_STATE) == 1
 
     @property
     def state(self):
         """Return the current battery level percentage."""
-        return self._state
+        return self.service.value(CharacteristicsTypes.BATTERY_LEVEL)
 
 
 ENTITY_TYPES = {

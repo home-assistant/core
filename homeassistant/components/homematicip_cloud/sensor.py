@@ -33,6 +33,7 @@ from homeassistant.const import (
     POWER_WATT,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -155,7 +156,7 @@ class HomematicipAccesspointStatus(HomematicipGenericDevice):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
-        return "%"
+        return UNIT_PERCENTAGE
 
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
@@ -194,7 +195,7 @@ class HomematicipHeatingThermostat(HomematicipGenericDevice):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
-        return "%"
+        return UNIT_PERCENTAGE
 
 
 class HomematicipHumiditySensor(HomematicipGenericDevice):
@@ -217,7 +218,7 @@ class HomematicipHumiditySensor(HomematicipGenericDevice):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
-        return "%"
+        return UNIT_PERCENTAGE
 
 
 class HomematicipTemperatureSensor(HomematicipGenericDevice):

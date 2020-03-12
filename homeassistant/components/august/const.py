@@ -8,8 +8,6 @@ CONF_ACCESS_TOKEN_CACHE_FILE = "access_token_cache_file"
 CONF_LOGIN_METHOD = "login_method"
 CONF_INSTALL_ID = "install_id"
 
-AUGUST_DEVICE_UPDATE = "august_devices_update"
-
 VERIFICATION_CODE_KEY = "verification_code"
 
 NOTIFICATION_ID = "august_notification"
@@ -21,6 +19,16 @@ DATA_AUGUST = "data_august"
 
 DEFAULT_NAME = "August"
 DOMAIN = "august"
+
+OPERATION_METHOD_AUTORELOCK = "autorelock"
+OPERATION_METHOD_REMOTE = "remote"
+OPERATION_METHOD_KEYPAD = "keypad"
+OPERATION_METHOD_MOBILE_DEVICE = "mobile"
+
+ATTR_OPERATION_AUTORELOCK = "autorelock"
+ATTR_OPERATION_METHOD = "method"
+ATTR_OPERATION_REMOTE = "remote"
+ATTR_OPERATION_KEYPAD = "keypad"
 
 # Limit battery, online, and hardware updates to hourly
 # in order to reduce the number of api requests and

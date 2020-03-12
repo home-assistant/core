@@ -134,7 +134,7 @@ class ProbeEndpoint:
                 continue
 
             channel_class = zha_regs.ZIGBEE_CHANNEL_REGISTRY.get(
-                cluster_id, base.AttributeListeningChannel
+                cluster_id, base.ZigbeeChannel
             )
             channel = channel_class(cluster, ep_channels)
             self.probe_single_cluster(component, channel, ep_channels)

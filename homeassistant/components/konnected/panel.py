@@ -39,7 +39,6 @@ from .const import (
     CONF_REPEAT,
     DOMAIN,
     ENDPOINT_ROOT,
-    SIGNAL_SENSOR_UPDATE,
     STATE_LOW,
     ZONE_TO_PIN,
 )
@@ -290,9 +289,7 @@ class AlarmPanel:
             if sensor_config.get(CONF_INVERSE):
                 state = not state
 
-            async_dispatcher_send(
-                self.hass, SIGNAL_SENSOR_UPDATE.format(entity_id), state
-            )
+            async_dispatcher_send(self.hass, f"konnected.{entity_id}.update", state)
 
     @callback
     def async_desired_settings_payload(self):

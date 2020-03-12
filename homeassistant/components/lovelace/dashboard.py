@@ -1,32 +1,53 @@
 """Lovelace dashboard support."""
 from abc import ABC, abstractmethod
+import logging
 import os
 import time
 
+import voluptuous as vol
+
+from homeassistant.const import CONF_FILENAME
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import storage
+from homeassistant.helpers import collection, storage
 from homeassistant.util.yaml import load_yaml
 
 from .const import (
+    CONF_ICON,
+    CONF_URL_PATH,
     DOMAIN,
     EVENT_LOVELACE_UPDATED,
+    LOVELACE_CONFIG_FILE,
     MODE_STORAGE,
     MODE_YAML,
+    STORAGE_DASHBOARD_CREATE_FIELDS,
+    STORAGE_DASHBOARD_UPDATE_FIELDS,
     ConfigNotFound,
 )
 
 CONFIG_STORAGE_KEY_DEFAULT = DOMAIN
+CONFIG_STORAGE_KEY = "lovelace.{}"
 CONFIG_STORAGE_VERSION = 1
+DASHBOARDS_STORAGE_KEY = f"{DOMAIN}_dashboards"
+DASHBOARDS_STORAGE_VERSION = 1
+_LOGGER = logging.getLogger(__name__)
 
 
 class LovelaceConfig(ABC):
     """Base class for Lovelace config."""
 
-    def __init__(self, hass, url_path):
+    def __init__(self, hass, url_path, config):
         """Initialize Lovelace config."""
         self.hass = hass
-        self.url_path = url_path
+        if config:
+            self.config = {**config, CONF_URL_PATH: url_path}
+        else:
+            self.config = None
+
+    @property
+    def url_path(self) -> str:
+        """Return url path."""
+        return self.config[CONF_URL_PATH] if self.config else None
 
     @property
     @abstractmethod
@@ -58,13 +79,16 @@ class LovelaceConfig(ABC):
 class LovelaceStorage(LovelaceConfig):
     """Class to handle Storage based Lovelace config."""
 
-    def __init__(self, hass, url_path):
+    def __init__(self, hass, config):
         """Initialize Lovelace config based on storage helper."""
-        super().__init__(hass, url_path)
-        if url_path is None:
+        if config is None:
+            url_path = None
             storage_key = CONFIG_STORAGE_KEY_DEFAULT
         else:
-            raise ValueError("Storage-based dashboards are not supported")
+            url_path = config[CONF_URL_PATH]
+            storage_key = CONFIG_STORAGE_KEY.format(url_path)
+
+        super().__init__(hass, url_path, config)
 
         self._store = storage.Store(hass, CONFIG_STORAGE_VERSION, storage_key)
         self._data = None
@@ -101,6 +125,9 @@ class LovelaceStorage(LovelaceConfig):
 
     async def async_save(self, config):
         """Save config."""
+        if self.hass.config.safe_mode:
+            raise HomeAssistantError("Saving not supported in safe mode")
+
         if self._data is None:
             await self._load()
         self._data["config"] = config
@@ -109,7 +136,12 @@ class LovelaceStorage(LovelaceConfig):
 
     async def async_delete(self):
         """Delete config."""
-        await self.async_save(None)
+        if self.hass.config.safe_mode:
+            raise HomeAssistantError("Deleting not supported in safe mode")
+
+        await self._store.async_remove()
+        self._data = None
+        self._config_updated()
 
     async def _load(self):
         """Load the config."""
@@ -120,10 +152,13 @@ class LovelaceStorage(LovelaceConfig):
 class LovelaceYAML(LovelaceConfig):
     """Class to handle YAML-based Lovelace config."""
 
-    def __init__(self, hass, url_path, path):
+    def __init__(self, hass, url_path, config):
         """Initialize the YAML config."""
-        super().__init__(hass, url_path)
-        self.path = hass.config.path(path)
+        super().__init__(hass, url_path, config)
+
+        self.path = hass.config.path(
+            config[CONF_FILENAME] if config else LOVELACE_CONFIG_FILE
+        )
         self._cache = None
 
     @property
@@ -138,7 +173,7 @@ class LovelaceYAML(LovelaceConfig):
         except ConfigNotFound:
             return {
                 "mode": self.mode,
-                "error": "{} not found".format(self.path),
+                "error": f"{self.path} not found",
             }
 
         return _config_info(self.mode, config)
@@ -179,3 +214,39 @@ def _config_info(mode, config):
         "resources": len(config.get("resources", [])),
         "views": len(config.get("views", [])),
     }
+
+
+class DashboardsCollection(collection.StorageCollection):
+    """Collection of dashboards."""
+
+    CREATE_SCHEMA = vol.Schema(STORAGE_DASHBOARD_CREATE_FIELDS)
+    UPDATE_SCHEMA = vol.Schema(STORAGE_DASHBOARD_UPDATE_FIELDS)
+
+    def __init__(self, hass):
+        """Initialize the dashboards collection."""
+        super().__init__(
+            storage.Store(hass, DASHBOARDS_STORAGE_VERSION, DASHBOARDS_STORAGE_KEY),
+            _LOGGER,
+        )
+
+    async def _process_create_data(self, data: dict) -> dict:
+        """Validate the config is valid."""
+        if data[CONF_URL_PATH] in self.hass.data[DOMAIN]["dashboards"]:
+            raise vol.Invalid("Dashboard url path needs to be unique")
+
+        return self.CREATE_SCHEMA(data)
+
+    @callback
+    def _get_suggested_id(self, info: dict) -> str:
+        """Suggest an ID based on the config."""
+        return info[CONF_URL_PATH]
+
+    async def _update_data(self, data: dict, update_data: dict) -> dict:
+        """Return a new updated data object."""
+        update_data = self.UPDATE_SCHEMA(update_data)
+        updated = {**data, **update_data}
+
+        if CONF_ICON in updated and updated[CONF_ICON] is None:
+            updated.pop(CONF_ICON)
+
+        return updated

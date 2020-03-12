@@ -992,6 +992,10 @@ def mock_storage(data=None):
         # To ensure that the data can be serialized
         data[store.key] = json.loads(json.dumps(data_to_write, cls=store._encoder))
 
+    async def mock_remove(store):
+        """Remove data."""
+        data.pop(store.key, None)
+
     with patch(
         "homeassistant.helpers.storage.Store._async_load",
         side_effect=mock_async_load,
@@ -999,6 +1003,10 @@ def mock_storage(data=None):
     ), patch(
         "homeassistant.helpers.storage.Store._write_data",
         side_effect=mock_write_data,
+        autospec=True,
+    ), patch(
+        "homeassistant.helpers.storage.Store.async_remove",
+        side_effect=mock_remove,
         autospec=True,
     ):
         yield data

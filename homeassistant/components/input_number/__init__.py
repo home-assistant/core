@@ -26,7 +26,6 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceC
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "input_number"
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 CONF_INITIAL = "initial"
 CONF_MIN = "min"
@@ -209,7 +208,7 @@ class InputNumber(RestoreEntity):
     def from_yaml(cls, config: typing.Dict) -> "InputNumber":
         """Return entity instance initialized from yaml storage."""
         input_num = cls(config)
-        input_num.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])
+        input_num.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         input_num.editable = False
         return input_num
 

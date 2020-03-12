@@ -29,6 +29,7 @@ class FakeEndpoint:
         self.model = model
         self.profile_id = zigpy.profiles.zha.PROFILE_ID
         self.device_type = None
+        self.request = CoroutineMock()
 
     def add_input_cluster(self, cluster_id):
         """Add an input cluster."""
@@ -51,7 +52,7 @@ def patch_cluster(cluster):
     cluster.configure_reporting = CoroutineMock(return_value=[0])
     cluster.deserialize = Mock()
     cluster.handle_cluster_request = Mock()
-    cluster.read_attributes = CoroutineMock()
+    cluster.read_attributes = CoroutineMock(return_value=[{}, {}])
     cluster.read_attributes_raw = Mock()
     cluster.unbind = CoroutineMock(return_value=[0])
     cluster.write_attributes = CoroutineMock(return_value=[0])
@@ -126,13 +127,15 @@ async def async_enable_traffic(hass, zha_devices):
     await hass.async_block_till_done()
 
 
-def make_zcl_header(command_id: int, global_command: bool = True) -> zcl_f.ZCLHeader:
+def make_zcl_header(
+    command_id: int, global_command: bool = True, tsn: int = 1
+) -> zcl_f.ZCLHeader:
     """Cluster.handle_message() ZCL Header helper."""
     if global_command:
         frc = zcl_f.FrameControl(zcl_f.FrameType.GLOBAL_COMMAND)
     else:
         frc = zcl_f.FrameControl(zcl_f.FrameType.CLUSTER_COMMAND)
-    return zcl_f.ZCLHeader(frc, tsn=1, command_id=command_id)
+    return zcl_f.ZCLHeader(frc, tsn=tsn, command_id=command_id)
 
 
 def reset_clusters(clusters):
