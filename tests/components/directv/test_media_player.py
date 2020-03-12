@@ -85,14 +85,15 @@ async def setup_directv(hass: HomeAssistantType) -> MockConfigEntry:
 async def setup_directv_with_locations(hass: HomeAssistantType) -> MockConfigEntry:
     """Set up mock DirecTV integration."""
     with patch(
-        "homeassistant.components.directv.DIRECTV", new=MockDirectvClass,
-    ), patch(
-        "homeassistant.components.directv.DIRECTV.get_locations",
+        "tests.components.directv.test_media_player.MockDirectvClass.get_locations",
         return_value=MOCK_GET_LOCATIONS_MULTIPLE,
-    ), patch(
-        "homeassistant.components.directv.media_player.DIRECTV", new=MockDirectvClass,
     ):
-        return await setup_integration(hass)
+        with patch(
+            "homeassistant.components.directv.DIRECTV", new=MockDirectvClass,
+        ), patch(
+            "homeassistant.components.directv.media_player.DIRECTV", new=MockDirectvClass,
+        ):
+            return await setup_integration(hass)
 
 
 async def async_turn_on(
