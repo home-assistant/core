@@ -91,7 +91,8 @@ async def setup_directv_with_locations(hass: HomeAssistantType) -> MockConfigEnt
         with patch(
             "homeassistant.components.directv.DIRECTV", new=MockDirectvClass,
         ), patch(
-            "homeassistant.components.directv.media_player.DIRECTV", new=MockDirectvClass,
+            "homeassistant.components.directv.media_player.DIRECTV",
+            new=MockDirectvClass,
         ):
             return await setup_integration(hass)
 
