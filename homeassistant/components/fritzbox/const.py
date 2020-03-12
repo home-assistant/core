@@ -8,6 +8,11 @@ ATTR_STATE_LOCKED = "locked"
 ATTR_STATE_SUMMER_MODE = "summer_mode"
 ATTR_STATE_WINDOW_OPEN = "window_open"
 
+ATTR_TEMPERATURE_UNIT = "temperature_unit"
+
+ATTR_TOTAL_CONSUMPTION = "total_consumption"
+ATTR_TOTAL_CONSUMPTION_UNIT = "total_consumption_unit"
+
 CONF_CONNECTIONS = "connections"
 
 DEFAULT_HOST = "fritz.box"

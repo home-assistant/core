@@ -12,16 +12,15 @@ from homeassistant.const import (
 from .const import (
     ATTR_STATE_DEVICE_LOCKED,
     ATTR_STATE_LOCKED,
+    ATTR_TEMPERATURE_UNIT,
+    ATTR_TOTAL_CONSUMPTION,
+    ATTR_TOTAL_CONSUMPTION_UNIT,
     CONF_CONNECTIONS,
     DOMAIN as FRITZBOX_DOMAIN,
     LOGGER,
 )
 
-ATTR_TOTAL_CONSUMPTION = "total_consumption"
-ATTR_TOTAL_CONSUMPTION_UNIT = "total_consumption_unit"
 ATTR_TOTAL_CONSUMPTION_UNIT_VALUE = ENERGY_KILO_WATT_HOUR
-
-ATTR_TEMPERATURE_UNIT = "temperature_unit"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
