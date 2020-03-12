@@ -632,7 +632,7 @@ samsungctl[websocket]==0.7.1
 samsungtvws[websocket]==1.4.0
 
 # homeassistant.components.sense
-sense_energy==0.7.0
+sense_energy==0.7.1
 
 # homeassistant.components.sentry
 sentry-sdk==0.13.5
