@@ -24,6 +24,7 @@ CONF_API_KEY = "api_key"
 CONF_LANG = "lang"
 CONF_MESSAGE_LANG = "message_lang"
 CONF_LINE_NUMBERS = "line_numbers"
+DEFAULT_NAME = "Stib-Mivb"
 
 SUPPORTED_LANGUAGES = ["nl", "fr"]
 SUPPORTED_MESSAGE_LANGUAGES = ["en", "nl", "fr"]
@@ -96,7 +97,7 @@ class StibMivbSensor(Entity):
         self._next_passages = None
         self.__icon = None
         self._attributes["stop_id"] = self.stop_id
-        self._name = None
+        self._name = DEFAULT_NAME
         self.direction = None
 
     @Throttle(datetime.timedelta(seconds=30))
@@ -120,17 +121,17 @@ class StibMivbSensor(Entity):
                 break
             try:
                 self.direction = direction
+                self._name = (
+                    self._stop_name
+                    + " line "
+                    + " ".join(self.line_ids)
+                    + " direction "
+                    + self.direction
+                )
             except NameError:
                 _LOGGER.error(
                     "line %s does service stop %s", self.line_ids[0], self.stop_id
                 )
-            self._name = (
-                self._stop_name
-                + " line "
-                + " ".join(self.line_ids)
-                + " direction "
-                + self.direction
-            )
 
         try:
             waiting_time_response = await self.api.get_waiting_time(self.stop_id)
