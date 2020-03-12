@@ -19,7 +19,7 @@ class Ballast(ZigbeeChannel):
 
 @registries.CLIENT_CHANNELS_REGISTRY.register(lighting.Color.cluster_id)
 class ColorClientChannel(ClientChannel):
-    """Color event relay channel."""
+    """Color client channel."""
 
     pass
 

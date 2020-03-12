@@ -362,7 +362,7 @@ class ZDOChannel(LogMixin):
 
 
 class ClientChannel(ZigbeeChannel):
-    """Event relay that can be attached to zigbee clusters."""
+    """Channel listener for Zigbee client (output) clusters."""
 
     CHANNEL_NAME = CHANNEL_EVENT_RELAY
 

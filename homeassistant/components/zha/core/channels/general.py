@@ -241,7 +241,7 @@ class MultistateValue(ZigbeeChannel):
 
 @registries.CLIENT_CHANNELS_REGISTRY.register(general.OnOff.cluster_id)
 class OnOffClientChannel(ClientChannel):
-    """OnOff event relay channel."""
+    """OnOff client channel."""
 
     pass
 
