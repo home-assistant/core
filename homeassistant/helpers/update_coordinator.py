@@ -138,7 +138,6 @@ class DataUpdateCoordinator:
                 self.last_update_success = False
 
         except NotImplementedError as err:
-            self.last_update_success = False
             raise err
 
         except Exception as err:  # pylint: disable=broad-except
