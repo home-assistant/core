@@ -96,4 +96,7 @@ async def async_unload_entry(hass, entry):
     fritz = hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id]
     await hass.async_add_executor_job(fritz.logout)
 
+    for domain in SUPPORTED_DOMAINS:
+        await hass.config_entries.async_forward_entry_unload(entry, domain)
+
     return True
