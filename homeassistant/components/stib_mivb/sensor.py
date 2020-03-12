@@ -108,7 +108,28 @@ class StibMivbSensor(Entity):
             except IndexError:
                 _LOGGER.error("stop %s does not exist", self.stop_id)
             self._attributes["stop_name"] = self._stop_name
-        self._name = self._stop_name + " line " + " ".join(self.line_ids)
+            stops_by_line = await self.api.get_stops_by_line(self.line_ids[0])
+            for line in stops_by_line["lines"]:
+                for point in line["points"]:
+                    if int(point["id"]) == int(self.stop_id):
+                        direction = line["direction"]
+                        break
+                else:
+                    continue
+                break
+            try:
+                self.direction = direction
+            except NameError:
+                _LOGGER.error(
+                    "line %s does service stop %s", self.line_ids[0], self.stop_id
+                )
+            self._name = (
+                self._stop_name
+                + " line "
+                + " ".join(self.line_ids)
+                + " direction "
+                + self.direction
+            )
 
         try:
             waiting_time_response = await self.api.get_waiting_time(self.stop_id)
