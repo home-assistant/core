@@ -34,7 +34,6 @@ def scanner(hass):
         "homeassistant.components.device_tracker.legacy.load_yaml_config_file",
         return_value={
             "device_1": {
-                "hide_if_away": False,
                 "mac": "DEV1",
                 "name": "Unnamed Device",
                 "picture": "http://example.com/dev1.jpg",
@@ -42,7 +41,6 @@ def scanner(hass):
                 "vendor": None,
             },
             "device_2": {
-                "hide_if_away": False,
                 "mac": "DEV2",
                 "name": "Unnamed Device",
                 "picture": "http://example.com/dev2.jpg",
