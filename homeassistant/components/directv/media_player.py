@@ -107,8 +107,6 @@ async def async_setup_entry(
         else:
             dtv = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
 
-        if not dtv:
-            continue
 
         entities.append(
             DirecTvDevice(
