@@ -105,7 +105,7 @@ class DataUpdateCoordinator:
         await self._debounced_refresh.async_call()
 
     async def async_update_data(self) -> Optional[Any]:
-        """Update data."""
+        """Fetch the latest data from the source."""
         if self.update_method is None:
             raise UpdateFailed("Update method not implemented")
         return await self.update_method()
