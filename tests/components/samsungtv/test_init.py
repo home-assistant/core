@@ -34,6 +34,7 @@ REMOTE_CALL = {
     "id": "ha.component.samsung",
     "method": "legacy",
     "host": MOCK_CONFIG[SAMSUNGTV_DOMAIN][0][CONF_HOST],
+    "port": None,
     "timeout": 1,
 }
 
