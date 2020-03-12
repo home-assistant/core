@@ -93,6 +93,8 @@ ATTR_NIGHT_SOUND = "night_sound"
 ATTR_SPEECH_ENHANCE = "speech_enhance"
 ATTR_QUEUE_POSITION = "queue_position"
 
+UNAVAILABLE_VALUES = {"", "NOT_IMPLEMENTED", None}
+
 
 class SonosData:
     """Storage class for platform global data."""
@@ -330,7 +332,7 @@ def soco_coordinator(funct):
 
 def _timespan_secs(timespan):
     """Parse a time-span into number of seconds."""
-    if timespan in ("", "NOT_IMPLEMENTED", None):
+    if timespan in UNAVAILABLE_VALUES:
         return None
 
     return sum(60 ** x[0] * int(x[1]) for x in enumerate(reversed(timespan.split(":"))))
@@ -427,7 +429,11 @@ class SonosEntity(MediaPlayerDevice):
     @soco_coordinator
     def state(self):
         """Return the state of the entity."""
-        if self._status in ("PAUSED_PLAYBACK", "STOPPED"):
+        if self._status in ("PAUSED_PLAYBACK", "STOPPED",):
+            # Sonos can consider itself "paused" but without having media loaded
+            # (happens if playing Spotify and via Spotify app you pick another device to play on)
+            if self._media_title is None:
+                return STATE_IDLE
             return STATE_PAUSED
         if self._status in ("PLAYING", "TRANSITIONING"):
             return STATE_PLAYING
@@ -511,16 +517,14 @@ class SonosEntity(MediaPlayerDevice):
 
     def _radio_artwork(self, url):
         """Return the private URL with artwork for a radio stream."""
-        if url not in ("", "NOT_IMPLEMENTED", None):
-            if url.find("tts_proxy") > 0:
-                # If the content is a tts don't try to fetch an image from it.
-                return None
-            url = "http://{host}:{port}/getaa?s=1&u={uri}".format(
-                host=self.soco.ip_address,
-                port=1400,
-                uri=urllib.parse.quote(url, safe=""),
-            )
-        return url
+        if url in UNAVAILABLE_VALUES:
+            return None
+
+        if url.find("tts_proxy") > 0:
+            # If the content is a tts don't try to fetch an image from it.
+            return None
+
+        return f"http://{self.soco.ip_address}:1400/getaa?s=1&u={urllib.parse.quote(url, safe='')}"
 
     def _attach_player(self):
         """Get basic information and add event subscriptions."""
@@ -606,9 +610,9 @@ class SonosEntity(MediaPlayerDevice):
 
         self._media_image_url = None
 
-        self._media_artist = source
+        self._media_artist = None
         self._media_album_name = None
-        self._media_title = None
+        self._media_title = source
 
         self._source_name = source
 
@@ -640,7 +644,7 @@ class SonosEntity(MediaPlayerDevice):
 
         # For radio streams we set the radio station name as the title.
         current_uri_metadata = media_info["CurrentURIMetaData"]
-        if current_uri_metadata not in ("", "NOT_IMPLEMENTED", None):
+        if current_uri_metadata not in UNAVAILABLE_VALUES:
             # currently soco does not have an API for this
             current_uri_metadata = pysonos.xml.XML.fromstring(
                 pysonos.utils.really_utf8(current_uri_metadata)
@@ -650,7 +654,7 @@ class SonosEntity(MediaPlayerDevice):
                 ".//{http://purl.org/dc/elements/1.1/}title"
             )
 
-            if md_title not in ("", "NOT_IMPLEMENTED", None):
+            if md_title not in UNAVAILABLE_VALUES:
                 self._media_title = md_title
 
         if self._media_artist and self._media_title:
@@ -867,25 +871,25 @@ class SonosEntity(MediaPlayerDevice):
     @soco_coordinator
     def media_artist(self):
         """Artist of current playing media, music track only."""
-        return self._media_artist
+        return self._media_artist or None
 
     @property
     @soco_coordinator
     def media_album_name(self):
         """Album name of current playing media, music track only."""
-        return self._media_album_name
+        return self._media_album_name or None
 
     @property
     @soco_coordinator
     def media_title(self):
         """Title of current playing media."""
-        return self._media_title
+        return self._media_title or None
 
     @property
     @soco_coordinator
     def source(self):
         """Name of the current input source."""
-        return self._source_name
+        return self._source_name or None
 
     @property
     @soco_coordinator
