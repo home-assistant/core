@@ -98,7 +98,12 @@ async def async_setup_entry(
             continue
 
         if loc["clientAddr"] != "0":
-            dtv = DIRECTV(entry.data[CONF_HOST], DEFAULT_PORT, loc["clientAddr"])
+            dtv = DIRECTV(
+                entry.data[CONF_HOST],
+                DEFAULT_PORT,
+                loc["clientAddr"],
+                determine_state=False,
+            )
         else:
             dtv = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
 
