@@ -137,6 +137,10 @@ class DataUpdateCoordinator:
                 self.logger.error("Error fetching %s data: %s", self.name, err)
                 self.last_update_success = False
 
+        except NotImplementedError as err:
+            self.last_update_success = False
+            raise err
+
         except Exception as err:  # pylint: disable=broad-except
             self.last_update_success = False
             self.logger.exception(

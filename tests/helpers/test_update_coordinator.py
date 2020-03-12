@@ -110,10 +110,10 @@ async def test_refresh_no_update_method(crd, caplog):
 
     crd.update_method = None
 
-    await crd.async_refresh()
+    with pytest.raises(NotImplementedError):
+        await crd.async_refresh()
 
     assert crd.last_update_success is False
-    assert "Update method not implemented" in caplog.text
 
 
 async def test_update_interval(hass, crd):
