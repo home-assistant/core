@@ -102,7 +102,7 @@ class MockDirectvClass(DIRECTV):
     def __init__(self, ip, port=8080, clientAddr="0", determine_state=False):
         """Initialize the fake DirecTV device."""
         super().__init__(
-            host=ip, port=port, clientAddr=clientAddr, determine_state=determine_state,
+            ip=ip, port=port, clientAddr=clientAddr, determine_state=determine_state,
         )
 
         self._play = False
