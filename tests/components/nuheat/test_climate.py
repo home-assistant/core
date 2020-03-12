@@ -2,22 +2,14 @@
 import unittest
 from unittest.mock import Mock, patch
 
-from homeassistant import setup
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.components.nuheat import DOMAIN
 import homeassistant.components.nuheat.climate as nuheat
-from homeassistant.const import (
-    CONF_DEVICES,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 from tests.common import get_test_home_assistant
 
@@ -68,40 +60,33 @@ class TestNuHeat(unittest.TestCase):
         """Stop hass."""
         self.hass.stop()
 
-    @patch("homeassistant.components.nuheat.nuheat.NuHeat")
     @patch("homeassistant.components.nuheat.climate.NuHeatThermostat")
-    def test_setup_platform(self, mocked_thermostat, mock_api):
+    def test_setup_platform(self, mocked_thermostat):
         """Test setup_platform."""
         mocked_thermostat.return_value = self.thermostat
-        config = {
-            DOMAIN: {
-                CONF_USERNAME: "username",
-                CONF_PASSWORD: "password",
-                CONF_DEVICES: ["12345"],
-            }
-        }
-        assert setup.setup_component(self.hass, DOMAIN, config)
-        self.hass.block_till_done()
+        thermostat = mocked_thermostat(self.api, "12345", "F")
+        thermostats = [thermostat]
 
-    @patch("homeassistant.components.nuheat.nuheat.NuHeat")
+        self.hass.data[nuheat.DOMAIN] = (self.api, ["12345"])
+
+        config = {}
+        add_entities = Mock()
+        discovery_info = {}
+
+        nuheat.setup_platform(self.hass, config, add_entities, discovery_info)
+        add_entities.assert_called_once_with(thermostats, True)
+
     @patch("homeassistant.components.nuheat.climate.NuHeatThermostat")
-    def test_resume_program_service(self, mocked_thermostat, mock_api):
+    def test_resume_program_service(self, mocked_thermostat):
         """Test resume program service."""
         mocked_thermostat.return_value = self.thermostat
-        thermostat = mocked_thermostat(mock_api, "12345", "F")
+        thermostat = mocked_thermostat(self.api, "12345", "F")
         thermostat.resume_program = Mock()
         thermostat.schedule_update_ha_state = Mock()
         thermostat.entity_id = "climate.master_bathroom"
 
-        config = {
-            DOMAIN: {
-                CONF_USERNAME: "username",
-                CONF_PASSWORD: "password",
-                CONF_DEVICES: ["12345"],
-            }
-        }
-        assert setup.setup_component(self.hass, DOMAIN, config)
-        self.hass.block_till_done()
+        self.hass.data[nuheat.DOMAIN] = (self.api, ["12345"])
+        nuheat.setup_platform(self.hass, {}, Mock(), {})
 
         # Explicit entity
         self.hass.services.call(
