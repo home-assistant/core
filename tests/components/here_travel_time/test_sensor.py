@@ -37,7 +37,6 @@ from homeassistant.components.here_travel_time.sensor import (
     TRAVEL_MODE_PUBLIC,
     TRAVEL_MODE_PUBLIC_TIME_TABLE,
     TRAVEL_MODE_TRUCK,
-    UNIT_OF_MEASUREMENT,
     convert_time_to_isodate,
 )
 from homeassistant.const import ATTR_ICON, EVENT_HOMEASSISTANT_START
@@ -1126,3 +1125,49 @@ async def test_departure(hass, requests_mock_credentials_check):
 
     sensor = hass.states.get("sensor.test")
     assert sensor.state == "80"
+
+
+async def test_arrival_only_allowed_for_timetable(hass, caplog):
+    """Test that arrival is only allowed when mode is publicTransportTimeTable."""
+    caplog.set_level(logging.ERROR)
+    origin = "41.9798,-87.8801"
+    destination = "41.9043,-87.9216"
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin_latitude": origin.split(",")[0],
+            "origin_longitude": origin.split(",")[1],
+            "destination_latitude": destination.split(",")[0],
+            "destination_longitude": destination.split(",")[1],
+            "api_key": API_KEY,
+            "arrival": "01:00:00",
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+    assert len(caplog.records) == 1
+    assert "[arrival] is an invalid option" in caplog.text
+
+
+async def test_exclusive_arrival_and_departure(hass, caplog):
+    """Test that arrival and departure are exclusive."""
+    caplog.set_level(logging.ERROR)
+    origin = "41.9798,-87.8801"
+    destination = "41.9043,-87.9216"
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin_latitude": origin.split(",")[0],
+            "origin_longitude": origin.split(",")[1],
+            "destination_latitude": destination.split(",")[0],
+            "destination_longitude": destination.split(",")[1],
+            "api_key": API_KEY,
+            "arrival": "01:00:00",
+            "mode": TRAVEL_MODE_PUBLIC_TIME_TABLE,
+            "departure": "01:00:00",
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+    assert len(caplog.records) == 1
+    assert "two or more values in the same group of exclusion" in caplog.text

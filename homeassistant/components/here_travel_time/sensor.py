@@ -108,8 +108,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Inclusive(CONF_ORIGIN_LONGITUDE, "origin_coordinates"): cv.longitude,
         vol.Exclusive(CONF_ORIGIN_LATITUDE, "origin"): cv.latitude,
         vol.Exclusive(CONF_ORIGIN_ENTITY_ID, "origin"): cv.entity_id,
-        vol.Exclusive(CONF_ARRIVAL, "arrival_departure"): cv.time,
-        vol.Exclusive(CONF_DEPARTURE, "arrival_departure"): cv.time,
         vol.Optional(CONF_DEPARTURE): cv.time,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_MODE, default=TRAVEL_MODE_CAR): vol.In(TRAVEL_MODE),
@@ -122,14 +120,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_DESTINATION_LATITUDE, CONF_DESTINATION_ENTITY_ID),
     cv.has_at_least_one_key(CONF_ORIGIN_LATITUDE, CONF_ORIGIN_ENTITY_ID),
-    vol.Any(
-        PLATFORM_SCHEMA.extend(
-            {
-                vol.Required(CONF_MODE): vol.Match(TRAVEL_MODE_PUBLIC_TIME_TABLE),
-                vol.Required(CONF_ARRIVAL): cv.time,
-            }
-        ),
-        PLATFORM_SCHEMA,
+    cv.key_value_schemas(
+        CONF_MODE,
+        {
+            None: PLATFORM_SCHEMA,
+            TRAVEL_MODE_BICYCLE: PLATFORM_SCHEMA,
+            TRAVEL_MODE_CAR: PLATFORM_SCHEMA,
+            TRAVEL_MODE_PEDESTRIAN: PLATFORM_SCHEMA,
+            TRAVEL_MODE_PUBLIC: PLATFORM_SCHEMA,
+            TRAVEL_MODE_TRUCK: PLATFORM_SCHEMA,
+            TRAVEL_MODE_PUBLIC_TIME_TABLE: PLATFORM_SCHEMA.extend(
+                {
+                    vol.Exclusive(CONF_ARRIVAL, "arrival_departure"): cv.time,
+                    vol.Exclusive(CONF_DEPARTURE, "arrival_departure"): cv.time,
+                }
+            ),
+        },
     ),
 )
 
