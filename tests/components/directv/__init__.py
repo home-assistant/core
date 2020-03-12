@@ -1,4 +1,6 @@
 """Tests for the DirecTV component."""
+from DirectPy import DIRECTV
+
 from homeassistant.components.directv.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.typing import HomeAssistantType
