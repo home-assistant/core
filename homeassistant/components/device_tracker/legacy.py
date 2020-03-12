@@ -37,11 +37,9 @@ from .const import (
     ATTR_HOST_NAME,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
-    CONF_AWAY_HIDE,
     CONF_CONSIDER_HOME,
     CONF_NEW_DEVICE_DEFAULTS,
     CONF_TRACK_NEW,
-    DEFAULT_AWAY_HIDE,
     DEFAULT_CONSIDER_HOME,
     DEFAULT_TRACK_NEW,
     DOMAIN,
@@ -198,7 +196,6 @@ class DeviceTracker:
             mac,
             picture=picture,
             icon=icon,
-            hide_if_away=self.defaults.get(CONF_AWAY_HIDE, DEFAULT_AWAY_HIDE),
         )
         self.devices[dev_id] = device
         if mac is not None:
@@ -303,7 +300,6 @@ class Device(RestoreEntity):
         picture: str = None,
         gravatar: str = None,
         icon: str = None,
-        hide_if_away: bool = False,
     ) -> None:
         """Initialize a device."""
         self.hass = hass
@@ -330,8 +326,6 @@ class Device(RestoreEntity):
             self.config_picture = picture
 
         self.icon = icon
-
-        self.away_hide = hide_if_away
 
         self.source_type = None
 
@@ -371,11 +365,6 @@ class Device(RestoreEntity):
     def device_state_attributes(self):
         """Return device state attributes."""
         return self._attributes
-
-    @property
-    def hidden(self):
-        """If device should be hidden."""
-        return self.away_hide and self.state != STATE_HOME
 
     async def async_seen(
         self,
@@ -524,7 +513,6 @@ async def async_load_config(
             vol.Optional(CONF_MAC, default=None): vol.Any(
                 None, vol.All(cv.string, vol.Upper)
             ),
-            vol.Optional(CONF_AWAY_HIDE, default=DEFAULT_AWAY_HIDE): cv.boolean,
             vol.Optional("gravatar", default=None): vol.Any(None, cv.string),
             vol.Optional("picture", default=None): vol.Any(None, cv.string),
             vol.Optional(CONF_CONSIDER_HOME, default=consider_home): vol.All(
@@ -544,6 +532,7 @@ async def async_load_config(
     for dev_id, device in devices.items():
         # Deprecated option. We just ignore it to avoid breaking change
         device.pop("vendor", None)
+        device.pop("hide_if_away", None)
         try:
             device = dev_schema(device)
             device["dev_id"] = cv.slugify(dev_id)
@@ -564,7 +553,6 @@ def update_config(path: str, dev_id: str, device: Device):
                 ATTR_ICON: device.icon,
                 "picture": device.config_picture,
                 "track": device.track,
-                CONF_AWAY_HIDE: device.away_hide,
             }
         }
         out.write("\n")
