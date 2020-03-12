@@ -5,7 +5,7 @@ import zigpy.zcl.clusters.lighting as lighting
 
 from .. import registries, typing as zha_typing
 from ..const import REPORT_CONFIG_DEFAULT
-from .base import EventRelayChannel, ZigbeeChannel
+from .base import ClientChannel, ZigbeeChannel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,8 +17,8 @@ class Ballast(ZigbeeChannel):
     pass
 
 
-@registries.OUTPUT_CHANNELS_REGISTRY.register(lighting.Color.cluster_id)
-class ColorClientChannel(EventRelayChannel):
+@registries.CLIENT_CHANNELS_REGISTRY.register(lighting.Color.cluster_id)
+class ColorClientChannel(ClientChannel):
     """Color event relay channel."""
 
     pass

@@ -163,7 +163,7 @@ class ChannelPool:
         self._channels: Channels = channels
         self._claimed_channels: ChannelsDict = {}
         self._id: int = ep_id
-        self._relay_channels: Dict[str, zha_typing.EventRelayChannelType] = {}
+        self._relay_channels: Dict[str, zha_typing.ClientChannelType] = {}
         self._unique_id: str = f"{channels.unique_id}-{ep_id}"
 
     @property
@@ -217,7 +217,7 @@ class ChannelPool:
         return self._channels.zha_device.model
 
     @property
-    def relay_channels(self) -> Dict[str, zha_typing.EventRelayChannelType]:
+    def relay_channels(self) -> Dict[str, zha_typing.ClientChannelType]:
         """Return a dict of event relay channels."""
         return self._relay_channels
 
@@ -272,7 +272,7 @@ class ChannelPool:
     @callback
     def add_relay_channels(self) -> None:
         """Create relay channels for all output clusters if in the registry."""
-        for cluster_id, channel_class in zha_regs.OUTPUT_CHANNELS_REGISTRY.items():
+        for cluster_id, channel_class in zha_regs.CLIENT_CHANNELS_REGISTRY.items():
             cluster = self.endpoint.out_clusters.get(cluster_id)
             if cluster is not None:
                 channel = channel_class(cluster, self)

@@ -20,7 +20,7 @@ from ..const import (
     SIGNAL_SET_LEVEL,
     SIGNAL_STATE_ATTR,
 )
-from .base import EventRelayChannel, ZigbeeChannel, parse_and_log_command
+from .base import ClientChannel, ZigbeeChannel, parse_and_log_command
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -166,8 +166,8 @@ class Identify(ZigbeeChannel):
             self.async_send_signal(f"{self.unique_id}_{cmd}", args[0])
 
 
-@registries.OUTPUT_CHANNELS_REGISTRY.register(general.LevelControl.cluster_id)
-class LevelControlClientChannel(EventRelayChannel):
+@registries.CLIENT_CHANNELS_REGISTRY.register(general.LevelControl.cluster_id)
+class LevelControlClientChannel(ClientChannel):
     """Event Relay channel for LevelControl cluster."""
 
     pass
@@ -239,8 +239,8 @@ class MultistateValue(ZigbeeChannel):
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
-@registries.OUTPUT_CHANNELS_REGISTRY.register(general.OnOff.cluster_id)
-class OnOffClientChannel(EventRelayChannel):
+@registries.CLIENT_CHANNELS_REGISTRY.register(general.OnOff.cluster_id)
+class OnOffClientChannel(ClientChannel):
     """OnOff event relay channel."""
 
     pass
@@ -449,8 +449,8 @@ class RSSILocation(ZigbeeChannel):
     pass
 
 
-@registries.OUTPUT_CHANNELS_REGISTRY.register(general.Scenes.cluster_id)
-class ScenesClientChannel(EventRelayChannel):
+@registries.CLIENT_CHANNELS_REGISTRY.register(general.Scenes.cluster_id)
+class ScenesClientChannel(ClientChannel):
     """Scenes channel."""
 
     pass
