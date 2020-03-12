@@ -11,6 +11,12 @@ SSDP = {
             "manufacturer": "Royal Philips Electronics"
         }
     ],
+    "directv": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
+            "manufacturer": "DIRECTV"
+        }
+    ],
     "heos": [
         {
             "st": "urn:schemas-denon-com:device:ACT-Denon:1"
@@ -30,11 +36,20 @@ SSDP = {
         {
             "manufacturer": "Royal Philips Electronics",
             "modelName": "Philips hue bridge 2015"
+        },
+        {
+            "manufacturer": "Signify",
+            "modelName": "Philips hue bridge 2015"
+        }
+    ],
+    "konnected": [
+        {
+            "manufacturer": "konnected.io"
         }
     ],
     "samsungtv": [
         {
-            "deviceType": "urn:samsung.com:device:RemoteControlReceiver:1"
+            "st": "urn:samsung.com:device:RemoteControlReceiver:1"
         }
     ],
     "sonos": [

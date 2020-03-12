@@ -4,6 +4,7 @@ import unittest
 import pytest
 
 import homeassistant.components.radarr.sensor as radarr
+from homeassistant.const import DATA_GIGABYTES
 
 from tests.common import get_test_home_assistant
 
@@ -218,7 +219,7 @@ class TestRadarrSetup(unittest.TestCase):
             "platform": "radarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": [],
             "monitored_conditions": ["diskspace"],
         }
@@ -227,7 +228,7 @@ class TestRadarrSetup(unittest.TestCase):
             device.update()
             assert "263.10" == device.state
             assert "mdi:harddisk" == device.icon
-            assert "GB" == device.unit_of_measurement
+            assert DATA_GIGABYTES == device.unit_of_measurement
             assert "Radarr Disk Space" == device.name
             assert "263.10/465.42GB (56.53%)" == device.device_state_attributes["/data"]
 
@@ -238,7 +239,7 @@ class TestRadarrSetup(unittest.TestCase):
             "platform": "radarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["diskspace"],
         }
@@ -247,7 +248,7 @@ class TestRadarrSetup(unittest.TestCase):
             device.update()
             assert "263.10" == device.state
             assert "mdi:harddisk" == device.icon
-            assert "GB" == device.unit_of_measurement
+            assert DATA_GIGABYTES == device.unit_of_measurement
             assert "Radarr Disk Space" == device.name
             assert "263.10/465.42GB (56.53%)" == device.device_state_attributes["/data"]
 
@@ -258,7 +259,7 @@ class TestRadarrSetup(unittest.TestCase):
             "platform": "radarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["commands"],
         }
@@ -278,7 +279,7 @@ class TestRadarrSetup(unittest.TestCase):
             "platform": "radarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["movies"],
         }
@@ -298,7 +299,7 @@ class TestRadarrSetup(unittest.TestCase):
             "platform": "radarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["upcoming"],
         }
@@ -325,7 +326,7 @@ class TestRadarrSetup(unittest.TestCase):
             "platform": "radarr",
             "api_key": "foo",
             "days": "1",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["upcoming"],
         }
@@ -348,7 +349,7 @@ class TestRadarrSetup(unittest.TestCase):
             "platform": "radarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["status"],
         }
@@ -368,7 +369,7 @@ class TestRadarrSetup(unittest.TestCase):
             "platform": "radarr",
             "api_key": "foo",
             "days": "1",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["upcoming"],
             "ssl": "true",
@@ -393,7 +394,7 @@ class TestRadarrSetup(unittest.TestCase):
             "platform": "radarr",
             "api_key": "foo",
             "days": "1",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["upcoming"],
         }

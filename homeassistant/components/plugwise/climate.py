@@ -13,6 +13,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_OFF,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
@@ -66,7 +67,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Add the Plugwise (Anna) Thermostate."""
+    """Add the Plugwise (Anna) Thermostat."""
     api = haanna.Haanna(
         config[CONF_USERNAME],
         config[CONF_PASSWORD],
@@ -88,7 +89,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class ThermostatDevice(ClimateDevice):
-    """Representation of an Plugwise thermostat."""
+    """Representation of the Plugwise thermostat."""
 
     def __init__(self, api, name, min_temp, max_temp):
         """Set up the Plugwise API."""
@@ -96,14 +97,18 @@ class ThermostatDevice(ClimateDevice):
         self._min_temp = min_temp
         self._max_temp = max_temp
         self._name = name
+        self._direct_objects = None
         self._domain_objects = None
         self._outdoor_temperature = None
         self._selected_schema = None
+        self._last_active_schema = None
         self._preset_mode = None
         self._presets = None
         self._presets_list = None
+        self._boiler_status = None
         self._heating_status = None
         self._cooling_status = None
+        self._dhw_status = None
         self._schema_names = None
         self._schema_status = None
         self._current_temperature = None
@@ -115,8 +120,8 @@ class ThermostatDevice(ClimateDevice):
 
     @property
     def hvac_action(self):
-        """Return the current action."""
-        if self._heating_status:
+        """Return the current hvac action."""
+        if self._heating_status or self._boiler_status or self._dhw_status:
             return CURRENT_HVAC_HEAT
         if self._cooling_status:
             return CURRENT_HVAC_COOL
@@ -143,8 +148,10 @@ class ThermostatDevice(ClimateDevice):
         attributes = {}
         if self._outdoor_temperature:
             attributes["outdoor_temperature"] = self._outdoor_temperature
-        attributes["available_schemas"] = self._schema_names
-        attributes["selected_schema"] = self._selected_schema
+        if self._schema_names:
+            attributes["available_schemas"] = self._schema_names
+        if self._selected_schema:
+            attributes["selected_schema"] = self._selected_schema
         if self._boiler_temperature:
             attributes["boiler_temperature"] = self._boiler_temperature
         if self._water_pressure:
@@ -162,7 +169,7 @@ class ThermostatDevice(ClimateDevice):
     @property
     def hvac_modes(self):
         """Return the available hvac modes list."""
-        if self._heating_status is not None:
+        if self._heating_status is not None or self._boiler_status is not None:
             if self._cooling_status is not None:
                 return HVAC_MODES_2
             return HVAC_MODES_1
@@ -173,11 +180,11 @@ class ThermostatDevice(ClimateDevice):
         """Return current active hvac state."""
         if self._schema_status:
             return HVAC_MODE_AUTO
-        if self._heating_status:
+        if self._heating_status or self._boiler_status or self._dhw_status:
             if self._cooling_status:
                 return HVAC_MODE_HEAT_COOL
             return HVAC_MODE_HEAT
-        return None
+        return HVAC_MODE_OFF
 
     @property
     def target_temperature(self):
@@ -193,9 +200,9 @@ class ThermostatDevice(ClimateDevice):
     def preset_mode(self):
         """Return the active selected schedule-name.
 
-        Or return the active preset, or return Temporary in case of a manual change
-        in the set-temperature with a weekschedule active,
-        or return Manual in case of a manual change and no weekschedule active.
+        Or, return the active preset, or return Temporary in case of a manual change
+        in the set-temperature with a weekschedule active.
+        Or return Manual in case of a manual change and no weekschedule active.
         """
         if self._presets:
             presets = self._presets
@@ -248,7 +255,7 @@ class ThermostatDevice(ClimateDevice):
         if hvac_mode == HVAC_MODE_AUTO:
             schema_mode = "true"
         self._api.set_schema_state(
-            self._domain_objects, self._selected_schema, schema_mode
+            self._domain_objects, self._last_active_schema, schema_mode
         )
 
     def set_preset_mode(self, preset_mode):
@@ -259,16 +266,22 @@ class ThermostatDevice(ClimateDevice):
     def update(self):
         """Update the data from the thermostat."""
         _LOGGER.debug("Update called")
+        self._direct_objects = self._api.get_direct_objects()
         self._domain_objects = self._api.get_domain_objects()
         self._outdoor_temperature = self._api.get_outdoor_temperature(
             self._domain_objects
         )
         self._selected_schema = self._api.get_active_schema_name(self._domain_objects)
+        self._last_active_schema = self._api.get_last_active_schema_name(
+            self._domain_objects
+        )
         self._preset_mode = self._api.get_current_preset(self._domain_objects)
         self._presets = self._api.get_presets(self._domain_objects)
         self._presets_list = list(self._api.get_presets(self._domain_objects))
-        self._heating_status = self._api.get_heating_status(self._domain_objects)
-        self._cooling_status = self._api.get_cooling_status(self._domain_objects)
+        self._boiler_status = self._api.get_boiler_status(self._direct_objects)
+        self._heating_status = self._api.get_heating_status(self._direct_objects)
+        self._cooling_status = self._api.get_cooling_status(self._direct_objects)
+        self._dhw_status = self._api.get_domestic_hot_water_status(self._direct_objects)
         self._schema_names = self._api.get_schema_names(self._domain_objects)
         self._schema_status = self._api.get_schema_state(self._domain_objects)
         self._current_temperature = self._api.get_current_temperature(

@@ -23,6 +23,8 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 TYPE_STANDARD = "standard"
 TYPE_INVERTED = "inverted"
 
@@ -146,17 +148,17 @@ class RflinkCover(RflinkCommand, CoverDevice, RestoreEntity):
         """Return True because covers can be stopped midway."""
         return True
 
-    def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs):
         """Turn the device close."""
-        return self._async_handle_command("close_cover")
+        await self._async_handle_command("close_cover")
 
-    def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs):
         """Turn the device open."""
-        return self._async_handle_command("open_cover")
+        await self._async_handle_command("open_cover")
 
-    def async_stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs):
         """Turn the device stop."""
-        return self._async_handle_command("stop_cover")
+        await self._async_handle_command("stop_cover")
 
 
 class InvertedRflinkCover(RflinkCover):

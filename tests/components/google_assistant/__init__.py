@@ -22,6 +22,7 @@ class MockConfig(helpers.AbstractConfig):
         *,
         secure_devices_pin=None,
         should_expose=None,
+        should_2fa=None,
         entity_config=None,
         hass=None,
         local_sdk_webhook_id=None,
@@ -91,7 +92,7 @@ DEMO_DEVICES = [
         "id": "switch.ac",
         "name": {"name": "AC"},
         "traits": ["action.devices.traits.OnOff"],
-        "type": "action.devices.types.SWITCH",
+        "type": "action.devices.types.OUTLET",
         "willReportState": False,
     },
     {
@@ -103,7 +104,10 @@ DEMO_DEVICES = [
     },
     {
         "id": "light.ceiling_lights",
-        "name": {"name": "Roof Lights", "nicknames": ["top lights", "ceiling lights"]},
+        "name": {
+            "name": "Roof Lights",
+            "nicknames": ["Roof Lights", "top lights", "ceiling lights"],
+        },
         "traits": [
             "action.devices.traits.OnOff",
             "action.devices.traits.Brightness",

@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -210,6 +211,7 @@ class SMAsensor(Entity):
         """SMA sensors are updated & don't poll."""
         return False
 
+    @callback
     def async_update_values(self):
         """Update this sensor."""
         update = False

@@ -1,7 +1,7 @@
 """The tests for frontend storage."""
 import pytest
 
-from homeassistant.components.frontend import storage
+from homeassistant.components.frontend import DOMAIN
 from homeassistant.setup import async_setup_component
 
 
@@ -26,7 +26,7 @@ async def test_get_user_data_empty(hass, hass_ws_client, hass_storage):
 
 async def test_get_user_data(hass, hass_ws_client, hass_admin_user, hass_storage):
     """Test get_user_data command."""
-    storage_key = storage.STORAGE_KEY_USER_DATA.format(hass_admin_user.id)
+    storage_key = f"{DOMAIN}.user_data_{hass_admin_user.id}"
     hass_storage[storage_key] = {
         "key": storage_key,
         "version": 1,
@@ -102,7 +102,7 @@ async def test_set_user_data_empty(hass, hass_ws_client, hass_storage):
 
 async def test_set_user_data(hass, hass_ws_client, hass_storage, hass_admin_user):
     """Test set_user_data command with initial data."""
-    storage_key = storage.STORAGE_KEY_USER_DATA.format(hass_admin_user.id)
+    storage_key = f"{DOMAIN}.user_data_{hass_admin_user.id}"
     hass_storage[storage_key] = {
         "version": 1,
         "data": {"test-key": "test-value", "test-complex": "string"},

@@ -52,9 +52,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         # Check if host needs to be updated
         entry = entries[0]
         if entry.data[CONF_HOST] != host:
-            entry.data[CONF_HOST] = host
-            entry.title = format_title(host)
-            hass.config_entries.async_update_entry(entry)
+            hass.config_entries.async_update_entry(
+                entry, title=format_title(host), data={**entry.data, CONF_HOST: host}
+            )
 
     return True
 

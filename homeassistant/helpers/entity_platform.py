@@ -7,6 +7,7 @@ from typing import Optional
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import callback, split_entity_id, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.util.async_ import run_callback_threadsafe
 
 from .entity_registry import DISABLED_INTEGRATION
@@ -61,22 +62,42 @@ class EntityPlatform:
         # Platform is None for the EntityComponent "catch-all" EntityPlatform
         # which powers entity_component.add_entities
         if platform is None:
-            self.parallel_updates = None
-            self.parallel_updates_semaphore: Optional[asyncio.Semaphore] = None
+            self.parallel_updates_created = True
+            self.parallel_updates: Optional[asyncio.Semaphore] = None
             return
 
-        self.parallel_updates = getattr(platform, "PARALLEL_UPDATES", None)
-        # semaphore will be created on demand
-        self.parallel_updates_semaphore = None
+        self.parallel_updates_created = False
+        self.parallel_updates = None
 
-    def _get_parallel_updates_semaphore(self) -> asyncio.Semaphore:
-        """Get or create a semaphore for parallel updates."""
-        if self.parallel_updates_semaphore is None:
-            self.parallel_updates_semaphore = asyncio.Semaphore(
-                self.parallel_updates if self.parallel_updates else 1,
-                loop=self.hass.loop,
-            )
-        return self.parallel_updates_semaphore
+    @callback
+    def _get_parallel_updates_semaphore(
+        self, entity_has_async_update: bool
+    ) -> Optional[asyncio.Semaphore]:
+        """Get or create a semaphore for parallel updates.
+
+        Semaphore will be created on demand because we base it off if update method is async or not.
+
+        If parallel updates is set to 0, we skip the semaphore.
+        If parallel updates is set to a number, we initialize the semaphore to that number.
+        Default for entities with `async_update` method is 1. Otherwise it's 0.
+        """
+        if self.parallel_updates_created:
+            return self.parallel_updates
+
+        self.parallel_updates_created = True
+
+        parallel_updates = getattr(self.platform, "PARALLEL_UPDATES", None)
+
+        if parallel_updates is None and not entity_has_async_update:
+            parallel_updates = 1
+
+        if parallel_updates == 0:
+            parallel_updates = None
+
+        if parallel_updates is not None:
+            self.parallel_updates = asyncio.Semaphore(parallel_updates)
+
+        return self.parallel_updates
 
     async def async_setup(self, platform_config, discovery_info=None):
         """Set up the platform from a config file."""
@@ -146,7 +167,8 @@ class EntityPlatform:
         warn_task = hass.loop.call_later(
             SLOW_SETUP_WARNING,
             logger.warning,
-            "Setup of platform %s is taking over %s seconds.",
+            "Setup of %s platform %s is taking over %s seconds.",
+            self.domain,
             self.platform_name,
             SLOW_SETUP_WARNING,
         )
@@ -193,7 +215,11 @@ class EntityPlatform:
             )
             return False
         except Exception:  # pylint: disable=broad-except
-            logger.exception("Error while setting up platform %s", self.platform_name)
+            logger.exception(
+                "Error while setting up %s platform for %s",
+                self.platform_name,
+                self.domain,
+            )
             return False
         finally:
             warn_task.cancel()
@@ -276,21 +302,9 @@ class EntityPlatform:
 
         entity.hass = self.hass
         entity.platform = self
-
-        # Async entity
-        # PARALLEL_UPDATES == None: entity.parallel_updates = None
-        # PARALLEL_UPDATES == 0:    entity.parallel_updates = None
-        # PARALLEL_UPDATES > 0:     entity.parallel_updates = Semaphore(p)
-        # Sync entity
-        # PARALLEL_UPDATES == None: entity.parallel_updates = Semaphore(1)
-        # PARALLEL_UPDATES == 0:    entity.parallel_updates = None
-        # PARALLEL_UPDATES > 0:     entity.parallel_updates = Semaphore(p)
-        if hasattr(entity, "async_update") and not self.parallel_updates:
-            entity.parallel_updates = None
-        elif not hasattr(entity, "async_update") and self.parallel_updates == 0:
-            entity.parallel_updates = None
-        else:
-            entity.parallel_updates = self._get_parallel_updates_semaphore()
+        entity.parallel_updates = self._get_parallel_updates_semaphore(
+            hasattr(entity, "async_update")
+        )
 
         # Update properties before we generate the entity_id
         if update_before_add:
@@ -354,6 +368,9 @@ class EntityPlatform:
                 capabilities=entity.capability_attributes,
                 supported_features=entity.supported_features,
                 device_class=entity.device_class,
+                unit_of_measurement=entity.unit_of_measurement,
+                original_name=entity.name,
+                original_icon=entity.icon,
             )
 
             entity.registry_entry = entry
@@ -446,6 +463,33 @@ class EntityPlatform:
         ):
             self._async_unsub_polling()
             self._async_unsub_polling = None
+
+    async def async_extract_from_service(self, service_call, expand_group=True):
+        """Extract all known and available entities from a service call.
+
+        Will return an empty list if entities specified but unknown.
+
+        This method must be run in the event loop.
+        """
+        return await service.async_extract_entities(
+            self.hass, self.entities.values(), service_call, expand_group
+        )
+
+    @callback
+    def async_register_entity_service(self, name, schema, func, required_features=None):
+        """Register an entity service."""
+        if isinstance(schema, dict):
+            schema = cv.make_entity_service_schema(schema)
+
+        async def handle_service(call):
+            """Handle the service."""
+            await service.entity_service_call(
+                self.hass, [self], func, call, required_features
+            )
+
+        self.hass.services.async_register(
+            self.platform_name, name, handle_service, schema
+        )
 
     async def _update_entity_states(self, now: datetime) -> None:
         """Update the states of all the polling entities.

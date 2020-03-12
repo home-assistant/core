@@ -7,6 +7,7 @@ from asynctest import mock
 from asynctest.mock import call, patch
 import pytest
 from samsungctl import exceptions
+from samsungtvws.exceptions import ConnectionFailure
 from websocket import WebSocketException
 
 from homeassistant.components.media_player import DEVICE_CLASS_TV
@@ -58,6 +59,17 @@ MOCK_CONFIG = {
         {
             CONF_HOST: "fake",
             CONF_NAME: "fake",
+            CONF_PORT: 55000,
+            CONF_ON_ACTION: [{"delay": "00:00:01"}],
+        }
+    ]
+}
+
+MOCK_CONFIGWS = {
+    SAMSUNGTV_DOMAIN: [
+        {
+            CONF_HOST: "fake",
+            CONF_NAME: "fake",
             CONF_PORT: 8001,
             CONF_ON_ACTION: [{"delay": "00:00:01"}],
         }
@@ -75,15 +87,38 @@ MOCK_CONFIG_NOTURNON = {
 @pytest.fixture(name="remote")
 def remote_fixture():
     """Patch the samsungctl Remote."""
-    with patch("homeassistant.components.samsungtv.config_flow.socket"), patch(
-        "homeassistant.components.samsungtv.config_flow.Remote"
-    ), patch(
-        "homeassistant.components.samsungtv.media_player.SamsungRemote"
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote"
     ) as remote_class, patch(
+        "homeassistant.components.samsungtv.config_flow.socket"
+    ) as socket1, patch(
         "homeassistant.components.samsungtv.socket"
-    ):
+    ) as socket2:
         remote = mock.Mock()
+        remote.__enter__ = mock.Mock()
+        remote.__exit__ = mock.Mock()
         remote_class.return_value = remote
+        socket1.gethostbyname.return_value = "FAKE_IP_ADDRESS"
+        socket2.gethostbyname.return_value = "FAKE_IP_ADDRESS"
+        yield remote
+
+
+@pytest.fixture(name="remotews")
+def remotews_fixture():
+    """Patch the samsungtvws SamsungTVWS."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS"
+    ) as remote_class, patch(
+        "homeassistant.components.samsungtv.config_flow.socket"
+    ) as socket1, patch(
+        "homeassistant.components.samsungtv.socket"
+    ) as socket2:
+        remote = mock.Mock()
+        remote.__enter__ = mock.Mock()
+        remote.__exit__ = mock.Mock()
+        remote_class.return_value = remote
+        socket1.gethostbyname.return_value = "FAKE_IP_ADDRESS"
+        socket2.gethostbyname.return_value = "FAKE_IP_ADDRESS"
         yield remote
 
 
@@ -136,15 +171,81 @@ async def test_update_on(hass, remote, mock_now):
 async def test_update_off(hass, remote, mock_now):
     """Testing update tv off."""
     await setup_samsungtv(hass, MOCK_CONFIG)
-    remote.control = mock.Mock(side_effect=OSError("Boom"))
 
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=[OSError("Boom"), mock.DEFAULT],
+    ):
 
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == STATE_OFF
+        next_update = mock_now + timedelta(minutes=5)
+        with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+            async_fire_time_changed(hass, next_update)
+            await hass.async_block_till_done()
+
+        state = hass.states.get(ENTITY_ID)
+        assert state.state == STATE_OFF
+
+
+async def test_update_access_denied(hass, remote, mock_now):
+    """Testing update tv access denied exception."""
+    await setup_samsungtv(hass, MOCK_CONFIG)
+
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=exceptions.AccessDenied("Boom"),
+    ):
+        next_update = mock_now + timedelta(minutes=5)
+        with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+            async_fire_time_changed(hass, next_update)
+            await hass.async_block_till_done()
+
+    assert [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+
+
+async def test_update_connection_failure(hass, remotews, mock_now):
+    """Testing update tv connection failure exception."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=[OSError("Boom"), mock.DEFAULT],
+    ):
+        await setup_samsungtv(hass, MOCK_CONFIGWS)
+
+        with patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVWS",
+            side_effect=ConnectionFailure("Boom"),
+        ):
+            next_update = mock_now + timedelta(minutes=5)
+            with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+                async_fire_time_changed(hass, next_update)
+            await hass.async_block_till_done()
+
+    assert [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+
+
+async def test_update_unhandled_response(hass, remote, mock_now):
+    """Testing update tv unhandled response exception."""
+    await setup_samsungtv(hass, MOCK_CONFIG)
+
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=[exceptions.UnhandledResponse("Boom"), mock.DEFAULT],
+    ):
+
+        next_update = mock_now + timedelta(minutes=5)
+        with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+            async_fire_time_changed(hass, next_update)
+            await hass.async_block_till_done()
+
+        state = hass.states.get(ENTITY_ID)
+        assert state.state == STATE_ON
 
 
 async def test_send_key(hass, remote):
@@ -155,8 +256,10 @@ async def test_send_key(hass, remote):
     )
     state = hass.states.get(ENTITY_ID)
     # key and update called
-    assert remote.control.call_count == 2
-    assert remote.control.call_args_list == [call("KEY_VOLUP"), call("KEY")]
+    assert remote.control.call_count == 1
+    assert remote.control.call_args_list == [call("KEY_VOLUP")]
+    assert remote.close.call_count == 1
+    assert remote.close.call_args_list == [call()]
     assert state.state == STATE_ON
 
 
@@ -182,12 +285,13 @@ async def test_send_key_connection_closed_retry_succeed(hass, remote):
     )
     state = hass.states.get(ENTITY_ID)
     # key because of retry two times and update called
-    assert remote.control.call_count == 3
+    assert remote.control.call_count == 2
     assert remote.control.call_args_list == [
         call("KEY_VOLUP"),
         call("KEY_VOLUP"),
-        call("KEY"),
     ]
+    assert remote.close.call_count == 1
+    assert remote.close.call_args_list == [call()]
     assert state.state == STATE_ON
 
 
@@ -221,7 +325,7 @@ async def test_send_key_os_error(hass, remote):
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     state = hass.states.get(ENTITY_ID)
-    assert state.state == STATE_OFF
+    assert state.state == STATE_ON
 
 
 async def test_name(hass, remote):
@@ -286,36 +390,30 @@ async def test_device_class(hass, remote):
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TV
 
 
-async def test_turn_off_websocket(hass, remote):
+async def test_turn_off_websocket(hass, remotews):
     """Test for turn_off."""
-    await setup_samsungtv(hass, MOCK_CONFIG)
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=[OSError("Boom"), mock.DEFAULT],
+    ):
+        await setup_samsungtv(hass, MOCK_CONFIGWS)
+        assert await hass.services.async_call(
+            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+        # key called
+        assert remotews.send_key.call_count == 1
+        assert remotews.send_key.call_args_list == [call("KEY_POWER")]
+
+
+async def test_turn_off_legacy(hass, remote):
+    """Test for turn_off."""
+    await setup_samsungtv(hass, MOCK_CONFIG_NOTURNON)
     assert await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID_NOTURNON}, True
     )
     # key called
     assert remote.control.call_count == 1
-    assert remote.control.call_args_list == [call("KEY_POWER")]
-
-
-async def test_turn_off_legacy(hass):
-    """Test for turn_off."""
-    with patch("homeassistant.components.samsungtv.config_flow.socket"), patch(
-        "homeassistant.components.samsungtv.config_flow.Remote",
-        side_effect=[OSError("Boom"), mock.DEFAULT],
-    ), patch(
-        "homeassistant.components.samsungtv.media_player.SamsungRemote"
-    ) as remote_class, patch(
-        "homeassistant.components.samsungtv.socket"
-    ):
-        remote = mock.Mock()
-        remote_class.return_value = remote
-        await setup_samsungtv(hass, MOCK_CONFIG_NOTURNON)
-        assert await hass.services.async_call(
-            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID_NOTURNON}, True
-        )
-        # key called
-        assert remote.control.call_count == 1
-        assert remote.control.call_args_list == [call("KEY_POWEROFF")]
+    assert remote.control.call_args_list == [call("KEY_POWEROFF")]
 
 
 async def test_turn_off_os_error(hass, remote, caplog):
@@ -326,7 +424,7 @@ async def test_turn_off_os_error(hass, remote, caplog):
     assert await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
-    assert "Could not establish connection." in caplog.text
+    assert "Could not establish connection" in caplog.text
 
 
 async def test_volume_up(hass, remote):
@@ -336,8 +434,10 @@ async def test_volume_up(hass, remote):
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     # key and update called
-    assert remote.control.call_count == 2
-    assert remote.control.call_args_list == [call("KEY_VOLUP"), call("KEY")]
+    assert remote.control.call_count == 1
+    assert remote.control.call_args_list == [call("KEY_VOLUP")]
+    assert remote.close.call_count == 1
+    assert remote.close.call_args_list == [call()]
 
 
 async def test_volume_down(hass, remote):
@@ -347,8 +447,10 @@ async def test_volume_down(hass, remote):
         DOMAIN, SERVICE_VOLUME_DOWN, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     # key and update called
-    assert remote.control.call_count == 2
-    assert remote.control.call_args_list == [call("KEY_VOLDOWN"), call("KEY")]
+    assert remote.control.call_count == 1
+    assert remote.control.call_args_list == [call("KEY_VOLDOWN")]
+    assert remote.close.call_count == 1
+    assert remote.close.call_args_list == [call()]
 
 
 async def test_mute_volume(hass, remote):
@@ -361,8 +463,10 @@ async def test_mute_volume(hass, remote):
         True,
     )
     # key and update called
-    assert remote.control.call_count == 2
-    assert remote.control.call_args_list == [call("KEY_MUTE"), call("KEY")]
+    assert remote.control.call_count == 1
+    assert remote.control.call_args_list == [call("KEY_MUTE")]
+    assert remote.close.call_count == 1
+    assert remote.close.call_args_list == [call()]
 
 
 async def test_media_play(hass, remote):
@@ -372,8 +476,10 @@ async def test_media_play(hass, remote):
         DOMAIN, SERVICE_MEDIA_PLAY, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     # key and update called
-    assert remote.control.call_count == 2
-    assert remote.control.call_args_list == [call("KEY_PLAY"), call("KEY")]
+    assert remote.control.call_count == 1
+    assert remote.control.call_args_list == [call("KEY_PLAY")]
+    assert remote.close.call_count == 1
+    assert remote.close.call_args_list == [call()]
 
 
 async def test_media_pause(hass, remote):
@@ -383,8 +489,10 @@ async def test_media_pause(hass, remote):
         DOMAIN, SERVICE_MEDIA_PAUSE, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     # key and update called
-    assert remote.control.call_count == 2
-    assert remote.control.call_args_list == [call("KEY_PAUSE"), call("KEY")]
+    assert remote.control.call_count == 1
+    assert remote.control.call_args_list == [call("KEY_PAUSE")]
+    assert remote.close.call_count == 1
+    assert remote.close.call_args_list == [call()]
 
 
 async def test_media_next_track(hass, remote):
@@ -394,8 +502,10 @@ async def test_media_next_track(hass, remote):
         DOMAIN, SERVICE_MEDIA_NEXT_TRACK, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     # key and update called
-    assert remote.control.call_count == 2
-    assert remote.control.call_args_list == [call("KEY_CHUP"), call("KEY")]
+    assert remote.control.call_count == 1
+    assert remote.control.call_args_list == [call("KEY_CHUP")]
+    assert remote.close.call_count == 1
+    assert remote.close.call_args_list == [call()]
 
 
 async def test_media_previous_track(hass, remote):
@@ -405,8 +515,10 @@ async def test_media_previous_track(hass, remote):
         DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     # key and update called
-    assert remote.control.call_count == 2
-    assert remote.control.call_args_list == [call("KEY_CHDOWN"), call("KEY")]
+    assert remote.control.call_count == 1
+    assert remote.control.call_args_list == [call("KEY_CHDOWN")]
+    assert remote.close.call_count == 1
+    assert remote.close.call_args_list == [call()]
 
 
 async def test_turn_on_with_turnon(hass, remote, delay):
@@ -450,71 +562,87 @@ async def test_play_media(hass, remote):
             True,
         )
         # keys and update called
-        assert remote.control.call_count == 5
+        assert remote.control.call_count == 4
         assert remote.control.call_args_list == [
             call("KEY_5"),
             call("KEY_7"),
             call("KEY_6"),
             call("KEY_ENTER"),
-            call("KEY"),
         ]
+        assert remote.close.call_count == 1
+        assert remote.close.call_args_list == [call()]
         assert len(sleeps) == 3
 
 
 async def test_play_media_invalid_type(hass, remote):
     """Test for play_media with invalid media type."""
-    url = "https://example.com"
-    await setup_samsungtv(hass, MOCK_CONFIG)
-    assert await hass.services.async_call(
-        DOMAIN,
-        SERVICE_PLAY_MEDIA,
-        {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_URL,
-            ATTR_MEDIA_CONTENT_ID: url,
-        },
-        True,
-    )
-    # only update called
-    assert remote.control.call_count == 1
-    assert remote.control.call_args_list == [call("KEY")]
+    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote, patch(
+        "homeassistant.components.samsungtv.config_flow.socket"
+    ):
+        url = "https://example.com"
+        await setup_samsungtv(hass, MOCK_CONFIG)
+        remote.reset_mock()
+        assert await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_URL,
+                ATTR_MEDIA_CONTENT_ID: url,
+            },
+            True,
+        )
+        # only update called
+        assert remote.control.call_count == 0
+        assert remote.close.call_count == 0
+        assert remote.call_count == 1
 
 
 async def test_play_media_channel_as_string(hass, remote):
     """Test for play_media with invalid channel as string."""
-    url = "https://example.com"
-    await setup_samsungtv(hass, MOCK_CONFIG)
-    assert await hass.services.async_call(
-        DOMAIN,
-        SERVICE_PLAY_MEDIA,
-        {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
-            ATTR_MEDIA_CONTENT_ID: url,
-        },
-        True,
-    )
-    # only update called
-    assert remote.control.call_count == 1
-    assert remote.control.call_args_list == [call("KEY")]
+    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote, patch(
+        "homeassistant.components.samsungtv.config_flow.socket"
+    ):
+        url = "https://example.com"
+        await setup_samsungtv(hass, MOCK_CONFIG)
+        remote.reset_mock()
+        assert await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
+                ATTR_MEDIA_CONTENT_ID: url,
+            },
+            True,
+        )
+        # only update called
+        assert remote.control.call_count == 0
+        assert remote.close.call_count == 0
+        assert remote.call_count == 1
 
 
 async def test_play_media_channel_as_non_positive(hass, remote):
     """Test for play_media with invalid channel as non positive integer."""
-    await setup_samsungtv(hass, MOCK_CONFIG)
-    assert await hass.services.async_call(
-        DOMAIN,
-        SERVICE_PLAY_MEDIA,
-        {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
-            ATTR_MEDIA_CONTENT_ID: "-4",
-        },
-        True,
-    )
-    # only update called
-    assert remote.control.call_count == 1
-    assert remote.control.call_args_list == [call("KEY")]
+    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote, patch(
+        "homeassistant.components.samsungtv.config_flow.socket"
+    ):
+        await setup_samsungtv(hass, MOCK_CONFIG)
+        remote.reset_mock()
+        assert await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
+                ATTR_MEDIA_CONTENT_ID: "-4",
+            },
+            True,
+        )
+        # only update called
+        assert remote.control.call_count == 0
+        assert remote.close.call_count == 0
+        assert remote.call_count == 1
 
 
 async def test_select_source(hass, remote):
@@ -527,19 +655,26 @@ async def test_select_source(hass, remote):
         True,
     )
     # key and update called
-    assert remote.control.call_count == 2
-    assert remote.control.call_args_list == [call("KEY_HDMI"), call("KEY")]
+    assert remote.control.call_count == 1
+    assert remote.control.call_args_list == [call("KEY_HDMI")]
+    assert remote.close.call_count == 1
+    assert remote.close.call_args_list == [call()]
 
 
 async def test_select_source_invalid_source(hass, remote):
     """Test for select_source with invalid source."""
-    await setup_samsungtv(hass, MOCK_CONFIG)
-    assert await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "INVALID"},
-        True,
-    )
-    # only update called
-    assert remote.control.call_count == 1
-    assert remote.control.call_args_list == [call("KEY")]
+    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote, patch(
+        "homeassistant.components.samsungtv.config_flow.socket"
+    ):
+        await setup_samsungtv(hass, MOCK_CONFIG)
+        remote.reset_mock()
+        assert await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SELECT_SOURCE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "INVALID"},
+            True,
+        )
+        # only update called
+        assert remote.control.call_count == 0
+        assert remote.close.call_count == 0
+        assert remote.call_count == 1

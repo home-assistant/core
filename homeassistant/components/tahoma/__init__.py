@@ -31,11 +31,14 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-TAHOMA_COMPONENTS = ["scene", "sensor", "cover", "switch", "binary_sensor"]
+TAHOMA_COMPONENTS = ["binary_sensor", "cover", "lock", "scene", "sensor", "switch"]
 
 TAHOMA_TYPES = {
+    "io:AwningValanceIOComponent": "cover",
     "io:ExteriorVenetianBlindIOComponent": "cover",
+    "io:DiscreteGarageOpenerIOComponent": "cover",
     "io:HorizontalAwningIOComponent": "cover",
+    "io:GarageOpenerIOComponent": "cover",
     "io:LightIOSystemSensor": "sensor",
     "io:OnOffIOComponent": "switch",
     "io:OnOffLightIOComponent": "switch",
@@ -49,8 +52,7 @@ TAHOMA_TYPES = {
     "io:VerticalExteriorAwningIOComponent": "cover",
     "io:VerticalInteriorBlindVeluxIOComponent": "cover",
     "io:WindowOpenerVeluxIOComponent": "cover",
-    "io:GarageOpenerIOComponent": "cover",
-    "io:DiscreteGarageOpenerIOComponent": "cover",
+    "opendoors:OpenDoorsSmartLockComponent": "lock",
     "rtds:RTDSContactSensor": "sensor",
     "rtds:RTDSMotionSensor": "sensor",
     "rtds:RTDSSmokeSensor": "smoke",

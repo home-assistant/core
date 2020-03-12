@@ -1,6 +1,8 @@
 """Const file for Tesla cars."""
 DOMAIN = "tesla"
 DATA_LISTENER = "listener"
+DEFAULT_SCAN_INTERVAL = 660
+MIN_SCAN_INTERVAL = 60
 TESLA_COMPONENTS = [
     "sensor",
     "lock",

@@ -61,11 +61,6 @@ TEMP_WARM_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 3 * 2 + TEMP_COLOR_MIN
 TEMP_COLD_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 3 + TEMP_COLOR_MIN
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old method of setting up Z-Wave lights."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Z-Wave Light from Config Entry."""
 
@@ -385,7 +380,9 @@ class ZwaveColorLight(ZwaveDimmer):
                 # white LED must be off in order for color to work
                 self._white = 0
 
-        if ATTR_WHITE_VALUE in kwargs or ATTR_HS_COLOR in kwargs:
+        if (
+            ATTR_WHITE_VALUE in kwargs or ATTR_HS_COLOR in kwargs
+        ) and self._hs is not None:
             rgbw = "#"
             for colorval in color_util.color_hs_to_RGB(*self._hs):
                 rgbw += format(colorval, "02x")

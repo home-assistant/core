@@ -1,10 +1,11 @@
 """Offer reusable conditions."""
 import asyncio
+from collections import deque
 from datetime import datetime, timedelta
 import functools as ft
 import logging
 import sys
-from typing import Callable, Container, Optional, Union, cast
+from typing import Callable, Container, Optional, Set, Union, cast
 
 from homeassistant.components import zone as zone_cmp
 from homeassistant.components.device_automation import (
@@ -19,6 +20,7 @@ from homeassistant.const import (
     CONF_BEFORE,
     CONF_BELOW,
     CONF_CONDITION,
+    CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_STATE,
@@ -31,7 +33,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNSET,
     WEEKDAYS,
 )
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.sun import get_astral_event_date
@@ -473,7 +475,7 @@ def zone(
     if latitude is None or longitude is None:
         return False
 
-    return zone_cmp.zone.in_zone(
+    return zone_cmp.in_zone(
         zone_ent, latitude, longitude, entity.attributes.get(ATTR_GPS_ACCURACY, 0)
     )
 
@@ -529,3 +531,50 @@ async def async_validate_condition_config(
         return cast(ConfigType, platform.CONDITION_SCHEMA(config))  # type: ignore
 
     return config
+
+
+@callback
+def async_extract_entities(config: ConfigType) -> Set[str]:
+    """Extract entities from a condition."""
+    referenced = set()
+    to_process = deque([config])
+
+    while to_process:
+        config = to_process.popleft()
+        condition = config[CONF_CONDITION]
+
+        if condition in ("and", "or"):
+            to_process.extend(config["conditions"])
+            continue
+
+        entity_id = config.get(CONF_ENTITY_ID)
+
+        if entity_id is not None:
+            referenced.add(entity_id)
+
+    return referenced
+
+
+@callback
+def async_extract_devices(config: ConfigType) -> Set[str]:
+    """Extract devices from a condition."""
+    referenced = set()
+    to_process = deque([config])
+
+    while to_process:
+        config = to_process.popleft()
+        condition = config[CONF_CONDITION]
+
+        if condition in ("and", "or"):
+            to_process.extend(config["conditions"])
+            continue
+
+        if condition != "device":
+            continue
+
+        device_id = config.get(CONF_DEVICE_ID)
+
+        if device_id is not None:
+            referenced.add(device_id)
+
+    return referenced

@@ -41,9 +41,9 @@ stages:
           jq curl
 
         release="$(Build.SourceBranchName)"
-        created_by="$(curl -s https://api.github.com/repos/home-assistant/home-assistant/releases/tags/${release} | jq --raw-output '.author.login')"
+        created_by="$(curl -s https://api.github.com/repos/home-assistant/core/releases/tags/${release} | jq --raw-output '.author.login')"
 
-        if [[ "${created_by}" =~ ^(balloob|pvizeli|fabaff|robbiet480|bramkragten)$ ]]; then
+        if [[ "${created_by}" =~ ^(balloob|pvizeli|fabaff|robbiet480|bramkragten|frenck)$ ]]; then
           exit 0
         fi
 
@@ -163,7 +163,7 @@ stages:
 
         git commit -am "Bump Home Assistant $version"
         git push
-      displayName: 'Update version files'
+      displayName: "Update version files"
   - job: 'ReleaseDocker'
     pool:
       vmImage: 'ubuntu-latest'

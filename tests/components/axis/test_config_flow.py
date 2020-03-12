@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 from homeassistant.components import axis
 from homeassistant.components.axis import config_flow
 
-from .test_device import MAC, setup_axis_integration
+from .test_device import MAC, MODEL, NAME, setup_axis_integration
 
 from tests.common import MockConfigEntry, mock_coro
 
@@ -54,12 +54,10 @@ async def test_flow_manual_configuration(hass):
     assert result["type"] == "create_entry"
     assert result["title"] == f"prodnbr - {MAC}"
     assert result["data"] == {
-        axis.CONF_DEVICE: {
-            config_flow.CONF_HOST: "1.2.3.4",
-            config_flow.CONF_USERNAME: "user",
-            config_flow.CONF_PASSWORD: "pass",
-            config_flow.CONF_PORT: 80,
-        },
+        config_flow.CONF_HOST: "1.2.3.4",
+        config_flow.CONF_USERNAME: "user",
+        config_flow.CONF_PASSWORD: "pass",
+        config_flow.CONF_PORT: 80,
         config_flow.CONF_MAC: MAC,
         config_flow.CONF_MODEL: "prodnbr",
         config_flow.CONF_NAME: "prodnbr 0",
@@ -95,11 +93,8 @@ async def test_manual_configuration_update_configuration(hass):
         )
 
     assert result["type"] == "abort"
-    assert result["reason"] == "updated_configuration"
-    assert (
-        device.config_entry.data[config_flow.CONF_DEVICE][config_flow.CONF_HOST]
-        == "2.3.4.5"
-    )
+    assert result["reason"] == "already_configured"
+    assert device.config_entry.data[config_flow.CONF_HOST] == "2.3.4.5"
 
 
 async def test_flow_fails_already_configured(hass):
@@ -223,12 +218,10 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(hass):
     assert result["type"] == "create_entry"
     assert result["title"] == f"prodnbr - {MAC}"
     assert result["data"] == {
-        axis.CONF_DEVICE: {
-            config_flow.CONF_HOST: "1.2.3.4",
-            config_flow.CONF_USERNAME: "user",
-            config_flow.CONF_PASSWORD: "pass",
-            config_flow.CONF_PORT: 80,
-        },
+        config_flow.CONF_HOST: "1.2.3.4",
+        config_flow.CONF_USERNAME: "user",
+        config_flow.CONF_PASSWORD: "pass",
+        config_flow.CONF_PORT: 80,
         config_flow.CONF_MAC: MAC,
         config_flow.CONF_MODEL: "prodnbr",
         config_flow.CONF_NAME: "prodnbr 2",
@@ -271,12 +264,10 @@ async def test_zeroconf_flow(hass):
     assert result["type"] == "create_entry"
     assert result["title"] == f"prodnbr - {MAC}"
     assert result["data"] == {
-        axis.CONF_DEVICE: {
-            config_flow.CONF_HOST: "1.2.3.4",
-            config_flow.CONF_USERNAME: "user",
-            config_flow.CONF_PASSWORD: "pass",
-            config_flow.CONF_PORT: 80,
-        },
+        config_flow.CONF_HOST: "1.2.3.4",
+        config_flow.CONF_USERNAME: "user",
+        config_flow.CONF_PASSWORD: "pass",
+        config_flow.CONF_PORT: 80,
         config_flow.CONF_MAC: MAC,
         config_flow.CONF_MODEL: "prodnbr",
         config_flow.CONF_NAME: "prodnbr 0",
@@ -310,6 +301,15 @@ async def test_zeroconf_flow_updated_configuration(hass):
     """Test that zeroconf update configuration with new parameters."""
     device = await setup_axis_integration(hass)
     assert device.host == "1.2.3.4"
+    assert device.config_entry.data == {
+        config_flow.CONF_HOST: "1.2.3.4",
+        config_flow.CONF_PORT: 80,
+        config_flow.CONF_USERNAME: "username",
+        config_flow.CONF_PASSWORD: "password",
+        config_flow.CONF_MAC: MAC,
+        config_flow.CONF_MODEL: MODEL,
+        config_flow.CONF_NAME: NAME,
+    }
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
@@ -323,11 +323,16 @@ async def test_zeroconf_flow_updated_configuration(hass):
     )
 
     assert result["type"] == "abort"
-    assert result["reason"] == "updated_configuration"
-    assert device.host == "2.3.4.5"
-    assert (
-        device.config_entry.data[config_flow.CONF_DEVICE][config_flow.CONF_PORT] == 8080
-    )
+    assert result["reason"] == "already_configured"
+    assert device.config_entry.data == {
+        config_flow.CONF_HOST: "2.3.4.5",
+        config_flow.CONF_PORT: 8080,
+        config_flow.CONF_USERNAME: "username",
+        config_flow.CONF_PASSWORD: "password",
+        config_flow.CONF_MAC: MAC,
+        config_flow.CONF_MODEL: MODEL,
+        config_flow.CONF_NAME: NAME,
+    }
 
 
 async def test_zeroconf_flow_ignore_non_axis_device(hass):

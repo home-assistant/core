@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\ud638\uc2a4\ud2b8\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
+        },
+        "error": {
+            "cannot_connect": "\uc11c\ubc84\uc5d0 \uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4. \ud638\uc2a4\ud2b8\uc640 \ud3ec\ud2b8\ub97c \ud655\uc778\ud55c \ud6c4 \ub2e4\uc2dc \uc2dc\ub3c4\ud574\uc8fc\uc138\uc694. \ub610\ud55c \uc11c\ubc84\uc5d0\uc11c Minecraft \ubc84\uc804 1.7 \uc774\uc0c1\uc744 \uc2e4\ud589 \uc911\uc778\uc9c0 \ud655\uc778\ud574\uc8fc\uc138\uc694.",
+            "invalid_ip": "IP \uc8fc\uc18c\uac00 \uc720\ud6a8\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4 (MAC \uc8fc\uc18c\ub97c \ud655\uc778\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4). \uc218\uc815 \ud6c4 \ub2e4\uc2dc \uc2dc\ub3c4\ud574\uc8fc\uc138\uc694.",
+            "invalid_port": "\ud3ec\ud2b8\ub294 1024-65535 \ubc94\uc704\uc5d0 \uc788\uc5b4\uc57c \ud569\ub2c8\ub2e4. \ud3ec\ud2b8\ub97c \uc218\uc815\ud55c \ud6c4 \ub2e4\uc2dc \uc2dc\ub3c4\ud574\uc8fc\uc138\uc694."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\ud638\uc2a4\ud2b8",
+                    "name": "\uc774\ub984",
+                    "port": "\ud3ec\ud2b8"
+                },
+                "description": "\ubaa8\ub2c8\ud130\ub9c1\uc774 \uac00\ub2a5\ud558\ub3c4\ub85d Minecraft \uc11c\ubc84 \uc778\uc2a4\ud134\uc2a4\ub97c \uc124\uc815\ud574\uc8fc\uc138\uc694.",
+                "title": "Minecraft \uc11c\ubc84 \uc5f0\uacb0"
+            }
+        },
+        "title": "Minecraft \uc11c\ubc84"
+    }
+}

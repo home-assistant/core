@@ -1,12 +1,16 @@
 {
     "config": {
         "abort": {
+            "missing_configuration": "L'int\u00e9gration Withings n'est pas configur\u00e9e. Veuillez suivre la documentation.",
             "no_flows": "Vous devez configurer Withings avant de pouvoir vous authentifier avec celui-ci. Veuillez lire la documentation."
         },
         "create_entry": {
             "default": "Authentifi\u00e9 avec succ\u00e8s \u00e0 Withings pour le profil s\u00e9lectionn\u00e9."
         },
         "step": {
+            "pick_implementation": {
+                "title": "Choisissez une m\u00e9thode d'authentification"
+            },
             "profile": {
                 "data": {
                     "profile": "Profil"

@@ -1,6 +1,13 @@
 {
     "config": {
+        "abort": {
+            "authorize_url_timeout": "\u010casov\u00fd limit autoriza\u010dn\u00edho URL vypr\u0161el",
+            "missing_configuration": "Integrace Withings nen\u00ed nakonfigurov\u00e1na. Postupujte podle n\u00e1vodu."
+        },
         "step": {
+            "pick_implementation": {
+                "title": "Vyberte metodu ov\u011b\u0159en\u00ed"
+            },
             "profile": {
                 "data": {
                     "profile": "Profil"

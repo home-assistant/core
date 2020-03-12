@@ -32,7 +32,7 @@ def configured_instances(hass):
 class OpenUvFlowHandler(config_entries.ConfigFlow):
     """Handle an OpenUV config flow."""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):

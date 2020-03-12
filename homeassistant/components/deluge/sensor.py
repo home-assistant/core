@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
+    DATA_RATE_KILOBYTES_PER_SECOND,
     STATE_IDLE,
 )
 from homeassistant.exceptions import PlatformNotReady
@@ -27,8 +28,8 @@ DHT_UPLOAD = 1000
 DHT_DOWNLOAD = 1000
 SENSOR_TYPES = {
     "current_status": ["Status", None],
-    "download_speed": ["Down Speed", "kB/s"],
-    "upload_speed": ["Up Speed", "kB/s"],
+    "download_speed": ["Down Speed", DATA_RATE_KILOBYTES_PER_SECOND],
+    "upload_speed": ["Up Speed", DATA_RATE_KILOBYTES_PER_SECOND],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

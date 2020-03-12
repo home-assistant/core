@@ -37,7 +37,9 @@ class TestLiteJetScene(unittest.TestCase):
         self.mock_lj.get_scene_name.side_effect = get_scene_name
 
         assert setup.setup_component(
-            self.hass, litejet.DOMAIN, {"litejet": {"port": "/tmp/this_will_be_mocked"}}
+            self.hass,
+            litejet.DOMAIN,
+            {"litejet": {"port": "/dev/serial/by-id/mock-litejet"}},
         )
         self.hass.block_till_done()
 

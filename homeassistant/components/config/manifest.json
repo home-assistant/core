@@ -1,6 +1,6 @@
 {
   "domain": "config",
-  "name": "Config",
+  "name": "Configuration",
   "documentation": "https://www.home-assistant.io/integrations/config",
   "requirements": [],
   "dependencies": ["http"],

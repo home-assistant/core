@@ -28,10 +28,13 @@
             "device_tracker": {
                 "data": {
                     "detection_time": "Temps (en segons) des de s'ha vist per \u00faltima vegada fins que es considera a fora",
+                    "ssid_filter": "Selecciona els SSID's on fer-hi el seguiment de clients",
                     "track_clients": "Segueix clients de la xarxa",
                     "track_devices": "Segueix dispositius de la xarxa (dispositius Ubiquiti)",
                     "track_wired_clients": "Inclou clients de xarxa per cable"
-                }
+                },
+                "description": "Configuraci\u00f3 de seguiment de dispositius",
+                "title": "Opcions d'UniFi"
             },
             "init": {
                 "data": {
@@ -42,7 +45,9 @@
             "statistics_sensors": {
                 "data": {
                     "allow_bandwidth_sensors": "Crea sensors d'\u00fas d'ample de banda per a clients de la xarxa"
-                }
+                },
+                "description": "Configuraci\u00f3 dels sensors d\u2019estad\u00edstiques",
+                "title": "Opcions d'UniFi"
             }
         }
     }

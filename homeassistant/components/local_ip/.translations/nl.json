@@ -1,11 +1,16 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Integratie is al geconfigureerd met een bestaande sensor met die naam"
+        },
         "step": {
             "user": {
                 "data": {
                     "name": "Sensor Naam"
-                }
+                },
+                "title": "Lokaal IP-adres"
             }
-        }
+        },
+        "title": "Lokaal IP-adres"
     }
 }

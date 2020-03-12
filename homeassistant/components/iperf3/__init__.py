@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_PROTOCOL,
     CONF_SCAN_INTERVAL,
+    DATA_RATE_MEGABITS_PER_SECOND,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -39,11 +40,9 @@ ATTR_UPLOAD = "upload"
 ATTR_VERSION = "Version"
 ATTR_HOST = "host"
 
-UNIT_OF_MEASUREMENT = "Mbit/s"
-
 SENSOR_TYPES = {
-    ATTR_DOWNLOAD: [ATTR_DOWNLOAD.capitalize(), UNIT_OF_MEASUREMENT],
-    ATTR_UPLOAD: [ATTR_UPLOAD.capitalize(), UNIT_OF_MEASUREMENT],
+    ATTR_DOWNLOAD: [ATTR_DOWNLOAD.capitalize(), DATA_RATE_MEGABITS_PER_SECOND],
+    ATTR_UPLOAD: [ATTR_UPLOAD.capitalize(), DATA_RATE_MEGABITS_PER_SECOND],
 }
 
 PROTOCOLS = ["tcp", "udp"]

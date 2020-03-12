@@ -11,13 +11,16 @@ import asyncio
 from collections import OrderedDict
 from itertools import chain
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, cast
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional, cast
 
 import attr
 
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
     ATTR_SUPPORTED_FEATURES,
+    ATTR_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_START,
     STATE_UNAVAILABLE,
 )
@@ -59,6 +62,7 @@ class RegistryEntry:
     unique_id = attr.ib(type=str)
     platform = attr.ib(type=str)
     name = attr.ib(type=str, default=None)
+    icon = attr.ib(type=str, default=None)
     device_id: Optional[str] = attr.ib(default=None)
     config_entry_id: Optional[str] = attr.ib(default=None)
     disabled_by = attr.ib(
@@ -77,6 +81,10 @@ class RegistryEntry:
     capabilities: Optional[Dict[str, Any]] = attr.ib(default=None)
     supported_features: int = attr.ib(default=0)
     device_class: Optional[str] = attr.ib(default=None)
+    unit_of_measurement: Optional[str] = attr.ib(default=None)
+    # As set by integration
+    original_name: Optional[str] = attr.ib(default=None)
+    original_icon: Optional[str] = attr.ib(default=None)
     domain = attr.ib(type=str, init=False, repr=False)
 
     @domain.default
@@ -164,6 +172,9 @@ class EntityRegistry:
         capabilities: Optional[Dict[str, Any]] = None,
         supported_features: Optional[int] = None,
         device_class: Optional[str] = None,
+        unit_of_measurement: Optional[str] = None,
+        original_name: Optional[str] = None,
+        original_icon: Optional[str] = None,
     ) -> RegistryEntry:
         """Get entity. Create if it doesn't exist."""
         config_entry_id = None
@@ -180,6 +191,9 @@ class EntityRegistry:
                 capabilities=capabilities or _UNDEF,
                 supported_features=supported_features or _UNDEF,
                 device_class=device_class or _UNDEF,
+                unit_of_measurement=unit_of_measurement or _UNDEF,
+                original_name=original_name or _UNDEF,
+                original_icon=original_icon or _UNDEF,
                 # When we changed our slugify algorithm, we invalidated some
                 # stored entity IDs with either a __ or ending in _.
                 # Fix introduced in 0.86 (Jan 23, 2019). Next line can be
@@ -210,6 +224,9 @@ class EntityRegistry:
             capabilities=capabilities,
             supported_features=supported_features or 0,
             device_class=device_class,
+            unit_of_measurement=unit_of_measurement,
+            original_name=original_name,
+            original_icon=original_icon,
         )
         self.entities[entity_id] = entity
         _LOGGER.info("Registered new %s.%s entity: %s", domain, platform, entity_id)
@@ -249,6 +266,7 @@ class EntityRegistry:
         entity_id,
         *,
         name=_UNDEF,
+        icon=_UNDEF,
         new_entity_id=_UNDEF,
         new_unique_id=_UNDEF,
         disabled_by=_UNDEF,
@@ -259,6 +277,7 @@ class EntityRegistry:
             self._async_update_entity(
                 entity_id,
                 name=name,
+                icon=icon,
                 new_entity_id=new_entity_id,
                 new_unique_id=new_unique_id,
                 disabled_by=disabled_by,
@@ -271,6 +290,7 @@ class EntityRegistry:
         entity_id,
         *,
         name=_UNDEF,
+        icon=_UNDEF,
         config_entry_id=_UNDEF,
         new_entity_id=_UNDEF,
         device_id=_UNDEF,
@@ -279,6 +299,9 @@ class EntityRegistry:
         capabilities=_UNDEF,
         supported_features=_UNDEF,
         device_class=_UNDEF,
+        unit_of_measurement=_UNDEF,
+        original_name=_UNDEF,
+        original_icon=_UNDEF,
     ):
         """Private facing update properties method."""
         old = self.entities[entity_id]
@@ -287,12 +310,16 @@ class EntityRegistry:
 
         for attr_name, value in (
             ("name", name),
+            ("icon", icon),
             ("config_entry_id", config_entry_id),
             ("device_id", device_id),
             ("disabled_by", disabled_by),
             ("capabilities", capabilities),
             ("supported_features", supported_features),
             ("device_class", device_class),
+            ("unit_of_measurement", unit_of_measurement),
+            ("original_name", original_name),
+            ("original_icon", original_icon),
         ):
             if value is not _UNDEF and value != getattr(old, attr_name):
                 changes[attr_name] = value
@@ -365,10 +392,14 @@ class EntityRegistry:
                     unique_id=entity["unique_id"],
                     platform=entity["platform"],
                     name=entity.get("name"),
+                    icon=entity.get("icon"),
                     disabled_by=entity.get("disabled_by"),
                     capabilities=entity.get("capabilities") or {},
                     supported_features=entity.get("supported_features", 0),
                     device_class=entity.get("device_class"),
+                    unit_of_measurement=entity.get("unit_of_measurement"),
+                    original_name=entity.get("original_name"),
+                    original_icon=entity.get("original_icon"),
                 )
 
         self.entities = entities
@@ -391,10 +422,14 @@ class EntityRegistry:
                 "unique_id": entry.unique_id,
                 "platform": entry.platform,
                 "name": entry.name,
+                "icon": entry.icon,
                 "disabled_by": entry.disabled_by,
                 "capabilities": entry.capabilities,
                 "supported_features": entry.supported_features,
                 "device_class": entry.device_class,
+                "unit_of_measurement": entry.unit_of_measurement,
+                "original_name": entry.original_name,
+                "original_icon": entry.original_icon,
             }
             for entry in self.entities.values()
         ]
@@ -511,6 +546,35 @@ def async_setup_entity_restore(
             if entry.device_class is not None:
                 attrs[ATTR_DEVICE_CLASS] = entry.device_class
 
+            if entry.unit_of_measurement is not None:
+                attrs[ATTR_UNIT_OF_MEASUREMENT] = entry.unit_of_measurement
+
+            name = entry.name or entry.original_name
+            if name is not None:
+                attrs[ATTR_FRIENDLY_NAME] = name
+
+            icon = entry.icon or entry.original_icon
+            if icon is not None:
+                attrs[ATTR_ICON] = icon
+
             states.async_set(entry.entity_id, STATE_UNAVAILABLE, attrs)
 
     hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _write_unavailable_states)
+
+
+async def async_migrate_entries(
+    hass: HomeAssistantType,
+    config_entry_id: str,
+    entry_callback: Callable[[RegistryEntry], Optional[dict]],
+) -> None:
+    """Migrator of unique IDs."""
+    ent_reg = await async_get_registry(hass)
+
+    for entry in ent_reg.entities.values():
+        if entry.config_entry_id != config_entry_id:
+            continue
+
+        updates = entry_callback(entry)
+
+        if updates is not None:
+            ent_reg.async_update_entity(entry.entity_id, **updates)  # type: ignore

@@ -1,5 +1,7 @@
 """Definitions for DSMR Reader sensors added to MQTT."""
 
+from homeassistant.const import VOLUME_CUBIC_METERS
+
 
 def dsmr_transform(value):
     """Transform DSMR version value to right format."""
@@ -79,7 +81,7 @@ DEFINITIONS = {
     "dsmr/reading/extra_device_delivered": {
         "name": "Gas meter usage",
         "icon": "mdi:fire",
-        "unit": "m3",
+        "unit": VOLUME_CUBIC_METERS,
     },
     "dsmr/reading/phase_voltage_l1": {
         "name": "Current voltage L1",
@@ -99,12 +101,12 @@ DEFINITIONS = {
     "dsmr/consumption/gas/delivered": {
         "name": "Gas usage",
         "icon": "mdi:fire",
-        "unit": "m3",
+        "unit": VOLUME_CUBIC_METERS,
     },
     "dsmr/consumption/gas/currently_delivered": {
         "name": "Current gas usage",
         "icon": "mdi:fire",
-        "unit": "m3",
+        "unit": VOLUME_CUBIC_METERS,
     },
     "dsmr/consumption/gas/read_at": {
         "name": "Gas meter read",
@@ -159,7 +161,7 @@ DEFINITIONS = {
     "dsmr/day-consumption/gas": {
         "name": "Gas usage",
         "icon": "mdi:counter",
-        "unit": "m3",
+        "unit": VOLUME_CUBIC_METERS,
     },
     "dsmr/day-consumption/gas_cost": {
         "name": "Gas cost",

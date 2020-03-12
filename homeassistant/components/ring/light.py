@@ -2,12 +2,14 @@
 from datetime import timedelta
 import logging
 
+import requests
+
 from homeassistant.components.light import Light
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.dt as dt_util
 
-from . import DATA_RING_STICKUP_CAMS, DOMAIN, SIGNAL_UPDATE_RING
+from . import DOMAIN
+from .entity import RingEntityMixin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,44 +27,35 @@ OFF_STATE = "off"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Create the lights for the Ring devices."""
-    cameras = hass.data[DATA_RING_STICKUP_CAMS]
+    devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
+
     lights = []
 
-    for device in cameras:
+    for device in devices["stickup_cams"]:
         if device.has_capability("light"):
-            lights.append(RingLight(device))
+            lights.append(RingLight(config_entry.entry_id, device))
 
-    async_add_entities(lights, True)
+    async_add_entities(lights)
 
 
-class RingLight(Light):
+class RingLight(RingEntityMixin, Light):
     """Creates a switch to turn the ring cameras light on and off."""
 
-    def __init__(self, device):
+    def __init__(self, config_entry_id, device):
         """Initialize the light."""
-        self._device = device
-        self._unique_id = self._device.id
-        self._light_on = False
+        super().__init__(config_entry_id, device)
+        self._unique_id = device.id
+        self._light_on = device.lights == ON_STATE
         self._no_updates_until = dt_util.utcnow()
-        self._disp_disconnect = None
-
-    async def async_added_to_hass(self):
-        """Register callbacks."""
-        self._disp_disconnect = async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_RING, self._update_callback
-        )
-
-    async def async_will_remove_from_hass(self):
-        """Disconnect callbacks."""
-        if self._disp_disconnect:
-            self._disp_disconnect()
-            self._disp_disconnect = None
 
     @callback
     def _update_callback(self):
         """Call update method."""
-        _LOGGER.debug("Updating Ring light %s (callback)", self.name)
-        self.async_schedule_update_ha_state(True)
+        if self._no_updates_until > dt_util.utcnow():
+            return
+
+        self._light_on = self._device.lights == ON_STATE
+        self.async_write_ha_state()
 
     @property
     def name(self):
@@ -75,32 +68,21 @@ class RingLight(Light):
         return self._unique_id
 
     @property
-    def should_poll(self):
-        """Update controlled via the hub."""
-        return False
-
-    @property
     def is_on(self):
         """If the switch is currently on or off."""
         return self._light_on
 
-    @property
-    def device_info(self):
-        """Return device info."""
-        return {
-            "identifiers": {(DOMAIN, self._device.id)},
-            "sw_version": self._device.firmware,
-            "name": self._device.name,
-            "model": self._device.kind,
-            "manufacturer": "Ring",
-        }
-
     def _set_light(self, new_state):
         """Update light state, and causes Home Assistant to correctly update."""
-        self._device.lights = new_state
+        try:
+            self._device.lights = new_state
+        except requests.Timeout:
+            _LOGGER.error("Time out setting %s light to %s", self.entity_id, new_state)
+            return
+
         self._light_on = new_state == ON_STATE
         self._no_updates_until = dt_util.utcnow() + SKIP_UPDATES_DELAY
-        self.async_schedule_update_ha_state(True)
+        self.async_schedule_update_ha_state()
 
     def turn_on(self, **kwargs):
         """Turn the light on for 30 seconds."""
@@ -109,11 +91,3 @@ class RingLight(Light):
     def turn_off(self, **kwargs):
         """Turn the light off."""
         self._set_light(OFF_STATE)
-
-    def update(self):
-        """Update current state of the light."""
-        if self._no_updates_until > dt_util.utcnow():
-            _LOGGER.debug("Skipping update...")
-            return
-
-        self._light_on = self._device.lights == ON_STATE

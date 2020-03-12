@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -55,6 +56,7 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Set up the REST command component."""
 
+    @callback
     def async_register_rest_command(name, command_config):
         """Create service for rest command."""
         websession = async_get_clientsession(hass, command_config.get(CONF_VERIFY_SSL))

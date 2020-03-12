@@ -1,12 +1,11 @@
 {
     "config": {
         "abort": {
-            "username_exists": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
             "login": "\u767b\u5165\u932f\u8aa4\uff1a\u8acb\u78ba\u8a8d\u96fb\u5b50\u90f5\u4ef6\u8207\u79d8\u5bc6\u6b63\u78ba\u6027",
             "send_verification_code": "\u50b3\u9001\u9a57\u8b49\u78bc\u5931\u6557",
-            "username_exists": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "validate_verification_code": "\u7121\u6cd5\u9a57\u8b49\u8f38\u5165\u9a57\u8b49\u78bc\uff0c\u9078\u64c7\u4e00\u90e8\u4fe1\u4efb\u8a2d\u5099\u3001\u7136\u5f8c\u91cd\u65b0\u57f7\u884c\u9a57\u8b49\u3002"
         },
         "step": {
