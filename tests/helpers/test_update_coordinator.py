@@ -113,8 +113,6 @@ async def test_refresh_no_update_method(crd):
     with pytest.raises(NotImplementedError):
         await crd.async_refresh()
 
-    assert crd.last_update_success is False
-
 
 async def test_update_interval(hass, crd):
     """Test update interval works."""
