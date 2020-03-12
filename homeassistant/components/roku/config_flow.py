@@ -1,5 +1,4 @@
 """Config flow for Roku."""
-import socket
 from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
@@ -13,8 +12,8 @@ from homeassistant.components.ssdp import (
 )
 from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN  # pylint: disable=unused-import
 
@@ -24,36 +23,18 @@ ERROR_CANNOT_CONNECT = "cannot_connect"
 ERROR_UNKNOWN = "unknown"
 
 
-def get_ip(host: str) -> str:
-    """Translate hostname to IP address."""
-    if host is None:
-        return None
-    return socket.gethostbyname(host)
-
-
-def get_roku_device_info(host: str) -> Any:
-    """Connect to Roku device."""
-    roku = Roku(host)
-
-    try:
-        device_info = roku.device_info
-        return device_info
-    except (OSError, RokuException) as exception:
-        raise CannotConnect from exception
-
-
-async def validate_input(hass: HomeAssistantType, data: Dict) -> Dict:
+def validate_input(data: Dict) -> Dict:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
 
-    host = await hass.async_add_executor_job(get_ip, data["host"])
-    device_info = await hass.async_add_executor_job(get_roku_device_info, host)
+    roku = Roku(data["host"])
+    device_info = roku.device_info
 
     return {
-        "title": host,
-        "host": host,
+        "title": data["host"],
+        "host": data["host"],
         "serial_num": device_info.serial_num,
     }
 
@@ -64,7 +45,8 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
-    async def _show_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
+    @callback
+    def _show_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
         """Show the form to the user."""
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors or {},
@@ -80,20 +62,18 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: Optional[Dict] = None
     ) -> Dict[str, Any]:
         """Handle a flow initialized by the user."""
+        if not user_input:
+            return self._show_form()
+
         errors = {}
 
-        if not user_input:
-            return await self._show_form()
-
         try:
-            info = await validate_input(self.hass, user_input)
-            user_input[CONF_HOST] = info[CONF_HOST]
-        except CannotConnect:
+            info = await self.hass.async_add_executor_job(validate_input, user_input)
+        except RokuException:
             errors["base"] = ERROR_CANNOT_CONNECT
-            return await self._show_form(errors)
+            return self._show_form(errors)
         except Exception:  # pylint: disable=broad-except
-            errors["base"] = ERROR_UNKNOWN
-            return await self._show_form(errors)
+            return self.async_abort(reason=ERROR_UNKNOWN)
 
         await self.async_set_unique_id(info["serial_num"])
         self._abort_if_unique_id_configured()
@@ -105,12 +85,11 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> Dict[str, Any]:
         """Handle a flow initialized by discovery."""
         host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
-        host = await self.hass.async_add_executor_job(get_ip, host)
         name = discovery_info[ATTR_UPNP_FRIENDLY_NAME]
         serial_num = discovery_info[ATTR_UPNP_SERIAL]
 
         await self.async_set_unique_id(serial_num)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update(
@@ -132,9 +111,9 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input[CONF_NAME] = name
 
             try:
-                await validate_input(self.hass, user_input)
+                await self.hass.async_add_executor_job(validate_input, user_input)
                 return self.async_create_entry(title=name, data=user_input)
-            except CannotConnect:
+            except RokuException:
                 return self.async_abort(reason=ERROR_CANNOT_CONNECT)
             except Exception:  # pylint: disable=broad-except
                 return self.async_abort(reason=ERROR_UNKNOWN)
