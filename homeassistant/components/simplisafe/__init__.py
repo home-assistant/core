@@ -413,7 +413,7 @@ class SimpliSafe:
         self._emergency_refresh_token_used = False
         self._hass = hass
         self._system_notifications = {}
-        self.options = config_entry.options
+        self.options = config_entry.options or {}
         self.initial_event_to_use = {}
         self.systems = {}
         self.websocket = SimpliSafeWebsocket(hass, api.websocket)
