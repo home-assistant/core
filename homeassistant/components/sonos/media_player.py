@@ -624,9 +624,9 @@ class SonosEntity(MediaPlayerDevice):
         media_info = self.soco.avTransport.GetMediaInfo([("InstanceID", 0)])
         self._media_image_url = self._radio_artwork(media_info["CurrentURI"])
 
-        self._media_artist = track_info.get("artist") or None
+        self._media_artist = track_info.get("artist")
         self._media_album_name = None
-        self._media_title = track_info.get("title") or None
+        self._media_title = track_info.get("title")
 
         if self._media_artist and self._media_title:
             # artist and album name are in the data, concatenate
@@ -707,11 +707,11 @@ class SonosEntity(MediaPlayerDevice):
             self._media_position = rel_time
             self._media_position_updated_at = utcnow()
 
-        self._media_image_url = track_info.get("album_art") or None
+        self._media_image_url = track_info.get("album_art")
 
-        self._media_artist = track_info.get("artist") or None
-        self._media_album_name = track_info.get("album") or None
-        self._media_title = track_info.get("title") or None
+        self._media_artist = track_info.get("artist")
+        self._media_album_name = track_info.get("album")
+        self._media_title = track_info.get("title")
 
         self._source_name = None
 
@@ -870,25 +870,25 @@ class SonosEntity(MediaPlayerDevice):
     @soco_coordinator
     def media_artist(self):
         """Artist of current playing media, music track only."""
-        return self._media_artist
+        return self._media_artist or None
 
     @property
     @soco_coordinator
     def media_album_name(self):
         """Album name of current playing media, music track only."""
-        return self._media_album_name
+        return self._media_album_name or None
 
     @property
     @soco_coordinator
     def media_title(self):
         """Title of current playing media."""
-        return self._media_title
+        return self._media_title or None
 
     @property
     @soco_coordinator
     def source(self):
         """Name of the current input source."""
-        return self._source_name
+        return self._source_name or None
 
     @property
     @soco_coordinator
