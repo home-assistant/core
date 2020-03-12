@@ -114,7 +114,7 @@ class MockDirectvClass(DIRECTV):
             self.attributes = RECORDING
         else:
             self._standby = True
-            self.attributea = LIVE
+            self.attributes = LIVE
 
     def get_locations(self):
         """Mock for get_locations method."""
