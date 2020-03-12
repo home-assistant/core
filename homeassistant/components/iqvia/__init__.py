@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 
 from pyiqvia import Client
-from pyiqvia.errors import InvalidZipError, IQVIAError
+from pyiqvia.errors import InvalidZipError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -172,7 +172,7 @@ class IQVIAData:
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)
 
         for key, result in zip(tasks, results):
-            if isinstance(result, IQVIAError):
+            if isinstance(result, Exception):
                 _LOGGER.error("Unable to get %s data: %s", key, result)
                 self.data[key] = {}
                 continue
