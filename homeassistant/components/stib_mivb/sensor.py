@@ -8,7 +8,7 @@ import pytz
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, DEVICE_CLASS_TIMESTAMP, TIME_MINUTES
+from homeassistant.const import ATTR_ATTRIBUTION, DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -94,7 +94,6 @@ class StibMivbSensor(Entity):
         self._state = None
         self._stop_name = None
         self._next_passages = None
-        self._unit = TIME_MINUTES
         self.__icon = None
         self._attributes["stop_id"] = self.stop_id
         self._name = None
