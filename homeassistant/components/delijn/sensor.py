@@ -5,7 +5,11 @@ from pydelijn.api import Passages
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, DEVICE_CLASS_TIMESTAMP
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    DEVICE_CLASS_TIMESTAMP,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -90,15 +94,7 @@ class DeLijnPublicTransportSensor(Entity):
             self._attributes["next_passages"] = self.line.passages
         except (KeyError, IndexError) as error:
             _LOGGER.debug("Error getting data from De Lijn: %s", error)
-            first_passage = None
-            self._state = None
-            self._attributes["stopname"] = None
-            self._attributes["line_number_public"] = None
-            self._attributes["line_transport_type"] = None
-            self._attributes["final_destination"] = None
-            self._attributes["due_at_schedule"] = None
-            self._attributes["due_at_realtime"] = None
-            self._attributes["next_passages"] = []
+            self._state = STATE_UNAVAILABLE
 
     @property
     def device_class(self):
