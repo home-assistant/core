@@ -304,7 +304,7 @@ class VizioDevice(MediaPlayerDevice):
     @property
     def source(self) -> str:
         """Return current input of the device."""
-        if self._current_app and self._current_input in INPUT_APPS:
+        if self._current_app is not None and self._current_input in INPUT_APPS:
             return self._current_app
 
         return self._current_input
