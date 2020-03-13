@@ -90,7 +90,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-ATTR_EMULATED_HUE = "emulated_hue"
 ATTR_EMULATED_HUE_NAME = "emulated_hue_name"
 ATTR_EMULATED_HUE_HIDDEN = "emulated_hue_hidden"
 
