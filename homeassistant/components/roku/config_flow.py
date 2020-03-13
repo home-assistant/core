@@ -1,8 +1,8 @@
 """Config flow for Roku."""
 from typing import Any, Dict, Optional
-from requests.exceptions import RequestException
 from urllib.parse import urlparse
 
+from requests.exceptions import RequestException
 from roku import Roku, RokuException
 import voluptuous as vol
 
