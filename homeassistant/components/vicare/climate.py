@@ -169,6 +169,12 @@ class ViCareClimate(ClimateDevice):
                 self._attributes[
                     "return_temperature"
                 ] = self._api.getReturnTemperature()
+                self._attributes[
+                    "return_temperature_primary_circuit"
+                ] = self._api.getReturnTemperaturePrimaryCircuit()
+                self._attributes[
+                    "supply_temperature_primary_circuit"
+                ] = self._api.getSupplyTemperaturePrimaryCircuit()
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
         except ValueError:
