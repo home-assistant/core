@@ -3,7 +3,7 @@ from typing import Callable, List
 
 from requests.exceptions import (
     ConnectionError as RequestsConnectionError,
-    ReadTimeout as RequestsReadTimeout
+    ReadTimeout as RequestsReadTimeout,
 )
 from roku import RokuException
 
