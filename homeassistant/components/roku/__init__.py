@@ -1,6 +1,7 @@
 """Support for Roku."""
 import asyncio
 from datetime import timedelta
+from requests.exceptions import RequestException
 from typing import Dict
 
 from roku import Roku, RokuException
@@ -49,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         roku = Roku(entry.data[CONF_HOST])
         roku_device_info = await hass.async_add_executor_job(roku.device_info)
-    except (OSError, RokuException) as exception:
+    except (RequestException, RokuException) as exception:
         raise ConfigEntryNotReady from exception
     except Exception as exception:  # pylint: disable=broad-except
         raise ConfigEntryNotReady from exception
