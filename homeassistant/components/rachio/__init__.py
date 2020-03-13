@@ -159,10 +159,25 @@ class RachioPerson:
         data = rachio.person.get(self._id)
         assert int(data[0][KEY_STATUS]) == 200, "User ID error"
         self.username = data[1][KEY_USERNAME]
-        self._controllers = [
-            RachioIro(self._hass, self.rachio, controller)
-            for controller in data[1][KEY_DEVICES]
-        ]
+        devices = data[1][KEY_DEVICES]
+        self._controllers = []
+        for controller in devices:
+            webhooks = self.rachio.notification.getDeviceWebhook(controller[KEY_ID])[1]
+            # The API does not provide a way to tell if a controller is shared
+            # or if they are the owner. To work around this problem we fetch the webooks
+            # before we setup the device so we can skip it instead of failing.
+            # webhooks are normally a list, however if there is an error
+            # rachio hands us back a dict
+            if isinstance(webhooks, dict):
+                _LOGGER.error(
+                    "Failed to add rachio controller '%s' because of an error: %s",
+                    controller[KEY_NAME],
+                    webhooks.get("error", "Unknown Error"),
+                )
+                continue
+            self._controllers.append(
+                RachioIro(self._hass, self.rachio, controller, webhooks)
+            )
         _LOGGER.info('Using Rachio API as user "%s"', self.username)
 
     @property
@@ -179,7 +194,7 @@ class RachioPerson:
 class RachioIro:
     """Represent a Rachio Iro."""
 
-    def __init__(self, hass, rachio, data):
+    def __init__(self, hass, rachio, data, webhooks):
         """Initialize a Rachio device."""
         self.hass = hass
         self.rachio = rachio
@@ -187,6 +202,7 @@ class RachioIro:
         self._name = data[KEY_NAME]
         self._zones = data[KEY_ZONES]
         self._init_data = data
+        self._webhooks = webhooks
         _LOGGER.debug('%s has ID "%s"', str(self), self.controller_id)
 
         # Listen for all updates
@@ -199,13 +215,19 @@ class RachioIro:
         # First delete any old webhooks that may have stuck around
         def _deinit_webhooks(event) -> None:
             """Stop getting updates from the Rachio API."""
-            webhooks = self.rachio.notification.getDeviceWebhook(self.controller_id)[1]
-            for webhook in webhooks:
+            if not self._webhooks:
+                # We fetched webhooks when we created the device, however if we call _init_webhooks
+                # again we need to fetch again
+                self._webhooks = self.rachio.notification.getDeviceWebhook(
+                    self.controller_id
+                )[1]
+            for webhook in self._webhooks:
                 if (
                     webhook[KEY_EXTERNAL_ID].startswith(WEBHOOK_CONST_ID)
                     or webhook[KEY_ID] == current_webhook_id
                 ):
                     self.rachio.notification.deleteWebhook(webhook[KEY_ID])
+            self._webhooks = None
 
         _deinit_webhooks(None)
 
