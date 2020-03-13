@@ -292,7 +292,7 @@ class TadoClimate(ClimateDevice):
         if preset_mode == PRESET_AWAY:
             _LOGGER.debug("Setting presence to away")
             self._tado.set_presence(PRESET_AWAY)
-        else:
+        elif preset_mode == PRESET_HOME:
             _LOGGER.debug("Setting presence to home")
             self._tado.set_presence(PRESET_HOME)
 
