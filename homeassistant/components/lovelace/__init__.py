@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import frontend
-from homeassistant.const import CONF_FILENAME
+from homeassistant.const import CONF_FILENAME, EVENT_HOMEASSISTANT_START
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, config_validation as cv
@@ -127,24 +127,11 @@ async def async_setup(hass, config):
         # We store a dictionary mapping url_path: config. None is the default.
         "dashboards": {None: default_config},
         "resources": resource_collection,
+        "yaml_dashboards": config[DOMAIN].get(CONF_DASHBOARDS, {}),
     }
 
     if hass.config.safe_mode:
         return True
-
-    # Process YAML dashboards
-    for url_path, dashboard_conf in config[DOMAIN].get(CONF_DASHBOARDS, {}).items():
-        # For now always mode=yaml
-        config = dashboard.LovelaceYAML(hass, url_path, dashboard_conf)
-        hass.data[DOMAIN]["dashboards"][url_path] = config
-
-        try:
-            _register_panel(hass, url_path, MODE_YAML, dashboard_conf, False)
-        except ValueError:
-            _LOGGER.warning("Panel url path %s is not unique", url_path)
-
-    # Process storage dashboards
-    dashboards_collection = dashboard.DashboardsCollection(hass)
 
     async def storage_dashboard_changed(change_type, item_id, item):
         """Handle a storage dashboard change."""
@@ -180,16 +167,34 @@ async def async_setup(hass, config):
         except ValueError:
             _LOGGER.warning("Failed to %s panel %s from storage", change_type, url_path)
 
-    dashboards_collection.async_add_listener(storage_dashboard_changed)
-    await dashboards_collection.async_load()
+    async def async_setup_dashboards(event):
+        """Register dashboards on startup."""
+        # Process YAML dashboards
+        for url_path, dashboard_conf in hass.data[DOMAIN]["yaml_dashboards"].items():
+            # For now always mode=yaml
+            config = dashboard.LovelaceYAML(hass, url_path, dashboard_conf)
+            hass.data[DOMAIN]["dashboards"][url_path] = config
 
-    collection.StorageCollectionWebsocket(
-        dashboards_collection,
-        "lovelace/dashboards",
-        "dashboard",
-        STORAGE_DASHBOARD_CREATE_FIELDS,
-        STORAGE_DASHBOARD_UPDATE_FIELDS,
-    ).async_setup(hass, create_list=False)
+            try:
+                _register_panel(hass, url_path, MODE_YAML, dashboard_conf, False)
+            except ValueError:
+                _LOGGER.warning("Panel url path %s is not unique", url_path)
+
+        # Process storage dashboards
+        dashboards_collection = dashboard.DashboardsCollection(hass)
+
+        dashboards_collection.async_add_listener(storage_dashboard_changed)
+        await dashboards_collection.async_load()
+
+        collection.StorageCollectionWebsocket(
+            dashboards_collection,
+            "lovelace/dashboards",
+            "dashboard",
+            STORAGE_DASHBOARD_CREATE_FIELDS,
+            STORAGE_DASHBOARD_UPDATE_FIELDS,
+        ).async_setup(hass, create_list=False)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, async_setup_dashboards)
 
     return True
 
