@@ -24,6 +24,8 @@ LOCATION_MESSAGE = {
     "battery_level": 99.9,
 }
 
+LOCATION_MESSAGE_ALT_FORMAT = {"lon": 1.0, "acc": 14, "lat": 2.0, "batt": 99.9}
+
 LOCATION_MESSAGE_INCOMPLETE = {"longitude": 2.0}
 
 
@@ -76,6 +78,37 @@ async def test_json_message(hass):
     state = hass.states.get("device_tracker.zanzito")
     assert state.attributes.get("latitude") == 2.0
     assert state.attributes.get("longitude") == 1.0
+    assert state.attributes.get("gps_accuracy") == 60.0
+    assert state.attributes.get("battery") == "99.9"
+
+
+async def test_json_message_alt_format(hass):
+    """Test json location message with user defined field names."""
+    dev_id = "zanzito"
+    topic = "location/zanzito"
+    location = json.dumps(LOCATION_MESSAGE_ALT_FORMAT)
+
+    assert await async_setup_component(
+        hass,
+        DT_DOMAIN,
+        {
+            DT_DOMAIN: {
+                CONF_PLATFORM: "mqtt_json",
+                "devices": {dev_id: topic},
+                "latitude_field": "lat",
+                "longitude_field": "lon",
+                "gps_accuracy_field": "acc",
+                "battery_level_field": "batt",
+            }
+        },
+    )
+    async_fire_mqtt_message(hass, topic, location)
+    await hass.async_block_till_done()
+    state = hass.states.get("device_tracker.zanzito")
+    assert state.attributes.get("latitude") == 2.0
+    assert state.attributes.get("longitude") == 1.0
+    assert state.attributes.get("gps_accuracy") == 14.0
+    assert state.attributes.get("battery") == "99.9"
 
 
 async def test_non_json_message(hass, caplog):
@@ -136,6 +169,8 @@ async def test_single_level_wildcard_topic(hass):
     state = hass.states.get("device_tracker.zanzito")
     assert state.attributes.get("latitude") == 2.0
     assert state.attributes.get("longitude") == 1.0
+    assert state.attributes.get("gps_accuracy") == 60.0
+    assert state.attributes.get("battery") == "99.9"
 
 
 async def test_multi_level_wildcard_topic(hass):
@@ -155,6 +190,8 @@ async def test_multi_level_wildcard_topic(hass):
     state = hass.states.get("device_tracker.zanzito")
     assert state.attributes.get("latitude") == 2.0
     assert state.attributes.get("longitude") == 1.0
+    assert state.attributes.get("gps_accuracy") == 60.0
+    assert state.attributes.get("battery") == "99.9"
 
 
 async def test_single_level_wildcard_topic_not_matching(hass):
