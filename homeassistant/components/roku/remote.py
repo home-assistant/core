@@ -1,7 +1,7 @@
 """Support for the Roku remote."""
 from typing import Callable, List
 
-import requests.exceptions
+from requests.exceptions import ConnectionError, ReadTimeout
 from roku import RokuException
 
 from homeassistant.components.remote import RemoteDevice
@@ -39,11 +39,7 @@ class RokuRemote(RemoteDevice):
         try:
             self._device_info = self.roku.device_info
             self._available = True
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.ReadTimeout,
-            RokuException,
-        ):
+        except (ConnectionError, ReadTimeout, RokuException):
             self._available = False
             pass
 
