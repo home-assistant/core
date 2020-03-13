@@ -19,6 +19,7 @@ from .const import (
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
+    CONF_POE_CLIENTS,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
@@ -262,6 +263,9 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="client_control",
             data_schema=vol.Schema(
                 {
+                    vol.Optional(
+                        CONF_POE_CLIENTS, default=self.controller.option_poe_clients
+                    ): bool,
                     vol.Optional(
                         CONF_BLOCK_CLIENT, default=self.options[CONF_BLOCK_CLIENT]
                     ): cv.multi_select(clients_to_block),
