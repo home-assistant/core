@@ -141,7 +141,7 @@ async def async_request_stream(hass, entity_id, fmt):
         source,
         fmt=fmt,
         keepalive=camera_prefs.preload_stream,
-        options=camera.options,
+        options=camera.stream_options,
     )
 
 
