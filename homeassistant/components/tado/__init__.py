@@ -165,6 +165,7 @@ class TadoConnector:
     def set_presence(
         self, presence="HOME",
     ):
+        """Set the presence to home or away"""
         if presence == "AWAY":
             self.tado.setAway()
         else:
