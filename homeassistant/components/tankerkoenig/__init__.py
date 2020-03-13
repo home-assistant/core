@@ -21,7 +21,7 @@ from .const import CONF_FUEL_TYPES, CONF_STATIONS, DOMAIN, FUEL_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_RADIUS = 2
+DEFAULT_RADIUS = 5
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 
 CONFIG_SCHEMA = vol.Schema(
