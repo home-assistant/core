@@ -1,5 +1,5 @@
 """Support for the Roku media player."""
-import requests.exceptions
+from requests.exceptions import ConnectionError, ReadTimeout
 from roku import RokuException
 
 from homeassistant.components.media_player import MediaPlayerDevice
@@ -70,11 +70,7 @@ class RokuDevice(MediaPlayerDevice):
                 self.current_app = None
 
             self._available = True
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.ReadTimeout,
-            RokuException,
-        ):
+        except (ConnectionError, ReadTimeout, RokuException):
             self._available = False
             pass
 
