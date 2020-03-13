@@ -76,7 +76,10 @@ class DriveFlowHandler(config_entries.ConfigFlow):
             DRIVE_NAME_INPUT = user_input.get(CONF_NAME)
             DRIVE_TYPE_INPUT = get_remotes_types_by_name(user_input.get(CONF_TYPE))
 
-            if slugify(DRIVE_NAME_INPUT) in configured_drivers(self.hass):
+            ent_registry = await self.hass.helpers.entity_registry.async_get_registry()
+            if ent_registry.async_is_registered(
+                "sensor.ais_drives_service_" + slugify(DRIVE_NAME_INPUT)
+            ):
                 errors = {CONF_NAME: "identifier_exists"}
 
             if slugify(DRIVE_NAME_INPUT) != DRIVE_NAME_INPUT:

@@ -177,7 +177,14 @@ def fix_rclone_config_permissions():
     # fix permissions
     uid = str(os.getuid())
     gid = str(os.getgid())
-    fix_rclone_cmd = 'su -c "chown ' + uid + ":" + gid + " " + G_RCLONE_CONF_FILE + '"'
+
+    if platform.machine() == "x86_64":
+        # to suport local test
+        fix_rclone_cmd = "chown " + uid + ":" + gid + " " + G_RCLONE_CONF_FILE
+    else:
+        fix_rclone_cmd = (
+            'su -c "chown ' + uid + ":" + gid + " " + G_RCLONE_CONF_FILE + '"'
+        )
     try:
         ret = subprocess.check_output(fix_rclone_cmd, shell=True)  # nosec
     except Exception as e:
@@ -730,11 +737,6 @@ class LocalData:
                     + '"'
                 )
             os.system("mkdir -p /data/data/pl.sviete.dom/dom_cloud_drives/" + name)
-            os.system(
-                'su -mm -c "export PATH=$PATH:/data/data/pl.sviete.dom/files/usr/bin/; '
-                + ' fusermount -u /data/data/pl.sviete.dom/dom_cloud_drives/"'
-                + name
-            )
             os.system(rclone_cmd_mount)
 
         else:
@@ -757,11 +759,14 @@ class LocalData:
             _LOGGER.error("rclone_remove_drive: NO drive in Rclone, name: " + name)
 
         # fusermount
-        os.system(
-            'su -mm -c "export PATH=$PATH:/data/data/pl.sviete.dom/files/usr/bin/; '
-            + ' fusermount -u /data/data/pl.sviete.dom/dom_cloud_drives/"'
-            + name
-        )
+        if platform.machine() == "x86_64":
+            os.system("fusermount -u /data/data/pl.sviete.dom/dom_cloud_drives/" + name)
+        else:
+            os.system(
+                'su -mm -c "export PATH=$PATH:/data/data/pl.sviete.dom/files/usr/bin/; '
+                + ' fusermount -u /data/data/pl.sviete.dom/dom_cloud_drives/"'
+                + name
+            )
 
         # delete drive folder
         os.system("rm -rf /data/data/pl.sviete.dom/dom_cloud_drives/" + name)

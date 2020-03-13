@@ -11,7 +11,6 @@ import json
 from homeassistant.core import callback
 from .config_flow import configured_service
 from .const import DOMAIN
-from homeassistant.helpers import entity_registry
 from homeassistant.components.mqtt import discovery as mqtt_disco
 from homeassistant.util.json import load_json, save_json
 
