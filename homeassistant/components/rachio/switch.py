@@ -7,17 +7,6 @@ from homeassistant.components.switch import SwitchDevice
 from homeassistant.helpers.dispatcher import dispatcher_connect
 
 from . import (
-    CONF_MANUAL_RUN_MINS,
-    DOMAIN as DOMAIN_RACHIO,
-    KEY_DEVICE_ID,
-    KEY_ENABLED,
-    KEY_ID,
-    KEY_NAME,
-    KEY_ON,
-    KEY_SUBTYPE,
-    KEY_SUMMARY,
-    KEY_ZONE_ID,
-    KEY_ZONE_NUMBER,
     SIGNAL_RACHIO_CONTROLLER_UPDATE,
     SIGNAL_RACHIO_ZONE_UPDATE,
     SUBTYPE_SLEEP_MODE_OFF,
@@ -26,6 +15,21 @@ from . import (
     SUBTYPE_ZONE_STARTED,
     SUBTYPE_ZONE_STOPPED,
 )
+from .const import (
+    CONF_MANUAL_RUN_MINS,
+    DEFAULT_NAME,
+    DOMAIN as DOMAIN_RACHIO,
+    KEY_DEVICE_ID,
+    KEY_ENABLED,
+    KEY_ID,
+    KEY_IMAGE_URL,
+    KEY_NAME,
+    KEY_ON,
+    KEY_SUBTYPE,
+    KEY_SUMMARY,
+    KEY_ZONE_ID,
+    KEY_ZONE_NUMBER,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,22 +37,31 @@ ATTR_ZONE_SUMMARY = "Summary"
 ATTR_ZONE_NUMBER = "Zone number"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Rachio switches."""
     manual_run_time = timedelta(
-        minutes=hass.data[DOMAIN_RACHIO].config.get(CONF_MANUAL_RUN_MINS)
+        minutes=hass.data[DOMAIN_RACHIO][config_entry.entry_id].config.get(
+            CONF_MANUAL_RUN_MINS
+        )
     )
     _LOGGER.info("Rachio run time is %s", str(manual_run_time))
 
     # Add all zones from all controllers as switches
     devices = []
-    for controller in hass.data[DOMAIN_RACHIO].controllers:
-        devices.append(RachioStandbySwitch(hass, controller))
+    for controller in hass.data[DOMAIN_RACHIO][config_entry.entry_id].controllers:
+        devices.append(
+            await hass.async_add_executor_job(RachioStandbySwitch, hass, controller)
+        )
+        zones = await hass.async_add_executor_job(controller.list_zones)
+        _LOGGER.debug("Rachio setting up zones: %s", zones)
+        for zone in zones:
+            _LOGGER.debug("Rachio setting up zone: %s", zone)
+            zone = await hass.async_add_executor_job(
+                RachioZone, hass, controller, zone, manual_run_time
+            )
+            devices.append(zone)
 
-        for zone in controller.list_zones():
-            devices.append(RachioZone(hass, controller, zone, manual_run_time))
-
-    add_entities(devices)
+    async_add_entities(devices)
     _LOGGER.info("%d Rachio switch(es) added", len(devices))
 
 
@@ -92,6 +105,22 @@ class RachioSwitch(SwitchDevice):
 
         # For this device
         self._handle_update(args, kwargs)
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        return {
+            "identifiers": {
+                (
+                    DOMAIN_RACHIO,
+                    self._controller.controller_id,
+                    self._controller.serial_number,
+                    self._controller.mac_address,
+                )
+            },
+            "name": self._controller.name,
+            "manufacturer": DEFAULT_NAME,
+        }
 
     @abstractmethod
     def _handle_update(self, *args, **kwargs) -> None:
@@ -160,6 +189,7 @@ class RachioZone(RachioSwitch):
         self._zone_number = data[KEY_ZONE_NUMBER]
         self._zone_enabled = data[KEY_ENABLED]
         self._manual_run_time = manual_run_time
+        self._entity_picture = data[KEY_IMAGE_URL] if KEY_IMAGE_URL in data else None
         self._summary = str()
         super().__init__(controller)
 
@@ -194,6 +224,11 @@ class RachioZone(RachioSwitch):
     def zone_is_enabled(self) -> bool:
         """Return whether the zone is allowed to run."""
         return self._zone_enabled
+
+    @property
+    def entity_picture(self):
+        """Return the entity picture to use in the frontend, if any."""
+        return self._entity_picture
 
     @property
     def state_attributes(self) -> dict:

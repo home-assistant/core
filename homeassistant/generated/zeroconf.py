@@ -43,6 +43,7 @@ HOMEKIT = {
     "LIFX": "lifx",
     "Netatmo Relay": "netatmo",
     "Presence": "netatmo",
+    "Rachio": "rachio",
     "TRADFRI": "tradfri",
     "Welcome": "netatmo",
     "Wemo": "wemo"

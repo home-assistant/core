@@ -1,7 +1,9 @@
 """Integration with the Rachio Iro sprinkler system controller."""
 import asyncio
+import http.client
 import logging
 import secrets
+import ssl
 from typing import Optional
 
 from aiohttp import web
@@ -9,20 +11,34 @@ from rachiopy import Rachio
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, EVENT_HOMEASSISTANT_STOP, URL_API
-from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+
+from .const import (
+    CONF_CUSTOM_URL,
+    CONF_MANUAL_RUN_MINS,
+    DEFAULT_MANUAL_RUN_MINS,
+    DOMAIN,
+    KEY_DEVICES,
+    KEY_ENABLED,
+    KEY_EXTERNAL_ID,
+    KEY_ID,
+    KEY_MAC_ADDRESS,
+    KEY_NAME,
+    KEY_SERIAL_NUMBER,
+    KEY_STATUS,
+    KEY_TYPE,
+    KEY_USERNAME,
+    KEY_ZONES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "rachio"
-
 SUPPORTED_DOMAINS = ["switch", "binary_sensor"]
-
-# Manual run length
-CONF_MANUAL_RUN_MINS = "manual_run_mins"
-DEFAULT_MANUAL_RUN_MINS = 10
-CONF_CUSTOM_URL = "hass_url_override"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -39,23 +55,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-# Keys used in the API JSON
-KEY_DEVICE_ID = "deviceId"
-KEY_DEVICES = "devices"
-KEY_ENABLED = "enabled"
-KEY_EXTERNAL_ID = "externalId"
-KEY_ID = "id"
-KEY_NAME = "name"
-KEY_ON = "on"
-KEY_STATUS = "status"
-KEY_SUBTYPE = "subType"
-KEY_SUMMARY = "summary"
-KEY_TYPE = "type"
-KEY_URL = "url"
-KEY_USERNAME = "username"
-KEY_ZONE_ID = "zoneId"
-KEY_ZONE_NUMBER = "zoneNumber"
-KEY_ZONES = "zones"
 
 STATUS_ONLINE = "ONLINE"
 STATUS_OFFLINE = "OFFLINE"
@@ -102,28 +101,62 @@ SIGNAL_RACHIO_ZONE_UPDATE = SIGNAL_RACHIO_UPDATE + "_zone"
 SIGNAL_RACHIO_SCHEDULE_UPDATE = SIGNAL_RACHIO_UPDATE + "_schedule"
 
 
-def setup(hass, config) -> bool:
-    """Set up the Rachio component."""
+async def async_setup(hass: HomeAssistant, config: dict):
+    """Set up the rachio component from YAML."""
 
-    # Listen for incoming webhook connections
-    hass.http.register_view(RachioWebhookView())
+    conf = config.get(DOMAIN)
+    hass.data.setdefault(DOMAIN, {})
+
+    if not conf:
+        return True
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+        )
+    )
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Unload a config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in SUPPORTED_DOMAINS
+            ]
+        )
+    )
+
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return unload_ok
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Set up the Rachio config entry."""
+
+    config = entry.data
 
     # Configure API
-    api_key = config[DOMAIN].get(CONF_API_KEY)
+    api_key = config.get(CONF_API_KEY)
     rachio = Rachio(api_key)
 
     # Get the URL of this server
-    custom_url = config[DOMAIN].get(CONF_CUSTOM_URL)
+    custom_url = config.get(CONF_CUSTOM_URL)
     hass_url = hass.config.api.base_url if custom_url is None else custom_url
     rachio.webhook_auth = secrets.token_hex()
     rachio.webhook_url = hass_url + WEBHOOK_PATH
 
     # Get the API user
     try:
-        person = RachioPerson(hass, rachio, config[DOMAIN])
-    except AssertionError as error:
+        person = await hass.async_add_executor_job(RachioPerson, hass, rachio, config)
+    # Yes we really do get all these exceptions (hopefully rachiopy switches to requests)
+    except (http.client.HTTPException, ssl.SSLError, OSError, AssertionError) as error:
         _LOGGER.error("Could not reach the Rachio API: %s", error)
-        return False
+        raise ConfigEntryNotReady
 
     # Check for Rachio controller devices
     if not person.controllers:
@@ -132,11 +165,15 @@ def setup(hass, config) -> bool:
     _LOGGER.info("%d Rachio device(s) found", len(person.controllers))
 
     # Enable component
-    hass.data[DOMAIN] = person
+    hass.data[DOMAIN][entry.entry_id] = person
 
-    # Load platforms
+    # Listen for incoming webhook connections after the data is there
+    hass.http.register_view(RachioWebhookView(entry.entry_id))
+
     for component in SUPPORTED_DOMAINS:
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
 
     return True
 
@@ -200,6 +237,8 @@ class RachioIro:
         self.rachio = rachio
         self._id = data[KEY_ID]
         self._name = data[KEY_NAME]
+        self._serial_number = data[KEY_SERIAL_NUMBER]
+        self._mac_address = data[KEY_MAC_ADDRESS]
         self._zones = data[KEY_ZONES]
         self._init_data = data
         self._webhooks = webhooks
@@ -257,6 +296,16 @@ class RachioIro:
         return self._id
 
     @property
+    def serial_number(self) -> str:
+        """Return the Rachio API controller serial number."""
+        return self._serial_number
+
+    @property
+    def mac_address(self) -> str:
+        """Return the Rachio API controller mac address."""
+        return self._mac_address
+
+    @property
     def name(self) -> str:
         """Return the user-defined name of the controller."""
         return self._name
@@ -307,7 +356,10 @@ class RachioWebhookView(HomeAssistantView):
     url = WEBHOOK_PATH
     name = url[1:].replace("/", ":")
 
-    @asyncio.coroutine
+    def __init__(self, entry_id):
+        """Initialize the instance of the view."""
+        self._entry_id = entry_id
+
     async def post(self, request) -> web.Response:
         """Handle webhook calls from the server."""
         hass = request.app["hass"]
@@ -315,7 +367,7 @@ class RachioWebhookView(HomeAssistantView):
 
         try:
             auth = data.get(KEY_EXTERNAL_ID, str()).split(":")[1]
-            assert auth == hass.data[DOMAIN].rachio.webhook_auth
+            assert auth == hass.data[DOMAIN][self._entry_id].rachio.webhook_auth
         except (AssertionError, IndexError):
             return web.Response(status=web.HTTPForbidden.status_code)
 
