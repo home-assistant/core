@@ -8,7 +8,6 @@ from homeassistant.components.wled.const import (
     ATTR_FADE,
     ATTR_TARGET_BRIGHTNESS,
     ATTR_UDP_PORT,
-    DOMAIN,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -17,6 +16,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 
@@ -136,12 +136,11 @@ async def test_switch_change_state(
 
 
 async def test_switch_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
 ) -> None:
     """Test error handling of the WLED switches."""
-    aioclient_mock.post("http://example.local:80/json/state", exc=aiohttp.ClientError)
-    entry = await init_integration(hass, aioclient_mock)
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    aioclient_mock.post("http://example.local:80/json/state", text="", status=400)
+    await init_integration(hass, aioclient_mock)
 
     with patch("homeassistant.components.wled.WLEDDataUpdateCoordinator.async_refresh"):
         await hass.services.async_call(
@@ -151,4 +150,27 @@ async def test_switch_error(
             blocking=True,
         )
         await hass.async_block_till_done()
-        assert not coordinator.last_update_success
+
+        state = hass.states.get("switch.wled_rgb_light_nightlight")
+        assert state.state == STATE_OFF
+        assert "Invalid response from API" in caplog.text
+
+
+async def test_switch_connection_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test error handling of the WLED switches."""
+    aioclient_mock.post("http://example.local:80/json/state", exc=aiohttp.ClientError)
+    await init_integration(hass, aioclient_mock)
+
+    with patch("homeassistant.components.wled.WLEDDataUpdateCoordinator.async_refresh"):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get("switch.wled_rgb_light_nightlight")
+        assert state.state == STATE_UNAVAILABLE
