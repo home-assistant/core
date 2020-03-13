@@ -1,5 +1,6 @@
 """Config flow for Roku."""
 from typing import Any, Dict, Optional
+from requests.exceptions import RequestException
 from urllib.parse import urlparse
 
 from roku import Roku, RokuException
@@ -69,7 +70,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             info = await self.hass.async_add_executor_job(validate_input, user_input)
-        except RokuException:
+        except (RequestException, RokuException):
             errors["base"] = ERROR_CANNOT_CONNECT
             return self._show_form(errors)
         except Exception:  # pylint: disable=broad-except
@@ -113,7 +114,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await self.hass.async_add_executor_job(validate_input, user_input)
                 return self.async_create_entry(title=name, data=user_input)
-            except RokuException:
+            except (RequestException, RokuException):
                 return self.async_abort(reason=ERROR_CANNOT_CONNECT)
             except Exception:  # pylint: disable=broad-except
                 return self.async_abort(reason=ERROR_UNKNOWN)
