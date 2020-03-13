@@ -133,6 +133,40 @@ async def async_setup(hass, config):
     if hass.config.safe_mode:
         return True
 
+    async def storage_dashboard_changed(change_type, item_id, item):
+        """Handle a storage dashboard change."""
+        url_path = item[CONF_URL_PATH]
+
+        if change_type == collection.CHANGE_REMOVED:
+            frontend.async_remove_panel(hass, url_path)
+            await hass.data[DOMAIN]["dashboards"].pop(url_path).async_delete()
+            return
+
+        if change_type == collection.CHANGE_ADDED:
+            existing = hass.data[DOMAIN]["dashboards"].get(url_path)
+
+            if existing:
+                _LOGGER.warning(
+                    "Cannot register panel at %s, it is already defined in %s",
+                    url_path,
+                    existing,
+                )
+                return
+
+            hass.data[DOMAIN]["dashboards"][url_path] = dashboard.LovelaceStorage(
+                hass, item
+            )
+
+            update = False
+        else:
+            hass.data[DOMAIN]["dashboards"][url_path].config = item
+            update = True
+
+        try:
+            _register_panel(hass, url_path, MODE_STORAGE, item, update)
+        except ValueError:
+            _LOGGER.warning("Failed to %s panel %s from storage", change_type, url_path)
+
     async def async_setup_dashboards(event):
         """Register dashboards on startup."""
         # Process YAML dashboards
@@ -148,42 +182,6 @@ async def async_setup(hass, config):
 
         # Process storage dashboards
         dashboards_collection = dashboard.DashboardsCollection(hass)
-
-        async def storage_dashboard_changed(change_type, item_id, item):
-            """Handle a storage dashboard change."""
-            url_path = item[CONF_URL_PATH]
-
-            if change_type == collection.CHANGE_REMOVED:
-                frontend.async_remove_panel(hass, url_path)
-                await hass.data[DOMAIN]["dashboards"].pop(url_path).async_delete()
-                return
-
-            if change_type == collection.CHANGE_ADDED:
-                existing = hass.data[DOMAIN]["dashboards"].get(url_path)
-
-                if existing:
-                    _LOGGER.warning(
-                        "Cannot register panel at %s, it is already defined in %s",
-                        url_path,
-                        existing,
-                    )
-                    return
-
-                hass.data[DOMAIN]["dashboards"][url_path] = dashboard.LovelaceStorage(
-                    hass, item
-                )
-
-                update = False
-            else:
-                hass.data[DOMAIN]["dashboards"][url_path].config = item
-                update = True
-
-            try:
-                _register_panel(hass, url_path, MODE_STORAGE, item, update)
-            except ValueError:
-                _LOGGER.warning(
-                    "Failed to %s panel %s from storage", change_type, url_path
-                )
 
         dashboards_collection.async_add_listener(storage_dashboard_changed)
         await dashboards_collection.async_load()
