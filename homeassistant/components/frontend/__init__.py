@@ -276,8 +276,7 @@ async def async_setup(hass, config):
 
     hass.http.app.router.register_resource(IndexView(repo_path, hass))
 
-    for panel in ("kiosk", "states", "profile"):
-        async_register_built_in_panel(hass, panel)
+    async_register_built_in_panel(hass, "profile")
 
     # To smooth transition to new urls, add redirects to new urls of dev tools
     # Added June 27, 2019. Can be removed in 2021.

@@ -6,6 +6,7 @@ import time
 
 import voluptuous as vol
 
+from homeassistant.components.frontend import DATA_PANELS
 from homeassistant.const import CONF_FILENAME
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -231,8 +232,8 @@ class DashboardsCollection(collection.StorageCollection):
 
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
-        if data[CONF_URL_PATH] in self.hass.data[DOMAIN]["dashboards"]:
-            raise vol.Invalid("Dashboard url path needs to be unique")
+        if data[CONF_URL_PATH] in self.hass.data[DATA_PANELS]:
+            raise vol.Invalid("Panel url path needs to be unique")
 
         return self.CREATE_SCHEMA(data)
 
