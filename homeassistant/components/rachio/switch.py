@@ -189,7 +189,7 @@ class RachioZone(RachioSwitch):
         self._zone_number = data[KEY_ZONE_NUMBER]
         self._zone_enabled = data[KEY_ENABLED]
         self._manual_run_time = manual_run_time
-        self._entity_picture = data[KEY_IMAGE_URL] if KEY_IMAGE_URL in data else None
+        self._entity_picture = data.get(KEY_IMAGE_URL)
         self._summary = str()
         super().__init__(controller)
 
