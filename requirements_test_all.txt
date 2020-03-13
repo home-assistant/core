@@ -61,6 +61,9 @@ aiobotocore==0.11.1
 # homeassistant.components.esphome
 aioesphomeapi==2.6.1
 
+# homeassistant.components.freebox
+aiofreepybox==0.0.8
+
 # homeassistant.components.homekit_controller
 aiohomekit[IP]==0.2.29
 
@@ -165,7 +168,7 @@ defusedxml==0.6.0
 denonavr==0.8.0
 
 # homeassistant.components.directv
-directpy==0.6
+directpy==0.7
 
 # homeassistant.components.updater
 distro==1.4.0
@@ -263,7 +266,7 @@ hole==0.5.0
 holidays==0.10.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200306.0
+home-assistant-frontend==20200312.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.8
@@ -575,7 +578,7 @@ python-ecobee-api==0.2.2
 python-forecastio==1.4.0
 
 # homeassistant.components.izone
-python-izone==1.1.1
+python-izone==1.1.2
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.4.8
@@ -632,7 +635,7 @@ samsungctl[websocket]==0.7.1
 samsungtvws[websocket]==1.4.0
 
 # homeassistant.components.sense
-sense_energy==0.7.0
+sense_energy==0.7.1
 
 # homeassistant.components.sentry
 sentry-sdk==0.13.5
@@ -663,7 +666,7 @@ spotipy==2.7.1
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==1.3.13
+sqlalchemy==1.3.15
 
 # homeassistant.components.starline
 starline==0.1.3

@@ -25,6 +25,7 @@ from . import (
     CONF_PAYLOAD,
     CONF_QOS,
     DOMAIN,
+    cleanup_device_registry,
 )
 from .discovery import MQTT_DISCOVERY_UPDATED, clear_discovery_hash
 
@@ -187,6 +188,7 @@ async def async_setup_trigger(hass, config, config_entry, discovery_data):
                 device_trigger.detach_trigger()
                 clear_discovery_hash(hass, discovery_hash)
                 remove_signal()
+                await cleanup_device_registry(hass, device.id)
         else:
             # Non-empty payload: Update trigger
             _LOGGER.info("Updating trigger: %s", discovery_hash)

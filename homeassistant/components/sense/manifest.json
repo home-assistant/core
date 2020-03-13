@@ -3,7 +3,7 @@
   "name": "Sense",
   "documentation": "https://www.home-assistant.io/integrations/sense",
   "requirements": [
-    "sense_energy==0.7.0"
+    "sense_energy==0.7.1"
   ],
   "dependencies": [],
   "codeowners": [

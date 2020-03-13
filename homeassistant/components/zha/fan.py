@@ -117,7 +117,7 @@ class ZhaFan(ZhaEntity, FanEntity):
     def async_set_state(self, attr_id, attr_name, value):
         """Handle state update from channel."""
         self._state = VALUE_TO_SPEED.get(value, self._state)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn the entity on."""

@@ -155,6 +155,7 @@ class DeviceRegistry:
         name=_UNDEF,
         name_by_user=_UNDEF,
         new_identifiers=_UNDEF,
+        sw_version=_UNDEF,
         via_device_id=_UNDEF,
         remove_config_entry_id=_UNDEF,
     ):
@@ -165,6 +166,7 @@ class DeviceRegistry:
             name=name,
             name_by_user=name_by_user,
             new_identifiers=new_identifiers,
+            sw_version=sw_version,
             via_device_id=via_device_id,
             remove_config_entry_id=remove_config_entry_id,
         )

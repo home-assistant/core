@@ -122,7 +122,7 @@ homeassistant/components/fortigate/* @kifeo
 homeassistant/components/fortios/* @kimfrellsen
 homeassistant/components/foscam/* @skgsergio
 homeassistant/components/foursquare/* @robbiet480
-homeassistant/components/freebox/* @snoof85
+homeassistant/components/freebox/* @snoof85 @Quentame
 homeassistant/components/fronius/* @nielstron
 homeassistant/components/frontend/* @home-assistant/frontend
 homeassistant/components/garmin_connect/* @cyberjunky
@@ -295,6 +295,7 @@ homeassistant/components/repetier/* @MTrab
 homeassistant/components/rfxtrx/* @danielhiversen
 homeassistant/components/ring/* @balloob
 homeassistant/components/rmvtransport/* @cgtobi
+homeassistant/components/roku/* @ctalkington
 homeassistant/components/roomba/* @pschmitt
 homeassistant/components/safe_mode/* @home-assistant/core
 homeassistant/components/saj/* @fredericvl
