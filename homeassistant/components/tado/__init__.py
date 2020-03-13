@@ -162,6 +162,15 @@ class TadoConnector:
         self.tado.resetZoneOverlay(zone_id)
         self.update_sensor("zone", zone_id)
 
+    def set_presence (
+        self,
+        presence="HOME",
+    ):
+        if presence == "AWAY":
+            self.tado.setAway()
+        else:
+            self.tado.setHome()
+
     def set_zone_overlay(
         self,
         zone_id,
