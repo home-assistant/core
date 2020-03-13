@@ -11,6 +11,10 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.util import Throttle
+from homeassistant.components.climate.const import (
+    PRESET_AWAY,
+    PRESET_HOME,
+)
 
 from .const import CONF_FALLBACK, DATA
 
@@ -163,10 +167,10 @@ class TadoConnector:
         self.update_sensor("zone", zone_id)
 
     def set_presence(
-        self, presence="HOME",
+        self, presence=PRESET_HOME,
     ):
         """Set the presence to home or away."""
-        if presence == "AWAY":
+        if presence == PRESET_AWAY:
             self.tado.setAway()
         else:
             self.tado.setHome()

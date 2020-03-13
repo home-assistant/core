@@ -289,15 +289,12 @@ class TadoClimate(ClimateDevice):
 
     def set_preset_mode(self, preset_mode):
         """Set new preset mode."""
-        print(preset_mode)
-        if preset_mode is None:
-            return
-        elif preset_mode == "away":
+        if preset_mode == PRESET_AWAY:
             _LOGGER.debug("Setting presence to away")
-            self._tado.set_presence("AWAY")
+            self._tado.set_presence(PRESET_AWAY)
         else:
             _LOGGER.debug("Setting presence to home")
-            self._tado.set_presence("HOME")
+            self._tado.set_presence(PRESET_HOME)
 
     @property
     def temperature_unit(self):
