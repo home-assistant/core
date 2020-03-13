@@ -94,7 +94,6 @@ class Sensor(ZhaEntity):
         """Init this sensor."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._channel = channels[0]
-        self._sensor_attr = self.SENSOR_ATTR
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
@@ -128,7 +127,7 @@ class Sensor(ZhaEntity):
     @callback
     def async_set_state(self, attr_id, attr_name, value):
         """Handle state update from channel."""
-        if self._sensor_attr is None or self._sensor_attr != attr_name:
+        if self.SENSOR_ATTR is None or self.SENSOR_ATTR != attr_name:
             return
         if value is not None:
             value = self.formatter(value)
