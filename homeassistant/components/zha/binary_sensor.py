@@ -64,6 +64,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class BinarySensor(ZhaEntity, BinarySensorDevice):
     """ZHA BinarySensor."""
 
+    SENSOR_ATTR = None
     DEVICE_CLASS = None
 
     def __init__(self, unique_id, zha_device, channels, **kwargs):
@@ -105,6 +106,8 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
     @callback
     def async_set_state(self, attr_id, attr_name, value):
         """Set the state."""
+        if self.SENSOR_ATTR is None or self.SENSOR_ATTR != attr_name:
+            return
         self._state = bool(value)
         self.async_write_ha_state()
 
@@ -121,6 +124,7 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
 class Accelerometer(BinarySensor):
     """ZHA BinarySensor."""
 
+    SENSOR_ATTR = "acceleration"
     DEVICE_CLASS = DEVICE_CLASS_MOVING
 
 
@@ -128,6 +132,7 @@ class Accelerometer(BinarySensor):
 class Occupancy(BinarySensor):
     """ZHA BinarySensor."""
 
+    SENSOR_ATTR = "occupancy"
     DEVICE_CLASS = DEVICE_CLASS_OCCUPANCY
 
 
@@ -135,12 +140,15 @@ class Occupancy(BinarySensor):
 class Opening(BinarySensor):
     """ZHA BinarySensor."""
 
+    SENSOR_ATTR = "on_off"
     DEVICE_CLASS = DEVICE_CLASS_OPENING
 
 
 @STRICT_MATCH(channel_names=CHANNEL_ZONE)
 class IASZone(BinarySensor):
     """ZHA IAS BinarySensor."""
+
+    SENSOR_ATTR = "zone_status"
 
     async def get_device_class(self) -> None:
         """Get the HA device class from the channel."""
