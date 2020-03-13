@@ -1,9 +1,9 @@
 """Support for Roku."""
 import asyncio
 from datetime import timedelta
-from requests.exceptions import RequestException
 from typing import Dict
 
+from requests.exceptions import RequestException
 from roku import Roku, RokuException
 import voluptuous as vol
 
