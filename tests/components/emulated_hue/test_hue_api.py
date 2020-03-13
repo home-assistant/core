@@ -133,7 +133,7 @@ def hass_hue(loop, hass):
     # Kitchen light is explicitly excluded from being exposed
     kitchen_light_entity = hass.states.get("light.kitchen_lights")
     attrs = dict(kitchen_light_entity.attributes)
-    attrs[emulated_hue.ATTR_EMULATED_HUE] = False
+    attrs[emulated_hue.ATTR_EMULATED_HUE_HIDDEN] = True
     hass.states.async_set(
         kitchen_light_entity.entity_id, kitchen_light_entity.state, attributes=attrs
     )
@@ -152,7 +152,7 @@ def hass_hue(loop, hass):
     # Expose the script
     script_entity = hass.states.get("script.set_kitchen_light")
     attrs = dict(script_entity.attributes)
-    attrs[emulated_hue.ATTR_EMULATED_HUE] = True
+    attrs[emulated_hue.ATTR_EMULATED_HUE_HIDDEN] = False
     hass.states.async_set(
         script_entity.entity_id, script_entity.state, attributes=attrs
     )

@@ -9,7 +9,6 @@ from homeassistant.components.http import real_ip
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.util.json import load_json, save_json
 
 from .hue_api import (
@@ -292,18 +291,8 @@ class Config:
             return not self._entities_with_hidden_attr_in_config[entity.entity_id]
 
         explicit_hidden = entity.attributes.get(ATTR_EMULATED_HUE_HIDDEN, None)
-        explicit_expose = entity.attributes.get(ATTR_EMULATED_HUE, None)
-
-        if explicit_expose is not None:
-            get_deprecated(
-                entity.attributes, ATTR_EMULATED_HUE_HIDDEN, ATTR_EMULATED_HUE, None
-            )
-
-        if explicit_expose is True or explicit_hidden is False:
-            return True
-
-        if explicit_expose is False or explicit_hidden is True:
-            return False
+        if explicit_hidden is not None:
+            return not explicit_hidden
 
         if not self.expose_by_default:
             return False
