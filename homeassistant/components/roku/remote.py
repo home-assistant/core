@@ -1,7 +1,10 @@
 """Support for the Roku remote."""
 from typing import Callable, List
 
-from requests.exceptions import ConnectionError as RequestsConnectionError, ReadTimeout as RequestsReadTimeout
+from requests.exceptions import (
+    ConnectionError as RequestsConnectionError,
+    ReadTimeout as RequestsReadTimeout
+)
 from roku import RokuException
 
 from homeassistant.components.remote import RemoteDevice
