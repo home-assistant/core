@@ -19,8 +19,7 @@ from .common import (
     async_enable_traffic,
     async_test_rejoin,
     find_entity_id,
-    make_attribute,
-    make_zcl_header,
+    send_attributes_report,
 )
 
 from tests.common import async_fire_time_changed
@@ -190,26 +189,18 @@ async def test_light(
 async def async_test_on_off_from_light(hass, cluster, entity_id):
     """Test on off functionality from the light."""
     # turn on at light
-    attr = make_attribute(0, 1)
-    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
-    cluster.handle_message(hdr, [[attr]])
-    await hass.async_block_till_done()
+    await send_attributes_report(hass, cluster, {1: 0, 0: 1, 2: 3})
     assert hass.states.get(entity_id).state == STATE_ON
 
     # turn off at light
-    attr.value.value = 0
-    cluster.handle_message(hdr, [[attr]])
-    await hass.async_block_till_done()
+    await send_attributes_report(hass, cluster, {1: 1, 0: 0, 2: 3})
     assert hass.states.get(entity_id).state == STATE_OFF
 
 
 async def async_test_on_from_light(hass, cluster, entity_id):
     """Test on off functionality from the light."""
     # turn on at light
-    attr = make_attribute(0, 1)
-    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
-    cluster.handle_message(hdr, [[attr]])
-    await hass.async_block_till_done()
+    await send_attributes_report(hass, cluster, {1: -1, 0: 1, 2: 2})
     assert hass.states.get(entity_id).state == STATE_ON
 
 
@@ -316,10 +307,10 @@ async def async_test_level_on_off_from_hass(
 
 async def async_test_dimmer_from_light(hass, cluster, entity_id, level, expected_state):
     """Test dimmer functionality from the light."""
-    attr = make_attribute(0, level)
-    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
-    cluster.handle_message(hdr, [[attr]])
-    await hass.async_block_till_done()
+
+    await send_attributes_report(
+        hass, cluster, {1: level + 10, 0: level, 2: level - 10 or 22}
+    )
     assert hass.states.get(entity_id).state == expected_state
     # hass uses None for brightness of 0 in state attributes
     if level == 0:
