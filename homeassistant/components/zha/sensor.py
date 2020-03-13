@@ -83,6 +83,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class Sensor(ZhaEntity):
     """Base ZHA sensor."""
 
+    SENSOR_ATTR = None
     _decimals = 1
     _device_class = None
     _divisor = 1
@@ -126,6 +127,8 @@ class Sensor(ZhaEntity):
     @callback
     def async_set_state(self, attr_id, attr_name, value):
         """Handle state update from channel."""
+        if self.SENSOR_ATTR is None or self.SENSOR_ATTR != attr_name:
+            return
         if value is not None:
             value = self.formatter(value)
         self._state = value
@@ -154,6 +157,7 @@ class Sensor(ZhaEntity):
 class AnalogInput(Sensor):
     """Sensor that displays analog input values."""
 
+    SENSOR_ATTR = "present_value"
     pass
 
 
@@ -161,6 +165,7 @@ class AnalogInput(Sensor):
 class Battery(Sensor):
     """Battery sensor of power configuration cluster."""
 
+    SENSOR_ATTR = "battery_percentage_remaining"
     _device_class = DEVICE_CLASS_BATTERY
     _unit = UNIT_PERCENTAGE
 
@@ -198,6 +203,7 @@ class Battery(Sensor):
 class ElectricalMeasurement(Sensor):
     """Active power measurement."""
 
+    SENSOR_ATTR = "active_power"
     _device_class = DEVICE_CLASS_POWER
     _divisor = 10
     _unit = POWER_WATT
@@ -232,6 +238,7 @@ class Text(Sensor):
 class Humidity(Sensor):
     """Humidity sensor."""
 
+    SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_HUMIDITY
     _divisor = 100
     _unit = UNIT_PERCENTAGE
@@ -241,6 +248,7 @@ class Humidity(Sensor):
 class Illuminance(Sensor):
     """Illuminance Sensor."""
 
+    SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_ILLUMINANCE
     _unit = "lx"
 
@@ -254,6 +262,7 @@ class Illuminance(Sensor):
 class SmartEnergyMetering(Sensor):
     """Metering sensor."""
 
+    SENSOR_ATTR = "instantaneous_demand"
     _device_class = DEVICE_CLASS_POWER
 
     def formatter(self, value):
@@ -270,6 +279,7 @@ class SmartEnergyMetering(Sensor):
 class Pressure(Sensor):
     """Pressure sensor."""
 
+    SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_PRESSURE
     _decimals = 0
     _unit = "hPa"
@@ -279,6 +289,7 @@ class Pressure(Sensor):
 class Temperature(Sensor):
     """Temperature Sensor."""
 
+    SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_TEMPERATURE
     _divisor = 100
     _unit = TEMP_CELSIUS
