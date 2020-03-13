@@ -1,5 +1,8 @@
 """Support for the Roku media player."""
-from requests.exceptions import ConnectionError as RequestsConnectionError, ReadTimeout as RequestsReadTimeout
+from requests.exceptions import (
+    ConnectionError as RequestsConnectionError,
+    ReadTimeout as RequestsReadTimeout
+)
 from roku import RokuException
 
 from homeassistant.components.media_player import MediaPlayerDevice
