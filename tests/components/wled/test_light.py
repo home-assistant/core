@@ -18,7 +18,6 @@ from homeassistant.components.wled.const import (
     ATTR_PLAYLIST,
     ATTR_PRESET,
     ATTR_SPEED,
-    DOMAIN,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -26,6 +25,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 
@@ -137,28 +137,7 @@ async def test_light_error(
 ) -> None:
     """Test error handling of the WLED lights."""
     aioclient_mock.post("http://example.local:80/json/state", text="", status=400)
-    entry = await init_integration(hass, aioclient_mock)
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.wled_rgb_light"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    assert coordinator.last_update_success
-    assert "Invalid response from API" in caplog.text
-
-
-async def test_light_connection_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test error handling of the WLED switches."""
-    aioclient_mock.post("http://example.local:80/json/state", exc=aiohttp.ClientError)
-    entry = await init_integration(hass, aioclient_mock)
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    await init_integration(hass, aioclient_mock)
 
     with patch("homeassistant.components.wled.WLEDDataUpdateCoordinator.async_refresh"):
         await hass.services.async_call(
@@ -168,7 +147,30 @@ async def test_light_connection_error(
             blocking=True,
         )
         await hass.async_block_till_done()
-        assert not coordinator.last_update_success
+
+        state = hass.states.get("light.wled_rgb_light")
+        assert state.state == STATE_ON
+        assert "Invalid response from API" in caplog.text
+
+
+async def test_light_connection_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test error handling of the WLED switches."""
+    aioclient_mock.post("http://example.local:80/json/state", exc=aiohttp.ClientError)
+    await init_integration(hass, aioclient_mock)
+
+    with patch("homeassistant.components.wled.WLEDDataUpdateCoordinator.async_refresh"):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "light.wled_rgb_light"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get("light.wled_rgb_light")
+        assert state.state == STATE_UNAVAILABLE
 
 
 async def test_rgbw_light(
