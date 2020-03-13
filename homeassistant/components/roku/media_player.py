@@ -1,7 +1,7 @@
 """Support for the Roku media player."""
 from requests.exceptions import (
     ConnectionError as RequestsConnectionError,
-    ReadTimeout as RequestsReadTimeout
+    ReadTimeout as RequestsReadTimeout,
 )
 from roku import RokuException
 
