@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import Any, Dict
 
-from wled import WLED, WLEDError
+from wled import WLED, Device as WLEDDevice, WLEDConnectionError, WLEDError
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -93,10 +93,16 @@ def wled_exception_handler(func):
 
     async def handler(self, *args, **kwargs):
         try:
-            return await func(self, *args, **kwargs)
-        except WLEDError as error:
+            await func(self, *args, **kwargs)
+            await self.coordinator.async_refresh()
+
+        except WLEDConnectionError as error:
             _LOGGER.error("Error communicating with API: %s", error)
             self.coordinator.last_update_success = False
+            self.coordinator.update_listeners()
+
+        except WLEDError as error:
+            _LOGGER.error("Invalid response from API: %s", error)
 
     return handler
 
@@ -110,21 +116,21 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize global WLED data updater."""
         self.wled = WLED(host, session=async_get_clientsession(hass))
 
-        async def async_update_data():
-            """Fetch data from WLED."""
-            # Ensure we can connect and talk to it
-            try:
-                return await self.wled.update()
-            except WLEDError as error:
-                raise UpdateFailed(f"Error communicating with API: {error}")
-
         super().__init__(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_method=async_update_data,
-            update_interval=SCAN_INTERVAL,
+            hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL,
         )
+
+    def update_listeners(self) -> None:
+        """Call update on all listeners."""
+        for update_callback in self._listeners:
+            update_callback()
+
+    async def _async_update_data(self) -> WLEDDevice:
+        """Fetch data from WLED."""
+        try:
+            return await self.wled.update()
+        except WLEDError as error:
+            raise UpdateFailed(f"Invalid response from API: {error}")
 
 
 class WLEDEntity(Entity):
