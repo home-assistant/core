@@ -64,6 +64,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class BinarySensor(ZhaEntity, BinarySensorDevice):
     """ZHA BinarySensor."""
 
+    SENSOR_ATTR = None
     DEVICE_CLASS = None
 
     def __init__(self, unique_id, zha_device, channels, **kwargs):
@@ -71,6 +72,7 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._channel = channels[0]
         self._device_class = self.DEVICE_CLASS
+        self._sensor_attr = self.SENSOR_ATTR
 
     async def get_device_class(self):
         """Get the HA device class from the channel."""
@@ -105,6 +107,8 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
     @callback
     def async_set_state(self, attr_id, attr_name, value):
         """Set the state."""
+        if self._sensor_attr is None or self._sensor_attr != attr_name:
+            return
         self._state = bool(value)
         self.async_write_ha_state()
 
@@ -121,6 +125,7 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
 class Accelerometer(BinarySensor):
     """ZHA BinarySensor."""
 
+    SENSOR_ATTR = "acceleration"
     DEVICE_CLASS = DEVICE_CLASS_MOVING
 
 
@@ -128,6 +133,7 @@ class Accelerometer(BinarySensor):
 class Occupancy(BinarySensor):
     """ZHA BinarySensor."""
 
+    SENSOR_ATTR = "occupancy"
     DEVICE_CLASS = DEVICE_CLASS_OCCUPANCY
 
 
@@ -135,6 +141,7 @@ class Occupancy(BinarySensor):
 class Opening(BinarySensor):
     """ZHA BinarySensor."""
 
+    SENSOR_ATTR = "on_off"
     DEVICE_CLASS = DEVICE_CLASS_OPENING
 
 
