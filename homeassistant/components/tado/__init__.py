@@ -7,14 +7,11 @@ from PyTado.interface import Tado
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.climate.const import PRESET_AWAY, PRESET_HOME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.util import Throttle
-from homeassistant.components.climate.const import (
-    PRESET_AWAY,
-    PRESET_HOME,
-)
 
 from .const import CONF_FALLBACK, DATA
 
