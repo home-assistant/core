@@ -114,7 +114,7 @@ class StibMivbSensor(Entity):
             stops_by_line = await self.api.get_stops_by_line(self.line_ids[0])
             for line in stops_by_line["lines"]:
                 for point in line["points"]:
-                    if int(point["id"]) == int(self.stop_id):
+                    if point["id"].lstrip("0") == self.stop_id.lstrip("0"):
                         direction = line["direction"]
                         break
                 else:
