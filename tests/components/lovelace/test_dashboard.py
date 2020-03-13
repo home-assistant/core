@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.components import frontend
 from homeassistant.components.lovelace import const, dashboard
+from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_capture_events, get_system_health_info
@@ -223,6 +224,8 @@ async def test_dashboard_from_yaml(hass, hass_ws_client, url_path):
             }
         },
     )
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
     assert hass.data[frontend.DATA_PANELS]["test-panel"].config == {"mode": "yaml"}
     assert hass.data[frontend.DATA_PANELS]["test-panel-no-sidebar"].config == {
         "mode": "yaml"
@@ -306,6 +309,8 @@ async def test_dashboard_from_yaml(hass, hass_ws_client, url_path):
 async def test_storage_dashboards(hass, hass_ws_client, hass_storage):
     """Test we load lovelace config from storage."""
     assert await async_setup_component(hass, "lovelace", {})
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
     assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "storage"}
 
     client = await hass_ws_client(hass)
@@ -449,6 +454,9 @@ async def test_websocket_list_dashboards(hass, hass_ws_client):
             }
         },
     )
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
 
