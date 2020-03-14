@@ -159,6 +159,9 @@ async def async_setup_entry(hass, config_entry):
             Client(websession, api_key=config_entry.data[CONF_API_KEY]),
             config_entry,
         )
+
+        # Only geography-based entries have options:
+        config_entry.add_update_listener(async_update_options)
     else:
         airvisual = AirVisualNodeProData(
             hass, Client(websession), config_entry.data[CONF_NODE_PRO_ID]
@@ -186,8 +189,6 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id] = async_track_time_interval(
         hass, refresh, airvisual.scan_interval
     )
-
-    config_entry.add_update_listener(async_update_options)
 
     return True
 
