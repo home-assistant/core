@@ -32,7 +32,7 @@ def get_dtv_data(
     hass: HomeAssistant, host: str, port: int = DEFAULT_PORT, client_addr: str = "0"
 ) -> dict:
     """Retrieve a DIRECTV instance, locations list, and version info for the receiver device."""
-    dtv = DIRECTV(host, port, client_addr)
+    dtv = DIRECTV(host, port, client_addr, determine_state=False)
     locations = dtv.get_locations()
     version_info = dtv.get_version()
 
