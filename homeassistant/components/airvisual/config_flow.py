@@ -75,11 +75,6 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_geography(self, user_input=None):
         """Handle the initialization of the integration via the cloud API."""
-        if not user_input:
-            return self.async_show_form(
-                step_id="geography", data_schema=self.geography_schema,
-            )
-
         geo_id = async_get_geography_id(user_input)
         await self._async_set_unique_id(geo_id)
         self._abort_if_unique_id_configured()
@@ -141,7 +136,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="node_pro",
                 data_schema=self.node_pro_schema,
-                errors={CONF_NODE_PRO_ID: "invalid_node_id"},
+                errors={CONF_NODE_PRO_ID: "invalid_node_pro_id"},
             )
 
         return self.async_create_entry(
@@ -160,6 +155,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="geography", data_schema=self.geography_schema
             )
+
         return self.async_show_form(
             step_id="node_pro", data_schema=self.node_pro_schema
         )
