@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "These coordinates have already been registered."
+            "already_configured": "These coordinates or Node/Pro ID are already registered."
         },
         "error": {
             "invalid_api_key": "Invalid API key",

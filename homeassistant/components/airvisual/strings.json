@@ -32,7 +32,7 @@
       "invalid_node_pro_id": "Invalid Node/Pro ID"
     },
     "abort": {
-      "already_configured": "These coordinates have already been registered."
+      "already_configured": "These coordinates or Node/Pro ID are already registered."
     }
   },
   "options": {
