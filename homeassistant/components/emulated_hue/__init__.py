@@ -91,7 +91,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 ATTR_EMULATED_HUE_NAME = "emulated_hue_name"
-ATTR_EMULATED_HUE_HIDDEN = "emulated_hue_hidden"
 
 
 async def async_setup(hass, yaml_config):
@@ -288,10 +287,6 @@ class Config:
 
         if entity.entity_id in self._entities_with_hidden_attr_in_config:
             return not self._entities_with_hidden_attr_in_config[entity.entity_id]
-
-        explicit_hidden = entity.attributes.get(ATTR_EMULATED_HUE_HIDDEN, None)
-        if explicit_hidden is not None:
-            return not explicit_hidden
 
         if not self.expose_by_default:
             return False
