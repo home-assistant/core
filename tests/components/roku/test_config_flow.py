@@ -1,7 +1,9 @@
 """Test the Roku config flow."""
+from socket import gaierror as SocketGIAError
 from typing import Any, Dict, Optional
 
 from asynctest import patch
+from requests.exceptions import RequestException
 from roku import RokuException
 
 from homeassistant.components.roku.const import DOMAIN
@@ -116,7 +118,7 @@ async def test_form(hass: HomeAssistantType) -> None:
 
 
 async def test_form_cannot_connect(hass: HomeAssistantType) -> None:
-    """Test we handle cannot connect error."""
+    """Test we handle cannot connect roku error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
@@ -124,6 +126,45 @@ async def test_form_cannot_connect(hass: HomeAssistantType) -> None:
     with patch(
         "homeassistant.components.roku.config_flow.validate_input",
         side_effect=RokuException,
+    ) as mock_validate_input:
+        result = await async_configure_flow(hass, result["flow_id"], {CONF_HOST: HOST},)
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    await hass.async_block_till_done()
+    assert len(mock_validate_input.mock_calls) == 1
+
+
+async def test_form_cannot_connect_request(hass: HomeAssistantType) -> None:
+    """Test we handle cannot connect request error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.roku.config_flow.validate_input",
+        side_effect=RequestException,
+    ) as mock_validate_input:
+        result = await async_configure_flow(hass, result["flow_id"], {CONF_HOST: HOST},)
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    await hass.async_block_till_done()
+    assert len(mock_validate_input.mock_calls) == 1
+
+
+
+async def test_form_cannot_connect_socket(hass: HomeAssistantType) -> None:
+    """Test we handle cannot connect socket error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.roku.config_flow.validate_input",
+        side_effect=SocketGIAError,
     ) as mock_validate_input:
         result = await async_configure_flow(hass, result["flow_id"], {CONF_HOST: HOST},)
 
