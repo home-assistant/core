@@ -28,6 +28,7 @@ from . import api, config_flow
 from .const import (
     AUTH,
     CONF_CLOUDHOOK_URL,
+    DATA_DEVICE_IDS,
     DATA_PERSONS,
     DOMAIN,
     OAUTH2_AUTHORIZE,
@@ -65,6 +66,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Netatmo component."""
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][DATA_PERSONS] = {}
+    hass.data[DOMAIN][DATA_DEVICE_IDS] = {}
 
     if DOMAIN not in config:
         return True
@@ -104,7 +106,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
 
     async def register_webhook(event):
-        # Wait for the could integration to be ready
+        # Wait for the cloud integration to be ready
         await asyncio.sleep(WAIT_FOR_CLOUD)
 
         if CONF_WEBHOOK_ID not in entry.data:
@@ -112,6 +114,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.config_entries.async_update_entry(entry, data=data)
 
         if hass.components.cloud.async_active_subscription():
+            # Wait for cloud connection to be established
+            for i in range(1, 4):
+                if hass.components.cloud.async_is_logged_in():
+                    break
+                elif i == 3:
+                    raise Exception("Not logged in. Stop trying.")
+                else:
+                    _LOGGER.error(
+                        "Not yet logged in. Waiting %s seconds", (WAIT_FOR_CLOUD * i),
+                    )
+                    await asyncio.sleep(WAIT_FOR_CLOUD * i)
+
             if CONF_CLOUDHOOK_URL not in entry.data:
                 webhook_url = await hass.components.cloud.async_create_cloudhook(
                     entry.data[CONF_WEBHOOK_ID]
