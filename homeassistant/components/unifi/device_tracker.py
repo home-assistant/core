@@ -120,6 +120,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         if option_ssid_filter != controller.option_ssid_filter:
             option_ssid_filter = controller.option_ssid_filter
+            update = True
 
             for mac, entity in tracked.items():
                 if (
