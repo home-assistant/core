@@ -30,6 +30,17 @@ PLATFORMS = [MEDIA_PLAYER_DOMAIN, REMOTE_DOMAIN]
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
+def get_roku_data(host: str) -> dict:
+    """Retrieve a Roku instance and version info for the device."""   
+    roku = Roku(host)
+    roku_device_info = roku.device_info
+
+    return {
+        DATA_CLIENT: roku,
+        DATA_DEVICE_INFO: roku_device_info,
+    }
+
+
 async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
     """Set up the Roku integration."""
     hass.data.setdefault(DOMAIN, {})
@@ -48,17 +59,13 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Roku from a config entry."""
     try:
-        roku = Roku(entry.data[CONF_HOST])
-        roku_device_info = await hass.async_add_executor_job(roku.device_info)
+        roku_data = await hass.async_add_executor_job(
+            get_roku_data, entry.data[CONF_HOST]
+        )
     except (RequestException, RokuException) as exception:
         raise ConfigEntryNotReady from exception
-    except Exception as exception:  # pylint: disable=broad-except
-        raise ConfigEntryNotReady from exception
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_CLIENT: roku,
-        DATA_DEVICE_INFO: roku_device_info,
-    }
+    hass.data[DOMAIN][entry.entry_id] = roku_data
 
     for component in PLATFORMS:
         hass.async_create_task(
