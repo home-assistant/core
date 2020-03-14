@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_SHOW_ON_MAP,
     CONF_STATE,
+    PRECISION_WHOLE,
     TEMP_CELSIUS,
 )
 from homeassistant.helpers.temperature import display_temp
@@ -241,7 +242,7 @@ class AirVisualNodeProSensor(AirVisualEntity, AirQualityEntity):
                     self.hass,
                     float(self._airvisual.data["current"]["tp"]),
                     TEMP_CELSIUS,
-                    0,
+                    PRECISION_WHOLE,
                 ),
             }
         )
