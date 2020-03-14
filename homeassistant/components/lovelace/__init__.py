@@ -143,6 +143,7 @@ async def async_setup(hass, config):
             return
 
         if change_type == collection.CHANGE_ADDED:
+
             existing = hass.data[DOMAIN]["dashboards"].get(url_path)
 
             if existing:
@@ -162,6 +163,10 @@ async def async_setup(hass, config):
             hass.data[DOMAIN]["dashboards"][url_path].config = item
             update = True
 
+        if "-" not in url_path:
+            _LOGGER.warning("Panel url path %s does not contain a hyphen (-)", url_path)
+            return
+
         try:
             _register_panel(hass, url_path, MODE_STORAGE, item, update)
         except ValueError:
@@ -174,6 +179,12 @@ async def async_setup(hass, config):
             # For now always mode=yaml
             config = dashboard.LovelaceYAML(hass, url_path, dashboard_conf)
             hass.data[DOMAIN]["dashboards"][url_path] = config
+
+            if "-" not in url_path:
+                _LOGGER.warning(
+                    "Panel url path %s does not contain a hyphen (-)", url_path
+                )
+                continue
 
             try:
                 _register_panel(hass, url_path, MODE_YAML, dashboard_conf, False)
