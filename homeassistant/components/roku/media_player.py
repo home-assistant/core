@@ -48,7 +48,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class RokuDevice(MediaPlayerDevice):
     """Representation of a Roku device on the network."""
 
-    def __init__(self, roku, ip_address, enabled_default=True):
+    def __init__(self, roku, ip_address):
         """Initialize the Roku device."""
         self.roku = roku
         self.ip_address = ip_address
@@ -56,7 +56,6 @@ class RokuDevice(MediaPlayerDevice):
         self.current_app = None
         self._available = False
         self._device_info = {}
-        self._enabled_default = enabled_default
         self._power_state = "Unknown"
 
     def update(self):
@@ -120,11 +119,6 @@ class RokuDevice(MediaPlayerDevice):
     def available(self):
         """Return if able to retrieve information from device or not."""
         return self._available
-
-    @property
-    def entity_registry_enabled_default(self):
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._enabled_default
 
     @property
     def unique_id(self):
