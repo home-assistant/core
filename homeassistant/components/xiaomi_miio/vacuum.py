@@ -60,7 +60,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     extra=vol.ALLOW_EXTRA,
 )
 
-FAN_SPEEDS = {"Silent": 38, "Standard": 60, "Medium": 77, "Turbo": 90, "Gentle": 105}
+FAN_SPEEDS = {
+    "Silent": 101,
+    "Standard": 102,
+    "Medium": 103,
+    "Turbo": 104,
+    "Gentle": 105,
+}
 
 ATTR_CLEAN_START = "clean_start"
 ATTR_CLEAN_STOP = "clean_stop"
