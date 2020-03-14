@@ -1,17 +1,19 @@
 """Config flow for ZHA."""
 import asyncio
 from collections import OrderedDict
-import copy
 import os
 
+from bellows.zigbee.application import CONF_PARAM_SRC_RTG
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback
 
 from .core.const import (
-    CONF_ENABLE_SOURCE_ROUTING,
+    CONF_ADDRESS_TABLE_SIZE,
+    CONF_NEIGHBOR_TABLE_SIZE,
     CONF_RADIO_TYPE,
+    CONF_SOURCE_ROUTE_TABLE_SIZE,
     CONF_USB_PATH,
     CONTROLLER,
     DEFAULT_BAUDRATE,
@@ -77,10 +79,26 @@ class ZHAOptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry):
         """Initialize ZHA options flow."""
-        self.options = copy.deepcopy(config_entry.options)
-        self.options[CONF_ENABLE_SOURCE_ROUTING] = config_entry.options.get(
-            CONF_ENABLE_SOURCE_ROUTING, False
-        )
+        self.config_entry = config_entry
+        self.options = dict(config_entry.options)
+        self.radio_specific_options = {
+            RadioType.ezsp.name: {
+                vol.Optional(
+                    CONF_SOURCE_ROUTE_TABLE_SIZE,
+                    default=self.config_entry.options.get(
+                        CONF_SOURCE_ROUTE_TABLE_SIZE, 8
+                    ),
+                ): vol.All(int, vol.Range(min=0, max=254)),
+                vol.Optional(
+                    CONF_ADDRESS_TABLE_SIZE,
+                    default=self.config_entry.options.get(CONF_ADDRESS_TABLE_SIZE, 16),
+                ): vol.All(int, vol.Range(min=0, max=254)),
+                vol.Optional(
+                    CONF_NEIGHBOR_TABLE_SIZE,
+                    default=self.config_entry.options.get(CONF_NEIGHBOR_TABLE_SIZE, 8),
+                ): vol.All(int, vol.Range(min=8, max=16)),
+            }
+        }
 
     async def async_step_init(self, user_input=None):
         """Manage the ZHA options."""
@@ -89,22 +107,23 @@ class ZHAOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_zha_network_options(self, user_input=None):
         """Manage the Zigpy configuration options for ZHA."""
         if user_input is not None:
-            self.options[CONF_ENABLE_SOURCE_ROUTING] = user_input[
-                CONF_ENABLE_SOURCE_ROUTING
-            ]
+            self.options.update(user_input)
             return self.async_create_entry(title="", data=self.options)
 
-        return self.async_show_form(
-            step_id="zha_network_options",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_ENABLE_SOURCE_ROUTING,
-                        default=self.options[CONF_ENABLE_SOURCE_ROUTING],
-                    ): bool
-                }
-            ),
+        schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_PARAM_SRC_RTG,
+                    default=self.config_entry.options.get(CONF_PARAM_SRC_RTG, False),
+                ): bool
+            }
         )
+        schema = schema.extend(
+            self.radio_specific_options.get(
+                self.config_entry.data.get(CONF_RADIO_TYPE), {}
+            )
+        )
+        return self.async_show_form(step_id="zha_network_options", data_schema=schema)
 
 
 async def check_zigpy_connection(usb_path, radio_type, database_path):

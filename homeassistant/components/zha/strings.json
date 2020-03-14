@@ -20,9 +20,12 @@
   "options": {
     "step": {
       "zha_network_options": {
-        "description": "ZHA Network Options",
+        "description": "ZHA Network Options - Home Assistant will have to be restarted after changing these options",
         "data": {
-          "enable_source_routing": "Enable Zigbee source routing"
+          "source_routing": "Enable Zigbee source routing",
+          "source_routing_table_size": "Source route table size",
+          "address_table_size": "Address table size",
+          "neighbor_table_size": "Neighbor table size"
         }
       }
     }
