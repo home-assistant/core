@@ -13,7 +13,6 @@ from homeassistant.const import (
     CONF_NAME,
     EVENT_CORE_CONFIG_UPDATE,
     LENGTH_FEET,
-    LENGTH_KILOMETERS,
     LENGTH_METERS,
     LENGTH_MILES,
     PRESSURE_HPA,
@@ -229,13 +228,9 @@ class MetWeather(WeatherEntity):
     def wind_speed(self):
         """Return the wind speed."""
         speed_m_s = self._current_weather_data.get("wind_speed")
-        if speed_m_s is None:
+        if self._is_metric or speed_m_s is None:
             return speed_m_s
 
-        if self._is_metric:
-            speed_km_s = convert_distance(speed_m_s, LENGTH_METERS, LENGTH_KILOMETERS)
-            speed_km_h = speed_km_s / 3600.0
-            return int(round(speed_km_h))
         speed_mi_s = convert_distance(speed_m_s, LENGTH_METERS, LENGTH_MILES)
         speed_mi_h = speed_mi_s / 3600.0
         return int(round(speed_mi_h))
