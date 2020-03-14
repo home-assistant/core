@@ -22,6 +22,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup_entry(
     hass: HomeAssistantType,
     entry: ConfigEntry,
@@ -69,7 +70,7 @@ class DirecTvRemote(RemoteDevice):
         self.dtv = dtv
         self._name = name
         self._unique_id = None
-        self._is_client = device != "
+        self._is_client = device != "0"
         self._receiver_id = None
         self._software_version = None
 
