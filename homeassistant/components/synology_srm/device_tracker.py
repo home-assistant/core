@@ -37,6 +37,34 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+ATTRIBUTE_ALIAS = {
+    "band": None,
+    "connection": None,
+    "current_rate": None,
+    "dev_type": None,
+    "hostname": None,
+    "ip6_addr": None,
+    "ip_addr": None,
+    "is_baned": None,
+    "is_beamforming_on": None,
+    "is_guest": None,
+    "is_high_qos": None,
+    "is_low_qos": None,
+    "is_manual_dev_type": None,
+    "is_manual_hostname": None,
+    "is_online": None,
+    "is_parental_controled": None,
+    "is_qos": None,
+    "is_wireless": None,
+    "mac": None,
+    "max_rate": None,
+    "mesh_node_id": None,
+    "rate_quality": None,
+    "signalstrength": "signal_strength",
+    "transferRXRate": "transfer_rx_rate",
+    "transferTXRate": "transfer_tx_rate",
+}
+
 
 def get_scanner(hass, config):
     """Validate the configuration and return Synology SRM scanner."""
@@ -75,9 +103,21 @@ class SynologySrmDeviceScanner(DeviceScanner):
 
     def get_extra_attributes(self, device) -> dict:
         """Get the extra attributes of a device."""
-        filter_result = [result for result in self.devices if result["mac"] == device]
-        if filter_result:
-            return filter_result[0]
+        device = next(
+            iter([result for result in self.devices if result["mac"] == device]), None
+        )
+        if device:
+            filtered_attributes = {}
+            for attribute, value in device.items():
+                if attribute in ATTRIBUTE_ALIAS:
+                    filtered_attributes[
+                        (
+                            ATTRIBUTE_ALIAS[attribute]
+                            if ATTRIBUTE_ALIAS[attribute]
+                            else attribute
+                        )
+                    ] = value
+            return filtered_attributes
         return {}
 
     def get_device_name(self, device):
