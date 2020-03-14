@@ -3,31 +3,39 @@ from abc import abstractmethod
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import dispatcher_connect
 
 from . import (
-    DOMAIN as DOMAIN_RACHIO,
-    KEY_DEVICE_ID,
-    KEY_STATUS,
-    KEY_SUBTYPE,
     SIGNAL_RACHIO_CONTROLLER_UPDATE,
     STATUS_OFFLINE,
     STATUS_ONLINE,
     SUBTYPE_OFFLINE,
     SUBTYPE_ONLINE,
 )
+from .const import (
+    DEFAULT_NAME,
+    DOMAIN as DOMAIN_RACHIO,
+    KEY_DEVICE_ID,
+    KEY_STATUS,
+    KEY_SUBTYPE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Rachio binary sensors."""
-    devices = []
-    for controller in hass.data[DOMAIN_RACHIO].controllers:
-        devices.append(RachioControllerOnlineBinarySensor(hass, controller))
-
-    add_entities(devices)
+    devices = await hass.async_add_executor_job(_create_devices, hass, config_entry)
+    async_add_entities(devices)
     _LOGGER.info("%d Rachio binary sensor(s) added", len(devices))
+
+
+def _create_devices(hass, config_entry):
+    devices = []
+    for controller in hass.data[DOMAIN_RACHIO][config_entry.entry_id].controllers:
+        devices.append(RachioControllerOnlineBinarySensor(hass, controller))
+    return devices
 
 
 class RachioControllerBinarySensor(BinarySensorDevice):
@@ -69,6 +77,18 @@ class RachioControllerBinarySensor(BinarySensorDevice):
     def _poll_update(self, data=None) -> bool:
         """Request the state from the API."""
         pass
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        return {
+            "identifiers": {(DOMAIN_RACHIO, self._controller.serial_number,)},
+            "connections": {
+                (device_registry.CONNECTION_NETWORK_MAC, self._controller.mac_address,)
+            },
+            "name": self._controller.name,
+            "manufacturer": DEFAULT_NAME,
+        }
 
     @abstractmethod
     def _handle_update(self, *args, **kwargs) -> None:
