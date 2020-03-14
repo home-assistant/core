@@ -1,4 +1,5 @@
 """Config flow for Roku."""
+import logging
 from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
@@ -22,6 +23,8 @@ DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
 ERROR_CANNOT_CONNECT = "cannot_connect"
 ERROR_UNKNOWN = "unknown"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def validate_input(data: Dict) -> Dict:
@@ -74,6 +77,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = ERROR_CANNOT_CONNECT
             return self._show_form(errors)
         except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unknown error trying to connect.")
             return self.async_abort(reason=ERROR_UNKNOWN)
 
         await self.async_set_unique_id(info["serial_num"])
