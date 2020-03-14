@@ -32,7 +32,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 
 def get_roku_data(host: str) -> dict:
-    """Retrieve a Roku instance and version info for the device."""   
+    """Retrieve a Roku instance and version info for the device."""
     roku = Roku(host)
     roku_device_info = roku.device_info
 
@@ -61,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Roku from a config entry."""
     try:
         roku_data = await hass.async_add_executor_job(
-            get_roku_data, entry.data[CONF_HOST]
+            get_roku_data, entry.data[CONF_HOST],
         )
     except (SocketGIAError, RequestException, RokuException) as exception:
         raise ConfigEntryNotReady from exception
