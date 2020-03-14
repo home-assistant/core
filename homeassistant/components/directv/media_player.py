@@ -158,15 +158,6 @@ class DirecTvDevice(MediaPlayerDevice):
                 self._model = MODEL_HOST
                 self._software_version = version_info["stbSoftwareVersion"]
 
-        if self._is_client:
-            _LOGGER.debug(
-                "Created DirecTV media player for client %s on device %s",
-                self._name,
-                device,
-            )
-        else:
-            _LOGGER.debug("Created DirecTV media player for device %s", self._name)
-
     def update(self):
         """Retrieve latest state."""
         _LOGGER.debug("%s: Updating status", self.entity_id)
