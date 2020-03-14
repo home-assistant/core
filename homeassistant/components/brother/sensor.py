@@ -132,6 +132,11 @@ class BrotherPrinterSensor(Entity):
         """Return the device info."""
         return self._device_info
 
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return True
+
     async def async_added_to_hass(self):
         """Connect to dispatcher listening for entity data notifications."""
         self.coordinator.async_add_listener(self.async_write_ha_state)
