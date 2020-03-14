@@ -1,5 +1,6 @@
 """Support for Broadlink RM devices."""
 from datetime import timedelta
+from ipaddress import ip_address
 import logging
 import socket
 
@@ -76,7 +77,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             SWITCH_SCHEMA
         ),
         vol.Optional(CONF_SLOTS, default={}): MP1_SWITCH_SLOT_SCHEMA,
-        vol.Required(CONF_HOST): hostname,
+        vol.Required(CONF_HOST): vol.All(vol.Any(hostname, ip_address), cv.string),
         vol.Required(CONF_MAC): mac_address,
         vol.Optional(CONF_FRIENDLY_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_TYPE, default=SWITCH_TYPES[0]): vol.In(SWITCH_TYPES),

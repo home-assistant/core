@@ -1,5 +1,6 @@
 """Support for the Broadlink RM2 Pro (only temperature) and A1 devices."""
 from datetime import timedelta
+from ipaddress import ip_address
 import logging
 
 import broadlink as blk
@@ -44,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
             cv.ensure_list, [vol.In(SENSOR_TYPES)]
         ),
-        vol.Required(CONF_HOST): hostname,
+        vol.Required(CONF_HOST): vol.All(vol.Any(hostname, ip_address), cv.string),
         vol.Required(CONF_MAC): mac_address,
         vol.Optional(CONF_TYPE, default=DEFAULT_TYPE): cv.positive_int,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
