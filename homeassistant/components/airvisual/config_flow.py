@@ -124,7 +124,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_geography(import_config)
 
     async def async_step_node_pro(self, user_input=None):
-        """Handle the initialization of the integration via the cloud API."""
+        """Handle the initialization of the integration with a Node/Pro."""
         await self._async_set_unique_id(user_input[CONF_NODE_PRO_ID])
 
         websession = aiohttp_client.async_get_clientsession(self.hass)
