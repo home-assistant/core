@@ -2,7 +2,7 @@
 
 ATTR_PLAYERS_LIST = "players_list"
 
-DEFAULT_HOST = "localhost"
+DEFAULT_HOST = "localhost:25565"
 DEFAULT_NAME = "Minecraft Server"
 DEFAULT_PORT = 25565
 
