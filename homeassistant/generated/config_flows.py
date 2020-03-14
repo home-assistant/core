@@ -80,6 +80,7 @@ FLOWS = [
     "plex",
     "point",
     "ps4",
+    "rachio",
     "rainmachine",
     "ring",
     "samsungtv",
