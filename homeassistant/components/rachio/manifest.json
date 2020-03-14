@@ -8,7 +8,7 @@
   "dependencies": [
     "http"
   ],
-  "codeowners": [],
+  "codeowners": ["@bdraco"],
   "config_flow": true,
   "homekit": {
     "models": [
