@@ -1,6 +1,7 @@
 """Support for Roku."""
 import asyncio
 from datetime import timedelta
+from socket import gaierror as SocketGIAError
 from typing import Dict
 
 from requests.exceptions import RequestException
@@ -62,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         roku_data = await hass.async_add_executor_job(
             get_roku_data, entry.data[CONF_HOST]
         )
-    except (RequestException, RokuException) as exception:
+    except (SocketGIAError, RequestException, RokuException) as exception:
         raise ConfigEntryNotReady from exception
 
     hass.data[DOMAIN][entry.entry_id] = roku_data
