@@ -204,6 +204,11 @@ class AirVisualNodeProSensor(AirVisualEntity, AirQualityEntity):
         self._unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return bool(self._airvisual.data)
+
+    @property
     def carbon_monoxide(self):
         """Return the CO (carbon monoxide) level."""
         return self._airvisual.data["current"].get("co")
