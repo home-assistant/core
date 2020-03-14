@@ -68,7 +68,7 @@ def mirobo_is_got_error_fixture():
     mock_vacuum = mock.MagicMock()
     mock_vacuum.status().data = {"test": "raw"}
     mock_vacuum.status().is_on = False
-    mock_vacuum.status().fanspeed = 38
+    mock_vacuum.status().fanspeed = 101
     mock_vacuum.status().got_error = True
     mock_vacuum.status().error = "Error message"
     mock_vacuum.status().battery = 82
@@ -261,11 +261,11 @@ async def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_FAN_SPEED,
-        {"entity_id": entity_id, "fan_speed": 60},
+        {"entity_id": entity_id, "fan_speed": 102},
         blocking=True,
     )
     mock_mirobo_is_got_error.assert_has_calls(
-        [mock.call.set_fan_speed(60)], any_order=True
+        [mock.call.set_fan_speed(102)], any_order=True
     )
     mock_mirobo_is_got_error.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_got_error.reset_mock()
@@ -277,7 +277,7 @@ async def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
         blocking=True,
     )
     mock_mirobo_is_got_error.assert_has_calls(
-        [mock.call.set_fan_speed(77)], any_order=True
+        [mock.call.set_fan_speed(103)], any_order=True
     )
     mock_mirobo_is_got_error.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_got_error.reset_mock()
