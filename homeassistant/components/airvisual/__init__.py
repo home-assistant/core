@@ -134,14 +134,18 @@ async def async_setup(hass, config):
 def _standardize_geography_config_entry(hass, config_entry):
     """Ensure that geography observables have appropriate properties."""
     entry_updates = {}
+
     if not config_entry.unique_id:
         # If the config entry doesn't already have a unique ID, set one:
         entry_updates["unique_id"] = config_entry.data[CONF_API_KEY]
     if not config_entry.options:
         # If the config entry doesn't already have any options set, set defaults:
         entry_updates["options"] = {CONF_SHOW_ON_MAP: True}
-    if entry_updates:
-        hass.config_entries.async_update_entry(config_entry, **entry_updates)
+
+    if not entry_updates:
+        return
+
+    hass.config_entries.async_update_entry(config_entry, **entry_updates)
 
 
 async def async_setup_entry(hass, config_entry):
