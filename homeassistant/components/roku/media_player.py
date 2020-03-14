@@ -18,7 +18,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import (
-    CONF_HOST,
     STATE_HOME,
     STATE_IDLE,
     STATE_PLAYING,
