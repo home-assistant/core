@@ -42,7 +42,7 @@ class SamsungTVBridge(ABC):
 
     def __init__(self, method, host, port):
         """Initialize Bridge."""
-        self.port = port
+        self.port = 8001 if port is None else port
         self.method = method
         self.host = host
         self.token = None
