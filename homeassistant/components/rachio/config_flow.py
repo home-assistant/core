@@ -1,33 +1,26 @@
 """Config flow for Rachio integration."""
-import http.client
 import logging
-import ssl
 
 from rachiopy import Rachio
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_API_KEY
+from homeassistant.core import callback
 
 from .const import (
-    CONF_CUSTOM_URL,
     CONF_MANUAL_RUN_MINS,
     DEFAULT_MANUAL_RUN_MINS,
     KEY_ID,
     KEY_STATUS,
     KEY_USERNAME,
+    RachioAPIExceptions,
 )
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_API_KEY): str,
-        vol.Optional(CONF_CUSTOM_URL): str,
-        vol.Optional(CONF_MANUAL_RUN_MINS, default=DEFAULT_MANUAL_RUN_MINS): int,
-    }
-)
+DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -51,7 +44,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
         username = data[1][KEY_USERNAME]
     # Yes we really do get all these exceptions (hopefully rachiopy switches to requests)
-    except (http.client.HTTPException, ssl.SSLError, OSError, AssertionError) as error:
+    except RachioAPIExceptions as error:
         _LOGGER.error("Could not reach the Rachio API: %s", error)
         raise CannotConnect
 
@@ -73,7 +66,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 info = await validate_input(self.hass, user_input)
                 await self.async_set_unique_id(user_input[CONF_API_KEY])
-
                 return self.async_create_entry(title=info["title"], data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
@@ -94,6 +86,37 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, user_input):
         """Handle import."""
         return await self.async_step_user(user_input)
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a option flow for Rachio."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        data_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_MANUAL_RUN_MINS,
+                    default=self.config_entry.options.get(
+                        CONF_MANUAL_RUN_MINS, DEFAULT_MANUAL_RUN_MINS
+                    ),
+                ): int
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=data_schema)
 
 
 class CannotConnect(exceptions.HomeAssistantError):

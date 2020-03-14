@@ -3,6 +3,7 @@ from abc import abstractmethod
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import dispatcher_connect
 
 from . import (
@@ -25,15 +26,16 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Rachio binary sensors."""
-    devices = []
-    for controller in hass.data[DOMAIN_RACHIO][config_entry.entry_id].controllers:
-        sensor = await hass.async_add_executor_job(
-            RachioControllerOnlineBinarySensor, hass, controller
-        )
-        devices.append(sensor)
-
+    devices = await hass.async_add_executor_job(_create_devices, hass, config_entry)
     async_add_entities(devices)
     _LOGGER.info("%d Rachio binary sensor(s) added", len(devices))
+
+
+def _create_devices(hass, config_entry):
+    devices = []
+    for controller in hass.data[DOMAIN_RACHIO][config_entry.entry_id].controllers:
+        devices.append(RachioControllerOnlineBinarySensor(hass, controller))
+    return devices
 
 
 class RachioControllerBinarySensor(BinarySensorDevice):
@@ -80,13 +82,9 @@ class RachioControllerBinarySensor(BinarySensorDevice):
     def device_info(self):
         """Return the device_info of the device."""
         return {
-            "identifiers": {
-                (
-                    DOMAIN_RACHIO,
-                    self._controller.controller_id,
-                    self._controller.serial_number,
-                    self._controller.mac_address,
-                )
+            "identifiers": {(DOMAIN_RACHIO, self._controller.serial_number,)},
+            "connections": {
+                (device_registry.CONNECTION_NETWORK_MAC, self._controller.mac_address,)
             },
             "name": self._controller.name,
             "manufacturer": DEFAULT_NAME,

@@ -1,9 +1,7 @@
 """Integration with the Rachio Iro sprinkler system controller."""
 import asyncio
-import http.client
 import logging
 import secrets
-import ssl
 from typing import Optional
 
 from aiohttp import web
@@ -34,6 +32,7 @@ from .const import (
     KEY_TYPE,
     KEY_USERNAME,
     KEY_ZONES,
+    RachioAPIExceptions,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -139,6 +138,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up the Rachio config entry."""
 
     config = entry.data
+    options = entry.options
+
+    # CONF_MANUAL_RUN_MINS can only come from a yaml import
+    if not options.get(CONF_MANUAL_RUN_MINS) and config.get(CONF_MANUAL_RUN_MINS):
+        options[CONF_MANUAL_RUN_MINS] = config[CONF_MANUAL_RUN_MINS]
 
     # Configure API
     api_key = config.get(CONF_API_KEY)
@@ -148,13 +152,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     custom_url = config.get(CONF_CUSTOM_URL)
     hass_url = hass.config.api.base_url if custom_url is None else custom_url
     rachio.webhook_auth = secrets.token_hex()
-    rachio.webhook_url = hass_url + WEBHOOK_PATH
+    webhook_url_path = f"{WEBHOOK_PATH}-{entry.entry_id}"
+    rachio.webhook_url = f"{hass_url}{webhook_url_path}"
 
     # Get the API user
     try:
-        person = await hass.async_add_executor_job(RachioPerson, hass, rachio, config)
+        person = await hass.async_add_executor_job(RachioPerson, hass, rachio, entry)
     # Yes we really do get all these exceptions (hopefully rachiopy switches to requests)
-    except (http.client.HTTPException, ssl.SSLError, OSError, AssertionError) as error:
+    # and there is not a reasonable timeout here so it can block for a long time
+    except RachioAPIExceptions as error:
         _LOGGER.error("Could not reach the Rachio API: %s", error)
         raise ConfigEntryNotReady
 
@@ -168,7 +174,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id] = person
 
     # Listen for incoming webhook connections after the data is there
-    hass.http.register_view(RachioWebhookView(entry.entry_id))
+    hass.http.register_view(RachioWebhookView(entry.entry_id, webhook_url_path))
 
     for component in SUPPORTED_DOMAINS:
         hass.async_create_task(
@@ -181,12 +187,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 class RachioPerson:
     """Represent a Rachio user."""
 
-    def __init__(self, hass, rachio, config):
+    def __init__(self, hass, rachio, config_entry):
         """Create an object from the provided API instance."""
         # Use API token to get user ID
         self._hass = hass
         self.rachio = rachio
-        self.config = config
+        self.config_entry = config_entry
 
         response = rachio.person.getInfo()
         assert int(response[0][KEY_STATUS]) == 200, "API key error"
@@ -353,12 +359,13 @@ class RachioWebhookView(HomeAssistantView):
     }
 
     requires_auth = False  # Handled separately
-    url = WEBHOOK_PATH
-    name = url[1:].replace("/", ":")
 
-    def __init__(self, entry_id):
+    def __init__(self, entry_id, webhook_url):
         """Initialize the instance of the view."""
         self._entry_id = entry_id
+        self.url = webhook_url
+        self.name = webhook_url[1:].replace("/", ":")
+        _LOGGER.debug("Created webhook at url: %s, with name %s", self.url, self.name)
 
     async def post(self, request) -> web.Response:
         """Handle webhook calls from the server."""

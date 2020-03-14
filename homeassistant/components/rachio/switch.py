@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import dispatcher_connect
 
 from . import (
@@ -17,6 +18,7 @@ from . import (
 )
 from .const import (
     CONF_MANUAL_RUN_MINS,
+    DEFAULT_MANUAL_RUN_MINS,
     DEFAULT_NAME,
     DOMAIN as DOMAIN_RACHIO,
     KEY_DEVICE_ID,
@@ -39,30 +41,26 @@ ATTR_ZONE_NUMBER = "Zone number"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Rachio switches."""
-    manual_run_time = timedelta(
-        minutes=hass.data[DOMAIN_RACHIO][config_entry.entry_id].config.get(
-            CONF_MANUAL_RUN_MINS
-        )
-    )
-    _LOGGER.info("Rachio run time is %s", str(manual_run_time))
-
     # Add all zones from all controllers as switches
+    devices = await hass.async_add_executor_job(_create_devices, hass, config_entry)
+    async_add_entities(devices)
+    _LOGGER.info("%d Rachio switch(es) added", len(devices))
+
+
+def _create_devices(hass, config_entry):
     devices = []
-    for controller in hass.data[DOMAIN_RACHIO][config_entry.entry_id].controllers:
-        devices.append(
-            await hass.async_add_executor_job(RachioStandbySwitch, hass, controller)
-        )
-        zones = await hass.async_add_executor_job(controller.list_zones)
+    person = hass.data[DOMAIN_RACHIO][config_entry.entry_id]
+    # Fetch the schedule once at startup
+    # in order to avoid every zone doing it
+    for controller in person.controllers:
+        devices.append(RachioStandbySwitch(hass, controller))
+        zones = controller.list_zones()
+        current_schedule = controller.current_schedule
         _LOGGER.debug("Rachio setting up zones: %s", zones)
         for zone in zones:
             _LOGGER.debug("Rachio setting up zone: %s", zone)
-            zone = await hass.async_add_executor_job(
-                RachioZone, hass, controller, zone, manual_run_time
-            )
-            devices.append(zone)
-
-    async_add_entities(devices)
-    _LOGGER.info("%d Rachio switch(es) added", len(devices))
+            devices.append(RachioZone(hass, person, controller, zone, current_schedule))
+    return devices
 
 
 class RachioSwitch(SwitchDevice):
@@ -110,13 +108,9 @@ class RachioSwitch(SwitchDevice):
     def device_info(self):
         """Return the device_info of the device."""
         return {
-            "identifiers": {
-                (
-                    DOMAIN_RACHIO,
-                    self._controller.controller_id,
-                    self._controller.serial_number,
-                    self._controller.mac_address,
-                )
+            "identifiers": {(DOMAIN_RACHIO, self._controller.serial_number,)},
+            "connections": {
+                (device_registry.CONNECTION_NETWORK_MAC, self._controller.mac_address,)
             },
             "name": self._controller.name,
             "manufacturer": DEFAULT_NAME,
@@ -182,16 +176,18 @@ class RachioStandbySwitch(RachioSwitch):
 class RachioZone(RachioSwitch):
     """Representation of one zone of sprinklers connected to the Rachio Iro."""
 
-    def __init__(self, hass, controller, data, manual_run_time):
+    def __init__(self, hass, person, controller, data, current_schedule):
         """Initialize a new Rachio Zone."""
         self._id = data[KEY_ID]
         self._zone_name = data[KEY_NAME]
         self._zone_number = data[KEY_ZONE_NUMBER]
         self._zone_enabled = data[KEY_ENABLED]
-        self._manual_run_time = manual_run_time
         self._entity_picture = data.get(KEY_IMAGE_URL)
+        self._person = person
         self._summary = str()
-        super().__init__(controller)
+        self._current_schedule = current_schedule
+        super().__init__(controller, poll=False)
+        self._state = self.zone_id == self._current_schedule.get(KEY_ZONE_ID)
 
         # Listen for all zone updates
         dispatcher_connect(hass, SIGNAL_RACHIO_ZONE_UPDATE, self._handle_update)
@@ -241,8 +237,18 @@ class RachioZone(RachioSwitch):
         self.turn_off()
 
         # Start this zone
-        self._controller.rachio.zone.start(self.zone_id, self._manual_run_time.seconds)
-        _LOGGER.debug("Watering %s on %s", self.name, self._controller.name)
+        manual_run_time = timedelta(
+            minutes=self._person.config_entry.options.get(
+                CONF_MANUAL_RUN_MINS, DEFAULT_MANUAL_RUN_MINS
+            )
+        )
+        self._controller.rachio.zone.start(self.zone_id, manual_run_time.seconds)
+        _LOGGER.debug(
+            "Watering %s on %s for %s",
+            self.name,
+            self._controller.name,
+            str(manual_run_time),
+        )
 
     def turn_off(self, **kwargs) -> None:
         """Stop watering all zones."""
@@ -250,8 +256,8 @@ class RachioZone(RachioSwitch):
 
     def _poll_update(self, data=None) -> bool:
         """Poll the API to check whether the zone is running."""
-        schedule = self._controller.current_schedule
-        return self.zone_id == schedule.get(KEY_ZONE_ID)
+        self._current_schedule = self._controller.current_schedule
+        return self.zone_id == self._current_schedule.get(KEY_ZONE_ID)
 
     def _handle_update(self, *args, **kwargs) -> None:
         """Handle incoming webhook zone data."""
