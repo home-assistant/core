@@ -16,7 +16,7 @@ from tests.components.roku import MockDeviceInfo, setup_integration
 async def test_config_entry_not_ready(hass: HomeAssistantType) -> None:
     """Test the Roku configuration entry not ready."""
     with patch(
-        "homeassistant.components.roku.Roku.device_info", side_effect=RokuException,
+        "homeassistant.components.roku.Roku._call", side_effect=RokuException,
     ):
         entry = await setup_integration(hass)
 
