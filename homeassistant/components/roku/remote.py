@@ -27,12 +27,11 @@ async def async_setup_entry(
 class RokuRemote(RemoteDevice):
     """Device that sends commands to an Roku."""
 
-    def __init__(self, roku, enabled_default=True):
+    def __init__(self, roku):
         """Initialize the Roku device."""
         self.roku = roku
         self._available = False
         self._device_info = {}
-        self._enabled_default = enabled_default
 
     def update(self):
         """Retrieve latest state."""
@@ -57,11 +56,6 @@ class RokuRemote(RemoteDevice):
     def available(self):
         """Return if able to retrieve information from device or not."""
         return self._available
-
-    @property
-    def entity_registry_enabled_default(self):
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._enabled_default
 
     @property
     def unique_id(self):
