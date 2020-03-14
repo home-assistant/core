@@ -144,6 +144,9 @@ async def async_setup(hass, config):
 
         if change_type == collection.CHANGE_ADDED:
 
+            if "-" not in url_path:
+                url_path = "lovelace-%s" % url_path
+
             existing = hass.data[DOMAIN]["dashboards"].get(url_path)
 
             if existing:
@@ -162,10 +165,6 @@ async def async_setup(hass, config):
         else:
             hass.data[DOMAIN]["dashboards"][url_path].config = item
             update = True
-
-        if "-" not in url_path:
-            _LOGGER.warning("Panel url path %s does not contain a hyphen (-)", url_path)
-            return
 
         try:
             _register_panel(hass, url_path, MODE_STORAGE, item, update)
