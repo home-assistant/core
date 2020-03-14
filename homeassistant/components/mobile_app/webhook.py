@@ -381,7 +381,7 @@ async def webhook_register_sensor(hass, config_entry, data):
         _LOGGER.error("Error registering sensor: %s", ex)
         return empty_okay_response()
 
-    register_signal = "{}_{}_register".format(DOMAIN, data[ATTR_SENSOR_TYPE])
+    register_signal = f"{DOMAIN}_{data[ATTR_SENSOR_TYPE]}_register"
     async_dispatcher_send(hass, register_signal, data)
 
     return webhook_response(

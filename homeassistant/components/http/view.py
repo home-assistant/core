@@ -144,9 +144,7 @@ def request_handler_factory(view, handler):
         elif not isinstance(result, bytes):
             assert (
                 False
-            ), "Result should be None, string, bytes or Response. Got: {}".format(
-                result
-            )
+            ), f"Result should be None, string, bytes or Response. Got: {result}"
 
         return web.Response(body=result, status=status_code)
 

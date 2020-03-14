@@ -56,7 +56,10 @@ async def async_call_action_from_config(
 
 async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
     """List device actions."""
-    zha_device = await async_get_zha_device(hass, device_id)
+    try:
+        zha_device = await async_get_zha_device(hass, device_id)
+    except (KeyError, AttributeError):
+        return []
     cluster_channels = [
         ch.name
         for pool in zha_device.channels.pools
@@ -81,7 +84,10 @@ async def _execute_service_based_action(
 ) -> None:
     action_type = config[CONF_TYPE]
     service_name = SERVICE_NAMES[action_type]
-    zha_device = await async_get_zha_device(hass, config[CONF_DEVICE_ID])
+    try:
+        zha_device = await async_get_zha_device(hass, config[CONF_DEVICE_ID])
+    except (KeyError, AttributeError):
+        return
 
     service_data = {ATTR_IEEE: str(zha_device.ieee)}
 

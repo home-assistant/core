@@ -1,7 +1,10 @@
 """Support for MyChevy binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import ENTITY_ID_FORMAT, BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDevice,
+)
 from homeassistant.core import callback
 from homeassistant.util import slugify
 
@@ -42,11 +45,7 @@ class EVBinarySensor(BinarySensorDevice):
         self._type = config.device_class
         self._is_on = None
         self._car_vid = car_vid
-        self.entity_id = ENTITY_ID_FORMAT.format(
-            "{}_{}_{}".format(
-                MYCHEVY_DOMAIN, slugify(self._car.name), slugify(self._name)
-            )
-        )
+        self.entity_id = f"{BINARY_SENSOR_DOMAIN}.{MYCHEVY_DOMAIN}_{slugify(self._car.name)}_{slugify(self._name)}"
 
     @property
     def name(self):

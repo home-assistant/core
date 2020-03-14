@@ -74,7 +74,7 @@ GROUP_SCHEMA = vol.All(
             CONF_ICON: cv.icon,
             CONF_ALL: cv.boolean,
         }
-    ),
+    )
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -231,7 +231,7 @@ async def async_setup(hass, config):
     async def groups_service_handler(service):
         """Handle dynamic group service functions."""
         object_id = service.data[ATTR_OBJECT_ID]
-        entity_id = ENTITY_ID_FORMAT.format(object_id)
+        entity_id = f"{DOMAIN}.{object_id}"
         group = component.get_entity(entity_id)
 
         # new group
@@ -311,7 +311,7 @@ async def async_setup(hass, config):
                     vol.Exclusive(ATTR_ENTITIES, "entities"): cv.entity_ids,
                     vol.Exclusive(ATTR_ADD_ENTITIES, "entities"): cv.entity_ids,
                 }
-            ),
+            )
         ),
     )
 
@@ -336,7 +336,7 @@ async def _async_process_config(hass, config, component):
         # Don't create tasks and await them all. The order is important as
         # groups get a number based on creation order.
         await Group.async_create_group(
-            hass, name, entity_ids, icon=icon, object_id=object_id, mode=mode,
+            hass, name, entity_ids, icon=icon, object_id=object_id, mode=mode
         )
 
 
@@ -388,7 +388,7 @@ class Group(Entity):
         """Initialize a group."""
         return asyncio.run_coroutine_threadsafe(
             Group.async_create_group(
-                hass, name, entity_ids, user_defined, icon, object_id, mode,
+                hass, name, entity_ids, user_defined, icon, object_id, mode
             ),
             hass.loop,
         ).result()

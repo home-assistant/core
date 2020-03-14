@@ -32,6 +32,7 @@ from homeassistant.helpers import config_validation as cv
 from .const import (
     CONF_ACTIVATION,
     CONF_BLINK,
+    CONF_DEFAULT_OPTIONS,
     CONF_DISCOVERY,
     CONF_INVERSE,
     CONF_MODEL,
@@ -138,7 +139,6 @@ OPTIONS_SCHEMA = vol.Schema(
     extra=vol.REMOVE_EXTRA,
 )
 
-CONF_DEFAULT_OPTIONS = "default_options"
 CONFIG_ENTRY_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ID): cv.matches_regex("[0-9a-f]{12}"),
@@ -157,6 +157,9 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
+
+    # class variable to store/share discovered host information
+    discovered_hosts = {}
 
     # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
 
@@ -178,7 +181,7 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except (CannotConnect, KeyError):
             raise CannotConnect
         else:
-            self.data[CONF_MODEL] = status.get("name", KONN_MODEL)
+            self.data[CONF_MODEL] = status.get("model", KONN_MODEL)
             self.data[CONF_ACCESS_TOKEN] = "".join(
                 random.choices(f"{string.ascii_uppercase}{string.digits}", k=20)
             )
@@ -196,6 +199,7 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # config schema ensures we have port if we have host
         if device_config.get(CONF_HOST):
+            # automatically connect if we have host info
             return await self.async_step_user(
                 user_input={
                     CONF_HOST: device_config[CONF_HOST],
@@ -205,6 +209,28 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # if we have no host info wait for it or abort if previously configured
         self._abort_if_unique_id_configured()
+        return await self.async_step_import_confirm()
+
+    async def async_step_import_confirm(self, user_input=None):
+        """Confirm the user wants to import the config entry."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="import_confirm",
+                description_placeholders={"id": self.unique_id},
+            )
+
+        # if we have ssdp discovered applicable host info use it
+        if KonnectedFlowHandler.discovered_hosts.get(self.unique_id):
+            return await self.async_step_user(
+                user_input={
+                    CONF_HOST: KonnectedFlowHandler.discovered_hosts[self.unique_id][
+                        CONF_HOST
+                    ],
+                    CONF_PORT: KonnectedFlowHandler.discovered_hosts[self.unique_id][
+                        CONF_PORT
+                    ],
+                }
+            )
         return await self.async_step_user()
 
     async def async_step_ssdp(self, discovery_info):
@@ -265,11 +291,21 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 self.data[CONF_ID] = status["mac"].replace(":", "")
-                self.data[CONF_MODEL] = status.get("name", KONN_MODEL)
+                self.data[CONF_MODEL] = status.get("model", KONN_MODEL)
+
+                # save off our discovered host info
+                KonnectedFlowHandler.discovered_hosts[self.data[CONF_ID]] = {
+                    CONF_HOST: self.data[CONF_HOST],
+                    CONF_PORT: self.data[CONF_PORT],
+                }
                 return await self.async_step_confirm()
 
         return self.async_show_form(
             step_id="user",
+            description_placeholders={
+                "host": self.data.get(CONF_HOST, "Unknown"),
+                "port": self.data.get(CONF_PORT, "Unknown"),
+            },
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST, default=self.data.get(CONF_HOST)): str,
@@ -286,23 +322,14 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         the connection.
         """
         if user_input is None:
-            # update an existing config entry if host info changes
-            entry = await self.async_set_unique_id(
-                self.data[CONF_ID], raise_on_progress=False
-            )
-            if entry and (
-                entry.data[CONF_HOST] != self.data[CONF_HOST]
-                or entry.data[CONF_PORT] != self.data[CONF_PORT]
-            ):
-                entry_data = copy.deepcopy(entry.data)
-                entry_data.update(self.data)
-                self.hass.config_entries.async_update_entry(entry, data=entry_data)
-
-            self._abort_if_unique_id_configured()
+            # abort and update an existing config entry if host info changes
+            await self.async_set_unique_id(self.data[CONF_ID])
+            self._abort_if_unique_id_configured(updates=self.data)
             return self.async_show_form(
                 step_id="confirm",
                 description_placeholders={
                     "model": KONN_PANEL_MODEL_NAMES[self.data[CONF_MODEL]],
+                    "id": self.unique_id,
                     "host": self.data[CONF_HOST],
                     "port": self.data[CONF_PORT],
                 },
@@ -556,7 +583,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         }
                     ),
                     description_placeholders={
-                        "zone": "Zone {self.active_cfg}"
+                        "zone": f"Zone {self.active_cfg}"
                         if len(self.active_cfg) < 3
                         else self.active_cfg.upper
                     },
@@ -594,7 +621,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     }
                 ),
                 description_placeholders={
-                    "zone": "Zone {self.active_cfg}"
+                    "zone": f"Zone {self.active_cfg}"
                     if len(self.active_cfg) < 3
                     else self.active_cfg.upper()
                 },
@@ -624,7 +651,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         }
                     ),
                     description_placeholders={
-                        "zone": "Zone {self.active_cfg}"
+                        "zone": f"Zone {self.active_cfg}"
                         if len(self.active_cfg) < 3
                         else self.active_cfg.upper()
                     },
@@ -671,7 +698,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     }
                 ),
                 description_placeholders={
-                    "zone": "Zone {self.active_cfg}"
+                    "zone": f"Zone {self.active_cfg}"
                     if len(self.active_cfg) < 3
                     else self.active_cfg.upper()
                 },
@@ -710,7 +737,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         }
                     ),
                     description_placeholders={
-                        "zone": "Zone {self.active_cfg}"
+                        "zone": f"Zone {self.active_cfg}"
                         if len(self.active_cfg) < 3
                         else self.active_cfg.upper()
                     },

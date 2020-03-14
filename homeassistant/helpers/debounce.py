@@ -31,6 +31,7 @@ class Debouncer:
         self.immediate = immediate
         self._timer_task: Optional[asyncio.TimerHandle] = None
         self._execute_at_end_of_timer: bool = False
+        self._execute_lock = asyncio.Lock()
 
     async def async_call(self) -> None:
         """Call the function."""
@@ -42,15 +43,23 @@ class Debouncer:
 
             return
 
-        if self.immediate:
-            await self.hass.async_add_job(self.function)  # type: ignore
-        else:
-            self._execute_at_end_of_timer = True
+        # Locked means a call is in progress. Any call is good, so abort.
+        if self._execute_lock.locked():
+            return
 
-        self._timer_task = self.hass.loop.call_later(
-            self.cooldown,
-            lambda: self.hass.async_create_task(self._handle_timer_finish()),
-        )
+        if not self.immediate:
+            self._execute_at_end_of_timer = True
+            self._schedule_timer()
+            return
+
+        async with self._execute_lock:
+            # Abort if timer got set while we're waiting for the lock.
+            if self._timer_task:
+                return
+
+            await self.hass.async_add_job(self.function)  # type: ignore
+
+            self._schedule_timer()
 
     async def _handle_timer_finish(self) -> None:
         """Handle a finished timer."""
@@ -63,10 +72,21 @@ class Debouncer:
 
         self._execute_at_end_of_timer = False
 
-        try:
-            await self.hass.async_add_job(self.function)  # type: ignore
-        except Exception:  # pylint: disable=broad-except
-            self.logger.exception("Unexpected exception from %s", self.function)
+        # Locked means a call is in progress. Any call is good, so abort.
+        if self._execute_lock.locked():
+            return
+
+        async with self._execute_lock:
+            # Abort if timer got set while we're waiting for the lock.
+            if self._timer_task:
+                return  # type: ignore
+
+            try:
+                await self.hass.async_add_job(self.function)  # type: ignore
+            except Exception:  # pylint: disable=broad-except
+                self.logger.exception("Unexpected exception from %s", self.function)
+
+            self._schedule_timer()
 
     @callback
     def async_cancel(self) -> None:
@@ -76,3 +96,11 @@ class Debouncer:
             self._timer_task = None
 
         self._execute_at_end_of_timer = False
+
+    @callback
+    def _schedule_timer(self) -> None:
+        """Schedule a timer."""
+        self._timer_task = self.hass.loop.call_later(
+            self.cooldown,
+            lambda: self.hass.async_create_task(self._handle_timer_finish()),
+        )

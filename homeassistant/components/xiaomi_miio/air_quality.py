@@ -5,7 +5,12 @@ from miio import AirQualityMonitor, Device, DeviceException
 import voluptuous as vol
 
 from homeassistant.components.air_quality import PLATFORM_SCHEMA, AirQualityEntity
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
+from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_TOKEN,
+)
 from homeassistant.exceptions import NoEntitySpecifiedError, PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
@@ -88,7 +93,7 @@ class AirMonitorB1(AirQualityEntity):
         self._device = device
         self._unique_id = unique_id
         self._icon = "mdi:cloud"
-        self._unit_of_measurement = "μg/m3"
+        self._unit_of_measurement = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
         self._available = None
         self._air_quality_index = None
         self._carbon_dioxide = None

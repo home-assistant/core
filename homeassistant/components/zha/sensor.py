@@ -17,6 +17,7 @@ from homeassistant.const import (
     POWER_WATT,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -82,6 +83,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class Sensor(ZhaEntity):
     """Base ZHA sensor."""
 
+    SENSOR_ATTR = None
     _decimals = 1
     _device_class = None
     _divisor = 1
@@ -123,12 +125,14 @@ class Sensor(ZhaEntity):
         return self._state
 
     @callback
-    def async_set_state(self, state):
+    def async_set_state(self, attr_id, attr_name, value):
         """Handle state update from channel."""
-        if state is not None:
-            state = self.formatter(state)
-        self._state = state
-        self.async_schedule_update_ha_state()
+        if self.SENSOR_ATTR is None or self.SENSOR_ATTR != attr_name:
+            return
+        if value is not None:
+            value = self.formatter(value)
+        self._state = value
+        self.async_write_ha_state()
 
     @callback
     def async_restore_last_state(self, last_state):
@@ -153,6 +157,7 @@ class Sensor(ZhaEntity):
 class AnalogInput(Sensor):
     """Sensor that displays analog input values."""
 
+    SENSOR_ATTR = "present_value"
     pass
 
 
@@ -160,8 +165,9 @@ class AnalogInput(Sensor):
 class Battery(Sensor):
     """Battery sensor of power configuration cluster."""
 
+    SENSOR_ATTR = "battery_percentage_remaining"
     _device_class = DEVICE_CLASS_BATTERY
-    _unit = "%"
+    _unit = UNIT_PERCENTAGE
 
     @staticmethod
     def formatter(value):
@@ -175,10 +181,12 @@ class Battery(Sensor):
     async def async_state_attr_provider(self):
         """Return device state attrs for battery sensors."""
         state_attrs = {}
-        battery_size = await self._channel.get_attribute_value("battery_size")
+        attributes = ["battery_size", "battery_quantity"]
+        results = await self._channel.get_attributes(attributes)
+        battery_size = results.get("battery_size")
         if battery_size is not None:
             state_attrs["battery_size"] = BATTERY_SIZES.get(battery_size, "Unknown")
-        battery_quantity = await self._channel.get_attribute_value("battery_quantity")
+        battery_quantity = results.get("battery_quantity")
         if battery_quantity is not None:
             state_attrs["battery_quantity"] = battery_quantity
         return state_attrs
@@ -188,13 +196,14 @@ class Battery(Sensor):
         """Update a single device state attribute."""
         if key == "battery_voltage":
             self._device_state_attributes[key] = round(value / 10, 1)
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
 
 @STRICT_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
 class ElectricalMeasurement(Sensor):
     """Active power measurement."""
 
+    SENSOR_ATTR = "active_power"
     _device_class = DEVICE_CLASS_POWER
     _divisor = 10
     _unit = POWER_WATT
@@ -229,15 +238,17 @@ class Text(Sensor):
 class Humidity(Sensor):
     """Humidity sensor."""
 
+    SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_HUMIDITY
     _divisor = 100
-    _unit = "%"
+    _unit = UNIT_PERCENTAGE
 
 
 @STRICT_MATCH(channel_names=CHANNEL_ILLUMINANCE)
 class Illuminance(Sensor):
     """Illuminance Sensor."""
 
+    SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_ILLUMINANCE
     _unit = "lx"
 
@@ -251,6 +262,7 @@ class Illuminance(Sensor):
 class SmartEnergyMetering(Sensor):
     """Metering sensor."""
 
+    SENSOR_ATTR = "instantaneous_demand"
     _device_class = DEVICE_CLASS_POWER
 
     def formatter(self, value):
@@ -267,6 +279,7 @@ class SmartEnergyMetering(Sensor):
 class Pressure(Sensor):
     """Pressure sensor."""
 
+    SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_PRESSURE
     _decimals = 0
     _unit = "hPa"
@@ -276,6 +289,7 @@ class Pressure(Sensor):
 class Temperature(Sensor):
     """Temperature Sensor."""
 
+    SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_TEMPERATURE
     _divisor = 100
     _unit = TEMP_CELSIUS

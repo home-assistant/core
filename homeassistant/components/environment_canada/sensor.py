@@ -113,7 +113,7 @@ class ECSensor(Entity):
         metadata = self.ec_data.metadata
         sensor_data = conditions.get(self.sensor_type)
 
-        self._unique_id = "{}-{}".format(metadata["location"], self.sensor_type)
+        self._unique_id = f"{metadata['location']}-{self.sensor_type}"
         self._attr = {}
         self._name = sensor_data.get("label")
         value = sensor_data.get("value")

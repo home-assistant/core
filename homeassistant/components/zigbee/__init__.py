@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PIN,
     EVENT_HOMEASSISTANT_STOP,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
@@ -448,7 +449,7 @@ class ZigBeeAnalogIn(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return "%"
+        return UNIT_PERCENTAGE
 
     def update(self):
         """Get the latest reading from the ADC."""

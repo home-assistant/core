@@ -55,7 +55,6 @@ SUPPORT_FRONTIER_SILICON = (
 
 DEFAULT_PORT = 80
 DEFAULT_PASSWORD = "1234"
-DEVICE_URL = "http://{0}:{1}/device"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -83,7 +82,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     try:
         async_add_entities(
-            [AFSAPIDevice(DEVICE_URL.format(host, port), password, name)], True
+            [AFSAPIDevice(f"http://{host}:{port}/device", password, name)], True
         )
         _LOGGER.debug("FSAPI device %s:%s -> %s", host, port, password)
         return True

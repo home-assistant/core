@@ -1,6 +1,11 @@
 """Meteo-France component constants."""
 
-from homeassistant.const import TEMP_CELSIUS, TIME_HOURS, TIME_MINUTES
+from homeassistant.const import (
+    SPEED_KILOMETERS_PER_HOUR,
+    TEMP_CELSIUS,
+    TIME_MINUTES,
+    UNIT_PERCENTAGE,
+)
 
 DOMAIN = "meteo_france"
 PLATFORMS = ["sensor", "weather"]
@@ -17,25 +22,25 @@ SENSOR_TYPE_CLASS = "device_class"
 SENSOR_TYPES = {
     "rain_chance": {
         SENSOR_TYPE_NAME: "Rain chance",
-        SENSOR_TYPE_UNIT: "%",
+        SENSOR_TYPE_UNIT: UNIT_PERCENTAGE,
         SENSOR_TYPE_ICON: "mdi:weather-rainy",
         SENSOR_TYPE_CLASS: None,
     },
     "freeze_chance": {
         SENSOR_TYPE_NAME: "Freeze chance",
-        SENSOR_TYPE_UNIT: "%",
+        SENSOR_TYPE_UNIT: UNIT_PERCENTAGE,
         SENSOR_TYPE_ICON: "mdi:snowflake",
         SENSOR_TYPE_CLASS: None,
     },
     "thunder_chance": {
         SENSOR_TYPE_NAME: "Thunder chance",
-        SENSOR_TYPE_UNIT: "%",
+        SENSOR_TYPE_UNIT: UNIT_PERCENTAGE,
         SENSOR_TYPE_ICON: "mdi:weather-lightning",
         SENSOR_TYPE_CLASS: None,
     },
     "snow_chance": {
         SENSOR_TYPE_NAME: "Snow chance",
-        SENSOR_TYPE_UNIT: "%",
+        SENSOR_TYPE_UNIT: UNIT_PERCENTAGE,
         SENSOR_TYPE_ICON: "mdi:weather-snowy",
         SENSOR_TYPE_CLASS: None,
     },
@@ -47,7 +52,7 @@ SENSOR_TYPES = {
     },
     "wind_speed": {
         SENSOR_TYPE_NAME: "Wind Speed",
-        SENSOR_TYPE_UNIT: f"km/{TIME_HOURS}",
+        SENSOR_TYPE_UNIT: SPEED_KILOMETERS_PER_HOUR,
         SENSOR_TYPE_ICON: "mdi:weather-windy",
         SENSOR_TYPE_CLASS: None,
     },

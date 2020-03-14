@@ -11,8 +11,12 @@
         },
         "step": {
             "confirm": {
-                "description": "Modell: {model}\nVert: {host}\nPort: {port}\n\nDu kan konfigurere IO og panel atferd i Konnected Alarm Panel innstillinger.",
+                "description": "Modell: {model}\nID: {id}\nVert: {host}\nPort: {port}\n\nDu kan konfigurere IO- og panelvirkem\u00e5ten i innstillingene for Konnected Alarm Panel.",
                 "title": "Konnected Enhet klar"
+            },
+            "import_confirm": {
+                "description": "Et Konnected Alarm Panel med ID {id} er oppdaget i configuration.yaml. Denne flyten vil tillate deg \u00e5 importere den til en config-oppf\u00f8ring.",
+                "title": "Importer Konnected Enhet"
             },
             "user": {
                 "data": {

@@ -10,6 +10,7 @@ from homeassistant import config_entries
 from homeassistant.components import unifi
 import homeassistant.components.device_tracker as device_tracker
 from homeassistant.components.unifi.const import (
+    CONF_BLOCK_CLIENT,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
@@ -53,6 +54,14 @@ CLIENT_4 = {
     "is_wired": True,
     "last_seen": 1562600145,
     "mac": "00:00:00:00:00:04",
+}
+CLIENT_5 = {
+    "essid": "ssid",
+    "hostname": "client_5",
+    "ip": "10.0.0.5",
+    "is_wired": True,
+    "last_seen": None,
+    "mac": "00:00:00:00:00:05",
 }
 
 DEVICE_1 = {
@@ -111,11 +120,11 @@ async def test_tracked_devices(hass):
     controller = await setup_unifi_integration(
         hass,
         options={CONF_SSID_FILTER: ["ssid"]},
-        clients_response=[CLIENT_1, CLIENT_2, CLIENT_3, client_4_copy],
+        clients_response=[CLIENT_1, CLIENT_2, CLIENT_3, CLIENT_5, client_4_copy],
         devices_response=[DEVICE_1, DEVICE_2],
         known_wireless_clients=(CLIENT_4["mac"],),
     )
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 7
 
     client_1 = hass.states.get("device_tracker.client_1")
     assert client_1 is not None
@@ -133,6 +142,11 @@ async def test_tracked_devices(hass):
     client_4 = hass.states.get("device_tracker.client_4")
     assert client_4 is not None
     assert client_4.state == "not_home"
+
+    # A client that has never been seen should be marked away.
+    client_5 = hass.states.get("device_tracker.client_5")
+    assert client_5 is not None
+    assert client_5.state == "not_home"
 
     device_1 = hass.states.get("device_tracker.device_1")
     assert device_1 is not None
@@ -443,7 +457,7 @@ async def test_restoring_client(hass):
 
     await setup_unifi_integration(
         hass,
-        options={unifi.CONF_BLOCK_CLIENT: True},
+        options={CONF_BLOCK_CLIENT: True},
         clients_response=[CLIENT_2],
         clients_all_response=[CLIENT_1],
     )

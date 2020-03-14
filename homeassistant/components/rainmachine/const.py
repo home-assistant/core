@@ -1,9 +1,4 @@
 """Define constants for the SimpliSafe component."""
-from datetime import timedelta
-import logging
-
-LOGGER = logging.getLogger(__package__)
-
 DOMAIN = "rainmachine"
 
 DATA_CLIENT = "client"
@@ -15,8 +10,6 @@ DATA_ZONES = "zones"
 DATA_ZONES_DETAILS = "zones_details"
 
 DEFAULT_PORT = 8080
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
-DEFAULT_SSL = True
 
 PROGRAM_UPDATE_TOPIC = f"{DOMAIN}_program_update"
 SENSOR_UPDATE_TOPIC = f"{DOMAIN}_data_update"
