@@ -63,7 +63,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if config.get(CONF_LATITUDE) is None:
         config[CONF_TRACK_HOME] = True
 
-    async_add_entities([MetWeather(config)])
+    async_add_entities([MetWeather(config, hass.config.units.is_metric)])
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
