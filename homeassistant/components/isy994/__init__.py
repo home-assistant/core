@@ -143,6 +143,8 @@ NODE_FILTERS = {
             "Siren",
             "Siren_ADV",
             "X10",
+            "KeypadRelay",
+            "KeypadRelay_ADV",
         ],
         "insteon_type": ["2.", "9.10.", "9.11.", "113."],
     },
