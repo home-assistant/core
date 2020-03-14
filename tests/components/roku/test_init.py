@@ -1,5 +1,8 @@
 """Tests for the Roku integration."""
+from socket import gaierror as SocketGIAError
+
 from asynctest import patch
+from requests.exceptions import RequestException
 from roku import RokuException
 
 from homeassistant.components.roku.const import DOMAIN
@@ -17,6 +20,26 @@ async def test_config_entry_not_ready(hass: HomeAssistantType) -> None:
     """Test the Roku configuration entry not ready."""
     with patch(
         "homeassistant.components.roku.Roku._call", side_effect=RokuException,
+    ):
+        entry = await setup_integration(hass)
+
+    assert entry.state == ENTRY_STATE_SETUP_RETRY
+
+
+async def test_config_entry_not_ready_request(hass: HomeAssistantType) -> None:
+    """Test the Roku configuration entry not ready."""
+    with patch(
+        "homeassistant.components.roku.Roku._call", side_effect=RequestException,
+    ):
+        entry = await setup_integration(hass)
+
+    assert entry.state == ENTRY_STATE_SETUP_RETRY
+
+
+async def test_config_entry_not_ready_socket(hass: HomeAssistantType) -> None:
+    """Test the Roku configuration entry not ready."""
+    with patch(
+        "homeassistant.components.roku.Roku._call", side_effect=SocketGIAError,
     ):
         entry = await setup_integration(hass)
 
