@@ -32,7 +32,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["media_player"]
+PLATFORMS = ["media_player", "remote"]
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
