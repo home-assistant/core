@@ -12,12 +12,15 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
     EVENT_CORE_CONFIG_UPDATE,
+    LENGTH_FEET,
+    LENGTH_METERS,
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_call_later
+from homeassistant.util.distance import convert as convert_distance
 import homeassistant.util.dt as dt_util
 
 from .const import CONF_TRACK_HOME
@@ -61,15 +64,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a weather entity from a config_entry."""
-    async_add_entities([MetWeather(config_entry.data)])
+    async_add_entities([MetWeather(config_entry.data, hass.config.units.is_metric)])
 
 
 class MetWeather(WeatherEntity):
     """Implementation of a Met.no weather condition."""
 
-    def __init__(self, config):
+    def __init__(self, config, is_metric):
         """Initialise the platform with a data instance and site."""
         self._config = config
+        self._is_metric = is_metric
         self._unsub_track_home = None
         self._unsub_fetch_data = None
         self._weather_data = None
@@ -99,6 +103,10 @@ class MetWeather(WeatherEntity):
             longitude = conf[CONF_LONGITUDE]
             elevation = conf[CONF_ELEVATION]
 
+        if not self._is_metric:
+            elevation = int(
+                round(convert_distance(elevation, LENGTH_FEET, LENGTH_METERS))
+            )
         coordinates = {
             "lat": str(latitude),
             "lon": str(longitude),
