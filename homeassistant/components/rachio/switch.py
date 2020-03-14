@@ -4,7 +4,6 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import dispatcher_connect
 
 from . import (
@@ -15,11 +14,11 @@ from . import (
     SUBTYPE_ZONE_COMPLETED,
     SUBTYPE_ZONE_STARTED,
     SUBTYPE_ZONE_STOPPED,
+    RachioDeviceMixIn,
 )
 from .const import (
     CONF_MANUAL_RUN_MINS,
     DEFAULT_MANUAL_RUN_MINS,
-    DEFAULT_NAME,
     DOMAIN as DOMAIN_RACHIO,
     KEY_DEVICE_ID,
     KEY_ENABLED,
@@ -42,28 +41,30 @@ ATTR_ZONE_NUMBER = "Zone number"
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Rachio switches."""
     # Add all zones from all controllers as switches
-    devices = await hass.async_add_executor_job(_create_devices, hass, config_entry)
-    async_add_entities(devices)
-    _LOGGER.info("%d Rachio switch(es) added", len(devices))
+    entities = await hass.async_add_executor_job(_create_entities, hass, config_entry)
+    async_add_entities(entities)
+    _LOGGER.info("%d Rachio switch(es) added", len(entities))
 
 
-def _create_devices(hass, config_entry):
-    devices = []
+def _create_entities(hass, config_entry):
+    entities = []
     person = hass.data[DOMAIN_RACHIO][config_entry.entry_id]
     # Fetch the schedule once at startup
     # in order to avoid every zone doing it
     for controller in person.controllers:
-        devices.append(RachioStandbySwitch(hass, controller))
+        entities.append(RachioStandbySwitch(hass, controller))
         zones = controller.list_zones()
         current_schedule = controller.current_schedule
         _LOGGER.debug("Rachio setting up zones: %s", zones)
         for zone in zones:
             _LOGGER.debug("Rachio setting up zone: %s", zone)
-            devices.append(RachioZone(hass, person, controller, zone, current_schedule))
-    return devices
+            entities.append(
+                RachioZone(hass, person, controller, zone, current_schedule)
+            )
+    return entities
 
 
-class RachioSwitch(SwitchDevice):
+class RachioSwitch(RachioDeviceMixIn, SwitchDevice):
     """Represent a Rachio state that can be toggled."""
 
     def __init__(self, controller, poll=True):
@@ -103,18 +104,6 @@ class RachioSwitch(SwitchDevice):
 
         # For this device
         self._handle_update(args, kwargs)
-
-    @property
-    def device_info(self):
-        """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN_RACHIO, self._controller.serial_number,)},
-            "connections": {
-                (device_registry.CONNECTION_NETWORK_MAC, self._controller.mac_address,)
-            },
-            "name": self._controller.name,
-            "manufacturer": DEFAULT_NAME,
-        }
 
     @abstractmethod
     def _handle_update(self, *args, **kwargs) -> None:
