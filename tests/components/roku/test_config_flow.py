@@ -155,7 +155,6 @@ async def test_form_cannot_connect_request(hass: HomeAssistantType) -> None:
     assert len(mock_validate_input.mock_calls) == 1
 
 
-
 async def test_form_cannot_connect_socket(hass: HomeAssistantType) -> None:
     """Test we handle cannot connect socket error."""
     result = await hass.config_entries.flow.async_init(
