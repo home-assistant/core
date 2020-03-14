@@ -32,7 +32,7 @@ from .const import (
     KEY_TYPE,
     KEY_USERNAME,
     KEY_ZONES,
-    RachioAPIExceptions,
+    RACHIO_API_EXCEPTIONS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -160,7 +160,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         person = await hass.async_add_executor_job(RachioPerson, hass, rachio, entry)
     # Yes we really do get all these exceptions (hopefully rachiopy switches to requests)
     # and there is not a reasonable timeout here so it can block for a long time
-    except RachioAPIExceptions as error:
+    except RACHIO_API_EXCEPTIONS as error:
         _LOGGER.error("Could not reach the Rachio API: %s", error)
         raise ConfigEntryNotReady
 

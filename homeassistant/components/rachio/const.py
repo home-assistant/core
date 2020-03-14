@@ -34,4 +34,9 @@ KEY_ZONE_NUMBER = "zoneNumber"
 KEY_ZONES = "zones"
 
 # Yes we really do get all these exceptions (hopefully rachiopy switches to requests)
-RachioAPIExceptions = (http.client.HTTPException, ssl.SSLError, OSError, AssertionError)
+RACHIO_API_EXCEPTIONS = (
+    http.client.HTTPException,
+    ssl.SSLError,
+    OSError,
+    AssertionError,
+)

@@ -14,7 +14,7 @@ from .const import (
     KEY_ID,
     KEY_STATUS,
     KEY_USERNAME,
-    RachioAPIExceptions,
+    RACHIO_API_EXCEPTIONS,
 )
 from .const import DOMAIN  # pylint:disable=unused-import
 
@@ -44,7 +44,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
         username = data[1][KEY_USERNAME]
     # Yes we really do get all these exceptions (hopefully rachiopy switches to requests)
-    except RachioAPIExceptions as error:
+    except RACHIO_API_EXCEPTIONS as error:
         _LOGGER.error("Could not reach the Rachio API: %s", error)
         raise CannotConnect
 
