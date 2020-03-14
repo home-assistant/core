@@ -76,12 +76,7 @@ async def test_form_invalid_auth(hass):
         "homeassistant.components.rachio.config_flow.Rachio", return_value=rachio_mock
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_API_KEY: "api_key",
-                CONF_CUSTOM_URL: "http://custom.url",
-                CONF_MANUAL_RUN_MINS: 5,
-            },
+            result["flow_id"], {CONF_API_KEY: "api_key"},
         )
 
     assert result2["type"] == "form"
@@ -102,12 +97,7 @@ async def test_form_cannot_connect(hass):
         "homeassistant.components.rachio.config_flow.Rachio", return_value=rachio_mock
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_API_KEY: "api_key",
-                CONF_CUSTOM_URL: "http://custom.url",
-                CONF_MANUAL_RUN_MINS: 5,
-            },
+            result["flow_id"], {CONF_API_KEY: "api_key"},
         )
 
     assert result2["type"] == "form"
