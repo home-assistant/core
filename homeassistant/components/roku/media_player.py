@@ -42,16 +42,16 @@ SUPPORT_ROKU = (
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Roku config entry."""
     roku = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
-    async_add_entities([RokuDevice(roku, entry[CONF_HOST])], True)
+    async_add_entities([RokuDevice(roku)], True)
 
 
 class RokuDevice(MediaPlayerDevice):
     """Representation of a Roku device on the network."""
 
-    def __init__(self, roku, ip_address):
+    def __init__(self, roku):
         """Initialize the Roku device."""
         self.roku = roku
-        self.ip_address = ip_address
+        self.ip_address = roku.host
         self.channels = []
         self.current_app = None
         self._available = False
