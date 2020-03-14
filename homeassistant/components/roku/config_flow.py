@@ -1,5 +1,6 @@
 """Config flow for Roku."""
 import logging
+from socket import gaierror as SocketGIAError
 from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
@@ -73,7 +74,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             info = await self.hass.async_add_executor_job(validate_input, user_input)
-        except (RequestException, RokuException):
+        except (SocketGIAError, RequestException, RokuException):
             errors["base"] = ERROR_CANNOT_CONNECT
             return self._show_form(errors)
         except Exception:  # pylint: disable=broad-except
@@ -118,7 +119,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await self.hass.async_add_executor_job(validate_input, user_input)
                 return self.async_create_entry(title=name, data=user_input)
-            except (RequestException, RokuException):
+            except (SocketGIAError, RequestException, RokuException):
                 return self.async_abort(reason=ERROR_CANNOT_CONNECT)
             except Exception:  # pylint: disable=broad-except
                 LOGGER.exception("Unknown error trying to connect.")
