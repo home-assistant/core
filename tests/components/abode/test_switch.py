@@ -38,7 +38,7 @@ async def test_entity_registry(hass):
     assert entry.unique_id == DEVICE_UID
 
 
-async def test_switch_attributes(hass):
+async def test_attributes(hass):
     """Test the switch attributes are correct."""
     await setup_platform(hass, SWITCH_DOMAIN)
 

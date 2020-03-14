@@ -17,7 +17,7 @@ async def test_entity_registry(hass):
     assert entry.unique_id == "d0a3a1c316891ceb00c20118aae2a133"
 
 
-async def test_camera_attributes(hass):
+async def test_attributes(hass):
     """Test the camera attributes are correct."""
     await setup_platform(hass, CAMERA_DOMAIN)
 

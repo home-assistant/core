@@ -32,7 +32,7 @@ async def test_entity_registry(hass):
     assert entry.unique_id == "001122334455"
 
 
-async def test_automation_attributes(hass):
+async def test_attributes(hass):
     """Test the alarm control panel attributes are correct."""
     await setup_platform(hass, ALARM_DOMAIN)
 
@@ -126,3 +126,15 @@ async def test_set_alarm_standby(hass):
 
             state = hass.states.get(DEVICE_ID)
             assert state.state == STATE_ALARM_DISARMED
+
+
+async def test_state_unknown(hass):
+    """Test an unknown alarm control panel state."""
+    with patch("abodepy.ALARM.AbodeAlarm.mode", new_callable=PropertyMock) as mock_mode:
+        await setup_platform(hass, ALARM_DOMAIN)
+        await hass.async_block_till_done()
+
+        mock_mode.return_value = None
+
+        state = hass.states.get(DEVICE_ID)
+        assert state.state == "unknown"
