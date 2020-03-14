@@ -154,7 +154,7 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerDevice):
 
         homekit_state = self.service.value(CharacteristicsTypes.CURRENT_MEDIA_STATE)
         if homekit_state is not None:
-            return HK_TO_HA_STATE[homekit_state]
+            return HK_TO_HA_STATE.get(homekit_state, STATE_OK)
 
         return STATE_OK
 
