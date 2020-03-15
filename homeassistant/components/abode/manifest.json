@@ -5,6 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/abode",
   "requirements": ["abodepy==0.18.1"],
   "dependencies": [],
-  "codeowners": ["@shred86"],
-  "quality_scale": "silver"
+  "codeowners": ["@shred86"]
 }
