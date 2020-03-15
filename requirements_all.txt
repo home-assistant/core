@@ -1996,7 +1996,7 @@ temperusb==1.5.3
 # tensorflow==1.13.2
 
 # homeassistant.components.tesla
-teslajsonpy==0.4.0
+teslajsonpy==0.5.1
 
 # homeassistant.components.thermoworks_smoke
 thermoworks_smoke==0.1.8
