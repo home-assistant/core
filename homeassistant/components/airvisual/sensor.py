@@ -3,6 +3,7 @@ from logging import getLogger
 
 from homeassistant.components.air_quality import AirQualityEntity
 from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_STATE,
@@ -14,7 +15,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_SHOW_ON_MAP,
     CONF_STATE,
-    PRECISION_WHOLE,
+    PRECISION_TENTHS,
     TEMP_CELSIUS,
 )
 from homeassistant.helpers.temperature import display_temp
@@ -223,6 +224,20 @@ class AirVisualNodeProSensor(AirVisualEntity, AirQualityEntity):
         return self._airvisual.data["measurements"][0].get("co2_ppm")
 
     @property
+    def device_info(self):
+        """Return device registry information for this entity."""
+        return {
+            "identifiers": {(DOMAIN, self._airvisual.data["serial_number"])},
+            "name": self._airvisual.data["settings"]["node_name"],
+            "manufacturer": "AirVisual",
+            "model": f'{self._airvisual.data["status"]["model"]}',
+            "sw_version": (
+                f'Version {self._airvisual.data["status"]["system_version"]}'
+                f'{self._airvisual.data["status"]["app_version"]}'
+            ),
+        }
+
+    @property
     def name(self):
         """Return the name."""
         return f"{self._airvisual.data['settings']['node_name']} Air Quality"
@@ -258,6 +273,7 @@ class AirVisualNodeProSensor(AirVisualEntity, AirQualityEntity):
 
         self._attrs.update(
             {
+                ATTR_BATTERY_LEVEL: self._airvisual.data["status"]["battery"],
                 ATTR_HUMIDITY: self._airvisual.data["measurements"][0].get(
                     "humidity_RH"
                 ),
@@ -265,7 +281,7 @@ class AirVisualNodeProSensor(AirVisualEntity, AirQualityEntity):
                     self.hass,
                     float(self._airvisual.data["measurements"][0].get("temperature_C")),
                     TEMP_CELSIUS,
-                    PRECISION_WHOLE,
+                    PRECISION_TENTHS,
                 ),
                 ATTR_VOC: self._airvisual.data["measurements"][0].get("voc_ppb"),
                 **sensor_life_attrs,
