@@ -1,19 +1,29 @@
 """Support for Nexia / Trane XL Thermostats."""
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
-from nexia.home import NexiaHome
-from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
+from requests.exceptions import ConnectTimeout, HTTPError
 
-from homeassistant.const import (
-    CONF_ID,
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_ID,
+    CONF_SCAN_INTERVAL,
+)
+
+REQUIREMENTS = [
+    "beautifulsoup4==4.6.3",
+    "certifi==2018.8.24",
+    "chardet==3.0.4",
+    "html5lib==1.0.1",
+    "idna==2.7",
+    "requests==2.19.1",
+    "six==1.11.0",
+    "urllib3==1.23",
+    "webencodings==0.5.1",
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,12 +54,6 @@ ATTR_OUTDOOR_TEMPERATURE = "outdoor_temperature"
 ATTR_THERMOSTAT_ID = "thermostat_id"
 ATTR_ZONE_ID = "zone_id"
 ATTR_AIRCLEANER_MODE = "aircleaner_mode"
-ATTR_HUMIDIFY_SUPPORTED = "humidify_supported"
-ATTR_DEHUMIDIFY_SUPPORTED = "dehumidify_supported"
-ATTR_HUMIDIFY_SETPOINT = "humidify_setpoint"
-ATTR_DEHUMIDIFY_SETPOINT = "dehumidify_setpoint"
-
-UPDATE_COORDINATOR = "udpate_coordinator"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -57,7 +61,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_ID): cv.positive_int,
+                vol.Required(CONF_ID): cv.positive_int,
                 vol.Optional(CONF_SCAN_INTERVAL): cv.positive_int,
             }
         ),
@@ -65,26 +69,32 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-DEFAULT_UPDATE_RATE = 120
-
 
 def setup(hass, config):
     """Configure the base Nexia device for Home Assistant."""
+    from .nexia_thermostat import NexiaThermostat
 
     conf = config[DOMAIN]
 
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
-    house_id = conf.get(CONF_ID)
+    house_id = conf[CONF_ID]
 
-    scan_interval = timedelta(seconds=conf.get(CONF_SCAN_INTERVAL, DEFAULT_UPDATE_RATE))
-
-    nexia_home = None
+    scan_interval = timedelta(
+        seconds=conf.get(CONF_SCAN_INTERVAL, NexiaThermostat.DEFAULT_UPDATE_RATE)
+    )
 
     try:
-        nexia_home = NexiaHome(
-            username=username, password=password, house_id=house_id, auto_login=True
+        thermostat = NexiaThermostat(
+            username=username,
+            password=password,
+            house_id=house_id,
+            update_rate=NexiaThermostat.DISABLE_AUTO_UPDATE,
         )
+        hass.data[DATA_NEXIA] = {
+            NEXIA_DEVICE: thermostat,
+            NEXIA_SCAN_INTERVAL: scan_interval,
+        }
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Nexia service: %s", str(ex))
         hass.components.persistent_notification.create(
@@ -95,28 +105,4 @@ def setup(hass, config):
             notification_id=NOTIFICATION_ID,
         )
         return False
-
-    async def _async_update_data():
-        """Fetch data from API endpoint."""
-        return await hass.async_add_job(nexia_home.update)
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="Nexia update",
-        update_method=_async_update_data,
-        update_interval=scan_interval,
-    )
-
-    hass.data[DATA_NEXIA] = {
-        NEXIA_DEVICE: nexia_home,
-        NEXIA_SCAN_INTERVAL: scan_interval,
-        UPDATE_COORDINATOR: coordinator,
-    }
-
     return True
-
-
-def is_percent(value):
-    """If the value is a valid percentage."""
-    return isinstance(value, int) and 0 <= value <= 100
