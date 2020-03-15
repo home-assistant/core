@@ -72,6 +72,7 @@ FLOWS = [
     "neato",
     "nest",
     "netatmo",
+    "nexia",
     "notion",
     "opentherm_gw",
     "openuv",

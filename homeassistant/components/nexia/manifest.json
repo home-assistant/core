@@ -2,13 +2,12 @@
   "domain": "nexia",
   "name": "Nexia",
   "requirements": [
-    "requests",
     "nexia==0.4.1"
   ],
   "dependencies": [],
   "codeowners": [
     "@ryannazaretian", "@bdraco"
   ],
-  "documentation": "https://www.home-assistant.io/components/nexia/",
+  "documentation": "https://www.home-assistant.io/integrations/nexia",
   "config_flow": true
 }
