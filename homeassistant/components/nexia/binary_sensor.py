@@ -47,7 +47,7 @@ class NexiaBinarySensor(BinarySensorDevice):
     """Provices Nexia BinarySensor support."""
 
     def __init__(self, coordinator, device, sensor_call, sensor_name, sensor_class):
-        """Initialize the Ecobee sensor."""
+        """Initialize the nexia sensor."""
         self._coordinator = coordinator
         self._device = device
         self._name = self._device.get_name() + " " + sensor_name
