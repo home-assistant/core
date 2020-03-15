@@ -6,5 +6,5 @@
   "requirements": ["abodepy==0.18.1"],
   "dependencies": [],
   "codeowners": ["@shred86"],
-  "quality_scale": "gold"
+  "quality_scale": "silver"
 }
