@@ -20,13 +20,13 @@ from homeassistant.const import (
     CONF_BEFORE,
     CONF_BELOW,
     CONF_CONDITION,
+    CONF_DAYS,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_STATE,
     CONF_VALUE_TEMPLATE,
     CONF_WEEKDAY,
-    CONF_DAYS,
     CONF_ZONE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -454,11 +454,7 @@ def weekday(days: Union[None, str, Container[str]]) -> bool:
     now = dt_util.now()
     now_weekday = WEEKDAYS[now.weekday()]
 
-    if (
-        isinstance(days, str)
-        and days != now_weekday
-        or now_weekday not in days
-    ):
+    if isinstance(days, str) and days != now_weekday or now_weekday not in days:
         return False
 
     return True
