@@ -169,7 +169,7 @@ class TadoConnector:
         """Set the presence to home or away."""
         if presence == PRESET_AWAY:
             self.tado.setAway()
-        else:
+        elif presence == PRESET_HOME:
             self.tado.setHome()
 
     def set_zone_overlay(
