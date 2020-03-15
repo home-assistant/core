@@ -3,7 +3,7 @@
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import ATTR_ATTRIBUTION
 
-from . import (
+from .const import (
     ATTR_FIRMWARE,
     ATTR_MODEL,
     ATTR_THERMOSTAT_ID,
@@ -15,21 +15,32 @@ from . import (
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up a sensor for a Nexia device."""
-    nexia_home = hass.data[DATA_NEXIA][NEXIA_DEVICE]
-    coordinator = hass.data[DATA_NEXIA][UPDATE_COORDINATOR]
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up sensors for a Nexia device."""
 
-    sensors = list()
+    nexia_data = hass.data[config_entry.entry_id][DATA_NEXIA]
+
+    entities = await hass.async_add_executor_job(_generate_entities(nexia_data))
+
+    async_add_entities(entities, True)
+
+
+def _generate_entities(nexia_data):
+    """Generate sensor for a Nexia device."""
+
+    nexia_home = nexia_data[NEXIA_DEVICE]
+    coordinator = nexia_data[UPDATE_COORDINATOR]
+
+    entities = []
     for thermostat_id in nexia_home.get_thermostat_ids():
         thermostat = nexia_home.get_thermostat_by_id(thermostat_id)
-        sensors.append(
+        entities.append(
             NexiaBinarySensor(
                 coordinator, thermostat, "is_blower_active", "Blower Active", None
             )
         )
         if thermostat.has_emergency_heat():
-            sensors.append(
+            entities.append(
                 NexiaBinarySensor(
                     coordinator,
                     thermostat,
@@ -39,7 +50,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 )
             )
 
-    add_entities(sensors, True)
+    return entities
 
 
 class NexiaBinarySensor(BinarySensorDevice):

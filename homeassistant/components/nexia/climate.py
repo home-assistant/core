@@ -56,7 +56,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-from . import (
+from .const import (
     ATTR_AIRCLEANER_MODE,
     ATTR_DEHUMIDIFY_SETPOINT,
     ATTR_DEHUMIDIFY_SUPPORTED,
@@ -99,12 +99,23 @@ SET_HUMIDITY_SCHEMA = vol.Schema(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up climate zones for a Nexia device."""
-    nexia_home = hass.data[DATA_NEXIA][NEXIA_DEVICE]
-    coordinator = hass.data[DATA_NEXIA][UPDATE_COORDINATOR]
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up climate for a Nexia device."""
 
-    zones = []
+    nexia_data = hass.data[config_entry.entry_id][DATA_NEXIA]
+
+    entities = await hass.async_add_executor_job(_generate_entities(nexia_data, hass))
+
+    async_add_entities(entities, True)
+
+
+def _generate_entities(nexia_data, hass):
+    """Generate climate for a Nexia device."""
+
+    nexia_home = nexia_data[NEXIA_DEVICE]
+    coordinator = nexia_data[UPDATE_COORDINATOR]
+
+    entities = []
     for thermostat_id in nexia_home.get_thermostat_ids():
         thermostat = nexia_home.get_thermostat_by_id(thermostat_id)
         if thermostat.has_humidify_support():
@@ -116,10 +127,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
                 if entity_id:
                     target_thermostats = set(
-                        zone.thermostat for zone in zones if zone.entity_id in entity_id
+                        zone.thermostat
+                        for zone in entities
+                        if zone.entity_id in entity_id
                     )
                 else:
-                    target_thermostats = set(zone.thermostat for zone in zones)
+                    target_thermostats = set(zone.thermostat for zone in entities)
 
                 for thermostat in target_thermostats:
                     thermostat.set_humidify_setpoint(humidity)
@@ -133,9 +146,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         for zone_id in thermostat.get_zone_ids():
             zone = thermostat.get_zone_by_id(zone_id)
-            zones.append(NexiaZone(coordinator, zone))
+            entities.append(NexiaZone(coordinator, zone))
 
-    add_entities(zones, True)
+    return entities
 
     def aircleaner_set_service(service):
         entity_id = service.data.get(ATTR_ENTITY_ID)
@@ -144,10 +157,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         if entity_id:
             target_thermostats = set(
-                zone.thermostat for zone in zones if zone.entity_id in entity_id
+                zone.thermostat for zone in entities if zone.entity_id in entity_id
             )
         else:
-            target_thermostats = set(zone.thermostat for zone in zones)
+            target_thermostats = set(zone.thermostat for zone in entities)
 
         for thermostat in target_thermostats:
             thermostat.set_aircleaner_mode(aircleaner_mode)

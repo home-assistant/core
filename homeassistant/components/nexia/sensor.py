@@ -11,7 +11,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity import Entity
 
-from . import (
+from .const import (
     ATTR_FIRMWARE,
     ATTR_MODEL,
     ATTR_THERMOSTAT_ID,
@@ -24,12 +24,20 @@ from . import (
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up sensors for a Nexia device."""
-    nexia_home = hass.data[DATA_NEXIA][NEXIA_DEVICE]
-    coordinator = hass.data[DATA_NEXIA][UPDATE_COORDINATOR]
 
-    sensors = list()
+    nexia_data = hass.data[config_entry.entry_id][DATA_NEXIA]
+
+    entities = await hass.async_add_executor_job(_generate_entities(nexia_data))
+
+    async_add_entities(entities, True)
+
+
+def _generate_entities(nexia_data):
+    nexia_home = nexia_data[NEXIA_DEVICE]
+    coordinator = nexia_data[UPDATE_COORDINATOR]
+    entities = []
 
     ###########################################################################
     # Thermostat / System Sensors
@@ -38,7 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         thermostat = nexia_home.get_thermostat_by_id(thermostat_id)
         #######################################################################
         # System Status
-        sensors.append(
+        entities.append(
             NexiaSensor(
                 coordinator,
                 thermostat,
@@ -50,7 +58,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         )
         #######################################################################
         # Air cleaner
-        sensors.append(
+        entities.append(
             NexiaSensor(
                 coordinator,
                 thermostat,
@@ -63,7 +71,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         #######################################################################
         # Compressor Speed
         if thermostat.has_variable_speed_compressor():
-            sensors.append(
+            entities.append(
                 NexiaSensor(
                     coordinator,
                     thermostat,
@@ -74,7 +82,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     percent_conv,
                 )
             )
-            sensors.append(
+            entities.append(
                 NexiaSensor(
                     coordinator,
                     thermostat,
@@ -93,7 +101,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 if thermostat.get_unit() == UNIT_CELSIUS
                 else TEMP_FAHRENHEIT
             )
-            sensors.append(
+            entities.append(
                 NexiaSensor(
                     coordinator,
                     thermostat,
@@ -106,7 +114,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         #######################################################################
         # Relative Humidity
         if thermostat.has_relative_humidity():
-            sensors.append(
+            entities.append(
                 NexiaSensor(
                     coordinator,
                     thermostat,
@@ -130,7 +138,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             )
             ###################################################################
             # Temperature
-            sensors.append(
+            entities.append(
                 NexiaZoneSensor(
                     coordinator,
                     zone,
@@ -143,14 +151,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             )
             ###################################################################
             # Zone Status
-            sensors.append(
+            entities.append(
                 NexiaZoneSensor(
                     coordinator, zone, "get_status", "Zone Status", None, None,
                 )
             )
             ###################################################################
             # Setpoint Status
-            sensors.append(
+            entities.append(
                 NexiaZoneSensor(
                     coordinator,
                     zone,
@@ -161,7 +169,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 )
             )
 
-    add_entities(sensors, True)
+    return entities
 
 
 def percent_conv(val):
