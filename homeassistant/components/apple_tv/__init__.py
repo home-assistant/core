@@ -334,8 +334,8 @@ class AppleTVManager:
     def address_updated(self, address):
         """Update cached address in config entry."""
         _LOGGER.debug("Changing address to %s", address)
-        self.config_entry.data[CONF_ADDRESS] = address
         update_entry = partial(
-            self.hass.config_entries.async_update_entry, data={**self.config_entry.data}
+            self.hass.config_entries.async_update_entry,
+            data={**self.config_entry.data, CONF_ADDRESS: address},
         )
         self.hass.add_job(update_entry, self.config_entry)
