@@ -1,4 +1,7 @@
 """BleBox sensor entities."""
+
+# pylint: disable=fixme
+
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 

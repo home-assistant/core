@@ -21,6 +21,9 @@ from homeassistant.util.color import (
 
 from . import CommonEntity, async_add_blebox
 
+# pylint: disable=fixme
+
+
 _LOGGER = logging.getLogger(__name__)
 
 

@@ -3,6 +3,8 @@ from homeassistant.components.switch import DEVICE_CLASS_SWITCH, SwitchDevice
 
 from . import CommonEntity, async_add_blebox
 
+# pylint: disable=fixme
+
 
 async def async_setup_platform(hass, config, async_add, discovery_info=None):
     """Set up BleBox platform."""

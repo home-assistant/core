@@ -1,5 +1,7 @@
 """BleBox climate entity implementation."""
 
+# pylint: disable=fixme
+
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,

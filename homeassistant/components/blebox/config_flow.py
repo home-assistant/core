@@ -12,6 +12,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
+# pylint: disable=fixme
+
 # TODO: remove default host (use input placeholder)
 # TODO: suggest default IP on same network as HASS?
 DEFAULT_HOST = "192.168.0.2"

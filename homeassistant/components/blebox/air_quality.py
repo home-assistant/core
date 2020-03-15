@@ -4,6 +4,8 @@ from homeassistant.components.air_quality import AirQualityEntity
 
 from . import CommonEntity, async_add_blebox
 
+# pylint: disable=fixme
+
 
 # TODO: remove?
 async def async_setup_platform(hass, config, async_add, discovery_info=None):

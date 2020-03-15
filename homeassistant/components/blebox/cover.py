@@ -1,4 +1,7 @@
 """BleBox cover entity implementation."""
+
+# pylint: disable=fixme
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DEVICE_CLASS_DOOR,
