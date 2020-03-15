@@ -26,6 +26,7 @@ from homeassistant.const import (
     CONF_STATE,
     CONF_VALUE_TEMPLATE,
     CONF_WEEKDAY,
+    CONF_DAYS,
     CONF_ZONE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -446,6 +447,36 @@ def time_from_config(
         return time(before, after, weekday)
 
     return time_if
+
+
+def weekday(days: Union[None, str, Container[str]]) -> bool:
+    """Test if weekday condition matches."""
+    now = dt_util.now()
+    now_weekday = WEEKDAYS[now.weekday()]
+
+    if (
+        isinstance(days, str)
+        and days != now_weekday
+        or now_weekday not in days
+    ):
+        return False
+
+    return True
+
+
+def weekday_from_config(
+    config: ConfigType, config_validation: bool = True
+) -> ConditionCheckerType:
+    """Wrap action method with weekday based condition."""
+    if config_validation:
+        config = cv.WEEKDAY_CONDITION_SCHEMA(config)
+    days = config.get(CONF_DAYS)
+
+    def weekday_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
+        """Validate weekday based if-condition."""
+        return weekday(days)
+
+    return weekday_if
 
 
 def zone(

@@ -891,6 +891,13 @@ TIME_CONDITION_SCHEMA = vol.All(
     has_at_least_one_key("before", "after", "weekday"),
 )
 
+WEEKDAY_CONDITION_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_CONDITION): "weekday",
+        "days": weekdays,
+    }
+)
+
 ZONE_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONDITION): "zone",
