@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 import logging
 import os
 import time
+from typing import Optional, cast
 
 import voluptuous as vol
 
@@ -229,6 +230,25 @@ class DashboardsCollection(collection.StorageCollection):
             storage.Store(hass, DASHBOARDS_STORAGE_VERSION, DASHBOARDS_STORAGE_KEY),
             _LOGGER,
         )
+
+    async def _async_load_data(self) -> Optional[dict]:
+        """Load the data."""
+        data = await self.store.async_load()
+
+        if data is None:
+            return cast(Optional[dict], data)
+
+        updated = False
+
+        for item in data["items"] or []:
+            if "-" not in item[CONF_URL_PATH]:
+                updated = True
+                item[CONF_URL_PATH] = f"lovelace-{item[CONF_URL_PATH]}"
+
+        if updated:
+            await self.store.async_save(data)
+
+        return cast(Optional[dict], data)
 
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
