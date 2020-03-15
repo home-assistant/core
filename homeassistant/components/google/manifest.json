@@ -1,6 +1,6 @@
 {
   "domain": "google",
-  "name": "Google",
+  "name": "Google Calendars",
   "documentation": "https://www.home-assistant.io/integrations/google",
   "requirements": [
     "google-api-python-client==1.6.4",

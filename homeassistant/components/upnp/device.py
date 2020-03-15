@@ -1,4 +1,4 @@
-"""Hass representation of an UPnP/IGD."""
+"""Home Assistant representation of an UPnP/IGD."""
 import asyncio
 from ipaddress import IPv4Address
 
@@ -14,7 +14,7 @@ from .const import CONF_LOCAL_IP, DOMAIN, LOGGER as _LOGGER
 
 
 class Device:
-    """Hass representation of an UPnP/IGD."""
+    """Home Assistant representation of an UPnP/IGD."""
 
     def __init__(self, igd_device):
         """Initialize UPnP/IGD device."""

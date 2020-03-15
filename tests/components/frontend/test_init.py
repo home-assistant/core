@@ -1,7 +1,7 @@
 """The tests for Home Assistant frontend."""
 import re
-from unittest.mock import patch
 
+from asynctest import patch
 import pytest
 
 from homeassistant.components.frontend import (
@@ -22,14 +22,14 @@ CONFIG_THEMES = {DOMAIN: {CONF_THEMES: {"happy": {"primary-color": "red"}}}}
 
 @pytest.fixture
 def mock_http_client(hass, aiohttp_client):
-    """Start the Hass HTTP component."""
+    """Start the Home Assistant HTTP component."""
     hass.loop.run_until_complete(async_setup_component(hass, "frontend", {}))
     return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @pytest.fixture
 def mock_http_client_with_themes(hass, aiohttp_client):
-    """Start the Hass HTTP component."""
+    """Start the Home Assistant HTTP component."""
     hass.loop.run_until_complete(
         async_setup_component(
             hass,
@@ -42,7 +42,7 @@ def mock_http_client_with_themes(hass, aiohttp_client):
 
 @pytest.fixture
 def mock_http_client_with_urls(hass, aiohttp_client):
-    """Start the Hass HTTP component."""
+    """Start the Home Assistant HTTP component."""
     hass.loop.run_until_complete(
         async_setup_component(
             hass,
@@ -106,15 +106,6 @@ async def test_we_cannot_POST_to_root(mock_http_client):
     assert resp.status == 405
 
 
-async def test_states_routes(mock_http_client):
-    """All served by index."""
-    resp = await mock_http_client.get("/states")
-    assert resp.status == 200
-
-    resp = await mock_http_client.get("/states/group.existing")
-    assert resp.status == 200
-
-
 async def test_themes_api(hass, hass_ws_client):
     """Test that /api/themes returns correct data."""
     assert await async_setup_component(hass, "frontend", CONFIG_THEMES)
@@ -125,6 +116,16 @@ async def test_themes_api(hass, hass_ws_client):
 
     assert msg["result"]["default_theme"] == "default"
     assert msg["result"]["themes"] == {"happy": {"primary-color": "red"}}
+
+    # safe mode
+    hass.config.safe_mode = True
+    await client.send_json({"id": 6, "type": "frontend/get_themes"})
+    msg = await client.receive_json()
+
+    assert msg["result"]["default_theme"] == "safe_mode"
+    assert msg["result"]["themes"] == {
+        "safe_mode": {"primary-color": "#db4437", "accent-color": "#eeee02"}
+    }
 
 
 async def test_themes_set_theme(hass, hass_ws_client):
@@ -173,7 +174,7 @@ async def test_themes_reload_themes(hass, hass_ws_client):
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.frontend.load_yaml_config_file",
+        "homeassistant.components.frontend.async_hass_config_yaml",
         return_value={DOMAIN: {CONF_THEMES: {"sad": {"primary-color": "blue"}}}},
     ):
         await hass.services.async_call(
@@ -207,7 +208,7 @@ async def test_missing_themes(hass, hass_ws_client):
 
 async def test_extra_urls(mock_http_client_with_urls, mock_onboarded):
     """Test that extra urls are loaded."""
-    resp = await mock_http_client_with_urls.get("/states?latest")
+    resp = await mock_http_client_with_urls.get("/lovelace?latest")
     assert resp.status == 200
     text = await resp.text()
     assert text.find('href="https://domain.com/my_extra_url.html"') >= 0

@@ -77,15 +77,21 @@
             "remote_button_short_release": "\"{subtype}\"-knappen frigivet",
             "remote_button_triple_press": "\"{subtype}\"-knappen tredobbeltklikkes",
             "remote_double_tap": "Enheden \"{subtype}\" dobbelttappet",
+            "remote_double_tap_any_side": "Enhed dobbelttappet p\u00e5 enhver side",
             "remote_falling": "Enheden er i frit fald",
+            "remote_flip_180_degrees": "Enhed vendt 180 grader",
+            "remote_flip_90_degrees": "Enhed vendt 90 grader",
             "remote_gyro_activated": "Enhed rystet",
             "remote_moved": "Enheden flyttede med \"{subtype}\" op",
+            "remote_moved_any_side": "Enhed flyttet med enhver side opad",
             "remote_rotate_from_side_1": "Enhed roteret fra \"side 1\" til \"{subtype}\"",
             "remote_rotate_from_side_2": "Enhed roteret fra \"side 2\" til \"{subtype}\"",
             "remote_rotate_from_side_3": "Enhed roteret fra \"side 3\" til \"{subtype}\"",
             "remote_rotate_from_side_4": "Enhed roteret fra \"side 4\" til \"{subtype}\"",
             "remote_rotate_from_side_5": "Enhed roteret fra \"side 5\" til \"{subtype}\"",
-            "remote_rotate_from_side_6": "Enhed roteret fra \"side 6\" til \"{subtype}\""
+            "remote_rotate_from_side_6": "Enhed roteret fra \"side 6\" til \"{subtype}\"",
+            "remote_turned_clockwise": "Enhed drejet med uret",
+            "remote_turned_counter_clockwise": "Enhed drejet mod uret"
         }
     },
     "options": {
@@ -102,7 +108,8 @@
                     "allow_clip_sensor": "Tillad deCONZ CLIP-sensorer",
                     "allow_deconz_groups": "Tillad deCONZ-lysgrupper"
                 },
-                "description": "Konfigurer synligheden af deCONZ-enhedstyper"
+                "description": "Konfigurer synligheden af deCONZ-enhedstyper",
+                "title": "deCONZ-indstillinger"
             }
         }
     }

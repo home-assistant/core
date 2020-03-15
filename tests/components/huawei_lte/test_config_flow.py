@@ -6,11 +6,16 @@ import pytest
 from requests.exceptions import ConnectionError
 from requests_mock import ANY
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ssdp
-from homeassistant.components.huawei_lte.config_flow import ConfigFlowHandler
 from homeassistant.components.huawei_lte.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_RECIPIENT,
+    CONF_URL,
+    CONF_USERNAME,
+)
 
 from tests.common import MockConfigEntry
 
@@ -20,59 +25,62 @@ FIXTURE_USER_INPUT = {
     CONF_PASSWORD: "secret",
 }
 
-
-@pytest.fixture
-def flow(hass):
-    """Get flow to test."""
-    flow = ConfigFlowHandler()
-    flow.hass = hass
-    flow.context = {}
-    return flow
+FIXTURE_USER_INPUT_OPTIONS = {
+    CONF_NAME: DOMAIN,
+    CONF_RECIPIENT: "+15555551234",
+}
 
 
-async def test_show_set_form(flow):
+async def test_show_set_form(hass):
     """Test that the setup form is served."""
-    result = await flow.async_step_user(user_input=None)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
 
-async def test_urlize_plain_host(flow, requests_mock):
+async def test_urlize_plain_host(hass, requests_mock):
     """Test that plain host or IP gets converted to a URL."""
     requests_mock.request(ANY, ANY, exc=ConnectionError())
     host = "192.168.100.1"
     user_input = {**FIXTURE_USER_INPUT, CONF_URL: host}
-    result = await flow.async_step_user(user_input=user_input)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=user_input
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
     assert user_input[CONF_URL] == f"http://{host}/"
 
 
-async def test_already_configured(flow):
+async def test_already_configured(hass):
     """Test we reject already configured devices."""
     MockConfigEntry(
         domain=DOMAIN, data=FIXTURE_USER_INPUT, title="Already configured"
-    ).add_to_hass(flow.hass)
+    ).add_to_hass(hass)
 
-    # Tweak URL a bit to check that doesn't fail duplicate detection
-    result = await flow.async_step_user(
-        user_input={
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={
             **FIXTURE_USER_INPUT,
+            # Tweak URL a bit to check that doesn't fail duplicate detection
             CONF_URL: FIXTURE_USER_INPUT[CONF_URL].replace("http", "HTTP"),
-        }
+        },
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_connection_error(flow, requests_mock):
+async def test_connection_error(hass, requests_mock):
     """Test we show user form on connection error."""
-
     requests_mock.request(ANY, ANY, exc=ConnectionError())
-    result = await flow.async_step_user(user_input=FIXTURE_USER_INPUT)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=FIXTURE_USER_INPUT
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -109,28 +117,32 @@ def login_requests_mock(requests_mock):
         (ResponseCodeEnum.ERROR_SYSTEM_UNKNOWN, {"base": "response_error"}),
     ),
 )
-async def test_login_error(flow, login_requests_mock, code, errors):
+async def test_login_error(hass, login_requests_mock, code, errors):
     """Test we show user form with appropriate error on response failure."""
     login_requests_mock.request(
         ANY,
         f"{FIXTURE_USER_INPUT[CONF_URL]}api/user/login",
         text=f"<error><code>{code}</code><message/></error>",
     )
-    result = await flow.async_step_user(user_input=FIXTURE_USER_INPUT)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=FIXTURE_USER_INPUT
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
     assert result["errors"] == errors
 
 
-async def test_success(flow, login_requests_mock):
+async def test_success(hass, login_requests_mock):
     """Test successful flow provides entry creation data."""
     login_requests_mock.request(
         ANY,
         f"{FIXTURE_USER_INPUT[CONF_URL]}api/user/login",
         text=f"<response>OK</response>",
     )
-    result = await flow.async_step_user(user_input=FIXTURE_USER_INPUT)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=FIXTURE_USER_INPUT
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_URL] == FIXTURE_USER_INPUT[CONF_URL]
@@ -138,11 +150,14 @@ async def test_success(flow, login_requests_mock):
     assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
 
 
-async def test_ssdp(flow):
+async def test_ssdp(hass):
     """Test SSDP discovery initiates config properly."""
     url = "http://192.168.100.1/"
-    result = await flow.async_step_ssdp(
-        discovery_info={
+    context = {"source": config_entries.SOURCE_SSDP}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context=context,
+        data={
             ssdp.ATTR_SSDP_LOCATION: "http://192.168.100.1:60957/rootDesc.xml",
             ssdp.ATTR_SSDP_ST: "upnp:rootdevice",
             ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
@@ -154,9 +169,29 @@ async def test_ssdp(flow):
             ssdp.ATTR_UPNP_PRESENTATION_URL: url,
             ssdp.ATTR_UPNP_SERIAL: "00000000",
             ssdp.ATTR_UPNP_UDN: "uuid:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
-        }
+        },
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-    assert flow.context[CONF_URL] == url
+    assert context[CONF_URL] == url
+
+
+async def test_options(hass):
+    """Test options produce expected data."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=FIXTURE_USER_INPUT, options=FIXTURE_USER_INPUT_OPTIONS
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    recipient = "+15555550000"
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_RECIPIENT: recipient}
+    )
+    assert result["data"][CONF_NAME] == DOMAIN
+    assert result["data"][CONF_RECIPIENT] == [recipient]

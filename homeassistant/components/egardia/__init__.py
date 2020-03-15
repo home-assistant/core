@@ -119,7 +119,7 @@ def setup(hass, config):
                 """Handle Home Assistant stop event."""
                 server.stop()
 
-            # listen to home assistant stop event
+            # listen to Home Assistant stop event
             hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop_event)
 
         except OSError:

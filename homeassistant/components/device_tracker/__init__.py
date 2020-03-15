@@ -3,7 +3,6 @@ import asyncio
 
 import voluptuous as vol
 
-from homeassistant.components import group
 from homeassistant.const import ATTR_GPS_ACCURACY, STATE_HOME
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
@@ -26,12 +25,10 @@ from .const import (
     ATTR_LOCATION_NAME,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
-    CONF_AWAY_HIDE,
     CONF_CONSIDER_HOME,
     CONF_NEW_DEVICE_DEFAULTS,
     CONF_SCAN_INTERVAL,
     CONF_TRACK_NEW,
-    DEFAULT_AWAY_HIDE,
     DEFAULT_CONSIDER_HOME,
     DEFAULT_TRACK_NEW,
     DOMAIN,
@@ -42,8 +39,6 @@ from .const import (
     SOURCE_TYPE_ROUTER,
 )
 from .legacy import DeviceScanner  # noqa: F401 pylint: disable=unused-import
-
-ENTITY_ID_ALL_DEVICES = group.ENTITY_ID_FORMAT.format("all_devices")
 
 SERVICE_SEE = "see"
 
@@ -56,12 +51,7 @@ SOURCE_TYPES = (
 
 NEW_DEVICE_DEFAULTS_SCHEMA = vol.Any(
     None,
-    vol.Schema(
-        {
-            vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean,
-            vol.Optional(CONF_AWAY_HIDE, default=DEFAULT_AWAY_HIDE): cv.boolean,
-        }
-    ),
+    vol.Schema({vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean}),
 )
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {
@@ -97,11 +87,9 @@ SERVICE_SEE_PAYLOAD_SCHEMA = vol.Schema(
 
 
 @bind_hass
-def is_on(hass: HomeAssistantType, entity_id: str = None):
+def is_on(hass: HomeAssistantType, entity_id: str):
     """Return the state if any or a specified device is home."""
-    entity = entity_id or ENTITY_ID_ALL_DEVICES
-
-    return hass.states.is_state(entity, STATE_HOME)
+    return hass.states.is_state(entity_id, STATE_HOME)
 
 
 def see(
@@ -147,8 +135,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     if setup_tasks:
         await asyncio.wait(setup_tasks)
-
-    tracker.async_setup_group()
 
     async def async_platform_discovered(p_type, info):
         """Load a platform."""

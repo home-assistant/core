@@ -118,6 +118,27 @@ async def test_yaml_collection():
         {"id": "mock-2", "name": "Mock 2"},
     )
 
+    # Test loading new data. Mock 1 is updated, 2 removed, 3 added.
+    await coll.async_load(
+        [{"id": "mock-1", "name": "Mock 1-updated"}, {"id": "mock-3", "name": "Mock 3"}]
+    )
+    assert len(changes) == 5
+    assert changes[2] == (
+        collection.CHANGE_UPDATED,
+        "mock-1",
+        {"id": "mock-1", "name": "Mock 1-updated"},
+    )
+    assert changes[3] == (
+        collection.CHANGE_ADDED,
+        "mock-3",
+        {"id": "mock-3", "name": "Mock 3"},
+    )
+    assert changes[4] == (
+        collection.CHANGE_REMOVED,
+        "mock-2",
+        {"id": "mock-2", "name": "Mock 2"},
+    )
+
 
 async def test_yaml_collection_skipping_duplicate_ids():
     """Test YAML collection skipping duplicate IDs."""
@@ -353,4 +374,12 @@ async def test_storage_collection_websocket(hass, hass_ws_client):
     assert response["success"]
 
     assert len(changes) == 3
-    assert changes[2] == (collection.CHANGE_REMOVED, "initial_name", None)
+    assert changes[2] == (
+        collection.CHANGE_REMOVED,
+        "initial_name",
+        {
+            "id": "initial_name",
+            "immutable_string": "no-changes",
+            "name": "Updated name",
+        },
+    )

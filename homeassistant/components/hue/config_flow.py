@@ -10,14 +10,19 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.components import ssdp
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers import aiohttp_client
 
 from .bridge import authenticate_bridge
-from .const import DOMAIN, LOGGER  # pylint: disable=unused-import
+from .const import (  # pylint: disable=unused-import
+    CONF_ALLOW_HUE_GROUPS,
+    DOMAIN,
+    LOGGER,
+)
 from .errors import AuthenticationRequired, CannotConnect
 
 HUE_MANUFACTURERURL = "http://www.philips.com"
-HUE_IGNORED_BRIDGE_NAMES = ["HASS Bridge", "Espalexa"]
+HUE_IGNORED_BRIDGE_NAMES = ["Home Assistant Bridge", "Espalexa"]
 
 
 class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -55,10 +60,8 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if (
             user_input is not None
             and self.discovered_bridges is not None
-            # pylint: disable=unsupported-membership-test
             and user_input["id"] in self.discovered_bridges
         ):
-            # pylint: disable=unsubscriptable-object
             self.bridge = self.discovered_bridges[user_input["id"]]
             await self.async_set_unique_id(self.bridge.id, raise_on_progress=False)
             # We pass user input to link so it will attempt to link right away
@@ -124,7 +127,11 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(
                 title=bridge.config.name,
-                data={"host": bridge.host, "username": bridge.username},
+                data={
+                    "host": bridge.host,
+                    "username": bridge.username,
+                    CONF_ALLOW_HUE_GROUPS: False,
+                },
             )
         except AuthenticationRequired:
             errors["base"] = "register_failed"
@@ -169,7 +176,8 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         bridge = self._async_get_bridge(host, discovery_info[ssdp.ATTR_UPNP_SERIAL])
 
         await self.async_set_unique_id(bridge.id)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates={CONF_HOST: bridge.host})
+
         self.bridge = bridge
         return await self.async_step_link()
 
@@ -180,7 +188,8 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         await self.async_set_unique_id(bridge.id)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates={CONF_HOST: bridge.host})
+
         self.bridge = bridge
         return await self.async_step_link()
 

@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/filter",
   "requirements": [],
   "dependencies": ["history"],
-  "codeowners": ["@dgomes"]
+  "codeowners": ["@dgomes"],
+  "quality_scale": "internal"
 }

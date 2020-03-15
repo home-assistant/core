@@ -129,7 +129,7 @@ class SeventeenTrackSummarySensor(Entity):
 
     @property
     def unique_id(self):
-        """Return a unique, HASS-friendly identifier for this entity."""
+        """Return a unique, Home Assistant friendly identifier for this entity."""
         return "summary_{0}_{1}".format(self._data.account_id, slugify(self._status))
 
     @property
@@ -212,7 +212,7 @@ class SeventeenTrackPackageSensor(Entity):
 
     @property
     def unique_id(self):
-        """Return a unique, HASS-friendly identifier for this entity."""
+        """Return a unique, Home Assistant friendly identifier for this entity."""
         return UNIQUE_ID_TEMPLATE.format(self._data.account_id, self._tracking_number)
 
     async def async_update(self):

@@ -1,13 +1,15 @@
 """The tests for the Prometheus exporter."""
-import asyncio
-
 import pytest
 
 from homeassistant import setup
 from homeassistant.components import climate, sensor
 from homeassistant.components.demo.sensor import DemoSensor
 import homeassistant.components.prometheus as prometheus
-from homeassistant.const import DEVICE_CLASS_POWER, ENERGY_KILO_WATT_HOUR
+from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    DEVICE_CLASS_POWER,
+    ENERGY_KILO_WATT_HOUR,
+)
 from homeassistant.setup import async_setup_component
 
 
@@ -48,17 +50,28 @@ async def prometheus_client(loop, hass, hass_client):
     sensor4.entity_id = "sensor.wind_direction"
     await sensor4.async_update_ha_state()
 
+    sensor5 = DemoSensor(
+        None,
+        "SPS30 PM <1µm Weight concentration",
+        3.7069,
+        None,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        None,
+    )
+    sensor5.hass = hass
+    sensor5.entity_id = "sensor.sps30_pm_1um_weight_concentration"
+    await sensor5.async_update_ha_state()
+
     return await hass_client()
 
 
-@asyncio.coroutine
-def test_view(prometheus_client):  # pylint: disable=redefined-outer-name
+async def test_view(prometheus_client):  # pylint: disable=redefined-outer-name
     """Test prometheus metrics view."""
-    resp = yield from prometheus_client.get(prometheus.API_ENDPOINT)
+    resp = await prometheus_client.get(prometheus.API_ENDPOINT)
 
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/plain"
-    body = yield from resp.text()
+    body = await resp.text()
     body = body.split("\n")
 
     assert len(body) > 3
@@ -115,4 +128,10 @@ def test_view(prometheus_client):  # pylint: disable=redefined-outer-name
         'sensor_unit_u0xb0{domain="sensor",'
         'entity="sensor.wind_direction",'
         'friendly_name="Wind Direction"} 25.0' in body
+    )
+
+    assert (
+        'sensor_unit_u0xb5g_per_mu0xb3{domain="sensor",'
+        'entity="sensor.sps30_pm_1um_weight_concentration",'
+        'friendly_name="SPS30 PM <1µm Weight concentration"} 3.7069' in body
     )

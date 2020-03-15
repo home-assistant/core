@@ -65,30 +65,33 @@ TILT_FEATURES = (
     | SUPPORT_SET_TILT_POSITION
 )
 
-COVER_SCHEMA = vol.Schema(
-    {
-        vol.Inclusive(OPEN_ACTION, CONF_OPEN_OR_CLOSE): cv.SCRIPT_SCHEMA,
-        vol.Inclusive(CLOSE_ACTION, CONF_OPEN_OR_CLOSE): cv.SCRIPT_SCHEMA,
-        vol.Optional(STOP_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Exclusive(
-            CONF_POSITION_TEMPLATE, CONF_VALUE_OR_POSITION_TEMPLATE
-        ): cv.template,
-        vol.Exclusive(
-            CONF_VALUE_TEMPLATE, CONF_VALUE_OR_POSITION_TEMPLATE
-        ): cv.template,
-        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
-        vol.Optional(CONF_POSITION_TEMPLATE): cv.template,
-        vol.Optional(CONF_TILT_TEMPLATE): cv.template,
-        vol.Optional(CONF_ICON_TEMPLATE): cv.template,
-        vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_OPTIMISTIC): cv.boolean,
-        vol.Optional(CONF_TILT_OPTIMISTIC): cv.boolean,
-        vol.Optional(POSITION_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(TILT_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-        vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
-    }
+COVER_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Inclusive(OPEN_ACTION, CONF_OPEN_OR_CLOSE): cv.SCRIPT_SCHEMA,
+            vol.Inclusive(CLOSE_ACTION, CONF_OPEN_OR_CLOSE): cv.SCRIPT_SCHEMA,
+            vol.Optional(STOP_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Exclusive(
+                CONF_POSITION_TEMPLATE, CONF_VALUE_OR_POSITION_TEMPLATE
+            ): cv.template,
+            vol.Exclusive(
+                CONF_VALUE_TEMPLATE, CONF_VALUE_OR_POSITION_TEMPLATE
+            ): cv.template,
+            vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
+            vol.Optional(CONF_POSITION_TEMPLATE): cv.template,
+            vol.Optional(CONF_TILT_TEMPLATE): cv.template,
+            vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+            vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
+            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_OPTIMISTIC): cv.boolean,
+            vol.Optional(CONF_TILT_OPTIMISTIC): cv.boolean,
+            vol.Optional(POSITION_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(TILT_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+            vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
+        }
+    ),
+    cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -118,12 +121,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         optimistic = device_config.get(CONF_OPTIMISTIC)
         tilt_optimistic = device_config.get(CONF_TILT_OPTIMISTIC)
 
-        if position_action is None and open_action is None:
-            _LOGGER.error(
-                "Must specify at least one of %s" or "%s", OPEN_ACTION, POSITION_ACTION
-            )
-            continue
-
         templates = {
             CONF_VALUE_TEMPLATE: state_template,
             CONF_POSITION_TEMPLATE: position_template,
@@ -134,7 +131,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         }
 
         initialise_templates(hass, templates)
-        entity_ids = extract_entities(device, "cover", None, templates)
+        entity_ids = extract_entities(
+            device, "cover", device_config.get(CONF_ENTITY_ID), templates
+        )
 
         covers.append(
             CoverTemplate(
@@ -158,12 +157,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 entity_ids,
             )
         )
-    if not covers:
-        _LOGGER.error("No covers added")
-        return False
 
     async_add_entities(covers)
-    return True
 
 
 class CoverTemplate(CoverDevice):
@@ -226,19 +221,6 @@ class CoverTemplate(CoverDevice):
         self._tilt_value = None
         self._entities = entity_ids
         self._available = True
-
-        if self._template is not None:
-            self._template.hass = self.hass
-        if self._position_template is not None:
-            self._position_template.hass = self.hass
-        if self._tilt_template is not None:
-            self._tilt_template.hass = self.hass
-        if self._icon_template is not None:
-            self._icon_template.hass = self.hass
-        if self._entity_picture_template is not None:
-            self._entity_picture_template.hass = self.hass
-        if self._availability_template is not None:
-            self._availability_template.hass = self.hass
 
     async def async_added_to_hass(self):
         """Register callbacks."""

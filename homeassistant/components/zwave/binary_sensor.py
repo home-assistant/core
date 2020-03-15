@@ -14,11 +14,6 @@ from .const import COMMAND_CLASS_SENSOR_BINARY
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old method of setting up Z-Wave binary sensors."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Z-Wave binary sensors from Config Entry."""
 

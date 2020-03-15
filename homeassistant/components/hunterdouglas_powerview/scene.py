@@ -36,7 +36,7 @@ STATE_ATTRIBUTE_ROOM_NAME = "roomName"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up home assistant scene entries."""
+    """Set up Home Assistant scene entries."""
 
     hub_address = config.get(HUB_ADDRESS)
     websession = async_get_clientsession(hass)

@@ -49,7 +49,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_CONTENT_TYPE, default=DEFAULT_CONTENT_TYPE): cv.string,
-        vol.Optional(CONF_FRAMERATE, default=2): cv.positive_int,
+        vol.Optional(CONF_FRAMERATE, default=2): vol.Any(
+            cv.small_float, cv.positive_int
+        ),
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
 )

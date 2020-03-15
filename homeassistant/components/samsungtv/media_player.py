@@ -1,18 +1,10 @@
 """Support for interface with an Samsung TV."""
 import asyncio
 from datetime import timedelta
-import socket
 
-from samsungctl import Remote as SamsungRemote, exceptions as samsung_exceptions
 import voluptuous as vol
-import wakeonlan
-from websocket import WebSocketException
 
-from homeassistant.components.media_player import (
-    DEVICE_CLASS_TV,
-    PLATFORM_SCHEMA,
-    MediaPlayerDevice,
-)
+from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
@@ -27,27 +19,24 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
-    CONF_BROADCAST_ADDRESS,
     CONF_HOST,
-    CONF_MAC,
+    CONF_ID,
+    CONF_IP_ADDRESS,
+    CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
-    CONF_TIMEOUT,
+    CONF_TOKEN,
     STATE_OFF,
     STATE_ON,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.script import Script
 from homeassistant.util import dt as dt_util
 
-from .const import LOGGER
-
-DEFAULT_NAME = "Samsung TV Remote"
-DEFAULT_TIMEOUT = 1
-DEFAULT_BROADCAST_ADDRESS = "255.255.255.255"
+from .bridge import SamsungTVBridge
+from .const import CONF_MANUFACTURER, CONF_MODEL, CONF_ON_ACTION, DOMAIN, LOGGER
 
 KEY_PRESS_TIMEOUT = 1.2
-KNOWN_DEVICES_KEY = "samsungtv_known_devices"
-METHODS = ("websocket", "legacy")
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
 
 SUPPORT_SAMSUNGTV = (
@@ -62,178 +51,79 @@ SUPPORT_SAMSUNGTV = (
     | SUPPORT_PLAY_MEDIA
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT): cv.port,
-        vol.Optional(CONF_MAC): cv.string,
-        vol.Optional(
-            CONF_BROADCAST_ADDRESS, default=DEFAULT_BROADCAST_ADDRESS
-        ): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    }
-)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass, config, add_entities, discovery_info=None
+):  # pragma: no cover
     """Set up the Samsung TV platform."""
-    known_devices = hass.data.get(KNOWN_DEVICES_KEY)
-    if known_devices is None:
-        known_devices = set()
-        hass.data[KNOWN_DEVICES_KEY] = known_devices
+    pass
 
-    uuid = None
-    # Is this a manual configuration?
-    if config.get(CONF_HOST) is not None:
-        host = config.get(CONF_HOST)
-        port = config.get(CONF_PORT)
-        name = config.get(CONF_NAME)
-        mac = config.get(CONF_MAC)
-        broadcast = config.get(CONF_BROADCAST_ADDRESS)
-        timeout = config.get(CONF_TIMEOUT)
-    elif discovery_info is not None:
-        tv_name = discovery_info.get("name")
-        model = discovery_info.get("model_name")
-        host = discovery_info.get("host")
-        name = f"{tv_name} ({model})"
-        if name.startswith("[TV]"):
-            name = name[4:]
-        port = None
-        timeout = DEFAULT_TIMEOUT
-        mac = None
-        broadcast = DEFAULT_BROADCAST_ADDRESS
-        uuid = discovery_info.get("udn")
-        if uuid and uuid.startswith("uuid:"):
-            uuid = uuid[len("uuid:") :]
 
-    # Only add a device once, so discovered devices do not override manual
-    # config.
-    ip_addr = socket.gethostbyname(host)
-    if ip_addr not in known_devices:
-        known_devices.add(ip_addr)
-        add_entities([SamsungTVDevice(host, port, name, timeout, mac, broadcast, uuid)])
-        LOGGER.info("Samsung TV %s added as '%s'", host, name)
-    else:
-        LOGGER.info("Ignoring duplicate Samsung TV %s", host)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Samsung TV from a config entry."""
+    ip_address = config_entry.data[CONF_IP_ADDRESS]
+    on_script = None
+    if (
+        DOMAIN in hass.data
+        and ip_address in hass.data[DOMAIN]
+        and CONF_ON_ACTION in hass.data[DOMAIN][ip_address]
+        and hass.data[DOMAIN][ip_address][CONF_ON_ACTION]
+    ):
+        turn_on_action = hass.data[DOMAIN][ip_address][CONF_ON_ACTION]
+        on_script = Script(hass, turn_on_action)
+    async_add_entities([SamsungTVDevice(config_entry, on_script)])
 
 
 class SamsungTVDevice(MediaPlayerDevice):
     """Representation of a Samsung TV."""
 
-    def __init__(self, host, port, name, timeout, mac, broadcast, uuid):
+    def __init__(self, config_entry, on_script):
         """Initialize the Samsung device."""
-
-        # Save a reference to the imported classes
-        self._name = name
-        self._mac = mac
-        self._broadcast = broadcast
-        self._uuid = uuid
+        self._config_entry = config_entry
+        self._manufacturer = config_entry.data.get(CONF_MANUFACTURER)
+        self._model = config_entry.data.get(CONF_MODEL)
+        self._name = config_entry.data.get(CONF_NAME)
+        self._on_script = on_script
+        self._uuid = config_entry.data.get(CONF_ID)
         # Assume that the TV is not muted
         self._muted = False
         # Assume that the TV is in Play mode
         self._playing = True
         self._state = None
-        self._remote = None
         # Mark the end of a shutdown command (need to wait 15 seconds before
         # sending the next command to avoid turning the TV back ON).
         self._end_of_power_off = None
-        # Generate a configuration for the Samsung library
-        self._config = {
-            "name": "HomeAssistant",
-            "description": name,
-            "id": "ha.component.samsung",
-            "method": None,
-            "port": port,
-            "host": host,
-            "timeout": timeout,
-        }
+        # Initialize bridge
+        self._bridge = SamsungTVBridge.get_bridge(
+            config_entry.data[CONF_METHOD],
+            config_entry.data[CONF_HOST],
+            config_entry.data[CONF_PORT],
+            config_entry.data.get(CONF_TOKEN),
+        )
+        self._bridge.register_reauth_callback(self.access_denied)
 
-        # Select method by port number, mainly for fallback
-        if self._config["port"] in (8001, 8002):
-            self._config["method"] = "websocket"
-        elif self._config["port"] == 55000:
-            self._config["method"] = "legacy"
+    def access_denied(self):
+        """Access denied callbck."""
+        LOGGER.debug("Access denied in getting remote object")
+        self.hass.add_job(
+            self.hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": "reauth"}, data=self._config_entry.data,
+            )
+        )
 
     def update(self):
         """Update state of device."""
-        self.send_key("KEY")
-
-    def get_remote(self):
-        """Create or return a remote control instance."""
-
-        # Try to find correct method automatically
-        if self._config["method"] not in METHODS:
-            for method in METHODS:
-                try:
-                    self._config["method"] = method
-                    LOGGER.debug("Try config: %s", self._config)
-                    self._remote = SamsungRemote(self._config.copy())
-                    self._state = STATE_ON
-                    LOGGER.debug("Found working config: %s", self._config)
-                    break
-                except (
-                    samsung_exceptions.UnhandledResponse,
-                    samsung_exceptions.AccessDenied,
-                ):
-                    # We got a response so it's working.
-                    self._state = STATE_ON
-                    LOGGER.debug(
-                        "Found working config without connection: %s", self._config
-                    )
-                    break
-                except OSError as err:
-                    LOGGER.debug("Failing config: %s error was: %s", self._config, err)
-                    self._config["method"] = None
-
-            # Unable to find working connection
-            if self._config["method"] is None:
-                self._remote = None
-                self._state = None
-                return None
-
-        if self._remote is None:
-            # We need to create a new instance to reconnect.
-            self._remote = SamsungRemote(self._config.copy())
-
-        return self._remote
+        if self._power_off_in_progress():
+            self._state = STATE_OFF
+        else:
+            self._state = STATE_ON if self._bridge.is_on() else STATE_OFF
 
     def send_key(self, key):
         """Send a key to the tv and handles exceptions."""
-        if self._power_off_in_progress() and key not in ("KEY_POWER", "KEY_POWEROFF"):
+        if self._power_off_in_progress() and key != "KEY_POWEROFF":
             LOGGER.info("TV is powering off, not sending command: %s", key)
             return
-        try:
-            # recreate connection if connection was dead
-            retry_count = 1
-            for _ in range(retry_count + 1):
-                try:
-                    self.get_remote().control(key)
-                    break
-                except (
-                    samsung_exceptions.ConnectionClosed,
-                    BrokenPipeError,
-                    WebSocketException,
-                ):
-                    # BrokenPipe can occur when the commands is sent to fast
-                    # WebSocketException can occur when timed out
-                    self._remote = None
-            self._state = STATE_ON
-        except AttributeError:
-            # Auto-detect could not find working config yet
-            pass
-        except (samsung_exceptions.UnhandledResponse, samsung_exceptions.AccessDenied):
-            # We got a response so it's on.
-            self._state = STATE_ON
-            self._remote = None
-            LOGGER.debug("Failed sending command %s", key, exc_info=True)
-            return
-        except OSError:
-            # Different reasons, e.g. hostname not resolveable
-            self._state = STATE_OFF
-            self._remote = None
-        if self._power_off_in_progress():
-            self._state = STATE_OFF
+        self._bridge.send_key(key)
 
     def _power_off_in_progress(self):
         return (
@@ -257,6 +147,16 @@ class SamsungTVDevice(MediaPlayerDevice):
         return self._state
 
     @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "name": self.name,
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "manufacturer": self._manufacturer,
+            "model": self._model,
+        }
+
+    @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._muted
@@ -269,7 +169,7 @@ class SamsungTVDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        if self._mac:
+        if self._on_script:
             return SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON
         return SUPPORT_SAMSUNGTV
 
@@ -282,16 +182,9 @@ class SamsungTVDevice(MediaPlayerDevice):
         """Turn off media player."""
         self._end_of_power_off = dt_util.utcnow() + timedelta(seconds=15)
 
-        if self._config["method"] == "websocket":
-            self.send_key("KEY_POWER")
-        else:
-            self.send_key("KEY_POWEROFF")
+        self.send_key("KEY_POWEROFF")
         # Force closing of remote session to provide instant UI feedback
-        try:
-            self.get_remote().close()
-            self._remote = None
-        except OSError:
-            LOGGER.debug("Could not establish connection.")
+        self._bridge.close_remote()
 
     def volume_up(self):
         """Volume up the media player."""
@@ -344,21 +237,19 @@ class SamsungTVDevice(MediaPlayerDevice):
             return
 
         for digit in media_id:
-            await self.hass.async_add_job(self.send_key, f"KEY_{digit}")
+            await self.hass.async_add_executor_job(self.send_key, f"KEY_{digit}")
             await asyncio.sleep(KEY_PRESS_TIMEOUT, self.hass.loop)
-        await self.hass.async_add_job(self.send_key, "KEY_ENTER")
+        await self.hass.async_add_executor_job(self.send_key, "KEY_ENTER")
 
-    def turn_on(self):
+    async def async_turn_on(self):
         """Turn the media player on."""
-        if self._mac:
-            wakeonlan.send_magic_packet(self._mac, ip_address=self._broadcast)
-        else:
-            self.send_key("KEY_POWERON")
+        if self._on_script:
+            await self._on_script.async_run()
 
-    async def async_select_source(self, source):
+    def select_source(self, source):
         """Select input source."""
         if source not in SOURCES:
             LOGGER.error("Unsupported source")
             return
 
-        await self.hass.async_add_job(self.send_key, SOURCES[source])
+        self.send_key(SOURCES[source])

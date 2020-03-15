@@ -209,7 +209,7 @@ class Configurator:
         entity_id = self._requests.pop(request_id)[0]
 
         # If we remove the state right away, it will not be included with
-        # the result fo the service call (current design limitation).
+        # the result of the service call (current design limitation).
         # Instead, we will set it to configured to give as feedback but delete
         # it shortly after so that it is deleted when the client updates.
         self.hass.states.async_set(entity_id, STATE_CONFIGURED)
@@ -237,7 +237,7 @@ class Configurator:
     def _generate_unique_id(self):
         """Generate a unique configurator ID."""
         self._cur_id += 1
-        return "{}-{}".format(id(self), self._cur_id)
+        return f"{id(self)}-{self._cur_id}"
 
     def _validate_request_id(self, request_id):
         """Validate that the request belongs to this instance."""

@@ -20,7 +20,7 @@
                 "title": "Vybrat Hue p\u0159emost\u011bn\u00ed"
             },
             "link": {
-                "description": "Stiskn\u011bte tla\u010d\u00edtko na p\u0159emost\u011bn\u00ed k registraci Philips Hue v Home Assistant.\n\n! [Um\u00edst\u011bn\u00ed tla\u010d\u00edtka na p\u0159emost\u011bn\u00ed] (/ static/images/config_philips_hue.jpg)",
+                "description": "Stiskn\u011bte tla\u010d\u00edtko na p\u0159emost\u011bn\u00ed k registraci Philips Hue v Home Assistant.\n\n! [Um\u00edst\u011bn\u00ed tla\u010d\u00edtka na p\u0159emost\u011bn\u00ed](/ static/images/config_philips_hue.jpg)",
                 "title": "P\u0159ipojit Hub"
             }
         },

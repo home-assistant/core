@@ -20,7 +20,7 @@ MOCK_DATA2 = {"goodbye": "cruel world"}
 
 @pytest.fixture
 def store(hass):
-    """Fixture of a store that prevents writing on HASS stop."""
+    """Fixture of a store that prevents writing on Home Assistant stop."""
     yield storage.Store(hass, MOCK_VERSION, MOCK_KEY)
 
 

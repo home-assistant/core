@@ -28,15 +28,20 @@
             "device_tracker": {
                 "data": {
                     "detection_time": "\u6700\u7d42\u51fa\u73fe\u5f8c\u8996\u70ba\u96e2\u958b\u7684\u6642\u9593\uff08\u4ee5\u79d2\u70ba\u55ae\u4f4d\uff09",
+                    "ssid_filter": "\u9078\u64c7\u6240\u8981\u8ffd\u8e64\u7684\u7121\u7dda\u7db2\u8def",
                     "track_clients": "\u8ffd\u8e64\u7db2\u8def\u5ba2\u6236\u7aef",
                     "track_devices": "\u8ffd\u8e64\u7db2\u8def\u8a2d\u5099\uff08Ubiquiti \u8a2d\u5099\uff09",
                     "track_wired_clients": "\u5305\u542b\u6709\u7dda\u7db2\u8def\u5ba2\u6236\u7aef"
-                }
+                },
+                "description": "\u8a2d\u5b9a\u8a2d\u5099\u8ffd\u8e64",
+                "title": "UniFi \u9078\u9805"
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "\u65b0\u589e\u7db2\u8def\u5ba2\u6236\u7aef\u983b\u5bec\u7528\u91cf\u611f\u61c9\u5668"
-                }
+                    "allow_bandwidth_sensors": "\u7db2\u8def\u5ba2\u6236\u7aef\u983b\u5bec\u7528\u91cf\u611f\u61c9\u5668"
+                },
+                "description": "\u8a2d\u5b9a\u7d71\u8a08\u6578\u64da\u611f\u61c9\u5668",
+                "title": "UniFi \u9078\u9805"
             }
         }
     }

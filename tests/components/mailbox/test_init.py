@@ -9,7 +9,7 @@ import homeassistant.components.mailbox as mailbox
 
 @pytest.fixture
 def mock_http_client(hass, hass_client):
-    """Start the Hass HTTP component."""
+    """Start the Home Assistant HTTP component."""
     config = {mailbox.DOMAIN: {"platform": "demo"}}
     hass.loop.run_until_complete(async_setup_component(hass, mailbox.DOMAIN, config))
     return hass.loop.run_until_complete(hass_client())

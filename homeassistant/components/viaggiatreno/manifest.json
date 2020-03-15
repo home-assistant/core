@@ -1,6 +1,6 @@
 {
   "domain": "viaggiatreno",
-  "name": "Viaggiatreno",
+  "name": "Trenitalia ViaggiaTreno",
   "documentation": "https://www.home-assistant.io/integrations/viaggiatreno",
   "requirements": [],
   "dependencies": [],

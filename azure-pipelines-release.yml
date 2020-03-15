@@ -14,7 +14,7 @@ schedules:
     always: true
 variables:
   - name: versionBuilder
-    value: '6.3'
+    value: '6.9'
   - group: docker
   - group: github
   - group: twine
@@ -41,9 +41,9 @@ stages:
           jq curl
 
         release="$(Build.SourceBranchName)"
-        created_by="$(curl -s https://api.github.com/repos/home-assistant/home-assistant/releases/tags/${release} | jq --raw-output '.author.login')"
+        created_by="$(curl -s https://api.github.com/repos/home-assistant/core/releases/tags/${release} | jq --raw-output '.author.login')"
 
-        if [[ "${created_by}" =~ ^(balloob|pvizeli|fabaff|robbiet480|bramkragten)$ ]]; then
+        if [[ "${created_by}" =~ ^(balloob|pvizeli|fabaff|robbiet480|bramkragten|frenck)$ ]]; then
           exit 0
         fi
 
@@ -94,7 +94,7 @@ stages:
           buildMachine: 'raspberrypi2,raspberrypi3,raspberrypi4,odroid-xu,tinker'
         aarch64:
           buildArch: 'aarch64'
-          buildMachine: 'qemuarm-64,raspberrypi3-64,raspberrypi4-64,odroid-c2,orangepi-prime'
+          buildMachine: 'qemuarm-64,raspberrypi3-64,raspberrypi4-64,odroid-c2,odroid-n2'
     steps:
     - template: templates/azp-step-ha-version.yaml@azure
     - script: |
@@ -163,7 +163,7 @@ stages:
 
         git commit -am "Bump Home Assistant $version"
         git push
-      displayName: 'Update version files'
+      displayName: "Update version files"
   - job: 'ReleaseDocker'
     pool:
       vmImage: 'ubuntu-latest'

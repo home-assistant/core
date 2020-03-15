@@ -113,7 +113,7 @@ class LightGroup(light.Light):
         await self.async_update()
 
     async def async_will_remove_from_hass(self):
-        """Handle removal from HASS."""
+        """Handle removal from Home Assistant."""
         if self._async_unsub_state_changed is not None:
             self._async_unsub_state_changed()
             self._async_unsub_state_changed = None

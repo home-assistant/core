@@ -695,7 +695,7 @@ class WinkAuthCallbackView(HomeAssistantView):
 
         response_message = """Wink has been successfully authorized!
          You can close this window now! For the best results you should reboot
-         HomeAssistant"""
+         Home Assistant"""
         html_response = """<html><head><title>Wink Auth</title></head>
                 <body><h1>{}</h1></body></html>"""
 

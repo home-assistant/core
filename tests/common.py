@@ -323,11 +323,15 @@ async def async_mock_mqtt_component(hass, config=None):
     if config is None:
         config = {mqtt.CONF_BROKER: "mock-broker"}
 
+    async def _async_fire_mqtt_message(topic, payload, qos, retain):
+        async_fire_mqtt_message(hass, topic, payload, qos, retain)
+
     with patch("paho.mqtt.client.Client") as mock_client:
         mock_client().connect.return_value = 0
         mock_client().subscribe.return_value = (0, 0)
         mock_client().unsubscribe.return_value = (0, 0)
         mock_client().publish.return_value = (0, 0)
+        mock_client().publish.side_effect = _async_fire_mqtt_message
 
         result = await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
         assert result
@@ -584,7 +588,6 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
         platform=None,
         scan_interval=timedelta(seconds=15),
         entity_namespace=None,
-        async_entities_added_callback=lambda: None,
     ):
         """Initialize a mock entity platform."""
         if logger is None:
@@ -602,7 +605,6 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
             platform=platform,
             scan_interval=scan_interval,
             entity_namespace=entity_namespace,
-            async_entities_added_callback=async_entities_added_callback,
         )
 
 
@@ -925,6 +927,11 @@ class MockEntity(entity.Entity):
         return self._handle("device_class")
 
     @property
+    def unit_of_measurement(self):
+        """Info on the units the entity state is in."""
+        return self._handle("unit_of_measurement")
+
+    @property
     def capability_attributes(self):
         """Info about capabilities."""
         return self._handle("capability_attributes")
@@ -985,6 +992,10 @@ def mock_storage(data=None):
         # To ensure that the data can be serialized
         data[store.key] = json.loads(json.dumps(data_to_write, cls=store._encoder))
 
+    async def mock_remove(store):
+        """Remove data."""
+        data.pop(store.key, None)
+
     with patch(
         "homeassistant.helpers.storage.Store._async_load",
         side_effect=mock_async_load,
@@ -992,6 +1003,10 @@ def mock_storage(data=None):
     ), patch(
         "homeassistant.helpers.storage.Store._write_data",
         side_effect=mock_write_data,
+        autospec=True,
+    ), patch(
+        "homeassistant.helpers.storage.Store.async_remove",
+        side_effect=mock_remove,
         autospec=True,
     ):
         yield data

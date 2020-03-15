@@ -22,7 +22,7 @@
                 "title": "Kies Hue bridge"
             },
             "link": {
-                "description": "Druk op de knop van de bridge om Philips Hue te registreren met Home Assistant.  ![Locatie van de knop op bridge] (/static/images/config_philips_hue.jpg)",
+                "description": "Druk op de knop van de bridge om Philips Hue te registreren met Home Assistant.  \n\n![Locatie van de knop op bridge](/static/images/config_philips_hue.jpg)",
                 "title": "Link Hub"
             }
         },

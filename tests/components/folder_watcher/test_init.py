@@ -31,7 +31,7 @@ async def test_valid_path_setup(hass):
 
 @MockDependency("watchdog", "events")
 def test_event(mock_watchdog):
-    """Check that HASS events are fired correctly on watchdog event."""
+    """Check that Home Assistant events are fired correctly on watchdog event."""
 
     class MockPatternMatchingEventHandler:
         """Mock base class for the pattern matcher event handler."""

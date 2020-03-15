@@ -14,6 +14,542 @@
         }
     },
     "devices": {
+        "3014F711000BBBB000000000": {
+            "availableFirmwareVersion": "2.0.2",
+            "firmwareVersion": "2.0.2",
+            "firmwareVersionInteger": 131074,
+            "functionalChannels": {
+                "0": {
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "coProUpdateFailure": false,
+                    "configPending": false,
+                    "deviceId": "3014F711000BBBB000000000",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "deviceUndervoltage": false,
+                    "dutyCycle": false,
+                    "functionalChannelType": "DEVICE_OPERATIONLOCK",
+                    "groupIndex": 0,
+                    "groups": [],
+                    "index": 0,
+                    "label": "",
+                    "lowBat": false,
+                    "operationLockActive": false,
+                    "routerModuleEnabled": false,
+                    "routerModuleSupported": false,
+                    "rssiDeviceValue": -45,
+                    "rssiPeerValue": -54,
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceCoProError": false,
+                        "IFeatureDeviceCoProRestart": false,
+                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceOverheated": false,
+                        "IFeatureDeviceOverloaded": false,
+                        "IFeatureDeviceTemperatureOutOfRange": false,
+                        "IFeatureDeviceUndervoltage": false
+                    },
+                    "temperatureOutOfRange": false,
+                    "unreach": false
+                },
+                "1": {
+                    "actualTemperature": 23.0,
+                    "deviceId": "3014F711000BBBB000000000",
+                    "display": "ACTUAL",
+                    "functionalChannelType": "WALL_MOUNTED_THERMOSTAT_PRO_CHANNEL",
+                    "groupIndex": 1,
+                    "groups": [],
+                    "humidity": 52,
+                    "index": 1,
+                    "label": "",
+                    "setPointTemperature": 20.0,
+                    "temperatureOffset": 0.0,
+                    "vaporAmount": 10.662700840292974
+                }
+            },
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "3014F711000BBBB000000000",
+            "label": "Raumbedienger\u00e4t",
+            "lastStatusUpdate": 1579383507353,
+            "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+            "manufacturerCode": 1,
+            "modelId": 282,
+            "modelType": "ALPHA-IP-RBG",
+            "oem": "M\u00f6hlenhoff",
+            "permanentlyReachable": true,
+            "serializedGlobalTradeItemNumber": "3014F711000BBBB000000000",
+            "type": "ROOM_CONTROL_DEVICE",
+            "updateState": "UP_TO_DATE"
+        },
+        "3014F711000000BBBB000005": {
+            "availableFirmwareVersion": "1.0.16",
+            "firmwareVersion": "1.0.12",
+            "firmwareVersionInteger": 65548,
+            "functionalChannels": {
+                "0": {
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "coProUpdateFailure": false,
+                    "configPending": false,
+                    "deviceId": "3014F711000000BBBB000005",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "deviceUndervoltage": false,
+                    "dutyCycle": false,
+                    "functionalChannelType": "DEVICE_BASE",
+                    "groupIndex": 0,
+                    "groups": [],
+                    "index": 0,
+                    "label": "",
+                    "lowBat": false,
+                    "routerModuleEnabled": false,
+                    "routerModuleSupported": false,
+                    "rssiDeviceValue": -41,
+                    "rssiPeerValue": -29,
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceCoProError": false,
+                        "IFeatureDeviceCoProRestart": false,
+                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceOverheated": false,
+                        "IFeatureDeviceOverloaded": false,
+                        "IFeatureDeviceTemperatureOutOfRange": false,
+                        "IFeatureDeviceUndervoltage": false
+                    },
+                    "temperatureOutOfRange": false,
+                    "unreach": false
+                },
+                "1": {
+                    "actualTemperature": 23.3,
+                    "deviceId": "3014F711000000BBBB000005",
+                    "functionalChannelType": "ANALOG_ROOM_CONTROL_CHANNEL",
+                    "groupIndex": 1,
+                    "groups": [],
+                    "index": 1,
+                    "label": "",
+                    "setPointTemperature": 23.0,
+                    "temperatureOffset": 0.0
+                }
+            },
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "3014F711000000BBBB000005",
+            "label": "Raumbedienger\u00e4t Analog",
+            "lastStatusUpdate": 1579384126279,
+            "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+            "manufacturerCode": 1,
+            "modelId": 281,
+            "modelType": "ALPHA-IP-RBGa",
+            "oem": "M\u00f6hlenhoff",
+            "permanentlyReachable": true,
+            "serializedGlobalTradeItemNumber": "3014F711000000BBBB000005",
+            "type": "ROOM_CONTROL_DEVICE_ANALOG",
+            "updateState": "TRANSFERING_UPDATE"
+        },
+        "3014F711000000000000AAA5": {
+            "availableFirmwareVersion": "0.0.0",
+            "firmwareVersion": "1.0.12",
+            "firmwareVersionInteger": 65548,
+            "functionalChannels": {
+                "0": {
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "coProUpdateFailure": false,
+                    "configPending": false,
+                    "deviceId": "3014F711000000000000AAA5",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "deviceUndervoltage": false,
+                    "dutyCycle": false,
+                    "functionalChannelType": "DEVICE_OPERATIONLOCK",
+                    "groupIndex": 0,
+                    "groups": [],
+                    "index": 0,
+                    "label": "",
+                    "lowBat": false,
+                    "operationLockActive": false,
+                    "routerModuleEnabled": false,
+                    "routerModuleSupported": false,
+                    "rssiDeviceValue": -58,
+                    "rssiPeerValue": -59,
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceCoProError": false,
+                        "IFeatureDeviceCoProRestart": false,
+                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceOverheated": false,
+                        "IFeatureDeviceOverloaded": false,
+                        "IFeatureDeviceTemperatureOutOfRange": false,
+                        "IFeatureDeviceUndervoltage": false
+                    },
+                    "temperatureOutOfRange": false,
+                    "unreach": false
+                },
+                "1": {
+                    "actualTemperature": 16.0,
+                    "deviceId": "3014F711000000000000AAA5",
+                    "display": "ACTUAL",
+                    "functionalChannelType": "WALL_MOUNTED_THERMOSTAT_PRO_CHANNEL",
+                    "groupIndex": 1,
+                    "groups": [],
+                    "humidity": 42,
+                    "index": 1,
+                    "label": "",
+                    "setPointTemperature": 12.0,
+                    "temperatureOffset": 0.0,
+                    "vaporAmount": 5.710127947243264
+                }
+            },
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "3014F711000000000000AAA5",
+            "label": "Thermostat Schlafen Tal",
+            "lastStatusUpdate": 1578954498192,
+            "liveUpdateState": "UP_TO_DATE",
+            "manufacturerCode": 1,
+            "modelId": 408,
+            "modelType": "HmIP-WTH-B",
+            "oem": "eQ-3",
+            "permanentlyReachable": true,
+            "serializedGlobalTradeItemNumber": "3014F711000000000000AAA5",
+            "type": "WALL_MOUNTED_THERMOSTAT_BASIC_HUMIDITY",
+            "updateState": "BACKGROUND_UPDATE_NOT_SUPPORTED"
+        },
+        "3014F7110000000000ABCD50": {
+            "availableFirmwareVersion": "1.0.12",
+            "firmwareVersion": "1.0.12",
+            "firmwareVersionInteger": 65548,
+            "functionalChannels": {
+                "0": {
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "coProUpdateFailure": false,
+                    "configPending": false,
+                    "deviceId": "3014F7110000000000ABCD50",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "deviceUndervoltage": false,
+                    "dutyCycle": false,
+                    "functionalChannelType": "DEVICE_BASE",
+                    "groupIndex": 0,
+                    "groups": [
+                    ],
+                    "index": 0,
+                    "label": "",
+                    "lowBat": null,
+                    "routerModuleEnabled": false,
+                    "routerModuleSupported": false,
+                    "rssiDeviceValue": -58,
+                    "rssiPeerValue": null,
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceCoProError": false,
+                        "IFeatureDeviceCoProRestart": false,
+                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceOverheated": false,
+                        "IFeatureDeviceOverloaded": false,
+                        "IFeatureDeviceTemperatureOutOfRange": false,
+                        "IFeatureDeviceUndervoltage": false
+                    },
+                    "temperatureOutOfRange": false,
+                    "unreach": false
+                },
+                "1": {
+                    "deviceId": "3014F7110000000000ABCD50",
+                    "functionalChannelType": "MAINS_FAILURE_CHANNEL",
+                    "genericAlarmSignal": "FULL_ALARM",
+                    "groupIndex": 1,
+                    "groups": [
+                    ],
+                    "index": 1,
+                    "label": "",
+                    "powerMainsFailure": false
+                }
+            },
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "3014F7110000000000ABCD50",
+            "label": "Netzausfall\u00fcberwachung",
+            "lastStatusUpdate": 1577487207542,
+            "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+            "manufacturerCode": 1,
+            "modelId": 309,
+            "modelType": "HmIP-PMFS",
+            "oem": "eQ-3",
+            "permanentlyReachable": true,
+            "serializedGlobalTradeItemNumber": "3014F7110000000000ABCD50",
+            "type": "PLUGGABLE_MAINS_FAILURE_SURVEILLANCE",
+            "updateState": "UP_TO_DATE"
+        },
+        "3014F7110000000000000049": {
+            "availableFirmwareVersion": "1.0.8",
+            "firmwareVersion": "1.0.8",
+            "firmwareVersionInteger": 65544,
+            "functionalChannels": {
+                "0": {
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "coProUpdateFailure": false,
+                    "configPending": false,
+                    "coolingEmergencyValue": 0.0,
+                    "deviceId": "3014F7110000000000000049",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "deviceUndervoltage": false,
+                    "dutyCycle": false,
+                    "frostProtectionTemperature": 8.0,
+                    "functionalChannelType": "DEVICE_BASE_FLOOR_HEATING",
+                    "groupIndex": 0,
+                    "groups": [],
+                    "heatingEmergencyValue": 0.25,
+                    "index": 0,
+                    "label": "",
+                    "lowBat": null,
+                    "minimumFloorHeatingValvePosition": 0.0,
+                    "pulseWidthModulationAtLowFloorHeatingValvePositionEnabled": true,
+                    "routerModuleEnabled": false,
+                    "routerModuleSupported": false,
+                    "rssiDeviceValue": -55,
+                    "rssiPeerValue": null,
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceCoProError": false,
+                        "IFeatureDeviceCoProRestart": false,
+                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceOverheated": false,
+                        "IFeatureDeviceOverloaded": false,
+                        "IFeatureDeviceTemperatureOutOfRange": false,
+                        "IFeatureDeviceUndervoltage": false,
+                        "IFeatureMinimumFloorHeatingValvePosition": true,
+                        "IFeaturePulseWidthModulationAtLowFloorHeatingValvePosition": true
+                    },
+                    "temperatureOutOfRange": false,
+                    "unreach": false,
+                    "valveProtectionDuration": 5,
+                    "valveProtectionSwitchingInterval": 14
+                },
+                "1": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL",
+                    "groupIndex": 1,
+                    "groups": [],
+                    "index": 1,
+                    "label": "",
+                    "valveState": "ADAPTION_DONE"
+                },
+                "10": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL",
+                    "groupIndex": 10,
+                    "groups": [],
+                    "index": 10,
+                    "label": "",
+                    "valveState": "ADJUSTMENT_TOO_SMALL"
+                },
+                "11": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL",
+                    "groupIndex": 11,
+                    "groups": [],
+                    "index": 11,
+                    "label": "",
+                    "valveState": "ADJUSTMENT_TOO_SMALL"
+                },
+                "12": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL",
+                    "groupIndex": 12,
+                    "groups": [],
+                    "index": 12,
+                    "label": "",
+                    "valveState": "ADJUSTMENT_TOO_SMALL"
+                },
+                "13": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "HEAT_DEMAND_CHANNEL",
+                    "groupIndex": 0,
+                    "groups": [],
+                    "index": 13,
+                    "label": ""
+                },
+                "14": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "DEHUMIDIFIER_DEMAND_CHANNEL",
+                    "groupIndex": 0,
+                    "groups": [],
+                    "index": 14,
+                    "label": ""
+                },
+                "15": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "CHANGE_OVER_CHANNEL",
+                    "groupIndex": 0,
+                    "groups": [],
+                    "index": 15,
+                    "label": ""
+                },
+                "2": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL",
+                    "groupIndex": 2,
+                    "groups": [],
+                    "index": 2,
+                    "label": "",
+                    "valveState": "ADAPTION_DONE"
+                },
+                "3": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL",
+                    "groupIndex": 3,
+                    "groups": [],
+                    "index": 3,
+                    "label": "",
+                    "valveState": "ADAPTION_DONE"
+                },
+                "4": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL",
+                    "groupIndex": 4,
+                    "groups": [],
+                    "index": 4,
+                    "label": "",
+                    "valveState": "ADAPTION_DONE"
+                },
+                "5": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL",
+                    "groupIndex": 5,
+                    "groups": [],
+                    "index": 5,
+                    "label": "",
+                    "valveState": "ADAPTION_DONE"
+                },
+                "6": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL",
+                    "groupIndex": 6,
+                    "groups": [],
+                    "index": 6,
+                    "label": "",
+                    "valveState": "ADJUSTMENT_TOO_SMALL"
+                },
+                "7": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL",
+                    "groupIndex": 7,
+                    "groups": [],
+                    "index": 7,
+                    "label": "",
+                    "valveState": "ADJUSTMENT_TOO_SMALL"
+                },
+                "8": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL",
+                    "groupIndex": 8,
+                    "groups": [],
+                    "index": 8,
+                    "label": "",
+                    "valveState": "ADJUSTMENT_TOO_SMALL"
+                },
+                "9": {
+                    "deviceId": "3014F7110000000000000049",
+                    "functionalChannelType": "FLOOR_TERMINAL_BLOCK_MECHANIC_CHANNEL",
+                    "groupIndex": 9,
+                    "groups": [],
+                    "index": 9,
+                    "label": "",
+                    "valveState": "ADJUSTMENT_TOO_SMALL"
+                }
+            },
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "3014F7110000000000000049",
+            "label": "Fu\u00dfbodenheizungsaktor OG motorisch",
+            "lastStatusUpdate": 1577486092047,
+            "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+            "manufacturerCode": 1,
+            "modelId": 365,
+            "modelType": "HmIP-FALMOT-C12",
+            "oem": "eQ-3",
+            "permanentlyReachable": true,
+            "serializedGlobalTradeItemNumber": "3014F7110000000000000049",
+            "type": "FLOOR_TERMINAL_BLOCK_12",
+            "updateState": "UP_TO_DATE"
+        },
+        "3014F7110000000000000148": {
+            "availableFirmwareVersion": "1.4.0",
+            "firmwareVersion": "1.4.0",
+            "firmwareVersionInteger": 66560,
+            "functionalChannels": {
+                "0": {
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "coProUpdateFailure": false,
+                    "configPending": false,
+                    "deviceId": "3014F7110000000000000148",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "deviceUndervoltage": false,
+                    "dutyCycle": false,
+                    "functionalChannelType": "DEVICE_BASE",
+                    "groupIndex": 0,
+                    "groups": [
+                        "00000000-0000-0000-0000-000000000039"
+                    ],
+                    "index": 0,
+                    "label": "",
+                    "lowBat": null,
+                    "routerModuleEnabled": false,
+                    "routerModuleSupported": false,
+                    "rssiDeviceValue": -52,
+                    "rssiPeerValue": null,
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceCoProError": false,
+                        "IFeatureDeviceCoProRestart": false,
+                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceOverheated": false,
+                        "IFeatureDeviceOverloaded": false,
+                        "IFeatureDeviceTemperatureOutOfRange": false,
+                        "IFeatureDeviceUndervoltage": false
+                    },
+                    "temperatureOutOfRange": false,
+                    "unreach": false
+                },
+                "1": {
+                    "deviceId": "3014F7110000000000000148",
+                    "functionalChannelType": "SWITCH_CHANNEL",
+                    "groupIndex": 1,
+                    "groups": [
+                        "00000000-0000-0000-0000-000000000043",
+                        "00000000-0000-0000-0000-000000000041"
+                    ],
+                    "index": 1,
+                    "label": "",
+                    "on": true,
+                    "profileMode": "AUTOMATIC",
+                    "userDesiredProfileMode": "AUTOMATIC"
+                },
+                "2": {
+                    "deviceId": "3014F7110000000000000148",
+                    "functionalChannelType": "SWITCH_CHANNEL",
+                    "groupIndex": 2,
+                    "groups": [
+                        "00000000-0000-0000-0000-000000000041",
+                        "00000000-0000-0000-0000-000000000044"
+                    ],
+                    "index": 2,
+                    "label": "",
+                    "on": true,
+                    "profileMode": "AUTOMATIC",
+                    "userDesiredProfileMode": "AUTOMATIC"
+                }
+            },
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "3014F7110000000000000148",
+            "label": "Heizungsaktor",
+            "lastStatusUpdate": 1577482332693,
+            "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+            "manufacturerCode": 1,
+            "modelId": 356,
+            "modelType": "HmIP-WHS2",
+            "oem": "eQ-3",
+            "permanentlyReachable": true,
+            "serializedGlobalTradeItemNumber": "3014F7110000000000000148",
+            "type": "HEATING_SWITCH_2",
+            "updateState": "UP_TO_DATE"
+        },
         "3014F7110000ABCDABCD0033": {
             "availableFirmwareVersion": "1.0.6",
             "firmwareVersion": "1.0.6",
@@ -290,7 +826,8 @@
                     "rssiPeerValue": -74,
                     "unreach": false,
                     "valveProtectionDuration": 5,
-                    "valveProtectionSwitchingInterval": 14
+                    "valveProtectionSwitchingInterval": 14,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F71100000000FAL24C10",
@@ -439,7 +976,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -64,
                     "rssiPeerValue": -76,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "blindModeActive": true,
@@ -503,7 +1041,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -53,
                     "rssiPeerValue": -56,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000BCBB11",
@@ -566,7 +1105,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -79,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F711ABCD0ABCD000002",
@@ -654,7 +1194,8 @@
                     "rssiDeviceValue": -47,
                     "rssiPeerValue": -50,
                     "sabotage": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F71100000000ABCDEF10",
@@ -706,7 +1247,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -51,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F71100000000000TEST1",
@@ -833,7 +1375,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -73,
                     "rssiPeerValue": -78,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "blindModeActive": true,
@@ -899,7 +1442,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -76,
                     "rssiPeerValue": -77,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "actualTemperature": 21.0,
@@ -969,7 +1513,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": null,
                     "rssiPeerValue": null,
-                    "unreach": null
+                    "unreach": null,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F711ABCDEF0000000014",
@@ -1037,7 +1582,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -67,
                     "rssiPeerValue": -70,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F711BSL0000000000050",
@@ -1110,7 +1656,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -60,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "averageIllumination": 807.3,
@@ -1161,7 +1708,8 @@
                     "rssiDeviceValue": -76,
                     "rssiPeerValue": null,
                     "sabotage": false,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000054",
@@ -1217,7 +1765,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -46,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F711000000000AAAAA25",
@@ -1290,7 +1839,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -55,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "actualTemperature": 4.3,
@@ -1361,7 +1911,8 @@
                     "rssiPeerValue": null,
                     "unreach": false,
                     "valveProtectionDuration": 5,
-                    "valveProtectionSwitchingInterval": 14
+                    "valveProtectionSwitchingInterval": 14,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000BBBBB1",
@@ -1480,7 +2031,8 @@
                     "rssiDeviceValue": -59,
                     "rssiPeerValue": null,
                     "sabotage": false,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000BBBBB8",
@@ -1526,7 +2078,8 @@
                     "rssiDeviceValue": -56,
                     "rssiPeerValue": -52,
                     "sabotage": false,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "currentIllumination": null,
@@ -1577,7 +2130,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -70,
                     "rssiPeerValue": -67,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "currentIllumination": null,
@@ -1631,7 +2185,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -65,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "acousticAlarmSignal": "FREQUENCY_RISING",
@@ -1689,7 +2244,8 @@
                     "rssiDeviceValue": -85,
                     "rssiPeerValue": null,
                     "sabotage": false,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000000",
@@ -1739,7 +2295,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -73,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000005551",
@@ -1792,7 +2349,8 @@
                     "rssiDeviceValue": -64,
                     "rssiPeerValue": null,
                     "sabotage": false,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000001",
@@ -1846,7 +2404,8 @@
                     "rssiDeviceValue": -95,
                     "rssiPeerValue": null,
                     "sabotage": false,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000002",
@@ -1900,7 +2459,8 @@
                     "rssiDeviceValue": -78,
                     "rssiPeerValue": null,
                     "sabotage": false,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000003",
@@ -1954,7 +2514,8 @@
                     "rssiDeviceValue": -56,
                     "rssiPeerValue": null,
                     "sabotage": false,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000004",
@@ -2008,7 +2569,8 @@
                     "rssiDeviceValue": -80,
                     "rssiPeerValue": null,
                     "sabotage": false,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000005",
@@ -2062,7 +2624,8 @@
                     "rssiDeviceValue": -76,
                     "rssiPeerValue": null,
                     "sabotage": false,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000006",
@@ -2115,7 +2678,8 @@
                     "rssiDeviceValue": -56,
                     "rssiPeerValue": null,
                     "sabotage": false,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000007",
@@ -2304,7 +2868,8 @@
                     "routerModuleSupported": true,
                     "rssiDeviceValue": -48,
                     "rssiPeerValue": -49,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "currentPowerConsumption": 195.3,
@@ -2357,7 +2922,8 @@
                     "routerModuleSupported": true,
                     "rssiDeviceValue": -60,
                     "rssiPeerValue": -66,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "currentPowerConsumption": 0.0,
@@ -2410,7 +2976,8 @@
                     "routerModuleSupported": true,
                     "rssiDeviceValue": -47,
                     "rssiPeerValue": -49,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "currentPowerConsumption": 2.04,
@@ -2463,7 +3030,8 @@
                     "routerModuleSupported": true,
                     "rssiDeviceValue": -47,
                     "rssiPeerValue": -49,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000110",
@@ -2516,7 +3084,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -54,
                     "rssiPeerValue": -51,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000011",
@@ -2571,7 +3140,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -46,
                     "rssiPeerValue": -54,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000012",
@@ -2626,7 +3196,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -58,
                     "rssiPeerValue": -58,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000013",
@@ -2646,7 +3217,7 @@
             },
             "homeId": "00000000-0000-0000-0000-000000000001",
             "id": "3014F7110000000000000013",
-            "label": "Heizkörperthermostat",
+            "label": "Heizkörperthermostat2",
             "lastStatusUpdate": 1524514007132,
             "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
             "manufacturerCode": 1,
@@ -2681,7 +3252,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -60,
                     "rssiPeerValue": -58,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000014",
@@ -2736,7 +3308,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -65,
                     "rssiPeerValue": -66,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000015",
@@ -2791,7 +3364,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -50,
                     "rssiPeerValue": -51,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000016",
@@ -2811,7 +3385,7 @@
             },
             "homeId": "00000000-0000-0000-0000-000000000001",
             "id": "3014F7110000000000000016",
-            "label": "Heizkörperthermostat",
+            "label": "Heizkörperthermostat3",
             "lastStatusUpdate": 1524514626157,
             "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
             "manufacturerCode": 1,
@@ -2846,7 +3420,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -67,
                     "rssiPeerValue": -62,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000017",
@@ -2900,7 +3475,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -67,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000018",
@@ -2951,7 +3527,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -50,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000019",
@@ -2968,7 +3545,7 @@
             },
             "homeId": "00000000-0000-0000-0000-000000000001",
             "id": "3014F7110000000000000019",
-            "label": "Rauchwarnmelder",
+            "label": "Rauchwarnmelder2",
             "lastStatusUpdate": 1524480981494,
             "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
             "manufacturerCode": 1,
@@ -3002,7 +3579,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -54,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000020",
@@ -3019,7 +3597,7 @@
             },
             "homeId": "00000000-0000-0000-0000-000000000001",
             "id": "3014F7110000000000000020",
-            "label": "Rauchwarnmelder",
+            "label": "Rauchwarnmelder3",
             "lastStatusUpdate": 1524456324824,
             "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
             "manufacturerCode": 1,
@@ -3053,7 +3631,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -80,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F7110000000000000021",
@@ -3070,7 +3649,7 @@
             },
             "homeId": "00000000-0000-0000-0000-000000000001",
             "id": "3014F7110000000000000021",
-            "label": "Rauchwarnmelder",
+            "label": "Rauchwarnmelder4",
             "lastStatusUpdate": 1524443129876,
             "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
             "manufacturerCode": 1,
@@ -3104,7 +3683,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -76,
                     "rssiPeerValue": -63,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "actualTemperature": 24.7,
@@ -3160,7 +3740,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -61,
                     "rssiPeerValue": -58,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "actualTemperature": 24.5,
@@ -3182,7 +3763,7 @@
             },
             "homeId": "00000000-0000-0000-0000-000000000001",
             "id": "3014F7110000000000000023",
-            "label": "Wandthermostat",
+            "label": "Wandthermostat4",
             "lastStatusUpdate": 1524516454116,
             "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
             "manufacturerCode": 1,
@@ -3216,7 +3797,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -75,
                     "rssiPeerValue": -85,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "actualTemperature": 23.6,
@@ -3238,7 +3820,7 @@
             },
             "homeId": "00000000-0000-0000-0000-000000000001",
             "id": "3014F7110000000000000024",
-            "label": "Wandthermostat",
+            "label": "Wandthermostat2",
             "lastStatusUpdate": 1524516436601,
             "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
             "manufacturerCode": 1,
@@ -3272,7 +3854,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -46,
                     "rssiPeerValue": -47,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "actualTemperature": 23.8,
@@ -3294,7 +3877,7 @@
             },
             "homeId": "00000000-0000-0000-0000-000000000001",
             "id": "3014F7110000000000000025",
-            "label": "Wandthermostat",
+            "label": "Wandthermostat3",
             "lastStatusUpdate": 1524516556479,
             "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
             "manufacturerCode": 1,
@@ -3327,7 +3910,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -46,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "binaryBehaviorType": "NORMALLY_CLOSE",
@@ -3378,7 +3962,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -68,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "actualTemperature": 15.4,
@@ -3445,7 +4030,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -55,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "actualTemperature": 15.1,
@@ -3494,7 +4080,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -77,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "actualTemperature": 15.2,
@@ -3551,7 +4138,8 @@
                     "rssiDeviceValue": -54,
                     "rssiPeerValue": null,
                     "sabotage": false,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F711AAAA000000000004",
@@ -3599,7 +4187,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -44,
                     "rssiPeerValue": -42,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F711AAAA000000000005",
@@ -3649,7 +4238,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -61,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F711BBBBBBBBBBBBB017",
@@ -3740,7 +4330,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -42,
                     "rssiPeerValue": null,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F711BBBBBBBBBBBBB016",
@@ -3854,7 +4445,8 @@
                     "rssiDeviceValue": -62,
                     "rssiPeerValue": -61,
                     "sabotage": false,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "currentIllumination": null,
@@ -3909,7 +4501,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -78,
                     "rssiPeerValue": -77,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "bottomToTopReferenceTime": 30.080000000000002,
@@ -3972,7 +4565,8 @@
                     "routerModuleSupported": false,
                     "rssiDeviceValue": -35,
                     "rssiPeerValue": -36,
-                    "unreach": false
+                    "unreach": false,
+                    "supportedOptionalFeatures": {}
                 },
                 "1": {
                     "deviceId": "3014F711BBBBBBBBBBBBB18",
@@ -5569,6 +6163,27 @@
             "profileMode": null,
             "type": "HOT_WATER",
             "unreach": null
+        },
+        "00000000-0000-0000-0000-000000000093": {
+            "channels": [],
+            "dutyCycle": false,
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "00000000-0000-0000-0000-000000000093",
+            "label": "Rollladen Schiebet\u00fcr",
+            "lastStatusUpdate": 1577488124150,
+            "lowBat": null,
+            "metaGroupId": null,
+            "primaryShadingLevel": 0.97,
+            "primaryShadingStateType": "POSITION_USED",
+            "processing": false,
+            "profileId": "00000000-0000-0000-0000-000000000113",
+            "profileMode": "AUTOMATIC",
+            "secondaryShadingLevel": null,
+            "secondaryShadingStateType": "NOT_EXISTENT",
+            "shutterLevel": 0.97,
+            "slatsLevel": null,
+            "type": "SHUTTER_PROFILE",
+            "unreach": false
         }
     },
     "home": {

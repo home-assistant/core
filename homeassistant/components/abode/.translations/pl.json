@@ -5,7 +5,7 @@
         },
         "error": {
             "connection_error": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z Abode.",
-            "identifier_exists": "Konto zosta\u0142o ju\u017c zarejestrowane",
+            "identifier_exists": "Konto jest ju\u017c zarejestrowane.",
             "invalid_credentials": "Nieprawid\u0142owe dane uwierzytelniaj\u0105ce"
         },
         "step": {

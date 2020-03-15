@@ -4,7 +4,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
-    CONF_DEVICE,
     CONF_HOST,
     CONF_MAC,
     CONF_NAME,
@@ -12,12 +11,10 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_MODEL, DOMAIN
 from .device import get_device
-from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
+from .errors import AuthenticationRequired, CannotConnect
 
 AXIS_OUI = {"00408C", "ACCC8E", "B8A44F"}
 
@@ -29,45 +26,18 @@ PLATFORMS = ["camera"]
 
 AXIS_INCLUDE = EVENT_TYPES + PLATFORMS
 
-AXIS_DEFAULT_HOST = "192.168.0.90"
-AXIS_DEFAULT_USERNAME = "root"
-AXIS_DEFAULT_PASSWORD = "pass"
 DEFAULT_PORT = 80
-
-DEVICE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_HOST, default=AXIS_DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_USERNAME, default=AXIS_DEFAULT_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD, default=AXIS_DEFAULT_PASSWORD): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-@callback
-def configured_devices(hass):
-    """Return a set of the configured devices."""
-    return {
-        entry.data[CONF_MAC]: entry
-        for entry in hass.config_entries.async_entries(DOMAIN)
-    }
 
 
 class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Axis config flow."""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize the Axis config flow."""
         self.device_config = {}
-        self.model = None
-        self.name = None
-        self.serial_number = None
-
         self.discovery_schema = {}
         self.import_schema = {}
 
@@ -80,25 +50,34 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
+                device = await get_device(
+                    self.hass,
+                    host=user_input[CONF_HOST],
+                    port=user_input[CONF_PORT],
+                    username=user_input[CONF_USERNAME],
+                    password=user_input[CONF_PASSWORD],
+                )
+
+                serial_number = device.vapix.params.system_serialnumber
+                await self.async_set_unique_id(serial_number)
+
+                self._abort_if_unique_id_configured(
+                    updates={
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_PORT: user_input[CONF_PORT],
+                    }
+                )
+
                 self.device_config = {
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_PORT: user_input[CONF_PORT],
                     CONF_USERNAME: user_input[CONF_USERNAME],
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    CONF_MAC: serial_number,
+                    CONF_MODEL: device.vapix.params.prodnbr,
                 }
-                device = await get_device(self.hass, self.device_config)
-
-                self.serial_number = device.vapix.params.system_serialnumber
-
-                if self.serial_number in configured_devices(self.hass):
-                    raise AlreadyConfigured
-
-                self.model = device.vapix.params.prodnbr
 
                 return await self._create_entry()
-
-            except AlreadyConfigured:
-                errors["base"] = "already_configured"
 
             except AuthenticationRequired:
                 errors["base"] = "faulty_credentials"
@@ -125,66 +104,47 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         Generate a name to be used as a prefix for device entities.
         """
+        model = self.device_config[CONF_MODEL]
         same_model = [
             entry.data[CONF_NAME]
             for entry in self.hass.config_entries.async_entries(DOMAIN)
-            if entry.data[CONF_MODEL] == self.model
+            if entry.data[CONF_MODEL] == model
         ]
 
-        self.name = f"{self.model}"
+        name = model
         for idx in range(len(same_model) + 1):
-            self.name = f"{self.model} {idx}"
-            if self.name not in same_model:
+            name = f"{model} {idx}"
+            if name not in same_model:
                 break
 
-        data = {
-            CONF_DEVICE: self.device_config,
-            CONF_NAME: self.name,
-            CONF_MAC: self.serial_number,
-            CONF_MODEL: self.model,
-        }
+        self.device_config[CONF_NAME] = name
 
-        title = f"{self.model} - {self.serial_number}"
-        return self.async_create_entry(title=title, data=data)
-
-    async def _update_entry(self, entry, host):
-        """Update existing entry if it is the same device."""
-        entry.data[CONF_DEVICE][CONF_HOST] = host
-        self.hass.config_entries.async_update_entry(entry)
+        title = f"{model} - {self.device_config[CONF_MAC]}"
+        return self.async_create_entry(title=title, data=self.device_config)
 
     async def async_step_zeroconf(self, discovery_info):
-        """Prepare configuration for a discovered Axis device.
+        """Prepare configuration for a discovered Axis device."""
+        serial_number = discovery_info["properties"]["macaddress"]
 
-        This flow is triggered by the discovery component.
-        """
-        serialnumber = discovery_info["properties"]["macaddress"]
-
-        if serialnumber[:6] not in AXIS_OUI:
+        if serial_number[:6] not in AXIS_OUI:
             return self.async_abort(reason="not_axis_device")
 
         if discovery_info[CONF_HOST].startswith("169.254"):
             return self.async_abort(reason="link_local_address")
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context["macaddress"] = serialnumber
+        await self.async_set_unique_id(serial_number)
 
-        if any(
-            serialnumber == flow["context"]["macaddress"]
-            for flow in self._async_in_progress()
-        ):
-            return self.async_abort(reason="already_in_progress")
-
-        device_entries = configured_devices(self.hass)
-
-        if serialnumber in device_entries:
-            entry = device_entries[serialnumber]
-            await self._update_entry(entry, discovery_info[CONF_HOST])
-            return self.async_abort(reason="already_configured")
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_HOST: discovery_info[CONF_HOST],
+                CONF_PORT: discovery_info[CONF_PORT],
+            }
+        )
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
-            "name": discovery_info["hostname"][:-7],
-            "host": discovery_info[CONF_HOST],
+            CONF_NAME: discovery_info["hostname"][:-7],
+            CONF_HOST: discovery_info[CONF_HOST],
         }
 
         self.discovery_schema = {

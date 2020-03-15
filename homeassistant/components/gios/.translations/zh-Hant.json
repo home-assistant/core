@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\u6b64 GIO\u015a \u76e3\u6e2c\u7ad9\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3002"
+        },
         "error": {
             "cannot_connect": "\u7121\u6cd5\u9023\u7dda\u81f3 GIO\u015a \u4f3a\u670d\u5668\u3002",
             "invalid_sensors_data": "\u6b64\u76e3\u6e2c\u7ad9\u50b3\u611f\u5668\u8cc7\u6599\u7121\u6548\u3002",

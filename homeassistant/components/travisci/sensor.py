@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_MONITORED_CONDITIONS,
     CONF_SCAN_INTERVAL,
+    TIME_SECONDS,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -30,7 +31,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 # sensor_type [ description, unit, icon ]
 SENSOR_TYPES = {
     "last_build_id": ["Last Build ID", "", "mdi:account-card-details"],
-    "last_build_duration": ["Last Build Duration", "sec", "mdi:timelapse"],
+    "last_build_duration": ["Last Build Duration", TIME_SECONDS, "mdi:timelapse"],
     "last_build_finished_at": ["Last Build Finished At", "", "mdi:timetable"],
     "last_build_started_at": ["Last Build Started At", "", "mdi:timetable"],
     "last_build_state": ["Last Build State", "", "mdi:github-circle"],

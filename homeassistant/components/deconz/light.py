@@ -22,6 +22,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 
 from .const import (
+    CONF_GROUP_ID_BASE,
     COVER_TYPES,
     DOMAIN as DECONZ_DOMAIN,
     NEW_GROUP,
@@ -29,7 +30,7 @@ from .const import (
     SWITCH_TYPES,
 )
 from .deconz_device import DeconzDevice
-from .gateway import DeconzEntityHandler, get_gateway_from_config_entry
+from .gateway import get_gateway_from_config_entry
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -39,8 +40,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ lights and groups from a config entry."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
-
-    entity_handler = DeconzEntityHandler(gateway)
 
     @callback
     def async_add_light(lights):
@@ -62,13 +61,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     @callback
     def async_add_group(groups):
         """Add group from deCONZ."""
+        if not gateway.option_allow_deconz_groups:
+            return
+
         entities = []
 
         for group in groups:
             if group.lights:
-                new_group = DeconzGroup(group, gateway)
-                entity_handler.add_entity(new_group)
-                entities.append(new_group)
+                entities.append(DeconzGroup(group, gateway))
 
         async_add_entities(entities, True)
 
@@ -89,9 +89,12 @@ class DeconzLight(DeconzDevice, Light):
         """Set up light."""
         super().__init__(device, gateway)
 
-        self._features = SUPPORT_BRIGHTNESS
-        self._features |= SUPPORT_FLASH
-        self._features |= SUPPORT_TRANSITION
+        self._features = 0
+
+        if self._device.brightness is not None:
+            self._features |= SUPPORT_BRIGHTNESS
+            self._features |= SUPPORT_FLASH
+            self._features |= SUPPORT_TRANSITION
 
         if self._device.ct is not None:
             self._features |= SUPPORT_COLOR_TEMP
@@ -152,7 +155,7 @@ class DeconzLight(DeconzDevice, Light):
 
         if ATTR_TRANSITION in kwargs:
             data["transitiontime"] = int(kwargs[ATTR_TRANSITION] * 10)
-        elif "IKEA" in (self._device.manufacturer or ""):
+        elif "IKEA" in self._device.manufacturer:
             data["transitiontime"] = 0
 
         if ATTR_FLASH in kwargs:
@@ -205,7 +208,11 @@ class DeconzGroup(DeconzLight):
         """Set up group and create an unique id."""
         super().__init__(device, gateway)
 
-        self._unique_id = f"{self.gateway.api.config.bridgeid}-{self._device.deconz_id}"
+        group_id_base = self.gateway.config_entry.unique_id
+        if CONF_GROUP_ID_BASE in self.gateway.config_entry.data:
+            group_id_base = self.gateway.config_entry.data[CONF_GROUP_ID_BASE]
+
+        self._unique_id = f"{group_id_base}-{self._device.deconz_id}"
 
     @property
     def unique_id(self):

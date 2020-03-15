@@ -199,7 +199,7 @@ class Smappee:
         try:
             return self._smappy.get_consumption(location_id, start, end, aggregation)
         except RequestException as error:
-            _LOGGER.error("Error getting comsumption from Smappee cloud. (%s)", error)
+            _LOGGER.error("Error getting consumption from Smappee cloud. (%s)", error)
 
     def get_sensor_consumption(self, location_id, sensor_id, aggregation, delta):
         """Update data from Smappee."""
@@ -221,7 +221,7 @@ class Smappee:
                 location_id, sensor_id, start, end, aggregation
             )
         except RequestException as error:
-            _LOGGER.error("Error getting comsumption from Smappee cloud. (%s)", error)
+            _LOGGER.error("Error getting consumption from Smappee cloud. (%s)", error)
 
     def actuator_on(self, location_id, actuator_id, is_remote_switch, duration=None):
         """Turn on actuator."""

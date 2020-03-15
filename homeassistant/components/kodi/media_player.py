@@ -183,7 +183,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         encryption = config.get(CONF_PROXY_SSL)
         websocket = config.get(CONF_ENABLE_WEBSOCKET)
     else:
-        name = "{} ({})".format(DEFAULT_NAME, discovery_info.get("hostname"))
+        name = f"{DEFAULT_NAME} ({discovery_info.get('hostname')})"
         host = discovery_info.get("host")
         port = discovery_info.get("port")
         tcp_port = DEFAULT_TCP_PORT
@@ -286,9 +286,7 @@ class KodiDevice(MediaPlayerDevice):
         ws_protocol = "wss" if encryption else "ws"
 
         self._http_url = f"{http_protocol}://{host}:{port}/jsonrpc"
-        self._image_url = "{}://{}{}:{}/image".format(
-            http_protocol, image_auth_string, host, port
-        )
+        self._image_url = f"{http_protocol}://{image_auth_string}{host}:{port}/image"
         self._ws_url = f"{ws_protocol}://{host}:{tcp_port}/jsonrpc"
 
         self._http_server = jsonrpc_async.Server(self._http_url, **kwargs)
@@ -577,7 +575,7 @@ class KodiDevice(MediaPlayerDevice):
 
         url_components = urllib.parse.urlparse(thumbnail)
         if url_components.scheme == "image":
-            return "{}/{}".format(self._image_url, urllib.parse.quote_plus(thumbnail))
+            return f"{self._image_url}/{urllib.parse.quote_plus(thumbnail)}"
 
     @property
     def media_title(self):
@@ -668,20 +666,14 @@ class KodiDevice(MediaPlayerDevice):
         assert (await self.server.Input.ExecuteAction("volumedown")) == "OK"
 
     @cmd
-    def async_set_volume_level(self, volume):
-        """Set volume level, range 0..1.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.server.Application.SetVolume(int(volume * 100))
+    async def async_set_volume_level(self, volume):
+        """Set volume level, range 0..1."""
+        await self.server.Application.SetVolume(int(volume * 100))
 
     @cmd
-    def async_mute_volume(self, mute):
-        """Mute (true) or unmute (false) media player.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.server.Application.SetMute(mute)
+    async def async_mute_volume(self, mute):
+        """Mute (true) or unmute (false) media player."""
+        await self.server.Application.SetMute(mute)
 
     async def async_set_play_state(self, state):
         """Handle play/pause/toggle."""
@@ -691,28 +683,19 @@ class KodiDevice(MediaPlayerDevice):
             await self.server.Player.PlayPause(players[0]["playerid"], state)
 
     @cmd
-    def async_media_play_pause(self):
-        """Pause media on media player.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.async_set_play_state("toggle")
+    async def async_media_play_pause(self):
+        """Pause media on media player."""
+        await self.async_set_play_state("toggle")
 
     @cmd
-    def async_media_play(self):
-        """Play media.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.async_set_play_state(True)
+    async def async_media_play(self):
+        """Play media."""
+        await self.async_set_play_state(True)
 
     @cmd
-    def async_media_pause(self):
-        """Pause the media player.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.async_set_play_state(False)
+    async def async_media_pause(self):
+        """Pause the media player."""
+        await self.async_set_play_state(False)
 
     @cmd
     async def async_media_stop(self):
@@ -735,20 +718,14 @@ class KodiDevice(MediaPlayerDevice):
             await self.server.Player.GoTo(players[0]["playerid"], direction)
 
     @cmd
-    def async_media_next_track(self):
-        """Send next track command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self._goto("next")
+    async def async_media_next_track(self):
+        """Send next track command."""
+        await self._goto("next")
 
     @cmd
-    def async_media_previous_track(self):
-        """Send next track command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self._goto("previous")
+    async def async_media_previous_track(self):
+        """Send next track command."""
+        await self._goto("previous")
 
     @cmd
     async def async_media_seek(self, position):
@@ -772,17 +749,18 @@ class KodiDevice(MediaPlayerDevice):
             await self.server.Player.Seek(players[0]["playerid"], time)
 
     @cmd
-    def async_play_media(self, media_type, media_id, **kwargs):
-        """Send the play_media command to the media player.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_play_media(self, media_type, media_id, **kwargs):
+        """Send the play_media command to the media player."""
         if media_type == "CHANNEL":
-            return self.server.Player.Open({"item": {"channelid": int(media_id)}})
-        if media_type == "PLAYLIST":
-            return self.server.Player.Open({"item": {"playlistid": int(media_id)}})
-
-        return self.server.Player.Open({"item": {"file": str(media_id)}})
+            await self.server.Player.Open({"item": {"channelid": int(media_id)}})
+        elif media_type == "PLAYLIST":
+            await self.server.Player.Open({"item": {"playlistid": int(media_id)}})
+        elif media_type == "DIRECTORY":
+            await self.server.Player.Open({"item": {"directory": str(media_id)}})
+        elif media_type == "PLUGIN":
+            await self.server.Player.Open({"item": {"file": str(media_id)}})
+        else:
+            await self.server.Player.Open({"item": {"file": str(media_id)}})
 
     async def async_set_shuffle(self, shuffle):
         """Set shuffle mode, for the first player."""

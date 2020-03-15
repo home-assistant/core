@@ -11,7 +11,7 @@ from tests.common import mock_coro
 
 # pylint: disable=protected-access
 async def test_homeassistant_location_exists() -> None:
-    """Test if homeassistant location exists it should return True."""
+    """Test if Home Assistant location exists it should return True."""
     hass = Mock()
     flow = config_flow.SmhiFlowHandler()
     flow.hass = hass
@@ -119,7 +119,7 @@ async def test_flow_show_form() -> None:
     flow = config_flow.SmhiFlowHandler()
     flow.hass = hass
 
-    # Test show form when home assistant config exists and
+    # Test show form when Home Assistant config exists and
     # home is already configured, then new config is allowed
     with patch.object(
         flow, "_show_config_form", return_value=mock_coro()
@@ -133,7 +133,7 @@ async def test_flow_show_form() -> None:
         await flow.async_step_user()
         assert len(config_form.mock_calls) == 1
 
-    # Test show form when home assistant config not and
+    # Test show form when Home Assistant config not and
     # home is not configured
     with patch.object(
         flow, "_show_config_form", return_value=mock_coro()
@@ -158,7 +158,7 @@ async def test_flow_show_form_name_exists() -> None:
     flow = config_flow.SmhiFlowHandler()
     flow.hass = hass
     test_data = {"name": "home", CONF_LONGITUDE: "0", CONF_LATITUDE: "0"}
-    # Test show form when home assistant config exists and
+    # Test show form when Home Assistant config exists and
     # home is already configured, then new config is allowed
     with patch.object(
         flow, "_show_config_form", return_value=mock_coro()

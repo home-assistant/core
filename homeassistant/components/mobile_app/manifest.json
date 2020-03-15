@@ -4,7 +4,8 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/mobile_app",
   "requirements": ["PyNaCl==1.3.0"],
-  "dependencies": ["http", "webhook"],
+  "dependencies": ["http", "webhook", "person"],
   "after_dependencies": ["cloud"],
-  "codeowners": ["@robbiet480"]
+  "codeowners": ["@robbiet480"],
+  "quality_scale": "internal"
 }

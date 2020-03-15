@@ -6,11 +6,11 @@
         "step": {
             "user": {
                 "data": {
-                    "name": "Sensor navn"
+                    "name": "Sensornavn"
                 },
-                "title": "Lokal IP adresse"
+                "title": "Lokal IP-adresse"
             }
         },
-        "title": "Lokal IP adresse"
+        "title": "Lokal IP-adresse"
     }
 }

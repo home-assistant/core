@@ -5,7 +5,7 @@
             "set_preset_mode": "Preset \u00e4nnere fir {entity_name}"
         },
         "condition_type": {
-            "is_hvac_mode": "\n{entity_name} ass op e spezifesche HVAC Modus gesat",
+            "is_hvac_mode": "{entity_name} ass op e spezifesche HVAC Modus gesat",
             "is_preset_mode": "{entity_name} ass op e spezifesche preset Modus gesat"
         },
         "trigger_type": {

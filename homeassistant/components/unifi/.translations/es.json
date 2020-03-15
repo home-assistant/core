@@ -28,10 +28,13 @@
             "device_tracker": {
                 "data": {
                     "detection_time": "Tiempo en segundos desde la \u00faltima vez que se vio hasta considerarlo desconectado",
+                    "ssid_filter": "Seleccione los SSIDs para realizar seguimiento de clientes inal\u00e1mbricos",
                     "track_clients": "Seguimiento de los clientes de red",
                     "track_devices": "Rastree dispositivos de red (dispositivos Ubiquiti)",
                     "track_wired_clients": "Incluir clientes de red cableada"
-                }
+                },
+                "description": "Configurar dispositivo de seguimiento",
+                "title": "Opciones UniFi"
             },
             "init": {
                 "data": {
@@ -42,7 +45,9 @@
             "statistics_sensors": {
                 "data": {
                     "allow_bandwidth_sensors": "Crear sensores para monitorizar uso de ancho de banda de clientes de red"
-                }
+                },
+                "description": "Configurar estad\u00edsticas de los sensores",
+                "title": "Opciones UniFi"
             }
         }
     }

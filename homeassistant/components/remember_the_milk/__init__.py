@@ -17,7 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "remember_the_milk"
 DEFAULT_NAME = DOMAIN
-GROUP_NAME_RTM = "remember the milk accounts"
 
 CONF_SHARED_SECRET = "shared_secret"
 CONF_ID_MAP = "id_map"
@@ -50,7 +49,7 @@ SERVICE_SCHEMA_COMPLETE_TASK = vol.Schema({vol.Required(CONF_ID): cv.string})
 
 def setup(hass, config):
     """Set up the Remember the milk component."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass, group_name=GROUP_NAME_RTM)
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     stored_rtm_config = RememberTheMilkConfiguration(hass)
     for rtm_config in config[DOMAIN]:
