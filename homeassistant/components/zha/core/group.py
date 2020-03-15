@@ -101,6 +101,7 @@ class ZHAGroup(LogMixin):
         """Get ZHA group info."""
         group_info = {}
         group_info["group_id"] = self.group_id
+        group_info["entity_domain"] = self.entity_domain
         group_info["name"] = self.name
         group_info["members"] = [
             zha_device.async_get_info() for zha_device in self.members

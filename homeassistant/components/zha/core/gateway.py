@@ -6,10 +6,12 @@ import itertools
 import logging
 import os
 import traceback
+from typing import Optional
 
 from serial import SerialException
 import zigpy.device as zigpy_dev
 
+from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.system_log import LogEntry, _figure_out_source
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -54,6 +56,7 @@ from .const import (
     SIGNAL_ADD_GROUP_ENTITIES,
     SIGNAL_REMOVE,
     SIGNAL_REMOVE_GROUP,
+    SIGNAL_REMOVE_GROUP_ENTITIES,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
     ZHA_GW_MSG,
@@ -406,15 +409,17 @@ class ZHAGateway:
         for group_id in self.application_controller.groups:
             group = self.application_controller.groups[group_id]
             zha_group = self._async_get_or_create_group(group)
-            light_groups.append(
-                {
-                    "group_id": zha_group.group_id,
-                    "zha_device": self._coordinator_zha_device,
-                    "unique_id": f"light_group_{zha_group.group_id}",
-                    "entity_ids": zha_group.member_entity_ids,
-                }
-            )
-        async_dispatcher_send(self._hass, SIGNAL_ADD_GROUP_ENTITIES, light_groups)
+            if zha_group.entity_domain and zha_group.entity_domain == LIGHT:
+                light_groups.append(
+                    {
+                        "group_id": zha_group.group_id,
+                        "zha_device": self._coordinator_zha_device,
+                        "unique_id": f"light_group_{zha_group.group_id}",
+                        "entity_ids": zha_group.member_entity_ids,
+                    }
+                )
+        if len(light_groups) > 0:
+            async_dispatcher_send(self._hass, SIGNAL_ADD_GROUP_ENTITIES, light_groups)
 
     @callback
     def _async_get_or_create_device(
@@ -591,6 +596,43 @@ class ZHAGateway:
             if tasks:
                 await asyncio.gather(*tasks)
         self.application_controller.groups.pop(group_id)
+
+    async def async_update_zha_group(self, group_id: int, entity_domain: Optional[str]):
+        """Update a ZHA group."""
+        group = self.groups.get(group_id)
+        if not group:
+            _LOGGER.debug("Group: %s:0x%04x could not be found", group.name, group_id)
+            return
+        previous_entity_domain = group.entity_domain
+        if previous_entity_domain == entity_domain:
+            _LOGGER.debug(
+                "Group: %s:0x%04x entity domain was unchanged", group.name, group_id
+            )
+            return
+        group.entity_domain = entity_domain
+        self.zha_storage.async_update_group(group)
+        await self.zha_storage.async_save()
+
+        # cleanup previous entity if there is one
+        if previous_entity_domain is not None:
+            async_dispatcher_send(
+                self._hass, f"{SIGNAL_REMOVE_GROUP_ENTITIES}_{group.group_id}"
+            )
+        if entity_domain == LIGHT:
+            async_dispatcher_send(
+                self._hass,
+                SIGNAL_ADD_GROUP_ENTITIES,
+                [
+                    {
+                        "group_id": group.group_id,
+                        "zha_device": self._coordinator_zha_device,
+                        "unique_id": f"light_group_{group.group_id}",
+                        "entity_ids": group.member_entity_ids,
+                    }
+                ],
+            )
+
+        return group
 
     async def shutdown(self):
         """Stop ZHA Controller Application."""

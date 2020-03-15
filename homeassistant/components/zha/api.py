@@ -22,6 +22,7 @@ from .core.const import (
     ATTR_COMMAND,
     ATTR_COMMAND_TYPE,
     ATTR_ENDPOINT_ID,
+    ATTR_ENTITY_DOMAIN,
     ATTR_LEVEL,
     ATTR_MANUFACTURER,
     ATTR_MEMBERS,
@@ -324,6 +325,35 @@ async def websocket_remove_groups(hass, connection, msg):
         await zha_gateway.async_remove_zigpy_group(group_ids[0])
     ret_groups = [group.async_get_info() for group in zha_gateway.groups.values()]
     connection.send_result(msg[ID], ret_groups)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zha/group/update",
+        vol.Required(GROUP_ID): cv.positive_int,
+        vol.Required(ATTR_ENTITY_DOMAIN): cv.string,
+    }
+)
+async def websocket_update_group(hass, connection, msg):
+    """Remove members from a ZHA group."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    group_id = msg[GROUP_ID]
+    entity_domain = msg[ATTR_ENTITY_DOMAIN]
+    zha_group = None
+
+    if group_id in zha_gateway.groups:
+        zha_group = await zha_gateway.async_update_zha_group(group_id, entity_domain)
+    if not zha_group:
+        connection.send_message(
+            websocket_api.error_message(
+                msg[ID], websocket_api.const.ERR_NOT_FOUND, "ZHA Group not found"
+            )
+        )
+        return
+    ret_group = zha_group.async_get_info()
+    connection.send_result(msg[ID], ret_group)
 
 
 @websocket_api.require_admin
@@ -1045,6 +1075,7 @@ def async_load_api(hass):
     websocket_api.async_register_command(hass, websocket_get_group)
     websocket_api.async_register_command(hass, websocket_add_group)
     websocket_api.async_register_command(hass, websocket_remove_groups)
+    websocket_api.async_register_command(hass, websocket_update_group)
     websocket_api.async_register_command(hass, websocket_add_group_members)
     websocket_api.async_register_command(hass, websocket_remove_group_members)
     websocket_api.async_register_command(hass, websocket_bind_group)
