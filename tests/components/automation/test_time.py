@@ -171,6 +171,37 @@ async def test_if_action_one_weekday(hass, calls):
     assert 1 == len(calls)
 
 
+async def test_if_action_one_weekday_new(hass, calls):
+    """Test for if action with one weekday."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {"condition": "weekday", "days": "mon"},
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    days_past_monday = dt_util.now().weekday()
+    monday = dt_util.now() - timedelta(days=days_past_monday)
+    tuesday = monday + timedelta(days=1)
+
+    with patch("homeassistant.helpers.condition.dt_util.now", return_value=monday):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    assert 1 == len(calls)
+
+    with patch("homeassistant.helpers.condition.dt_util.now", return_value=tuesday):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    assert 1 == len(calls)
+
+
 async def test_if_action_list_weekday(hass, calls):
     """Test for action with a list of weekdays."""
     assert await async_setup_component(
@@ -180,6 +211,44 @@ async def test_if_action_list_weekday(hass, calls):
             automation.DOMAIN: {
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "condition": {"condition": "time", "weekday": ["mon", "tue"]},
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    days_past_monday = dt_util.now().weekday()
+    monday = dt_util.now() - timedelta(days=days_past_monday)
+    tuesday = monday + timedelta(days=1)
+    wednesday = tuesday + timedelta(days=1)
+
+    with patch("homeassistant.helpers.condition.dt_util.now", return_value=monday):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    assert 1 == len(calls)
+
+    with patch("homeassistant.helpers.condition.dt_util.now", return_value=tuesday):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    assert 2 == len(calls)
+
+    with patch("homeassistant.helpers.condition.dt_util.now", return_value=wednesday):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    assert 2 == len(calls)
+
+
+async def test_if_action_list_weekday_new(hass, calls):
+    """Test for action with a list of weekdays."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {"condition": "weekday", "days": ["mon", "tue"]},
                 "action": {"service": "test.automation"},
             }
         },
