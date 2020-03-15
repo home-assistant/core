@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ACCESS_TOKEN,
@@ -306,7 +306,7 @@ class KonnectedView(HomeAssistantView):
             [
                 entry.data[CONF_ACCESS_TOKEN]
                 for entry in hass.config_entries.async_entries(DOMAIN)
-                if entry.source != SOURCE_IGNORE
+                if entry.data.get(CONF_ACCESS_TOKEN)
             ]
         )
         if auth is None or not next(

@@ -4,7 +4,6 @@ import pytest
 
 from homeassistant.components import konnected
 from homeassistant.components.konnected import config_flow
-from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -583,13 +582,8 @@ async def test_state_updates(hass, aiohttp_client, mock_panel):
     )
     entry.add_to_hass(hass)
 
-    # Add ignored entry to ensure we handle it OK
-    entry = MockConfigEntry(
-        domain="konnected",
-        title="Konnected Alarm Panel",
-        source=SOURCE_IGNORE,
-        data={},
-    )
+    # Add empty data field to ensure we process it correctly (possible if entry is ignored)
+    entry = MockConfigEntry(domain="konnected", title="Konnected Alarm Panel", data={},)
     entry.add_to_hass(hass)
 
     assert (
