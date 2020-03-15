@@ -38,8 +38,6 @@ from .const import (
     TOPIC_UPDATE,
 )
 
-CONF_NODE_PRO_ID = "node_pro_id"
-
 DATA_LISTENER = "listener"
 
 DEFAULT_ATTRIBUTION = "Data provided by AirVisual"
@@ -106,7 +104,7 @@ async def async_setup(hass, config):
         return True
 
     for observable in config[DOMAIN]:
-        if CONF_NODE_PRO_ID in observable:
+        if CONF_IP_ADDRESS in observable:
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN, context={"source": SOURCE_IMPORT}, data=observable

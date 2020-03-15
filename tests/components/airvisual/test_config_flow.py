@@ -1,11 +1,10 @@
 """Define tests for the AirVisual config flow."""
 from asynctest import patch
-from pyairvisual.errors import InvalidKeyError, NotFoundError
+from pyairvisual.errors import InvalidKeyError, NodeProError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.airvisual import (
     CONF_GEOGRAPHIES,
-    CONF_NODE_PRO_ID,
     DOMAIN,
     INTEGRATION_TYPE_GEOGRAPHY,
     INTEGRATION_TYPE_NODE_PRO,
@@ -13,8 +12,10 @@ from homeassistant.components.airvisual import (
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_IP_ADDRESS,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    CONF_PASSWORD,
     CONF_SHOW_ON_MAP,
 )
 from homeassistant.setup import async_setup_component
@@ -29,7 +30,7 @@ async def test_duplicate_error(hass):
         CONF_LATITUDE: 51.528308,
         CONF_LONGITUDE: -0.3817765,
     }
-    node_pro_conf = {CONF_NODE_PRO_ID: "fghij67890"}
+    node_pro_conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PASSWORD: "12345"}
 
     MockConfigEntry(
         domain=DOMAIN, unique_id="51.528308, -0.3817765", data=geography_conf
@@ -43,7 +44,7 @@ async def test_duplicate_error(hass):
     assert result["reason"] == "already_configured"
 
     MockConfigEntry(
-        domain=DOMAIN, unique_id="fghij67890", data=node_pro_conf
+        domain=DOMAIN, unique_id="192.168.1.100", data=node_pro_conf
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -61,7 +62,6 @@ async def test_invalid_identifier(hass):
         CONF_LATITUDE: 51.528308,
         CONF_LONGITUDE: -0.3817765,
     }
-    node_pro_conf = {CONF_NODE_PRO_ID: "fghij67890"}
 
     with patch(
         "pyairvisual.api.API.nearest_city", side_effect=InvalidKeyError,
@@ -72,14 +72,19 @@ async def test_invalid_identifier(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
 
+
+async def test_node_pro_error(hass):
+    """Test that an invalid Node/Pro ID shows an error."""
+    node_pro_conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PASSWORD: "my_password"}
+
     with patch(
-        "pyairvisual.api.API.node", side_effect=NotFoundError,
+        "pyairvisual.node.Node.from_samba", side_effect=NodeProError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=node_pro_conf
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {CONF_NODE_PRO_ID: "invalid_node_pro_id"}
+        assert result["errors"] == {CONF_IP_ADDRESS: "unable_to_connect"}
 
 
 async def test_migration_1_2(hass):
@@ -156,8 +161,8 @@ async def test_options_flow(hass):
 
 
 async def test_step_geography(hass):
-    """Test that the user is taken to the correct flow based on integration type."""
-    geography_conf = {
+    """Test the geograph (cloud API) step."""
+    conf = {
         CONF_API_KEY: "abcde12345",
         CONF_LATITUDE: 51.528308,
         CONF_LONGITUDE: -0.3817765,
@@ -167,7 +172,7 @@ async def test_step_geography(hass):
         "homeassistant.components.airvisual.async_setup_entry", return_value=True
     ), patch("pyairvisual.api.API.nearest_city"):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=geography_conf
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == "Cloud API (51.528308, -0.3817765)"
@@ -175,17 +180,35 @@ async def test_step_geography(hass):
             CONF_API_KEY: "abcde12345",
             CONF_LATITUDE: 51.528308,
             CONF_LONGITUDE: -0.3817765,
+        }
+
+
+async def test_step_node_pro(hass):
+    """Test the Node/Pro step."""
+    conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PASSWORD: "my_password"}
+
+    with patch(
+        "homeassistant.components.airvisual.async_setup_entry", return_value=True
+    ), patch("pyairvisual.node.Node.from_samba"):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == "Node/Pro (192.168.1.100)"
+        assert result["data"] == {
+            CONF_IP_ADDRESS: "192.168.1.100",
+            CONF_PASSWORD: "my_password",
         }
 
 
 async def test_step_import(hass):
-    """Test that the import step works for both types of configuration."""
+    """Test the import step for both types of configuration."""
     geography_conf = {
         CONF_API_KEY: "abcde12345",
         CONF_LATITUDE: 51.528308,
         CONF_LONGITUDE: -0.3817765,
     }
-    node_pro_conf = {CONF_NODE_PRO_ID: "fghij67890"}
+    node_pro_conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PASSWORD: "my_password"}
 
     with patch(
         "homeassistant.components.airvisual.async_setup_entry", return_value=True
@@ -204,18 +227,21 @@ async def test_step_import(hass):
 
     with patch(
         "homeassistant.components.airvisual.async_setup_entry", return_value=True
-    ), patch("pyairvisual.api.API.node"):
+    ), patch("pyairvisual.node.Node.from_samba"):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=node_pro_conf
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "Node/Pro (fghij67890)"
-        assert result["data"] == {CONF_NODE_PRO_ID: "fghij67890"}
+        assert result["title"] == "Node/Pro (192.168.1.100)"
+        assert result["data"] == {
+            CONF_IP_ADDRESS: "192.168.1.100",
+            CONF_PASSWORD: "my_password",
+        }
 
 
 async def test_step_user(hass):
-    """Test that the form is served with no input."""
+    """Test the user ("pick the integration type") step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
