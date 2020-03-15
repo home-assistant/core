@@ -79,6 +79,7 @@ FLOWS = [
     "plaato",
     "plex",
     "point",
+    "powerwall",
     "ps4",
     "rachio",
     "rainmachine",
