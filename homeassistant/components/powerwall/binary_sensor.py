@@ -24,7 +24,6 @@ from .const import (
     POWERWALL_REGION,
     POWERWALL_RUNNING_KEY,
     POWERWALL_SITE_INFO,
-    POWERWALL_SITE_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -88,7 +87,6 @@ class PowerWallRunningSensor(PowerWallBinarySensor):
         super().__init__(coordinator, site_info, ip_address)
         self._coordinator = coordinator
         self._site_info = site_info
-        self._site_name = site_info[POWERWALL_SITE_NAME]
         self._ip_address = ip_address
 
     @property
@@ -129,7 +127,6 @@ class PowerWallConnectedSensor(PowerWallBinarySensor):
         super().__init__(coordinator, site_info, ip_address)
         self._coordinator = coordinator
         self._site_info = site_info
-        self._site_name = site_info[POWERWALL_SITE_NAME]
         self._ip_address = ip_address
 
     @property
@@ -161,7 +158,6 @@ class PowerWallGridStatusSensor(PowerWallBinarySensor):
         super().__init__(coordinator, site_info, ip_address)
         self._coordinator = coordinator
         self._site_info = site_info
-        self._site_name = site_info[POWERWALL_SITE_NAME]
         self._ip_address = ip_address
 
     @property

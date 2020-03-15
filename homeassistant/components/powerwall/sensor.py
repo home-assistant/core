@@ -15,7 +15,6 @@ from .const import (
     POWERWALL_COORDINATOR,
     POWERWALL_IP_ADDRESS,
     POWERWALL_SITE_INFO,
-    POWERWALL_SITE_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -83,7 +82,6 @@ class PowerWallChargeSensor(PowerWallSensor):
         super().__init__(coordinator, site_info, ip_address)
         self._coordinator = coordinator
         self._site_info = site_info
-        self._site_name = site_info[POWERWALL_SITE_NAME]
         self._ip_address = ip_address
 
     @property
@@ -121,7 +119,6 @@ class PowerWallEnergySensor(PowerWallSensor):
         self._coordinator = coordinator
         self._meter = meter
         self._site_info = site_info
-        self._site_name = site_info[POWERWALL_SITE_NAME]
         self._ip_address = ip_address
 
     @property
