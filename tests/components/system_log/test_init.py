@@ -157,7 +157,7 @@ async def test_dedup_logs(hass, hass_client):
     log_msg()
     log = await get_error_log(hass, hass_client, 3)
     assert_log(log[0], "", ["error message 2", "error message 2-2"], "ERROR")
-    assert log[0]["timestamp"] > log[0]["first_occured"]
+    assert log[0]["timestamp"] > log[0]["first_occurred"]
 
     log_msg("2-3")
     log_msg("2-4")
