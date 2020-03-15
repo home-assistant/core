@@ -55,13 +55,39 @@ _SRV_TOUR_OFF = "stop_tour"
 _SRV_PTZ_CTRL = "ptz_control"
 _ATTR_PTZ_TT = "travel_time"
 _ATTR_PTZ_MOV = "movement"
-_MOV = ["zoom_in", "zoom_out", "right", "left", "up", "down",
-        "right_down", "right_up", "left_down", "left_up",
-        "bottom_right", "top_right", "bottom_left", "top_left"]
-_ACTION = ["ZoomTel", "ZoomWide", "Right", "Left", "Up", "Down",
-           "RightDown", "RightUp", "LeftDown", "LeftUp",
-           "RightDown", "RightUp", "LeftDown", "LeftUp"]
-_DEFAULT_TT = .2
+_MOV = [
+    "zoom_in",
+    "zoom_out",
+    "right",
+    "left",
+    "up",
+    "down",
+    "right_down",
+    "right_up",
+    "left_down",
+    "left_up",
+    "bottom_right",
+    "top_right",
+    "bottom_left",
+    "top_left",
+]
+_ACTION = [
+    "ZoomTel",
+    "ZoomWide",
+    "Right",
+    "Left",
+    "Up",
+    "Down",
+    "RightDown",
+    "RightUp",
+    "LeftDown",
+    "LeftUp",
+    "RightDown",
+    "RightUp",
+    "LeftDown",
+    "LeftUp",
+]
+_DEFAULT_TT = 0.2
 
 _ATTR_PRESET = "preset"
 _ATTR_COLOR_BW = "color_bw"
@@ -95,7 +121,11 @@ CAMERA_SERVICES = {
     _SRV_CBW: (_SRV_CBW_SCHEMA, "async_set_color_bw", (_ATTR_COLOR_BW,)),
     _SRV_TOUR_ON: (CAMERA_SERVICE_SCHEMA, "async_start_tour", ()),
     _SRV_TOUR_OFF: (CAMERA_SERVICE_SCHEMA, "async_stop_tour", ()),
-    _SRV_PTZ_CTRL: (_SRV_PTZ_SCHEMA, "async_ptz_control", (_ATTR_PTZ_MOV, _ATTR_PTZ_TT)),
+    _SRV_PTZ_CTRL: (
+        _SRV_PTZ_SCHEMA,
+        "async_ptz_control",
+        (_ATTR_PTZ_MOV, _ATTR_PTZ_TT),
+    ),
 }
 
 _BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
