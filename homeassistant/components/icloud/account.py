@@ -5,7 +5,11 @@ import operator
 from typing import Dict
 
 from pyicloud import PyiCloudService
-from pyicloud.exceptions import PyiCloudFailedLoginException, PyiCloudNoDevicesException
+from pyicloud.exceptions import (
+    PyiCloudFailedLoginException,
+    PyiCloudNoDevicesException,
+    PyiCloudServiceNotActivatedException,
+)
 from pyicloud.services.findmyiphone import AppleDevice
 
 from homeassistant.components.zone import async_active_zone
@@ -74,6 +78,7 @@ class IcloudAccount:
         username: str,
         password: str,
         icloud_dir: Store,
+        with_family: bool,
         max_interval: int,
         gps_accuracy_threshold: int,
     ):
@@ -81,6 +86,7 @@ class IcloudAccount:
         self.hass = hass
         self._username = username
         self._password = password
+        self._with_family = with_family
         self._fetch_interval = max_interval
         self._max_interval = max_interval
         self._gps_accuracy_threshold = gps_accuracy_threshold
@@ -98,7 +104,10 @@ class IcloudAccount:
         """Set up an iCloud account."""
         try:
             self.api = PyiCloudService(
-                self._username, self._password, self._icloud_dir.path
+                self._username,
+                self._password,
+                self._icloud_dir.path,
+                with_family=self._with_family,
             )
         except PyiCloudFailedLoginException as error:
             self.api = None
@@ -109,7 +118,7 @@ class IcloudAccount:
             api_devices = self.api.devices
             # Gets device owners infos
             user_info = api_devices.response["userInfo"]
-        except (KeyError, PyiCloudNoDevicesException):
+        except (PyiCloudServiceNotActivatedException, PyiCloudNoDevicesException):
             _LOGGER.error("No iCloud device found")
             raise ConfigEntryNotReady
 

@@ -11,7 +11,7 @@ from .subscriber import AugustSubscriberMixin
 _LOGGER = logging.getLogger(__name__)
 
 ACTIVITY_STREAM_FETCH_LIMIT = 10
-ACTIVITY_CATCH_UP_FETCH_LIMIT = 200
+ACTIVITY_CATCH_UP_FETCH_LIMIT = 1000
 
 
 class ActivityStream(AugustSubscriberMixin):

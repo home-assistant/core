@@ -1,7 +1,8 @@
 """Test zha light."""
-from unittest.mock import call, sentinel
+from datetime import timedelta
+from unittest.mock import MagicMock, call, sentinel
 
-import asynctest
+from asynctest import CoroutineMock, patch
 import pytest
 import zigpy.profiles.zha
 import zigpy.types
@@ -12,14 +13,16 @@ import zigpy.zcl.foundation as zcl_f
 from homeassistant.components.light import DOMAIN, FLASH_LONG, FLASH_SHORT
 from homeassistant.components.zha.light import FLASH_EFFECTS
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+import homeassistant.util.dt as dt_util
 
 from .common import (
     async_enable_traffic,
     async_test_rejoin,
     find_entity_id,
-    make_attribute,
-    make_zcl_header,
+    send_attributes_report,
 )
+
+from tests.common import async_fire_time_changed
 
 ON = 1
 OFF = 0
@@ -63,28 +66,66 @@ LIGHT_COLOR = {
 }
 
 
-@asynctest.patch(
+@patch("zigpy.zcl.clusters.general.OnOff.read_attributes", new=MagicMock())
+async def test_light_refresh(hass, zigpy_device_mock, zha_device_joined_restored):
+    """Test zha light platform refresh."""
+
+    # create zigpy devices
+    zigpy_device = zigpy_device_mock(LIGHT_ON_OFF)
+    zha_device = await zha_device_joined_restored(zigpy_device)
+    on_off_cluster = zigpy_device.endpoints[1].on_off
+    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
+
+    # allow traffic to flow through the gateway and device
+    await async_enable_traffic(hass, [zha_device])
+    on_off_cluster.read_attributes.reset_mock()
+
+    # not enough time passed
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
+    await hass.async_block_till_done()
+    assert on_off_cluster.read_attributes.call_count == 0
+    assert on_off_cluster.read_attributes.await_count == 0
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    # 1 interval - 1 call
+    on_off_cluster.read_attributes.return_value = [{"on_off": 1}, {}]
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=80))
+    await hass.async_block_till_done()
+    assert on_off_cluster.read_attributes.call_count == 1
+    assert on_off_cluster.read_attributes.await_count == 1
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    # 2 intervals - 2 calls
+    on_off_cluster.read_attributes.return_value = [{"on_off": 0}, {}]
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=80))
+    await hass.async_block_till_done()
+    assert on_off_cluster.read_attributes.call_count == 2
+    assert on_off_cluster.read_attributes.await_count == 2
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+
+@patch(
     "zigpy.zcl.clusters.lighting.Color.request",
-    new=asynctest.CoroutineMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
+    new=CoroutineMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
 )
-@asynctest.patch(
+@patch(
     "zigpy.zcl.clusters.general.Identify.request",
-    new=asynctest.CoroutineMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
+    new=CoroutineMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
 )
-@asynctest.patch(
+@patch(
     "zigpy.zcl.clusters.general.LevelControl.request",
-    new=asynctest.CoroutineMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
+    new=CoroutineMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
 )
-@asynctest.patch(
+@patch(
     "zigpy.zcl.clusters.general.OnOff.request",
-    new=asynctest.CoroutineMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
+    new=CoroutineMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
 )
 @pytest.mark.parametrize(
     "device, reporting",
     [(LIGHT_ON_OFF, (1, 0, 0)), (LIGHT_LEVEL, (1, 1, 0)), (LIGHT_COLOR, (1, 1, 3))],
 )
 async def test_light(
-    hass, zigpy_device_mock, zha_device_joined_restored, device, reporting,
+    hass, zigpy_device_mock, zha_device_joined_restored, device, reporting
 ):
     """Test zha light platform."""
 
@@ -148,26 +189,18 @@ async def test_light(
 async def async_test_on_off_from_light(hass, cluster, entity_id):
     """Test on off functionality from the light."""
     # turn on at light
-    attr = make_attribute(0, 1)
-    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
-    cluster.handle_message(hdr, [[attr]])
-    await hass.async_block_till_done()
+    await send_attributes_report(hass, cluster, {1: 0, 0: 1, 2: 3})
     assert hass.states.get(entity_id).state == STATE_ON
 
     # turn off at light
-    attr.value.value = 0
-    cluster.handle_message(hdr, [[attr]])
-    await hass.async_block_till_done()
+    await send_attributes_report(hass, cluster, {1: 1, 0: 0, 2: 3})
     assert hass.states.get(entity_id).state == STATE_OFF
 
 
 async def async_test_on_from_light(hass, cluster, entity_id):
     """Test on off functionality from the light."""
     # turn on at light
-    attr = make_attribute(0, 1)
-    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
-    cluster.handle_message(hdr, [[attr]])
-    await hass.async_block_till_done()
+    await send_attributes_report(hass, cluster, {1: -1, 0: 1, 2: 2})
     assert hass.states.get(entity_id).state == STATE_ON
 
 
@@ -274,10 +307,10 @@ async def async_test_level_on_off_from_hass(
 
 async def async_test_dimmer_from_light(hass, cluster, entity_id, level, expected_state):
     """Test dimmer functionality from the light."""
-    attr = make_attribute(0, level)
-    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
-    cluster.handle_message(hdr, [[attr]])
-    await hass.async_block_till_done()
+
+    await send_attributes_report(
+        hass, cluster, {1: level + 10, 0: level, 2: level - 10 or 22}
+    )
     assert hass.states.get(entity_id).state == expected_state
     # hass uses None for brightness of 0 in state attributes
     if level == 0:

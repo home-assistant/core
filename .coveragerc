@@ -61,7 +61,6 @@ omit =
     homeassistant/components/asterisk_mbox/*
     homeassistant/components/aten_pe/*
     homeassistant/components/atome/*
-    homeassistant/components/august/*
     homeassistant/components/aurora_abb_powerone/sensor.py
     homeassistant/components/automatic/device_tracker.py
     homeassistant/components/avea/light.py
@@ -150,7 +149,6 @@ omit =
     homeassistant/components/dht/sensor.py
     homeassistant/components/digital_ocean/*
     homeassistant/components/digitalloggers/switch.py
-    homeassistant/components/directv/media_player.py
     homeassistant/components/discogs/sensor.py
     homeassistant/components/discord/notify.py
     homeassistant/components/dlib_face_detect/image_processing.py
@@ -244,7 +242,11 @@ omit =
     homeassistant/components/foscam/const.py
     homeassistant/components/foursquare/*
     homeassistant/components/free_mobile/notify.py
-    homeassistant/components/freebox/*
+    homeassistant/components/freebox/__init__.py
+    homeassistant/components/freebox/device_tracker.py
+    homeassistant/components/freebox/router.py
+    homeassistant/components/freebox/sensor.py
+    homeassistant/components/freebox/switch.py
     homeassistant/components/fritz/device_tracker.py
     homeassistant/components/fritzbox/*
     homeassistant/components/fritzbox_callmonitor/sensor.py
@@ -414,7 +416,9 @@ omit =
     homeassistant/components/mediaroom/media_player.py
     homeassistant/components/melcloud/__init__.py
     homeassistant/components/melcloud/climate.py
+    homeassistant/components/melcloud/const.py
     homeassistant/components/melcloud/sensor.py
+    homeassistant/components/melcloud/water_heater.py
     homeassistant/components/message_bird/notify.py
     homeassistant/components/met/weather.py
     homeassistant/components/meteo_france/__init__.py
@@ -466,7 +470,6 @@ omit =
     homeassistant/components/nello/lock.py
     homeassistant/components/nest/*
     homeassistant/components/netatmo/__init__.py
-    homeassistant/components/netatmo/binary_sensor.py
     homeassistant/components/netatmo/api.py
     homeassistant/components/netatmo/camera.py
     homeassistant/components/netatmo/climate.py
@@ -542,10 +545,8 @@ omit =
     homeassistant/components/pioneer/media_player.py
     homeassistant/components/pjlink/media_player.py
     homeassistant/components/plaato/*
-    homeassistant/components/plex/__init__.py
     homeassistant/components/plex/media_player.py
     homeassistant/components/plex/sensor.py
-    homeassistant/components/plex/server.py
     homeassistant/components/plugwise/*
     homeassistant/components/plum_lightpad/*
     homeassistant/components/pocketcasts/sensor.py

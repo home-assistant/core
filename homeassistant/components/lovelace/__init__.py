@@ -127,24 +127,11 @@ async def async_setup(hass, config):
         # We store a dictionary mapping url_path: config. None is the default.
         "dashboards": {None: default_config},
         "resources": resource_collection,
+        "yaml_dashboards": config[DOMAIN].get(CONF_DASHBOARDS, {}),
     }
 
     if hass.config.safe_mode:
         return True
-
-    # Process YAML dashboards
-    for url_path, dashboard_conf in config[DOMAIN].get(CONF_DASHBOARDS, {}).items():
-        # For now always mode=yaml
-        config = dashboard.LovelaceYAML(hass, url_path, dashboard_conf)
-        hass.data[DOMAIN]["dashboards"][url_path] = config
-
-        try:
-            _register_panel(hass, url_path, MODE_YAML, dashboard_conf, False)
-        except ValueError:
-            _LOGGER.warning("Panel url path %s is not unique", url_path)
-
-    # Process storage dashboards
-    dashboards_collection = dashboard.DashboardsCollection(hass)
 
     async def storage_dashboard_changed(change_type, item_id, item):
         """Handle a storage dashboard change."""
@@ -156,6 +143,7 @@ async def async_setup(hass, config):
             return
 
         if change_type == collection.CHANGE_ADDED:
+
             existing = hass.data[DOMAIN]["dashboards"].get(url_path)
 
             if existing:
@@ -179,6 +167,20 @@ async def async_setup(hass, config):
             _register_panel(hass, url_path, MODE_STORAGE, item, update)
         except ValueError:
             _LOGGER.warning("Failed to %s panel %s from storage", change_type, url_path)
+
+    # Process YAML dashboards
+    for url_path, dashboard_conf in hass.data[DOMAIN]["yaml_dashboards"].items():
+        # For now always mode=yaml
+        config = dashboard.LovelaceYAML(hass, url_path, dashboard_conf)
+        hass.data[DOMAIN]["dashboards"][url_path] = config
+
+        try:
+            _register_panel(hass, url_path, MODE_YAML, dashboard_conf, False)
+        except ValueError:
+            _LOGGER.warning("Panel url path %s is not unique", url_path)
+
+    # Process storage dashboards
+    dashboards_collection = dashboard.DashboardsCollection(hass)
 
     dashboards_collection.async_add_listener(storage_dashboard_changed)
     await dashboards_collection.async_load()
