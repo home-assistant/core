@@ -97,7 +97,7 @@ CAMERA_SERVICES = {
     _SRV_TOUR_OFF: (CAMERA_SERVICE_SCHEMA, "async_stop_tour", ()),   
     _SRV_PTZ_CTRL: (_SRV_PTZ_SCHEMA, "async_ptz_control", (_ATTR_PTZ_MOV, _ATTR_PTZ_TT)),
 }
- 
+
 _BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
 
 
