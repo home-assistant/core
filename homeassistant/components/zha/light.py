@@ -47,6 +47,7 @@ from .core.const import (
     EFFECT_BREATHE,
     EFFECT_DEFAULT_VARIANT,
     SIGNAL_ADD_ENTITIES,
+    SIGNAL_ADD_GROUP_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_SET_LEVEL,
 )
@@ -92,6 +93,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         functools.partial(
             discovery.async_add_entities, async_add_entities, entities_to_create
         ),
+    )
+    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+
+    def add_group_entities(discovery_info):
+        """Add light group entities for ZHA."""
+        group_entities = []
+        for group_info in discovery_info:
+            group_entities.append(LightGroup(**group_info))
+        async_add_entities(group_entities)
+
+    unsub = async_dispatcher_connect(
+        hass, SIGNAL_ADD_GROUP_ENTITIES, add_group_entities
     )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 

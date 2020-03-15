@@ -51,6 +51,7 @@ from .const import (
     DEFAULT_DATABASE_NAME,
     DOMAIN,
     SIGNAL_ADD_ENTITIES,
+    SIGNAL_ADD_GROUP_ENTITIES,
     SIGNAL_REMOVE,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
@@ -157,8 +158,6 @@ class ZHAGateway:
         self._hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(
             self.application_controller.ieee
         )
-        await self.async_load_devices()
-        self._initialize_groups()
 
     async def async_load_devices(self) -> None:
         """Restore ZHA devices from zigpy application state."""
@@ -399,21 +398,19 @@ class ZHAGateway:
 
     def _initialize_groups(self):
         """Initialize ZHA groups."""
+        light_groups = []
         for group_id in self.application_controller.groups:
             group = self.application_controller.groups[group_id]
             zha_group = self._async_get_or_create_group(group)
-            discovery_info = {
-                "component": "light",
-                "group_id": zha_group.group_id,
-                "zha_device": self._coordinator_zha_device,
-                "unique_id": zha_group.group_id,
-                "channels": [],
-                "entity_ids": zha_group.member_entity_ids,
-            }
-
-            self._hass.data[DATA_ZHA]["light"][
-                discovery_info["unique_id"]
-            ] = discovery_info
+            light_groups.append(
+                {
+                    "group_id": zha_group.group_id,
+                    "zha_device": self._coordinator_zha_device,
+                    "unique_id": f"light_group_{zha_group.group_id}",
+                    "entity_ids": zha_group.member_entity_ids,
+                }
+            )
+        async_dispatcher_send(self._hass, SIGNAL_ADD_GROUP_ENTITIES, light_groups)
 
     @callback
     def _async_get_or_create_device(

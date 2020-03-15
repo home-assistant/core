@@ -200,6 +200,7 @@ SENSOR_TEMPERATURE = CHANNEL_TEMPERATURE
 SENSOR_TYPE = "sensor_type"
 
 SIGNAL_ADD_ENTITIES = "zha_add_new_entities"
+SIGNAL_ADD_GROUP_ENTITIES = "zha_add_new_group_entities"
 SIGNAL_ATTR_UPDATED = "attribute_updated"
 SIGNAL_AVAILABLE = "available"
 SIGNAL_MOVE_LEVEL = "move_level"
