@@ -1,0 +1,11 @@
+{
+  "domain": "kostal_plenticore",
+  "name": "Kostal Plenticore Inverter",
+  "documentation": "https://www.home-assistant.io/integrations/kostalplenticore/",
+  "dependencies": [],
+  "requirements": ["kostalplenticore==0.1"],
+  "codeowners": [
+    "@ITTV-Tools"
+  ]
+
+}

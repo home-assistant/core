@@ -284,6 +284,9 @@ keyring==20.0.0
 # homeassistant.scripts.keyring
 keyrings.alt==3.4.0
 
+# homeassistant.components.kostal_plenticore
+kostalplenticore==0.1
+
 # homeassistant.components.dyson
 libpurecool==0.6.1
 

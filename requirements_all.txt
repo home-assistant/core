@@ -766,6 +766,9 @@ kiwiki-client==0.1.1
 # homeassistant.components.konnected
 konnected==0.1.5
 
+# homeassistant.components.kostal_plenticore
+kostalplenticore==0.1
+
 # homeassistant.components.eufy
 lakeside==0.12
 
