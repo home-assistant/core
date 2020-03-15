@@ -880,6 +880,7 @@ TEMPLATE_CONDITION_SCHEMA = vol.Schema(
 )
 
 TIME_CONDITION_SCHEMA = vol.All(
+    deprecated("weekday", invalidation_version="0.109"),
     vol.Schema(
         {
             vol.Required(CONF_CONDITION): "time",
@@ -892,10 +893,7 @@ TIME_CONDITION_SCHEMA = vol.All(
 )
 
 WEEKDAY_CONDITION_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_CONDITION): "weekday",
-        "days": weekdays,
-    }
+    {vol.Required(CONF_CONDITION): "weekday", "days": weekdays,}
 )
 
 ZONE_CONDITION_SCHEMA = vol.Schema(
@@ -949,6 +947,7 @@ CONDITION_SCHEMA: vol.Schema = key_value_schemas(
         "sun": SUN_CONDITION_SCHEMA,
         "template": TEMPLATE_CONDITION_SCHEMA,
         "time": TIME_CONDITION_SCHEMA,
+        "weekday": WEEKDAY_CONDITION_SCHEMA,
         "zone": ZONE_CONDITION_SCHEMA,
         "and": AND_CONDITION_SCHEMA,
         "or": OR_CONDITION_SCHEMA,
