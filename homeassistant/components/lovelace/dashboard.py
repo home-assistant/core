@@ -233,7 +233,7 @@ class DashboardsCollection(collection.StorageCollection):
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         if "-" not in data[CONF_URL_PATH]:
-            raise vol.Invalid("Panel url path needs to contain a hyphen (-)")
+            raise vol.Invalid("Url path needs to contain a hyphen (-)")
 
         if data[CONF_URL_PATH] in self.hass.data[DATA_PANELS]:
             raise vol.Invalid("Panel url path needs to be unique")
