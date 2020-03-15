@@ -36,6 +36,8 @@ ATTR_HUMIDITY = "humidity"
 ATTR_POLLUTANT_SYMBOL = "pollutant_symbol"
 ATTR_POLLUTANT_UNIT = "pollutant_unit"
 ATTR_REGION = "region"
+ATTR_SENSOR_LIFE = "sensor_life_{0}"
+ATTR_VOC = "voc"
 
 MASS_PARTS_PER_MILLION = "ppm"
 MASS_PARTS_PER_BILLION = "ppb"
@@ -204,14 +206,21 @@ class AirVisualNodeProSensor(AirVisualEntity, AirQualityEntity):
         self._unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 
     @property
+    def air_quality_index(self):
+        """Return the Air Quality Index (AQI)."""
+        if self._airvisual.data["settings"]["is_aqi_usa"]:
+            return self._airvisual.data["measurements"][0]["pm25_AQIUS"]
+        return self._airvisual.data["measurements"][0]["pm25_AQICN"]
+
+    @property
     def available(self):
         """Return True if entity is available."""
         return bool(self._airvisual.data)
 
     @property
-    def carbon_monoxide(self):
-        """Return the CO (carbon monoxide) level."""
-        return self._airvisual.data["current"].get("co")
+    def carbon_dioxide(self):
+        """Return the CO2 (carbon dioxide) level."""
+        return self._airvisual.data["measurements"][0].get("co2_ppm")
 
     @property
     def name(self):
@@ -221,33 +230,44 @@ class AirVisualNodeProSensor(AirVisualEntity, AirQualityEntity):
     @property
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
-        return self._airvisual.data["current"].get("p2")
+        return self._airvisual.data["measurements"][0].get("pm25_ugm3")
 
     @property
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
-        return self._airvisual.data["current"].get("p1")
+        return self._airvisual.data["measurements"][0].get("pm10_ugm3")
 
     @property
     def particulate_matter_0_1(self):
         """Return the particulate matter 0.1 level."""
-        return self._airvisual.data["current"].get("p01")
+        return self._airvisual.data["measurements"][0].get("pm01_ugm3")
 
     @property
     def unique_id(self):
         """Return a unique, Home Assistant friendly identifier for this entity."""
-        return self._airvisual.node_pro_id
+        return self._airvisual.data["serial_number"]
 
     async def async_update(self):
         """Update the Node/Pro's data."""
+        sensor_life_attrs = {
+            ATTR_SENSOR_LIFE.format(pollutant): lifespan
+            for pollutant, lifespan in self._airvisual.data["status"][
+                "sensor_life"
+            ].items()
+        }
+
         self._attrs.update(
             {
-                ATTR_HUMIDITY: self._airvisual.data["current"]["hm"],
+                ATTR_HUMIDITY: self._airvisual.data["measurements"][0].get(
+                    "humidity_RH"
+                ),
                 ATTR_TEMPERATURE: display_temp(
                     self.hass,
-                    float(self._airvisual.data["current"]["tp"]),
+                    float(self._airvisual.data["measurements"][0].get("temperature_C")),
                     TEMP_CELSIUS,
                     PRECISION_WHOLE,
                 ),
+                ATTR_VOC: self._airvisual.data["measurements"][0].get("voc_ppb"),
+                **sensor_life_attrs,
             }
         )

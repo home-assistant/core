@@ -1,17 +1,18 @@
 """The airvisual component."""
 from datetime import timedelta
-import logging
 
 from pyairvisual import Client
-from pyairvisual.errors import AirVisualError, InvalidKeyError, NotFoundError
+from pyairvisual.errors import AirVisualError, InvalidKeyError, NodeProError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
+    CONF_IP_ADDRESS,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    CONF_PASSWORD,
     CONF_SHOW_ON_MAP,
     CONF_STATE,
 )
@@ -29,15 +30,15 @@ from .const import (
     CONF_CITY,
     CONF_COUNTRY,
     CONF_GEOGRAPHIES,
-    CONF_NODE_PRO_ID,
     DATA_CLIENT,
     DOMAIN,
     INTEGRATION_TYPE_GEOGRAPHY,
     INTEGRATION_TYPE_NODE_PRO,
+    LOGGER,
     TOPIC_UPDATE,
 )
 
-_LOGGER = logging.getLogger(__name__)
+CONF_NODE_PRO_ID = "node_pro_id"
 
 DATA_LISTENER = "listener"
 
@@ -71,7 +72,9 @@ CLOUD_API_SCHEMA = vol.Schema(
     }
 )
 
-NODE_PRO_SCHEMA = vol.Schema({vol.Required(CONF_NODE_PRO_ID): cv.string})
+NODE_PRO_SCHEMA = vol.Schema(
+    {vol.Required(CONF_IP_ADDRESS): cv.string, vol.Required(CONF_PASSWORD): cv.string}
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.All(cv.ensure_list, [vol.Any(CLOUD_API_SCHEMA, NODE_PRO_SCHEMA)])},
@@ -163,17 +166,18 @@ async def async_setup_entry(hass, config_entry):
         # Only geography-based entries have options:
         config_entry.add_update_listener(async_update_options)
     else:
-        airvisual = AirVisualNodeProData(
-            hass, Client(websession), config_entry.data[CONF_NODE_PRO_ID]
-        )
+        airvisual = AirVisualNodeProData(hass, Client(websession), config_entry)
 
     try:
         await airvisual.async_update()
     except InvalidKeyError:
-        _LOGGER.error("Invalid API key provided")
+        LOGGER.error("Invalid API key provided")
         raise ConfigEntryNotReady
-    except NotFoundError:
-        _LOGGER.error("Invalid Node/Pro ID provided")
+    except NodeProError as err:
+        LOGGER.error("Error connecting to Node/Pro unit: %s", err)
+        raise ConfigEntryNotReady
+    except AirVisualError as err:
+        LOGGER.error("AirVisual error: %s", err)
         raise ConfigEntryNotReady
 
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = airvisual
@@ -197,7 +201,7 @@ async def async_migrate_entry(hass, config_entry):
     """Migrate an old config entry."""
     version = config_entry.version
 
-    _LOGGER.debug("Migrating from version %s", version)
+    LOGGER.debug("Migrating from version %s", version)
 
     # 1 -> 2: One geography per config entry
     if version == 1:
@@ -226,7 +230,7 @@ async def async_migrate_entry(hass, config_entry):
                 )
             )
 
-    _LOGGER.info("Migration to version %s successful", version)
+    LOGGER.info("Migration to version %s successful", version)
 
     return True
 
@@ -325,10 +329,10 @@ class AirVisualGeographyData:
         try:
             self.data[self.geography_id] = await api_coro
         except AirVisualError as err:
-            _LOGGER.error("Error while retrieving data: %s", err)
+            LOGGER.error("Error while retrieving data: %s", err)
             self.data[self.geography_id] = {}
 
-        _LOGGER.debug("Received new geography data")
+        LOGGER.debug("Received new geography data")
         async_dispatcher_send(self._hass, self.topic_update)
 
     @callback
@@ -341,23 +345,27 @@ class AirVisualGeographyData:
 class AirVisualNodeProData:
     """Define a class to manage data from an AirVisual Node/Pro."""
 
-    def __init__(self, hass, client, node_pro_id):
+    def __init__(self, hass, client, config_entry):
         """Initialize."""
         self._client = client
         self._hass = hass
+        self._password = config_entry.data[CONF_PASSWORD]
         self.data = {}
         self.integration_type = INTEGRATION_TYPE_NODE_PRO
-        self.node_pro_id = node_pro_id
+        self.ip_address = config_entry.data[CONF_IP_ADDRESS]
         self.scan_interval = DEFAULT_NODE_PRO_SCAN_INTERVAL
-        self.topic_update = TOPIC_UPDATE.format(node_pro_id)
+        self.topic_update = TOPIC_UPDATE.format(config_entry.data[CONF_IP_ADDRESS])
 
     async def async_update(self):
         """Get new data from the Node/Pro."""
         try:
-            self.data = await self._client.api.node(self.node_pro_id)
-        except AirVisualError as err:
-            _LOGGER.error("Error while retrieving Node/Pro data: %s", err)
+            self.data = await self._client.node.from_samba(
+                self.ip_address, self._password
+            )
+        except NodeProError as err:
+            LOGGER.error("Error while retrieving Node/Pro data: %s", err)
             self.data = {}
+            return
 
-        _LOGGER.debug("Received new Node/Pro data")
+        LOGGER.debug("Received new Node/Pro data")
         async_dispatcher_send(self._hass, self.topic_update)

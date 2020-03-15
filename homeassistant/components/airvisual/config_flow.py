@@ -2,14 +2,16 @@
 import asyncio
 
 from pyairvisual import Client
-from pyairvisual.errors import InvalidKeyError, NotFoundError
+from pyairvisual.errors import InvalidKeyError, NodeProError
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_IP_ADDRESS,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    CONF_PASSWORD,
     CONF_SHOW_ON_MAP,
 )
 from homeassistant.core import callback
@@ -18,10 +20,10 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from . import async_get_geography_id
 from .const import (  # pylint: disable=unused-import
     CONF_GEOGRAPHIES,
-    CONF_NODE_PRO_ID,
     DOMAIN,
     INTEGRATION_TYPE_GEOGRAPHY,
     INTEGRATION_TYPE_NODE_PRO,
+    LOGGER,
 )
 
 
@@ -60,7 +62,9 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @property
     def node_pro_schema(self):
         """Return the data schema for a Node/Pro."""
-        return vol.Schema({vol.Required(CONF_NODE_PRO_ID): str})
+        return vol.Schema(
+            {vol.Required(CONF_IP_ADDRESS): str, vol.Required(CONF_PASSWORD): str}
+        )
 
     async def _async_set_unique_id(self, unique_id):
         """Set the unique ID of the config flow and abort if it already exists."""
@@ -119,29 +123,31 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
-        if CONF_NODE_PRO_ID in import_config:
+        if CONF_IP_ADDRESS in import_config:
             return await self.async_step_node_pro(import_config)
         return await self.async_step_geography(import_config)
 
     async def async_step_node_pro(self, user_input=None):
         """Handle the initialization of the integration with a Node/Pro."""
-        await self._async_set_unique_id(user_input[CONF_NODE_PRO_ID])
+        await self._async_set_unique_id(user_input[CONF_IP_ADDRESS])
 
         websession = aiohttp_client.async_get_clientsession(self.hass)
         client = Client(websession)
 
         try:
-            await client.api.node(user_input[CONF_NODE_PRO_ID])
-        except NotFoundError:
+            await client.node.from_samba(
+                user_input[CONF_IP_ADDRESS], user_input[CONF_PASSWORD]
+            )
+        except NodeProError as err:
+            LOGGER.error("Error connecting to Node/Pro unit: %s", err)
             return self.async_show_form(
                 step_id="node_pro",
                 data_schema=self.node_pro_schema,
-                errors={CONF_NODE_PRO_ID: "invalid_node_pro_id"},
+                errors={CONF_IP_ADDRESS: "unable_to_connect"},
             )
 
         return self.async_create_entry(
-            title=f"Node/Pro ({user_input[CONF_NODE_PRO_ID]})",
-            data={CONF_NODE_PRO_ID: user_input[CONF_NODE_PRO_ID]},
+            title=f"Node/Pro ({user_input[CONF_IP_ADDRESS]})", data=user_input
         )
 
     async def async_step_user(self, user_input=None):
