@@ -115,16 +115,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
         if hass.components.cloud.async_active_subscription():
             # Wait for cloud connection to be established
-            for i in range(1, 4):
-                if hass.components.cloud.async_is_logged_in():
-                    break
-                elif i == 3:
-                    raise Exception("Not logged in. Stop trying.")
-                else:
-                    _LOGGER.error(
-                        "Not yet logged in. Waiting %s seconds", (WAIT_FOR_CLOUD * i),
-                    )
-                    await asyncio.sleep(WAIT_FOR_CLOUD * i)
+            await asyncio.sleep(WAIT_FOR_CLOUD)
 
             if CONF_CLOUDHOOK_URL not in entry.data:
                 webhook_url = await hass.components.cloud.async_create_cloudhook(
