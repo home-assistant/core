@@ -105,4 +105,4 @@ class LutronLed(LutronDevice, SwitchDevice):
     def update(self):
         """Call when forcing a refresh of the device."""
         if self._prev_state is None:
-            self._prev_state = self.state
+            self._prev_state = self._lutron_device.state
