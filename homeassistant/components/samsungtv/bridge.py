@@ -42,10 +42,11 @@ class SamsungTVBridge(ABC):
 
     def __init__(self, method, host, port):
         """Initialize Bridge."""
-        self.port = 8001 if port is None else port
+        self.port = port
         self.method = method
         self.host = host
         self.token = None
+        self.default_port = None
         self._remote = None
         self._callback = None
 
@@ -191,6 +192,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
         """Initialize Bridge."""
         super().__init__(method, host, port)
         self.token = token
+        self.default_port = 8001
 
     def try_connect(self):
         """Try to connect to the Websocket TV."""

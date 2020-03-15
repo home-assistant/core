@@ -71,13 +71,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     ):
         turn_on_action = hass.data[DOMAIN][ip_address][CONF_ON_ACTION]
         on_script = Script(hass, turn_on_action)
-    async_add_entities([SamsungTVDevice(config_entry, on_script)])
+    async_add_entities([SamsungTVDevice(hass, config_entry, on_script)])
 
 
 class SamsungTVDevice(MediaPlayerDevice):
     """Representation of a Samsung TV."""
 
-    def __init__(self, config_entry, on_script):
+    def __init__(self, hass, config_entry, on_script):
         """Initialize the Samsung device."""
         self._config_entry = config_entry
         self._manufacturer = config_entry.data.get(CONF_MANUFACTURER)
@@ -93,13 +93,21 @@ class SamsungTVDevice(MediaPlayerDevice):
         # Mark the end of a shutdown command (need to wait 15 seconds before
         # sending the next command to avoid turning the TV back ON).
         self._end_of_power_off = None
-        # Initialize bridge
-        self._bridge = SamsungTVBridge.get_bridge(
-            config_entry.data[CONF_METHOD],
-            config_entry.data[CONF_HOST],
-            config_entry.data[CONF_PORT],
-            config_entry.data.get(CONF_TOKEN),
-        )
+
+        data = config_entry.data.copy()
+        while True:
+            # Initialize bridge
+            self._bridge = SamsungTVBridge.get_bridge(
+                data[CONF_METHOD],
+                data[CONF_HOST],
+                data[CONF_PORT],
+                data.get(CONF_TOKEN),
+            )
+            if self._bridge.port is None and self._bridge.default_port is not None:
+                data[CONF_PORT] = self._bridge.default_port
+                hass.config_entries.async_update_entry(config_entry, data=data)
+                continue
+            break
         self._bridge.register_reauth_callback(self.access_denied)
 
     def access_denied(self):
