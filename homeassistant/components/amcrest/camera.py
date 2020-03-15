@@ -455,9 +455,9 @@ class AmcrestCam(Camera):
         """Call the job and stop camera tour."""
         await self.hass.async_add_executor_job(self._start_tour, False)
 
-    async def async_ptz_control(self, movement, tt):
+    async def async_ptz_control(self, movement, travl_time):
         """Call the job and move/zoom PTZ camera."""
-        await self.hass.async_add_executor_job(self._ptz_control, movement, tt)
+        await self.hass.async_add_executor_job(self._ptz_control, movement, travl_time)
 
     # Methods to send commands to Amcrest camera and handle errors
 
@@ -601,19 +601,19 @@ class AmcrestCam(Camera):
                 _LOGGER, "start" if start else "stop", self.name, "camera tour", error
             )
 
-    def _ptz_control(self, movement, tt):
+    def _ptz_control(self, movement, travl_time):
         """Move or zoom camera in specified direction."""
         code = _ACTION[_MOV.index(movement)]
         try:
             channel = 1
-            hs = 0
-            vs = "vertical_speed=1"
+            hspeed = 0
+            vspeed = "vertical_speed=1"
             if "zoom" in movement:
-                vs = 0
+                vspeed = 0
 
-            self._api.ptz_control_command(channel, "start", code, hs, vs)
-            time.sleep(tt)
-            self._api.ptz_control_command(channel, "stop", code, hs, vs)
+            self._api.ptz_control_command(channel, "start", code, hspeed, vspeed)
+            time.sleep(travl_time)
+            self._api.ptz_control_command(channel, "stop", code, hspeed, vspeed)
 
         except AmcrestError as error:
             log_update_error(
