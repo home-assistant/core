@@ -116,9 +116,9 @@ class GarminConnectData:
             return
 
         try:
-            self._activity_data = self.client.get_body_composition(today.isoformat())[
-                "totalAverage"
-            ]
+            self._body_composition_data = self.client.get_body_composition(
+                today.isoformat()
+            )["totalAverage"]
         except (
             GarminConnectAuthenticationError,
             GarminConnectTooManyRequestsError,

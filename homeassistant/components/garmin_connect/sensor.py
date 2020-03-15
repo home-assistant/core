@@ -173,8 +173,10 @@ class GarminConnectSensor(Entity):
         if "Duration" in self._type or "Seconds" in self._type:
             self._state = data[self._type] // 60
         elif "Mass" in self._type or self._type == "weight":
-            self._state = round(data[self._type] // 1000, 2)
-        elif self._type == "bodyFat" or self._type == "bodyWater":
+            self._state = round((data[self._type] / 1000), 2)
+        elif (
+            self._type == "bodyFat" or self._type == "bodyWater" or self._type == "bmi"
+        ):
             self._state = round(data[self._type], 2)
         else:
             self._state = data[self._type]
