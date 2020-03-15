@@ -4,6 +4,7 @@ import pytest
 
 from homeassistant.components import konnected
 from homeassistant.components.konnected import config_flow
+from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -357,6 +358,15 @@ async def test_unload_entry(hass, mock_panel):
     assert await async_setup_component(hass, konnected.DOMAIN, {}) is True
     assert hass.data[konnected.DOMAIN]["devices"].get("aabbccddeeff") is not None
     assert await konnected.async_unload_entry(hass, entry)
+    assert hass.data[konnected.DOMAIN]["devices"] == {}
+
+
+async def test_ignore_entry(hass, mock_panel):
+    """Test being able to ignore an entry."""
+    entry = MockConfigEntry(domain=konnected.DOMAIN, data={}, source=SOURCE_IGNORE)
+    entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, konnected.DOMAIN, {}) is True
     assert hass.data[konnected.DOMAIN]["devices"] == {}
 
 

@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ACCESS_TOKEN,
@@ -237,6 +237,10 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up panel from a config entry."""
+    if SOURCE_IGNORE == entry.data:
+        _LOGGER.info("Ignoring config entry")
+        return True
+
     client = AlarmPanel(hass, entry)
     # create a data store in hass.data[DOMAIN][CONF_DEVICES]
     await client.async_save_data()
@@ -306,6 +310,7 @@ class KonnectedView(HomeAssistantView):
             [
                 entry.data[CONF_ACCESS_TOKEN]
                 for entry in hass.config_entries.async_entries(DOMAIN)
+                if entry.source != SOURCE_IGNORE
             ]
         )
         if auth is None or not next(
