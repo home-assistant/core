@@ -55,12 +55,12 @@ _SRV_TOUR_OFF = "stop_tour"
 _SRV_PTZ_CTRL = "ptz_control"
 _ATTR_PTZ_TT = "travel_time"
 _ATTR_PTZ_MOV = "movement"
-_MOV =    ["zoom_in", "zoom_out", "right", "left", "up", "down",
-            "right_down", "right_up", "left_down", "left_up",
-            "bottom_right", "top_right", "bottom_left", "top_left"]   
+_MOV = ["zoom_in", "zoom_out", "right", "left", "up", "down",
+   "right_down", "right_up", "left_down", "left_up",
+   "bottom_right", "top_right", "bottom_left", "top_left"]
 _ACTION = ["ZoomTel", "ZoomWide", "Right", "Left", "Up", "Down",
-            "RightDown", "RightUp", "LeftDown", "LeftUp",
-            "RightDown", "RightUp", "LeftDown", "LeftUp"]
+   "RightDown", "RightUp", "LeftDown", "LeftUp",
+   "RightDown", "RightUp", "LeftDown", "LeftUp"]
 _DEFAULT_TT = .2
 
 _ATTR_PRESET = "preset"
@@ -424,7 +424,7 @@ class AmcrestCam(Camera):
     async def async_stop_tour(self):
         """Call the job and stop camera tour."""
         await self.hass.async_add_executor_job(self._start_tour, False)
-        
+
     async def async_ptz_control(self, movement, tt):
         """Call the job and move/zoom PTZ camera."""
         await self.hass.async_add_executor_job(self._ptz_control, movement, tt)
@@ -570,7 +570,7 @@ class AmcrestCam(Camera):
             log_update_error(
                 _LOGGER, "start" if start else "stop", self.name, "camera tour", error
             )
-            
+
     def _ptz_control(self, movement, tt):
         """Move or zoom camera in specified direction."""
         code = _ACTION[_MOV.index(movement)]
