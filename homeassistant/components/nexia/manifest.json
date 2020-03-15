@@ -3,11 +3,11 @@
   "name": "Nexia",
   "requirements": [
     "requests",
-    "nexia==0.3.2"
+    "nexia==0.4.1"
   ],
   "dependencies": [],
   "codeowners": [
-    "ryannazaretian"
+    "@ryannazaretian", "@bdraco"
   ],
   "documentation": "https://www.home-assistant.io/components/nexia/",
   "config_flow": true

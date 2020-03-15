@@ -12,13 +12,12 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 
 from .const import (
-    ATTR_FIRMWARE,
-    ATTR_MODEL,
     ATTR_THERMOSTAT_ID,
-    ATTR_THERMOSTAT_NAME,
     ATTR_ZONE_ID,
     ATTRIBUTION,
     DATA_NEXIA,
+    DOMAIN,
+    MANUFACTURER,
     NEXIA_DEVICE,
     UPDATE_COORDINATOR,
 )
@@ -27,14 +26,7 @@ from .const import (
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up sensors for a Nexia device."""
 
-    nexia_data = hass.data[config_entry.entry_id][DATA_NEXIA]
-
-    entities = await hass.async_add_executor_job(_generate_entities(nexia_data))
-
-    async_add_entities(entities, True)
-
-
-def _generate_entities(nexia_data):
+    nexia_data = hass.data[DOMAIN][config_entry.entry_id][DATA_NEXIA]
     nexia_home = nexia_data[NEXIA_DEVICE]
     coordinator = nexia_data[UPDATE_COORDINATOR]
     entities = []
@@ -169,7 +161,7 @@ def _generate_entities(nexia_data):
                 )
             )
 
-    return entities
+    async_add_entities(entities, True)
 
 
 def percent_conv(val):
@@ -215,9 +207,6 @@ class NexiaSensor(Entity):
         """Return the device specific state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_MODEL: self._device.get_model(),
-            ATTR_FIRMWARE: self._device.get_firmware(),
-            ATTR_THERMOSTAT_NAME: self._device.get_name(),
             ATTR_THERMOSTAT_ID: self._device.thermostat_id,
         }
 
@@ -250,6 +239,17 @@ class NexiaSensor(Entity):
     def available(self):
         """Return True if entity is available."""
         return self._coordinator.last_update_success
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        return {
+            "identifiers": {(DOMAIN, self._device.thermostat_id)},
+            "name": self._device.get_name(),
+            "model": self._device.get_model(),
+            "sw_version": self._device.get_firmware(),
+            "manufacturer": MANUFACTURER,
+        }
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
@@ -296,11 +296,20 @@ class NexiaZoneSensor(NexiaSensor):
         """Return the device specific state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_MODEL: self._device.thermostat.get_model(),
-            ATTR_FIRMWARE: self._device.thermostat.get_firmware(),
-            ATTR_THERMOSTAT_NAME: self._device.thermostat.get_name(),
             ATTR_THERMOSTAT_ID: self._device.thermostat.thermostat_id,
             ATTR_ZONE_ID: self._device.zone_id,
+        }
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        return {
+            "identifiers": {(DOMAIN, self._device.zone_id)},
+            "name": self._device.get_name(),
+            "model": self._device.thermostat.get_model(),
+            "sw_version": self._device.thermostat.get_firmware(),
+            "manufacturer": MANUFACTURER,
+            "via_device": (DOMAIN, self._device.thermostat.thermostat_id),
         }
 
     @property

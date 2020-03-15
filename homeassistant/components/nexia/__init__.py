@@ -78,11 +78,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     nexia_home = None
 
     try:
-        nexia_home = hass.async_add_executor_job(
-            partial(NexiaHome, username=username, password=password, auto_login=True)
+        nexia_home = await hass.async_add_executor_job(
+            partial(NexiaHome, username=username, password=password)
         )
-    except (ConnectTimeout, HTTPError) as ex:
+    except ConnectTimeout as ex:
         _LOGGER.error("Unable to connect to Nexia service: %s", str(ex))
+        raise ConfigEntryNotReady
+    except HTTPError as http_ex:
+        if http_ex.response.status_code >= 400 and http_ex.response.status_code < 500:
+            _LOGGER.error(
+                "Access error from Nexia service, please check credentials: %s",
+                str(http_ex),
+            )
+            return False
+        _LOGGER.error("HTTP error from Nexia service: %s", str(http_ex))
         raise ConfigEntryNotReady
 
     async def _async_update_data():
@@ -97,7 +106,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         update_interval=timedelta(seconds=DEFAULT_UPDATE_RATE),
     )
 
-    hass.data[entry.entry_id][DATA_NEXIA] = {
+    hass.data[DOMAIN][entry.entry_id] = {}
+    hass.data[DOMAIN][entry.entry_id][DATA_NEXIA] = {
         NEXIA_DEVICE: nexia_home,
         UPDATE_COORDINATOR: coordinator,
     }

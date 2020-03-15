@@ -19,5 +19,5 @@ set_humidify_setpoint:
       work. Leaving it blank will cause all systems to enter this air cleaner mode."
       example: "\"entity_id\": \"home\""
     humidity:
-      description: "The humidification setpoint as a float, range 0-100."
+      description: "The humidification setpoint as an int, range 35-65."
       example: "\"humidity\": \"45\""
