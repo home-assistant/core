@@ -53,6 +53,7 @@ from .const import (
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ADD_GROUP_ENTITIES,
     SIGNAL_REMOVE,
+    SIGNAL_REMOVE_GROUP,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
     ZHA_GW_MSG,
@@ -263,6 +264,9 @@ class ZHAGateway:
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_REMOVED)
         zha_group = self._groups.pop(zigpy_group.group_id, None)
         zha_group.info("group_removed")
+        async_dispatcher_send(
+            self._hass, f"{SIGNAL_REMOVE_GROUP}_{zigpy_group.group_id}"
+        )
 
     def _send_group_gateway_message(self, zigpy_group, gateway_message_type):
         """Send the gareway event for a zigpy group event."""
@@ -559,22 +563,34 @@ class ZHAGateway:
                 for ieee in members:
                     tasks.append(self.devices[ieee].async_add_to_group(group_id))
                 await asyncio.gather(*tasks)
-        return self.groups.get(group_id)
+        zha_group = self.groups.get(group_id)
+        async_dispatcher_send(
+            self._hass,
+            SIGNAL_ADD_GROUP_ENTITIES,
+            [
+                {
+                    "group_id": zha_group.group_id,
+                    "zha_device": self._coordinator_zha_device,
+                    "unique_id": f"light_group_{zha_group.group_id}",
+                    "entity_ids": zha_group.member_entity_ids,
+                }
+            ],
+        )
+        return zha_group
 
     async def async_remove_zigpy_group(self, group_id):
         """Remove a Zigbee group from Zigpy."""
         group = self.groups.get(group_id)
+        if not group:
+            _LOGGER.debug("Group: %s:0x%04x could not be found", group.name, group_id)
+            return
         if group and group.members:
             tasks = []
             for member in group.members:
                 tasks.append(member.async_remove_from_group(group_id))
             if tasks:
                 await asyncio.gather(*tasks)
-            else:
-                # we have members but none are tracked by ZHA for whatever reason
-                self.application_controller.groups.pop(group_id)
-        else:
-            self.application_controller.groups.pop(group_id)
+        self.application_controller.groups.pop(group_id)
 
     async def shutdown(self):
         """Stop ZHA Controller Application."""
