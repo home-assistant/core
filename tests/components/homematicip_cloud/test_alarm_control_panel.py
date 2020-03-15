@@ -31,9 +31,7 @@ async def _async_manipulate_security_zones(
     internal_zone = home.search_group_by_id(internal_zone_id)
     internal_zone.active = internal_active
 
-    home.from_json(json)
-    home._get_functionalHomes(json)
-    home._load_functionalChannels()
+    home.update_home_only(json)
     home.fire_update_event(json)
     await hass.async_block_till_done()
 
