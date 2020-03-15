@@ -1,10 +1,23 @@
 set_aircleaner_mode:
-  description: Sets the air cleaner mode. This is a system global mode.
+  description: "Sets the air cleaner mode. This is a system global mode."
   fields:
     entity_id:
       description: "(Optional) What zone's system to set. Any zone of a particular system will \
       work. Leaving it blank will cause all systems to enter this air cleaner mode."
-      example: '{"entity_id": "home", "aircleaner_mode": "quick"}'
+      example: "\"entity_id\": \"home\""
     aircleaner_mode:
-      description: The air cleaner mode to set. Options include "auto", "quick", or "allergy".
-      example: '{"aircleaner_mode": "allergy"}'
+      description: "The air cleaner mode to set. Options include \"auto\", \"quick\", or \"allergy\"."
+      example: "\"aircleaner_mode\": \"quick\""
+
+set_humidify_setpoint:
+  description: "While the climate.set_humidity service sets the dehumidification setpoint, there was
+   not a way to incorporate humidification support into the stock Home Assistant climate component.
+   This nexia.set_humidify_setpoint will allow you to set the humidification setpoint."
+  fields:
+    entity_id:
+      description: "(Optional) What zone's system to set. Any zone of a particular system will \
+      work. Leaving it blank will cause all systems to enter this air cleaner mode."
+      example: "\"entity_id\": \"home\""
+    humidity:
+      description: "The humidification setpoint as a float, range 0-100."
+      example: "\"humidity\": \"45\""
