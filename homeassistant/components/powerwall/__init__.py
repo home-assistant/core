@@ -65,7 +65,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Tesla Powerwall from a config entry."""
 
     entry_id = entry.entry_id
-    _LOGGER.debug("power_wall entry: %s", entry_id)
 
     hass.data[DOMAIN].setdefault(entry_id, {})
     power_wall = PowerWall(entry.data[CONF_IP_ADDRESS])
@@ -73,8 +72,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     def _call_site_info(power_wall):
         """Wrap site_info to be a callable."""
         return power_wall.site_info
-
-    _LOGGER.debug("power_wall: %s", power_wall)
 
     site_info = None
     try:
@@ -102,8 +99,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     }
 
     await coordinator.async_refresh()
-
-    _LOGGER.debug("DATA: %s", coordinator.data)
 
     for component in PLATFORMS:
         hass.async_create_task(
