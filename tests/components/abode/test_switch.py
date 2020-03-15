@@ -1,8 +1,6 @@
 """Tests for the Abode switch device."""
 from unittest.mock import patch
 
-import abodepy.helpers.constants as CONST
-
 from homeassistant.components.abode import (
     DOMAIN as ABODE_DOMAIN,
     SERVICE_TRIGGER_AUTOMATION,
@@ -17,8 +15,6 @@ from homeassistant.const import (
 )
 
 from .common import setup_platform
-
-from tests.common import load_fixture
 
 AUTOMATION_ID = "switch.test_automation"
 AUTOMATION_UID = "47fae27488f74f55b964a81a066c3a01"
@@ -55,6 +51,7 @@ async def test_switch_on(hass):
             SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
         )
         await hass.async_block_till_done()
+
         mock_switch_on.assert_called_once()
 
 
@@ -67,6 +64,7 @@ async def test_switch_off(hass):
             SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: DEVICE_ID}, blocking=True
         )
         await hass.async_block_till_done()
+
         mock_switch_off.assert_called_once()
 
 
@@ -79,38 +77,36 @@ async def test_automation_attributes(hass):
     assert state.state == STATE_ON
 
 
-async def test_turn_automation_off(hass, requests_mock):
+async def test_turn_automation_off(hass):
     """Test the automation can be turned off."""
-    await setup_platform(hass, SWITCH_DOMAIN)
-    requests_mock.patch(
-        str.replace(CONST.AUTOMATION_ID_URL, "$AUTOMATIONID$", AUTOMATION_UID),
-        text=load_fixture("abode_automation_changed.json"),
-    )
+    with patch("abodepy.AbodeAutomation.enable") as mock_trigger:
+        await setup_platform(hass, SWITCH_DOMAIN)
 
-    await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: AUTOMATION_ID}, blocking=True
-    )
-    await hass.async_block_till_done()
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: AUTOMATION_ID},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
-    state = hass.states.get(AUTOMATION_ID)
-    assert state.state == STATE_OFF
+        mock_trigger.assert_called_once()
 
 
-async def test_turn_automation_on(hass, requests_mock):
+async def test_turn_automation_on(hass):
     """Test the automation can be turned on."""
-    await setup_platform(hass, SWITCH_DOMAIN)
-    requests_mock.patch(
-        str.replace(CONST.AUTOMATION_ID_URL, "$AUTOMATIONID$", AUTOMATION_UID),
-        text=load_fixture("abode_automation.json"),
-    )
+    with patch("abodepy.AbodeAutomation.enable") as mock_trigger:
+        await setup_platform(hass, SWITCH_DOMAIN)
 
-    await hass.services.async_call(
-        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: AUTOMATION_ID}, blocking=True
-    )
-    await hass.async_block_till_done()
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: AUTOMATION_ID},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
-    state = hass.states.get(AUTOMATION_ID)
-    assert state.state == STATE_ON
+        mock_trigger.assert_called_once()
 
 
 async def test_trigger_automation(hass, requests_mock):
@@ -125,4 +121,5 @@ async def test_trigger_automation(hass, requests_mock):
             blocking=True,
         )
         await hass.async_block_till_done()
+
         mock.assert_called_once()
