@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.helpers.dispatcher import dispatcher_connect
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
     SIGNAL_RACHIO_CONTROLLER_UPDATE,
@@ -14,7 +14,7 @@ from . import (
     SUBTYPE_ZONE_COMPLETED,
     SUBTYPE_ZONE_STARTED,
     SUBTYPE_ZONE_STOPPED,
-    RachioDeviceMixIn,
+    RachioDeviceInfoProvider,
 )
 from .const import (
     CONF_MANUAL_RUN_MINS,
@@ -52,23 +52,22 @@ def _create_entities(hass, config_entry):
     # Fetch the schedule once at startup
     # in order to avoid every zone doing it
     for controller in person.controllers:
-        entities.append(RachioStandbySwitch(hass, controller))
+        entities.append(RachioStandbySwitch(controller))
         zones = controller.list_zones()
         current_schedule = controller.current_schedule
         _LOGGER.debug("Rachio setting up zones: %s", zones)
         for zone in zones:
             _LOGGER.debug("Rachio setting up zone: %s", zone)
-            entities.append(
-                RachioZone(hass, person, controller, zone, current_schedule)
-            )
+            entities.append(RachioZone(person, controller, zone, current_schedule))
     return entities
 
 
-class RachioSwitch(RachioDeviceMixIn, SwitchDevice):
+class RachioSwitch(RachioDeviceInfoProvider, SwitchDevice):
     """Represent a Rachio state that can be toggled."""
 
     def __init__(self, controller, poll=True):
         """Initialize a new Rachio switch."""
+        super().__init__(controller)
         self._controller = controller
 
         if poll:
@@ -114,11 +113,8 @@ class RachioSwitch(RachioDeviceMixIn, SwitchDevice):
 class RachioStandbySwitch(RachioSwitch):
     """Representation of a standby status/button."""
 
-    def __init__(self, hass, controller):
+    def __init__(self, controller):
         """Instantiate a new Rachio standby mode switch."""
-        dispatcher_connect(
-            hass, SIGNAL_RACHIO_CONTROLLER_UPDATE, self._handle_any_update
-        )
         super().__init__(controller, poll=True)
         self._poll_update(controller.init_data)
 
@@ -161,11 +157,17 @@ class RachioStandbySwitch(RachioSwitch):
         """Resume controller functionality."""
         self._controller.rachio.device.on(self._controller.controller_id)
 
+    async def async_added_to_hass(self):
+        """Subscribe to updates."""
+        async_dispatcher_connect(
+            self.hass, SIGNAL_RACHIO_CONTROLLER_UPDATE, self._handle_any_update
+        )
+
 
 class RachioZone(RachioSwitch):
     """Representation of one zone of sprinklers connected to the Rachio Iro."""
 
-    def __init__(self, hass, person, controller, data, current_schedule):
+    def __init__(self, person, controller, data, current_schedule):
         """Initialize a new Rachio Zone."""
         self._id = data[KEY_ID]
         self._zone_name = data[KEY_NAME]
@@ -177,9 +179,6 @@ class RachioZone(RachioSwitch):
         self._current_schedule = current_schedule
         super().__init__(controller, poll=False)
         self._state = self.zone_id == self._current_schedule.get(KEY_ZONE_ID)
-
-        # Listen for all zone updates
-        dispatcher_connect(hass, SIGNAL_RACHIO_ZONE_UPDATE, self._handle_update)
 
     def __str__(self):
         """Display the zone as a string."""
@@ -261,3 +260,9 @@ class RachioZone(RachioSwitch):
             self._state = False
 
         self.schedule_update_ha_state()
+
+    async def async_added_to_hass(self):
+        """Subscribe to updates."""
+        async_dispatcher_connect(
+            self.hass, SIGNAL_RACHIO_ZONE_UPDATE, self._handle_update
+        )

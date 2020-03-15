@@ -348,8 +348,13 @@ class RachioIro:
         _LOGGER.info("Stopped watering of all zones on %s", str(self))
 
 
-class RachioDeviceMixIn(Entity):
+class RachioDeviceInfoProvider(Entity):
     """Mixin to provide device_info."""
+
+    def __init__(self, controller):
+        """Initialize a Rachio device."""
+        super().__init__()
+        self._controller = controller
 
     @property
     def device_info(self):
