@@ -91,7 +91,7 @@ class LogEntry:
 
     def __init__(self, record, stack, source):
         """Initialize a log entry."""
-        self.first_occured = self.timestamp = record.created
+        self.first_occurred = self.timestamp = record.created
         self.name = record.name
         self.level = record.levelname
         self.message = deque([record.getMessage()], maxlen=5)
@@ -117,7 +117,7 @@ class LogEntry:
             "timestamp": self.timestamp,
             "exception": self.exception,
             "count": self.count,
-            "first_occured": self.first_occured,
+            "first_occurred": self.first_occurred,
         }
 
 
