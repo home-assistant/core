@@ -90,7 +90,7 @@ async def test_turn_automation_off(hass):
         )
         await hass.async_block_till_done()
 
-        mock_trigger.assert_called_once()
+        mock_trigger.assert_called_once_with(False)
 
 
 async def test_turn_automation_on(hass):
@@ -106,7 +106,7 @@ async def test_turn_automation_on(hass):
         )
         await hass.async_block_till_done()
 
-        mock_trigger.assert_called_once()
+        mock_trigger.assert_called_once_with(True)
 
 
 async def test_trigger_automation(hass, requests_mock):
