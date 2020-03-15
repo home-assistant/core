@@ -154,14 +154,14 @@ class AEHThread(threading.Thread):
                     try:
                         if age < QUEUE_BACKLOG_SECONDS:
                             event_data = self.event_to_filtered_event_data(event)
-                            event_data and event_data_batch.add(event_data)
+                            if event_data: event_data_batch.add(event_data)
                         else:
                             dropped += 1
                     except ValueError:
                         can_add = False  # EventDataBatch object reaches max_size.
         except queue.Empty:
             pass
-        dropped and _LOGGER.warning("Catching up, dropped %d old events.", dropped)
+        if dropped: _LOGGER.warning("Catching up, dropped %d old events.", dropped)
         return event_data_batch, dequeue_count
 
     def send(self):
