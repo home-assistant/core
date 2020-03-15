@@ -387,7 +387,7 @@ homeassistant/components/unifiled/* @florisvdk
 homeassistant/components/upc_connect/* @pvizeli
 homeassistant/components/upcloud/* @scop
 homeassistant/components/updater/* @home-assistant/core
-homeassistant/components/upnp/* @robbiet480
+homeassistant/components/upnp/* @StevenLooman
 homeassistant/components/uptimerobot/* @ludeeus
 homeassistant/components/usgs_earthquakes_feed/* @exxamalte
 homeassistant/components/utility_meter/* @dgomes
