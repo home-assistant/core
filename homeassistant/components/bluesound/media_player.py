@@ -56,6 +56,8 @@ from .const import (
     SERVICE_JOIN,
     SERVICE_SET_TIMER,
     SERVICE_UNJOIN,
+    SERVICE_NEXT_INPUT,
+    SERVICE_PREVIOUS_INPUT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -100,6 +102,8 @@ SERVICE_TO_METHOD = {
     SERVICE_UNJOIN: {"method": "async_unjoin", "schema": BS_SCHEMA},
     SERVICE_SET_TIMER: {"method": "async_increase_timer", "schema": BS_SCHEMA},
     SERVICE_CLEAR_TIMER: {"method": "async_clear_timer", "schema": BS_SCHEMA},
+    SERVICE_NEXT_INPUT: {"method": "async_next_input", "schema": BS_SCHEMA},
+    SERVICE_PREVIOUS_INPUT: {"method": "async_previous_input", "schema": BS_SCHEMA},
 }
 
 
@@ -917,7 +921,15 @@ class BluesoundPlayer(MediaPlayerDevice):
         """Enable or disable shuffle mode."""
         value = "1" if shuffle else "0"
         return await self.send_bluesound_command(f"/Shuffle?state={value}")
-
+    
+    async def async_next_input(self):
+        """Switch to next available input."""
+        return await self.send_bluesound_command("/ExternalSource?id=%2B&schemaVersion=26")
+    
+    async def async_previous_input(self):
+        """Switch to previous input."""
+        return await self.send_bluesound_command("/ExternalSource?id=-&schemaVersion=26")
+    
     async def async_select_source(self, source):
         """Select input source."""
         if self.is_grouped and not self.is_master:
