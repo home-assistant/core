@@ -1,4 +1,4 @@
-"""Define a config flow manager for Flu Near You."""
+"""Define a config flow manager for flunearyou."""
 from pyflunearyou import Client
 from pyflunearyou.errors import FluNearYouError
 import voluptuous as vol
