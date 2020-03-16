@@ -23,7 +23,6 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     power_wall = PowerWall(data[CONF_IP_ADDRESS])
 
-    site_info = None
     try:
         site_info = await hass.async_add_executor_job(_call_site_info, power_wall)
     except (PowerWallUnreachableError, ApiError, ConnectionError):
