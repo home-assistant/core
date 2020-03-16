@@ -11,7 +11,6 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
-
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 
