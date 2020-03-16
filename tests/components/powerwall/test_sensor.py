@@ -110,7 +110,3 @@ async def test_sensors(hass):
     assert all(
         item in entity.attributes.items() for item in expected_attributes.items()
     )
-
-    # "binary_sensor.grid_status"
-    # "binary_sensor.powerwall_status"
-    # "binary_sensor.powerwall_connected_to_tesla"
