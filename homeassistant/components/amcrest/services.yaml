@@ -81,7 +81,7 @@ ptz_control:
       description: "Name of the camera, or 'all' for all cameras."
       example: 'camera.house_front'
     movement:
-      description: "up, down, right, left, right_up, right_down, left_up, left_down, zoom_in, zoom_out"
+      description: "up, down, right, left, top_right, bottom_right, top_left, bottom_left, zoom_in, zoom_out"
       example: 'right'
     travel_time:
       description: "(optional) Incremental travel time in fractional seconds: from 0 to 1.  Default:  .2"
