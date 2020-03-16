@@ -273,4 +273,11 @@ class NWSWeather(WeatherEntity):
     @property
     def available(self):
         """Return if state is available."""
-        return self.nws.update_observation_success
+        if self.mode == "daynight":
+            return (
+                self.nws.update_observation_success and self.nws.update_forecast_success
+            )
+        return (
+            self.nws.update_observation_success
+            and self.nws.update_forecast_hourly_success
+        )
