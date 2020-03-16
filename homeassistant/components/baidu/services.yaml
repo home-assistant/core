@@ -1,0 +1,12 @@
+tts.baidu_say:
+  description: 
+  fields:
+    entity_id:
+      description: The entity id of the player used to play the message.
+      example: 'media_player.mpd'
+    message:
+      description: 
+      example: 'This is a voice message.'
+    cache:
+      description: Whether to keep temporary files. After the service is called, the .mp3 file is generated in the tts folder.
+      example: 'false'
