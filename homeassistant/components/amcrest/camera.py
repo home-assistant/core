@@ -4,7 +4,6 @@ from datetime import timedelta
 from functools import partial
 import logging
 import time
-import homeassistant.helpers.config_validation as cv
 
 from amcrest import AmcrestError
 from haffmpeg.camera import CameraMjpeg
@@ -23,6 +22,7 @@ from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_web,
     async_get_clientsession,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
@@ -591,21 +591,15 @@ class AmcrestCam(Camera):
         """Move or zoom camera in specified direction."""
         code = _ACTION[_MOV.index(movement)]
         try:
-            if code in _ZOOM_ACTIONS:
-                arg1 = arg2 = 0
-            elif code in _MOVE_1_ACTIONS:
-                arg1 = 0
-                arg2 = 1
-            else:
-                arg1 = arg2 = 1
+            kwargs = {"code": code, "arg1": 0, "arg2": 0, "arg3": 0}
+            if code in _MOVE_1_ACTIONS:
+                kwargs["arg2"] = 1
+            elif code in _MOVE_2_ACTIONS:
+                kwargs["arg1"] = kwargs["arg2"] = 1
 
-            self._api.ptz_control_command(
-                action="start", code=code, arg1=arg1, arg2=arg2, arg3=0
-            )
+            self._api.ptz_control_command(action="start", **kwargs)
             time.sleep(travel_time)
-            self._api.ptz_control_command(
-                action="stop", code=code, arg1=arg1, arg2=arg2, arg3=0
-            )
+            self._api.ptz_control_command(action="stop", **kwargs)
 
         except AmcrestError as error:
             log_update_error(
