@@ -124,7 +124,7 @@ class PowerWallEnergySensor(PowerWallSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "kWh"
+        return ENERGY_KILO_WATT_HOUR
 
     @property
     def name(self):
