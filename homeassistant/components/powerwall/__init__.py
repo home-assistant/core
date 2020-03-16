@@ -73,7 +73,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         """Wrap site_info to be a callable."""
         return power_wall.site_info
 
-    site_info = None
     try:
         site_info = await hass.async_add_executor_job(_call_site_info, power_wall)
     except (PowerWallUnreachableError, ApiError, ConnectionError):
