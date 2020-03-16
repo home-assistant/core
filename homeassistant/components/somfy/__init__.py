@@ -1,9 +1,4 @@
-"""
-Support for Somfy hubs.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/integrations/somfy/
-"""
+"""Support for Somfy hubs."""
 import asyncio
 from datetime import timedelta
 import logging
@@ -32,6 +27,7 @@ DOMAIN = "somfy"
 
 CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
+CONF_OPTIMISTIC = "optimisitic"
 
 SOMFY_AUTH_CALLBACK_PATH = "/auth/somfy/callback"
 SOMFY_AUTH_START = "/auth/somfy"
@@ -42,6 +38,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_CLIENT_ID): cv.string,
                 vol.Required(CONF_CLIENT_SECRET): cv.string,
+                vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
             }
         )
     },
@@ -57,6 +54,8 @@ async def async_setup(hass, config):
 
     if DOMAIN not in config:
         return True
+
+    hass.data[DOMAIN][CONF_OPTIMISTIC] = config[DOMAIN][CONF_OPTIMISTIC]
 
     config_flow.SomfyFlowHandler.async_register_implementation(
         hass,

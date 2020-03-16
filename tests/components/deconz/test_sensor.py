@@ -218,6 +218,40 @@ async def test_allow_clip_sensors(hass):
     clip_light_level_sensor = hass.states.get("sensor.clip_light_level_sensor")
     assert clip_light_level_sensor.state == "999.8"
 
+    hass.config_entries.async_update_entry(
+        gateway.config_entry, options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: False}
+    )
+    await hass.async_block_till_done()
+
+    assert "sensor.light_level_sensor" in gateway.deconz_ids
+    assert "sensor.presence_sensor" not in gateway.deconz_ids
+    assert "sensor.switch_1" not in gateway.deconz_ids
+    assert "sensor.switch_1_battery_level" not in gateway.deconz_ids
+    assert "sensor.switch_2" not in gateway.deconz_ids
+    assert "sensor.switch_2_battery_level" in gateway.deconz_ids
+    assert "sensor.daylight_sensor" not in gateway.deconz_ids
+    assert "sensor.power_sensor" in gateway.deconz_ids
+    assert "sensor.consumption_sensor" in gateway.deconz_ids
+    assert "sensor.clip_light_level_sensor" not in gateway.deconz_ids
+    assert len(hass.states.async_all()) == 5
+
+    hass.config_entries.async_update_entry(
+        gateway.config_entry, options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: True}
+    )
+    await hass.async_block_till_done()
+
+    assert "sensor.light_level_sensor" in gateway.deconz_ids
+    assert "sensor.presence_sensor" not in gateway.deconz_ids
+    assert "sensor.switch_1" not in gateway.deconz_ids
+    assert "sensor.switch_1_battery_level" not in gateway.deconz_ids
+    assert "sensor.switch_2" not in gateway.deconz_ids
+    assert "sensor.switch_2_battery_level" in gateway.deconz_ids
+    assert "sensor.daylight_sensor" not in gateway.deconz_ids
+    assert "sensor.power_sensor" in gateway.deconz_ids
+    assert "sensor.consumption_sensor" in gateway.deconz_ids
+    assert "sensor.clip_light_level_sensor" in gateway.deconz_ids
+    assert len(hass.states.async_all()) == 6
+
 
 async def test_add_new_sensor(hass):
     """Test that adding a new sensor works."""

@@ -10,9 +10,9 @@ from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 
 from .common import (
     async_enable_traffic,
+    async_test_rejoin,
     find_entity_id,
-    make_attribute,
-    make_zcl_header,
+    send_attributes_report,
 )
 
 from tests.common import mock_coro
@@ -34,7 +34,7 @@ def zigpy_device(zigpy_device_mock):
     return zigpy_device_mock(endpoints)
 
 
-async def test_switch(hass, zha_gateway, zha_device_joined_restored, zigpy_device):
+async def test_switch(hass, zha_device_joined_restored, zigpy_device):
     """Test zha switch platform."""
 
     zha_device = await zha_device_joined_restored(zigpy_device)
@@ -46,22 +46,17 @@ async def test_switch(hass, zha_gateway, zha_device_joined_restored, zigpy_devic
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # allow traffic to flow through the gateway and device
-    await async_enable_traffic(hass, zha_gateway, [zha_device])
+    await async_enable_traffic(hass, [zha_device])
 
     # test that the state has changed from unavailable to off
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # turn on at switch
-    attr = make_attribute(0, 1)
-    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
-    cluster.handle_message(hdr, [[attr]])
-    await hass.async_block_till_done()
+    await send_attributes_report(hass, cluster, {1: 0, 0: 1, 2: 2})
     assert hass.states.get(entity_id).state == STATE_ON
 
     # turn off at switch
-    attr.value.value = 0
-    cluster.handle_message(hdr, [[attr]])
-    await hass.async_block_till_done()
+    await send_attributes_report(hass, cluster, {1: 1, 0: 0, 2: 2})
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # turn on from HA
@@ -75,7 +70,7 @@ async def test_switch(hass, zha_gateway, zha_device_joined_restored, zigpy_devic
         )
         assert len(cluster.request.mock_calls) == 1
         assert cluster.request.call_args == call(
-            False, ON, (), expect_reply=True, manufacturer=None
+            False, ON, (), expect_reply=True, manufacturer=None, tsn=None
         )
 
     # turn off from HA
@@ -89,15 +84,8 @@ async def test_switch(hass, zha_gateway, zha_device_joined_restored, zigpy_devic
         )
         assert len(cluster.request.mock_calls) == 1
         assert cluster.request.call_args == call(
-            False, OFF, (), expect_reply=True, manufacturer=None
+            False, OFF, (), expect_reply=True, manufacturer=None, tsn=None
         )
 
     # test joining a new switch to the network and HA
-    cluster.bind.reset_mock()
-    cluster.configure_reporting.reset_mock()
-    await zha_gateway.async_device_initialized(zigpy_device)
-    await hass.async_block_till_done()
-    assert cluster.bind.call_count == 1
-    assert cluster.bind.await_count == 1
-    assert cluster.configure_reporting.call_count == 1
-    assert cluster.configure_reporting.await_count == 1
+    await async_test_rejoin(hass, zigpy_device, [cluster], (1,))

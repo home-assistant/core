@@ -38,7 +38,7 @@ class EmulatedRokuFlowHandler(config_entries.ConfigFlow):
         servers_num = len(configured_servers(self.hass))
 
         if servers_num:
-            default_name = "{} {}".format(DEFAULT_NAME, servers_num + 1)
+            default_name = f"{DEFAULT_NAME} {servers_num + 1}"
             default_port = DEFAULT_PORT + servers_num
         else:
             default_name = DEFAULT_NAME

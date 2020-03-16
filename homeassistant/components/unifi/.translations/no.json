@@ -28,21 +28,20 @@
             "device_tracker": {
                 "data": {
                     "detection_time": "Tid i sekunder fra sist sett til den ble ansett borte",
+                    "ssid_filter": "Velg SSID-er for \u00e5 spore tr\u00e5dl\u00f8se klienter p\u00e5",
                     "track_clients": "Spor nettverksklienter",
                     "track_devices": "Spore nettverksenheter (Ubiquiti-enheter)",
                     "track_wired_clients": "Inkluder kablede nettverksklienter"
-                }
-            },
-            "init": {
-                "data": {
-                    "one": "en",
-                    "other": "andre"
-                }
+                },
+                "description": "Konfigurere enhetssporing",
+                "title": "UniFi-alternativer"
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "Opprett b\u00e5ndbreddesensorer for nettverksklienter"
-                }
+                    "allow_bandwidth_sensors": "B\u00e5ndbreddebrukssensorer for nettverksklienter"
+                },
+                "description": "Konfigurer statistikk sensorer",
+                "title": "UniFi-alternativer"
             }
         }
     }

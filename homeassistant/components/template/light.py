@@ -131,12 +131,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             )
         )
 
-    if not lights:
-        _LOGGER.error("No lights added")
-        return False
-
     async_add_entities(lights)
-    return True
 
 
 class LightTemplate(Light):

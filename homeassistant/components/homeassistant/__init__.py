@@ -55,6 +55,15 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
         tasks = []
 
         for domain, ent_ids in by_domain:
+            # This leads to endless loop.
+            if domain == DOMAIN:
+                _LOGGER.warning(
+                    "Called service homeassistant.%s with invalid entity IDs %s",
+                    service.service,
+                    ", ".join(ent_ids),
+                )
+                continue
+
             # We want to block for all calls and only return when all calls
             # have been processed. If a service does not exist it causes a 10
             # second delay while we're blocking waiting for a response.
@@ -73,7 +82,8 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
                 hass.services.async_call(domain, service.service, data, blocking)
             )
 
-        await asyncio.wait(tasks)
+        if tasks:
+            await asyncio.gather(*tasks)
 
     service_schema = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids}, extra=vol.ALLOW_EXTRA)
 

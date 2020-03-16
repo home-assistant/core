@@ -72,6 +72,9 @@ def test_get_or_create_updates_data(registry):
         supported_features=5,
         device_class="mock-device-class",
         disabled_by=entity_registry.DISABLED_HASS,
+        unit_of_measurement="initial-unit_of_measurement",
+        original_name="initial-original_name",
+        original_icon="initial-original_icon",
     )
 
     assert orig_entry.config_entry_id == orig_config_entry.entry_id
@@ -80,6 +83,9 @@ def test_get_or_create_updates_data(registry):
     assert orig_entry.supported_features == 5
     assert orig_entry.device_class == "mock-device-class"
     assert orig_entry.disabled_by == entity_registry.DISABLED_HASS
+    assert orig_entry.unit_of_measurement == "initial-unit_of_measurement"
+    assert orig_entry.original_name == "initial-original_name"
+    assert orig_entry.original_icon == "initial-original_icon"
 
     new_config_entry = MockConfigEntry(domain="light")
 
@@ -93,6 +99,9 @@ def test_get_or_create_updates_data(registry):
         supported_features=10,
         device_class="new-mock-device-class",
         disabled_by=entity_registry.DISABLED_USER,
+        unit_of_measurement="updated-unit_of_measurement",
+        original_name="updated-original_name",
+        original_icon="updated-original_icon",
     )
 
     assert new_entry.config_entry_id == new_config_entry.entry_id
@@ -100,6 +109,9 @@ def test_get_or_create_updates_data(registry):
     assert new_entry.capabilities == {"new-max": 100}
     assert new_entry.supported_features == 10
     assert new_entry.device_class == "new-mock-device-class"
+    assert new_entry.unit_of_measurement == "updated-unit_of_measurement"
+    assert new_entry.original_name == "updated-original_name"
+    assert new_entry.original_icon == "updated-original_icon"
     # Should not be updated
     assert new_entry.disabled_by == entity_registry.DISABLED_HASS
 
@@ -147,6 +159,11 @@ async def test_loading_saving_data(hass, registry):
         supported_features=5,
         device_class="mock-device-class",
         disabled_by=entity_registry.DISABLED_HASS,
+        original_name="Original Name",
+        original_icon="hass:original-icon",
+    )
+    orig_entry2 = registry.async_update_entity(
+        orig_entry2.entity_id, name="User Name", icon="hass:user-icon"
     )
 
     assert len(registry.entities) == 2
@@ -169,6 +186,10 @@ async def test_loading_saving_data(hass, registry):
     assert new_entry2.capabilities == {"max": 100}
     assert new_entry2.supported_features == 5
     assert new_entry2.device_class == "mock-device-class"
+    assert new_entry2.name == "User Name"
+    assert new_entry2.icon == "hass:user-icon"
+    assert new_entry2.original_name == "Original Name"
+    assert new_entry2.original_icon == "hass:original-icon"
 
 
 def test_generate_entity_considers_registered_entities(registry):
@@ -434,6 +455,7 @@ async def test_update_entity(registry):
 
     for attr_name, new_value in (
         ("name", "new name"),
+        ("icon", "new icon"),
         ("disabled_by", entity_registry.DISABLED_USER),
     ):
         changes = {attr_name: new_value}
@@ -503,6 +525,8 @@ async def test_restore_states(hass):
         capabilities={"max": 100},
         supported_features=5,
         device_class="mock-device-class",
+        original_name="Mock Original Name",
+        original_icon="hass:original-icon",
     )
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
@@ -524,6 +548,8 @@ async def test_restore_states(hass):
         "supported_features": 5,
         "device_class": "mock-device-class",
         "restored": True,
+        "friendly_name": "Mock Original Name",
+        "icon": "hass:original-icon",
     }
 
     registry.async_remove("light.disabled")

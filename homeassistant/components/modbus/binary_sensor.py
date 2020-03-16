@@ -2,6 +2,8 @@
 import logging
 from typing import Optional
 
+from pymodbus.exceptions import ConnectionException, ModbusException
+from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -23,8 +25,8 @@ CONF_INPUTS = "inputs"
 CONF_INPUT_TYPE = "input_type"
 CONF_ADDRESS = "address"
 
-INPUT_TYPE_COIL = "coil"
-INPUT_TYPE_DISCRETE = "discrete_input"
+DEFAULT_INPUT_TYPE_COIL = "coil"
+DEFAULT_INPUT_TYPE_DISCRETE = "discrete_input"
 
 PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_DEPRECATED_COILS, CONF_INPUTS),
@@ -41,8 +43,10 @@ PLATFORM_SCHEMA = vol.All(
                             vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
                             vol.Optional(CONF_SLAVE): cv.positive_int,
                             vol.Optional(
-                                CONF_INPUT_TYPE, default=INPUT_TYPE_COIL
-                            ): vol.In([INPUT_TYPE_COIL, INPUT_TYPE_DISCRETE]),
+                                CONF_INPUT_TYPE, default=DEFAULT_INPUT_TYPE_COIL
+                            ): vol.In(
+                                [DEFAULT_INPUT_TYPE_COIL, DEFAULT_INPUT_TYPE_DISCRETE]
+                            ),
                         }
                     ),
                 )
@@ -55,16 +59,16 @@ PLATFORM_SCHEMA = vol.All(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Modbus binary sensors."""
     sensors = []
-    for entry in config.get(CONF_INPUTS):
-        hub = hass.data[MODBUS_DOMAIN][entry.get(CONF_HUB)]
+    for entry in config[CONF_INPUTS]:
+        hub = hass.data[MODBUS_DOMAIN][entry[CONF_HUB]]
         sensors.append(
             ModbusBinarySensor(
                 hub,
-                entry.get(CONF_NAME),
+                entry[CONF_NAME],
                 entry.get(CONF_SLAVE),
-                entry.get(CONF_ADDRESS),
+                entry[CONF_ADDRESS],
                 entry.get(CONF_DEVICE_CLASS),
-                entry.get(CONF_INPUT_TYPE),
+                entry[CONF_INPUT_TYPE],
             )
         )
 
@@ -83,6 +87,7 @@ class ModbusBinarySensor(BinarySensorDevice):
         self._device_class = device_class
         self._input_type = input_type
         self._value = None
+        self._available = True
 
     @property
     def name(self):
@@ -99,18 +104,38 @@ class ModbusBinarySensor(BinarySensorDevice):
         """Return the device class of the sensor."""
         return self._device_class
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._available
+
     def update(self):
         """Update the state of the sensor."""
-        if self._input_type == INPUT_TYPE_COIL:
-            result = self._hub.read_coils(self._slave, self._address, 1)
-        else:
-            result = self._hub.read_discrete_inputs(self._slave, self._address, 1)
         try:
-            self._value = result.bits[0]
-        except AttributeError:
-            _LOGGER.error(
-                "No response from hub %s, slave %s, address %s",
-                self._hub.name,
-                self._slave,
-                self._address,
-            )
+            if self._input_type == DEFAULT_INPUT_TYPE_COIL:
+                result = self._hub.read_coils(self._slave, self._address, 1)
+            else:
+                result = self._hub.read_discrete_inputs(self._slave, self._address, 1)
+        except ConnectionException:
+            self._set_unavailable()
+            return
+
+        if isinstance(result, (ModbusException, ExceptionResponse)):
+            self._set_unavailable()
+            return
+
+        self._value = result.bits[0]
+        self._available = True
+
+    def _set_unavailable(self):
+        """Set unavailable state and log it as an error."""
+        if not self._available:
+            return
+
+        _LOGGER.error(
+            "No response from hub %s, slave %s, address %s",
+            self._hub.name,
+            self._slave,
+            self._address,
+        )
+        self._available = False

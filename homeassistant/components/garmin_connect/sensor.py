@@ -160,21 +160,20 @@ class GarminConnectSensor(Entity):
             return
 
         await self._data.async_update()
-        if not self._data.data:
+        data = self._data.data
+        if not data:
             _LOGGER.error("Didn't receive data from Garmin Connect")
             return
-
-        data = self._data.data
-        try:
-            if "Duration" in self._type and data[self._type]:
-                self._state = data[self._type] // 60
-            elif "Seconds" in self._type and data[self._type]:
-                self._state = data[self._type] // 60
-            else:
-                self._state = data[self._type]
-        except KeyError:
-            _LOGGER.debug("Entity type %s not found in fetched data", self._type)
+        if data.get(self._type) is None:
+            _LOGGER.debug("Entity type %s not set in fetched data", self._type)
+            self._available = False
             return
+        self._available = True
+
+        if "Duration" in self._type or "Seconds" in self._type:
+            self._state = data[self._type] // 60
+        else:
+            self._state = data[self._type]
 
         _LOGGER.debug(
             "Entity %s set to state %s %s", self._type, self._state, self._unit

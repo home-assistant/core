@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Airly integracija za te koordinate je \u017ee nastavljen."
+        },
         "error": {
             "auth": "Klju\u010d API ni pravilen.",
             "name_exists": "Ime \u017ee obstaja",

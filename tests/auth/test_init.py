@@ -31,7 +31,7 @@ async def test_auth_manager_from_config_validates_config(mock_hass):
             [
                 {"name": "Test Name", "type": "insecure_example", "users": []},
                 {
-                    "name": "Invalid config because no users",
+                    "name": "Invalid configuration because no users",
                     "type": "insecure_example",
                     "id": "invalid_config",
                 },
@@ -81,7 +81,7 @@ async def test_auth_manager_from_config_auth_modules(mock_hass):
             [
                 {"name": "Module 1", "type": "insecure_example", "data": []},
                 {
-                    "name": "Invalid config because no data",
+                    "name": "Invalid configuration because no data",
                     "type": "insecure_example",
                     "id": "another",
                 },

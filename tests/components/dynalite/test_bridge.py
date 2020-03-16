@@ -1,136 +1,85 @@
 """Test Dynalite bridge."""
-from unittest.mock import Mock, call, patch
 
-from dynalite_lib import CONF_ALL
-import pytest
+from asynctest import CoroutineMock, Mock, patch
+from dynalite_devices_lib.const import CONF_ALL
 
-from homeassistant.components.dynalite import DATA_CONFIGS, DOMAIN
-from homeassistant.components.dynalite.bridge import BridgeError, DynaliteBridge
+from homeassistant.components import dynalite
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from tests.common import mock_coro
+from tests.common import MockConfigEntry
 
 
-async def test_bridge_setup():
-    """Test a successful setup."""
-    hass = Mock()
-    entry = Mock()
+async def test_update_device(hass):
+    """Test that update works."""
     host = "1.2.3.4"
-    entry.data = {"host": host}
-    hass.data = {DOMAIN: {DATA_CONFIGS: {host: {}}}}
-    dyn_bridge = DynaliteBridge(hass, entry)
-
-    with patch.object(
-        dyn_bridge.dynalite_devices, "async_setup", return_value=mock_coro(True)
-    ):
-        assert await dyn_bridge.async_setup() is True
-
-    forward_entries = set(
-        c[1][1] for c in hass.config_entries.async_forward_entry_setup.mock_calls
+    entry = MockConfigEntry(domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host})
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.dynalite.bridge.DynaliteDevices"
+    ) as mock_dyn_dev:
+        mock_dyn_dev().async_setup = CoroutineMock(return_value=True)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        # Not waiting so it add the devices before registration
+        update_device_func = mock_dyn_dev.mock_calls[1][2]["update_device_func"]
+    device = Mock()
+    device.unique_id = "abcdef"
+    wide_func = Mock()
+    async_dispatcher_connect(hass, f"dynalite-update-{host}", wide_func)
+    specific_func = Mock()
+    async_dispatcher_connect(
+        hass, f"dynalite-update-{host}-{device.unique_id}", specific_func
     )
-    hass.config_entries.async_forward_entry_setup.assert_called_once()
-    assert forward_entries == set(["light"])
+    update_device_func(CONF_ALL)
+    await hass.async_block_till_done()
+    wide_func.assert_called_once()
+    specific_func.assert_not_called()
+    update_device_func(device)
+    await hass.async_block_till_done()
+    wide_func.assert_called_once()
+    specific_func.assert_called_once()
 
 
-async def test_invalid_host():
-    """Test without host in hass.data."""
-    hass = Mock()
-    entry = Mock()
-    host = "1.2.3.4"
-    entry.data = {"host": host}
-    hass.data = {DOMAIN: {DATA_CONFIGS: {}}}
-
-    dyn_bridge = None
-    with pytest.raises(BridgeError):
-        dyn_bridge = DynaliteBridge(hass, entry)
-    assert dyn_bridge is None
-
-
-async def test_add_devices_then_register():
+async def test_add_devices_then_register(hass):
     """Test that add_devices work."""
-    hass = Mock()
-    entry = Mock()
     host = "1.2.3.4"
-    entry.data = {"host": host}
-    hass.data = {DOMAIN: {DATA_CONFIGS: {host: {}}}}
-    dyn_bridge = DynaliteBridge(hass, entry)
-
+    entry = MockConfigEntry(domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host})
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.dynalite.bridge.DynaliteDevices"
+    ) as mock_dyn_dev:
+        mock_dyn_dev().async_setup = CoroutineMock(return_value=True)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        # Not waiting so it add the devices before registration
+        new_device_func = mock_dyn_dev.mock_calls[1][2]["new_device_func"]
+    # Now with devices
     device1 = Mock()
     device1.category = "light"
+    device1.name = "NAME"
     device2 = Mock()
     device2.category = "switch"
-    dyn_bridge.add_devices([device1, device2])
-    reg_func = Mock()
-    dyn_bridge.register_add_entities(reg_func)
-    reg_func.assert_called_once()
-    assert reg_func.mock_calls[0][1][0][0].device is device1
+    new_device_func([device1, device2])
+    await hass.async_block_till_done()
+    assert hass.states.get("light.name")
 
 
-async def test_register_then_add_devices():
+async def test_register_then_add_devices(hass):
     """Test that add_devices work after register_add_entities."""
-    hass = Mock()
-    entry = Mock()
     host = "1.2.3.4"
-    entry.data = {"host": host}
-    hass.data = {DOMAIN: {DATA_CONFIGS: {host: {}}}}
-    dyn_bridge = DynaliteBridge(hass, entry)
-
+    entry = MockConfigEntry(domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host})
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.dynalite.bridge.DynaliteDevices"
+    ) as mock_dyn_dev:
+        mock_dyn_dev().async_setup = CoroutineMock(return_value=True)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        new_device_func = mock_dyn_dev.mock_calls[1][2]["new_device_func"]
+    # Now with devices
     device1 = Mock()
     device1.category = "light"
+    device1.name = "NAME"
     device2 = Mock()
     device2.category = "switch"
-    reg_func = Mock()
-    dyn_bridge.register_add_entities(reg_func)
-    dyn_bridge.add_devices([device1, device2])
-    reg_func.assert_called_once()
-    assert reg_func.mock_calls[0][1][0][0].device is device1
-
-
-async def test_update_device():
-    """Test the update_device callback."""
-    hass = Mock()
-    entry = Mock()
-    host = "1.2.3.4"
-    entry.data = {"host": host}
-    hass.data = {DOMAIN: {DATA_CONFIGS: {host: {}}}}
-    dyn_bridge = DynaliteBridge(hass, entry)
-    with patch.object(dyn_bridge, "dynalite_devices") as devices_mock:
-        # Single device update
-        device1 = Mock()
-        device1.unique_id = "testing1"
-        device2 = Mock()
-        device2.unique_id = "testing2"
-        dyn_bridge.all_entities = {
-            device1.unique_id: device1,
-            device2.unique_id: device2,
-        }
-        dyn_bridge.update_device(device1)
-        device1.try_schedule_ha.assert_called_once()
-        device2.try_schedule_ha.assert_not_called()
-        # connected to network - all devices update
-        devices_mock.available = True
-        dyn_bridge.update_device(CONF_ALL)
-        assert device1.try_schedule_ha.call_count == 2
-        device2.try_schedule_ha.assert_called_once()
-        # disconnected from network - all devices update
-        devices_mock.available = False
-        dyn_bridge.update_device(CONF_ALL)
-        assert device1.try_schedule_ha.call_count == 3
-        assert device2.try_schedule_ha.call_count == 2
-
-
-async def test_async_reset():
-    """Test async_reset."""
-    hass = Mock()
-    hass.config_entries.async_forward_entry_unload = Mock(
-        return_value=mock_coro(Mock())
-    )
-    entry = Mock()
-    host = "1.2.3.4"
-    entry.data = {"host": host}
-    hass.data = {DOMAIN: {DATA_CONFIGS: {host: {}}}}
-    dyn_bridge = DynaliteBridge(hass, entry)
-    await dyn_bridge.async_reset()
-    hass.config_entries.async_forward_entry_unload.assert_called_once()
-    assert hass.config_entries.async_forward_entry_unload.mock_calls[0] == call(
-        entry, "light"
-    )
+    new_device_func([device1, device2])
+    await hass.async_block_till_done()
+    assert hass.states.get("light.name")

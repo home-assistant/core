@@ -1,9 +1,8 @@
 """Test zha fan."""
-from unittest.mock import call, patch
+from unittest.mock import call
 
 import pytest
 import zigpy.zcl.clusters.hvac as hvac
-import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components import fan
 from homeassistant.components.fan import ATTR_SPEED, DOMAIN, SERVICE_SET_SPEED
@@ -18,12 +17,10 @@ from homeassistant.const import (
 
 from .common import (
     async_enable_traffic,
+    async_test_rejoin,
     find_entity_id,
-    make_attribute,
-    make_zcl_header,
+    send_attributes_report,
 )
-
-from tests.common import mock_coro
 
 
 @pytest.fixture
@@ -35,7 +32,7 @@ def zigpy_device(zigpy_device_mock):
     return zigpy_device_mock(endpoints)
 
 
-async def test_fan(hass, zha_gateway, zha_device_joined_restored, zigpy_device):
+async def test_fan(hass, zha_device_joined_restored, zigpy_device):
     """Test zha fan platform."""
 
     zha_device = await zha_device_joined_restored(zigpy_device)
@@ -47,63 +44,39 @@ async def test_fan(hass, zha_gateway, zha_device_joined_restored, zigpy_device):
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # allow traffic to flow through the gateway and device
-    await async_enable_traffic(hass, zha_gateway, [zha_device])
+    await async_enable_traffic(hass, [zha_device])
 
     # test that the state has changed from unavailable to off
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # turn on at fan
-    attr = make_attribute(0, 1)
-    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
-    cluster.handle_message(hdr, [[attr]])
-    await hass.async_block_till_done()
+    await send_attributes_report(hass, cluster, {1: 2, 0: 1, 2: 3})
     assert hass.states.get(entity_id).state == STATE_ON
 
     # turn off at fan
-    attr.value.value = 0
-    cluster.handle_message(hdr, [[attr]])
-    await hass.async_block_till_done()
+    await send_attributes_report(hass, cluster, {1: 1, 0: 0, 2: 2})
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # turn on from HA
-    with patch(
-        "zigpy.zcl.Cluster.write_attributes",
-        return_value=mock_coro([zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS]),
-    ):
-        # turn on via UI
-        await async_turn_on(hass, entity_id)
-        assert len(cluster.write_attributes.mock_calls) == 1
-        assert cluster.write_attributes.call_args == call({"fan_mode": 2})
+    cluster.write_attributes.reset_mock()
+    await async_turn_on(hass, entity_id)
+    assert len(cluster.write_attributes.mock_calls) == 1
+    assert cluster.write_attributes.call_args == call({"fan_mode": 2})
 
     # turn off from HA
-    with patch(
-        "zigpy.zcl.Cluster.write_attributes",
-        return_value=mock_coro([zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS]),
-    ):
-        # turn off via UI
-        await async_turn_off(hass, entity_id)
-        assert len(cluster.write_attributes.mock_calls) == 1
-        assert cluster.write_attributes.call_args == call({"fan_mode": 0})
+    cluster.write_attributes.reset_mock()
+    await async_turn_off(hass, entity_id)
+    assert len(cluster.write_attributes.mock_calls) == 1
+    assert cluster.write_attributes.call_args == call({"fan_mode": 0})
 
     # change speed from HA
-    with patch(
-        "zigpy.zcl.Cluster.write_attributes",
-        return_value=mock_coro([zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS]),
-    ):
-        # turn on via UI
-        await async_set_speed(hass, entity_id, speed=fan.SPEED_HIGH)
-        assert len(cluster.write_attributes.mock_calls) == 1
-        assert cluster.write_attributes.call_args == call({"fan_mode": 3})
+    cluster.write_attributes.reset_mock()
+    await async_set_speed(hass, entity_id, speed=fan.SPEED_HIGH)
+    assert len(cluster.write_attributes.mock_calls) == 1
+    assert cluster.write_attributes.call_args == call({"fan_mode": 3})
 
     # test adding new fan to the network and HA
-    cluster.bind.reset_mock()
-    cluster.configure_reporting.reset_mock()
-    await zha_gateway.async_device_initialized(zigpy_device)
-    await hass.async_block_till_done()
-    assert cluster.bind.call_count == 1
-    assert cluster.bind.await_count == 1
-    assert cluster.configure_reporting.call_count == 1
-    assert cluster.configure_reporting.await_count == 1
+    await async_test_rejoin(hass, zigpy_device, [cluster], (1,))
 
 
 async def async_turn_on(hass, entity_id, speed=None):

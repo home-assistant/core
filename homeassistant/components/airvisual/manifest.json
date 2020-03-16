@@ -1,6 +1,7 @@
 {
   "domain": "airvisual",
   "name": "AirVisual",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airvisual",
   "requirements": ["pyairvisual==3.0.1"],
   "dependencies": [],
