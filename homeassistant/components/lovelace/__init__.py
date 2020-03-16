@@ -75,23 +75,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     frontend.async_register_built_in_panel(hass, DOMAIN, config={"mode": mode})
 
-    async def create_yaml_resource_col(yaml_resources):
-        """Create yaml resources collection."""
-        if yaml_resources is None:
-            try:
-                default_config = dashboard.LovelaceYAML(hass, None, None)
-                ll_conf = await default_config.async_load(False)
-            except HomeAssistantError:
-                pass
-            else:
-                if CONF_RESOURCES in ll_conf:
-                    _LOGGER.warning(
-                        "Resources need to be specified in your configuration.yaml. Please see the docs."
-                    )
-                    yaml_resources = ll_conf[CONF_RESOURCES]
-
-        return resources.ResourceYAMLCollection(yaml_resources or [])
-
     async def reload_resources_service_handler(service_call: ServiceCallType) -> None:
         """Reload yaml resources."""
         try:
@@ -105,13 +88,13 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         config = await async_process_component_config(hass, conf, integration)
 
         resource_collection = await create_yaml_resource_col(
-            config[DOMAIN].get(CONF_RESOURCES)
+            hass, config[DOMAIN].get(CONF_RESOURCES)
         )
         hass.data[DOMAIN]["resources"] = resource_collection
 
     if mode == MODE_YAML:
         default_config = dashboard.LovelaceYAML(hass, None, None)
-        resource_collection = await create_yaml_resource_col(yaml_resources)
+        resource_collection = await create_yaml_resource_col(hass, yaml_resources)
 
         async_register_admin_service(
             hass,
@@ -229,6 +212,24 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     ).async_setup(hass, create_list=False)
 
     return True
+
+
+async def create_yaml_resource_col(hass, yaml_resources):
+    """Create yaml resources collection."""
+    if yaml_resources is None:
+        default_config = dashboard.LovelaceYAML(hass, None, None)
+        try:
+            ll_conf = await default_config.async_load(False)
+        except HomeAssistantError:
+            pass
+        else:
+            if CONF_RESOURCES in ll_conf:
+                _LOGGER.warning(
+                    "Resources need to be specified in your configuration.yaml. Please see the docs."
+                )
+                yaml_resources = ll_conf[CONF_RESOURCES]
+
+    return resources.ResourceYAMLCollection(yaml_resources or [])
 
 
 async def system_health_info(hass):
