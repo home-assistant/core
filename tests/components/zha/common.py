@@ -102,6 +102,23 @@ def make_attribute(attrid, value, status=0):
     return attr
 
 
+def send_attribute_report(hass, cluster, attrid, value):
+    """Send a single attribute report."""
+    return send_attributes_report(hass, cluster, {attrid: value})
+
+
+async def send_attributes_report(hass, cluster: int, attributes: dict):
+    """Cause the sensor to receive an attribute report from the network.
+
+    This is to simulate the normal device communication that happens when a
+    device is paired to the zigbee network.
+    """
+    attrs = [make_attribute(attrid, value) for attrid, value in attributes.items()]
+    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
+    cluster.handle_message(hdr, [attrs])
+    await hass.async_block_till_done()
+
+
 async def find_entity_id(domain, zha_device, hass):
     """Find the entity id under the testing.
 

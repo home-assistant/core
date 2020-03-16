@@ -163,7 +163,7 @@ aioftp==0.12.0
 aioharmony==0.1.13
 
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.29
+aiohomekit[IP]==0.2.29.1
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -350,7 +350,7 @@ bravia-tv==1.0.1
 broadlink==0.12.0
 
 # homeassistant.components.brother
-brother==0.1.8
+brother==0.1.9
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
@@ -469,7 +469,7 @@ dweepy==0.3.0
 dynalite_devices==0.1.32
 
 # homeassistant.components.rainforest_eagle
-eagle200_reader==0.2.1
+eagle200_reader==0.2.4
 
 # homeassistant.components.ebusd
 ebusdpy==0.0.16
@@ -696,10 +696,10 @@ hole==0.5.0
 holidays==0.10.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200312.0
+home-assistant-frontend==20200313.0
 
 # homeassistant.components.zwave
-homeassistant-pyozw==0.1.8
+homeassistant-pyozw==0.1.9
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.10.17
@@ -712,7 +712,7 @@ horimote==0.4.1
 httplib2==0.10.3
 
 # homeassistant.components.huawei_lte
-huawei-lte-api==1.4.10
+huawei-lte-api==1.4.11
 
 # homeassistant.components.hydrawise
 hydrawiser==0.1.1
@@ -747,7 +747,7 @@ incomfort-client==0.4.0
 influxdb==5.2.3
 
 # homeassistant.components.insteon
-insteonplm==0.16.7
+insteonplm==0.16.8
 
 # homeassistant.components.iperf3
 iperf3==0.1.11
@@ -1088,7 +1088,7 @@ pushover_complete==1.1.1
 pwmled==1.5.0
 
 # homeassistant.components.august
-py-august==0.24.0
+py-august==0.25.0
 
 # homeassistant.components.canary
 py-canary==0.5.0
@@ -1467,7 +1467,7 @@ pyownet==0.10.0.post1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.6.3
+pypck==0.6.4
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.0
@@ -1996,7 +1996,7 @@ temperusb==1.5.3
 # tensorflow==1.13.2
 
 # homeassistant.components.tesla
-teslajsonpy==0.4.0
+teslajsonpy==0.5.1
 
 # homeassistant.components.thermoworks_smoke
 thermoworks_smoke==0.1.8

@@ -677,7 +677,11 @@ def entity_to_json(config, entity):
         retval["type"] = "Color temperature light"
         retval["modelid"] = "HASS312"
         retval["state"].update(
-            {HUE_API_STATE_COLORMODE: "ct", HUE_API_STATE_CT: state[STATE_COLOR_TEMP]}
+            {
+                HUE_API_STATE_COLORMODE: "ct",
+                HUE_API_STATE_CT: state[STATE_COLOR_TEMP],
+                HUE_API_STATE_BRI: state[STATE_BRIGHTNESS],
+            }
         )
     elif entity_features & (
         SUPPORT_BRIGHTNESS

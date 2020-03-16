@@ -19,6 +19,7 @@ MODELS = {
     "NAModule4": "Smart Additional Indoor module",
     "NAModule3": "Smart Rain Gauge",
     "NAModule2": "Smart Anemometer",
+    "NHC": "Home Coach",
 }
 
 AUTH = "netatmo_auth"
