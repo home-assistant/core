@@ -4,6 +4,7 @@ from datetime import timedelta
 from functools import partial
 import logging
 import time
+import homeassistant.helpers.config_validation as cv
 
 from amcrest import AmcrestError
 from haffmpeg.camera import CameraMjpeg
@@ -62,31 +63,16 @@ _MOV = [
     "left",
     "up",
     "down",
-    "right_down",
-    "right_up",
-    "left_down",
-    "left_up",
     "bottom_right",
     "top_right",
     "bottom_left",
     "top_left",
 ]
-_ACTION = [
-    "ZoomTel",
-    "ZoomWide",
-    "Right",
-    "Left",
-    "Up",
-    "Down",
-    "RightDown",
-    "RightUp",
-    "LeftDown",
-    "LeftUp",
-    "RightDown",
-    "RightUp",
-    "LeftDown",
-    "LeftUp",
-]
+_ZOOM_ACTIONS = ["ZoomWide", "ZoomTele"]
+_MOVE_1_ACTIONS = ["Right", "Left", "Up", "Down"]
+_MOVE_2_ACTIONS = ["RightDown", "RightUp", "LeftDown", "LeftUp"]
+_ACTION = _ZOOM_ACTIONS + _MOVE_1_ACTIONS + _MOVE_2_ACTIONS
+
 _DEFAULT_TT = 0.2
 
 _ATTR_PRESET = "preset"
@@ -106,7 +92,7 @@ _SRV_CBW_SCHEMA = CAMERA_SERVICE_SCHEMA.extend(
 _SRV_PTZ_SCHEMA = CAMERA_SERVICE_SCHEMA.extend(
     {
         vol.Required(_ATTR_PTZ_MOV): vol.In(_MOV),
-        vol.Optional(_ATTR_PTZ_TT, default=_DEFAULT_TT): vol.Range(min=0, max=1),
+        vol.Optional(_ATTR_PTZ_TT, default=_DEFAULT_TT): cv.small_float,
     }
 )
 
@@ -455,9 +441,9 @@ class AmcrestCam(Camera):
         """Call the job and stop camera tour."""
         await self.hass.async_add_executor_job(self._start_tour, False)
 
-    async def async_ptz_control(self, movement, travl_time):
+    async def async_ptz_control(self, movement, travel_time):
         """Call the job and move/zoom PTZ camera."""
-        await self.hass.async_add_executor_job(self._ptz_control, movement, travl_time)
+        await self.hass.async_add_executor_job(self._ptz_control, movement, travel_time)
 
     # Methods to send commands to Amcrest camera and handle errors
 
@@ -601,19 +587,25 @@ class AmcrestCam(Camera):
                 _LOGGER, "start" if start else "stop", self.name, "camera tour", error
             )
 
-    def _ptz_control(self, movement, travl_time):
+    def _ptz_control(self, movement, travel_time):
         """Move or zoom camera in specified direction."""
         code = _ACTION[_MOV.index(movement)]
         try:
-            channel = 1
-            hspeed = 0
-            vspeed = "vertical_speed=1"
-            if "zoom" in movement:
-                vspeed = 0
+            if code in _ZOOM_ACTIONS:
+                arg1 = arg2 = 0
+            elif code in _MOVE_1_ACTIONS:
+                arg1 = 0
+                arg2 = 1
+            else:
+                arg1 = arg2 = 1
 
-            self._api.ptz_control_command(channel, "start", code, hspeed, vspeed)
-            time.sleep(travl_time)
-            self._api.ptz_control_command(channel, "stop", code, hspeed, vspeed)
+            self._api.ptz_control_command(
+                action="start", code=code, arg1=arg1, arg2=arg2, arg3=0
+            )
+            time.sleep(travel_time)
+            self._api.ptz_control_command(
+                action="stop", code=code, arg1=arg1, arg2=arg2, arg3=0
+            )
 
         except AmcrestError as error:
             log_update_error(
