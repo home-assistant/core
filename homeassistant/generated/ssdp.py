@@ -47,6 +47,13 @@ SSDP = {
             "manufacturer": "konnected.io"
         }
     ],
+    "roku": [
+        {
+            "deviceType": "urn:roku-com:device:player:1-0",
+            "manufacturer": "Roku",
+            "st": "roku:ecp"
+        }
+    ],
     "samsungtv": [
         {
             "st": "urn:samsung.com:device:RemoteControlReceiver:1"
