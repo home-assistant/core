@@ -67,6 +67,7 @@ class RachioSwitch(RachioDeviceInfoProvider, SwitchDevice):
 
     def __init__(self, controller, poll=True):
         """Initialize a new Rachio switch."""
+        super().__init__(controller)
         self._controller = controller
 
         if poll:
