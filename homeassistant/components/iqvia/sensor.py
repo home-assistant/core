@@ -22,6 +22,7 @@ from homeassistant.components.iqvia import (
     IQVIAEntity,
 )
 from homeassistant.const import ATTR_STATE
+from homeassistant.core import callback
 
 from .const import SENSORS
 
@@ -95,7 +96,8 @@ def calculate_trend(indices):
 class ForecastSensor(IQVIAEntity):
     """Define sensor related to forecast data."""
 
-    async def async_update(self):
+    @callback
+    def update_from_latest_data(self):
         """Update the sensor."""
         if not self._iqvia.data.get(self._type):
             return
@@ -133,7 +135,8 @@ class ForecastSensor(IQVIAEntity):
 class IndexSensor(IQVIAEntity):
     """Define sensor related to indices."""
 
-    async def async_update(self):
+    @callback
+    def update_from_latest_data(self):
         """Update the sensor."""
         if not self._iqvia.data:
             return
