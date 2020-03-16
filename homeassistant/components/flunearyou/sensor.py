@@ -125,13 +125,23 @@ class FluNearYouSensor(Entity):
         @callback
         def update():
             """Update the state."""
+            self.update_from_latest_data()
             self.async_write_ha_state()
 
         self._async_unsub_dispatcher_connect = async_dispatcher_connect(
             self.hass, TOPIC_UPDATE, update
         )
 
-    async def async_update(self):
+        update()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect dispatcher listener when removed."""
+        if self._async_unsub_dispatcher_connect:
+            self._async_unsub_dispatcher_connect()
+            self._async_unsub_dispatcher_connect = None
+
+    @callback
+    def update_from_latest_data(self):
         """Update the sensor."""
         cdc_data = self._fny.data.get(CATEGORY_CDC_REPORT)
         user_data = self._fny.data.get(CATEGORY_USER_REPORT)
@@ -182,9 +192,3 @@ class FluNearYouSensor(Entity):
                 )
             else:
                 self._state = user_data["local"][self._kind]
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect dispatcher listener when removed."""
-        if self._async_unsub_dispatcher_connect:
-            self._async_unsub_dispatcher_connect()
-            self._async_unsub_dispatcher_connect = None
