@@ -415,7 +415,7 @@ class ZHAGateway:
                         "group_id": zha_group.group_id,
                         "zha_device": self._coordinator_zha_device,
                         "unique_id": f"light_group_{zha_group.group_id}",
-                        "entity_ids": zha_group.member_entity_ids,
+                        "entity_ids": zha_group.domain_entity_ids,
                     }
                 )
         if len(light_groups) > 0:
