@@ -1,7 +1,12 @@
 """Support for August sensors."""
 import logging
 
-from homeassistant.const import DEVICE_CLASS_BATTERY, DEVICE_CLASS_POWER
+from homeassistant.const import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_POWER,
+    ENERGY_KILO_WATT_HOUR,
+    UNIT_PERCENTAGE,
+)
 
 from . import PowerWallEntity
 from .const import (
@@ -87,7 +92,7 @@ class PowerWallChargeSensor(PowerWallSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "%"  # switch to UNIT_PERCENTAGE
+        return UNIT_PERCENTAGE
 
     @property
     def name(self):
