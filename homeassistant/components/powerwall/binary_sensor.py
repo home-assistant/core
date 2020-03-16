@@ -38,9 +38,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     ip_address = powerwall_data[POWERWALL_IP_ADDRESS]
 
     entities = []
-    entities.append(PowerWallRunningSensor(coordinator, site_info, ip_address))
-    entities.append(PowerWallGridStatusSensor(coordinator, site_info, ip_address))
-    entities.append(PowerWallConnectedSensor(coordinator, site_info, ip_address))
+    for sensor_class in (
+        PowerWallRunningSensor, PowerWallGridStatusSensor, PowerWallConnectedSensor
+    ):
+        entities.append(sensor_class(coordinator, site_info, ip_address))
 
     async_add_entities(entities, True)
 
@@ -51,7 +52,6 @@ class PowerWallBinarySensor(PowerWallEntity, BinarySensorDevice):
     def __init__(self, coordinator, site_info, ip_address):
         """Initialize the sensor."""
         super().__init__(coordinator, site_info, ip_address)
-        self._coordinator = coordinator
 
     @property
     def available(self):
@@ -85,9 +85,6 @@ class PowerWallRunningSensor(PowerWallBinarySensor):
     def __init__(self, coordinator, site_info, ip_address):
         """Initialize the sensor."""
         super().__init__(coordinator, site_info, ip_address)
-        self._coordinator = coordinator
-        self._site_info = site_info
-        self._ip_address = ip_address
 
     @property
     def name(self):
