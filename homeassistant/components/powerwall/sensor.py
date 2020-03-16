@@ -51,7 +51,6 @@ class PowerWallSensor(PowerWallEntity):
     def __init__(self, coordinator, site_info, ip_address):
         """Initialize the sensor."""
         super().__init__(coordinator, site_info, ip_address)
-        self._coordinator = coordinator
 
     @property
     def available(self):
@@ -85,9 +84,6 @@ class PowerWallChargeSensor(PowerWallSensor):
     def __init__(self, coordinator, site_info, ip_address):
         """Initialize the sensor."""
         super().__init__(coordinator, site_info, ip_address)
-        self._coordinator = coordinator
-        self._site_info = site_info
-        self._ip_address = ip_address
 
     @property
     def unit_of_measurement(self):
@@ -121,10 +117,7 @@ class PowerWallEnergySensor(PowerWallSensor):
     def __init__(self, meter, coordinator, site_info, ip_address):
         """Initialize the sensor."""
         super().__init__(coordinator, site_info, ip_address)
-        self._coordinator = coordinator
         self._meter = meter
-        self._site_info = site_info
-        self._ip_address = ip_address
 
     @property
     def unit_of_measurement(self):
