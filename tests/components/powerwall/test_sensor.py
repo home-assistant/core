@@ -24,14 +24,15 @@ async def test_sensors(hass):
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
     reg_device = device_registry.async_get_device(
-        identifiers={("powerwall", "1.2.3.4")}, connections=set()
+        identifiers={("powerwall", "Wom Energy_60Hz_240V_s_IEEE1547a_2014_25_13.5")},
+        connections=set(),
     )
     assert reg_device.model == "PowerWall 2"
     assert reg_device.manufacturer == "Tesla"
     assert reg_device.name == "MySite"
 
-    entity = hass.states.get("sensor.powerwall_site_now")
-    assert entity.state == "0.032"
+    state = hass.states.get("sensor.powerwall_site_now")
+    assert state.state == "0.032"
     expected_attributes = {
         "frequency": 60,
         "energy_exported": 10429451.9916853,
@@ -43,12 +44,10 @@ async def test_sensors(hass):
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
-    assert all(
-        item in entity.attributes.items() for item in expected_attributes.items()
-    )
+    assert all(item in state.attributes.items() for item in expected_attributes.items())
 
-    entity = hass.states.get("sensor.powerwall_load_now")
-    assert entity.state == "1.971"
+    state = hass.states.get("sensor.powerwall_load_now")
+    assert state.state == "1.971"
     expected_attributes = {
         "frequency": 60,
         "energy_exported": 1056797.48917483,
@@ -60,12 +59,10 @@ async def test_sensors(hass):
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
-    assert all(
-        item in entity.attributes.items() for item in expected_attributes.items()
-    )
+    assert all(item in state.attributes.items() for item in expected_attributes.items())
 
-    entity = hass.states.get("sensor.powerwall_battery_now")
-    assert entity.state == "-8.55"
+    state = hass.states.get("sensor.powerwall_battery_now")
+    assert state.state == "-8.55"
     expected_attributes = {
         "frequency": 60.014,
         "energy_exported": 3620010,
@@ -77,12 +74,10 @@ async def test_sensors(hass):
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
-    assert all(
-        item in entity.attributes.items() for item in expected_attributes.items()
-    )
+    assert all(item in state.attributes.items() for item in expected_attributes.items())
 
-    entity = hass.states.get("sensor.powerwall_solar_now")
-    assert entity.state == "10.49"
+    state = hass.states.get("sensor.powerwall_solar_now")
+    assert state.state == "10.49"
     expected_attributes = {
         "frequency": 60,
         "energy_exported": 9864205.82222448,
@@ -94,12 +89,10 @@ async def test_sensors(hass):
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
-    assert all(
-        item in entity.attributes.items() for item in expected_attributes.items()
-    )
+    assert all(item in state.attributes.items() for item in expected_attributes.items())
 
-    entity = hass.states.get("sensor.powerwall_charge")
-    assert entity.state == "47.32"
+    state = hass.states.get("sensor.powerwall_charge")
+    assert state.state == "47.32"
     expected_attributes = {
         "unit_of_measurement": "%",
         "friendly_name": "Powerwall Charge",
@@ -107,6 +100,4 @@ async def test_sensors(hass):
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
-    assert all(
-        item in entity.attributes.items() for item in expected_attributes.items()
-    )
+    assert all(item in state.attributes.items() for item in expected_attributes.items())

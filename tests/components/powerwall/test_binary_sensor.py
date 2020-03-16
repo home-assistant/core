@@ -24,16 +24,14 @@ async def test_sensors(hass):
         await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.grid_status")
-    assert entity.state == STATE_ON
+    assert state.state == STATE_ON
     expected_attributes = {"friendly_name": "Grid Status", "device_class": "power"}
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
-    assert all(
-        item in entity.attributes.items() for item in expected_attributes.items()
-    )
+    assert all(item in state.attributes.items() for item in expected_attributes.items())
 
-    entity = hass.states.get("binary_sensor.powerwall_status")
-    assert entity.state == STATE_ON
+    state = hass.states.get("binary_sensor.powerwall_status")
+    assert state.state == STATE_ON
     expected_attributes = {
         "region": "IEEE1547a:2014",
         "grid_code": "60Hz_240V_s_IEEE1547a_2014",
@@ -43,18 +41,14 @@ async def test_sensors(hass):
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
-    assert all(
-        item in entity.attributes.items() for item in expected_attributes.items()
-    )
+    assert all(item in state.attributes.items() for item in expected_attributes.items())
 
-    entity = hass.states.get("binary_sensor.powerwall_connected_to_tesla")
-    assert entity.state == STATE_ON
+    state = hass.states.get("binary_sensor.powerwall_connected_to_tesla")
+    assert state.state == STATE_ON
     expected_attributes = {
         "friendly_name": "Powerwall Connected to Tesla",
         "device_class": "connectivity",
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
-    assert all(
-        item in entity.attributes.items() for item in expected_attributes.items()
-    )
+    assert all(item in state.attributes.items() for item in expected_attributes.items())
