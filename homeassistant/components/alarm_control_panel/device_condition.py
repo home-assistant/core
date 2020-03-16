@@ -6,6 +6,7 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
+    SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -15,6 +16,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_ENTITY_ID,
     STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
@@ -25,13 +27,22 @@ from homeassistant.helpers import condition, config_validation as cv, entity_reg
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from . import DOMAIN
+from .const import (
+    CONDITION_TRIGGERED,
+    CONDITION_DISARMED,
+    CONDITION_ARMED_HOME,
+    CONDITION_ARMED_AWAY,
+    CONDITION_ARMED_NIGHT,
+    CONDITION_ARMED_CUSTOM_BYPASS,
+)
 
 CONDITION_TYPES = {
-    "is_triggered",
-    "is_disarmed",
-    "is_armed_home",
-    "is_armed_away",
-    "is_armed_night",
+    CONDITION_TRIGGERED,
+    CONDITION_DISARMED,
+    CONDITION_ARMED_HOME,
+    CONDITION_ARMED_AWAY,
+    CONDITION_ARMED_NIGHT,
+    CONDITION_ARMED_CUSTOM_BYPASS,
 }
 
 CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
@@ -69,14 +80,14 @@ async def async_get_conditions(
                 CONF_DEVICE_ID: device_id,
                 CONF_DOMAIN: DOMAIN,
                 CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "is_disarmed",
+                CONF_TYPE: CONDITION_DISARMED,
             },
             {
                 CONF_CONDITION: "device",
                 CONF_DEVICE_ID: device_id,
                 CONF_DOMAIN: DOMAIN,
                 CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "is_triggered",
+                CONF_TYPE: CONDITION_TRIGGERED,
             },
         ]
         if supported_features & SUPPORT_ALARM_ARM_HOME:
@@ -86,7 +97,7 @@ async def async_get_conditions(
                     CONF_DEVICE_ID: device_id,
                     CONF_DOMAIN: DOMAIN,
                     CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "is_armed_home",
+                    CONF_TYPE: CONDITION_ARMED_HOME,
                 }
             )
         if supported_features & SUPPORT_ALARM_ARM_AWAY:
@@ -96,7 +107,7 @@ async def async_get_conditions(
                     CONF_DEVICE_ID: device_id,
                     CONF_DOMAIN: DOMAIN,
                     CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "is_armed_away",
+                    CONF_TYPE: CONDITION_ARMED_AWAY,
                 }
             )
         if supported_features & SUPPORT_ALARM_ARM_NIGHT:
@@ -106,7 +117,17 @@ async def async_get_conditions(
                     CONF_DEVICE_ID: device_id,
                     CONF_DOMAIN: DOMAIN,
                     CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "is_armed_night",
+                    CONF_TYPE: CONDITION_ARMED_NIGHT,
+                }
+            )
+        if supported_features & SUPPORT_ALARM_ARM_CUSTOM_BYPASS:
+            conditions.append(
+                {
+                    CONF_CONDITION: "device",
+                    CONF_DEVICE_ID: device_id,
+                    CONF_DOMAIN: DOMAIN,
+                    CONF_ENTITY_ID: entry.entity_id,
+                    CONF_TYPE: CONDITION_ARMED_CUSTOM_BYPASS,
                 }
             )
 
@@ -119,16 +140,18 @@ def async_condition_from_config(
     """Create a function to test a device condition."""
     if config_validation:
         config = CONDITION_SCHEMA(config)
-    elif config[CONF_TYPE] == "is_triggered":
+    elif config[CONF_TYPE] == CONDITION_TRIGGERED:
         state = STATE_ALARM_TRIGGERED
-    elif config[CONF_TYPE] == "is_disarmed":
+    elif config[CONF_TYPE] == CONDITION_DISARMED:
         state = STATE_ALARM_DISARMED
-    elif config[CONF_TYPE] == "is_armed_home":
+    elif config[CONF_TYPE] == CONDITION_ARMED_HOME:
         state = STATE_ALARM_ARMED_HOME
-    elif config[CONF_TYPE] == "is_armed_away":
+    elif config[CONF_TYPE] == CONDITION_ARMED_AWAY:
         state = STATE_ALARM_ARMED_AWAY
-    elif config[CONF_TYPE] == "is_armed_night":
+    elif config[CONF_TYPE] == CONDITION_ARMED_NIGHT:
         state = STATE_ALARM_ARMED_NIGHT
+    elif config[CONF_TYPE] == CONDITION_ARMED_CUSTOM_BYPASS:
+        state = STATE_ALARM_ARMED_CUSTOM_BYPASS
 
     def test_is_state(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
         """Test if an entity is a certain state."""

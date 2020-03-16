@@ -5,6 +5,7 @@ from homeassistant.components.alarm_control_panel import DOMAIN
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
@@ -97,7 +98,7 @@ async def test_get_maximum_conditions(hass, device_reg, entity_reg):
     )
     entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
     hass.states.async_set(
-        "alarm_control_panel.test_5678", "attributes", {"supported_features": 15}
+        "alarm_control_panel.test_5678", "attributes", {"supported_features": 31}
     )
     expected_conditions = [
         {
@@ -132,6 +133,13 @@ async def test_get_maximum_conditions(hass, device_reg, entity_reg):
             "condition": "device",
             "domain": DOMAIN,
             "type": "is_armed_night",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "type": "is_armed_custom_bypass",
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
         },
@@ -238,6 +246,24 @@ async def test_if_state(hass, calls):
                         },
                     },
                 },
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event6"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": "",
+                            "entity_id": "alarm_control_panel.entity",
+                            "type": "is_armed_custom_bypass",
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "is_armed_custom_bypass - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                        },
+                    },
+                },
             ]
         },
     )
@@ -247,6 +273,7 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event3")
     hass.bus.async_fire("test_event4")
     hass.bus.async_fire("test_event5")
+    hass.bus.async_fire("test_event6")
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == "is_triggered - event - test_event1"
@@ -257,6 +284,7 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event3")
     hass.bus.async_fire("test_event4")
     hass.bus.async_fire("test_event5")
+    hass.bus.async_fire("test_event6")
     await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[1].data["some"] == "is_disarmed - event - test_event2"
@@ -267,6 +295,7 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event3")
     hass.bus.async_fire("test_event4")
     hass.bus.async_fire("test_event5")
+    hass.bus.async_fire("test_event6")
     await hass.async_block_till_done()
     assert len(calls) == 3
     assert calls[2].data["some"] == "is_armed_home - event - test_event3"
@@ -277,6 +306,7 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event3")
     hass.bus.async_fire("test_event4")
     hass.bus.async_fire("test_event5")
+    hass.bus.async_fire("test_event6")
     await hass.async_block_till_done()
     assert len(calls) == 4
     assert calls[3].data["some"] == "is_armed_away - event - test_event4"
@@ -287,6 +317,18 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event3")
     hass.bus.async_fire("test_event4")
     hass.bus.async_fire("test_event5")
+    hass.bus.async_fire("test_event6")
     await hass.async_block_till_done()
     assert len(calls) == 5
     assert calls[4].data["some"] == "is_armed_night - event - test_event5"
+
+    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_ARMED_CUSTOM_BYPASS)
+    hass.bus.async_fire("test_event1")
+    hass.bus.async_fire("test_event2")
+    hass.bus.async_fire("test_event3")
+    hass.bus.async_fire("test_event4")
+    hass.bus.async_fire("test_event5")
+    hass.bus.async_fire("test_event6")
+    await hass.async_block_till_done()
+    assert len(calls) == 6
+    assert calls[5].data["some"] == "is_armed_custom_bypass - event - test_event6"
