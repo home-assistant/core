@@ -9,7 +9,15 @@ from .const import (
     CATEGORY_USER_REPORT,
     DATA_CLIENT,
     DOMAIN,
+    SENSORS,
     TOPIC_UPDATE,
+    TYPE_USER_CHICK,
+    TYPE_USER_DENGUE,
+    TYPE_USER_FLU,
+    TYPE_USER_LEPTO,
+    TYPE_USER_NO_SYMPTOMS,
+    TYPE_USER_SYMPTOMS,
+    TYPE_USER_TOTAL,
 )
 
 ATTR_CITY = "city"
@@ -22,36 +30,10 @@ ATTR_ZIP_CODE = "zip_code"
 
 DEFAULT_ATTRIBUTION = "Data provided by Flu Near You"
 
-TYPE_CDC_LEVEL = "level"
-TYPE_CDC_LEVEL2 = "level2"
-TYPE_USER_CHICK = "chick"
-TYPE_USER_DENGUE = "dengue"
-TYPE_USER_FLU = "flu"
-TYPE_USER_LEPTO = "lepto"
-TYPE_USER_NO_SYMPTOMS = "none"
-TYPE_USER_SYMPTOMS = "symptoms"
-TYPE_USER_TOTAL = "total"
-
 EXTENDED_TYPE_MAPPING = {
     TYPE_USER_FLU: "ili",
     TYPE_USER_NO_SYMPTOMS: "no_symptoms",
     TYPE_USER_TOTAL: "total_surveys",
-}
-
-SENSORS = {
-    CATEGORY_CDC_REPORT: [
-        (TYPE_CDC_LEVEL, "CDC Level", "mdi:biohazard", None),
-        (TYPE_CDC_LEVEL2, "CDC Level 2", "mdi:biohazard", None),
-    ],
-    CATEGORY_USER_REPORT: [
-        (TYPE_USER_CHICK, "Avian Flu Symptoms", "mdi:alert", "reports"),
-        (TYPE_USER_DENGUE, "Dengue Fever Symptoms", "mdi:alert", "reports"),
-        (TYPE_USER_FLU, "Flu Symptoms", "mdi:alert", "reports"),
-        (TYPE_USER_LEPTO, "Leptospirosis Symptoms", "mdi:alert", "reports"),
-        (TYPE_USER_NO_SYMPTOMS, "No Symptoms", "mdi:alert", "reports"),
-        (TYPE_USER_SYMPTOMS, "Flu-like Symptoms", "mdi:alert", "reports"),
-        (TYPE_USER_TOTAL, "Total Symptoms", "mdi:alert", "reports"),
-    ],
 }
 
 
@@ -61,9 +43,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_add_entities(
         [
-            FluNearYouSensor(fny, kind, name, category, icon, unit)
+            FluNearYouSensor(fny, sensor_type, name, category, icon, unit)
             for category, sensors in SENSORS.items()
-            for kind, name, icon, unit in sensors
+            for sensor_type, name, icon, unit in sensors
         ],
         True,
     )
@@ -72,15 +54,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class FluNearYouSensor(Entity):
     """Define a base Flu Near You sensor."""
 
-    def __init__(self, fny, kind, name, category, icon, unit):
+    def __init__(self, fny, sensor_type, name, category, icon, unit):
         """Initialize the sensor."""
-        self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._async_unsub_dispatcher_connect = None
+        self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._category = category
         self._fny = fny
         self._icon = icon
-        self._kind = kind
         self._name = name
+        self._sensor_type = sensor_type
         self._state = None
         self._unit = unit
 
@@ -112,7 +94,7 @@ class FluNearYouSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self._fny.latitude},{self._fny.longitude}_{self._kind}"
+        return f"{self._fny.latitude},{self._fny.longitude}_{self._sensor_type}"
 
     @property
     def unit_of_measurement(self):
@@ -132,6 +114,8 @@ class FluNearYouSensor(Entity):
             self.hass, TOPIC_UPDATE, update
         )
 
+        await self._fny.async_register_api_interest(self._sensor_type)
+
         update()
 
     async def async_will_remove_from_hass(self) -> None:
@@ -139,6 +123,8 @@ class FluNearYouSensor(Entity):
         if self._async_unsub_dispatcher_connect:
             self._async_unsub_dispatcher_connect()
             self._async_unsub_dispatcher_connect = None
+
+        await self._fny.async_deregister_api_interest(self._sensor_type)
 
     @callback
     def update_from_latest_data(self):
@@ -153,7 +139,7 @@ class FluNearYouSensor(Entity):
                     ATTR_STATE: cdc_data["name"],
                 }
             )
-            self._state = cdc_data[self._kind]
+            self._state = cdc_data[self._sensor_type]
         elif self._category == CATEGORY_USER_REPORT and user_data:
             self._attrs.update(
                 {
@@ -165,10 +151,10 @@ class FluNearYouSensor(Entity):
                 }
             )
 
-            if self._kind in user_data["state"]["data"]:
-                states_key = self._kind
-            elif self._kind in EXTENDED_TYPE_MAPPING:
-                states_key = EXTENDED_TYPE_MAPPING[self._kind]
+            if self._sensor_type in user_data["state"]["data"]:
+                states_key = self._sensor_type
+            elif self._sensor_type in EXTENDED_TYPE_MAPPING:
+                states_key = EXTENDED_TYPE_MAPPING[self._sensor_type]
 
             self._attrs[ATTR_STATE_REPORTS_THIS_WEEK] = user_data["state"]["data"][
                 states_key
@@ -177,7 +163,7 @@ class FluNearYouSensor(Entity):
                 "last_week_data"
             ][states_key]
 
-            if self._kind == TYPE_USER_TOTAL:
+            if self._sensor_type == TYPE_USER_TOTAL:
                 self._state = sum(
                     v
                     for k, v in user_data["local"].items()
@@ -191,4 +177,4 @@ class FluNearYouSensor(Entity):
                     )
                 )
             else:
-                self._state = user_data["local"][self._kind]
+                self._state = user_data["local"][self._sensor_type]
