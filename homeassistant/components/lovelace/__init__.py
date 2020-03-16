@@ -3,12 +3,13 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant import config as conf_util
 from homeassistant.components import frontend
+from homeassistant.config import async_hass_config_yaml, async_process_component_config
 from homeassistant.const import CONF_FILENAME
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import collection, config_validation as cv, service
+from homeassistant.helpers import collection, config_validation as cv
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceCallType
 from homeassistant.loader import async_get_integration
 from homeassistant.util import sanitize_filename
@@ -94,14 +95,14 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     async def reload_resources_service_handler(service_call: ServiceCallType) -> None:
         """Reload yaml resources."""
         try:
-            conf = await conf_util.async_hass_config_yaml(hass)
+            conf = await async_hass_config_yaml(hass)
         except HomeAssistantError as err:
             _LOGGER.error(err)
             return
 
         integration = await async_get_integration(hass, DOMAIN)
 
-        config = await conf_util.async_process_component_config(hass, conf, integration)
+        config = await async_process_component_config(hass, conf, integration)
 
         resource_collection = await create_yaml_resource_col(
             config[DOMAIN].get(CONF_RESOURCES)
@@ -112,7 +113,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         default_config = dashboard.LovelaceYAML(hass, None, None)
         resource_collection = await create_yaml_resource_col(yaml_resources)
 
-        service.async_register_admin_service(
+        async_register_admin_service(
             hass,
             DOMAIN,
             SERVICE_RELOAD_RESOURCES,
