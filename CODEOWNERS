@@ -17,6 +17,7 @@ homeassistant/components/abode/* @shred86
 homeassistant/components/adguard/* @frenck
 homeassistant/components/airly/* @bieniu
 homeassistant/components/airvisual/* @bachya
+homeassistant/components/alarmdecoder/* @ajschmidt8
 homeassistant/components/alexa/* @home-assistant/cloud @ochlocracy
 homeassistant/components/almond/* @gcampax @balloob
 homeassistant/components/alpha_vantage/* @fabaff
