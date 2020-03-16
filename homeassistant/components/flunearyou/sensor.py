@@ -9,15 +9,7 @@ from .const import (
     CATEGORY_USER_REPORT,
     DATA_CLIENT,
     DOMAIN,
-    SENSORS,
     TOPIC_UPDATE,
-    TYPE_USER_CHICK,
-    TYPE_USER_DENGUE,
-    TYPE_USER_FLU,
-    TYPE_USER_LEPTO,
-    TYPE_USER_NO_SYMPTOMS,
-    TYPE_USER_SYMPTOMS,
-    TYPE_USER_TOTAL,
 )
 
 ATTR_CITY = "city"
@@ -30,10 +22,36 @@ ATTR_ZIP_CODE = "zip_code"
 
 DEFAULT_ATTRIBUTION = "Data provided by Flu Near You"
 
+TYPE_CDC_LEVEL = "level"
+TYPE_CDC_LEVEL2 = "level2"
+TYPE_USER_CHICK = "chick"
+TYPE_USER_DENGUE = "dengue"
+TYPE_USER_FLU = "flu"
+TYPE_USER_LEPTO = "lepto"
+TYPE_USER_NO_SYMPTOMS = "none"
+TYPE_USER_SYMPTOMS = "symptoms"
+TYPE_USER_TOTAL = "total"
+
 EXTENDED_TYPE_MAPPING = {
     TYPE_USER_FLU: "ili",
     TYPE_USER_NO_SYMPTOMS: "no_symptoms",
     TYPE_USER_TOTAL: "total_surveys",
+}
+
+SENSORS = {
+    CATEGORY_CDC_REPORT: [
+        (TYPE_CDC_LEVEL, "CDC Level", "mdi:biohazard", None),
+        (TYPE_CDC_LEVEL2, "CDC Level 2", "mdi:biohazard", None),
+    ],
+    CATEGORY_USER_REPORT: [
+        (TYPE_USER_CHICK, "Avian Flu Symptoms", "mdi:alert", "reports"),
+        (TYPE_USER_DENGUE, "Dengue Fever Symptoms", "mdi:alert", "reports"),
+        (TYPE_USER_FLU, "Flu Symptoms", "mdi:alert", "reports"),
+        (TYPE_USER_LEPTO, "Leptospirosis Symptoms", "mdi:alert", "reports"),
+        (TYPE_USER_NO_SYMPTOMS, "No Symptoms", "mdi:alert", "reports"),
+        (TYPE_USER_SYMPTOMS, "Flu-like Symptoms", "mdi:alert", "reports"),
+        (TYPE_USER_TOTAL, "Total Symptoms", "mdi:alert", "reports"),
+    ],
 }
 
 
