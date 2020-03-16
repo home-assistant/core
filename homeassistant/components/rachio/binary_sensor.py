@@ -3,8 +3,7 @@ from abc import abstractmethod
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.helpers import device_registry
-from homeassistant.helpers.dispatcher import dispatcher_connect
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
     SIGNAL_RACHIO_CONTROLLER_UPDATE,
@@ -12,47 +11,38 @@ from . import (
     STATUS_ONLINE,
     SUBTYPE_OFFLINE,
     SUBTYPE_ONLINE,
+    RachioDeviceInfoProvider,
 )
-from .const import (
-    DEFAULT_NAME,
-    DOMAIN as DOMAIN_RACHIO,
-    KEY_DEVICE_ID,
-    KEY_STATUS,
-    KEY_SUBTYPE,
-)
+from .const import DOMAIN as DOMAIN_RACHIO, KEY_DEVICE_ID, KEY_STATUS, KEY_SUBTYPE
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Rachio binary sensors."""
-    devices = await hass.async_add_executor_job(_create_devices, hass, config_entry)
-    async_add_entities(devices)
-    _LOGGER.info("%d Rachio binary sensor(s) added", len(devices))
+    entities = await hass.async_add_executor_job(_create_entities, hass, config_entry)
+    async_add_entities(entities)
+    _LOGGER.info("%d Rachio binary sensor(s) added", len(entities))
 
 
-def _create_devices(hass, config_entry):
-    devices = []
+def _create_entities(hass, config_entry):
+    entities = []
     for controller in hass.data[DOMAIN_RACHIO][config_entry.entry_id].controllers:
-        devices.append(RachioControllerOnlineBinarySensor(hass, controller))
-    return devices
+        entities.append(RachioControllerOnlineBinarySensor(controller))
+    return entities
 
 
-class RachioControllerBinarySensor(BinarySensorDevice):
+class RachioControllerBinarySensor(RachioDeviceInfoProvider, BinarySensorDevice):
     """Represent a binary sensor that reflects a Rachio state."""
 
-    def __init__(self, hass, controller, poll=True):
+    def __init__(self, controller, poll=True):
         """Set up a new Rachio controller binary sensor."""
-        self._controller = controller
+        super().__init__(controller)
 
         if poll:
             self._state = self._poll_update()
         else:
             self._state = None
-
-        dispatcher_connect(
-            hass, SIGNAL_RACHIO_CONTROLLER_UPDATE, self._handle_any_update
-        )
 
     @property
     def should_poll(self) -> bool:
@@ -78,30 +68,24 @@ class RachioControllerBinarySensor(BinarySensorDevice):
         """Request the state from the API."""
         pass
 
-    @property
-    def device_info(self):
-        """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN_RACHIO, self._controller.serial_number,)},
-            "connections": {
-                (device_registry.CONNECTION_NETWORK_MAC, self._controller.mac_address,)
-            },
-            "name": self._controller.name,
-            "manufacturer": DEFAULT_NAME,
-        }
-
     @abstractmethod
     def _handle_update(self, *args, **kwargs) -> None:
         """Handle an update to the state of this sensor."""
         pass
 
+    async def async_added_to_hass(self):
+        """Subscribe to updates."""
+        async_dispatcher_connect(
+            self.hass, SIGNAL_RACHIO_CONTROLLER_UPDATE, self._handle_any_update
+        )
+
 
 class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
     """Represent a binary sensor that reflects if the controller is online."""
 
-    def __init__(self, hass, controller):
+    def __init__(self, controller):
         """Set up a new Rachio controller online binary sensor."""
-        super().__init__(hass, controller, poll=False)
+        super().__init__(controller, poll=False)
         self._state = self._poll_update(controller.init_data)
 
     @property
