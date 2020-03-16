@@ -68,11 +68,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data[DOMAIN].setdefault(entry_id, {})
     power_wall = PowerWall(entry.data[CONF_IP_ADDRESS])
-
-    def _call_site_info(power_wall):
-        """Wrap site_info to be a callable."""
-        return power_wall.site_info
-
     try:
         site_info = await hass.async_add_executor_job(_call_site_info, power_wall)
     except (PowerWallUnreachableError, ApiError, ConnectionError):
@@ -105,6 +100,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
 
     return True
+
+
+def _call_site_info(power_wall):
+    """Wrap site_info to be a callable."""
+    return power_wall.site_info
 
 
 def _fetch_powerwall_data(power_wall):
