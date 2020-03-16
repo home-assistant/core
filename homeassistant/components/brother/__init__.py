@@ -80,4 +80,4 @@ class BrotherDataUpdateCoordinator(DataUpdateCoordinator):
             await self.brother.async_update()
         except (ConnectionError, SnmpError, UnsupportedModel) as error:
             raise UpdateFailed(error)
-        return self.brother
+        return self.brother.data
