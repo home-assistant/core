@@ -44,7 +44,7 @@ async def test_successful_minimal_config(hass, mock_simple_nws):
     with assert_setup_component(1):
         assert await async_setup_component(hass, DOMAIN, MINIMAL_CONFIG) is True
         assert DOMAIN in hass.data
-        assert nws.unique_id(40.0, -75.0) in hass.data[DOMAIN]
+        assert nws.base_unique_id(40.0, -75.0) in hass.data[DOMAIN]
 
 
 async def test_successful_latlon_config(hass, mock_simple_nws):
@@ -52,7 +52,7 @@ async def test_successful_latlon_config(hass, mock_simple_nws):
     with assert_setup_component(1):
         assert await async_setup_component(hass, DOMAIN, LATLON_CONFIG) is True
         assert DOMAIN in hass.data
-        assert nws.unique_id(45.0, -75.0) in hass.data[DOMAIN]
+        assert nws.base_unique_id(45.0, -75.0) in hass.data[DOMAIN]
 
 
 async def test_successful_full_config(hass, mock_simple_nws):
@@ -60,7 +60,7 @@ async def test_successful_full_config(hass, mock_simple_nws):
     with assert_setup_component(1):
         assert await async_setup_component(hass, DOMAIN, FULL_CONFIG) is True
         assert DOMAIN in hass.data
-        assert nws.unique_id(45.0, -75.0) in hass.data[DOMAIN]
+        assert nws.base_unique_id(45.0, -75.0) in hass.data[DOMAIN]
 
 
 async def test_unsuccessful_duplicate_config(hass, mock_simple_nws):

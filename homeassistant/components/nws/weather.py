@@ -27,7 +27,7 @@ from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
 from homeassistant.util.temperature import convert as convert_temperature
 
-from . import unique_id
+from . import base_unique_id, signal_unique_id
 from .const import (
     ATTR_FORECAST_DAYTIME,
     ATTR_FORECAST_DETAILED_DESCRIPTION,
@@ -73,7 +73,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info)
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
 
-    nws_data = hass.data[DOMAIN][unique_id(latitude, longitude)]
+    nws_data = hass.data[DOMAIN][base_unique_id(latitude, longitude)]
 
     async_add_entities(
         [
@@ -103,7 +103,9 @@ class NWSWeather(WeatherEntity):
     async def async_added_to_hass(self) -> None:
         """Set up a listener and load data."""
         async_dispatcher_connect(
-            self.hass, unique_id(self.latitude, self.longitude), self._update_callback
+            self.hass,
+            signal_unique_id(self.latitude, self.longitude),
+            self._update_callback,
         )
         self._update_callback()
 
@@ -267,8 +269,7 @@ class NWSWeather(WeatherEntity):
     @property
     def unique_id(self):
         """Return a unique_id for this entity."""
-        base_id = unique_id(self.latitude, self.longitude)
-        return f"{base_id}_{self.mode}"
+        return f"{base_unique_id(self.latitude, self.longitude)}_{self.mode}"
 
     @property
     def available(self):

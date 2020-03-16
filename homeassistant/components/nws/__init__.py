@@ -45,9 +45,14 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = ["weather"]
 
 
-def unique_id(latitude, longitude):
+def base_unique_id(latitude, longitude):
     """Return unique id for entries in configuration."""
-    return f"{DOMAIN}_{latitude}_{longitude}"
+    return f"{latitude}_{longitude}"
+
+
+def signal_unique_id(latitude, longitude):
+    """Return unique id for signaling to entries in configuration from component."""
+    return f"{DOMAIN}_{base_unique_id(latitude,longitude)}"
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -65,7 +70,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
         client_session = async_get_clientsession(hass)
 
-        if unique_id(latitude, longitude) in hass.data[DOMAIN]:
+        if base_unique_id(latitude, longitude) in hass.data[DOMAIN]:
             _LOGGER.error(
                 "Duplicate entry in config: latitude %s  latitude: %s",
                 latitude,
@@ -83,7 +88,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
         await nws_data.async_update()
 
-        hass.data[DOMAIN][unique_id(latitude, longitude)] = nws_data
+        hass.data[DOMAIN][base_unique_id(latitude, longitude)] = nws_data
 
         scan_time = datetime.timedelta(minutes=scan_interval)
         async_track_time_interval(hass, nws_data.async_update, scan_time)
@@ -183,4 +188,6 @@ class NwsData:
             self.update_forecast_hourly_success,
         )
 
-        async_dispatcher_send(self.hass, unique_id(self.latitude, self.longitude))
+        async_dispatcher_send(
+            self.hass, signal_unique_id(self.latitude, self.longitude)
+        )
