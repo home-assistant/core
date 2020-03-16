@@ -45,7 +45,7 @@ ATTRIBUTE_ALIAS = {
     "hostname": None,
     "ip6_addr": None,
     "ip_addr": None,
-    "is_baned": None,
+    "is_baned": "is_banned",
     "is_beamforming_on": None,
     "is_guest": None,
     "is_high_qos": None,
@@ -53,7 +53,7 @@ ATTRIBUTE_ALIAS = {
     "is_manual_dev_type": None,
     "is_manual_hostname": None,
     "is_online": None,
-    "is_parental_controled": None,
+    "is_parental_controled": "is_parental_controlled",
     "is_qos": None,
     "is_wireless": None,
     "mac": None,
@@ -104,21 +104,18 @@ class SynologySrmDeviceScanner(DeviceScanner):
     def get_extra_attributes(self, device) -> dict:
         """Get the extra attributes of a device."""
         device = next(
-            iter([result for result in self.devices if result["mac"] == device]), None
+            (result for result in self.devices if result["mac"] == device), None
         )
-        if device:
-            filtered_attributes = {}
-            for attribute, value in device.items():
-                if attribute in ATTRIBUTE_ALIAS:
-                    filtered_attributes[
-                        (
-                            ATTRIBUTE_ALIAS[attribute]
-                            if ATTRIBUTE_ALIAS[attribute]
-                            else attribute
-                        )
-                    ] = value
+        filtered_attributes = {}
+        if not device:
             return filtered_attributes
-        return {}
+        for attribute, alias in ATTRIBUTE_ALIAS.items():
+            value = device.get(attribute)
+            if value is None:
+                continue
+            attr = alias or attribute
+            filtered_attributes[attr] = value
+        return filtered_attributes
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
