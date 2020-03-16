@@ -88,7 +88,7 @@ class LovelaceStorage(LovelaceConfig):
             storage_key = CONFIG_STORAGE_KEY_DEFAULT
         else:
             url_path = config[CONF_URL_PATH]
-            storage_key = CONFIG_STORAGE_KEY.format(url_path)
+            storage_key = CONFIG_STORAGE_KEY.format(config["id"])
 
         super().__init__(hass, url_path, config)
 
