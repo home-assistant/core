@@ -140,56 +140,47 @@ class NwsData:
         """Return hourly forecast."""
         return self.nws.forecast_hourly
 
-    async def async_update(self, now=None):
-        """Update all data."""
+    @staticmethod
+    async def _async_update_item(update_call, update_type, station_name, success):
         try:
-            _LOGGER.debug("Updating observation for station %s", self.station)
-            await self.nws.update_observation()
+            _LOGGER.debug("Updating %s for station %s", update_type, station_name)
+            await update_call()
 
-            if not self.update_observation_success:
+            if success:
                 _LOGGER.warning(
-                    "Success updating observation for station %s", self.station
+                    "Success updating %s for station %s", update_type, station_name
                 )
-                self.update_observation_success = True
+                success = True
         except (aiohttp.ClientError, asyncio.TimeoutError) as err:
-            if self.update_observation_success:
+            if success:
                 _LOGGER.warning(
-                    "Error updating observation for station %s: %s", self.station, err
-                )
-            self.update_observation_success = False
-
-        try:
-            _LOGGER.debug("Updating forecast for station %s", self.station)
-            await self.nws.update_forecast()
-
-            if not self.update_forecast_success:
-                _LOGGER.warning(
-                    "Success updating forecast for station %s", self.station
-                )
-                self.update_forecast_success = True
-        except (aiohttp.ClientError, asyncio.TimeoutError) as err:
-            if self.update_forecast_success:
-                _LOGGER.warning(
-                    "Error updating forecast for station %s: %s", self.station, err
-                )
-            self.update_forecast_success = False
-
-        try:
-            _LOGGER.debug("Updating forecast hourly for station %s", self.station)
-            await self.nws.update_forecast_hourly()
-
-            if not self.update_forecast_hourly_success:
-                _LOGGER.warning(
-                    "Success updating forecast hourly for station %s", self.station
-                )
-                self.update_forecast_hourly_success = True
-        except (aiohttp.ClientError, asyncio.TimeoutError) as err:
-            if self.update_forecast_hourly_success:
-                _LOGGER.warning(
-                    "Error updating forecast hourly for station %s: %s",
-                    self.station,
+                    "Error updating %s for station %s: %s",
+                    update_type,
+                    station_name,
                     err,
                 )
-            self.update_forecast_hourly_success = False
+            success = False
+
+    async def async_update(self, now=None):
+        """Update all data."""
+
+        await self._async_update_item(
+            self.nws.update_observation,
+            "observation",
+            self.station,
+            self.update_observation_success,
+        )
+        await self._async_update_item(
+            self.nws.update_forecast,
+            "forecast",
+            self.station,
+            self.update_forecast_success,
+        )
+        await self._async_update_item(
+            self.nws.update_forecast_hourly,
+            "forecast_hourly",
+            self.station,
+            self.update_forecast_hourly_success,
+        )
+
         async_dispatcher_send(self.hass, unique_id(self.latitude, self.longitude))
-        _LOGGER.debug("Updating complete for station %s", self.station)

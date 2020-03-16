@@ -165,5 +165,5 @@ async def test_error_forecast_hourly(hass, caplog, mock_simple_nws):
     async_fire_time_changed(hass, future_time)
     await hass.async_block_till_done()
 
-    assert "Error updating forecast hourly" in caplog.text
-    assert "Success updating forecast hourly" in caplog.text
+    assert "Error updating forecast_hourly" in caplog.text
+    assert "Success updating forecast_hourly" in caplog.text
