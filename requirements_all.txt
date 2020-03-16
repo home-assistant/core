@@ -1281,7 +1281,7 @@ pyflic-homeassistant==0.4.dev0
 pyflume==0.3.0
 
 # homeassistant.components.flunearyou
-pyflunearyou==1.0.3
+pyflunearyou==1.0.7
 
 # homeassistant.components.futurenow
 pyfnip==0.2

@@ -1,25 +1,16 @@
 """Support for user- and CDC-based flu info sensors from Flu Near You."""
-from datetime import timedelta
-import logging
-
-from pyflunearyou import Client
-from pyflunearyou.errors import FluNearYouError
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_STATE,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_MONITORED_CONDITIONS,
-)
-from homeassistant.helpers import aiohttp_client
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_STATE
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    CATEGORY_CDC_REPORT,
+    CATEGORY_USER_REPORT,
+    DATA_CLIENT,
+    DOMAIN,
+    TOPIC_UPDATE,
+)
 
 ATTR_CITY = "city"
 ATTR_REPORTED_DATE = "reported_date"
@@ -30,12 +21,6 @@ ATTR_STATE_REPORTS_THIS_WEEK = "state_reports_this_week"
 ATTR_ZIP_CODE = "zip_code"
 
 DEFAULT_ATTRIBUTION = "Data provided by Flu Near You"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
-SCAN_INTERVAL = timedelta(minutes=30)
-
-CATEGORY_CDC_REPORT = "cdc_report"
-CATEGORY_USER_REPORT = "user_report"
 
 TYPE_CDC_LEVEL = "level"
 TYPE_CDC_LEVEL2 = "level2"
@@ -69,36 +54,19 @@ SENSORS = {
     ],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
-        vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSORS)): vol.All(
-            cv.ensure_list, [vol.In(SENSORS)]
-        ),
-    }
-)
 
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Flu Near You sensors based on a config entry."""
+    fny = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id]
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Configure the platform and add the sensors."""
-    websession = aiohttp_client.async_get_clientsession(hass)
-
-    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-
-    fny = FluNearYouData(
-        Client(websession), latitude, longitude, config[CONF_MONITORED_CONDITIONS]
+    async_add_entities(
+        [
+            FluNearYouSensor(fny, kind, name, category, icon, unit)
+            for category, sensors in SENSORS.items()
+            for kind, name, icon, unit in sensors
+        ],
+        True,
     )
-    await fny.async_update()
-
-    sensors = [
-        FluNearYouSensor(fny, kind, name, category, icon, unit)
-        for category in config[CONF_MONITORED_CONDITIONS]
-        for kind, name, icon, unit in SENSORS[category]
-    ]
-
-    async_add_entities(sensors, True)
 
 
 class FluNearYouSensor(Entity):
@@ -107,18 +75,19 @@ class FluNearYouSensor(Entity):
     def __init__(self, fny, kind, name, category, icon, unit):
         """Initialize the sensor."""
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._async_unsub_dispatcher_connect = None
         self._category = category
+        self._fny = fny
         self._icon = icon
         self._kind = kind
         self._name = name
         self._state = None
         self._unit = unit
-        self.fny = fny
 
     @property
     def available(self):
         """Return True if entity is available."""
-        return bool(self.fny.data[self._category])
+        return bool(self._fny.data[self._category])
 
     @property
     def device_state_attributes(self):
@@ -143,19 +112,29 @@ class FluNearYouSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self.fny.latitude},{self.fny.longitude}_{self._kind}"
+        return f"{self._fny.latitude},{self._fny.longitude}_{self._kind}"
 
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit
 
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+
+        @callback
+        def update():
+            """Update the state."""
+            self.async_write_ha_state()
+
+        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
+            self.hass, TOPIC_UPDATE, update
+        )
+
     async def async_update(self):
         """Update the sensor."""
-        await self.fny.async_update()
-
-        cdc_data = self.fny.data.get(CATEGORY_CDC_REPORT)
-        user_data = self.fny.data.get(CATEGORY_USER_REPORT)
+        cdc_data = self._fny.data.get(CATEGORY_CDC_REPORT)
+        user_data = self._fny.data.get(CATEGORY_USER_REPORT)
 
         if self._category == CATEGORY_CDC_REPORT and cdc_data:
             self._attrs.update(
@@ -204,30 +183,8 @@ class FluNearYouSensor(Entity):
             else:
                 self._state = user_data["local"][self._kind]
 
-
-class FluNearYouData:
-    """Define a data object to retrieve info from Flu Near You."""
-
-    def __init__(self, client, latitude, longitude, sensor_types):
-        """Initialize."""
-        self._client = client
-        self._sensor_types = sensor_types
-        self.data = {}
-        self.latitude = latitude
-        self.longitude = longitude
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self):
-        """Update Flu Near You data."""
-        for key, method in [
-            (CATEGORY_CDC_REPORT, self._client.cdc_reports.status_by_coordinates),
-            (CATEGORY_USER_REPORT, self._client.user_reports.status_by_coordinates),
-        ]:
-            if key in self._sensor_types:
-                try:
-                    self.data[key] = await method(self.latitude, self.longitude)
-                except FluNearYouError as err:
-                    _LOGGER.error('There was an error with "%s" data: %s', key, err)
-                    self.data[key] = {}
-
-        _LOGGER.debug("New data stored: %s", self.data)
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect dispatcher listener when removed."""
+        if self._async_unsub_dispatcher_connect:
+            self._async_unsub_dispatcher_connect()
+            self._async_unsub_dispatcher_connect = None
