@@ -23,7 +23,7 @@ async def test_sensors(hass):
         assert await async_setup_component(hass, DOMAIN, _mock_get_config())
         await hass.async_block_till_done()
 
-    entity = hass.states.get("binary_sensor.grid_status")
+    state = hass.states.get("binary_sensor.grid_status")
     assert entity.state == STATE_ON
     expected_attributes = {"friendly_name": "Grid Status", "device_class": "power"}
     # Only test for a subset of attributes in case
