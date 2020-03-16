@@ -23,18 +23,23 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
+from homeassistant.const import STATE_OFF
 
 from .common import (
+    help_test_availability_without_topic,
+    help_test_custom_availability_payload,
+    help_test_default_availability_payload,
     help_test_discovery_broken,
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_attr,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
+    help_test_entity_device_info_with_connection,
     help_test_entity_device_info_with_identifier,
     help_test_entity_id_update,
     help_test_setting_attribute_via_mqtt_json_message,
+    help_test_setting_attribute_with_template,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
@@ -46,7 +51,7 @@ from tests.components.climate import common
 ENTITY_CLIMATE = "climate.test"
 
 DEFAULT_CONFIG = {
-    "climate": {
+    CLIMATE_DOMAIN: {
         "platform": "mqtt",
         "name": "test",
         "mode_command_topic": "mode-topic",
@@ -59,32 +64,6 @@ DEFAULT_CONFIG = {
         "hold_command_topic": "hold-topic",
         "aux_command_topic": "aux-topic",
     }
-}
-
-DEFAULT_CONFIG_ATTR = {
-    CLIMATE_DOMAIN: {
-        "platform": "mqtt",
-        "name": "test",
-        "power_state_topic": "test-topic",
-        "power_command_topic": "test_topic",
-        "json_attributes_topic": "attr-topic",
-    }
-}
-
-DEFAULT_CONFIG_DEVICE_INFO = {
-    "platform": "mqtt",
-    "name": "Test 1",
-    "power_state_topic": "test-topic",
-    "power_command_topic": "test-command-topic",
-    "device": {
-        "identifiers": ["helloworld"],
-        "connections": [["mac", "02:5b:26:a8:dc:12"]],
-        "manufacturer": "Whatever",
-        "name": "Beer",
-        "model": "Glass",
-        "sw_version": "0.1-beta",
-    },
-    "unique_id": "veryunique",
 }
 
 
@@ -597,27 +576,25 @@ async def test_set_aux(hass, mqtt_mock):
     assert state.attributes.get("aux_heat") == "off"
 
 
+async def test_availability_without_topic(hass, mqtt_mock):
+    """Test availability without defined availability topic."""
+    await help_test_availability_without_topic(
+        hass, mqtt_mock, CLIMATE_DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_default_availability_payload(hass, mqtt_mock):
+    """Test availability by default payload with defined topic."""
+    await help_test_default_availability_payload(
+        hass, mqtt_mock, CLIMATE_DOMAIN, DEFAULT_CONFIG
+    )
+
+
 async def test_custom_availability_payload(hass, mqtt_mock):
     """Test availability by custom payload with defined topic."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
-    config["climate"]["availability_topic"] = "availability-topic"
-    config["climate"]["payload_available"] = "good"
-    config["climate"]["payload_not_available"] = "nogood"
-
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
-
-    state = hass.states.get("climate.test")
-    assert state.state == STATE_UNAVAILABLE
-
-    async_fire_mqtt_message(hass, "availability-topic", "good")
-
-    state = hass.states.get("climate.test")
-    assert state.state != STATE_UNAVAILABLE
-
-    async_fire_mqtt_message(hass, "availability-topic", "nogood")
-
-    state = hass.states.get("climate.test")
-    assert state.state == STATE_UNAVAILABLE
+    await help_test_custom_availability_payload(
+        hass, mqtt_mock, CLIMATE_DOMAIN, DEFAULT_CONFIG
+    )
 
 
 async def test_set_target_temperature_low_high_with_templates(hass, mqtt_mock, caplog):
@@ -801,35 +778,35 @@ async def test_temp_step_custom(hass, mqtt_mock):
 async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
-        hass, mqtt_mock, CLIMATE_DOMAIN, DEFAULT_CONFIG_ATTR
+        hass, mqtt_mock, CLIMATE_DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_setting_attribute_with_template(hass, mqtt_mock):
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await help_test_setting_attribute_with_template(
+        hass, mqtt_mock, CLIMATE_DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass, mqtt_mock, caplog, CLIMATE_DOMAIN, DEFAULT_CONFIG_ATTR
+        hass, mqtt_mock, caplog, CLIMATE_DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_update_with_json_attrs_bad_JSON(hass, mqtt_mock, caplog):
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_JSON(
-        hass, mqtt_mock, caplog, CLIMATE_DOMAIN, DEFAULT_CONFIG_ATTR
+        hass, mqtt_mock, caplog, CLIMATE_DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     """Test update of discovered MQTTAttributes."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG[CLIMATE_DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG[CLIMATE_DOMAIN])
-    config1["json_attributes_topic"] = "attr-topic1"
-    config2["json_attributes_topic"] = "attr-topic2"
-    data1 = json.dumps(config1)
-    data2 = json.dumps(config2)
-
     await help_test_discovery_update_attr(
-        hass, mqtt_mock, caplog, CLIMATE_DOMAIN, data1, data2
+        hass, mqtt_mock, caplog, CLIMATE_DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -880,47 +857,47 @@ async def test_discovery_broken(hass, mqtt_mock, caplog):
     )
 
 
+async def test_entity_device_info_with_connection(hass, mqtt_mock):
+    """Test MQTT climate device registry integration."""
+    await help_test_entity_device_info_with_connection(
+        hass, mqtt_mock, CLIMATE_DOMAIN, DEFAULT_CONFIG
+    )
+
+
 async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     """Test MQTT climate device registry integration."""
     await help_test_entity_device_info_with_identifier(
-        hass, mqtt_mock, CLIMATE_DOMAIN, DEFAULT_CONFIG_DEVICE_INFO
+        hass, mqtt_mock, CLIMATE_DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_device_info_update(hass, mqtt_mock):
     """Test device registry update."""
     await help_test_entity_device_info_update(
-        hass, mqtt_mock, CLIMATE_DOMAIN, DEFAULT_CONFIG_DEVICE_INFO
+        hass, mqtt_mock, CLIMATE_DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_device_info_remove(hass, mqtt_mock):
     """Test device registry remove."""
-    config = {
-        "platform": "mqtt",
-        "name": "Test 1",
-        "power_state_topic": "test-topic",
-        "power_command_topic": "test-command-topic",
-        "device": {"identifiers": ["helloworld"]},
-        "unique_id": "veryunique",
-    }
-    await help_test_entity_device_info_remove(hass, mqtt_mock, CLIMATE_DOMAIN, config)
+    await help_test_entity_device_info_remove(
+        hass, mqtt_mock, CLIMATE_DOMAIN, DEFAULT_CONFIG
+    )
 
 
 async def test_entity_id_update(hass, mqtt_mock):
     """Test MQTT subscriptions are managed when entity_id is updated."""
     config = {
-        CLIMATE_DOMAIN: [
-            {
-                "platform": "mqtt",
-                "name": "beer",
-                "mode_state_topic": "test-topic",
-                "availability_topic": "avty-topic",
-                "unique_id": "TOTALLY_UNIQUE",
-            }
-        ]
+        CLIMATE_DOMAIN: {
+            "platform": "mqtt",
+            "name": "test",
+            "mode_state_topic": "test-topic",
+            "availability_topic": "avty-topic",
+        }
     }
-    await help_test_entity_id_update(hass, mqtt_mock, CLIMATE_DOMAIN, config)
+    await help_test_entity_id_update(
+        hass, mqtt_mock, CLIMATE_DOMAIN, config, ["test-topic", "avty-topic"]
+    )
 
 
 async def test_precision_default(hass, mqtt_mock):
