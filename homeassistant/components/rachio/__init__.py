@@ -13,19 +13,22 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, EVENT_HOMEASSISTANT_STOP, URL_API
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import Entity
 
 from .const import (
     CONF_CUSTOM_URL,
     CONF_MANUAL_RUN_MINS,
     DEFAULT_MANUAL_RUN_MINS,
+    DEFAULT_NAME,
     DOMAIN,
     KEY_DEVICES,
     KEY_ENABLED,
     KEY_EXTERNAL_ID,
     KEY_ID,
     KEY_MAC_ADDRESS,
+    KEY_MODEL,
     KEY_NAME,
     KEY_SERIAL_NUMBER,
     KEY_STATUS,
@@ -142,10 +145,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # CONF_MANUAL_RUN_MINS can only come from a yaml import
     if not options.get(CONF_MANUAL_RUN_MINS) and config.get(CONF_MANUAL_RUN_MINS):
-        options[CONF_MANUAL_RUN_MINS] = config[CONF_MANUAL_RUN_MINS]
+        options_copy = options.copy()
+        options_copy[CONF_MANUAL_RUN_MINS] = config[CONF_MANUAL_RUN_MINS]
+        hass.config_entries.async_update_entry(options=options_copy)
 
     # Configure API
-    api_key = config.get(CONF_API_KEY)
+    api_key = config[CONF_API_KEY]
     rachio = Rachio(api_key)
 
     # Get the URL of this server
@@ -155,9 +160,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     webhook_url_path = f"{WEBHOOK_PATH}-{entry.entry_id}"
     rachio.webhook_url = f"{hass_url}{webhook_url_path}"
 
+    person = RachioPerson(rachio, entry)
+
     # Get the API user
     try:
-        person = await hass.async_add_executor_job(RachioPerson, hass, rachio, entry)
+        await hass.async_add_executor_job(person.setup, hass)
     # Yes we really do get all these exceptions (hopefully rachiopy switches to requests)
     # and there is not a reasonable timeout here so it can block for a long time
     except RACHIO_API_EXCEPTIONS as error:
@@ -187,23 +194,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 class RachioPerson:
     """Represent a Rachio user."""
 
-    def __init__(self, hass, rachio, config_entry):
+    def __init__(self, rachio, config_entry):
         """Create an object from the provided API instance."""
         # Use API token to get user ID
-        self._hass = hass
         self.rachio = rachio
         self.config_entry = config_entry
+        self.username = None
+        self._id = None
+        self._controllers = []
 
-        response = rachio.person.getInfo()
+    def setup(self, hass):
+        """Rachio device setup."""
+        response = self.rachio.person.getInfo()
         assert int(response[0][KEY_STATUS]) == 200, "API key error"
         self._id = response[1][KEY_ID]
 
         # Use user ID to get user data
-        data = rachio.person.get(self._id)
+        data = self.rachio.person.get(self._id)
         assert int(data[0][KEY_STATUS]) == 200, "User ID error"
         self.username = data[1][KEY_USERNAME]
         devices = data[1][KEY_DEVICES]
-        self._controllers = []
         for controller in devices:
             webhooks = self.rachio.notification.getDeviceWebhook(controller[KEY_ID])[1]
             # The API does not provide a way to tell if a controller is shared
@@ -218,9 +228,10 @@ class RachioPerson:
                     webhooks.get("error", "Unknown Error"),
                 )
                 continue
-            self._controllers.append(
-                RachioIro(self._hass, self.rachio, controller, webhooks)
-            )
+
+            rachio_iro = RachioIro(hass, self.rachio, controller, webhooks)
+            rachio_iro.setup()
+            self._controllers.append(rachio_iro)
         _LOGGER.info('Using Rachio API as user "%s"', self.username)
 
     @property
@@ -242,14 +253,17 @@ class RachioIro:
         self.hass = hass
         self.rachio = rachio
         self._id = data[KEY_ID]
-        self._name = data[KEY_NAME]
-        self._serial_number = data[KEY_SERIAL_NUMBER]
-        self._mac_address = data[KEY_MAC_ADDRESS]
+        self.name = data[KEY_NAME]
+        self.serial_number = data[KEY_SERIAL_NUMBER]
+        self.mac_address = data[KEY_MAC_ADDRESS]
+        self.model = data[KEY_MODEL]
         self._zones = data[KEY_ZONES]
         self._init_data = data
         self._webhooks = webhooks
         _LOGGER.debug('%s has ID "%s"', str(self), self.controller_id)
 
+    def setup(self):
+        """Rachio Iro setup for webhooks."""
         # Listen for all updates
         self._init_webhooks()
 
@@ -302,21 +316,6 @@ class RachioIro:
         return self._id
 
     @property
-    def serial_number(self) -> str:
-        """Return the Rachio API controller serial number."""
-        return self._serial_number
-
-    @property
-    def mac_address(self) -> str:
-        """Return the Rachio API controller mac address."""
-        return self._mac_address
-
-    @property
-    def name(self) -> str:
-        """Return the user-defined name of the controller."""
-        return self._name
-
-    @property
     def current_schedule(self) -> str:
         """Return the schedule that the device is running right now."""
         return self.rachio.device.getCurrentSchedule(self.controller_id)[1]
@@ -349,6 +348,28 @@ class RachioIro:
         _LOGGER.info("Stopped watering of all zones on %s", str(self))
 
 
+class RachioDeviceInfoProvider(Entity):
+    """Mixin to provide device_info."""
+
+    def __init__(self, controller):
+        """Initialize a Rachio device."""
+        super().__init__()
+        self._controller = controller
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        return {
+            "identifiers": {(DOMAIN, self._controller.serial_number,)},
+            "connections": {
+                (device_registry.CONNECTION_NETWORK_MAC, self._controller.mac_address,)
+            },
+            "name": self._controller.name,
+            "model": self._controller.model,
+            "manufacturer": DEFAULT_NAME,
+        }
+
+
 class RachioWebhookView(HomeAssistantView):
     """Provide a page for the server to call."""
 
@@ -365,7 +386,9 @@ class RachioWebhookView(HomeAssistantView):
         self._entry_id = entry_id
         self.url = webhook_url
         self.name = webhook_url[1:].replace("/", ":")
-        _LOGGER.debug("Created webhook at url: %s, with name %s", self.url, self.name)
+        _LOGGER.debug(
+            "Initialize webhook at url: %s, with name %s", self.url, self.name
+        )
 
     async def post(self, request) -> web.Response:
         """Handle webhook calls from the server."""
