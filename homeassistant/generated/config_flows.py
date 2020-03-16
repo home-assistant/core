@@ -83,6 +83,7 @@ FLOWS = [
     "rachio",
     "rainmachine",
     "ring",
+    "roku",
     "samsungtv",
     "sense",
     "sentry",
