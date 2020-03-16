@@ -12,6 +12,7 @@ from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DEFAULT_PORT
 from .const import DOMAIN  # pylint: disable=unused-import
@@ -83,7 +84,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=info["title"], data=user_input)
 
     async def async_step_ssdp(
-        self, discovery_info: Optional[Dict] = None
+        self, discovery_info: Optional[DiscoveryInfoType] = None
     ) -> Dict[str, Any]:
         """Handle a flow initialized by discovery."""
         host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname

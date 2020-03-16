@@ -20,7 +20,7 @@ from homeassistant.helpers import (
     entity,
     service,
 )
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import async_prepare_setup_platform
 
@@ -219,7 +219,7 @@ class EntityComponent:
         self,
         platform_type: str,
         platform_config: ConfigType,
-        discovery_info: Optional[Dict[str, Any]] = None,
+        discovery_info: Optional[DiscoveryInfoType] = None,
     ) -> None:
         """Set up a platform for this component."""
         if self.config is None:
