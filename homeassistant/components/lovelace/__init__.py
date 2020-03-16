@@ -4,10 +4,14 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import frontend
+from homeassistant.config import async_hass_config_yaml, async_process_component_config
 from homeassistant.const import CONF_FILENAME
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, config_validation as cv
+from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceCallType
+from homeassistant.loader import async_get_integration
 from homeassistant.util import sanitize_filename
 
 from . import dashboard, resources, websocket
@@ -25,8 +29,10 @@ from .const import (
     MODE_STORAGE,
     MODE_YAML,
     RESOURCE_CREATE_FIELDS,
+    RESOURCE_RELOAD_SERVICE_SCHEMA,
     RESOURCE_SCHEMA,
     RESOURCE_UPDATE_FIELDS,
+    SERVICE_RELOAD_RESOURCES,
     STORAGE_DASHBOARD_CREATE_FIELDS,
     STORAGE_DASHBOARD_UPDATE_FIELDS,
     url_slug,
@@ -62,29 +68,41 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up the Lovelace commands."""
     mode = config[DOMAIN][CONF_MODE]
     yaml_resources = config[DOMAIN].get(CONF_RESOURCES)
 
     frontend.async_register_built_in_panel(hass, DOMAIN, config={"mode": mode})
 
+    async def reload_resources_service_handler(service_call: ServiceCallType) -> None:
+        """Reload yaml resources."""
+        try:
+            conf = await async_hass_config_yaml(hass)
+        except HomeAssistantError as err:
+            _LOGGER.error(err)
+            return
+
+        integration = await async_get_integration(hass, DOMAIN)
+
+        config = await async_process_component_config(hass, conf, integration)
+
+        resource_collection = await create_yaml_resource_col(
+            hass, config[DOMAIN].get(CONF_RESOURCES)
+        )
+        hass.data[DOMAIN]["resources"] = resource_collection
+
     if mode == MODE_YAML:
         default_config = dashboard.LovelaceYAML(hass, None, None)
+        resource_collection = await create_yaml_resource_col(hass, yaml_resources)
 
-        if yaml_resources is None:
-            try:
-                ll_conf = await default_config.async_load(False)
-            except HomeAssistantError:
-                pass
-            else:
-                if CONF_RESOURCES in ll_conf:
-                    _LOGGER.warning(
-                        "Resources need to be specified in your configuration.yaml. Please see the docs."
-                    )
-                    yaml_resources = ll_conf[CONF_RESOURCES]
-
-        resource_collection = resources.ResourceYAMLCollection(yaml_resources or [])
+        async_register_admin_service(
+            hass,
+            DOMAIN,
+            SERVICE_RELOAD_RESOURCES,
+            reload_resources_service_handler,
+            schema=RESOURCE_RELOAD_SERVICE_SCHEMA,
+        )
 
     else:
         default_config = dashboard.LovelaceStorage(hass, None)
@@ -194,6 +212,24 @@ async def async_setup(hass, config):
     ).async_setup(hass, create_list=False)
 
     return True
+
+
+async def create_yaml_resource_col(hass, yaml_resources):
+    """Create yaml resources collection."""
+    if yaml_resources is None:
+        default_config = dashboard.LovelaceYAML(hass, None, None)
+        try:
+            ll_conf = await default_config.async_load(False)
+        except HomeAssistantError:
+            pass
+        else:
+            if CONF_RESOURCES in ll_conf:
+                _LOGGER.warning(
+                    "Resources need to be specified in your configuration.yaml. Please see the docs."
+                )
+                yaml_resources = ll_conf[CONF_RESOURCES]
+
+    return resources.ResourceYAMLCollection(yaml_resources or [])
 
 
 async def system_health_info(hass):
