@@ -7,7 +7,7 @@ from pyflunearyou.errors import FluNearYouError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MONITORED_CONDITIONS
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -19,6 +19,7 @@ from .const import (
     DATA_CLIENT,
     DOMAIN,
     LOGGER,
+    SENSORS,
     TOPIC_UPDATE,
 )
 
@@ -28,8 +29,18 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
+        DOMAIN: vol.All(
+            cv.deprecated(CONF_MONITORED_CONDITIONS, invalidation_version="0.114.0"),
+            vol.Schema(
+                {
+                    vol.Optional(CONF_LATITUDE): cv.latitude,
+                    vol.Optional(CONF_LONGITUDE): cv.longitude,
+                    vol.Optional(
+                        CONF_MONITORED_CONDITIONS, default=list(SENSORS)
+                    ): vol.All(cv.ensure_list, [vol.In(SENSORS)]),
+                }
+            ),
+        )
     },
     extra=vol.ALLOW_EXTRA,
 )
