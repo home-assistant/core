@@ -38,7 +38,6 @@ class RachioControllerBinarySensor(RachioDeviceInfoProvider, BinarySensorDevice)
     def __init__(self, controller, poll=True):
         """Set up a new Rachio controller binary sensor."""
         super().__init__(controller)
-        self._controller = controller
 
         if poll:
             self._state = self._poll_update()
