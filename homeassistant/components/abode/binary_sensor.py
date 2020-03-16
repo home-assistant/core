@@ -41,6 +41,6 @@ class AbodeBinarySensor(AbodeDevice, BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of the binary sensor."""
-        if self._device.get_value("is_window"):
+        if self._device.get_value("is_window") == "1":
             return DEVICE_CLASS_WINDOW
         return self._device.generic_type
