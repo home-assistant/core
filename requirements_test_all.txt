@@ -747,7 +747,7 @@ yahooweather==0.10
 zeroconf==0.24.5
 
 # homeassistant.components.zha
-zha-quirks==0.0.36
+zha-quirks==0.0.37
 
 # homeassistant.components.zha
 zigpy-cc==0.1.0
