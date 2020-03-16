@@ -46,7 +46,6 @@ class PowerWallSensor(PowerWallEntity):
     def __init__(self, coordinator, site_info, ip_address):
         """Initialize the sensor."""
         super().__init__(coordinator, site_info, ip_address)
-        self._coordinator = coordinator
 
     @property
     def available(self):
