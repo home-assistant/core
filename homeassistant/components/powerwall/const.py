@@ -18,23 +18,22 @@ ATTR_ENERGY_IMPORTED = "energy_imported"
 ATTR_INSTANT_AVERAGE_VOLTAGE = "instant_average_voltage"
 ATTR_NOMINAL_SYSTEM_POWER = "nominal_system_power_kW"
 
-POWERWALL_SITE_NAME = "site_name"
-POWERWALL_IP_ADDRESS = "ip"
+SITE_INFO_UTILITY = "utility"
+SITE_INFO_GRID_CODE = "grid_code"
+SITE_INFO_NOMINAL_SYSTEM_POWER_KW = "nominal_system_power_kW"
+SITE_INFO_NOMINAL_SYSTEM_ENERGY_KWH = "nominal_system_energy_kWh"
+SITE_INFO_REGION = "region"
 
+POWERWALL_SITE_NAME = "site_name"
 
 POWERWALL_API_METERS = "meters"
 POWERWALL_API_CHARGE = "charge"
 POWERWALL_API_GRID_STATUS = "grid_status"
 POWERWALL_API_SITEMASTER = "sitemaster"
 
-POWERWALL_REGION = "region"
-POWERWALL_GRID_CODE = "grid_code"
-
 POWERWALL_GRID_ONLINE = "SystemGridConnected"
 POWERWALL_CONNECTED_KEY = "connected_to_tesla"
 POWERWALL_RUNNING_KEY = "running"
-
-POWERWALL_NOMINAL_SYSTEM_POWER = "nominal_system_power_kW"
 
 
 MODEL = "PowerWall 2"

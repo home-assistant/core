@@ -16,22 +16,17 @@ from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     DOMAIN,
-    MANUFACTURER,
-    MODEL,
     POWERWALL_API_CHARGE,
     POWERWALL_API_GRID_STATUS,
     POWERWALL_API_METERS,
     POWERWALL_API_SITEMASTER,
     POWERWALL_COORDINATOR,
-    POWERWALL_IP_ADDRESS,
     POWERWALL_OBJECT,
     POWERWALL_SITE_INFO,
-    POWERWALL_SITE_NAME,
     UPDATE_INTERVAL,
 )
 
@@ -69,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN].setdefault(entry_id, {})
     power_wall = PowerWall(entry.data[CONF_IP_ADDRESS])
     try:
-        site_info = await hass.async_add_executor_job(_call_site_info, power_wall)
+        site_info = await hass.async_add_executor_job(call_site_info, power_wall)
     except (PowerWallUnreachableError, ApiError, ConnectionError):
         raise ConfigEntryNotReady
 
@@ -89,7 +84,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         POWERWALL_OBJECT: power_wall,
         POWERWALL_COORDINATOR: coordinator,
         POWERWALL_SITE_INFO: site_info,
-        POWERWALL_IP_ADDRESS: entry.data[CONF_IP_ADDRESS],
     }
 
     await coordinator.async_refresh()
@@ -102,7 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-def _call_site_info(power_wall):
+def call_site_info(power_wall):
     """Wrap site_info to be a callable."""
     return power_wall.site_info
 
@@ -134,25 +128,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-class PowerWallEntity(Entity):
-    """Base class for powerwall entities."""
-
-    def __init__(self, coordinator, site_info, ip_address):
-        """Initialize the sensor."""
-        super().__init__()
-        self._coordinator = coordinator
-        self._site_info = site_info
-        self._site_name = site_info[POWERWALL_SITE_NAME]
-        self._ip_address = ip_address
-
-    @property
-    def device_info(self):
-        """Powerwall device info."""
-        return {
-            "identifiers": {(DOMAIN, self._ip_address)},
-            "name": self._site_name,
-            "manufacturer": MANUFACTURER,
-            "model": MODEL,
-        }
