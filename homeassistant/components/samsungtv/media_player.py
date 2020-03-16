@@ -72,18 +72,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         turn_on_action = hass.data[DOMAIN][ip_address][CONF_ON_ACTION]
         on_script = Script(hass, turn_on_action)
 
+    # Initialize bridge
     data = config_entry.data.copy()
-    while True:
-        # Initialize bridge
+    bridge = SamsungTVBridge.get_bridge(
+        data[CONF_METHOD], data[CONF_HOST], data[CONF_PORT], data.get(CONF_TOKEN),
+    )
+    if bridge.port is None and bridge.default_port is not None:
+        # For backward compat, set default port for websocket tv
+        data[CONF_PORT] = bridge.default_port
+        hass.config_entries.async_update_entry(config_entry, data=data)
         bridge = SamsungTVBridge.get_bridge(
             data[CONF_METHOD], data[CONF_HOST], data[CONF_PORT], data.get(CONF_TOKEN),
         )
-        if bridge.port is None and bridge.default_port is not None:
-            # For backward compat, set default port for websocket tv
-            data[CONF_PORT] = bridge.default_port
-            hass.config_entries.async_update_entry(config_entry, data=data)
-            continue
-        break
 
     async_add_entities([SamsungTVDevice(bridge, config_entry, on_script)])
 
