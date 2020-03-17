@@ -1,10 +1,10 @@
 """Test Home Assistant config flow for BleBox devices."""
 
-from asynctest import patch
+from asynctest import CoroutineMock, mock, patch
 import blebox_uniapi
 import pytest
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.blebox import async_unload_entry, config_flow
 from homeassistant.setup import async_setup_component
 
@@ -65,6 +65,80 @@ async def test_flow_works(hass, feature_mock):
         config_flow.CONF_PORT: 80,
         # config_flow.CONF_NAME: "my device",
     }
+
+
+@pytest.fixture
+def product_class_mock():
+    """Return a mocked feature."""
+    path = "homeassistant.components.blebox.config_flow.Products"
+    patcher = patch(path, mock.DEFAULT, blebox_uniapi.products.Products, True, True)
+    yield patcher
+
+
+async def test_flow_with_connection_failure(hass, product_class_mock):
+    """Test that config flow works."""
+    with product_class_mock as products_class:
+        products_class.async_from_host = CoroutineMock(
+            side_effect=config_flow.CannotConnect
+        )
+        flow = init_config_flow(hass)
+        result = await flow.async_step_user()
+        result = await flow.async_step_user({"host": "172.2.3.4", "port": 80})
+        assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_flow_with_api_failure(hass, product_class_mock):
+    """Test that config flow works."""
+    with product_class_mock as products_class:
+        products_class.async_from_host = CoroutineMock(
+            side_effect=blebox_uniapi.error.ClientError
+        )
+        flow = init_config_flow(hass)
+        result = await flow.async_step_user()
+        result = await flow.async_step_user({"host": "172.2.3.4", "port": 80})
+        assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_flow_with_unknown_failure(hass, product_class_mock):
+    """Test that config flow works."""
+    with product_class_mock as products_class:
+        products_class.async_from_host = CoroutineMock(side_effect=RuntimeError)
+
+        flow = init_config_flow(hass)
+        result = await flow.async_step_user()
+        result = await flow.async_step_user({"host": "172.2.3.4", "port": 80})
+        assert result["errors"] == {"base": "unknown"}
+
+
+async def test_already_configured(hass):
+    """Test that same device cannot be added twice."""
+
+    feature = mock_only_feature(
+        blebox_uniapi.feature.Cover,
+        unique_id="BleBox-gateBox-1afe34db9437-0.position",
+        full_name="gateBox-0.position",
+        device_class="gate",
+        state=0,
+        async_update=CoroutineMock(),
+        current=None,
+    )
+
+    setup_product_mock(
+        "covers", [feature], "homeassistant.components.blebox.Products",
+    )
+
+    config = mock_config("172.1.2.3")
+    config.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        "blebox", context={"source": "user"}, data={"host": "172.1.2.3", "port": 80},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_async_setup(hass):
