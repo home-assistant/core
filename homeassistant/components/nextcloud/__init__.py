@@ -31,6 +31,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
     }
 )
+BINARY_SENSORS = (
+    "nextcloud_system_enable_avatars",
+    "nextcloud_system_enable_previews",
+    "nextcloud_system_filelocking.enabled",
+    "nextcloud_system_debug",
+)
 
 
 def setup(hass, config):
@@ -39,7 +45,6 @@ def setup(hass, config):
     conf = config["sensor"][0]
     try:
         ncm = NextcloudMonitor(conf[CONF_URL], conf[CONF_USERNAME], conf[CONF_PASSWORD])
-        raise
     except Exception:
         raise PlatformNotReady("Nextcloud setup failed.")
 
@@ -58,6 +63,7 @@ def setup(hass, config):
     track_time_interval(hass, nextcloud_update, conf[CONF_SCAN_INTERVAL])
 
     discovery.load_platform(hass, "sensor", DOMAIN, {}, conf)
+    discovery.load_platform(hass, "binary_sensor", DOMAIN, {}, conf)
 
     return True
 
