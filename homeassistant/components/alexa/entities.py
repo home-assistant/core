@@ -778,8 +778,6 @@ class CameraCapabilities(AlexaEntity):
     def interfaces(self):
         """Yield the supported interfaces."""
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if supported & camera.SUPPORT_ON_OFF:
-            yield AlexaPowerController(self.entity)
         if supported & camera.SUPPORT_STREAM:
             yield AlexaCameraStreamController(self.entity)
         yield AlexaEndpointHealth(self.hass, self.entity)
