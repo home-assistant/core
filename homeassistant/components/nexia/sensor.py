@@ -169,7 +169,7 @@ def percent_conv(val):
 
 
 class NexiaSensor(NexiaEntity):
-    """Provides Nexia sensor support."""
+    """Provides Nexia thermostat sensor support."""
 
     def __init__(
         self,
@@ -190,14 +190,14 @@ class NexiaSensor(NexiaEntity):
         self._class = sensor_class
         self._state = None
         self._name = f"{self._device.get_name()} {self._sensor_name}"
-        self._unique_id = f"{self._device.thermostat_id}_{self._call}"
         self._unit_of_measurement = sensor_unit
         self._modifier = modifier
 
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return self._unique_id
+        # This is the thermostat unique_id
+        return f"{self._device.thermostat_id}_{self._call}"
 
     @property
     def name(self):
@@ -267,20 +267,13 @@ class NexiaZoneSensor(NexiaSensor):
             sensor_unit,
             modifier,
         )
-        self._unique_id = f"{self._device.zone_id}_{self._call}"
         self._device = device
 
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return self._unique_id
-
-    @property
-    def device_state_attributes(self):
-        """Return the device specific state attributes."""
-        return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-        }
+        # This is the zone unique_id
+        return f"{self._device.zone_id}_{self._call}"
 
     @property
     def device_info(self):
@@ -293,13 +286,3 @@ class NexiaZoneSensor(NexiaSensor):
             "manufacturer": MANUFACTURER,
             "via_device": (DOMAIN, self._device.thermostat.thermostat_id),
         }
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        val = getattr(self._device, self._call)()
-        if self._modifier:
-            val = self._modifier(val)
-        if isinstance(val, float):
-            val = round(val, 1)
-        return val
