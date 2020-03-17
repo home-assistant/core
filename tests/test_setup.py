@@ -540,7 +540,7 @@ async def test_setup_import_blows_up(hass):
 
 async def test_blacklist(caplog):
     """Test setup blacklist."""
-    with patch("homeassistant.setup.BLACKLIST", ["bad_integration"]):
+    with patch("homeassistant.setup.BLACKLIST", {"bad_integration"}):
         assert not await setup.async_setup_component(
             mock.Mock(config=mock.Mock(components=[])), "bad_integration", {}
         )
