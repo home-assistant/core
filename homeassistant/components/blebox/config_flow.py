@@ -13,8 +13,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import DOMAIN
 from .errors import CannotConnect
 
-# pylint: disable=fixme
-
 PLACEHOLDER_HOST = "192.168.0.2"
 PLACEHOLDER_PORT = 80
 
