@@ -12,7 +12,7 @@
       },
       "ssdp_confirm": {
         "title": "Roku",
-        "description": "Do you want to set up {name}? Manual configurations for this device in the yaml files will be overwritten.",
+        "description": "Do you want to set up {name}?",
         "data": {}
       }
     },
