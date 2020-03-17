@@ -1315,7 +1315,7 @@ pyhomeworks==0.0.6
 pyialarm==0.3
 
 # homeassistant.components.icloud
-pyicloud==0.9.4
+pyicloud==0.9.5
 
 # homeassistant.components.intesishome
 pyintesishome==1.6
