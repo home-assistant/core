@@ -233,6 +233,7 @@ class OpenUvEntity(Entity):
 
     def __init__(self, openuv):
         """Initialize."""
+        self._async_unsub_dispatcher_connect = None
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._available = True
         self._name = None
