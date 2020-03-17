@@ -1188,7 +1188,7 @@ pycfdns==0.0.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==4.1.1
+pychromecast==4.2.0
 
 # homeassistant.components.cmus
 pycmus==0.1.1
