@@ -6,15 +6,23 @@ from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.setup import async_setup_component
 
 from .common import (
+    help_test_availability_without_topic,
+    help_test_custom_availability_payload,
+    help_test_default_availability_payload,
     help_test_discovery_broken,
     help_test_discovery_removal,
     help_test_discovery_update,
+    help_test_discovery_update_attr,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
     help_test_entity_device_info_with_connection,
     help_test_entity_device_info_with_identifier,
     help_test_entity_id_update,
+    help_test_setting_attribute_via_mqtt_json_message,
+    help_test_setting_attribute_with_template,
     help_test_unique_id,
+    help_test_update_with_json_attrs_bad_JSON,
+    help_test_update_with_json_attrs_not_dict,
 )
 
 from tests.common import (
@@ -47,6 +55,62 @@ async def test_run_camera_setup(hass, aiohttp_client):
     assert resp.status == 200
     body = await resp.text()
     assert body == "beer"
+
+
+async def test_availability_without_topic(hass, mqtt_mock):
+    """Test availability without defined availability topic."""
+    await help_test_availability_without_topic(
+        hass, mqtt_mock, camera.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_default_availability_payload(hass, mqtt_mock):
+    """Test availability by default payload with defined topic."""
+    await help_test_default_availability_payload(
+        hass, mqtt_mock, camera.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_custom_availability_payload(hass, mqtt_mock):
+    """Test availability by custom payload with defined topic."""
+    await help_test_custom_availability_payload(
+        hass, mqtt_mock, camera.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await help_test_setting_attribute_via_mqtt_json_message(
+        hass, mqtt_mock, camera.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_setting_attribute_with_template(hass, mqtt_mock):
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await help_test_setting_attribute_with_template(
+        hass, mqtt_mock, camera.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
+    """Test attributes get extracted from a JSON result."""
+    await help_test_update_with_json_attrs_not_dict(
+        hass, mqtt_mock, caplog, camera.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_update_with_json_attrs_bad_JSON(hass, mqtt_mock, caplog):
+    """Test attributes get extracted from a JSON result."""
+    await help_test_update_with_json_attrs_bad_JSON(
+        hass, mqtt_mock, caplog, camera.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_discovery_update_attr(hass, mqtt_mock, caplog):
+    """Test update of discovered MQTTAttributes."""
+    await help_test_discovery_update_attr(
+        hass, mqtt_mock, caplog, camera.DOMAIN, DEFAULT_CONFIG
+    )
 
 
 async def test_unique_id(hass):
