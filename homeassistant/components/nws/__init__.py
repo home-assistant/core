@@ -65,7 +65,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
         latitude = entry.get(CONF_LATITUDE, hass.config.latitude)
         longitude = entry.get(CONF_LONGITUDE, hass.config.longitude)
         api_key = entry[CONF_API_KEY]
-        station = entry.get(CONF_STATION)
         scan_interval = entry.get(CONF_SCAN_INTERVAL, 10)
 
         client_session = async_get_clientsession(hass)
@@ -80,17 +79,10 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
         nws_data = NwsData(hass, latitude, longitude, api_key, client_session)
 
-        try:
-            await nws_data.async_set_station(station)
-        except (aiohttp.ClientError, asyncio.TimeoutError) as err:
-            _LOGGER.error("Error automatically setting station: %s", str(err))
-            return False
-
-        await nws_data.async_update()
-
         hass.data[DOMAIN][base_unique_id(latitude, longitude)] = nws_data
 
         scan_time = datetime.timedelta(minutes=scan_interval)
+
         async_track_time_interval(hass, nws_data.async_update, scan_time)
 
         for component in PLATFORMS:

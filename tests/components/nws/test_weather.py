@@ -115,6 +115,19 @@ async def test_none(hass, mock_simple_nws):
     assert forecast is None
 
 
+async def test_error_station(hass, mock_simple_nws):
+    """Test error in setting station."""
+
+    instance = mock_simple_nws.return_value
+    instance.set_station.side_effect = aiohttp.ClientError
+
+    assert await async_setup_component(hass, nws.DOMAIN, MINIMAL_CONFIG) is True
+    await hass.async_block_till_done()
+
+    assert hass.states.get("weather.abc_hourly") is None
+    assert hass.states.get("weather.abc_daynight") is None
+
+
 async def test_error_observation(hass, mock_simple_nws, caplog):
     """Test error during update observation."""
     instance = mock_simple_nws.return_value

@@ -1,5 +1,8 @@
 """Support for NWS weather service."""
+import asyncio
 import logging
+
+import aiohttp
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -22,6 +25,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
@@ -34,6 +38,7 @@ from .const import (
     ATTR_FORECAST_PRECIP_PROB,
     ATTRIBUTION,
     CONDITION_CLASSES,
+    CONF_STATION,
     DOMAIN,
 )
 
@@ -72,8 +77,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info)
     """Set up the NWS weather platform."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
+    station = config.get(CONF_STATION)
 
     nws_data = hass.data[DOMAIN][base_unique_id(latitude, longitude)]
+
+    try:
+        await nws_data.async_set_station(station)
+    except (aiohttp.ClientError, asyncio.TimeoutError) as err:
+        _LOGGER.error("Error automatically setting station: %s", str(err))
+        raise PlatformNotReady
+
+    await nws_data.async_update()
 
     async_add_entities(
         [
