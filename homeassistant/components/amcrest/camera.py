@@ -590,13 +590,13 @@ class AmcrestCam(Camera):
     def _ptz_control(self, movement, travel_time):
         """Move or zoom camera in specified direction."""
         code = _ACTION[_MOV.index(movement)]
-        
+
         kwargs = {"code": code, "arg1": 0, "arg2": 0, "arg3": 0}
         if code in _MOVE_1_ACTIONS:
             kwargs["arg2"] = 1
         elif code in _MOVE_2_ACTIONS:
             kwargs["arg1"] = kwargs["arg2"] = 1
-                
+
         try:
             self._api.ptz_control_command(action="start", **kwargs)
             time.sleep(travel_time)
