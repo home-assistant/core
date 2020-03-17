@@ -366,6 +366,9 @@ class NexiaZone(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
+        target_temp_step = 0.5
+        if self.thermostat.get_unit() == UNIT_FAHRENHEIT:
+            target_temp_step = 1.0
 
         (min_temp, max_temp) = self.thermostat.get_setpoint_limits()
         data = {
@@ -374,9 +377,7 @@ class NexiaZone(ClimateDevice):
             ATTR_HVAC_MODE: self.mode,
             ATTR_TARGET_TEMP_HIGH: self._device.get_cooling_setpoint(),
             ATTR_TARGET_TEMP_LOW: self._device.get_heating_setpoint(),
-            ATTR_TARGET_TEMP_STEP: 1.0
-            if self.thermostat.get_unit() == UNIT_FAHRENHEIT
-            else 0.5,
+            ATTR_TARGET_TEMP_STEP: target_temp_step,
             ATTR_MIN_TEMP: min_temp,
             ATTR_MAX_TEMP: max_temp,
             ATTR_FAN_MODES: FAN_MODES,
@@ -476,7 +477,7 @@ class NexiaZone(ClimateDevice):
 
             if hvac_mode in OPERATION_MODES:
 
-                self._device.set_mode(mode=hvac_mode,)
+                self._device.set_mode(mode=hvac_mode)
             else:
                 raise KeyError(
                     f"Operation mode {hvac_mode} not in the supported "
