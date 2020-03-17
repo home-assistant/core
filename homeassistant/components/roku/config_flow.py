@@ -140,4 +140,4 @@ class CannotConnect(HomeAssistantError):
 
 
 class UnknownError(HomeAssistantError):
-    """Error to indicate we cannot connect."""
+    """Error to indicate we encountered an unknown error."""
