@@ -21,7 +21,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 # TODO List the platforms that you want to support.
 # For your initial PR, limit it to 1 platform.
-PLATFORMS = ["sensor", "cover", "air_quality", "light", "climate", "switch"]
+PLATFORMS = ["cover"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
