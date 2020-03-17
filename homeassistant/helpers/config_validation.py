@@ -893,10 +893,7 @@ TIME_CONDITION_SCHEMA = vol.All(
 )
 
 WEEKDAY_CONDITION_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_CONDITION): "weekday",
-        "days": weekdays,
-    }
+    {vol.Required(CONF_CONDITION): "weekday", "days": weekdays}
 )
 
 ZONE_CONDITION_SCHEMA = vol.Schema(
