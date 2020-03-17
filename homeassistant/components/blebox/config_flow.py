@@ -18,7 +18,6 @@ PLACEHOLDER_PORT = 80
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO adjust the data schema to the data that you need
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST, default=PLACEHOLDER_HOST): str,
