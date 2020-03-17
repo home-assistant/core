@@ -377,25 +377,10 @@ def _led(hass, call):
 
 @asyncio.coroutine
 def _set_ais_secure_android_id_dom(hass, call):
-    # the G_AIS_SECURE_ANDROID_ID_DOM can be set from frame during the wifi_connection_info
-    if ais_global.G_AIS_SECURE_ANDROID_ID_DOM is None:
-        import subprocess
-
-        try:
-            android_id = subprocess.check_output(
-                'su -c "settings get secure android_id"', shell=True, timeout=15
-            )
-            android_id = android_id.decode("utf-8").replace("\n", "")
-        except Exception as e:
-            from uuid import getnode as get_mac
-
-            android_id = get_mac()
-
-        ais_global.G_AIS_SECURE_ANDROID_ID_DOM = "dom-" + str(android_id)
-
+    # the G_AIS_SECURE_ANDROID_ID_DOM is set only in one place ais_global
     hass.states.async_set(
         "sensor.ais_secure_android_id_dom",
-        ais_global.G_AIS_SECURE_ANDROID_ID_DOM,
+        ais_global.get_sercure_android_id_dom(),
         {
             "friendly_name": "Unikalny identyfikator bramki",
             "icon": "mdi:account-card-details",
