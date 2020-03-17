@@ -204,8 +204,8 @@ def _monitor_events(hass, name, api, event_codes):
     event_codes = ",".join(event_codes)
     start_stop = re.compile(r"Code=([^;]+);action=(Start|Stop)", flags=re.S)
     while True:
+        api.available_flag.wait()
         try:
-            api.available_flag.wait()
             for event_info in api.event_stream(event_codes, retries=5):
                 _LOGGER.debug("%s event info: %r", name, event_info)
                 for code, action in start_stop.findall(event_info):
