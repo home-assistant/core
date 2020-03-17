@@ -1535,7 +1535,7 @@ async def async_api_initialize_camera_stream(hass, config, directive, context):
     payload = {
         "cameraStreams": [
             {
-                "uri": f"{config.camera_stream_url}{stream_source}",
+                "uri": f"{config.hass_url}{stream_source}",
                 "protocol": "RTSP",
                 "resolution": {"width": 1280, "height": 720},
                 "authorizationType": "NONE",
@@ -1543,7 +1543,7 @@ async def async_api_initialize_camera_stream(hass, config, directive, context):
                 "audioCodec": "AAC",
             }
         ],
-        "imageUri": f"{config.camera_stream_url}{camera_image}",
+        "imageUri": f"{config.hass_url}{camera_image}",
     }
     return directive.response(
         name="Response", namespace="Alexa.CameraStreamController", payload=payload

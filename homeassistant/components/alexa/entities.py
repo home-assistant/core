@@ -1,5 +1,6 @@
 """Alexa entity adapters."""
 from typing import List
+from urllib.parse import urlparse
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -777,8 +778,23 @@ class CameraCapabilities(AlexaEntity):
 
     def interfaces(self):
         """Yield the supported interfaces."""
-        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if supported & camera.SUPPORT_STREAM:
-            yield AlexaCameraStreamController(self.entity)
-        yield AlexaEndpointHealth(self.hass, self.entity)
-        yield Alexa(self.hass)
+        if self._validate_hass_url():
+            supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            if supported & camera.SUPPORT_STREAM:
+                yield AlexaCameraStreamController(self.entity)
+            yield AlexaEndpointHealth(self.hass, self.entity)
+            yield Alexa(self.hass)
+
+    def _validate_hass_url(self):
+        """Validate the hass URL for cameras.
+
+        Check the URL for HTTPS scheme and port 443.
+        """
+        hass_url = self.config.hass_url
+        if urlparse(hass_url).scheme not in ["https"]:
+            return False
+
+        if urlparse(hass_url).port is not None and urlparse(hass_url).port != 443:
+            return False
+
+        return True

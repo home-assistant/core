@@ -36,8 +36,8 @@ class AbstractConfig(ABC):
         """Return config locale."""
 
     @property
-    def camera_stream_url(self):
-        """Return local camera stream url."""
+    def hass_url(self):
+        """Return hass url."""
         return None
 
     @property

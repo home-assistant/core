@@ -3768,11 +3768,7 @@ async def test_camera_discovery(hass):
     appliance = await discovery_test(device, hass)
 
     capabilities = assert_endpoint_capabilities(
-        appliance,
-        "Alexa.PowerController",
-        "Alexa.CameraStreamController",
-        "Alexa.EndpointHealth",
-        "Alexa",
+        appliance, "Alexa.CameraStreamController", "Alexa.EndpointHealth", "Alexa"
     )
 
     camera_stream_capability = get_capability(
@@ -3786,6 +3782,48 @@ async def test_camera_discovery(hass):
     assert "NONE" in configuration["authorizationTypes"]
     assert "H264" in configuration["videoCodecs"]
     assert "AAC" in configuration["audioCodecs"]
+
+
+async def test_camera_hass_urls(hass):
+    """Test camera discovery with unsupported urls."""
+    request = get_new_request("Alexa.Discovery", "Discover")
+
+    # setup test devices
+    hass.states.async_set(
+        "camera.test", "idle", {"friendly_name": "Test camera", "supported_features": 3}
+    )
+
+    alexa_config = MockConfig(hass)
+
+    alexa_config.hass_url = "http://nohttpswrongport.org:8123"
+    msg = await smart_home.async_handle_message(hass, alexa_config, request)
+    await hass.async_block_till_done()
+    assert len(msg["event"]["payload"]["endpoints"]) == 0
+
+    alexa_config.hass_url = "https://httpswrongport.org:8123"
+    msg = await smart_home.async_handle_message(hass, alexa_config, request)
+    await hass.async_block_till_done()
+    assert len(msg["event"]["payload"]["endpoints"]) == 0
+
+    alexa_config.hass_url = "http://nohttpsport443.org:443"
+    msg = await smart_home.async_handle_message(hass, alexa_config, request)
+    await hass.async_block_till_done()
+    assert len(msg["event"]["payload"]["endpoints"]) == 0
+
+    alexa_config.hass_url = "tls://nohttpsport443.org:443"
+    msg = await smart_home.async_handle_message(hass, alexa_config, request)
+    await hass.async_block_till_done()
+    assert len(msg["event"]["payload"]["endpoints"]) == 0
+
+    alexa_config.hass_url = "https://correctschemaandport.org:443"
+    msg = await smart_home.async_handle_message(hass, alexa_config, request)
+    await hass.async_block_till_done()
+    assert len(msg["event"]["payload"]["endpoints"]) == 1
+
+    alexa_config.hass_url = "https://correctschemaandport.org"
+    msg = await smart_home.async_handle_message(hass, alexa_config, request)
+    await hass.async_block_till_done()
+    assert len(msg["event"]["payload"]["endpoints"]) == 1
 
 
 async def test_initialize_camera_stream(hass, mock_camera, mock_stream):

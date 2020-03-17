@@ -21,7 +21,7 @@ CONF_ENDPOINT = "endpoint"
 CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
 CONF_LOCALE = "locale"
-CONF_CAMERA_STREAM_URL = "camera_stream_url"
+CONF_HASS_URL = "hass_url"
 
 ATTR_UID = "uid"
 ATTR_UPDATE_DATE = "updateDate"

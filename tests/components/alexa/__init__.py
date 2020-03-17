@@ -9,7 +9,7 @@ from tests.common import async_mock_service
 TEST_URL = "https://api.amazonalexa.com/v3/events"
 TEST_TOKEN_URL = "https://api.amazon.com/auth/o2/token"
 TEST_LOCALE = "en-US"
-TEST_CAMERA_STREAM_URL = "https://mycamerastream.test"
+TEST_HASS_URL = "https://mycamerastream.test"
 
 
 class MockConfig(config.AbstractConfig):
@@ -22,6 +22,8 @@ class MockConfig(config.AbstractConfig):
         "binary_sensor.test_motion_camera_event": {"display_categories": "CAMERA"},
         "camera.test": {"display_categories": "CAMERA"},
     }
+
+    hass_url = TEST_HASS_URL
 
     @property
     def supports_auth(self):
@@ -37,11 +39,6 @@ class MockConfig(config.AbstractConfig):
     def locale(self):
         """Return config locale."""
         return TEST_LOCALE
-
-    @property
-    def camera_stream_url(self):
-        """Return config camera stream url."""
-        return TEST_CAMERA_STREAM_URL
 
     def should_expose(self, entity_id):
         """If an entity should be exposed."""

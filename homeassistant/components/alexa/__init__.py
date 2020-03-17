@@ -10,7 +10,7 @@ from homeassistant.helpers import config_validation as cv, entityfilter
 from . import flash_briefings, intent, smart_home_http
 from .const import (
     CONF_AUDIO,
-    CONF_CAMERA_STREAM_URL,
+    CONF_HASS_URL,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_DESCRIPTION,
@@ -50,7 +50,7 @@ SMART_HOME_SCHEMA = vol.Schema(
         vol.Optional(CONF_LOCALE, default=DEFAULT_LOCALE): vol.In(
             CONF_SUPPORTED_LOCALES
         ),
-        vol.Optional(CONF_CAMERA_STREAM_URL): cv.url,
+        vol.Optional(CONF_HASS_URL): cv.url,
         vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
         vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ALEXA_ENTITY_SCHEMA},
     }
@@ -100,11 +100,7 @@ async def async_setup(hass, config):
                 f"send command {data['request']['namespace']}/{data['request']['name']}"
             )
 
-        return {
-            "name": "Amazon Alexa",
-            "message": message,
-            "entity_id": entity_id,
-        }
+        return {"name": "Amazon Alexa", "message": message, "entity_id": entity_id}
 
     hass.components.logbook.async_describe_event(
         DOMAIN, EVENT_ALEXA_SMART_HOME, async_describe_logbook_event
