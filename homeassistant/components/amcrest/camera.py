@@ -57,8 +57,8 @@ _SRV_PTZ_CTRL = "ptz_control"
 _ATTR_PTZ_TT = "travel_time"
 _ATTR_PTZ_MOV = "movement"
 _MOV = [
-    "zoom_in",
     "zoom_out",
+    "zoom_in",
     "right",
     "left",
     "up",
