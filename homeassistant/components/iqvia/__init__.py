@@ -311,18 +311,19 @@ class IQVIAEntity(Entity):
             # express interest in allergy outlook data:
             await self._iqvia.async_register_api_interest(TYPE_ALLERGY_OUTLOOK)
 
-        update()
+        self.update_from_latest_data()
 
     async def async_will_remove_from_hass(self):
         """Disconnect dispatcher listener when removed."""
         if self._async_unsub_dispatcher_connect:
             self._async_unsub_dispatcher_connect()
+            self._async_unsub_dispatcher_connect = None
 
         self._iqvia.async_deregister_api_interest(self._type)
         if self._type == TYPE_ALLERGY_FORECAST:
             # Entities that lose interest in allergy forecast data should also lose
             # interest in allergy outlook data:
-            await self._iqvia.async_deregister_api_interest(TYPE_ALLERGY_OUTLOOK)
+            self._iqvia.async_deregister_api_interest(TYPE_ALLERGY_OUTLOOK)
 
     @callback
     def update_from_latest_data(self):
