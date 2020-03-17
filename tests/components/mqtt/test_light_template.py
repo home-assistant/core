@@ -30,7 +30,12 @@ from unittest.mock import patch
 
 from homeassistant.components import light, mqtt
 from homeassistant.components.mqtt.discovery import async_start
-from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
+    ATTR_SUPPORTED_FEATURES,
+    STATE_OFF,
+    STATE_ON,
+)
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
@@ -60,6 +65,7 @@ from tests.common import (
     async_fire_mqtt_message,
     mock_coro,
 )
+from tests.components.light import common
 
 DEFAULT_CONFIG = {
     light.DOMAIN: {
@@ -269,8 +275,8 @@ async def test_state_brightness_color_effect_temp_white_change_via_topic(
     assert light_state.attributes.get("effect") == "rainbow"
 
 
-async def test_optimistic(hass, mqtt_mock):
-    """Test optimistic mode."""
+async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
+    """Test the sending of command in optimistic mode."""
     fake_state = ha.State(
         "light.test",
         "on",
@@ -320,9 +326,284 @@ async def test_optimistic(hass, mqtt_mock):
     assert state.attributes.get("white_value") == 50
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
+    await common.async_turn_off(hass, "light.test")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", "off", 2, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+
+    await common.async_turn_on(hass, "light.test")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", "on,,,,--", 2, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+
+    # Set color_temp
+    await common.async_turn_on(hass, "light.test", color_temp=70)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", "on,,70,,--", 2, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("color_temp") == 70
+
+    # Set full brightness
+    await common.async_turn_on(hass, "light.test", brightness=255)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", "on,255,,,--", 2, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("brightness") == 255
+
+    # Full brightness - no scaling of RGB values sent over MQTT
+    await common.async_turn_on(
+        hass, "light.test", rgb_color=[255, 128, 0], white_value=80
+    )
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", "on,,,80,255-128-0", 2, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("white_value") == 80
+    assert state.attributes.get("rgb_color") == (255, 128, 0)
+
+    # Full brightness - normalization of RGB values sent over MQTT
+    await common.async_turn_on(hass, "light.test", rgb_color=[128, 64, 0])
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", "on,,,,255-127-0", 2, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("rgb_color") == (255, 127, 0)
+
+    # Set half brightness
+    await common.async_turn_on(hass, "light.test", brightness=128)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", "on,128,,,--", 2, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("brightness") == 128
+
+    # Half brightness - scaling of RGB values sent over MQTT
+    await common.async_turn_on(
+        hass, "light.test", rgb_color=[0, 255, 128], white_value=40
+    )
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", "on,,,40,0-128-64", 2, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("white_value") == 40
+    assert state.attributes.get("rgb_color") == (0, 255, 128)
+
+    # Half brightness - normalization+scaling of RGB values sent over MQTT
+    await common.async_turn_on(
+        hass, "light.test", rgb_color=[0, 32, 16], white_value=40
+    )
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", "on,,,40,0-128-64", 2, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("white_value") == 40
+    assert state.attributes.get("rgb_color") == (0, 255, 127)
+
+
+async def test_sending_mqtt_commands_non_optimistic_brightness_template(
+    hass, mqtt_mock
+):
+    """Test the sending of command in optimistic mode."""
+    with assert_setup_component(1, light.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            light.DOMAIN,
+            {
+                light.DOMAIN: {
+                    "platform": "mqtt",
+                    "schema": "template",
+                    "name": "test",
+                    "effect_list": ["rainbow", "colorloop"],
+                    "state_topic": "test_light_rgb",
+                    "command_topic": "test_light_rgb/set",
+                    "command_on_template": "on,"
+                    "{{ brightness|d }},"
+                    "{{ color_temp|d }},"
+                    "{{ white_value|d }},"
+                    "{{ red|d }}-"
+                    "{{ green|d }}-"
+                    "{{ blue|d }}",
+                    "command_off_template": "off",
+                    "state_template": '{{ value.split(",")[0] }}',
+                    "brightness_template": '{{ value.split(",")[1] }}',
+                    "color_temp_template": '{{ value.split(",")[2] }}',
+                    "white_value_template": '{{ value.split(",")[3] }}',
+                    "red_template": '{{ value.split(",")[4].' 'split("-")[0] }}',
+                    "green_template": '{{ value.split(",")[4].' 'split("-")[1] }}',
+                    "blue_template": '{{ value.split(",")[4].' 'split("-")[2] }}',
+                    "effect_template": '{{ value.split(",")[5] }}',
+                }
+            },
+        )
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+    assert not state.attributes.get("brightness")
+    assert not state.attributes.get("hs_color")
+    assert not state.attributes.get("effect")
+    assert not state.attributes.get("color_temp")
+    assert not state.attributes.get("white_value")
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_turn_off(hass, "light.test")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", "off", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+
+    await common.async_turn_on(hass, "light.test")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", "on,,,,--", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+
+    # Set color_temp
+    await common.async_turn_on(hass, "light.test", color_temp=70)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", "on,,70,,--", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+    assert not state.attributes.get("color_temp")
+
+    # Set full brightness
+    await common.async_turn_on(hass, "light.test", brightness=255)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", "on,255,,,--", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+    assert not state.attributes.get("brightness")
+
+    # Full brightness - no scaling of RGB values sent over MQTT
+    await common.async_turn_on(
+        hass, "light.test", rgb_color=[255, 128, 0], white_value=80
+    )
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", "on,,,80,255-128-0", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+    assert not state.attributes.get("white_value")
+    assert not state.attributes.get("rgb_color")
+
+    # Full brightness - normalization of RGB values sent over MQTT
+    await common.async_turn_on(hass, "light.test", rgb_color=[128, 64, 0])
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", "on,,,,255-127-0", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+    # Set half brightness
+    await common.async_turn_on(hass, "light.test", brightness=128)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", "on,128,,,--", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+    # Half brightness - no scaling of RGB values sent over MQTT
+    await common.async_turn_on(
+        hass, "light.test", rgb_color=[0, 255, 128], white_value=40
+    )
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", "on,,,40,0-255-128", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+
+    # Half brightness - normalization but no scaling of RGB values sent over MQTT
+    await common.async_turn_on(
+        hass, "light.test", rgb_color=[0, 32, 16], white_value=40
+    )
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", "on,,,40,0-255-127", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+
+
+async def test_effect(hass, mqtt_mock):
+    """Test effect sent over MQTT in optimistic mode."""
+    with assert_setup_component(1, light.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            light.DOMAIN,
+            {
+                light.DOMAIN: {
+                    "platform": "mqtt",
+                    "schema": "template",
+                    "effect_list": ["rainbow", "colorloop"],
+                    "name": "test",
+                    "command_topic": "test_light_rgb/set",
+                    "command_on_template": "on,{{ effect }}",
+                    "command_off_template": "off",
+                    "qos": 0,
+                }
+            },
+        )
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 44
+
+    await common.async_turn_on(hass, "light.test")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", "on,", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert not state.attributes.get("effect")
+
+    await common.async_turn_on(hass, "light.test", effect="rainbow")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", "on,rainbow", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("effect") == "rainbow"
+
+    await common.async_turn_on(hass, "light.test", effect="colorloop")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", "on,colorloop", 0, False
+    )
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("effect") == "colorloop"
+
 
 async def test_flash(hass, mqtt_mock):
-    """Test flash."""
+    """Test flash sent over MQTT in optimistic mode."""
     with assert_setup_component(1, light.DOMAIN):
         assert await async_setup_component(
             hass,
@@ -342,6 +623,30 @@ async def test_flash(hass, mqtt_mock):
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 40
+
+    await common.async_turn_on(hass, "light.test")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", "on,", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+
+    await common.async_turn_on(hass, "light.test", flash="short")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", "on,short", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+
+    await common.async_turn_on(hass, "light.test", flash="long")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", "on,long", 0, False
+    )
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
 
 
 async def test_transition(hass, mqtt_mock):
@@ -358,10 +663,28 @@ async def test_transition(hass, mqtt_mock):
                     "command_topic": "test_light_rgb/set",
                     "command_on_template": "on,{{ transition }}",
                     "command_off_template": "off,{{ transition|d }}",
+                    "qos": 1,
                 }
             },
         )
 
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 40
+
+    await common.async_turn_on(hass, "light.test", transition=10)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", "on,10", 1, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+
+    await common.async_turn_off(hass, "light.test", transition=20)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", "off,20", 1, False
+    )
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
 
