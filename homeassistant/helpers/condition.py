@@ -449,8 +449,12 @@ def time_from_config(
     return time_if
 
 
-def weekday(days: Union[None, str, Container[str]]) -> bool:
+def weekdays(days: Union[None, str, Container[str]]) -> bool:
     """Test if weekday condition matches."""
+
+    if days is None:
+        return False
+
     now = dt_util.now()
     now_weekday = WEEKDAYS[now.weekday()]
 
@@ -470,7 +474,7 @@ def weekday_from_config(
 
     def weekday_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Validate weekday based if-condition."""
-        return weekday(days)
+        return weekdays(days)
 
     return weekday_if
 
