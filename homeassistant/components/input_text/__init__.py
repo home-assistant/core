@@ -88,24 +88,22 @@ def _cv_input_text(cfg):
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: cv.schema_with_slug_keys(
-            vol.Any(
-                vol.All(
-                    {
-                        vol.Optional(CONF_NAME): cv.string,
-                        vol.Optional(CONF_MIN, default=CONF_MIN_VALUE): vol.Coerce(int),
-                        vol.Optional(CONF_MAX, default=CONF_MAX_VALUE): vol.Coerce(int),
-                        vol.Optional(CONF_INITIAL, ""): cv.string,
-                        vol.Optional(CONF_ICON): cv.icon,
-                        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-                        vol.Optional(CONF_PATTERN): cv.string,
-                        vol.Optional(CONF_MODE, default=MODE_TEXT): vol.In(
-                            [MODE_TEXT, MODE_PASSWORD]
-                        ),
-                    },
-                    _cv_input_text,
-                ),
-                None,
-            )
+            vol.All(
+                lambda value: value or {},
+                {
+                    vol.Optional(CONF_NAME): cv.string,
+                    vol.Optional(CONF_MIN, default=CONF_MIN_VALUE): vol.Coerce(int),
+                    vol.Optional(CONF_MAX, default=CONF_MAX_VALUE): vol.Coerce(int),
+                    vol.Optional(CONF_INITIAL, ""): cv.string,
+                    vol.Optional(CONF_ICON): cv.icon,
+                    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+                    vol.Optional(CONF_PATTERN): cv.string,
+                    vol.Optional(CONF_MODE, default=MODE_TEXT): vol.In(
+                        [MODE_TEXT, MODE_PASSWORD]
+                    ),
+                },
+                _cv_input_text,
+            ),
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -203,13 +201,6 @@ class InputText(RestoreEntity):
     @classmethod
     def from_yaml(cls, config: typing.Dict) -> "InputText":
         """Return entity instance initialized from yaml storage."""
-        # set defaults for empty config
-        config = {
-            CONF_MAX: CONF_MAX_VALUE,
-            CONF_MIN: CONF_MIN_VALUE,
-            CONF_MODE: MODE_TEXT,
-            **config,
-        }
         input_text = cls(config)
         input_text.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         input_text.editable = False
