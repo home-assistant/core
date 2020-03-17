@@ -18,6 +18,7 @@ from homeassistant.const import (
     PRECISION_TENTHS,
     TEMP_CELSIUS,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.temperature import display_temp
 
 from . import AirVisualEntity
@@ -151,7 +152,8 @@ class AirVisualGeographySensor(AirVisualEntity):
         """Return a unique, Home Assistant friendly identifier for this entity."""
         return f"{self._geography_id}_{self._locale}_{self._kind}"
 
-    async def async_update(self):
+    @callback
+    def update_from_latest_data(self):
         """Update the sensor."""
         try:
             data = self._airvisual.data[self._geography_id]["current"]["pollution"]
@@ -262,7 +264,8 @@ class AirVisualNodeProSensor(AirVisualEntity, AirQualityEntity):
         """Return a unique, Home Assistant friendly identifier for this entity."""
         return self._airvisual.data["serial_number"]
 
-    async def async_update(self):
+    @callback
+    def update_from_latest_data(self):
         """Update the Node/Pro's data."""
         sensor_life_attrs = {
             ATTR_SENSOR_LIFE.format(pollutant): lifespan

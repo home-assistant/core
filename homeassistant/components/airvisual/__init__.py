@@ -283,17 +283,25 @@ class AirVisualEntity(Entity):
         @callback
         def update():
             """Update the state."""
+            self.update_from_latest_data()
             self.async_write_ha_state()
 
         self.async_on_remove(
             async_dispatcher_connect(self.hass, self._airvisual.topic_update, update)
         )
 
+        self.update_from_latest_data()
+
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect dispatcher listener when removed."""
         if self._async_unsub_dispatcher_connect:
             self._async_unsub_dispatcher_connect()
             self._async_unsub_dispatcher_connect = None
+
+    @callback
+    def update_from_latest_data(self):
+        """Update the entity from the latest data."""
+        raise NotImplementedError
 
 
 class AirVisualGeographyData:
