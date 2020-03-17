@@ -168,6 +168,13 @@ class HomematicipGenericDevice(Entity):
             name = f"{name} {self.post}"
         return name
 
+    def _get_label_by_channel(self, channel: int) -> str:
+        """Return the name of the channel."""
+        name = self._device.functionalChannels[channel].label
+        if name and self._home.name is not None and self._home.name != "":
+            name = f"{self._home.name} {name}"
+        return name
+
     @property
     def should_poll(self) -> bool:
         """No polling needed."""
