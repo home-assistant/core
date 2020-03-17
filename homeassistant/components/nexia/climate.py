@@ -110,53 +110,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             zone = thermostat.get_zone_by_id(zone_id)
             entities.append(NexiaZone(coordinator, zone))
 
-    def humidify_set_service(service):
-        entity_id = service.data.get(ATTR_ENTITY_ID)
-        humidity = service.data.get(ATTR_HUMIDITY)
-        target_zones = []
-
-        for zone in entities:
-            if entity_id and zone.entity_id not in entity_id:
-                continue
-
-            if (
-                zone.thermostat.has_humidify_support()
-                and zone.thermostat not in target_zones
-            ):
-                target_zones.append(zone)
-
-        for zone in target_zones:
-            thermostat.set_humidify_setpoint(int(humidity) / 100.0)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SET_HUMIDIFY_SETPOINT,
-        humidify_set_service,
-        schema=SET_HUMIDITY_SCHEMA,
-    )
-
-    def aircleaner_set_service(service):
-        entity_id = service.data.get(ATTR_ENTITY_ID)
-        aircleaner_mode = service.data.get(ATTR_AIRCLEANER_MODE)
-        target_zones = []
-
-        for zone in entities:
-            if entity_id and zone.entity_id not in entity_id:
-                continue
-
-            if zone.thermostat not in target_zones:
-                target_zones.append(zone)
-
-        for zone in target_zones:
-            zone.set_aircleaner_mode(aircleaner_mode)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SET_AIRCLEANER_MODE,
-        aircleaner_set_service,
-        schema=SET_FAN_MIN_ON_TIME_SCHEMA,
-    )
-
     async_add_entities(entities, True)
 
 
