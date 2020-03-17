@@ -64,8 +64,6 @@ from .const import (
     ATTR_HUMIDIFY_SETPOINT,
     ATTR_HUMIDIFY_SUPPORTED,
     ATTR_SETPOINT_STATUS,
-    ATTR_THERMOSTAT_ID,
-    ATTR_ZONE_ID,
     ATTR_ZONE_STATUS,
     ATTRIBUTION,
     DATA_NEXIA,
@@ -74,6 +72,7 @@ from .const import (
     NEXIA_DEVICE,
     UPDATE_COORDINATOR,
 )
+from .entity import NexiaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -161,11 +160,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class NexiaZone(ClimateDevice):
+class NexiaZone(NexiaEntity, ClimateDevice):
     """Provides Nexia Climate support."""
 
     def __init__(self, coordinator, device):
         """Initialize the thermostat."""
+        super().__init__(coordinator)
         self.thermostat = device.thermostat
         self._device = device
         self._coordinator = coordinator
@@ -386,8 +386,6 @@ class NexiaZone(ClimateDevice):
             ATTR_HOLD_MODES: self._device.get_presets(),
             ATTR_SETPOINT_STATUS: self._device.get_setpoint_status(),
             ATTR_ZONE_STATUS: self._device.get_status(),
-            ATTR_THERMOSTAT_ID: self.thermostat.thermostat_id,
-            ATTR_ZONE_ID: self._device.zone_id,
         }
 
         if self.thermostat.has_emergency_heat():
@@ -494,21 +492,3 @@ class NexiaZone(ClimateDevice):
         """Set the humidify setpoint."""
         self.thermostat.set_humidify_setpoint(humidify_setpoint / 100.0)
         self.schedule_update_ha_state()
-
-    @property
-    def should_poll(self):
-        """Update use the coordinator."""
-        return False
-
-    @property
-    def available(self):
-        """Return true if entity is available."""
-        return self._coordinator.last_update_success
-
-    async def async_added_to_hass(self):
-        """Subscribe to updates."""
-        self._coordinator.async_add_listener(self.async_write_ha_state)
-
-    async def async_will_remove_from_hass(self):
-        """Undo subscription."""
-        self._coordinator.async_remove_listener(self.async_write_ha_state)

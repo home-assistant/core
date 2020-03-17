@@ -10,7 +10,6 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     UNIT_PERCENTAGE,
 )
-from homeassistant.helpers.entity import Entity
 
 from .const import (
     ATTRIBUTION,
@@ -20,6 +19,7 @@ from .const import (
     NEXIA_DEVICE,
     UPDATE_COORDINATOR,
 )
+from .entity import NexiaEntity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -168,7 +168,7 @@ def percent_conv(val):
     return val * 100.0
 
 
-class NexiaSensor(Entity):
+class NexiaSensor(NexiaEntity):
     """Provides Nexia sensor support."""
 
     def __init__(
@@ -182,6 +182,7 @@ class NexiaSensor(Entity):
         modifier=None,
     ):
         """Initialize the sensor."""
+        super().__init__(coordinator)
         self._coordinator = coordinator
         self._device = device
         self._call = sensor_call
@@ -231,16 +232,6 @@ class NexiaSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def should_poll(self):
-        """Update are handled by the coordinator."""
-        return False
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._coordinator.last_update_success
-
-    @property
     def device_info(self):
         """Return the device_info of the device."""
         return {
@@ -250,14 +241,6 @@ class NexiaSensor(Entity):
             "sw_version": self._device.get_firmware(),
             "manufacturer": MANUFACTURER,
         }
-
-    async def async_added_to_hass(self):
-        """Subscribe to updates."""
-        self._coordinator.async_add_listener(self.async_write_ha_state)
-
-    async def async_will_remove_from_hass(self):
-        """Undo subscription."""
-        self._coordinator.async_remove_listener(self.async_write_ha_state)
 
 
 class NexiaZoneSensor(NexiaSensor):

@@ -11,6 +11,7 @@ from .const import (
     NEXIA_DEVICE,
     UPDATE_COORDINATOR,
 )
+from .entity import NexiaEntity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -42,11 +43,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class NexiaBinarySensor(BinarySensorDevice):
+class NexiaBinarySensor(NexiaEntity, BinarySensorDevice):
     """Provices Nexia BinarySensor support."""
 
     def __init__(self, coordinator, device, sensor_call, sensor_name, sensor_class):
         """Initialize the nexia sensor."""
+        super().__init__(coordinator)
         self._coordinator = coordinator
         self._device = device
         self._name = f"{self._device.get_name()} {sensor_name}"
@@ -92,21 +94,3 @@ class NexiaBinarySensor(BinarySensorDevice):
     def device_class(self):
         """Return the class of this sensor, from DEVICE_CLASSES."""
         return self._device_class
-
-    @property
-    def should_poll(self):
-        """Update are handled by the coordinator."""
-        return False
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._coordinator.last_update_success
-
-    async def async_added_to_hass(self):
-        """Subscribe to updates."""
-        self._coordinator.async_add_listener(self.async_write_ha_state)
-
-    async def async_will_remove_from_hass(self):
-        """Undo subscription."""
-        self._coordinator.async_remove_listener(self.async_write_ha_state)
