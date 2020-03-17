@@ -1,12 +1,10 @@
 """Helpers for amcrest component."""
-from homeassistant.util import slugify
-
 from .const import DOMAIN
 
 
 def service_signal(service, *args):
     """Encode signal."""
-    return slugify("_".join([DOMAIN, service, *args]))
+    return "_".join([DOMAIN, service, *args])
 
 
 def log_update_error(logger, action, name, entity_type, error):

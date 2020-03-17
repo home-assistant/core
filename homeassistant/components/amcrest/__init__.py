@@ -211,7 +211,7 @@ def _monitor_events(hass, name, api, event_codes):
                 for code, action in start_stop.findall(event_info):
                     signal = service_signal(SERVICE_EVENT, name, code)
                     start = action == "Start"
-                    _LOGGER.debug("Sending signal: %s: %s", signal, start)
+                    _LOGGER.debug("Sending signal: '%s': %s", signal, start)
                     dispatcher_send(hass, signal, start)
         except AmcrestError as error:
             _LOGGER.warning(
