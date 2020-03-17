@@ -116,7 +116,7 @@ class FluNearYouSensor(Entity):
 
         await self._fny.async_register_api_interest(self._sensor_type)
 
-        update()
+        self.update_from_latest_data()
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect dispatcher listener when removed."""
@@ -124,7 +124,7 @@ class FluNearYouSensor(Entity):
             self._async_unsub_dispatcher_connect()
             self._async_unsub_dispatcher_connect = None
 
-        await self._fny.async_deregister_api_interest(self._sensor_type)
+        self._fny.async_deregister_api_interest(self._sensor_type)
 
     @callback
     def update_from_latest_data(self):
