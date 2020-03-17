@@ -364,6 +364,18 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
 
+    await common.async_turn_on(hass, "light.test", color_temp=90)
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set",
+        JsonValidator('{"state": "ON", "color_temp": 90}'),
+        2,
+        False,
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+
     await common.async_turn_off(hass, "light.test")
 
     mqtt_mock.async_publish.assert_called_once_with(
@@ -666,6 +678,64 @@ async def test_sending_xy_color(hass, mqtt_mock):
     )
 
 
+async def test_effect(hass, mqtt_mock):
+    """Test for effect being sent when included."""
+    assert await async_setup_component(
+        hass,
+        light.DOMAIN,
+        {
+            light.DOMAIN: {
+                "platform": "mqtt",
+                "schema": "json",
+                "name": "test",
+                "command_topic": "test_light_rgb/set",
+                "effect": True,
+                "qos": 0,
+            }
+        },
+    )
+
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 44
+
+    await common.async_turn_on(hass, "light.test")
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", JsonValidator('{"state": "ON"}'), 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("effect") == "none"
+
+    await common.async_turn_on(hass, "light.test", effect="rainbow")
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set",
+        JsonValidator('{"state": "ON", "effect": "rainbow"}'),
+        0,
+        False,
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("effect") == "rainbow"
+
+    await common.async_turn_on(hass, "light.test", effect="colorloop")
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set",
+        JsonValidator('{"state": "ON", "effect": "colorloop"}'),
+        0,
+        False,
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("effect") == "colorloop"
+
+
 async def test_flash_short_and_long(hass, mqtt_mock):
     """Test for flash length being sent when included."""
     assert await async_setup_component(
@@ -792,8 +862,8 @@ async def test_brightness_scale(hass, mqtt_mock):
     assert state.attributes.get("brightness") == 255
 
 
-async def test_invalid_color_brightness_and_white_values(hass, mqtt_mock):
-    """Test that invalid color/brightness/white values are ignored."""
+async def test_invalid_values(hass, mqtt_mock):
+    """Test that invalid color/brightness/white/etc. values are ignored."""
     assert await async_setup_component(
         hass,
         light.DOMAIN,
@@ -805,6 +875,7 @@ async def test_invalid_color_brightness_and_white_values(hass, mqtt_mock):
                 "state_topic": "test_light_rgb",
                 "command_topic": "test_light_rgb/set",
                 "brightness": True,
+                "color_temp": True,
                 "rgb": True,
                 "white_value": True,
                 "qos": "0",
@@ -814,10 +885,11 @@ async def test_invalid_color_brightness_and_white_values(hass, mqtt_mock):
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 185
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 187
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("brightness") is None
     assert state.attributes.get("white_value") is None
+    assert state.attributes.get("color_temp") is None
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     # Turn on the light
@@ -827,7 +899,9 @@ async def test_invalid_color_brightness_and_white_values(hass, mqtt_mock):
         '{"state":"ON",'
         '"color":{"r":255,"g":255,"b":255},'
         '"brightness": 255,'
-        '"white_value": 255}',
+        '"white_value": 255,'
+        '"color_temp": 100,'
+        '"effect": "rainbow"}',
     )
 
     state = hass.states.get("light.test")
@@ -835,12 +909,33 @@ async def test_invalid_color_brightness_and_white_values(hass, mqtt_mock):
     assert state.attributes.get("rgb_color") == (255, 255, 255)
     assert state.attributes.get("brightness") == 255
     assert state.attributes.get("white_value") == 255
+    assert state.attributes.get("color_temp") == 100
 
-    # Bad color values
+    # Bad HS color values
+    async_fire_mqtt_message(
+        hass, "test_light_rgb", '{"state":"ON",' '"color":{"h":"bad","s":"val"}}',
+    )
+
+    # Color should not have changed
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("rgb_color") == (255, 255, 255)
+
+    # Bad RGB color values
     async_fire_mqtt_message(
         hass,
         "test_light_rgb",
         '{"state":"ON",' '"color":{"r":"bad","g":"val","b":"test"}}',
+    )
+
+    # Color should not have changed
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("rgb_color") == (255, 255, 255)
+
+    # Bad XY color values
+    async_fire_mqtt_message(
+        hass, "test_light_rgb", '{"state":"ON",' '"color":{"x":"bad","y":"val"}}',
     )
 
     # Color should not have changed
@@ -867,6 +962,16 @@ async def test_invalid_color_brightness_and_white_values(hass, mqtt_mock):
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
     assert state.attributes.get("white_value") == 255
+
+    # Bad color temperature
+    async_fire_mqtt_message(
+        hass, "test_light_rgb", '{"state":"ON",' '"color_temp": "badValue"}'
+    )
+
+    # Color temperature should not have changed
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("color_temp") == 100
 
 
 async def test_availability_without_topic(hass, mqtt_mock):
