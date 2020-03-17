@@ -78,7 +78,7 @@ aiohue==2.0.0
 aionotion==1.1.0
 
 # homeassistant.components.pvpc_hourly_pricing
-aiopvpc==1.0.0
+aiopvpc==1.0.2
 
 # homeassistant.components.webostv
 aiopylgtv==0.3.3
