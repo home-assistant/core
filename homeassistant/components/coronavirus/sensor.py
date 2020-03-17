@@ -7,9 +7,9 @@ from .const import ATTRIBUTION, OPTION_WORLDWIDE
 
 SENSORS = {
     "confirmed": "mdi:emoticon-neutral-outline",
-    "current": "mdi:emoticon-frown-outline",
+    "current": "mdi:emoticon-sad-outline",
     "recovered": "mdi:emoticon-happy-outline",
-    "deaths": "mdi:emoticon-dead-outline",
+    "deaths": "mdi:emoticon-cry-outline",
 }
 
 
