@@ -462,6 +462,7 @@ class RainMachineEntity(Entity):
         """Disconnect dispatcher listener when removed."""
         for handler in self._dispatcher_handlers:
             handler()
+        self._dispatcher_handlers = []
 
     @callback
     def update_from_latest_data(self):
