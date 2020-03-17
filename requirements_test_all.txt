@@ -736,7 +736,7 @@ watchdog==0.8.3
 withings-api==2.1.3
 
 # homeassistant.components.wled
-wled==0.2.1
+wled==0.3.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.rest
