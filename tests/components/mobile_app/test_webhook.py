@@ -160,8 +160,10 @@ async def test_webhook_handle_get_zones(hass, create_registrations, webhook_clie
     assert resp.status == 200
 
     json = await resp.json()
-    assert len(json) == 1
-    assert json[0]["entity_id"] == "zone.home"
+    assert len(json) == 2
+    zones = sorted(json, key=lambda entry: entry["entity_id"])
+    assert zones[0]["entity_id"] == "zone.home"
+    assert zones[1]["entity_id"] == "zone.test"
 
 
 async def test_webhook_handle_get_config(hass, create_registrations, webhook_client):
