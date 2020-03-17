@@ -13,8 +13,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 
 from .const import (
-    ATTR_THERMOSTAT_ID,
-    ATTR_ZONE_ID,
     ATTRIBUTION,
     DATA_NEXIA,
     DOMAIN,
@@ -208,7 +206,6 @@ class NexiaSensor(Entity):
         """Return the device specific state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_THERMOSTAT_ID: self._device.thermostat_id,
         }
 
     @property
@@ -297,8 +294,6 @@ class NexiaZoneSensor(NexiaSensor):
         """Return the device specific state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_THERMOSTAT_ID: self._device.thermostat.thermostat_id,
-            ATTR_ZONE_ID: self._device.zone_id,
         }
 
     @property

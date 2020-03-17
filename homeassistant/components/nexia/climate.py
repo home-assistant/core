@@ -181,10 +181,10 @@ class NexiaZone(ClimateDevice):
         """Return the list of supported features."""
         supported = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_PRESET_MODE
 
-        if self._device.thermostat.has_relative_humidity():
+        if self.thermostat.has_relative_humidity():
             supported |= SUPPORT_TARGET_HUMIDITY
 
-        if self._device.thermostat.has_emergency_heat():
+        if self.thermostat.has_emergency_heat():
             supported |= SUPPORT_AUX_HEAT
 
         return supported
@@ -192,7 +192,7 @@ class NexiaZone(ClimateDevice):
     @property
     def is_fan_on(self):
         """Blower is on."""
-        return self._device.thermostat.is_blower_active()
+        return self.thermostat.is_blower_active()
 
     @property
     def name(self):
@@ -202,11 +202,7 @@ class NexiaZone(ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return (
-            TEMP_CELSIUS
-            if self._device.thermostat.get_unit() == "C"
-            else TEMP_FAHRENHEIT
-        )
+        return TEMP_CELSIUS if self.thermostat.get_unit() == "C" else TEMP_FAHRENHEIT
 
     @property
     def current_temperature(self):
@@ -216,7 +212,7 @@ class NexiaZone(ClimateDevice):
     @property
     def fan_mode(self):
         """Return the fan setting."""
-        return self._device.thermostat.get_fan_mode()
+        return self.thermostat.get_fan_mode()
 
     @property
     def fan_modes(self):
@@ -225,7 +221,7 @@ class NexiaZone(ClimateDevice):
 
     def set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
-        self._device.thermostat.set_fan_mode(fan_mode)
+        self.thermostat.set_fan_mode(fan_mode)
         self.schedule_update_ha_state()
 
     def set_hold_mode(self, hold_mode):
@@ -248,14 +244,14 @@ class NexiaZone(ClimateDevice):
 
     def set_humidity(self, humidity):
         """Dehumidify target."""
-        self._device.thermostat.set_dehumidify_setpoint(humidity / 100.0)
+        self.thermostat.set_dehumidify_setpoint(humidity / 100.0)
         self.schedule_update_ha_state()
 
     @property
     def current_humidity(self):
         """Humidity indoors."""
-        if self._device.thermostat.has_relative_humidity():
-            return round(self._device.thermostat.get_relative_humidity() * 100.0, 1)
+        if self.thermostat.has_relative_humidity():
+            return round(self.thermostat.get_relative_humidity() * 100.0, 1)
         return "Not supported"
 
     @property
@@ -268,7 +264,7 @@ class NexiaZone(ClimateDevice):
     @property
     def hvac_action(self) -> str:
         """Operation ie. heat, cool, idle."""
-        system_status = self._device.thermostat.get_system_status()
+        system_status = self.thermostat.get_system_status()
         zone_called = self._device.is_calling()
 
         if self._device.get_requested_mode() == OPERATION_MODE_OFF:
@@ -324,10 +320,10 @@ class NexiaZone(ClimateDevice):
         new_cool_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH, None)
         set_temp = kwargs.get(ATTR_TEMPERATURE, None)
 
-        deadband = self._device.thermostat.get_deadband()
+        deadband = self.thermostat.get_deadband()
         cur_cool_temp = self._device.get_cooling_setpoint()
         cur_heat_temp = self._device.get_heating_setpoint()
-        (min_temp, max_temp) = self._device.thermostat.get_setpoint_limits()
+        (min_temp, max_temp) = self.thermostat.get_setpoint_limits()
 
         # Check that we're not going to hit any minimum or maximum values
         if new_heat_temp and new_heat_temp + deadband > max_temp:
@@ -353,7 +349,7 @@ class NexiaZone(ClimateDevice):
     @property
     def is_aux_heat(self):
         """Emergency heat state."""
-        return self._device.thermostat.is_emergency_heat_active()
+        return self.thermostat.is_emergency_heat_active()
 
     @property
     def device_info(self):
@@ -361,25 +357,25 @@ class NexiaZone(ClimateDevice):
         return {
             "identifiers": {(DOMAIN, self._device.zone_id)},
             "name": self._device.get_name(),
-            "model": self._device.thermostat.get_model(),
-            "sw_version": self._device.thermostat.get_firmware(),
+            "model": self.thermostat.get_model(),
+            "sw_version": self.thermostat.get_firmware(),
             "manufacturer": MANUFACTURER,
-            "via_device": (DOMAIN, self._device.thermostat.thermostat_id),
+            "via_device": (DOMAIN, self.thermostat.thermostat_id),
         }
 
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
 
-        (min_temp, max_temp) = self._device.thermostat.get_setpoint_limits()
+        (min_temp, max_temp) = self.thermostat.get_setpoint_limits()
         data = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_FAN_MODE: self._device.thermostat.get_fan_mode(),
+            ATTR_FAN_MODE: self.thermostat.get_fan_mode(),
             ATTR_HVAC_MODE: self.mode,
             ATTR_TARGET_TEMP_HIGH: self._device.get_cooling_setpoint(),
             ATTR_TARGET_TEMP_LOW: self._device.get_heating_setpoint(),
             ATTR_TARGET_TEMP_STEP: 1.0
-            if self._device.thermostat.get_unit() == UNIT_FAHRENHEIT
+            if self.thermostat.get_unit() == UNIT_FAHRENHEIT
             else 0.5,
             ATTR_MIN_TEMP: min_temp,
             ATTR_MAX_TEMP: max_temp,
@@ -389,55 +385,48 @@ class NexiaZone(ClimateDevice):
             ATTR_HOLD_MODES: self._device.get_presets(),
             ATTR_SETPOINT_STATUS: self._device.get_setpoint_status(),
             ATTR_ZONE_STATUS: self._device.get_status(),
-            ATTR_THERMOSTAT_ID: self._device.thermostat.thermostat_id,
+            ATTR_THERMOSTAT_ID: self.thermostat.thermostat_id,
             ATTR_ZONE_ID: self._device.zone_id,
         }
 
-        if self._device.thermostat.has_emergency_heat():
-            data.update(
-                {
-                    ATTR_AUX_HEAT: "on"
-                    if self._device.thermostat.is_emergency_heat_active()
-                    else "off"
-                }
-            )
+        if self.thermostat.has_emergency_heat():
+            aux_heat_value = "off"
+            if self.thermostat.is_emergency_heat_active():
+                aux_heat_value = "on"
+            data.update({ATTR_AUX_HEAT: aux_heat_value})
 
-        if self._device.thermostat.has_relative_humidity():
+        if self.thermostat.has_relative_humidity():
             data.update(
                 {
-                    ATTR_HUMIDIFY_SUPPORTED: self._device.thermostat.has_humidify_support(),
-                    ATTR_DEHUMIDIFY_SUPPORTED: self._device.thermostat.has_dehumidify_support(),
+                    ATTR_HUMIDIFY_SUPPORTED: self.thermostat.has_humidify_support(),
+                    ATTR_DEHUMIDIFY_SUPPORTED: self.thermostat.has_dehumidify_support(),
                     ATTR_CURRENT_HUMIDITY: round(
-                        self._device.thermostat.get_relative_humidity() * 100.0, 1
+                        self.thermostat.get_relative_humidity() * 100.0, 1
                     ),
                     ATTR_MIN_HUMIDITY: round(
-                        self._device.thermostat.get_humidity_setpoint_limits()[0]
-                        * 100.0,
-                        1,
+                        self.thermostat.get_humidity_setpoint_limits()[0] * 100.0, 1,
                     ),
                     ATTR_MAX_HUMIDITY: round(
-                        self._device.thermostat.get_humidity_setpoint_limits()[1]
-                        * 100.0,
-                        1,
+                        self.thermostat.get_humidity_setpoint_limits()[1] * 100.0, 1,
                     ),
                 }
             )
-            if self._device.thermostat.has_dehumidify_support():
+            if self.thermostat.has_dehumidify_support():
                 data.update(
                     {
                         ATTR_DEHUMIDIFY_SETPOINT: round(
-                            self._device.thermostat.get_dehumidify_setpoint() * 100.0, 1
+                            self.thermostat.get_dehumidify_setpoint() * 100.0, 1
                         ),
                         ATTR_HUMIDITY: round(
-                            self._device.thermostat.get_dehumidify_setpoint() * 100.0, 1
+                            self.thermostat.get_dehumidify_setpoint() * 100.0, 1
                         ),
                     }
                 )
-            if self._device.thermostat.has_humidify_support():
+            if self.thermostat.has_humidify_support():
                 data.update(
                     {
                         ATTR_HUMIDIFY_SETPOINT: round(
-                            self._device.thermostat.get_humidify_setpoint() * 100.0, 1
+                            self.thermostat.get_humidify_setpoint() * 100.0, 1
                         )
                     }
                 )
@@ -450,12 +439,12 @@ class NexiaZone(ClimateDevice):
 
     def turn_aux_heat_off(self):
         """Turn. Aux Heat off."""
-        self._device.thermostat.set_emergency_heat(False)
+        self.thermostat.set_emergency_heat(False)
         self.schedule_update_ha_state()
 
     def turn_aux_heat_on(self):
         """Turn. Aux Heat on."""
-        self._device.thermostat.set_emergency_heat(True)
+        self.thermostat.set_emergency_heat(True)
         self.schedule_update_ha_state()
 
     def turn_off(self):
@@ -497,12 +486,12 @@ class NexiaZone(ClimateDevice):
 
     def set_aircleaner_mode(self, aircleaner_mode):
         """Set the aircleaner mode."""
-        self._device.thermostat.set_air_cleaner(aircleaner_mode)
+        self.thermostat.set_air_cleaner(aircleaner_mode)
         self.schedule_update_ha_state()
 
     def set_humidify_setpoint(self, humidify_setpoint):
         """Set the humidify setpoint."""
-        self._device.thermostat.set_humidify_setpoint(humidify_setpoint / 100.0)
+        self.thermostat.set_humidify_setpoint(humidify_setpoint / 100.0)
         self.schedule_update_ha_state()
 
     @property
