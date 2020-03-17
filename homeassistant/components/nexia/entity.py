@@ -6,7 +6,7 @@ from homeassistant.helpers.entity import Entity
 class NexiaEntity(Entity):
     """Base class for nexia entities."""
 
-    def __init__(self, coordinator, site_info):
+    def __init__(self, coordinator):
         """Initialize the entity."""
         super().__init__()
         self._coordinator = coordinator
