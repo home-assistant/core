@@ -188,18 +188,20 @@ class NexiaSensor(Entity):
         self._sensor_name = sensor_name
         self._class = sensor_class
         self._state = None
+        self._name = f"{self._device.get_name()} {self._sensor_name}"
+        self._unique_id = f"{self._device.thermostat_id}_{self._call}"
         self._unit_of_measurement = sensor_unit
         self._modifier = modifier
 
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return f"{self._device.thermostat_id}_{self._call}"
+        return self._unique_id
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._device.get_name() + " " + self._sensor_name
+        return self._name
 
     @property
     def device_state_attributes(self):
@@ -282,12 +284,13 @@ class NexiaZoneSensor(NexiaSensor):
             sensor_unit,
             modifier,
         )
+        self._unique_id = f"{self._device.zone_id}_{self._call}"
         self._device = device
 
     @property
     def unique_id(self):
         """Return the unique id of the sensor."""
-        return f"{self._device.zone_id}_{self._call}"
+        return self._unique_id
 
     @property
     def device_state_attributes(self):

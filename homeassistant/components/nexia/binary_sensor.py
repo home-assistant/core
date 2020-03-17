@@ -4,7 +4,6 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import ATTR_ATTRIBUTION
 
 from .const import (
-    ATTR_THERMOSTAT_ID,
     ATTRIBUTION,
     DATA_NEXIA,
     DOMAIN,
@@ -50,7 +49,7 @@ class NexiaBinarySensor(BinarySensorDevice):
         """Initialize the nexia sensor."""
         self._coordinator = coordinator
         self._device = device
-        self._name = self._device.get_name() + " " + sensor_name
+        self._name = f"{self._device.get_name()} {sensor_name}"
         self._call = sensor_call
         self._unique_id = f"{self._device.thermostat_id}_{sensor_call}"
         self._state = None
@@ -82,7 +81,6 @@ class NexiaBinarySensor(BinarySensorDevice):
         """Return the device specific state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_THERMOSTAT_ID: self._device.thermostat_id,
         }
 
     @property
