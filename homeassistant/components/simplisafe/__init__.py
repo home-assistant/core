@@ -642,13 +642,17 @@ class SimpliSafeEntity(Entity):
         @callback
         def update():
             """Update the state."""
-            self.async_schedule_update_ha_state(True)
+            self.update_from_latest_data()
+            self.async_write_ha_state()
 
         self._async_unsub_dispatcher_connect = async_dispatcher_connect(
             self.hass, TOPIC_UPDATE.format(self._system.system_id), update
         )
 
-    async def async_update(self):
+        self.update_from_latest_data()
+
+    @callback
+    def update_from_latest_data(self):
         """Update the entity."""
         self.async_update_from_rest_api()
 
