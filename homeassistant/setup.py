@@ -20,6 +20,8 @@ DATA_DEPS_REQS = "deps_reqs_processed"
 
 SLOW_SETUP_WARNING = 10
 
+BLACKLIST = set(["auto_backup"])
+
 
 def setup_component(hass: core.HomeAssistant, domain: str, config: ConfigType) -> bool:
     """Set up a component and all its dependencies."""
@@ -37,6 +39,12 @@ async def async_setup_component(
     """
     if domain in hass.config.components:
         return True
+
+    if domain in BLACKLIST:
+        _LOGGER.error(
+            "Integration %s is blacklisted because it is causing issues.", domain
+        )
+        return False
 
     setup_tasks = hass.data.setdefault(DATA_SETUP, {})
 
