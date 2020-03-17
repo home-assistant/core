@@ -78,7 +78,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = ERROR_CANNOT_CONNECT
             return self._show_form(errors)
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unknown error trying to connect.")
+            _LOGGER.exception("Unknown error trying to connect")
             return self.async_abort(reason=ERROR_UNKNOWN)
 
         await self.async_set_unique_id(info["serial_num"])
