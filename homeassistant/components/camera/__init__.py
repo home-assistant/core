@@ -161,11 +161,29 @@ async def async_get_image(hass, entity_id, timeout=10):
 
 
 @bind_hass
+async def async_get_image_url(hass, entity_id):
+    """Fetch the image url from a camera entity."""
+    camera = _get_camera_from_entity_id(hass, entity_id)
+
+    return camera.entity_picture
+
+
+@bind_hass
 async def async_get_mjpeg_stream(hass, request, entity_id):
     """Fetch an mjpeg stream from a camera entity."""
     camera = _get_camera_from_entity_id(hass, entity_id)
 
     return await camera.handle_async_mjpeg_stream(request)
+
+
+@bind_hass
+async def async_get_mjpeg_stream_url(hass, entity_id):
+    """Fetch the mjpeg stream url from a camera entity."""
+    camera = _get_camera_from_entity_id(hass, entity_id)
+
+    return (
+        f"/api/camera_proxy_stream/{camera.entity_id}?token={camera.access_tokens[-1]}"
+    )
 
 
 async def async_get_still_stream(request, image_cb, content_type, interval):

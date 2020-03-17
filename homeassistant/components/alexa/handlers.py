@@ -1530,11 +1530,8 @@ async def async_api_resume(hass, config, directive, context):
 async def async_api_initialize_camera_stream(hass, config, directive, context):
     """Process a InitializeCameraStreams request."""
     entity = directive.entity
-    camera_component = hass.data.get(camera.DOMAIN)
-    camera_entity = camera_component.get_entity(entity.entity_id)
-    stream_source = await camera.async_request_stream(
-        hass, camera_entity.entity_id, fmt="hls"
-    )
+    stream_source = await camera.async_request_stream(hass, entity.entity_id, fmt="hls")
+    camera_image = await camera.async_get_image_url(hass, entity.entity_id)
     payload = {
         "cameraStreams": [
             {
@@ -1546,7 +1543,7 @@ async def async_api_initialize_camera_stream(hass, config, directive, context):
                 "audioCodec": "AAC",
             }
         ],
-        "imageUri": f"{config.camera_stream_url}{camera_entity.entity_picture}",
+        "imageUri": f"{config.camera_stream_url}{camera_image}",
     }
     return directive.response(
         name="Response", namespace="Alexa.CameraStreamController", payload=payload
