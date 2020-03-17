@@ -320,3 +320,8 @@ class NotionEntity(Entity):
         if self._async_unsub_dispatcher_connect:
             self._async_unsub_dispatcher_connect()
             self._async_unsub_dispatcher_connect = None
+
+    @callback
+    def update_from_latest_data(self):
+        """Update the entity from the latest data."""
+        raise NotImplementedError
