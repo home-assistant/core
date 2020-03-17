@@ -2,7 +2,7 @@
 Support for interacting with Ais Dom devices.
 
 For more details about this platform, please refer to the documentation at
-https://sviete.github.io/AIS-docs
+https://www.ai-speaker.com
 """
 import logging
 import asyncio

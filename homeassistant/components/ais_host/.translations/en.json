@@ -4,7 +4,7 @@
         "step": {
             "init": {
                 "title": "Define new AIS host name",
-                "description": "You can change the hostname of the device to another one, this is useful if you have several ais-dom devices on the network.\n\n The host name can not have any special characters [Details in the documentation ](https://sviete.github.io/AIS-docs/).",
+                "description": "You can change the hostname of the device to another one, this is useful if you have several ais-dom devices on the network.\n\n The host name can not have any special characters [Details in the documentation ](https://www.ai-speaker.com).",
                 "data": {
                     "name": "New Host Name"
                 }

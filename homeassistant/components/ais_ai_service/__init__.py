@@ -4562,7 +4562,7 @@ class AisAskGoogle(intent.IntentHandler):
             m = (
                 "Żeby wysyłać komendy do serwisu Google, dodaj integrację AIS Google Home. Więcej informacji "
                 "znajdziesz w dokumentacji [Asystenta domowego]("
-                "https://sviete.github.io/AIS-docs/docs/en/ais_app_ai_integration_google_home.html). "
+                "https://www.ai-speaker.com/docs/ais_app_ai_integration_google_home). "
             )
 
         return m, True

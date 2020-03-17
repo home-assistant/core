@@ -50,7 +50,7 @@ class OwnTracksFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "webhook_url": webhook_url,
                 "android_url": "https://play.google.com/store/apps/details?id=org.owntracks.android",
                 "ios_url": "https://itunes.apple.com/us/app/owntracks/id692424691?mt=8",
-                "docs_url": "https://sviete.github.io/AIS-docs/docs/en/ais_bramka_presence_detection.html",
+                "docs_url": "https://www.ai-speaker.com/docs/ais_bramka_presence_detection",
             },
         )
 

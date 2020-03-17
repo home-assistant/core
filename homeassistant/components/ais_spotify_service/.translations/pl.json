@@ -7,7 +7,7 @@
                 "title": "Uwierzytelnienie  na Spotify"
             },
            "confirm": {
-                "description": "![AIS logo](/static/icons/spotify.png)\n\nCzy chcesz skonfigurowa\u0107 dostęp do serwisu Spotify?\n\n Szczegóły w dokumentacji [Komponent Spotify](https://sviete.github.io/AIS-docs/docs/en/ais_app_spotify.html)",
+                "description": "![AIS logo](/static/icons/spotify.png)\n\nCzy chcesz skonfigurowa\u0107 dostęp do serwisu Spotify?\n\n Szczegóły w dokumentacji [Komponent Spotify](https://www.ai-speaker.com/docs/ais_app_spotify)",
                 "title": "Serwis Spotify"
            }
         },

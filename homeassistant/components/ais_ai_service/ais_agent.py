@@ -21,7 +21,7 @@ class AisAgent(agent.AbstractConversationAgent):
             name += " > Google Home"
         return {
             "name": name,
-            "url": "https://sviete.github.io/AIS-docs/docs/en/ais_app_ai_integration.html",
+            "url": "https://www.ai-speaker.com/docs/ais_app_ai_integration",
         }
 
     async def async_get_onboarding(self):
