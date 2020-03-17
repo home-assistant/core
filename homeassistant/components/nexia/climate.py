@@ -353,7 +353,7 @@ class NexiaZone(ClimateDevice):
     @property
     def is_aux_heat(self):
         """Emergency heat state."""
-        return "on" if self._device.thermostat.is_emergency_heat_active() else "off"
+        return self._device.thermostat.is_emergency_heat_active()
 
     @property
     def device_info(self):
