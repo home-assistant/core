@@ -65,6 +65,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
+    async def async_step_homekit(self, homekit_info):
+        """Handle HomeKit discovery."""
+        return await self.async_step_user()
+
     async def async_step_import(self, user_input):
         """Handle import."""
         await self.async_set_unique_id(user_input[CONF_USERNAME])
