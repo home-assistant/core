@@ -25,7 +25,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.dt as dt_util
 
 from . import SENSOR_SCHEMA
-from .const import ATTR_TARIFF, DEFAULT_TIMEOUT, DOMAIN
+from .const import ATTR_TARIFF, DEFAULT_TARIFF, DEFAULT_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,9 +64,7 @@ async def async_setup_platform(
 
 async def update_listener(hass: HomeAssistant, entry: config_entries.ConfigEntry):
     """Update selected tariff for sensor."""
-    if entry.options[ATTR_TARIFF] != entry.data[ATTR_TARIFF]:
-        entry.data[ATTR_TARIFF] = entry.options[ATTR_TARIFF]
-        hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+    hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
 
 async def async_setup_entry(
@@ -80,7 +78,9 @@ async def async_setup_entry(
     entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, name, hass=hass)
 
     pvpc_data_handler = PVPCData(
-        tariff=config_entry.data[ATTR_TARIFF],
+        tariff=config_entry.options.get(
+            ATTR_TARIFF, config_entry.data.get(ATTR_TARIFF, DEFAULT_TARIFF)
+        ),
         local_timezone=hass.config.time_zone,
         websession=async_get_clientsession(hass),
         logger=_LOGGER,

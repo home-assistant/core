@@ -5,7 +5,7 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 
 from . import CONF_NAME, UI_CONFIG_SCHEMA
-from .const import ATTR_TARIFF, DOMAIN, TARIFFS
+from .const import ATTR_TARIFF, DEFAULT_TARIFF, DOMAIN, TARIFFS
 
 DOMAIN_NAME = DOMAIN
 
@@ -24,7 +24,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 title=self.config_entry.data.get(CONF_NAME), data=user_input,
             )
 
-        current_tariff = self.config_entry.data.get(ATTR_TARIFF)
+        current_tariff = self.config_entry.options.get(
+            ATTR_TARIFF, self.config_entry.data.get(ATTR_TARIFF, DEFAULT_TARIFF)
+        )
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
