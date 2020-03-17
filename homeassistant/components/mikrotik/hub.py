@@ -332,16 +332,17 @@ class MikrotikHub:
     async def async_add_options(self):
         """Populate default options for Mikrotik."""
         if not self.config_entry.options:
+            data = dict(self.config_entry.data)
             options = {
-                CONF_ARP_PING: self.config_entry.data.pop(CONF_ARP_PING, False),
-                CONF_FORCE_DHCP: self.config_entry.data.pop(CONF_FORCE_DHCP, False),
-                CONF_DETECTION_TIME: self.config_entry.data.pop(
+                CONF_ARP_PING: data.pop(CONF_ARP_PING, False),
+                CONF_FORCE_DHCP: data.pop(CONF_FORCE_DHCP, False),
+                CONF_DETECTION_TIME: data.pop(
                     CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME
                 ),
             }
 
             self.hass.config_entries.async_update_entry(
-                self.config_entry, options=options
+                self.config_entry, data=data, options=options
             )
 
     async def request_update(self):
