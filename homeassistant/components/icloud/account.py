@@ -97,6 +97,7 @@ class IcloudAccount:
         self._owner_fullname = None
         self._family_members_fullname = {}
         self._devices = {}
+        self._retried_fetch = False
 
         self.listeners = []
 
@@ -120,10 +121,6 @@ class IcloudAccount:
             user_info = api_devices.response["userInfo"]
         except (PyiCloudServiceNotActivatedException, PyiCloudNoDevicesException):
             _LOGGER.error("No iCloud device found")
-            raise ConfigEntryNotReady
-
-        if DEVICE_STATUS_CODES.get(list(api_devices)[0][DEVICE_STATUS]) == "pending":
-            _LOGGER.warning("Pending devices, trying again ...")
             raise ConfigEntryNotReady
 
         self._owner_fullname = f"{user_info['firstName']} {user_info['lastName']}"
@@ -157,28 +154,15 @@ class IcloudAccount:
             )
             return
 
-        if DEVICE_STATUS_CODES.get(list(api_devices)[0][DEVICE_STATUS]) == "pending":
-            _LOGGER.warning("Pending devices, trying again in 15s")
-            self._fetch_interval = 0.25
-            dispatcher_send(self.hass, self.signal_device_update)
-            track_point_in_utc_time(
-                self.hass,
-                self.keep_alive,
-                utcnow() + timedelta(minutes=self._fetch_interval),
-            )
-            return
-
         # Gets devices infos
         new_device = False
         for device in api_devices:
             status = device.status(DEVICE_STATUS_SET)
             device_id = status[DEVICE_ID]
             device_name = status[DEVICE_NAME]
-            device_status = DEVICE_STATUS_CODES.get(status[DEVICE_STATUS], "error")
 
             if (
-                device_status == "pending"
-                or status[DEVICE_BATTERY_STATUS] == "Unknown"
+                status[DEVICE_BATTERY_STATUS] == "Unknown"
                 or status.get(DEVICE_BATTERY_LEVEL) is None
             ):
                 continue
@@ -198,7 +182,16 @@ class IcloudAccount:
                 self._devices[device_id].update(status)
                 new_device = True
 
-        self._fetch_interval = self._determine_interval()
+        if (
+            DEVICE_STATUS_CODES.get(list(api_devices)[0][DEVICE_STATUS]) == "pending"
+            and not self._retried_fetch
+        ):
+            _LOGGER.warning("Pending devices, trying again in 15s")
+            self._fetch_interval = 0.25
+            self._retried_fetch = True
+        else:
+            self._fetch_interval = self._determine_interval()
+            self._retried_fetch = False
 
         dispatcher_send(self.hass, self.signal_device_update)
         if new_device:
