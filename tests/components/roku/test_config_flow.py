@@ -127,7 +127,9 @@ async def test_form_cannot_connect(hass: HomeAssistantType) -> None:
         "homeassistant.components.roku.config_flow.Roku._call",
         side_effect=RokuException,
     ) as mock_validate_input:
-        result = await async_configure_flow(hass, result["flow_id"], {CONF_HOST: HOST},)
+        result = await hass.config_entries.flow.async_configure(
+            flow_id=result["flow_id"], user_input={CONF_HOST: HOST}
+        )
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {"base": "cannot_connect"}
@@ -146,7 +148,9 @@ async def test_form_cannot_connect_request(hass: HomeAssistantType) -> None:
         "homeassistant.components.roku.config_flow.Roku._call",
         side_effect=RequestException,
     ) as mock_validate_input:
-        result = await async_configure_flow(hass, result["flow_id"], {CONF_HOST: HOST},)
+        result = await hass.config_entries.flow.async_configure(
+            flow_id=result["flow_id"], user_input={CONF_HOST: HOST}
+        )
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {"base": "cannot_connect"}
@@ -165,7 +169,9 @@ async def test_form_cannot_connect_socket(hass: HomeAssistantType) -> None:
         "homeassistant.components.roku.config_flow.Roku._call",
         side_effect=SocketGIAError,
     ) as mock_validate_input:
-        result = await async_configure_flow(hass, result["flow_id"], {CONF_HOST: HOST},)
+        result = await hass.config_entries.flow.async_configure(
+            flow_id=result["flow_id"], user_input={CONF_HOST: HOST}
+        )
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {"base": "cannot_connect"}
@@ -181,10 +187,11 @@ async def test_form_unknown_error(hass: HomeAssistantType) -> None:
     )
 
     with patch(
-        "homeassistant.components.roku.config_flow.Roku._call",
-        side_effect=Exception,
+        "homeassistant.components.roku.config_flow.Roku._call", side_effect=Exception,
     ) as mock_validate_input:
-        result = await async_configure_flow(hass, result["flow_id"], {CONF_HOST: HOST},)
+        result = await hass.config_entries.flow.async_configure(
+            flow_id=result["flow_id"], user_input={CONF_HOST: HOST}
+        )
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "unknown"

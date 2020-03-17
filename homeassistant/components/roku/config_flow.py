@@ -34,8 +34,13 @@ def validate_input(data: Dict) -> Dict:
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
 
-    roku = Roku(data["host"])
-    device_info = roku.device_info
+    try:
+        roku = Roku(data["host"])
+        device_info = roku.device_info
+    except (SocketGIAError, RequestException, RokuException) as exception:
+        raise CannotConnect from exception
+    except Exception as exception:  # pylint: disable=broad-except
+        raise UnknownError from exception
 
     return {
         "title": data["host"],
@@ -74,10 +79,10 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             info = await self.hass.async_add_executor_job(validate_input, user_input)
-        except (SocketGIAError, RequestException, RokuException):
+        except CannotConnect:
             errors["base"] = ERROR_CANNOT_CONNECT
             return self._show_form(errors)
-        except Exception:  # pylint: disable=broad-except
+        except UnknownError:
             _LOGGER.exception("Unknown error trying to connect")
             return self.async_abort(reason=ERROR_UNKNOWN)
 
@@ -119,10 +124,10 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await self.hass.async_add_executor_job(validate_input, user_input)
                 return self.async_create_entry(title=name, data=user_input)
-            except (SocketGIAError, RequestException, RokuException):
+            except CannotConnect:
                 return self.async_abort(reason=ERROR_CANNOT_CONNECT)
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unknown error trying to connect.")
+            except UnknownError:
+                _LOGGER.exception("Unknown error trying to connect")
                 return self.async_abort(reason=ERROR_UNKNOWN)
 
         return self.async_show_form(
@@ -131,4 +136,8 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class CannotConnect(HomeAssistantError):
+    """Error to indicate we cannot connect."""
+
+
+class UnknownError(HomeAssistantError):
     """Error to indicate we cannot connect."""
