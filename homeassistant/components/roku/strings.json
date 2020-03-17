@@ -17,11 +17,11 @@
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect, please try again",
-      "unknown": "Unexpected error"
+      "cannot_connect": "Failed to connect, please try again"
     },
     "abort": {
-      "already_configured": "Roku device is already configured"
+      "already_configured": "Roku device is already configured",
+      "unknown": "Unexpected error"
     }
   }
 }
