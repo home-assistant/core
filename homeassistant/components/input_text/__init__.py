@@ -294,5 +294,12 @@ class InputText(RestoreEntity):
 
     async def async_update_config(self, config: typing.Dict) -> None:
         """Handle when the config is updated."""
+        # set defaults for empty config
+        config = {
+            CONF_MAX: CONF_MAX_VALUE,
+            CONF_MIN: CONF_MIN_VALUE,
+            CONF_MODE: MODE_TEXT,
+            **config,
+        }
         self._config = config
         self.async_write_ha_state()
