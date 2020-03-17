@@ -97,6 +97,7 @@ class IcloudAccount:
         self._owner_fullname = None
         self._family_members_fullname = {}
         self._devices = {}
+        self._retried_fetch = False
 
         self.listeners = []
 
@@ -181,11 +182,16 @@ class IcloudAccount:
                 self._devices[device_id].update(status)
                 new_device = True
 
-        if DEVICE_STATUS_CODES.get(list(api_devices)[0][DEVICE_STATUS]) == "pending":
+        if (
+            DEVICE_STATUS_CODES.get(list(api_devices)[0][DEVICE_STATUS]) == "pending"
+            and not self._retried_fetch
+        ):
             _LOGGER.warning("Pending devices, trying again in 15s")
             self._fetch_interval = 0.25
+            self._retried_fetch = True
         else:
             self._fetch_interval = self._determine_interval()
+            self._retried_fetch = False
 
         dispatcher_send(self.hass, self.signal_device_update)
         if new_device:
