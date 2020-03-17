@@ -24,17 +24,14 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 PLATFORMS = ["sensor", "cover", "air_quality", "light", "climate", "switch"]
 
 
-# TODO: test
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the BleBox devices component."""
-    # TODO: coverage
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up BleBox devices from a config entry."""
 
-    # TODO: coverage
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
@@ -44,7 +41,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
-    # TODO: coverage
     """Unload a config entry."""
     unload_ok = all(
         await asyncio.gather(

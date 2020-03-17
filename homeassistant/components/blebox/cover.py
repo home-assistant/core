@@ -1,7 +1,5 @@
 """BleBox cover entity implementation."""
 
-# pylint: disable=fixme
-
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DEVICE_CLASS_DOOR,
@@ -40,7 +38,6 @@ class BleBoxCoverEntity(CommonEntity, CoverDevice):
         """Return the equivalent HA cover state."""
         states = {
             None: None,
-            # TODO: use constants in lib instead of numbers
             0: STATE_CLOSING,  # moving down
             1: STATE_OPENING,  # moving up
             2: STATE_OPEN,  # manually stopped
@@ -65,7 +62,6 @@ class BleBoxCoverEntity(CommonEntity, CoverDevice):
         }
         return types[self._feature.device_class]
 
-    # TODO: does changing this at runtime really work as expected?
     @property
     def supported_features(self):
         """Return the supported cover features."""
