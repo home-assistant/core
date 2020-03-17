@@ -142,7 +142,7 @@ def async_condition_from_config(
     """Create a function to test a device condition."""
     if config_validation:
         config = CONDITION_SCHEMA(config)
-    elif config[CONF_TYPE] == CONDITION_TRIGGERED:
+    if config[CONF_TYPE] == CONDITION_TRIGGERED:
         state = STATE_ALARM_TRIGGERED
     elif config[CONF_TYPE] == CONDITION_DISARMED:
         state = STATE_ALARM_DISARMED
