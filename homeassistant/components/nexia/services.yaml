@@ -20,4 +20,4 @@ set_humidify_setpoint:
       example: "\"entity_id\": \"home\""
     humidity:
       description: "The humidification setpoint as an int, range 35-65."
-      example: "\"humidity\": \"45\""
+      example: 45
