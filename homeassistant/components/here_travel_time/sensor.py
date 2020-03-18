@@ -24,6 +24,7 @@ from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import location
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import DiscoveryInfoType
 import homeassistant.util.dt as dt
 
 _LOGGER = logging.getLogger(__name__)
@@ -144,7 +145,7 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: Dict[str, Union[str, bool]],
     async_add_entities: Callable,
-    discovery_info: None = None,
+    discovery_info: Optional[DiscoveryInfoType] = None,
 ) -> None:
     """Set up the HERE travel time platform."""
 

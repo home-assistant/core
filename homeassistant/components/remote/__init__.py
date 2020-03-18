@@ -114,9 +114,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return cast(
-        bool, await cast(EntityComponent, hass.data[DOMAIN]).async_setup_entry(entry)
-    )
+    return await cast(EntityComponent, hass.data[DOMAIN]).async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
