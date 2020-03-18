@@ -48,7 +48,9 @@ async def test_show_zerconf_form(
     flow = config_flow.WLEDFlowHandler()
     flow.hass = hass
     flow.context = {"source": SOURCE_ZEROCONF}
-    result = await flow.async_step_zeroconf({"hostname": "example.local."})
+    result = await flow.async_step_zeroconf(
+        {"hostname": "example.local.", "properties": {}}
+    )
 
     assert flow.context[CONF_HOST] == "example.local"
     assert flow.context[CONF_NAME] == "example"
@@ -83,7 +85,7 @@ async def test_zeroconf_connection_error(
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data={"hostname": "example.local."},
+        data={"hostname": "example.local.", "properties": {}},
     )
 
     assert result["reason"] == "connection_error"
@@ -103,7 +105,7 @@ async def test_zeroconf_confirm_connection_error(
             CONF_HOST: "example.com",
             CONF_NAME: "test",
         },
-        data={"hostname": "example.com."},
+        data={"hostname": "example.com.", "properties": {}},
     )
 
     assert result["reason"] == "connection_error"
@@ -147,7 +149,23 @@ async def test_zeroconf_device_exists_abort(
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data={"hostname": "example.local."},
+        data={"hostname": "example.local.", "properties": {}},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_zeroconf_with_mac_device_exists_abort(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test we abort zeroconf flow if WLED device already configured."""
+    await init_integration(hass, aioclient_mock)
+
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data={"hostname": "example.local.", "properties": {CONF_MAC: "aabbccddeeff"}},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -194,7 +212,9 @@ async def test_full_zeroconf_flow_implementation(
     flow = config_flow.WLEDFlowHandler()
     flow.hass = hass
     flow.context = {"source": SOURCE_ZEROCONF}
-    result = await flow.async_step_zeroconf({"hostname": "example.local."})
+    result = await flow.async_step_zeroconf(
+        {"hostname": "example.local.", "properties": {}}
+    )
 
     assert flow.context[CONF_HOST] == "example.local"
     assert flow.context[CONF_NAME] == "example"
