@@ -58,11 +58,7 @@ from .common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import (
-    assert_setup_component,
-    async_fire_mqtt_message,
-    mock_coro,
-)
+from tests.common import assert_setup_component, async_fire_mqtt_message, mock_coro
 from tests.components.light import common
 
 DEFAULT_CONFIG = {
