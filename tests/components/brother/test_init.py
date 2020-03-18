@@ -2,12 +2,10 @@
 import json
 
 from asynctest import patch
-import pytest
 
-import homeassistant.components.brother as brother
 from homeassistant.components.brother.const import DOMAIN
+from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
 from homeassistant.const import CONF_HOST, CONF_TYPE, STATE_UNAVAILABLE
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -17,8 +15,10 @@ async def test_async_setup_entry(hass):
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="HL-L2340DW 0123456789",
+        unique_id="0123456789",
         data={CONF_HOST: "localhost", CONF_TYPE: "laser"},
     )
+
     with patch(
         "brother.Brother._get_data",
         return_value=json.loads(load_fixture("brother_printer_data.json")),
@@ -38,12 +38,14 @@ async def test_config_not_ready(hass):
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="HL-L2340DW 0123456789",
+        unique_id="0123456789",
         data={CONF_HOST: "localhost", CONF_TYPE: "laser"},
     )
-    with patch(
-        "brother.Brother._get_data", side_effect=ConnectionError()
-    ), pytest.raises(ConfigEntryNotReady):
-        await brother.async_setup_entry(hass, entry)
+
+    with patch("brother.Brother._get_data", side_effect=ConnectionError()):
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        assert entry.state == ENTRY_STATE_SETUP_RETRY
 
 
 async def test_unload_entry(hass):
@@ -51,8 +53,10 @@ async def test_unload_entry(hass):
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="HL-L2340DW 0123456789",
+        unique_id="0123456789",
         data={CONF_HOST: "localhost", CONF_TYPE: "laser"},
     )
+
     with patch(
         "brother.Brother._get_data",
         return_value=json.loads(load_fixture("brother_printer_data.json")),
