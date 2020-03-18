@@ -24,6 +24,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     SUPPORT_FAN_MODE,
+    SUPPORT_SWING_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -247,9 +248,23 @@ class AtaDeviceClimate(MelCloudClimate):
         await self._device.set({ata.PROPERTY_VANE_VERTICAL: position})
 
     @property
+    def swing_mode(self) -> Optional[str]:
+        """Return the swing mode."""
+        return self._device.vane_vertical
+
+    async def async_set_swing_mode(self, swing_mode) -> None:
+        """Set new swing mode."""
+        await self._device.set({"vane_vertical": swing_mode})
+
+    @property
+    def swing_modes(self) -> Optional[str]:
+        """Return the list of available swing modes."""
+        return self._device.vane_vertical_positions
+
+    @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
-        return SUPPORT_FAN_MODE | SUPPORT_TARGET_TEMPERATURE
+        return SUPPORT_FAN_MODE | SUPPORT_TARGET_TEMPERATURE | SUPPORT_SWING_MODE
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
