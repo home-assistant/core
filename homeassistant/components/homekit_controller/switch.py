@@ -107,7 +107,7 @@ ENTITY_TYPES = {
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up Homekit fans."""
+    """Set up Homekit switches."""
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]
 
