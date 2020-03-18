@@ -28,54 +28,55 @@ from .const import (
 )
 
 ATTR_COUNTER = "counter"
+ATTR_FIRMWARE = "firmware"
+ATTR_MODEL = "model"
 ATTR_REMAINING_PAGES = "remaining_pages"
+ATTR_SERIAL = "serial"
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add Brother entities from a config_entry."""
-    brother = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     sensors = []
 
-    name = brother.model
     device_info = {
-        "identifiers": {(DOMAIN, brother.serial)},
-        "name": brother.model,
+        "identifiers": {(DOMAIN, coordinator.data[ATTR_SERIAL])},
+        "name": coordinator.data[ATTR_MODEL],
         "manufacturer": ATTR_MANUFACTURER,
-        "model": brother.model,
-        "sw_version": brother.firmware,
+        "model": coordinator.data[ATTR_MODEL],
+        "sw_version": coordinator.data.get(ATTR_FIRMWARE),
     }
 
     for sensor in SENSOR_TYPES:
-        if sensor in brother.data:
-            sensors.append(BrotherPrinterSensor(brother, name, sensor, device_info))
-    async_add_entities(sensors, True)
+        if sensor in coordinator.data:
+            sensors.append(BrotherPrinterSensor(coordinator, sensor, device_info))
+    async_add_entities(sensors, False)
 
 
 class BrotherPrinterSensor(Entity):
     """Define an Brother Printer sensor."""
 
-    def __init__(self, printer, name, kind, device_info):
+    def __init__(self, coordinator, kind, device_info):
         """Initialize."""
-        self.printer = printer
-        self._name = name
+        self._name = f"{coordinator.data[ATTR_MODEL]} {SENSOR_TYPES[kind][ATTR_LABEL]}"
+        self._unique_id = f"{coordinator.data[ATTR_SERIAL].lower()}_{kind}"
         self._device_info = device_info
-        self._unique_id = f"{self.printer.serial.lower()}_{kind}"
+        self.coordinator = coordinator
         self.kind = kind
-        self._state = None
         self._attrs = {}
 
     @property
     def name(self):
         """Return the name."""
-        return f"{self._name} {SENSOR_TYPES[self.kind][ATTR_LABEL]}"
+        return self._name
 
     @property
     def state(self):
         """Return the state."""
-        return self._state
+        return self.coordinator.data.get(self.kind)
 
     @property
     def device_state_attributes(self):
@@ -98,8 +99,10 @@ class BrotherPrinterSensor(Entity):
             remaining_pages = ATTR_YELLOW_DRUM_REMAINING_PAGES
             drum_counter = ATTR_YELLOW_DRUM_COUNTER
         if remaining_pages and drum_counter:
-            self._attrs[ATTR_REMAINING_PAGES] = self.printer.data.get(remaining_pages)
-            self._attrs[ATTR_COUNTER] = self.printer.data.get(drum_counter)
+            self._attrs[ATTR_REMAINING_PAGES] = self.coordinator.data.get(
+                remaining_pages
+            )
+            self._attrs[ATTR_COUNTER] = self.coordinator.data.get(drum_counter)
         return self._attrs
 
     @property
@@ -120,15 +123,27 @@ class BrotherPrinterSensor(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self.printer.available
+        return self.coordinator.last_update_success
+
+    @property
+    def should_poll(self):
+        """Return the polling requirement of the entity."""
+        return False
 
     @property
     def device_info(self):
         """Return the device info."""
         return self._device_info
 
-    async def async_update(self):
-        """Update the data from printer."""
-        await self.printer.async_update()
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return True
 
-        self._state = self.printer.data.get(self.kind)
+    async def async_added_to_hass(self):
+        """Connect to dispatcher listening for entity data notifications."""
+        self.coordinator.async_add_listener(self.async_write_ha_state)
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect from update signal."""
+        self.coordinator.async_remove_listener(self.async_write_ha_state)
