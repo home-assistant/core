@@ -5,7 +5,7 @@ import functools
 import itertools
 import logging
 import random
-from typing import Any, Callable, Iterator, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from zigpy.zcl.clusters.general import Identify, LevelControl, OnOff
 from zigpy.zcl.clusters.lighting import Color
@@ -38,7 +38,7 @@ from homeassistant.helpers.event import (
 )
 import homeassistant.util.color as color_util
 
-from .core import discovery
+from .core import discovery, helpers
 from .core.const import (
     CHANNEL_COLOR,
     CHANNEL_LEVEL,
@@ -739,77 +739,40 @@ class LightGroup(BaseZhaEntity, light.Light):
         self._is_on = len(on_states) > 0
         self._available = any(state.state != STATE_UNAVAILABLE for state in states)
 
-        self._brightness = _reduce_attribute(on_states, ATTR_BRIGHTNESS)
+        self._brightness = helpers.reduce_attribute(on_states, ATTR_BRIGHTNESS)
 
-        self._hs_color = _reduce_attribute(on_states, ATTR_HS_COLOR, reduce=_mean_tuple)
+        self._hs_color = helpers.reduce_attribute(
+            on_states, ATTR_HS_COLOR, reduce=helpers.mean_tuple
+        )
 
-        self._white_value = _reduce_attribute(on_states, ATTR_WHITE_VALUE)
+        self._white_value = helpers.reduce_attribute(on_states, ATTR_WHITE_VALUE)
 
-        self._color_temp = _reduce_attribute(on_states, ATTR_COLOR_TEMP)
-        self._min_mireds = _reduce_attribute(
+        self._color_temp = helpers.reduce_attribute(on_states, ATTR_COLOR_TEMP)
+        self._min_mireds = helpers.reduce_attribute(
             states, ATTR_MIN_MIREDS, default=154, reduce=min
         )
-        self._max_mireds = _reduce_attribute(
+        self._max_mireds = helpers.reduce_attribute(
             states, ATTR_MAX_MIREDS, default=500, reduce=max
         )
 
         self._effect_list = None
-        all_effect_lists = list(_find_state_attributes(states, ATTR_EFFECT_LIST))
+        all_effect_lists = list(helpers.find_state_attributes(states, ATTR_EFFECT_LIST))
         if all_effect_lists:
             # Merge all effects from all effect_lists with a union merge.
             self._effect_list = list(set().union(*all_effect_lists))
 
         self._effect = None
-        all_effects = list(_find_state_attributes(on_states, ATTR_EFFECT))
+        all_effects = list(helpers.find_state_attributes(on_states, ATTR_EFFECT))
         if all_effects:
             # Report the most common effect.
             effects_count = Counter(itertools.chain(all_effects))
             self._effect = effects_count.most_common(1)[0][0]
 
         self._supported_features = 0
-        for support in _find_state_attributes(states, ATTR_SUPPORTED_FEATURES):
+        for support in helpers.find_state_attributes(states, ATTR_SUPPORTED_FEATURES):
             # Merge supported features by emulating support for every feature
             # we find.
             self._supported_features |= support
         # Bitwise-and the supported features with the GroupedLight's features
         # so that we don't break in the future when a new feature is added.
         self._supported_features &= SUPPORT_GROUP_LIGHT
-
-
-def _find_state_attributes(states: List[State], key: str) -> Iterator[Any]:
-    """Find attributes with matching key from states."""
-    for state in states:
-        value = state.attributes.get(key)
-        if value is not None:
-            yield value
-
-
-def _mean_int(*args):
-    """Return the mean of the supplied values."""
-    return int(sum(args) / len(args))
-
-
-def _mean_tuple(*args):
-    """Return the mean values along the columns of the supplied values."""
-    return tuple(sum(l) / len(l) for l in zip(*args))
-
-
-def _reduce_attribute(
-    states: List[State],
-    key: str,
-    default: Optional[Any] = None,
-    reduce: Callable[..., Any] = _mean_int,
-) -> Any:
-    """Find the first attribute matching key from states.
-
-    If none are found, return default.
-    """
-    attrs = list(_find_state_attributes(states, key))
-
-    if not attrs:
-        return default
-
-    if len(attrs) == 1:
-        return attrs[0]
-
-    return reduce(*attrs)
