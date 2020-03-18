@@ -50,7 +50,7 @@ aio_georss_gdacs==0.3
 aioambient==1.0.4
 
 # homeassistant.components.asuswrt
-aioasuswrt==1.2.2
+aioasuswrt==1.2.3
 
 # homeassistant.components.automatic
 aioautomatic==0.6.5
