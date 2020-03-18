@@ -1846,7 +1846,7 @@ sentry-sdk==0.13.5
 sharp_aquos_rc==0.3.2
 
 # homeassistant.components.shodan
-shodan==1.21.3
+shodan==1.22.0
 
 # homeassistant.components.sighthound
 simplehound==0.3
