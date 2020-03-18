@@ -1,7 +1,7 @@
 """Config flow for Vizio."""
 import copy
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from pyvizio import VizioAsync, async_guess_device_type
 import voluptuous as vol
@@ -23,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
     CONF_APPS,
@@ -318,7 +319,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_user(user_input=import_config)
 
     async def async_step_zeroconf(
-        self, discovery_info: Dict[str, Any] = None
+        self, discovery_info: Optional[DiscoveryInfoType] = None
     ) -> Dict[str, Any]:
         """Handle zeroconf discovery."""
 

@@ -221,7 +221,7 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
 
     home_zone = Zone(_home_conf(hass), True,)
     home_zone.entity_id = ENTITY_ID_HOME
-    await component.async_add_entities([home_zone])  # type: ignore
+    await component.async_add_entities([home_zone])
 
     async def core_config_updated(_: Event) -> None:
         """Handle core config updated."""

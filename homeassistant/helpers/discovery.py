@@ -5,7 +5,7 @@ There are two different types of discoveries that can be fired/listened for.
  - listen_platform/discover_platform is for platforms. These are used by
    components to allow discovery of their platforms.
 """
-from typing import Callable, Collection, Union
+from typing import Any, Callable, Collection, Dict, Optional, Union
 
 from homeassistant import core, setup
 from homeassistant.const import ATTR_DISCOVERED, ATTR_SERVICE, EVENT_PLATFORM_DISCOVERED
@@ -90,7 +90,9 @@ def listen_platform(
 
 @bind_hass
 def async_listen_platform(
-    hass: core.HomeAssistant, component: str, callback: Callable
+    hass: core.HomeAssistant,
+    component: str,
+    callback: Callable[[str, Optional[Dict[str, Any]]], Any],
 ) -> None:
     """Register a platform loader listener.
 
