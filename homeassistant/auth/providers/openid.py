@@ -4,13 +4,15 @@ import logging
 import re
 from typing import Any, Dict, Optional, cast
 
+from aiohttp import ClientResponseError
+from aiohttp.client import ClientResponse
 from aiohttp.web import HTTPBadRequest, Request, Response
 import jwt
 import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import _decode_jwt, _encode_jwt
@@ -20,6 +22,7 @@ from ..models import Credentials, UserMeta
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_ISSUER = "issuer"
 CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
 CONF_TOKEN_URI = "token_uri"
@@ -30,10 +33,9 @@ DATA_JWT_SECRET = "openid_jwt_secret"
 
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
     {
+        vol.Required(CONF_ISSUER): str,
         vol.Required(CONF_CLIENT_ID): str,
         vol.Required(CONF_CLIENT_SECRET): str,
-        vol.Required(CONF_TOKEN_URI): str,
-        vol.Required(CONF_AUTHORIZATION_URI): str,
         vol.Required(CONF_EMAILS): [str],
     },
     extra=vol.PREVENT_EXTRA,
@@ -46,7 +48,23 @@ class InvalidAuthError(HomeAssistantError):
     """Raised when submitting invalid authentication."""
 
 
+async def raise_for_status(response: ClientResponse) -> None:
+    """Raise exception on data failure with logging."""
+    if 400 <= response.status:
+        e = ClientResponseError(
+            response.request_info,
+            response.history,
+            code=response.status,
+            headers=response.headers,
+        )
+        data = await response.text()
+        _LOGGER.error("Request failed: %s", data)
+        raise InvalidAuthError(data) from e
+
+
 registered = False
+
+WANTED_SCOPES = set(["openid", "email", "profile"])
 
 
 @AUTH_PROVIDERS.register("openid")
@@ -55,9 +73,28 @@ class OpenIdAuthProvider(AuthProvider):
 
     DEFAULT_TITLE = "OpenId Connect"
 
+    _discovery_document: Optional[Dict[str, Any]]
+
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Extend parent's __init__."""
         super().__init__(*args, **kwargs)
+
+    async def async_get_discovery_document(self) -> Dict[str, Any]:
+        """Retrieve a discovery document for openid."""
+        if self._discovery_document is None:
+            session = async_get_clientsession(self.hass)
+            async with session.get(self.discovery_url) as response:
+                await raise_for_status(response)
+                self._discovery_document = cast(Dict[str, Any], await response.json())
+
+        return self._discovery_document
+
+    @property
+    def discovery_url(self) -> str:
+        """Construct discovery url based on config."""
+        return str(
+            URL(self.config[CONF_ISSUER]).with_path(".well-known/openid-configuration")
+        )
 
     @property
     def redirect_uri(self) -> str:
@@ -74,6 +111,8 @@ class OpenIdAuthProvider(AuthProvider):
 
     async def async_retrieve_token(self, code: str) -> Dict[str, Any]:
         """Convert a token code into an actual token."""
+        data = await self.async_get_discovery_document()
+
         payload = {
             "grant_type": "authorization_code",
             "code": code,
@@ -81,13 +120,10 @@ class OpenIdAuthProvider(AuthProvider):
             "client_id": self.config[CONF_CLIENT_ID],
             "client_secret": self.config[CONF_CLIENT_SECRET],
         }
-        uri = self.config[CONF_TOKEN_URI]
-        session = async_get_clientsession(self.hass)
 
-        async with session.post(uri, data=payload) as response:
-            if 400 <= response.status:
-                data = await response.text()
-                raise InvalidAuthError(f"Token retrieveal failed with error: {data}")
+        session = async_get_clientsession(self.hass)
+        async with session.post(data["token_endpoint"], data=payload) as response:
+            await raise_for_status(response)
             return cast(Dict[str, Any], await response.json())
 
     async def async_decode_id_token(self, id_token: str) -> Dict[str, Any]:
@@ -102,20 +138,21 @@ class OpenIdAuthProvider(AuthProvider):
             raise InvalidAuthError(f"Email {id_token['email']} not in allowed users")
         return id_token
 
-    @callback
-    def async_generate_authorize_url(self, flow_id: str) -> str:
+    async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate a authorization url for a given flow."""
-        return str(
-            URL(self.config["authorization_uri"]).with_query(
-                {
-                    "response_type": "code",
-                    "client_id": self.config["client_id"],
-                    "redirect_uri": self.redirect_uri,
-                    "state": _encode_jwt(self.hass, {"flow_id": flow_id}),
-                    "scope": "openid email",
-                }
-            )
-        )
+        data = await self.async_get_discovery_document()
+
+        scopes = WANTED_SCOPES.intersection(data["scopes_supported"])
+
+        query = {
+            "response_type": "code",
+            "client_id": self.config["client_id"],
+            "redirect_uri": self.redirect_uri,
+            "state": _encode_jwt(self.hass, {"flow_id": flow_id}),
+            "scope": " ".join(scopes),
+        }
+
+        return str(URL(data["authorization_endpoint"]).with_query(query))
 
     async def async_get_or_create_credentials(
         self, flow_result: Dict[str, str]
@@ -127,7 +164,6 @@ class OpenIdAuthProvider(AuthProvider):
             if credential.data["email"] == email:
                 return credential
 
-        # Create new credentials.
         return self.async_create_credentials(flow_result)
 
     async def async_user_meta_for_credentials(
@@ -138,11 +174,14 @@ class OpenIdAuthProvider(AuthProvider):
         Will be used to populate info when creating a new user.
         """
         email = credentials.data["email"]
-        match = re.match(r"[^@]+", email)
-        if match:
-            name = str(match.group(0))
+        if "name" in credentials.data:
+            name = credentials.data["name"]
         else:
-            name = str(email)
+            match = re.match(r"[^@]+", email)
+            if match:
+                name = str(match.group(0))
+            else:
+                name = str(email)
 
         return UserMeta(name=name, is_active=True)
 
@@ -169,7 +208,7 @@ class OpenIdLoginFlow(LoginFlow):
             self.external_data = str(user_input)
             return self.async_external_step_done(next_step_id="authorize")
 
-        url = provider.async_generate_authorize_url(self.flow_id)
+        url = await provider.async_generate_authorize_url(self.flow_id)
         return self.async_external_step(step_id="authenticate", url=url)
 
     async def async_step_authorize(
