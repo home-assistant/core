@@ -163,7 +163,7 @@ aioftp==0.12.0
 aioharmony==0.1.13
 
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.29.1
+aiohomekit[IP]==0.2.34
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -1432,7 +1432,7 @@ pynx584==0.4
 pynzbgetapi==0.2.0
 
 # homeassistant.components.obihai
-pyobihai==1.2.0
+pyobihai==1.2.1
 
 # homeassistant.components.ombi
 pyombi==0.1.10
@@ -1705,7 +1705,7 @@ pytradfri[async]==6.4.0
 pytrafikverket==0.1.6.1
 
 # homeassistant.components.ubee
-pyubee==0.9
+pyubee==0.10
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==0.0.5
