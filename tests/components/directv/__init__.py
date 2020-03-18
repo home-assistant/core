@@ -1,4 +1,6 @@
 """Tests for the DirecTV component."""
+from DirectPy import DIRECTV
+
 from homeassistant.components.directv.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.typing import HomeAssistantType
@@ -94,18 +96,23 @@ MOCK_GET_VERSION = {
 }
 
 
-class MockDirectvClass:
+class MockDirectvClass(DIRECTV):
     """A fake DirecTV DVR device."""
 
-    def __init__(self, ip, port=8080, clientAddr="0"):
+    def __init__(self, ip, port=8080, clientAddr="0", determine_state=False):
         """Initialize the fake DirecTV device."""
-        self._host = ip
-        self._port = port
-        self._device = clientAddr
-        self._standby = True
-        self._play = False
+        super().__init__(
+            ip=ip, port=port, clientAddr=clientAddr, determine_state=determine_state,
+        )
 
-        self.attributes = LIVE
+        self._play = False
+        self._standby = True
+
+        if self.clientAddr == CLIENT_ADDRESS:
+            self.attributes = RECORDING
+            self._standby = False
+        else:
+            self.attributes = LIVE
 
     def get_locations(self):
         """Mock for get_locations method."""

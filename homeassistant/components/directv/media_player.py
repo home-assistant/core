@@ -83,22 +83,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_dtv_instance(
-    host: str, port: int = DEFAULT_PORT, client_addr: str = "0"
-) -> DIRECTV:
-    """Retrieve a DIRECTV instance for the receiver or client device."""
-    try:
-        return DIRECTV(host, port, client_addr)
-    except RequestException as exception:
-        _LOGGER.debug(
-            "Request exception %s trying to retrieve DIRECTV instance for client address %s on device %s",
-            exception,
-            client_addr,
-            host,
-        )
-        return None
-
-
 async def async_setup_entry(
     hass: HomeAssistantType,
     entry: ConfigEntry,
@@ -114,15 +98,14 @@ async def async_setup_entry(
             continue
 
         if loc["clientAddr"] != "0":
-            # directpy does IO in constructor.
-            dtv = await hass.async_add_executor_job(
-                get_dtv_instance, entry.data[CONF_HOST], DEFAULT_PORT, loc["clientAddr"]
+            dtv = DIRECTV(
+                entry.data[CONF_HOST],
+                DEFAULT_PORT,
+                loc["clientAddr"],
+                determine_state=False,
             )
         else:
             dtv = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
-
-        if not dtv:
-            continue
 
         entities.append(
             DirecTvDevice(
@@ -174,15 +157,6 @@ class DirecTvDevice(MediaPlayerDevice):
                 self._unique_id = self._receiver_id
                 self._model = MODEL_HOST
                 self._software_version = version_info["stbSoftwareVersion"]
-
-        if self._is_client:
-            _LOGGER.debug(
-                "Created DirecTV media player for client %s on device %s",
-                self._name,
-                device,
-            )
-        else:
-            _LOGGER.debug("Created DirecTV media player for device %s", self._name)
 
     def update(self):
         """Retrieve latest state."""

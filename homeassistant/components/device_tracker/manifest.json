@@ -3,7 +3,8 @@
   "name": "Device Tracker",
   "documentation": "https://www.home-assistant.io/integrations/device_tracker",
   "requirements": [],
-  "dependencies": ["group", "zone"],
+  "dependencies": [],
+  "after_dependencies": ["zone"],
   "codeowners": [],
   "quality_scale": "internal"
 }

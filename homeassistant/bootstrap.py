@@ -20,6 +20,7 @@ from homeassistant.const import (
     REQUIRED_NEXT_PYTHON_VER,
 )
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import DATA_SETUP, async_setup_component
 from homeassistant.util.logging import AsyncHandler
 from homeassistant.util.package import async_get_user_site, is_virtual_env
@@ -133,7 +134,7 @@ async def async_setup_hass(
 
 
 async def async_from_config_dict(
-    config: Dict[str, Any], hass: core.HomeAssistant
+    config: ConfigType, hass: core.HomeAssistant
 ) -> Optional[core.HomeAssistant]:
     """Try to configure Home Assistant from a configuration dictionary.
 
