@@ -2,7 +2,7 @@
 import logging
 import re
 
-from pyalarmdotcom import Alarmdotcom
+from pyalarmdotcomajax import Alarmdotcom
 import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
@@ -33,6 +33,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_USERNAME): cv.string,
         vol.Optional(CONF_CODE): cv.positive_int,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_FORCE_BYPASS, default=False): cv.boolean,
+        vol.Optional(CONF_NO_ENTRY_DELAY, default=False): cv.boolean,
     }
 )
 
@@ -43,8 +45,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     code = config.get(CONF_CODE)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-
-    alarmdotcom = AlarmDotCom(hass, name, code, username, password)
+    force_bypass = config.get(CONF_FORCE_BYPASS)
+    no_entry_delay = config.get(CONF_NO_ENTRY_DELAY)
+    alarmdotcom = AlarmDotCom(
+        hass, name, code, username, password, force_bypass, no_entry_delay
+    )
     await alarmdotcom.async_login()
     async_add_entities([alarmdotcom])
 
@@ -63,7 +68,14 @@ class AlarmDotCom(alarm.AlarmControlPanel):
         self._password = password
         self._websession = async_get_clientsession(self._hass)
         self._state = None
-        self._alarm = Alarmdotcom(username, password, self._websession, hass.loop)
+        self._alarm = Alarmdotcom(
+            username,
+            password,
+            self._websession,
+            hass.loop,
+            force_bypass,
+            no_entry_delay,
+        )
 
     async def async_login(self):
         """Login to Alarm.com."""
