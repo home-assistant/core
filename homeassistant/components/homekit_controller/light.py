@@ -48,18 +48,6 @@ class HomeKitLight(HomeKitEntity, Light):
             CharacteristicsTypes.SATURATION,
         ]
 
-    def _setup_brightness(self, char):
-        self._features |= SUPPORT_BRIGHTNESS
-
-    def _setup_color_temperature(self, char):
-        self._features |= SUPPORT_COLOR_TEMP
-
-    def _setup_hue(self, char):
-        self._features |= SUPPORT_COLOR
-
-    def _setup_saturation(self, char):
-        self._features |= SUPPORT_COLOR
-
     @property
     def is_on(self):
         """Return true if device is on."""
@@ -86,7 +74,21 @@ class HomeKitLight(HomeKitEntity, Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return self._features
+        features = 0
+
+        if self.service.has(CharacteristicsTypes.BRIGHTNESS):
+            features |= SUPPORT_BRIGHTNESS
+
+        if self.service.has(CharacteristicsTypes.COLOR_TEMPERATURE):
+            features |= SUPPORT_COLOR_TEMP
+
+        if self.service.has(CharacteristicsTypes.HUE):
+            features |= SUPPORT_COLOR
+
+        if self.service.has(CharacteristicsTypes.SATURATION):
+            features |= SUPPORT_COLOR
+
+        return features
 
     async def async_turn_on(self, **kwargs):
         """Turn the specified light on."""
