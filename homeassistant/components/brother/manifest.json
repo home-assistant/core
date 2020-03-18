@@ -6,5 +6,6 @@
   "codeowners": ["@bieniu"],
   "requirements": ["brother==0.1.9"],
   "zeroconf": ["_printer._tcp.local."],
-  "config_flow": true
+  "config_flow": true,
+  "quality_scale": "platinum"
 }
