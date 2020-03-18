@@ -30,8 +30,6 @@ DEFAULT_PORT = 8080
 
 DOMAIN = "hlk_sw16"
 
-SIGNAL_AVAILABILITY = "hlk_sw16_device_available_{}"
-
 SWITCH_SCHEMA = vol.Schema({vol.Optional(CONF_NAME): cv.string})
 
 RELAY_ID = vol.All(
@@ -74,13 +72,13 @@ async def async_setup(hass, config):
         def disconnected():
             """Schedule reconnect after connection has been lost."""
             _LOGGER.warning("HLK-SW16 %s disconnected", device)
-            async_dispatcher_send(hass, SIGNAL_AVAILABILITY.format(device), False)
+            async_dispatcher_send(hass, f"hlk_sw16_device_available_{device}", False)
 
         @callback
         def reconnected():
             """Schedule reconnect after connection has been lost."""
             _LOGGER.warning("HLK-SW16 %s connected", device)
-            async_dispatcher_send(hass, SIGNAL_AVAILABILITY.format(device), True)
+            async_dispatcher_send(hass, f"hlk_sw16_device_available_{device}", True)
 
         async def connect():
             """Set up connection and hook it into HA for reconnect/shutdown."""
@@ -168,6 +166,6 @@ class SW16Device(Entity):
         self._is_on = await self._client.status(self._device_port)
         async_dispatcher_connect(
             self.hass,
-            SIGNAL_AVAILABILITY.format(self._device_id),
+            f"hlk_sw16_device_available_{self._device_id}",
             self._availability_callback,
         )

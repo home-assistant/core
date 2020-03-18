@@ -30,6 +30,9 @@ def _generate_and_log_exception(exception, log):
 
 def assert_log(log, exception, message, level):
     """Assert that specified values are in a specific log entry."""
+    if not isinstance(message, list):
+        message = [message]
+
     assert log["name"] == "test_logger"
     assert exception in log["exception"]
     assert message == log["message"]
@@ -39,7 +42,7 @@ def assert_log(log, exception, message, level):
 
 def get_frame(name):
     """Get log stack frame."""
-    return (name, None, None, None)
+    return (name, 5, None, None)
 
 
 async def test_normal_logs(hass, hass_client):
@@ -134,22 +137,45 @@ async def test_remove_older_logs(hass, hass_client):
     assert_log(log[1], "", "error message 2", "ERROR")
 
 
+def log_msg(nr=2):
+    """Log an error at same line."""
+    _LOGGER.error(f"error message %s", nr)
+
+
 async def test_dedup_logs(hass, hass_client):
     """Test that duplicate log entries are dedup."""
-    await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
+    await async_setup_component(hass, system_log.DOMAIN, {})
     _LOGGER.error("error message 1")
-    _LOGGER.error("error message 2")
-    _LOGGER.error("error message 2")
+    log_msg()
+    log_msg("2-2")
     _LOGGER.error("error message 3")
-    log = await get_error_log(hass, hass_client, 2)
+    log = await get_error_log(hass, hass_client, 3)
     assert_log(log[0], "", "error message 3", "ERROR")
     assert log[1]["count"] == 2
-    assert_log(log[1], "", "error message 2", "ERROR")
+    assert_log(log[1], "", ["error message 2", "error message 2-2"], "ERROR")
 
-    _LOGGER.error("error message 2")
-    log = await get_error_log(hass, hass_client, 2)
-    assert_log(log[0], "", "error message 2", "ERROR")
-    assert log[0]["timestamp"] > log[0]["first_occured"]
+    log_msg()
+    log = await get_error_log(hass, hass_client, 3)
+    assert_log(log[0], "", ["error message 2", "error message 2-2"], "ERROR")
+    assert log[0]["timestamp"] > log[0]["first_occurred"]
+
+    log_msg("2-3")
+    log_msg("2-4")
+    log_msg("2-5")
+    log_msg("2-6")
+    log = await get_error_log(hass, hass_client, 3)
+    assert_log(
+        log[0],
+        "",
+        [
+            "error message 2-2",
+            "error message 2-3",
+            "error message 2-4",
+            "error message 2-5",
+            "error message 2-6",
+        ],
+        "ERROR",
+    )
 
 
 async def test_clear_logs(hass, hass_client):
@@ -218,7 +244,7 @@ async def test_unknown_path(hass, hass_client):
     _LOGGER.findCaller = MagicMock(return_value=("unknown_path", 0, None, None))
     _LOGGER.error("error message")
     log = (await get_error_log(hass, hass_client, 1))[0]
-    assert log["source"] == "unknown_path"
+    assert log["source"] == ["unknown_path", 0]
 
 
 def log_error_from_test_path(path):
@@ -250,7 +276,7 @@ async def test_homeassistant_path(hass, hass_client):
     ):
         log_error_from_test_path("venv_path/homeassistant/component/component.py")
         log = (await get_error_log(hass, hass_client, 1))[0]
-    assert log["source"] == "component/component.py"
+    assert log["source"] == ["component/component.py", 5]
 
 
 async def test_config_path(hass, hass_client):
@@ -259,13 +285,4 @@ async def test_config_path(hass, hass_client):
     with patch.object(hass.config, "config_dir", new="config"):
         log_error_from_test_path("config/custom_component/test.py")
         log = (await get_error_log(hass, hass_client, 1))[0]
-    assert log["source"] == "custom_component/test.py"
-
-
-async def test_netdisco_path(hass, hass_client):
-    """Test error logged from netdisco path."""
-    await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
-    with patch.dict("sys.modules", netdisco=MagicMock(__path__=["venv_path/netdisco"])):
-        log_error_from_test_path("venv_path/netdisco/disco_component.py")
-        log = (await get_error_log(hass, hass_client, 1))[0]
-    assert log["source"] == "disco_component.py"
+    assert log["source"] == ["custom_component/test.py", 5]

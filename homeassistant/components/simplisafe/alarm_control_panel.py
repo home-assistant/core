@@ -190,11 +190,6 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
     @callback
     def async_update_from_rest_api(self):
         """Update the entity with the provided REST API data."""
-        if self._system.state == SystemStates.error:
-            self._online = False
-            return
-        self._online = True
-
         if self._system.version == 3:
             self._attrs.update(
                 {

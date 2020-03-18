@@ -22,6 +22,7 @@ from .const import (
     MANUFACTURER,
     MIN_TIME_BETWEEN_EVENT_UPDATES,
     MIN_TIME_BETWEEN_UPDATES,
+    MODELS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -149,7 +150,7 @@ class NetatmoCamera(Camera):
             "identifiers": {(DOMAIN, self._camera_id)},
             "name": self._camera_name,
             "manufacturer": MANUFACTURER,
-            "model": self._camera_type,
+            "model": MODELS[self._camera_type],
         }
 
     @property
@@ -224,23 +225,13 @@ class NetatmoCamera(Camera):
 
         camera = self._data.camera_data.get_camera(cid=self._camera_id)
 
-        # URLs
         self._vpnurl, self._localurl = self._data.camera_data.camera_urls(
             cid=self._camera_id
         )
-
-        # Monitoring status
         self._status = camera.get("status")
-
-        # SD Card status
         self._sd_status = camera.get("sd_status")
-
-        # Power status
         self._alim_status = camera.get("alim_status")
-
-        # Is local
         self._is_local = camera.get("is_local")
-
         self.is_streaming = self._alim_status == "on"
 
 

@@ -111,9 +111,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         activity,
     )
 
-    harmony_conf_file = hass.config.path(
-        "{}{}{}".format("harmony_", slugify(name), ".conf")
-    )
+    harmony_conf_file = hass.config.path(f"harmony_{slugify(name)}.conf")
     try:
         device = HarmonyRemote(
             name, address, port, activity, harmony_conf_file, delay_secs

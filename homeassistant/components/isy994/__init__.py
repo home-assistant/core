@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
@@ -101,7 +102,7 @@ NODE_FILTERS = {
     },
     "light": {
         "uom": ["51"],
-        "states": ["on", "off", "%"],
+        "states": ["on", "off", UNIT_PERCENTAGE],
         "node_def_id": [
             "DimmerLampSwitch",
             "DimmerLampSwitch_ADV",
@@ -141,6 +142,7 @@ NODE_FILTERS = {
             "AlertModuleArmed",
             "Siren",
             "Siren_ADV",
+            "X10",
         ],
         "insteon_type": ["2.", "9.10.", "9.11.", "113."],
     },
@@ -529,5 +531,5 @@ class ISYDevice(Entity):
         attr = {}
         if hasattr(self._node, "aux_properties"):
             for name, val in self._node.aux_properties.items():
-                attr[name] = "{} {}".format(val.get("value"), val.get("uom"))
+                attr[name] = f"{val.get('value')} {val.get('uom')}"
         return attr

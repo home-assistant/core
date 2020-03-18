@@ -11,6 +11,10 @@ from homeassistant.const import (
     CONF_SOURCE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TIME_DAYS,
+    TIME_HOURS,
+    TIME_MINUTES,
+    TIME_SECONDS,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -42,7 +46,12 @@ UNIT_PREFIXES = {
 }
 
 # SI Time prefixes
-UNIT_TIME = {"s": 1, "min": 60, "h": 60 * 60, "d": 24 * 60 * 60}
+UNIT_TIME = {
+    TIME_SECONDS: 1,
+    TIME_MINUTES: 60,
+    TIME_HOURS: 60 * 60,
+    TIME_DAYS: 24 * 60 * 60,
+}
 
 ICON = "mdi:chart-line"
 
@@ -55,7 +64,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_SOURCE): cv.entity_id,
         vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
         vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
-        vol.Optional(CONF_UNIT_TIME, default="h"): vol.In(UNIT_TIME),
+        vol.Optional(CONF_UNIT_TIME, default=TIME_HOURS): vol.In(UNIT_TIME),
         vol.Optional(CONF_UNIT): cv.string,
         vol.Optional(CONF_TIME_WINDOW, default=DEFAULT_TIME_WINDOW): cv.time_period,
     }

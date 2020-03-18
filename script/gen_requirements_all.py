@@ -68,7 +68,7 @@ enum34==1000000000.0.0
 pycrypto==1000000000.0.0
 """
 
-IGNORE_PRE_COMMIT_HOOK_ID = ("check-json",)
+IGNORE_PRE_COMMIT_HOOK_ID = ("check-json", "no-commit-to-branch")
 
 
 def has_tests(module: str):
@@ -135,7 +135,7 @@ def gather_recursive_requirements(domain, seen=None):
 
 def comment_requirement(req):
     """Comment out requirement. Some don't install on all systems."""
-    return any(ign in req for ign in COMMENT_REQUIREMENTS)
+    return any(ign.lower() in req.lower() for ign in COMMENT_REQUIREMENTS)
 
 
 def gather_modules():

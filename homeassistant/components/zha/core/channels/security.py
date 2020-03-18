@@ -4,18 +4,16 @@ Security channels module for Zigbee Home Automation.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
+import asyncio
 import logging
 
 from zigpy.exceptions import DeliveryError
 import zigpy.zcl.clusters.security as security
 
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import ZigbeeChannel
 from .. import registries
 from ..const import (
-    CLUSTER_COMMAND_SERVER,
     SIGNAL_ATTR_UPDATED,
     WARNING_DEVICE_MODE_EMERGENCY,
     WARNING_DEVICE_SOUND_HIGH,
@@ -23,6 +21,7 @@ from ..const import (
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
 )
+from .base import ZigbeeChannel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,13 +74,7 @@ class IasWd(ZigbeeChannel):
         value = IasWd.set_bit(value, 6, mode, 2)
         value = IasWd.set_bit(value, 7, mode, 3)
 
-        await self.device.issue_cluster_command(
-            self.cluster.endpoint.endpoint_id,
-            self.cluster.cluster_id,
-            0x0001,
-            CLUSTER_COMMAND_SERVER,
-            [value],
-        )
+        await self.squawk(value)
 
     async def start_warning(
         self,
@@ -116,12 +109,8 @@ class IasWd(ZigbeeChannel):
         value = IasWd.set_bit(value, 6, mode, 2)
         value = IasWd.set_bit(value, 7, mode, 3)
 
-        await self.device.issue_cluster_command(
-            self.cluster.endpoint.endpoint_id,
-            self.cluster.cluster_id,
-            0x0000,
-            CLUSTER_COMMAND_SERVER,
-            [value, warning_duration, strobe_duty_cycle, strobe_intensity],
+        await self.start_warning(
+            value, warning_duration, strobe_duty_cycle, strobe_intensity
         )
 
 
@@ -135,18 +124,19 @@ class IASZoneChannel(ZigbeeChannel):
         """Handle commands received to this cluster."""
         if command_id == 0:
             state = args[0] & 3
-            async_dispatcher_send(
-                self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", state
+            self.async_send_signal(
+                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", 2, "zone_status", state
             )
             self.debug("Updated alarm state: %s", state)
         elif command_id == 1:
             self.debug("Enroll requested")
             res = self._cluster.enroll_response(0, 0)
-            self._zha_device.hass.async_create_task(res)
+            asyncio.create_task(res)
 
     async def async_configure(self):
         """Configure IAS device."""
-        if self._zha_device.skip_configuration:
+        await self.get_attribute_value("zone_type", from_cache=False)
+        if self._ch_pool.skip_configuration:
             self.debug("skipping IASZoneChannel configuration")
             return
 
@@ -172,19 +162,20 @@ class IASZoneChannel(ZigbeeChannel):
             )
         self.debug("finished IASZoneChannel configuration")
 
-        await self.get_attribute_value("zone_type", from_cache=False)
-
     @callback
     def attribute_updated(self, attrid, value):
         """Handle attribute updates on this cluster."""
         if attrid == 2:
             value = value & 3
-            async_dispatcher_send(
-                self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value
+            self.async_send_signal(
+                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
+                attrid,
+                self.cluster.attributes.get(attrid, [attrid])[0],
+                value,
             )
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
-        await self.get_attribute_value("zone_status", from_cache=from_cache)
-        await self.get_attribute_value("zone_state", from_cache=from_cache)
+        attributes = ["zone_status", "zone_state"]
+        await self.get_attributes(attributes, from_cache=from_cache)
         await super().async_initialize(from_cache)
