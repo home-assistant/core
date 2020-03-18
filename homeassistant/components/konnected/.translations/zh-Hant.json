@@ -11,8 +11,12 @@
         },
         "step": {
             "confirm": {
-                "description": "\u578b\u865f\uff1a{model}\n\u4e3b\u6a5f\u7aef\uff1a{host}\n\u901a\u8a0a\u57e0\uff1a{port}\n\n\u53ef\u4ee5\u65bc Konncected \u8b66\u5831\u9762\u677f\u8a2d\u5b9a\u4e2d\u8a2d\u5b9a IO \u8207\u9762\u677f\u884c\u70ba\u3002",
+                "description": "\u578b\u865f\uff1a{model}\nID\uff1a{id}\n\u4e3b\u6a5f\u7aef\uff1a{host}\n\u901a\u8a0a\u57e0\uff1a{port}\n\n\u53ef\u4ee5\u65bc Konncected \u8b66\u5831\u9762\u677f\u8a2d\u5b9a\u4e2d\u8a2d\u5b9a IO \u8207\u9762\u677f\u884c\u70ba\u3002",
                 "title": "Konnected \u8a2d\u5099\u5df2\u5099\u59a5"
+            },
+            "import_confirm": {
+                "description": "\u65bc configuration.yaml \u4e2d\u767c\u73fe Konnected \u8b66\u5831 ID {id}\u3002\u6b64\u6d41\u7a0b\u5c07\u5141\u8a31\u532f\u5165\u81f3\u8a2d\u5b9a\u4e2d\u3002",
+                "title": "\u532f\u5165 Konnected \u8a2d\u5099"
             },
             "user": {
                 "data": {

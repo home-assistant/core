@@ -37,6 +37,7 @@ from homeassistant.exceptions import (
     Unauthorized,
 )
 from homeassistant.helpers import config_validation as cv, event, template
+from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceDataType
@@ -48,6 +49,7 @@ from homeassistant.util.logging import catch_log_exception
 from . import config_flow, discovery, server  # noqa: F401 pylint: disable=unused-import
 from .const import (
     ATTR_DISCOVERY_HASH,
+    ATTR_DISCOVERY_TOPIC,
     CONF_BROKER,
     CONF_DISCOVERY,
     CONF_STATE_TOPIC,
@@ -435,8 +437,9 @@ async def async_subscribe(
         topic,
         catch_log_exception(
             wrapped_msg_callback,
-            lambda msg: "Exception in {} when handling msg on '{}': '{}'".format(
-                msg_callback.__name__, msg.topic, msg.payload
+            lambda msg: (
+                f"Exception in {msg_callback.__name__} when handling msg on "
+                f"'{msg.topic}': '{msg.payload}'"
             ),
         ),
         qos,
@@ -510,6 +513,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     hass.data[DATA_MQTT_HASS_CONFIG] = config
 
     websocket_api.async_register_command(hass, websocket_subscribe)
+    websocket_api.async_register_command(hass, websocket_remove_device)
 
     if conf is None:
         # If we have a config entry, setup is done by that config entry.
@@ -565,7 +569,7 @@ async def async_setup_entry(hass, entry):
 
     # If user didn't have configuration.yaml config, generate defaults
     if conf is None:
-        conf = CONFIG_SCHEMA({DOMAIN: entry.data})[DOMAIN]
+        conf = CONFIG_SCHEMA({DOMAIN: dict(entry.data)})[DOMAIN]
     elif any(key in conf for key in entry.data):
         _LOGGER.warning(
             "Data in your configuration entry is going to override your "
@@ -1011,7 +1015,7 @@ def _raise_on_error(result_code: int) -> None:
 
     if result_code != 0:
         raise HomeAssistantError(
-            "Error talking to MQTT: {}".format(mqtt.error_string(result_code))
+            f"Error talking to MQTT: {mqtt.error_string(result_code)}"
         )
 
 
@@ -1156,42 +1160,54 @@ class MqttAvailability(Entity):
 class MqttDiscoveryUpdate(Entity):
     """Mixin used to handle updated discovery message."""
 
-    def __init__(self, discovery_hash, discovery_update=None) -> None:
+    def __init__(self, discovery_data, discovery_update=None) -> None:
         """Initialize the discovery update mixin."""
-        self._discovery_hash = discovery_hash
+        self._discovery_data = discovery_data
         self._discovery_update = discovery_update
         self._remove_signal = None
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to discovery updates."""
         await super().async_added_to_hass()
+        discovery_hash = (
+            self._discovery_data[ATTR_DISCOVERY_HASH] if self._discovery_data else None
+        )
 
         @callback
         def discovery_callback(payload):
             """Handle discovery update."""
             _LOGGER.info(
-                "Got update for entity with hash: %s '%s'",
-                self._discovery_hash,
-                payload,
+                "Got update for entity with hash: %s '%s'", discovery_hash, payload,
             )
             if not payload:
                 # Empty payload: Remove component
                 _LOGGER.info("Removing component: %s", self.entity_id)
                 self.hass.async_create_task(self.async_remove())
-                clear_discovery_hash(self.hass, self._discovery_hash)
+                clear_discovery_hash(self.hass, discovery_hash)
                 self._remove_signal()
             elif self._discovery_update:
                 # Non-empty payload: Notify component
                 _LOGGER.info("Updating component: %s", self.entity_id)
-                payload.pop(ATTR_DISCOVERY_HASH)
                 self.hass.async_create_task(self._discovery_update(payload))
 
-        if self._discovery_hash:
+        if discovery_hash:
             self._remove_signal = async_dispatcher_connect(
                 self.hass,
-                MQTT_DISCOVERY_UPDATED.format(self._discovery_hash),
+                MQTT_DISCOVERY_UPDATED.format(discovery_hash),
                 discovery_callback,
             )
+
+    async def async_removed_from_registry(self) -> None:
+        """Clear retained discovery topic in broker."""
+        discovery_topic = self._discovery_data[ATTR_DISCOVERY_TOPIC]
+        publish(
+            self.hass, discovery_topic, "", retain=True,
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Stop listening to signal."""
+        if self._remove_signal:
+            self._remove_signal()
 
 
 def device_info_from_config(config):
@@ -1245,6 +1261,35 @@ class MqttEntityDeviceInfo(Entity):
     def device_info(self):
         """Return a device description for device registry."""
         return device_info_from_config(self._device_config)
+
+
+@websocket_api.websocket_command(
+    {vol.Required("type"): "mqtt/device/remove", vol.Required("device_id"): str}
+)
+@websocket_api.async_response
+async def websocket_remove_device(hass, connection, msg):
+    """Delete device."""
+    device_id = msg["device_id"]
+    dev_registry = await get_dev_reg(hass)
+
+    device = dev_registry.async_get(device_id)
+    if not device:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Device not found"
+        )
+        return
+
+    for config_entry in device.config_entries:
+        config_entry = hass.config_entries.async_get_entry(config_entry)
+        # Only delete the device if it belongs to an MQTT device entry
+        if config_entry.domain == DOMAIN:
+            dev_registry.async_remove_device(device_id)
+            connection.send_message(websocket_api.result_message(msg["id"]))
+            return
+
+    connection.send_error(
+        msg["id"], websocket_api.const.ERR_NOT_FOUND, "Non MQTT device"
+    )
 
 
 @websocket_api.async_response

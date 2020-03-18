@@ -15,7 +15,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import ATTR_BRIGHTNESS_STEP_PCT, DOMAIN, SUPPORT_BRIGHTNESS
+from . import ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS_STEP_PCT, DOMAIN, SUPPORT_BRIGHTNESS
 
 TYPE_BRIGHTNESS_INCREASE = "brightness_increase"
 TYPE_BRIGHTNESS_DECREASE = "brightness_decrease"
@@ -28,6 +28,9 @@ ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
             toggle_entity.DEVICE_ACTION_TYPES
             + [TYPE_BRIGHTNESS_INCREASE, TYPE_BRIGHTNESS_DECREASE]
         ),
+        vol.Optional(ATTR_BRIGHTNESS_PCT): vol.All(
+            vol.Coerce(int), vol.Range(min=0, max=100)
+        ),
     }
 )
 
@@ -39,7 +42,10 @@ async def async_call_action_from_config(
     context: Context,
 ) -> None:
     """Change state based on configuration."""
-    if config[CONF_TYPE] in toggle_entity.DEVICE_ACTION_TYPES:
+    if (
+        config[CONF_TYPE] in toggle_entity.DEVICE_ACTION_TYPES
+        and config[CONF_TYPE] != toggle_entity.CONF_TURN_ON
+    ):
         await toggle_entity.async_call_action_from_config(
             hass, config, variables, context, DOMAIN
         )
@@ -49,8 +55,10 @@ async def async_call_action_from_config(
 
     if config[CONF_TYPE] == TYPE_BRIGHTNESS_INCREASE:
         data[ATTR_BRIGHTNESS_STEP_PCT] = 10
-    else:
+    elif config[CONF_TYPE] == TYPE_BRIGHTNESS_DECREASE:
         data[ATTR_BRIGHTNESS_STEP_PCT] = -10
+    elif ATTR_BRIGHTNESS_PCT in config:
+        data[ATTR_BRIGHTNESS_PCT] = config[ATTR_BRIGHTNESS_PCT]
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, data, blocking=True, context=context
@@ -93,3 +101,33 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
             )
 
     return actions
+
+
+async def async_get_action_capabilities(hass: HomeAssistant, config: dict) -> dict:
+    """List action capabilities."""
+    if config[CONF_TYPE] != toggle_entity.CONF_TURN_ON:
+        return {}
+
+    registry = await entity_registry.async_get_registry(hass)
+    entry = registry.async_get(config[ATTR_ENTITY_ID])
+    state = hass.states.get(config[ATTR_ENTITY_ID])
+
+    supported_features = 0
+
+    if state:
+        supported_features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+    elif entry:
+        supported_features = entry.supported_features
+
+    if not supported_features & SUPPORT_BRIGHTNESS:
+        return {}
+
+    return {
+        "extra_fields": vol.Schema(
+            {
+                vol.Optional(ATTR_BRIGHTNESS_PCT): vol.All(
+                    vol.Coerce(int), vol.Range(min=0, max=100)
+                )
+            }
+        )
+    }

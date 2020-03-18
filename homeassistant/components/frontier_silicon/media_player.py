@@ -24,8 +24,10 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     CONF_HOST,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
+    STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
@@ -53,13 +55,13 @@ SUPPORT_FRONTIER_SILICON = (
 
 DEFAULT_PORT = 80
 DEFAULT_PASSWORD = "1234"
-DEVICE_URL = "http://{0}:{1}/device"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
     }
 )
 
@@ -68,17 +70,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the Frontier Silicon platform."""
     if discovery_info is not None:
         async_add_entities(
-            [AFSAPIDevice(discovery_info["ssdp_description"], DEFAULT_PASSWORD)], True
+            [AFSAPIDevice(discovery_info["ssdp_description"], DEFAULT_PASSWORD, None)],
+            True,
         )
         return True
 
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     password = config.get(CONF_PASSWORD)
+    name = config.get(CONF_NAME)
 
     try:
         async_add_entities(
-            [AFSAPIDevice(DEVICE_URL.format(host, port), password)], True
+            [AFSAPIDevice(f"http://{host}:{port}/device", password, name)], True
         )
         _LOGGER.debug("FSAPI device %s:%s -> %s", host, port, password)
         return True
@@ -93,13 +97,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class AFSAPIDevice(MediaPlayerDevice):
     """Representation of a Frontier Silicon device on the network."""
 
-    def __init__(self, device_url, password):
+    def __init__(self, device_url, password, name):
         """Initialize the Frontier Silicon API device."""
         self._device_url = device_url
         self._password = password
         self._state = None
 
-        self._name = None
+        self._name = name
         self._title = None
         self._artist = None
         self._album_name = None
@@ -107,6 +111,8 @@ class AFSAPIDevice(MediaPlayerDevice):
         self._source = None
         self._source_list = None
         self._media_image_url = None
+        self._max_volume = None
+        self._volume_level = None
 
     # Properties
     @property
@@ -176,6 +182,11 @@ class AFSAPIDevice(MediaPlayerDevice):
         """Image url of current playing media."""
         return self._media_image_url
 
+    @property
+    def volume_level(self):
+        """Volume level of the media player (0..1)."""
+        return self._volume_level
+
     async def async_update(self):
         """Get the latest date and update device state."""
         fs_device = self.fs_device
@@ -186,14 +197,23 @@ class AFSAPIDevice(MediaPlayerDevice):
         if not self._source_list:
             self._source_list = await fs_device.get_mode_list()
 
-        status = await fs_device.get_play_status()
-        self._state = {
-            "playing": STATE_PLAYING,
-            "paused": STATE_PAUSED,
-            "stopped": STATE_OFF,
-            "unknown": STATE_UNKNOWN,
-            None: STATE_OFF,
-        }.get(status, STATE_UNKNOWN)
+        # The API seems to include 'zero' in the number of steps (e.g. if the range is
+        # 0-40 then get_volume_steps returns 41) subtract one to get the max volume.
+        # If call to get_volume fails set to 0 and try again next time.
+        if not self._max_volume:
+            self._max_volume = int(await fs_device.get_volume_steps() or 1) - 1
+
+        if await fs_device.get_power():
+            status = await fs_device.get_play_status()
+            self._state = {
+                "playing": STATE_PLAYING,
+                "paused": STATE_PAUSED,
+                "stopped": STATE_IDLE,
+                "unknown": STATE_UNKNOWN,
+                None: STATE_IDLE,
+            }.get(status, STATE_UNKNOWN)
+        else:
+            self._state = STATE_OFF
 
         if self._state != STATE_OFF:
             info_name = await fs_device.get_play_name()
@@ -206,6 +226,11 @@ class AFSAPIDevice(MediaPlayerDevice):
             self._source = await fs_device.get_mode()
             self._mute = await fs_device.get_mute()
             self._media_image_url = await fs_device.get_play_graphic()
+
+            volume = await self.fs_device.get_volume()
+
+            # Prevent division by zero if max_volume not known yet
+            self._volume_level = float(volume or 0) / (self._max_volume or 1)
         else:
             self._title = None
             self._artist = None
@@ -214,6 +239,8 @@ class AFSAPIDevice(MediaPlayerDevice):
             self._source = None
             self._mute = None
             self._media_image_url = None
+
+            self._volume_level = None
 
     # Management actions
     # power control
@@ -266,16 +293,20 @@ class AFSAPIDevice(MediaPlayerDevice):
     async def async_volume_up(self):
         """Send volume up command."""
         volume = await self.fs_device.get_volume()
-        await self.fs_device.set_volume(volume + 1)
+        volume = int(volume or 0) + 1
+        await self.fs_device.set_volume(min(volume, self._max_volume))
 
     async def async_volume_down(self):
         """Send volume down command."""
         volume = await self.fs_device.get_volume()
-        await self.fs_device.set_volume(volume - 1)
+        volume = int(volume or 0) - 1
+        await self.fs_device.set_volume(max(volume, 0))
 
     async def async_set_volume_level(self, volume):
         """Set volume command."""
-        await self.fs_device.set_volume(int(volume * 20))
+        if self._max_volume:  # Can't do anything sensible if not set
+            volume = int(volume * self._max_volume)
+            await self.fs_device.set_volume(volume)
 
     async def async_select_source(self, source):
         """Select input source."""

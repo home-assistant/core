@@ -70,7 +70,7 @@ class AquaLogicSwitch(SwitchDevice):
     @property
     def name(self):
         """Return the name of the switch."""
-        return "AquaLogic {}".format(SWITCH_TYPES[self._type])
+        return f"AquaLogic {SWITCH_TYPES[self._type]}"
 
     @property
     def should_poll(self):

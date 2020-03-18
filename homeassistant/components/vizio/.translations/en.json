@@ -12,11 +12,27 @@
         },
         "error": {
             "cant_connect": "Could not connect to the device. [Review the docs](https://www.home-assistant.io/integrations/vizio/) and re-verify that:\n- The device is powered on\n- The device is connected to the network\n- The values you filled in are accurate\nbefore attempting to resubmit.",
+            "complete_pairing failed": "Unable to complete pairing. Ensure the PIN you provided is correct and the TV is still powered and connected to the network before resubmitting.",
             "host_exists": "Vizio device with specified host already configured.",
             "name_exists": "Vizio device with specified name already configured.",
             "tv_needs_token": "When Device Type is `tv` then a valid Access Token is needed."
         },
         "step": {
+            "pair_tv": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "description": "Your TV should be displaying a code. Enter that code into the form and then continue to the next step to complete the pairing.",
+                "title": "Complete Pairing Process"
+            },
+            "pairing_complete": {
+                "description": "Your Vizio SmartCast device is now connected to Home Assistant.",
+                "title": "Pairing Complete"
+            },
+            "pairing_complete_import": {
+                "description": "Your Vizio SmartCast device is now connected to Home Assistant.\n\nYour Access Token is '**{access_token}**'.",
+                "title": "Pairing Complete"
+            },
             "user": {
                 "data": {
                     "access_token": "Access Token",
@@ -24,6 +40,7 @@
                     "host": "<Host/IP>:<Port>",
                     "name": "Name"
                 },
+                "description": "All fields are required except Access Token. If you choose not to provide an Access Token, and your Device Type is 'tv', you will go through a pairing process with your device so an Access Token can be retrieved.\n\nTo go through the pairing process, before clicking Submit, ensure your TV is powered on and connected to the network. You also need to be able to see the screen.",
                 "title": "Setup Vizio SmartCast Device"
             }
         },

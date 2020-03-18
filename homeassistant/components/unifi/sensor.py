@@ -2,15 +2,13 @@
 import logging
 
 from homeassistant.components.unifi.config_flow import get_controller_from_config_entry
+from homeassistant.const import DATA_BYTES
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .unifi_client import UniFiClient
 
 LOGGER = logging.getLogger(__name__)
-
-ATTR_RECEIVING = "receiving"
-ATTR_TRANSMITTING = "transmitting"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -114,6 +112,11 @@ class UniFiRxBandwidthSensor(UniFiClient):
     def unique_id(self):
         """Return a unique identifier for this bandwidth sensor."""
         return f"rx-{self.client.mac}"
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity."""
+        return DATA_BYTES
 
 
 class UniFiTxBandwidthSensor(UniFiRxBandwidthSensor):

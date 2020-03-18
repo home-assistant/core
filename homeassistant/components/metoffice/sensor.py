@@ -13,7 +13,9 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -64,14 +66,14 @@ SENSOR_TYPES = {
     "weather": ["Weather", None],
     "temperature": ["Temperature", TEMP_CELSIUS],
     "feels_like_temperature": ["Feels Like Temperature", TEMP_CELSIUS],
-    "wind_speed": ["Wind Speed", "mph"],
+    "wind_speed": ["Wind Speed", SPEED_MILES_PER_HOUR],
     "wind_direction": ["Wind Direction", None],
-    "wind_gust": ["Wind Gust", "mph"],
+    "wind_gust": ["Wind Gust", SPEED_MILES_PER_HOUR],
     "visibility": ["Visibility", None],
     "visibility_distance": ["Visibility Distance", "km"],
     "uv": ["UV", None],
-    "precipitation": ["Probability of Precipitation", "%"],
-    "humidity": ["Humidity", "%"],
+    "precipitation": ["Probability of Precipitation", UNIT_PERCENTAGE],
+    "humidity": ["Humidity", UNIT_PERCENTAGE],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -139,7 +141,7 @@ class MetOfficeCurrentSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._name, SENSOR_TYPES[self._condition][0])
+        return f"{self._name} {SENSOR_TYPES[self._condition][0]}"
 
     @property
     def state(self):

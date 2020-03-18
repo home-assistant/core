@@ -25,7 +25,7 @@
             "max_peers_error": "Device refused to add pairing as it has no free pairing storage.",
             "busy_error": "Device refused to add pairing as it is already pairing with another controller.",
             "max_tries_error": "Device refused to add pairing as it has received more than 100 unsuccessful authentication attempts.",
-            "pairing_failed": "An unhandled error occured while attempting to pair with this device. This may be a temporary failure or your device may not be supported currently."
+            "pairing_failed": "An unhandled error occurred while attempting to pair with this device. This may be a temporary failure or your device may not be supported currently."
         },
         "abort": {
             "no_devices": "No unpaired devices could be found",

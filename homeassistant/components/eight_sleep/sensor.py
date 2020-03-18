@@ -1,6 +1,8 @@
 """Support for Eight Sleep sensors."""
 import logging
 
+from homeassistant.const import UNIT_PERCENTAGE
+
 from . import (
     CONF_SENSORS,
     DATA_EIGHT,
@@ -18,9 +20,9 @@ ATTR_AVG_RESP_RATE = "Average Respiratory Rate"
 ATTR_HEART_RATE = "Heart Rate"
 ATTR_AVG_HEART_RATE = "Average Heart Rate"
 ATTR_SLEEP_DUR = "Time Slept"
-ATTR_LIGHT_PERC = "Light Sleep %"
-ATTR_DEEP_PERC = "Deep Sleep %"
-ATTR_REM_PERC = "REM Sleep %"
+ATTR_LIGHT_PERC = f"Light Sleep {UNIT_PERCENTAGE}"
+ATTR_DEEP_PERC = f"Deep Sleep {UNIT_PERCENTAGE}"
+ATTR_REM_PERC = f"REM Sleep {UNIT_PERCENTAGE}"
 ATTR_TNT = "Tosses & Turns"
 ATTR_SLEEP_STAGE = "Sleep Stage"
 ATTR_TARGET_HEAT = "Target Heating Level"
@@ -100,7 +102,7 @@ class EightHeatSensor(EightSleepHeatEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return "%"
+        return UNIT_PERCENTAGE
 
     async def async_update(self):
         """Retrieve latest state."""

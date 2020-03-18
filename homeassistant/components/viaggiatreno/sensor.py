@@ -7,7 +7,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -177,5 +177,5 @@ class ViaggiaTrenoSensor(Entity):
                 self._unit = ""
             else:
                 self._state = res.get("ritardo")
-                self._unit = "min"
+                self._unit = TIME_MINUTES
                 self._icon = ICON
