@@ -1,88 +1,81 @@
 # Describes the format for available ADS services
 check_local_ip:
-  description: Sprawdzenie lokalnego IP bramki i ustawienie go jako wartość encji sensor.internal_ip_address.
-    Ta usługa wykonaywana jest automatycznie przy starcie urządzenia.
+  description: 'Sprawdzenie lokalnego IP bramki i ustawienie go jako wartość encji sensor.internal_ip_address. Ta usługa wykonaywana jest automatycznie przy starcie urządzenia.'
 
 check_night_mode:
-  description: Sprawdzenie czy został włączony tryb nocny jeżeli tak to zmieniamy temat w aplikacji i redukujemy głośność.
-    Ta usługa wykonaywana jest co minutę.
+  description: 'Sprawdzenie czy został włączony tryb nocny jeżeli tak to zmieniamy temat w aplikacji i redukujemy głośność. Ta usługa wykonaywana jest co minutę.'
 
 on_new_iot_device_selection:
-  description: Ustalenie nazwy nowododawanego urządzenia.
-    Ta usługa wykonaywana jest automaycznie podczas dodawania nowego urządzenia.
+  description: 'Ustalenie nazwy nowododawanego urządzenia. Ta usługa wykonaywana jest automaycznie podczas dodawania nowego urządzenia.'
   fields:
     iot:
-      description: Model urządzenia.
+      description: 'Model urządzenia.'
       example: 's20'
 
 prepare_remote_menu:
-  description: Przygotowanie menu dostępnego z pilota na podstawie grup/encji w systemie.
-    Ta usługa wykonywana jest automatycznie po uruchomieniu systemu oraz po wykryciu/dodaniu nowych komponentów.
+  description: 'Przygotowanie menu dostępnego z pilota na podstawie grup/encji w systemie. Ta usługa wykonywana jest automatycznie po uruchomieniu systemu oraz po wykryciu/dodaniu nowych komponentów.'
 
 process:
-  description: Zamiana tekstu na komendę do wykonania.
+  description: 'Zamiana tekstu na komendę do wykonania.'
   fields:
     text:
-      description: Tekst pynia/komendy.
+      description: 'Tekst pynia/komendy.'
       example: 'Włącz radio RMF'
 
 process_code:
-  description: Przetwarzanie kodu z klawiatury/pilota.
-    Ta usługa wykonywana jest automatycznie po otrzymaniu kodu z klawiatury/pilota.
+  description: 'Przetwarzanie kodu z klawiatury/pilota. Ta usługa wykonywana jest automatycznie po otrzymaniu kodu z klawiatury/pilota.'
   fields:
     text:
-      description: Wiadomość z kodem z pilota oraz akcją (0 - down, 1 - up, 2 - hold)
+      description: 'Wiadomość z kodem z pilota oraz akcją (0 - down, 1 - up, 2 - hold)'
       example: '{"text": "{\"KeyCode\": 92, \"Action\": \"0\"}"} '
 
-
 process_command_from_frame:
-  description: Przetwarzanie wiadomości/komendy otrzymanej z systemu Android.
+  description: 'Przetwarzanie wiadomości/komendy otrzymanej z systemu Android.'
   fields:
     data:
-      description: Przykładowy komunikat o zmianie adresu IP.
+      description: 'Przykładowy komunikat o zmianie adresu IP.'
       example: '{"topic": "ais/ip_state_change_info", "payload": "{\"ip\": \"192.168.1.1\"}"}'
 
-
 publish_command_to_frame:
-  description: Publikowanie komendy do systemu Android.
+  description: 'Publikowanie komendy do systemu Android.'
   fields:
     key:
-      description: Akcja do wykonania.
+      description: 'Akcja do wykonania.'
       example: 'playAudio'
     val:
-      description: Wiadomość / dane do akcji.
+      description: 'Wiadomość / dane do akcji.'
       example: 'https://test/audio.mp3'
 
 say_in_browser:
-  description: Wysłanie tekstu do przeczytania w przeglądarce
+  description: 'Wysłanie tekstu do przeczytania w przeglądarce'
   fields:
     text:
-      description: Tekst do przeczytania przez przeglądarkę
+      description: 'Tekst do przeczytania przez przeglądarkę'
       example: 'Cześć, tu przeglądarka'
 
 say_it:
-  description: Zamiana tekstu na mowę, czytanie tekstu. Za pomocą mechanizmu TTS w systemie Android na bramce.
+  description: 'Zamiana tekstu na mowę, czytanie tekstu. Za pomocą mechanizmu TTS w systemie Android na bramce.'
   fields:
     text:
-      description: Tekst do przeczytania.
-      example: 'Cześć, jak się masz?'
+      description: 'Tekst do przeczytania.'
+      example: 'Cześć, jak się masz'
     img:
-      description: URL zdjęcia do wyświetlenia.
+      description: 'URL zdjęcia do wyświetlenia.'
       example: 'http://ai-speaker.com/images/logo_ais.png'
 
 set_context:
-  description: Ustawienie kontekstu w jakim jest konwersacja z asystentem
+  description: 'Ustawienie kontekstu w jakim jest konwersacja z asystentem'
   fields:
     text:
-      description: Kontekst do ustawienia
+      description: 'Kontekst do ustawienia'
       example: 'youtube'
 
-switch_ui:
-  description: Przełączenie interfejsu odtwarzacza na wybrany tryb (YouTube, Spotify, Radio, Podcast)
-    fields:
-      mode:
-        description: Tryb do ustawienia
-        example: 'Radio'
-
 welcome_home:
-  description: Głosowy komunikat powitalny. Akcja wykonywana jest automatycznie podczas uruchomienia systemu.
+  description: 'Głosowy komunikat powitalny. Akcja wykonywana jest automatycznie podczas uruchomienia systemu.'
+
+switch_ui:
+  description: 'Przełączenie interfejsu odtwarzacza na wybrany tryb YouTube Spotify Radio Podcast'
+  fields:
+    mode:
+      description: 'Tryb do ustawienia'
+      example: 'Radio'
