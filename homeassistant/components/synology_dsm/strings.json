@@ -7,10 +7,11 @@
                 "data": {
                     "name": "Name",
                     "host": "Host",
-                    "port":"Port",
-                    "ssl":"Use SSL/TLS to connect to your NAS",
+                    "port": "Port",
+                    "ssl": "Use SSL/TLS to connect to your NAS",
+                    "api_version": "DSM version",
                     "username": "Username",
-                    "password":"Password"
+                    "password": "Password"
                 }
             }
         },
