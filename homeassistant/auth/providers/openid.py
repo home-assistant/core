@@ -86,11 +86,8 @@ class OpenIdAuthProvider(AuthProvider):
 
         async with session.post(uri, data=payload) as response:
             if 400 <= response.status:
-                if "json" in response.headers.get("CONTENT-TYPE", ""):
-                    data = await response.json()
-                else:
-                    data = await response.text()
-                raise InvalidAuthError(f"Token validation failed with error: {data}")
+                data = await response.text()
+                raise InvalidAuthError(f"Token retrieveal failed with error: {data}")
             return cast(Dict[str, Any], await response.json())
 
     async def async_validate_token(self, token: Dict[str, Any]) -> Dict[str, Any]:
