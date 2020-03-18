@@ -27,6 +27,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .const import (
     CONF_VOLUMES,
     DEFAULT_DSM_VERSION,
+    DOMAIN,
     SERVICE_UPDATE,
     STORAGE_DISK_SENSORS,
     STORAGE_VOL_SENSORS,
@@ -109,6 +110,7 @@ class SynoApi:
             host, port, username, password, use_ssl, dsm_version=api_version
         )
 
+        self.information = self._api.information
         self.utilisation = self._api.utilisation
         self.storage = self._api.storage
 
@@ -155,21 +157,32 @@ class SynoNasSensor(Entity):
         return self._name
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon."""
         return self._icon
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Return the unit the value is expressed in."""
         if self.sensor_type in TEMP_SENSORS_KEYS:
             return self._api.temp_unit
         return self._unit
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, any]:
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
+
+    @property
+    def device_info(self) -> Dict[str, any]:
+        """Return the device information."""
+        return {
+            "identifiers": {(DOMAIN, self._api.information.serial)},
+            "name": "Synology NAS",
+            "manufacturer": "Synology",
+            "model": self._api.information.model,
+            "sw_version": self._api.information.version_string,
+        }
 
     @property
     def should_poll(self) -> bool:
@@ -229,3 +242,17 @@ class SynoNasStorageSensor(SynoNasSensor):
 
             return getattr(self._api.storage, self.sensor_type)(self.monitored_device)
         return None
+
+    @property
+    def device_info(self) -> Dict[str, any]:
+        """Return the device information."""
+        return {
+            "identifiers": {
+                (DOMAIN, self._api.information.serial, self.monitored_device)
+            },
+            "name": f"Synology NAS ({self.monitored_device})",
+            "manufacturer": "Synology",
+            "model": self._api.information.model,
+            "sw_version": self._api.information.version_string,
+            "via_device": (DOMAIN, self._api.information.serial),
+        }
