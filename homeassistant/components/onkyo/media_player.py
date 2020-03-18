@@ -58,6 +58,17 @@ SUPPORT_ONKYO_WO_VOLUME = (
     | SUPPORT_PLAY_MEDIA
 )
 
+SUPPORT_ONKYO_WO_SOUND_MODE = (
+    SUPPORT_VOLUME_SET
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_VOLUME_STEP
+    | SUPPORT_TURN_ON
+    | SUPPORT_TURN_OFF
+    | SUPPORT_SELECT_SOURCE
+    | SUPPORT_PLAY
+    | SUPPORT_PLAY_MEDIA
+)
+
 KNOWN_HOSTS: List[str] = []
 DEFAULT_SOURCES = {
     "tv": "TV",
@@ -82,7 +93,7 @@ SOUND_MODE_MAPPING = {
     "Extended Stereo": ["all-ch-stereo"],
     "Surround": ["surr"],
     "Auto Surround": ["auto-surround"],
-    "PCM": ["straight-decode"],
+    "Multichannel PCM": ["straight-decode"],
     "Dolby Digital": ["dolby-atmos", "dolby-surround", "dolby-virtual", "dolby-ex",
                       "dolby-surround-thx-cinema", "pliix-thx-cinema", "pliix-movie", 
                       "dolby-surround-thx-music", "pliix-thx-music", "pliix-music",
@@ -279,6 +290,8 @@ class OnkyoDevice(MediaPlayerDevice):
         self._sound_mode_reverse_mapping = {subval: key for key, values in SOUND_MODE_MAPPING.items() for subval in values}
         self._attributes = {}
 
+        self._supports_sound_mode = True
+
     def command(self, command):
         """Run an eiscp command and catch connection errors."""
         try:
@@ -309,7 +322,6 @@ class OnkyoDevice(MediaPlayerDevice):
         current_source_raw = self.command("input-selector query")
         hdmi_out_raw = self.command("hdmi-output-selector query")
         preset_raw = self.command("preset query")
-        sound_mode_raw = self.command("listening-mode query")
         if not (volume_raw and mute_raw and current_source_raw):
             return
 
@@ -329,16 +341,25 @@ class OnkyoDevice(MediaPlayerDevice):
         elif ATTR_PRESET in self._attributes:
             del self._attributes[ATTR_PRESET]
 
-        if isinstance(sound_mode_raw[1], str):
-            sound_mode_tuples = (sound_mode_raw[0], (sound_mode_raw[1],))
-        else:
-            sound_mode_tuples = sound_mode_raw
+        # Only query the listening mode when sound mode is supported
+        if self._supports_sound_mode:
+            sound_mode_raw = self.command("listening-mode query")
 
-        for sound_mode in sound_mode_tuples[1]:
-            if sound_mode in self._sound_mode_reverse_mapping:
-                self._sound_mode = self._sound_mode_reverse_mapping[sound_mode]
-                break
-            self._sound_mode = "_".join(sound_mode_tuples[1])
+            # If we received a source value, but not a sound mode
+            # it's likely this receiver does not support sound modes.
+            if current_source_raw and not sound_mode_raw:
+                self._supports_sound_mode = False
+            else:
+                if isinstance(sound_mode_raw[1], str):
+                    sound_mode_tuples = (sound_mode_raw[0], (sound_mode_raw[1],))
+                else:
+                    sound_mode_tuples = sound_mode_raw
+
+                for sound_mode in sound_mode_tuples[1]:
+                    if sound_mode in self._sound_mode_reverse_mapping:
+                        self._sound_mode = self._sound_mode_reverse_mapping[sound_mode]
+                        break
+                    self._sound_mode = "_".join(sound_mode_tuples[1])
 
         self._muted = bool(mute_raw[1] == "on")
         #       AMP_VOL/MAX_RECEIVER_VOL*(MAX_VOL/100)
@@ -373,7 +394,9 @@ class OnkyoDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Return media player features that are supported."""
-        return SUPPORT_ONKYO
+        if self._supports_sound_mode:
+            return SUPPORT_ONKYO
+        return SUPPORT_ONKYO_WO_SOUND_MODE
 
     @property
     def source(self):
