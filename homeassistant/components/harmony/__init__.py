@@ -95,6 +95,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
+
+    # Shutdown a harmony remote for removal
+    device = hass.data[DOMAIN][entry.entry_id]
+    await device.shutdown()
+
     if unload_ok:
         DEVICES.remove(hass.data[DOMAIN][entry.entry_id])
         hass.data[DOMAIN].pop(entry.entry_id)
