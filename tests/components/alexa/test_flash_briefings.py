@@ -63,7 +63,7 @@ def alexa_client(loop, hass, hass_client):
 
 
 def _flash_briefing_req(client, briefing_id):
-    return client.get("/api/alexa/flash_briefings/{}".format(briefing_id))
+    return client.get(f"/api/alexa/flash_briefings/{briefing_id}")
 
 
 async def test_flash_briefing_invalid_id(alexa_client):

@@ -617,16 +617,7 @@ def entity_to_json(config, entity):
     """Convert an entity to its Hue bridge JSON representation."""
     entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
     unique_id = hashlib.md5(entity.entity_id.encode()).hexdigest()
-    unique_id = "00:{}:{}:{}:{}:{}:{}:{}-{}".format(
-        unique_id[0:2],
-        unique_id[2:4],
-        unique_id[4:6],
-        unique_id[6:8],
-        unique_id[8:10],
-        unique_id[10:12],
-        unique_id[12:14],
-        unique_id[14:16],
-    )
+    unique_id = f"00:{unique_id[0:2]}:{unique_id[2:4]}:{unique_id[4:6]}:{unique_id[6:8]}:{unique_id[8:10]}:{unique_id[10:12]}:{unique_id[12:14]}-{unique_id[14:16]}"
 
     state = get_entity_state(config, entity)
 
@@ -686,7 +677,11 @@ def entity_to_json(config, entity):
         retval["type"] = "Color temperature light"
         retval["modelid"] = "HASS312"
         retval["state"].update(
-            {HUE_API_STATE_COLORMODE: "ct", HUE_API_STATE_CT: state[STATE_COLOR_TEMP]}
+            {
+                HUE_API_STATE_COLORMODE: "ct",
+                HUE_API_STATE_CT: state[STATE_COLOR_TEMP],
+                HUE_API_STATE_BRI: state[STATE_BRIGHTNESS],
+            }
         )
     elif entity_features & (
         SUPPORT_BRIGHTNESS

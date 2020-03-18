@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -29,7 +30,7 @@ SCAN_INTERVAL = timedelta(seconds=300)
 SENSOR_TYPES = {
     "temperature": ["Temperature", TEMP_CELSIUS],
     "air_quality": ["Air Quality", " "],
-    "humidity": ["Humidity", "%"],
+    "humidity": ["Humidity", UNIT_PERCENTAGE],
     "light": ["Light", " "],
     "noise": ["Noise", " "],
 }
@@ -67,7 +68,7 @@ class BroadlinkSensor(Entity):
 
     def __init__(self, name, broadlink_data, sensor_type):
         """Initialize the sensor."""
-        self._name = "{} {}".format(name, SENSOR_TYPES[sensor_type][0])
+        self._name = f"{name} {SENSOR_TYPES[sensor_type][0]}"
         self._state = None
         self._is_available = False
         self._type = sensor_type

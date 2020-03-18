@@ -31,13 +31,6 @@ NEW_LIGHT = "lights"
 NEW_SCENE = "scenes"
 NEW_SENSOR = "sensors"
 
-NEW_DEVICE = {
-    NEW_GROUP: "deconz_new_group_{}",
-    NEW_LIGHT: "deconz_new_light_{}",
-    NEW_SCENE: "deconz_new_scene_{}",
-    NEW_SENSOR: "deconz_new_sensor_{}",
-}
-
 ATTR_DARK = "dark"
 ATTR_OFFSET = "offset"
 ATTR_ON = "on"

@@ -12,11 +12,27 @@
         },
         "error": {
             "cant_connect": "Kunne ikke koble til enheten. [Se gjennom dokumentene] (https://www.home-assistant.io/integrations/vizio/) og bekreft at: \n - Enheten er sl\u00e5tt p\u00e5 \n - Enheten er koblet til nettverket \n - Verdiene du fylte ut er n\u00f8yaktige \n f\u00f8r du pr\u00f8ver \u00e5 sende inn p\u00e5 nytt.",
+            "complete_pairing failed": "Kan ikke fullf\u00f8re sammenkoblingen. Forsikre deg om at PIN-koden du oppga er riktig, og at TV-en fortsatt er p\u00e5 og tilkoblet nettverket f\u00f8r du sender inn p\u00e5 nytt.",
             "host_exists": "Vizio-enhet med spesifisert vert allerede konfigurert.",
             "name_exists": "Vizio-enhet med spesifisert navn allerede konfigurert.",
             "tv_needs_token": "N\u00e5r enhetstype er `tv`, er det n\u00f8dvendig med en gyldig tilgangstoken."
         },
         "step": {
+            "pair_tv": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "description": "TVen skal vise en kode. Skriv inn denne koden i skjemaet, og fortsett deretter til neste trinn for \u00e5 fullf\u00f8re paringen.",
+                "title": "Fullf\u00f8r Sammenkoblings Prosessen"
+            },
+            "pairing_complete": {
+                "description": "Din Vizio SmartCast-enheten er n\u00e5 koblet til Home Assistant.",
+                "title": "Sammenkoblingen Er Fullf\u00f8rt"
+            },
+            "pairing_complete_import": {
+                "description": "Vizio SmartCast-enheten er n\u00e5 koblet til Home Assistant.\n\nTilgangstokenet er **{access_token}**.",
+                "title": "Sammenkoblingen Er Fullf\u00f8rt"
+            },
             "user": {
                 "data": {
                     "access_token": "Tilgangstoken",
@@ -24,6 +40,7 @@
                     "host": "<Host/IP>:<Port>",
                     "name": "Navn"
                 },
+                "description": "Alle felt er obligatoriske unntatt Access Token. Hvis du velger \u00e5 ikke oppgi et Access-token, og enhetstypen din er \u00abtv\u00bb, g\u00e5r du gjennom en sammenkoblingsprosess med enheten slik at et Tilgangstoken kan hentes.\n\nHvis du vil g\u00e5 gjennom paringsprosessen, m\u00e5 du kontrollere at TV-en er sl\u00e5tt p\u00e5 og koblet til nettverket f\u00f8r du klikker p\u00e5 Send. Du m\u00e5 ogs\u00e5 kunne se skjermen.",
                 "title": "Sett opp Vizio SmartCast-enhet"
             }
         },

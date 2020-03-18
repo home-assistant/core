@@ -1,7 +1,7 @@
 """Support for Canary sensors."""
 from canary.api import SensorType
 
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS, UNIT_PERCENTAGE
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
@@ -10,14 +10,21 @@ from . import DATA_CANARY
 SENSOR_VALUE_PRECISION = 2
 ATTR_AIR_QUALITY = "air_quality"
 
+# Define variables to store the device names, as referred to by the Canary API.
+# Note: If Canary change the name of any of their devices (which they have done),
+# then these variables will need updating, otherwise the sensors will stop working
+# and disappear in Home Assistant.
+CANARY_PRO = "Canary Pro"
+CANARY_FLEX = "Canary Flex"
+
 # Sensor types are defined like so:
 # sensor type name, unit_of_measurement, icon
 SENSOR_TYPES = [
-    ["temperature", TEMP_CELSIUS, "mdi:thermometer", ["Canary"]],
-    ["humidity", "%", "mdi:water-percent", ["Canary"]],
-    ["air_quality", None, "mdi:weather-windy", ["Canary"]],
-    ["wifi", "dBm", "mdi:wifi", ["Canary Flex"]],
-    ["battery", "%", "mdi:battery-50", ["Canary Flex"]],
+    ["temperature", TEMP_CELSIUS, "mdi:thermometer", [CANARY_PRO]],
+    ["humidity", UNIT_PERCENTAGE, "mdi:water-percent", [CANARY_PRO]],
+    ["air_quality", None, "mdi:weather-windy", [CANARY_PRO]],
+    ["wifi", "dBm", "mdi:wifi", [CANARY_FLEX]],
+    ["battery", UNIT_PERCENTAGE, "mdi:battery-50", [CANARY_FLEX]],
 ]
 
 STATE_AIR_QUALITY_NORMAL = "normal"

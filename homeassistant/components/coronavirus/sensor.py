@@ -5,6 +5,13 @@ from homeassistant.helpers.entity import Entity
 from . import get_coordinator
 from .const import ATTRIBUTION, OPTION_WORLDWIDE
 
+SENSORS = {
+    "confirmed": "mdi:emoticon-neutral-outline",
+    "current": "mdi:emoticon-sad-outline",
+    "recovered": "mdi:emoticon-happy-outline",
+    "deaths": "mdi:emoticon-cry-outline",
+}
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer sensor setup to the shared sensor module."""
@@ -12,7 +19,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_add_entities(
         CoronavirusSensor(coordinator, config_entry.data["country"], info_type)
-        for info_type in ("confirmed", "recovered", "deaths", "current")
+        for info_type in SENSORS
     )
 
 
@@ -49,6 +56,11 @@ class CoronavirusSensor(Entity):
             )
 
         return getattr(self.coordinator.data[self.country], self.info_type)
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return SENSORS[self.info_type]
 
     @property
     def unit_of_measurement(self):

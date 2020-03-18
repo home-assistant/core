@@ -5,5 +5,5 @@
   "requirements": ["mutagen==1.43.0"],
   "dependencies": ["http"],
   "after_dependencies": ["media_player"],
-  "codeowners": ["@robbiet480"]
+  "codeowners": ["@pvizeli"]
 }

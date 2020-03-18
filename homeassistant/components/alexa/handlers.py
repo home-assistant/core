@@ -121,6 +121,12 @@ async def async_api_turn_on(hass, config, directive, context):
     service = SERVICE_TURN_ON
     if domain == cover.DOMAIN:
         service = cover.SERVICE_OPEN_COVER
+    elif domain == vacuum.DOMAIN:
+        supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if not supported & vacuum.SUPPORT_TURN_ON and supported & vacuum.SUPPORT_START:
+            service = vacuum.SERVICE_START
+    elif domain == timer.DOMAIN:
+        service = timer.SERVICE_START
     elif domain == media_player.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         power_features = media_player.SUPPORT_TURN_ON | media_player.SUPPORT_TURN_OFF
@@ -149,6 +155,15 @@ async def async_api_turn_off(hass, config, directive, context):
     service = SERVICE_TURN_OFF
     if entity.domain == cover.DOMAIN:
         service = cover.SERVICE_CLOSE_COVER
+    elif domain == vacuum.DOMAIN:
+        supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if (
+            not supported & vacuum.SUPPORT_TURN_OFF
+            and supported & vacuum.SUPPORT_RETURN_HOME
+        ):
+            service = vacuum.SERVICE_RETURN_TO_BASE
+    elif domain == timer.DOMAIN:
+        service = timer.SERVICE_CANCEL
     elif domain == media_player.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         power_features = media_player.SUPPORT_TURN_ON | media_player.SUPPORT_TURN_OFF
@@ -478,8 +493,8 @@ async def async_api_select_input(hass, config, directive, context):
             media_input = source
             break
     else:
-        msg = "failed to map input {} to a media source on {}".format(
-            media_input, entity.entity_id
+        msg = (
+            f"failed to map input {media_input} to a media source on {entity.entity_id}"
         )
         raise AlexaInvalidValueError(msg)
 
@@ -1225,7 +1240,7 @@ async def async_api_adjust_range(hass, config, directive, context):
         service = SERVICE_SET_COVER_POSITION
         current = entity.attributes.get(cover.ATTR_POSITION)
         if not current:
-            msg = "Unable to determine {} current position".format(entity.entity_id)
+            msg = f"Unable to determine {entity.entity_id} current position"
             raise AlexaInvalidValueError(msg)
         position = response_value = min(100, max(0, range_delta + current))
         if position == 100:
@@ -1241,9 +1256,7 @@ async def async_api_adjust_range(hass, config, directive, context):
         service = SERVICE_SET_COVER_TILT_POSITION
         current = entity.attributes.get(cover.ATTR_TILT_POSITION)
         if not current:
-            msg = "Unable to determine {} current tilt position".format(
-                entity.entity_id
-            )
+            msg = f"Unable to determine {entity.entity_id} current tilt position"
             raise AlexaInvalidValueError(msg)
         tilt_position = response_value = min(100, max(0, range_delta + current))
         if tilt_position == 100:
@@ -1439,9 +1452,7 @@ async def async_api_set_eq_mode(hass, config, directive, context):
     if sound_mode_list and mode.lower() in sound_mode_list:
         data[media_player.const.ATTR_SOUND_MODE] = mode.lower()
     else:
-        msg = "failed to map sound mode {} to a mode on {}".format(
-            mode, entity.entity_id
-        )
+        msg = f"failed to map sound mode {mode} to a mode on {entity.entity_id}"
         raise AlexaInvalidValueError(msg)
 
     await hass.services.async_call(

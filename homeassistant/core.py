@@ -12,6 +12,7 @@ import functools
 import logging
 import os
 import pathlib
+import re
 import threading
 from time import monotonic
 from types import MappingProxyType
@@ -63,7 +64,7 @@ from homeassistant.exceptions import (
     ServiceNotFound,
     Unauthorized,
 )
-from homeassistant.util import location, slugify
+from homeassistant.util import location
 from homeassistant.util.async_ import fire_coroutine_threadsafe, run_callback_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
@@ -103,12 +104,15 @@ def split_entity_id(entity_id: str) -> List[str]:
     return entity_id.split(".", 1)
 
 
+VALID_ENTITY_ID = re.compile(r"^(?!.+__)(?!_)[\da-z_]+(?<!_)\.(?!_)[\da-z_]+(?<!_)$")
+
+
 def valid_entity_id(entity_id: str) -> bool:
     """Test if an entity ID is a valid format.
 
     Format: <domain>.<entity> where both are slugs.
     """
-    return "." in entity_id and slugify(entity_id) == entity_id.replace(".", "_", 1)
+    return VALID_ENTITY_ID.match(entity_id) is not None
 
 
 def valid_state(state: str) -> bool:

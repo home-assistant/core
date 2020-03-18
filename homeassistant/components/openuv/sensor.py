@@ -1,6 +1,7 @@
 """Support for OpenUV sensors."""
 import logging
 
+from homeassistant.const import TIME_MINUTES
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.dt import as_local, parse_datetime
@@ -50,32 +51,32 @@ SENSORS = {
     TYPE_SAFE_EXPOSURE_TIME_1: (
         "Skin Type 1 Safe Exposure Time",
         "mdi:timer",
-        "minutes",
+        TIME_MINUTES,
     ),
     TYPE_SAFE_EXPOSURE_TIME_2: (
         "Skin Type 2 Safe Exposure Time",
         "mdi:timer",
-        "minutes",
+        TIME_MINUTES,
     ),
     TYPE_SAFE_EXPOSURE_TIME_3: (
         "Skin Type 3 Safe Exposure Time",
         "mdi:timer",
-        "minutes",
+        TIME_MINUTES,
     ),
     TYPE_SAFE_EXPOSURE_TIME_4: (
         "Skin Type 4 Safe Exposure Time",
         "mdi:timer",
-        "minutes",
+        TIME_MINUTES,
     ),
     TYPE_SAFE_EXPOSURE_TIME_5: (
         "Skin Type 5 Safe Exposure Time",
         "mdi:timer",
-        "minutes",
+        TIME_MINUTES,
     ),
     TYPE_SAFE_EXPOSURE_TIME_6: (
         "Skin Type 6 Safe Exposure Time",
         "mdi:timer",
-        "minutes",
+        TIME_MINUTES,
     ),
 }
 

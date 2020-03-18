@@ -1,5 +1,5 @@
 """Support for HomeKit Controller air quality sensors."""
-from homekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.air_quality import AirQualityEntity
 from homeassistant.core import callback
@@ -34,38 +34,38 @@ class HomeAirQualitySensor(HomeKitEntity, AirQualityEntity):
     @property
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
-        return self.get_hk_char_value(CharacteristicsTypes.DENSITY_PM25)
+        return self.service.value(CharacteristicsTypes.DENSITY_PM25)
 
     @property
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
-        return self.get_hk_char_value(CharacteristicsTypes.DENSITY_PM10)
+        return self.service.value(CharacteristicsTypes.DENSITY_PM10)
 
     @property
     def ozone(self):
         """Return the O3 (ozone) level."""
-        return self.get_hk_char_value(CharacteristicsTypes.DENSITY_OZONE)
+        return self.service.value(CharacteristicsTypes.DENSITY_OZONE)
 
     @property
     def sulphur_dioxide(self):
         """Return the SO2 (sulphur dioxide) level."""
-        return self.get_hk_char_value(CharacteristicsTypes.DENSITY_SO2)
+        return self.service.value(CharacteristicsTypes.DENSITY_SO2)
 
     @property
     def nitrogen_dioxide(self):
         """Return the NO2 (nitrogen dioxide) level."""
-        return self.get_hk_char_value(CharacteristicsTypes.DENSITY_NO2)
+        return self.service.value(CharacteristicsTypes.DENSITY_NO2)
 
     @property
     def air_quality_text(self):
         """Return the Air Quality Index (AQI)."""
-        air_quality = self.get_hk_char_value(CharacteristicsTypes.AIR_QUALITY)
+        air_quality = self.service.value(CharacteristicsTypes.AIR_QUALITY)
         return AIR_QUALITY_TEXT.get(air_quality, "unknown")
 
     @property
     def volatile_organic_compounds(self):
         """Return the volatile organic compounds (VOC) level."""
-        return self.get_hk_char_value(CharacteristicsTypes.DENSITY_VOC)
+        return self.service.value(CharacteristicsTypes.DENSITY_VOC)
 
     @property
     def device_state_attributes(self):
