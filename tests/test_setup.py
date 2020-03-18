@@ -6,7 +6,6 @@ import os
 import threading
 from unittest import mock
 
-from asynctest import patch
 import voluptuous as vol
 
 from homeassistant import setup
@@ -536,15 +535,3 @@ async def test_setup_import_blows_up(hass):
         "homeassistant.loader.Integration.get_component", side_effect=ValueError
     ):
         assert not await setup.async_setup_component(hass, "sun", {})
-
-
-async def test_blacklist(caplog):
-    """Test setup blacklist."""
-    with patch("homeassistant.setup.BLACKLIST", {"bad_integration"}):
-        assert not await setup.async_setup_component(
-            mock.Mock(config=mock.Mock(components=[])), "bad_integration", {}
-        )
-    assert (
-        "Integration bad_integration is blacklisted because it is causing issues."
-        in caplog.text
-    )
