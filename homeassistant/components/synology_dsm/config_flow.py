@@ -97,6 +97,11 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         api = SynologyDSM(
             host, port, username, password, use_ssl, dsm_version=api_version,
         )
+
+        if not await self.hass.async_add_executor_job(api.login):
+            errors[CONF_USERNAME] = "login"
+            return await self._show_setup_form(user_input, errors)
+
         storage = await self.hass.async_add_executor_job(getattr, api, "storage")
         utilisation = await self.hass.async_add_executor_job(
             getattr, api, "utilisation"

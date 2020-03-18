@@ -4,7 +4,7 @@
             "already_configured": "Host already configured"
         },
         "error": {
-            "already_configured": "Host already configured",
+            "login": "Login error: please check your email & password",
             "unknown": "Unknown error: please retry later or an other configuration"
         },
         "step": {
