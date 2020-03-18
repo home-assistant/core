@@ -19,6 +19,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             entities.append(UpdateSwitch(device, controller, config_entry))
         elif device.type == "maxrange switch":
             entities.append(RangeSwitch(device, controller, config_entry))
+        elif device.type == "sentry mode switch":
+            entities.append(SentryModeSwitch(device, controller, config_entry))
     async_add_entities(entities, True)
 
 
@@ -114,3 +116,33 @@ class UpdateSwitch(TeslaDevice, SwitchDevice):
         _LOGGER.debug("Updating state for: %s %s", self._name, car_id)
         await super().async_update()
         self._state = bool(self.controller.get_updates(car_id))
+
+
+class SentryModeSwitch(TeslaDevice, SwitchDevice):
+    """Representation of a Tesla sentry mode switch."""
+
+    def __init__(self, tesla_device, controller, config_entry):
+        """Initialise the switch."""
+        self._state = None
+        super().__init__(tesla_device, controller, config_entry)
+
+    async def async_turn_on(self, **kwargs):
+        """Send the on command."""
+        _LOGGER.debug("Enable sentry mode: %s", self._name)
+        await self.tesla_device.enable_sentry_mode()
+
+    async def async_turn_off(self, **kwargs):
+        """Send the off command."""
+        _LOGGER.debug("Disable sentry mode: %s", self._name)
+        await self.tesla_device.disable_sentry_mode()
+
+    @property
+    def is_on(self):
+        """Get whether the switch is in on state."""
+        return self._state
+
+    async def async_update(self):
+        """Update the state of the switch."""
+        _LOGGER.debug("Updating state for: %s", self._name)
+        await super().async_update()
+        self._state = bool(self.tesla_device.get_value())

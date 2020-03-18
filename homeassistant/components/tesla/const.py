@@ -23,4 +23,5 @@ ICONS = {
     "temperature sensor": "mdi:thermometer",
     "location tracker": "mdi:crosshairs-gps",
     "charging rate sensor": "mdi:speedometer",
+    "sentry mode switch": "mdi:shield-car",
 }
