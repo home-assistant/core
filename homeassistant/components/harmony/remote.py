@@ -26,6 +26,7 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
+from . import find_unique_id_for_remote
 from .const import DOMAIN, SERVICE_CHANGE_CHANNEL, SERVICE_SYNC
 
 _LOGGER = logging.getLogger(__name__)
@@ -269,16 +270,7 @@ class HarmonyRemote(remote.RemoteDevice):
     @property
     def unique_id(self):
         """Return the unique id."""
-
-        websocket_unique_id = self._client.hub_config.info.get("activeRemoteId")
-        if websocket_unique_id is not None:
-            return websocket_unique_id
-
-        xmpp_unique_id = self._client.config.get("global", {}).get("timeStampHash")
-        if not xmpp_unique_id:
-            return None
-
-        return xmpp_unique_id.split(";")[-1]
+        return find_unique_id_for_remote(self._client)
 
     @property
     def name(self):

@@ -16,7 +16,8 @@ from homeassistant.components.remote import (
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 
-from .const import DOMAIN
+from . import find_unique_id_for_remote
+from .const import DOMAIN, UNIQUE_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,12 +42,20 @@ async def validate_input(hass: core.HomeAssistant, data):
     except harmony_exceptions.TimeOut:
         raise CannotConnect
 
+    unique_id = find_unique_id_for_remote(harmony)
+    await harmony.close()
+
     # As a last resort we get the name from the harmony client
-    # in the event a name was not provided
+    # in the event a name was not provided.  harmony.name is
+    # usually the ip address but it can be an empty string.
     if CONF_NAME not in data or data[CONF_NAME] is None or data[CONF_NAME] == "":
         data[CONF_NAME] = harmony.name
 
-    return {CONF_NAME: data[CONF_NAME], CONF_HOST: data[CONF_HOST]}
+    return {
+        CONF_NAME: data[CONF_NAME],
+        CONF_HOST: data[CONF_HOST],
+        UNIQUE_ID: unique_id,
+    }
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -63,21 +72,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_HOST])
-            self._abort_if_unique_id_configured()
             try:
                 info = await validate_input(self.hass, user_input)
-                config_entry = self.async_create_entry(title=info[CONF_NAME], data=info)
-                # Options from yaml are preserved
-                options = _options_from_user_input(user_input)
-                if options:
-                    config_entry["options"] = options
-                return config_entry
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+
+            if "base" not in errors:
+                return await self._async_create_entry_from_valid_input(info, user_input)
 
         # Return form
         return self.async_show_form(
@@ -88,12 +92,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a discovered Harmony device."""
         parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
         friendly_name = discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME]
-
-        # The unique id is explicitly not set here because
-        # entities can be imported from yaml by name via
-        # discovery.  If the unique id is set here, it will
-        # start the config flow and block the import which will
-        # break users config on upgrade.
 
         # pylint: disable=no-member
         self.context["title_placeholders"] = {"name": friendly_name}
@@ -110,26 +108,23 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            # Wait until they say they want to link to set the unique
-            # id in case its about to be imported by the platform.
-            await self.async_set_unique_id(self.harmony_config[CONF_HOST])
-            # Abort if already setup
-            self._abort_if_unique_id_configured()
             try:
                 info = await validate_input(self.hass, self.harmony_config)
-                return self.async_create_entry(title=info[CONF_NAME], data=info)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
+            if "base" not in errors:
+                return await self._async_create_entry_from_valid_input(info, user_input)
+
         return self.async_show_form(
             step_id="link",
             errors=errors,
             description_placeholders={
-                "name": self.harmony_config[CONF_NAME],
-                "host": self.harmony_config[CONF_HOST],
+                CONF_HOST: self.harmony_config[CONF_NAME],
+                CONF_NAME: self.harmony_config[CONF_HOST],
             },
         )
 
@@ -142,6 +137,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry):
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
+
+    async def _async_create_entry_from_valid_input(self, validated, user_input):
+        await self.async_set_unique_id(validated[UNIQUE_ID])
+        self._abort_if_unique_id_configured()
+        config_entry = self.async_create_entry(
+            title=validated[CONF_NAME],
+            data={CONF_NAME: validated[CONF_NAME], CONF_HOST: validated[CONF_HOST]},
+        )
+        # Options from yaml are preserved
+        options = _options_from_user_input(user_input)
+        if options:
+            config_entry["options"] = options
+        return config_entry
 
 
 def _options_from_user_input(user_input):
