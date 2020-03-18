@@ -103,6 +103,7 @@ class SynoApi:
         """Initialize the API wrapper class."""
         self._hass = hass
         self.temp_unit = temp_unit
+        self.unique_id = f"{host}:{port}"
 
         self._api = SynologyDSM(
             host, port, username, password, use_ssl, dsm_version=api_version
@@ -129,22 +130,24 @@ class SynoNasSensor(Entity):
         monitored_device: str = None,
     ):
         """Initialize the sensor."""
+        self._api = api
         self.sensor_type = sensor_type
         self._name = f"{name} {sensor_info[0]}"
         self._unit = sensor_info[1]
         self._icon = sensor_info[2]
         self.monitored_device = monitored_device
-        self._api = api
 
         if self.monitored_device is not None:
             self._name = f"{self._name} ({self.monitored_device})"
+
+        self._unique_id = f"{self._api.unique_id} {self._name}"
 
         self._unsub_dispatcher = None
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return self._name
+        return self._unique_id
 
     @property
     def name(self) -> str:
