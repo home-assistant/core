@@ -90,6 +90,17 @@ async def async_setup_entry(hass, config_entry):
     """
 
     hass.data[DATA_ZHA] = hass.data.get(DATA_ZHA, {})
+
+    config = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {})
+
+    if config.get(CONF_ENABLE_QUIRKS, True):
+        # needs to be done here so that the ZHA module is finished loading
+        # before zhaquirks is imported
+        import zhaquirks  # noqa: F401 pylint: disable=unused-import, import-outside-toplevel, import-error
+
+    zha_gateway = ZHAGateway(hass, config, config_entry)
+    await zha_gateway.async_initialize()
+
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS] = []
     hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED] = asyncio.Event()
     platforms = []
@@ -105,16 +116,6 @@ async def async_setup_entry(hass, config_entry):
         hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED].set()
 
     hass.async_create_task(_platforms_loaded())
-
-    config = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {})
-
-    if config.get(CONF_ENABLE_QUIRKS, True):
-        # needs to be done here so that the ZHA module is finished loading
-        # before zhaquirks is imported
-        import zhaquirks  # noqa: F401 pylint: disable=unused-import, import-outside-toplevel, import-error
-
-    zha_gateway = ZHAGateway(hass, config, config_entry)
-    await zha_gateway.async_initialize()
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
     device_registry.async_get_or_create(
