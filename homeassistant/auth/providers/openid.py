@@ -137,9 +137,9 @@ class OpenIdAuthProvider(AuthProvider):
         Will be used to populate info when creating a new user.
         """
         email = credentials.data["email"]
-        match = re.match(r"([^@]+)", email)
+        match = re.match(r"[^@]+", email)
         if match:
-            name = str(match.groups(0))
+            name = str(match.group(0))
         else:
             name = str(email)
 
