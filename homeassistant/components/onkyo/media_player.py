@@ -17,6 +17,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
+    SUPPORT_SELECT_SOUND_MODE,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -46,6 +47,7 @@ SUPPORT_ONKYO = (
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_PLAY
     | SUPPORT_PLAY_MEDIA
+    | SUPPORT_SELECT_SOUND_MODE
 )
 
 SUPPORT_ONKYO_WO_VOLUME = (
@@ -70,6 +72,41 @@ DEFAULT_SOURCES = {
     "video6": "Video 6",
     "video7": "Video 7",
     "fm": "Radio",
+}
+
+SOUND_MODE_MAPPING = {
+    "Auto": ["auto"],
+    "Direct": ["direct"],
+    "Pure Direct": ["pure-audio"],
+    "Stereo": ["stereo"],
+    "Extended Stereo": ["all-ch-stereo"],
+    "Surround": ["surr"],
+    "Auto Surround": ["auto-surround"],
+    "PCM": ["straight-decode"],
+    "Dolby Digital": ["dolby-atmos", "dolby-surround", "dolby-virtual", "dolby-ex",
+                      "dolby-surround-thx-cinema", "pliix-thx-cinema", "pliix-movie", 
+                      "dolby-surround-thx-music", "pliix-thx-music", "pliix-music",
+                      "dolby-surround-thx-games", "pliix-thx-games", "pliix-game",
+                      "pliiz-height-thx-cinema", "pliiz-height-thx-games", "plii", 
+                      "pliiz-height-thx-music", "pliiz-height-thx-u2", "pliiz-height"],
+    "DTS Surround":  ["dts-x", "neural-x", "dts-surround-sensation", 
+                      "neo-6-cinema-dts-surround-sensation", "dts-neural-x-thx-cinema",
+                      "neo-6-music-dts-surround-sensation", "dts-neural-x-thx-music",
+                      "dts-neural-x-thx-games"],
+    "THX":           ["thx", "thx-surround-ex", "thx-cinema", "thx-music", "thx-musicmode", 
+                      "thx-games", "thx-u2", "neural-thx", "neural-thx-cinema", 
+                      "neural-thx-music", "neural-thx-games"],
+    "Mono": ["mono"],
+    "Extended Mono": ["full-mono"],
+    "Action": ["action", "game-action"],
+    "Drama": ["tv-logic"],
+    "Entertainment Show": ["studio-mix"],
+    "Advanced Game": ["film", "game-rpg"],
+    "Sports": ["enhanced-7", "enhance", "game-sports"],
+    "Classical": ["orchestra"],
+    "Rock/Pop": ["musical", "game-rock"],
+    "Unplugged": ["unplugged"],
+    "Front Stage Surround": ["theater-dimensional"]
 }
 
 DEFAULT_PLAYABLE_SOURCES = ("fm", "am", "tuner")
@@ -236,6 +273,10 @@ class OnkyoDevice(MediaPlayerDevice):
         self._source_list = list(sources.values())
         self._source_mapping = sources
         self._reverse_mapping = {value: key for key, value in sources.items()}
+        self._sound_mode = None
+        self._sound_mode_list = list(SOUND_MODE_MAPPING.keys())
+        self._sound_mode_mapping = SOUND_MODE_MAPPING
+        self._sound_mode_reverse_mapping = {subval: key for key, values in SOUND_MODE_MAPPING.items() for subval in values}
         self._attributes = {}
 
     def command(self, command):
@@ -268,6 +309,7 @@ class OnkyoDevice(MediaPlayerDevice):
         current_source_raw = self.command("input-selector query")
         hdmi_out_raw = self.command("hdmi-output-selector query")
         preset_raw = self.command("preset query")
+        sound_mode_raw = self.command("listening-mode query")
         if not (volume_raw and mute_raw and current_source_raw):
             return
 
@@ -286,6 +328,17 @@ class OnkyoDevice(MediaPlayerDevice):
             self._attributes[ATTR_PRESET] = preset_raw[1]
         elif ATTR_PRESET in self._attributes:
             del self._attributes[ATTR_PRESET]
+
+        if isinstance(sound_mode_raw[1], str):
+            sound_mode_tuples = (sound_mode_raw[0], (sound_mode_raw[1],))
+        else:
+            sound_mode_tuples = sound_mode_raw
+
+        for sound_mode in sound_mode_tuples[1]:
+            if sound_mode in self._sound_mode_reverse_mapping:
+                self._sound_mode = self._sound_mode_reverse_mapping[sound_mode]
+                break
+            self._sound_mode = "_".join(sound_mode_tuples[1])
 
         self._muted = bool(mute_raw[1] == "on")
         #       AMP_VOL/MAX_RECEIVER_VOL*(MAX_VOL/100)
@@ -331,6 +384,16 @@ class OnkyoDevice(MediaPlayerDevice):
     def source_list(self):
         """List of available input sources."""
         return self._source_list
+
+    @property
+    def sound_mode(self):
+        """Return the current matched sound mode."""
+        return self._sound_mode
+
+    @property
+    def sound_mode_list(self):
+        """Return a list of available sound modes."""
+        return self._sound_mode_list
 
     @property
     def device_state_attributes(self):
@@ -379,6 +442,12 @@ class OnkyoDevice(MediaPlayerDevice):
         if source in self._source_list:
             source = self._reverse_mapping[source]
         self.command(f"input-selector {source}")
+
+    def select_sound_mode(self, sound_mode):
+        """Select sound mode."""
+        if sound_mode in self._sound_mode_list:
+            sound_mode = self._sound_mode_mapping[sound_mode][0]
+        self.command(f"listening-mode {sound_mode}")
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play radio station by preset number."""
