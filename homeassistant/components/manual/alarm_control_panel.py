@@ -26,6 +26,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
@@ -237,7 +238,7 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
         if self._state in SUPPORTED_PENDING_STATES and self._within_pending_time(
             self._state
         ):
-            return STATE_ALARM_PENDING
+            return STATE_ALARM_ARMING
 
         return self._state
 
@@ -255,7 +256,7 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
     @property
     def _active_state(self):
         """Get the current state."""
-        if self.state == STATE_ALARM_PENDING:
+        if self.state == STATE_ALARM_PENDING or self.state == STATE_ALARM_ARMING:
             return self._previous_state
         return self._state
 
@@ -385,7 +386,7 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
         """Return the state attributes."""
         state_attr = {}
 
-        if self.state == STATE_ALARM_PENDING:
+        if self.state == STATE_ALARM_PENDING or self.state == STATE_ALARM_ARMING:
             state_attr[ATTR_PRE_PENDING_STATE] = self._previous_state
             state_attr[ATTR_POST_PENDING_STATE] = self._state
 
@@ -397,7 +398,10 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
         state = await self.async_get_last_state()
         if state:
             if (
-                state.state == STATE_ALARM_PENDING
+                (
+                    state.state == STATE_ALARM_PENDING
+                    or state.state == STATE_ALARM_ARMING
+                )
                 and hasattr(state, "attributes")
                 and state.attributes["pre_pending_state"]
             ):
