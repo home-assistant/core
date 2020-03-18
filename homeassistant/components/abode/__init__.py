@@ -297,11 +297,6 @@ class AbodeDevice(Entity):
 
         self.hass.data[DOMAIN].entity_ids.add(self.entity_id)
 
-    def _update_connection_status(self):
-        """Update the device available property."""
-        self._available = self._data.abode.events.connected
-        self.schedule_update_ha_state()
-
     async def async_will_remove_from_hass(self):
         """Unsubscribe from device events."""
         self.hass.async_add_job(
@@ -357,6 +352,11 @@ class AbodeDevice(Entity):
         """Update the device state."""
         self.schedule_update_ha_state()
 
+    def _update_connection_status(self):
+        """Update the device available property."""
+        self._available = self._data.abode.events.connected
+        self.schedule_update_ha_state()
+
 
 class AbodeAutomation(Entity):
     """Representation of an Abode automation."""
@@ -365,10 +365,21 @@ class AbodeAutomation(Entity):
         """Initialize for Abode automation."""
         self._data = data
         self._automation = automation
+        self._available = True
 
     async def async_added_to_hass(self):
         """Set up automation entity."""
+        self.hass.async_add_job(
+            self._data.abode.events.add_connection_status_callback,
+            self._automation.automation_id,
+            self._update_connection_status,
+        )
         self.hass.data[DOMAIN].entity_ids.add(self.entity_id)
+
+    @property
+    def available(self):
+        """Return the available state."""
+        return self._available
 
     @property
     def should_poll(self):
@@ -396,3 +407,8 @@ class AbodeAutomation(Entity):
     def unique_id(self):
         """Return a unique ID to use for this automation."""
         return self._automation.automation_id
+
+    def _update_connection_status(self):
+        """Update the automation available property."""
+        self._available = self._data.abode.events.connected
+        self.schedule_update_ha_state()
