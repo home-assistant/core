@@ -16,6 +16,7 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
+    CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
     CONF_SITE_ID,
@@ -30,6 +31,7 @@ from .const import (
 from .controller import get_controller
 from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
 
+CONF_NEW_CLIENT = "new_client"
 DEFAULT_PORT = 8443
 DEFAULT_SITE_ID = "default"
 DEFAULT_VERIFY_SSL = False
@@ -171,44 +173,102 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize UniFi options flow."""
         self.config_entry = config_entry
         self.options = dict(config_entry.options)
+        self.controller = None
 
     async def async_step_init(self, user_input=None):
         """Manage the UniFi options."""
+        self.controller = get_controller_from_config_entry(self.hass, self.config_entry)
+        self.options[CONF_BLOCK_CLIENT] = self.controller.option_block_clients
         return await self.async_step_device_tracker()
 
     async def async_step_device_tracker(self, user_input=None):
         """Manage the device tracker options."""
         if user_input is not None:
             self.options.update(user_input)
-            return await self.async_step_statistics_sensors()
+            return await self.async_step_client_control()
 
-        controller = get_controller_from_config_entry(self.hass, self.config_entry)
-
-        ssid_filter = {wlan: wlan for wlan in controller.api.wlans}
+        ssid_filter = {wlan: wlan for wlan in self.controller.api.wlans}
 
         return self.async_show_form(
             step_id="device_tracker",
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_TRACK_CLIENTS, default=controller.option_track_clients,
+                        CONF_TRACK_CLIENTS,
+                        default=self.controller.option_track_clients,
                     ): bool,
                     vol.Optional(
                         CONF_TRACK_WIRED_CLIENTS,
-                        default=controller.option_track_wired_clients,
+                        default=self.controller.option_track_wired_clients,
                     ): bool,
                     vol.Optional(
-                        CONF_TRACK_DEVICES, default=controller.option_track_devices,
+                        CONF_TRACK_DEVICES,
+                        default=self.controller.option_track_devices,
                     ): bool,
                     vol.Optional(
-                        CONF_SSID_FILTER, default=controller.option_ssid_filter
+                        CONF_SSID_FILTER, default=self.controller.option_ssid_filter
                     ): cv.multi_select(ssid_filter),
                     vol.Optional(
                         CONF_DETECTION_TIME,
-                        default=int(controller.option_detection_time.total_seconds()),
+                        default=int(
+                            self.controller.option_detection_time.total_seconds()
+                        ),
                     ): int,
                 }
             ),
+        )
+
+    async def async_step_client_control(self, user_input=None):
+        """Manage configuration of network access controlled clients."""
+        errors = {}
+
+        if user_input is not None:
+            new_client = user_input.pop(CONF_NEW_CLIENT, None)
+            self.options.update(user_input)
+
+            if new_client:
+                if (
+                    new_client in self.controller.api.clients
+                    or new_client in self.controller.api.clients_all
+                ):
+                    self.options[CONF_BLOCK_CLIENT].append(new_client)
+
+                else:
+                    errors["base"] = "unknown_client_mac"
+
+            else:
+                return await self.async_step_statistics_sensors()
+
+        clients_to_block = {}
+
+        for mac in self.options[CONF_BLOCK_CLIENT]:
+
+            name = None
+
+            for clients in [
+                self.controller.api.clients,
+                self.controller.api.clients_all,
+            ]:
+                if mac in clients:
+                    name = f"{clients[mac].name or clients[mac].hostname} ({mac})"
+                    break
+
+            if not name:
+                name = mac
+
+            clients_to_block[mac] = name
+
+        return self.async_show_form(
+            step_id="client_control",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_BLOCK_CLIENT, default=self.options[CONF_BLOCK_CLIENT]
+                    ): cv.multi_select(clients_to_block),
+                    vol.Optional(CONF_NEW_CLIENT): str,
+                }
+            ),
+            errors=errors,
         )
 
     async def async_step_statistics_sensors(self, user_input=None):
@@ -217,15 +277,13 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
             self.options.update(user_input)
             return await self._update_options()
 
-        controller = get_controller_from_config_entry(self.hass, self.config_entry)
-
         return self.async_show_form(
             step_id="statistics_sensors",
             data_schema=vol.Schema(
                 {
                     vol.Optional(
                         CONF_ALLOW_BANDWIDTH_SENSORS,
-                        default=controller.option_allow_bandwidth_sensors,
+                        default=self.controller.option_allow_bandwidth_sensors,
                     ): bool
                 }
             ),

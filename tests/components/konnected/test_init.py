@@ -582,6 +582,10 @@ async def test_state_updates(hass, aiohttp_client, mock_panel):
     )
     entry.add_to_hass(hass)
 
+    # Add empty data field to ensure we process it correctly (possible if entry is ignored)
+    entry = MockConfigEntry(domain="konnected", title="Konnected Alarm Panel", data={},)
+    entry.add_to_hass(hass)
+
     assert (
         await async_setup_component(
             hass,

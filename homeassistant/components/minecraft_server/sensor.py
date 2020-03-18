@@ -4,6 +4,7 @@ import logging
 from typing import Any, Dict
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import TIME_MILLISECONDS
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import MinecraftServer, MinecraftServerEntity
@@ -20,7 +21,6 @@ from .const import (
     NAME_PLAYERS_ONLINE,
     NAME_PROTOCOL_VERSION,
     NAME_VERSION,
-    UNIT_LATENCY_TIME,
     UNIT_PLAYERS_MAX,
     UNIT_PLAYERS_ONLINE,
     UNIT_PROTOCOL_VERSION,
@@ -121,7 +121,7 @@ class MinecraftServerLatencyTimeSensor(MinecraftServerSensorEntity):
             server=server,
             type_name=NAME_LATENCY_TIME,
             icon=ICON_LATENCY_TIME,
-            unit=UNIT_LATENCY_TIME,
+            unit=TIME_MILLISECONDS,
         )
 
     async def async_update(self) -> None:

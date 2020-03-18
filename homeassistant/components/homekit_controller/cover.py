@@ -1,7 +1,7 @@
 """Support for Homekit covers."""
 import logging
 
-from homekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -61,13 +61,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class HomeKitGarageDoorCover(HomeKitEntity, CoverDevice):
     """Representation of a HomeKit Garage Door."""
 
-    def __init__(self, accessory, discovery_info):
-        """Initialise the Cover."""
-        super().__init__(accessory, discovery_info)
-        self._state = None
-        self._obstruction_detected = None
-        self.lock_state = None
-
     @property
     def device_class(self):
         """Define this cover as a garage door."""
@@ -81,31 +74,31 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverDevice):
             CharacteristicsTypes.OBSTRUCTION_DETECTED,
         ]
 
-    def _update_door_state_current(self, value):
-        self._state = CURRENT_GARAGE_STATE_MAP[value]
-
-    def _update_obstruction_detected(self, value):
-        self._obstruction_detected = value
-
     @property
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_OPEN | SUPPORT_CLOSE
 
     @property
+    def state(self):
+        """Return the current state of the garage door."""
+        value = self.service.value(CharacteristicsTypes.DOOR_STATE_CURRENT)
+        return CURRENT_GARAGE_STATE_MAP[value]
+
+    @property
     def is_closed(self):
         """Return true if cover is closed, else False."""
-        return self._state == STATE_CLOSED
+        return self.state == STATE_CLOSED
 
     @property
     def is_closing(self):
         """Return if the cover is closing or not."""
-        return self._state == STATE_CLOSING
+        return self.state == STATE_CLOSING
 
     @property
     def is_opening(self):
         """Return if the cover is opening or not."""
-        return self._state == STATE_OPENING
+        return self.state == STATE_OPENING
 
     async def async_open_cover(self, **kwargs):
         """Send open command."""
@@ -117,22 +110,22 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverDevice):
 
     async def set_door_state(self, state):
         """Send state command."""
-        characteristics = [
-            {
-                "aid": self._aid,
-                "iid": self._chars["door-state.target"],
-                "value": TARGET_GARAGE_STATE_MAP[state],
-            }
-        ]
-        await self._accessory.put_characteristics(characteristics)
+        await self.async_put_characteristics(
+            {CharacteristicsTypes.DOOR_STATE_TARGET: TARGET_GARAGE_STATE_MAP[state]}
+        )
 
     @property
     def device_state_attributes(self):
         """Return the optional state attributes."""
-        if self._obstruction_detected is None:
-            return None
+        attributes = {}
 
-        return {"obstruction-detected": self._obstruction_detected}
+        obstruction_detected = self.service.value(
+            CharacteristicsTypes.OBSTRUCTION_DETECTED
+        )
+        if obstruction_detected:
+            attributes["obstruction-detected"] = obstruction_detected
+
+        return attributes
 
 
 class HomeKitWindowCover(HomeKitEntity, CoverDevice):
@@ -141,11 +134,7 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
     def __init__(self, accessory, discovery_info):
         """Initialise the Cover."""
         super().__init__(accessory, discovery_info)
-        self._state = None
-        self._position = None
-        self._tilt_position = None
-        self._obstruction_detected = None
-        self.lock_state = None
+
         self._features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
     def get_characteristic_types(self):
@@ -175,21 +164,6 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
             SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_SET_TILT_POSITION
         )
 
-    def _update_position_state(self, value):
-        self._state = CURRENT_WINDOW_STATE_MAP[value]
-
-    def _update_position_current(self, value):
-        self._position = value
-
-    def _update_vertical_tilt_current(self, value):
-        self._tilt_position = value
-
-    def _update_horizontal_tilt_current(self, value):
-        self._tilt_position = value
-
-    def _update_obstruction_detected(self, value):
-        self._obstruction_detected = value
-
     @property
     def supported_features(self):
         """Flag supported features."""
@@ -198,29 +172,54 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
     @property
     def current_cover_position(self):
         """Return the current position of cover."""
-        return self._position
+        return self.service.value(CharacteristicsTypes.POSITION_CURRENT)
 
     @property
     def is_closed(self):
         """Return true if cover is closed, else False."""
-        return self._position == 0
+        return self.current_cover_position == 0
 
     @property
     def is_closing(self):
         """Return if the cover is closing or not."""
-        return self._state == STATE_CLOSING
+        value = self.service.value(CharacteristicsTypes.POSITION_STATE)
+        state = CURRENT_WINDOW_STATE_MAP[value]
+        return state == STATE_CLOSING
 
     @property
     def is_opening(self):
         """Return if the cover is opening or not."""
-        return self._state == STATE_OPENING
+        value = self.service.value(CharacteristicsTypes.POSITION_STATE)
+        state = CURRENT_WINDOW_STATE_MAP[value]
+        return state == STATE_OPENING
+
+    @property
+    def is_horizontal_tilt(self):
+        """Return True if the service has a horizontal tilt characteristic."""
+        return (
+            self.service.value(CharacteristicsTypes.HORIZONTAL_TILT_CURRENT) is not None
+        )
+
+    @property
+    def is_vertical_tilt(self):
+        """Return True if the service has a vertical tilt characteristic."""
+        return (
+            self.service.value(CharacteristicsTypes.VERTICAL_TILT_CURRENT) is not None
+        )
+
+    @property
+    def current_cover_tilt_position(self):
+        """Return current position of cover tilt."""
+        tilt_position = self.service.value(CharacteristicsTypes.VERTICAL_TILT_CURRENT)
+        if not tilt_position:
+            tilt_position = self.service.value(
+                CharacteristicsTypes.HORIZONTAL_TILT_CURRENT
+            )
+        return tilt_position
 
     async def async_stop_cover(self, **kwargs):
         """Send hold command."""
-        characteristics = [
-            {"aid": self._aid, "iid": self._chars["position.hold"], "value": 1}
-        ]
-        await self._accessory.put_characteristics(characteristics)
+        await self.async_put_characteristics({CharacteristicsTypes.POSITION_HOLD: 1})
 
     async def async_open_cover(self, **kwargs):
         """Send open command."""
@@ -233,43 +232,31 @@ class HomeKitWindowCover(HomeKitEntity, CoverDevice):
     async def async_set_cover_position(self, **kwargs):
         """Send position command."""
         position = kwargs[ATTR_POSITION]
-        characteristics = [
-            {"aid": self._aid, "iid": self._chars["position.target"], "value": position}
-        ]
-        await self._accessory.put_characteristics(characteristics)
-
-    @property
-    def current_cover_tilt_position(self):
-        """Return current position of cover tilt."""
-        return self._tilt_position
+        await self.async_put_characteristics(
+            {CharacteristicsTypes.POSITION_TARGET: position}
+        )
 
     async def async_set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
         tilt_position = kwargs[ATTR_TILT_POSITION]
-        if "vertical-tilt.target" in self._chars:
-            characteristics = [
-                {
-                    "aid": self._aid,
-                    "iid": self._chars["vertical-tilt.target"],
-                    "value": tilt_position,
-                }
-            ]
-            await self._accessory.put_characteristics(characteristics)
-        elif "horizontal-tilt.target" in self._chars:
-            characteristics = [
-                {
-                    "aid": self._aid,
-                    "iid": self._chars["horizontal-tilt.target"],
-                    "value": tilt_position,
-                }
-            ]
-            await self._accessory.put_characteristics(characteristics)
+        if self.is_vertical_tilt:
+            await self.async_put_characteristics(
+                {CharacteristicsTypes.VERTICAL_TILT_TARGET: tilt_position}
+            )
+        elif self.is_horizontal_tilt:
+            await self.async_put_characteristics(
+                {CharacteristicsTypes.HORIZONTAL_TILT_TARGET: tilt_position}
+            )
 
     @property
     def device_state_attributes(self):
         """Return the optional state attributes."""
-        state_attributes = {}
-        if self._obstruction_detected is not None:
-            state_attributes["obstruction-detected"] = self._obstruction_detected
+        attributes = {}
 
-        return state_attributes
+        obstruction_detected = self.service.value(
+            CharacteristicsTypes.OBSTRUCTION_DETECTED
+        )
+        if obstruction_detected:
+            attributes["obstruction-detected"] = obstruction_detected
+
+        return attributes

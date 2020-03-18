@@ -137,11 +137,6 @@ class HomematicipHAP:
             job = self.hass.async_create_task(self.get_state())
             job.add_done_callback(self.get_state_finished)
             self._accesspoint_connected = True
-        else:
-            # Update home with the given json from arg[0],
-            # without devices and groups.
-
-            self.home.update_home_only(args[0])
 
     @callback
     def async_create_entity(self, *args, **kwargs) -> None:

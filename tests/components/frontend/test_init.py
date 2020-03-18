@@ -106,15 +106,6 @@ async def test_we_cannot_POST_to_root(mock_http_client):
     assert resp.status == 405
 
 
-async def test_states_routes(mock_http_client):
-    """All served by index."""
-    resp = await mock_http_client.get("/states")
-    assert resp.status == 200
-
-    resp = await mock_http_client.get("/states/group.existing")
-    assert resp.status == 200
-
-
 async def test_themes_api(hass, hass_ws_client):
     """Test that /api/themes returns correct data."""
     assert await async_setup_component(hass, "frontend", CONFIG_THEMES)
@@ -217,7 +208,7 @@ async def test_missing_themes(hass, hass_ws_client):
 
 async def test_extra_urls(mock_http_client_with_urls, mock_onboarded):
     """Test that extra urls are loaded."""
-    resp = await mock_http_client_with_urls.get("/states?latest")
+    resp = await mock_http_client_with_urls.get("/lovelace?latest")
     assert resp.status == 200
     text = await resp.text()
     assert text.find('href="https://domain.com/my_extra_url.html"') >= 0

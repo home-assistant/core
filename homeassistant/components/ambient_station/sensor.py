@@ -83,7 +83,11 @@ class AmbientWeatherSensor(AmbientWeatherEntity):
             w_m2_brightness_val = self._ambient.stations[self._mac_address][
                 ATTR_LAST_DATA
             ].get(TYPE_SOLARRADIATION)
-            self._state = round(float(w_m2_brightness_val) / 0.0079)
+
+            if w_m2_brightness_val is None:
+                self._state = None
+            else:
+                self._state = round(float(w_m2_brightness_val) / 0.0079)
         else:
             self._state = self._ambient.stations[self._mac_address][ATTR_LAST_DATA].get(
                 self._sensor_type

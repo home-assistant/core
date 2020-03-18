@@ -140,7 +140,7 @@ def main():
     if not arguments.commit:
         return
 
-    subprocess.run(["git", "commit", "-am", f"Bumped version to {bumped}"])
+    subprocess.run(["git", "commit", "-nam", f"Bumped version to {bumped}"])
 
 
 def test_bump_version():

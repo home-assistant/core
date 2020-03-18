@@ -7,7 +7,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
     ATTR_WHITE_VALUE,
-    ENTITY_ID_FORMAT,
+    DOMAIN,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_WHITE_VALUE,
@@ -77,7 +77,7 @@ class FibaroLight(FibaroDevice, Light):
             self._supported_flags |= SUPPORT_WHITE_VALUE
 
         super().__init__(fibaro_device)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
+        self.entity_id = f"{DOMAIN}.{self.ha_id}"
 
     @property
     def brightness(self):
