@@ -162,7 +162,7 @@ class ModbusThermostat(ClimateDevice):
             DATA_TYPE_FLOAT: {1: "e", 2: "f", 4: "d"},
         }
 
-        self._structure = ">{}".format(data_types[self._data_type][self._count])
+        self._structure = f">{data_types[self._data_type][self._count]}"
 
     @property
     def supported_features(self):

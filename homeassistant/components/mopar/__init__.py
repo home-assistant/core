@@ -127,7 +127,7 @@ class MoparData:
         vehicle = self.vehicles[index]
         if not vehicle:
             return None
-        return "{} {} {}".format(vehicle["year"], vehicle["make"], vehicle["model"])
+        return f"{vehicle['year']} {vehicle['make']} {vehicle['model']}"
 
     def actuate(self, command, index):
         """Run a command on the specified Mopar vehicle."""

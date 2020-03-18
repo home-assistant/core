@@ -1,6 +1,5 @@
 """Alexa capabilities."""
 import logging
-import math
 
 from homeassistant.components import (
     cover,
@@ -8,6 +7,7 @@ from homeassistant.components import (
     image_processing,
     input_number,
     light,
+    timer,
     vacuum,
 )
 from homeassistant.components.alarm_control_panel import ATTR_CODE_FORMAT, FORMAT_NUMBER
@@ -26,6 +26,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_IDLE,
     STATE_LOCKED,
     STATE_OFF,
     STATE_ON,
@@ -227,7 +228,6 @@ class AlexaCapability:
         """Return properties serialized for an API response."""
         for prop in self.properties_supported():
             prop_name = prop["name"]
-            # pylint: disable=assignment-from-no-return
             prop_value = self.get_property(prop_name)
             if prop_value is not None:
                 result = {
@@ -365,6 +365,10 @@ class AlexaPowerController(AlexaCapability):
 
         if self.entity.domain == climate.DOMAIN:
             is_on = self.entity.state != climate.HVAC_MODE_OFF
+        elif self.entity.domain == vacuum.DOMAIN:
+            is_on = self.entity.state == vacuum.STATE_CLEANING
+        elif self.entity.domain == timer.DOMAIN:
+            is_on = self.entity.state != STATE_IDLE
 
         else:
             is_on = self.entity.state != STATE_OFF
@@ -670,11 +674,8 @@ class AlexaSpeaker(AlexaCapability):
             current_level = self.entity.attributes.get(
                 media_player.ATTR_MEDIA_VOLUME_LEVEL
             )
-            try:
-                current = math.floor(int(current_level * 100))
-            except ZeroDivisionError:
-                current = 0
-            return current
+            if current_level is not None:
+                return round(float(current_level) * 100)
 
         if name == "muted":
             return bool(

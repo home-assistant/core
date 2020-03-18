@@ -81,13 +81,11 @@ class HaveIBeenPwnedSensor(Entity):
             return val
 
         for idx, value in enumerate(self._data.data[self._email]):
-            tmpname = "breach {}".format(idx + 1)
-            tmpvalue = "{} {}".format(
-                value["Title"],
-                dt_util.as_local(dt_util.parse_datetime(value["AddedDate"])).strftime(
-                    DATE_STR_FORMAT
-                ),
+            tmpname = f"breach {idx + 1}"
+            datetime_local = dt_util.as_local(
+                dt_util.parse_datetime(value["AddedDate"])
             )
+            tmpvalue = f"{value['Title']} {datetime_local.strftime(DATE_STR_FORMAT)}"
             val[tmpname] = tmpvalue
 
         return val

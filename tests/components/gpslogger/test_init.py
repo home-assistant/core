@@ -77,7 +77,7 @@ async def webhook_id(hass, gpslogger_client):
 
 async def test_missing_data(hass, gpslogger_client, webhook_id):
     """Test missing data."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
 
     data = {"latitude": 1.0, "longitude": 1.1, "device": "123"}
 
@@ -103,7 +103,7 @@ async def test_missing_data(hass, gpslogger_client, webhook_id):
 
 async def test_enter_and_exit(hass, gpslogger_client, webhook_id):
     """Test when there is a known zone."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
 
     data = {"latitude": HOME_LATITUDE, "longitude": HOME_LONGITUDE, "device": "123"}
 
@@ -111,18 +111,14 @@ async def test_enter_and_exit(hass, gpslogger_client, webhook_id):
     req = await gpslogger_client.post(url, data=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
-    state_name = hass.states.get(
-        "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["device"])
-    ).state
+    state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}").state
     assert STATE_HOME == state_name
 
     # Enter Home again
     req = await gpslogger_client.post(url, data=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
-    state_name = hass.states.get(
-        "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["device"])
-    ).state
+    state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}").state
     assert STATE_HOME == state_name
 
     data["longitude"] = 0
@@ -132,9 +128,7 @@ async def test_enter_and_exit(hass, gpslogger_client, webhook_id):
     req = await gpslogger_client.post(url, data=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
-    state_name = hass.states.get(
-        "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["device"])
-    ).state
+    state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}").state
     assert STATE_NOT_HOME == state_name
 
     dev_reg = await hass.helpers.device_registry.async_get_registry()
@@ -146,7 +140,7 @@ async def test_enter_and_exit(hass, gpslogger_client, webhook_id):
 
 async def test_enter_with_attrs(hass, gpslogger_client, webhook_id):
     """Test when additional attributes are present."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
 
     data = {
         "latitude": 1.0,
@@ -164,7 +158,7 @@ async def test_enter_with_attrs(hass, gpslogger_client, webhook_id):
     req = await gpslogger_client.post(url, data=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
-    state = hass.states.get("{}.{}".format(DEVICE_TRACKER_DOMAIN, data["device"]))
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}")
     assert state.state == STATE_NOT_HOME
     assert state.attributes["gps_accuracy"] == 10.5
     assert state.attributes["battery_level"] == 10.0
@@ -190,7 +184,7 @@ async def test_enter_with_attrs(hass, gpslogger_client, webhook_id):
     req = await gpslogger_client.post(url, data=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
-    state = hass.states.get("{}.{}".format(DEVICE_TRACKER_DOMAIN, data["device"]))
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}")
     assert state.state == STATE_HOME
     assert state.attributes["gps_accuracy"] == 123
     assert state.attributes["battery_level"] == 23
@@ -206,16 +200,14 @@ async def test_enter_with_attrs(hass, gpslogger_client, webhook_id):
 )
 async def test_load_unload_entry(hass, gpslogger_client, webhook_id):
     """Test that the appropriate dispatch signals are added and removed."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
     data = {"latitude": HOME_LATITUDE, "longitude": HOME_LONGITUDE, "device": "123"}
 
     # Enter the Home
     req = await gpslogger_client.post(url, data=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
-    state_name = hass.states.get(
-        "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["device"])
-    ).state
+    state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}").state
     assert STATE_HOME == state_name
     assert len(hass.data[DATA_DISPATCHER][TRACKER_UPDATE]) == 1
 

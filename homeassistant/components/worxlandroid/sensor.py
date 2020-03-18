@@ -7,7 +7,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_PIN, CONF_TIMEOUT
+from homeassistant.const import CONF_HOST, CONF_PIN, CONF_TIMEOUT, UNIT_PERCENTAGE
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -77,7 +77,7 @@ class WorxLandroidSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement of the sensor."""
         if self.sensor == "battery":
-            return "%"
+            return UNIT_PERCENTAGE
         return None
 
     async def async_update(self):

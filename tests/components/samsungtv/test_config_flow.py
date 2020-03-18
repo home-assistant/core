@@ -4,6 +4,7 @@ from unittest.mock import call, patch
 from asynctest import mock
 import pytest
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
+from samsungtvws.exceptions import ConnectionFailure
 from websocket import WebSocketProtocolException
 
 from homeassistant.components.samsungtv.const import (
@@ -36,15 +37,6 @@ MOCK_SSDP_DATA_NOPREFIX = {
     ATTR_UPNP_UDN: "fake2_uuid",
 }
 
-AUTODETECT_WEBSOCKET = {
-    "name": "HomeAssistant",
-    "description": "HomeAssistant",
-    "id": "ha.component.samsung",
-    "method": "websocket",
-    "port": None,
-    "host": "fake_host",
-    "timeout": 1,
-}
 AUTODETECT_LEGACY = {
     "name": "HomeAssistant",
     "description": "HomeAssistant",
@@ -59,7 +51,9 @@ AUTODETECT_LEGACY = {
 @pytest.fixture(name="remote")
 def remote_fixture():
     """Patch the samsungctl Remote."""
-    with patch("samsungctl.Remote") as remote_class, patch(
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote"
+    ) as remote_class, patch(
         "homeassistant.components.samsungtv.config_flow.socket"
     ) as socket_class:
         remote = mock.Mock()
@@ -71,9 +65,25 @@ def remote_fixture():
         yield remote
 
 
-async def test_user(hass, remote):
-    """Test starting a flow by user."""
+@pytest.fixture(name="remotews")
+def remotews_fixture():
+    """Patch the samsungtvws SamsungTVWS."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS"
+    ) as remotews_class, patch(
+        "homeassistant.components.samsungtv.config_flow.socket"
+    ) as socket_class:
+        remotews = mock.Mock()
+        remotews.__enter__ = mock.Mock()
+        remotews.__exit__ = mock.Mock()
+        remotews_class.return_value = remotews
+        socket = mock.Mock()
+        socket_class.return_value = socket
+        yield remotews
 
+
+async def test_user_legacy(hass, remote):
+    """Test starting a flow by user."""
     # show form
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
@@ -85,23 +95,51 @@ async def test_user(hass, remote):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_USER_DATA
     )
+    # legacy tv entry created
     assert result["type"] == "create_entry"
     assert result["title"] == "fake_name"
     assert result["data"][CONF_HOST] == "fake_host"
     assert result["data"][CONF_NAME] == "fake_name"
+    assert result["data"][CONF_METHOD] == "legacy"
     assert result["data"][CONF_MANUFACTURER] is None
     assert result["data"][CONF_MODEL] is None
     assert result["data"][CONF_ID] is None
 
 
-async def test_user_missing_auth(hass):
+async def test_user_websocket(hass, remotews):
+    """Test starting a flow by user."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom")
+    ):
+        # show form
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}
+        )
+        assert result["type"] == "form"
+        assert result["step_id"] == "user"
+
+        # entry was added
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
+        )
+        # legacy tv entry created
+        assert result["type"] == "create_entry"
+        assert result["title"] == "fake_name"
+        assert result["data"][CONF_HOST] == "fake_host"
+        assert result["data"][CONF_NAME] == "fake_name"
+        assert result["data"][CONF_METHOD] == "websocket"
+        assert result["data"][CONF_MANUFACTURER] is None
+        assert result["data"][CONF_MODEL] is None
+        assert result["data"][CONF_ID] is None
+
+
+async def test_user_legacy_missing_auth(hass):
     """Test starting a flow by user with authentication."""
     with patch(
-        "homeassistant.components.samsungtv.config_flow.Remote",
+        "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=AccessDenied("Boom"),
     ), patch("homeassistant.components.samsungtv.config_flow.socket"):
-
-        # missing authentication
+        # legacy device missing authentication
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
         )
@@ -109,14 +147,31 @@ async def test_user_missing_auth(hass):
         assert result["reason"] == "auth_missing"
 
 
-async def test_user_not_supported(hass):
+async def test_user_legacy_not_supported(hass):
     """Test starting a flow by user for not supported device."""
     with patch(
-        "homeassistant.components.samsungtv.config_flow.Remote",
+        "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=UnhandledResponse("Boom"),
     ), patch("homeassistant.components.samsungtv.config_flow.socket"):
+        # legacy device not supported
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
+        )
+        assert result["type"] == "abort"
+        assert result["reason"] == "not_supported"
 
-        # device not supported
+
+async def test_user_websocket_not_supported(hass):
+    """Test starting a flow by user for not supported device."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
+    ), patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS",
+        side_effect=WebSocketProtocolException("Boom"),
+    ), patch(
+        "homeassistant.components.samsungtv.config_flow.socket"
+    ):
+        # websocket device not supported
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
         )
@@ -127,11 +182,30 @@ async def test_user_not_supported(hass):
 async def test_user_not_successful(hass):
     """Test starting a flow by user but no connection found."""
     with patch(
-        "homeassistant.components.samsungtv.config_flow.Remote",
+        "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
+    ), patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS",
         side_effect=OSError("Boom"),
-    ), patch("homeassistant.components.samsungtv.config_flow.socket"):
+    ), patch(
+        "homeassistant.components.samsungtv.config_flow.socket"
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
+        )
+        assert result["type"] == "abort"
+        assert result["reason"] == "not_successful"
 
-        # device not connectable
+
+async def test_user_not_successful_2(hass):
+    """Test starting a flow by user but no connection found."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
+    ), patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS",
+        side_effect=ConnectionFailure("Boom"),
+    ), patch(
+        "homeassistant.components.samsungtv.config_flow.socket"
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
         )
@@ -202,10 +276,10 @@ async def test_ssdp_noprefix(hass, remote):
     assert result["data"][CONF_ID] == "fake2_uuid"
 
 
-async def test_ssdp_missing_auth(hass):
+async def test_ssdp_legacy_missing_auth(hass):
     """Test starting a flow from discovery with authentication."""
     with patch(
-        "homeassistant.components.samsungtv.config_flow.Remote",
+        "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=AccessDenied("Boom"),
     ), patch("homeassistant.components.samsungtv.config_flow.socket"):
 
@@ -224,10 +298,10 @@ async def test_ssdp_missing_auth(hass):
         assert result["reason"] == "auth_missing"
 
 
-async def test_ssdp_not_supported(hass):
+async def test_ssdp_legacy_not_supported(hass):
     """Test starting a flow from discovery for not supported device."""
     with patch(
-        "homeassistant.components.samsungtv.config_flow.Remote",
+        "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=UnhandledResponse("Boom"),
     ), patch("homeassistant.components.samsungtv.config_flow.socket"):
 
@@ -246,13 +320,16 @@ async def test_ssdp_not_supported(hass):
         assert result["reason"] == "not_supported"
 
 
-async def test_ssdp_not_supported_2(hass):
+async def test_ssdp_websocket_not_supported(hass):
     """Test starting a flow from discovery for not supported device."""
     with patch(
-        "homeassistant.components.samsungtv.config_flow.Remote",
+        "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
+    ), patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS",
         side_effect=WebSocketProtocolException("Boom"),
-    ), patch("homeassistant.components.samsungtv.config_flow.socket"):
-
+    ), patch(
+        "homeassistant.components.samsungtv.config_flow.socket"
+    ):
         # confirm to add the entry
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "ssdp"}, data=MOCK_SSDP_DATA
@@ -271,9 +348,39 @@ async def test_ssdp_not_supported_2(hass):
 async def test_ssdp_not_successful(hass):
     """Test starting a flow from discovery but no device found."""
     with patch(
-        "homeassistant.components.samsungtv.config_flow.Remote",
+        "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
+    ), patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS",
         side_effect=OSError("Boom"),
-    ), patch("homeassistant.components.samsungtv.config_flow.socket"):
+    ), patch(
+        "homeassistant.components.samsungtv.config_flow.socket"
+    ):
+
+        # confirm to add the entry
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "ssdp"}, data=MOCK_SSDP_DATA
+        )
+        assert result["type"] == "form"
+        assert result["step_id"] == "confirm"
+
+        # device not found
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input="whatever"
+        )
+        assert result["type"] == "abort"
+        assert result["reason"] == "not_successful"
+
+
+async def test_ssdp_not_successful_2(hass):
+    """Test starting a flow from discovery but no device found."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
+    ), patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS",
+        side_effect=ConnectionFailure("Boom"),
+    ), patch(
+        "homeassistant.components.samsungtv.config_flow.socket"
+    ):
 
         # confirm to add the entry
         result = await hass.config_entries.flow.async_init(
@@ -316,9 +423,10 @@ async def test_ssdp_already_configured(hass, remote):
         DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
     )
     assert result["type"] == "create_entry"
-    assert result["data"][CONF_MANUFACTURER] is None
-    assert result["data"][CONF_MODEL] is None
-    assert result["data"][CONF_ID] is None
+    entry = result["result"]
+    assert entry.data[CONF_MANUFACTURER] is None
+    assert entry.data[CONF_MODEL] is None
+    assert entry.data[CONF_ID] is None
 
     # failed as already configured
     result2 = await hass.config_entries.flow.async_init(
@@ -328,27 +436,37 @@ async def test_ssdp_already_configured(hass, remote):
     assert result2["reason"] == "already_configured"
 
     # check updated device info
-    assert result["data"][CONF_MANUFACTURER] == "fake_manufacturer"
-    assert result["data"][CONF_MODEL] == "fake_model"
-    assert result["data"][CONF_ID] == "fake_uuid"
+    assert entry.data[CONF_MANUFACTURER] == "fake_manufacturer"
+    assert entry.data[CONF_MODEL] == "fake_model"
+    assert entry.data[CONF_ID] == "fake_uuid"
 
 
-async def test_autodetect_websocket(hass, remote):
+async def test_autodetect_websocket(hass, remote, remotews):
     """Test for send key with autodetection of protocol."""
-    with patch("homeassistant.components.samsungtv.config_flow.Remote") as remote:
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
+    ), patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remotews:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
         )
         assert result["type"] == "create_entry"
         assert result["data"][CONF_METHOD] == "websocket"
-        assert remote.call_count == 1
-        assert remote.call_args_list == [call(AUTODETECT_WEBSOCKET)]
+        assert remotews.call_count == 1
+        assert remotews.call_args_list == [
+            call(
+                host="fake_host",
+                name="HomeAssistant",
+                port=8001,
+                timeout=31,
+                token=None,
+            )
+        ]
 
 
 async def test_autodetect_auth_missing(hass, remote):
     """Test for send key with autodetection of protocol."""
     with patch(
-        "homeassistant.components.samsungtv.config_flow.Remote",
+        "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=[AccessDenied("Boom")],
     ) as remote:
         result = await hass.config_entries.flow.async_init(
@@ -357,13 +475,13 @@ async def test_autodetect_auth_missing(hass, remote):
         assert result["type"] == "abort"
         assert result["reason"] == "auth_missing"
         assert remote.call_count == 1
-        assert remote.call_args_list == [call(AUTODETECT_WEBSOCKET)]
+        assert remote.call_args_list == [call(AUTODETECT_LEGACY)]
 
 
 async def test_autodetect_not_supported(hass, remote):
     """Test for send key with autodetection of protocol."""
     with patch(
-        "homeassistant.components.samsungtv.config_flow.Remote",
+        "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=[UnhandledResponse("Boom")],
     ) as remote:
         result = await hass.config_entries.flow.async_init(
@@ -372,40 +490,52 @@ async def test_autodetect_not_supported(hass, remote):
         assert result["type"] == "abort"
         assert result["reason"] == "not_supported"
         assert remote.call_count == 1
-        assert remote.call_args_list == [call(AUTODETECT_WEBSOCKET)]
+        assert remote.call_args_list == [call(AUTODETECT_LEGACY)]
 
 
 async def test_autodetect_legacy(hass, remote):
     """Test for send key with autodetection of protocol."""
-    with patch(
-        "homeassistant.components.samsungtv.config_flow.Remote",
-        side_effect=[OSError("Boom"), mock.DEFAULT],
-    ) as remote:
+    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
         )
         assert result["type"] == "create_entry"
         assert result["data"][CONF_METHOD] == "legacy"
-        assert remote.call_count == 2
-        assert remote.call_args_list == [
-            call(AUTODETECT_WEBSOCKET),
-            call(AUTODETECT_LEGACY),
-        ]
+        assert remote.call_count == 1
+        assert remote.call_args_list == [call(AUTODETECT_LEGACY)]
 
 
-async def test_autodetect_none(hass, remote):
+async def test_autodetect_none(hass, remote, remotews):
     """Test for send key with autodetection of protocol."""
     with patch(
-        "homeassistant.components.samsungtv.config_flow.Remote",
+        "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
+    ) as remote, patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS",
         side_effect=OSError("Boom"),
-    ) as remote:
+    ) as remotews:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
         )
         assert result["type"] == "abort"
         assert result["reason"] == "not_successful"
-        assert remote.call_count == 2
+        assert remote.call_count == 1
         assert remote.call_args_list == [
-            call(AUTODETECT_WEBSOCKET),
             call(AUTODETECT_LEGACY),
+        ]
+        assert remotews.call_count == 2
+        assert remotews.call_args_list == [
+            call(
+                host="fake_host",
+                name="HomeAssistant",
+                port=8001,
+                timeout=31,
+                token=None,
+            ),
+            call(
+                host="fake_host",
+                name="HomeAssistant",
+                port=8002,
+                timeout=31,
+                token=None,
+            ),
         ]

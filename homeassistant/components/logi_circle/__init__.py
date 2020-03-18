@@ -130,9 +130,10 @@ async def async_setup_entry(hass, entry):
 
     if not logi_circle.authorized:
         hass.components.persistent_notification.create(
-            "Error: The cached access tokens are missing from {}.<br />"
-            "Please unload then re-add the Logi Circle integration to resolve."
-            "".format(DEFAULT_CACHEDB),
+            (
+                f"Error: The cached access tokens are missing from {DEFAULT_CACHEDB}.<br />"
+                f"Please unload then re-add the Logi Circle integration to resolve."
+            ),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
@@ -158,18 +159,14 @@ async def async_setup_entry(hass, entry):
         # string, so we'll handle it separately.
         err = f"{_TIMEOUT}s timeout exceeded when connecting to Logi Circle API"
         hass.components.persistent_notification.create(
-            "Error: {}<br />"
-            "You will need to restart hass after fixing."
-            "".format(err),
+            f"Error: {err}<br />You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
         return False
     except ClientResponseError as ex:
         hass.components.persistent_notification.create(
-            "Error: {}<br />"
-            "You will need to restart hass after fixing."
-            "".format(ex),
+            f"Error: {ex}<br />You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )

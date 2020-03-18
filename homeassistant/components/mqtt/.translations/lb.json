@@ -38,6 +38,16 @@
             "button_6": "Sechste Kn\u00e4ppchen",
             "turn_off": "Ausschalten",
             "turn_on": "Uschalten"
+        },
+        "trigger_type": {
+            "button_double_press": "\"{subtype}\" zwee mol gedr\u00e9ckt",
+            "button_long_press": "\"{subtype}\" permanent gedr\u00e9ckt",
+            "button_long_release": "\"{subtype}\" no laangem unhalen lassgelooss",
+            "button_quadruple_press": "\"{subtype}\" v\u00e9ier mol gedr\u00e9ckt",
+            "button_quintuple_press": "\"{subtype}\" f\u00ebnnef mol gedr\u00e9ckt",
+            "button_short_press": "\"{subtype}\" gedr\u00e9ckt",
+            "button_short_release": "\"{subtype}\" lassgelooss",
+            "button_triple_press": "\"{subtype}\" dr\u00e4imol gedr\u00e9ckt"
         }
     }
 }

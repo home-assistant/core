@@ -6,7 +6,7 @@ def service_signal(service, ident=None):
     """Encode service and identifier into signal."""
     signal = f"{DOMAIN}_{service}"
     if ident:
-        signal += "_{}".format(ident.replace(".", "_"))
+        signal += f"_{ident.replace('.', '_')}"
     return signal
 
 

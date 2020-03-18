@@ -3,7 +3,7 @@
   "name": "HomeKit Controller",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/homekit_controller",
-  "requirements": ["homekit[IP]==0.15.0"],
+  "requirements": ["aiohomekit[IP]==0.2.29.1"],
   "dependencies": [],
   "zeroconf": ["_hap._tcp.local."],
   "codeowners": ["@Jc2k"]

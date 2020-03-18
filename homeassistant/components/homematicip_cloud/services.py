@@ -12,6 +12,10 @@ import voluptuous as vol
 from homeassistant.const import ATTR_ENTITY_ID
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import comp_entity_ids
+from homeassistant.helpers.service import (
+    async_register_admin_service,
+    verify_domain_control,
+)
 from homeassistant.helpers.typing import HomeAssistantType, ServiceCallType
 
 from .const import DOMAIN as HMIPC_DOMAIN
@@ -37,17 +41,6 @@ SERVICE_DEACTIVATE_VACATION = "deactivate_vacation"
 SERVICE_DUMP_HAP_CONFIG = "dump_hap_config"
 SERVICE_RESET_ENERGY_COUNTER = "reset_energy_counter"
 SERVICE_SET_ACTIVE_CLIMATE_PROFILE = "set_active_climate_profile"
-
-HMIPC_SERVICES2 = {
-    SERVICE_ACTIVATE_ECO_MODE_WITH_DURATION: "_async_activate_eco_mode_with_duration",
-    SERVICE_ACTIVATE_ECO_MODE_WITH_PERIOD: "_async_activate_eco_mode_with_period",
-    SERVICE_ACTIVATE_VACATION: "_async_activate_vacation",
-    SERVICE_DEACTIVATE_ECO_MODE: "SERVICE_DEACTIVATE_ECO_MODE",
-    SERVICE_DEACTIVATE_VACATION: "_async_deactivate_vacation",
-    SERVICE_DUMP_HAP_CONFIG: "_async_dump_hap_config",
-    SERVICE_RESET_ENERGY_COUNTER: "_async_reset_energy_counter",
-    SERVICE_SET_ACTIVE_CLIMATE_PROFILE: "_set_active_climate_profile",
-}
 
 HMIPC_SERVICES = [
     SERVICE_ACTIVATE_ECO_MODE_WITH_DURATION,
@@ -120,6 +113,7 @@ async def async_setup_services(hass: HomeAssistantType) -> None:
     if hass.services.async_services().get(HMIPC_DOMAIN):
         return
 
+    @verify_domain_control(hass, HMIPC_DOMAIN)
     async def async_call_hmipc_service(service: ServiceCallType):
         """Call correct HomematicIP Cloud service."""
         service_name = service.service
@@ -142,58 +136,60 @@ async def async_setup_services(hass: HomeAssistantType) -> None:
             await _set_active_climate_profile(hass, service)
 
     hass.services.async_register(
-        HMIPC_DOMAIN,
-        SERVICE_ACTIVATE_ECO_MODE_WITH_DURATION,
-        async_call_hmipc_service,
+        domain=HMIPC_DOMAIN,
+        service=SERVICE_ACTIVATE_ECO_MODE_WITH_DURATION,
+        service_func=async_call_hmipc_service,
         schema=SCHEMA_ACTIVATE_ECO_MODE_WITH_DURATION,
     )
 
     hass.services.async_register(
-        HMIPC_DOMAIN,
-        SERVICE_ACTIVATE_ECO_MODE_WITH_PERIOD,
-        async_call_hmipc_service,
+        domain=HMIPC_DOMAIN,
+        service=SERVICE_ACTIVATE_ECO_MODE_WITH_PERIOD,
+        service_func=async_call_hmipc_service,
         schema=SCHEMA_ACTIVATE_ECO_MODE_WITH_PERIOD,
     )
 
     hass.services.async_register(
-        HMIPC_DOMAIN,
-        SERVICE_ACTIVATE_VACATION,
-        async_call_hmipc_service,
+        domain=HMIPC_DOMAIN,
+        service=SERVICE_ACTIVATE_VACATION,
+        service_func=async_call_hmipc_service,
         schema=SCHEMA_ACTIVATE_VACATION,
     )
 
     hass.services.async_register(
-        HMIPC_DOMAIN,
-        SERVICE_DEACTIVATE_ECO_MODE,
-        async_call_hmipc_service,
+        domain=HMIPC_DOMAIN,
+        service=SERVICE_DEACTIVATE_ECO_MODE,
+        service_func=async_call_hmipc_service,
         schema=SCHEMA_DEACTIVATE_ECO_MODE,
     )
 
     hass.services.async_register(
-        HMIPC_DOMAIN,
-        SERVICE_DEACTIVATE_VACATION,
-        async_call_hmipc_service,
+        domain=HMIPC_DOMAIN,
+        service=SERVICE_DEACTIVATE_VACATION,
+        service_func=async_call_hmipc_service,
         schema=SCHEMA_DEACTIVATE_VACATION,
     )
 
     hass.services.async_register(
-        HMIPC_DOMAIN,
-        SERVICE_SET_ACTIVE_CLIMATE_PROFILE,
-        async_call_hmipc_service,
+        domain=HMIPC_DOMAIN,
+        service=SERVICE_SET_ACTIVE_CLIMATE_PROFILE,
+        service_func=async_call_hmipc_service,
         schema=SCHEMA_SET_ACTIVE_CLIMATE_PROFILE,
     )
 
-    hass.services.async_register(
-        HMIPC_DOMAIN,
-        SERVICE_DUMP_HAP_CONFIG,
-        async_call_hmipc_service,
+    async_register_admin_service(
+        hass=hass,
+        domain=HMIPC_DOMAIN,
+        service=SERVICE_DUMP_HAP_CONFIG,
+        service_func=async_call_hmipc_service,
         schema=SCHEMA_DUMP_HAP_CONFIG,
     )
 
-    hass.helpers.service.async_register_admin_service(
-        HMIPC_DOMAIN,
-        SERVICE_RESET_ENERGY_COUNTER,
-        async_call_hmipc_service,
+    async_register_admin_service(
+        hass=hass,
+        domain=HMIPC_DOMAIN,
+        service=SERVICE_RESET_ENERGY_COUNTER,
+        service_func=async_call_hmipc_service,
         schema=SCHEMA_RESET_ENERGY_COUNTER,
     )
 
@@ -204,7 +200,7 @@ async def async_unload_services(hass: HomeAssistantType):
         return
 
     for hmipc_service in HMIPC_SERVICES:
-        hass.services.async_remove(HMIPC_DOMAIN, hmipc_service)
+        hass.services.async_remove(domain=HMIPC_DOMAIN, service=hmipc_service)
 
 
 async def _async_activate_eco_mode_with_duration(

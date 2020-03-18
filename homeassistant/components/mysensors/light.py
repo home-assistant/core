@@ -228,8 +228,6 @@ class MySensorsLightRGB(MySensorsLight):
 class MySensorsLightRGBW(MySensorsLightRGB):
     """RGBW child class to MySensorsLightRGB."""
 
-    # pylint: disable=too-many-ancestors
-
     @property
     def supported_features(self):
         """Flag supported features."""

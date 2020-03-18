@@ -60,7 +60,7 @@ TEST_NOACK = [
     None,
     None,
 ]
-ENTITY_ID = alert.ENTITY_ID_FORMAT.format(NAME)
+ENTITY_ID = f"{alert.DOMAIN}.{NAME}"
 
 
 def turn_on(hass, entity_id):
