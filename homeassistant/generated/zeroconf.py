@@ -28,6 +28,9 @@ ZEROCONF = {
     "_ipp._tcp.local.": [
         "ipp"
     ],
+    "_ipps._tcp.local.": [
+        "ipp"
+    ],
     "_printer._tcp.local.": [
         "brother"
     ],

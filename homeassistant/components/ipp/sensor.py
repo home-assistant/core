@@ -1,10 +1,12 @@
 """Support for IPP sensors."""
+from datetime import timedelta
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UNIT_PERCENTAGE
+from homeassistant.const import DEVICE_CLASS_TIMESTAMP, UNIT_PERCENTAGE
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util.dt import utcnow
 
 from . import IPPDataUpdateCoordinator, IPPDeviceEntity
 from .const import (
@@ -33,6 +35,7 @@ async def async_setup_entry(
     sensors = []
 
     sensors.append(IPPPrinterSensor(entry.entry_id, coordinator))
+    sensors.append(IPPUptimeSensor(entry.entry_id, coordinator))
 
     for marker_index in range(len(coordinator.data.markers)):
         sensors.append(IPPMarkerSensor(entry.entry_id, coordinator, marker_index))
@@ -147,3 +150,29 @@ class IPPPrinterSensor(IPPSensor):
     def state(self) -> Union[None, str, int, float]:
         """Return the state of the sensor."""
         return self.coordinator.data.state.printer_state
+
+
+class IPPUptimeSensor(IPPSensor):
+    """Defines a IPP uptime sensor."""
+
+    def __init__(self, entry_id: str, coordinator: IPPDataUpdateCoordinator) -> None:
+        """Initialize IPP uptime sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            enabled_default=False,
+            entry_id=entry_id,
+            icon="mdi:clock-outline",
+            key="uptime",
+            name=f"{coordinator.data.info.name} Uptime",
+        )
+
+    @property
+    def state(self) -> Union[None, str, int, float]:
+        """Return the state of the sensor."""
+        uptime = utcnow() - timedelta(seconds=self.coordinator.data.info.uptime)
+        return uptime.replace(microsecond=0).isoformat()
+
+    @property
+    def device_class(self) -> Optional[str]:
+        """Return the class of this sensor."""
+        return DEVICE_CLASS_TIMESTAMP

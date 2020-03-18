@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "This printer is already configured.",
-            "connection_error": "Failed to connect to printer."
+            "connection_error": "Failed to connect to printer.",
+            "connection_upgrade": "Failed to connect to printer due to connection upgrade being required."
         },
         "error": {
             "connection_error": "Failed to connect to printer.",

@@ -45,19 +45,20 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_abort(reason="connection_error")
 
+        zeroconf_type = user_input["type"]
         # Hostname is format: EPSON123456.local.
         host = user_input["hostname"].rstrip(".")
         port = user_input["port"]
         name, _ = host.rsplit(".")
         ipp_rp = user_input["properties"].get("rp", "ipp/printer")
-        tls = user_input["properties"].get("TLS", "")
+        tls = zeroconf_type == "_ipps._tcp.local."
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update(
             {
                 CONF_HOST: host,
                 CONF_PORT: port,
-                CONF_SSL: tls != "",
+                CONF_SSL: tls,
                 CONF_VERIFY_SSL: False,
                 CONF_BASE_PATH: "/" + ipp_rp,
                 CONF_NAME: name,
@@ -111,7 +112,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
                 printer = await ipp.printer()
             except IPPConnectionUpgradeRequired:
                 if source == SOURCE_ZEROCONF:
-                    return self.async_abort(reason="connection_error")
+                    return self.async_abort(reason="connection_upgrade")
                 return self._show_setup_form({"base": "connection_upgrade"})
             except IPPConnectionError:
                 if source == SOURCE_ZEROCONF:
