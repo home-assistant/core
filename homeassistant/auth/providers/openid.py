@@ -90,9 +90,13 @@ class OpenIdAuthProvider(AuthProvider):
                 raise InvalidAuthError(f"Token retrieveal failed with error: {data}")
             return cast(Dict[str, Any], await response.json())
 
+    async def async_decode_id_token(self, id_token: str) -> Dict[str, Any]:
+        """Decode a token."""
+        return jwt.decode(id_token, verify=False)
+
     async def async_validate_token(self, token: Dict[str, Any]) -> Dict[str, Any]:
         """Validate a token."""
-        id_token = jwt.decode(token["id_token"])
+        id_token = await self.async_decode_id_token(token["id_token"])
 
         if id_token["email"] not in self.config[CONF_EMAILS]:
             raise InvalidAuthError(f"Email {id_token['email']} not in allowed users")
