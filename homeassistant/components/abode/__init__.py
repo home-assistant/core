@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
@@ -119,7 +120,7 @@ async def async_setup_entry(hass, config_entry):
 
     except (AbodeException, ConnectTimeout, HTTPError) as ex:
         LOGGER.error("Unable to connect to Abode: %s", str(ex))
-        return False
+        raise PlatformNotReady
 
     for platform in ABODE_PLATFORMS:
         hass.async_create_task(
@@ -278,6 +279,7 @@ class AbodeDevice(Entity):
         """Initialize Abode device."""
         self._data = data
         self._device = device
+        self._available = True
 
     async def async_added_to_hass(self):
         """Subscribe to device events."""
@@ -286,13 +288,30 @@ class AbodeDevice(Entity):
             self._device.device_id,
             self._update_callback,
         )
+
+        self.hass.async_add_job(
+            self._data.abode.events.add_connection_status_callback,
+            self._device.device_id,
+            self._update_connection_status,
+        )
+
         self.hass.data[DOMAIN].entity_ids.add(self.entity_id)
+
+    def _update_connection_status(self):
+        """Update the device available property."""
+        self._available = self._data.abode.events.connected
+        self.schedule_update_ha_state()
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe from device events."""
         self.hass.async_add_job(
             self._data.abode.events.remove_all_device_callbacks, self._device.device_id
         )
+
+    @property
+    def available(self):
+        """Return the available state."""
+        return self._available
 
     @property
     def should_poll(self):
