@@ -506,7 +506,7 @@ async def test_select_radio_favorite(hass, config_entry, config, controller, fav
 async def test_select_radio_favorite_command_error(
     hass, config_entry, config, controller, favorites, caplog
 ):
-    """Tests command error loged when playing favorite."""
+    """Tests command error logged when playing favorite."""
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
     # Test set radio preset

@@ -100,7 +100,7 @@ class SigfoxAPI:
 
     @property
     def auth(self):
-        """Return the API authentification."""
+        """Return the API authentication."""
         return self._auth
 
     @property

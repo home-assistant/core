@@ -9,5 +9,3 @@ DEFAULT_NAME = "Samsung TV"
 CONF_MANUFACTURER = "manufacturer"
 CONF_MODEL = "model"
 CONF_ON_ACTION = "turn_on_action"
-
-METHODS = ("websocket", "legacy")

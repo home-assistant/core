@@ -1554,6 +1554,15 @@ class AisColudData:
             info_text += " i szyfruje"
             password = "-p" + password
 
+        # 0. chmod
+        try:
+            ret = subprocess.check_output(
+                'su -c "chmod -R 755 /data/data/pl.sviete.dom/files/home/AIS"',
+                shell=True,  # nosec
+            )
+        except Exception as e:
+            _LOGGER.error("do_backup chmod: " + str(e))
+
         # 1. zip files
         self.get_backup_info(
             call, 1, None, info_text + " bieżącą konfigurację", None, None
@@ -1580,24 +1589,9 @@ class AisColudData:
                 shell=True,  # nosec
             )
         except Exception as e:
-            # try again - sqllite problems
-            try:
-                ret = subprocess.check_output(
-                    "7za a -mmt=2 "
-                    + password
-                    + " -xr\!deps"
-                    + " -xr\!*.log"
-                    + " -xr\!*.db"
-                    + " -xr\!home-assistant* "
-                    + home_dir
-                    + "backup.zip "
-                    + home_dir
-                    + "AIS/.",
-                    shell=True,  # nosec
-                )
-            except Exception as e:
-                self.get_backup_info(call, 0, str(e))
-                return
+            self.get_backup_info(call, 0, str(e))
+            _LOGGER.error("do_backup 7za: " + str(e))
+            return
         # 2. upload
         self.get_backup_info(
             call,
@@ -1611,6 +1605,7 @@ class AisColudData:
             ws_resp = self.cloud.post_backup(home_dir + "backup.zip")
         except Exception as e:
             self.get_backup_info(call, 0, str(e))
+            _LOGGER.error("post_backup: " + str(e))
             return
 
         # refresh

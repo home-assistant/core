@@ -4,7 +4,7 @@
         "step": {
             "init": {
                 "title": "Podaj parametry połączenia z serwerem Supla",
-                "description": "Wykryjemy Twoje urządzenia na serwerze Supla Cloud lub na Twoim serwerze Supla.\n\n {error_info} ",
+                "description": "Wykryjemy Twoje urządzenia na serwerze Supla Cloud lub na Twoim serwerze Supla.\nSzczegóły w dokumentacji [Integracja AIS SUPLA](https://www.ai-speaker.com/docs/ais_app_supla)\n {error_info} ",
                 "data": {
                      "server": "Serwer",
                      "access_token": "Token"

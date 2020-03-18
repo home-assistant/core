@@ -2,7 +2,7 @@
 This module exposes AIS dom via Zeroconf.
 
 For more details about this component, please refer to the documentation at
-https://sviete.github.io/AIS-docs
+https://www.ai-speaker.com
 """
 import logging
 import socket

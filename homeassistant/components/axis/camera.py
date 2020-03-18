@@ -9,7 +9,6 @@ from homeassistant.components.mjpeg.camera import (
 )
 from homeassistant.const import (
     CONF_AUTHENTICATION,
-    CONF_DEVICE,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -35,15 +34,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     config = {
         CONF_NAME: config_entry.data[CONF_NAME],
-        CONF_USERNAME: config_entry.data[CONF_DEVICE][CONF_USERNAME],
-        CONF_PASSWORD: config_entry.data[CONF_DEVICE][CONF_PASSWORD],
+        CONF_USERNAME: config_entry.data[CONF_USERNAME],
+        CONF_PASSWORD: config_entry.data[CONF_PASSWORD],
         CONF_MJPEG_URL: AXIS_VIDEO.format(
-            config_entry.data[CONF_DEVICE][CONF_HOST],
-            config_entry.data[CONF_DEVICE][CONF_PORT],
+            config_entry.data[CONF_HOST], config_entry.data[CONF_PORT],
         ),
         CONF_STILL_IMAGE_URL: AXIS_IMAGE.format(
-            config_entry.data[CONF_DEVICE][CONF_HOST],
-            config_entry.data[CONF_DEVICE][CONF_PORT],
+            config_entry.data[CONF_HOST], config_entry.data[CONF_PORT],
         ),
         CONF_AUTHENTICATION: HTTP_DIGEST_AUTHENTICATION,
     }
@@ -76,14 +73,14 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
     async def stream_source(self):
         """Return the stream source."""
         return AXIS_STREAM.format(
-            self.device.config_entry.data[CONF_DEVICE][CONF_USERNAME],
-            self.device.config_entry.data[CONF_DEVICE][CONF_PASSWORD],
+            self.device.config_entry.data[CONF_USERNAME],
+            self.device.config_entry.data[CONF_PASSWORD],
             self.device.host,
         )
 
     def _new_address(self):
         """Set new device address for video stream."""
-        port = self.device.config_entry.data[CONF_DEVICE][CONF_PORT]
+        port = self.device.config_entry.data[CONF_PORT]
         self._mjpeg_url = AXIS_VIDEO.format(self.device.host, port)
         self._still_image_url = AXIS_IMAGE.format(self.device.host, port)
 

@@ -91,7 +91,7 @@ async def async_setup(hass, config):
     """Set up the pi_hole integration."""
 
     def get_data():
-        """Retrive component data."""
+        """Retrieve component data."""
         return hass.data[DOMAIN]
 
     def ensure_api_token(call_data):

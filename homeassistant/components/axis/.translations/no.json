@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
-            "bad_config_file": "D\u00e5rlig data fra konfigurasjonsfilen",
+            "bad_config_file": "D\u00e5rlige data fra konfigurasjonsfilen",
             "link_local_address": "Linking av lokale adresser st\u00f8ttes ikke",
             "not_axis_device": "Oppdaget enhet ikke en Axis enhet",
             "updated_configuration": "Oppdatert enhetskonfigurasjonen med ny vertsadresse"

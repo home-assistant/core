@@ -342,7 +342,7 @@ def test_get_device_detects_single_setpoint_device(device_single_setpoint):
 
 
 def test_default_hvac_modes():
-    """Test wether all hvac modes are included in default_hvac_modes."""
+    """Test whether all hvac modes are included in default_hvac_modes."""
     for hvac_mode in HVAC_MODES:
         assert hvac_mode in DEFAULT_HVAC_MODES
 

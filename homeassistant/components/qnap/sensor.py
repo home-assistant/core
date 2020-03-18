@@ -16,6 +16,8 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    DATA_GIBIBYTES,
+    DATA_RATE_MEBIBYTES_PER_SECOND,
     TEMP_CELSIUS,
 )
 from homeassistant.exceptions import PlatformNotReady
@@ -62,22 +64,22 @@ _CPU_MON_COND = {
     "cpu_usage": ["CPU Usage", "%", "mdi:chip"],
 }
 _MEMORY_MON_COND = {
-    "memory_free": ["Memory Available", "GB", "mdi:memory"],
-    "memory_used": ["Memory Used", "GB", "mdi:memory"],
+    "memory_free": ["Memory Available", DATA_GIBIBYTES, "mdi:memory"],
+    "memory_used": ["Memory Used", DATA_GIBIBYTES, "mdi:memory"],
     "memory_percent_used": ["Memory Usage", "%", "mdi:memory"],
 }
 _NETWORK_MON_COND = {
     "network_link_status": ["Network Link", None, "mdi:checkbox-marked-circle-outline"],
-    "network_tx": ["Network Up", "MB/s", "mdi:upload"],
-    "network_rx": ["Network Down", "MB/s", "mdi:download"],
+    "network_tx": ["Network Up", DATA_RATE_MEBIBYTES_PER_SECOND, "mdi:upload"],
+    "network_rx": ["Network Down", DATA_RATE_MEBIBYTES_PER_SECOND, "mdi:download"],
 }
 _DRIVE_MON_COND = {
     "drive_smart_status": ["SMART Status", None, "mdi:checkbox-marked-circle-outline"],
     "drive_temp": ["Temperature", TEMP_CELSIUS, "mdi:thermometer"],
 }
 _VOLUME_MON_COND = {
-    "volume_size_used": ["Used Space", "GB", "mdi:chart-pie"],
-    "volume_size_free": ["Free Space", "GB", "mdi:chart-pie"],
+    "volume_size_used": ["Used Space", DATA_GIBIBYTES, "mdi:chart-pie"],
+    "volume_size_free": ["Free Space", DATA_GIBIBYTES, "mdi:chart-pie"],
     "volume_percentage_used": ["Volume Used", "%", "mdi:chart-pie"],
 }
 
@@ -270,7 +272,7 @@ class QNAPMemorySensor(QNAPSensor):
         if self._api.data:
             data = self._api.data["system_stats"]["memory"]
             size = round_nicely(float(data["total"]) / 1024)
-            return {ATTR_MEMORY_SIZE: f"{size} GB"}
+            return {ATTR_MEMORY_SIZE: f"{size} {DATA_GIBIBYTES}"}
 
 
 class QNAPNetworkSensor(QNAPSensor):
@@ -399,4 +401,6 @@ class QNAPVolumeSensor(QNAPSensor):
             data = self._api.data["volumes"][self.monitor_device]
             total_gb = int(data["total_size"]) / 1024 / 1024 / 1024
 
-            return {ATTR_VOLUME_SIZE: "{} GB".format(round_nicely(total_gb))}
+            return {
+                ATTR_VOLUME_SIZE: "{} {}".format(round_nicely(total_gb), DATA_GIBIBYTES)
+            }

@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "country": "Kraj"
+                },
+                "title": "Wybierz kraj do monitorowania"
+            }
+        },
+        "title": "Coronavirus"
+    }
+}

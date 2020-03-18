@@ -285,7 +285,7 @@ class Doods(ImageProcessingEntity):
             )
 
         # Run detection
-        start = time.time()
+        start = time.monotonic()
         response = self._doods.detect(
             image, dconfig=self._dconfig, detector_name=self._detector_name
         )
@@ -293,7 +293,7 @@ class Doods(ImageProcessingEntity):
             "doods detect: %s response: %s duration: %s",
             self._dconfig,
             response,
-            time.time() - start,
+            time.monotonic() - start,
         )
 
         matches = {}

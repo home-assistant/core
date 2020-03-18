@@ -180,7 +180,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if len(str(usercode)) < 4:
                 _LOGGER.error(
                     "Invalid code provided: (%s) "
-                    "usercode must be atleast 4 and at most"
+                    "usercode must be at least 4 and at most"
                     " %s digits",
                     usercode,
                     len(value.data),

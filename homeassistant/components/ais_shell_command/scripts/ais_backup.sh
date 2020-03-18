@@ -1,5 +1,8 @@
 # AIS dom backup script to create bootstrap
 
+# 0. remove the gate ID
+rm /data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_secure_android_id_dom
+
 # 1. clean cache files
 apt-get autoremove --purge
 apt-get clean

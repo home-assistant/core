@@ -472,6 +472,30 @@ def test_datetime():
     schema("2016-11-23T18:59:08")
 
 
+def test_multi_select():
+    """Test multi select validation.
+
+    Expected behavior:
+        - Will not accept any input but a list
+        - Will not accept selections outside of configured scope
+    """
+    schema = vol.Schema(cv.multi_select({"paulus": "Paulus", "robban": "Robban"}))
+
+    with pytest.raises(vol.Invalid):
+        schema("robban")
+        schema(["paulus", "martinhj"])
+
+    schema(["robban", "paulus"])
+
+
+def test_multi_select_in_serializer():
+    """Test multi_select with custom_serializer."""
+    assert cv.custom_serializer(cv.multi_select({"paulus": "Paulus"})) == {
+        "type": "multi_select",
+        "options": {"paulus": "Paulus"},
+    }
+
+
 @pytest.fixture
 def schema():
     """Create a schema used for testing deprecation."""

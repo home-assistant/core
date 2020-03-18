@@ -43,7 +43,11 @@ stages:
 
           . venv/bin/activate
           pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
-          pre-commit install-hooks --config .pre-commit-config-all.yaml
+          pre-commit install-hooks
+    - script: |
+        . venv/bin/activate
+        pre-commit run codespell --all-files
+      displayName: 'Run codespell'
     - script: |
         . venv/bin/activate
         pre-commit run flake8 --all-files
@@ -94,7 +98,7 @@ stages:
 
           . venv/bin/activate
           pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
-          pre-commit install-hooks --config .pre-commit-config-all.yaml
+          pre-commit install-hooks
     - script: |
         . venv/bin/activate
         pre-commit run black --all-files --show-diff-on-failure
@@ -190,8 +194,8 @@ stages:
 
           . venv/bin/activate
           pip install -e . -r requirements_test.txt -c homeassistant/package_constraints.txt
-          pre-commit install-hooks --config .pre-commit-config-all.yaml
+          pre-commit install-hooks
     - script: |
         . venv/bin/activate
-        pre-commit run --config .pre-commit-config-all.yaml mypy --all-files
+        pre-commit run mypy --all-files
       displayName: 'Run mypy'

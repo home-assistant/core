@@ -179,7 +179,7 @@ async def test_name_exists(hass, api):
 
 
 async def test_connection_error(hass, conn_error):
-    """Test error when connection is unsuccesful."""
+    """Test error when connection is unsuccessful."""
 
     result = await hass.config_entries.flow.async_init(
         mikrotik.DOMAIN, context={"source": "user"}

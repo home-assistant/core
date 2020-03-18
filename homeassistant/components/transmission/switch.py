@@ -80,7 +80,7 @@ class TransmissionSwitch(ToggleEntity):
     def turn_off(self, **kwargs):
         """Turn the device off."""
         if self.type == "on_off":
-            _LOGGING.debug("Stoping all torrents")
+            _LOGGING.debug("Stopping all torrents")
             self._tm_client.api.stop_torrents()
         if self.type == "turtle_mode":
             _LOGGING.debug("Turning Turtle Mode of Transmission off")

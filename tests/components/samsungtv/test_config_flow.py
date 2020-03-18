@@ -4,6 +4,7 @@ from unittest.mock import call, patch
 from asynctest import mock
 import pytest
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
+from websocket import WebSocketProtocolException
 
 from homeassistant.components.samsungtv.const import (
     CONF_MANUFACTURER,
@@ -42,7 +43,7 @@ AUTODETECT_WEBSOCKET = {
     "method": "websocket",
     "port": None,
     "host": "fake_host",
-    "timeout": 31,
+    "timeout": 1,
 }
 AUTODETECT_LEGACY = {
     "name": "HomeAssistant",
@@ -228,6 +229,28 @@ async def test_ssdp_not_supported(hass):
     with patch(
         "homeassistant.components.samsungtv.config_flow.Remote",
         side_effect=UnhandledResponse("Boom"),
+    ), patch("homeassistant.components.samsungtv.config_flow.socket"):
+
+        # confirm to add the entry
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "ssdp"}, data=MOCK_SSDP_DATA
+        )
+        assert result["type"] == "form"
+        assert result["step_id"] == "confirm"
+
+        # device not supported
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input="whatever"
+        )
+        assert result["type"] == "abort"
+        assert result["reason"] == "not_supported"
+
+
+async def test_ssdp_not_supported_2(hass):
+    """Test starting a flow from discovery for not supported device."""
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.Remote",
+        side_effect=WebSocketProtocolException("Boom"),
     ), patch("homeassistant.components.samsungtv.config_flow.socket"):
 
         # confirm to add the entry

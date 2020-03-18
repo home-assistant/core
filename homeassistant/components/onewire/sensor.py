@@ -19,6 +19,7 @@ CONF_NAMES = "names"
 
 DEFAULT_MOUNT_DIR = "/sys/bus/w1/devices/"
 DEVICE_SENSORS = {
+    # Family : { SensorType: owfs path }
     "10": {"temperature": "temperature"},
     "12": {"temperature": "TAI8570/temperature", "pressure": "TAI8570/pressure"},
     "22": {"temperature": "temperature"},
@@ -27,6 +28,9 @@ DEVICE_SENSORS = {
         "humidity": "humidity",
         "pressure": "B1-R1-A/pressure",
         "illuminance": "S3-R1-A/illuminance",
+        "voltage_VAD": "VAD",
+        "voltage_VDD": "VDD",
+        "current": "IAD",
     },
     "28": {"temperature": "temperature"},
     "3B": {"temperature": "temperature"},
@@ -54,6 +58,7 @@ HOBBYBOARD_EF = {
 }
 
 SENSOR_TYPES = {
+    # SensorType: [ Measured unit, Unit ]
     "temperature": ["temperature", TEMP_CELSIUS],
     "humidity": ["humidity", "%"],
     "humidity_raw": ["humidity", "%"],
@@ -70,6 +75,10 @@ SENSOR_TYPES = {
     "counter_a": ["counter", "count"],
     "counter_b": ["counter", "count"],
     "HobbyBoard": ["none", "none"],
+    "voltage": ["voltage", "V"],
+    "voltage_VAD": ["voltage", "V"],
+    "voltage_VDD": ["voltage", "V"],
+    "current": ["current", "A"],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -95,11 +104,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     base_dir = config[CONF_MOUNT_DIR]
     owport = config[CONF_PORT]
     owhost = config.get(CONF_HOST)
+    if owhost:
+        _LOGGER.debug("Initializing using %s:%s", owhost, owport)
+    else:
+        _LOGGER.debug("Initializing using %s", base_dir)
+
     devs = []
     device_names = {}
-    if "names" in config:
-        if isinstance(config["names"], dict):
-            device_names = config["names"]
+    if CONF_NAMES in config:
+        if isinstance(config[CONF_NAMES], dict):
+            device_names = config[CONF_NAMES]
 
     # We have an owserver on a remote(or local) host/port
     if owhost:
@@ -112,7 +126,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             )
             devices = []
         for device in devices:
-            _LOGGER.debug("found device: %s", device)
+            _LOGGER.debug("Found device: %s", device)
             family = owproxy.read(f"{device}family").decode()
             dev_type = "std"
             if "EF" in family:
@@ -200,6 +214,7 @@ class OneWire(Entity):
         self._device_file = device_file
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._state = None
+        self._value_raw = None
 
     def _read_value_raw(self):
         """Read the value as it is returned by the sensor."""
@@ -223,6 +238,16 @@ class OneWire(Entity):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the sensor."""
+        return {"device_file": self._device_file, "raw_value": self._value_raw}
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._device_file
 
 
 class OneWireProxy(OneWire):
@@ -249,6 +274,7 @@ class OneWireProxy(OneWire):
             _LOGGER.error("Owserver failure in read(), got: %s", exc)
         if value_read:
             value = round(float(value_read), 1)
+            self._value_raw = float(value_read)
 
         self._state = value
 
@@ -267,6 +293,7 @@ class OneWireDirect(OneWire):
         if equals_pos != -1:
             value_string = lines[1][equals_pos + 2 :]
             value = round(float(value_string) / 1000.0, 1)
+            self._value_raw = float(value_string)
         self._state = value
 
 
@@ -280,6 +307,7 @@ class OneWireOWFS(OneWire):
             value_read = self._read_value_raw()
             if len(value_read) == 1:
                 value = round(float(value_read[0]), 1)
+                self._value_raw = float(value_read[0])
         except ValueError:
             _LOGGER.warning("Invalid value read from %s", self._device_file)
         except FileNotFoundError:

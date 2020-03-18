@@ -11,8 +11,8 @@ cryptography==2.8
 defusedxml==0.6.0
 distro==1.4.0
 hass-nabucasa==0.31
-ais-dom-frontend==20200212.2
-importlib-metadata==1.4.0
+ais-dom-frontend==20200221.0
+importlib-metadata==1.5.0
 jinja2>=2.10.3
 netdisco==2.6.0
 pip>=8.0.3
@@ -27,6 +27,9 @@ voluptuous==0.11.7
 zeroconf==0.24.4
 
 pycryptodome>=3.6.6
+
+# Constrain urllib3 to ensure we deal with CVE-2019-11236 & CVE-2019-11324
+urllib3>=1.24.3
 
 # Not needed for our supported Python versions
 enum34==1000000000.0.0

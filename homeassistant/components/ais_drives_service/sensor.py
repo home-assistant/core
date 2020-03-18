@@ -64,16 +64,16 @@ class DriveSensor(Entity):
     #     """Return the unit of measurement of this entity, if any."""
     #     return '%'
 
-    # @property
-    # def device_info(self):
-    #     return {
-    #         "identifiers": {("Rclone", self._name)},
-    #         "name": self._name,
-    #         "manufacturer": "AI-Speaker",
-    #         "model": self._drive_type,
-    #         "sw_version": "Rclone",
-    #         "via_device": None,
-    #     }
+    @property
+    def device_info(self):
+        return {
+            "identifiers": {("Rclone", self._name)},
+            "name": self._name,
+            "manufacturer": "AI-Speaker",
+            "model": self._drive_type,
+            "sw_version": "Rclone",
+            "via_device": None,
+        }
 
     @property
     def should_poll(self):

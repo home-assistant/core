@@ -421,7 +421,7 @@ class BluesoundPlayer(MediaPlayerDevice):
                     # sync_status. We will force an update if the player is
                     # grouped this isn't a foolproof solution. A better
                     # solution would be to fetch sync_status more often when
-                    # the device is playing. This would solve alot of
+                    # the device is playing. This would solve a lot of
                     # problems. This change will be done when the
                     # communication is moved to a separate library
                     await self.force_update_sync_status()

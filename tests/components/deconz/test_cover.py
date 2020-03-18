@@ -74,7 +74,7 @@ async def test_cover(hass):
         "id": "1",
         "state": {"on": True},
     }
-    gateway.api.async_event_handler(state_changed_event)
+    gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
     level_controllable_cover = hass.states.get("cover.level_controllable_cover")

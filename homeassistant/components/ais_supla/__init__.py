@@ -2,6 +2,7 @@
 import logging
 from typing import Optional
 
+from pysupla import SuplaAPI
 import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -10,18 +11,16 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.config_entries import SOURCE_IMPORT
 from .const import DOMAIN, CONF_SERVER, CONF_SERVERS, CONF_CHANNELS
 
-from pysupla import SuplaAPI
-
-REQUIREMENTS = ["pysupla==0.0.3"]
-
 _LOGGER = logging.getLogger(__name__)
 
 
 SUPLA_FUNCTION_HA_CMP_MAP = {
     "CONTROLLINGTHEROLLERSHUTTER": "cover",
+    "CONTROLLINGTHEGATE": "cover",
     "LIGHTSWITCH": "switch",
     "POWERSWITCH": "switch",
 }
+SUPLA_FUNCTION_NONE = "NONE"
 SUPLA_CHANNELS = "supla_channels"
 SUPLA_SERVERS = "supla_servers"
 
@@ -91,7 +90,7 @@ async def async_discover_devices(hass, config_entry):
         component_name = SUPLA_FUNCTION_HA_CMP_MAP.get(channel_function)
 
         if component_name is None:
-            _LOGGER.warning(
+            _LOGGER.info(
                 "Unsupported function: %s, channel id: %s",
                 channel_function,
                 channel["id"],
@@ -100,6 +99,7 @@ async def async_discover_devices(hass, config_entry):
 
         component_configs.setdefault(component_name, []).append(channel)
 
+    # Load discovered devices
     for component_name, channel in component_configs.items():
         hass.data[DOMAIN][CONF_CHANNELS][component_name] = channel
         hass.async_create_task(
@@ -152,6 +152,16 @@ class SuplaChannel(Entity):
         if "type" in self.channel_data:
             return "supla: " + self.channel_data["type"]["caption"]
         return ""
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        if self.channel_data is None:
+            return False
+        state = self.channel_data.get("state")
+        if state is None:
+            return False
+        return state.get("connected")
 
     def action(self, action, **add_pars):
         """

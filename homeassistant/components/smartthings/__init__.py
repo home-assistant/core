@@ -146,7 +146,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     except ClientResponseError as ex:
         if ex.status in (401, 403):
             _LOGGER.exception(
-                "Unable to setup config entry '%s' - please reconfigure the integration",
+                "Unable to setup configuration entry '%s' - please reconfigure the integration",
                 entry.title,
             )
             remove_entry = True
@@ -183,7 +183,7 @@ async def async_get_entry_scenes(entry: ConfigEntry, api):
     except ClientResponseError as ex:
         if ex.status == 403:
             _LOGGER.exception(
-                "Unable to load scenes for config entry '%s' because the access token does not have the required access",
+                "Unable to load scenes for configuration entry '%s' because the access token does not have the required access",
                 entry.title,
             )
         else:
@@ -230,7 +230,7 @@ async def async_remove_entry(hass: HomeAssistantType, entry: ConfigEntry) -> Non
     app_count = sum(1 for entry in all_entries if entry.data[CONF_APP_ID] == app_id)
     if app_count > 1:
         _LOGGER.debug(
-            "App %s was not removed because it is in use by other config entries",
+            "App %s was not removed because it is in use by other configuration entries",
             app_id,
         )
         return

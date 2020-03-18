@@ -307,7 +307,7 @@ async def test_restore_state(hass):
 
 
 async def test_default_value(hass):
-    """Test default value if none has been set via inital or restore state."""
+    """Test default value if none has been set via initial or restore state."""
     await async_setup_component(
         hass,
         DOMAIN,

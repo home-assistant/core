@@ -6,7 +6,12 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_API_KEY, CONF_MONITORED_VARIABLES, CONF_NAME
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_MONITORED_VARIABLES,
+    CONF_NAME,
+    DATA_GIGABYTES,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -17,7 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "TekSavvy"
 CONF_TOTAL_BANDWIDTH = "total_bandwidth"
 
-GIGABYTES = "GB"
 PERCENT = "%"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
@@ -25,15 +29,15 @@ REQUEST_TIMEOUT = 5  # seconds
 
 SENSOR_TYPES = {
     "usage": ["Usage Ratio", PERCENT, "mdi:percent"],
-    "usage_gb": ["Usage", GIGABYTES, "mdi:download"],
-    "limit": ["Data limit", GIGABYTES, "mdi:download"],
-    "onpeak_download": ["On Peak Download", GIGABYTES, "mdi:download"],
-    "onpeak_upload": ["On Peak Upload", GIGABYTES, "mdi:upload"],
-    "onpeak_total": ["On Peak Total", GIGABYTES, "mdi:download"],
-    "offpeak_download": ["Off Peak download", GIGABYTES, "mdi:download"],
-    "offpeak_upload": ["Off Peak Upload", GIGABYTES, "mdi:upload"],
-    "offpeak_total": ["Off Peak Total", GIGABYTES, "mdi:download"],
-    "onpeak_remaining": ["Remaining", GIGABYTES, "mdi:download"],
+    "usage_gb": ["Usage", DATA_GIGABYTES, "mdi:download"],
+    "limit": ["Data limit", DATA_GIGABYTES, "mdi:download"],
+    "onpeak_download": ["On Peak Download", DATA_GIGABYTES, "mdi:download"],
+    "onpeak_upload": ["On Peak Upload", DATA_GIGABYTES, "mdi:upload"],
+    "onpeak_total": ["On Peak Total", DATA_GIGABYTES, "mdi:download"],
+    "offpeak_download": ["Off Peak download", DATA_GIGABYTES, "mdi:download"],
+    "offpeak_upload": ["Off Peak Upload", DATA_GIGABYTES, "mdi:upload"],
+    "offpeak_total": ["Off Peak Total", DATA_GIGABYTES, "mdi:download"],
+    "onpeak_remaining": ["Remaining", DATA_GIGABYTES, "mdi:download"],
 }
 
 API_HA_MAP = (

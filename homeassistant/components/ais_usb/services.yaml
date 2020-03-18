@@ -1,3 +1,11 @@
 # Describes the format for available AIS USB services
+
+stop_devices:
+  description: Zatrzymanie serwisów obsługujących zewnętrzne urządzenia USB (wykonywane automatycznie przy starcie Asystenta domowego)
+
 lsusb:
-  description: Sprawdzanie dostępnych urządzeń w systemie
+  description: Sprawdzanie urządzeń USB dołączonych do bramki i uruchomienie serwisów obsługujących te urządzenia (wykonywane automatycznie przy starcie Asystenta domowego)
+
+mount_external_drives:
+  description: Sprawdzanie i zamontowanie dysków zewnętrznych dołączonych do bramki (wykonywane automatycznie przy starcie Asystenta domowego)
+

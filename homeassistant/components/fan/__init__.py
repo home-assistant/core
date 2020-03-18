@@ -169,7 +169,7 @@ class FanEntity(ToggleEntity):
 
     @property
     def capability_attributes(self):
-        """Return capabilitiy attributes."""
+        """Return capability attributes."""
         return {ATTR_SPEED_LIST: self.speed_list}
 
     @property

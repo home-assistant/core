@@ -63,7 +63,7 @@ class HomeKitEntity(Entity):
         return False
 
     def setup(self):
-        """Configure an entity baed on its HomeKit characterstics metadata."""
+        """Configure an entity baed on its HomeKit characteristics metadata."""
         accessories = self._accessory.accessories
 
         get_uuid = CharacteristicsTypes.get_uuid
@@ -124,7 +124,7 @@ class HomeKitEntity(Entity):
         """Collect new data from bridge and update the entity state in hass."""
         accessory_state = self._accessory.current_state.get(self._aid, {})
         for iid, result in accessory_state.items():
-            # No value so dont process this result
+            # No value so don't process this result
             if "value" not in result:
                 continue
 

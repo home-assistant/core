@@ -27,5 +27,17 @@
             }
         },
         "title": "MQTT"
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "\u00c9ischte Kn\u00e4ppchen",
+            "button_2": "Zweete Kn\u00e4ppchen",
+            "button_3": "Dr\u00ebtte Kn\u00e4ppchen",
+            "button_4": "V\u00e9ierte Kn\u00e4ppchen",
+            "button_5": "F\u00ebnnefte Kn\u00e4ppchen",
+            "button_6": "Sechste Kn\u00e4ppchen",
+            "turn_off": "Ausschalten",
+            "turn_on": "Uschalten"
+        }
     }
 }

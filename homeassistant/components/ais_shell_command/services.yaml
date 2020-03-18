@@ -5,21 +5,13 @@ change_host_name:
     hostname:
       description: Nowa nazwa hosta
       example: 'ais-dom'
+
 execute_command:
   description: Wykonanie komendy w konsoli
   fields:
     command:
       description: Komenda do wykonania
-      example: 'sudo settings get secure android_id'
-    entity_id:
-      description: Encja do wyświetlenia wyniku komendy
-      example: 'binary_sensor.test'
-    friendly_name:
-      description: Nazwa encji wyniku komendy
-      example: 'binary_sensor.test'
-    icon:
-      description: Ikona encji wyniku komendy
-      example: 'mdi:android'
+      example: 'touch /data/data/pl.sviete.dom/files/home/1.txt'
 
 execute_script:
   description: Uruchomienie skryptu w konsoli
@@ -34,19 +26,6 @@ key_event:
     key_code:
       description: kod przycisku
       example: 'KEYCODE_BACK'
-
-scan_device:
-  description: Wykrywanie urządzeń - pobranie informacji o urządzeniu
-  fields:
-    url:
-      description: adres serwisu zwracającego informację o urządzeniu
-      example: 'http://192.168.1.44/cm?cmnd=status 5'
-
-scan_network_for_devices:
-  description: Wykrywanie urządzeń w sieci z raportowaniem na bieżąco wyników w aplikacji
-
-show_network_devices_info:
-  description: Raport wykrytych urządzeń
 
 led:
   description: Sterowanie diodą led umieszczoną z przodu urządzenia

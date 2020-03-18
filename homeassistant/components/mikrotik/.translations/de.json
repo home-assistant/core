@@ -27,6 +27,7 @@
         "step": {
             "device_tracker": {
                 "data": {
+                    "arp_ping": "ARP Ping aktivieren",
                     "force_dhcp": "Erzwingen Sie das Scannen \u00fcber DHCP"
                 }
             }

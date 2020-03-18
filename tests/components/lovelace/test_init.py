@@ -38,6 +38,23 @@ async def test_lovelace_from_storage(hass, hass_ws_client, hass_storage):
 
     assert response["result"] == {"yo": "hello"}
 
+    # Test with safe mode
+    hass.config.safe_mode = True
+    await client.send_json({"id": 8, "type": "lovelace/config"})
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "config_not_found"
+
+    await client.send_json(
+        {"id": 9, "type": "lovelace/config/save", "config": {"yo": "hello"}}
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+
+    await client.send_json({"id": 10, "type": "lovelace/config/delete"})
+    response = await client.receive_json()
+    assert not response["success"]
+
 
 async def test_lovelace_from_storage_save_before_load(
     hass, hass_ws_client, hass_storage

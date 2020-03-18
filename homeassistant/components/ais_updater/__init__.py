@@ -645,8 +645,8 @@ def do_execute_upgrade(hass, call):
         reinstall_dom_app = False
         reinstall_android_app = False
         reinstall_linux_apt = False
-        _LOGGER.error(str(StrictVersion(ws_resp["dom_app_version"])))
-        _LOGGER.error(str(StrictVersion(current_version)))
+        _LOGGER.info(str(StrictVersion(ws_resp["dom_app_version"])))
+        _LOGGER.info(str(StrictVersion(current_version)))
         if StrictVersion(ws_resp["dom_app_version"]) > StrictVersion(current_version):
             reinstall_dom_app = True
         if G_CURRENT_ANDROID_DOM_V != "0":

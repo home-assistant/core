@@ -58,7 +58,6 @@ class LastfmSensor(Entity):
         self._unique_id = hashlib.sha256(user.encode("utf-8")).hexdigest()
         self._user = lastfm_api.get_user(user)
         self._name = user
-        self._entity_id = user
         self._lastfm = lastfm_api
         self._state = "Not Scrobbling"
         self._playcount = None
@@ -75,11 +74,6 @@ class LastfmSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def entity_id(self):
-        """Return the entity ID."""
-        return f"sensor.lastfm_{self._entity_id}"
 
     @property
     def state(self):

@@ -75,7 +75,7 @@ async def test_setup_hass(hass: HomeAssistant, aioclient_mock) -> None:
 
 
 async def test_setup_plattform(hass):
-    """Test that setup plattform does nothing."""
+    """Test that setup platform does nothing."""
     assert await weather_smhi.async_setup_platform(hass, None, None) is None
 
 

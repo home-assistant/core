@@ -1,10 +1,10 @@
 from typing import Optional
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.components import conversation
 from homeassistant.helpers import intent
+from homeassistant.components.conversation import agent
 
 
-class AisAgent(conversation.AbstractConversationAgent):
+class AisAgent(agent.AbstractConversationAgent):
     """AIS dom conversation agent."""
 
     def __init__(self, hass: HomeAssistant):
@@ -21,7 +21,7 @@ class AisAgent(conversation.AbstractConversationAgent):
             name += " > Google Home"
         return {
             "name": name,
-            "url": "https://sviete.github.io/AIS-docs/docs/en/ais_app_ai_integration.html",
+            "url": "https://www.ai-speaker.com/docs/ais_app_ai_integration",
         }
 
     async def async_get_onboarding(self):

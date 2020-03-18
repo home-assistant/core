@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto jest ju\u017c skonfigurowane"
+            "already_configured": "Konto jest ju\u017c skonfigurowane."
         },
         "error": {
             "access": "Nie mo\u017cna uzyska\u0107 dost\u0119pu do Enedis.fr, sprawd\u017a po\u0142\u0105czenie internetowe",

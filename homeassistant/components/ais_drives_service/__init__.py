@@ -105,12 +105,18 @@ def async_setup(hass, config):
         if "name" in call.data:
             data.rclone_mount_drive(call.data["name"])
 
+    def rclone_remove_drive(call):
+        _LOGGER.info("rclone_remove_drive")
+        if "name" in call.data:
+            data.rclone_remove_drive(call.data["name"])
+
     def rclone_mount_drives(call):
         _LOGGER.info("rclone_mount_drives")
         data.rclone_mount_drives()
 
     hass.services.async_register(DOMAIN, "rclone_mount_drives", rclone_mount_drives)
     hass.services.async_register(DOMAIN, "rclone_mount_drive", rclone_mount_drive)
+    hass.services.async_register(DOMAIN, "rclone_remove_drive", rclone_remove_drive)
     hass.services.async_register(DOMAIN, "browse_path", browse_path)
     hass.services.async_register(DOMAIN, "sync_locations", sync_locations)
     hass.services.async_register(DOMAIN, "play_next", play_next)
@@ -171,7 +177,14 @@ def fix_rclone_config_permissions():
     # fix permissions
     uid = str(os.getuid())
     gid = str(os.getgid())
-    fix_rclone_cmd = 'su -c "chown ' + uid + ":" + gid + " " + G_RCLONE_CONF_FILE + '"'
+
+    if platform.machine() == "x86_64":
+        # to suport local test
+        fix_rclone_cmd = "chown " + uid + ":" + gid + " " + G_RCLONE_CONF_FILE
+    else:
+        fix_rclone_cmd = (
+            'su -c "chown ' + uid + ":" + gid + " " + G_RCLONE_CONF_FILE + '"'
+        )
     try:
         ret = subprocess.check_output(fix_rclone_cmd, shell=True)  # nosec
     except Exception as e:
@@ -569,7 +582,7 @@ class LocalData:
             },
         )
         if say:
-            self.say("Dysk wewnętrzny")
+            self.say("Wszystkie Dyski")
 
     def dispalay_current_path(self):
         state = self.hass.states.get("sensor.ais_drives")
@@ -724,11 +737,39 @@ class LocalData:
                     + '"'
                 )
             os.system("mkdir -p /data/data/pl.sviete.dom/dom_cloud_drives/" + name)
-            os.system("fusermount -u /data/data/pl.sviete.dom/dom_cloud_drives/" + name)
             os.system(rclone_cmd_mount)
 
         else:
             self.say("Nie masz dodanego dysku zdalnego o nazwie " + name)
+
+    def rclone_remove_drive(self, name):
+        remotes = rclone_get_remotes_long()
+        drive_exist = False
+        for r in remotes:
+            if name == r["name"]:
+                drive_exist = True
+        if drive_exist:
+            # Delete an existing remote
+            fix_rclone_config_permissions()
+            rclone_cmd_remove_drive = (
+                "rclone config delete " + name + " " + G_RCLONE_CONF
+            )
+            os.system(rclone_cmd_remove_drive)
+        else:
+            _LOGGER.error("rclone_remove_drive: NO drive in Rclone, name: " + name)
+
+        # fusermount
+        if platform.machine() == "x86_64":
+            os.system("fusermount -u /data/data/pl.sviete.dom/dom_cloud_drives/" + name)
+        else:
+            os.system(
+                'su -mm -c "export PATH=$PATH:/data/data/pl.sviete.dom/files/usr/bin/; '
+                + ' fusermount -u /data/data/pl.sviete.dom/dom_cloud_drives/"'
+                + name
+            )
+
+        # delete drive folder
+        os.system("rm -rf /data/data/pl.sviete.dom/dom_cloud_drives/" + name)
 
     def sync_locations(self, call):
         if "source_path" not in call.data:

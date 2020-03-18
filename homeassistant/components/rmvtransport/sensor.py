@@ -233,7 +233,7 @@ class RMVDepartureData:
             )
         except RMVtransportApiConnectionError:
             self.departures = []
-            _LOGGER.warning("Could not retrive data from rmv.de")
+            _LOGGER.warning("Could not retrieve data from rmv.de")
             return
         self.station = _data.get("station")
         _deps = []

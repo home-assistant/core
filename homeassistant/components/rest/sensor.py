@@ -1,10 +1,13 @@
 """Support for RESTful API sensors."""
 import json
 import logging
+from xml.parsers.expat import ExpatError
 
+from jsonpath import jsonpath
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
+import xmltodict
 
 from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -38,7 +41,9 @@ DEFAULT_VERIFY_SSL = True
 DEFAULT_FORCE_UPDATE = False
 DEFAULT_TIMEOUT = 10
 
+
 CONF_JSON_ATTRS = "json_attributes"
+CONF_JSON_ATTRS_PATH = "json_attributes_path"
 METHODS = ["POST", "GET"]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -57,6 +62,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_JSON_ATTRS_PATH): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
         vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
@@ -84,6 +90,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     device_class = config.get(CONF_DEVICE_CLASS)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     json_attrs = config.get(CONF_JSON_ATTRS)
+    json_attrs_path = config.get(CONF_JSON_ATTRS_PATH)
     force_update = config.get(CONF_FORCE_UPDATE)
     timeout = config.get(CONF_TIMEOUT)
 
@@ -120,6 +127,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 json_attrs,
                 force_update,
                 resource_template,
+                json_attrs_path,
             )
         ],
         True,
@@ -140,6 +148,7 @@ class RestSensor(Entity):
         json_attrs,
         force_update,
         resource_template,
+        json_attrs_path,
     ):
         """Initialize the REST sensor."""
         self._hass = hass
@@ -153,6 +162,7 @@ class RestSensor(Entity):
         self._attributes = None
         self._force_update = force_update
         self._resource_template = resource_template
+        self._json_attrs_path = json_attrs_path
 
     @property
     def name(self):
@@ -191,12 +201,31 @@ class RestSensor(Entity):
 
         self.rest.update()
         value = self.rest.data
+        _LOGGER.debug("Data fetched from resource: %s", value)
+        if self.rest.headers is not None:
+            # If the http request failed, headers will be None
+            content_type = self.rest.headers.get("content-type")
+
+            if content_type and content_type.startswith("text/xml"):
+                try:
+                    value = json.dumps(xmltodict.parse(value))
+                    _LOGGER.debug("JSON converted from XML: %s", value)
+                except ExpatError:
+                    _LOGGER.warning(
+                        "REST xml result could not be parsed and converted to JSON."
+                    )
+                    _LOGGER.debug("Erroneous XML: %s", value)
 
         if self._json_attrs:
             self._attributes = {}
             if value:
                 try:
                     json_dict = json.loads(value)
+                    if self._json_attrs_path is not None:
+                        json_dict = jsonpath(json_dict, self._json_attrs_path)
+                    # jsonpath will always store the result in json_dict[0]
+                    # so the next line happens to work exactly as needed to
+                    # find the result
                     if isinstance(json_dict, list):
                         json_dict = json_dict[0]
                     if isinstance(json_dict, dict):
@@ -240,6 +269,7 @@ class RestData:
         self._verify_ssl = verify_ssl
         self._timeout = timeout
         self.data = None
+        self.headers = None
 
     def set_url(self, url):
         """Set url."""
@@ -259,6 +289,8 @@ class RestData:
                 verify=self._verify_ssl,
             )
             self.data = response.text
+            self.headers = response.headers
         except requests.exceptions.RequestException as ex:
             _LOGGER.error("Error fetching data: %s failed with %s", self._resource, ex)
             self.data = None
+            self.headers = None

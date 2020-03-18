@@ -2,7 +2,7 @@
 Support for interacting with Ais Files.
 
 For more details about this platform, please refer to the documentation at
-https://sviete.github.io/AIS-docs
+https://www.ai-speaker.com/
 """
 import asyncio
 import logging

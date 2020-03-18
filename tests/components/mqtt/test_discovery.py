@@ -229,7 +229,7 @@ async def test_discovery_expansion(hass, mqtt_mock, caplog):
         '    "name":"DiscoveryExpansionTest1 Device",'
         '    "mdl":"Generic",'
         '    "sw":"1.2.3.4",'
-        '    "mf":"Noone"'
+        '    "mf":"None"'
         "  }"
         "}"
     )
@@ -250,7 +250,7 @@ async def test_discovery_expansion(hass, mqtt_mock, caplog):
 
 
 ABBREVIATIONS_WHITE_LIST = [
-    # MQTT client/server settings
+    # MQTT client/server/trigger settings
     "CONF_BIRTH_MESSAGE",
     "CONF_BROKER",
     "CONF_CERTIFICATE",
@@ -258,6 +258,7 @@ ABBREVIATIONS_WHITE_LIST = [
     "CONF_CLIENT_ID",
     "CONF_CLIENT_KEY",
     "CONF_DISCOVERY",
+    "CONF_DISCOVERY_ID",
     "CONF_DISCOVERY_PREFIX",
     "CONF_EMBEDDED",
     "CONF_KEEPALIVE",

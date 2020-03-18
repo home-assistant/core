@@ -3,11 +3,9 @@ import logging
 
 from homeassistant.components.unifi.config_flow import get_controller_from_config_entry
 from homeassistant.core import callback
-from homeassistant.helpers import entity_registry
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_registry import DISABLED_CONFIG_ENTRY
+
+from .unifi_client import UniFiClient
 
 LOGGER = logging.getLogger(__name__)
 
@@ -24,36 +22,48 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     controller = get_controller_from_config_entry(hass, config_entry)
     sensors = {}
 
-    registry = await entity_registry.async_get_registry(hass)
+    option_allow_bandwidth_sensors = controller.option_allow_bandwidth_sensors
+
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
     @callback
     def update_controller():
         """Update the values of the controller."""
-        update_items(controller, async_add_entities, sensors)
+        nonlocal option_allow_bandwidth_sensors
+
+        if not option_allow_bandwidth_sensors:
+            return
+
+        add_entities(controller, async_add_entities, sensors)
 
     controller.listeners.append(
         async_dispatcher_connect(hass, controller.signal_update, update_controller)
     )
 
     @callback
-    def update_disable_on_entities():
+    def options_updated():
         """Update the values of the controller."""
-        for entity in sensors.values():
+        nonlocal option_allow_bandwidth_sensors
 
-            if entity.entity_registry_enabled_default == entity.enabled:
-                continue
+        if option_allow_bandwidth_sensors != controller.option_allow_bandwidth_sensors:
+            option_allow_bandwidth_sensors = controller.option_allow_bandwidth_sensors
 
-            disabled_by = None
-            if not entity.entity_registry_enabled_default and entity.enabled:
-                disabled_by = DISABLED_CONFIG_ENTRY
+            if option_allow_bandwidth_sensors:
+                update_controller()
 
-            registry.async_update_entity(
-                entity.registry_entry.entity_id, disabled_by=disabled_by
-            )
+            else:
+                for sensor in sensors.values():
+
+                    if entity_registry.async_is_registered(sensor.entity_id):
+                        entity_registry.async_remove(sensor.entity_id)
+
+                    hass.async_create_task(sensor.async_remove())
+
+                sensors.clear()
 
     controller.listeners.append(
         async_dispatcher_connect(
-            hass, controller.signal_options_update, update_disable_on_entities
+            hass, controller.signal_options_update, options_updated
         )
     )
 
@@ -61,8 +71,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 @callback
-def update_items(controller, async_add_entities, sensors):
-    """Update sensors from the controller."""
+def add_entities(controller, async_add_entities, sensors):
+    """Add new sensor entities from the controller."""
     new_sensors = []
 
     for client_id in controller.api.clients:
@@ -73,9 +83,6 @@ def update_items(controller, async_add_entities, sensors):
             item_id = f"{direction}-{client_id}"
 
             if item_id in sensors:
-                sensor = sensors[item_id]
-                if sensor.enabled:
-                    sensor.async_schedule_update_ha_state()
                 continue
 
             sensors[item_id] = sensor_class(
@@ -87,51 +94,7 @@ def update_items(controller, async_add_entities, sensors):
         async_add_entities(new_sensors)
 
 
-class UniFiBandwidthSensor(Entity):
-    """UniFi Bandwidth sensor base class."""
-
-    def __init__(self, client, controller):
-        """Set up client."""
-        self.client = client
-        self.controller = controller
-        self.is_wired = self.client.mac not in controller.wireless_clients
-
-    @property
-    def entity_registry_enabled_default(self):
-        """Return if the entity should be enabled when first added to the entity registry."""
-        if self.controller.option_allow_bandwidth_sensors:
-            return True
-        return False
-
-    async def async_added_to_hass(self):
-        """Client entity created."""
-        LOGGER.debug("New UniFi bandwidth sensor %s (%s)", self.name, self.client.mac)
-
-    async def async_update(self):
-        """Synchronize state with controller.
-
-        Make sure to update self.is_wired if client is wireless, there is an issue when clients go offline that they get marked as wired.
-        """
-        LOGGER.debug(
-            "Updating UniFi bandwidth sensor %s (%s)", self.entity_id, self.client.mac
-        )
-        await self.controller.request_update()
-
-        if self.is_wired and self.client.mac in self.controller.wireless_clients:
-            self.is_wired = False
-
-    @property
-    def available(self) -> bool:
-        """Return if controller is available."""
-        return self.controller.available
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return {"connections": {(CONNECTION_NETWORK_MAC, self.client.mac)}}
-
-
-class UniFiRxBandwidthSensor(UniFiBandwidthSensor):
+class UniFiRxBandwidthSensor(UniFiClient):
     """Receiving bandwidth sensor."""
 
     @property
@@ -153,7 +116,7 @@ class UniFiRxBandwidthSensor(UniFiBandwidthSensor):
         return f"rx-{self.client.mac}"
 
 
-class UniFiTxBandwidthSensor(UniFiBandwidthSensor):
+class UniFiTxBandwidthSensor(UniFiRxBandwidthSensor):
     """Transmitting bandwidth sensor."""
 
     @property

@@ -91,7 +91,7 @@ def get_from_conf(config, config_key, length):
     string = config.get(config_key)
     if len(string) != length:
         _LOGGER.error(
-            "Error in config parameter %s: Must be exactly %d "
+            "Error in configuration parameter %s: Must be exactly %d "
             "bytes. Device will not be added",
             config_key,
             length / 2,

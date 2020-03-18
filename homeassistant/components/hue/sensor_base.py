@@ -3,6 +3,7 @@ import asyncio
 from datetime import timedelta
 import logging
 
+from aiohttp import client_exceptions
 from aiohue import AiohueException, Unauthorized
 from aiohue.sensors import TYPE_ZLL_PRESENCE
 import async_timeout
@@ -42,10 +43,12 @@ class SensorManager:
         self.coordinator = DataUpdateCoordinator(
             bridge.hass,
             _LOGGER,
-            "sensor",
-            self.async_update_data,
-            self.SCAN_INTERVAL,
-            debounce.Debouncer(bridge.hass, _LOGGER, REQUEST_REFRESH_DELAY, True),
+            name="sensor",
+            update_method=self.async_update_data,
+            update_interval=self.SCAN_INTERVAL,
+            request_refresh_debouncer=debounce.Debouncer(
+                bridge.hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True
+            ),
         )
 
     async def async_update_data(self):
@@ -53,12 +56,12 @@ class SensorManager:
         try:
             with async_timeout.timeout(4):
                 return await self.bridge.async_request_call(
-                    self.bridge.api.sensors.update()
+                    self.bridge.api.sensors.update
                 )
         except Unauthorized:
             await self.bridge.handle_unauthorized_error()
             raise UpdateFailed
-        except (asyncio.TimeoutError, AiohueException):
+        except (asyncio.TimeoutError, AiohueException, client_exceptions.ClientError):
             raise UpdateFailed
 
     async def async_register_component(self, binary, async_add_entities):
@@ -183,7 +186,7 @@ class GenericHueSensor(entity.Entity):
     @property
     def available(self):
         """Return if sensor is available."""
-        return not self.bridge.sensor_manager.coordinator.failed_last_update and (
+        return self.bridge.sensor_manager.coordinator.last_update_success and (
             self.bridge.allow_unreachable or self.sensor.config["reachable"]
         )
 

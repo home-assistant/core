@@ -108,7 +108,8 @@
                     "allow_clip_sensor": "Permitir sensores deCONZ CLIP",
                     "allow_deconz_groups": "Permitir grupos de luz deCONZ"
                 },
-                "description": "Configurar la visibilidad de los tipos de dispositivos deCONZ"
+                "description": "Configurar la visibilidad de los tipos de dispositivos deCONZ",
+                "title": "Opciones deCONZ"
             }
         }
     }

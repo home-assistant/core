@@ -14,7 +14,11 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers import aiohttp_client
 
 from .bridge import authenticate_bridge
-from .const import DOMAIN, LOGGER  # pylint: disable=unused-import
+from .const import (  # pylint: disable=unused-import
+    CONF_ALLOW_HUE_GROUPS,
+    DOMAIN,
+    LOGGER,
+)
 from .errors import AuthenticationRequired, CannotConnect
 
 HUE_MANUFACTURERURL = "http://www.philips.com"
@@ -125,7 +129,11 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(
                 title=bridge.config.name,
-                data={"host": bridge.host, "username": bridge.username},
+                data={
+                    "host": bridge.host,
+                    "username": bridge.username,
+                    CONF_ALLOW_HUE_GROUPS: False,
+                },
             )
         except AuthenticationRequired:
             errors["base"] = "register_failed"

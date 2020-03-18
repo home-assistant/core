@@ -51,6 +51,8 @@ TAHOMA_DEVICE_CLASSES = {
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tahoma covers."""
+    if discovery_info is None:
+        return
     controller = hass.data[TAHOMA_DOMAIN]["controller"]
     devices = []
     for device in hass.data[TAHOMA_DOMAIN]["devices"]["cover"]:

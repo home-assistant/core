@@ -377,7 +377,7 @@ class Filter:
 
     @property
     def skip_processing(self):
-        """Return wether the current filter_state should be skipped."""
+        """Return whether the current filter_state should be skipped."""
         return self._skip_processing
 
     def _filter_state(self, new_state):

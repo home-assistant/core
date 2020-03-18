@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DOMAIN as SENSOR_DOMAIN,
 )
-from homeassistant.const import CONF_URL, STATE_UNKNOWN
+from homeassistant.const import CONF_URL, DATA_BYTES, STATE_UNKNOWN
 
 from . import HuaweiLteBaseEntity
 from .const import (
@@ -18,7 +18,6 @@ from .const import (
     KEY_DEVICE_INFORMATION,
     KEY_DEVICE_SIGNAL,
     KEY_MONITORING_TRAFFIC_STATISTICS,
-    UNIT_BYTES,
     UNIT_SECONDS,
 )
 
@@ -126,19 +125,19 @@ SENSOR_META = {
         name="Current connection duration", unit=UNIT_SECONDS, icon="mdi:timer"
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "CurrentDownload"): dict(
-        name="Current connection download", unit=UNIT_BYTES, icon="mdi:download"
+        name="Current connection download", unit=DATA_BYTES, icon="mdi:download"
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "CurrentUpload"): dict(
-        name="Current connection upload", unit=UNIT_BYTES, icon="mdi:upload"
+        name="Current connection upload", unit=DATA_BYTES, icon="mdi:upload"
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "TotalConnectTime"): dict(
         name="Total connected duration", unit=UNIT_SECONDS, icon="mdi:timer"
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "TotalDownload"): dict(
-        name="Total download", unit=UNIT_BYTES, icon="mdi:download"
+        name="Total download", unit=DATA_BYTES, icon="mdi:download"
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "TotalUpload"): dict(
-        name="Total upload", unit=UNIT_BYTES, icon="mdi:upload"
+        name="Total upload", unit=DATA_BYTES, icon="mdi:upload"
     ),
 }
 

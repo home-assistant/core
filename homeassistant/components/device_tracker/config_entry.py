@@ -62,6 +62,11 @@ class TrackerEntity(BaseTrackerEntity):
     """Represent a tracked device."""
 
     @property
+    def force_update(self):
+        """All updates need to be written to the state machine."""
+        return True
+
+    @property
     def location_accuracy(self):
         """Return the location accuracy of the device.
 

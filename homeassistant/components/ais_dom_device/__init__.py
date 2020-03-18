@@ -2,7 +2,7 @@
 Support for interacting with Ais Dom devices.
 
 For more details about this platform, please refer to the documentation at
-https://sviete.github.io/AIS-docs
+https://www.ai-speaker.com
 """
 import logging
 import asyncio
@@ -11,8 +11,6 @@ import json
 from homeassistant.core import callback
 from .config_flow import configured_service
 from .const import DOMAIN
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers import entity_registry
 from homeassistant.components.mqtt import discovery as mqtt_disco
 from homeassistant.util.json import load_json, save_json
 
@@ -180,32 +178,36 @@ async def _async_send_rf_code(hass, long_topic, b0_code):
 
 
 async def _async_remove_ais_dom_entity(hass, entity_id):
-    registry = await entity_registry.async_get_registry(hass)
-    if entity_id in registry.entities:
-        entity_entry = registry.async_get(entity_id)
+    ent_registry = await hass.helpers.entity_registry.async_get_registry()
+    if ent_registry.async_is_registered(entity_id):
+        entity_entry = ent_registry.async_get(entity_id)
         unique_id = entity_entry.unique_id
         domain = entity_entry.domain
         platform = entity_entry.platform
-        registry.async_remove(entity_id)
-        # remove from already discovered
-        if platform == "mqtt":
-            discovery_hash = (domain, unique_id)
-            if discovery_hash in hass.data[mqtt_disco.ALREADY_DISCOVERED]:
-                mqtt_disco.clear_discovery_hash(hass, discovery_hash)
+        ent_registry.async_remove(entity_id)
+    # remove from already discovered
+    if platform == "mqtt":
+        discovery_hash = (domain, unique_id)
+        if discovery_hash in hass.data[mqtt_disco.ALREADY_DISCOVERED]:
+            mqtt_disco.clear_discovery_hash(hass, discovery_hash)
+        # remove this code and his name from json
+        G_RF_CODES_DATA.async_remove_code(unique_id)
+    elif platform == "ais_drives_service":
+        # remove drive, unmount and remove symlincs
+        await hass.services.async_call(
+            "ais_drives_service", "rclone_remove_drive", {"name": unique_id}
+        )
 
     hass.states.async_remove(entity_id)
 
-    # remove this code and his name from json
-    G_RF_CODES_DATA.async_remove_code(unique_id)
-
 
 async def _async_remove_ais_dom_device(hass, device_id):
-    dev_registry = await dr.async_get_registry(hass)
+    dev_registry = await hass.helpers.device_registry.async_get_registry()
     device = dev_registry.async_get(device_id)
 
     # prepare list of entities to remove
     entities_to_remove = []
-    ent_registry = await entity_registry.async_get_registry(hass)
+    ent_registry = await hass.helpers.entity_registry.async_get_registry()
     for e in ent_registry.entities:
         entity_entry = ent_registry.async_get(e)
         if entity_entry.device_id == device_id:
@@ -216,12 +218,12 @@ async def _async_remove_ais_dom_device(hass, device_id):
         await _async_remove_ais_dom_entity(hass, r)
 
     if device is not None:
-        dev_registry.async_remove_device(device.id)
+        dev_registry.async_remove_device(device_id)
 
 
 async def _async_add_ais_dom_entity(hass, device_id, name, b0_code, topic, entity_type):
     # 0. get the device from registry
-    registry = await dr.async_get_registry(hass)
+    registry = await hass.helpers.device_registry.async_get_registry()
     device = registry.async_get(device_id)
 
     # 1. get topic from payload

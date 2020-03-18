@@ -273,6 +273,7 @@ class EntityComponent:
 
         return processed_conf
 
+    @callback
     def _async_init_entity_platform(
         self,
         platform_type: str,

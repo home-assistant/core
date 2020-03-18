@@ -97,11 +97,7 @@ class PS4Device(MediaPlayerDevice):
     def status_callback(self):
         """Handle status callback. Parse status."""
         self._parse_status()
-
-    @callback
-    def schedule_update(self):
-        """Schedules update with HA."""
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def subscribe_to_protocol(self):
@@ -184,7 +180,6 @@ class PS4Device(MediaPlayerDevice):
                         self._media_content_id = title_id
                         if self._use_saved():
                             _LOGGER.debug("Using saved data for media: %s", title_id)
-                            self.schedule_update()
                             return
 
                         self._media_title = name
@@ -223,13 +218,11 @@ class PS4Device(MediaPlayerDevice):
         """Set states for state idle."""
         self.reset_title()
         self._state = STATE_IDLE
-        self.schedule_update()
 
     def state_standby(self):
         """Set states for state standby."""
         self.reset_title()
         self._state = STATE_STANDBY
-        self.schedule_update()
 
     def state_unknown(self):
         """Set states for state unknown."""
@@ -286,8 +279,8 @@ class PS4Device(MediaPlayerDevice):
             self._media_image = art or None
             self._media_type = media_type
 
-            self.update_list()
-            self.schedule_update()
+            await self.hass.async_add_executor_job(self.update_list)
+            self.async_write_ha_state()
 
     def update_list(self):
         """Update Game List, Correct data if different."""

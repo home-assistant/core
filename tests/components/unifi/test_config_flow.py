@@ -2,6 +2,7 @@
 import aiounifi
 from asynctest import patch
 
+from homeassistant import data_entry_flow
 from homeassistant.components import unifi
 from homeassistant.components.unifi import config_flow
 from homeassistant.components.unifi.const import CONF_CONTROLLER, CONF_SITE_ID
@@ -13,17 +14,29 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
+from .test_controller import setup_unifi_integration
+
 from tests.common import MockConfigEntry
 
+WLANS = [{"name": "SSID 1"}, {"name": "SSID 2"}]
 
-async def test_flow_works(hass, aioclient_mock):
+
+async def test_flow_works(hass, aioclient_mock, mock_discovery):
     """Test config flow."""
+    mock_discovery.return_value = "1"
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": "user"}
     )
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
+    assert result["data_schema"]({CONF_USERNAME: "", CONF_PASSWORD: ""}) == {
+        CONF_HOST: "unifi",
+        CONF_USERNAME: "",
+        CONF_PASSWORD: "",
+        CONF_PORT: 8443,
+        CONF_VERIFY_SSL: False,
+    }
 
     aioclient_mock.post(
         "https://1.2.3.4:1234/api/login",
@@ -228,36 +241,39 @@ async def test_flow_fails_unknown_problem(hass, aioclient_mock):
 
 async def test_option_flow(hass):
     """Test config flow options."""
-    entry = MockConfigEntry(domain=config_flow.DOMAIN, data={}, options=None)
-    hass.config_entries._entries.append(entry)
+    controller = await setup_unifi_integration(hass, wlans_response=WLANS)
 
-    flow = await hass.config_entries.options.async_create_flow(
-        entry.entry_id, context={"source": "test"}, data=None
+    result = await hass.config_entries.options.async_init(
+        controller.config_entry.entry_id
     )
 
-    result = await flow.async_step_init()
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "device_tracker"
 
-    result = await flow.async_step_device_tracker(
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
         user_input={
             config_flow.CONF_TRACK_CLIENTS: False,
             config_flow.CONF_TRACK_WIRED_CLIENTS: False,
             config_flow.CONF_TRACK_DEVICES: False,
+            config_flow.CONF_SSID_FILTER: ["SSID 1"],
             config_flow.CONF_DETECTION_TIME: 100,
-        }
+        },
     )
-    assert result["type"] == "form"
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "statistics_sensors"
 
-    result = await flow.async_step_statistics_sensors(
-        user_input={config_flow.CONF_ALLOW_BANDWIDTH_SENSORS: True}
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={config_flow.CONF_ALLOW_BANDWIDTH_SENSORS: True}
     )
-    assert result["type"] == "create_entry"
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
         config_flow.CONF_TRACK_CLIENTS: False,
         config_flow.CONF_TRACK_WIRED_CLIENTS: False,
         config_flow.CONF_TRACK_DEVICES: False,
         config_flow.CONF_DETECTION_TIME: 100,
+        config_flow.CONF_SSID_FILTER: ["SSID 1"],
         config_flow.CONF_ALLOW_BANDWIDTH_SENSORS: True,
     }

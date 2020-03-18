@@ -140,7 +140,7 @@ class UtilityMeterSensor(RestoreEntity):
             diff = Decimal(new_state.state) - Decimal(old_state.state)
 
             if (not self._sensor_net_consumption) and diff < 0:
-                # Source sensor just rolled over for unknow reasons,
+                # Source sensor just rolled over for unknown reasons,
                 return
             self._state += diff
 

@@ -177,7 +177,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if entry.data[CONF_NAME] != import_config[CONF_NAME]:
                     updated_name[CONF_NAME] = import_config[CONF_NAME]
 
-                if entry.data[CONF_VOLUME_STEP] != import_config[CONF_VOLUME_STEP]:
+                if entry.data.get(CONF_VOLUME_STEP) != import_config[CONF_VOLUME_STEP]:
                     updated_options[CONF_VOLUME_STEP] = import_config[CONF_VOLUME_STEP]
 
                 if updated_options or updated_name:
@@ -204,6 +204,11 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """Handle zeroconf discovery."""
+
+        # Set unique ID early to prevent device from getting rediscovered multiple times
+        await self.async_set_unique_id(
+            unique_id=discovery_info[CONF_HOST].split(":")[0], raise_on_progress=True
+        )
 
         discovery_info[
             CONF_HOST

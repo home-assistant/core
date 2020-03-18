@@ -178,7 +178,7 @@ class VarAbs(LcnServiceCall):
     """Set absolute value of a variable or setpoint.
 
     Variable has to be set as counter!
-    Reguator setpoints can also be set using R1VARSETPOINT, R2VARSETPOINT.
+    Regulator setpoints can also be set using R1VARSETPOINT, R2VARSETPOINT.
     """
 
     schema = LcnServiceCall.schema.extend(

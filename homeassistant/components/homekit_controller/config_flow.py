@@ -262,7 +262,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         _LOGGER.info(
             (
                 "Legacy configuration %s for homekit"
-                "accessory migrated to config entries"
+                "accessory migrated to configuration entries"
             ),
             hkid,
         )
@@ -352,6 +352,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
         return self._async_step_pair_show_form(errors)
 
+    @callback
     def _async_step_pair_show_form(self, errors=None):
         return self.async_show_form(
             step_id="pair",

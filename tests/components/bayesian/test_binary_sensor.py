@@ -149,7 +149,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
         assert state.state == "off"
 
     def test_threshold(self):
-        """Test sensor on probabilty threshold limits."""
+        """Test sensor on probability threshold limits."""
         config = {
             "binary_sensor": {
                 "name": "Test_Binary",

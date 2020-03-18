@@ -270,7 +270,7 @@ class BroadlinkRemote(RemoteDevice):
     async def _async_learn_code(self, command, device, toggle, timeout):
         """Learn a code from a remote.
 
-        Capture an aditional code for toggle commands.
+        Capture an additional code for toggle commands.
         """
         try:
             if not toggle:

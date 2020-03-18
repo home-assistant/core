@@ -718,7 +718,7 @@ def create_hue_success_response(entity_id, attr, value):
 
 
 def create_list_of_entities(config, request):
-    """Create a list of all entites."""
+    """Create a list of all entities."""
     hass = request.app["hass"]
     json_response = {}
 

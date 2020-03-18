@@ -4,7 +4,7 @@
         "step": {
             "init": {
                 "title": "Podaj nową nazwę hosta",
-                "description": "Możesz zmienić nazwę hosta urządzenia na inną, jest to przydatne gdy masz kilka urządzeń ais-dom w sieci.\n\n Nazwa hosta nie może mieć żadnych znaków specjalnych [Szczeg\u00F3\u0142y w dokumentacji  ](https://sviete.github.io/AIS-docs/).",
+                "description": "Możesz zmienić nazwę hosta urządzenia na inną, jest to przydatne gdy masz kilka urządzeń ais-dom w sieci.\n\n Nazwa hosta nie może mieć żadnych znaków specjalnych [Szczeg\u00F3\u0142y w dokumentacji  ](https://www.ai-speaker.com).",
                 "data": {
                     "name": "Nazwa"
                 }

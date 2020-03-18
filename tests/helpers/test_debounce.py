@@ -8,7 +8,11 @@ async def test_immediate_works(hass):
     """Test immediate works."""
     calls = []
     debouncer = debounce.Debouncer(
-        hass, None, 0.01, True, CoroutineMock(side_effect=lambda: calls.append(None))
+        hass,
+        None,
+        cooldown=0.01,
+        immediate=True,
+        function=CoroutineMock(side_effect=lambda: calls.append(None)),
     )
 
     await debouncer.async_call()
@@ -37,7 +41,11 @@ async def test_not_immediate_works(hass):
     """Test immediate works."""
     calls = []
     debouncer = debounce.Debouncer(
-        hass, None, 0.01, False, CoroutineMock(side_effect=lambda: calls.append(None))
+        hass,
+        None,
+        cooldown=0.01,
+        immediate=False,
+        function=CoroutineMock(side_effect=lambda: calls.append(None)),
     )
 
     await debouncer.async_call()

@@ -7,7 +7,7 @@
                   "title": "AIS Google Home"
              },
             "oauth": {
-                "description": "Konfiguracja komunikacji z Google Home wymaga pobrania pliku JSON OAuth2 z Google. Aby to zrobić, postępuj zgodnie z [przewodnikiem w dokumentacji Asystenta domowego](https://sviete.github.io/AIS-docs/docs/en/ais_app_ai_integration_google_home.html)\n\n ![AIS logo](/static/icons/ais_google_home.png)\n\n Następnie wróć tu i wklej w pole **Poświadczenie oAuth2 dla urządzenia** (zawartość z pliku pobranego z Google).\n\n W ten sposób urządzenie zostanie autoryzowane.\n\n{error_info}",
+                "description": "Konfiguracja komunikacji z Google Home wymaga pobrania pliku JSON OAuth2 z Google. Aby to zrobić, postępuj zgodnie z [przewodnikiem w dokumentacji Asystenta domowego](https://www.ai-speaker.com/docs/ais_app_ai_integration_google_home)\n\n ![AIS logo](/static/icons/ais_google_home.png)\n\n Następnie wróć tu i wklej w pole **Poświadczenie oAuth2 dla urządzenia** (zawartość z pliku pobranego z Google).\n\n W ten sposób urządzenie zostanie autoryzowane.\n\n{error_info}",
                 "title": "Uwierzytelnianie urządzenia w Google",
                 "data": {
                     "oauth_json": "Poświadczenie oAuth2 dla urządzenia"

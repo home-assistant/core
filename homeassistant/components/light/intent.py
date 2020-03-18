@@ -1,6 +1,7 @@
 """Intents for the light integration."""
 import voluptuous as vol
 
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 import homeassistant.helpers.config_validation as cv
@@ -8,7 +9,6 @@ import homeassistant.util.color as color_util
 
 from . import (
     ATTR_BRIGHTNESS_PCT,
-    ATTR_ENTITY_ID,
     ATTR_RGB_COLOR,
     DOMAIN,
     SERVICE_TURN_ON,

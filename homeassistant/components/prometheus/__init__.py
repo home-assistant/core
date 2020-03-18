@@ -334,7 +334,7 @@ class PrometheusMetrics:
 
     @staticmethod
     def _sensor_fallback_metric(state, unit):
-        """Get metric from fallback logic for compatability."""
+        """Get metric from fallback logic for compatibility."""
         if unit in (None, ""):
             _LOGGER.debug("Unsupported sensor: %s", state.entity_id)
             return None

@@ -193,27 +193,50 @@ class WebDavCalendarData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data."""
+        start_of_today = dt.start_of_local_day()
+        start_of_tomorrow = dt.start_of_local_day() + timedelta(days=1)
+
         # We have to retrieve the results for the whole day as the server
         # won't return events that have already started
-        results = self.calendar.date_search(
-            dt.start_of_local_day(), dt.start_of_local_day() + timedelta(days=1)
-        )
+        results = self.calendar.date_search(start_of_today, start_of_tomorrow)
+
+        # Create new events for each recurrence of an event that happens today.
+        # For recurring events, some servers return the original event with recurrence rules
+        # and they would not be properly parsed using their original start/end dates.
+        new_events = []
+        for event in results:
+            vevent = event.instance.vevent
+            for start_dt in vevent.getrruleset() or []:
+                _start_of_today = start_of_today
+                _start_of_tomorrow = start_of_tomorrow
+                if self.is_all_day(vevent):
+                    start_dt = start_dt.date()
+                    _start_of_today = _start_of_today.date()
+                    _start_of_tomorrow = _start_of_tomorrow.date()
+                if _start_of_today <= start_dt < _start_of_tomorrow:
+                    new_event = event.copy()
+                    new_vevent = new_event.instance.vevent
+                    if hasattr(new_vevent, "dtend"):
+                        dur = new_vevent.dtend.value - new_vevent.dtstart.value
+                        new_vevent.dtend.value = start_dt + dur
+                    new_vevent.dtstart.value = start_dt
+                    new_events.append(new_event)
+                elif _start_of_tomorrow <= start_dt:
+                    break
+        vevents = [event.instance.vevent for event in results + new_events]
 
         # dtstart can be a date or datetime depending if the event lasts a
         # whole day. Convert everything to datetime to be able to sort it
-        results.sort(key=lambda x: self.to_datetime(x.instance.vevent.dtstart.value))
+        vevents.sort(key=lambda x: self.to_datetime(x.dtstart.value))
 
         vevent = next(
             (
-                event.instance.vevent
-                for event in results
+                vevent
+                for vevent in vevents
                 if (
-                    self.is_matching(event.instance.vevent, self.search)
-                    and (
-                        not self.is_all_day(event.instance.vevent)
-                        or self.include_all_day
-                    )
-                    and not self.is_over(event.instance.vevent)
+                    self.is_matching(vevent, self.search)
+                    and (not self.is_all_day(vevent) or self.include_all_day)
+                    and not self.is_over(vevent)
                 )
             ),
             None,
@@ -223,7 +246,7 @@ class WebDavCalendarData:
         if vevent is None:
             _LOGGER.debug(
                 "No matching event found in the %d results for %s",
-                len(results),
+                len(vevents),
                 self.calendar.name,
             )
             self.event = None

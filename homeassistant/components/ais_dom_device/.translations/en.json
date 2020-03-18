@@ -3,7 +3,7 @@
       "title": "AIS Add New Device",
       "step": {
         "confirm": {
-          "description": "Do you want to add a new device?\n\n![AIS logo](/static/icons/ais_logo_works_with_dom-100-black.png)\n\nThis wizard works with devices having ** open source and free ** software developed as part of the project [Tasmota] (https://github.com/arendst/Tasmota). The software is installed on devices ** AI-Speaker **, it can also be an alternative software for devices manufactured by many manufacturers.\n\nDetails in the documentation [Works with AI-Speaker] (https://sviete.github.io/AIS-docs/docs/en/ais_iot_works_with.html)",
+          "description": "Do you want to add a new device?\n\n![AIS logo](/static/icons/ais_logo_works_with_dom-100-black.png)\n\nThis wizard works with devices having ** open source and free ** software developed as part of the project [Tasmota] (https://github.com/arendst/Tasmota). The software is installed on devices ** AI-Speaker **, it can also be an alternative software for devices manufactured by many manufacturers.\n\nDetails in the documentation [Works with AI-Speaker] (https://www.ai-speaker.com/docs/ais_iot_works_with)",
           "title": "Add the AIS device"
         },
         "one": {

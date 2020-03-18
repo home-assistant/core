@@ -13,6 +13,8 @@ import bellows.zigbee.application
 import zigpy.profiles.zha
 import zigpy.profiles.zll
 import zigpy.zcl as zcl
+import zigpy_cc.api
+import zigpy_cc.zigbee.application
 import zigpy_deconz.api
 import zigpy_deconz.zigbee.application
 import zigpy_xbee.api
@@ -127,15 +129,20 @@ LIGHT_CLUSTERS = SetRegistry()
 OUTPUT_CHANNEL_ONLY_CLUSTERS = SetRegistry()
 
 RADIO_TYPES = {
+    RadioType.deconz.name: {
+        ZHA_GW_RADIO: zigpy_deconz.api.Deconz,
+        CONTROLLER: zigpy_deconz.zigbee.application.ControllerApplication,
+        ZHA_GW_RADIO_DESCRIPTION: "Deconz",
+    },
     RadioType.ezsp.name: {
         ZHA_GW_RADIO: bellows.ezsp.EZSP,
         CONTROLLER: bellows.zigbee.application.ControllerApplication,
         ZHA_GW_RADIO_DESCRIPTION: "EZSP",
     },
-    RadioType.deconz.name: {
-        ZHA_GW_RADIO: zigpy_deconz.api.Deconz,
-        CONTROLLER: zigpy_deconz.zigbee.application.ControllerApplication,
-        ZHA_GW_RADIO_DESCRIPTION: "Deconz",
+    RadioType.ti_cc.name: {
+        ZHA_GW_RADIO: zigpy_cc.api.API,
+        CONTROLLER: zigpy_cc.zigbee.application.ControllerApplication,
+        ZHA_GW_RADIO_DESCRIPTION: "TI CC",
     },
     RadioType.xbee.name: {
         ZHA_GW_RADIO: zigpy_xbee.api.XBee,

@@ -3,7 +3,7 @@
   "name": "GeoNet NZ Quakes",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/geonetnz_quakes",
-  "requirements": ["aio_geojson_geonetnz_quakes==0.11"],
+  "requirements": ["aio_geojson_geonetnz_quakes==0.12"],
   "dependencies": [],
   "codeowners": ["@exxamalte"]
 }

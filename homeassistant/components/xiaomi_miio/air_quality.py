@@ -21,6 +21,8 @@ DEFAULT_NAME = "Xiaomi Miio Air Quality Monitor"
 
 ATTR_CO2E = "carbon_dioxide_equivalent"
 ATTR_TVOC = "total_volatile_organic_compounds"
+ATTR_TEMP = "temperature"
+ATTR_HUM = "humidity"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -33,6 +35,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 PROP_TO_ATTR = {
     "carbon_dioxide_equivalent": ATTR_CO2E,
     "total_volatile_organic_compounds": ATTR_TVOC,
+    "temperature": ATTR_TEMP,
+    "humidity": ATTR_HUM,
 }
 
 
@@ -91,6 +95,8 @@ class AirMonitorB1(AirQualityEntity):
         self._carbon_dioxide_equivalent = None
         self._particulate_matter_2_5 = None
         self._total_volatile_organic_compounds = None
+        self._temperature = None
+        self._humidity = None
 
     async def async_update(self):
         """Fetch state from the miio device."""
@@ -100,6 +106,8 @@ class AirMonitorB1(AirQualityEntity):
             self._carbon_dioxide_equivalent = state.co2e
             self._particulate_matter_2_5 = round(state.pm25, 1)
             self._total_volatile_organic_compounds = round(state.tvoc, 3)
+            self._temperature = round(state.temperature, 2)
+            self._humidity = round(state.humidity, 2)
             self._available = True
         except DeviceException as ex:
             self._available = False
@@ -151,6 +159,16 @@ class AirMonitorB1(AirQualityEntity):
         return self._total_volatile_organic_compounds
 
     @property
+    def temperature(self):
+        """Return the current temperature."""
+        return self._temperature
+
+    @property
+    def humidity(self):
+        """Return the current humidity."""
+        return self._humidity
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         data = {}
@@ -179,6 +197,8 @@ class AirMonitorS1(AirMonitorB1):
             self._carbon_dioxide = state.co2
             self._particulate_matter_2_5 = state.pm25
             self._total_volatile_organic_compounds = state.tvoc
+            self._temperature = state.temperature
+            self._humidity = state.humidity
             self._available = True
         except DeviceException as ex:
             self._available = False

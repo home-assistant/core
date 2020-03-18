@@ -1,7 +1,6 @@
 """Support for the Netatmo Weather Service."""
 from datetime import timedelta
 import logging
-from time import time
 
 import pyatmo
 
@@ -519,7 +518,6 @@ class NetatmoData:
         """Initialize the data object."""
         self.data = {}
         self.station_data = station_data
-        self._next_update = time()
         self.auth = auth
 
     def get_module_infos(self):

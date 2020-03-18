@@ -13,6 +13,7 @@ class Debouncer:
         self,
         hass: HomeAssistant,
         logger: Logger,
+        *,
         cooldown: float,
         immediate: bool,
         function: Optional[Callable[..., Awaitable[Any]]] = None,

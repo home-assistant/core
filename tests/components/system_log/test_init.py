@@ -30,6 +30,7 @@ def _generate_and_log_exception(exception, log):
 
 def assert_log(log, exception, message, level):
     """Assert that specified values are in a specific log entry."""
+    assert log["name"] == "test_logger"
     assert exception in log["exception"]
     assert message == log["message"]
     assert level == log["level"]

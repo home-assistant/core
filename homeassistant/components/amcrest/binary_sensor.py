@@ -1,4 +1,4 @@
-"""Suppoort for Amcrest IP camera binary sensors."""
+"""Support for Amcrest IP camera binary sensors."""
 from datetime import timedelta
 import logging
 

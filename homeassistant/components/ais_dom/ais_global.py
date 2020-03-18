@@ -3,7 +3,7 @@ Support for functionality to cache some data for AI-Speaker.
 """
 import logging
 import socket
-
+import platform
 import requests
 
 # LV settings
@@ -88,7 +88,9 @@ G_MODEL_SONOFF_T12 = "sonoff_t12"
 G_MODEL_SONOFF_T13 = "sonoff_t13"
 #
 G_AIS_SECURE_ANDROID_ID_DOM = None
-
+G_AIS_SECURE_ANDROID_ID_DOM_FILE = (
+    "/data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_secure_android_id_dom"
+)
 #
 G_AIS_GATE_REQ = {}
 
@@ -133,20 +135,45 @@ def say_direct(text):
 
 def get_sercure_android_id_dom():
     global G_AIS_SECURE_ANDROID_ID_DOM
-    if G_AIS_SECURE_ANDROID_ID_DOM is None:
+    if (
+        G_AIS_SECURE_ANDROID_ID_DOM is not None
+        and G_AIS_SECURE_ANDROID_ID_DOM.startswith("dom-")
+    ):
+        return G_AIS_SECURE_ANDROID_ID_DOM
+    else:
+        # get dom_id from file
+        try:
+            with open(G_AIS_SECURE_ANDROID_ID_DOM_FILE) as fptr:
+                dom_id = fptr.read().replace("\n", "")
+                if dom_id.startswith("dom-"):
+                    G_AIS_SECURE_ANDROID_ID_DOM = dom_id
+                    return G_AIS_SECURE_ANDROID_ID_DOM
+        except Exception as e:
+            _LOGGER.error("Error get_sercure_android_id_dom " + str(e))
+
+        # get dom_id from secure android settings and save in file
         import subprocess
 
-        try:
-            android_id = subprocess.check_output(
-                'su -c "settings get secure android_id"', shell=True, timeout=10
-            )
-            android_id = android_id.decode("utf-8").replace("\n", "")
-        except Exception:
+        android_id = ""
+        if platform.machine() == "x86_64":
+            # to suport local test
             from uuid import getnode as get_mac
 
             android_id = get_mac()
+        else:
+            try:
+                android_id = subprocess.check_output(
+                    'su -c "settings get secure android_id"', shell=True, timeout=10
+                )
+                android_id = android_id.decode("utf-8").replace("\n", "")
+            except Exception as e:
+                _LOGGER.error("Error get_sercure_android_id_dom " + str(e))
 
-        G_AIS_SECURE_ANDROID_ID_DOM = "dom-" + str(android_id)
+        # save in file
+        if android_id != "":
+            with open(G_AIS_SECURE_ANDROID_ID_DOM_FILE, "w") as fptr:
+                fptr.write("dom-" + str(android_id))
+                G_AIS_SECURE_ANDROID_ID_DOM = "dom-" + str(android_id)
     return G_AIS_SECURE_ANDROID_ID_DOM
 
 

@@ -7,7 +7,15 @@ import psutil
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_RESOURCES, CONF_TYPE, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    CONF_RESOURCES,
+    CONF_TYPE,
+    DATA_GIBIBYTES,
+    DATA_MEBIBYTES,
+    DATA_RATE_MEGABYTES_PER_SECOND,
+    STATE_OFF,
+    STATE_ON,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
@@ -19,8 +27,8 @@ _LOGGER = logging.getLogger(__name__)
 CONF_ARG = "arg"
 
 SENSOR_TYPES = {
-    "disk_free": ["Disk free", "GiB", "mdi:harddisk", None],
-    "disk_use": ["Disk use", "GiB", "mdi:harddisk", None],
+    "disk_free": ["Disk free", DATA_GIBIBYTES, "mdi:harddisk", None],
+    "disk_use": ["Disk use", DATA_GIBIBYTES, "mdi:harddisk", None],
     "disk_use_percent": ["Disk use (percent)", "%", "mdi:harddisk", None],
     "ipv4_address": ["IPv4 address", "", "mdi:server-network", None],
     "ipv6_address": ["IPv6 address", "", "mdi:server-network", None],
@@ -28,29 +36,29 @@ SENSOR_TYPES = {
     "load_15m": ["Load (15m)", " ", "mdi:memory", None],
     "load_1m": ["Load (1m)", " ", "mdi:memory", None],
     "load_5m": ["Load (5m)", " ", "mdi:memory", None],
-    "memory_free": ["Memory free", "MiB", "mdi:memory", None],
-    "memory_use": ["Memory use", "MiB", "mdi:memory", None],
+    "memory_free": ["Memory free", DATA_MEBIBYTES, "mdi:memory", None],
+    "memory_use": ["Memory use", DATA_MEBIBYTES, "mdi:memory", None],
     "memory_use_percent": ["Memory use (percent)", "%", "mdi:memory", None],
-    "network_in": ["Network in", "MiB", "mdi:server-network", None],
-    "network_out": ["Network out", "MiB", "mdi:server-network", None],
+    "network_in": ["Network in", DATA_MEBIBYTES, "mdi:server-network", None],
+    "network_out": ["Network out", DATA_MEBIBYTES, "mdi:server-network", None],
     "packets_in": ["Packets in", " ", "mdi:server-network", None],
     "packets_out": ["Packets out", " ", "mdi:server-network", None],
     "throughput_network_in": [
         "Network throughput in",
-        "MB/s",
+        DATA_RATE_MEGABYTES_PER_SECOND,
         "mdi:server-network",
         None,
     ],
     "throughput_network_out": [
         "Network throughput out",
-        "MB/s",
+        DATA_RATE_MEGABYTES_PER_SECOND,
         "mdi:server-network",
         None,
     ],
     "process": ["Process", " ", "mdi:memory", None],
     "processor_use": ["Processor use", "%", "mdi:memory", None],
-    "swap_free": ["Swap free", "MiB", "mdi:harddisk", None],
-    "swap_use": ["Swap use", "MiB", "mdi:harddisk", None],
+    "swap_free": ["Swap free", DATA_MEBIBYTES, "mdi:harddisk", None],
+    "swap_use": ["Swap use", DATA_MEBIBYTES, "mdi:harddisk", None],
     "swap_use_percent": ["Swap use (percent)", "%", "mdi:harddisk", None],
 }
 

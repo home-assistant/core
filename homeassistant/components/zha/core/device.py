@@ -214,6 +214,11 @@ class ZHADevice(LogMixin):
                     return True
 
     @property
+    def skip_configuration(self):
+        """Return true if the device should not issue configuration related commands."""
+        return self._zigpy_device.skip_configuration
+
+    @property
     def gateway(self):
         """Return the gateway for this device."""
         return self._zha_gateway

@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def is_virtual_env() -> bool:
-    """Return if we run in a virtual environtment."""
+    """Return if we run in a virtual environment."""
     # Check supports venv && virtualenv
     return getattr(sys, "base_prefix", sys.prefix) != sys.prefix or hasattr(
         sys, "real_prefix"

@@ -11,6 +11,7 @@ from homeassistant.components.light import (
     Light,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import callback
 import homeassistant.util.color as color_util
 from homeassistant.util.color import rgb_hex_to_rgb_list
 
@@ -150,11 +151,13 @@ class MySensorsLight(mysensors.device.MySensorsEntity, Light):
             self._values[value_type] = STATE_OFF
             self.async_schedule_update_ha_state()
 
+    @callback
     def _async_update_light(self):
         """Update the controller with values from light child."""
         value_type = self.gateway.const.SetReq.V_LIGHT
         self._state = self._values[value_type] == STATE_ON
 
+    @callback
     def _async_update_dimmer(self):
         """Update the controller with values from dimmer child."""
         value_type = self.gateway.const.SetReq.V_DIMMER
@@ -163,6 +166,7 @@ class MySensorsLight(mysensors.device.MySensorsEntity, Light):
             if self._brightness == 0:
                 self._state = False
 
+    @callback
     def _async_update_rgb_or_w(self):
         """Update the controller with values from RGB or RGBW child."""
         value = self._values[self.value_type]

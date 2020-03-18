@@ -1,7 +1,6 @@
 {
     "data": {
         "config": {
-            "background": "center / cover no-repeat url(\"/static/ais_dom/ais_backgroud.jpg\") fixed",
             "resources": [],
             "title": "Asystent domowy",
             "views": [
@@ -15,19 +14,8 @@
                     ],
                     "cards": [
                         {
-                            "cards": [
-                                {
-                                    "content": "#  **Cze\u015b\u0107 [[ {user} ]]**. \n\n### Witamy w systemie Asystent domowy  <ha-icon icon=\"mdi:party-popper\" ></ha-icon> \n#### Dzi\u0119kujemy, \u017ce nam zaufa\u0142e\u015b i wybra\u0142e\u015b naszego **Asystenta domowego**! \n Mam nadziej\u0119, \u017ce spe\u0142ni\u0105 si\u0119 Twoje wszystkie oczekiwania i \u017ce uprzyjemnimy Ci dotwarzanie multimedi\u00f3w i sterowanie urz\u0105dzeniami w domu :)\n\n------------------------\nWiadomo\u015b\u0107, kt\u00f3r\u0105 teraz czytasz, umieszczona jest na **karcie**  <ha-icon icon=\"mdi:card-bulleted-outline\" ></ha-icon>    na pierwszym **widoku** <ha-icon icon=\"mdi:home\" ></ha-icon> interfejsu u\u017cytkownika **Asystenta domowego**. \n\nInterfejs dzia\u0142a na urz\u0105dzeniach mobilnych oraz stacjonarnych i jest konfigurowalny, tak \u017ceby\u015b\u00a0m\u00f3g\u0142 w szybki i \u0142atwy spos\u00f3b doda\u0107 tu, w\u0142asne widoki oraz karty, a nast\u0119pnie umie\u015bci\u0142 na nich swoje sterowalne urz\u0105dzenia domowe. \n\n\nW instrukcji wyja\u015bniamy [jak w\u0142\u0105czy\u0107 tryb konfiguracji interfejsu](https://sviete.github.io/AIS-docs/docs/en/ais_app_ui_config.html), by dostosowa\u0107 wygl\u0105d do w\u0142asnych preferencji. \nNa drugim widoku **Jednostki**  <ha-icon icon=\"mdi:google-circles-extended\" ></ha-icon> prezentujemy przyk\u0142adowe karty, kt\u00f3re mo\u017cesz kopiowa\u0107 do w\u0142asnych widok\u00f3w. \n\n------------------------\n AI-Speaker [[ sensor.daytodisplay ]]\n",
-                                    "style": "ha-card {\n  background: #323232cc;\n }\n",
-                                    "type": "markdown"
-                                },
-                                {
-                                    "content": "<img src=\"/static/icons/favicon-50x50.png\">",
-                                    "style": "@keyframes animateAisLogo {\n  0% {\n  opacity:1;\n  transform: scale(0.2);\n  }\n  30% {\n  opacity:0.8;\n  transform: scale(0.3);\n  }\n  45% {\n  opacity:0.6;\n  transform: scale(0.6);\n  }\n  65% {\n  opacity:0.3;\n  transform: scale(0.8);\n  }\n  100% {\n  opacity:0;\n  transform: scale(1.2);\n  }\n}\nha-card {\n  position: absolute;\n  bottom: 20px;\n  right: 20px;\n  background: none;\n  box-shadow: none;\n}\nha-card img {\n  animation: animateAisLogo 20s linear infinite;\n}\n",
-                                    "type": "markdown"
-                                }
-                            ],
-                            "type": "vertical-stack"
+                            "content": "#  **Cze\u015b\u0107 [[ {user} ]]**! \n\n### Witamy w systemie Asystent domowy  <ha-icon icon=\"mdi:party-popper\" ></ha-icon> \n#### Dzi\u0119kujemy, \u017ce nam zaufa\u0142e\u015b i wybra\u0142e\u015b naszego **Asystenta domowego**! \n Mamy nadziej\u0119, \u017ce spe\u0142ni\u0105 si\u0119 Twoje wszystkie oczekiwania i \u017ce uprzyjemnimy Ci odtwarzanie multimedi\u00f3w i sterowanie urz\u0105dzeniami w domu  <ha-icon icon=\"mdi:emoticon-cool-outline\" ></ha-icon>\n\n------------------------\nInterfejs jest konfigurowalny, tak \u017ceby\u015b m\u00f3g\u0142 w szybki i \u0142atwy spos\u00f3b doda\u0107 swoje widoki i karty. W ten spos\u00f3b mo\u017cesz doda\u0107 tu swoje sterowalne urz\u0105dzenia domowe oraz inne interesuj\u0105ce Ci\u0119 rzeczy. \n\n[<ha-icon icon=\"mdi:information-outline\" ></ha-icon> w instrukcji](https://www.ai-speaker.com/docs/ais_app_ui_config) wyja\u015bniamy jak to dzia\u0142a.\n",
+                            "type": "markdown"
                         }
                     ],
                     "icon": "mdi:home-outline",
@@ -80,29 +68,6 @@
                                                 "domain": "person"
                                             }
                                         ]
-                                    },
-                                    "type": "ais-auto-entities"
-                                },
-                                {
-                                    "card": {
-                                        "show_header_toggle": false,
-                                        "title": "Automatyzacje",
-                                        "type": "entities"
-                                    },
-                                    "filter": {
-                                        "exclude": [
-                                            {
-                                                "entity_id": "automation.ais_*"
-                                            }
-                                        ],
-                                        "include": [
-                                            {
-                                                "domain": "automation"
-                                            }
-                                        ]
-                                    },
-                                    "sort": {
-                                        "method": "name"
                                     },
                                     "type": "ais-auto-entities"
                                 }
@@ -427,6 +392,65 @@
                     "badges": [],
                     "cards": [
                         {
+                            "entities": [
+                                {
+                                    "entity": "sensor.status_serwisu_zigbee2mqtt"
+                                },
+                                {
+                                    "entity": "sensor.wersja_zigbee2mqtt"
+                                },
+                                {
+                                    "entity": "sensor.wersja_kordynatora"
+                                },
+                                {
+                                    "type": "divider"
+                                },
+                                {
+                                    "entity": "switch.zigbee_tryb_parowania"
+                                },
+                                {
+                                    "entity": "timer.zigbee_permit_join"
+                                },
+                                {
+                                    "type": "divider"
+                                },
+                                {
+                                    "entity": "input_text.zigbee2mqtt_old_name"
+                                },
+                                {
+                                    "entity": "input_text.zigbee2mqtt_new_name"
+                                },
+                                {
+                                    "entity": "script.zigbee2mqtt_rename"
+                                },
+                                {
+                                    "type": "divider"
+                                },
+                                {
+                                    "entity": "input_text.zigbee2mqtt_remove"
+                                },
+                                {
+                                    "entity": "script.zigbee2mqtt_remove"
+                                }
+                            ],
+                            "show_header_toggle": false,
+                            "title": "Zigbee",
+                            "type": "entities"
+                        },
+                        {
+                            "entity": "sensor.zigbee2mqtt_networkmap",
+                            "type": "ais-zigbee2mqtt"
+                        }
+                    ],
+                    "icon": "mdi:zigbee",
+                    "path": "ais_zigbee",
+                    "title": "zigbee",
+                    "visible": false
+                },
+                {
+                    "badges": [],
+                    "cards": [
+                        {
                             "cards": [
                                 {
                                     "artwork": "full-cover",
@@ -471,7 +495,7 @@
                                         {
                                             "cards": [
                                                 {
-                                                    "color": "white",
+                                                    "color": "#727272",
                                                     "color_type": "icon",
                                                     "entity": "sensor.ais_player_mode",
                                                     "icon": "mdi:heart",
@@ -494,7 +518,7 @@
                                                     "type": "ais-button"
                                                 },
                                                 {
-                                                    "color": "white",
+                                                    "color": "#727272",
                                                     "color_type": "icon",
                                                     "entity": "sensor.ais_player_mode",
                                                     "icon": "mdi:bookmark",
@@ -517,7 +541,7 @@
                                                     "type": "ais-button"
                                                 },
                                                 {
-                                                    "color": "white",
+                                                    "color": "#727272",
                                                     "color_type": "icon",
                                                     "entity": "sensor.ais_player_mode",
                                                     "icon": "mdi:newspaper",
@@ -540,7 +564,7 @@
                                                     "type": "ais-button"
                                                 },
                                                 {
-                                                    "color": "white",
+                                                    "color": "#727272",
                                                     "color_type": "icon",
                                                     "entity": "sensor.ais_player_mode",
                                                     "icon": "mdi:folder",
@@ -568,7 +592,7 @@
                                         {
                                             "cards": [
                                                 {
-                                                    "color": "white",
+                                                    "color": "#727272",
                                                     "color_type": "icon",
                                                     "entity": "sensor.ais_player_mode",
                                                     "icon": "mdi:radio",
@@ -591,7 +615,7 @@
                                                     "type": "ais-button"
                                                 },
                                                 {
-                                                    "color": "white",
+                                                    "color": "#727272",
                                                     "color_type": "icon",
                                                     "entity": "sensor.ais_player_mode",
                                                     "icon": "mdi:podcast",
@@ -614,7 +638,7 @@
                                                     "type": "ais-button"
                                                 },
                                                 {
-                                                    "color": "white",
+                                                    "color": "#727272",
                                                     "color_type": "icon",
                                                     "entity": "sensor.ais_player_mode",
                                                     "icon": "mdi:audiobook",
@@ -637,7 +661,7 @@
                                                     "type": "ais-button"
                                                 },
                                                 {
-                                                    "color": "white",
+                                                    "color": "#727272",
                                                     "color_type": "icon",
                                                     "entity": "sensor.ais_player_mode",
                                                     "icon": "mdi:music",
@@ -675,7 +699,7 @@
                                             {
                                                 "cards": [
                                                     {
-                                                        "color": "white",
+                                                        "color": "#727272",
                                                         "color_type": "icon",
                                                         "entity": "input_select.ais_music_service",
                                                         "icon": "mdi:youtube",
@@ -695,7 +719,7 @@
                                                         "type": "ais-button"
                                                     },
                                                     {
-                                                        "color": "white",
+                                                        "color": "#727272",
                                                         "color_type": "icon",
                                                         "entity": "input_select.ais_music_service",
                                                         "icon": "mdi:spotify",
@@ -1134,65 +1158,6 @@
                     "icon": "mdi:music",
                     "path": "ais_audio",
                     "title": "Audio",
-                    "visible": false
-                },
-                {
-                    "badges": [],
-                    "cards": [
-                        {
-                            "entities": [
-                                {
-                                    "entity": "sensor.status_serwisu_zigbee2mqtt"
-                                },
-                                {
-                                    "entity": "sensor.wersja_zigbee2mqtt"
-                                },
-                                {
-                                    "entity": "sensor.wersja_kordynatora"
-                                },
-                                {
-                                    "type": "divider"
-                                },
-                                {
-                                    "entity": "switch.zigbee_tryb_parowania"
-                                },
-                                {
-                                    "entity": "timer.zigbee_permit_join"
-                                },
-                                {
-                                    "type": "divider"
-                                },
-                                {
-                                    "entity": "input_text.zigbee2mqtt_old_name"
-                                },
-                                {
-                                    "entity": "input_text.zigbee2mqtt_new_name"
-                                },
-                                {
-                                    "entity": "script.zigbee2mqtt_rename"
-                                },
-                                {
-                                    "type": "divider"
-                                },
-                                {
-                                    "entity": "input_text.zigbee2mqtt_remove"
-                                },
-                                {
-                                    "entity": "script.zigbee2mqtt_remove"
-                                }
-                            ],
-                            "show_header_toggle": false,
-                            "title": "Zigbee",
-                            "type": "entities"
-                        },
-                        {
-                            "entity": "sensor.zigbee2mqtt_networkmap",
-                            "type": "ais-zigbee2mqtt"
-                        }
-                    ],
-                    "icon": "mdi:zigbee",
-                    "path": "ais_zigbee",
-                    "title": "zigbee",
                     "visible": false
                 }
             ]

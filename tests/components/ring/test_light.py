@@ -7,7 +7,7 @@ from tests.common import load_fixture
 
 
 async def test_entity_registry(hass, requests_mock):
-    """Tests that the devices are registed in the entity registry."""
+    """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, LIGHT_DOMAIN)
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 

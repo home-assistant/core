@@ -1,7 +1,7 @@
 {
   "domain": "ais_help",
   "name": "Pomoc",
-  "documentation": "https://sviete.github.io/AIS-docs",
+  "documentation": "https://www.ai-speaker.com",
   "requirements": [],
   "dependencies": [
     "frontend"

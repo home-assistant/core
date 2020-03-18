@@ -1,11 +1,18 @@
 """Support for Supla cover - curtains, rollershutters etc."""
 import logging
 
-from homeassistant.components.cover import ATTR_POSITION, CoverDevice
+from homeassistant.components.cover import (
+    ATTR_POSITION,
+    DEVICE_CLASS_GARAGE,
+    CoverDevice,
+)
 from homeassistant.components.ais_supla import SuplaChannel
 from .const import DOMAIN, CONF_SERVER, CONF_CHANNELS
 
 _LOGGER = logging.getLogger(__name__)
+
+SUPLA_SHUTTER = "CONTROLLINGTHEROLLERSHUTTER"
+SUPLA_GATE = "CONTROLLINGTHEGATE"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -16,7 +23,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 async def async_setup_entry(hass, config_entry, async_add_entities):
     server = hass.data[DOMAIN][CONF_SERVER][config_entry.entry_id]
     channels = hass.data[DOMAIN][CONF_CHANNELS]["cover"]
-    async_add_entities([SuplaCover(device, server) for device in channels])
+    for device in channels:
+        device_name = device["function"]["name"]
+        if device_name == SUPLA_SHUTTER:
+            async_add_entities([SuplaCover(device, server)])
+        elif device_name == SUPLA_GATE:
+            async_add_entities([SuplaGateDoor(device, server)])
 
 
 class SuplaCover(SuplaChannel, CoverDevice):
@@ -52,3 +64,38 @@ class SuplaCover(SuplaChannel, CoverDevice):
     def stop_cover(self, **kwargs):
         """Stop the cover."""
         self.action("STOP")
+
+
+class SuplaGateDoor(SuplaChannel, CoverDevice):
+    """Representation of a Supla gate door."""
+
+    @property
+    def is_closed(self):
+        """Return if the gate is closed or not."""
+        state = self.channel_data.get("state")
+        if state and "hi" in state:
+            return state.get("hi")
+        return None
+
+    def open_cover(self, **kwargs) -> None:
+        """Open the gate."""
+        if self.is_closed:
+            self.action("OPEN_CLOSE")
+
+    def close_cover(self, **kwargs) -> None:
+        """Close the gate."""
+        if not self.is_closed:
+            self.action("OPEN_CLOSE")
+
+    def stop_cover(self, **kwargs) -> None:
+        """Stop the gate."""
+        self.action("OPEN_CLOSE")
+
+    def toggle(self, **kwargs) -> None:
+        """Toggle the gate."""
+        self.action("OPEN_CLOSE")
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_GARAGE

@@ -294,12 +294,10 @@ class VoltageSensor(GEMSensor):
     def __init__(self, monitor_serial_number, number, name):
         """Construct the entity."""
         super().__init__(monitor_serial_number, name, "volts", number)
-        self._monitor = None
 
     def _get_sensor(self, monitor):
-        """Wire the updates to a current channel."""
-        self._monitor = monitor
-        return monitor.channels[self._number - 1]
+        """Wire the updates to the monitor itself, since there is no voltage element in the API."""
+        return monitor
 
     @property
     def icon(self):
@@ -309,10 +307,10 @@ class VoltageSensor(GEMSensor):
     @property
     def state(self):
         """Return the current voltage being reported by this sensor."""
-        if not self._monitor.voltage:
+        if not self._sensor:
             return None
 
-        return self._monitor.voltage
+        return self._sensor.voltage
 
     @property
     def unit_of_measurement(self):

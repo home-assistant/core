@@ -1,9 +1,9 @@
 {
   "domain": "frontend",
   "name": "Ais dom Frontend",
-  "documentation": "https://sviete.github.io/AIS-docs/docs/en/ais_app_index.html",
+  "documentation": "https://www.ai-speaker.com",
   "requirements": [
-    "ais-dom-frontend==20200212.2"
+    "ais-dom-frontend==20200221.0"
   ],
   "dependencies": [
     "api",

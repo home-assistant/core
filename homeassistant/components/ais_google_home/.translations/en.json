@@ -7,7 +7,7 @@
                   "title": "AIS Google Home"
              },
             "oauth": {
-                "description": "Setting up communication with Google Home requires downloading the JSON OAuth2 file from Google. To do this, follow the [Guide in the Home Assistant documentation](https://sviete.github.io/AIS-docs/docs/en/ais_app_ai_integration_google_home.html)\n\n Then come back to this page and paste in the field ** Certificate oAuth2 for the device ** content from a file downloaded from Google.\n\n In this way the device will be authorized.\n\n![AIS logo](/static/icons/ais_google_home.png)\n\n {error_info}",
+                "description": "Setting up communication with Google Home requires downloading the JSON OAuth2 file from Google. To do this, follow the [Guide in the Home Assistant documentation](https://www.ai-speaker.com/docs/ais_app_ai_integration_google_home)\n\n Then come back to this page and paste in the field ** Certificate oAuth2 for the device ** content from a file downloaded from Google.\n\n In this way the device will be authorized.\n\n![AIS logo](/static/icons/ais_google_home.png)\n\n {error_info}",
                 "title": "Device authentication in Google",
                 "data": {
                     "oauth_json": "OAuth2 certification for the device"

@@ -2501,16 +2501,12 @@ async def async_setup(hass, config):
                 "media_player.wbudowany_glosnik"
             ).attributes["volume_level"]
             # set volume as min from (0.2, curr_volume_level)
+            vl = min(0.2, ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL)
             hass.async_add_job(
                 hass.services.async_call(
                     "media_player",
                     "volume_set",
-                    {
-                        "entity_id": "media_player.wbudowany_glosnik",
-                        "volume_level": min(
-                            0.2, ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL
-                        ),
-                    },
+                    {"entity_id": "media_player.wbudowany_glosnik", "volume_level": vl},
                 )
             )
             hass.async_add_job(
@@ -2524,22 +2520,21 @@ async def async_setup(hass, config):
             ).attributes["volume_level"]
             # get volume level
             if ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL is not None:
-                # TODO get the volume level on start
+                vl = max(
+                    0.1, ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL, curr_volume_level
+                )
                 hass.async_add_job(
                     hass.services.async_call(
                         "media_player",
                         "volume_set",
                         {
                             "entity_id": "media_player.wbudowany_glosnik",
-                            "volume_level": max(
-                                ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL,
-                                curr_volume_level,
-                            ),
+                            "volume_level": vl,
                         },
                     )
                 )
             hass.async_add_job(
-                hass.services.async_call("frontend", "set_theme", {"name": "ais"})
+                hass.services.async_call("frontend", "set_theme", {"name": "default"})
             )
 
         if not timer:
@@ -3417,6 +3412,7 @@ def _beep_it(hass, tone):
 
 def _say_it(hass, message, img=None, exclude_say_it=None):
     # sent the tts message to the panel via http api
+    message = message.replace("°C", "stopni Celsjusza")
     _post_message(message, hass, exclude_say_it)
 
     if len(message) > 1999:
@@ -3707,7 +3703,7 @@ def _process(hass, text, calling_client_id=None, hot_word_on=False):
                         s = True
                         found_intent = "YT"
 
-        # only if how word is disabled
+        # only if hot word is disabled
         if found_intent is None and hot_word_on is False:
             suffix = get_context_suffix(hass)
             if suffix is not None:
@@ -3737,7 +3733,7 @@ def _process(hass, text, calling_client_id=None, hot_word_on=False):
         # the was no match - try again but with player context
         # we should get media player source first
         # this is done only if the hot word is False
-        if calling_client_id is None and hot_word_on is False:
+        if found_intent is None and calling_client_id is None and hot_word_on is False:
             if (
                 CURR_ENTITIE == "media_player.wbudowany_glosnik"
                 and CURR_ENTITIE_ENTERED
@@ -4566,7 +4562,7 @@ class AisAskGoogle(intent.IntentHandler):
             m = (
                 "Żeby wysyłać komendy do serwisu Google, dodaj integrację AIS Google Home. Więcej informacji "
                 "znajdziesz w dokumentacji [Asystenta domowego]("
-                "https://sviete.github.io/AIS-docs/docs/en/ais_app_ai_integration_google_home.html). "
+                "https://www.ai-speaker.com/docs/ais_app_ai_integration_google_home). "
             )
 
         return m, True

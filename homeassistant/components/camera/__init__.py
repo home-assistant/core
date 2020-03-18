@@ -377,7 +377,7 @@ class Camera(Entity):
     async def handle_async_mjpeg_stream(self, request):
         """Serve an HTTP MJPEG stream from the camera.
 
-        This method can be overridden by camera plaforms to proxy
+        This method can be overridden by camera platforms to proxy
         a direct stream from the camera.
         """
         return await self.handle_async_still_stream(request, self.frame_interval)

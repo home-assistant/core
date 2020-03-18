@@ -9,6 +9,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
     CONF_ALIAS,
+    CONF_ICON,
     EVENT_SCRIPT_STARTED,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
@@ -42,7 +43,8 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 SCRIPT_ENTRY_SCHEMA = vol.Schema(
     {
-        CONF_ALIAS: cv.string,
+        vol.Optional(CONF_ALIAS): cv.string,
+        vol.Optional(CONF_ICON): cv.icon,
         vol.Required(CONF_SEQUENCE): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_DESCRIPTION, default=""): cv.string,
         vol.Optional(CONF_FIELDS, default={}): {
@@ -207,9 +209,15 @@ async def _async_process_config(hass, config, component):
     scripts = []
 
     for object_id, cfg in config.get(DOMAIN, {}).items():
-        alias = cfg.get(CONF_ALIAS, object_id)
-        script = ScriptEntity(hass, object_id, alias, cfg[CONF_SEQUENCE])
-        scripts.append(script)
+        scripts.append(
+            ScriptEntity(
+                hass,
+                object_id,
+                cfg.get(CONF_ALIAS, object_id),
+                cfg.get(CONF_ICON),
+                cfg[CONF_SEQUENCE],
+            )
+        )
         hass.services.async_register(
             DOMAIN, object_id, service_handler, schema=SCRIPT_SERVICE_SCHEMA
         )
@@ -227,9 +235,12 @@ async def _async_process_config(hass, config, component):
 class ScriptEntity(ToggleEntity):
     """Representation of a script entity."""
 
-    def __init__(self, hass, object_id, name, sequence):
+    icon = None
+
+    def __init__(self, hass, object_id, name, icon, sequence):
         """Initialize the script."""
         self.object_id = object_id
+        self.icon = icon
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self.script = Script(hass, sequence, name, self.async_update_ha_state)
 
