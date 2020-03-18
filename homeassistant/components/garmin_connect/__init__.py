@@ -134,6 +134,11 @@ class GarminConnectData:
                 err,
             )
             return
+        except KeyError:
+            _LOGGER.error(
+                "Keyerror occurred during Garmin Connect get body composition data"
+            )
+            return
         except Exception:  # pylint: disable=broad-except
             _LOGGER.error(
                 "Unknown error occurred during Garmin Connect get body composition data"
