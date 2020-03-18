@@ -26,6 +26,8 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Alarm.com"
+CONF_FORCE_BYPASS = "force_bypass"
+CONF_NO_ENTRY_DELAY = "no_entry_delay"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -57,7 +59,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class AlarmDotCom(alarm.AlarmControlPanel):
     """Representation of an Alarm.com status."""
 
-    def __init__(self, hass, name, code, username, password):
+    def __init__(
+        self, hass, name, code, username, password, force_bypass, no_entry_delay
+    ):
         """Initialize the Alarm.com status."""
 
         _LOGGER.debug("Setting up Alarm.com...")
