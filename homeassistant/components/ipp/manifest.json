@@ -2,9 +2,10 @@
   "domain": "ipp",
   "name": "Internet Printing Protocol (IPP)",
   "documentation": "https://www.home-assistant.io/integrations/ipp",
-  "requirements": ["pyipp==0.2.0"],
+  "requirements": ["pyipp==0.8.1"],
   "dependencies": [],
   "codeowners": ["@ctalkington"],
   "config_flow": true,
-  "zeroconf": ["_ipps._tcp.local.", "_ipp._tcp.local."]
+  "quality_scale": "platinum",
+  "zeroconf": ["_ipp._tcp.local."]
 }

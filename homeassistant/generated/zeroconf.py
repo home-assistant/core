@@ -25,9 +25,6 @@ ZEROCONF = {
     "_hap._tcp.local.": [
         "homekit_controller"
     ],
-    "_ipps._tcp.local.": [
-        "ipp"
-    ],
     "_ipp._tcp.local.": [
         "ipp"
     ],
