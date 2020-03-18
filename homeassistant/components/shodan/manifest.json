@@ -2,7 +2,7 @@
   "domain": "shodan",
   "name": "Shodan",
   "documentation": "https://www.home-assistant.io/integrations/shodan",
-  "requirements": ["shodan==1.21.3"],
+  "requirements": ["shodan==1.22.0"],
   "dependencies": [],
   "codeowners": ["@fabaff"]
 }
