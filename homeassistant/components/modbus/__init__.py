@@ -88,51 +88,13 @@ SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
 )
 
 
-def setup_client(client_config):
-    """Set up pymodbus client."""
-    client_type = client_config[CONF_TYPE]
-
-    if client_type == "serial":
-        return ModbusSerialClient(
-            method=client_config[CONF_METHOD],
-            port=client_config[CONF_PORT],
-            baudrate=client_config[CONF_BAUDRATE],
-            stopbits=client_config[CONF_STOPBITS],
-            bytesize=client_config[CONF_BYTESIZE],
-            parity=client_config[CONF_PARITY],
-            timeout=client_config[CONF_TIMEOUT],
-        )
-    if client_type == "rtuovertcp":
-        return ModbusTcpClient(
-            host=client_config[CONF_HOST],
-            port=client_config[CONF_PORT],
-            framer=ModbusRtuFramer,
-            timeout=client_config[CONF_TIMEOUT],
-        )
-    if client_type == "tcp":
-        return ModbusTcpClient(
-            host=client_config[CONF_HOST],
-            port=client_config[CONF_PORT],
-            timeout=client_config[CONF_TIMEOUT],
-        )
-    if client_type == "udp":
-        return ModbusUdpClient(
-            host=client_config[CONF_HOST],
-            port=client_config[CONF_PORT],
-            timeout=client_config[CONF_TIMEOUT],
-        )
-    assert False
-
-
 async def async_setup(hass, config):
     """Set up Modbus component."""
     hass.data[DOMAIN] = hub_collect = {}
 
+    _LOGGER.debug("registering hubs")
     for client_config in config[DOMAIN]:
-        client = setup_client(client_config)
-        name = client_config[CONF_NAME]
-        hub_collect[name] = ModbusHub(client, name)
-        _LOGGER.debug("Setting up hub: %s", client_config)
+        hub_collect[client_config[CONF_NAME]] = ModbusHub(client_config, hass.loop)
 
     def stop_modbus(event):
         """Stop Modbus service."""
@@ -142,6 +104,8 @@ async def async_setup(hass, config):
     def start_modbus(event):
         """Start Modbus service."""
         for client in hub_collect.values():
+            _LOGGER.debug("setup hub %s", client.name)
+            client.setup()
             client.connect()
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
@@ -186,16 +150,70 @@ async def async_setup(hass, config):
 class ModbusHub:
     """Thread safe wrapper class for pymodbus."""
 
-    def __init__(self, modbus_client, name):
+    def __init__(self, client_config, main_loop):
         """Initialize the Modbus hub."""
-        self._client = modbus_client
+        _LOGGER.debug("Preparing setup: %s", client_config)
+
+        # generic configuration
+        self._loop = main_loop
+        self._client = None
         self._lock = threading.Lock()
-        self._name = name
+        self._config_name = client_config[CONF_NAME]
+        self._config_type = client_config[CONF_TYPE]
+        self._config_port = client_config[CONF_PORT]
+        self._config_timeout = client_config[CONF_TIMEOUT]
+
+        if self._config_type == "serial":
+            # serial configuration
+            self._config_method = client_config[CONF_METHOD]
+            self._config_baudrate = client_config[CONF_BAUDRATE]
+            self._config_stopbits = client_config[CONF_STOPBITS]
+            self._config_bytesize = client_config[CONF_BYTESIZE]
+            self._config_parity = client_config[CONF_PARITY]
+        else:
+            # network configuration
+            self._config_host = client_config[CONF_HOST]
 
     @property
     def name(self):
         """Return the name of this hub."""
-        return self._name
+        return self._config_name
+
+    def setup(self):
+        """Set up pymodbus client."""
+
+        _LOGGER.debug("doing setup")
+        if self._config_type == "serial":
+            self._client = ModbusSerialClient(
+                method=self._config_method,
+                port=self._config_port,
+                baudrate=self._config_baudrate,
+                stopbits=self._config_stopbits,
+                bytesize=self._config_bytesize,
+                parity=self._config_parity,
+                timeout=self._config_timeout,
+            )
+        elif self._config_type == "rtuovertcp":
+            self._client = ModbusTcpClient(
+                host=self._config_host,
+                port=self._config_port,
+                framer=ModbusRtuFramer,
+                timeout=self._config_timeout,
+            )
+        elif self._config_type == "tcp":
+            self._client = ModbusTcpClient(
+                host=self._config_host,
+                port=self._config_port,
+                timeout=self._config_timeout,
+            )
+        elif self._config_type == "udp":
+            self._client = ModbusUdpClient(
+                host=self._config_host,
+                port=self._config_port,
+                timeout=self._config_timeout,
+            )
+        else:
+            assert False
 
     def close(self):
         """Disconnect client."""
