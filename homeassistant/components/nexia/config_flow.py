@@ -32,7 +32,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         _LOGGER.error("Unable to connect to Nexia service: %s", str(ex))
         raise CannotConnect
     except HTTPError as http_ex:
-        _LOGGER.error("HTTP error from Nexia service: %s", str(http_ex))
+        _LOGGER.error("HTTP error from Nexia service: %s", http_ex)
         if http_ex.response.status_code >= 400 and http_ex.response.status_code < 500:
             raise InvalidAuth
         raise CannotConnect
