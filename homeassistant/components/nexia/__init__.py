@@ -89,7 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         if http_ex.response.status_code >= 400 and http_ex.response.status_code < 500:
             _LOGGER.error(
                 "Access error from Nexia service, please check credentials: %s",
-                str(http_ex),
+                http_ex,
             )
             return False
         _LOGGER.error("HTTP error from Nexia service: %s", http_ex)
