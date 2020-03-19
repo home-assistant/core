@@ -28,8 +28,7 @@ If your light doesn't support RGB feature, omit `(red|green|blue)_template`.
 """
 from unittest.mock import patch
 
-from homeassistant.components import light, mqtt
-from homeassistant.components.mqtt.discovery import async_start
+from homeassistant.components import light
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_SUPPORTED_FEATURES,
@@ -59,12 +58,7 @@ from .common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import (
-    MockConfigEntry,
-    assert_setup_component,
-    async_fire_mqtt_message,
-    mock_coro,
-)
+from tests.common import assert_setup_component, async_fire_mqtt_message, mock_coro
 from tests.components.light import common
 
 DEFAULT_CONFIG = {
@@ -881,24 +875,6 @@ async def test_discovery_removal(hass, mqtt_mock, caplog):
         '  "command_off_template": "off"}'
     )
     await help_test_discovery_removal(hass, mqtt_mock, caplog, light.DOMAIN, data)
-
-
-async def test_discovery_deprecated(hass, mqtt_mock, caplog):
-    """Test discovery of mqtt template light with deprecated option."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    await async_start(hass, "homeassistant", {"mqtt": {}}, entry)
-    data = (
-        '{ "name": "Beer",'
-        '  "platform": "mqtt_template",'
-        '  "command_topic": "test_topic",'
-        '  "command_on_template": "on",'
-        '  "command_off_template": "off"}'
-    )
-    async_fire_mqtt_message(hass, "homeassistant/light/bla/config", data)
-    await hass.async_block_till_done()
-    state = hass.states.get("light.beer")
-    assert state is not None
-    assert state.name == "Beer"
 
 
 async def test_discovery_update_light(hass, mqtt_mock, caplog):
