@@ -1759,6 +1759,9 @@ python-izone==1.1.2
 # homeassistant.components.joaoapps_join
 python-join-api==0.0.6
 
+# homeassistant.auth.providers.openid
+python-jose==3.1.0
+
 # homeassistant.components.juicenet
 python-juicenet==1.0.1
 

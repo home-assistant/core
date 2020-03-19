@@ -22,7 +22,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
 
-REQUIREMENTS = ["python-jose=3.1.0"]
+REQUIREMENTS = ["python-jose==3.1.0"]
 
 _LOGGER = logging.getLogger(__name__)
 
