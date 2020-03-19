@@ -229,6 +229,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 LOGGER.debug("Failing config: %s, error: %s", config, err)
         else:
             if result:
+                # pylint: disable=useless-else-on-loop
                 return result
 
         return RESULT_NOT_SUCCESSFUL
