@@ -7,7 +7,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.util import slugify
 
 from .const import DOMAIN, PLATFORMS
 from .remote import DEVICES, HarmonyRemote
@@ -38,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         activity,
     )
 
-    harmony_conf_file = hass.config.path(f"harmony_{slugify(address)}.conf")
+    harmony_conf_file = hass.config.path(f"harmony_{entry.unique_id}.conf")
     try:
         device = HarmonyRemote(name, address, activity, harmony_conf_file, delay_secs)
         await device.connect()
