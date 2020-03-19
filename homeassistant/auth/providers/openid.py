@@ -7,16 +7,17 @@ from typing import Any, Dict, Optional, cast
 
 from aiohttp import ClientResponseError
 from aiohttp.client import ClientResponse
-from aiohttp.web import HTTPBadRequest, Request, Response
 from jose import jwt
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.components.http import HomeAssistantView
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.config_entry_oauth2_flow import _decode_jwt, _encode_jwt
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    AUTH_CALLBACK_PATH,
+    _encode_jwt,
+    async_register_view,
+)
 
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
@@ -40,9 +41,7 @@ CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
     extra=vol.PREVENT_EXTRA,
 )
 
-AUTH_CALLBACK_PATH = "/api/openid/redirect"
 OPENID_CONFIGURATION_PATH = ".well-known/openid-configuration"
-DATA_OPENID_VIEW = "openid_view"
 
 
 class InvalidAuthError(HomeAssistantError):
@@ -115,10 +114,7 @@ class OpenIdAuthProvider(AuthProvider):
         await self.async_get_discovery_document()
         await self.async_get_jwks()
 
-        if DATA_OPENID_VIEW not in self.hass.data:
-            self.hass.data[DATA_OPENID_VIEW] = self.hass.http.register_view(  # type: ignore
-                OpenIdCallbackView()
-            )
+        async_register_view(self.hass)
 
         return OpenIdLoginFlow(self)
 
@@ -170,7 +166,7 @@ class OpenIdAuthProvider(AuthProvider):
             "response_type": "code",
             "client_id": self.config["client_id"],
             "redirect_uri": self.redirect_uri,
-            "state": _encode_jwt(self.hass, {"flow_id": flow_id}),
+            "state": _encode_jwt(self.hass, {"flow_id": flow_id, "flow_type": "login"}),
             "scope": " ".join(scopes),
             "nonce": nonce,
         }
@@ -254,41 +250,3 @@ class OpenIdLoginFlow(LoginFlow):
         except InvalidAuthError:
             return self.async_abort(reason="invalid_auth")
         return await self.async_finish(result)
-
-
-class OpenIdCallbackView(HomeAssistantView):
-    """Handle openid callback."""
-
-    url = AUTH_CALLBACK_PATH
-    name = "api:openid:redirect"
-    requires_auth = False
-
-    def __init__(self) -> None:
-        """Initialize instance of the view."""
-        super().__init__()
-
-    async def get(self, request: Request) -> Response:
-        """Handle oauth token request."""
-        hass = cast(HomeAssistant, request.app["hass"])
-
-        def check_get(param: str) -> Any:
-            if param not in request.query:
-                _LOGGER.error("State missing in request.")
-                raise HTTPBadRequest(text="Parameter {} not found".format(param))
-            return request.query[param]
-
-        state = check_get("state")
-        code = check_get("code")
-
-        state = _decode_jwt(hass, state)
-        if state is None:
-            _LOGGER.error("State failed to decode.")
-            raise HTTPBadRequest(text="Invalid state")
-
-        auth_manager = hass.auth  # type: ignore
-        await auth_manager.login_flow.async_configure(state["flow_id"], user_input=code)
-
-        return Response(
-            headers={"content-type": "text/html"},
-            text="<script>window.close()</script>",
-        )

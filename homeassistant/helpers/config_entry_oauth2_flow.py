@@ -316,15 +316,20 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
 
 
 @callback
+def async_register_view(hass: HomeAssistant) -> None:
+    """Make sure callback view is registered."""
+    if not hass.data.get(DATA_VIEW_REGISTERED, False):
+        hass.http.register_view(OAuth2AuthorizeCallbackView())  # type: ignore
+        hass.data[DATA_VIEW_REGISTERED] = True
+
+
+@callback
 def async_register_implementation(
     hass: HomeAssistant, domain: str, implementation: AbstractOAuth2Implementation
 ) -> None:
     """Register an OAuth2 flow implementation for an integration."""
-    if isinstance(implementation, LocalOAuth2Implementation) and not hass.data.get(
-        DATA_VIEW_REGISTERED, False
-    ):
-        hass.http.register_view(OAuth2AuthorizeCallbackView())  # type: ignore
-        hass.data[DATA_VIEW_REGISTERED] = True
+    if isinstance(implementation, LocalOAuth2Implementation):
+        async_register_view(hass)
 
     implementations = hass.data.setdefault(DATA_IMPLEMENTATIONS, {})
     implementations.setdefault(domain, {})[implementation.domain] = implementation
@@ -403,7 +408,12 @@ class OAuth2AuthorizeCallbackView(HomeAssistantView):
         if state is None:
             return web.Response(text="Invalid state")
 
-        await hass.config_entries.flow.async_configure(
+        if state.get("flow_type") == "login":
+            flow_mgr = hass.auth.login_flow
+        else:
+            flow_mgr = hass.config_entries.flow
+
+        await flow_mgr.async_configure(
             flow_id=state["flow_id"], user_input=request.query["code"]
         )
 
