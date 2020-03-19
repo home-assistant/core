@@ -169,7 +169,7 @@ class OpenIdAuthProvider(AuthProvider):
             "client_id": self.config["client_id"],
             "redirect_uri": self.redirect_uri,
             "state": _encode_jwt(self.hass, {"flow_id": flow_id, "flow_type": "login"}),
-            "scope": " ".join(scopes),
+            "scope": " ".join(sorted(scopes)),
             "nonce": nonce,
         }
 
