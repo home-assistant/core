@@ -72,21 +72,21 @@ class OpenIdAuthProvider(AuthProvider):
 
     DEFAULT_TITLE = "OpenId Connect"
 
-    _discovery_document: Optional[Dict[str, Any]] = None
+    _discovery_document: Dict[str, Any]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Extend parent's __init__."""
         super().__init__(*args, **kwargs)
 
-    async def async_get_discovery_document(self) -> Dict[str, Any]:
-        """Retrieve a discovery document for openid."""
-        if self._discovery_document is None:
-            session = async_get_clientsession(self.hass)
-            async with session.get(self.discovery_url) as response:
-                await raise_for_status(response)
-                self._discovery_document = cast(Dict[str, Any], await response.json())
+    async def async_get_discovery_document(self) -> None:
+        """Cache discovery document for openid."""
+        if hasattr(self, "._discovery_document"):
+            return
 
-        return self._discovery_document
+        session = async_get_clientsession(self.hass)
+        async with session.get(self.discovery_url) as response:
+            await raise_for_status(response)
+            self._discovery_document = cast(Dict[str, Any], await response.json())
 
     @property
     def discovery_url(self) -> str:
@@ -100,6 +100,9 @@ class OpenIdAuthProvider(AuthProvider):
 
     async def async_login_flow(self, context: Optional[Dict]) -> LoginFlow:
         """Return a flow to login."""
+
+        await self.async_get_discovery_document()
+
         if DATA_OPENID_VIEW not in self.hass.data:
             self.hass.data[DATA_OPENID_VIEW] = self.hass.http.register_view(  # type: ignore
                 OpenIdCallbackView()
@@ -109,7 +112,6 @@ class OpenIdAuthProvider(AuthProvider):
 
     async def async_retrieve_token(self, code: str) -> Dict[str, Any]:
         """Convert a token code into an actual token."""
-        data = await self.async_get_discovery_document()
 
         payload = {
             "grant_type": "authorization_code",
@@ -120,7 +122,9 @@ class OpenIdAuthProvider(AuthProvider):
         }
 
         session = async_get_clientsession(self.hass)
-        async with session.post(data["token_endpoint"], data=payload) as response:
+        async with session.post(
+            self._discovery_document["token_endpoint"], data=payload
+        ) as response:
             await raise_for_status(response)
             return cast(Dict[str, Any], await response.json())
 
@@ -142,9 +146,9 @@ class OpenIdAuthProvider(AuthProvider):
 
     async def async_generate_authorize_url(self, flow_id: str, nonce: str) -> str:
         """Generate a authorization url for a given flow."""
-        data = await self.async_get_discovery_document()
-
-        scopes = WANTED_SCOPES.intersection(data["scopes_supported"])
+        scopes = WANTED_SCOPES.intersection(
+            self._discovery_document["scopes_supported"]
+        )
 
         query = {
             "response_type": "code",
@@ -155,7 +159,9 @@ class OpenIdAuthProvider(AuthProvider):
             "nonce": nonce,
         }
 
-        return str(URL(data["authorization_endpoint"]).with_query(query))
+        return str(
+            URL(self._discovery_document["authorization_endpoint"]).with_query(query)
+        )
 
     @property
     def support_mfa(self) -> bool:
