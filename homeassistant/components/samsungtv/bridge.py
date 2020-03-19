@@ -227,9 +227,9 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 result = RESULT_NOT_SUPPORTED
             except (OSError, ConnectionFailure) as err:
                 LOGGER.debug("Failing config: %s, error: %s", config, err)
+        # pylint: disable=useless-else-on-loop
         else:
             if result:
-                # pylint: disable=useless-else-on-loop
                 return result
 
         return RESULT_NOT_SUCCESSFUL
