@@ -92,7 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 str(http_ex),
             )
             return False
-        _LOGGER.error("HTTP error from Nexia service: %s", str(http_ex))
+        _LOGGER.error("HTTP error from Nexia service: %s", http_ex)
         raise ConfigEntryNotReady
 
     async def _async_update_data():
