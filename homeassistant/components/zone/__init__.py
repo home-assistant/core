@@ -1,6 +1,6 @@
 """Support for the definition of zones."""
 import logging
-from typing import Dict, Optional, cast
+from typing import Any, Dict, Optional, cast
 
 import voluptuous as vol
 
@@ -66,7 +66,7 @@ UPDATE_FIELDS = {
 }
 
 
-def empty_value(value):
+def empty_value(value: Any) -> Any:
     """Test if the user has the default config value from adding "zone:"."""
     if isinstance(value, dict) and len(value) == 0:
         return []
@@ -237,7 +237,7 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
 
     home_zone = Zone(_home_conf(hass), True,)
     home_zone.entity_id = ENTITY_ID_HOME
-    await component.async_add_entities([home_zone])
+    await component.async_add_entities([home_zone])  # type: ignore
 
     async def core_config_updated(_: Event) -> None:
         """Handle core config updated."""
