@@ -1,9 +1,9 @@
 """Test config flow."""
 
-from tests.common import MockConfigEntry, mock_coro
-
 from pyatv import exceptions
 from pyatv.const import Protocol
+
+from tests.common import MockConfigEntry, mock_coro
 
 # User Flows
 
@@ -414,4 +414,5 @@ async def test_reconfigure_update_credentials(hass, flow, mrp_device, pairing):
 
 async def test_option_start_off(options):
     """Test start off-option flag."""
+    (await options().step_init(has_input=False)).gives_form_init()
     (await options().step_init(start_off=True)).gives_create_entry({"start_off": True})

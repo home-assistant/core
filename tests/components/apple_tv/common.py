@@ -94,9 +94,10 @@ class FlowInteraction:
             gives_type, gives_name = name.split("_", 1)
             return partial(getattr(self, "_" + gives_type), gives_name)
 
-    async def _init(self, **data):
+    async def _init(self, has_input=True, **user_input):
+        args = {**user_input} if has_input else None
         self.result = await self.flow.hass.config_entries.flow.async_init(
-            "apple_tv", data={**data}, context={"source": self.name}
+            "apple_tv", data=args, context={"source": self.name}
         )
         return self
 

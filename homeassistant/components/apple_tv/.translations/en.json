@@ -58,7 +58,7 @@
   },
   "options": {
     "step": {
-      "device_options": {
+      "init": {
         "description": "Configure General Device Settings",
         "data": {
           "start_off": "Do not turn device on when starting Home Assistant"
