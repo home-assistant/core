@@ -2,7 +2,7 @@
 
 import logging
 import re
-import secrets
+from secrets import token_hex
 from typing import Any, Dict, Optional, cast
 
 from aiohttp import ClientResponseError
@@ -236,7 +236,7 @@ class OpenIdLoginFlow(LoginFlow):
         if user_input:
             self.external_data = str(user_input)
             return self.async_external_step_done(next_step_id="authorize")
-        self.nonce = secrets.token_hex()
+        self.nonce = token_hex()
         url = await provider.async_generate_authorize_url(self.flow_id, self.nonce)
         return self.async_external_step(step_id="authenticate", url=url)
 
