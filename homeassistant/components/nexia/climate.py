@@ -219,7 +219,7 @@ class NexiaZone(NexiaEntity, ClimateDevice):
         zone_called = self._device.is_calling()
 
         if self._device.get_requested_mode() == OPERATION_MODE_OFF:
-            return STATE_OFF
+            return CURRENT_HVAC_OFF
         if not zone_called:
             return CURRENT_HVAC_IDLE
         if system_status == SYSTEM_STATUS_COOL:
