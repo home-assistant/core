@@ -7,7 +7,6 @@ from typing import Any, Dict, Optional, cast
 
 from aiohttp import ClientResponseError
 from aiohttp.client import ClientResponse
-from jose import jwt
 import voluptuous as vol
 from yarl import URL
 
@@ -142,6 +141,8 @@ class OpenIdAuthProvider(AuthProvider):
         self, token: Dict[str, Any], nonce: str
     ) -> Dict[str, Any]:
         """Validate a token."""
+        from jose import jwt
+
         id_token = cast(
             Dict[str, Any],
             jwt.decode(
