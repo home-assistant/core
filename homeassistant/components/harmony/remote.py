@@ -164,7 +164,7 @@ class HarmonyRemote(remote.RemoteDevice):
     async def _async_update_options(self, data):
         """Change options when the options flow does."""
         if ATTR_DELAY_SECS in data:
-            self.delay_seconds = data[ATTR_DELAY_SECS]
+            self.delay_secs = data[ATTR_DELAY_SECS]
 
         if ATTR_ACTIVITY in data:
             self.default_activity = data[ATTR_ACTIVITY]
