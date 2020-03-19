@@ -2,6 +2,7 @@
 
 import logging
 import re
+import secrets
 from typing import Any, Dict, Optional, cast
 
 from aiohttp import ClientResponseError
@@ -127,15 +128,19 @@ class OpenIdAuthProvider(AuthProvider):
         """Decode a token."""
         return jwt.decode(id_token, verify=False)
 
-    async def async_validate_token(self, token: Dict[str, Any]) -> Dict[str, Any]:
+    async def async_validate_token(
+        self, token: Dict[str, Any], nonce: str
+    ) -> Dict[str, Any]:
         """Validate a token."""
         id_token = await self.async_decode_id_token(token["id_token"])
+        if id_token.get("nonce") != nonce:
+            raise InvalidAuthError(f"Nonce mismatch in id_token")
 
         if id_token["email"] not in self.config[CONF_EMAILS]:
             raise InvalidAuthError(f"Email {id_token['email']} not in allowed users")
         return id_token
 
-    async def async_generate_authorize_url(self, flow_id: str) -> str:
+    async def async_generate_authorize_url(self, flow_id: str, nonce: str) -> str:
         """Generate a authorization url for a given flow."""
         data = await self.async_get_discovery_document()
 
@@ -147,6 +152,7 @@ class OpenIdAuthProvider(AuthProvider):
             "redirect_uri": self.redirect_uri,
             "state": _encode_jwt(self.hass, {"flow_id": flow_id}),
             "scope": " ".join(scopes),
+            "nonce": nonce,
         }
 
         return str(URL(data["authorization_endpoint"]).with_query(query))
@@ -192,6 +198,7 @@ class OpenIdLoginFlow(LoginFlow):
     """Handler for the login flow."""
 
     external_data: str
+    nonce: str
 
     async def async_step_init(
         self, user_input: Optional[Dict[str, str]] = None
@@ -209,8 +216,8 @@ class OpenIdLoginFlow(LoginFlow):
         if user_input:
             self.external_data = str(user_input)
             return self.async_external_step_done(next_step_id="authorize")
-
-        url = await provider.async_generate_authorize_url(self.flow_id)
+        self.nonce = secrets.token_hex()
+        url = await provider.async_generate_authorize_url(self.flow_id, self.nonce)
         return self.async_external_step(step_id="authenticate", url=url)
 
     async def async_step_authorize(
@@ -221,7 +228,7 @@ class OpenIdLoginFlow(LoginFlow):
         provider = cast(OpenIdAuthProvider, self._auth_provider)
         try:
             token = await provider.async_retrieve_token(self.external_data)
-            result = await provider.async_validate_token(token)
+            result = await provider.async_validate_token(token, self.nonce)
         except InvalidAuthError:
             return self.async_abort(reason="invalid_auth")
         return await self.async_finish(result)
