@@ -76,11 +76,12 @@ async def test_form_import(hass):
     assert result["data"] == {
         "host": "1.2.3.4",
         "name": "friend",
-    }
-    assert result["options"] == {
         "activity": "Watch TV",
         "delay_secs": 0.9,
     }
+    # It is not possible to import options at this time
+    # so they end up in the config entry data and are
+    # used a fallback when they are not in options
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

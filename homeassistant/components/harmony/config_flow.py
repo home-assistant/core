@@ -150,14 +150,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._host_already_configured(validated):
             return self.async_abort(reason="already_configured")
         self._abort_if_unique_id_configured()
-        config_entry = self.async_create_entry(
-            title=validated[CONF_NAME],
-            data={CONF_NAME: validated[CONF_NAME], CONF_HOST: validated[CONF_HOST]},
-        )
-        # Options from yaml are preserved
-        options = _options_from_user_input(user_input)
-        if options:
-            config_entry["options"] = options
+        data = {CONF_NAME: validated[CONF_NAME], CONF_HOST: validated[CONF_HOST]}
+        # Options from yaml are preserved, we will pull them out when
+        # we setup the config entry
+        data.update(_options_from_user_input(user_input))
+        config_entry = self.async_create_entry(title=validated[CONF_NAME], data=data)
         return config_entry
 
     def _host_already_configured(self, user_input):

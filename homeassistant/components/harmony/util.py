@@ -8,8 +8,5 @@ def find_unique_id_for_remote(harmony: HarmonyClient):
     if websocket_unique_id is not None:
         return websocket_unique_id
 
-    xmpp_unique_id = harmony.config.get("global", {}).get("timeStampHash")
-    if not xmpp_unique_id:
-        return None
-
-    return xmpp_unique_id.split(";")[-1]
+    # fallback to the xmpp unique id if websocket is not available
+    return harmony.config["global"]["timeStampHash"].split(";")[-1]
