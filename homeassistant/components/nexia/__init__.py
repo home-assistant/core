@@ -83,7 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             partial(NexiaHome, username=username, password=password)
         )
     except ConnectTimeout as ex:
-        _LOGGER.error("Unable to connect to Nexia service: %s", str(ex))
+        _LOGGER.error("Unable to connect to Nexia service: %s", ex)
         raise ConfigEntryNotReady
     except HTTPError as http_ex:
         if http_ex.response.status_code >= 400 and http_ex.response.status_code < 500:
