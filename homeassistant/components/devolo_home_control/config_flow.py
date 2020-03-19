@@ -18,7 +18,7 @@ def _login_data_valid(user, password):
     mydevolo = Mydevolo.get_instance()
     mydevolo.user = user
     mydevolo.password = password
-    mydevolo.uuid
+    mydevolo.uuid  # pylint: disable=0104
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -60,7 +60,7 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
         except WrongCredentialsError:
-            return self._show_form({"base": "connection_error"})
+            return self._show_form({"base": "invalid_credentials"})
 
     @callback
     def _show_form(self, errors=None):
