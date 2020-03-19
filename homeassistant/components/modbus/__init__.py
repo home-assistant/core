@@ -124,7 +124,7 @@ def setup_client(client_config):
     assert False
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up Modbus component."""
     hass.data[DOMAIN] = hub_collect = {}
 
@@ -178,7 +178,7 @@ def setup(hass, config):
         client_name = service.data[ATTR_HUB]
         hub_collect[client_name].write_coil(unit, address, state)
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_modbus)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_modbus)
 
     return True
 

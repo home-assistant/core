@@ -71,7 +71,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Modbus Thermostat Platform."""
     name = config[CONF_NAME]
     modbus_slave = config[CONF_SLAVE]
@@ -169,7 +169,7 @@ class ModbusThermostat(ClimateDevice):
         """Return the list of supported features."""
         return SUPPORT_FLAGS
 
-    def update(self):
+    async def async_update(self):
         """Update Target & Current Temperature."""
         self._target_temperature = self._read_register(
             DEFAULT_REGISTER_TYPE_HOLDING, self._target_temperature_register

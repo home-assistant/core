@@ -88,7 +88,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Modbus sensors."""
     sensors = []
     data_types = {DATA_TYPE_INT: {1: "h", 2: "i", 4: "q"}}
@@ -218,7 +218,7 @@ class ModbusRegisterSensor(RestoreEntity):
         """Return True if entity is available."""
         return self._available
 
-    def update(self):
+    async def async_update(self):
         """Update the state of the sensor."""
         try:
             if self._register_type == DEFAULT_REGISTER_TYPE_INPUT:

@@ -73,7 +73,7 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Read configuration and create Modbus devices."""
     switches = []
     if CONF_COILS in config:
@@ -261,7 +261,7 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
         """Return True if entity is available."""
         return self._available
 
-    def update(self):
+    async def async_update(self):
         """Update the state of the switch."""
         if not self._verify_state:
             return

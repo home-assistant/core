@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Modbus binary sensors."""
     sensors = []
     for entry in config[CONF_INPUTS]:
@@ -109,7 +109,7 @@ class ModbusBinarySensor(BinarySensorDevice):
         """Return True if entity is available."""
         return self._available
 
-    def update(self):
+    async def async_update(self):
         """Update the state of the sensor."""
         try:
             if self._input_type == DEFAULT_INPUT_TYPE_COIL:
