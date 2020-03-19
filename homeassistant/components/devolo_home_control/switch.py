@@ -50,7 +50,7 @@ class DevoloSwitch(SwitchDevice):
 
         self._homecontrol = hass.data[DOMAIN]["homecontrol"]
         self._name = self._device_instance.itemName
-        self._available = self._homecontrol.is_online(self._device_instance.uid)
+        self._available = self._device_instance.is_online()
 
         # Get the brand and model information
         try:
@@ -140,7 +140,7 @@ class DevoloSwitch(SwitchDevice):
                 message[0]
             ].current
         elif message[0].startswith("hdm"):
-            self._available = self._homecontrol.is_online(self._device_instance.uid)
+            self._available = self._device_instance.is_online()
         else:
             _LOGGER.debug("No valid message received")
             _LOGGER.debug(message)

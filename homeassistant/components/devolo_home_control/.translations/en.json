@@ -1,21 +1,15 @@
 {
-    "device_automation": {
-        "action_type": {
-            "turn_off": "Turn off {entity_name}",
-            "turn_on": "Turn on {entity_name}"
-        }
-    },
   "config": {
     "error": {
-      "invalid_credentials": "invalid login information"
+      "invalid_credentials": "Incorrect user name and/or password."
     },
     "step": {
       "user": {
         "data": {
-          "password": "password",
-          "username": "e-mail-address"
+          "password": "Password",
+          "username": "Email address / devolo ID"
         },
-        "title": "Please enter your login information"
+        "title": "devolo Home Control"
       }
     },
     "title": "devolo Home Control"

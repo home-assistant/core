@@ -48,8 +48,6 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
         try:
             if user_input is None:
                 return await self._show_setup_form(user_input)
@@ -75,3 +73,12 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(self.data_schema),
             errors=errors if errors else {},
         )
+
+
+def create_config_flow(hass):
+    """Start a config flow."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
+        )
+    )
