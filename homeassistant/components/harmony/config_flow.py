@@ -72,6 +72,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
+
             try:
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
@@ -102,6 +103,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_HOST: parsed_url.hostname,
             CONF_NAME: friendly_name,
         }
+
+        if self._host_already_configured(self.harmony_config):
+            return self.async_abort(reason="already_configured")
 
         return await self.async_step_link()
 
@@ -141,7 +145,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return OptionsFlowHandler(config_entry)
 
     async def _async_create_entry_from_valid_input(self, validated, user_input):
+        """Single path to create the config entry from validated input."""
         await self.async_set_unique_id(validated[UNIQUE_ID])
+        if self._host_already_configured(validated):
+            return self.async_abort(reason="already_configured")
         self._abort_if_unique_id_configured()
         config_entry = self.async_create_entry(
             title=validated[CONF_NAME],
@@ -152,6 +159,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if options:
             config_entry["options"] = options
         return config_entry
+
+    def _host_already_configured(self, user_input):
+        """See if we already have a harmony matching user input configured."""
+        existing_hosts = {
+            entry.data[CONF_HOST] for entry in self._async_current_entries()
+        }
+        return user_input[CONF_HOST] in existing_hosts
 
 
 def _options_from_user_input(user_input):

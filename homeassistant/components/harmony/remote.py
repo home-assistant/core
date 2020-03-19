@@ -62,64 +62,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the Harmony platform."""
 
     hass.data.setdefault(CONF_DEVICE_CACHE, [])
-    import_config = None
 
-    if discovery_info:
-        # Find the discovered device in the list of user configurations
-        matching_configuration_entry = next(
-            (
-                c
-                for c in hass.data[CONF_DEVICE_CACHE]
-                if c.get(CONF_NAME) == discovery_info.get(CONF_NAME)
-            ),
-            None,
-        )
-
-        if matching_configuration_entry is None:
-            # This name is not configured in their yaml
-            return
-
-        matching_name = discovery_info.get(CONF_NAME)
-
-        # Ignore hub name when checking if this hub is known - ip only
-        if matching_name in (harmony.host for harmony in DEVICES):
-            _LOGGER.debug("Discovered host already known: %s", matching_name)
-            return
-
-        import_config = {
-            ATTR_DELAY_SECS: matching_configuration_entry.get(
-                ATTR_DELAY_SECS, DEFAULT_DELAY_SECS
-            ),
-            ATTR_ACTIVITY: matching_configuration_entry.get(ATTR_ACTIVITY),
-            CONF_NAME: matching_name,
-            CONF_HOST: discovery_info.get(CONF_HOST),
-        }
-        _LOGGER.info(
-            "The hub with name '%s' has been found to have address '%s'.",
-            import_config[CONF_NAME],
-            import_config[CONF_HOST],
-        )
-        # The name matches one of the names that was provided in the yaml
-        # We fall though and will proceed to import the config entry
-    elif CONF_HOST in config:
-        # Here we are loading the yaml config and CONF_HOST is defined
-        import_config = config
-    else:
-        # Here we are loading the yaml config and CONF_HOST is NOT defined
-        #
-        # Cache the device config entry so discovery can add it to the list
-        # of entries without CONF_HOST it will auto import as soon as this function
-        # is called with discovery_info that contains a matching CONF_NAME
-        _LOGGER.info(
-            "The hub with name '%s' will be imported upon discovery.",
+    if CONF_HOST not in config:
+        _LOGGER.error(
+            "The harmony remote '%s' cannot be setup because configuration now requires a host when configured manually.",
             config[CONF_NAME],
         )
-        hass.data[CONF_DEVICE_CACHE].append(config)
         return
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=import_config
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
         )
     )
 
