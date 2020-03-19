@@ -8,6 +8,7 @@
   "dependencies": [
     "api",
     "auth",
+    "device_automation",
     "http",
     "lovelace",
     "onboarding",
