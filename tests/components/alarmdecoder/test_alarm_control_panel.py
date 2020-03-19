@@ -1,10 +1,12 @@
 """Tests for the AlarmDecoder alarm control panel device."""
+from unittest.mock import call, patch
+
+import pytest
+
 from homeassistant.components.alarmdecoder import DOMAIN
 from homeassistant.components.alarmdecoder.alarm_control_panel import (
     AlarmDecoderAlarmPanel,
 )
-from unittest.mock import patch, call
-import pytest
 
 
 @pytest.mark.parametrize(

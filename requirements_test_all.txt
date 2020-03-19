@@ -95,6 +95,9 @@ aiowwlln==2.0.2
 # homeassistant.components.airly
 airly==0.0.2
 
+# homeassistant.components.alarmdecoder
+alarmdecoder==1.13.2
+
 # homeassistant.components.ambiclimate
 ambiclimate==0.2.1
 
