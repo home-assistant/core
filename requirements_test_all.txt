@@ -64,8 +64,11 @@ aioesphomeapi==2.6.1
 # homeassistant.components.freebox
 aiofreepybox==0.0.8
 
+# homeassistant.components.harmony
+aioharmony==0.1.13
+
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.29.1
+aiohomekit[IP]==0.2.34
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -266,7 +269,7 @@ hole==0.5.0
 holidays==0.10.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200316.1
+home-assistant-frontend==20200318.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.9
@@ -367,6 +370,14 @@ pexpect==4.6.0
 
 # homeassistant.components.pilight
 pilight==0.1.1
+
+# homeassistant.components.doods
+# homeassistant.components.proxy
+# homeassistant.components.qrcode
+# homeassistant.components.seven_segments
+# homeassistant.components.sighthound
+# homeassistant.components.tensorflow
+pillow==7.0.0
 
 # homeassistant.components.plex
 plexapi==3.3.0
@@ -590,7 +601,7 @@ python-nest==4.1.0
 python-twitch-client==0.6.0
 
 # homeassistant.components.velbus
-python-velbus==2.0.42
+python-velbus==2.0.43
 
 # homeassistant.components.awair
 python_awair==0.0.4
@@ -650,7 +661,7 @@ sentry-sdk==0.13.5
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.0.2
+simplisafe-python==9.0.3
 
 # homeassistant.components.sleepiq
 sleepyq==0.7
@@ -691,6 +702,9 @@ sunwatcher==0.2.1
 
 # homeassistant.components.tellduslive
 tellduslive==0.10.10
+
+# homeassistant.components.powerwall
+tesla-powerwall==0.1.1
 
 # homeassistant.components.tesla
 teslajsonpy==0.5.1
@@ -759,7 +773,7 @@ zeroconf==0.24.5
 zha-quirks==0.0.37
 
 # homeassistant.components.zha
-zigpy-cc==0.1.0
+zigpy-cc==0.2.3
 
 # homeassistant.components.zha
 zigpy-deconz==0.7.0

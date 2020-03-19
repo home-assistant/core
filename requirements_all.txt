@@ -163,7 +163,7 @@ aioftp==0.12.0
 aioharmony==0.1.13
 
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.29.1
+aiohomekit[IP]==0.2.34
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -696,7 +696,7 @@ hole==0.5.0
 holidays==0.10.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200316.1
+home-assistant-frontend==20200318.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.9
@@ -1017,6 +1017,7 @@ pilight==0.1.1
 # homeassistant.components.proxy
 # homeassistant.components.qrcode
 # homeassistant.components.seven_segments
+# homeassistant.components.sighthound
 # homeassistant.components.tensorflow
 pillow==7.0.0
 
@@ -1432,7 +1433,7 @@ pynx584==0.4
 pynzbgetapi==0.2.0
 
 # homeassistant.components.obihai
-pyobihai==1.2.0
+pyobihai==1.2.1
 
 # homeassistant.components.ombi
 pyombi==0.1.10
@@ -1665,7 +1666,7 @@ python-telnet-vlc==1.0.4
 python-twitch-client==0.6.0
 
 # homeassistant.components.velbus
-python-velbus==2.0.42
+python-velbus==2.0.43
 
 # homeassistant.components.vlc
 python-vlc==1.1.2
@@ -1705,7 +1706,7 @@ pytradfri[async]==6.4.0
 pytrafikverket==0.1.6.1
 
 # homeassistant.components.ubee
-pyubee==0.9
+pyubee==0.10
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==0.0.5
@@ -1846,7 +1847,7 @@ sentry-sdk==0.13.5
 sharp_aquos_rc==0.3.2
 
 # homeassistant.components.shodan
-shodan==1.21.3
+shodan==1.22.0
 
 # homeassistant.components.sighthound
 simplehound==0.3
@@ -1855,7 +1856,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.0.2
+simplisafe-python==9.0.3
 
 # homeassistant.components.sisyphus
 sisyphus-control==2.2.1
@@ -1994,6 +1995,9 @@ temperusb==1.5.3
 
 # homeassistant.components.tensorflow
 # tensorflow==1.13.2
+
+# homeassistant.components.powerwall
+tesla-powerwall==0.1.1
 
 # homeassistant.components.tesla
 teslajsonpy==0.5.1
@@ -2167,7 +2171,7 @@ zhong_hong_hvac==1.0.9
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
-zigpy-cc==0.1.0
+zigpy-cc==0.2.3
 
 # homeassistant.components.zha
 zigpy-deconz==0.7.0

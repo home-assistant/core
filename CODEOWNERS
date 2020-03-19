@@ -147,7 +147,7 @@ homeassistant/components/griddy/* @bdraco
 homeassistant/components/group/* @home-assistant/core
 homeassistant/components/growatt_server/* @indykoning
 homeassistant/components/gtfs/* @robbiet480
-homeassistant/components/harmony/* @ehendrix23
+homeassistant/components/harmony/* @ehendrix23 @bramkragten @bdraco
 homeassistant/components/hassio/* @home-assistant/hass-io
 homeassistant/components/heatmiser/* @andylockran
 homeassistant/components/heos/* @andrewsayre
@@ -277,6 +277,7 @@ homeassistant/components/plant/* @ChristianKuehnel
 homeassistant/components/plex/* @jjlawren
 homeassistant/components/plugwise/* @laetificat @CoMPaTech @bouwew
 homeassistant/components/point/* @fredrike
+homeassistant/components/powerwall/* @bdraco
 homeassistant/components/proxmoxve/* @k4ds3
 homeassistant/components/ps4/* @ktnrg45
 homeassistant/components/ptvsd/* @swamp-ig
