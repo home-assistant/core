@@ -205,10 +205,10 @@ class OpenIdAuthProvider(AuthProvider):
         self, flow_result: Dict[str, str]
     ) -> Credentials:
         """Get credentials based on the flow result."""
-        email = flow_result["email"]
+        subject = flow_result["sub"]
 
         for credential in await self.async_credentials():
-            if credential.data["email"] == email:
+            if credential.data["sub"] == subject:
                 return credential
 
         return self.async_create_credentials(flow_result)
