@@ -587,7 +587,7 @@ python-nest==4.1.0
 python-twitch-client==0.6.0
 
 # homeassistant.components.velbus
-python-velbus==2.0.42
+python-velbus==2.0.43
 
 # homeassistant.components.awair
 python_awair==0.0.4
