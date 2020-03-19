@@ -76,7 +76,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
 
-    nexia_home = None
 
     try:
         nexia_home = await hass.async_add_executor_job(
