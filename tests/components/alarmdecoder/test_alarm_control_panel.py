@@ -10,10 +10,10 @@ import pytest
 @pytest.mark.parametrize(
     "auto_bypass,code_arm_required,code,expected",
     [
-        (True, True, "1234", ["12347"]),
-        (True, False, "1234", ["12347"]),
-        (False, True, "1234", ["12347"]),
-        (False, False, "1234", ["12347"]),
+        (True, True, "1234", ["#7"]),
+        (True, False, "1234", ["#7"]),
+        (False, True, "1234", ["#7"]),
+        (False, False, "1234", ["#7"]),
         (True, True, None, []),
         (True, False, None, ["#7"]),
         (False, True, None, []),
@@ -31,10 +31,10 @@ def test_alarm_arm_night(auto_bypass, code_arm_required, code, expected):
 @pytest.mark.parametrize(
     "auto_bypass,code_arm_required,code,expected",
     [
-        (True, True, "1234", ["12346#", "12343"]),
-        (True, False, "1234", ["12346#", "12343"]),
-        (False, True, "1234", ["12343"]),
-        (False, False, "1234", ["12343"]),
+        (True, True, "1234", ["12346#", "#3"]),
+        (True, False, "1234", ["12346#", "#3"]),
+        (False, True, "1234", ["#3"]),
+        (False, False, "1234", ["#3"]),
         (True, True, None, []),
         (True, False, None, ["#3"]),
         (False, True, None, []),
@@ -52,10 +52,10 @@ def test_alarm_arm_home(auto_bypass, code_arm_required, code, expected):
 @pytest.mark.parametrize(
     "auto_bypass,code_arm_required,code,expected",
     [
-        (True, True, "1234", ["12346#", "12342"]),
-        (True, False, "1234", ["12346#", "12342"]),
-        (False, True, "1234", ["12342"]),
-        (False, False, "1234", ["12342"]),
+        (True, True, "1234", ["12346#", "#2"]),
+        (True, False, "1234", ["12346#", "#2"]),
+        (False, True, "1234", ["#2"]),
+        (False, False, "1234", ["#2"]),
         (True, True, None, []),
         (True, False, None, ["#2"]),
         (False, True, None, []),

@@ -176,28 +176,25 @@ class AlarmDecoderAlarmPanel(AlarmControlPanel):
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        if code:
-            if self._auto_bypass:
-                self.hass.data[DATA_AD].send(f"{code!s}6#")
-            self.hass.data[DATA_AD].send(f"{code!s}2")
-        elif not self._code_arm_required:
-            self.hass.data[DATA_AD].send("#2")
+        if self._code_arm_required and not code:
+            return
+        if self._auto_bypass and code:
+            self.hass.data[DATA_AD].send(f"{code!s}6#")
+        self.hass.data[DATA_AD].send("#2")
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        if code:
-            if self._auto_bypass:
-                self.hass.data[DATA_AD].send(f"{code!s}6#")
-            self.hass.data[DATA_AD].send(f"{code!s}3")
-        elif not self._code_arm_required:
-            self.hass.data[DATA_AD].send("#3")
+        if self._code_arm_required and not code:
+            return
+        if self._auto_bypass and code:
+            self.hass.data[DATA_AD].send(f"{code!s}6#")
+        self.hass.data[DATA_AD].send("#3")
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
-        if code:
-            self.hass.data[DATA_AD].send(f"{code!s}7")
-        elif not self._code_arm_required:
-            self.hass.data[DATA_AD].send("#7")
+        if self._code_arm_required and not code:
+            return
+        self.hass.data[DATA_AD].send("#7")
 
     def alarm_toggle_chime(self, code=None):
         """Send toggle chime command."""
