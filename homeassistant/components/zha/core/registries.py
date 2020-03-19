@@ -200,7 +200,13 @@ class MatchRule:
     def weight(self) -> int:
         """Return the weight of the matching rule.
 
-        Most specific matches should be preferred over less specific.
+        Most specific matches should be preferred over less specific. Model matching
+        rules have a priority over manufacturer matching rules and rules matching a
+        single model/manufacturer get a better prioirty over rules matching multiple
+        models/manufacturers. And any model or manufacturers matching rules get better
+        priority over rules matching only channels.
+        But in case of a channel name/channel id matching, we give rules matching
+        multiple channels a better prioirty over rules matching a single channel.
         """
         weight = 0
         if self.models:
