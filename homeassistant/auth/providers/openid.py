@@ -152,6 +152,11 @@ class OpenIdAuthProvider(AuthProvider):
 
         return str(URL(data["authorization_endpoint"]).with_query(query))
 
+    @property
+    def support_mfa(self) -> bool:
+        """Return whether multi-factor auth supported by the auth provider."""
+        return False
+
     async def async_get_or_create_credentials(
         self, flow_result: Dict[str, str]
     ) -> Credentials:
