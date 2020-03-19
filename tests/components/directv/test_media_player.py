@@ -186,6 +186,15 @@ async def test_setup_with_multiple_locations(hass: HomeAssistantType) -> None:
     assert hass.states.get(CLIENT_ENTITY_ID)
 
 
+async def test_standby_response_403(hass: HomeAssistantType) -> None:
+    """Test update method encountering HTTP 403."""
+    with patch(
+        "tests.components.directv.test_media_player.MockDirectvClass.get_standby",
+        side_effect=RequestException,
+    ):
+        await setup_directv_with_locations(hass)
+
+
 async def test_unique_id(hass: HomeAssistantType) -> None:
     """Test unique id."""
     await setup_directv_with_locations(hass)
