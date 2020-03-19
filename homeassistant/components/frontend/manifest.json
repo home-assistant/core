@@ -3,11 +3,12 @@
   "name": "Home Assistant Frontend",
   "documentation": "https://www.home-assistant.io/integrations/frontend",
   "requirements": [
-    "home-assistant-frontend==20200318.0"
+    "home-assistant-frontend==20200318.1"
   ],
   "dependencies": [
     "api",
     "auth",
+    "device_automation",
     "http",
     "lovelace",
     "onboarding",
