@@ -39,7 +39,10 @@ from .const import (
     ATTR_VANE_HORIZONTAL_POSITIONS,
     ATTR_VANE_VERTICAL,
     ATTR_VANE_VERTICAL_POSITIONS,
+    CONF_POSITION,
     DOMAIN,
+    SERVICE_SET_VANE_HORIZONTAL,
+    SERVICE_SET_VANE_VERTICAL,
     TEMP_UNIT_LOOKUP,
 )
 
@@ -85,13 +88,13 @@ async def async_setup_entry(
 
     platform = entity_platform.current_platform.get()
     platform.async_register_entity_service(
-        "set_vane_horizontal",
-        {vol.Required("position"): cv.string},
+        SERVICE_SET_VANE_HORIZONTAL,
+        {vol.Required(CONF_POSITION): cv.string},
         "async_set_vane_horizontal",
     )
     platform.async_register_entity_service(
-        "set_vane_vertical",
-        {vol.Required("entity_id"): cv.entity_id, vol.Required("position"): cv.string},
+        SERVICE_SET_VANE_VERTICAL,
+        {vol.Required(CONF_POSITION): cv.string},
         "async_set_vane_vertical",
     )
 
