@@ -12,11 +12,9 @@ from typing import Optional
 from aiopvpc import PVPCData
 
 from homeassistant import config_entries
-from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_TIMEOUT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_time_change,
@@ -24,59 +22,20 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.dt as dt_util
 
-from . import SENSOR_SCHEMA
-from .const import ATTR_TARIFF, DEFAULT_TARIFF, DEFAULT_TIMEOUT, DOMAIN
+from .const import ATTR_TARIFF, DEFAULT_TARIFF, DEFAULT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(SENSOR_SCHEMA.schema)
 
 ATTR_PRICE = "price"
 ICON = "mdi:currency-eur"
 UNIT = "€/kWh"
 
 
-async def async_setup_platform(
-    hass: HomeAssistant, config, async_add_devices, discovery_info=None
-):
-    """
-    Set up the electricity price sensor as a sensor platform.
-
-    ```yaml
-    sensor:
-      - platform: pvpc_hourly_pricing
-        name: pvpc_manual_sensor
-        tariff: normal
-
-      - platform: pvpc_hourly_pricing
-        name: pvpc_manual_sensor_2
-        tariff: discrimination
-        timeout: 8
-    ```
-    """
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, data=config, context={"source": config_entries.SOURCE_IMPORT}
-        )
-    )
-    return True
-
-
-async def update_listener(hass: HomeAssistant, entry: config_entries.ConfigEntry):
-    """Update selected tariff for sensor."""
-    hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
-
-
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: config_entries.ConfigEntry, async_add_entities
 ):
     """Set up the electricity price sensor from config_entry."""
-    if not config_entry.update_listeners:
-        config_entry.add_update_listener(update_listener)
-
     name = config_entry.data[CONF_NAME]
-    entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, name, hass=hass)
-
     pvpc_data_handler = PVPCData(
         tariff=config_entry.options.get(
             ATTR_TARIFF, config_entry.data.get(ATTR_TARIFF, DEFAULT_TARIFF)
@@ -86,7 +45,9 @@ async def async_setup_entry(
         logger=_LOGGER,
         timeout=config_entry.data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
     )
-    async_add_entities([ElecPriceSensor(name, entity_id, pvpc_data_handler)], True)
+    async_add_entities(
+        [ElecPriceSensor(name, config_entry.unique_id, pvpc_data_handler)], True
+    )
 
 
 class ElecPriceSensor(RestoreEntity):
@@ -96,10 +57,10 @@ class ElecPriceSensor(RestoreEntity):
     icon = ICON
     should_poll = False
 
-    def __init__(self, name, entity_id, pvpc_data_handler):
+    def __init__(self, name, unique_id, pvpc_data_handler):
         """Initialize the sensor object."""
         self._name = name
-        self.entity_id = entity_id
+        self._unique_id = unique_id
         self._pvpc_data = pvpc_data_handler
         self._num_retries = 0
 
@@ -144,7 +105,7 @@ class ElecPriceSensor(RestoreEntity):
     @property
     def unique_id(self) -> Optional[str]:
         """Return a unique ID."""
-        return "_".join([DOMAIN, "sensor", self.entity_id])
+        return self._unique_id
 
     @property
     def name(self):

@@ -7,3 +7,5 @@ ATTR_TARIFF = "tariff"
 DEFAULT_NAME = "PVPC"
 DEFAULT_TARIFF = TARIFFS[1]
 DEFAULT_TIMEOUT = 5
+
+UNIQUE_ID_MASK = "pvpc_price_sensor_tariff_{0}"

@@ -12,18 +12,7 @@
       }
     },
     "abort": {
-      "already_configured": "Integration is already configured with an existing sensor with that name"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "tariff": "Change the contracted tariff (1, 2, or 3 periods)"
-        },
-        "description": "Select the contracted rate based on the number of billing periods per day:\n- 1 period: normal\n- 2 periods: discrimination (nightly rate)\n- 3 periods: electric car (nightly rate of 3 periods)",
-        "title": "Tariff change"
-      }
+      "already_configured": "Integration is already configured with an existing sensor with that tariff"
     }
   }
 }

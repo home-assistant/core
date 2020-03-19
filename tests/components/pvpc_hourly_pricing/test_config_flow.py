@@ -7,6 +7,7 @@ from pytz import timezone
 from homeassistant import data_entry_flow
 from homeassistant.components.pvpc_hourly_pricing import ATTR_TARIFF, DOMAIN
 from homeassistant.const import CONF_NAME
+from homeassistant.helpers import entity_registry
 
 from .conftest import check_valid_state
 
@@ -47,33 +48,7 @@ async def test_config_flow(hass, pvpc_aioclient_mock: AiohttpClientMocker):
         check_valid_state(state, tariff="normal")
         assert pvpc_aioclient_mock.call_count == 1
 
-        # get entry and min_price with tariff 'normal' to play with options flow
-        entry = result["result"]
-        min_price_normal_tariff = state.attributes["min_price"]
-
-        # Use options to change tariff
-        result = await hass.config_entries.options.async_init(
-            entry.entry_id, context={"source": "user"}
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={ATTR_TARIFF: "electric_car"}
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["data"][ATTR_TARIFF] == "electric_car"
-
-        # check tariff change
-        await hass.async_block_till_done()
-        state = hass.states.get("sensor.test")
-        check_valid_state(state, tariff="electric_car")
-        assert pvpc_aioclient_mock.call_count == 2
-
-        # Check parsing was ok by ensuring that EV is better tariff than default one
-        min_price_electric_car_tariff = state.attributes["min_price"]
-        assert min_price_electric_car_tariff < min_price_normal_tariff
-
-        # Check abort when configuring another with same name
+        # Check abort when configuring another with same tariff
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}
         )
@@ -82,21 +57,25 @@ async def test_config_flow(hass, pvpc_aioclient_mock: AiohttpClientMocker):
             result["flow_id"], {CONF_NAME: "test", ATTR_TARIFF: "normal"}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert pvpc_aioclient_mock.call_count == 2
+        assert pvpc_aioclient_mock.call_count == 1
 
-        # Use options to change tariff back to normal
-        result = await hass.config_entries.options.async_init(
-            entry.entry_id, context={"source": "user"}
+        # Check removal
+        registry = await entity_registry.async_get_registry(hass)
+        registry_entity = registry.async_get("sensor.test")
+        assert await hass.config_entries.async_remove(registry_entity.config_entry_id)
+
+        # and add it again with UI
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={ATTR_TARIFF: "normal"}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_NAME: "test", ATTR_TARIFF: "normal"}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["data"][ATTR_TARIFF] == "normal"
 
-        # check tariff change
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test")
         check_valid_state(state, tariff="normal")
-        assert pvpc_aioclient_mock.call_count == 3
+        assert pvpc_aioclient_mock.call_count == 2
