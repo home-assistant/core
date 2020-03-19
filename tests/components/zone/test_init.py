@@ -487,3 +487,18 @@ async def test_import_config_entry(hass):
     assert state.attributes[zone.ATTR_RADIUS] == 3
     assert state.attributes[zone.ATTR_PASSIVE] is False
     assert state.attributes[ATTR_ICON] == "mdi:from-config-entry"
+
+
+async def test_zone_empty_setup(hass):
+    """Set up zone with empty config."""
+    assert await setup.async_setup_component(hass, DOMAIN, {"zone": {}})
+
+
+async def test_unavailable_zone(hass):
+    """Test active zone with unavailable zones."""
+    assert await setup.async_setup_component(hass, DOMAIN, {"zone": {}})
+    hass.states.async_set("zone.bla", "unavailable", {"restored": True})
+
+    assert zone.async_active_zone(hass, 0.0, 0.01) is None
+
+    assert zone.in_zone(hass.states.get("zone.bla"), 0, 0) is False
