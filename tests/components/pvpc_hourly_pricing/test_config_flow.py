@@ -21,10 +21,8 @@ async def test_config_flow(hass, pvpc_aioclient_mock: AiohttpClientMocker):
 
     - Create a new entry with tariff "normal"
     - Check state and attributes
-    - Use Options flow to change to tariff "electric_car"
-    - Check new tariff state and compare both.
-    - Check abort stage on name collision
-    - Use Options flow to change it back to tariff "normal"
+    - Check abort when trying to config another with same tariff
+    - Check removal and add again to check state restoration
     """
     hass.config.time_zone = timezone("Europe/Madrid")
     mock_data = {"return_time": datetime(2019, 10, 26, 14, 0, tzinfo=date_util.UTC)}

@@ -22,11 +22,11 @@ UI_CONFIG_SCHEMA = vol.Schema(
         vol.Required(ATTR_TARIFF, default=DEFAULT_TARIFF): vol.In(TARIFFS),
     }
 )
-SENSOR_SCHEMA = UI_CONFIG_SCHEMA.extend(
+SINGLE_SENSOR_SCHEMA = UI_CONFIG_SCHEMA.extend(
     {vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int}
 )
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: cv.ensure_list(SENSOR_SCHEMA)}, extra=vol.ALLOW_EXTRA
+    {DOMAIN: cv.ensure_list(SINGLE_SENSOR_SCHEMA)}, extra=vol.ALLOW_EXTRA
 )
 
 
