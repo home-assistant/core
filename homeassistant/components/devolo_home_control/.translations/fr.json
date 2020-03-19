@@ -1,13 +1,13 @@
 {
   "config": {
     "error": {
-      "invalid_credentials": "Incorrect user name and/or password."
+      "invalid_credentials": "Nom d''utilisateur et/ou mot de passe incorrect."
     },
     "step": {
       "user": {
         "data": {
-          "password": "Password",
-          "username": "Email address / devolo ID"
+          "password": "Mot de passe",
+          "username": "Adresse e-mail / devolo ID"
         },
         "title": "devolo Home Control"
       }
