@@ -71,7 +71,7 @@ class OpenIdAuthProvider(AuthProvider):
 
     DEFAULT_TITLE = "OpenId Connect"
 
-    _discovery_document: Optional[Dict[str, Any]]
+    _discovery_document: Optional[Dict[str, Any]] = None
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Extend parent's __init__."""
