@@ -140,7 +140,7 @@ async def async_setup_entry(hass, config_entry):
             config_entry.data[CONF_IP_ADDRESS],
             config_entry.data[CONF_PASSWORD],
             port=config_entry.data[CONF_PORT],
-            ssl=config_entry.data[CONF_SSL],
+            ssl=config_entry.data.get(CONF_SSL, DEFAULT_SSL),
         )
     except RainMachineError as err:
         _LOGGER.error("An error occurred: %s", err)
@@ -153,8 +153,10 @@ async def async_setup_entry(hass, config_entry):
         rainmachine = RainMachine(
             hass,
             controller,
-            config_entry.data[CONF_ZONE_RUN_TIME],
-            config_entry.data[CONF_SCAN_INTERVAL],
+            config_entry.data.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN),
+            config_entry.data.get(
+                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL.total_seconds()
+            ),
         )
 
     # Update the data object, which at this point (prior to any sensors registering
