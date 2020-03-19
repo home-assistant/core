@@ -463,6 +463,38 @@ async def test_autodetect_websocket(hass, remote, remotews):
         ]
 
 
+async def test_autodetect_websocket_ssl(hass, remote, remotews):
+    """Test for send key with autodetection of protocol."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote", side_effect=OSError("Boom"),
+    ), patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS",
+        side_effect=[WebSocketProtocolException("Boom"), mock.DEFAULT],
+    ) as remotews:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
+        )
+        assert result["type"] == "create_entry"
+        assert result["data"][CONF_METHOD] == "websocket"
+        assert remotews.call_count == 2
+        assert remotews.call_args_list == [
+            call(
+                host="fake_host",
+                name="HomeAssistant",
+                port=8001,
+                timeout=31,
+                token=None,
+            ),
+            call(
+                host="fake_host",
+                name="HomeAssistant",
+                port=8002,
+                timeout=31,
+                token=None,
+            ),
+        ]
+
+
 async def test_autodetect_auth_missing(hass, remote):
     """Test for send key with autodetection of protocol."""
     with patch(
