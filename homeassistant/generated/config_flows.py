@@ -40,6 +40,7 @@ FLOWS = [
     "gpslogger",
     "griddy",
     "hangouts",
+    "harmony",
     "heos",
     "hisense_aehw4a1",
     "homekit_controller",

@@ -64,6 +64,9 @@ aioesphomeapi==2.6.1
 # homeassistant.components.freebox
 aiofreepybox==0.0.8
 
+# homeassistant.components.harmony
+aioharmony==0.1.13
+
 # homeassistant.components.homekit_controller
 aiohomekit[IP]==0.2.34
 

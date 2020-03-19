@@ -21,36 +21,29 @@ from homeassistant.components.remote import (
     DEFAULT_DELAY_SECS,
     PLATFORM_SCHEMA,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP,
-)
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import slugify
 
 from .const import DOMAIN, SERVICE_CHANGE_CHANNEL, SERVICE_SYNC
+from .util import find_unique_id_for_remote
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CHANNEL = "channel"
 ATTR_CURRENT_ACTIVITY = "current_activity"
 
-DEFAULT_PORT = 8088
 DEVICES = []
-CONF_DEVICE_CACHE = "harmony_device_cache"
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(ATTR_ACTIVITY): cv.string,
         vol.Required(CONF_NAME): cv.string,
         vol.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS): vol.Coerce(float),
         vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    }
+        # The client ignores port so lets not confuse the user by pretenting we do anything with this
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 HARMONY_SYNC_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
@@ -65,65 +58,36 @@ HARMONY_CHANGE_CHANNEL_SCHEMA = vol.Schema(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Harmony platform."""
-    activity = None
-
-    if CONF_DEVICE_CACHE not in hass.data:
-        hass.data[CONF_DEVICE_CACHE] = []
 
     if discovery_info:
-        # Find the discovered device in the list of user configurations
-        override = next(
-            (
-                c
-                for c in hass.data[CONF_DEVICE_CACHE]
-                if c.get(CONF_NAME) == discovery_info.get(CONF_NAME)
-            ),
-            None,
-        )
-
-        port = DEFAULT_PORT
-        delay_secs = DEFAULT_DELAY_SECS
-        if override is not None:
-            activity = override.get(ATTR_ACTIVITY)
-            delay_secs = override.get(ATTR_DELAY_SECS)
-            port = override.get(CONF_PORT, DEFAULT_PORT)
-
-        host = (discovery_info.get(CONF_NAME), discovery_info.get(CONF_HOST), port)
-
-        # Ignore hub name when checking if this hub is known - ip and port only
-        if host[1:] in ((h.host, h.port) for h in DEVICES):
-            _LOGGER.debug("Discovered host already known: %s", host)
-            return
-    elif CONF_HOST in config:
-        host = (config.get(CONF_NAME), config.get(CONF_HOST), config.get(CONF_PORT))
-        activity = config.get(ATTR_ACTIVITY)
-        delay_secs = config.get(ATTR_DELAY_SECS)
-    else:
-        hass.data[CONF_DEVICE_CACHE].append(config)
+        # Now handled by ssdp in the config flow
         return
 
-    name, address, port = host
-    _LOGGER.info(
-        "Loading Harmony Platform: %s at %s:%s, startup activity: %s",
-        name,
-        address,
-        port,
-        activity,
+    if CONF_HOST not in config:
+        _LOGGER.error(
+            "The harmony remote '%s' cannot be setup because configuration now requires a host when configured manually.",
+            config[CONF_NAME],
+        )
+        return
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
     )
 
-    harmony_conf_file = hass.config.path(f"harmony_{slugify(name)}.conf")
-    try:
-        device = HarmonyRemote(
-            name, address, port, activity, harmony_conf_file, delay_secs
-        )
-        if not await device.connect():
-            raise PlatformNotReady
 
-        DEVICES.append(device)
-        async_add_entities([device])
-        register_services(hass)
-    except (ValueError, AttributeError):
-        raise PlatformNotReady
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+):
+    """Set up the Harmony config entry."""
+
+    device = hass.data[DOMAIN][entry.entry_id]
+
+    _LOGGER.info("Harmony Remote: %s", device)
+
+    async_add_entities([device])
+    register_services(hass)
 
 
 def register_services(hass):
@@ -165,11 +129,10 @@ async def _change_channel_service(service):
 class HarmonyRemote(remote.RemoteDevice):
     """Remote representation used to control a Harmony device."""
 
-    def __init__(self, name, host, port, activity, out_path, delay_secs):
+    def __init__(self, name, host, activity, out_path, delay_secs):
         """Initialize HarmonyRemote class."""
         self._name = name
         self.host = host
-        self.port = port
         self._state = None
         self._current_activity = None
         self._default_activity = activity
@@ -177,6 +140,39 @@ class HarmonyRemote(remote.RemoteDevice):
         self._config_path = out_path
         self._delay_secs = delay_secs
         self._available = False
+
+    @property
+    def delay_secs(self):
+        """Delay seconds between sending commands."""
+        return self._delay_secs
+
+    @delay_secs.setter
+    def delay_secs(self, delay_secs):
+        """Update the delay seconds (from options flow)."""
+        self._delay_secs = delay_secs
+
+    @property
+    def default_activity(self):
+        """Activity used when non specified."""
+        return self._default_activity
+
+    @property
+    def activity_names(self):
+        """Names of all the remotes activities."""
+        activities = [activity["label"] for activity in self._client.config["activity"]]
+
+        # Remove both ways of representing PowerOff
+        if None in activities:
+            activities.remove(None)
+        if "PowerOff" in activities:
+            activities.remove("PowerOff")
+
+        return activities
+
+    @default_activity.setter
+    def default_activity(self, activity):
+        """Update the default activity (from options flow)."""
+        self._default_activity = activity
 
     async def async_added_to_hass(self):
         """Complete the initialization."""
@@ -193,15 +189,34 @@ class HarmonyRemote(remote.RemoteDevice):
         # activity
         await self.new_config()
 
-        async def shutdown(_):
-            """Close connection on shutdown."""
-            _LOGGER.debug("%s: Closing Harmony Hub", self._name)
-            try:
-                await self._client.close()
-            except aioexc.TimeOut:
-                _LOGGER.warning("%s: Disconnect timed-out", self._name)
+    async def shutdown(self):
+        """Close connection on shutdown."""
+        _LOGGER.debug("%s: Closing Harmony Hub", self._name)
+        try:
+            await self._client.close()
+        except aioexc.TimeOut:
+            _LOGGER.warning("%s: Disconnect timed-out", self._name)
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
+    @property
+    def device_info(self):
+        """Return device info."""
+        model = "Harmony Hub"
+        if "ethernetStatus" in self._client.hub_config.info:
+            model = "Harmony Hub Pro 2400"
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "manufacturer": "Logitech",
+            "sw_version": self._client.hub_config.info.get(
+                "hubSwVersion", self._client.fw_version
+            ),
+            "name": self.name,
+            "model": model,
+        }
+
+    @property
+    def unique_id(self):
+        """Return the unique id."""
+        return find_unique_id_for_remote(self._client)
 
     @property
     def name(self):
@@ -239,7 +254,6 @@ class HarmonyRemote(remote.RemoteDevice):
         except aioexc.TimeOut:
             _LOGGER.warning("%s: Connection timed-out", self._name)
             return False
-
         return True
 
     def new_activity(self, activity_info: tuple) -> None:
