@@ -75,9 +75,7 @@ class AccountSensor(Entity):
         """Return the state attributes of the sensor."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_NATIVE_BALANCE: "{} {}".format(
-                self._native_balance, self._native_currency
-            ),
+            ATTR_NATIVE_BALANCE: f"{self._native_balance} {self._native_currency}",
         }
 
     def update(self):

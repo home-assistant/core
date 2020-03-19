@@ -53,7 +53,6 @@ async def async_attach_trigger(hass, config, action, automation_info):
             from_match = False
         to_match = condition.zone(hass, zone_state, to_s)
 
-        # pylint: disable=too-many-boolean-expressions
         if (
             event == EVENT_ENTER
             and not from_match

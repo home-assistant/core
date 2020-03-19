@@ -1,12 +1,10 @@
 """Support to check for available updates."""
-import asyncio
 from datetime import timedelta
 from distutils.version import StrictVersion
 import json
 import logging
 import uuid
 
-import aiohttp
 import async_timeout
 from distro import linux_distribution  # pylint: disable=import-error
 import voluptuous as vol
@@ -80,13 +78,13 @@ async def async_setup(hass, config):
         # This component only makes sense in release versions
         _LOGGER.info("Running on 'dev', only analytics will be submitted")
 
-    config = config.get(DOMAIN, {})
-    if config.get(CONF_REPORTING):
+    conf = config.get(DOMAIN, {})
+    if conf.get(CONF_REPORTING):
         huuid = await hass.async_add_job(_load_uuid, hass)
     else:
         huuid = None
 
-    include_components = config.get(CONF_COMPONENT_REPORTING)
+    include_components = conf.get(CONF_COMPONENT_REPORTING)
 
     async def check_new_version():
         """Check if a new version is available and report if one is."""
@@ -123,7 +121,11 @@ async def async_setup(hass, config):
         return Updater(update_available, newest, release_notes)
 
     coordinator = hass.data[DOMAIN] = update_coordinator.DataUpdateCoordinator(
-        hass, _LOGGER, "Home Assistant update", check_new_version, timedelta(days=1)
+        hass,
+        _LOGGER,
+        name="Home Assistant update",
+        update_method=check_new_version,
+        update_interval=timedelta(days=1),
     )
 
     await coordinator.async_refresh()
@@ -152,29 +154,27 @@ async def get_newest_version(hass, huuid, include_components):
         info_object = {}
 
     session = async_get_clientsession(hass)
-    try:
-        with async_timeout.timeout(5):
-            req = await session.post(UPDATER_URL, json=info_object)
-        _LOGGER.info(
-            (
-                "Submitted analytics to Home Assistant servers. "
-                "Information submitted includes %s"
-            ),
-            info_object,
-        )
-    except (asyncio.TimeoutError, aiohttp.ClientError):
-        _LOGGER.error("Could not contact Home Assistant Update to check for updates")
-        raise update_coordinator.UpdateFailed
+
+    with async_timeout.timeout(15):
+        req = await session.post(UPDATER_URL, json=info_object)
+
+    _LOGGER.info(
+        (
+            "Submitted analytics to Home Assistant servers. "
+            "Information submitted includes %s"
+        ),
+        info_object,
+    )
 
     try:
         res = await req.json()
     except ValueError:
-        _LOGGER.error("Received invalid JSON from Home Assistant Update")
-        raise update_coordinator.UpdateFailed
+        raise update_coordinator.UpdateFailed(
+            "Received invalid JSON from Home Assistant Update"
+        )
 
     try:
         res = RESPONSE_SCHEMA(res)
         return res["version"], res["release-notes"]
-    except vol.Invalid:
-        _LOGGER.error("Got unexpected response: %s", res)
-        raise update_coordinator.UpdateFailed
+    except vol.Invalid as err:
+        raise update_coordinator.UpdateFailed(f"Got unexpected response: {err}")

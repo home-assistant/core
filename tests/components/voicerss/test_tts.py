@@ -67,7 +67,10 @@ class TestTTSVoiceRSSPlatform:
         self.hass.services.call(
             tts.DOMAIN,
             "voicerss_say",
-            {tts.ATTR_MESSAGE: "I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "I person is on front of your door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -97,7 +100,10 @@ class TestTTSVoiceRSSPlatform:
         self.hass.services.call(
             tts.DOMAIN,
             "voicerss_say",
-            {tts.ATTR_MESSAGE: "I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "I person is on front of your door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -121,6 +127,7 @@ class TestTTSVoiceRSSPlatform:
             tts.DOMAIN,
             "voicerss_say",
             {
+                "entity_id": "media_player.something",
                 tts.ATTR_MESSAGE: "I person is on front of your door.",
                 tts.ATTR_LANGUAGE: "de-de",
             },
@@ -145,7 +152,10 @@ class TestTTSVoiceRSSPlatform:
         self.hass.services.call(
             tts.DOMAIN,
             "voicerss_say",
-            {tts.ATTR_MESSAGE: "I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "I person is on front of your door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -167,7 +177,10 @@ class TestTTSVoiceRSSPlatform:
         self.hass.services.call(
             tts.DOMAIN,
             "voicerss_say",
-            {tts.ATTR_MESSAGE: "I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "I person is on front of your door.",
+            },
         )
         self.hass.block_till_done()
 
@@ -194,7 +207,10 @@ class TestTTSVoiceRSSPlatform:
         self.hass.services.call(
             tts.DOMAIN,
             "voicerss_say",
-            {tts.ATTR_MESSAGE: "I person is on front of your door."},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "I person is on front of your door.",
+            },
         )
         self.hass.block_till_done()
 

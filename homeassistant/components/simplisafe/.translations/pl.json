@@ -1,7 +1,10 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "To konto SimpliSafe jest ju\u017c w u\u017cyciu."
+        },
         "error": {
-            "identifier_exists": "Konto jest ju\u017c zarejestrowane",
+            "identifier_exists": "Konto jest ju\u017c zarejestrowane.",
             "invalid_credentials": "Nieprawid\u0142owe dane uwierzytelniaj\u0105ce"
         },
         "step": {

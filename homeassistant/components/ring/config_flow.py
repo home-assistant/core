@@ -75,13 +75,6 @@ class RingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="2fa", data_schema=vol.Schema({"2fa": str}),
         )
 
-    async def async_step_import(self, user_input):
-        """Handle import."""
-        if self._async_current_entries():
-            return self.async_abort(reason="already_configured")
-
-        return await self.async_step_user(user_input)
-
 
 class Require2FA(exceptions.HomeAssistantError):
     """Error to indicate we require 2FA."""

@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_in_progress": "Configuratie stroom voor vizio component al in uitvoering.",
+            "already_setup": "Dit item is al ingesteld.",
+            "already_setup_with_diff_host_and_name": "Dit item lijkt al te zijn ingesteld met een andere host en naam op basis van het serienummer. Verwijder alle oude vermeldingen uit uw configuratie.yaml en uit het menu Integraties voordat u opnieuw probeert dit apparaat toe te voegen.",
+            "host_exists": "Vizio apparaat met opgegeven host al geconfigureerd.",
+            "name_exists": "Vizio apparaat met opgegeven naam al geconfigureerd.",
+            "updated_entry": "Dit item is al ingesteld, maar de naam en/of opties die zijn gedefinieerd in de configuratie komen niet overeen met de eerder ge\u00efmporteerde configuratie, dus het configuratie-item is dienovereenkomstig bijgewerkt.",
+            "updated_options": "Dit item is al ingesteld, maar de opties die in de configuratie zijn gedefinieerd komen niet overeen met de eerder ge\u00efmporteerde optiewaarden, dus de configuratie-invoer is dienovereenkomstig bijgewerkt.",
+            "updated_volume_step": "Dit item is al ingesteld, maar de volumestapgrootte in de configuratie komt niet overeen met het configuratie-item, dus het configuratie-item is dienovereenkomstig bijgewerkt."
+        },
+        "error": {
+            "cant_connect": "Kan geen verbinding maken met het apparaat. [Bekijk de documenten] (https://www.home-assistant.io/integrations/vizio/) en controleer of:\n- Het apparaat is ingeschakeld\n- Het apparaat is aangesloten op het netwerk\n- De waarden die u ingevuld correct zijn\nvoordat u weer probeert om opnieuw in te dienen.",
+            "host_exists": "Vizio apparaat met opgegeven host al geconfigureerd.",
+            "name_exists": "Vizio apparaat met opgegeven naam al geconfigureerd.",
+            "tv_needs_token": "Wanneer het apparaattype `tv` is, dan is er een geldig toegangstoken nodig."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Toegangstoken",
+                    "device_class": "Apparaattype",
+                    "host": "<Host/IP>:<Port>",
+                    "name": "Naam"
+                },
+                "title": "Vizio SmartCast Client instellen"
+            }
+        },
+        "title": "Vizio SmartCast"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "Time-out van API-aanvragen (seconden)",
+                    "volume_step": "Volume Stapgrootte"
+                },
+                "title": "Update Vizo SmartCast Opties"
+            }
+        },
+        "title": "Update Vizo SmartCast Opties"
+    }
+}

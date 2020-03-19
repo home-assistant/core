@@ -1,9 +1,4 @@
-"""
-Support for the Environment Canada radar imagery.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.environment_canada/
-"""
+"""Support for the Environment Canada radar imagery."""
 import datetime
 import logging
 

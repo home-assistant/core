@@ -13,6 +13,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -36,6 +37,7 @@ DEFAULT_SOURCES = {}
 SUPPORT_PIONEER = (
     SUPPORT_PAUSE
     | SUPPORT_VOLUME_SET
+    | SUPPORT_VOLUME_STEP
     | SUPPORT_VOLUME_MUTE
     | SUPPORT_TURN_ON
     | SUPPORT_TURN_OFF

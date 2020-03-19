@@ -24,14 +24,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .config_flow import configured_instances
-from .const import (
-    DEFAULT_RADIUS,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    FEED,
-    SIGNAL_NEW_SENSOR,
-    SIGNAL_UPDATE_ENTITY,
-)
+from .const import DEFAULT_RADIUS, DEFAULT_SCAN_INTERVAL, DOMAIN, FEED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -173,7 +166,7 @@ class GeonetnzVolcanoFeedEntityManager:
     @callback
     def async_event_new_entity(self):
         """Return manager specific event to signal new entity."""
-        return SIGNAL_NEW_SENSOR.format(self._config_entry_id)
+        return f"geonetnz_volcano_new_sensor_{self._config_entry_id}"
 
     def get_entry(self, external_id):
         """Get feed entry by external id."""
@@ -199,7 +192,7 @@ class GeonetnzVolcanoFeedEntityManager:
 
     async def _update_entity(self, external_id):
         """Update entity."""
-        async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY.format(external_id))
+        async_dispatcher_send(self._hass, f"geonetnz_volcano_update_{external_id}")
 
     async def _remove_entity(self, external_id):
         """Ignore removing entity."""

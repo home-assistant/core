@@ -1,5 +1,4 @@
 """Support for the Philips Hue lights."""
-import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
@@ -72,6 +71,21 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     pass
 
 
+def create_light(item_class, coordinator, bridge, is_group, api, item_id):
+    """Create the light."""
+    if is_group:
+        supported_features = 0
+        for light_id in api[item_id].lights:
+            if light_id not in bridge.api.lights:
+                continue
+            light = bridge.api.lights[light_id]
+            supported_features |= SUPPORT_HUE.get(light.type, SUPPORT_HUE_EXTENDED)
+        supported_features = supported_features or SUPPORT_HUE_EXTENDED
+    else:
+        supported_features = SUPPORT_HUE.get(api[item_id].type, SUPPORT_HUE_EXTENDED)
+    return item_class(coordinator, bridge, is_group, api[item_id], supported_features)
+
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Hue lights from a config entry."""
     bridge = hass.data[HUE_DOMAIN][config_entry.entry_id]
@@ -79,17 +93,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     light_coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        "light",
-        partial(async_safe_fetch, bridge, bridge.api.lights.update),
-        SCAN_INTERVAL,
-        Debouncer(bridge.hass, _LOGGER, REQUEST_REFRESH_DELAY, True),
+        name="light",
+        update_method=partial(async_safe_fetch, bridge, bridge.api.lights.update),
+        update_interval=SCAN_INTERVAL,
+        request_refresh_debouncer=Debouncer(
+            bridge.hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True
+        ),
     )
 
     # First do a refresh to see if we can reach the hub.
     # Otherwise we will declare not ready.
     await light_coordinator.async_refresh()
 
-    if light_coordinator.failed_last_update:
+    if not light_coordinator.last_update_success:
         raise PlatformNotReady
 
     update_lights = partial(
@@ -98,7 +114,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         bridge.api.lights,
         {},
         async_add_entities,
-        partial(HueLight, light_coordinator, bridge, False),
+        partial(create_light, HueLight, light_coordinator, bridge, False),
     )
 
     # We add a listener after fetching the data, so manually trigger listener
@@ -122,10 +138,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     group_coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        "group",
-        partial(async_safe_fetch, bridge, bridge.api.groups.update),
-        SCAN_INTERVAL,
-        Debouncer(bridge.hass, _LOGGER, REQUEST_REFRESH_DELAY, True),
+        name="group",
+        update_method=partial(async_safe_fetch, bridge, bridge.api.groups.update),
+        update_interval=SCAN_INTERVAL,
+        request_refresh_debouncer=Debouncer(
+            bridge.hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True
+        ),
     )
 
     update_groups = partial(
@@ -134,7 +152,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         bridge.api.groups,
         {},
         async_add_entities,
-        partial(HueLight, group_coordinator, bridge, True),
+        partial(create_light, HueLight, group_coordinator, bridge, True),
     )
 
     group_coordinator.async_add_listener(update_groups)
@@ -149,12 +167,12 @@ async def async_safe_fetch(bridge, fetch_method):
     """Safely fetch data."""
     try:
         with async_timeout.timeout(4):
-            return await bridge.async_request_call(fetch_method())
+            return await bridge.async_request_call(fetch_method)
     except aiohue.Unauthorized:
         await bridge.handle_unauthorized_error()
-        raise UpdateFailed
-    except (asyncio.TimeoutError, aiohue.AiohueException):
-        raise UpdateFailed
+        raise UpdateFailed("Unauthorized")
+    except (aiohue.AiohueException,) as err:
+        raise UpdateFailed(f"Hue error: {err}")
 
 
 @callback
@@ -166,7 +184,7 @@ def async_update_items(bridge, api, current, async_add_entities, create_item):
         if item_id in current:
             continue
 
-        current[item_id] = create_item(api[item_id])
+        current[item_id] = create_item(api, item_id)
         new_items.append(current[item_id])
 
     bridge.hass.async_create_task(remove_devices(bridge, api, current))
@@ -178,12 +196,13 @@ def async_update_items(bridge, api, current, async_add_entities, create_item):
 class HueLight(Light):
     """Representation of a Hue light."""
 
-    def __init__(self, coordinator, bridge, is_group, light):
+    def __init__(self, coordinator, bridge, is_group, light, supported_features):
         """Initialize the light."""
         self.light = light
         self.coordinator = coordinator
         self.bridge = bridge
         self.is_group = is_group
+        self._supported_features = supported_features
 
         if is_group:
             self.is_osram = False
@@ -277,7 +296,7 @@ class HueLight(Light):
     @property
     def available(self):
         """Return if light is available."""
-        return not self.coordinator.failed_last_update and (
+        return self.coordinator.last_update_success and (
             self.is_group
             or self.bridge.allow_unreachable
             or self.light.state["reachable"]
@@ -286,7 +305,7 @@ class HueLight(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_HUE.get(self.light.type, SUPPORT_HUE_EXTENDED)
+        return self._supported_features
 
     @property
     def effect(self):
@@ -372,9 +391,13 @@ class HueLight(Light):
                 command["effect"] = "none"
 
         if self.is_group:
-            await self.bridge.async_request_call(self.light.set_action(**command))
+            await self.bridge.async_request_call(
+                partial(self.light.set_action, **command)
+            )
         else:
-            await self.bridge.async_request_call(self.light.set_state(**command))
+            await self.bridge.async_request_call(
+                partial(self.light.set_state, **command)
+            )
 
         await self.coordinator.async_request_refresh()
 
@@ -397,9 +420,13 @@ class HueLight(Light):
             command["alert"] = "none"
 
         if self.is_group:
-            await self.bridge.async_request_call(self.light.set_action(**command))
+            await self.bridge.async_request_call(
+                partial(self.light.set_action, **command)
+            )
         else:
-            await self.bridge.async_request_call(self.light.set_state(**command))
+            await self.bridge.async_request_call(
+                partial(self.light.set_state, **command)
+            )
 
         await self.coordinator.async_request_refresh()
 

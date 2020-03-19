@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONTENT_TYPE_JSON,
+    DATA_RATE_MEGABYTES_PER_SECOND,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -29,7 +30,7 @@ DEFAULT_PORT = 8000
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 
-SENSOR_TYPES = {"speed": ["speed", "Speed", "MB/s"]}
+SENSOR_TYPES = {"speed": ["speed", "Speed", DATA_RATE_MEGABYTES_PER_SECOND]}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/deconz",
   "requirements": [
-    "pydeconz==69"
+    "pydeconz==70"
   ],
   "ssdp": [
     {

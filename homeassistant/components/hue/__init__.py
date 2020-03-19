@@ -6,25 +6,26 @@ from aiohue.util import normalize_bridge_id
 import voluptuous as vol
 
 from homeassistant import config_entries, core
+from homeassistant.components import persistent_notification
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .bridge import HueBridge
-from .const import DOMAIN
+from .const import (
+    CONF_ALLOW_HUE_GROUPS,
+    CONF_ALLOW_UNREACHABLE,
+    DEFAULT_ALLOW_HUE_GROUPS,
+    DEFAULT_ALLOW_UNREACHABLE,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BRIDGES = "bridges"
 
-CONF_ALLOW_UNREACHABLE = "allow_unreachable"
-DEFAULT_ALLOW_UNREACHABLE = False
-
 DATA_CONFIGS = "hue_configs"
 
 PHUE_CONFIG_FILE = "phue.conf"
-
-CONF_ALLOW_HUE_GROUPS = "allow_hue_groups"
-DEFAULT_ALLOW_HUE_GROUPS = True
 
 BRIDGE_CONFIG_SCHEMA = vol.Schema(
     {
@@ -45,13 +46,7 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Optional(CONF_BRIDGES): vol.All(
-                    cv.ensure_list,
-                    [
-                        vol.All(
-                            cv.deprecated("filename", invalidation_version="0.106.0"),
-                            BRIDGE_CONFIG_SCHEMA,
-                        ),
-                    ],
+                    cv.ensure_list, [BRIDGE_CONFIG_SCHEMA],
                 )
             }
         )
@@ -111,8 +106,10 @@ async def async_setup_entry(
     config = hass.data[DATA_CONFIGS].get(host)
 
     if config is None:
-        allow_unreachable = DEFAULT_ALLOW_UNREACHABLE
-        allow_groups = DEFAULT_ALLOW_HUE_GROUPS
+        allow_unreachable = entry.data.get(
+            CONF_ALLOW_UNREACHABLE, DEFAULT_ALLOW_UNREACHABLE
+        )
+        allow_groups = entry.data.get(CONF_ALLOW_HUE_GROUPS, DEFAULT_ALLOW_HUE_GROUPS)
     else:
         allow_unreachable = config[CONF_ALLOW_UNREACHABLE]
         allow_groups = config[CONF_ALLOW_HUE_GROUPS]
@@ -142,8 +139,20 @@ async def async_setup_entry(
         sw_version=config.swversion,
     )
 
-    if config.swupdate2_bridge_state == "readytoinstall":
-        err = "Please check for software updates of the bridge in the Philips Hue App."
+    if config.modelid == "BSB002" and config.swversion < "1935144040":
+        persistent_notification.async_create(
+            hass,
+            "Your Hue hub has a known security vulnerability ([CVE-2020-6007](https://cve.circl.lu/cve/CVE-2020-6007)). Go to the Hue app and check for software updates.",
+            "Signify Hue",
+            "hue_hub_firmware",
+        )
+
+    elif config.swupdate2_bridge_state == "readytoinstall":
+        err = (
+            "Please check for software updates of the bridge in the Philips Hue App.",
+            "Signify Hue",
+            "hue_hub_firmware",
+        )
         _LOGGER.warning(err)
 
     return True
