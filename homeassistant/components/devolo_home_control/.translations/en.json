@@ -3,7 +3,7 @@
         "abort": {
         },
         "error": {
-            "connection_error": "Failed to connect."
+            "invalid_credentials": "Incorrect user name and/or password."
         },
         "step": {
             "user": {
