@@ -900,9 +900,9 @@ async def websocket_handle_thumbnail(hass, connection, msg):
         )
         return
 
-    _LOGGER.warning(
-        "The websocket command media_player_thumbnail is deprecated. Use /api/media_player_proxy instead."
-    )
+    # _LOGGER.warning(
+    #     "The websocket command media_player_thumbnail is deprecated. Use /api/media_player_proxy instead."
+    # )
 
     data, content_type = await player.async_get_media_image()
 

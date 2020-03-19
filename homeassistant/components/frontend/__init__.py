@@ -41,10 +41,10 @@ CONF_FRONTEND_REPO = "development_repo"
 CONF_JS_VERSION = "javascript_version"
 EVENT_PANELS_UPDATED = "panels_updated"
 
-DEFAULT_THEME_COLOR = "#03A9F4"
+DEFAULT_THEME_COLOR = "#FF9800"
 
 MANIFEST_JSON = {
-    "background_color": "#FFFFFF",
+    "background_color": "#4c4c4c",
     "description": "Home automation platform that puts local control and privacy first.",
     "dir": "ltr",
     "display": "standalone",
