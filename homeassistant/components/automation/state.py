@@ -75,7 +75,7 @@ async def async_attach_trigger(
                             "for": time_delta if not time_delta else period[entity],
                         }
                     },
-                    context=to_s.context,
+                    context=to_s.context if to_s else None,
                 )
             )
 
