@@ -61,7 +61,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     if mydevolo.maintenance:
         return False
 
-    # TODO: Handle more than one gateway
     gateway_id = mydevolo.gateway_ids[0]
     mprm_url = mydevolo.mprm
 
