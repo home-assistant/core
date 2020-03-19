@@ -6,9 +6,10 @@ from homeassistant.components.harmony.config_flow import CannotConnect
 from homeassistant.components.harmony.const import DOMAIN
 
 
-def _get_mock_harmonyapi(connect=None):
+def _get_mock_harmonyapi(connect=None, close=None):
     harmonyapi_mock = MagicMock()
     type(harmonyapi_mock).connect = CoroutineMock(return_value=connect)
+    type(harmonyapi_mock).close = CoroutineMock(return_value=close)
 
     return harmonyapi_mock
 
@@ -89,6 +90,18 @@ async def test_form_ssdp(hass):
     """Test we get the form with ssdp source."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data={
+            "friendlyName": "Harmony Hub",
+            "ssdp_location": "http://192.168.209.238:8088/description",
+        },
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "link"
+    assert result["errors"] == {}
+
     harmonyapi = _get_mock_harmonyapi(connect=True)
     with patch(
         "homeassistant.components.harmony.config_flow.HarmonyAPI",
@@ -98,24 +111,13 @@ async def test_form_ssdp(hass):
     ) as mock_setup, patch(
         "homeassistant.components.harmony.async_setup_entry", return_value=True,
     ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_SSDP},
-            data={
-                "friendlyName": "Harmony Hub",
-                "ssdp_location": "http://192.168.209.238:8088/description",
-            },
-        )
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
 
-    assert result["type"] == "create_entry"
-    assert result["title"] == "friend"
-    assert result["data"] == {
-        "host": "1.2.3.4",
-        "name": "friend",
-    }
-    assert result["options"] == {
-        "activity": "Watch TV",
-        "delay_secs": 0.9,
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "Harmony Hub"
+    assert result2["data"] == {
+        "host": "192.168.209.238",
+        "name": "Harmony Hub",
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
