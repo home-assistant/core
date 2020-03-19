@@ -2,7 +2,10 @@
 import logging
 import threading
 
-from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient, ModbusUdpClient
+from pymodbus.client.asynchronous import schedulers
+from pymodbus.client.asynchronous.serial import AsyncModbusSerialClient as ClientSerial
+from pymodbus.client.asynchronous.tcp import AsyncModbusTCPClient as ClientTCP
+from pymodbus.client.asynchronous.udp import AsyncModbusUDPClient as ClientUDP
 from pymodbus.transaction import ModbusRtuFramer
 import voluptuous as vol
 
@@ -106,7 +109,6 @@ async def async_setup(hass, config):
         for client in hub_collect.values():
             _LOGGER.debug("setup hub %s", client.name)
             client.setup()
-            client.connect()
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
 
@@ -184,7 +186,8 @@ class ModbusHub:
 
         _LOGGER.debug("doing setup")
         if self._config_type == "serial":
-            self._client = ModbusSerialClient(
+            _, client = ClientSerial(
+                schedulers.ASYNC_IO,
                 method=self._config_method,
                 port=self._config_port,
                 baudrate=self._config_baudrate,
@@ -192,38 +195,41 @@ class ModbusHub:
                 bytesize=self._config_bytesize,
                 parity=self._config_parity,
                 timeout=self._config_timeout,
+                loop=self._loop,
             )
         elif self._config_type == "rtuovertcp":
-            self._client = ModbusTcpClient(
+            _, client = ClientTCP(
+                schedulers.ASYNC_IO,
                 host=self._config_host,
                 port=self._config_port,
                 framer=ModbusRtuFramer,
                 timeout=self._config_timeout,
+                loop=self._loop,
             )
         elif self._config_type == "tcp":
-            self._client = ModbusTcpClient(
+            _, client = ClientTCP(
+                schedulers.ASYNC_IO,
                 host=self._config_host,
                 port=self._config_port,
                 timeout=self._config_timeout,
+                loop=self._loop,
             )
         elif self._config_type == "udp":
-            self._client = ModbusUdpClient(
+            _, client = ClientUDP(
+                schedulers.ASYNC_IO,
                 host=self._config_host,
                 port=self._config_port,
                 timeout=self._config_timeout,
+                loop=self._loop,
             )
         else:
             assert False
+        self._client = client.protocol
 
     def close(self):
         """Disconnect client."""
         with self._lock:
             self._client.close()
-
-    def connect(self):
-        """Connect client."""
-        with self._lock:
-            self._client.connect()
 
     def read_coils(self, unit, address, count):
         """Read coils."""
