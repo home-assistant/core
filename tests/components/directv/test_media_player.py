@@ -56,6 +56,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.directv import (
     DOMAIN,
     MOCK_GET_LOCATIONS_MULTIPLE,
+    MOCK_GET_TUNED_403,
     RECORDING,
     MockDirectvClass,
     setup_integration,
@@ -190,15 +191,17 @@ async def test_get_tuned_access_control(hass: HomeAssistantType) -> None:
     """Test get_tuned method encountering access control via HTTP 403."""
     with patch(
         "tests.components.directv.test_media_player.MockDirectvClass.get_tuned",
-        side_effect=RequestException,
+        return_value=MOCK_GET_TUNED_403,
     ):
         await setup_directv_with_locations(hass)
 
     state = hass.states.get(MAIN_ENTITY_ID)
-    assert state.attributes.media_content_id == None
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_ID) is None
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) is None
 
     state = hass.states.get(CLIENT_ENTITY_ID)
-    assert state.attributes.media_content_id == None
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_ID) is None
+    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) is None
 
 
 async def test_unique_id(hass: HomeAssistantType) -> None:

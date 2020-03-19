@@ -81,6 +81,15 @@ MOCK_GET_LOCATIONS_MULTIPLE = {
     },
 }
 
+MOCK_GET_TUNED_403 = {
+    "status": {
+        "code": 403,
+        "commandResult": 1,
+        "msg": "Forbidden.",
+        "query": "/tv/getTuned",
+    }
+}
+
 MOCK_GET_VERSION = {
     "accessCardId": "0021-1495-6572",
     "receiverId": "0288 7745 5858",

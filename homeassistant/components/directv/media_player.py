@@ -184,6 +184,11 @@ class DirecTvDevice(MediaPlayerDevice):
                         if not self._paused or self._last_update is None
                         else self._last_update
                     )
+                elif self._current["status"]["code"] == 403:
+                    _LOGGER.error(
+                        "%s: Media information unavailable. Please ensure that external device access is allowed on your receiver.",
+                        self.entity_id,
+                    )
                 else:
                     # If an error is received then only set to unavailable if
                     # this started at least 1 minute ago.
@@ -293,12 +298,12 @@ class DirecTvDevice(MediaPlayerDevice):
         if self._is_standby:
             return None
 
-        return self._current["programId"]
+        return self._current.get("programId")
 
     @property
     def media_content_type(self):
         """Return the content type of current playing media."""
-        if self._is_standby:
+        if self._is_standby or "programId" not in self._current:
             return None
 
         if "episodeTitle" in self._current:
@@ -312,7 +317,7 @@ class DirecTvDevice(MediaPlayerDevice):
         if self._is_standby:
             return None
 
-        return self._current["duration"]
+        return self._current.get("duration")
 
     @property
     def media_position(self):
@@ -339,7 +344,7 @@ class DirecTvDevice(MediaPlayerDevice):
         if self._is_standby:
             return None
 
-        return self._current["title"]
+        return self._current.get("title")
 
     @property
     def media_series_title(self):
@@ -355,6 +360,9 @@ class DirecTvDevice(MediaPlayerDevice):
         if self._is_standby:
             return None
 
+        if "callsign" not in self._current or "major" not in self._current:
+            return None
+
         return f"{self._current['callsign']} ({self._current['major']})"
 
     @property
@@ -363,7 +371,7 @@ class DirecTvDevice(MediaPlayerDevice):
         if self._is_standby:
             return None
 
-        return self._current["major"]
+        return self._current.get("major")
 
     @property
     def supported_features(self):
@@ -376,7 +384,7 @@ class DirecTvDevice(MediaPlayerDevice):
         if self._is_standby:
             return None
 
-        return self._current["isRecording"]
+        return self._current.get("isRecording")
 
     @property
     def media_rating(self):
@@ -384,7 +392,7 @@ class DirecTvDevice(MediaPlayerDevice):
         if self._is_standby:
             return None
 
-        return self._current["rating"]
+        return self._current.get("rating")
 
     @property
     def media_recorded(self):
@@ -397,7 +405,7 @@ class DirecTvDevice(MediaPlayerDevice):
     @property
     def media_start_time(self):
         """Start time the program aired."""
-        if self._is_standby:
+        if self._is_standby or "startTime" not in self._current:
             return None
 
         return dt_util.as_local(dt_util.utc_from_timestamp(self._current["startTime"]))
