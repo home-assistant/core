@@ -50,8 +50,8 @@ class InvalidAuthError(HomeAssistantError):
 
 async def raise_for_status(response: ClientResponse) -> None:
     """Raise exception on data failure with logging."""
-    if 400 <= response.status:
-        e = ClientResponseError(
+    if response.status >= 400:
+        standard = ClientResponseError(
             response.request_info,
             response.history,
             code=response.status,
@@ -59,7 +59,7 @@ async def raise_for_status(response: ClientResponse) -> None:
         )
         data = await response.text()
         _LOGGER.error("Request failed: %s", data)
-        raise InvalidAuthError(data) from e
+        raise InvalidAuthError(data) from standard
 
 
 WANTED_SCOPES = set(["openid", "email", "profile"])
