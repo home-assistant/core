@@ -1,11 +1,11 @@
 """Config flow for Apple TV integration."""
-import logging
 from ipaddress import ip_address
+import logging
 from random import randrange
 
 from pyatv import const, convert, exceptions, pair, scan
-
 import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -19,7 +19,6 @@ from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_CREDENTIALS  # pylint: disable=unused-import
 from .const import (
     CONF_CREDENTIALS_AIRPLAY,
     CONF_CREDENTIALS_DMAP,
@@ -28,6 +27,7 @@ from .const import (
     CONF_START_OFF,
     DOMAIN,
 )
+from .const import CONF_CREDENTIALS  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 

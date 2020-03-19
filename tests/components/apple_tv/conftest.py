@@ -2,13 +2,14 @@
 
 from unittest.mock import patch
 
-import pytest
 from pyatv import conf
+import pytest
 
 from homeassistant.components.apple_tv import config_flow
-from tests.common import MockConfigEntry, mock_coro
 
 from .common import FlowInteraction, MockPairingHandler, create_conf
+
+from tests.common import MockConfigEntry, mock_coro
 
 
 @pytest.fixture

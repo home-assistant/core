@@ -1,15 +1,14 @@
 """The Apple TV integration."""
 import asyncio
-import logging
 from functools import partial
+import logging
 from random import randrange
 from typing import Sequence, TypeVar, Union
 
 from pyatv import connect, exceptions, scan
 from pyatv.const import Protocol
-
-import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
@@ -21,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_CREDENTIALS,
