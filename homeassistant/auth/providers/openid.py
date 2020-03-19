@@ -29,8 +29,6 @@ CONF_TOKEN_URI = "token_uri"
 CONF_AUTHORIZATION_URI = "authorization_uri"
 CONF_EMAILS = "emails"
 
-DATA_JWT_SECRET = "openid_jwt_secret"
-
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
     {
         vol.Required(CONF_ISSUER): str,
