@@ -40,6 +40,7 @@ CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
 )
 
 AUTH_CALLBACK_PATH = "/api/openid/redirect"
+DATA_OPENID_VIEW = "openid_view"
 
 
 class InvalidAuthError(HomeAssistantError):
@@ -59,8 +60,6 @@ async def raise_for_status(response: ClientResponse) -> None:
         _LOGGER.error("Request failed: %s", data)
         raise InvalidAuthError(data) from e
 
-
-registered = False
 
 WANTED_SCOPES = set(["openid", "email", "profile"])
 
@@ -101,10 +100,11 @@ class OpenIdAuthProvider(AuthProvider):
 
     async def async_login_flow(self, context: Optional[Dict]) -> LoginFlow:
         """Return a flow to login."""
-        global registered
-        if not registered:
-            self.hass.http.register_view(OpenIdCallbackView())  # type: ignore
-        registered = True
+        if DATA_OPENID_VIEW not in self.hass.data:
+            self.hass.data[DATA_OPENID_VIEW] = self.hass.http.register_view(  # type: ignore
+                OpenIdCallbackView()
+            )
+
         return OpenIdLoginFlow(self)
 
     async def async_retrieve_token(self, code: str) -> Dict[str, Any]:
