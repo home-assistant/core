@@ -26,8 +26,8 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
-from . import find_unique_id_for_remote
 from .const import DOMAIN, SERVICE_CHANGE_CHANNEL, SERVICE_SYNC
+from .util import find_unique_id_for_remote
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -137,13 +137,6 @@ async def async_setup_entry(
     register_services(hass)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Shutdown a harmony remote for removal."""
-
-    device = hass.data[DOMAIN][entry.entry_id]
-    await device.shutdown()
-
-
 def register_services(hass):
     """Register all services for harmony devices."""
     hass.services.async_register(
@@ -243,7 +236,7 @@ class HarmonyRemote(remote.RemoteDevice):
         # activity
         await self.new_config()
 
-    async def shutdown(self, _):
+    async def shutdown(self):
         """Close connection on shutdown."""
         _LOGGER.debug("%s: Closing Harmony Hub", self._name)
         try:

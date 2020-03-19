@@ -16,8 +16,8 @@ from homeassistant.components.remote import (
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 
-from . import find_unique_id_for_remote
 from .const import DOMAIN, UNIQUE_ID
+from .util import find_unique_id_for_remote
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,6 +90,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, discovery_info):
         """Handle a discovered Harmony device."""
+        _LOGGER.debug("SSDP discovery_info: %s", discovery_info)
+
         parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
         friendly_name = discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME]
 

@@ -85,6 +85,43 @@ async def test_form_import(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_ssdp(hass):
+    """Test we get the form with ssdp source."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    harmonyapi = _get_mock_harmonyapi(connect=True)
+    with patch(
+        "homeassistant.components.harmony.config_flow.HarmonyAPI",
+        return_value=harmonyapi,
+    ), patch(
+        "homeassistant.components.harmony.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.harmony.async_setup_entry", return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_SSDP},
+            data={
+                "friendlyName": "Harmony Hub",
+                "ssdp_location": "http://192.168.209.238:8088/description",
+            },
+        )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == "friend"
+    assert result["data"] == {
+        "host": "1.2.3.4",
+        "name": "friend",
+    }
+    assert result["options"] == {
+        "activity": "Watch TV",
+        "delay_secs": 0.9,
+    }
+    await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_form_cannot_connect(hass):
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(

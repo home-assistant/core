@@ -2,8 +2,6 @@
 import asyncio
 import logging
 
-from aioharmony.harmonyapi import HarmonyAPI as HarmonyClient
-
 from homeassistant.components.remote import ATTR_ACTIVITY, ATTR_DELAY_SECS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -70,19 +68,6 @@ async def _update_listener(hass, entry):
 
     if ATTR_ACTIVITY in entry.options:
         device.default_activity = entry.options[ATTR_ACTIVITY]
-
-
-def find_unique_id_for_remote(harmony: HarmonyClient):
-    """Find the unique id for both websocket and xmpp clients."""
-    websocket_unique_id = harmony.hub_config.info.get("activeRemoteId")
-    if websocket_unique_id is not None:
-        return websocket_unique_id
-
-    xmpp_unique_id = harmony.config.get("global", {}).get("timeStampHash")
-    if not xmpp_unique_id:
-        return None
-
-    return xmpp_unique_id.split(";")[-1]
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
