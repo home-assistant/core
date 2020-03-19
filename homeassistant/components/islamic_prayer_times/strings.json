@@ -19,9 +19,6 @@
           "calculation_method": "Prayer calculation method"
         }
       }
-    },
-    "error": {
-      "wrong_method": "possible values [karachi, isna, mwl, makkah]"
     }
   }
 }

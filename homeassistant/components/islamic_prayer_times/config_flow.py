@@ -44,13 +44,8 @@ class IslamicPrayerOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Manage options."""
-        errors = {}
-
         if user_input is not None:
-            if user_input[CONF_CALC_METHOD] in CALC_METHODS:
-                return self.async_create_entry(title="", data=user_input)
-
-            errors[CONF_CALC_METHOD] = "wrong_method"
+            return self.async_create_entry(title="", data=user_input)
 
         options = {
             vol.Optional(
@@ -58,9 +53,7 @@ class IslamicPrayerOptionsFlowHandler(config_entries.OptionsFlow):
                 default=self.config_entry.options.get(
                     CONF_CALC_METHOD, DEFAULT_CALC_METHOD
                 ),
-            ): str
+            ): vol.In(CALC_METHODS)
         }
 
-        return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(options), errors=errors
-        )
+        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))

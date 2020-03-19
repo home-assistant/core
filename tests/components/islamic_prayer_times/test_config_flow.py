@@ -43,16 +43,6 @@ async def test_options(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_CALC_METHOD] == "makkah"
 
-    # Test calc_method is wrong
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_CALC_METHOD: "bla"}
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {CONF_CALC_METHOD: "wrong_method"}
-
 
 async def test_import(hass):
     """Test import step."""
