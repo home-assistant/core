@@ -75,10 +75,6 @@ class OpenIdAuthProvider(AuthProvider):
     _discovery_document: Dict[str, Any]
     _jwks: Dict[str, Any]
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """Extend parent's __init__."""
-        super().__init__(*args, **kwargs)
-
     async def async_get_discovery_document(self) -> None:
         """Cache discovery document for openid."""
         if hasattr(self, "._discovery_document"):
