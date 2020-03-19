@@ -23,11 +23,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         }
 
         devices = hass.data[DOMAIN][DEVICES]
-
+        optimistic = False
+        if CONF_OPTIMISTIC in hass.data[DOMAIN]:
+            optimistic = hass.data[DOMAIN][CONF_OPTIMISTIC]
         return [
-            SomfyCover(
-                cover, hass.data[DOMAIN][API], hass.data[DOMAIN][CONF_OPTIMISTIC]
-            )
+            SomfyCover(cover, hass.data[DOMAIN][API], optimistic)
             for cover in devices
             if categories & set(cover.categories)
         ]
