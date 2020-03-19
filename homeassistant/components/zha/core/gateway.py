@@ -7,10 +7,12 @@ import logging
 import os
 import traceback
 
+from serial import SerialException
 import zigpy.device as zigpy_dev
 
 from homeassistant.components.system_log import LogEntry, _figure_out_source
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import (
     CONNECTION_ZIGBEE,
     async_get_registry as get_dev_reg,
@@ -98,7 +100,6 @@ class ZHAGateway:
         self.ha_entity_registry = None
         self.application_controller = None
         self.radio_description = None
-        hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
         self._log_levels = {
             DEBUG_LEVEL_ORIGINAL: async_capture_log_levels(),
             DEBUG_LEVEL_CURRENT: async_capture_log_levels(),
@@ -122,7 +123,11 @@ class ZHAGateway:
         radio_details = RADIO_TYPES[radio_type]
         radio = radio_details[ZHA_GW_RADIO]()
         self.radio_description = radio_details[ZHA_GW_RADIO_DESCRIPTION]
-        await radio.connect(usb_path, baudrate)
+        try:
+            await radio.connect(usb_path, baudrate)
+        except (SerialException, OSError) as exception:
+            _LOGGER.error("Couldn't open serial port for ZHA: %s", str(exception))
+            raise ConfigEntryNotReady
 
         if CONF_DATABASE in self._config:
             database = self._config[CONF_DATABASE]
@@ -133,7 +138,22 @@ class ZHAGateway:
         apply_application_controller_patch(self)
         self.application_controller.add_listener(self)
         self.application_controller.groups.add_listener(self)
-        await self.application_controller.startup(auto_form=True)
+
+        try:
+            res = await self.application_controller.startup(auto_form=True)
+            if res is False:
+                await self.application_controller.shutdown()
+                raise ConfigEntryNotReady
+        except asyncio.TimeoutError as exception:
+            _LOGGER.error(
+                "Couldn't start %s coordinator",
+                radio_details[ZHA_GW_RADIO_DESCRIPTION],
+                exc_info=exception,
+            )
+            radio.close()
+            raise ConfigEntryNotReady from exception
+
+        self._hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
         self._hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(
             self.application_controller.ieee
         )
