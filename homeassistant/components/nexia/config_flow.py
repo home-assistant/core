@@ -20,7 +20,6 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    nexia_home = None
     try:
         nexia_home = NexiaHome(
             username=data[CONF_USERNAME],
