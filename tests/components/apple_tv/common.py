@@ -5,7 +5,7 @@ from functools import partial
 from pyatv import conf, interface
 from pyatv.const import Protocol
 
-from homeassistant.components.apple_tv.const import DOMAIN
+from homeassistant.data_entry_flow import AbortFlow
 
 
 class MockPairingHandler(interface.PairingHandler):
@@ -14,13 +14,12 @@ class MockPairingHandler(interface.PairingHandler):
     def __init__(self, *args):
         """Initialize a new MockPairingHandler."""
         super().__init__(*args)
-        self.pin_code = None
-        self.paired = False
         self.always_fail = False
 
     def pin(self, pin):
         """Pin code used for pairing."""
         self.pin_code = pin
+        self.paired = False
 
     @property
     def device_provides_pin(self):
@@ -75,6 +74,7 @@ class FlowInteraction:
         self.flow = flow
         self.name = None
         self.result = None
+        self.exception = None
 
     def __getattr__(self, attr):
         """Return correct action method dynamically based on name."""
@@ -96,13 +96,16 @@ class FlowInteraction:
 
     async def _init(self, **data):
         self.result = await self.flow.hass.config_entries.flow.async_init(
-            DOMAIN, data={**data}, context={"source": self.name}
+            "apple_tv", data={**data}, context={"source": self.name}
         )
         return self
 
     async def _step(self, has_input=True, **user_input):
         args = {**user_input} if has_input else None
-        self.result = await getattr(self.flow, "async_step_" + self.name)(args)
+        try:
+            self.result = await getattr(self.flow, "async_step_" + self.name)(args)
+        except AbortFlow as ex:
+            self.exception = ex
         return self
 
     def _form(self, step_id, **kwargs):
@@ -116,13 +119,16 @@ class FlowInteraction:
         assert self.result["data"] == entry
 
     def _abort(self, reason):
-        assert self.result["type"] == "abort"
-        assert self.result["reason"] == reason
+        if self.result:
+            assert self.result["type"] == "abort"
+            assert self.result["reason"] == reason
+        else:
+            assert self.exception.reason, reason
 
 
-def create_conf(address, name, *services):
+def create_conf(name, address, *services):
     """Create an Apple TV configuration."""
-    atv = conf.AppleTV(address, name)
+    atv = conf.AppleTV(name, address)
     for service in services:
         atv.add_service(service)
     return atv

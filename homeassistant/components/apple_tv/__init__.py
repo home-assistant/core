@@ -243,7 +243,7 @@ class AppleTVManager:
         _LOGGER.debug("Authentication error, reconfigure integration")
 
         name = self.config_entry.data.get(CONF_NAME)
-        identifier = self.config_entry.data.get(CONF_IDENTIFIER)
+        identifier = self.config_entry.unique_id
 
         self.hass.components.persistent_notification.create(
             "An irrecoverable connection problem occurred when connecting to "
@@ -265,7 +265,7 @@ class AppleTVManager:
         )
 
     async def _scan(self):
-        identifier = self.config_entry.data[CONF_IDENTIFIER]
+        identifier = self.config_entry.unique_id
         address = self.config_entry.data[CONF_ADDRESS]
         protocol = Protocol(self.config_entry.data[CONF_PROTOCOL])
 

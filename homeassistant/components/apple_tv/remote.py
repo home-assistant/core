@@ -6,27 +6,16 @@ from homeassistant.components import remote
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 
-from .const import CONF_IDENTIFIER, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Apple TV remote platform."""
-    if not discovery_info:
-        return
-
-    identifier = discovery_info[CONF_IDENTIFIER]
-    name = discovery_info[CONF_NAME]
-    manager = hass.data[DOMAIN][identifier]
-    async_add_entities([AppleTVRemote(name, identifier, manager)])
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Load Apple TV remote based on a config entry."""
-    identifier = config_entry.data[CONF_IDENTIFIER]
+    identifier = config_entry.unique_id
     name = config_entry.data[CONF_NAME]
     manager = hass.data[DOMAIN][config_entry.unique_id]
     async_add_entities([AppleTVRemote(name, identifier, manager)])

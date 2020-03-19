@@ -30,7 +30,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
 
-from .const import CONF_IDENTIFIER, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ SUPPORT_APPLE_TV = (
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Load Apple TV media player based on a config entry."""
-    identifier = config_entry.data[CONF_IDENTIFIER]
+    identifier = config_entry.unique_id
     name = config_entry.data[CONF_NAME]
     manager = hass.data[DOMAIN][config_entry.unique_id]
     async_add_entities([AppleTvDevice(name, identifier, manager)])

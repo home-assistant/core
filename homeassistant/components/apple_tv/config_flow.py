@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -100,23 +101,19 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize a new AppleTVConfigFlow."""
         self.scan_result = None
         self.atv = None
-        self.identifier = None
         self.protocol = None
         self.pairing = None
         self.credentials = {}  # Protocol -> credentials
 
     async def async_step_invalid_credentials(self, info):
         """Handle initial step when updating invalid credentials."""
-        self.identifier = info.get(CONF_IDENTIFIER)
+        await self.async_set_unique_id(info.get(CONF_IDENTIFIER))
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {"name": info.get(CONF_NAME)}
 
-        await self.async_set_unique_id(self.identifier)
-        self._abort_if_unique_id_configured()
-
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context["identifier"] = self.identifier
+        self.context["identifier"] = self.unique_id
         return await self.async_step_reconfigure()
 
     async def async_step_reconfigure(self, user_input=None):
@@ -137,7 +134,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         default_suggestion = self._prefill_identifier()
         if user_input is not None:
-            self.identifier = user_input[CONF_IDENTIFIER]
+            await self.async_set_unique_id(user_input[CONF_IDENTIFIER])
             try:
                 await self.async_find_device()
                 return await self.async_step_confirm()
@@ -152,7 +149,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             # Use whatever the user entered as default value
-            default_suggestion = self.identifier
+            default_suggestion = self.unique_id
 
         return self.async_show_form(
             step_id="user",
@@ -170,23 +167,22 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         properties = discovery_info["properties"]
 
         if service_type == "_mediaremotetv._tcp.local.":
-            self.identifier = properties["UniqueIdentifier"]
+            identifier = properties["UniqueIdentifier"]
             name = properties["Name"]
         elif service_type == "_touch-able._tcp.local.":
-            self.identifier = discovery_info["name"].split(".")[0]
+            identifier = discovery_info["name"].split(".")[0]
             name = properties["CtlN"]
         elif service_type == "_appletv-v2._tcp.local.":
-            self.identifier = discovery_info["name"].split(".")[0]
+            identifier = discovery_info["name"].split(".")[0]
             name = properties["Name"] + " (Home Sharing)"
         else:
             return self.async_abort(reason="unrecoverable_error")
 
-        for flow in self._async_in_progress():
-            if flow["context"].get("identifier") == self.identifier:
-                return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(identifier, raise_on_progress=True)
+        self._abort_if_unique_id_configured()
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context["identifier"] = self.identifier
+        self.context["identifier"] = self.unique_id
         self.context["title_placeholders"] = {"name": name}
         return await self.async_find_device_wrapper(self.async_step_confirm)
 
@@ -211,7 +207,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_find_device(self, allow_exist=False):
         """Scan for the selected device to discover services."""
         self.scan_result, self.atv = await device_scan(
-            self.identifier, self.hass.loop, cache=self.scan_result
+            self.unique_id, self.hass.loop, cache=self.scan_result
         )
         if not self.atv:
             raise DeviceNotFound()
@@ -220,7 +216,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if not allow_exist:
             for identifier in self.atv.all_identifiers:
-                if self._is_already_configured(identifier):
+                if identifier in self._async_current_ids():
                     raise DeviceAlreadyConfigured()
 
         # If credentials were found, save them
@@ -248,7 +244,6 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Any more protocols to pair? Else bail out here
         if not self.protocol:
             return await self._async_get_entry(
-                self.atv.identifier,
                 self.atv.main_service().protocol,
                 self.atv.name,
                 self.credentials,
@@ -295,6 +290,8 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_begin_pairing()
             except exceptions.PairingError:
                 errors["base"] = "auth"
+            except AbortFlow:
+                raise
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -340,15 +337,14 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, info):
         """Import device from configuration file."""
-        self.identifier = info.get(CONF_IDENTIFIER)
+        await self.async_set_unique_id(info.get(CONF_IDENTIFIER))
 
-        _LOGGER.debug("Importing device with identifier %s", self.identifier)
+        _LOGGER.debug("Importing device with identifier %s", self.unique_id)
         creds = {
             CREDENTIAL_MAPPING[prot]: creds
             for prot, creds in info.get(CONF_CREDENTIALS).items()
         }
         return await self._async_get_entry(
-            info.get(CONF_IDENTIFIER),
             const.Protocol[info.get(CONF_PROTOCOL)],
             info.get(CONF_NAME),
             creds,
@@ -357,24 +353,19 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_get_entry(
-        self, identifier, protocol, name, credentials, address, is_import=False
+        self, protocol, name, credentials, address, is_import=False
     ):
         if not is_valid_credentials(credentials):
             return self.async_abort(reason="invalid_config")
 
         data = {
-            CONF_IDENTIFIER: identifier,
             CONF_PROTOCOL: protocol.value,
             CONF_NAME: name,
             CONF_CREDENTIALS: credentials,
             CONF_ADDRESS: str(address),
         }
 
-        config_entry = self._get_config_entry(identifier)
-        if config_entry:
-            config_entry.data.update(data)
-            self.hass.config_entries.async_update_entry(config_entry)
-            return self.async_abort(reason="updated_configuration")
+        self._abort_if_unique_id_configured(updates=data)
 
         title = name + (" (import from configuration.yaml)" if is_import else "")
         return self.async_create_entry(title=title, data=data)
@@ -395,25 +386,16 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             [
                 f"`{atv.name} ({atv.address})`"
                 for atv in self.scan_result
-                if not self._is_already_configured(atv.identifier)
+                if atv.identifier not in self._async_current_ids()
             ]
         )
 
     def _prefill_identifier(self):
         # Return identifier (address) of one device that has not been paired with
         for atv in self.scan_result:
-            if not self._is_already_configured(atv.identifier):
+            if atv.identifier not in self._async_current_ids():
                 return str(atv.address)
         return ""
-
-    def _is_already_configured(self, identifier):
-        return self._get_config_entry(identifier) is not None
-
-    def _get_config_entry(self, identifier):
-        for entry in self._async_current_entries():
-            if entry.data[CONF_IDENTIFIER] == identifier:
-                return entry
-        return None
 
 
 class AppleTVOptionsFlow(config_entries.OptionsFlow):
