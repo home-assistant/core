@@ -11,27 +11,15 @@ from nexia.const import (
     SYSTEM_STATUS_COOL,
     SYSTEM_STATUS_HEAT,
     SYSTEM_STATUS_IDLE,
-    UNIT_FAHRENHEIT,
 )
-import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_AUX_HEAT,
-    ATTR_CURRENT_HUMIDITY,
-    ATTR_FAN_MODE,
-    ATTR_FAN_MODES,
-    ATTR_HUMIDITY,
-    ATTR_HVAC_MODE,
-    ATTR_HVAC_MODES,
     ATTR_MAX_HUMIDITY,
-    ATTR_MAX_TEMP,
     ATTR_MIN_HUMIDITY,
-    ATTR_MIN_TEMP,
-    ATTR_PRESET_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    ATTR_TARGET_TEMP_STEP,
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -48,22 +36,17 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     STATE_OFF,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-import homeassistant.helpers.config_validation as cv
 
 from .const import (
-    ATTR_AIRCLEANER_MODE,
     ATTR_DEHUMIDIFY_SETPOINT,
     ATTR_DEHUMIDIFY_SUPPORTED,
-    ATTR_HOLD_MODES,
     ATTR_HUMIDIFY_SETPOINT,
     ATTR_HUMIDIFY_SUPPORTED,
-    ATTR_SETPOINT_STATUS,
     ATTR_ZONE_STATUS,
     ATTRIBUTION,
     DATA_NEXIA,
@@ -75,25 +58,6 @@ from .const import (
 from .entity import NexiaEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-SERVICE_SET_AIRCLEANER_MODE = "set_aircleaner_mode"
-SERVICE_SET_HUMIDIFY_SETPOINT = "set_humidify_setpoint"
-
-SET_FAN_MIN_ON_TIME_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_AIRCLEANER_MODE): cv.string,
-    }
-)
-
-SET_HUMIDITY_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_HUMIDITY): vol.All(
-            vol.Coerce(int), vol.Range(min=35, max=65)
-        ),
-    }
-)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -232,22 +196,6 @@ class NexiaZone(NexiaEntity, ClimateDevice):
 
     @property
     def hvac_mode(self):
-        """Operation requested ie. heat, cool, idle."""
-        return self.mode
-
-    @property
-    def hvac_modes(self):
-        """List of HVAC available modes."""
-        return [
-            HVAC_MODE_OFF,
-            HVAC_MODE_AUTO,
-            HVAC_MODE_HEAT_COOL,
-            HVAC_MODE_HEAT,
-            HVAC_MODE_COOL,
-        ]
-
-    @property
-    def mode(self):
         """Return current mode, as the user-visible name."""
 
         mode = self._device.get_requested_mode()
@@ -264,6 +212,17 @@ class NexiaZone(NexiaEntity, ClimateDevice):
         if mode == OPERATION_MODE_COOL:
             return HVAC_MODE_COOL
         raise KeyError(f"Unhandled mode: {mode}")
+
+    @property
+    def hvac_modes(self):
+        """List of HVAC available modes."""
+        return [
+            HVAC_MODE_OFF,
+            HVAC_MODE_AUTO,
+            HVAC_MODE_HEAT_COOL,
+            HVAC_MODE_HEAT,
+            HVAC_MODE_COOL,
+        ]
 
     def set_temperature(self, **kwargs):
         """Set target temperature."""
@@ -317,25 +276,8 @@ class NexiaZone(NexiaEntity, ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
-        target_temp_step = 0.5
-        if self.thermostat.get_unit() == UNIT_FAHRENHEIT:
-            target_temp_step = 1.0
-
-        (min_temp, max_temp) = self.thermostat.get_setpoint_limits()
         data = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_FAN_MODE: self.thermostat.get_fan_mode(),
-            ATTR_HVAC_MODE: self.mode,
-            ATTR_TARGET_TEMP_HIGH: self._device.get_cooling_setpoint(),
-            ATTR_TARGET_TEMP_LOW: self._device.get_heating_setpoint(),
-            ATTR_TARGET_TEMP_STEP: target_temp_step,
-            ATTR_MIN_TEMP: min_temp,
-            ATTR_MAX_TEMP: max_temp,
-            ATTR_FAN_MODES: FAN_MODES,
-            ATTR_HVAC_MODES: self.hvac_modes,
-            ATTR_PRESET_MODE: self._device.get_preset(),
-            ATTR_HOLD_MODES: self._device.get_presets(),
-            ATTR_SETPOINT_STATUS: self._device.get_setpoint_status(),
             ATTR_ZONE_STATUS: self._device.get_status(),
         }
 
@@ -350,9 +292,6 @@ class NexiaZone(NexiaEntity, ClimateDevice):
                 {
                     ATTR_HUMIDIFY_SUPPORTED: self._has_humidify_support,
                     ATTR_DEHUMIDIFY_SUPPORTED: self._has_dehumidify_support,
-                    ATTR_CURRENT_HUMIDITY: round(
-                        self.thermostat.get_relative_humidity() * 100.0, 1
-                    ),
                     ATTR_MIN_HUMIDITY: round(
                         self.thermostat.get_humidity_setpoint_limits()[0] * 100.0, 1,
                     ),
@@ -365,9 +304,6 @@ class NexiaZone(NexiaEntity, ClimateDevice):
                 data.update(
                     {
                         ATTR_DEHUMIDIFY_SETPOINT: round(
-                            self.thermostat.get_dehumidify_setpoint() * 100.0, 1
-                        ),
-                        ATTR_HUMIDITY: round(
                             self.thermostat.get_dehumidify_setpoint() * 100.0, 1
                         ),
                     }
@@ -406,10 +342,6 @@ class NexiaZone(NexiaEntity, ClimateDevice):
         """Turn. on the zone."""
         self.set_hvac_mode(OPERATION_MODE_AUTO)
         self.schedule_update_ha_state()
-
-    def set_swing_mode(self, swing_mode):
-        """Unsupported - Swing Mode."""
-        raise NotImplementedError("set_swing_mode is not supported by this device")
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set the system mode (Auto, Heat_Cool, Cool, Heat, etc)."""
