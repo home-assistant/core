@@ -379,3 +379,10 @@ class NexiaZone(NexiaEntity, ClimateDevice):
         """Set the humidify setpoint."""
         self.thermostat.set_humidify_setpoint(humidify_setpoint / 100.0)
         self.schedule_update_ha_state()
+
+    async def async_update(self):
+        """Update the entity.
+
+        Only used by the generic entity update service.
+        """
+        await self._coordinator.async_request_refresh()
