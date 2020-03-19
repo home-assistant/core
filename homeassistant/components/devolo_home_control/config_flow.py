@@ -60,7 +60,7 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
         except WrongCredentialsError:
-            return self._show_form({"base": "invalid_credentials"})
+            return self._show_form({"base": "connection_error"})
 
     @callback
     def _show_form(self, errors=None):
