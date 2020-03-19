@@ -15,14 +15,18 @@ from homeassistant.components.climate.const import (
     PRESET_BOOST,
     PRESET_ECO,
     PRESET_NONE,
+    SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
     SUPPORT_SWING_MODE,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.components.zwave import climate
-from homeassistant.components.zwave.climate import DEFAULT_HVAC_MODES
+from homeassistant.components.zwave import climate, const
+from homeassistant.components.zwave.climate import (
+    AUX_HEAT_ZWAVE_MODE,
+    DEFAULT_HVAC_MODES,
+)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 from tests.mock.zwave import MockEntityValues, MockNode, MockValue, value_changed
@@ -34,6 +38,7 @@ def device(hass, mock_openzwave):
     node = MockNode()
     values = MockEntityValues(
         primary=MockValue(
+            command_class=const.COMMAND_CLASS_THERMOSTAT_MODE,
             data=HVAC_MODE_HEAT,
             data_items=[
                 HVAC_MODE_OFF,
@@ -62,6 +67,7 @@ def device_zxt_120(hass, mock_openzwave):
 
     values = MockEntityValues(
         primary=MockValue(
+            command_class=const.COMMAND_CLASS_THERMOSTAT_MODE,
             data=HVAC_MODE_HEAT,
             data_items=[
                 HVAC_MODE_OFF,
@@ -90,6 +96,7 @@ def device_mapping(hass, mock_openzwave):
     node = MockNode()
     values = MockEntityValues(
         primary=MockValue(
+            command_class=const.COMMAND_CLASS_THERMOSTAT_MODE,
             data="Heat",
             data_items=["Off", "Cool", "Heat", "Full Power", "Auto"],
             node=node,
@@ -112,6 +119,7 @@ def device_unknown(hass, mock_openzwave):
     node = MockNode()
     values = MockEntityValues(
         primary=MockValue(
+            command_class=const.COMMAND_CLASS_THERMOSTAT_MODE,
             data="Heat",
             data_items=["Off", "Cool", "Heat", "heat_cool", "Abcdefg"],
             node=node,
@@ -134,6 +142,7 @@ def device_heat_cool(hass, mock_openzwave):
     node = MockNode()
     values = MockEntityValues(
         primary=MockValue(
+            command_class=const.COMMAND_CLASS_THERMOSTAT_MODE,
             data=HVAC_MODE_HEAT,
             data_items=[
                 HVAC_MODE_OFF,
@@ -162,6 +171,7 @@ def device_heat_cool_range(hass, mock_openzwave):
     node = MockNode()
     values = MockEntityValues(
         primary=MockValue(
+            command_class=const.COMMAND_CLASS_THERMOSTAT_MODE,
             data=HVAC_MODE_HEAT_COOL,
             data_items=[
                 HVAC_MODE_OFF,
@@ -189,6 +199,7 @@ def device_heat_cool_away(hass, mock_openzwave):
     node = MockNode()
     values = MockEntityValues(
         primary=MockValue(
+            command_class=const.COMMAND_CLASS_THERMOSTAT_MODE,
             data=HVAC_MODE_HEAT_COOL,
             data_items=[
                 HVAC_MODE_OFF,
@@ -219,6 +230,7 @@ def device_heat_eco(hass, mock_openzwave):
     node = MockNode()
     values = MockEntityValues(
         primary=MockValue(
+            command_class=const.COMMAND_CLASS_THERMOSTAT_MODE,
             data=HVAC_MODE_HEAT,
             data_items=[HVAC_MODE_OFF, HVAC_MODE_HEAT, "heat econ"],
             node=node,
@@ -235,8 +247,102 @@ def device_heat_eco(hass, mock_openzwave):
     yield device
 
 
+@pytest.fixture
+def device_aux_heat(hass, mock_openzwave):
+    """Fixture to provide a precreated climate device. aux heat."""
+    node = MockNode()
+    values = MockEntityValues(
+        primary=MockValue(
+            command_class=const.COMMAND_CLASS_THERMOSTAT_MODE,
+            data=HVAC_MODE_HEAT,
+            data_items=[HVAC_MODE_OFF, HVAC_MODE_HEAT, "Aux Heat"],
+            node=node,
+        ),
+        setpoint_heating=MockValue(data=2, node=node),
+        setpoint_eco_heating=MockValue(data=1, node=node),
+        temperature=MockValue(data=5, node=node, units=None),
+        fan_mode=MockValue(data="test2", data_items=[3, 4, 5], node=node),
+        operating_state=MockValue(data="test4", node=node),
+        fan_action=MockValue(data=7, node=node),
+    )
+    device = climate.get_device(hass, node=node, values=values, node_config={})
+
+    yield device
+
+
+@pytest.fixture
+def device_single_setpoint(hass, mock_openzwave):
+    """Fixture to provide a precreated climate device.
+
+    SETPOINT_THERMOSTAT device class.
+    """
+
+    node = MockNode()
+    values = MockEntityValues(
+        primary=MockValue(
+            command_class=const.COMMAND_CLASS_THERMOSTAT_SETPOINT, data=1, node=node
+        ),
+        mode=None,
+        temperature=MockValue(data=5, node=node, units=None),
+        fan_mode=MockValue(data="test2", data_items=[3, 4, 5], node=node),
+        operating_state=MockValue(data=CURRENT_HVAC_HEAT, node=node),
+        fan_action=MockValue(data=7, node=node),
+    )
+    device = climate.get_device(hass, node=node, values=values, node_config={})
+
+    yield device
+
+
+@pytest.fixture
+def device_single_setpoint_with_mode(hass, mock_openzwave):
+    """Fixture to provide a precreated climate device.
+
+    SETPOINT_THERMOSTAT device class with COMMAND_CLASS_THERMOSTAT_MODE command class
+    """
+
+    node = MockNode()
+    values = MockEntityValues(
+        primary=MockValue(
+            command_class=const.COMMAND_CLASS_THERMOSTAT_SETPOINT, data=1, node=node
+        ),
+        mode=MockValue(
+            command_class=const.COMMAND_CLASS_THERMOSTAT_MODE,
+            data=HVAC_MODE_HEAT,
+            data_items=[HVAC_MODE_OFF, HVAC_MODE_HEAT],
+            node=node,
+        ),
+        temperature=MockValue(data=5, node=node, units=None),
+        fan_mode=MockValue(data="test2", data_items=[3, 4, 5], node=node),
+        operating_state=MockValue(data=CURRENT_HVAC_HEAT, node=node),
+        fan_action=MockValue(data=7, node=node),
+    )
+    device = climate.get_device(hass, node=node, values=values, node_config={})
+
+    yield device
+
+
+def test_get_device_detects_none(hass, mock_openzwave):
+    """Test get_device returns None."""
+    node = MockNode()
+    value = MockValue(data=0, node=node)
+    values = MockEntityValues(primary=value)
+
+    device = climate.get_device(hass, node=node, values=values, node_config={})
+    assert device is None
+
+
+def test_get_device_detects_multiple_setpoint_device(device):
+    """Test get_device returns a Z-Wave multiple setpoint device."""
+    assert isinstance(device, climate.ZWaveClimateMultipleSetpoint)
+
+
+def test_get_device_detects_single_setpoint_device(device_single_setpoint):
+    """Test get_device returns a Z-Wave single setpoint device."""
+    assert isinstance(device_single_setpoint, climate.ZWaveClimateSingleSetpoint)
+
+
 def test_default_hvac_modes():
-    """Test wether all hvac modes are included in default_hvac_modes."""
+    """Test whether all hvac modes are included in default_hvac_modes."""
     for hvac_mode in HVAC_MODES:
         assert hvac_mode in DEFAULT_HVAC_MODES
 
@@ -274,6 +380,18 @@ def test_supported_features_preset_mode(device_mapping):
     )
 
 
+def test_supported_features_preset_mode_away(device_heat_cool_away):
+    """Test supported features flags with swing mode."""
+    device = device_heat_cool_away
+    assert (
+        device.supported_features
+        == SUPPORT_FAN_MODE
+        + SUPPORT_TARGET_TEMPERATURE
+        + SUPPORT_TARGET_TEMPERATURE_RANGE
+        + SUPPORT_PRESET_MODE
+    )
+
+
 def test_supported_features_swing_mode(device_zxt_120):
     """Test supported features flags with swing mode."""
     device = device_zxt_120
@@ -284,6 +402,27 @@ def test_supported_features_swing_mode(device_zxt_120):
         + SUPPORT_TARGET_TEMPERATURE_RANGE
         + SUPPORT_SWING_MODE
     )
+
+
+def test_supported_features_aux_heat(device_aux_heat):
+    """Test supported features flags with aux heat."""
+    device = device_aux_heat
+    assert (
+        device.supported_features
+        == SUPPORT_FAN_MODE + SUPPORT_TARGET_TEMPERATURE + SUPPORT_AUX_HEAT
+    )
+
+
+def test_supported_features_single_setpoint(device_single_setpoint):
+    """Test supported features flags for SETPOINT_THERMOSTAT."""
+    device = device_single_setpoint
+    assert device.supported_features == SUPPORT_FAN_MODE + SUPPORT_TARGET_TEMPERATURE
+
+
+def test_supported_features_single_setpoint_with_mode(device_single_setpoint_with_mode):
+    """Test supported features flags for SETPOINT_THERMOSTAT."""
+    device = device_single_setpoint_with_mode
+    assert device.supported_features == SUPPORT_FAN_MODE + SUPPORT_TARGET_TEMPERATURE
 
 
 def test_zxt_120_swing_mode(device_zxt_120):
@@ -328,6 +467,22 @@ def test_data_lists(device):
     ]
     assert device.preset_modes == []
     device.values.primary = None
+    assert device.preset_modes == []
+
+
+def test_data_lists_single_setpoint(device_single_setpoint):
+    """Test data lists from zwave value items."""
+    device = device_single_setpoint
+    assert device.fan_modes == [3, 4, 5]
+    assert device.hvac_modes == []
+    assert device.preset_modes == []
+
+
+def test_data_lists_single_setpoint_with_mode(device_single_setpoint_with_mode):
+    """Test data lists from zwave value items."""
+    device = device_single_setpoint_with_mode
+    assert device.fan_modes == [3, 4, 5]
+    assert device.hvac_modes == [HVAC_MODE_OFF, HVAC_MODE_HEAT]
     assert device.preset_modes == []
 
 
@@ -402,6 +557,14 @@ def test_target_value_set_eco(device_heat_eco):
     device.set_temperature(**{ATTR_TEMPERATURE: 0})
     assert device.values.setpoint_heating.data == 2
     assert device.values.setpoint_eco_heating.data == 0
+
+
+def test_target_value_set_single_setpoint(device_single_setpoint):
+    """Test values changed for climate device."""
+    device = device_single_setpoint
+    assert device.values.primary.data == 1
+    device.set_temperature(**{ATTR_TEMPERATURE: 2})
+    assert device.values.primary.data == 2
 
 
 def test_operation_value_set(device):
@@ -546,6 +709,15 @@ def test_target_changed_with_mode(device):
     assert device.target_temperature_high == 10
 
 
+def test_target_value_changed_single_setpoint(device_single_setpoint):
+    """Test values changed for climate device."""
+    device = device_single_setpoint
+    assert device.target_temperature == 1
+    device.values.primary.data = 2
+    value_changed(device.values.primary)
+    assert device.target_temperature == 2
+
+
 def test_temperature_value_changed(device):
     """Test values changed for climate device."""
     assert device.current_temperature == 5
@@ -677,3 +849,44 @@ def test_fan_action_value_changed(device):
     device.values.fan_action.data = 9
     value_changed(device.values.fan_action)
     assert device.device_state_attributes[climate.ATTR_FAN_ACTION] == 9
+
+
+def test_aux_heat_unsupported_set(device):
+    """Test aux heat for climate device."""
+    device = device
+    assert device.values.primary.data == HVAC_MODE_HEAT
+    device.turn_aux_heat_on()
+    assert device.values.primary.data == HVAC_MODE_HEAT
+    device.turn_aux_heat_off()
+    assert device.values.primary.data == HVAC_MODE_HEAT
+
+
+def test_aux_heat_unsupported_value_changed(device):
+    """Test aux heat for climate device."""
+    device = device
+    assert device.is_aux_heat is None
+    device.values.primary.data = HVAC_MODE_HEAT
+    value_changed(device.values.primary)
+    assert device.is_aux_heat is None
+
+
+def test_aux_heat_set(device_aux_heat):
+    """Test aux heat for climate device."""
+    device = device_aux_heat
+    assert device.values.primary.data == HVAC_MODE_HEAT
+    device.turn_aux_heat_on()
+    assert device.values.primary.data == AUX_HEAT_ZWAVE_MODE
+    device.turn_aux_heat_off()
+    assert device.values.primary.data == HVAC_MODE_HEAT
+
+
+def test_aux_heat_value_changed(device_aux_heat):
+    """Test aux heat for climate device."""
+    device = device_aux_heat
+    assert device.is_aux_heat is False
+    device.values.primary.data = AUX_HEAT_ZWAVE_MODE
+    value_changed(device.values.primary)
+    assert device.is_aux_heat is True
+    device.values.primary.data = HVAC_MODE_HEAT
+    value_changed(device.values.primary)
+    assert device.is_aux_heat is False

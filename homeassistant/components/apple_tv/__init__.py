@@ -88,16 +88,15 @@ def request_configuration(hass, config, atv, credentials):
         try:
             await atv.airplay.finish_authentication(pin)
             hass.components.persistent_notification.async_create(
-                "Authentication succeeded!<br /><br />Add the following "
-                "to credentials: in your apple_tv configuration:<br /><br />"
-                "{0}".format(credentials),
+                f"Authentication succeeded!<br /><br />"
+                f"Add the following to credentials: "
+                f"in your apple_tv configuration:<br /><br />{credentials}",
                 title=NOTIFICATION_AUTH_TITLE,
                 notification_id=NOTIFICATION_AUTH_ID,
             )
         except DeviceAuthenticationError as ex:
             hass.components.persistent_notification.async_create(
-                "Authentication failed! Did you enter correct PIN?<br /><br />"
-                "Details: {0}".format(ex),
+                f"Authentication failed! Did you enter correct PIN?<br /><br />Details: {ex}",
                 title=NOTIFICATION_AUTH_TITLE,
                 notification_id=NOTIFICATION_AUTH_ID,
             )
@@ -124,9 +123,7 @@ async def scan_apple_tvs(hass):
         if login_id is None:
             login_id = "Home Sharing disabled"
         devices.append(
-            "Name: {0}<br />Host: {1}<br />Login ID: {2}".format(
-                atv.name, atv.address, login_id
-            )
+            f"Name: {atv.name}<br />Host: {atv.address}<br />Login ID: {login_id}"
         )
 
     if not devices:

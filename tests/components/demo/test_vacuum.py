@@ -19,7 +19,6 @@ from homeassistant.components.vacuum import (
     ATTR_PARAMS,
     ATTR_STATUS,
     DOMAIN,
-    ENTITY_ID_ALL_VACUUMS,
     SERVICE_SEND_COMMAND,
     SERVICE_SET_FAN_SPEED,
     STATE_CLEANING,
@@ -118,14 +117,6 @@ class TestVacuumDemo(unittest.TestCase):
         self.hass.states.set(ENTITY_VACUUM_BASIC, STATE_OFF)
         self.hass.block_till_done()
         assert not vacuum.is_on(self.hass, ENTITY_VACUUM_BASIC)
-
-        self.hass.states.set(ENTITY_ID_ALL_VACUUMS, STATE_ON)
-        self.hass.block_till_done()
-        assert vacuum.is_on(self.hass)
-
-        self.hass.states.set(ENTITY_ID_ALL_VACUUMS, STATE_OFF)
-        self.hass.block_till_done()
-        assert not vacuum.is_on(self.hass)
 
         common.turn_on(self.hass, ENTITY_VACUUM_COMPLETE)
         self.hass.block_till_done()

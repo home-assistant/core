@@ -4,10 +4,11 @@ import unittest
 from unittest.mock import patch
 
 from aiohttp.hdrs import CONTENT_TYPE
+import defusedxml.ElementTree as ET
 import requests
 
 from homeassistant import const, setup
-from homeassistant.components import emulated_hue, http
+from homeassistant.components import emulated_hue
 
 from tests.common import get_test_home_assistant, get_test_instance_port
 
@@ -28,11 +29,7 @@ class TestEmulatedHue(unittest.TestCase):
         """Set up the class."""
         cls.hass = hass = get_test_home_assistant()
 
-        setup.setup_component(
-            hass, http.DOMAIN, {http.DOMAIN: {http.CONF_SERVER_PORT: HTTP_SERVER_PORT}}
-        )
-
-        with patch("homeassistant.components" ".emulated_hue.UPNPResponderThread"):
+        with patch("homeassistant.components.emulated_hue.UPNPResponderThread"):
             setup.setup_component(
                 hass,
                 emulated_hue.DOMAIN,
@@ -52,8 +49,6 @@ class TestEmulatedHue(unittest.TestCase):
 
     def test_description_xml(self):
         """Test the description."""
-        import defusedxml.ElementTree as ET
-
         result = requests.get(BRIDGE_URL_BASE.format("/description.xml"), timeout=5)
 
         assert result.status_code == 200

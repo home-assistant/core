@@ -3,7 +3,9 @@ ignore=tests
 # Use a conservative default here; 2 should speed up most setups and not hurt
 # any too bad. Override on command line as appropriate.
 jobs=2
+load-plugins=pylint_strict_informational
 persistent=no
+extension-pkg-whitelist=ciso8601
 
 [BASIC]
 good-names=id,i,j,k,ex,Run,_,fp
@@ -25,6 +27,7 @@ good-names=id,i,j,k,ex,Run,_,fp
 # unnecessary-pass - readability for functions which only contain pass
 # import-outside-toplevel - TODO
 # too-many-ancestors - it's too strict.
+# wrong-import-order - isort guards this
 disable=
   format,
   abstract-class-little-used,
@@ -49,7 +52,8 @@ disable=
   too-many-statements,
   too-many-boolean-expressions,
   unnecessary-pass,
-  unused-argument
+  unused-argument,
+  wrong-import-order
 enable=
   use-symbolic-message-instead
 

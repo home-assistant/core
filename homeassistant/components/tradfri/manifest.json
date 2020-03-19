@@ -1,6 +1,6 @@
 {
   "domain": "tradfri",
-  "name": "Tradfri",
+  "name": "IKEA TRÅDFRI (TRADFRI)",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tradfri",
   "requirements": ["pytradfri[async]==6.4.0"],

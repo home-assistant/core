@@ -4,7 +4,7 @@
             "set_hvac_mode": "Canvia el mode HVAC de {entity_name}",
             "set_preset_mode": "Canvia la configuraci\u00f3 preestablerta de {entity_name}"
         },
-        "condtion_type": {
+        "condition_type": {
             "is_hvac_mode": "{entity_name} est\u00e0 configurat/ada en un mode HVAC espec\u00edfic",
             "is_preset_mode": "{entity_name} est\u00e0 configurat/ada en un mode preestablert espec\u00edfic"
         },

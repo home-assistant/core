@@ -2,7 +2,7 @@
 import ipaddress
 import logging
 
-from braviarc.braviarc import BraviaRC
+from bravia_tv import BraviaRC
 from getmac import get_mac_address
 import voluptuous as vol
 
@@ -13,6 +13,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE,
+    SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
@@ -47,6 +48,7 @@ SUPPORT_BRAVIA = (
     | SUPPORT_TURN_OFF
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_PLAY
+    | SUPPORT_STOP
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -291,7 +293,7 @@ class BraviaTVDevice(MediaPlayerDevice):
         if self._channel_name is not None:
             return_value = self._channel_name
             if self._program_name is not None:
-                return_value = return_value + ": " + self._program_name
+                return_value = f"{return_value}: {self._program_name}"
         return return_value
 
     @property
@@ -350,6 +352,11 @@ class BraviaTVDevice(MediaPlayerDevice):
         """Send media pause command to media player."""
         self._playing = False
         self._braviarc.media_pause()
+
+    def media_stop(self):
+        """Send media stop command to media player."""
+        self._playing = False
+        self._braviarc.media_stop()
 
     def media_next_track(self):
         """Send next track command."""

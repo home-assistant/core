@@ -5,7 +5,7 @@ from pmsensor import serial_pm as pm
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -79,7 +79,7 @@ class ParticulateMatterSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return "µg/m³"
+        return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 
     def update(self):
         """Read from sensor and update the state."""

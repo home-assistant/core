@@ -4,7 +4,7 @@
             "set_hvac_mode": "Change HVAC mode on {entity_name}",
             "set_preset_mode": "Change preset on {entity_name}"
         },
-        "condtion_type": {
+        "condition_type": {
             "is_hvac_mode": "{entity_name} is set to a specific HVAC mode",
             "is_preset_mode": "{entity_name} is set to a specific preset mode"
         },

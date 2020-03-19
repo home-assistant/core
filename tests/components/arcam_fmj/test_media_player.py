@@ -5,18 +5,10 @@ from arcam.fmj import DecodeMode2CH, DecodeModeMCH, IncomingAudioFormat, SourceC
 from asynctest.mock import ANY, MagicMock, Mock, PropertyMock, patch
 import pytest
 
-from homeassistant.components.arcam_fmj.const import (
-    DOMAIN,
-    SIGNAL_CLIENT_DATA,
-    SIGNAL_CLIENT_STARTED,
-    SIGNAL_CLIENT_STOPPED,
-)
-from homeassistant.components.arcam_fmj.media_player import ArcamFmj
 from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
-from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
-from .conftest import MOCK_HOST, MOCK_NAME, MOCK_PORT
+from .conftest import MOCK_ENTITY_ID, MOCK_HOST, MOCK_NAME, MOCK_PORT
 
 MOCK_TURN_ON = {
     "service": "switch.turn_on",
@@ -24,50 +16,69 @@ MOCK_TURN_ON = {
 }
 
 
+async def update(player, force_refresh=False):
+    """Force a update of player and return current state data."""
+    await player.async_update_ha_state(force_refresh=force_refresh)
+    return player.hass.states.get(player.entity_id)
+
+
 async def test_properties(player, state):
     """Test standard properties."""
     assert player.unique_id is None
     assert player.device_info == {
-        "identifiers": {(DOMAIN, MOCK_HOST, MOCK_PORT)},
+        "identifiers": {("arcam_fmj", MOCK_HOST, MOCK_PORT)},
         "model": "FMJ",
         "manufacturer": "Arcam",
     }
     assert not player.should_poll
 
 
-async def test_powered_off(player, state):
+async def test_powered_off(hass, player, state):
     """Test properties in powered off state."""
     state.get_source.return_value = None
     state.get_power.return_value = None
-    assert player.source is None
-    assert player.state == STATE_OFF
+
+    data = await update(player)
+    assert "source" not in data.attributes
+    assert data.state == "off"
 
 
 async def test_powered_on(player, state):
     """Test properties in powered on state."""
     state.get_source.return_value = SourceCodes.PVR
     state.get_power.return_value = True
-    assert player.source == "PVR"
-    assert player.state == STATE_ON
+
+    data = await update(player)
+    assert data.attributes["source"] == "PVR"
+    assert data.state == "on"
 
 
 async def test_supported_features_no_service(player, state):
     """Test support when turn on service exist."""
     state.get_power.return_value = None
-    assert player.supported_features == 68876
+    data = await update(player)
+    assert data.attributes["supported_features"] == 68876
 
     state.get_power.return_value = False
-    assert player.supported_features == 69004
+    data = await update(player)
+    assert data.attributes["supported_features"] == 69004
 
 
 async def test_supported_features_service(hass, state):
     """Test support when turn on service exist."""
+    from homeassistant.components.arcam_fmj.media_player import ArcamFmj
+
     player = ArcamFmj(state, "dummy", MOCK_TURN_ON)
+    player.hass = hass
+    player.entity_id = MOCK_ENTITY_ID
+
     state.get_power.return_value = None
-    assert player.supported_features == 69004
+    data = await update(player)
+    assert data.attributes["supported_features"] == 69004
 
     state.get_power.return_value = False
-    assert player.supported_features == 69004
+    data = await update(player)
+    assert data.attributes["supported_features"] == 69004
 
 
 async def test_turn_on_without_service(player, state):
@@ -83,8 +94,11 @@ async def test_turn_on_without_service(player, state):
 
 async def test_turn_on_with_service(hass, state):
     """Test support when turn on service exist."""
+    from homeassistant.components.arcam_fmj.media_player import ArcamFmj
+
     player = ArcamFmj(state, "dummy", MOCK_TURN_ON)
     player.hass = Mock(HomeAssistant)
+    player.entity_id = MOCK_ENTITY_ID
     with patch(
         "homeassistant.components.arcam_fmj.media_player.async_call_from_config"
     ) as async_call_from_config:
@@ -109,7 +123,7 @@ async def test_turn_off(player, state):
 
 @pytest.mark.parametrize("mute", [True, False])
 async def test_mute_volume(player, state, mute):
-    """Test mute functionallity."""
+    """Test mute functionality."""
     await player.async_mute_volume(mute)
     state.set_mute.assert_called_with(mute)
     player.async_schedule_update_ha_state.assert_called_with()
@@ -122,7 +136,7 @@ async def test_name(player):
 
 async def test_update(player, state):
     """Test update."""
-    await player.async_update()
+    await update(player, force_refresh=True)
     state.update.assert_called_with()
 
 
@@ -157,7 +171,8 @@ async def test_select_source(player, state, source, value):
 async def test_source_list(player, state):
     """Test source list."""
     state.get_source_list.return_value = [SourceCodes.BD]
-    assert player.source_list == ["BD"]
+    data = await update(player)
+    assert data.attributes["source_list"] == ["BD"]
 
 
 @pytest.mark.parametrize(
@@ -185,14 +200,14 @@ async def test_select_sound_mode(player, state, mode, mode_sel, mode_2ch, mode_m
 
 
 async def test_volume_up(player, state):
-    """Test mute functionallity."""
+    """Test mute functionality."""
     await player.async_volume_up()
     state.inc_volume.assert_called_with()
     player.async_schedule_update_ha_state.assert_called_with()
 
 
 async def test_volume_down(player, state):
-    """Test mute functionallity."""
+    """Test mute functionality."""
     await player.async_volume_down()
     state.dec_volume.assert_called_with()
     player.async_schedule_update_ha_state.assert_called_with()
@@ -317,16 +332,28 @@ async def test_media_artist(player, state, source, dls, artist):
 )
 async def test_media_title(player, state, source, channel, title):
     """Test media title."""
+    from homeassistant.components.arcam_fmj.media_player import ArcamFmj
+
     state.get_source.return_value = source
     with patch.object(
         ArcamFmj, "media_channel", new_callable=PropertyMock
     ) as media_channel:
         media_channel.return_value = channel
-        assert player.media_title == title
+        data = await update(player)
+        if title is None:
+            assert "media_title" not in data.attributes
+        else:
+            assert data.attributes["media_title"] == title
 
 
 async def test_added_to_hass(player, state):
     """Test addition to hass."""
+    from homeassistant.components.arcam_fmj.const import (
+        SIGNAL_CLIENT_DATA,
+        SIGNAL_CLIENT_STARTED,
+        SIGNAL_CLIENT_STOPPED,
+    )
+
     connectors = {}
 
     def _connect(signal, fun):

@@ -59,7 +59,7 @@ class ProwlNotificationService(BaseNotificationService):
 
             if response.status != 200 or "error" in result:
                 _LOGGER.error(
-                    "Prowl service returned http " "status %d, response %s",
+                    "Prowl service returned http status %d, response %s",
                     response.status,
                     result,
                 )

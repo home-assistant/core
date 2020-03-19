@@ -1,6 +1,7 @@
 """Support for aurora forecast data sensor."""
 from datetime import timedelta
 import logging
+from math import floor
 
 from aiohttp.hdrs import USER_AGENT
 import requests
@@ -13,7 +14,7 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by the National Oceanic and Atmospheric " "Administration"
+ATTRIBUTION = "Data provided by the National Oceanic and Atmospheric Administration"
 CONF_THRESHOLD = "forecast_threshold"
 
 DEFAULT_DEVICE_CLASS = "visible"
@@ -99,8 +100,6 @@ class AuroraData:
         """Initialize the data object."""
         self.latitude = latitude
         self.longitude = longitude
-        self.number_of_latitude_intervals = 513
-        self.number_of_longitude_intervals = 1024
         self.headers = {USER_AGENT: HA_USER_AGENT}
         self.threshold = int(threshold)
         self.is_visible = None
@@ -126,18 +125,22 @@ class AuroraData:
     def get_aurora_forecast(self):
         """Get forecast data and parse for given long/lat."""
         raw_data = requests.get(URL, headers=self.headers, timeout=5).text
+        # We discard comment rows (#)
+        # We split the raw text by line (\n)
+        # For each line we trim leading spaces and split by spaces
         forecast_table = [
-            row.strip(" ").split("   ")
+            row.strip().split()
             for row in raw_data.split("\n")
             if not row.startswith("#")
         ]
 
         # Convert lat and long for data points in table
-        converted_latitude = round(
-            (self.latitude / 180) * self.number_of_latitude_intervals
-        )
-        converted_longitude = round(
-            (self.longitude / 360) * self.number_of_longitude_intervals
+        # Assumes self.latitude belongs to [-90;90[ (South to North)
+        # Assumes self.longitude belongs to [-180;180[ (West to East)
+        # No assumptions made regarding the number of rows and columns
+        converted_latitude = floor((self.latitude + 90) * len(forecast_table) / 180)
+        converted_longitude = floor(
+            (self.longitude + 180) * len(forecast_table[converted_latitude]) / 360
         )
 
         return forecast_table[converted_latitude][converted_longitude]

@@ -66,26 +66,32 @@
         },
         "trigger_type": {
             "remote_awakened": "Dispositivo despertado",
-            "remote_button_double_press": "Bot\u00f3n \"{subtype}\" pulsado dos veces consecutivas",
+            "remote_button_double_press": "Bot\u00f3n \"{subtype}\" doble pulsaci\u00f3n",
             "remote_button_long_press": "Bot\u00f3n \"{subtype}\" pulsado continuamente",
-            "remote_button_long_release": "Bot\u00f3n \"{subtype}\" liberado despu\u00e9s de un rato pulsado",
-            "remote_button_quadruple_press": "Bot\u00f3n \"{subtype}\" pulsado cuatro veces consecutivas",
-            "remote_button_quintuple_press": "Bot\u00f3n \"{subtype}\" pulsado cinco veces consecutivas",
+            "remote_button_long_release": "Bot\u00f3n \"{subtype}\" soltado despu\u00e9s de una pulsaci\u00f3n larga",
+            "remote_button_quadruple_press": "Bot\u00f3n \"{subtype}\" cu\u00e1druple pulsaci\u00f3n",
+            "remote_button_quintuple_press": "Bot\u00f3n \"{subtype}\" qu\u00edntuple pulsaci\u00f3n",
             "remote_button_rotated": "Bot\u00f3n \"{subtype}\" girado",
-            "remote_button_rotation_stopped": "Bot\u00f3n rotativo \"{subtipo}\" detenido",
+            "remote_button_rotation_stopped": "Bot\u00f3n rotativo \"{subtype}\" detenido",
             "remote_button_short_press": "Bot\u00f3n \"{subtype}\" pulsado",
-            "remote_button_short_release": "Bot\u00f3n \"{subtype}\" liberado",
-            "remote_button_triple_press": "Bot\u00f3n \"{subtype}\" pulsado cuatro veces consecutivas",
+            "remote_button_short_release": "Bot\u00f3n \"{subtype}\" soltado",
+            "remote_button_triple_press": "Bot\u00f3n \"{subtype}\" triple pulsaci\u00f3n",
             "remote_double_tap": "Dispositivo \" {subtype} \" doble pulsaci\u00f3n",
+            "remote_double_tap_any_side": "Dispositivo con doble toque en cualquier lado",
             "remote_falling": "Dispositivo en ca\u00edda libre",
+            "remote_flip_180_degrees": "Dispositivo volteado 180 grados",
+            "remote_flip_90_degrees": "Dispositivo volteado 90 grados",
             "remote_gyro_activated": "Dispositivo sacudido",
             "remote_moved": "Dispositivo movido con \"{subtipo}\" hacia arriba",
+            "remote_moved_any_side": "Dispositivo movido con cualquier lado hacia arriba",
             "remote_rotate_from_side_1": "Dispositivo girado del \"lado 1\" al \" {subtype} \"",
             "remote_rotate_from_side_2": "Dispositivo girado del \"lado 2\" al \" {subtype} \"",
             "remote_rotate_from_side_3": "Dispositivo girado del \"lado 3\" al \" {subtype} \"",
             "remote_rotate_from_side_4": "Dispositivo girado del \"lado 4\" al \" {subtype} \"",
             "remote_rotate_from_side_5": "Dispositivo girado del \"lado 5\" al \" {subtype} \"",
-            "remote_rotate_from_side_6": "Dispositivo girado de \"lado 6\" a \" {subtype} \""
+            "remote_rotate_from_side_6": "Dispositivo girado de \"lado 6\" a \" {subtype} \"",
+            "remote_turned_clockwise": "Dispositivo girado en el sentido de las agujas del reloj",
+            "remote_turned_counter_clockwise": "Dispositivo girado en sentido contrario a las agujas del reloj"
         }
     },
     "options": {
@@ -102,7 +108,8 @@
                     "allow_clip_sensor": "Permitir sensores deCONZ CLIP",
                     "allow_deconz_groups": "Permitir grupos de luz deCONZ"
                 },
-                "description": "Configurar la visibilidad de los tipos de dispositivos deCONZ"
+                "description": "Configurar la visibilidad de los tipos de dispositivos deCONZ",
+                "title": "Opciones deCONZ"
             }
         }
     }

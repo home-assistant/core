@@ -139,7 +139,7 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
             self._egardiasystem.alarm_disarm()
         except requests.exceptions.RequestException as err:
             _LOGGER.error(
-                "Egardia device exception occurred when " "sending disarm command: %s",
+                "Egardia device exception occurred when sending disarm command: %s",
                 err,
             )
 

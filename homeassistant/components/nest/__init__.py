@@ -216,7 +216,7 @@ async def async_setup_entry(hass, entry):
                     structure.set_eta(trip_id, eta_begin, eta_end)
                 else:
                     _LOGGER.info(
-                        "No thermostats found in structure: %s, " "unable to set ETA",
+                        "No thermostats found in structure: %s, unable to set ETA",
                         structure.name,
                     )
 

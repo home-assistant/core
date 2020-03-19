@@ -27,10 +27,10 @@ def install_osx():
         with open(path, "w", encoding="utf-8") as outp:
             outp.write(plist)
     except OSError as err:
-        print("Unable to write to " + path, err)
+        print(f"Unable to write to {path}", err)
         return
 
-    os.popen("launchctl load -w -F " + path)
+    os.popen(f"launchctl load -w -F {path}")
 
     print(
         "Home Assistant has been installed. \
@@ -41,7 +41,7 @@ def install_osx():
 def uninstall_osx():
     """Unload from launchd on OS X."""
     path = os.path.expanduser("~/Library/LaunchAgents/org.homeassistant.plist")
-    os.popen("launchctl unload " + path)
+    os.popen(f"launchctl unload {path}")
 
     print("Home Assistant has been uninstalled.")
 

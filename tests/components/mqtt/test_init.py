@@ -1,5 +1,5 @@
 """The tests for the MQTT component."""
-import asyncio
+from datetime import timedelta
 import ssl
 import unittest
 from unittest import mock
@@ -7,7 +7,8 @@ from unittest import mock
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import mqtt
+from homeassistant.components import mqtt, websocket_api
+from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_SERVICE,
@@ -16,18 +17,35 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from tests.common import (
     MockConfigEntry,
     async_fire_mqtt_message,
+    async_fire_time_changed,
     async_mock_mqtt_component,
     fire_mqtt_message,
     get_test_home_assistant,
     mock_coro,
+    mock_device_registry,
     mock_mqtt_component,
+    mock_registry,
     threadsafe_coroutine_factory,
 )
+
+
+@pytest.fixture
+def device_reg(hass):
+    """Return an empty, loaded, registry."""
+    return mock_device_registry(hass)
+
+
+@pytest.fixture
+def entity_reg(hass):
+    """Return an empty, loaded, registry."""
+    return mock_registry(hass)
 
 
 @pytest.fixture
@@ -593,8 +611,7 @@ class TestMQTTCallbacks(unittest.TestCase):
         assert self.hass.data["mqtt"]._mqttc.subscribe.mock_calls == expected
 
 
-@asyncio.coroutine
-def test_setup_embedded_starts_with_no_config(hass):
+async def test_setup_embedded_starts_with_no_config(hass):
     """Test setting up embedded server with no config."""
     client_config = ("localhost", 1883, "user", "pass", None, "3.1.1")
 
@@ -602,12 +619,11 @@ def test_setup_embedded_starts_with_no_config(hass):
         "homeassistant.components.mqtt.server.async_start",
         return_value=mock_coro(return_value=(True, client_config)),
     ) as _start:
-        yield from async_mock_mqtt_client(hass, {})
+        await async_mock_mqtt_client(hass, {})
         assert _start.call_count == 1
 
 
-@asyncio.coroutine
-def test_setup_embedded_with_embedded(hass):
+async def test_setup_embedded_with_embedded(hass):
     """Test setting up embedded server with no config."""
     client_config = ("localhost", 1883, "user", "pass", None, "3.1.1")
 
@@ -616,7 +632,7 @@ def test_setup_embedded_with_embedded(hass):
         return_value=mock_coro(return_value=(True, client_config)),
     ) as _start:
         _start.return_value = mock_coro(return_value=(True, client_config))
-        yield from async_mock_mqtt_client(hass, {"embedded": None})
+        await async_mock_mqtt_client(hass, {"embedded": None})
         assert _start.call_count == 1
 
 
@@ -716,10 +732,9 @@ async def test_setup_with_tls_config_of_v1_under_python36_only_uses_v1(hass, moc
     assert mock_MQTT.mock_calls[0][2]["tls_version"] == ssl.PROTOCOL_TLSv1
 
 
-@asyncio.coroutine
-def test_birth_message(hass):
+async def test_birth_message(hass):
     """Test sending birth message."""
-    mqtt_client = yield from async_mock_mqtt_client(
+    mqtt_client = await async_mock_mqtt_client(
         hass,
         {
             mqtt.CONF_BROKER: "mock-broker",
@@ -732,14 +747,13 @@ def test_birth_message(hass):
     calls = []
     mqtt_client.publish.side_effect = lambda *args: calls.append(args)
     hass.data["mqtt"]._mqtt_on_connect(None, None, 0, 0)
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert calls[-1] == ("birth", "birth", 0, False)
 
 
-@asyncio.coroutine
-def test_mqtt_subscribes_topics_on_connect(hass):
+async def test_mqtt_subscribes_topics_on_connect(hass):
     """Test subscription to topic on connect."""
-    mqtt_client = yield from async_mock_mqtt_client(hass)
+    mqtt_client = await async_mock_mqtt_client(hass)
 
     hass.data["mqtt"].subscriptions = [
         mqtt.Subscription("topic/test", None),
@@ -751,7 +765,7 @@ def test_mqtt_subscribes_topics_on_connect(hass):
     hass.add_job = mock.MagicMock()
     hass.data["mqtt"]._mqtt_on_connect(None, None, 0, 0)
 
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert mqtt_client.disconnect.call_count == 0
 
@@ -808,3 +822,115 @@ async def test_mqtt_ws_subscription(hass, hass_ws_client):
     await client.send_json({"id": 8, "type": "unsubscribe_events", "subscription": 5})
     response = await client.receive_json()
     assert response["success"]
+
+
+async def test_dump_service(hass):
+    """Test that we can dump a topic."""
+    await async_mock_mqtt_component(hass)
+
+    mock_open = mock.mock_open()
+
+    await hass.services.async_call(
+        "mqtt", "dump", {"topic": "bla/#", "duration": 3}, blocking=True
+    )
+    async_fire_mqtt_message(hass, "bla/1", "test1")
+    async_fire_mqtt_message(hass, "bla/2", "test2")
+
+    with mock.patch("homeassistant.components.mqtt.open", mock_open):
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
+        await hass.async_block_till_done()
+
+    writes = mock_open.return_value.write.mock_calls
+    assert len(writes) == 2
+    assert writes[0][1][0] == "bla/1,test1\n"
+    assert writes[1][1][0] == "bla/2,test2\n"
+
+
+async def test_mqtt_ws_remove_discovered_device(
+    hass, device_reg, entity_reg, hass_ws_client, mqtt_mock
+):
+    """Test MQTT websocket device removal."""
+    config_entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    config_entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, config_entry)
+
+    data = (
+        '{ "device":{"identifiers":["0AFFD2"]},'
+        '  "state_topic": "foobar/sensor",'
+        '  "unique_id": "unique" }'
+    )
+
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    await hass.async_block_till_done()
+
+    # Verify device entry is created
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    assert device_entry is not None
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 5, "type": "mqtt/device/remove", "device_id": device_entry.id}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    # Verify device entry is cleared
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    assert device_entry is None
+
+
+async def test_mqtt_ws_remove_discovered_device_twice(
+    hass, device_reg, hass_ws_client, mqtt_mock
+):
+    """Test MQTT websocket device removal."""
+    config_entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    config_entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, config_entry)
+
+    data = (
+        '{ "device":{"identifiers":["0AFFD2"]},'
+        '  "state_topic": "foobar/sensor",'
+        '  "unique_id": "unique" }'
+    )
+
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    await hass.async_block_till_done()
+
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    assert device_entry is not None
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 5, "type": "mqtt/device/remove", "device_id": device_entry.id}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    await client.send_json(
+        {"id": 6, "type": "mqtt/device/remove", "device_id": device_entry.id}
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == websocket_api.const.ERR_NOT_FOUND
+
+
+async def test_mqtt_ws_remove_non_mqtt_device(
+    hass, device_reg, hass_ws_client, mqtt_mock
+):
+    """Test MQTT websocket device removal of device belonging to other domain."""
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    assert device_entry is not None
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 5, "type": "mqtt/device/remove", "device_id": device_entry.id}
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == websocket_api.const.ERR_NOT_FOUND

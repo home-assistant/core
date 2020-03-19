@@ -189,7 +189,7 @@ class KNXCover(CoverDevice):
             await self.device.set_angle(tilt_position)
 
     def start_auto_updater(self):
-        """Start the autoupdater to update HASS while cover is moving."""
+        """Start the autoupdater to update Home Assistant while cover is moving."""
         if self._unsubscribe_auto_updater is None:
             self._unsubscribe_auto_updater = async_track_utc_time_change(
                 self.hass, self.auto_updater_hook

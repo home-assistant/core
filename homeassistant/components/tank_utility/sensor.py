@@ -4,11 +4,11 @@ import datetime
 import logging
 
 import requests
-import tank_utility
+from tank_utility import auth, device as tank_monitor
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_DEVICES, CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_DEVICES, CONF_EMAIL, CONF_PASSWORD, UNIT_PERCENTAGE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -26,7 +26,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 SENSOR_TYPE = "tank"
 SENSOR_ROUNDING_PRECISION = 1
-SENSOR_UNIT_OF_MEASUREMENT = "%"
 SENSOR_ATTRS = [
     "name",
     "address",
@@ -47,7 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     devices = config.get(CONF_DEVICES)
 
     try:
-        token = tank_utility.auth.get_token(email, password)
+        token = auth.get_token(email, password)
     except requests.exceptions.HTTPError as http_error:
         if (
             http_error.response.status_code
@@ -73,8 +72,8 @@ class TankUtilitySensor(Entity):
         self._token = token
         self._device = device
         self._state = None
-        self._name = "Tank Utility " + self.device
-        self._unit_of_measurement = SENSOR_UNIT_OF_MEASUREMENT
+        self._name = f"Tank Utility {self.device}"
+        self._unit_of_measurement = UNIT_PERCENTAGE
         self._attributes = {}
 
     @property
@@ -111,7 +110,7 @@ class TankUtilitySensor(Entity):
 
         data = {}
         try:
-            data = tank_utility.device.get_device_data(self._token, self.device)
+            data = tank_monitor.get_device_data(self._token, self.device)
         except requests.exceptions.HTTPError as http_error:
             if (
                 http_error.response.status_code
@@ -120,10 +119,8 @@ class TankUtilitySensor(Entity):
                 == requests.codes.bad_request  # pylint: disable=no-member
             ):
                 _LOGGER.info("Getting new token")
-                self._token = tank_utility.auth.get_token(
-                    self._email, self._password, force=True
-                )
-                data = tank_utility.device.get_device_data(self._token, self.device)
+                self._token = auth.get_token(self._email, self._password, force=True)
+                data = tank_monitor.get_device_data(self._token, self.device)
             else:
                 raise http_error
         data.update(data.pop("device", {}))

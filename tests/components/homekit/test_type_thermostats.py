@@ -41,8 +41,11 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     CONF_TEMPERATURE_UNIT,
+    EVENT_HOMEASSISTANT_START,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import CoreState
+from homeassistant.helpers import entity_registry
 
 from tests.common import async_mock_service
 from tests.components.homekit.common import patch_debounce
@@ -517,6 +520,51 @@ async def test_thermostat_temperature_step_whole(hass, hk_driver, cls):
     assert acc.char_target_temp.properties[PROP_MIN_STEP] == 1.0
 
 
+async def test_thermostat_restore(hass, hk_driver, cls, events):
+    """Test setting up an entity from state in the event registry."""
+    hass.state = CoreState.not_running
+
+    registry = await entity_registry.async_get_registry(hass)
+
+    registry.async_get_or_create(
+        "climate", "generic", "1234", suggested_object_id="simple",
+    )
+    registry.async_get_or_create(
+        "climate",
+        "generic",
+        "9012",
+        suggested_object_id="all_info_set",
+        capabilities={
+            ATTR_MIN_TEMP: 60,
+            ATTR_MAX_TEMP: 70,
+            ATTR_HVAC_MODES: [HVAC_MODE_HEAT_COOL, HVAC_MODE_OFF],
+        },
+        supported_features=0,
+        device_class="mock-device-class",
+    )
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
+    await hass.async_block_till_done()
+
+    acc = cls.thermostat(hass, hk_driver, "Climate", "climate.simple", 2, None)
+    assert acc.category == 9
+    assert acc.get_temperature_range() == (7, 35)
+    assert set(acc.char_target_heat_cool.properties["ValidValues"].keys()) == {
+        "cool",
+        "heat",
+        "heat_cool",
+        "off",
+    }
+
+    acc = cls.thermostat(hass, hk_driver, "Climate", "climate.all_info_set", 2, None)
+    assert acc.category == 9
+    assert acc.get_temperature_range() == (60.0, 70.0)
+    assert set(acc.char_target_heat_cool.properties["ValidValues"].keys()) == {
+        "heat_cool",
+        "off",
+    }
+
+
 async def test_thermostat_hvac_modes(hass, hk_driver, cls):
     """Test if unsupported HVAC modes are deactivated in HomeKit."""
     entity_id = "climate.test"
@@ -671,3 +719,46 @@ async def test_water_heater_get_temperature_range(hass, hk_driver, cls):
     )
     await hass.async_block_till_done()
     assert acc.get_temperature_range() == (15.5, 21.0)
+
+
+async def test_water_heater_restore(hass, hk_driver, cls, events):
+    """Test setting up an entity from state in the event registry."""
+    hass.state = CoreState.not_running
+
+    registry = await entity_registry.async_get_registry(hass)
+
+    registry.async_get_or_create(
+        "water_heater", "generic", "1234", suggested_object_id="simple",
+    )
+    registry.async_get_or_create(
+        "water_heater",
+        "generic",
+        "9012",
+        suggested_object_id="all_info_set",
+        capabilities={ATTR_MIN_TEMP: 60, ATTR_MAX_TEMP: 70},
+        supported_features=0,
+        device_class="mock-device-class",
+    )
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
+    await hass.async_block_till_done()
+
+    acc = cls.thermostat(hass, hk_driver, "WaterHeater", "water_heater.simple", 2, None)
+    assert acc.category == 9
+    assert acc.get_temperature_range() == (7, 35)
+    assert set(acc.char_current_heat_cool.properties["ValidValues"].keys()) == {
+        "Cool",
+        "Heat",
+        "Off",
+    }
+
+    acc = cls.thermostat(
+        hass, hk_driver, "WaterHeater", "water_heater.all_info_set", 2, None
+    )
+    assert acc.category == 9
+    assert acc.get_temperature_range() == (60.0, 70.0)
+    assert set(acc.char_current_heat_cool.properties["ValidValues"].keys()) == {
+        "Cool",
+        "Heat",
+        "Off",
+    }

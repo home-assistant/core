@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ez az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "already_in_progress": "Ez az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "not_huawei_lte": "Nem Huawei LTE eszk\u00f6z"
+        },
+        "error": {
+            "connection_failed": "Kapcsol\u00f3d\u00e1s sikertelen",
+            "connection_timeout": "Kapcsolat id\u0151t\u00fall\u00e9p\u00e9se",
+            "incorrect_password": "Hib\u00e1s jelsz\u00f3",
+            "incorrect_username": "Helytelen felhaszn\u00e1l\u00f3n\u00e9v",
+            "incorrect_username_or_password": "Helytelen felhaszn\u00e1l\u00f3n\u00e9v vagy jelsz\u00f3",
+            "invalid_url": "\u00c9rv\u00e9nytelen URL"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "url": "URL",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "title": "Huawei LTE konfigur\u00e1l\u00e1sa"
+            }
+        },
+        "title": "Huawei LTE"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "\u00c9rtes\u00edt\u00e9si szolg\u00e1ltat\u00e1s neve (a m\u00f3dos\u00edt\u00e1s \u00fajraind\u00edt\u00e1st ig\u00e9nyel)",
+                    "recipient": "SMS-\u00e9rtes\u00edt\u00e9s c\u00edmzettjei",
+                    "track_new_devices": "\u00daj eszk\u00f6z\u00f6k nyomk\u00f6vet\u00e9se"
+                }
+            }
+        }
+    }
+}

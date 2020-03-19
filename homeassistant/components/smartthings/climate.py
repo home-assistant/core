@@ -80,11 +80,6 @@ UNIT_MAP = {"C": TEMP_CELSIUS, "F": TEMP_FAHRENHEIT}
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform uses config entry setup."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add climate entities for a config entry."""
     ac_capabilities = [
@@ -411,7 +406,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateDevice):
                     self._device.device_id,
                     mode,
                 )
-        self._hvac_modes = modes
+        self._hvac_modes = list(modes)
 
     @property
     def current_temperature(self):

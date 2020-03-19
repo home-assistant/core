@@ -74,11 +74,11 @@ class TestAuroraSensorSetUp(unittest.TestCase):
                 entities.append(entity)
 
         config = {"name": "Test", "forecast_threshold": 1}
-        self.hass.config.longitude = 5
-        self.hass.config.latitude = 5
+        self.hass.config.longitude = 18.987
+        self.hass.config.latitude = 69.648
 
         aurora.setup_platform(self.hass, config, mock_add_entities)
 
         aurora_component = entities[0]
-        assert aurora_component.aurora_data.visibility_level == "5"
+        assert aurora_component.aurora_data.visibility_level == "16"
         assert aurora_component.is_on

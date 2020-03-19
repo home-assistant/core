@@ -28,10 +28,13 @@
             "device_tracker": {
                 "data": {
                     "detection_time": "Tempo in secondi dall'ultima volta che viene visto fino a quando non \u00e8 considerato lontano",
+                    "ssid_filter": "Selezionare gli SSID su cui tracciare i client wireless",
                     "track_clients": "Traccia i client di rete",
                     "track_devices": "Tracciare i dispositivi di rete (dispositivi Ubiquiti)",
                     "track_wired_clients": "Includi i client di rete cablata"
-                }
+                },
+                "description": "Configurare il tracciamento del dispositivo",
+                "title": "Opzioni UniFi"
             },
             "init": {
                 "data": {
@@ -41,8 +44,10 @@
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "Creare sensori di utilizzo della larghezza di banda per i client di rete"
-                }
+                    "allow_bandwidth_sensors": "Sensori di utilizzo della larghezza di banda per i client di rete"
+                },
+                "description": "Configurare i sensori delle statistiche",
+                "title": "Opzioni UniFi"
             }
         }
     }

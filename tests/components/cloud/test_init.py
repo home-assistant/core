@@ -28,7 +28,6 @@ async def test_constructor_loads_info_from_config(hass):
                     "user_pool_id": "test-user_pool_id",
                     "region": "test-region",
                     "relayer": "test-relayer",
-                    "google_actions_sync_url": "http://test-google_actions_sync_url",
                     "subscription_info_url": "http://test-subscription-info-url",
                     "cloudhook_create_url": "http://test-cloudhook_create_url",
                     "remote_api_url": "http://test-remote_api_url",
@@ -46,7 +45,6 @@ async def test_constructor_loads_info_from_config(hass):
     assert cl.user_pool_id == "test-user_pool_id"
     assert cl.region == "test-region"
     assert cl.relayer == "test-relayer"
-    assert cl.google_actions_sync_url == "http://test-google_actions_sync_url"
     assert cl.subscription_info_url == "http://test-subscription-info-url"
     assert cl.cloudhook_create_url == "http://test-cloudhook_create_url"
     assert cl.remote_api_url == "http://test-remote_api_url"
@@ -163,3 +161,27 @@ async def test_on_connect(hass, mock_cloud_fixture):
         await hass.async_block_till_done()
 
     assert len(mock_load.mock_calls) == 0
+
+
+async def test_remote_ui_url(hass, mock_cloud_fixture):
+    """Test getting remote ui url."""
+    cl = hass.data["cloud"]
+
+    # Not logged in
+    with pytest.raises(cloud.CloudNotAvailable):
+        cloud.async_remote_ui_url(hass)
+
+    with patch.object(cloud, "async_is_logged_in", return_value=True):
+        # Remote not enabled
+        with pytest.raises(cloud.CloudNotAvailable):
+            cloud.async_remote_ui_url(hass)
+
+        await cl.client.prefs.async_update(remote_enabled=True)
+
+        # No instance domain
+        with pytest.raises(cloud.CloudNotAvailable):
+            cloud.async_remote_ui_url(hass)
+
+        cl.remote._instance_domain = "example.com"
+
+        assert cloud.async_remote_ui_url(hass) == "https://example.com"

@@ -17,6 +17,7 @@ CONF_SENDER_NR = "number"
 CONF_RECP_NR = "recipients"
 CONF_SIGNAL_CLI_REST_API = "url"
 ATTR_FILENAME = "attachment"
+ATTR_FILENAMES = "attachments"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -34,9 +35,7 @@ def get_service(hass, config, discovery_info=None):
     recp_nrs = config[CONF_RECP_NR]
     signal_cli_rest_api_url = config[CONF_SIGNAL_CLI_REST_API]
 
-    signal_cli_rest_api = SignalCliRestApi(
-        signal_cli_rest_api_url, sender_nr, api_version=1
-    )
+    signal_cli_rest_api = SignalCliRestApi(signal_cli_rest_api_url, sender_nr)
 
     return SignalNotificationService(recp_nrs, signal_cli_rest_api)
 
@@ -60,12 +59,21 @@ class SignalNotificationService(BaseNotificationService):
 
         data = kwargs.get(ATTR_DATA)
 
-        filename = None
-        if data is not None and ATTR_FILENAME in data:
-            filename = data[ATTR_FILENAME]
+        filenames = None
+        if data is not None:
+            if ATTR_FILENAMES in data:
+                filenames = data[ATTR_FILENAMES]
+            if ATTR_FILENAME in data:
+                _LOGGER.warning(
+                    "The 'attachment' option is deprecated, please replace it with 'attachments'. This option will become invalid in version 0.108."
+                )
+                if filenames is None:
+                    filenames = [data[ATTR_FILENAME]]
+                else:
+                    filenames.append(data[ATTR_FILENAME])
 
         try:
-            self._signal_cli_rest_api.send_message(message, self._recp_nrs, filename)
+            self._signal_cli_rest_api.send_message(message, self._recp_nrs, filenames)
         except SignalCliRestApiError as ex:
             _LOGGER.error("%s", ex)
             raise ex

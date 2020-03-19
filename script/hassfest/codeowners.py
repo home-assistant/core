@@ -66,7 +66,7 @@ def validate(integrations: Dict[str, Integration], config: Config):
         if fp.read().strip() != content:
             config.add_error(
                 "codeowners",
-                "File CODEOWNERS is not up to date. " "Run python3 -m script.hassfest",
+                "File CODEOWNERS is not up to date. Run python3 -m script.hassfest",
                 fixable=True,
             )
         return

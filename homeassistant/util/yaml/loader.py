@@ -41,7 +41,6 @@ def clear_secret_cache() -> None:
     __SECRET_CACHE.clear()
 
 
-# pylint: disable=too-many-ancestors
 class SafeLineLoader(yaml.SafeLoader):
     """Loader class that keeps track of line numbers."""
 
@@ -258,7 +257,7 @@ def _load_secret_yaml(secret_path: str) -> JSON_TYPE:
                 _LOGGER.setLevel(logging.DEBUG)
             else:
                 _LOGGER.error(
-                    "secrets.yaml: 'logger: debug' expected," " but 'logger: %s' found",
+                    "secrets.yaml: 'logger: debug' expected, but 'logger: %s' found",
                     logger,
                 )
             del secrets["logger"]
@@ -276,7 +275,7 @@ def secret_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
 
         if node.value in secrets:
             _LOGGER.debug(
-                "Secret %s retrieved from secrets.yaml in " "folder %s",
+                "Secret %s retrieved from secrets.yaml in folder %s",
                 node.value,
                 secret_path,
             )

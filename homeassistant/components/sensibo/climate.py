@@ -65,7 +65,7 @@ _FETCH_FIELDS = ",".join(
         "temperatureUnit",
     ]
 )
-_INITIAL_FETCH_FIELDS = "id," + _FETCH_FIELDS
+_INITIAL_FETCH_FIELDS = f"id,{_FETCH_FIELDS}"
 
 FIELD_TO_FLAG = {
     "fanLevel": SUPPORT_FAN_MODE,

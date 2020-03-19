@@ -14,15 +14,13 @@ addons:
 matrix:
   fast_finish: true
   include:
-    - python: "3.6.1"
+    - python: "3.7.0"
       env: TOXENV=lint
-    - python: "3.6.1"
+    - python: "3.7.0"
       env: TOXENV=pylint PYLINT_ARGS=--jobs=0 TRAVIS_WAIT=30
-    - python: "3.6.1"
+    - python: "3.7.0"
       env: TOXENV=typing
-    - python: "3.6.1"
-      env: TOXENV=py36
-    - python: "3.7"
+    - python: "3.7.0"
       env: TOXENV=py37
 
 cache:

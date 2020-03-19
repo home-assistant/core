@@ -50,7 +50,9 @@ class TestLiteJetLight(unittest.TestCase):
         self.mock_lj.on_load_deactivated.side_effect = on_load_deactivated
 
         assert setup.setup_component(
-            self.hass, litejet.DOMAIN, {"litejet": {"port": "/tmp/this_will_be_mocked"}}
+            self.hass,
+            litejet.DOMAIN,
+            {"litejet": {"port": "/dev/serial/by-id/mock-litejet"}},
         )
         self.hass.block_till_done()
 

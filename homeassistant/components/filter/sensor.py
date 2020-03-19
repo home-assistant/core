@@ -324,7 +324,8 @@ class FilterState:
     def set_precision(self, precision):
         """Set precision of Number based states."""
         if isinstance(self.state, Number):
-            self.state = round(float(self.state), precision)
+            value = round(float(self.state), precision)
+            self.state = int(value) if precision == 0 else value
 
     def __str__(self):
         """Return state as the string representation of FilterState."""
@@ -363,6 +364,7 @@ class Filter:
         self._skip_processing = False
         self._window_size = window_size
         self._store_raw = False
+        self._only_numbers = True
 
     @property
     def window_size(self):
@@ -376,7 +378,7 @@ class Filter:
 
     @property
     def skip_processing(self):
-        """Return wether the current filter_state should be skipped."""
+        """Return whether the current filter_state should be skipped."""
         return self._skip_processing
 
     def _filter_state(self, new_state):
@@ -385,7 +387,11 @@ class Filter:
 
     def filter_state(self, new_state):
         """Implement a common interface for filters."""
-        filtered = self._filter_state(FilterState(new_state))
+        fstate = FilterState(new_state)
+        if self._only_numbers and not isinstance(fstate.state, Number):
+            raise ValueError
+
+        filtered = self._filter_state(fstate)
         filtered.set_precision(self.precision)
         if self._store_raw:
             self.states.append(copy(FilterState(new_state)))
@@ -422,6 +428,7 @@ class RangeFilter(Filter):
 
     def _filter_state(self, new_state):
         """Implement the range filter."""
+
         if self._upper_bound is not None and new_state.state > self._upper_bound:
 
             self._stats_internal["erasures_up"] += 1
@@ -468,6 +475,7 @@ class OutlierFilter(Filter):
 
     def _filter_state(self, new_state):
         """Implement the outlier filter."""
+
         median = statistics.median([s.state for s in self.states]) if self.states else 0
         if (
             len(self.states) == self.states.maxlen
@@ -497,6 +505,7 @@ class LowPassFilter(Filter):
 
     def _filter_state(self, new_state):
         """Implement the low pass filter."""
+
         if not self.states:
             return new_state
 
@@ -538,6 +547,7 @@ class TimeSMAFilter(Filter):
 
     def _filter_state(self, new_state):
         """Implement the Simple Moving Average filter."""
+
         self._leak(new_state.timestamp)
         self.queue.append(copy(new_state))
 
@@ -564,6 +574,7 @@ class ThrottleFilter(Filter):
     def __init__(self, window_size, precision, entity):
         """Initialize Filter."""
         super().__init__(FILTER_NAME_THROTTLE, window_size, precision, entity)
+        self._only_numbers = False
 
     def _filter_state(self, new_state):
         """Implement the throttle filter."""
@@ -588,6 +599,7 @@ class TimeThrottleFilter(Filter):
         super().__init__(FILTER_NAME_TIME_THROTTLE, window_size, precision, entity)
         self._time_window = window_size
         self._last_emitted_at = None
+        self._only_numbers = False
 
     def _filter_state(self, new_state):
         """Implement the filter."""

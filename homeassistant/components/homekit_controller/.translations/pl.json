@@ -3,7 +3,7 @@
         "abort": {
             "accessory_not_found_error": "Nie mo\u017cna rozpocz\u0105\u0107 parowania, poniewa\u017c nie znaleziono urz\u0105dzenia.",
             "already_configured": "Akcesorium jest ju\u017c skonfigurowane z tym kontrolerem.",
-            "already_in_progress": "Konfigurowanie urz\u0105dzenia jest ju\u017c w toku.",
+            "already_in_progress": "Konfiguracja urz\u0105dzenia jest ju\u017c w toku.",
             "already_paired": "To akcesorium jest ju\u017c sparowane z innym urz\u0105dzeniem. Zresetuj akcesorium i spr\u00f3buj ponownie.",
             "ignored_model": "Obs\u0142uga HomeKit dla tego modelu jest zablokowana, poniewa\u017c dost\u0119pna jest pe\u0142niejsza integracja natywna.",
             "invalid_config_entry": "To urz\u0105dzenie jest wy\u015bwietlane jako gotowe do sparowania, ale istnieje ju\u017c konfliktowy wpis konfiguracyjny dla niego w Home Assistant, kt\u00f3ry musi zosta\u0107 najpierw usuni\u0119ty.",

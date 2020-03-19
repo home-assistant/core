@@ -16,10 +16,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 async def test_show_user_form(hass: HomeAssistant) -> None:
     """Test that the user set up form is served."""
-    flow = config_flow.ElgatoFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_USER}
-    result = await flow.async_step_user(user_input=None)
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": SOURCE_USER},
+    )
 
     assert result["step_id"] == "user"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -70,11 +69,10 @@ async def test_connection_error(
         "http://example.local/elgato/accessory-info", exc=aiohttp.ClientError
     )
 
-    flow = config_flow.ElgatoFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_USER}
-    result = await flow.async_step_user(
-        user_input={CONF_HOST: "example.local", CONF_PORT: 9123}
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_HOST: "example.local", CONF_PORT: 9123},
     )
 
     assert result["errors"] == {"base": "connection_error"}
@@ -90,11 +88,10 @@ async def test_zeroconf_connection_error(
         "http://example.local/elgato/accessory-info", exc=aiohttp.ClientError
     )
 
-    flow = config_flow.ElgatoFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_ZEROCONF}
-    result = await flow.async_step_zeroconf(
-        user_input={"hostname": "example.local.", "port": 9123}
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data={"hostname": "example.local.", "port": 9123},
     )
 
     assert result["reason"] == "connection_error"
@@ -142,12 +139,12 @@ async def test_user_device_exists_abort(
     """Test we abort zeroconf flow if Elgato Key Light device already configured."""
     await init_integration(hass, aioclient_mock)
 
-    flow = config_flow.ElgatoFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_USER}
-    result = await flow.async_step_user({CONF_HOST: "example.local", CONF_PORT: 9123})
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_HOST: "example.local", CONF_PORT: 9123},
+    )
 
-    assert result["reason"] == "already_configured"
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
@@ -157,19 +154,19 @@ async def test_zeroconf_device_exists_abort(
     """Test we abort zeroconf flow if Elgato Key Light device already configured."""
     await init_integration(hass, aioclient_mock)
 
-    flow = config_flow.ElgatoFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_ZEROCONF}
-    result = await flow.async_step_zeroconf(
-        {"hostname": "example.local.", "port": 9123}
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data={"hostname": "example.local.", "port": 9123},
     )
 
     assert result["reason"] == "already_configured"
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
-    flow.context = {"source": SOURCE_ZEROCONF, CONF_HOST: "example.local", "port": 9123}
-    result = await flow.async_step_zeroconf_confirm(
-        {"hostname": "example.local.", "port": 9123}
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": SOURCE_ZEROCONF, CONF_HOST: "example.local", "port": 9123},
+        data={"hostname": "example.local.", "port": 9123},
     )
 
     assert result["reason"] == "already_configured"
@@ -186,22 +183,25 @@ async def test_full_user_flow_implementation(
         headers={"Content-Type": "application/json"},
     )
 
-    flow = config_flow.ElgatoFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_USER}
-    result = await flow.async_step_user(user_input=None)
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": SOURCE_USER},
+    )
 
     assert result["step_id"] == "user"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
-    result = await flow.async_step_user(
-        user_input={CONF_HOST: "example.local", CONF_PORT: 9123}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "example.local", CONF_PORT: 9123}
     )
+
     assert result["data"][CONF_HOST] == "example.local"
     assert result["data"][CONF_PORT] == 9123
     assert result["data"][CONF_SERIAL_NUMBER] == "CN11A1A00001"
     assert result["title"] == "CN11A1A00001"
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    entries = hass.config_entries.async_entries(config_flow.DOMAIN)
+    assert entries[0].unique_id == "CN11A1A00001"
 
 
 async def test_full_zeroconf_flow_implementation(

@@ -4,7 +4,5 @@
   "documentation": "https://www.home-assistant.io/integrations/lovelace",
   "requirements": [],
   "dependencies": [],
-  "codeowners": [
-    "@home-assistant/frontend"
-  ]
+  "codeowners": ["@home-assistant/frontend"]
 }

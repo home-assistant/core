@@ -8,6 +8,7 @@ from tests.common import async_mock_service
 
 TEST_URL = "https://api.amazonalexa.com/v3/events"
 TEST_TOKEN_URL = "https://api.amazon.com/auth/o2/token"
+TEST_LOCALE = "en-US"
 
 
 class MockConfig(config.AbstractConfig):
@@ -17,6 +18,7 @@ class MockConfig(config.AbstractConfig):
         "binary_sensor.test_doorbell": {"display_categories": "DOORBELL"},
         "binary_sensor.test_contact_forced": {"display_categories": "CONTACT_SENSOR"},
         "binary_sensor.test_motion_forced": {"display_categories": "MOTION_SENSOR"},
+        "binary_sensor.test_motion_camera_event": {"display_categories": "CAMERA"},
     }
 
     @property
@@ -28,6 +30,11 @@ class MockConfig(config.AbstractConfig):
     def endpoint(self):
         """Endpoint for report state."""
         return TEST_URL
+
+    @property
+    def locale(self):
+        """Return config locale."""
+        return TEST_LOCALE
 
     def should_expose(self, entity_id):
         """If an entity should be exposed."""

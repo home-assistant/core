@@ -1,8 +1,8 @@
 {
   "domain": "doorbird",
-  "name": "Doorbird",
+  "name": "DoorBird",
   "documentation": "https://www.home-assistant.io/integrations/doorbird",
   "requirements": ["doorbirdpy==2.0.8"],
-  "dependencies": ["http"],
+  "dependencies": ["http", "logbook"],
   "codeowners": ["@oblogic7"]
 }

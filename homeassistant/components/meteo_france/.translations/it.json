@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Citt\u00e0 gi\u00e0 configurata",
+            "unknown": "Errore sconosciuto: riprovare pi\u00f9 tardi"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "city": "Citt\u00e0"
+                },
+                "description": "Inserisci il codice postale (solo per la Francia, consigliato) o il nome della citt\u00e0",
+                "title": "M\u00e9t\u00e9o-France"
+            }
+        },
+        "title": "M\u00e9t\u00e9o-France"
+    }
+}

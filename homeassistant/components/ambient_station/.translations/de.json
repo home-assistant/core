@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Dieser App-Schl\u00fcssel wird bereits verwendet."
+        },
         "error": {
             "identifier_exists": "Anwendungsschl\u00fcssel und / oder API-Schl\u00fcssel bereits registriert",
             "invalid_key": "Ung\u00fcltiger API Key und / oder Anwendungsschl\u00fcssel",

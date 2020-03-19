@@ -1,6 +1,5 @@
 """Tests for async util methods from Python source."""
 import asyncio
-import sys
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
@@ -112,11 +111,7 @@ class RunThreadsafeTests(TestCase):
         """Wait 0.05 second and return a + b."""
         yield from asyncio.sleep(0.05, loop=self.loop)
         if cancel:
-            if sys.version_info[:2] >= (3, 7):
-                current_task = asyncio.current_task
-            else:
-                current_task = asyncio.tasks.Task.current_task
-            current_task(self.loop).cancel()
+            asyncio.current_task(self.loop).cancel()
             yield
         return self.add_callback(a, b, fail, invalid)
 

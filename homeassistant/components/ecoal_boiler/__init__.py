@@ -18,7 +18,7 @@ from homeassistant.helpers.discovery import load_platform
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "ecoal_boiler"
-DATA_ECOAL_BOILER = "data_" + DOMAIN
+DATA_ECOAL_BOILER = f"data_{DOMAIN}"
 
 DEFAULT_USERNAME = "admin"
 DEFAULT_PASSWORD = "admin"
@@ -91,7 +91,7 @@ def setup(hass, hass_config):
     if ecoal_contr.version is None:
         # Wrong credentials nor network config
         _LOGGER.error(
-            "Unable to read controller status from %s@%s" " (wrong host/credentials)",
+            "Unable to read controller status from %s@%s (wrong host/credentials)",
             username,
             host,
         )

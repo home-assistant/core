@@ -1,11 +1,40 @@
 {
     "config": {
+        "abort": {
+            "accessory_not_found_error": "Nem adhat\u00f3 hozz\u00e1 p\u00e1ros\u00edt\u00e1s, mert az eszk\u00f6z m\u00e1r nem tal\u00e1lhat\u00f3.",
+            "already_configured": "A tartoz\u00e9k m\u00e1r konfigur\u00e1lva van ezzel a vez\u00e9rl\u0151vel.",
+            "already_in_progress": "Az eszk\u00f6z konfigur\u00e1ci\u00f3ja m\u00e1r folyamatban van.",
+            "already_paired": "Ez a tartoz\u00e9k m\u00e1r p\u00e1ros\u00edtva van egy m\u00e1sik eszk\u00f6zzel. \u00c1ll\u00edtsa alaphelyzetbe a tartoz\u00e9kot, majd pr\u00f3b\u00e1lkozzon \u00fajra.",
+            "ignored_model": "A HomeKit t\u00e1mogat\u00e1sa e modelln\u00e9l blokkolva van, mivel a szolg\u00e1ltat\u00e1shoz teljes nat\u00edv integr\u00e1ci\u00f3 \u00e9rhet\u0151 el.",
+            "invalid_config_entry": "Ez az eszk\u00f6z k\u00e9szen \u00e1ll a p\u00e1ros\u00edt\u00e1sra, de m\u00e1r van egy \u00fctk\u00f6z\u0151 konfigur\u00e1ci\u00f3s bejegyz\u00e9s a Home Assistant-ben, amelyet el\u0151sz\u00f6r el kell t\u00e1vol\u00edtani.",
+            "no_devices": "Nem tal\u00e1lhat\u00f3 nem p\u00e1ros\u00edtott eszk\u00f6z"
+        },
+        "error": {
+            "authentication_error": "Helytelen HomeKit k\u00f3d. K\u00e9rj\u00fck, ellen\u0151rizze, \u00e9s pr\u00f3b\u00e1lja \u00fajra.",
+            "busy_error": "Az eszk\u00f6z megtagadta a p\u00e1ros\u00edt\u00e1s hozz\u00e1ad\u00e1s\u00e1t, mivel m\u00e1r p\u00e1ros\u00edtva van egy m\u00e1sik vez\u00e9rl\u0151vel.",
+            "max_peers_error": "Az eszk\u00f6z megtagadta a p\u00e1ros\u00edt\u00e1s hozz\u00e1ad\u00e1s\u00e1t, mivel nincs ingyenes p\u00e1ros\u00edt\u00e1si t\u00e1rhely.",
+            "max_tries_error": "Az eszk\u00f6z megtagadta a p\u00e1ros\u00edt\u00e1s hozz\u00e1ad\u00e1s\u00e1t, mivel t\u00f6bb mint 100 sikertelen hiteles\u00edt\u00e9si k\u00eds\u00e9rletet kapott.",
+            "pairing_failed": "Nem kezelt hiba t\u00f6rt\u00e9nt az eszk\u00f6zzel val\u00f3 p\u00e1ros\u00edt\u00e1s sor\u00e1n. Lehet, hogy ez \u00e1tmeneti hiba, vagy jelenleg nem t\u00e1mogatja az eszk\u00f6zt.",
+            "unable_to_pair": "Nem siker\u00fclt p\u00e1ros\u00edtani, pr\u00f3b\u00e1ld \u00fajra.",
+            "unknown_error": "Az eszk\u00f6z ismeretlen hib\u00e1t jelentett. A p\u00e1ros\u00edt\u00e1s sikertelen."
+        },
+        "flow_title": "HomeKit tartoz\u00e9k: {name}",
         "step": {
+            "pair": {
+                "data": {
+                    "pairing_code": "P\u00e1ros\u00edt\u00e1si k\u00f3d"
+                },
+                "description": "\u00cdrja be a HomeKit p\u00e1ros\u00edt\u00e1si k\u00f3dj\u00e1t (XXX-XX-XXX form\u00e1tumban) a kieg\u00e9sz\u00edt\u0151 haszn\u00e1lat\u00e1hoz",
+                "title": "HomeKit tartoz\u00e9k p\u00e1ros\u00edt\u00e1sa"
+            },
             "user": {
                 "data": {
                     "device": "Eszk\u00f6z"
-                }
+                },
+                "description": "V\u00e1lassza ki azt az eszk\u00f6zt, amelyet p\u00e1ros\u00edtani szeretne",
+                "title": "HomeKit tartoz\u00e9k p\u00e1ros\u00edt\u00e1sa"
             }
-        }
+        },
+        "title": "HomeKit tartoz\u00e9k"
     }
 }

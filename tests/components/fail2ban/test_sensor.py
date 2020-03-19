@@ -97,7 +97,7 @@ class TestBanSensor(unittest.TestCase):
 
     def test_single_ban(self):
         """Test that log is parsed correctly for single ban."""
-        log_parser = BanLogParser("/tmp")
+        log_parser = BanLogParser("/test/fail2ban.log")
         sensor = BanSensor("fail2ban", "jail_one", log_parser)
         assert sensor.name == "fail2ban jail_one"
         mock_fh = MockOpen(read_data=fake_log("single_ban"))
@@ -112,7 +112,7 @@ class TestBanSensor(unittest.TestCase):
 
     def test_ipv6_ban(self):
         """Test that log is parsed correctly for IPV6 bans."""
-        log_parser = BanLogParser("/tmp")
+        log_parser = BanLogParser("/test/fail2ban.log")
         sensor = BanSensor("fail2ban", "jail_one", log_parser)
         assert sensor.name == "fail2ban jail_one"
         mock_fh = MockOpen(read_data=fake_log("ipv6_ban"))
@@ -127,7 +127,7 @@ class TestBanSensor(unittest.TestCase):
 
     def test_multiple_ban(self):
         """Test that log is parsed correctly for multiple ban."""
-        log_parser = BanLogParser("/tmp")
+        log_parser = BanLogParser("/test/fail2ban.log")
         sensor = BanSensor("fail2ban", "jail_one", log_parser)
         assert sensor.name == "fail2ban jail_one"
         mock_fh = MockOpen(read_data=fake_log("multi_ban"))
@@ -148,7 +148,7 @@ class TestBanSensor(unittest.TestCase):
 
     def test_unban_all(self):
         """Test that log is parsed correctly when unbanning."""
-        log_parser = BanLogParser("/tmp")
+        log_parser = BanLogParser("/test/fail2ban.log")
         sensor = BanSensor("fail2ban", "jail_one", log_parser)
         assert sensor.name == "fail2ban jail_one"
         mock_fh = MockOpen(read_data=fake_log("unban_all"))
@@ -166,7 +166,7 @@ class TestBanSensor(unittest.TestCase):
 
     def test_unban_one(self):
         """Test that log is parsed correctly when unbanning one ip."""
-        log_parser = BanLogParser("/tmp")
+        log_parser = BanLogParser("/test/fail2ban.log")
         sensor = BanSensor("fail2ban", "jail_one", log_parser)
         assert sensor.name == "fail2ban jail_one"
         mock_fh = MockOpen(read_data=fake_log("unban_one"))
@@ -184,7 +184,7 @@ class TestBanSensor(unittest.TestCase):
 
     def test_multi_jail(self):
         """Test that log is parsed correctly when using multiple jails."""
-        log_parser = BanLogParser("/tmp")
+        log_parser = BanLogParser("/test/fail2ban.log")
         sensor1 = BanSensor("fail2ban", "jail_one", log_parser)
         sensor2 = BanSensor("fail2ban", "jail_two", log_parser)
         assert sensor1.name == "fail2ban jail_one"
@@ -205,7 +205,7 @@ class TestBanSensor(unittest.TestCase):
 
     def test_ban_active_after_update(self):
         """Test that ban persists after subsequent update."""
-        log_parser = BanLogParser("/tmp")
+        log_parser = BanLogParser("/test/fail2ban.log")
         sensor = BanSensor("fail2ban", "jail_one", log_parser)
         assert sensor.name == "fail2ban jail_one"
         mock_fh = MockOpen(read_data=fake_log("single_ban"))

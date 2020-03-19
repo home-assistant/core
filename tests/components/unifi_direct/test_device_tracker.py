@@ -7,7 +7,6 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    CONF_AWAY_HIDE,
     CONF_CONSIDER_HOME,
     CONF_NEW_DEVICE_DEFAULTS,
     CONF_TRACK_NEW,
@@ -25,9 +24,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, load_fixture, mock_component
 
-scanner_path = (
-    "homeassistant.components.unifi_direct.device_tracker." + "UnifiDeviceScanner"
-)
+scanner_path = "homeassistant.components.unifi_direct.device_tracker.UnifiDeviceScanner"
 
 
 @pytest.fixture(autouse=True)
@@ -51,7 +48,7 @@ async def test_get_scanner(unifi_mock, hass):
             CONF_PASSWORD: "fake_pass",
             CONF_TRACK_NEW: True,
             CONF_CONSIDER_HOME: timedelta(seconds=180),
-            CONF_NEW_DEVICE_DEFAULTS: {CONF_TRACK_NEW: True, CONF_AWAY_HIDE: False},
+            CONF_NEW_DEVICE_DEFAULTS: {CONF_TRACK_NEW: True},
         }
     }
 
