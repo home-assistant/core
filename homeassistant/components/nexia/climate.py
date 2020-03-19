@@ -123,6 +123,12 @@ class NexiaZone(NexiaEntity, ClimateDevice):
         self._device = device
         self._coordinator = coordinator
         self._unique_id = f"{self._device.zone_id}_zone"
+        # The has_* calls are stable for the life of the device
+        # and do not do I/O
+        self._has_relative_humidity = self.thermostat.has_relative_humidity()
+        self._has_emergency_heat = self.thermostat.has_emergency_heat()
+        self._has_humidify_support = self.thermostat.has_humidify_support()
+        self._has_dehumidify_support = self.thermostat.has_dehumidify_support()
 
     @property
     def unique_id(self):
@@ -134,10 +140,10 @@ class NexiaZone(NexiaEntity, ClimateDevice):
         """Return the list of supported features."""
         supported = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_PRESET_MODE
 
-        if self.thermostat.has_relative_humidity():
+        if self._has_relative_humidity:
             supported |= SUPPORT_TARGET_HUMIDITY
 
-        if self.thermostat.has_emergency_heat():
+        if self._has_emergency_heat:
             supported |= SUPPORT_AUX_HEAT
 
         return supported
@@ -177,14 +183,6 @@ class NexiaZone(NexiaEntity, ClimateDevice):
         self.thermostat.set_fan_mode(fan_mode)
         self.schedule_update_ha_state()
 
-    def set_hold_mode(self, hold_mode):
-        """Set new target hold mode."""
-        if hold_mode.lower() == "none":
-            self._device.call_return_to_schedule()
-        else:
-            self._device.set_preset(hold_mode)
-        self.schedule_update_ha_state()
-
     @property
     def preset_mode(self):
         """Preset that is active."""
@@ -203,7 +201,7 @@ class NexiaZone(NexiaEntity, ClimateDevice):
     @property
     def current_humidity(self):
         """Humidity indoors."""
-        if self.thermostat.has_relative_humidity():
+        if self._has_relative_humidity:
             return round(self.thermostat.get_relative_humidity() * 100.0, 1)
         return "Not supported"
 
@@ -341,17 +339,17 @@ class NexiaZone(NexiaEntity, ClimateDevice):
             ATTR_ZONE_STATUS: self._device.get_status(),
         }
 
-        if self.thermostat.has_emergency_heat():
+        if self._has_emergency_heat:
             aux_heat_value = "off"
             if self.thermostat.is_emergency_heat_active():
                 aux_heat_value = "on"
             data.update({ATTR_AUX_HEAT: aux_heat_value})
 
-        if self.thermostat.has_relative_humidity():
+        if self._has_relative_humidity:
             data.update(
                 {
-                    ATTR_HUMIDIFY_SUPPORTED: self.thermostat.has_humidify_support(),
-                    ATTR_DEHUMIDIFY_SUPPORTED: self.thermostat.has_dehumidify_support(),
+                    ATTR_HUMIDIFY_SUPPORTED: self._has_humidify_support,
+                    ATTR_DEHUMIDIFY_SUPPORTED: self._has_dehumidify_support,
                     ATTR_CURRENT_HUMIDITY: round(
                         self.thermostat.get_relative_humidity() * 100.0, 1
                     ),
@@ -363,7 +361,7 @@ class NexiaZone(NexiaEntity, ClimateDevice):
                     ),
                 }
             )
-            if self.thermostat.has_dehumidify_support():
+            if self._has_dehumidify_support:
                 data.update(
                     {
                         ATTR_DEHUMIDIFY_SETPOINT: round(
@@ -374,7 +372,7 @@ class NexiaZone(NexiaEntity, ClimateDevice):
                         ),
                     }
                 )
-            if self.thermostat.has_humidify_support():
+            if self._has_humidify_support:
                 data.update(
                     {
                         ATTR_HUMIDIFY_SETPOINT: round(

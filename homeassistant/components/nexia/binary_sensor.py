@@ -26,7 +26,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         thermostat = nexia_home.get_thermostat_by_id(thermostat_id)
         entities.append(
             NexiaBinarySensor(
-                coordinator, thermostat, "is_blower_active", "Blower Active", None
+                coordinator, thermostat, "is_blower_active", "Blower Active"
             )
         )
         if thermostat.has_emergency_heat():
@@ -36,7 +36,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     thermostat,
                     "is_emergency_heat_active",
                     "Emergency Heat Active",
-                    None,
                 )
             )
 
@@ -46,7 +45,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class NexiaBinarySensor(NexiaEntity, BinarySensorDevice):
     """Provices Nexia BinarySensor support."""
 
-    def __init__(self, coordinator, device, sensor_call, sensor_name, sensor_class):
+    def __init__(self, coordinator, device, sensor_call, sensor_name):
         """Initialize the nexia sensor."""
         super().__init__(coordinator)
         self._coordinator = coordinator
@@ -55,7 +54,6 @@ class NexiaBinarySensor(NexiaEntity, BinarySensorDevice):
         self._call = sensor_call
         self._unique_id = f"{self._device.thermostat_id}_{sensor_call}"
         self._state = None
-        self._device_class = sensor_class
 
     @property
     def unique_id(self):
@@ -89,8 +87,3 @@ class NexiaBinarySensor(NexiaEntity, BinarySensorDevice):
     def is_on(self):
         """Return the status of the sensor."""
         return getattr(self._device, self._call)()
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        return self._device_class

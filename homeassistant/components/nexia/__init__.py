@@ -36,22 +36,6 @@ CONFIG_SCHEMA = vol.Schema(
 DEFAULT_UPDATE_RATE = 120
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
-
-
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the nexia component from YAML."""
 
@@ -75,7 +59,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     conf = entry.data
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
-
 
     try:
         nexia_home = await hass.async_add_executor_job(
@@ -120,6 +103,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-def is_percent(value):
-    """If the value is a valid percentage."""
-    return isinstance(value, int) and 0 <= value <= 100
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Unload a config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return unload_ok
