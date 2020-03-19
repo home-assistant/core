@@ -29,7 +29,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         )
         await hass.async_add_executor_job(nexia_home.login)
     except ConnectTimeout as ex:
-        _LOGGER.error("Unable to connect to Nexia service: %s", str(ex))
+        _LOGGER.error("Unable to connect to Nexia service: %s", ex)
         raise CannotConnect
     except HTTPError as http_ex:
         _LOGGER.error("HTTP error from Nexia service: %s", http_ex)
