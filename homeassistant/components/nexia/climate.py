@@ -228,7 +228,7 @@ class NexiaZone(NexiaEntity, ClimateDevice):
             return CURRENT_HVAC_HEAT
         if system_status == SYSTEM_STATUS_IDLE:
             return CURRENT_HVAC_IDLE
-        return "idle"
+        return CURRENT_HVAC_IDLE
 
     @property
     def hvac_mode(self):
