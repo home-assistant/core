@@ -7,7 +7,6 @@ from nexia.const import (
     OPERATION_MODE_COOL,
     OPERATION_MODE_HEAT,
     OPERATION_MODE_OFF,
-    OPERATION_MODES,
     SYSTEM_STATUS_COOL,
     SYSTEM_STATUS_HEAT,
     SYSTEM_STATUS_IDLE,
@@ -23,6 +22,7 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_OFF,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
@@ -37,7 +37,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_TEMPERATURE,
-    STATE_OFF,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -58,6 +57,26 @@ from .const import (
 from .entity import NexiaEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+#
+# Nexia has two bits to determine hvac mode
+# There are actually eight states so we map to
+# the most significant state
+#
+# 1. Zone Mode : Auto / Cooling / Heating / Off
+# 2. Run Mode  : Hold / Run Schedule
+#
+#
+HA_TO_NEXIA_HVAC_MODE_MAP = {
+    HVAC_MODE_HEAT: OPERATION_MODE_HEAT,
+    HVAC_MODE_COOL: OPERATION_MODE_COOL,
+    HVAC_MODE_HEAT_COOL: OPERATION_MODE_AUTO,
+    HVAC_MODE_AUTO: OPERATION_MODE_AUTO,
+    HVAC_MODE_OFF: OPERATION_MODE_OFF,
+}
+NEXIA_TO_HA_HVAC_MODE_MAP = {
+    value: key for key, value in HA_TO_NEXIA_HVAC_MODE_MAP.items()
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -197,21 +216,18 @@ class NexiaZone(NexiaEntity, ClimateDevice):
     @property
     def hvac_mode(self):
         """Return current mode, as the user-visible name."""
-
         mode = self._device.get_requested_mode()
         hold = self._device.is_in_permanent_hold()
 
-        if mode == OPERATION_MODE_OFF:
-            return HVAC_MODE_OFF
-        if not hold and mode == OPERATION_MODE_AUTO:
-            return HVAC_MODE_AUTO
-        if mode == OPERATION_MODE_AUTO:
+        # If the device is in hold mode with
+        # OPERATION_MODE_AUTO
+        # overriding the schedule by still
+        # heating and cooling to the
+        # temp range.
+        if hold and mode == OPERATION_MODE_AUTO:
             return HVAC_MODE_HEAT_COOL
-        if mode == OPERATION_MODE_HEAT:
-            return HVAC_MODE_HEAT
-        if mode == OPERATION_MODE_COOL:
-            return HVAC_MODE_COOL
-        raise KeyError(f"Unhandled mode: {mode}")
+
+        return NEXIA_TO_HA_HVAC_MODE_MAP[mode]
 
     @property
     def hvac_modes(self):
@@ -345,25 +361,13 @@ class NexiaZone(NexiaEntity, ClimateDevice):
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set the system mode (Auto, Heat_Cool, Cool, Heat, etc)."""
-
         if hvac_mode == HVAC_MODE_AUTO:
             self._device.call_return_to_schedule()
             self._device.set_mode(mode=OPERATION_MODE_AUTO)
         else:
-            if hvac_mode == HVAC_MODE_HEAT_COOL:
-                hvac_mode = HVAC_MODE_AUTO
             self._device.call_permanent_hold()
+            self._device.set_mode(mode=HA_TO_NEXIA_HVAC_MODE_MAP[hvac_mode])
 
-            hvac_mode = hvac_mode.upper()
-
-            if hvac_mode in OPERATION_MODES:
-
-                self._device.set_mode(mode=hvac_mode)
-            else:
-                raise KeyError(
-                    f"Operation mode {hvac_mode} not in the supported "
-                    + f"operations list {str(OPERATION_MODES)}"
-                )
         self.schedule_update_ha_state()
 
     def set_aircleaner_mode(self, aircleaner_mode):
