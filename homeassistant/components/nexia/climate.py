@@ -203,7 +203,7 @@ class NexiaZone(NexiaEntity, ClimateDevice):
         """Humidity indoors."""
         if self._has_relative_humidity:
             return round(self.thermostat.get_relative_humidity() * 100.0, 1)
-        return "Not supported"
+        return None
 
     @property
     def target_temperature(self):
