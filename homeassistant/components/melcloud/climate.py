@@ -146,13 +146,23 @@ class AtaDeviceClimate(MelCloudClimate):
         """Return the optional state attributes with device specific additions."""
         attr = {}
 
-        if self._device.vane_vertical and self._device.vane_horizontal:
-            attr.update({
-                ATTR_VANE_HORIZONTAL: vane_horizontal,
-                ATTR_VANE_HORIZONTAL_POSITIONS: self._device.vane_horizontal_positions,
-                ATTR_VANE_VERTICAL: vane_vertical,
-                ATTR_VANE_VERTICAL_POSITIONS: self._device.vane_vertical_positions,
-            })
+        vane_horizontal = self._device.vane_horizontal
+        if vane_horizontal:
+            attr.update(
+                {
+                    ATTR_VANE_HORIZONTAL: vane_horizontal,
+                    ATTR_VANE_HORIZONTAL_POSITIONS: self._device.vane_horizontal_positions,
+                }
+            )
+
+        vane_vertical = self._device.vane_vertical
+        if vane_horizontal:
+            attr.update(
+                {
+                    ATTR_VANE_VERTICAL: vane_vertical,
+                    ATTR_VANE_VERTICAL_POSITIONS: self._device.vane_vertical_positions,
+                }
+            )
         return attr
 
     @property
