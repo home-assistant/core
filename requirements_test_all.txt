@@ -170,6 +170,11 @@ denonavr==0.8.0
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.6.1
 
+# homeassistant.components.devolo_home_control
+
+# homeassistant.components.devolo_home_control
+devolo-home-control-api==0.6.1
+
 # homeassistant.components.directv
 directpy==0.7
 
