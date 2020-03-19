@@ -167,7 +167,7 @@ class NexiaZone(NexiaEntity, ClimateDevice):
         """Humidity indoors."""
         if self._has_relative_humidity:
             return round(self.thermostat.get_relative_humidity() * 100.0, 1)
-        return "Not supported"
+        return None
 
     @property
     def target_temperature(self):
@@ -183,7 +183,7 @@ class NexiaZone(NexiaEntity, ClimateDevice):
         zone_called = self._device.is_calling()
 
         if self._device.get_requested_mode() == OPERATION_MODE_OFF:
-            return STATE_OFF
+            return CURRENT_HVAC_OFF
         if not zone_called:
             return CURRENT_HVAC_IDLE
         if system_status == SYSTEM_STATUS_COOL:
@@ -192,7 +192,7 @@ class NexiaZone(NexiaEntity, ClimateDevice):
             return CURRENT_HVAC_HEAT
         if system_status == SYSTEM_STATUS_IDLE:
             return CURRENT_HVAC_IDLE
-        return "idle"
+        return CURRENT_HVAC_IDLE
 
     @property
     def hvac_mode(self):
