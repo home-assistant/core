@@ -6,7 +6,7 @@
   "requirements": [
     "bellows-homeassistant==0.14.0",
     "zha-quirks==0.0.37",
-    "zigpy-cc==0.1.0",
+    "zigpy-cc==0.2.3",
     "zigpy-deconz==0.7.0",
     "zigpy-homeassistant==0.16.0",
     "zigpy-xbee-homeassistant==0.10.0",
