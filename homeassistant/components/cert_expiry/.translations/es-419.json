@@ -1,5 +1,26 @@
 {
     "config": {
+        "abort": {
+            "host_port_exists": "Esta combinaci\u00f3n de host y puerto ya est\u00e1 configurada"
+        },
+        "error": {
+            "certificate_error": "El certificado no pudo ser validado",
+            "certificate_fetch_failed": "No se puede recuperar el certificado de esta combinaci\u00f3n de host y puerto",
+            "connection_timeout": "Tiempo de espera al conectarse a este host",
+            "host_port_exists": "Esta combinaci\u00f3n de host y puerto ya est\u00e1 configurada",
+            "resolve_failed": "Este host no puede resolverse",
+            "wrong_host": "El certificado no coincide con el nombre de host"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "El nombre de host del certificado",
+                    "name": "El nombre del certificado",
+                    "port": "El puerto del certificado"
+                },
+                "title": "Definir el certificado para probar"
+            }
+        },
         "title": "Expiraci\u00f3n del certificado"
     }
 }

@@ -26,7 +26,6 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceC
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "input_number"
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 CONF_INITIAL = "initial"
 CONF_MIN = "min"
@@ -209,7 +208,7 @@ class InputNumber(RestoreEntity):
     def from_yaml(cls, config: typing.Dict) -> "InputNumber":
         """Return entity instance initialized from yaml storage."""
         input_num = cls(config)
-        input_num.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])
+        input_num.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         input_num.editable = False
         return input_num
 
@@ -288,44 +287,22 @@ class InputNumber(RestoreEntity):
     async def async_set_value(self, value):
         """Set new value."""
         num_value = float(value)
+
         if num_value < self._minimum or num_value > self._maximum:
-            _LOGGER.warning(
-                "Invalid value: %s (range %s - %s)",
-                num_value,
-                self._minimum,
-                self._maximum,
+            raise vol.Invalid(
+                f"Invalid value for {self.entity_id}: {value} (range {self._minimum} - {self._maximum})"
             )
-            return
+
         self._current_value = num_value
         self.async_write_ha_state()
 
     async def async_increment(self):
         """Increment value."""
-        new_value = self._current_value + self._step
-        if new_value > self._maximum:
-            _LOGGER.warning(
-                "Invalid value: %s (range %s - %s)",
-                new_value,
-                self._minimum,
-                self._maximum,
-            )
-            return
-        self._current_value = new_value
-        self.async_write_ha_state()
+        await self.async_set_value(min(self._current_value + self._step, self._maximum))
 
     async def async_decrement(self):
         """Decrement value."""
-        new_value = self._current_value - self._step
-        if new_value < self._minimum:
-            _LOGGER.warning(
-                "Invalid value: %s (range %s - %s)",
-                new_value,
-                self._minimum,
-                self._maximum,
-            )
-            return
-        self._current_value = new_value
-        self.async_write_ha_state()
+        await self.async_set_value(max(self._current_value - self._step, self._minimum))
 
     async def async_update_config(self, config: typing.Dict) -> None:
         """Handle when the config is updated."""

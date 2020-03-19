@@ -3,6 +3,7 @@
 ABBREVIATIONS = {
     "act_t": "action_topic",
     "act_tpl": "action_template",
+    "atype": "automation_type",
     "aux_cmd_t": "aux_command_topic",
     "aux_stat_tpl": "aux_state_template",
     "aux_stat_t": "aux_state_topic",
@@ -80,6 +81,7 @@ ABBREVIATIONS = {
     "osc_cmd_t": "oscillation_command_topic",
     "osc_stat_t": "oscillation_state_topic",
     "osc_val_tpl": "oscillation_value_template",
+    "pl": "payload",
     "pl_arm_away": "payload_arm_away",
     "pl_arm_home": "payload_arm_home",
     "pl_arm_nite": "payload_arm_night",
@@ -142,6 +144,7 @@ ABBREVIATIONS = {
     "stat_t": "state_topic",
     "stat_tpl": "state_template",
     "stat_val_tpl": "state_value_template",
+    "stype": "subtype",
     "sup_feat": "supported_features",
     "swing_mode_cmd_t": "swing_mode_command_topic",
     "swing_mode_stat_tpl": "swing_mode_state_template",

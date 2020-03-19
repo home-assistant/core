@@ -1,9 +1,4 @@
-"""
-Helpers for Zigbee Home Automation.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/integrations/zha/
-"""
+"""Helpers for Zigbee Home Automation."""
 import collections
 import logging
 
@@ -38,18 +33,6 @@ async def safe_read(
         return result
     except Exception:  # pylint: disable=broad-except
         return {}
-
-
-def get_attr_id_by_name(cluster, attr_name):
-    """Get the attribute id for a cluster attribute by its name."""
-    return next(
-        (
-            attrid
-            for attrid, (attrname, datatype) in cluster.attributes.items()
-            if attr_name == attrname
-        ),
-        None,
-    )
 
 
 async def get_matched_clusters(source_zha_device, target_zha_device):

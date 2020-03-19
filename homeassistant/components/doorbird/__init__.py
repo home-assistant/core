@@ -66,7 +66,7 @@ def setup(hass, config):
         custom_url = doorstation_config.get(CONF_CUSTOM_URL)
         events = doorstation_config.get(CONF_EVENTS)
         token = doorstation_config.get(CONF_TOKEN)
-        name = doorstation_config.get(CONF_NAME) or "DoorBird {}".format(index + 1)
+        name = doorstation_config.get(CONF_NAME) or f"DoorBird {index + 1}"
 
         try:
             device = DoorBird(device_ip, username, password)
@@ -297,6 +297,6 @@ class DoorBirdRequestView(HomeAssistantView):
 
         hass.bus.async_fire(f"{DOMAIN}_{event}", event_data)
 
-        log_entry(hass, "Doorbird {}".format(event), "event was fired.", DOMAIN)
+        log_entry(hass, f"Doorbird {event}", "event was fired.", DOMAIN)
 
         return web.Response(status=200, text="OK")

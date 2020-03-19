@@ -6,7 +6,12 @@ import Adafruit_DHT  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
+    TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -28,7 +33,7 @@ SENSOR_TEMPERATURE = "temperature"
 SENSOR_HUMIDITY = "humidity"
 SENSOR_TYPES = {
     SENSOR_TEMPERATURE: ["Temperature", None],
-    SENSOR_HUMIDITY: ["Humidity", "%"],
+    SENSOR_HUMIDITY: ["Humidity", UNIT_PERCENTAGE],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

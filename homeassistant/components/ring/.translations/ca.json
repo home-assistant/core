@@ -8,6 +8,12 @@
             "unknown": "Error inesperat"
         },
         "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "Codi de dos factors"
+                },
+                "title": "Autenticaci\u00f3 de dos factors"
+            },
             "user": {
                 "data": {
                     "password": "Contrasenya",

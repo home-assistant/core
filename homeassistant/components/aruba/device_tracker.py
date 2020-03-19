@@ -84,8 +84,8 @@ class ArubaDeviceScanner(DeviceScanner):
     def get_aruba_data(self):
         """Retrieve data from Aruba Access Point and return parsed result."""
 
-        connect = "ssh {}@{}"
-        ssh = pexpect.spawn(connect.format(self.username, self.host))
+        connect = f"ssh {self.username}@{self.host}"
+        ssh = pexpect.spawn(connect)
         query = ssh.expect(
             [
                 "password:",

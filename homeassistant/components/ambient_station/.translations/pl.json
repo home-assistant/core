@@ -1,7 +1,10 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Ten klucz aplikacji jest ju\u017c w u\u017cyciu."
+        },
         "error": {
-            "identifier_exists": "Klucz aplikacji i/lub klucz API ju\u017c jest zarejestrowany",
+            "identifier_exists": "Klucz aplikacji i/lub klucz API ju\u017c jest zarejestrowany.",
             "invalid_key": "Nieprawid\u0142owy klucz API i/lub klucz aplikacji",
             "no_devices": "Nie znaleziono urz\u0105dze\u0144 na koncie"
         },

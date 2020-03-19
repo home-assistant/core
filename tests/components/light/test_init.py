@@ -462,3 +462,37 @@ async def test_light_turn_on_auth(hass, hass_admin_user):
             True,
             core.Context(user_id=hass_admin_user.id),
         )
+
+
+async def test_light_brightness_step(hass):
+    """Test that light context works."""
+    platform = getattr(hass.components, "test.light")
+    platform.init()
+    entity = platform.ENTITIES[0]
+    entity.supported_features = light.SUPPORT_BRIGHTNESS
+    entity.brightness = 100
+    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.attributes["brightness"] == 100
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": entity.entity_id, "brightness_step": -10},
+        True,
+    )
+
+    _, data = entity.last_call("turn_on")
+    assert data["brightness"] == 90, data
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": entity.entity_id, "brightness_step_pct": 10},
+        True,
+    )
+
+    _, data = entity.last_call("turn_on")
+    assert data["brightness"] == 125, data

@@ -8,7 +8,8 @@
                 "data": {
                     "name": "Name",
                     "latitude": "Latitude",
-                    "longitude": "Longitude"
+                    "longitude": "Longitude",
+                    "mode": "Mode"
                 }
             }
         },

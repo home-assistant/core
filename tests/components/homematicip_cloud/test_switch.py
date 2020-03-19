@@ -16,23 +16,23 @@ from .helper import async_manipulate_test_data, get_and_check_entity_basics
 
 async def test_manually_configured_platform(hass):
     """Test that we do not set up an access point."""
-    assert (
-        await async_setup_component(
-            hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: {"platform": HMIPC_DOMAIN}}
-        )
-        is True
+    assert await async_setup_component(
+        hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: {"platform": HMIPC_DOMAIN}}
     )
     assert not hass.data.get(HMIPC_DOMAIN)
 
 
-async def test_hmip_switch(hass, default_mock_hap):
+async def test_hmip_switch(hass, default_mock_hap_factory):
     """Test HomematicipSwitch."""
     entity_id = "switch.schrank"
     entity_name = "Schrank"
     device_model = "HMIP-PS"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=[entity_name]
+    )
 
     ha_state, hmip_device = get_and_check_entity_basics(
-        hass, default_mock_hap, entity_id, entity_name, device_model
+        hass, mock_hap, entity_id, entity_name, device_model
     )
 
     assert ha_state.state == STATE_ON
@@ -59,14 +59,17 @@ async def test_hmip_switch(hass, default_mock_hap):
     assert ha_state.state == STATE_ON
 
 
-async def test_hmip_switch_measuring(hass, default_mock_hap):
+async def test_hmip_switch_measuring(hass, default_mock_hap_factory):
     """Test HomematicipSwitchMeasuring."""
     entity_id = "switch.pc"
     entity_name = "Pc"
     device_model = "HMIP-PSM"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=[entity_name]
+    )
 
     ha_state, hmip_device = get_and_check_entity_basics(
-        hass, default_mock_hap, entity_id, entity_name, device_model
+        hass, mock_hap, entity_id, entity_name, device_model
     )
 
     assert ha_state.state == STATE_ON
@@ -100,14 +103,15 @@ async def test_hmip_switch_measuring(hass, default_mock_hap):
     assert not ha_state.attributes.get(ATTR_TODAY_ENERGY_KWH)
 
 
-async def test_hmip_group_switch(hass, default_mock_hap):
+async def test_hmip_group_switch(hass, default_mock_hap_factory):
     """Test HomematicipGroupSwitch."""
     entity_id = "switch.strom_group"
     entity_name = "Strom Group"
     device_model = None
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(test_groups=["Strom"])
 
     ha_state, hmip_device = get_and_check_entity_basics(
-        hass, default_mock_hap, entity_id, entity_name, device_model
+        hass, mock_hap, entity_id, entity_name, device_model
     )
 
     assert ha_state.state == STATE_ON
@@ -139,14 +143,22 @@ async def test_hmip_group_switch(hass, default_mock_hap):
     assert ha_state.attributes[ATTR_GROUP_MEMBER_UNREACHABLE]
 
 
-async def test_hmip_multi_switch(hass, default_mock_hap):
+async def test_hmip_multi_switch(hass, default_mock_hap_factory):
     """Test HomematicipMultiSwitch."""
     entity_id = "switch.jalousien_1_kizi_2_schlazi_channel1"
     entity_name = "Jalousien - 1 KiZi, 2 SchlaZi Channel1"
     device_model = "HmIP-PCBS2"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=[
+            "Jalousien - 1 KiZi, 2 SchlaZi",
+            "Multi IO Box",
+            "Heizungsaktor",
+            "ioBroker",
+        ]
+    )
 
     ha_state, hmip_device = get_and_check_entity_basics(
-        hass, default_mock_hap, entity_id, entity_name, device_model
+        hass, mock_hap, entity_id, entity_name, device_model
     )
 
     assert ha_state.state == STATE_OFF

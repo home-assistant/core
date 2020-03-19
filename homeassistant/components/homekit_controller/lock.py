@@ -1,7 +1,7 @@
 """Support for HomeKit Controller locks."""
 import logging
 
-from homekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_LOCKED, STATE_UNLOCKED
@@ -37,12 +37,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class HomeKitLock(HomeKitEntity, LockDevice):
     """Representation of a HomeKit Controller Lock."""
 
-    def __init__(self, accessory, discovery_info):
-        """Initialise the Lock."""
-        super().__init__(accessory, discovery_info)
-        self._state = None
-        self._battery_level = None
-
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
         return [
@@ -51,16 +45,11 @@ class HomeKitLock(HomeKitEntity, LockDevice):
             CharacteristicsTypes.BATTERY_LEVEL,
         ]
 
-    def _update_lock_mechanism_current_state(self, value):
-        self._state = CURRENT_STATE_MAP[value]
-
-    def _update_battery_level(self, value):
-        self._battery_level = value
-
     @property
     def is_locked(self):
         """Return true if device is locked."""
-        return self._state == STATE_LOCKED
+        value = self.service.value(CharacteristicsTypes.LOCK_MECHANISM_CURRENT_STATE)
+        return CURRENT_STATE_MAP[value] == STATE_LOCKED
 
     async def async_lock(self, **kwargs):
         """Lock the device."""
@@ -72,19 +61,17 @@ class HomeKitLock(HomeKitEntity, LockDevice):
 
     async def _set_lock_state(self, state):
         """Send state command."""
-        characteristics = [
-            {
-                "aid": self._aid,
-                "iid": self._chars["lock-mechanism.target-state"],
-                "value": TARGET_STATE_MAP[state],
-            }
-        ]
-        await self._accessory.put_characteristics(characteristics)
+        await self.async_put_characteristics(
+            {CharacteristicsTypes.LOCK_MECHANISM_TARGET_STATE: TARGET_STATE_MAP[state]}
+        )
 
     @property
     def device_state_attributes(self):
         """Return the optional state attributes."""
-        if self._battery_level is None:
-            return None
+        attributes = {}
 
-        return {ATTR_BATTERY_LEVEL: self._battery_level}
+        battery_level = self.service.value(CharacteristicsTypes.BATTERY_LEVEL)
+        if battery_level:
+            attributes[ATTR_BATTERY_LEVEL] = battery_level
+
+        return attributes

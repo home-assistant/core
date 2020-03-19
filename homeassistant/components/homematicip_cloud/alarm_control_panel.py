@@ -16,6 +16,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import DOMAIN as HMIPC_DOMAIN
@@ -95,10 +96,18 @@ class HomematicipAlarmControlPanel(AlarmControlPanel):
         """Register callbacks."""
         self._home.on_update(self._async_device_changed)
 
+    @callback
     def _async_device_changed(self, *args, **kwargs) -> None:
         """Handle device state changes."""
-        _LOGGER.debug("Event %s (%s)", self.name, CONST_ALARM_CONTROL_PANEL_NAME)
-        self.async_schedule_update_ha_state()
+        # Don't update disabled entities
+        if self.enabled:
+            _LOGGER.debug("Event %s (%s)", self.name, CONST_ALARM_CONTROL_PANEL_NAME)
+            self.async_schedule_update_ha_state()
+        else:
+            _LOGGER.debug(
+                "Device Changed Event for %s (Alarm Control Panel) not fired. Entity is disabled.",
+                self.name,
+            )
 
     @property
     def name(self) -> str:

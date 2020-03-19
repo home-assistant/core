@@ -6,13 +6,13 @@ import velbus
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PORT
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import DOMAIN
+from .const import CONF_MEMO_TEXT, DOMAIN, SERVICE_SET_MEMO_TEXT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,6 +80,32 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     hass.services.async_register(DOMAIN, "sync_clock", syn_clock, schema=vol.Schema({}))
 
+    def set_memo_text(service):
+        """Handle Memo Text service call."""
+        module_address = service.data[CONF_ADDRESS]
+        memo_text = service.data[CONF_MEMO_TEXT]
+        memo_text.hass = hass
+        try:
+            controller.get_module(module_address).set_memo_text(
+                memo_text.async_render()
+            )
+        except velbus.util.VelbusException as err:
+            _LOGGER.error("An error occurred while setting memo text: %s", err)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_MEMO_TEXT,
+        set_memo_text,
+        vol.Schema(
+            {
+                vol.Required(CONF_ADDRESS): vol.All(
+                    vol.Coerce(int), vol.Range(min=0, max=255)
+                ),
+                vol.Optional(CONF_MEMO_TEXT, default=""): cv.template,
+            }
+        ),
+    )
+
     return True
 
 
@@ -140,11 +166,11 @@ class VelbusEntity(Entity):
             "identifiers": {
                 (DOMAIN, self._module.get_module_address(), self._module.serial)
             },
-            "name": "{} {}".format(
-                self._module.get_module_address(), self._module.get_module_name()
+            "name": "{} ({})".format(
+                self._module.get_module_name(), self._module.get_module_address()
             ),
             "manufacturer": "Velleman",
-            "model": self._module.get_module_name(),
+            "model": self._module.get_module_type_name(),
             "sw_version": "{}.{}-{}".format(
                 self._module.memory_map_version,
                 self._module.build_year,

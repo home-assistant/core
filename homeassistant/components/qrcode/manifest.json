@@ -2,7 +2,10 @@
   "domain": "qrcode",
   "name": "QR Code",
   "documentation": "https://www.home-assistant.io/integrations/qrcode",
-  "requirements": ["pillow==6.2.1", "pyzbar==0.1.7"],
+  "requirements": [
+    "pillow==7.0.0",
+    "pyzbar==0.1.7"
+  ],
   "dependencies": [],
   "codeowners": []
 }

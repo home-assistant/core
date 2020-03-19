@@ -2,13 +2,23 @@
     "config": {
         "abort": {
             "already_configured": "A bridge m\u00e1r konfigur\u00e1lva van",
+            "already_in_progress": "Az \u00e1tj\u00e1r\u00f3 konfigur\u00e1ci\u00f3s folyamata m\u00e1r folyamatban van.",
             "no_bridges": "Nem tal\u00e1ltam deCONZ bridget",
-            "one_instance_only": "Ez a komponens csak egy deCONZ egys\u00e9get t\u00e1mogat"
+            "not_deconz_bridge": "Nem egy deCONZ \u00e1tj\u00e1r\u00f3",
+            "one_instance_only": "Ez a komponens csak egy deCONZ egys\u00e9get t\u00e1mogat",
+            "updated_instance": "A deCONZ-p\u00e9ld\u00e1ny \u00faj \u00e1llom\u00e1sc\u00edmmel friss\u00edtve"
         },
         "error": {
             "no_key": "API kulcs lek\u00e9r\u00e9se nem siker\u00fclt"
         },
+        "flow_title": "deCONZ Zigbee \u00e1tj\u00e1r\u00f3 ({host})",
         "step": {
+            "hassio_confirm": {
+                "data": {
+                    "allow_clip_sensor": "Virtu\u00e1lis \u00e9rz\u00e9kel\u0151k import\u00e1l\u00e1s\u00e1nak enged\u00e9lyez\u00e9se"
+                },
+                "title": "deCONZ Zigbee \u00e1tj\u00e1r\u00f3 a Hass.io kieg\u00e9sz\u00edt\u0151 seg\u00edts\u00e9g\u00e9vel"
+            },
             "init": {
                 "data": {
                     "host": "Hoszt",
@@ -32,12 +42,72 @@
     },
     "device_automation": {
         "trigger_subtype": {
-            "close": "Bez\u00e1r\u00e1s"
+            "both_buttons": "Mindk\u00e9t gomb",
+            "button_1": "Els\u0151 gomb",
+            "button_2": "M\u00e1sodik gomb",
+            "button_3": "Harmadik gomb",
+            "button_4": "Negyedik gomb",
+            "close": "Bez\u00e1r\u00e1s",
+            "dim_down": "S\u00f6t\u00e9t\u00edt",
+            "dim_up": "Vil\u00e1gos\u00edt",
+            "left": "Balra",
+            "open": "Nyitva",
+            "right": "Jobbra",
+            "side_1": "1. oldal",
+            "side_2": "2. oldal",
+            "side_3": "3. oldal",
+            "side_4": "4. oldal",
+            "side_5": "5. oldal",
+            "side_6": "6. oldal",
+            "turn_off": "Kikapcsolva",
+            "turn_on": "Bekapcsolva"
         },
         "trigger_type": {
+            "remote_awakened": "A k\u00e9sz\u00fcl\u00e9k fel\u00e9bredt",
+            "remote_button_double_press": "\" {subtype} \" gombra k\u00e9tszer kattintottak",
+            "remote_button_long_press": "A \" {subtype} \" gomb folyamatosan lenyomva",
+            "remote_button_long_release": "A \" {subtype} \" gomb hossz\u00fa megnyom\u00e1s ut\u00e1n elengedve",
+            "remote_button_quadruple_press": "\" {subtype} \" gombra n\u00e9gyszer kattintottak",
+            "remote_button_quintuple_press": "\" {subtype} \" gombra \u00f6tsz\u00f6r kattintottak",
+            "remote_button_rotated": "A gomb elforgatva: \" {subtype} \"",
+            "remote_button_rotation_stopped": "A (z) \" {subtype} \" gomb forg\u00e1sa le\u00e1llt",
+            "remote_button_short_press": "\" {subtype} \" gomb lenyomva",
+            "remote_button_short_release": "\"{alt\u00edpus}\" gomb elengedve",
+            "remote_button_triple_press": "\" {subtype} \" gombra h\u00e1romszor kattintottak",
+            "remote_double_tap": "Az \" {subtype} \" eszk\u00f6z dupla kattint\u00e1sa",
             "remote_double_tap_any_side": "A k\u00e9sz\u00fcl\u00e9k b\u00e1rmelyik oldal\u00e1n dupl\u00e1n koppint.",
+            "remote_falling": "K\u00e9sz\u00fcl\u00e9k szabades\u00e9sben",
             "remote_flip_180_degrees": "180 fokkal megd\u00f6nt\u00f6tt eszk\u00f6z",
-            "remote_flip_90_degrees": "90 fokkal megd\u00f6nt\u00f6tt eszk\u00f6z"
+            "remote_flip_90_degrees": "90 fokkal megd\u00f6nt\u00f6tt eszk\u00f6z",
+            "remote_gyro_activated": "A k\u00e9sz\u00fcl\u00e9k meg lett r\u00e1zva",
+            "remote_moved": "Az eszk\u00f6z a \" {subtype} \"-lal felfel\u00e9 mozgatva",
+            "remote_moved_any_side": "A k\u00e9sz\u00fcl\u00e9k valamelyik oldal\u00e1val felfel\u00e9 mozogott",
+            "remote_rotate_from_side_1": "Az eszk\u00f6z a \"1. oldalr\u00f3l\" a \" {subtype} \" -ra fordult",
+            "remote_rotate_from_side_2": "Az eszk\u00f6z a \"2. oldalr\u00f3l\" a \" {subtype} \" -ra fordult",
+            "remote_rotate_from_side_3": "Az eszk\u00f6z a \"3. oldalr\u00f3l\" a \" {subtype} \" -ra fordult",
+            "remote_rotate_from_side_4": "Az eszk\u00f6z a \"4. oldalr\u00f3l\" a \" {subtype} \" -ra fordult",
+            "remote_rotate_from_side_5": "Az eszk\u00f6z a \"5. oldalr\u00f3l\" a \" {subtype} \" -ra fordult",
+            "remote_rotate_from_side_6": "Az eszk\u00f6z a \"6. oldalr\u00f3l\" a \" {subtype} \" -ra fordult",
+            "remote_turned_clockwise": "A k\u00e9sz\u00fcl\u00e9k az \u00f3ramutat\u00f3 j\u00e1r\u00e1s\u00e1val megegyez\u0151en fordult",
+            "remote_turned_counter_clockwise": "A k\u00e9sz\u00fcl\u00e9k az \u00f3ramutat\u00f3 j\u00e1r\u00e1s\u00e1val ellent\u00e9tes ir\u00e1nyban fordult"
+        }
+    },
+    "options": {
+        "step": {
+            "async_step_deconz_devices": {
+                "data": {
+                    "allow_clip_sensor": "Enged\u00e9lyezze a deCONZ CLIP \u00e9rz\u00e9kel\u0151ket",
+                    "allow_deconz_groups": "DeCONZ f\u00e9nycsoportok enged\u00e9lyez\u00e9se"
+                },
+                "description": "A deCONZ eszk\u00f6zt\u00edpusok l\u00e1that\u00f3s\u00e1g\u00e1nak konfigur\u00e1l\u00e1sa"
+            },
+            "deconz_devices": {
+                "data": {
+                    "allow_clip_sensor": "Enged\u00e9lyezze a deCONZ CLIP \u00e9rz\u00e9kel\u0151ket",
+                    "allow_deconz_groups": "DeCONZ f\u00e9nycsoportok enged\u00e9lyez\u00e9se"
+                },
+                "description": "A deCONZ eszk\u00f6zt\u00edpusok l\u00e1that\u00f3s\u00e1g\u00e1nak konfigur\u00e1l\u00e1sa"
+            }
         }
     }
 }
