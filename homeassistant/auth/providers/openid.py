@@ -1,6 +1,5 @@
 """OpenId based authentication provider."""
 
-import json
 import logging
 import re
 import secrets
@@ -9,8 +8,7 @@ from typing import Any, Dict, Optional, cast
 from aiohttp import ClientResponseError
 from aiohttp.client import ClientResponse
 from aiohttp.web import HTTPBadRequest, Request, Response
-from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
-import jwt
+from jose import jwt
 import voluptuous as vol
 from yarl import URL
 
@@ -65,21 +63,6 @@ async def raise_for_status(response: ClientResponse) -> None:
         raise InvalidAuthError(data) from standard
 
 
-def convert_jwks_to_pem(jwks: Dict[str, Any]) -> bytes:
-    """Convert a JWKS key set into a PEM combined certificate string."""
-
-    algorithms = jwt.algorithms.get_default_algorithms()
-    pems = bytes()
-    for key in jwks["keys"]:
-        algorithm = algorithms[key["alg"]]
-        public_key = algorithm.from_jwk(json.dumps(key))
-        pem = public_key.public_bytes(
-            encoding=Encoding.PEM, format=PublicFormat.SubjectPublicKeyInfo
-        )
-        pems += pem
-    return pems
-
-
 WANTED_SCOPES = set(["openid", "email", "profile"])
 
 
@@ -90,7 +73,7 @@ class OpenIdAuthProvider(AuthProvider):
     DEFAULT_TITLE = "OpenId Connect"
 
     _discovery_document: Dict[str, Any]
-    _jwks_pem: bytes
+    _jwks: Dict[str, Any]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Extend parent's __init__."""
@@ -106,17 +89,15 @@ class OpenIdAuthProvider(AuthProvider):
             await raise_for_status(response)
             self._discovery_document = cast(Dict[str, Any], await response.json())
 
-    async def async_get_jwks_pem(self) -> None:
+    async def async_get_jwks(self) -> None:
         """Cache the keys for id verification."""
-        if hasattr(self, "._jwks_pem"):
+        if hasattr(self, "._jwks"):
             return
 
         session = async_get_clientsession(self.hass)
         async with session.get(self._discovery_document["jwks_uri"]) as response:
             await raise_for_status(response)
-            jwks = cast(Dict[str, Any], await response.json())
-
-        self._jwks_pem = convert_jwks_to_pem(jwks)
+            self._jwks = cast(Dict[str, Any], await response.json())
 
     @property
     def discovery_url(self) -> str:
@@ -132,7 +113,7 @@ class OpenIdAuthProvider(AuthProvider):
         """Return a flow to login."""
 
         await self.async_get_discovery_document()
-        await self.async_get_jwks_pem()
+        await self.async_get_jwks()
 
         if DATA_OPENID_VIEW not in self.hass.data:
             self.hass.data[DATA_OPENID_VIEW] = self.hass.http.register_view(  # type: ignore
@@ -159,17 +140,19 @@ class OpenIdAuthProvider(AuthProvider):
             await raise_for_status(response)
             return cast(Dict[str, Any], await response.json())
 
-    async def async_decode_id_token(self, id_token: str) -> Dict[str, Any]:
-        """Decode a token."""
-        return jwt.decode(
-            id_token, key=self._jwks_pem, audience=self.config[CONF_CLIENT_ID]
-        )
-
     async def async_validate_token(
         self, token: Dict[str, Any], nonce: str
     ) -> Dict[str, Any]:
         """Validate a token."""
-        id_token = await self.async_decode_id_token(token["id_token"])
+        id_token = cast(
+            Dict[str, Any],
+            jwt.decode(
+                token["id_token"],
+                key=self._jwks,
+                audience=self.config[CONF_CLIENT_ID],
+                access_token=token["access_token"],
+            ),
+        )
         if id_token.get("nonce") != nonce:
             raise InvalidAuthError(f"Nonce mismatch in id_token")
 
