@@ -30,13 +30,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = nexia_data[UPDATE_COORDINATOR]
     entities = []
 
-    ###########################################################################
     # Thermostat / System Sensors
-    ###########################################################################
     for thermostat_id in nexia_home.get_thermostat_ids():
         thermostat = nexia_home.get_thermostat_by_id(thermostat_id)
-        #######################################################################
-        # System Status
+
         entities.append(
             NexiaSensor(
                 coordinator,
@@ -47,7 +44,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 None,
             )
         )
-        #######################################################################
         # Air cleaner
         entities.append(
             NexiaSensor(
@@ -59,7 +55,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 None,
             )
         )
-        #######################################################################
         # Compressor Speed
         if thermostat.has_variable_speed_compressor():
             entities.append(
@@ -84,7 +79,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     percent_conv,
                 )
             )
-        #######################################################################
         # Outdoor Temperature
         if thermostat.has_outdoor_temperature():
             unit = (
@@ -102,7 +96,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     unit,
                 )
             )
-        #######################################################################
         # Relative Humidity
         if thermostat.has_relative_humidity():
             entities.append(
@@ -117,9 +110,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 )
             )
 
-        #######################################################################
         # Zone Sensors
-        #######################################################################
         for zone_id in thermostat.get_zone_ids():
             zone = thermostat.get_zone_by_id(zone_id)
             unit = (
@@ -127,7 +118,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 if thermostat.get_unit() == UNIT_CELSIUS
                 else TEMP_FAHRENHEIT
             )
-            ###################################################################
             # Temperature
             entities.append(
                 NexiaZoneSensor(
@@ -140,14 +130,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     None,
                 )
             )
-            ###################################################################
             # Zone Status
             entities.append(
                 NexiaZoneSensor(
                     coordinator, zone, "get_status", "Zone Status", None, None,
                 )
             )
-            ###################################################################
             # Setpoint Status
             entities.append(
                 NexiaZoneSensor(
