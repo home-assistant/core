@@ -157,6 +157,5 @@ class Subscriber:
 
     def update(self, message):
         """Trigger hass to update the device."""
-        # TODO: Make this message to DEBUG before PR
-        _LOGGER.info(f'{self.name} got message "{message}"')
+        _LOGGER.debug(f'{self.name} got message "{message}"')
         self.device.update(message)
