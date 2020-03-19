@@ -1,10 +1,14 @@
 """Support for EnOcean binary sensors."""
 import logging
 
+from enocean.protocol.constants import RORG
 import voluptuous as vol
 
 from homeassistant.components import enocean
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_DOOR,
+    DEVICE_CLASS_GARAGE_DOOR,
+    DEVICE_CLASS_WINDOW,
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
     BinarySensorDevice,
@@ -17,7 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "EnOcean binary sensor"
 DEPENDENCIES = ["enocean"]
 EVENT_BUTTON_PRESSED = "button_pressed"
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
@@ -61,6 +64,22 @@ class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
         """Return the class of this sensor."""
         return self._device_class
 
+    @property
+    def is_on(self):
+        """Return true if the binary sensor is on."""
+        if self.onoff == -1:
+            return None
+
+        inverted_classes = [
+            DEVICE_CLASS_DOOR,
+            DEVICE_CLASS_GARAGE_DOOR,
+            DEVICE_CLASS_WINDOW,
+        ]
+        if self.device_class in inverted_classes:
+            return self.onoff == 0
+        else:
+            return self.onoff == 1
+
     def value_changed(self, packet):
         """Fire an event with the data that have changed.
 
@@ -81,33 +100,37 @@ class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
         elif packet.data[6] == 0x20:
             pushed = 0
 
-        self.schedule_update_ha_state()
-
         action = packet.data[1]
-        if action == 0x70:
-            self.which = 0
-            self.onoff = 0
-        elif action == 0x50:
-            self.which = 0
-            self.onoff = 1
-        elif action == 0x30:
-            self.which = 1
-            self.onoff = 0
-        elif action == 0x10:
-            self.which = 1
-            self.onoff = 1
-        elif action == 0x37:
-            self.which = 10
-            self.onoff = 0
-        elif action == 0x15:
-            self.which = 10
-            self.onoff = 1
-        self.hass.bus.fire(
-            EVENT_BUTTON_PRESSED,
-            {
-                "id": self.dev_id,
-                "pushed": pushed,
-                "which": self.which,
-                "onoff": self.onoff,
-            },
-        )
+        if packet.rorg == RORG.BS1:
+            # for some reason, the packet was not decoded by the enOcean library
+            # so we cannot rely on the status property.
+            self.onoff = action & 0x01
+        else:
+            if action == 0x70:
+                self.which = 0
+                self.onoff = 0
+            elif action == 0x50:
+                self.which = 0
+                self.onoff = 1
+            elif action == 0x30:
+                self.which = 1
+                self.onoff = 0
+            elif action == 0x10:
+                self.which = 1
+                self.onoff = 1
+            elif action == 0x37:
+                self.which = 10
+                self.onoff = 0
+            elif action == 0x15:
+                self.which = 10
+                self.onoff = 1
+            self.hass.bus.fire(
+                EVENT_BUTTON_PRESSED,
+                {
+                    "id": self.dev_id,
+                    "pushed": pushed,
+                    "which": self.which,
+                    "onoff": self.onoff,
+                },
+            )
+        self.schedule_update_ha_state()
