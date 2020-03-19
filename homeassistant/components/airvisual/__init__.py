@@ -366,7 +366,7 @@ class AirVisualNodeProData:
         """Get new data from the Node/Pro."""
         try:
             self.data = await self._client.node.from_samba(
-                self.ip_address, self._password
+                self.ip_address, self._password, include_history=False
             )
         except NodeProError as err:
             LOGGER.error("Error while retrieving Node/Pro data: %s", err)
