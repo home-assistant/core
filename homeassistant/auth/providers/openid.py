@@ -40,6 +40,7 @@ CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
 )
 
 AUTH_CALLBACK_PATH = "/api/openid/redirect"
+OPENID_CONFIGURATION_PATH = ".well-known/openid-configuration"
 DATA_OPENID_VIEW = "openid_view"
 
 
@@ -89,9 +90,7 @@ class OpenIdAuthProvider(AuthProvider):
     @property
     def discovery_url(self) -> str:
         """Construct discovery url based on config."""
-        return str(
-            URL(self.config[CONF_ISSUER]).with_path(".well-known/openid-configuration")
-        )
+        return str(URL(self.config[CONF_ISSUER]).with_path(OPENID_CONFIGURATION_PATH))
 
     @property
     def redirect_uri(self) -> str:
