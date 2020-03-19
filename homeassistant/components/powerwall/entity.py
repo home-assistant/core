@@ -9,7 +9,6 @@ from .const import (
     POWERWALL_SITE_NAME,
     SITE_INFO_GRID_CODE,
     SITE_INFO_NOMINAL_SYSTEM_ENERGY_KWH,
-    SITE_INFO_NOMINAL_SYSTEM_POWER_KW,
     SITE_INFO_UTILITY,
 )
 
@@ -26,7 +25,6 @@ class PowerWallEntity(Entity):
         unique_group = (
             site_info[SITE_INFO_UTILITY],
             site_info[SITE_INFO_GRID_CODE],
-            str(site_info[SITE_INFO_NOMINAL_SYSTEM_POWER_KW]),
             str(site_info[SITE_INFO_NOMINAL_SYSTEM_ENERGY_KWH]),
         )
         self.base_unique_id = "_".join(unique_group)
