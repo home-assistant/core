@@ -223,7 +223,8 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 return RESULT_SUCCESS
             except WebSocketException:
                 LOGGER.debug("Working but unsupported config: %s", config)
-                return RESULT_NOT_SUPPORTED
+                if self.port != 8001:
+                    return RESULT_NOT_SUPPORTED
             except (OSError, ConnectionFailure) as err:
                 LOGGER.debug("Failing config: %s, error: %s", config, err)
 
