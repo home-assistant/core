@@ -255,9 +255,7 @@ async def test_manual_update_entity(hass):
     await init_integration(hass)
 
     await async_setup_component(hass, "homeassistant", {})
-    with patch(
-        "homeassistant.components.brother.Brother.async_update", return_value=True
-    ) as mock_update:
+    with patch("homeassistant.components.brother.Brother.async_update") as mock_update:
         await hass.services.async_call(
             "homeassistant",
             "update_entity",
