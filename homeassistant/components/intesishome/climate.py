@@ -143,6 +143,7 @@ class IntesisAC(ClimateDevice):
         self._setpoint_step = 1
         self._current_temp = None
         self._max_temp = None
+        self._hvac_mode_list = []
         self._min_temp = None
         self._target_temp = None
         self._outdoor_temp = None
@@ -184,11 +185,11 @@ class IntesisAC(ClimateDevice):
             self._support |= SUPPORT_PRESET_MODE
 
         # Setup HVAC modes
-        self._hvac_mode_list = [HVAC_MODE_OFF]
         modes = controller.get_mode_list(ih_device_id)
         if modes:
             mode_list = [MAP_IH_TO_HVAC_MODE[mode] for mode in modes]
             self._hvac_mode_list.extend(mode_list)
+        self._hvac_mode_list.append(HVAC_MODE_OFF)
 
     async def async_added_to_hass(self):
         """Subscribe to event updates."""
