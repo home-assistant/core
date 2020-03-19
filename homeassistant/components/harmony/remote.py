@@ -35,8 +35,6 @@ ATTR_CHANNEL = "channel"
 ATTR_CURRENT_ACTIVITY = "current_activity"
 
 DEVICES = []
-CONF_DEVICE_CACHE = "harmony_device_cache"
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(ATTR_ACTIVITY): cv.string,
@@ -61,7 +59,9 @@ HARMONY_CHANGE_CHANNEL_SCHEMA = vol.Schema(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Harmony platform."""
 
-    hass.data.setdefault(CONF_DEVICE_CACHE, [])
+    if discovery_info:
+        # Now handled by ssdp in the config flow
+        return
 
     if CONF_HOST not in config:
         _LOGGER.error(
