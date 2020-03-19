@@ -89,9 +89,8 @@ async def async_setup_entry(hass, config_entry):
     Will automatically load components to support devices found on the network.
     """
 
-    hass.data[DATA_ZHA] = hass.data.get(DATA_ZHA, {})
-
-    config = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {})
+    zha_data = hass.data.setdefault(DATA_ZHA, {})
+    config = zha_data.get(DATA_ZHA_CONFIG, {})
 
     if config.get(CONF_ENABLE_QUIRKS, True):
         # needs to be done here so that the ZHA module is finished loading
@@ -101,8 +100,8 @@ async def async_setup_entry(hass, config_entry):
     zha_gateway = ZHAGateway(hass, config, config_entry)
     await zha_gateway.async_initialize()
 
-    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS] = []
-    hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED] = asyncio.Event()
+    zha_data[DATA_ZHA_DISPATCHERS] = []
+    zha_data[DATA_ZHA_PLATFORM_LOADED] = asyncio.Event()
     platforms = []
     for component in COMPONENTS:
         platforms.append(
@@ -113,7 +112,7 @@ async def async_setup_entry(hass, config_entry):
 
     async def _platforms_loaded():
         await asyncio.gather(*platforms)
-        hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED].set()
+        zha_data[DATA_ZHA_PLATFORM_LOADED].set()
 
     hass.async_create_task(_platforms_loaded())
 
@@ -131,8 +130,8 @@ async def async_setup_entry(hass, config_entry):
 
     async def async_zha_shutdown(event):
         """Handle shutdown tasks."""
-        await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].shutdown()
-        await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].async_update_device_storage()
+        await zha_data[DATA_ZHA_GATEWAY].shutdown()
+        await zha_data[DATA_ZHA_GATEWAY].async_update_device_storage()
 
     hass.bus.async_listen_once(ha_const.EVENT_HOMEASSISTANT_STOP, async_zha_shutdown)
     hass.async_create_task(zha_gateway.async_load_devices())
