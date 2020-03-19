@@ -151,7 +151,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     if CONF_WEBHOOK_ID in entry.data:
         await hass.async_add_executor_job(
-            hass.data[DOMAIN][entry.entry_id][AUTH].dropwebhook()
+            hass.data[DOMAIN][entry.entry_id][AUTH].dropwebhook
         )
 
     unload_ok = all(
