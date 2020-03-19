@@ -3,7 +3,6 @@ from datetime import timedelta
 import json
 
 from asynctest import patch
-from brother import Brother
 
 from homeassistant.components.brother.const import UNIT_PAGES
 from homeassistant.const import (
@@ -256,7 +255,9 @@ async def test_manual_update_entity(hass):
     await init_integration(hass)
 
     await async_setup_component(hass, "homeassistant", {})
-    with patch.object(Brother, "async_update", return_value=True) as mock_update:
+    with patch(
+        "homeassistant.components.brother.Brother.async_update", return_value=True
+    ) as mock_update:
         await hass.services.async_call(
             "homeassistant",
             "update_entity",
