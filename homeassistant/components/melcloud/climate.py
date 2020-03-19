@@ -141,17 +141,16 @@ class AtaDeviceClimate(MelCloudClimate):
     @property
     def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the optional state attributes with device specific additions."""
-        vane_horizontal = self._device.vane_horizontal
-        vane_vertical = self._device.vane_vertical
-        if vane_horizontal is None or vane_vertical is None:
-            return None
+        attr = {}
 
-        return {
-            ATTR_VANE_HORIZONTAL: vane_horizontal,
-            ATTR_VANE_HORIZONTAL_POSITIONS: self._device.vane_horizontal_positions,
-            ATTR_VANE_VERTICAL: vane_vertical,
-            ATTR_VANE_VERTICAL_POSITIONS: self._device.vane_vertical_positions,
-        }
+        if self._device.vane_vertical and self._device.vane_horizontal:
+            attr.update({
+                ATTR_VANE_HORIZONTAL: vane_horizontal,
+                ATTR_VANE_HORIZONTAL_POSITIONS: self._device.vane_horizontal_positions,
+                ATTR_VANE_VERTICAL: vane_vertical,
+                ATTR_VANE_VERTICAL_POSITIONS: self._device.vane_vertical_positions,
+            })
+        return attr
 
     @property
     def temperature_unit(self) -> str:
