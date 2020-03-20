@@ -26,6 +26,7 @@ async def validate_input(hass: core.HomeAssistant, data):
             password=data[CONF_PASSWORD],
             auto_login=False,
             auto_update=False,
+            device_name=hass.config.location_name,
         )
         await hass.async_add_executor_job(nexia_home.login)
     except ConnectTimeout as ex:
