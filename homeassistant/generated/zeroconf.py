@@ -39,6 +39,7 @@ ZEROCONF = {
 }
 
 HOMEKIT = {
+    "819LMB": "myq",
     "BSB002": "hue",
     "LIFX": "lifx",
     "Netatmo Relay": "netatmo",
