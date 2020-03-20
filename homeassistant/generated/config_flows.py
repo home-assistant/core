@@ -70,6 +70,7 @@ FLOWS = [
     "minecraft_server",
     "mobile_app",
     "mqtt",
+    "myq",
     "neato",
     "nest",
     "netatmo",
