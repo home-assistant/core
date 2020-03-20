@@ -33,8 +33,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-LUTRON_CASETA_COMPONENTS = ["light", "switch", "cover", "scene", "fan",
-                            "binary_sensor"]
+LUTRON_CASETA_COMPONENTS = ["light", "switch", "cover", "scene", "fan", "binary_sensor"]
 
 
 async def async_setup(hass, base_config):
@@ -91,8 +90,9 @@ class LutronCasetaDevice(Entity):
                 "manufacturer": "Lutron",
             }
         except Exception:
-            _LOGGER.exception("Failed generating device info for %s and device %s",
-                              self, self._device)
+            _LOGGER.exception(
+                "Failed generating device info for %s and device %s", self, self._device
+            )
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -116,7 +116,7 @@ class LutronCasetaDevice(Entity):
     @property
     def model(self):
         """Return the model number of the device."""
-        return self._device['model']
+        return self._device["model"]
 
     @property
     def unique_id(self):
