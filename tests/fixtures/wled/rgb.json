@@ -62,6 +62,12 @@
     "live": false,
     "fxcount": 81,
     "palcount": 50,
+    "wifi": {
+      "bssid": "AA:AA:AA:AA:AA:BB",
+      "rssi": -62,
+      "signal": 76,
+      "channel": 11
+    },
     "arch": "esp8266",
     "core": "2_4_2",
     "freeheap": 14600,
