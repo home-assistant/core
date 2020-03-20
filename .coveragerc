@@ -432,7 +432,6 @@ omit =
     homeassistant/components/mochad/*
     homeassistant/components/modbus/*
     homeassistant/components/modem_callerid/sensor.py
-    homeassistant/components/mopar/*
     homeassistant/components/mpchc/media_player.py
     homeassistant/components/mpd/media_player.py
     homeassistant/components/mqtt_room/sensor.py

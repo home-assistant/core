@@ -1,8 +1,0 @@
-{
-  "domain": "mopar",
-  "name": "Mopar",
-  "documentation": "https://www.home-assistant.io/integrations/mopar",
-  "requirements": ["motorparts==1.1.0"],
-  "dependencies": [],
-  "codeowners": []
-}
