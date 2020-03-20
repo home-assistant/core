@@ -149,9 +149,6 @@ class VizioDevice(MediaPlayerDevice):
 
     def _apps_list(self, apps: List[str]) -> List[str]:
         """Return process apps list based on configured filters."""
-        if self._additional_app_configs:
-            apps = [app for app in apps if app not in self._get_additional_app_names()]
-
         if self._conf_apps.get(CONF_INCLUDE):
             return [app for app in apps if app in self._conf_apps[CONF_INCLUDE]]
 
@@ -338,7 +335,11 @@ class VizioDevice(MediaPlayerDevice):
                     if _input not in INPUT_APPS
                 ],
                 *self._available_apps,
-                *self._get_additional_app_names(),
+                *[
+                    app
+                    for app in self._get_additional_app_names()
+                    if app not in self._available_apps
+                ],
             ]
 
         return self._available_inputs
