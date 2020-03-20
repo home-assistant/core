@@ -18,7 +18,7 @@ def _login_data_valid(user, password):
     mydevolo = Mydevolo.get_instance()
     mydevolo.user = user
     mydevolo.password = password
-    mydevolo.uuid  # pylint: disable=0104
+    mydevolo.uuid  # pylint: disable=W0104
 
 
 @config_entries.HANDLERS.register(DOMAIN)
