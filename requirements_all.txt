@@ -163,7 +163,7 @@ aioftp==0.12.0
 aioharmony==0.1.13
 
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.29.1
+aiohomekit[IP]==0.2.29.2
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -1017,6 +1017,7 @@ pilight==0.1.1
 # homeassistant.components.proxy
 # homeassistant.components.qrcode
 # homeassistant.components.seven_segments
+# homeassistant.components.sighthound
 # homeassistant.components.tensorflow
 pillow==7.0.0
 
@@ -1665,7 +1666,7 @@ python-telnet-vlc==1.0.4
 python-twitch-client==0.6.0
 
 # homeassistant.components.velbus
-python-velbus==2.0.42
+python-velbus==2.0.43
 
 # homeassistant.components.vlc
 python-vlc==1.1.2
@@ -1855,7 +1856,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.0.2
+simplisafe-python==9.0.3
 
 # homeassistant.components.sisyphus
 sisyphus-control==2.2.1
