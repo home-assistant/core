@@ -27,7 +27,7 @@ DOMAIN = "somfy"
 
 CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
-CONF_OPTIMISTIC = "optimisitic"
+CONF_OPTIMISTIC = "optimistic"
 
 SOMFY_AUTH_CALLBACK_PATH = "/auth/somfy/callback"
 SOMFY_AUTH_START = "/auth/somfy"
@@ -36,8 +36,8 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Required(CONF_CLIENT_ID): cv.string,
-                vol.Required(CONF_CLIENT_SECRET): cv.string,
+                vol.Inclusive(CONF_CLIENT_ID, "oauth"): cv.string,
+                vol.Inclusive(CONF_CLIENT_SECRET, "oauth"): cv.string,
                 vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
             }
         )
@@ -51,23 +51,21 @@ SOMFY_COMPONENTS = ["cover", "switch"]
 async def async_setup(hass, config):
     """Set up the Somfy component."""
     hass.data[DOMAIN] = {}
+    domain_config = config.get(DOMAIN, {})
+    hass.data[DOMAIN][CONF_OPTIMISTIC] = domain_config.get(CONF_OPTIMISTIC, False)
 
-    if DOMAIN not in config:
-        return True
-
-    hass.data[DOMAIN][CONF_OPTIMISTIC] = config[DOMAIN][CONF_OPTIMISTIC]
-
-    config_flow.SomfyFlowHandler.async_register_implementation(
-        hass,
-        config_entry_oauth2_flow.LocalOAuth2Implementation(
+    if CONF_CLIENT_ID in domain_config:
+        config_flow.SomfyFlowHandler.async_register_implementation(
             hass,
-            DOMAIN,
-            config[DOMAIN][CONF_CLIENT_ID],
-            config[DOMAIN][CONF_CLIENT_SECRET],
-            "https://accounts.somfy.com/oauth/oauth/v2/auth",
-            "https://accounts.somfy.com/oauth/oauth/v2/token",
-        ),
-    )
+            config_entry_oauth2_flow.LocalOAuth2Implementation(
+                hass,
+                DOMAIN,
+                config[DOMAIN][CONF_CLIENT_ID],
+                config[DOMAIN][CONF_CLIENT_SECRET],
+                "https://accounts.somfy.com/oauth/oauth/v2/auth",
+                "https://accounts.somfy.com/oauth/oauth/v2/token",
+            ),
+        )
 
     return True
 

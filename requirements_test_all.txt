@@ -62,7 +62,7 @@ aiobotocore==0.11.1
 aioesphomeapi==2.6.1
 
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.29.1
+aiohomekit[IP]==0.2.29.2
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -365,6 +365,14 @@ pexpect==4.6.0
 # homeassistant.components.pilight
 pilight==0.1.1
 
+# homeassistant.components.doods
+# homeassistant.components.proxy
+# homeassistant.components.qrcode
+# homeassistant.components.seven_segments
+# homeassistant.components.sighthound
+# homeassistant.components.tensorflow
+pillow==7.0.0
+
 # homeassistant.components.plex
 plexapi==3.3.0
 
@@ -587,7 +595,7 @@ python-nest==4.1.0
 python-twitch-client==0.6.0
 
 # homeassistant.components.velbus
-python-velbus==2.0.42
+python-velbus==2.0.43
 
 # homeassistant.components.awair
 python_awair==0.0.4
@@ -641,7 +649,7 @@ sentry-sdk==0.13.5
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.0.2
+simplisafe-python==9.0.3
 
 # homeassistant.components.sleepiq
 sleepyq==0.7
