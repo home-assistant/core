@@ -171,10 +171,10 @@ class ModbusThermostat(ClimateDevice):
 
     async def async_update(self):
         """Update Target & Current Temperature."""
-        self._target_temperature = self._read_register(
+        self._target_temperature = await self._read_register(
             DEFAULT_REGISTER_TYPE_HOLDING, self._target_temperature_register
         )
-        self._current_temperature = self._read_register(
+        self._current_temperature = await self._read_register(
             self._current_temperature_register_type, self._current_temperature_register
         )
 
@@ -223,7 +223,7 @@ class ModbusThermostat(ClimateDevice):
         """Return the supported step of target temperature."""
         return self._temp_step
 
-    def set_temperature(self, **kwargs):
+    async def set_temperature(self, **kwargs):
         """Set new target temperature."""
         target_temperature = int(
             (kwargs.get(ATTR_TEMPERATURE) - self._offset) / self._scale
@@ -232,22 +232,22 @@ class ModbusThermostat(ClimateDevice):
             return
         byte_string = struct.pack(self._structure, target_temperature)
         register_value = struct.unpack(">h", byte_string[0:2])[0]
-        self._write_register(self._target_temperature_register, register_value)
+        await self._write_register(self._target_temperature_register, register_value)
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
 
-    def _read_register(self, register_type, register) -> Optional[float]:
+    async def _read_register(self, register_type, register) -> Optional[float]:
         """Read register using the Modbus hub slave."""
         try:
             if register_type == DEFAULT_REGISTER_TYPE_INPUT:
-                result = self._hub.read_input_registers(
+                result = await self._hub.read_input_registers(
                     self._slave, register, self._count
                 )
             else:
-                result = self._hub.read_holding_registers(
+                result = await self._hub.read_holding_registers(
                     self._slave, register, self._count
                 )
         except ConnectionException:
@@ -270,10 +270,10 @@ class ModbusThermostat(ClimateDevice):
 
         return register_value
 
-    def _write_register(self, register, value):
+    async def _write_register(self, register, value):
         """Write holding register using the Modbus hub slave."""
         try:
-            self._hub.write_registers(self._slave, register, [value, 0])
+            await self._hub.write_registers(self._slave, register, [value, 0])
         except ConnectionException:
             self._set_unavailable(register)
             return

@@ -113,9 +113,11 @@ class ModbusBinarySensor(BinarySensorDevice):
         """Update the state of the sensor."""
         try:
             if self._input_type == DEFAULT_INPUT_TYPE_COIL:
-                result = self._hub.read_coils(self._slave, self._address, 1)
+                result = await self._hub.read_coils(self._slave, self._address, 1)
             else:
-                result = self._hub.read_discrete_inputs(self._slave, self._address, 1)
+                result = await self._hub.read_discrete_inputs(
+                    self._slave, self._address, 1
+                )
         except ConnectionException:
             self._set_unavailable()
             return

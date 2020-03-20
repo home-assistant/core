@@ -143,22 +143,22 @@ class ModbusCoilSwitch(ToggleEntity, RestoreEntity):
         """Return True if entity is available."""
         return self._available
 
-    def turn_on(self, **kwargs):
+    async def turn_on(self, **kwargs):
         """Set switch on."""
-        self._write_coil(self._coil, True)
+        await self._write_coil(self._coil, True)
 
-    def turn_off(self, **kwargs):
+    async def turn_off(self, **kwargs):
         """Set switch off."""
-        self._write_coil(self._coil, False)
+        await self._write_coil(self._coil, False)
 
-    def update(self):
+    async def async_update(self):
         """Update the state of the switch."""
-        self._is_on = self._read_coil(self._coil)
+        self._is_on = await self._read_coil(self._coil)
 
-    def _read_coil(self, coil) -> Optional[bool]:
+    async def _read_coil(self, coil) -> Optional[bool]:
         """Read coil using the Modbus hub slave."""
         try:
-            result = self._hub.read_coils(self._slave, coil, 1)
+            result = await self._hub.read_coils(self._slave, coil, 1)
         except ConnectionException:
             self._set_unavailable()
             return
@@ -172,10 +172,10 @@ class ModbusCoilSwitch(ToggleEntity, RestoreEntity):
 
         return value
 
-    def _write_coil(self, coil, value):
+    async def _write_coil(self, coil, value):
         """Write coil using the Modbus hub slave."""
         try:
-            self._hub.write_coil(self._slave, coil, value)
+            await self._hub.write_coil(self._slave, coil, value)
         except ConnectionException:
             self._set_unavailable()
             return
@@ -238,21 +238,21 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
 
         self._is_on = None
 
-    def turn_on(self, **kwargs):
+    async def turn_on(self, **kwargs):
         """Set switch on."""
 
         # Only holding register is writable
         if self._register_type == DEFAULT_REGISTER_TYPE_HOLDING:
-            self._write_register(self._command_on)
+            await self._write_register(self._command_on)
             if not self._verify_state:
                 self._is_on = True
 
-    def turn_off(self, **kwargs):
+    async def turn_off(self, **kwargs):
         """Set switch off."""
 
         # Only holding register is writable
         if self._register_type == DEFAULT_REGISTER_TYPE_HOLDING:
-            self._write_register(self._command_off)
+            await self._write_register(self._command_off)
             if not self._verify_state:
                 self._is_on = False
 
@@ -266,7 +266,7 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
         if not self._verify_state:
             return
 
-        value = self._read_register()
+        value = await self._read_register()
         if value == self._state_on:
             self._is_on = True
         elif value == self._state_off:
@@ -280,12 +280,14 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
                 value,
             )
 
-    def _read_register(self) -> Optional[int]:
+    async def _read_register(self) -> Optional[int]:
         try:
             if self._register_type == DEFAULT_REGISTER_TYPE_INPUT:
-                result = self._hub.read_input_registers(self._slave, self._register, 1)
+                result = await self._hub.read_input_registers(
+                    self._slave, self._register, 1
+                )
             else:
-                result = self._hub.read_holding_registers(
+                result = await self._hub.read_holding_registers(
                     self._slave, self._register, 1
                 )
         except ConnectionException:
@@ -301,10 +303,10 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
 
         return value
 
-    def _write_register(self, value):
+    async def _write_register(self, value):
         """Write holding register using the Modbus hub slave."""
         try:
-            self._hub.write_register(self._slave, self._register, value)
+            await self._hub.write_register(self._slave, self._register, value)
         except ConnectionException:
             self._set_unavailable()
             return

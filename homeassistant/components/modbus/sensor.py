@@ -222,11 +222,11 @@ class ModbusRegisterSensor(RestoreEntity):
         """Update the state of the sensor."""
         try:
             if self._register_type == DEFAULT_REGISTER_TYPE_INPUT:
-                result = self._hub.read_input_registers(
+                result = await self._hub.read_input_registers(
                     self._slave, self._register, self._count
                 )
             else:
-                result = self._hub.read_holding_registers(
+                result = await self._hub.read_holding_registers(
                     self._slave, self._register, self._count
                 )
         except ConnectionException:

@@ -1,6 +1,6 @@
 """Support for Modbus."""
+import asyncio
 import logging
-import threading
 
 from pymodbus.client.asynchronous import schedulers
 from pymodbus.client.asynchronous.serial import AsyncModbusSerialClient as ClientSerial
@@ -113,36 +113,38 @@ async def async_setup(hass, config):
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
 
         # Register services for modbus
-        hass.services.register(
+        hass.services.async_register(
             DOMAIN,
             SERVICE_WRITE_REGISTER,
             write_register,
             schema=SERVICE_WRITE_REGISTER_SCHEMA,
         )
-        hass.services.register(
+        hass.services.async_register(
             DOMAIN, SERVICE_WRITE_COIL, write_coil, schema=SERVICE_WRITE_COIL_SCHEMA
         )
 
-    def write_register(service):
+    async def write_register(service):
         """Write Modbus registers."""
         unit = int(float(service.data[ATTR_UNIT]))
         address = int(float(service.data[ATTR_ADDRESS]))
         value = service.data[ATTR_VALUE]
         client_name = service.data[ATTR_HUB]
         if isinstance(value, list):
-            hub_collect[client_name].write_registers(
+            await hub_collect[client_name].write_registers(
                 unit, address, [int(float(i)) for i in value]
             )
         else:
-            hub_collect[client_name].write_register(unit, address, int(float(value)))
+            await hub_collect[client_name].write_register(
+                unit, address, int(float(value))
+            )
 
-    def write_coil(service):
+    async def write_coil(service):
         """Write Modbus coil."""
         unit = service.data[ATTR_UNIT]
         address = service.data[ATTR_ADDRESS]
         state = service.data[ATTR_STATE]
         client_name = service.data[ATTR_HUB]
-        hub_collect[client_name].write_coil(unit, address, state)
+        await hub_collect[client_name].write_coil(unit, address, state)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_modbus)
 
@@ -159,7 +161,7 @@ class ModbusHub:
         # generic configuration
         self._loop = main_loop
         self._client = None
-        self._lock = threading.Lock()
+        self._lock = asyncio.Lock()
         self._config_name = client_config[CONF_NAME]
         self._config_type = client_config[CONF_TYPE]
         self._config_port = client_config[CONF_PORT]
@@ -228,47 +230,46 @@ class ModbusHub:
 
     def close(self):
         """Disconnect client."""
-        with self._lock:
-            self._client.close()
+        self._client.close()
 
-    def read_coils(self, unit, address, count):
+    async def read_coils(self, unit, address, count):
         """Read coils."""
-        with self._lock:
+        async with self._lock:
             kwargs = {"unit": unit} if unit else {}
-            return self._client.read_coils(address, count, **kwargs)
+            return await self._client.read_coils(address, count, **kwargs)
 
-    def read_discrete_inputs(self, unit, address, count):
+    async def read_discrete_inputs(self, unit, address, count):
         """Read discrete inputs."""
-        with self._lock:
+        async with self._lock:
             kwargs = {"unit": unit} if unit else {}
-            return self._client.read_discrete_inputs(address, count, **kwargs)
+            return await self._client.read_discrete_inputs(address, count, **kwargs)
 
-    def read_input_registers(self, unit, address, count):
+    async def read_input_registers(self, unit, address, count):
         """Read input registers."""
-        with self._lock:
+        async with self._lock:
             kwargs = {"unit": unit} if unit else {}
-            return self._client.read_input_registers(address, count, **kwargs)
+            return await self._client.read_input_registers(address, count, **kwargs)
 
-    def read_holding_registers(self, unit, address, count):
+    async def read_holding_registers(self, unit, address, count):
         """Read holding registers."""
-        with self._lock:
+        async with self._lock:
             kwargs = {"unit": unit} if unit else {}
-            return self._client.read_holding_registers(address, count, **kwargs)
+            return await self._client.read_holding_registers(address, count, **kwargs)
 
-    def write_coil(self, unit, address, value):
+    async def write_coil(self, unit, address, value):
         """Write coil."""
-        with self._lock:
+        async with self._lock:
             kwargs = {"unit": unit} if unit else {}
-            self._client.write_coil(address, value, **kwargs)
+            await self._client.write_coil(address, value, **kwargs)
 
-    def write_register(self, unit, address, value):
+    async def write_register(self, unit, address, value):
         """Write register."""
-        with self._lock:
+        async with self._lock:
             kwargs = {"unit": unit} if unit else {}
-            self._client.write_register(address, value, **kwargs)
+            await self._client.write_register(address, value, **kwargs)
 
-    def write_registers(self, unit, address, values):
+    async def write_registers(self, unit, address, values):
         """Write registers."""
-        with self._lock:
+        async with self._lock:
             kwargs = {"unit": unit} if unit else {}
-            self._client.write_registers(address, values, **kwargs)
+            await self._client.write_registers(address, values, **kwargs)
