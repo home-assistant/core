@@ -419,7 +419,7 @@ class OAuth2AuthorizeCallbackView(HomeAssistantView):
 
         return web.Response(
             headers={"content-type": "text/html"},
-            text="<script>window.close()</script>",
+            text="<script>if (window.opener) { window.opener.postMessage({type: 'externalCallback'}); } window.close();</script>",
         )
 
 
