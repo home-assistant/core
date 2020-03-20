@@ -474,8 +474,8 @@ async def test_setup_with_apps_additional_apps_config(
         hass,
         "launch_app",
         SERVICE_SELECT_SOURCE,
-        {ATTR_INPUT_SOURCE: CURRENT_APP},
-        CURRENT_APP,
+        {ATTR_INPUT_SOURCE: "Netflix"},
+        "Netflix",
     )
     await _test_service(
         hass,
