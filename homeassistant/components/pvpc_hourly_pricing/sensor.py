@@ -12,7 +12,7 @@ from typing import Optional
 from aiopvpc import PVPCData
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_NAME, CONF_TIMEOUT
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import (
@@ -22,13 +22,15 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.dt as dt_util
 
-from .const import ATTR_TARIFF, DEFAULT_TARIFF, DEFAULT_TIMEOUT
+from .const import ATTR_TARIFF
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_PRICE = "price"
 ICON = "mdi:currency-eur"
 UNIT = "€/kWh"
+
+_DEFAULT_TIMEOUT = 10
 
 
 async def async_setup_entry(
@@ -37,13 +39,11 @@ async def async_setup_entry(
     """Set up the electricity price sensor from config_entry."""
     name = config_entry.data[CONF_NAME]
     pvpc_data_handler = PVPCData(
-        tariff=config_entry.options.get(
-            ATTR_TARIFF, config_entry.data.get(ATTR_TARIFF, DEFAULT_TARIFF)
-        ),
+        tariff=config_entry.data[ATTR_TARIFF],
         local_timezone=hass.config.time_zone,
         websession=async_get_clientsession(hass),
         logger=_LOGGER,
-        timeout=config_entry.data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+        timeout=_DEFAULT_TIMEOUT,
     )
     async_add_entities(
         [ElecPriceSensor(name, config_entry.unique_id, pvpc_data_handler)], True

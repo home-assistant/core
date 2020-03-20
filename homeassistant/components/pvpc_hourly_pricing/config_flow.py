@@ -2,7 +2,7 @@
 from homeassistant import config_entries
 
 from . import CONF_NAME, UI_CONFIG_SCHEMA
-from .const import ATTR_TARIFF, DOMAIN, UNIQUE_ID_MASK
+from .const import ATTR_TARIFF, DOMAIN
 
 _DOMAIN_NAME = DOMAIN
 
@@ -16,8 +16,7 @@ class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=_DOMAIN_NAME):
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         if user_input is not None:
-            unique_id = UNIQUE_ID_MASK.format(user_input[ATTR_TARIFF])
-            await self.async_set_unique_id(unique_id)
+            await self.async_set_unique_id(user_input[ATTR_TARIFF])
             self._abort_if_unique_id_configured()
             return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
