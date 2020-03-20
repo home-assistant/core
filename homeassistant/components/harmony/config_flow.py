@@ -147,18 +147,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_create_entry_from_valid_input(self, validated, user_input):
         """Single path to create the config entry from validated input."""
         await self.async_set_unique_id(validated[UNIQUE_ID])
-        if self._host_already_configured(validated):
-            return self.async_abort(reason="already_configured")
         self._abort_if_unique_id_configured()
-        config_entry = self.async_create_entry(
-            title=validated[CONF_NAME],
-            data={CONF_NAME: validated[CONF_NAME], CONF_HOST: validated[CONF_HOST]},
-        )
-        # Options from yaml are preserved
-        options = _options_from_user_input(user_input)
-        if options:
-            config_entry["options"] = options
-        return config_entry
+        data = {CONF_NAME: validated[CONF_NAME], CONF_HOST: validated[CONF_HOST]}
+        # Options from yaml are preserved, we will pull them out when
+        # we setup the config entry
+        data.update(_options_from_user_input(user_input))
+        return self.async_create_entry(title=validated[CONF_NAME], data=data)
 
     def _host_already_configured(self, user_input):
         """See if we already have a harmony matching user input configured."""
