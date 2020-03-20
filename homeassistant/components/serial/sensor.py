@@ -2,6 +2,7 @@
 import json
 import logging
 
+import asyncio
 import serial_asyncio
 import voluptuous as vol
 
@@ -27,7 +28,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Serial sensor platform."""
     name = config.get(CONF_NAME)
@@ -42,7 +42,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, sensor.stop_serial_read())
     async_add_entities([sensor], True)
-
 
 class SerialSensor(Entity):
     """Representation of a Serial sensor."""
@@ -65,26 +64,42 @@ class SerialSensor(Entity):
 
     async def serial_read(self, device, rate, **kwargs):
         """Read the data from the port."""
-        reader, _ = await serial_asyncio.open_serial_connection(
-            url=device, baudrate=rate, **kwargs
-        )
+        loggedError = False
         while True:
-            line = await reader.readline()
-            line = line.decode("utf-8").strip()
-
             try:
-                data = json.loads(line)
-                if isinstance(data, dict):
-                    self._attributes = data
-            except ValueError:
-                pass
+                reader, _ = await serial_asyncio.open_serial_connection(
+                    url=device, baudrate=rate, **kwargs
+                )
+                _LOGGER.info("Serial device %s connected", device)
+                while True:
+                    try:
+                        line = await reader.readline()
+                        line = line.decode("utf-8").strip()
 
-            if self._template is not None:
-                line = self._template.async_render_with_possible_json_value(line)
+                        try:
+                            data = json.loads(line)
+                            if isinstance(data, dict):
+                                self._attributes = data
+                        except ValueError:
+                            pass
 
-            _LOGGER.debug("Received: %s", line)
-            self._state = line
-            self.async_schedule_update_ha_state()
+                        if self._template is not None:
+                            line = self._template.async_render_with_possible_json_value(line)
+
+                        _LOGGER.debug("Received: %s", line)
+                        self._state = line
+                        self.async_schedule_update_ha_state()
+                    except Exception as e:
+                        self._state = None
+                        self._attributes = None
+                        self.async_schedule_update_ha_state()
+                        _LOGGER.error("Error while reading serial device %s: " + str(e), device)
+                        break
+            except:
+                if not loggedError:
+                    _LOGGER.error("Unable to connect to the serial device %s. Retrying...", device)
+                    loggedError = True
+                await asyncio.sleep(5)
 
     async def stop_serial_read(self):
         """Close resources."""
