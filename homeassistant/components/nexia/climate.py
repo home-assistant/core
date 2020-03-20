@@ -14,7 +14,6 @@ from nexia.const import (
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    ATTR_AUX_HEAT,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
     ATTR_TARGET_TEMP_HIGH,
@@ -304,12 +303,6 @@ class NexiaZone(NexiaEntity, ClimateDevice):
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_ZONE_STATUS: self._device.get_status(),
         }
-
-        if self._has_emergency_heat:
-            aux_heat_value = "off"
-            if self.thermostat.is_emergency_heat_active():
-                aux_heat_value = "on"
-            data.update({ATTR_AUX_HEAT: aux_heat_value})
 
         if self._has_relative_humidity:
             data.update(
