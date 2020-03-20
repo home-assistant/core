@@ -1,7 +1,6 @@
 """Support for Amcrest IP cameras."""
 from datetime import timedelta
 import logging
-import re
 import threading
 
 import aiohttp
@@ -72,8 +71,6 @@ RESOLUTION_LIST = {"high": 0, "low": 1}
 SCAN_INTERVAL = timedelta(seconds=10)
 
 AUTHENTICATION_LIST = {"basic": "basic"}
-
-_event_threads = 0  # pylint: disable=invalid-name
 
 
 def _has_unique_names(devices):
@@ -202,17 +199,13 @@ class AmcrestChecker(Http):
 
 def _monitor_events(hass, name, api, event_codes):
     event_codes = ",".join(event_codes)
-    start_stop = re.compile(r"Code=([^;]+);action=(Start|Stop)", flags=re.S)
     while True:
         api.available_flag.wait()
         try:
-            for event_info in api.event_stream(event_codes, retries=5):
-                _LOGGER.debug("%s event info: %r", name, event_info)
-                for code, action in start_stop.findall(event_info):
-                    signal = service_signal(SERVICE_EVENT, name, code)
-                    start = action == "Start"
-                    _LOGGER.debug("Sending signal: '%s': %s", signal, start)
-                    dispatcher_send(hass, signal, start)
+            for code, start in api.event_actions(event_codes, retries=5):
+                signal = service_signal(SERVICE_EVENT, name, code)
+                _LOGGER.debug("Sending signal: '%s': %s", signal, start)
+                dispatcher_send(hass, signal, start)
         except AmcrestError as error:
             _LOGGER.warning(
                 "Error while processing events from %s camera: %r", name, error
@@ -220,15 +213,12 @@ def _monitor_events(hass, name, api, event_codes):
 
 
 def _start_event_monitor(hass, name, api, event_codes):
-    global _event_threads  # pylint: disable=invalid-name
-
-    _event_threads += 1
     thread = threading.Thread(
         target=_monitor_events,
-        name=f"Amcrest_{_event_threads}",
+        name=f"Amcrest {name}",
         args=(hass, name, api, event_codes),
+        daemon=True,
     )
-    thread.daemon = True
     thread.start()
 
 
