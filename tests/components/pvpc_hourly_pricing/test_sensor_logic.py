@@ -18,14 +18,10 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 async def _process_time_step(
     hass, mock_data, key_state=None, value=None, tariff="discrimination"
 ):
-    mock_data["return_time"] += timedelta(seconds=1)
-    hass.bus.async_fire(EVENT_TIME_CHANGED, {ATTR_NOW: mock_data["return_time"]})
-    await hass.async_block_till_done()
-
     state = hass.states.get("sensor.test_dst")
     check_valid_state(state, tariff=tariff, value=value, key_attr=key_state)
 
-    mock_data["return_time"] += timedelta(minutes=59, seconds=59)
+    mock_data["return_time"] += timedelta(hours=1)
     hass.bus.async_fire(EVENT_TIME_CHANGED, {ATTR_NOW: mock_data["return_time"]})
     await hass.async_block_till_done()
     return state
@@ -48,9 +44,9 @@ async def test_availability(hass, caplog, pvpc_aioclient_mock: AiohttpClientMock
 
         await _process_time_step(hass, mock_data, "price_21h")
         await _process_time_step(hass, mock_data, "price_22h", 0.06893)
-        assert pvpc_aioclient_mock.call_count == 6
+        assert pvpc_aioclient_mock.call_count == 4
         await _process_time_step(hass, mock_data, "price_23h", 0.06935)
-        assert pvpc_aioclient_mock.call_count == 8
+        assert pvpc_aioclient_mock.call_count == 6
 
         # sensor has no more prices, state is "unavailable" from now on
         await _process_time_step(hass, mock_data, value="unavailable")
@@ -62,7 +58,7 @@ async def test_availability(hass, caplog, pvpc_aioclient_mock: AiohttpClientMock
         )
         assert num_warnings == 1
         assert num_errors == 0
-        assert pvpc_aioclient_mock.call_count == 11
+        assert pvpc_aioclient_mock.call_count == 9
 
         # check that it is silent until it becomes available again
         caplog.clear()
@@ -70,19 +66,19 @@ async def test_availability(hass, caplog, pvpc_aioclient_mock: AiohttpClientMock
             # silent mode
             for _ in range(22):
                 await _process_time_step(hass, mock_data, value="unavailable")
-            assert pvpc_aioclient_mock.call_count == 56
+            assert pvpc_aioclient_mock.call_count == 54
             assert len(caplog.messages) == 0
 
             # warning about data access recovered
             await _process_time_step(hass, mock_data, value="unavailable")
-            assert pvpc_aioclient_mock.call_count == 58
+            assert pvpc_aioclient_mock.call_count == 56
             assert len(caplog.messages) == 1
             assert caplog.records[0].levelno == logging.WARNING
 
             # working ok again
             await _process_time_step(hass, mock_data, "price_00h", value=0.06821)
-            assert pvpc_aioclient_mock.call_count == 59
+            assert pvpc_aioclient_mock.call_count == 57
             await _process_time_step(hass, mock_data, "price_01h", value=0.06627)
-            assert pvpc_aioclient_mock.call_count == 60
+            assert pvpc_aioclient_mock.call_count == 58
             assert len(caplog.messages) == 1
             assert caplog.records[0].levelno == logging.WARNING
