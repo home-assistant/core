@@ -196,6 +196,30 @@ class MatchRule:
         factory=frozenset, converter=set_or_callable
     )
 
+    @property
+    def weight(self) -> int:
+        """Return the weight of the matching rule.
+
+        Most specific matches should be preferred over less specific. Model matching
+        rules have a priority over manufacturer matching rules and rules matching a
+        single model/manufacturer get a better priority over rules matching multiple
+        models/manufacturers. And any model or manufacturers matching rules get better
+        priority over rules matching only channels.
+        But in case of a channel name/channel id matching, we give rules matching
+        multiple channels a better priority over rules matching a single channel.
+        """
+        weight = 0
+        if self.models:
+            weight += 401 - len(self.models)
+
+        if self.manufacturers:
+            weight += 301 - len(self.manufacturers)
+
+        weight += 10 * len(self.channel_names)
+        weight += 5 * len(self.generic_ids)
+        weight += 1 * len(self.aux_channels)
+        return weight
+
     def claim_channels(self, channel_pool: List[ChannelType]) -> List[ChannelType]:
         """Return a list of channels this rule matches + aux channels."""
         claimed = []
@@ -268,7 +292,8 @@ class ZHAEntityRegistry:
         default: CALLABLE_T = None,
     ) -> Tuple[CALLABLE_T, List[ChannelType]]:
         """Match a ZHA Channels to a ZHA Entity class."""
-        for match in self._strict_registry[component]:
+        matches = self._strict_registry[component]
+        for match in sorted(matches, key=lambda x: x.weight, reverse=True):
             if match.strict_matched(manufacturer, model, channels):
                 claimed = match.claim_channels(channels)
                 return self._strict_registry[component][match], claimed
