@@ -6,8 +6,7 @@ from homeassistant.components.binary_sensor import (
     DOMAIN,
     BinarySensorDevice,
 )
-from pylutron_caseta import (OCCUPANCY_GROUP_OCCUPIED,
-                             OCCUPANCY_GROUP_UNOCCUPIED)
+from pylutron_caseta import OCCUPANCY_GROUP_OCCUPIED, OCCUPANCY_GROUP_UNOCCUPIED
 from . import LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,7 +35,7 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorDevice):
     @property
     def is_on(self):
         """Return the brightness of the light."""
-        return self._device['status'] == OCCUPANCY_GROUP_OCCUPIED
+        return self._device["status"] == OCCUPANCY_GROUP_OCCUPIED
 
     async def async_added_to_hass(self):
         """Register callbacks."""
