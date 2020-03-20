@@ -59,3 +59,17 @@ repos:
         types: [python]
         require_serial: true
         files: ^homeassistant/.+\.py$
+      - id: gen_requirements_all
+        name: gen_requirements_all
+        entry: python3 -m script.gen_requirements_all
+        pass_filenames: false
+        language: system
+        types: [json]
+        files: ^homeassistant/.+/manifest\.json$
+      - id: hassfest
+        name: hassfest
+        entry: python3 -m script.hassfest
+        pass_filenames: false
+        language: system
+        types: [json]
+        files: ^homeassistant/.+/manifest\.json$

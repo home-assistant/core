@@ -8,15 +8,6 @@ omit =
     homeassistant/scripts/*.py
 
     # omit pieces of code that rely on external devices being present
-    homeassistant/components/abode/__init__.py
-    homeassistant/components/abode/alarm_control_panel.py
-    homeassistant/components/abode/binary_sensor.py
-    homeassistant/components/abode/camera.py
-    homeassistant/components/abode/cover.py
-    homeassistant/components/abode/light.py
-    homeassistant/components/abode/lock.py
-    homeassistant/components/abode/sensor.py
-    homeassistant/components/abode/switch.py
     homeassistant/components/acer_projector/switch.py
     homeassistant/components/actiontec/device_tracker.py
     homeassistant/components/adguard/__init__.py
@@ -33,7 +24,6 @@ omit =
     homeassistant/components/airvisual/sensor.py
     homeassistant/components/aladdin_connect/cover.py
     homeassistant/components/alarmdecoder/*
-    homeassistant/components/alarmdotcom/alarm_control_panel.py
     homeassistant/components/alpha_vantage/sensor.py
     homeassistant/components/amazon_polly/tts.py
     homeassistant/components/ambiclimate/climate.py
@@ -93,9 +83,6 @@ omit =
     homeassistant/components/broadlink/remote.py
     homeassistant/components/broadlink/sensor.py
     homeassistant/components/broadlink/switch.py
-    homeassistant/components/brother/__init__.py
-    homeassistant/components/brother/sensor.py
-    homeassistant/components/brother/const.py
     homeassistant/components/brottsplatskartan/sensor.py
     homeassistant/components/browser/*
     homeassistant/components/brunt/cover.py
@@ -601,7 +588,9 @@ omit =
     homeassistant/components/ring/camera.py
     homeassistant/components/ripple/sensor.py
     homeassistant/components/rocketchat/notify.py
-    homeassistant/components/roku/*
+    homeassistant/components/roku/__init__.py
+    homeassistant/components/roku/media_player.py
+    homeassistant/components/roku/remote.py
     homeassistant/components/roomba/vacuum.py
     homeassistant/components/route53/*
     homeassistant/components/rova/sensor.py

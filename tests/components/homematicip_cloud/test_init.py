@@ -24,7 +24,9 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 
-async def test_config_with_accesspoint_passed_to_config_entry(hass):
+async def test_config_with_accesspoint_passed_to_config_entry(
+    hass, mock_connection, simple_mock_home
+):
     """Test that config for a accesspoint are loaded via config entry."""
 
     entry_config = {
@@ -51,7 +53,9 @@ async def test_config_with_accesspoint_passed_to_config_entry(hass):
     assert isinstance(hass.data[HMIPC_DOMAIN]["ABC123"], HomematicipHAP)
 
 
-async def test_config_already_registered_not_passed_to_config_entry(hass):
+async def test_config_already_registered_not_passed_to_config_entry(
+    hass, simple_mock_home
+):
     """Test that an already registered accesspoint does not get imported."""
 
     mock_config = {HMIPC_AUTHTOKEN: "123", HMIPC_HAPID: "ABC123", HMIPC_NAME: "name"}
@@ -87,7 +91,9 @@ async def test_config_already_registered_not_passed_to_config_entry(hass):
     assert config_entries[0].unique_id == "ABC123"
 
 
-async def test_load_entry_fails_due_to_connection_error(hass, hmip_config_entry):
+async def test_load_entry_fails_due_to_connection_error(
+    hass, hmip_config_entry, mock_connection_init
+):
     """Test load entry fails due to connection error."""
     hmip_config_entry.add_to_hass(hass)
 
@@ -101,7 +107,9 @@ async def test_load_entry_fails_due_to_connection_error(hass, hmip_config_entry)
     assert hmip_config_entry.state == ENTRY_STATE_SETUP_RETRY
 
 
-async def test_load_entry_fails_due_to_generic_exception(hass, hmip_config_entry):
+async def test_load_entry_fails_due_to_generic_exception(
+    hass, hmip_config_entry, simple_mock_home
+):
     """Test load entry fails due to generic exception."""
     hmip_config_entry.add_to_hass(hass)
 

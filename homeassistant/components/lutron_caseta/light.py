@@ -7,11 +7,20 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     Light,
 )
-from homeassistant.components.lutron.light import to_hass_level, to_lutron_level
 
 from . import LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def to_lutron_level(level):
+    """Convert the given Home Assistant light level (0-255) to Lutron (0-100)."""
+    return int((level * 100) // 255)
+
+
+def to_hass_level(level):
+    """Convert the given Lutron (0-100) light level to Home Assistant (0-255)."""
+    return int((level * 255) // 100)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

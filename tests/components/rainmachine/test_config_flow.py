@@ -4,7 +4,7 @@ from unittest.mock import patch
 from regenmaschine.errors import RainMachineError
 
 from homeassistant import data_entry_flow
-from homeassistant.components.rainmachine import DOMAIN, config_flow
+from homeassistant.components.rainmachine import CONF_ZONE_RUN_TIME, DOMAIN, config_flow
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_IP_ADDRESS,
@@ -98,6 +98,7 @@ async def test_step_import(hass):
             CONF_PORT: 8080,
             CONF_SSL: True,
             CONF_SCAN_INTERVAL: 60,
+            CONF_ZONE_RUN_TIME: 600,
         }
 
 
@@ -129,4 +130,5 @@ async def test_step_user(hass):
             CONF_PORT: 8080,
             CONF_SSL: True,
             CONF_SCAN_INTERVAL: 60,
+            CONF_ZONE_RUN_TIME: 600,
         }

@@ -30,8 +30,8 @@ class DataUpdateCoordinator:
         logger: logging.Logger,
         *,
         name: str,
-        update_method: Callable[[], Awaitable],
         update_interval: timedelta,
+        update_method: Optional[Callable[[], Awaitable]] = None,
         request_refresh_debouncer: Optional[Debouncer] = None,
     ):
         """Initialize global data updater."""
@@ -104,8 +104,14 @@ class DataUpdateCoordinator:
         """
         await self._debounced_refresh.async_call()
 
+    async def _async_update_data(self) -> Optional[Any]:
+        """Fetch the latest data from the source."""
+        if self.update_method is None:
+            raise NotImplementedError("Update method not implemented")
+        return await self.update_method()
+
     async def async_refresh(self) -> None:
-        """Update data."""
+        """Refresh data."""
         if self._unsub_refresh:
             self._unsub_refresh()
             self._unsub_refresh = None
@@ -114,7 +120,7 @@ class DataUpdateCoordinator:
 
         try:
             start = monotonic()
-            self.data = await self.update_method()
+            self.data = await self._async_update_data()
 
         except asyncio.TimeoutError:
             if self.last_update_success:
@@ -130,6 +136,9 @@ class DataUpdateCoordinator:
             if self.last_update_success:
                 self.logger.error("Error fetching %s data: %s", self.name, err)
                 self.last_update_success = False
+
+        except NotImplementedError as err:
+            raise err
 
         except Exception as err:  # pylint: disable=broad-except
             self.last_update_success = False

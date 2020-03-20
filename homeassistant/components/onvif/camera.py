@@ -375,7 +375,7 @@ class ONVIFHassCamera(Camera):
     def setup_ptz(self):
         """Set up PTZ if available."""
         _LOGGER.debug("Setting up the ONVIF PTZ service")
-        if self._camera.get_service("ptz") is None:
+        if self._camera.get_service("ptz", create=False) is None:
             _LOGGER.debug("PTZ is not available")
         else:
             self._ptz_service = self._camera.create_ptz_service()

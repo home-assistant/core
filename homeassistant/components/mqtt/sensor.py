@@ -1,6 +1,5 @@
 """Support for MQTT sensors."""
 from datetime import timedelta
-import json
 import logging
 from typing import Optional
 
@@ -41,7 +40,6 @@ from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 _LOGGER = logging.getLogger(__name__)
 
 CONF_EXPIRE_AFTER = "expire_after"
-CONF_JSON_ATTRS = "json_attributes"
 
 DEFAULT_NAME = "MQTT Sensor"
 DEFAULT_FORCE_UPDATE = False
@@ -53,7 +51,6 @@ PLATFORM_SCHEMA = (
             vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
             vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
             vol.Optional(CONF_ICON): cv.icon,
-            vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
@@ -110,15 +107,8 @@ class MqttSensor(
         self._state = None
         self._sub_state = None
         self._expiration_trigger = None
-        self._attributes = None
 
         device_config = config.get(CONF_DEVICE)
-
-        if config.get(CONF_JSON_ATTRS):
-            _LOGGER.warning(
-                'configuration variable "json_attributes" is '
-                'deprecated, replace with "json_attributes_topic"'
-            )
 
         MqttAttributes.__init__(self, config)
         MqttAvailability.__init__(self, config)
@@ -164,22 +154,6 @@ class MqttSensor(
                 self._expiration_trigger = async_track_point_in_utc_time(
                     self.hass, self.value_is_expired, expiration_at
                 )
-
-            json_attributes = set(self._config[CONF_JSON_ATTRS])
-            if json_attributes:
-                self._attributes = {}
-                try:
-                    json_dict = json.loads(payload)
-                    if isinstance(json_dict, dict):
-                        attrs = {
-                            k: json_dict[k] for k in json_attributes & json_dict.keys()
-                        }
-                        self._attributes = attrs
-                    else:
-                        _LOGGER.warning("JSON result was not a dictionary")
-                except ValueError:
-                    _LOGGER.warning("MQTT payload could not be parsed as JSON")
-                    _LOGGER.debug("Erroneous JSON: %s", payload)
 
             if template is not None:
                 payload = template.async_render_with_possible_json_value(
@@ -240,11 +214,6 @@ class MqttSensor(
     def state(self):
         """Return the state of the entity."""
         return self._state
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
 
     @property
     def unique_id(self):

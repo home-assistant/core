@@ -47,7 +47,6 @@ FLASH_EFFECTS = {light.FLASH_SHORT: EFFECT_BLINK, light.FLASH_LONG: EFFECT_BREAT
 UNSUPPORTED_ATTRIBUTE = 0x86
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, light.DOMAIN)
 PARALLEL_UPDATES = 0
-_REFRESH_INTERVAL = (45, 75)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -67,6 +66,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 @STRICT_MATCH(channel_names=CHANNEL_ON_OFF, aux_channels={CHANNEL_COLOR, CHANNEL_LEVEL})
 class Light(ZhaEntity, light.Light):
     """Representation of a ZHA or ZLL light."""
+
+    _REFRESH_INTERVAL = (45, 75)
 
     def __init__(self, unique_id, zha_device: ZhaDeviceType, channels, **kwargs):
         """Initialize the ZHA light."""
@@ -177,9 +178,9 @@ class Light(ZhaEntity, light.Light):
             await self.async_accept_signal(
                 self._level_channel, SIGNAL_SET_LEVEL, self.set_level
             )
-        refresh_interval = random.randint(*_REFRESH_INTERVAL)
+        refresh_interval = random.randint(*[x * 60 for x in self._REFRESH_INTERVAL])
         self._cancel_refresh_handle = async_track_time_interval(
-            self.hass, self._refresh, timedelta(minutes=refresh_interval)
+            self.hass, self._refresh, timedelta(seconds=refresh_interval)
         )
 
     async def async_will_remove_from_hass(self) -> None:
@@ -398,3 +399,14 @@ class Light(ZhaEntity, light.Light):
         """Call async_get_state at an interval."""
         await self.async_get_state(from_cache=False)
         self.async_write_ha_state()
+
+
+@STRICT_MATCH(
+    channel_names=CHANNEL_ON_OFF,
+    aux_channels={CHANNEL_COLOR, CHANNEL_LEVEL},
+    manufacturers="Philips",
+)
+class HueLight(Light):
+    """Representation of a HUE light which does not report attributes."""
+
+    _REFRESH_INTERVAL = (3, 5)

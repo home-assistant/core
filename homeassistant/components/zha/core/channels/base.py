@@ -83,9 +83,9 @@ class ZigbeeChannel(LogMixin):
         self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
     ) -> None:
         """Initialize ZigbeeChannel."""
-        self._channel_name = cluster.ep_attribute
-        self._ch_pool = ch_pool
         self._generic_id = f"channel_0x{cluster.cluster_id:04x}"
+        self._channel_name = getattr(cluster, "ep_attribute", self._generic_id)
+        self._ch_pool = ch_pool
         self._cluster = cluster
         self._id = f"{ch_pool.id}:0x{cluster.cluster_id:04x}"
         unique_id = ch_pool.unique_id.replace("-", ":")

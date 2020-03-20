@@ -12,6 +12,7 @@ from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DEFAULT_PORT
 from .const import DOMAIN  # pylint: disable=unused-import
@@ -29,8 +30,7 @@ def validate_input(data: Dict) -> Dict:
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    # directpy does IO in constructor.
-    dtv = DIRECTV(data["host"], DEFAULT_PORT)
+    dtv = DIRECTV(data["host"], DEFAULT_PORT, determine_state=False)
     version_info = dtv.get_version()
 
     return {
@@ -76,8 +76,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
             return self._show_form(errors)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
-            errors["base"] = ERROR_UNKNOWN
-            return self._show_form(errors)
+            return self.async_abort(reason=ERROR_UNKNOWN)
 
         await self.async_set_unique_id(info["receiver_id"])
         self._abort_if_unique_id_configured()
@@ -85,7 +84,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=info["title"], data=user_input)
 
     async def async_step_ssdp(
-        self, discovery_info: Optional[Dict] = None
+        self, discovery_info: Optional[DiscoveryInfoType] = None
     ) -> Dict[str, Any]:
         """Handle a flow initialized by discovery."""
         host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname

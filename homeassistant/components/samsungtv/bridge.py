@@ -46,6 +46,7 @@ class SamsungTVBridge(ABC):
         self.method = method
         self.host = host
         self.token = None
+        self.default_port = None
         self._remote = None
         self._callback = None
 
@@ -130,10 +131,11 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         super().__init__(method, host, None)
         self.config = {
             CONF_NAME: VALUE_CONF_NAME,
-            CONF_ID: VALUE_CONF_ID,
             CONF_DESCRIPTION: VALUE_CONF_NAME,
-            CONF_METHOD: method,
+            CONF_ID: VALUE_CONF_ID,
             CONF_HOST: host,
+            CONF_METHOD: method,
+            CONF_PORT: None,
             CONF_TIMEOUT: 1,
         }
 
@@ -190,6 +192,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
         """Initialize Bridge."""
         super().__init__(method, host, port)
         self.token = token
+        self.default_port = 8001
 
     def try_connect(self):
         """Try to connect to the Websocket TV."""

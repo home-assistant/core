@@ -3,7 +3,7 @@
   "name": "Lock",
   "documentation": "https://www.home-assistant.io/integrations/lock",
   "requirements": [],
-  "dependencies": ["group"],
+  "dependencies": [],
   "codeowners": [],
   "quality_scale": "internal"
 }
