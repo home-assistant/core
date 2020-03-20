@@ -10,6 +10,7 @@ from nexia.const import (
     SYSTEM_STATUS_COOL,
     SYSTEM_STATUS_HEAT,
     SYSTEM_STATUS_IDLE,
+    UNIT_FAHRENHEIT,
 )
 
 from homeassistant.components.climate import ClimateDevice
@@ -32,6 +33,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -119,7 +121,12 @@ class NexiaZone(NexiaEntity, ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        supported = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_PRESET_MODE
+        supported = (
+            SUPPORT_TARGET_TEMPERATURE_RANGE
+            | SUPPORT_TARGET_TEMPERATURE
+            | SUPPORT_FAN_MODE
+            | SUPPORT_PRESET_MODE
+        )
 
         if self._has_humidify_support or self._has_dehumidify_support:
             supported |= SUPPORT_TARGET_HUMIDITY
@@ -158,6 +165,16 @@ class NexiaZone(NexiaEntity, ClimateDevice):
     def fan_modes(self):
         """Return the list of available fan modes."""
         return FAN_MODES
+
+    @property
+    def min_temp(self):
+        """Minimum temp for the current setting."""
+        return (self._device.thermostat.get_setpoint_limits())[0]
+
+    @property
+    def max_temp(self):
+        """Maximum temp for the current setting."""
+        return (self._device.thermostat.get_setpoint_limits())[1]
 
     def set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
@@ -198,8 +215,37 @@ class NexiaZone(NexiaEntity, ClimateDevice):
     @property
     def target_temperature(self):
         """Temperature we try to reach."""
-        if self._device.get_current_mode() == "COOL":
+        current_mode = self._device.get_current_mode()
+
+        if current_mode == OPERATION_MODE_COOL:
             return self._device.get_cooling_setpoint()
+        if current_mode == OPERATION_MODE_HEAT:
+            return self._device.get_heating_setpoint()
+        return None
+
+    @property
+    def target_temperature_step(self):
+        """Step size of temperature units."""
+        if self._device.thermostat.get_unit() == UNIT_FAHRENHEIT:
+            return 1.0
+        return 0.5
+
+    @property
+    def target_temperature_high(self):
+        """Highest temperature we are trying to reach."""
+        current_mode = self._device.get_current_mode()
+
+        if current_mode in (OPERATION_MODE_COOL, OPERATION_MODE_HEAT):
+            return None
+        return self._device.get_cooling_setpoint()
+
+    @property
+    def target_temperature_low(self):
+        """Lowest temperature we are trying to reach."""
+        current_mode = self._device.get_current_mode()
+
+        if current_mode in (OPERATION_MODE_COOL, OPERATION_MODE_HEAT):
+            return None
         return self._device.get_heating_setpoint()
 
     @property
