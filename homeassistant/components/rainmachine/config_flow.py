@@ -4,10 +4,22 @@ from regenmaschine.errors import RainMachineError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import (
+    CONF_IP_ADDRESS,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SCAN_INTERVAL,
+    CONF_SSL,
+)
 from homeassistant.helpers import aiohttp_client
 
-from .const import DEFAULT_PORT, DOMAIN  # pylint: disable=unused-import
+from .const import (  # pylint: disable=unused-import
+    CONF_ZONE_RUN_TIME,
+    DEFAULT_PORT,
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_ZONE_RUN,
+    DOMAIN,
+)
 
 
 class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -53,8 +65,8 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_IP_ADDRESS],
                 user_input[CONF_PASSWORD],
                 websession,
-                port=user_input.get(CONF_PORT, DEFAULT_PORT),
-                ssl=True,
+                port=user_input[CONF_PORT],
+                ssl=user_input.get(CONF_SSL, True),
             )
         except RainMachineError:
             return await self._show_form({CONF_PASSWORD: "invalid_credentials"})
@@ -63,5 +75,17 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # access token without using the IP address and password, so we have to
         # store it:
         return self.async_create_entry(
-            title=user_input[CONF_IP_ADDRESS], data=user_input
+            title=user_input[CONF_IP_ADDRESS],
+            data={
+                CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+                CONF_PORT: user_input[CONF_PORT],
+                CONF_SSL: user_input.get(CONF_SSL, True),
+                CONF_SCAN_INTERVAL: user_input.get(
+                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL.total_seconds()
+                ),
+                CONF_ZONE_RUN_TIME: user_input.get(
+                    CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN
+                ),
+            },
         )
