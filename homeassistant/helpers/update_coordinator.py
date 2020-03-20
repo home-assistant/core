@@ -70,7 +70,7 @@ class DataUpdateCoordinator:
 
         # This is the first listener, set up interval.
         if schedule_refresh:
-            self._schedule_refresh(timedelta())
+            self._schedule_refresh()
 
     @callback
     def async_remove_listener(self, update_callback: CALLBACK_TYPE) -> None:
@@ -82,18 +82,20 @@ class DataUpdateCoordinator:
             self._unsub_refresh = None
 
     @callback
-    def _schedule_refresh(self, last_took: timedelta) -> None:
+    def _schedule_refresh(self) -> None:
         """Schedule a refresh."""
         if self._unsub_refresh:
             self._unsub_refresh()
             self._unsub_refresh = None
 
-        # Correct next trigger time with the time it took.
-        # Another approach could be to just use:
-        # `utcnow().replace(microsecond=0) + self.update_interval`
-        delta = max(self.update_interval - 1.2 * last_took, timedelta(seconds=0.5))
+        # We _floor_ utcnow to create a schedule on a rounded second,
+        # minimizing the time between the point and the real activation.
+        # That way we obtain a constant update frequency,
+        # as long as the update process takes less than a second
         self._unsub_refresh = async_track_point_in_utc_time(
-            self.hass, self._handle_refresh_interval, utcnow() + delta
+            self.hass,
+            self._handle_refresh_interval,
+            utcnow().replace(microsecond=0) + self.update_interval,
         )
 
     async def _handle_refresh_interval(self, _now: datetime) -> None:
@@ -156,11 +158,12 @@ class DataUpdateCoordinator:
                 self.logger.info("Fetching %s data recovered", self.name)
 
         finally:
-            took = monotonic() - start
             self.logger.debug(
-                "Finished fetching %s data in %.3f seconds", self.name, took
+                "Finished fetching %s data in %.3f seconds",
+                self.name,
+                monotonic() - start,
             )
-            self._schedule_refresh(timedelta(seconds=took))
+            self._schedule_refresh()
 
         for update_callback in self._listeners:
             update_callback()
