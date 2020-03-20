@@ -108,7 +108,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_ON_OFF_STATE_ADDRESS): cv.string,
         vol.Optional(CONF_ON_OFF_INVERT, default=DEFAULT_ON_OFF_INVERT): cv.boolean,
         vol.Optional(CONF_OPERATION_MODES): vol.All(
-            cv.ensure_list, [vol.In(OPERATION_MODES)]
+            cv.ensure_list, [vol.In({**OPERATION_MODES, **PRESET_MODES})]
         ),
         vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
         vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
