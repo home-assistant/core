@@ -122,7 +122,7 @@ class NexiaZone(NexiaEntity, ClimateDevice):
         """Return the list of supported features."""
         supported = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_PRESET_MODE
 
-        if self._has_relative_humidity:
+        if self._has_humidify_support or self._has_dehumidify_support:
             supported |= SUPPORT_TARGET_HUMIDITY
 
         if self._has_emergency_heat:
