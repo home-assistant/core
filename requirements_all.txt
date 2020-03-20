@@ -1322,7 +1322,7 @@ pyialarm==0.3
 pyicloud==0.9.5
 
 # homeassistant.components.intesishome
-pyintesishome==1.6
+pyintesishome==1.7.1
 
 # homeassistant.components.ipma
 pyipma==2.0.5
