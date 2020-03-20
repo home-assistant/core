@@ -3,7 +3,6 @@ import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
-import time
 
 from amcrest import AmcrestError
 from haffmpeg.camera import CameraMjpeg
