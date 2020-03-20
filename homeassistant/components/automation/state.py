@@ -6,10 +6,10 @@ from typing import Dict
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.const import CONF_FOR, CONF_PLATFORM, MATCH_ALL
+from homeassistant.const import CONF_FOR, CONF_PLATFORM, EVENT_STATE_CHANGED, MATCH_ALL
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.event import async_track_same_state, async_track_state_change
+from homeassistant.helpers.event import Event, async_track_same_state
 
 # mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs
@@ -58,8 +58,14 @@ async def async_attach_trigger(
     period: Dict[str, timedelta] = {}
 
     @callback
-    def state_automation_listener(entity, from_s, to_s):
+    def state_automation_listener(event: Event):
         """Listen for state changes and calls action."""
+        entity: str = event.data["entity_id"]
+        if entity not in entity_id:
+            return
+
+        from_s = event.data.get("old_state")
+        to_s = event.data.get("new_state")
 
         @callback
         def call_action():
@@ -75,7 +81,7 @@ async def async_attach_trigger(
                             "for": time_delta if not time_delta else period[entity],
                         }
                     },
-                    context=to_s.context if to_s else None,
+                    context=event.context,
                 )
             )
 
@@ -120,17 +126,16 @@ async def async_attach_trigger(
             )
             return
 
+        def _check_same_state(_, _2, new_st):
+            if new_st is None:
+                return False
+            return new_st.state == to_s.state
+
         unsub_track_same[entity] = async_track_same_state(
-            hass,
-            period[entity],
-            call_action,
-            lambda _, _2, to_state: to_state.state == to_s.state,
-            entity_ids=entity,
+            hass, period[entity], call_action, _check_same_state, entity_ids=entity_id,
         )
 
-    unsub = async_track_state_change(
-        hass, entity_id, state_automation_listener, from_state, to_state
-    )
+    unsub = hass.bus.async_listen(EVENT_STATE_CHANGED, state_automation_listener)
 
     @callback
     def async_remove():
