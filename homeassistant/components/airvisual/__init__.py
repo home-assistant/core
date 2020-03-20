@@ -22,7 +22,6 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import (
     CONF_CITY,
     CONF_COUNTRY,
-    CONF_GEOGRAPHIES,
     DATA_CLIENT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -35,7 +34,7 @@ DATA_LISTENER = "listener"
 
 DEFAULT_OPTIONS = {CONF_SHOW_ON_MAP: True}
 
-CONF_NODE_ID = "node_id"
+CONF_GEOGRAPHIES = "geographies"
 
 GEOGRAPHY_COORDINATES_SCHEMA = vol.Schema(
     {

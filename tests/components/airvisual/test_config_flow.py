@@ -3,7 +3,11 @@ from asynctest import patch
 from pyairvisual.errors import InvalidKeyError
 
 from homeassistant import data_entry_flow
-from homeassistant.components.airvisual import CONF_GEOGRAPHIES, DOMAIN
+from homeassistant.components.airvisual import (
+    CONF_GEOGRAPHIES,
+    DOMAIN,
+    async_migrate_entry,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
@@ -17,9 +21,15 @@ from tests.common import MockConfigEntry
 
 async def test_duplicate_error(hass):
     """Test that errors are shown when duplicates are added."""
-    conf = {CONF_API_KEY: "abcde12345"}
+    conf = {
+        CONF_API_KEY: "abcde12345",
+        CONF_LATITUDE: 51.528308,
+        CONF_LONGITUDE: -0.3817765,
+    }
 
-    MockConfigEntry(domain=DOMAIN, unique_id="abcde12345", data=conf).add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN, unique_id="51.528308, -0.3817765", data=conf
+    ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=conf
@@ -31,7 +41,11 @@ async def test_duplicate_error(hass):
 
 async def test_invalid_api_key(hass):
     """Test that invalid credentials throws an error."""
-    conf = {CONF_API_KEY: "abcde12345"}
+    conf = {
+        CONF_API_KEY: "abcde12345",
+        CONF_LATITUDE: 51.528308,
+        CONF_LONGITUDE: -0.3817765,
+    }
 
     with patch(
         "pyairvisual.api.API.nearest_city", side_effect=InvalidKeyError,
@@ -40,6 +54,29 @@ async def test_invalid_api_key(hass):
             DOMAIN, context={"source": SOURCE_USER}, data=conf
         )
         assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
+
+
+async def test_migration_1_2(hass):
+    """Test migrating from version 1 to version 2."""
+    conf = {
+        CONF_API_KEY: "abcde12345",
+        CONF_GEOGRAPHIES: [{CONF_LATITUDE: 51.528308, CONF_LONGITUDE: -0.3817765}],
+    }
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, version=1, unique_id="abcde12345", data=conf
+    )
+    config_entry.add_to_hass(hass)
+
+    await async_migrate_entry(hass, config_entry)
+
+    assert config_entry.unique_id == "51.528308, -0.3817765"
+    assert config_entry.title == "Cloud API (51.528308, -0.3817765)"
+    assert config_entry.data == {
+        CONF_API_KEY: "abcde12345",
+        CONF_LATITUDE: 51.528308,
+        CONF_LONGITUDE: -0.3817765,
+    }
 
 
 async def test_options_flow(hass):
@@ -84,7 +121,8 @@ async def test_step_import(hass):
     """Test that the import step works."""
     conf = {
         CONF_API_KEY: "abcde12345",
-        CONF_GEOGRAPHIES: [{CONF_LATITUDE: 51.528308, CONF_LONGITUDE: -0.3817765}],
+        CONF_LATITUDE: 51.528308,
+        CONF_LONGITUDE: -0.3817765,
     }
 
     with patch(
@@ -95,10 +133,11 @@ async def test_step_import(hass):
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "Cloud API (API key: abcd...)"
+        assert result["title"] == "Cloud API (51.528308, -0.3817765)"
         assert result["data"] == {
             CONF_API_KEY: "abcde12345",
-            CONF_GEOGRAPHIES: [{CONF_LATITUDE: 51.528308, CONF_LONGITUDE: -0.3817765}],
+            CONF_LATITUDE: 51.528308,
+            CONF_LONGITUDE: -0.3817765,
         }
 
 
@@ -117,8 +156,9 @@ async def test_step_user(hass):
             DOMAIN, context={"source": SOURCE_USER}, data=conf
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "Cloud API (API key: abcd...)"
+        assert result["title"] == "Cloud API (32.87336, -117.22743)"
         assert result["data"] == {
             CONF_API_KEY: "abcde12345",
-            CONF_GEOGRAPHIES: [{CONF_LATITUDE: 32.87336, CONF_LONGITUDE: -117.22743}],
+            CONF_LATITUDE: 32.87336,
+            CONF_LONGITUDE: -117.22743,
         }
