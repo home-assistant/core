@@ -1,6 +1,6 @@
 """Nexia constants."""
 
-PLATFORMS = ["sensor", "binary_sensor", "climate", "switch"]
+PLATFORMS = ["sensor", "binary_sensor", "climate", "scene"]
 
 ATTRIBUTION = "Data provided by mynexia.com"
 

@@ -1,7 +1,5 @@
 """The lock tests for the august platform."""
 
-from homeassistant.const import STATE_OFF
-
 from .util import async_init_integration
 
 
@@ -11,7 +9,6 @@ async def test_automation_scenees(hass):
     await async_init_integration(hass)
 
     state = hass.states.get("scene.away_short")
-    assert state.state == STATE_OFF
     expected_attributes = {
         "attribution": "Data provided by mynexia.com",
         "description": "When IFTTT activates the automation Upstairs "
@@ -39,7 +36,6 @@ async def test_automation_scenees(hass):
     )
 
     state = hass.states.get("scene.power_outage")
-    assert state.state == STATE_OFF
     expected_attributes = {
         "attribution": "Data provided by mynexia.com",
         "description": "When IFTTT activates the automation Upstairs "
@@ -59,7 +55,6 @@ async def test_automation_scenees(hass):
     )
 
     state = hass.states.get("scene.power_restored")
-    assert state.state == STATE_OFF
     expected_attributes = {
         "attribution": "Data provided by mynexia.com",
         "description": "When IFTTT activates the automation Upstairs "
