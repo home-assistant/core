@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_STATE,
+    CONF_DELAY,
     CONF_HOST,
     CONF_METHOD,
     CONF_NAME,
@@ -62,6 +63,7 @@ ETHERNET_SCHEMA = BASE_SCHEMA.extend(
         vol.Required(CONF_PORT): cv.port,
         vol.Required(CONF_TYPE): vol.Any("tcp", "udp", "rtuovertcp"),
         vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
+        vol.Optional(CONF_DELAY, default=0): cv.positive_int,
     }
 )
 
@@ -166,6 +168,7 @@ class ModbusHub:
         self._config_type = client_config[CONF_TYPE]
         self._config_port = client_config[CONF_PORT]
         self._config_timeout = client_config[CONF_TIMEOUT]
+        self._config_delay = client_config[CONF_DELAY]
 
         if self._config_type == "serial":
             # serial configuration
@@ -182,6 +185,11 @@ class ModbusHub:
     def name(self):
         """Return the name of this hub."""
         return self._config_name
+
+    async def _connect_delay(self):
+        if self._config_delay > 0:
+            await asyncio.sleep(self._config_delay)
+            self._config_delay = 0
 
     def setup(self):
         """Set up pymodbus client."""
@@ -234,42 +242,49 @@ class ModbusHub:
 
     async def read_coils(self, unit, address, count):
         """Read coils."""
+        await self._connect_delay()
         async with self._lock:
             kwargs = {"unit": unit} if unit else {}
             return await self._client.read_coils(address, count, **kwargs)
 
     async def read_discrete_inputs(self, unit, address, count):
         """Read discrete inputs."""
+        await self._connect_delay()
         async with self._lock:
             kwargs = {"unit": unit} if unit else {}
             return await self._client.read_discrete_inputs(address, count, **kwargs)
 
     async def read_input_registers(self, unit, address, count):
         """Read input registers."""
+        await self._connect_delay()
         async with self._lock:
             kwargs = {"unit": unit} if unit else {}
             return await self._client.read_input_registers(address, count, **kwargs)
 
     async def read_holding_registers(self, unit, address, count):
         """Read holding registers."""
+        await self._connect_delay()
         async with self._lock:
             kwargs = {"unit": unit} if unit else {}
             return await self._client.read_holding_registers(address, count, **kwargs)
 
     async def write_coil(self, unit, address, value):
         """Write coil."""
+        await self._connect_delay()
         async with self._lock:
             kwargs = {"unit": unit} if unit else {}
             await self._client.write_coil(address, value, **kwargs)
 
     async def write_register(self, unit, address, value):
         """Write register."""
+        await self._connect_delay()
         async with self._lock:
             kwargs = {"unit": unit} if unit else {}
             await self._client.write_register(address, value, **kwargs)
 
     async def write_registers(self, unit, address, values):
         """Write registers."""
+        await self._connect_delay()
         async with self._lock:
             kwargs = {"unit": unit} if unit else {}
             await self._client.write_registers(address, values, **kwargs)
