@@ -571,7 +571,9 @@ def _identify_config_schema(module: ModuleType) -> Tuple[Optional[str], Optional
 
     schema = module.CONFIG_SCHEMA.schema[key]  # type: ignore
 
-    if hasattr(key, "default"):
+    if hasattr(key, "default") and not isinstance(
+        key.default, vol.schema_builder.Undefined
+    ):
         default_value = schema(key.default())
 
         if isinstance(default_value, dict):
