@@ -58,7 +58,6 @@ from .const import (
     APP_LIST,
     CURRENT_APP,
     CURRENT_INPUT,
-    CUSTOM_APP_NAME,
     CUSTOM_CONFIG,
     ENTITY_ID,
     INPUT_LIST,
@@ -184,6 +183,9 @@ async def _test_setup_with_apps(
             )
         else:
             list_to_test = list(INPUT_LIST_WITH_APPS + APP_LIST)
+
+        if CONF_ADDITIONAL_CONFIGS in device_config.get(CONF_APPS, {}):
+            assert attr["source_list"].count(CURRENT_APP) == 1
 
         for app_to_remove in INPUT_APPS:
             if app_to_remove in list_to_test:
@@ -478,7 +480,7 @@ async def test_setup_with_apps_additional_apps_config(
         hass,
         "launch_app_config",
         SERVICE_SELECT_SOURCE,
-        {ATTR_INPUT_SOURCE: CUSTOM_APP_NAME},
+        {ATTR_INPUT_SOURCE: CURRENT_APP},
         **CUSTOM_CONFIG,
     )
 
