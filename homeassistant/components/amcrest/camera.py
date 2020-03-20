@@ -442,8 +442,27 @@ class AmcrestCam(Camera):
         await self.hass.async_add_executor_job(self._start_tour, False)
 
     async def async_ptz_control(self, movement, travel_time):
-        """Call the job and move/zoom PTZ camera."""
-        await self.hass.async_add_executor_job(self._ptz_control, movement, travel_time)
+        """Move or zoom camera in specified direction."""
+        code = _ACTION[_MOV.index(movement)]
+
+        kwargs = {"code": code, "arg1": 0, "arg2": 0, "arg3": 0}
+        if code in _MOVE_1_ACTIONS:
+            kwargs["arg2"] = 1
+        elif code in _MOVE_2_ACTIONS:
+            kwargs["arg1"] = kwargs["arg2"] = 1
+
+        try:
+            await self.hass.async_add_executor_job(
+                partial(self._api.ptz_control_command, action="start", **kwargs)
+            )
+            await asyncio.sleep(travel_time)
+            await self.hass.async_add_executor_job(
+                partial(self._api.ptz_control_command, action="stop", **kwargs)
+            )
+        except AmcrestError as error:
+            log_update_error(
+                _LOGGER, "move", self.name, f"camera PTZ {movement}", error
+            )
 
     # Methods to send commands to Amcrest camera and handle errors
 
@@ -585,24 +604,4 @@ class AmcrestCam(Camera):
         except AmcrestError as error:
             log_update_error(
                 _LOGGER, "start" if start else "stop", self.name, "camera tour", error
-            )
-
-    def _ptz_control(self, movement, travel_time):
-        """Move or zoom camera in specified direction."""
-        code = _ACTION[_MOV.index(movement)]
-
-        kwargs = {"code": code, "arg1": 0, "arg2": 0, "arg3": 0}
-        if code in _MOVE_1_ACTIONS:
-            kwargs["arg2"] = 1
-        elif code in _MOVE_2_ACTIONS:
-            kwargs["arg1"] = kwargs["arg2"] = 1
-
-        try:
-            self._api.ptz_control_command(action="start", **kwargs)
-            time.sleep(travel_time)
-            self._api.ptz_control_command(action="stop", **kwargs)
-
-        except AmcrestError as error:
-            log_update_error(
-                _LOGGER, "move", self.name, f"camera PTZ {movement}", error
             )
