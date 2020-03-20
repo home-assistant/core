@@ -123,7 +123,7 @@ async def test_tracked_devices(hass):
         devices_response=[DEVICE_1, DEVICE_2],
         known_wireless_clients=(CLIENT_4["mac"],),
     )
-    assert len(hass.states.async_entity_ids("device_tracker")) == 5
+    assert len(hass.states.async_entity_ids("device_tracker")) == 6
 
     client_1 = hass.states.get("device_tracker.client_1")
     assert client_1 is not None
@@ -349,7 +349,7 @@ async def test_option_ssid_filter(hass):
     controller = await setup_unifi_integration(
         hass, options={CONF_SSID_FILTER: ["ssid"]}, clients_response=[CLIENT_3],
     )
-    assert len(hass.states.async_entity_ids("device_tracker")) == 0
+    assert len(hass.states.async_entity_ids("device_tracker")) == 1
 
     # SSID filter active
     client_3 = hass.states.get("device_tracker.client_3")
