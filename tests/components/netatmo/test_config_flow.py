@@ -65,6 +65,7 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
             "read_station",
             "read_thermostat",
             "write_camera",
+            "write_presence",
             "write_thermostat",
         ]
     )
