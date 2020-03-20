@@ -148,7 +148,23 @@ class LovelaceStorage(LovelaceConfig):
     async def _load(self):
         """Load the config."""
         data = await self._store.async_load()
-        self._data = data if data else {"config": None}
+        # self._data = data if data else {"config": None}
+        if data:
+            self._data = data
+        else:
+            # ais fix dashboards
+            storage_path = "/data/data/pl.sviete.dom/files/home/AIS/.storage/"
+            ais_dom_lovelace_path = str(os.path.dirname(__file__))
+            if self._store.path == storage_path + "lovelace":
+                ais_dom_lovelace_path += "/ais_dom_lovelace_full"
+            else:
+                ais_dom_lovelace_path += "/ais_dom_lovelace_new"
+            from homeassistant.util import json as json_util
+
+            data = await self._store.hass.async_add_executor_job(
+                json_util.load_json, ais_dom_lovelace_path
+            )
+            self._data = data["data"] if data else {"config": None}
 
 
 class LovelaceYAML(LovelaceConfig):
@@ -173,10 +189,7 @@ class LovelaceYAML(LovelaceConfig):
         try:
             config = await self.async_load(False)
         except ConfigNotFound:
-            return {
-                "mode": self.mode,
-                "error": f"{self.path} not found",
-            }
+            return {"mode": self.mode, "error": f"{self.path} not found"}
 
         return _config_info(self.mode, config)
 

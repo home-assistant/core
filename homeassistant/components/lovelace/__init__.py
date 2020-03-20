@@ -75,6 +75,28 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     frontend.async_register_built_in_panel(hass, DOMAIN, config={"mode": mode})
 
+    # ais fix migration dashboards - remove in version 1.0
+    # run this only if lovelace_dashboards not exist and lovelace exists
+    storage_path = "/data/data/pl.sviete.dom/files/home/AIS/.storage/"
+    import os
+    import shutil
+
+    if os.path.exists(storage_path + "lovelace") and not os.path.exists(
+        storage_path + "lovelace_dashboards"
+    ):
+        ais_dom_lovelace_path = (
+            str(os.path.dirname(__file__)) + "/ais_dom_lovelace_full"
+        )
+        ais_dom_dashboards_path = (
+            str(os.path.dirname(__file__)) + "/lovelace_dashboards"
+        )
+        # 1. move current lovelace
+        shutil.move(storage_path + "lovelace", storage_path + "lovelace.lovelace_dom")
+        # 2. copy ais dom lovelace as default lovelace
+        shutil.copy(ais_dom_lovelace_path, storage_path + "lovelace")
+        # 3. copy lovelace_dashboards
+        shutil.copy(ais_dom_dashboards_path, storage_path + "lovelace_dashboards")
+
     async def reload_resources_service_handler(service_call: ServiceCallType) -> None:
         """Reload yaml resources."""
         try:
