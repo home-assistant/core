@@ -35,25 +35,25 @@ class NexiaAutomationScene(NexiaEntity, Scene):
     """Provides Nexia automation support."""
 
     def __init__(self, coordinator, automation):
-        """Initialize the sensor."""
+        """Initialize the automation scene."""
         super().__init__(coordinator)
         self._coordinator = coordinator
         self._automation = automation
 
     @property
     def unique_id(self):
-        """Return the unique id of the automation."""
+        """Return the unique id of the automation scene."""
         # This is the automation unique_id
         return self._automation.automation_id
 
     @property
     def name(self):
-        """Return the name of the scene."""
+        """Return the name of the automation scene."""
         return self._automation.name
 
     @property
     def device_state_attributes(self):
-        """Return the device specific state attributes."""
+        """Return the scene specific state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_DESCRIPTION: self._automation.description,
@@ -61,9 +61,9 @@ class NexiaAutomationScene(NexiaEntity, Scene):
 
     @property
     def icon(self):
-        """Return the device class of the automations switch."""
+        """Return the icon of the automation scene."""
         return "mdi:script-text-outline"
 
     def activate(self):
-        """Activate an automation switch."""
+        """Activate an automation scene."""
         self._automation.activate()
