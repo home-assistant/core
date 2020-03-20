@@ -64,6 +64,6 @@ class NexiaAutomationScene(NexiaEntity, Scene):
         """Return the device class of the automations switch."""
         return "mdi:script-text-outline"
 
-    def activate(self, **kwargs) -> None:
+    def activate(self):
         """Activate an automation switch."""
         self._automation.activate()
