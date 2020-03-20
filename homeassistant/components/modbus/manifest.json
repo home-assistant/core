@@ -4,5 +4,5 @@
   "documentation": "https://www.home-assistant.io/integrations/modbus",
   "requirements": ["pymodbus==2.3.0", "twisted==20.3.0"],
   "dependencies": [],
-  "codeowners": ["@adamchengtkc"]
+  "codeowners": ["@adamchengtkc", "@janiversen"]
 }
