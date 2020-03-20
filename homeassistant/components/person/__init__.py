@@ -77,7 +77,11 @@ PERSON_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {vol.Optional(DOMAIN): vol.All(cv.ensure_list, cv.remove_falsy, [PERSON_SCHEMA])},
+    {
+        vol.Optional(DOMAIN, default=[]): vol.All(
+            cv.ensure_list, cv.remove_falsy, [PERSON_SCHEMA]
+        )
+    },
     extra=vol.ALLOW_EXTRA,
 )
 
