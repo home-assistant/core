@@ -1,6 +1,6 @@
 """Nexia constants."""
 
-PLATFORMS = ["sensor", "binary_sensor", "climate"]
+PLATFORMS = ["sensor", "binary_sensor", "climate", "scene"]
 
 ATTRIBUTION = "Data provided by mynexia.com"
 
@@ -13,6 +13,8 @@ NEXIA_SCAN_INTERVAL = "scan_interval"
 
 DOMAIN = "nexia"
 DEFAULT_ENTITY_NAMESPACE = "nexia"
+
+ATTR_DESCRIPTION = "description"
 
 ATTR_ZONE_STATUS = "zone_status"
 ATTR_HUMIDIFY_SUPPORTED = "humidify_supported"

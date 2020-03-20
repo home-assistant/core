@@ -62,7 +62,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     try:
         nexia_home = await hass.async_add_executor_job(
-            partial(NexiaHome, username=username, password=password)
+            partial(
+                NexiaHome,
+                username=username,
+                password=password,
+                device_name=hass.config.location_name,
+            )
         )
     except ConnectTimeout as ex:
         _LOGGER.error("Unable to connect to Nexia service: %s", ex)
