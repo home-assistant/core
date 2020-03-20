@@ -5,12 +5,12 @@ from homeassistant.const import STATE_OFF
 from .util import async_init_integration
 
 
-async def test_automation_switches(hass):
-    """Test creation automation switches."""
+async def test_automation_scenees(hass):
+    """Test creation automation scenees."""
 
     await async_init_integration(hass)
 
-    state = hass.states.get("switch.away_short")
+    state = hass.states.get("scene.away_short")
     assert state.state == STATE_OFF
     expected_attributes = {
         "attribution": "Data provided by mynexia.com",
@@ -34,9 +34,11 @@ async def test_automation_switches(hass):
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
-    assert all(item in state.attributes.items() for item in expected_attributes.items())
+    assert all(
+        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+    )
 
-    state = hass.states.get("switch.power_outage")
+    state = hass.states.get("scene.power_outage")
     assert state.state == STATE_OFF
     expected_attributes = {
         "attribution": "Data provided by mynexia.com",
@@ -52,9 +54,11 @@ async def test_automation_switches(hass):
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
-    assert all(item in state.attributes.items() for item in expected_attributes.items())
+    assert all(
+        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+    )
 
-    state = hass.states.get("switch.power_restored")
+    state = hass.states.get("scene.power_restored")
     assert state.state == STATE_OFF
     expected_attributes = {
         "attribution": "Data provided by mynexia.com",
@@ -68,4 +72,6 @@ async def test_automation_switches(hass):
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
-    assert all(item in state.attributes.items() for item in expected_attributes.items())
+    assert all(
+        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+    )

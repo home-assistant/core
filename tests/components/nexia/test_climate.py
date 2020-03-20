@@ -40,4 +40,6 @@ async def test_climate_zones(hass):
     }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
-    assert all(item in state.attributes.items() for item in expected_attributes.items())
+    assert all(
+        state.attributes[key] == expected_attributes[key] for key in expected_attributes
+    )

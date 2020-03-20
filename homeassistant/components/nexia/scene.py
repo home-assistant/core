@@ -1,6 +1,6 @@
-"""Support for Nexia Switches."""
+"""Support for Nexia Automations."""
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.scene import Scene
 from homeassistant.const import ATTR_ATTRIBUTION
 
 from .const import (
@@ -15,7 +15,7 @@ from .entity import NexiaEntity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up sensors for a Nexia device."""
+    """Set up automations for a Nexia device."""
 
     nexia_data = hass.data[DOMAIN][config_entry.entry_id][DATA_NEXIA]
     nexia_home = nexia_data[NEXIA_DEVICE]
@@ -26,12 +26,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for automation_id in nexia_home.get_automation_ids():
         automation = nexia_home.get_automation_by_id(automation_id)
 
-        entities.append(NexiaAutomationSwitch(coordinator, automation))
+        entities.append(NexiaAutomationScene(coordinator, automation))
 
     async_add_entities(entities, True)
 
 
-class NexiaAutomationSwitch(NexiaEntity, SwitchDevice):
+class NexiaAutomationScene(NexiaEntity, Scene):
     """Provides Nexia automation support."""
 
     def __init__(self, coordinator, automation):
@@ -48,7 +48,7 @@ class NexiaAutomationSwitch(NexiaEntity, SwitchDevice):
 
     @property
     def name(self):
-        """Return the name of the sensor."""
+        """Return the name of the scene."""
         return self._automation.name
 
     @property
@@ -64,12 +64,6 @@ class NexiaAutomationSwitch(NexiaEntity, SwitchDevice):
         """Return the device class of the automations switch."""
         return "mdi:script-text-outline"
 
-    @property
-    def is_on(self):
-        """Get whether the automation is enabled is in the on state."""
-        # These are all momentary activations
-        return False
-
-    def turn_on(self, **kwargs) -> None:
+    def activate(self, **kwargs) -> None:
         """Activate an automation switch."""
         self._automation.activate()
