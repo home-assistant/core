@@ -5,11 +5,12 @@ import logging
 from homeassistant.components.remote import ATTR_ACTIVITY, ATTR_DELAY_SECS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DOMAIN, PLATFORMS
-from .remote import DEVICES, HarmonyRemote
+from .const import DOMAIN, HARMONY_OPTIONS_UPDATE, PLATFORMS
+from .remote import HarmonyRemote
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,19 +24,16 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Logitech Harmony Hub from a config entry."""
+    # As there currently is no way to import options from yaml
+    # when setting up a config entry, we fallback to adding
+    # the options to the config entry and pull them out here if
+    # they are missing from the options
+    _async_import_options_from_data_if_missing(hass, entry)
 
-    conf = entry.data
-    address = conf[CONF_HOST]
-    name = conf.get(CONF_NAME)
-    activity = conf.get(ATTR_ACTIVITY)
-    delay_secs = conf.get(ATTR_DELAY_SECS)
-
-    _LOGGER.info(
-        "Loading Harmony Platform: %s at %s, startup activity: %s",
-        name,
-        address,
-        activity,
-    )
+    address = entry.data[CONF_HOST]
+    name = entry.data[CONF_NAME]
+    activity = entry.options.get(ATTR_ACTIVITY)
+    delay_secs = entry.options.get(ATTR_DELAY_SECS)
 
     harmony_conf_file = hass.config.path(f"harmony_{entry.unique_id}.conf")
     try:
@@ -45,7 +43,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         raise ConfigEntryNotReady
 
     hass.data[DOMAIN][entry.entry_id] = device
-    DEVICES.append(device)
 
     entry.add_update_listener(_update_listener)
 
@@ -57,16 +54,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def _update_listener(hass, entry):
+@callback
+def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: ConfigEntry):
+    options = dict(entry.options)
+    modified = 0
+    for importable_option in [ATTR_ACTIVITY, ATTR_DELAY_SECS]:
+        if importable_option not in entry.options and importable_option in entry.data:
+            options[importable_option] = entry.data[importable_option]
+            modified = 1
+
+    if modified:
+        hass.config_entries.async_update_entry(entry, options=options)
+
+
+async def _update_listener(hass: HomeAssistant, entry: ConfigEntry):
     """Handle options update."""
-
-    device = hass.data[DOMAIN][entry.entry_id]
-
-    if ATTR_DELAY_SECS in entry.options:
-        device.delay_seconds = entry.options[ATTR_DELAY_SECS]
-
-    if ATTR_ACTIVITY in entry.options:
-        device.default_activity = entry.options[ATTR_ACTIVITY]
+    async_dispatcher_send(
+        hass, f"{HARMONY_OPTIONS_UPDATE}-{entry.unique_id}", entry.options
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -85,7 +90,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     await device.shutdown()
 
     if unload_ok:
-        DEVICES.remove(hass.data[DOMAIN][entry.entry_id])
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
