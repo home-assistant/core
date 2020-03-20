@@ -59,7 +59,8 @@ async def test_user_adds_full_device(flow, full_device, pairing):
                 Protocol.DMAP.value: "dmap_creds",
                 Protocol.AirPlay.value: "airplay_creds",
             },
-        }
+        },
+        unique_id="mrp_id",
     )
 
 
@@ -79,7 +80,8 @@ async def test_user_adds_dmap_device(flow, dmap_device, dmap_pin, pairing):
             "protocol": Protocol.DMAP.value,
             "name": "DMAP Device",
             "credentials": {Protocol.DMAP.value: "dmap_creds"},
-        }
+        },
+        unique_id="dmap_id",
     )
 
 
@@ -110,7 +112,8 @@ async def test_user_adds_device_with_credentials(flow, dmap_device_with_credenti
             "protocol": Protocol.DMAP.value,
             "name": "DMAP Device",
             "credentials": {Protocol.DMAP.value: "dummy_creds"},
-        }
+        },
+        unique_id="dmap_id",
     )
 
 
@@ -128,7 +131,8 @@ async def test_user_adds_device_with_ip_filter(
             "protocol": Protocol.DMAP.value,
             "name": "DMAP Device",
             "credentials": {Protocol.DMAP.value: "dummy_creds"},
-        }
+        },
+        unique_id="dmap_id",
     )
 
 
@@ -237,6 +241,7 @@ async def test_user_pair_begin_unexpected_error(flow, mrp_device, pairing_mock):
 async def test_import_mrp_device(flow, mrp_device):
     """Test importing MRP device from YAML."""
     config = {
+        "identifier": "mrp_id",
         "address": "127.0.0.1",
         "name": "Kitchen",
         "protocol": "MRP",
@@ -249,7 +254,8 @@ async def test_import_mrp_device(flow, mrp_device):
             "protocol": Protocol.MRP.value,
             "name": "Kitchen",
             "credentials": {Protocol.MRP.value: "mrp_creds"},
-        }
+        },
+        unique_id="mrp_id",
     )
 
 
@@ -287,7 +293,8 @@ async def test_zeroconf_add_mrp_device(flow, mrp_device, pairing):
             "protocol": Protocol.MRP.value,
             "name": "MRP Device",
             "credentials": {Protocol.MRP.value: "mrp_creds"},
-        }
+        },
+        unique_id="mrp_id",
     )
 
 

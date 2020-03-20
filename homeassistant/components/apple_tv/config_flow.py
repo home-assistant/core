@@ -20,14 +20,14 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
+    CONF_CREDENTIALS,
     CONF_CREDENTIALS_AIRPLAY,
     CONF_CREDENTIALS_DMAP,
     CONF_CREDENTIALS_MRP,
     CONF_IDENTIFIER,
     CONF_START_OFF,
-    DOMAIN,
 )
-from .const import CONF_CREDENTIALS  # pylint: disable=unused-import
+from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -243,6 +243,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Any more protocols to pair? Else bail out here
         if not self.protocol:
+            await self.async_set_unique_id(self.atv.main_service().identifier)
             return await self._async_get_entry(
                 self.atv.main_service().protocol,
                 self.atv.name,

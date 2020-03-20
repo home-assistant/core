@@ -115,9 +115,12 @@ class FlowInteraction:
         for key, value in kwargs.items():
             assert self.result[key] == value
 
-    def _create_entry(self, entry):
+    def _create_entry(self, entry, unique_id=None):
         assert self.result["type"] == "create_entry"
         assert self.result["data"] == entry
+
+        if unique_id:
+            assert self.flow.unique_id == unique_id
 
     def _abort(self, reason):
         if self.result:
