@@ -64,8 +64,8 @@ SUPPORTED_PENDING_STATES = [
     state for state in SUPPORTED_STATES if state != STATE_ALARM_DISARMED
 ]
 
-ATTR_PRE_PENDING_STATE = "pre_pending_state"
-ATTR_POST_PENDING_STATE = "post_pending_state"
+ATTR_PREVIOUS_STATE = "previous_state"
+ATTR_NEXT_STATE = "next_state"
 
 
 def _state_validator(config):
@@ -387,8 +387,8 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
         state_attr = {}
 
         if self.state == STATE_ALARM_PENDING or self.state == STATE_ALARM_ARMING:
-            state_attr[ATTR_PRE_PENDING_STATE] = self._previous_state
-            state_attr[ATTR_POST_PENDING_STATE] = self._state
+            state_attr[ATTR_PREVIOUS_STATE] = self._previous_state
+            state_attr[ATTR_NEXT_STATE] = self._state
 
         return state_attr
 
@@ -403,10 +403,10 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
                     or state.state == STATE_ALARM_ARMING
                 )
                 and hasattr(state, "attributes")
-                and state.attributes["pre_pending_state"]
+                and state.attributes[ATTR_PREVIOUS_STATE]
             ):
-                # If in pending state, we return to the pre_pending_state
-                self._state = state.attributes["pre_pending_state"]
+                # If in pending state, we return to the ATTR_PREVIOUS_STATE
+                self._state = state.attributes[ATTR_PREVIOUS_STATE]
                 self._state_ts = dt_util.utcnow()
             else:
                 self._state = state.state
