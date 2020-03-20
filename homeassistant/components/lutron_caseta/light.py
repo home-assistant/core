@@ -7,6 +7,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     Light,
 )
+
 from . import LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice
 
 _LOGGER = logging.getLogger(__name__)
