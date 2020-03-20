@@ -105,7 +105,6 @@ class NexiaZone(NexiaEntity, ClimateDevice):
         self.thermostat = device.thermostat
         self._device = device
         self._coordinator = coordinator
-        self._unique_id = f"{self._device.zone_id}_zone"
         # The has_* calls are stable for the life of the device
         # and do not do I/O
         self._has_relative_humidity = self.thermostat.has_relative_humidity()
@@ -116,7 +115,7 @@ class NexiaZone(NexiaEntity, ClimateDevice):
     @property
     def unique_id(self):
         """Device Uniqueid."""
-        return self._unique_id
+        return self._device.zone_id
 
     @property
     def supported_features(self):
