@@ -20,16 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
-from .const import (
-    DOMAIN,
-    GARAGE_STATE_ICONS,
-    GATE_STATE_ICONS,
-    MYQ_DEVICE_STATE,
-    MYQ_DEVICE_STATE_ONLINE,
-    MYQ_DEVICE_TYPE,
-    MYQ_DEVICE_TYPE_GATE,
-    MYQ_TO_HASS,
-)
+from .const import DOMAIN, MYQ_DEVICE_STATE, MYQ_DEVICE_STATE_ONLINE, MYQ_TO_HASS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,16 +68,6 @@ class MyQDevice(CoverDevice):
     def device_class(self):
         """Define this cover as a garage door."""
         return "garage"
-
-    @property
-    def icon(self):
-        """Return the correct icon for the device type."""
-        state = MYQ_TO_HASS.get(self._device.state)
-        device_type = self._device.device_json.get(MYQ_DEVICE_TYPE)
-        if device_type is not None and device_type == MYQ_DEVICE_TYPE_GATE:
-            return GATE_STATE_ICONS[state]
-
-        return GARAGE_STATE_ICONS[state]
 
     @property
     def name(self):
