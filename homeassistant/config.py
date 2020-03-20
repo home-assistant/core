@@ -565,9 +565,23 @@ def _log_pkg_error(package: str, component: str, config: Dict, message: str) -> 
 def _identify_config_schema(module: ModuleType) -> Tuple[Optional[str], Optional[Dict]]:
     """Extract the schema and identify list or dict based."""
     try:
-        schema = module.CONFIG_SCHEMA.schema[module.DOMAIN]  # type: ignore
-    except (AttributeError, KeyError):
+        key = next(k for k in module.CONFIG_SCHEMA.schema if k == module.DOMAIN)  # type: ignore
+    except (AttributeError, StopIteration):
         return None, None
+
+    schema = module.CONFIG_SCHEMA.schema[key]  # type: ignore
+
+    if hasattr(key, "default"):
+        default_value = schema(key.default())
+
+        if isinstance(default_value, dict):
+            return "dict", schema
+
+        if isinstance(default_value, list):
+            return "list", schema
+
+        return None, None
+
     t_schema = str(schema)
     if t_schema.startswith("{") or "schema_with_slug_keys" in t_schema:
         return ("dict", schema)

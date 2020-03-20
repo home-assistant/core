@@ -10,6 +10,7 @@ from unittest.mock import Mock
 import asynctest
 from asynctest import CoroutineMock, patch
 import pytest
+import voluptuous as vol
 from voluptuous import Invalid, MultipleInvalid
 import yaml
 
@@ -989,3 +990,20 @@ async def test_component_config_exceptions(hass, caplog):
             "Unknown error validating config for test_platform platform for test_domain component with PLATFORM_SCHEMA"
             in caplog.text
         )
+
+
+@pytest.mark.parametrize(
+    "domain, schema, expected",
+    [
+        ("zone", vol.Schema({vol.Optional("zone", default=[]): list}), "list"),
+        ("zone", vol.Schema({vol.Optional("zone", default=dict): dict}), "dict"),
+    ],
+)
+def test_identify_config_schema(domain, schema, expected):
+    """Test identify config schema."""
+    assert (
+        config_util._identify_config_schema(Mock(DOMAIN=domain, CONFIG_SCHEMA=schema))[
+            0
+        ]
+        == expected
+    )
