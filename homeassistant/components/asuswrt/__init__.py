@@ -74,7 +74,7 @@ async def async_setup(hass, config):
         conf[CONF_MODE],
         conf[CONF_REQUIRE_IP],
         interface=conf[CONF_INTERFACE],
-        dnsmasq=confconf[CONF_DNSMASQ],
+        dnsmasq=conf[CONF_DNSMASQ],
     )
 
     await api.connection.async_connect()
