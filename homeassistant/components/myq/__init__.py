@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.error("There was an error while logging in: %s", err)
         return False
     except MyQError:
-        return ConfigEntryNotReady
+        raise ConfigEntryNotReady
 
     hass.data[DOMAIN][entry.entry_id] = myq
 
