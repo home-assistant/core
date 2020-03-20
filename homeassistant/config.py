@@ -562,12 +562,12 @@ def _log_pkg_error(package: str, component: str, config: Dict, message: str) -> 
     _LOGGER.error(message)
 
 
-def _identify_config_schema(module: ModuleType) -> Tuple[Optional[str], Optional[Dict]]:
+def _identify_config_schema(module: ModuleType) -> Optional[str]:
     """Extract the schema and identify list or dict based."""
     try:
         key = next(k for k in module.CONFIG_SCHEMA.schema if k == module.DOMAIN)  # type: ignore
     except (AttributeError, StopIteration):
-        return None, None
+        return None
 
     schema = module.CONFIG_SCHEMA.schema[key]  # type: ignore
 
@@ -577,19 +577,19 @@ def _identify_config_schema(module: ModuleType) -> Tuple[Optional[str], Optional
         default_value = schema(key.default())
 
         if isinstance(default_value, dict):
-            return "dict", schema
+            return "dict"
 
         if isinstance(default_value, list):
-            return "list", schema
+            return "list"
 
-        return None, None
+        return None
 
     t_schema = str(schema)
     if t_schema.startswith("{") or "schema_with_slug_keys" in t_schema:
-        return ("dict", schema)
+        return "dict"
     if t_schema.startswith(("[", "All(<function ensure_list")):
-        return ("list", schema)
-    return "", schema
+        return "list"
+    return None
 
 
 def _recursive_merge(conf: Dict[str, Any], package: Dict[str, Any]) -> Union[bool, str]:
@@ -642,8 +642,7 @@ async def merge_packages_config(
             merge_list = hasattr(component, "PLATFORM_SCHEMA")
 
             if not merge_list and hasattr(component, "CONFIG_SCHEMA"):
-                merge_type, _ = _identify_config_schema(component)
-                merge_list = merge_type == "list"
+                merge_list = _identify_config_schema(component) == "list"
 
             if merge_list:
                 config[comp_name] = cv.remove_falsy(
