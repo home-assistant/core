@@ -441,6 +441,11 @@ class ThermostatData:
         except TypeError:
             _LOGGER.error("ThermostatData::setup() got error")
             return False
+        except pyatmo.exceptions.NoDevice:
+            _LOGGER.debug(
+                "No climate devices for %s (%s)", self.home_name, self.home_id
+            )
+            return False
         return True
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
