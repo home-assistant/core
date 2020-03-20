@@ -37,7 +37,6 @@ class NexiaAutomationScene(NexiaEntity, Scene):
     def __init__(self, coordinator, automation):
         """Initialize the automation scene."""
         super().__init__(coordinator)
-        self._coordinator = coordinator
         self._automation = automation
 
     @property
