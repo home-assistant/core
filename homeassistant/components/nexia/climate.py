@@ -181,6 +181,15 @@ class NexiaZone(NexiaEntity, ClimateDevice):
         self.schedule_update_ha_state()
 
     @property
+    def target_humidity(self):
+        """Humidity indoors setpoint."""
+        if self._has_dehumidify_support:
+            return round(self.thermostat.get_dehumidify_setpoint() * 100.0, 1)
+        if self._has_humidify_support:
+            return round(self.thermostat.get_humidify_setpoint() * 100.0, 1)
+        return None
+
+    @property
     def current_humidity(self):
         """Humidity indoors."""
         if self._has_relative_humidity:
