@@ -33,7 +33,8 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-LUTRON_CASETA_COMPONENTS = ["light", "switch", "cover", "scene", "fan"]
+LUTRON_CASETA_COMPONENTS = ["light", "switch", "cover", "scene", "fan",
+                            "binary_sensor"]
 
 
 async def async_setup(hass, base_config):
@@ -79,6 +80,20 @@ class LutronCasetaDevice(Entity):
         self._device = device
         self._smartbridge = bridge
 
+    @property
+    def device_info(self):
+        """Unique device identification"""
+        try:
+            return {
+                "identifiers": {(DOMAIN, self.serial)},
+                "name": self.name,
+                "model": self.model,
+                "manufacturer": "Lutron",
+            }
+        except Exception:
+            _LOGGER.exception("Failed generating device info for %s and device %s",
+                              self, self._device)
+
     async def async_added_to_hass(self):
         """Register callbacks."""
         self._smartbridge.add_subscriber(self.device_id, self.async_write_ha_state)
@@ -97,6 +112,11 @@ class LutronCasetaDevice(Entity):
     def serial(self):
         """Return the serial number of the device."""
         return self._device["serial"]
+
+    @property
+    def model(self):
+        """Return the model number of the device."""
+        return self._device['model']
 
     @property
     def unique_id(self):
