@@ -1,5 +1,7 @@
 """Tests for the nexia integration."""
+import uuid
 
+from asynctest import patch
 from nexia.home import NexiaHome
 import requests_mock
 
@@ -19,7 +21,9 @@ async def async_init_integration(
     session_fixture = "nexia/session_123456.json"
     sign_in_fixture = "nexia/sign_in.json"
 
-    with requests_mock.mock() as m:
+    with requests_mock.mock() as m, patch(
+        "nexia.home.load_or_create_uuid", return_value=uuid.uuid4()
+    ):
         m.post(NexiaHome.API_MOBILE_SESSION_URL, text=load_fixture(session_fixture))
         m.get(
             NexiaHome.API_MOBILE_HOUSES_URL.format(house_id=123456),
