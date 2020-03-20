@@ -179,7 +179,7 @@ async def _test_setup_with_apps(
                 + [
                     app["name"]
                     for app in device_config[CONF_APPS][CONF_ADDITIONAL_CONFIGS]
-                    if device_config[CONF_APPS][CONF_ADDITIONAL_CONFIGS] not in APP_LIST
+                    if app not in APP_LIST
                 ]
             )
         else:
