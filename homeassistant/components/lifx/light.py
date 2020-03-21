@@ -288,13 +288,8 @@ class LIFXManager:
 
     def register_set_state(self):
         """Register the LIFX set_state service call."""
-
-        async def service_handler(entity, service):
-            """Apply a service."""
-            await entity.set_state(**service.data)
-
         self.platform.async_register_entity_service(
-            SERVICE_LIFX_SET_STATE, LIFX_SET_STATE_SCHEMA, service_handler
+            SERVICE_LIFX_SET_STATE, LIFX_SET_STATE_SCHEMA, "set_state"
         )
 
     def register_effects(self):
