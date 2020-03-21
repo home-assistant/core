@@ -574,7 +574,9 @@ def _identify_config_schema(module: ModuleType) -> Optional[str]:
     if hasattr(key, "default") and not isinstance(
         key.default, vol.schema_builder.Undefined
     ):
-        default_value = schema(key.default())
+        default_value = module.CONFIG_SCHEMA({module.DOMAIN: key.default()})[  # type: ignore
+            module.DOMAIN  # type: ignore
+        ]
 
         if isinstance(default_value, dict):
             return "dict"
