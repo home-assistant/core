@@ -295,6 +295,10 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         """Play media."""
         kwargs = {}
 
+        # Spotify can't handle URI's with query strings or anchors
+        # Yet, they do generate those types of URI in their official clients.
+        media_id = media_id.split("?")[0].split("#")[0]
+
         if media_type == MEDIA_TYPE_MUSIC:
             kwargs["uris"] = [media_id]
         elif media_type == MEDIA_TYPE_PLAYLIST:
