@@ -57,6 +57,7 @@ limitPerRun: 30
 # Handle pull requests a little bit faster and with an adjusted comment.
 pulls:
   daysUntilStale: 30
+  exemptProjects: false
   markComment: >
     There hasn't been any activity on this pull request recently. This pull
     request has been automatically marked as stale because of that and will
