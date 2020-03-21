@@ -67,8 +67,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class Bmp280Sensor(Entity):
     """Base class for BMP280 entities."""
 
-    errored = False
-
     def __init__(
         self,
         bmp280: Adafruit_BMP280_I2C,
@@ -107,7 +105,7 @@ class Bmp280Sensor(Entity):
     @property
     def available(self) -> bool:
         """Return if the device is currently available."""
-        return not Bmp280Sensor.errored
+        return not self._errored
 
 
 class Bmp280TemperatureSensor(Bmp280Sensor):
@@ -124,15 +122,15 @@ class Bmp280TemperatureSensor(Bmp280Sensor):
         """Fetch new state data for the sensor."""
         try:
             self._state = round(self._bmp280.temperature, 1)
-            if Bmp280Sensor.errored:
+            if self._errored:
                 _LOGGER.warning("Communication restored with temperature sensor")
-                Bmp280Sensor.errored = False
+                self._errored = False
         except OSError:
             # this is thrown when a working sensor is unplugged between two updates
             _LOGGER.warning(
                 "Unable to read temperature data due to a communication problem"
             )
-            Bmp280Sensor.errored = True
+            self._errored = True
 
 
 class Bmp280PressureSensor(Bmp280Sensor):
@@ -149,12 +147,12 @@ class Bmp280PressureSensor(Bmp280Sensor):
         """Fetch new state data for the sensor."""
         try:
             self._state = round(self._bmp280.pressure)
-            if Bmp280Sensor.errored:
+            if self._errored:
                 _LOGGER.warning("Communication restored with pressure sensor")
-                Bmp280Sensor.errored = False
+                self._errored = False
         except OSError:
             # this is thrown when a working sensor is unplugged between two updates
             _LOGGER.warning(
                 "Unable to read pressure data due to a communication problem"
             )
-            Bmp280Sensor.errored = True
+            self._errored = True
