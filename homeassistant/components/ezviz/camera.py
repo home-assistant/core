@@ -202,6 +202,8 @@ class HassEzvizCamera(Camera):
         """Initialize an Ezviz camera."""
         super().__init__()
 
+        _LOGGER.debug("Camera attributes: %s", data)
+
         self._username = data.get("username")
         self._password = data.get("password")
         self._rtsp_stream = data.get("rtsp_stream")
@@ -209,18 +211,18 @@ class HassEzvizCamera(Camera):
 
         self._serial = data.get("serial")
         self._name = data.get("name")
-        self._status = data.get("status", 0)
+        self._status = data.get("status", 1)
         self._privacy = data.get("privacy")
         self._audio = data.get("audio")
-        self._ir_led = data.get("ir_led", 0)
-        self._state_led = data.get("state_led", 0)
-        self._follow_move = data.get("follow_move", 0)
-        self._alarm_notify = data.get("alarm_notify", 0)
-        self._alarm_sound_mod = data.get("alarm_sound_mod", 0)
-        self._encrypted = data.get("encrypted", 0)
+        self._ir_led = data.get("ir_led", False)
+        self._state_led = data.get("state_led", False)
+        self._follow_move = data.get("follow_move", False)
+        self._alarm_notify = data.get("alarm_notify", False)
+        self._alarm_sound_mod = data.get("alarm_sound_mod", "Software")
+        self._encrypted = data.get("encrypted", False)
         self._local_ip = data.get("local_ip")
-        self._detection_sensibility = data.get("detection_sensibility")
-        self._device_sub_category = data.get("device_sub_category")
+        self._detection_sensibility = data.get("detection_sensibility", "3")
+        self._device_sub_category = data.get("device_sub_category", "unknown")
         self._local_rtsp_port = data.get("local_rtsp_port", 554)
 
         self._ffmpeg = None
