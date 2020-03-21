@@ -688,7 +688,7 @@ somecomfort==0.5.2
 speak2mary==1.4.0
 
 # homeassistant.components.spotify
-spotipy==2.7.1
+spotipy==2.10.0
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
