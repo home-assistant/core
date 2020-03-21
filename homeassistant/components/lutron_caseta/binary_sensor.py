@@ -4,6 +4,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice,
 )
 from pylutron_caseta import OCCUPANCY_GROUP_OCCUPIED
+
 from . import LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice
 
 
