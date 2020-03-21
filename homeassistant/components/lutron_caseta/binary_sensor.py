@@ -1,12 +1,9 @@
 """Support for Lutron Caseta Occupancy/Vacancy Sensors."""
-import logging
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_OCCUPANCY,
-    DOMAIN,
     BinarySensorDevice,
 )
-from pylutron_caseta import OCCUPANCY_GROUP_OCCUPIED, OCCUPANCY_GROUP_UNOCCUPIED
+from pylutron_caseta import OCCUPANCY_GROUP_OCCUPIED
 from . import LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice
 
 
@@ -53,7 +50,7 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorDevice):
 
     @property
     def model(self):
-        """Return a model number"""
+        """Return a model number."""
         return "PD-OSENS-WH"
 
     @property
