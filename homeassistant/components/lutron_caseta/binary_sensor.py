@@ -47,7 +47,7 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorDevice):
         return self._device["occupancy_group_id"]
 
     @property
-    def serial(self):
+    def unique_id(self):
         """Return a unique identifier."""
         return f"caseta_occupancygroup_{self.device_id}"
 
