@@ -211,7 +211,7 @@ async def test_setup_websocket_2(hass, mock_now):
     assert len(config_entries) == 1
     assert entry is config_entries[0]
 
-    assert await async_setup_component(hass, SAMSUNGTV_DOMAIN, {}) is True
+    assert await async_setup_component(hass, SAMSUNGTV_DOMAIN, {})
     await hass.async_block_till_done()
 
     next_update = mock_now + timedelta(minutes=5)
