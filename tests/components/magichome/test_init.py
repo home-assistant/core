@@ -2,9 +2,9 @@
 import json
 import os
 
+from magichome import MagicHomeApi
 import pytest
 
-from magichome import MagicHomeApi
 from homeassistant.components import magichome
 from homeassistant.components.device_tracker.legacy import YAML_DEVICES
 from homeassistant.helpers.json import JSONEncoder
