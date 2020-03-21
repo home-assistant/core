@@ -178,7 +178,6 @@ class BraviaTVDevice(MediaPlayerDevice):
         self._content_mapping = {}
         self._duration = None
         self._content_uri = None
-        self._id = None
         self._playing = False
         self._start_date_time = None
         self._program_media_type = None
