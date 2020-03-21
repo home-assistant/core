@@ -15,13 +15,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import (
-    CLIMATE_ZONE_ENTITIES,
-    DOMAIN,
-    NEXIA_DEVICE,
-    PLATFORMS,
-    UPDATE_COORDINATOR,
-)
+from .const import DOMAIN, NEXIA_DEVICE, PLATFORMS, UPDATE_COORDINATOR
 from .services import register_climate_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -106,7 +100,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id] = {
         NEXIA_DEVICE: nexia_home,
         UPDATE_COORDINATOR: coordinator,
-        CLIMATE_ZONE_ENTITIES: [],
     }
 
     for component in PLATFORMS:

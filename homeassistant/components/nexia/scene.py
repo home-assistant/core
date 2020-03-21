@@ -1,15 +1,8 @@
 """Support for Nexia Automations."""
 
 from homeassistant.components.scene import Scene
-from homeassistant.const import ATTR_ATTRIBUTION
 
-from .const import (
-    ATTR_DESCRIPTION,
-    ATTRIBUTION,
-    DOMAIN,
-    NEXIA_DEVICE,
-    UPDATE_COORDINATOR,
-)
+from .const import ATTR_DESCRIPTION, DOMAIN, NEXIA_DEVICE, UPDATE_COORDINATOR
 from .entity import NexiaEntity
 
 
@@ -35,27 +28,17 @@ class NexiaAutomationScene(NexiaEntity, Scene):
 
     def __init__(self, coordinator, automation):
         """Initialize the automation scene."""
-        super().__init__(coordinator)
+        super().__init__(
+            coordinator, name=automation.name, unique_id=automation.automation_id,
+        )
         self._automation = automation
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the automation scene."""
-        # This is the automation unique_id
-        return self._automation.automation_id
-
-    @property
-    def name(self):
-        """Return the name of the automation scene."""
-        return self._automation.name
 
     @property
     def device_state_attributes(self):
         """Return the scene specific state attributes."""
-        return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_DESCRIPTION: self._automation.description,
-        }
+        data = super().device_state_attributes
+        data.update({ATTR_DESCRIPTION: self._automation.description})
+        return data
 
     @property
     def icon(self):
@@ -65,3 +48,4 @@ class NexiaAutomationScene(NexiaEntity, Scene):
     def activate(self):
         """Activate an automation scene."""
         self._automation.activate()
+        self._coordinator.async_request_refresh()
