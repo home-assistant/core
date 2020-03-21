@@ -163,17 +163,11 @@ class ElecPriceSensor(RestoreEntity):
             return
 
         if not prices:
-            _LOGGER.debug(
-                "Data source unavailable since %s",
-                self.hass.states.get(self.entity_id).last_changed,
-            )
+            _LOGGER.debug("Data source is not yet available")
             return
 
         self._num_retries = 0
         if not self._pvpc_data.source_available:
             self._pvpc_data.source_available = True
-            _LOGGER.warning(
-                "Component has recovered data access. Was unavailable since %s",
-                self.hass.states.get(self.entity_id).last_changed,
-            )
+            _LOGGER.warning("Component has recovered data access")
             self.async_schedule_update_ha_state(True)
