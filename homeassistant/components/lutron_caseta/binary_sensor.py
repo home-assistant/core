@@ -51,11 +51,6 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorDevice):
         return f"caseta_occupancygroup_{self.device_id}"
 
     @property
-    def model(self):
-        """Return a model number."""
-        return "PD-OSENS-WH"
-
-    @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {"Device ID": self.device_id}
+        return {"device_id": self.device_id}

@@ -99,11 +99,6 @@ class LutronCasetaDevice(Entity):
         return self._device["serial"]
 
     @property
-    def model(self):
-        """Return the model number of the device."""
-        return self._device["model"]
-
-    @property
     def unique_id(self):
         """Return the unique ID of the device (serial)."""
         return str(self.serial)
