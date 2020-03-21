@@ -1,6 +1,7 @@
 """Ask tankerkoenig.de for petrol price information."""
 from datetime import timedelta
 import logging
+from math import ceil
 from uuid import UUID
 
 import pytankerkoenig
@@ -180,27 +181,41 @@ class TankerkoenigData:
                 )
                 return False
             self.add_station(additional_station_data["station"])
+        if len(self.stations) > 10:
+            _LOGGER.warning(
+                "Found more than 10 stations to check. "
+                "This might invalidate your api-key on the long run. "
+                "Try using a smaller radius"
+            )
         return True
 
     async def fetch_data(self):
         """Get the latest data from tankerkoenig.de."""
         _LOGGER.debug("Fetching new data from tankerkoenig.de")
         station_ids = list(self.stations)
-        data = await self._hass.async_add_executor_job(
-            pytankerkoenig.getPriceList, self._api_key, station_ids
-        )
 
-        if data["ok"]:
+        prices = {}
+
+        # The API seems to only return at most 10 results, so split the list in chunks of 10
+        # and merge it together.
+        for index in range(ceil(len(station_ids) / 10)):
+            data = await self._hass.async_add_executor_job(
+                pytankerkoenig.getPriceList,
+                self._api_key,
+                station_ids[index * 10 : (index + 1) * 10],
+            )
+
             _LOGGER.debug("Received data: %s", data)
+            if not data["ok"]:
+                _LOGGER.error(
+                    "Error fetching data from tankerkoenig.de: %s", data["message"]
+                )
+                raise TankerkoenigError(data["message"])
             if "prices" not in data:
                 _LOGGER.error("Did not receive price information from tankerkoenig.de")
                 raise TankerkoenigError("No prices in data")
-        else:
-            _LOGGER.error(
-                "Error fetching data from tankerkoenig.de: %s", data["message"]
-            )
-            raise TankerkoenigError(data["message"])
-        return data["prices"]
+            prices.update(data["prices"])
+        return prices
 
     def add_station(self, station: dict):
         """Add fuel station to the entity list."""
