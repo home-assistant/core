@@ -290,10 +290,10 @@ class HassEzvizCamera(Camera):
             self.switch_follow_move_off,
         )
 
-    async def async_perform_ptz(self, direction, sleep):
+    async def async_perform_ptz(self, direction, speed):
         """Perform a PTZ action on the camera."""
         await self.hass.async_add_executor_job(
-            self._ezviz_camera.move, direction, sleep
+            self._ezviz_camera.move, direction, speed
         )
 
     @property
