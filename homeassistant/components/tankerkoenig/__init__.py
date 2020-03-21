@@ -27,16 +27,16 @@ DEFAULT_RADIUS = 2
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 
 
-def uuid4_string(value):
-    """Validate a v4 UUID in string format."""
+def uuid_string(value):
+    """Validate a UUID in string format."""
     try:
-        result = UUID(value, version=4)
+        result = UUID(value)
     except (ValueError, AttributeError, TypeError) as error:
-        raise vol.Invalid("Invalid Version4 UUID", error_message=str(error))
+        raise vol.Invalid("Invalid UUID", error_message=str(error))
 
     if str(result) != value.lower():
         # UUID() will create a uuid4 if input is invalid
-        raise vol.Invalid("Invalid Version4 UUID")
+        raise vol.Invalid("Invalid UUID")
 
     return str(result)
 
@@ -45,7 +45,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Required(CONF_API_KEY): uuid4_string,
+                vol.Required(CONF_API_KEY): uuid_string,
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.time_period,
@@ -66,7 +66,7 @@ CONFIG_SCHEMA = vol.Schema(
                     cv.positive_int, vol.Range(min=1)
                 ),
                 vol.Optional(CONF_STATIONS, default=[]): vol.All(
-                    cv.ensure_list, [uuid4_string]
+                    cv.ensure_list, [uuid_string]
                 ),
             }
         )
