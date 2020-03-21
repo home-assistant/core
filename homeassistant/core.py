@@ -471,7 +471,7 @@ class Event:
     def __init__(
         self,
         event_type: str,
-        data: Optional[Dict] = None,
+        data: Optional[Dict[str, Any]] = None,
         origin: EventOrigin = EventOrigin.local,
         time_fired: Optional[int] = None,
         context: Optional[Context] = None,
