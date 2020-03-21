@@ -9,7 +9,11 @@ from homeassistant import exceptions
 from homeassistant.const import CONF_FOR, CONF_PLATFORM, EVENT_STATE_CHANGED, MATCH_ALL
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.event import Event, async_track_same_state
+from homeassistant.helpers.event import (
+    Event,
+    async_track_same_state,
+    process_state_match,
+)
 
 # mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs
@@ -56,6 +60,8 @@ async def async_attach_trigger(
     match_all = from_state == MATCH_ALL and to_state == MATCH_ALL
     unsub_track_same = {}
     period: Dict[str, timedelta] = {}
+    match_from_state = process_state_match(from_state)
+    match_to_state = process_state_match(to_state)
 
     @callback
     def state_automation_listener(event: Event):
@@ -66,6 +72,18 @@ async def async_attach_trigger(
 
         from_s = event.data.get("old_state")
         to_s = event.data.get("new_state")
+
+        if (
+            (from_s is not None and not match_from_state(from_s.state))
+            or (to_s is not None and not match_to_state(to_s.state))
+            or (
+                not match_all
+                and from_s is not None
+                and to_s is not None
+                and from_s.state == to_s.state
+            )
+        ):
+            return
 
         @callback
         def call_action():
@@ -132,7 +150,7 @@ async def async_attach_trigger(
             return new_st.state == to_s.state
 
         unsub_track_same[entity] = async_track_same_state(
-            hass, period[entity], call_action, _check_same_state, entity_ids=entity_id,
+            hass, period[entity], call_action, _check_same_state, entity_ids=entity,
         )
 
     unsub = hass.bus.async_listen(EVENT_STATE_CHANGED, state_automation_listener)
