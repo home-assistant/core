@@ -557,6 +557,32 @@ async def test_temperature_setting_climate_onoff(hass):
     assert len(calls) == 1
 
 
+async def test_temperature_setting_climate_no_modes(hass):
+    """Test TemperatureSetting trait support for climate domain not supporting any modes."""
+    assert helpers.get_google_type(climate.DOMAIN, None) is not None
+    assert trait.TemperatureSettingTrait.supported(climate.DOMAIN, 0, None)
+
+    hass.config.units.temperature_unit = TEMP_CELSIUS
+
+    trt = trait.TemperatureSettingTrait(
+        hass,
+        State(
+            "climate.bla",
+            climate.HVAC_MODE_AUTO,
+            {
+                climate.ATTR_HVAC_MODES: [],
+                climate.ATTR_MIN_TEMP: None,
+                climate.ATTR_MAX_TEMP: None,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+    assert trt.sync_attributes() == {
+        "availableThermostatModes": "heat",
+        "thermostatTemperatureUnit": "C",
+    }
+
+
 async def test_temperature_setting_climate_range(hass):
     """Test TemperatureSetting trait support for climate domain - range."""
     assert helpers.get_google_type(climate.DOMAIN, None) is not None
