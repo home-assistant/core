@@ -17,6 +17,7 @@ FLOWS = [
     "ais_supla",
     "ais_tauron",
     "ais_wifi_service",
+    "fibaro",
     "airvisual",
     "almond",
     "ambiclimate",
