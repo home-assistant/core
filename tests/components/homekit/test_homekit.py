@@ -12,10 +12,10 @@ from homeassistant.components.homekit import (
     STATUS_STOPPED,
     STATUS_WAIT,
     HomeKit,
-    generate_aid,
 )
 from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
+    AID_STORAGE,
     BRIDGE_NAME,
     CONF_AUTO_START,
     CONF_SAFE_MODE,
@@ -49,17 +49,6 @@ def debounce_patcher():
     patcher = patch_debounce()
     yield patcher.start()
     patcher.stop()
-
-
-def test_generate_aid():
-    """Test generate aid method."""
-    aid = generate_aid("demo.entity")
-    assert isinstance(aid, int)
-    assert aid >= 2 and aid <= 18446744073709551615
-
-    with patch(f"{PATH_HOMEKIT}.adler32") as mock_adler32:
-        mock_adler32.side_effect = [0, 1]
-        assert generate_aid("demo.entity") is None
 
 
 async def test_setup_min(hass):
@@ -223,29 +212,30 @@ async def test_homekit_setup_safe_mode(hass, hk_driver):
     assert homekit.driver.safe_mode is True
 
 
-async def test_homekit_add_accessory():
+async def test_homekit_add_accessory(hass):
     """Add accessory if config exists and get_acc returns an accessory."""
     homekit = HomeKit("hass", None, None, None, lambda entity_id: True, {}, None, None)
     homekit.driver = "driver"
     homekit.bridge = mock_bridge = Mock()
 
-    with patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc:
+    assert await setup.async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
+    with patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc:
         mock_get_acc.side_effect = [None, "acc", None]
         homekit.add_bridge_accessory(State("light.demo", "on"))
-        mock_get_acc.assert_called_with("hass", "driver", ANY, 363398124, {})
+        mock_get_acc.assert_called_with(hass, "driver", ANY, 363398124, {})
         assert not mock_bridge.add_accessory.called
 
         homekit.add_bridge_accessory(State("demo.test", "on"))
-        mock_get_acc.assert_called_with("hass", "driver", ANY, 294192020, {})
+        mock_get_acc.assert_called_with(hass, "driver", ANY, 294192020, {})
         assert mock_bridge.add_accessory.called
 
         homekit.add_bridge_accessory(State("demo.test_2", "on"))
-        mock_get_acc.assert_called_with("hass", "driver", ANY, 429982757, {})
+        mock_get_acc.assert_called_with(hass, "driver", ANY, 429982757, {})
         mock_bridge.add_accessory.assert_called_with("acc")
 
 
-async def test_homekit_remove_accessory():
+async def test_homekit_remove_accessory(hass):
     """Remove accessory from bridge."""
     homekit = HomeKit("hass", None, None, None, lambda entity_id: True, {}, None, None)
     homekit.driver = "driver"
@@ -259,6 +249,8 @@ async def test_homekit_remove_accessory():
 
 async def test_homekit_entity_filter(hass):
     """Test the entity filter."""
+    assert await setup.async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
     entity_filter = generate_filter(["cover"], ["demo.test"], [], [])
     homekit = HomeKit(hass, None, None, None, entity_filter, {}, None, None)
 
@@ -375,7 +367,7 @@ async def test_homekit_reset_accessories(hass):
 
         assert await setup.async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
-        aid = generate_aid(entity_id)
+        aid = hass.data[AID_STORAGE].get_or_allocate_aid_for_entity_id(entity_id)
         homekit.bridge.accessories = {aid: "acc"}
         homekit.status = STATUS_RUNNING
 
