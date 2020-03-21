@@ -178,6 +178,7 @@ class BraviaTVDevice(MediaPlayerDevice):
         self._min_volume = None
         self._max_volume = None
         self._volume = None
+        self._unique_id = None
 
         self._braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
         self._unique_id = self._braviarc.get_system_info().get("cid").lower()
