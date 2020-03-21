@@ -995,8 +995,20 @@ async def test_component_config_exceptions(hass, caplog):
 @pytest.mark.parametrize(
     "domain, schema, expected",
     [
-        ("zone", vol.Schema({vol.Optional("zone", default=[]): list}), "list"),
-        ("zone", vol.Schema({vol.Optional("zone", default=dict): dict}), "dict"),
+        ("zone", vol.Schema({vol.Optional("zone", default=list): [int]}), "list"),
+        ("zone", vol.Schema({vol.Optional("zone", default=[]): [int]}), "list"),
+        (
+            "zone",
+            vol.Schema({vol.Optional("zone", default={}): {vol.Optional("hello"): 1}}),
+            "dict",
+        ),
+        (
+            "zone",
+            vol.Schema(
+                {vol.Optional("zone", default=dict): {vol.Optional("hello"): 1}}
+            ),
+            "dict",
+        ),
         ("zone", vol.Schema({vol.Optional("zone"): int}), None),
         ("zone", vol.Schema({"zone": int}), None),
         ("not_existing", vol.Schema({vol.Optional("zone", default=dict): dict}), None,),
