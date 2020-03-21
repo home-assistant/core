@@ -161,25 +161,34 @@ class ZHAGateway:
 
     async def async_load_devices(self) -> None:
         """Restore ZHA devices from zigpy application state."""
+        zigpy_devices = self.application_controller.devices.values()
+        for zigpy_device in zigpy_devices:
+            self._async_get_or_create_device(zigpy_device, restored=True)
+
+    async def async_prepare_entities(self) -> None:
+        """Prepare entities by initializing device channels."""
         semaphore = asyncio.Semaphore(2)
 
-        async def _throttle(device: zha_typing.ZigpyDeviceType):
+        async def _throttle(zha_device: zha_typing.ZhaDeviceType, cached: bool):
             async with semaphore:
-                await self.async_device_restored(device)
+                await zha_device.async_initialize(from_cache=cached)
 
-        zigpy_devices = self.application_controller.devices.values()
         _LOGGER.debug("Loading battery powered devices")
         await asyncio.gather(
             *[
-                _throttle(dev)
-                for dev in zigpy_devices
-                if not dev.node_desc.is_mains_powered
+                _throttle(dev, cached=True)
+                for dev in self.devices.values()
+                if not dev.is_mains_powered
             ]
         )
 
         _LOGGER.debug("Loading mains powered devices")
         await asyncio.gather(
-            *[_throttle(dev) for dev in zigpy_devices if dev.node_desc.is_mains_powered]
+            *[
+                _throttle(dev, cached=False)
+                for dev in self.devices.values()
+                if dev.is_mains_powered
+            ]
         )
 
     def device_joined(self, device):

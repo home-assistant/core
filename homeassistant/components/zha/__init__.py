@@ -152,6 +152,7 @@ async def async_load_entities(
     hass: HomeAssistantType, config_entry: config_entries.ConfigEntry
 ) -> None:
     """Load entities after integration was setup."""
+    await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].async_prepare_entities()
     to_setup = [
         hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED][comp]
         for comp in COMPONENTS
