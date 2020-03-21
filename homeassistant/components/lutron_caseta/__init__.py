@@ -79,24 +79,11 @@ class LutronCasetaDevice(Entity):
         self._device = device
         self._smartbridge = bridge
 
-    @property
-    def device_info(self):
-        """Unique device identification"""
-        try:
-            return {
-                "identifiers": {(DOMAIN, self.serial)},
-                "name": self.name,
-                "model": self.model,
-                "manufacturer": "Lutron",
-            }
-        except Exception:
-            _LOGGER.exception(
-                "Failed generating device info for %s and device %s", self, self._device
-            )
-
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self._smartbridge.add_subscriber(self.device_id, self.async_write_ha_state)
+        self._smartbridge.add_subscriber(
+            self.device_id, self.async_write_ha_state
+        )
 
     @property
     def device_id(self):

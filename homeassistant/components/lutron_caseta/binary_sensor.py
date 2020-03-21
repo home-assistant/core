@@ -9,19 +9,17 @@ from homeassistant.components.binary_sensor import (
 from pylutron_caseta import OCCUPANCY_GROUP_OCCUPIED, OCCUPANCY_GROUP_UNOCCUPIED
 from . import LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Lutron Caseta lights."""
-    devs = []
+    entities = []
     bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
     occupancy_groups = bridge.occupancy_groups
     for occupancy_group in occupancy_groups.values():
-        dev = LutronOccupancySensor(occupancy_group, bridge)
-        devs.append(dev)
+        entity = LutronOccupancySensor(occupancy_group, bridge)
+        entities.append(entity)
 
-    async_add_entities(devs, True)
+    async_add_entities(entities, True)
 
 
 class LutronOccupancySensor(LutronCasetaDevice, BinarySensorDevice):
@@ -40,7 +38,7 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorDevice):
     async def async_added_to_hass(self):
         """Register callbacks."""
         self._smartbridge.add_occupancy_subscriber(
-            self.device_id, self.async_schedule_update_ha_state
+            self.device_id, self.async_write_ha_state
         )
 
     @property
