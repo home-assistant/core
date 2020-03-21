@@ -3,6 +3,7 @@ import asyncio
 import datetime as dt
 import logging
 import os
+import async_timeout
 from typing import Optional
 
 from aiohttp.client_exceptions import ClientConnectionError, ServerDisconnectedError
@@ -166,6 +167,7 @@ class ONVIFHassCamera(Camera):
         self._profile_index = config.get(CONF_PROFILE)
         self._ptz_service = None
         self._input = None
+        self._snapshot = None
         self.stream_options[CONF_RTSP_TRANSPORT] = config.get(CONF_RTSP_TRANSPORT)
         self._mac = None
 
@@ -198,6 +200,7 @@ class ONVIFHassCamera(Camera):
             await self.async_obtain_mac_address()
             await self.async_check_date_and_time()
             await self.async_obtain_input_uri()
+            await self.async_obtain_snapshot_uri()
             self.setup_ptz()
         except ClientConnectionError as err:
             _LOGGER.warning(
@@ -372,6 +375,57 @@ class ONVIFHassCamera(Camera):
         except exceptions.ONVIFError as err:
             _LOGGER.error("Couldn't setup camera '%s'. Error: %s", self._name, err)
 
+    async def async_obtain_snapshot_uri(self):
+        """Set the snapshot uri for the camera."""
+        _LOGGER.debug(
+            "Connecting with ONVIF Camera: %s on port %s", self._host, self._port
+        )
+
+        try:
+            _LOGGER.debug("Retrieving profiles")
+
+            media_service = self._camera.create_media_service()
+
+            profiles = await media_service.GetProfiles()
+
+            _LOGGER.debug("Retrieved '%d' profiles", len(profiles))
+
+            if self._profile_index >= len(profiles):
+                _LOGGER.warning(
+                    "ONVIF Camera '%s' doesn't provide profile %d."
+                    " Using the last profile.",
+                    self._name,
+                    self._profile_index,
+                )
+                self._profile_index = -1
+
+            _LOGGER.debug("Using profile index '%d'", self._profile_index)
+
+            _LOGGER.debug("Retrieving snapshot uri")
+
+            # Fix Onvif setup error on Goke GK7102 based IP camera
+            # where we need to recreate media_service  #26781
+            media_service = self._camera.create_media_service()
+
+            req = media_service.create_type("GetSnapshotUri")
+            req.ProfileToken = profiles[self._profile_index].token
+
+            snapshot_uri = await media_service.GetSnapshotUri(req)
+            uri_no_auth = snapshot_uri.Uri
+            uri_for_log = uri_no_auth.replace("http://", "http://<user>:<password>@", 1)
+            # Same authentication as rtsp
+            self._snapshot = uri_no_auth.replace(
+                "http://", f"http://{self._username}:{self._password}@", 1
+            )
+
+            _LOGGER.debug(
+                "ONVIF Camera Using the following URL for %s snapshot: %s",
+                self._name,
+                uri_for_log,
+            )
+        except exceptions.ONVIFError as err:
+            _LOGGER.error("Couldn't setup camera '%s'. Error: %s", self._name, err)
+
     def setup_ptz(self):
         """Set up PTZ if available."""
         _LOGGER.debug("Setting up the ONVIF PTZ service")
@@ -457,13 +511,28 @@ class ONVIFHassCamera(Camera):
 
         _LOGGER.debug("Retrieving image from camera '%s'", self._name)
 
-        ffmpeg = ImageFrame(self.hass.data[DATA_FFMPEG].binary, loop=self.hass.loop)
+        if self._snapshot != None:
+            try:
+                websession = async_get_clientsession(self.hass)
+                with async_timeout.timeout(10):
+                    response = await websession.get(self._snapshot)
+                image = await response.read()
+            except asyncio.TimeoutError:
+                _LOGGER.error("Timeout getting image from: %s", self._name)
+                image = None
+            except aiohttp.ClientError as err:
+                _LOGGER.error("Error getting new camera image: %s", err)
+                image = None
 
-        image = await asyncio.shield(
-            ffmpeg.get_image(
-                self._input, output_format=IMAGE_JPEG, extra_cmd=self._ffmpeg_arguments
+        if self._snapshot == None or image == None:
+            ffmpeg = ImageFrame(self.hass.data[DATA_FFMPEG].binary, loop=self.hass.loop)
+
+            image = await asyncio.shield(
+                ffmpeg.get_image(
+                    self._input, output_format=IMAGE_JPEG, extra_cmd=self._ffmpeg_arguments
+                )
             )
-        )
+
         return image
 
     async def handle_async_mjpeg_stream(self, request):
