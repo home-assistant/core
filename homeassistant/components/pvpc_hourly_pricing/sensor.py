@@ -46,7 +46,7 @@ async def async_setup_entry(
         timeout=_DEFAULT_TIMEOUT,
     )
     async_add_entities(
-        [ElecPriceSensor(name, config_entry.unique_id, pvpc_data_handler)], True
+        [ElecPriceSensor(name, config_entry.unique_id, pvpc_data_handler)], False
     )
 
 
@@ -64,7 +64,6 @@ class ElecPriceSensor(RestoreEntity):
         self._pvpc_data = pvpc_data_handler
         self._num_retries = 0
 
-        self._init_done = False
         self._hourly_tracker = None
         self._price_tracker = None
 
@@ -99,8 +98,7 @@ class ElecPriceSensor(RestoreEntity):
             mins_update,
         )
         await self.async_update_prices(dt_util.utcnow())
-        self._init_done = True
-        await self.async_update_ha_state(True)
+        await self.async_update()
 
     @property
     def unique_id(self) -> Optional[str]:
@@ -129,10 +127,6 @@ class ElecPriceSensor(RestoreEntity):
 
     async def async_update(self, *args):
         """Update the sensor state."""
-        if not self._init_done:
-            # abort until added_to_hass is finished
-            return
-
         now = dt_util.utcnow() if not args else args[0]
         self._pvpc_data.process_state_and_attributes(now)
         self.async_write_ha_state()
@@ -169,5 +163,5 @@ class ElecPriceSensor(RestoreEntity):
         self._num_retries = 0
         if not self._pvpc_data.source_available:
             self._pvpc_data.source_available = True
-            _LOGGER.warning("Component has recovered data access")
-            self.async_schedule_update_ha_state(True)
+            _LOGGER.warning("%s: component has recovered data access", self.entity_id)
+            await self.async_update(now)
