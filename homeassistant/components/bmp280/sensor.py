@@ -1,7 +1,9 @@
 """Platform for Bosch BMP280 Environmental Sensor integration."""
+from datetime import timedelta
 import logging
 
 from adafruit_bmp280 import Adafruit_BMP280_I2C
+import board
 from busio import I2C
 import voluptuous as vol
 
@@ -14,11 +16,14 @@ from homeassistant.const import CONF_NAME, PRESSURE_HPA, TEMP_CELSIUS
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "BMP280"
-DEFAULT_I2C_ADDRESS = 0x77
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=3)
 
 MIN_I2C_ADDRESS = 0x76
 MAX_I2C_ADDRESS = 0x77
@@ -28,7 +33,7 @@ CONF_I2C_ADDRESS = "i2c_address"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS): vol.All(
+        vol.Required(CONF_I2C_ADDRESS): vol.All(
             vol.Coerce(int), vol.Range(min=MIN_I2C_ADDRESS, max=MAX_I2C_ADDRESS)
         ),
     }
@@ -38,33 +43,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
     try:
-        # this throws an exception if board is not supported
-        import board
-
         # initializing I2C bus using the auto-detected pins
         i2c = I2C(board.SCL, board.SDA)
         # initializing the sensor
-        bmp280 = Adafruit_BMP280_I2C(i2c, address=config.get(CONF_I2C_ADDRESS))
-        # use custom name if there's any
-        name = config.get(CONF_NAME)
-        # BMP280 has both temperature and pressure sensing capability
-        add_entities(
-            [Bmp280TemperatureSensor(bmp280, name), Bmp280PressureSensor(bmp280, name)]
-        )
-    except NotImplementedError as error:
-        # this is thrown right after the import statement if the board is unsupported
-        if error.args[0] == "Board not supported":
+        bmp280 = Adafruit_BMP280_I2C(i2c, address=config[CONF_I2C_ADDRESS])
+    except ValueError as error:
+        # this usually happens when the board is I2C capable, but the device can't be found at the configured address
+        if str(error.args[0]).startswith("No I2C device at address"):
             _LOGGER.error(
-                "Failed to determine board type. Is this instance running on a Raspberry Pi or a similar I2C capable device?"
+                "%s. Hint: Check wiring and make sure that the SDO pin is tied to either ground (0x76) or VCC (0x77)!",
+                error.args[0],
             )
             raise PlatformNotReady()
         raise error
-    except ValueError as error:
-        # this happens when the board is I2C capable, but the device is not found at the configured address
-        if str(error.args[0]).startswith("No I2C device at address"):
-            _LOGGER.error(error.args[0])
-            raise PlatformNotReady()
-        raise error
+    # use custom name if there's any
+    name = config.get(CONF_NAME)
+    # BMP280 has both temperature and pressure sensing capability
+    add_entities(
+        [Bmp280TemperatureSensor(bmp280, name), Bmp280PressureSensor(bmp280, name)]
+    )
 
 
 class Bmp280Sensor(Entity):
@@ -122,6 +119,7 @@ class Bmp280TemperatureSensor(Bmp280Sensor):
             bmp280, f"{name} Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE
         )
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Fetch new state data for the sensor."""
         try:
@@ -146,6 +144,7 @@ class Bmp280PressureSensor(Bmp280Sensor):
             bmp280, f"{name} Pressure", PRESSURE_HPA, DEVICE_CLASS_PRESSURE
         )
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Fetch new state data for the sensor."""
         try:
