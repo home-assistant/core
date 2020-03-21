@@ -56,19 +56,18 @@ def setup(hass, config):
 
     def load_devices(device_list):
         """Load new devices by device_list."""
-        device_type_list = {}
+        device_type_dict = {}
         for device in device_list:
             dev_type = device.device_type()
             if (
                 dev_type in MAGICHOME_TYPE_TO_HA
                 and device.object_id() not in hass.data[DOMAIN]["entities"]
             ):
-                # ha_type = MAGICHOME_TYPE_TO_HA[dev_type]
-                if dev_type not in device_type_list:
-                    device_type_list[dev_type] = []
-                device_type_list[dev_type].append(device.object_id())
+                if dev_type not in device_type_dict:
+                    device_type_dict.setdefault(dev_type, [])
+                device_type_dict[dev_type].append(device.object_id())
                 hass.data[DOMAIN]["entities"][device.object_id()] = None
-        for dev_type, dev_ids in device_type_list.items():
+        for dev_type, dev_ids in device_type_dict.items():
             discovery.load_platform(
                 hass, dev_type, DOMAIN, {"dev_ids": dev_ids}, config
             )

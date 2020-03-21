@@ -4,10 +4,14 @@ import os
 
 import pytest
 
+from unittest.mock import patch
+from magichome import MagicHomeApi
 from homeassistant.components import magichome
 from homeassistant.components.device_tracker.legacy import YAML_DEVICES
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry, async_fire_time_changed, mock_coro
 
 
 @pytest.fixture(autouse=True)
@@ -42,8 +46,6 @@ async def test_setting_up_magichome(hass):
     )
     await hass.async_start()
 
-    # This is done to make sure entity components don't accidentally store
-    # non-JSON-serializable data in the state machine.
     try:
         json.dumps(hass.states.async_all(), cls=JSONEncoder)
     except Exception:
@@ -51,3 +53,15 @@ async def test_setting_up_magichome(hass):
             "Unable to convert all magichome entities to JSON. "
             "Wrong data in state machine!"
         )
+
+
+async def test_magichome_api(hass):
+    magichome = MagicHomeApi()
+    assert magichome.init("test@user.com", "123456", "ZG001", "ZG001")
+    devices = magichome.discover_devices()
+    assert devices != []
+
+
+async def mock_magichome_api_fail(hass):
+    mock_of_magic_home_api = MagicHomeApi()
+    assert mock_of_magic_home_api.init("test@user.com", "password", "ZG001", "ZG001")
