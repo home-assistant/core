@@ -163,7 +163,6 @@ class ZHAGateway:
             self.application_controller.ieee
         )
         await self.async_load_devices()
-        self._initialize_groups()
 
     async def async_load_devices(self) -> None:
         """Restore ZHA devices from zigpy application state."""
