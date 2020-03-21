@@ -1,0 +1,19 @@
+set_aircleaner_mode:
+  description: "The HVAC air cleaner mode."
+  fields:
+    entity_id:
+      description: (Optional) Leaving it blank will set all nexia thermostats to the selected air cleaner mode."
+      example: climate.master_bedroom
+    aircleaner_mode:
+      description: "The air cleaner mode to set. Options include \"auto\", \"quick\", or \"allergy\"."
+      example: allergy
+
+set_humidify_setpoint:
+  description: "The humidification set point."
+  fields:
+    entity_id:
+      description: "(Optional) Leaving it blank will set all nexia thermostats to the humidification set point."
+      example: climate.master_bedroom
+    humidity:
+      description: "The humidification setpoint as an int, range 35-65."
+      example: 45

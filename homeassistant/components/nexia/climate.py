@@ -49,7 +49,7 @@ from .const import (
     ATTR_HUMIDIFY_SUPPORTED,
     ATTR_ZONE_STATUS,
     ATTRIBUTION,
-    DATA_NEXIA,
+    CLIMATE_ZONE_ENTITIES,
     DOMAIN,
     MANUFACTURER,
     NEXIA_DEVICE,
@@ -83,9 +83,10 @@ NEXIA_TO_HA_HVAC_MODE_MAP = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up climate for a Nexia device."""
 
-    nexia_data = hass.data[DOMAIN][config_entry.entry_id][DATA_NEXIA]
+    nexia_data = hass.data[DOMAIN][config_entry.entry_id]
     nexia_home = nexia_data[NEXIA_DEVICE]
     coordinator = nexia_data[UPDATE_COORDINATOR]
+    climate_zone_entities = nexia_data[CLIMATE_ZONE_ENTITIES]
 
     entities = []
     for thermostat_id in nexia_home.get_thermostat_ids():
@@ -94,6 +95,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             zone = thermostat.get_zone_by_id(zone_id)
             entities.append(NexiaZone(coordinator, zone))
 
+    climate_zone_entities.extend(entities)
     async_add_entities(entities, True)
 
 
