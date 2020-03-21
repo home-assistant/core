@@ -193,6 +193,9 @@ class ModbusHub:
 
     def setup(self):
         """Set up pymodbus client."""
+        # pylint: disable = E0633
+        # Client* do deliver loop, client as result but
+        # pylint does not accept that fact
 
         _LOGGER.debug("doing setup")
         if self._config_type == "serial":
