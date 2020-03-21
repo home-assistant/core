@@ -10,7 +10,6 @@ import async_timeout
 
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import Config, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import Throttle
 
@@ -42,14 +41,17 @@ async def async_setup_entry(hass, config_entry):
     latitude = config_entry.data[CONF_LATITUDE]
     longitude = config_entry.data[CONF_LONGITUDE]
 
+    # For backwards compat, set unique ID
+    if config_entry.unique_id is None:
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=f"{latitude}-{longitude}"
+        )
+
     websession = async_get_clientsession(hass)
 
     airly = AirlyData(websession, api_key, latitude, longitude)
 
     await airly.async_update()
-
-    if not airly.data:
-        raise ConfigEntryNotReady()
 
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = airly
 

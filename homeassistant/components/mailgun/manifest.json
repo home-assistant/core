@@ -3,11 +3,7 @@
   "name": "Mailgun",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/mailgun",
-  "requirements": [
-    "pymailgunner==1.4"
-  ],
-  "dependencies": [
-    "webhook"
-  ],
+  "requirements": ["pymailgunner==1.4"],
+  "dependencies": ["webhook"],
   "codeowners": []
 }

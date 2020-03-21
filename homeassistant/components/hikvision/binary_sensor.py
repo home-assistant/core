@@ -1,24 +1,26 @@
 """Support for Hikvision event stream events represented as binary sensors."""
-import logging
 from datetime import timedelta
+import logging
+
+from pyhik.hikvision import HikCamera
 import voluptuous as vol
 
-from homeassistant.helpers.event import track_point_in_utc_time
-from homeassistant.util.dt import utcnow
-from homeassistant.components.binary_sensor import BinarySensorDevice, PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
 from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    CONF_NAME,
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    CONF_SSL,
-    EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_START,
     ATTR_LAST_TRIP_TIME,
     CONF_CUSTOMIZE,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
 )
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import track_point_in_utc_time
+from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,7 +109,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for channel in channel_list:
             # Build sensor name, then parse customize config.
             if data.type == "NVR":
-                sensor_name = "{}_{}".format(sensor.replace(" ", "_"), channel[1])
+                sensor_name = f"{sensor.replace(' ', '_')}_{channel[1]}"
             else:
                 sensor_name = sensor.replace(" ", "_")
 
@@ -135,7 +137,6 @@ class HikvisionData:
 
     def __init__(self, hass, url, port, name, username, password):
         """Initialize the data object."""
-        from pyhik.hikvision import HikCamera
 
         self._url = url
         self._port = port

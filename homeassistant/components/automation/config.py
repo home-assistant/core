@@ -7,8 +7,8 @@ import voluptuous as vol
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.const import CONF_PLATFORM
 from homeassistant.config import async_log_exception, config_without_domain
+from homeassistant.const import CONF_PLATFORM
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition, config_per_platform, script
 from homeassistant.loader import IntegrationNotFound
@@ -26,7 +26,7 @@ async def async_validate_config_item(hass, config, full_config=None):
     triggers = []
     for trigger in config[CONF_TRIGGER]:
         trigger_platform = importlib.import_module(
-            "..{}".format(trigger[CONF_PLATFORM]), __name__
+            f"..{trigger[CONF_PLATFORM]}", __name__
         )
         if hasattr(trigger_platform, "async_validate_trigger_config"):
             trigger = await trigger_platform.async_validate_trigger_config(

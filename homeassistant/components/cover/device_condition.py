@@ -1,5 +1,6 @@
 """Provides device automations for Cover."""
 from typing import Any, Dict, List
+
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -8,24 +9,25 @@ from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
     CONF_CONDITION,
-    CONF_DOMAIN,
-    CONF_TYPE,
     CONF_DEVICE_ID,
+    CONF_DOMAIN,
     CONF_ENTITY_ID,
-    STATE_OPEN,
+    CONF_TYPE,
     STATE_CLOSED,
-    STATE_OPENING,
     STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     condition,
     config_validation as cv,
     entity_registry,
     template,
 )
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+
 from . import (
     DOMAIN,
     SUPPORT_CLOSE,
@@ -161,6 +163,7 @@ async def async_get_condition_capabilities(hass: HomeAssistant, config: dict) ->
     }
 
 
+@callback
 def async_condition_from_config(
     config: ConfigType, config_validation: bool
 ) -> condition.ConditionCheckerType:
@@ -194,6 +197,7 @@ def async_condition_from_config(
         f"{{{{ state.attributes.{position} }}}}"
     )
 
+    @callback
     def template_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Validate template based if-condition."""
         value_template.hass = hass

@@ -1,10 +1,12 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Host ist bereits konfiguriert.",
             "one_instance_allowed": "Nur eine einzige Instanz ist notwendig."
         },
         "error": {
             "cannot_connect": "Verbindung zum Host nicht m\u00f6glich",
+            "name_exists": "Name existiert bereits",
             "wrong_credentials": "Falscher Benutzername oder Kennwort"
         },
         "step": {
@@ -33,7 +35,8 @@
                 "data": {
                     "scan_interval": "Aktualisierungsfrequenz"
                 },
-                "description": "Konfigurieren von Optionen f\u00fcr Transmission"
+                "description": "Konfigurieren von Optionen f\u00fcr Transmission",
+                "title": "Konfiguriere die Optionen f\u00fcr die \u00dcbertragung"
             }
         }
     }

@@ -1,37 +1,30 @@
 """Support for Abode Security System cameras."""
 from datetime import timedelta
-import logging
 
 import abodepy.helpers.constants as CONST
 import abodepy.helpers.timeline as TIMELINE
 import requests
 
 from homeassistant.components.camera import Camera
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import Throttle
 
 from . import AbodeDevice
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=90)
 
-_LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform uses config entry setup."""
-    pass
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up a camera for an Abode device."""
-
+    """Set up Abode camera devices."""
     data = hass.data[DOMAIN]
 
-    devices = []
-    for device in data.abode.get_devices(generic_type=CONST.TYPE_CAMERA):
-        devices.append(AbodeCamera(data, device, TIMELINE.CAPTURE_IMAGE))
+    entities = []
 
-    async_add_entities(devices)
+    for device in data.abode.get_devices(generic_type=CONST.TYPE_CAMERA):
+        entities.append(AbodeCamera(data, device, TIMELINE.CAPTURE_IMAGE))
+
+    async_add_entities(entities)
 
 
 class AbodeCamera(AbodeDevice, Camera):
@@ -54,6 +47,9 @@ class AbodeCamera(AbodeDevice, Camera):
             self._capture_callback,
         )
 
+        signal = f"abode_camera_capture_{self.entity_id}"
+        async_dispatcher_connect(self.hass, signal, self.capture)
+
     def capture(self):
         """Request a new image capture."""
         return self._device.capture()
@@ -72,7 +68,7 @@ class AbodeCamera(AbodeDevice, Camera):
 
                 self._response.raise_for_status()
             except requests.HTTPError as err:
-                _LOGGER.warning("Failed to get camera image: %s", err)
+                LOGGER.warning("Failed to get camera image: %s", err)
                 self._response = None
         else:
             self._response = None

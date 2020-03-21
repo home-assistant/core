@@ -1,5 +1,6 @@
 """The tests the cover command line platform."""
 import logging
+
 import pytest
 
 from homeassistant import setup
@@ -8,18 +9,18 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
-    SERVICE_TOGGLE,
-    SERVICE_TOGGLE_COVER_TILT,
     SERVICE_OPEN_COVER,
     SERVICE_OPEN_COVER_TILT,
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
+    SERVICE_TOGGLE,
+    SERVICE_TOGGLE_COVER_TILT,
     STATE_CLOSED,
-    STATE_UNAVAILABLE,
-    STATE_OPEN,
-    STATE_ON,
     STATE_OFF,
+    STATE_ON,
+    STATE_OPEN,
+    STATE_UNAVAILABLE,
 )
 
 from tests.common import assert_setup_component, async_mock_service
@@ -31,7 +32,7 @@ ENTITY_COVER = "cover.test_template_cover"
 
 @pytest.fixture
 def calls(hass):
-    """Track calls to a mock serivce."""
+    """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
@@ -269,26 +270,22 @@ async def test_template_mutex(hass, calls):
     assert hass.states.async_all() == []
 
 
-async def test_template_open_or_position(hass, calls):
+async def test_template_open_or_position(hass, caplog):
     """Test that at least one of open_cover or set_position is used."""
-    with assert_setup_component(1, "cover"):
-        assert await setup.async_setup_component(
-            hass,
-            "cover",
-            {
-                "cover": {
-                    "platform": "template",
-                    "covers": {
-                        "test_template_cover": {"value_template": "{{ 1 == 1 }}"}
-                    },
-                }
-            },
-        )
-
-    await hass.async_start()
+    assert await setup.async_setup_component(
+        hass,
+        "cover",
+        {
+            "cover": {
+                "platform": "template",
+                "covers": {"test_template_cover": {"value_template": "{{ 1 == 1 }}"}},
+            }
+        },
+    )
     await hass.async_block_till_done()
 
     assert hass.states.async_all() == []
+    assert "Invalid config for [cover.template]" in caplog.text
 
 
 async def test_template_open_and_close(hass, calls):
@@ -884,7 +881,7 @@ async def test_availability_template(hass, calls):
 
 
 async def test_availability_without_availability_template(hass, calls):
-    """Test that component is availble if there is no."""
+    """Test that component is available if there is no."""
     assert await setup.async_setup_component(
         hass,
         "cover",

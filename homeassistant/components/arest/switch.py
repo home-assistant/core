@@ -5,7 +5,7 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import CONF_NAME, CONF_RESOURCE
 import homeassistant.helpers.config_validation as cv
 
@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         response = requests.get(resource, timeout=10)
     except requests.exceptions.MissingSchema:
         _LOGGER.error(
-            "Missing resource or schema in configuration. " "Add http:// to your URL"
+            "Missing resource or schema in configuration. Add http:// to your URL"
         )
         return False
     except requests.exceptions.ConnectionError:
@@ -86,7 +86,7 @@ class ArestSwitchBase(SwitchDevice):
     def __init__(self, resource, location, name):
         """Initialize the switch."""
         self._resource = resource
-        self._name = "{} {}".format(location.title(), name.title())
+        self._name = f"{location.title()} {name.title()}"
         self._state = None
         self._available = True
 

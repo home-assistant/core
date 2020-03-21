@@ -1,11 +1,11 @@
 """The tests for the folder sensor."""
-import unittest
 import os
+import unittest
 
 from homeassistant.components.folder.sensor import CONF_FOLDER_PATHS
 from homeassistant.setup import setup_component
-from tests.common import get_test_home_assistant
 
+from tests.common import get_test_home_assistant
 
 CWD = os.path.join(os.path.dirname(__file__))
 TEST_FOLDER = "test_folder"

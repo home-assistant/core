@@ -1,14 +1,14 @@
 """Integrate with DuckDNS."""
-import logging
 from asyncio import iscoroutinefunction
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
-from homeassistant.core import callback, CALLBACK_TYPE
+from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util

@@ -1,12 +1,12 @@
 """Tests for the CoinMarketCap sensor platform."""
 import json
-
 import unittest
 from unittest.mock import patch
 
 import homeassistant.components.sensor as sensor
 from homeassistant.setup import setup_component
-from tests.common import get_test_home_assistant, load_fixture, assert_setup_component
+
+from tests.common import assert_setup_component, get_test_home_assistant, load_fixture
 
 VALID_CONFIG = {
     "platform": "coinmarketcap",

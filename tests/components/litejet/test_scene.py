@@ -20,7 +20,7 @@ ENTITY_OTHER_SCENE_NUMBER = 2
 class TestLiteJetScene(unittest.TestCase):
     """Test the litejet component."""
 
-    @mock.patch("pylitejet.LiteJet")
+    @mock.patch("homeassistant.components.litejet.LiteJet")
     def setup_method(self, method, mock_pylitejet):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
@@ -37,7 +37,9 @@ class TestLiteJetScene(unittest.TestCase):
         self.mock_lj.get_scene_name.side_effect = get_scene_name
 
         assert setup.setup_component(
-            self.hass, litejet.DOMAIN, {"litejet": {"port": "/tmp/this_will_be_mocked"}}
+            self.hass,
+            litejet.DOMAIN,
+            {"litejet": {"port": "/dev/serial/by-id/mock-litejet"}},
         )
         self.hass.block_till_done()
 

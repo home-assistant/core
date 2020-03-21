@@ -20,7 +20,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .config_flow import SmartThingsFlowHandler  # noqa
+from .config_flow import SmartThingsFlowHandler  # noqa: F401
 from .const import (
     CONF_APP_ID,
     CONF_INSTALLED_APP_ID,
@@ -109,8 +109,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             entry.data[CONF_OAUTH_CLIENT_SECRET],
             entry.data[CONF_REFRESH_TOKEN],
         )
-        entry.data[CONF_REFRESH_TOKEN] = token.refresh_token
-        hass.config_entries.async_update_entry(entry)
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_REFRESH_TOKEN: token.refresh_token}
+        )
 
         # Get devices and their current status
         devices = await api.devices(location_ids=[installed_app.location_id])
@@ -146,7 +147,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     except ClientResponseError as ex:
         if ex.status in (401, 403):
             _LOGGER.exception(
-                "Unable to setup config entry '%s' - please reconfigure the integration",
+                "Unable to setup configuration entry '%s' - please reconfigure the integration",
                 entry.title,
             )
             remove_entry = True
@@ -183,7 +184,7 @@ async def async_get_entry_scenes(entry: ConfigEntry, api):
     except ClientResponseError as ex:
         if ex.status == 403:
             _LOGGER.exception(
-                "Unable to load scenes for config entry '%s' because the access token does not have the required access",
+                "Unable to load scenes for configuration entry '%s' because the access token does not have the required access",
                 entry.title,
             )
         else:
@@ -230,7 +231,7 @@ async def async_remove_entry(hass: HomeAssistantType, entry: ConfigEntry) -> Non
     app_count = sum(1 for entry in all_entries if entry.data[CONF_APP_ID] == app_id)
     if app_count > 1:
         _LOGGER.debug(
-            "App %s was not removed because it is in use by other config entries",
+            "App %s was not removed because it is in use by other configuration entries",
             app_id,
         )
         return
@@ -279,7 +280,7 @@ class DeviceBroker:
             capabilities = device.capabilities.copy()
             slots = {}
             for platform_name in SUPPORTED_PLATFORMS:
-                platform = importlib.import_module("." + platform_name, self.__module__)
+                platform = importlib.import_module(f".{platform_name}", self.__module__)
                 if not hasattr(platform, "get_capabilities"):
                     continue
                 assigned = platform.get_capabilities(capabilities)
@@ -304,8 +305,13 @@ class DeviceBroker:
                 self._entry.data[CONF_OAUTH_CLIENT_ID],
                 self._entry.data[CONF_OAUTH_CLIENT_SECRET],
             )
-            self._entry.data[CONF_REFRESH_TOKEN] = self._token.refresh_token
-            self._hass.config_entries.async_update_entry(self._entry)
+            self._hass.config_entries.async_update_entry(
+                self._entry,
+                data={
+                    **self._entry.data,
+                    CONF_REFRESH_TOKEN: self._token.refresh_token,
+                },
+            )
             _LOGGER.debug(
                 "Regenerated refresh token for installed app: %s",
                 self._installed_app_id,

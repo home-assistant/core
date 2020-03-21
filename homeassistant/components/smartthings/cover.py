@@ -33,11 +33,6 @@ VALUE_TO_STATE = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform uses config entry setup."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add covers for a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]

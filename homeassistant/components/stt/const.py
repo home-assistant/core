@@ -18,8 +18,8 @@ class AudioFormats(str, Enum):
     OGG = "ogg"
 
 
-class AudioBitrates(int, Enum):
-    """Supported Audio bitrates."""
+class AudioBitRates(int, Enum):
+    """Supported Audio bit rates."""
 
     BITRATE_8 = 8
     BITRATE_16 = 16
@@ -27,8 +27,8 @@ class AudioBitrates(int, Enum):
     BITRATE_32 = 32
 
 
-class AudioSamplerates(int, Enum):
-    """Supported Audio samplerates."""
+class AudioSampleRates(int, Enum):
+    """Supported Audio sample rates."""
 
     SAMPLERATE_8000 = 8000
     SAMPLERATE_11000 = 11000
@@ -39,6 +39,13 @@ class AudioSamplerates(int, Enum):
     SAMPLERATE_37800 = 37800
     SAMPLERATE_44100 = 44100
     SAMPLERATE_48000 = 48000
+
+
+class AudioChannels(int, Enum):
+    """Supported Audio channel."""
+
+    CHANNEL_MONO = 1
+    CHANNEL_STEREO = 2
 
 
 class SpeechResultState(str, Enum):

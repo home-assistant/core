@@ -1,16 +1,17 @@
 """Demo platform that has two fake alarm control panels."""
 import datetime
+
 from homeassistant.components.manual.alarm_control_panel import ManualAlarm
 from homeassistant.const import (
+    CONF_DELAY_TIME,
+    CONF_PENDING_TIME,
+    CONF_TRIGGER_TIME,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
-    CONF_DELAY_TIME,
-    CONF_PENDING_TIME,
-    CONF_TRIGGER_TIME,
 )
 
 
@@ -57,3 +58,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             )
         ]
     )
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Demo config entry."""
+    await async_setup_platform(hass, {}, async_add_entities)

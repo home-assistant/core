@@ -5,14 +5,9 @@ import logging
 import socket
 
 import broadlink
-
 import voluptuous as vol
 
-from homeassistant.components.switch import (
-    ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA,
-    SwitchDevice,
-)
+from homeassistant.components.switch import DOMAIN, PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
@@ -25,8 +20,8 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle, slugify
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.util import Throttle, slugify
 
 from . import async_setup_service, data_packet
 
@@ -160,7 +155,7 @@ class BroadlinkRMSwitch(SwitchDevice, RestoreEntity):
         self, name, friendly_name, device, command_on, command_off, retry_times
     ):
         """Initialize the switch."""
-        self.entity_id = ENTITY_ID_FORMAT.format(slugify(name))
+        self.entity_id = f"{DOMAIN}.{slugify(name)}"
         self._name = friendly_name
         self._state = False
         self._command_on = command_on

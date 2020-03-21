@@ -6,23 +6,24 @@ from typing import Optional
 
 import attr
 
-from homeassistant.const import CONF_URL, STATE_UNKNOWN
 from homeassistant.components.sensor import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DOMAIN as SENSOR_DOMAIN,
 )
-from homeassistant.helpers import entity_registry
+from homeassistant.const import CONF_URL, DATA_BYTES, STATE_UNKNOWN, TIME_SECONDS
 
 from . import HuaweiLteBaseEntity
 from .const import (
     DOMAIN,
     KEY_DEVICE_INFORMATION,
     KEY_DEVICE_SIGNAL,
+    KEY_MONITORING_MONTH_STATISTICS,
+    KEY_MONITORING_STATUS,
     KEY_MONITORING_TRAFFIC_STATISTICS,
-    UNIT_BYTES,
-    UNIT_SECONDS,
+    KEY_NET_CURRENT_PLMN,
+    KEY_NET_NET_MODE,
+    SENSOR_KEYS,
 )
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,26 +122,78 @@ SENSOR_META = {
         and "mdi:signal-cellular-2"
         or "mdi:signal-cellular-3",
     ),
+    KEY_MONITORING_MONTH_STATISTICS: dict(
+        exclude=re.compile(r"^month(duration|lastcleartime)$", re.IGNORECASE)
+    ),
+    (KEY_MONITORING_MONTH_STATISTICS, "CurrentMonthDownload"): dict(
+        name="Current month download", unit=DATA_BYTES, icon="mdi:download"
+    ),
+    (KEY_MONITORING_MONTH_STATISTICS, "CurrentMonthUpload"): dict(
+        name="Current month upload", unit=DATA_BYTES, icon="mdi:upload"
+    ),
+    KEY_MONITORING_STATUS: dict(
+        include=re.compile(
+            r"^(currentwifiuser|(primary|secondary).*dns)$", re.IGNORECASE
+        )
+    ),
+    (KEY_MONITORING_STATUS, "CurrentWifiUser"): dict(
+        name="WiFi clients connected", icon="mdi:wifi"
+    ),
+    (KEY_MONITORING_STATUS, "PrimaryDns"): dict(
+        name="Primary DNS server", icon="mdi:ip"
+    ),
+    (KEY_MONITORING_STATUS, "SecondaryDns"): dict(
+        name="Secondary DNS server", icon="mdi:ip"
+    ),
+    (KEY_MONITORING_STATUS, "PrimaryIPv6Dns"): dict(
+        name="Primary IPv6 DNS server", icon="mdi:ip"
+    ),
+    (KEY_MONITORING_STATUS, "SecondaryIPv6Dns"): dict(
+        name="Secondary IPv6 DNS server", icon="mdi:ip"
+    ),
     KEY_MONITORING_TRAFFIC_STATISTICS: dict(
         exclude=re.compile(r"^showtraffic$", re.IGNORECASE)
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "CurrentConnectTime"): dict(
-        name="Current connection duration", unit=UNIT_SECONDS, icon="mdi:timer"
+        name="Current connection duration", unit=TIME_SECONDS, icon="mdi:timer"
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "CurrentDownload"): dict(
-        name="Current connection download", unit=UNIT_BYTES, icon="mdi:download"
+        name="Current connection download", unit=DATA_BYTES, icon="mdi:download"
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "CurrentUpload"): dict(
-        name="Current connection upload", unit=UNIT_BYTES, icon="mdi:upload"
+        name="Current connection upload", unit=DATA_BYTES, icon="mdi:upload"
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "TotalConnectTime"): dict(
-        name="Total connected duration", unit=UNIT_SECONDS, icon="mdi:timer"
+        name="Total connected duration", unit=TIME_SECONDS, icon="mdi:timer"
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "TotalDownload"): dict(
-        name="Total download", unit=UNIT_BYTES, icon="mdi:download"
+        name="Total download", unit=DATA_BYTES, icon="mdi:download"
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "TotalUpload"): dict(
-        name="Total upload", unit=UNIT_BYTES, icon="mdi:upload"
+        name="Total upload", unit=DATA_BYTES, icon="mdi:upload"
+    ),
+    KEY_NET_CURRENT_PLMN: dict(exclude=re.compile(r"^(Rat|ShortName)$", re.IGNORECASE)),
+    (KEY_NET_CURRENT_PLMN, "State"): dict(
+        name="Operator search mode",
+        formatter=lambda x: ({"0": "Auto", "1": "Manual"}.get(x, "Unknown"), None),
+    ),
+    (KEY_NET_CURRENT_PLMN, "FullName"): dict(name="Operator name",),
+    (KEY_NET_CURRENT_PLMN, "Numeric"): dict(name="Operator code",),
+    KEY_NET_NET_MODE: dict(include=re.compile(r"^NetworkMode$", re.IGNORECASE)),
+    (KEY_NET_NET_MODE, "NetworkMode"): dict(
+        name="Preferred mode",
+        formatter=lambda x: (
+            {
+                "00": "4G/3G/2G",
+                "01": "2G",
+                "02": "3G",
+                "03": "4G",
+                "0301": "4G/2G",
+                "0302": "4G/3G",
+                "0201": "3G/2G",
+            }.get(x, "Unknown"),
+            None,
+        ),
     ),
 }
 
@@ -149,11 +202,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up from config entry."""
     router = hass.data[DOMAIN].routers[config_entry.data[CONF_URL]]
     sensors = []
-    for key in (
-        KEY_DEVICE_INFORMATION,
-        KEY_DEVICE_SIGNAL,
-        KEY_MONITORING_TRAFFIC_STATISTICS,
-    ):
+    for key in SENSOR_KEYS:
         items = router.data.get(key)
         if not items:
             continue
@@ -169,23 +218,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             sensors.append(
                 HuaweiLteSensor(router, key, item, SENSOR_META.get((key, item), {}))
             )
-
-    # Pre-0.97 unique id migration. Old ones used the device serial number
-    # (see comments in HuaweiLteData._setup_lte for more info), as well as
-    # had a bug that joined the path str with periods, not the path components,
-    # resulting e.g. *_device_signal.sinr to end up as
-    # *_d.e.v.i.c.e._.s.i.g.n.a.l...s.i.n.r
-    entreg = await entity_registry.async_get_registry(hass)
-    for entid, ent in entreg.entities.items():
-        if ent.platform != DOMAIN:
-            continue
-        for sensor in sensors:
-            oldsuf = ".".join(f"{sensor.key}.{sensor.item}")
-            if ent.unique_id.endswith(f"_{oldsuf}"):
-                entreg.async_update_entity(entid, new_unique_id=sensor.unique_id)
-                _LOGGER.debug(
-                    "Updated entity %s unique id to %s", entid, sensor.unique_id
-                )
 
     async_add_entities(sensors, True)
 

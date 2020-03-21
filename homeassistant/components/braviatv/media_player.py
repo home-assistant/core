@@ -2,16 +2,18 @@
 import ipaddress
 import logging
 
+from bravia_tv import BraviaRC
 from getmac import get_mac_address
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE,
+    SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
@@ -46,6 +48,7 @@ SUPPORT_BRAVIA = (
     | SUPPORT_TURN_OFF
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_PLAY
+    | SUPPORT_STOP
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -128,12 +131,11 @@ def request_configuration(config, hass, add_entities):
 
     def bravia_configuration_callback(data):
         """Handle the entry of user PIN."""
-        from braviarc import braviarc
 
         pin = data.get("pin")
-        braviarc = braviarc.BraviaRC(host)
-        braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
-        if braviarc.is_connected():
+        _braviarc = BraviaRC(host)
+        _braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
+        if _braviarc.is_connected():
             setup_bravia(config, pin, hass, add_entities)
         else:
             request_configuration(config, hass, add_entities)
@@ -154,10 +156,9 @@ class BraviaTVDevice(MediaPlayerDevice):
 
     def __init__(self, host, mac, name, pin):
         """Initialize the Sony Bravia device."""
-        from braviarc import braviarc
 
         self._pin = pin
-        self._braviarc = braviarc.BraviaRC(host, mac)
+        self._braviarc = BraviaRC(host, mac)
         self._name = name
         self._state = STATE_OFF
         self._muted = False
@@ -292,7 +293,7 @@ class BraviaTVDevice(MediaPlayerDevice):
         if self._channel_name is not None:
             return_value = self._channel_name
             if self._program_name is not None:
-                return_value = return_value + ": " + self._program_name
+                return_value = f"{return_value}: {self._program_name}"
         return return_value
 
     @property
@@ -351,6 +352,11 @@ class BraviaTVDevice(MediaPlayerDevice):
         """Send media pause command to media player."""
         self._playing = False
         self._braviarc.media_pause()
+
+    def media_stop(self):
+        """Send media stop command to media player."""
+        self._playing = False
+        self._braviarc.media_stop()
 
     def media_next_track(self):
         """Send next track command."""

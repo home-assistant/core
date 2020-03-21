@@ -1,22 +1,22 @@
 """Support for an exposed aREST RESTful API of a device."""
-import logging
 from datetime import timedelta
+import logging
 
 import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_UNIT_OF_MEASUREMENT,
-    CONF_VALUE_TEMPLATE,
-    CONF_RESOURCE,
     CONF_MONITORED_VARIABLES,
     CONF_NAME,
+    CONF_RESOURCE,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_VALUE_TEMPLATE,
 )
 from homeassistant.exceptions import TemplateError
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         response = requests.get(resource, timeout=10).json()
     except requests.exceptions.MissingSchema:
         _LOGGER.error(
-            "Missing resource or schema in configuration. " "Add http:// to your URL"
+            "Missing resource or schema in configuration. Add http:// to your URL"
         )
         return False
     except requests.exceptions.ConnectionError:
@@ -140,7 +140,7 @@ class ArestSensor(Entity):
         """Initialize the sensor."""
         self.arest = arest
         self._resource = resource
-        self._name = "{} {}".format(location.title(), name.title())
+        self._name = f"{location.title()} {name.title()}"
         self._variable = variable
         self._pin = pin
         self._state = None
@@ -204,8 +204,7 @@ class ArestData:
                 try:
                     if str(self._pin[0]) == "A":
                         response = requests.get(
-                            "{}/analog/{}".format(self._resource, self._pin[1:]),
-                            timeout=10,
+                            f"{self._resource,}/analog/{self._pin[1:]}", timeout=10
                         )
                         self.data = {"value": response.json()["return_value"]}
                 except TypeError:

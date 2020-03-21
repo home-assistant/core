@@ -1,33 +1,12 @@
-"""
-Helpers for Zigbee Home Automation.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/integrations/zha/
-"""
-import asyncio
+"""Helpers for Zigbee Home Automation."""
 import collections
 import logging
 
-import bellows.ezsp
-import bellows.zigbee.application
 import zigpy.types
-import zigpy_deconz.api
-import zigpy_deconz.zigbee.application
-import zigpy_xbee.api
-import zigpy_xbee.zigbee.application
-import zigpy_zigate.api
-import zigpy_zigate.zigbee.application
 
 from homeassistant.core import callback
 
-from .const import (
-    CLUSTER_TYPE_IN,
-    CLUSTER_TYPE_OUT,
-    DATA_ZHA,
-    DATA_ZHA_GATEWAY,
-    DEFAULT_BAUDRATE,
-    RadioType,
-)
+from .const import CLUSTER_TYPE_IN, CLUSTER_TYPE_OUT, DATA_ZHA, DATA_ZHA_GATEWAY
 from .registries import BINDABLE_CLUSTERS
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,42 +33,6 @@ async def safe_read(
         return result
     except Exception:  # pylint: disable=broad-except
         return {}
-
-
-async def check_zigpy_connection(usb_path, radio_type, database_path):
-    """Test zigpy radio connection."""
-    if radio_type == RadioType.ezsp.name:
-        radio = bellows.ezsp.EZSP()
-        ControllerApplication = bellows.zigbee.application.ControllerApplication
-    elif radio_type == RadioType.xbee.name:
-        radio = zigpy_xbee.api.XBee()
-        ControllerApplication = zigpy_xbee.zigbee.application.ControllerApplication
-    elif radio_type == RadioType.deconz.name:
-        radio = zigpy_deconz.api.Deconz()
-        ControllerApplication = zigpy_deconz.zigbee.application.ControllerApplication
-    elif radio_type == RadioType.zigate.name:
-        radio = zigpy_zigate.api.ZiGate()
-        ControllerApplication = zigpy_zigate.zigbee.application.ControllerApplication
-    try:
-        await radio.connect(usb_path, DEFAULT_BAUDRATE)
-        controller = ControllerApplication(radio, database_path)
-        await asyncio.wait_for(controller.startup(auto_form=True), timeout=30)
-        await controller.shutdown()
-    except Exception:  # pylint: disable=broad-except
-        return False
-    return True
-
-
-def get_attr_id_by_name(cluster, attr_name):
-    """Get the attribute id for a cluster attribute by its name."""
-    return next(
-        (
-            attrid
-            for attrid, (attrname, datatype) in cluster.attributes.items()
-            if attr_name == attrname
-        ),
-        None,
-    )
 
 
 async def get_matched_clusters(source_zha_device, target_zha_device):

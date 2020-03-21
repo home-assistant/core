@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -43,9 +44,9 @@ SCAN_INTERVAL = timedelta(seconds=1200)
 SENSOR_TYPES = {
     "temperature": ["Temperature", "°C", "mdi:thermometer"],
     "light": ["Light intensity", "lx", "mdi:white-balance-sunny"],
-    "moisture": ["Moisture", "%", "mdi:water-percent"],
+    "moisture": ["Moisture", UNIT_PERCENTAGE, "mdi:water-percent"],
     "conductivity": ["Conductivity", "µS/cm", "mdi:flash-circle"],
-    "battery": ["Battery", "%", "mdi:battery-charging"],
+    "battery": ["Battery", UNIT_PERCENTAGE, "mdi:battery-charging"],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -106,6 +107,7 @@ class MiFloraSensor(Entity):
         self._icon = icon
         self._name = name
         self._state = None
+        self._available = False
         self.data = []
         self._force_update = force_update
         # Median is used to filter out outliers. median of 3 will filter
@@ -133,6 +135,11 @@ class MiFloraSensor(Entity):
         return self._state
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
+
+    @property
     def unit_of_measurement(self):
         """Return the units of measurement."""
         return self._unit
@@ -156,15 +163,14 @@ class MiFloraSensor(Entity):
         try:
             _LOGGER.debug("Polling data for %s", self.name)
             data = self.poller.parameter_value(self.parameter)
-        except OSError as ioerr:
-            _LOGGER.info("Polling error %s", ioerr)
-            return
-        except BluetoothBackendException as bterror:
-            _LOGGER.info("Polling error %s", bterror)
+        except (OSError, BluetoothBackendException) as err:
+            _LOGGER.info("Polling error %s: %s", type(err).__name__, err)
+            self._available = False
             return
 
         if data is not None:
             _LOGGER.debug("%s = %s", self.name, data)
+            self._available = True
             self.data.append(data)
         else:
             _LOGGER.info("Did not receive any data from Mi Flora sensor %s", self.name)

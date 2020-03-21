@@ -1,27 +1,24 @@
 """Support for SolarEdge Monitoring API."""
 import logging
-import solaredge
 
-from requests.exceptions import HTTPError, ConnectTimeout
+from requests.exceptions import ConnectTimeout, HTTPError
+import solaredge
+from stringcase import snakecase
+
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 from .const import (
     CONF_SITE_ID,
-    OVERVIEW_UPDATE_DELAY,
     DETAILS_UPDATE_DELAY,
     INVENTORY_UPDATE_DELAY,
+    OVERVIEW_UPDATE_DELAY,
     POWER_FLOW_UPDATE_DELAY,
     SENSOR_TYPES,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old configuration."""
-    pass
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -39,7 +36,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             return
         _LOGGER.debug("Credentials correct and site is active")
     except KeyError:
-        _LOGGER.error("Missing details data in solaredge response")
+        _LOGGER.error("Missing details data in SolarEdge response")
         return
     except (ConnectTimeout, HTTPError):
         _LOGGER.error("Could not retrieve details from SolarEdge API")
@@ -262,7 +259,6 @@ class SolarEdgeDetailsDataService(SolarEdgeDataService):
     @Throttle(DETAILS_UPDATE_DELAY)
     def update(self):
         """Update the data from the SolarEdge Monitoring API."""
-        from stringcase import snakecase
 
         try:
             data = self.api.get_details(self.site_id)
@@ -349,7 +345,9 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
         power_to = []
 
         if "connections" not in power_flow:
-            _LOGGER.error("Missing connections in power flow data")
+            _LOGGER.debug(
+                "Missing connections in power flow data. Assuming site does not have any"
+            )
             return
 
         for connection in power_flow["connections"]:

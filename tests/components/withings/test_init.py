@@ -10,26 +10,26 @@ from withings_api.common import SleepModel, SleepState
 
 import homeassistant.components.http as http
 from homeassistant.components.withings import (
+    CONFIG_SCHEMA,
     async_setup,
     async_setup_entry,
     const,
-    CONFIG_SCHEMA,
 )
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .common import (
-    assert_state_equals,
-    configure_integration,
-    setup_hass,
     WITHINGS_GET_DEVICE_RESPONSE,
     WITHINGS_GET_DEVICE_RESPONSE_EMPTY,
+    WITHINGS_MEASURES_RESPONSE,
+    WITHINGS_MEASURES_RESPONSE_EMPTY,
     WITHINGS_SLEEP_RESPONSE,
     WITHINGS_SLEEP_RESPONSE_EMPTY,
     WITHINGS_SLEEP_SUMMARY_RESPONSE,
     WITHINGS_SLEEP_SUMMARY_RESPONSE_EMPTY,
-    WITHINGS_MEASURES_RESPONSE,
-    WITHINGS_MEASURES_RESPONSE_EMPTY,
+    assert_state_equals,
+    configure_integration,
+    setup_hass,
 )
 
 
@@ -308,8 +308,13 @@ async def test_full_setup(hass: HomeAssistant, aiohttp_client, aioclient_mock) -
                     {
                         "startdate": "2019-02-01 00:00:00",
                         "enddate": "2019-02-01 01:00:00",
+                        "state": SleepState.REM.real,
+                    },
+                    {
+                        "startdate": "2019-02-01 01:00:00",
+                        "enddate": "2019-02-01 02:00:00",
                         "state": SleepState.AWAKE.real,
-                    }
+                    },
                 ],
             },
         },
@@ -330,10 +335,15 @@ async def test_full_setup(hass: HomeAssistant, aiohttp_client, aioclient_mock) -
                 "model": SleepModel.TRACKER.real,
                 "series": [
                     {
+                        "startdate": "2019-02-01 01:00:00",
+                        "enddate": "2019-02-01 02:00:00",
+                        "state": SleepState.LIGHT.real,
+                    },
+                    {
                         "startdate": "2019-02-01 00:00:00",
                         "enddate": "2019-02-01 01:00:00",
-                        "state": SleepState.LIGHT.real,
-                    }
+                        "state": SleepState.REM.real,
+                    },
                 ],
             },
         },
@@ -356,8 +366,18 @@ async def test_full_setup(hass: HomeAssistant, aiohttp_client, aioclient_mock) -
                     {
                         "startdate": "2019-02-01 00:00:00",
                         "enddate": "2019-02-01 01:00:00",
+                        "state": SleepState.LIGHT.real,
+                    },
+                    {
+                        "startdate": "2019-02-01 02:00:00",
+                        "enddate": "2019-02-01 03:00:00",
                         "state": SleepState.REM.real,
-                    }
+                    },
+                    {
+                        "startdate": "2019-02-01 01:00:00",
+                        "enddate": "2019-02-01 02:00:00",
+                        "state": SleepState.AWAKE.real,
+                    },
                 ],
             },
         },

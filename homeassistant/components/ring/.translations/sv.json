@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
+        "error": {
+            "invalid_auth": "Ogiltig autentisering",
+            "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "Tv\u00e5faktorkod"
+                },
+                "title": "Tv\u00e5faktorautentisering"
+            },
+            "user": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn"
+                },
+                "title": "Logga in med Ring-konto"
+            }
+        },
+        "title": "Ring"
+    }
+}

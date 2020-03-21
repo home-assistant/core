@@ -6,6 +6,13 @@
             "arm_night": "Arm {entity_name} night",
             "disarm": "Disarm {entity_name}",
             "trigger": "Trigger {entity_name}"
+        },
+        "trigger_type": {
+            "armed_away": "{entity_name} armed away",
+            "armed_home": "{entity_name} armed home",
+            "armed_night": "{entity_name} armed night",
+            "disarmed": "{entity_name} disarmed",
+            "triggered": "{entity_name} triggered"
         }
     }
 }

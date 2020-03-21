@@ -1,12 +1,13 @@
 """Tests for PTVSD Debugger."""
 
 from unittest.mock import patch
+
 from asynctest import CoroutineMock
 from pytest import mark
 
+from homeassistant.bootstrap import _async_set_up_integrations
 import homeassistant.components.ptvsd as ptvsd_component
 from homeassistant.setup import async_setup_component
-from homeassistant.bootstrap import _async_set_up_integrations
 
 
 @mark.skip("causes code cover to fail")

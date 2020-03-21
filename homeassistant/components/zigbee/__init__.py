@@ -1,24 +1,25 @@
 """Support for Zigbee devices."""
-import logging
 from binascii import hexlify, unhexlify
+import logging
 
-import xbee_helper.const as xb_const
-from xbee_helper import ZigBee
-from xbee_helper.device import convert_adc
-from xbee_helper.exceptions import ZigBeeException, ZigBeeTxFailure
 from serial import Serial, SerialException
 import voluptuous as vol
+from xbee_helper import ZigBee
+import xbee_helper.const as xb_const
+from xbee_helper.device import convert_adc
+from xbee_helper.exceptions import ZigBeeException, ZigBeeTxFailure
 
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP,
+    CONF_ADDRESS,
     CONF_DEVICE,
     CONF_NAME,
     CONF_PIN,
-    CONF_ADDRESS,
+    EVENT_HOMEASSISTANT_STOP,
+    UNIT_PERCENTAGE,
 )
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -325,7 +326,7 @@ class ZigBeeDigitalIn(Entity):
         except ZIGBEE_TX_FAILURE:
             _LOGGER.warning(
                 "Transmission failure when attempting to get sample from "
-                "ZigBee device at address: %s",
+                "Zigbee device at address: %s",
                 hexlify(self._config.address),
             )
             return
@@ -335,7 +336,7 @@ class ZigBeeDigitalIn(Entity):
         pin_name = DIGITAL_PINS[self._config.pin]
         if pin_name not in sample:
             _LOGGER.warning(
-                "Pin %s (%s) was not in the sample provided by Zigbee device " "%s.",
+                "Pin %s (%s) was not in the sample provided by Zigbee device %s.",
                 self._config.pin,
                 pin_name,
                 hexlify(self._config.address),
@@ -348,7 +349,7 @@ class ZigBeeDigitalOut(ZigBeeDigitalIn):
     """Representation of a GPIO pin configured as a digital input."""
 
     def _set_state(self, state):
-        """Initialize the ZigBee digital out device."""
+        """Initialize the Zigbee digital out device."""
         try:
             DEVICE.set_gpio_pin(
                 self._config.pin, self._config.bool2state[state], self._config.address
@@ -356,12 +357,12 @@ class ZigBeeDigitalOut(ZigBeeDigitalIn):
         except ZIGBEE_TX_FAILURE:
             _LOGGER.warning(
                 "Transmission failure when attempting to set output pin on "
-                "ZigBee device at address: %s",
+                "Zigbee device at address: %s",
                 hexlify(self._config.address),
             )
             return
         except ZIGBEE_EXCEPTION as exc:
-            _LOGGER.exception("Unable to set digital pin on ZigBee device: %s", exc)
+            _LOGGER.exception("Unable to set digital pin on Zigbee device: %s", exc)
             return
         self._state = state
         if not self.should_poll:
@@ -376,19 +377,19 @@ class ZigBeeDigitalOut(ZigBeeDigitalIn):
         self._set_state(False)
 
     def update(self):
-        """Ask the ZigBee device what its output is set to."""
+        """Ask the Zigbee device what its output is set to."""
         try:
             pin_state = DEVICE.get_gpio_pin(self._config.pin, self._config.address)
         except ZIGBEE_TX_FAILURE:
             _LOGGER.warning(
                 "Transmission failure when attempting to get output pin status"
-                " from ZigBee device at address: %s",
+                " from Zigbee device at address: %s",
                 hexlify(self._config.address),
             )
             return
         except ZIGBEE_EXCEPTION as exc:
             _LOGGER.exception(
-                "Unable to get output pin status from ZigBee device: %s", exc
+                "Unable to get output pin status from Zigbee device: %s", exc
             )
             return
         self._state = self._config.state2bool[pin_state]
@@ -448,7 +449,7 @@ class ZigBeeAnalogIn(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return "%"
+        return UNIT_PERCENTAGE
 
     def update(self):
         """Get the latest reading from the ADC."""
@@ -462,8 +463,8 @@ class ZigBeeAnalogIn(Entity):
         except ZIGBEE_TX_FAILURE:
             _LOGGER.warning(
                 "Transmission failure when attempting to get sample from "
-                "ZigBee device at address: %s",
+                "Zigbee device at address: %s",
                 hexlify(self._config.address),
             )
         except ZIGBEE_EXCEPTION as exc:
-            _LOGGER.exception("Unable to get sample from ZigBee device: %s", exc)
+            _LOGGER.exception("Unable to get sample from Zigbee device: %s", exc)

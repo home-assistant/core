@@ -2,6 +2,8 @@
 import logging
 
 import voluptuous as vol
+from zhong_hong_hvac.hub import ZhongHongGateway
+from zhong_hong_hvac.hvac import HVAC as ZhongHongHVAC
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
@@ -71,7 +73,6 @@ MODE_TO_STATE = {
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ZhongHong HVAC platform."""
-    from zhong_hong_hvac.hub import ZhongHongGateway
 
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -87,7 +88,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hub_is_initialized = False
 
     async def startup():
-        """Start hub socket after all climate entity is setted up."""
+        """Start hub socket after all climate entity is set up."""
         nonlocal hub_is_initialized
         if not all([device.is_initialized for device in devices]):
             return
@@ -117,9 +118,8 @@ class ZhongHongClimate(ClimateDevice):
 
     def __init__(self, hub, addr_out, addr_in):
         """Set up the ZhongHong climate devices."""
-        from zhong_hong_hvac.hvac import HVAC
 
-        self._device = HVAC(hub, addr_out, addr_in)
+        self._device = ZhongHongHVAC(hub, addr_out, addr_in)
         self._hub = hub
         self._current_operation = None
         self._current_temperature = None
@@ -161,9 +161,7 @@ class ZhongHongClimate(ClimateDevice):
     @property
     def unique_id(self):
         """Return the unique ID of the HVAC."""
-        return "zhong_hong_hvac_{}_{}".format(
-            self._device.addr_out, self._device.addr_in
-        )
+        return f"zhong_hong_hvac_{self._device.addr_out}_{self._device.addr_in}"
 
     @property
     def supported_features(self):

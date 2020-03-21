@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Witryna kontrolera jest ju\u017c skonfigurowana",
+            "already_configured": "Witryna kontrolera jest ju\u017c skonfigurowana.",
             "user_privilege": "U\u017cytkownik musi by\u0107 administratorem"
         },
         "error": {
@@ -28,10 +28,13 @@
             "device_tracker": {
                 "data": {
                     "detection_time": "Czas w sekundach od momentu, kiedy ostatnio widziano, a\u017c do momentu, kiedy uznano go za nieobecny.",
+                    "ssid_filter": "Wybierz SSIDy do \u015bledzenia klient\u00f3w bezprzewodowych",
                     "track_clients": "\u015aled\u017a klient\u00f3w sieciowych",
                     "track_devices": "\u015aled\u017a urz\u0105dzenia sieciowe (urz\u0105dzenia Ubiquiti)",
                     "track_wired_clients": "Uwzgl\u0119dnij klient\u00f3w sieci przewodowej"
-                }
+                },
+                "description": "Konfiguracja \u015bledzenia urz\u0105dze\u0144",
+                "title": "Opcje UniFi"
             },
             "init": {
                 "data": {
@@ -44,7 +47,9 @@
             "statistics_sensors": {
                 "data": {
                     "allow_bandwidth_sensors": "Stw\u00f3rz sensory wykorzystania przepustowo\u015bci przez klient\u00f3w sieciowych"
-                }
+                },
+                "description": "Konfiguracja sensora statystyk",
+                "title": "Opcje UniFi"
             }
         }
     }

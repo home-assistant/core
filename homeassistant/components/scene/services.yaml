@@ -34,3 +34,8 @@ create:
         light.ceiling:
           state: "on"
           brightness: 200
+    snapshot_entities:
+      description: The entities of which a snapshot is to be taken
+      example:
+        - light.ceiling
+        - light.kitchen

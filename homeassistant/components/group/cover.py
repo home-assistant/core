@@ -4,18 +4,6 @@ from typing import Dict, Optional, Set
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
-    ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
-    CONF_ENTITIES,
-    CONF_NAME,
-    STATE_CLOSED,
-)
-from homeassistant.core import callback, State
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_state_change
-
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
@@ -41,7 +29,17 @@ from homeassistant.components.cover import (
     SUPPORT_STOP_TILT,
     CoverDevice,
 )
-
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    CONF_ENTITIES,
+    CONF_NAME,
+    STATE_CLOSED,
+)
+from homeassistant.core import State, callback
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_state_change
 
 # mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs

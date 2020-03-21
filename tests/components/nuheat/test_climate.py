@@ -3,8 +3,8 @@ import unittest
 from unittest.mock import Mock, patch
 
 from homeassistant.components.climate.const import (
+    HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
@@ -67,7 +67,7 @@ class TestNuHeat(unittest.TestCase):
         thermostat = mocked_thermostat(self.api, "12345", "F")
         thermostats = [thermostat]
 
-        self.hass.data[nuheat.NUHEAT_DOMAIN] = (self.api, ["12345"])
+        self.hass.data[nuheat.DOMAIN] = (self.api, ["12345"])
 
         config = {}
         add_entities = Mock()
@@ -85,12 +85,12 @@ class TestNuHeat(unittest.TestCase):
         thermostat.schedule_update_ha_state = Mock()
         thermostat.entity_id = "climate.master_bathroom"
 
-        self.hass.data[nuheat.NUHEAT_DOMAIN] = (self.api, ["12345"])
+        self.hass.data[nuheat.DOMAIN] = (self.api, ["12345"])
         nuheat.setup_platform(self.hass, {}, Mock(), {})
 
         # Explicit entity
         self.hass.services.call(
-            nuheat.NUHEAT_DOMAIN,
+            nuheat.DOMAIN,
             nuheat.SERVICE_RESUME_PROGRAM,
             {"entity_id": "climate.master_bathroom"},
             True,
@@ -103,9 +103,7 @@ class TestNuHeat(unittest.TestCase):
         thermostat.schedule_update_ha_state.reset_mock()
 
         # All entities
-        self.hass.services.call(
-            nuheat.NUHEAT_DOMAIN, nuheat.SERVICE_RESUME_PROGRAM, {}, True
-        )
+        self.hass.services.call(nuheat.DOMAIN, nuheat.SERVICE_RESUME_PROGRAM, {}, True)
 
         thermostat.resume_program.assert_called_with()
         thermostat.schedule_update_ha_state.assert_called_with(True)
@@ -132,10 +130,8 @@ class TestNuHeat(unittest.TestCase):
         assert self.thermostat.current_temperature == 22
 
     def test_current_operation(self):
-        """Test current operation."""
-        assert self.thermostat.hvac_mode == HVAC_MODE_HEAT
-        self.thermostat._thermostat.heating = False
-        assert self.thermostat.hvac_mode == HVAC_MODE_OFF
+        """Test requested mode."""
+        assert self.thermostat.hvac_mode == HVAC_MODE_AUTO
 
     def test_min_temp(self):
         """Test min temp."""
@@ -157,7 +153,7 @@ class TestNuHeat(unittest.TestCase):
 
     def test_operation_list(self):
         """Test the operation list."""
-        assert self.thermostat.hvac_modes == [HVAC_MODE_HEAT, HVAC_MODE_OFF]
+        assert self.thermostat.hvac_modes == [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
 
     def test_resume_program(self):
         """Test resume schedule."""

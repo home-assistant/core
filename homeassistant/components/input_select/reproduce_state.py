@@ -9,11 +9,11 @@ from homeassistant.core import Context, State
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import (
+    ATTR_OPTION,
+    ATTR_OPTIONS,
     DOMAIN,
     SERVICE_SELECT_OPTION,
     SERVICE_SET_OPTIONS,
-    ATTR_OPTION,
-    ATTR_OPTIONS,
 )
 
 ATTR_GROUP = [ATTR_OPTION, ATTR_OPTIONS]

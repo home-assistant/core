@@ -3,20 +3,17 @@ import asyncio
 import base64
 from collections import OrderedDict
 import logging
-
 from typing import Any, Dict, List, Optional, Set, cast
 
 import bcrypt
 import voluptuous as vol
 
 from homeassistant.const import CONF_ID
-from homeassistant.core import callback, HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, LoginFlow
-
+from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
-
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "auth_provider.homeassistant"
@@ -203,7 +200,7 @@ class Data:
 
 @AUTH_PROVIDERS.register("homeassistant")
 class HassAuthProvider(AuthProvider):
-    """Auth provider based on a local storage of users in HASS config dir."""
+    """Auth provider based on a local storage of users in Home Assistant config dir."""
 
     DEFAULT_TITLE = "Home Assistant Local"
 

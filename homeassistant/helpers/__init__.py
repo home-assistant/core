@@ -1,11 +1,10 @@
 """Helper methods for components within Home Assistant."""
 import re
-from typing import Any, Iterable, Tuple, Sequence, Dict
+from typing import Any, Iterable, Sequence, Tuple
 
 from homeassistant.const import CONF_PLATFORM
 
-# pylint: disable=invalid-name
-ConfigType = Dict[str, Any]
+from .typing import ConfigType
 
 
 def config_per_platform(config: ConfigType, domain: str) -> Iterable[Tuple[Any, Any]]:
@@ -37,5 +36,5 @@ def extract_domain_configs(config: ConfigType, domain: str) -> Sequence[str]:
 
     Async friendly.
     """
-    pattern = re.compile(r"^{}(| .+)$".format(domain))
+    pattern = re.compile(fr"^{domain}(| .+)$")
     return [key for key in config.keys() if pattern.match(key)]

@@ -3,7 +3,7 @@ import logging
 
 import requests
 
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS, UNIT_PERCENTAGE
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN as COMPONENT_DOMAIN, SENSOR_TYPES
@@ -32,7 +32,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 "If you do not want to have your printer on <br />"
                 " at all times, and you would like to monitor <br /> "
                 "temperatures, please add <br />"
-                "bed and/or number&#95of&#95tools to your config <br />"
+                "bed and/or number&#95of&#95tools to your configuration <br />"
                 "and restart.",
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID,
@@ -111,7 +111,7 @@ class OctoPrintSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         sensor_unit = self.unit_of_measurement
-        if sensor_unit in (TEMP_CELSIUS, "%"):
+        if sensor_unit in (TEMP_CELSIUS, UNIT_PERCENTAGE):
             # API sometimes returns null and not 0
             if self._state is None:
                 self._state = 0

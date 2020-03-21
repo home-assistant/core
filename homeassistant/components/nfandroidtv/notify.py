@@ -7,9 +7,6 @@ import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
-from homeassistant.const import CONF_TIMEOUT, CONF_HOST
-import homeassistant.helpers.config_validation as cv
-
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TITLE,
@@ -17,6 +14,8 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONF_HOST, CONF_TIMEOUT, UNIT_PERCENTAGE
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +66,14 @@ POSITIONS = {
     "center": 4,
 }
 
-TRANSPARENCIES = {"default": 0, "0%": 1, "25%": 2, "50%": 3, "75%": 4, "100%": 5}
+TRANSPARENCIES = {
+    "default": 0,
+    f"0{UNIT_PERCENTAGE}": 1,
+    f"25{UNIT_PERCENTAGE}": 2,
+    f"50{UNIT_PERCENTAGE}": 3,
+    f"75{UNIT_PERCENTAGE}": 4,
+    f"100{UNIT_PERCENTAGE}": 5,
+}
 
 COLORS = {
     "grey": "#607d8b",

@@ -12,8 +12,10 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -33,11 +35,11 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 SENSOR_TYPES = {
     "weather": ["Condition", None],
     "temperature": ["Temperature", None],
-    "wind_speed": ["Wind speed", "m/s"],
+    "wind_speed": ["Wind speed", SPEED_METERS_PER_SECOND],
     "wind_bearing": ["Wind bearing", "°"],
-    "humidity": ["Humidity", "%"],
+    "humidity": ["Humidity", UNIT_PERCENTAGE],
     "pressure": ["Pressure", "mbar"],
-    "clouds": ["Cloud coverage", "%"],
+    "clouds": ["Cloud coverage", UNIT_PERCENTAGE],
     "rain": ["Rain", "mm"],
     "snow": ["Snow", "mm"],
     "weather_code": ["Weather code", None],

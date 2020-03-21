@@ -1,15 +1,14 @@
 """Support for w800rf32 devices."""
 import logging
 
-import voluptuous as vol
 import W800rf32 as w800
+import voluptuous as vol
 
 from homeassistant.const import (
     CONF_DEVICE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 
