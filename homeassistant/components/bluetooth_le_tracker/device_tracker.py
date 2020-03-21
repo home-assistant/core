@@ -1,6 +1,7 @@
 """Tracking for bluetooth low energy devices."""
 import asyncio
 import logging
+from uuid import UUID
 
 import pygatt  # pylint: disable=import-error
 
@@ -20,6 +21,10 @@ import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
+# Base UUID: 00000000-0000-1000-8000-00805F9B34FB
+# Battery characteristic: 0x2a19 (https://www.bluetooth.com/specifications/gatt/characteristics/)
+BATTERY_CHARACTERISTIC_UUID = UUID("00002a19-0000-1000-8000-00805f9b34fb")
+CONF_TRACK_BATTERY = "track_battery"
 DATA_BLE = "BLE"
 DATA_BLE_ADAPTER = "ADAPTER"
 BLE_PREFIX = "BLE_"
@@ -42,7 +47,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop)
 
-    def see_device(address, name, new_device=False):
+    def see_device(address, name, new_device=False, battery=None):
         """Mark a device as seen."""
         if name is not None:
             name = name.strip("\x00")
@@ -59,6 +64,8 @@ def setup_scanner(hass, config, see, discovery_info=None):
                     return
                 _LOGGER.debug("Adding %s to tracked devices", address)
                 devs_to_track.append(address)
+                if config.get(CONF_TRACK_BATTERY):
+                    devs_track_battery.append(address)
             else:
                 _LOGGER.debug("Seen %s for the first time", address)
                 new_devices[address] = {"seen": 1, "name": name}
@@ -68,6 +75,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
             mac=BLE_PREFIX + address,
             host_name=name,
             source_type=SOURCE_TYPE_BLUETOOTH_LE,
+            battery=battery,
         )
 
     def discover_ble_devices():
@@ -88,6 +96,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
     yaml_path = hass.config.path(YAML_DEVICES)
     devs_to_track = []
     devs_donot_track = []
+    devs_track_battery = []
 
     # Load all known devices.
     # We just need the devices so set consider_home and home range
@@ -100,6 +109,8 @@ def setup_scanner(hass, config, see, discovery_info=None):
             if device.track:
                 _LOGGER.debug("Adding %s to BLE tracker", device.mac)
                 devs_to_track.append(device.mac[4:])
+                if config.get(CONF_TRACK_BATTERY):
+                    devs_track_battery.append(device.mac[4:])
             else:
                 _LOGGER.debug("Adding %s to BLE do not track", device.mac)
                 devs_donot_track.append(device.mac[4:])
@@ -117,13 +128,34 @@ def setup_scanner(hass, config, see, discovery_info=None):
     def update_ble(now):
         """Lookup Bluetooth LE devices and update status."""
         devs = discover_ble_devices()
+        adapter = pygatt.GATTToolBackend()
         for mac in devs_to_track:
             if mac not in devs:
                 continue
 
             if devs[mac] is None:
                 devs[mac] = mac
-            see_device(mac, devs[mac])
+
+            battery = None
+            if mac in devs_track_battery:
+                try:
+                    adapter.start(reset_on_start=True)
+                    _LOGGER.debug("Reading battery for Bluetooth LE device %s", mac)
+                    bt_device = adapter.connect(mac)
+                    # Try to get the handle; it will raise a BLEError exception if not available
+                    bt_device.get_handle(BATTERY_CHARACTERISTIC_UUID)
+                    battery = ord(bt_device.char_read(BATTERY_CHARACTERISTIC_UUID))
+                except pygatt.exceptions.NotificationTimeout:
+                    _LOGGER.warning("Timeout when trying to get battery status")
+                except pygatt.exceptions.BLEError as err:
+                    _LOGGER.warning("Could not read battery status: %s", err)
+                    # If the device does not offer battery information, there is no point in asking again later on.
+                    # Remove the device from the battery-tracked devices, so that their battery is not wasted trying to
+                    # get an unavailable information.
+                    devs_track_battery.remove(mac)
+                finally:
+                    adapter.stop()
+            see_device(mac, devs[mac], battery=battery)
 
         if track_new:
             for address in devs:
