@@ -428,8 +428,9 @@ async def smartapp_update(hass: HomeAssistantType, req, resp, app):
         None,
     )
     if entry:
-        entry.data[CONF_REFRESH_TOKEN] = req.refresh_token
-        hass.config_entries.async_update_entry(entry)
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_REFRESH_TOKEN: req.refresh_token}
+        )
 
     _LOGGER.debug(
         "Updated SmartApp '%s' under parent app '%s'", req.installed_app_id, app.app_id

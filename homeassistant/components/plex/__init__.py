@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -27,6 +28,7 @@ from homeassistant.helpers.dispatcher import (
 )
 
 from .const import (
+    CONF_IGNORE_NEW_SHARED_USERS,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
     CONF_SHOW_ALL_CONTROLS,
@@ -46,11 +48,15 @@ from .const import (
 )
 from .server import PlexServer
 
-MEDIA_PLAYER_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_USE_EPISODE_ART, default=False): cv.boolean,
-        vol.Optional(CONF_SHOW_ALL_CONTROLS, default=False): cv.boolean,
-    }
+MEDIA_PLAYER_SCHEMA = vol.All(
+    cv.deprecated(CONF_SHOW_ALL_CONTROLS, invalidation_version="0.110"),
+    vol.Schema(
+        {
+            vol.Optional(CONF_USE_EPISODE_ART, default=False): cv.boolean,
+            vol.Optional(CONF_SHOW_ALL_CONTROLS): cv.boolean,
+            vol.Optional(CONF_IGNORE_NEW_SHARED_USERS, default=False): cv.boolean,
+        }
+    ),
 )
 
 SERVER_CONFIG_SCHEMA = vol.Schema(
@@ -110,6 +116,11 @@ async def async_setup_entry(hass, entry):
     """Set up Plex from a config entry."""
     server_config = entry.data[PLEX_SERVER_CONFIG]
 
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(
+            entry, unique_id=entry.data[CONF_SERVER_IDENTIFIER]
+        )
+
     if MP_DOMAIN not in entry.options:
         options = dict(entry.options)
         options.setdefault(
@@ -127,7 +138,7 @@ async def async_setup_entry(hass, entry):
             server_config[CONF_URL],
             error,
         )
-        return False
+        raise ConfigEntryNotReady
     except (
         plexapi.exceptions.BadRequest,
         plexapi.exceptions.Unauthorized,

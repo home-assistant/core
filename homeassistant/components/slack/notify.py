@@ -163,7 +163,7 @@ class SlackNotificationService(BaseNotificationService):
                     return open(local_path, "rb")
                 _LOGGER.warning("'%s' is not secure to load data from!", local_path)
             else:
-                _LOGGER.warning("Neither URL nor local path found in params!")
+                _LOGGER.warning("Neither URL nor local path found in parameters!")
 
         except OSError as error:
             _LOGGER.error("Can't load from URL or local path: %s", error)

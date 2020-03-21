@@ -1,8 +1,4 @@
-"""Support for Dyson Pure Cool link fan.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/fan.dyson/
-"""
+"""Support for Dyson Pure Cool link fan."""
 import logging
 
 from libpurecool.const import FanMode, FanSpeed, NightMode, Oscillation
@@ -157,10 +153,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
     hass.services.register(
-        DYSON_DOMAIN,
-        SERVICE_SET_AUTO_MODE,
-        service_handle,
-        schema=SET_AUTO_MODE_SCHEMA,
+        DYSON_DOMAIN, SERVICE_SET_AUTO_MODE, service_handle, schema=SET_AUTO_MODE_SCHEMA
     )
     if has_purecool_devices:
         hass.services.register(
@@ -223,7 +216,7 @@ class DysonPureCoolLinkDevice(FanEntity):
         if speed == FanSpeed.FAN_SPEED_AUTO.value:
             self._device.set_configuration(fan_mode=FanMode.AUTO)
         else:
-            fan_speed = FanSpeed("{0:04d}".format(int(speed)))
+            fan_speed = FanSpeed(f"{int(speed):04d}")
             self._device.set_configuration(fan_mode=FanMode.FAN, fan_speed=fan_speed)
 
     def turn_on(self, speed: str = None, **kwargs) -> None:
@@ -233,7 +226,7 @@ class DysonPureCoolLinkDevice(FanEntity):
             if speed == FanSpeed.FAN_SPEED_AUTO.value:
                 self._device.set_configuration(fan_mode=FanMode.AUTO)
             else:
-                fan_speed = FanSpeed("{0:04d}".format(int(speed)))
+                fan_speed = FanSpeed(f"{int(speed):04d}")
                 self._device.set_configuration(
                     fan_mode=FanMode.FAN, fan_speed=fan_speed
                 )
@@ -393,7 +386,7 @@ class DysonPureCoolDevice(FanEntity):
         """Set the exact speed of the purecool fan."""
         _LOGGER.debug("Set exact speed for fan %s", self.name)
 
-        fan_speed = FanSpeed("{0:04d}".format(int(speed)))
+        fan_speed = FanSpeed(f"{int(speed):04d}")
         self._device.set_fan_speed(fan_speed)
 
     def oscillate(self, oscillating: bool) -> None:

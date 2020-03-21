@@ -3,6 +3,7 @@ from homeassistant.const import __version__
 
 DOMAIN = "plex"
 NAME_FORMAT = "Plex ({})"
+COMMON_PLAYERS = ["Plex Web"]
 
 DEFAULT_PORT = 32400
 DEFAULT_SSL = False
@@ -14,7 +15,6 @@ PLATFORMS_COMPLETED = "platforms_completed"
 SERVERS = "servers"
 WEBSOCKETS = "websockets"
 
-PLEX_CONFIG_FILE = "plex.conf"
 PLEX_MEDIA_PLAYER_OPTIONS = "plex_mp_options"
 PLEX_SERVER_CONFIG = "server_config"
 
@@ -28,6 +28,8 @@ CONF_SERVER = "server"
 CONF_SERVER_IDENTIFIER = "server_id"
 CONF_USE_EPISODE_ART = "use_episode_art"
 CONF_SHOW_ALL_CONTROLS = "show_all_controls"
+CONF_IGNORE_NEW_SHARED_USERS = "ignore_new_shared_users"
+CONF_MONITORED_USERS = "monitored_users"
 
 AUTH_CALLBACK_PATH = "/auth/plex/callback"
 AUTH_CALLBACK_NAME = "auth:plex:callback"

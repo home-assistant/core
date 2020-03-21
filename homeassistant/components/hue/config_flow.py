@@ -14,7 +14,11 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers import aiohttp_client
 
 from .bridge import authenticate_bridge
-from .const import DOMAIN, LOGGER  # pylint: disable=unused-import
+from .const import (  # pylint: disable=unused-import
+    CONF_ALLOW_HUE_GROUPS,
+    DOMAIN,
+    LOGGER,
+)
 from .errors import AuthenticationRequired, CannotConnect
 
 HUE_MANUFACTURERURL = "http://www.philips.com"
@@ -56,10 +60,8 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if (
             user_input is not None
             and self.discovered_bridges is not None
-            # pylint: disable=unsupported-membership-test
             and user_input["id"] in self.discovered_bridges
         ):
-            # pylint: disable=unsubscriptable-object
             self.bridge = self.discovered_bridges[user_input["id"]]
             await self.async_set_unique_id(self.bridge.id, raise_on_progress=False)
             # We pass user input to link so it will attempt to link right away
@@ -125,7 +127,11 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(
                 title=bridge.config.name,
-                data={"host": bridge.host, "username": bridge.username},
+                data={
+                    "host": bridge.host,
+                    "username": bridge.username,
+                    CONF_ALLOW_HUE_GROUPS: False,
+                },
             )
         except AuthenticationRequired:
             errors["base"] = "register_failed"

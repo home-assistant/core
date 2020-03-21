@@ -92,8 +92,8 @@ def invalid_msg(gateway, child, value_type_name):
     """Return a message for an invalid child during schema validation."""
     pres = gateway.const.Presentation
     set_req = gateway.const.SetReq
-    return "{} requires value_type {}".format(
-        pres(child.type).name, set_req[value_type_name].name
+    return (
+        f"{pres(child.type).name} requires value_type {set_req[value_type_name].name}"
     )
 
 

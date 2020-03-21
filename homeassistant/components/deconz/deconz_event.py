@@ -21,7 +21,7 @@ class DeconzEvent(DeconzBase):
         """Register callback that will be used for signals."""
         super().__init__(device, gateway)
 
-        self._device.register_async_callback(self.async_update_callback)
+        self._device.register_callback(self.async_update_callback)
 
         self.device_id = None
         self.event_id = slugify(self._device.name)
@@ -50,7 +50,7 @@ class DeconzEvent(DeconzBase):
             CONF_EVENT: self._device.state,
         }
 
-        if self._device.gesture:
+        if self._device.gesture is not None:
             data[CONF_GESTURE] = self._device.gesture
 
         self.gateway.hass.bus.async_fire(CONF_DECONZ_EVENT, data)

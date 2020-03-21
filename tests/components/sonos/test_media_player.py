@@ -1,5 +1,9 @@
 """Tests for the Sonos Media Player platform."""
+import pytest
+
 from homeassistant.components.sonos import DOMAIN, media_player
+from homeassistant.core import Context
+from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import async_setup_component
 
 
@@ -24,3 +28,17 @@ async def test_async_setup_entry_discover(hass, config_entry, discover):
 
     entity = hass.data[media_player.DATA_SONOS].entities[0]
     assert entity.unique_id == "RINCON_test"
+
+
+async def test_services(hass, config_entry, config, hass_read_only_user):
+    """Test join/unjoin requires control access."""
+    await setup_platform(hass, config_entry, config)
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN,
+            media_player.SERVICE_JOIN,
+            {"master": "media_player.bla", "entity_id": "media_player.blub"},
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )

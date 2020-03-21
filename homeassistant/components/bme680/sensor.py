@@ -1,14 +1,19 @@
 """Support for BME680 Sensor over SMBus."""
 import logging
 import threading
-from time import sleep, time
+from time import monotonic, sleep
 
 import bme680  # pylint: disable=import-error
 from smbus import SMBus  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
+    TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.temperature import celsius_to_fahrenheit
@@ -50,10 +55,10 @@ SENSOR_GAS = "gas"
 SENSOR_AQ = "airquality"
 SENSOR_TYPES = {
     SENSOR_TEMP: ["Temperature", None],
-    SENSOR_HUMID: ["Humidity", "%"],
+    SENSOR_HUMID: ["Humidity", UNIT_PERCENTAGE],
     SENSOR_PRESS: ["Pressure", "mb"],
     SENSOR_GAS: ["Gas Resistance", "Ohms"],
-    SENSOR_AQ: ["Air Quality", "%"],
+    SENSOR_AQ: ["Air Quality", UNIT_PERCENTAGE],
 }
 DEFAULT_MONITORED = [SENSOR_TEMP, SENSOR_HUMID, SENSOR_PRESS, SENSOR_AQ]
 OVERSAMPLING_VALUES = set([0, 1, 2, 4, 8, 16])
@@ -240,15 +245,15 @@ class BME680Handler:
         # Pause to allow initial data read for device validation.
         sleep(1)
 
-        start_time = time()
-        curr_time = time()
+        start_time = monotonic()
+        curr_time = monotonic()
         burn_in_data = []
 
         _LOGGER.info(
             "Beginning %d second gas sensor burn in for Air Quality", burn_in_time
         )
         while curr_time - start_time < burn_in_time:
-            curr_time = time()
+            curr_time = monotonic()
             if self._sensor.get_sensor_data() and self._sensor.data.heat_stable:
                 gas_resistance = self._sensor.data.gas_resistance
                 burn_in_data.append(gas_resistance)

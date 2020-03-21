@@ -66,7 +66,12 @@ class TestTTSMaryTTSPlatform:
 
         with patch("http.client.HTTPConnection", return_value=conn):
             self.hass.services.call(
-                tts.DOMAIN, "marytts_say", {tts.ATTR_MESSAGE: "HomeAssistant"}
+                tts.DOMAIN,
+                "marytts_say",
+                {
+                    "entity_id": "media_player.something",
+                    tts.ATTR_MESSAGE: "HomeAssistant",
+                },
             )
         self.hass.block_till_done()
 
@@ -93,7 +98,12 @@ class TestTTSMaryTTSPlatform:
 
         with patch("http.client.HTTPConnection", return_value=conn):
             self.hass.services.call(
-                tts.DOMAIN, "marytts_say", {tts.ATTR_MESSAGE: "HomeAssistant"}
+                tts.DOMAIN,
+                "marytts_say",
+                {
+                    "entity_id": "media_player.something",
+                    tts.ATTR_MESSAGE: "HomeAssistant",
+                },
             )
         self.hass.block_till_done()
 
@@ -123,7 +133,12 @@ class TestTTSMaryTTSPlatform:
 
         with patch("http.client.HTTPConnection", return_value=conn):
             self.hass.services.call(
-                tts.DOMAIN, "marytts_say", {tts.ATTR_MESSAGE: "HomeAssistant"}
+                tts.DOMAIN,
+                "marytts_say",
+                {
+                    "entity_id": "media_player.something",
+                    tts.ATTR_MESSAGE: "HomeAssistant",
+                },
             )
         self.hass.block_till_done()
 

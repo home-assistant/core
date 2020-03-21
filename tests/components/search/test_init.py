@@ -163,7 +163,7 @@ async def test_search(hass):
             "automation": [
                 {
                     "alias": "wled_entity",
-                    "trigger": {"platform": "state", "entity_id": "sensor.trigger_1"},
+                    "trigger": {"platform": "template", "value_template": "true"},
                     "action": [
                         {
                             "service": "test.script",
@@ -173,7 +173,7 @@ async def test_search(hass):
                 },
                 {
                     "alias": "wled_device",
-                    "trigger": {"platform": "state", "entity_id": "sensor.trigger_1"},
+                    "trigger": {"platform": "template", "value_template": "true"},
                     "action": [
                         {
                             "domain": "light",

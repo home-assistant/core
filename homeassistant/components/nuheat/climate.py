@@ -2,14 +2,15 @@
 from datetime import timedelta
 import logging
 
+from nuheat.config import SCHEDULE_HOLD, SCHEDULE_RUN, SCHEDULE_TEMPORARY_HOLD
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    PRESET_NONE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
@@ -28,16 +29,25 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
-# Hold modes
-MODE_AUTO = HVAC_MODE_AUTO  # Run device schedule
-MODE_HOLD_TEMPERATURE = "temperature"
-MODE_TEMPORARY_HOLD = "temporary_temperature"
+# The device does not have an off function.
+# To turn it off set to min_temp and PRESET_PERMANENT_HOLD
+OPERATION_LIST = [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
 
-OPERATION_LIST = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
+PRESET_RUN = "Run Schedule"
+PRESET_TEMPORARY_HOLD = "Temporary Hold"
+PRESET_PERMANENT_HOLD = "Permanent Hold"
 
-SCHEDULE_HOLD = 3
-SCHEDULE_RUN = 1
-SCHEDULE_TEMPORARY_HOLD = 2
+PRESET_MODES = [PRESET_RUN, PRESET_TEMPORARY_HOLD, PRESET_PERMANENT_HOLD]
+
+PRESET_MODE_TO_SCHEDULE_MODE_MAP = {
+    PRESET_RUN: SCHEDULE_RUN,
+    PRESET_TEMPORARY_HOLD: SCHEDULE_TEMPORARY_HOLD,
+    PRESET_PERMANENT_HOLD: SCHEDULE_HOLD,
+}
+
+SCHEDULE_MODE_TO_PRESET_MODE_MAP = {
+    value: key for key, value in PRESET_MODE_TO_SCHEDULE_MODE_MAP.items()
+}
 
 SERVICE_RESUME_PROGRAM = "resume_program"
 
@@ -118,12 +128,36 @@ class NuHeatThermostat(ClimateDevice):
         return self._thermostat.fahrenheit
 
     @property
-    def hvac_mode(self):
-        """Return current operation. ie. heat, idle."""
-        if self._thermostat.heating:
-            return HVAC_MODE_HEAT
+    def unique_id(self):
+        """Return the unique id."""
+        return self._thermostat.serial_number
 
-        return HVAC_MODE_OFF
+    @property
+    def available(self):
+        """Return the unique id."""
+        return self._thermostat.online
+
+    def set_hvac_mode(self, hvac_mode):
+        """Set the system mode."""
+
+        if hvac_mode == HVAC_MODE_AUTO:
+            self._thermostat.schedule_mode = SCHEDULE_RUN
+        elif hvac_mode == HVAC_MODE_HEAT:
+            self._thermostat.schedule_mode = SCHEDULE_HOLD
+
+        self._schedule_update()
+
+    @property
+    def hvac_mode(self):
+        """Return current setting heat or auto."""
+        if self._thermostat.schedule_mode in (SCHEDULE_TEMPORARY_HOLD, SCHEDULE_HOLD):
+            return HVAC_MODE_HEAT
+        return HVAC_MODE_AUTO
+
+    @property
+    def hvac_action(self):
+        """Return current operation heat or idle."""
+        return CURRENT_HVAC_HEAT if self._thermostat.heating else CURRENT_HVAC_IDLE
 
     @property
     def min_temp(self):
@@ -153,21 +187,12 @@ class NuHeatThermostat(ClimateDevice):
     def preset_mode(self):
         """Return current preset mode."""
         schedule_mode = self._thermostat.schedule_mode
-        if schedule_mode == SCHEDULE_RUN:
-            return MODE_AUTO
-
-        if schedule_mode == SCHEDULE_HOLD:
-            return MODE_HOLD_TEMPERATURE
-
-        if schedule_mode == SCHEDULE_TEMPORARY_HOLD:
-            return MODE_TEMPORARY_HOLD
-
-        return MODE_AUTO
+        return SCHEDULE_MODE_TO_PRESET_MODE_MAP.get(schedule_mode, PRESET_RUN)
 
     @property
     def preset_modes(self):
         """Return available preset modes."""
-        return [PRESET_NONE, MODE_HOLD_TEMPERATURE, MODE_TEMPORARY_HOLD]
+        return PRESET_MODES
 
     @property
     def hvac_modes(self):
@@ -177,37 +202,42 @@ class NuHeatThermostat(ClimateDevice):
     def resume_program(self):
         """Resume the thermostat's programmed schedule."""
         self._thermostat.resume_schedule()
-        self._force_update = True
+        self._schedule_update()
 
     def set_preset_mode(self, preset_mode):
         """Update the hold mode of the thermostat."""
-        if preset_mode == PRESET_NONE:
-            schedule_mode = SCHEDULE_RUN
 
-        elif preset_mode == MODE_HOLD_TEMPERATURE:
-            schedule_mode = SCHEDULE_HOLD
-
-        elif preset_mode == MODE_TEMPORARY_HOLD:
-            schedule_mode = SCHEDULE_TEMPORARY_HOLD
-
-        self._thermostat.schedule_mode = schedule_mode
-        self._force_update = True
+        self._thermostat.schedule_mode = PRESET_MODE_TO_SCHEDULE_MODE_MAP.get(
+            preset_mode, SCHEDULE_RUN
+        )
+        self._schedule_update()
 
     def set_temperature(self, **kwargs):
         """Set a new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
+        self._set_temperature(kwargs.get(ATTR_TEMPERATURE))
+
+    def _set_temperature(self, temperature):
         if self._temperature_unit == "C":
             self._thermostat.target_celsius = temperature
         else:
             self._thermostat.target_fahrenheit = temperature
+        # If they set a temperature without changing the mode
+        # to heat, we behave like the device does locally
+        # and set a temp hold.
+        if self._thermostat.schedule_mode == SCHEDULE_RUN:
+            self._thermostat.schedule_mode = SCHEDULE_TEMPORARY_HOLD
 
         _LOGGER.debug(
             "Setting NuHeat thermostat temperature to %s %s",
             temperature,
             self.temperature_unit,
         )
+        self._schedule_update()
 
+    def _schedule_update(self):
         self._force_update = True
+        if self.hass:
+            self.schedule_update_ha_state(True)
 
     def update(self):
         """Get the latest state from the thermostat."""

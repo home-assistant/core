@@ -15,8 +15,10 @@
                     "name": "Nom",
                     "password": "Contrasenya",
                     "port": "Port",
-                    "username": "Nom d'usuari"
-                }
+                    "username": "Nom d'usuari",
+                    "verify_ssl": "Utilitza SSL"
+                },
+                "title": "Configuraci\u00f3 de Mikrotik Router"
             }
         },
         "title": "Mikrotik"
@@ -25,7 +27,9 @@
         "step": {
             "device_tracker": {
                 "data": {
-                    "arp_ping": "Activa el ping ARP"
+                    "arp_ping": "Activa el ping ARP",
+                    "detection_time": "Interval per considerar a casa",
+                    "force_dhcp": "For\u00e7a l'escaneig mitjan\u00e7ant DHCP"
                 }
             }
         }

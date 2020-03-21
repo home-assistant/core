@@ -103,12 +103,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 attribute_templates,
             )
         )
-    if not sensors:
-        _LOGGER.error("No sensors added")
-        return False
 
     async_add_entities(sensors)
-    return True
 
 
 class BinarySensorTemplate(BinarySensorDevice):

@@ -5,6 +5,8 @@ import logging
 from time import monotonic
 from typing import Any, Awaitable, Callable, List, Optional
 
+import aiohttp
+
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
@@ -26,9 +28,10 @@ class DataUpdateCoordinator:
         self,
         hass: HomeAssistant,
         logger: logging.Logger,
+        *,
         name: str,
-        update_method: Callable[[], Awaitable],
         update_interval: timedelta,
+        update_method: Optional[Callable[[], Awaitable]] = None,
         request_refresh_debouncer: Optional[Debouncer] = None,
     ):
         """Initialize global data updater."""
@@ -43,16 +46,20 @@ class DataUpdateCoordinator:
         self._listeners: List[CALLBACK_TYPE] = []
         self._unsub_refresh: Optional[CALLBACK_TYPE] = None
         self._request_refresh_task: Optional[asyncio.TimerHandle] = None
-        self.failed_last_update = False
+        self.last_update_success = True
+
         if request_refresh_debouncer is None:
             request_refresh_debouncer = Debouncer(
                 hass,
                 logger,
-                REQUEST_REFRESH_DEFAULT_COOLDOWN,
-                REQUEST_REFRESH_DEFAULT_IMMEDIATE,
+                cooldown=REQUEST_REFRESH_DEFAULT_COOLDOWN,
+                immediate=REQUEST_REFRESH_DEFAULT_IMMEDIATE,
+                function=self.async_refresh,
             )
+        else:
+            request_refresh_debouncer.function = self.async_refresh
+
         self._debounced_refresh = request_refresh_debouncer
-        request_refresh_debouncer.function = self.async_refresh
 
     @callback
     def async_add_listener(self, update_callback: CALLBACK_TYPE) -> None:
@@ -97,8 +104,14 @@ class DataUpdateCoordinator:
         """
         await self._debounced_refresh.async_call()
 
+    async def _async_update_data(self) -> Optional[Any]:
+        """Fetch the latest data from the source."""
+        if self.update_method is None:
+            raise NotImplementedError("Update method not implemented")
+        return await self.update_method()
+
     async def async_refresh(self) -> None:
-        """Update data."""
+        """Refresh data."""
         if self._unsub_refresh:
             self._unsub_refresh()
             self._unsub_refresh = None
@@ -107,23 +120,36 @@ class DataUpdateCoordinator:
 
         try:
             start = monotonic()
-            self.data = await self.update_method()
+            self.data = await self._async_update_data()
+
+        except asyncio.TimeoutError:
+            if self.last_update_success:
+                self.logger.error("Timeout fetching %s data", self.name)
+                self.last_update_success = False
+
+        except aiohttp.ClientError as err:
+            if self.last_update_success:
+                self.logger.error("Error requesting %s data: %s", self.name, err)
+                self.last_update_success = False
 
         except UpdateFailed as err:
-            if not self.failed_last_update:
+            if self.last_update_success:
                 self.logger.error("Error fetching %s data: %s", self.name, err)
-                self.failed_last_update = True
+                self.last_update_success = False
+
+        except NotImplementedError as err:
+            raise err
 
         except Exception as err:  # pylint: disable=broad-except
-            self.failed_last_update = True
+            self.last_update_success = False
             self.logger.exception(
                 "Unexpected error fetching %s data: %s", self.name, err
             )
 
         else:
-            if self.failed_last_update:
-                self.failed_last_update = False
-                self.logger.info("Fetching %s data recovered")
+            if not self.last_update_success:
+                self.last_update_success = True
+                self.logger.info("Fetching %s data recovered", self.name)
 
         finally:
             self.logger.debug(

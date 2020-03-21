@@ -7,6 +7,7 @@ from homeassistant.const import (
     CONF_BRIGHTNESS,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
+    TIME_SECONDS,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -281,7 +282,7 @@ class SendKeys(LcnServiceCall):
                 vol.Upper, vol.In(SENDKEYCOMMANDS)
             ),
             vol.Optional(CONF_TIME, default=0): vol.All(int, vol.Range(min=0)),
-            vol.Optional(CONF_TIME_UNIT, default="s"): vol.All(
+            vol.Optional(CONF_TIME_UNIT, default=TIME_SECONDS): vol.All(
                 vol.Upper, vol.In(TIME_UNITS)
             ),
         }
@@ -324,7 +325,7 @@ class LockKeys(LcnServiceCall):
             ),
             vol.Required(CONF_STATE): is_key_lock_states_string,
             vol.Optional(CONF_TIME, default=0): vol.All(int, vol.Range(min=0)),
-            vol.Optional(CONF_TIME_UNIT, default="s"): vol.All(
+            vol.Optional(CONF_TIME_UNIT, default=TIME_SECONDS): vol.All(
                 vol.Upper, vol.In(TIME_UNITS)
             ),
         }
