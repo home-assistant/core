@@ -1,9 +1,13 @@
 """Support for Nexia Automations."""
 
+import asyncio
+
 from homeassistant.components.scene import Scene
 
 from .const import ATTR_DESCRIPTION, DOMAIN, NEXIA_DEVICE, UPDATE_COORDINATOR
 from .entity import NexiaEntity
+
+SCENE_ACTIVATION_TIME = 5
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -45,7 +49,8 @@ class NexiaAutomationScene(NexiaEntity, Scene):
         """Return the icon of the automation scene."""
         return "mdi:script-text-outline"
 
-    def activate(self):
+    async def async_activate(self):
         """Activate an automation scene."""
-        self._automation.activate()
-        self._coordinator.async_request_refresh()
+        await self.hass.async_add_executor_job(self._automation.activate)
+        await asyncio.sleep(SCENE_ACTIVATION_TIME)
+        await self._coordinator.async_refresh()
