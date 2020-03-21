@@ -31,7 +31,7 @@ ACCESS_TOKEN = "superdoublesecret"
 @pytest.fixture
 def auth_header(hass_access_token):
     """Generate an HTTP header with bearer token authorization."""
-    return {AUTHORIZATION: "Bearer {}".format(hass_access_token)}
+    return {AUTHORIZATION: f"Bearer {hass_access_token}"}
 
 
 @pytest.fixture
@@ -175,12 +175,12 @@ async def test_query_request(hass_fixture, assistant_client, auth_header):
     assert devices["light.bed_light"]["on"] is False
     assert devices["light.ceiling_lights"]["on"] is True
     assert devices["light.ceiling_lights"]["brightness"] == 70
+    assert devices["light.ceiling_lights"]["color"]["temperatureK"] == 2631
     assert devices["light.kitchen_lights"]["color"]["spectrumHsv"] == {
         "hue": 345,
         "saturation": 0.75,
         "value": 0.7058823529411765,
     }
-    assert devices["light.kitchen_lights"]["color"]["temperatureK"] == 4166
     assert devices["media_player.lounge_room"]["on"] is True
 
 
@@ -372,7 +372,6 @@ async def test_execute_request(hass_fixture, assistant_client, auth_header):
 
     bed = hass_fixture.states.get("light.bed_light")
     assert bed.attributes.get(light.ATTR_COLOR_TEMP) == 212
-    assert bed.attributes.get(light.ATTR_RGB_COLOR) == (0, 255, 0)
 
     assert hass_fixture.states.get("switch.decorative_lights").state == "off"
 

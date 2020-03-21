@@ -2,7 +2,7 @@
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import CONF_TYPE
 
-from . import IHC_CONTROLLER, IHC_DATA, IHC_INFO
+from . import IHC_CONTROLLER, IHC_INFO
 from .const import CONF_INVERTING
 from .ihcdevice import IHCDevice
 
@@ -18,7 +18,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         product = device["product"]
         # Find controller that corresponds with device id
         ctrl_id = device["ctrl_id"]
-        ihc_key = IHC_DATA.format(ctrl_id)
+        ihc_key = f"ihc{ctrl_id}"
         info = hass.data[ihc_key][IHC_INFO]
         ihc_controller = hass.data[ihc_key][IHC_CONTROLLER]
 

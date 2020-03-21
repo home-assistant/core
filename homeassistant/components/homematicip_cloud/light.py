@@ -20,6 +20,7 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
+    SUPPORT_TRANSITION,
     Light,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -197,7 +198,7 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
+        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_TRANSITION
 
     @property
     def unique_id(self) -> str:

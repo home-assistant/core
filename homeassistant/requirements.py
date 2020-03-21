@@ -32,7 +32,7 @@ class RequirementsNotFound(HomeAssistantError):
 
 
 async def async_get_integration_with_requirements(
-    hass: HomeAssistant, domain: str, done: Set[str] = None
+    hass: HomeAssistant, domain: str, done: Optional[Set[str]] = None
 ) -> Integration:
     """Get an integration with all requirements installed, including the dependencies.
 

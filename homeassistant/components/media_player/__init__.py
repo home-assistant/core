@@ -104,7 +104,6 @@ _RND = SystemRandom()
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-ENTITY_IMAGE_URL = "/api/media_player_proxy/{0}?token={1}&cache={2}"
 CACHE_IMAGES = "images"
 CACHE_MAXSIZE = "maxsize"
 CACHE_LOCK = "lock"
@@ -173,6 +172,23 @@ SCHEMA_WEBSOCKET_GET_THUMBNAIL = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.exten
 )
 
 
+def _rename_keys(**keys):
+    """Create validator that renames keys.
+
+    Necessary because the service schema names do not match the command parameters.
+
+    Async friendly.
+    """
+
+    def rename(value):
+        for to_key, from_key in keys.items():
+            if from_key in value:
+                value[to_key] = value.pop(from_key)
+        return value
+
+    return rename
+
+
 async def async_setup(hass, config):
     """Track states and offer events for media_players."""
     component = hass.data[DOMAIN] = EntityComponent(
@@ -238,30 +254,39 @@ async def async_setup(hass, config):
     )
     component.async_register_entity_service(
         SERVICE_VOLUME_SET,
-        {vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float},
-        lambda entity, call: entity.async_set_volume_level(
-            volume=call.data[ATTR_MEDIA_VOLUME_LEVEL]
+        vol.All(
+            cv.make_entity_service_schema(
+                {vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float}
+            ),
+            _rename_keys(volume=ATTR_MEDIA_VOLUME_LEVEL),
         ),
+        "async_set_volume_level",
         [SUPPORT_VOLUME_SET],
     )
     component.async_register_entity_service(
         SERVICE_VOLUME_MUTE,
-        {vol.Required(ATTR_MEDIA_VOLUME_MUTED): cv.boolean},
-        lambda entity, call: entity.async_mute_volume(
-            mute=call.data[ATTR_MEDIA_VOLUME_MUTED]
+        vol.All(
+            cv.make_entity_service_schema(
+                {vol.Required(ATTR_MEDIA_VOLUME_MUTED): cv.boolean}
+            ),
+            _rename_keys(mute=ATTR_MEDIA_VOLUME_MUTED),
         ),
+        "async_mute_volume",
         [SUPPORT_VOLUME_MUTE],
     )
     component.async_register_entity_service(
         SERVICE_MEDIA_SEEK,
-        {
-            vol.Required(ATTR_MEDIA_SEEK_POSITION): vol.All(
-                vol.Coerce(float), vol.Range(min=0)
-            )
-        },
-        lambda entity, call: entity.async_media_seek(
-            position=call.data[ATTR_MEDIA_SEEK_POSITION]
+        vol.All(
+            cv.make_entity_service_schema(
+                {
+                    vol.Required(ATTR_MEDIA_SEEK_POSITION): vol.All(
+                        vol.Coerce(float), vol.Range(min=0)
+                    )
+                }
+            ),
+            _rename_keys(position=ATTR_MEDIA_SEEK_POSITION),
         ),
+        "async_media_seek",
         [SUPPORT_SEEK],
     )
     component.async_register_entity_service(
@@ -278,12 +303,15 @@ async def async_setup(hass, config):
     )
     component.async_register_entity_service(
         SERVICE_PLAY_MEDIA,
-        MEDIA_PLAYER_PLAY_MEDIA_SCHEMA,
-        lambda entity, call: entity.async_play_media(
-            media_type=call.data[ATTR_MEDIA_CONTENT_TYPE],
-            media_id=call.data[ATTR_MEDIA_CONTENT_ID],
-            enqueue=call.data.get(ATTR_MEDIA_ENQUEUE),
+        vol.All(
+            cv.make_entity_service_schema(MEDIA_PLAYER_PLAY_MEDIA_SCHEMA),
+            _rename_keys(
+                media_type=ATTR_MEDIA_CONTENT_TYPE,
+                media_id=ATTR_MEDIA_CONTENT_ID,
+                enqueue=ATTR_MEDIA_ENQUEUE,
+            ),
         ),
+        "async_play_media",
         [SUPPORT_PLAY_MEDIA],
     )
     component.async_register_entity_service(
@@ -728,12 +756,20 @@ class MediaPlayerDevice(Entity):
         if self.media_image_remotely_accessible:
             return self.media_image_url
 
+        return self.media_image_local
+
+    @property
+    def media_image_local(self):
+        """Return local url to media image."""
         image_hash = self.media_image_hash
 
         if image_hash is None:
             return None
 
-        return ENTITY_IMAGE_URL.format(self.entity_id, self.access_token, image_hash)
+        return (
+            f"/api/media_player_proxy/{self.entity_id}?"
+            f"token={self.access_token}&cache={image_hash}"
+        )
 
     @property
     def capability_attributes(self):
@@ -759,11 +795,15 @@ class MediaPlayerDevice(Entity):
         if self.state == STATE_OFF:
             return None
 
-        state_attr = {
-            attr: getattr(self, attr)
-            for attr in ATTR_TO_PROPERTY
-            if getattr(self, attr) is not None
-        }
+        state_attr = {}
+
+        for attr in ATTR_TO_PROPERTY:
+            value = getattr(self, attr)
+            if value is not None:
+                state_attr[attr] = value
+
+        if self.media_image_remotely_accessible:
+            state_attr["entity_picture_local"] = self.media_image_local
 
         return state_attr
 
@@ -834,12 +874,6 @@ class MediaPlayerImageView(HomeAssistantView):
         if not authenticated:
             return web.Response(status=401)
 
-        if player.media_image_remotely_accessible:
-            url = player.media_image_url
-            if url is not None:
-                return web.Response(status=302, headers={"location": url})
-            return web.Response(status=500)
-
         data, content_type = await player.async_get_media_image()
 
         if data is None:
@@ -865,6 +899,10 @@ async def websocket_handle_thumbnail(hass, connection, msg):
             )
         )
         return
+
+    _LOGGER.warning(
+        "The websocket command media_player_thumbnail is deprecated. Use /api/media_player_proxy instead."
+    )
 
     data, content_type = await player.async_get_media_image()
 

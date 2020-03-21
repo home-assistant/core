@@ -6,7 +6,7 @@
             "already_in_progress": "Il flusso di configurazione per il dispositivo \u00e8 gi\u00e0 in corso.",
             "already_paired": "Questo accessorio \u00e8 gi\u00e0 associato a un altro dispositivo. Si prega di resettare l'accessorio e riprovare.",
             "ignored_model": "Il supporto di HomeKit per questo modello \u00e8 bloccato poich\u00e9 \u00e8 disponibile un'integrazione nativa con pi\u00f9 funzionalit\u00e0.",
-            "invalid_config_entry": "Questo dispositivo viene visualizzato come pronto per l'associazione, ma c'\u00e8 gi\u00e0 una voce di configurazione in conflitto in Home Assistant che deve prima essere rimossa.",
+            "invalid_config_entry": "Questo dispositivo viene visualizzato come pronto per l'associazione, ma c'\u00e8 gi\u00e0 una voce di configurazione in conflitto in Home Assistant che prima deve essere rimossa.",
             "no_devices": "Non \u00e8 stato possibile trovare dispositivi non associati"
         },
         "error": {

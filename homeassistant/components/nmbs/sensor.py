@@ -11,6 +11,7 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     CONF_NAME,
     CONF_SHOW_ON_MAP,
+    TIME_MINUTES,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -184,7 +185,7 @@ class NMBSSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "min"
+        return TIME_MINUTES
 
     @property
     def icon(self):

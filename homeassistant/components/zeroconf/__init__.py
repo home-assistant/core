@@ -108,7 +108,6 @@ def setup(hass, config):
 
     def stop_zeroconf(_):
         """Stop Zeroconf."""
-        zeroconf.unregister_service(info)
         zeroconf.close()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zeroconf)

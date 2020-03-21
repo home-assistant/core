@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "missing_configuration": "L'int\u00e9gration Withings n'est pas configur\u00e9e. Veuillez suivre la documentation.",
             "no_flows": "Vous devez configurer Withings avant de pouvoir vous authentifier avec celui-ci. Veuillez lire la documentation."
         },
         "create_entry": {

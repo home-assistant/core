@@ -28,10 +28,13 @@
             "device_tracker": {
                 "data": {
                     "detection_time": "Zeit in Sekunden vom letzten Gesehenen bis zur Entfernung",
+                    "ssid_filter": "W\u00e4hlen Sie SSIDs zur Verfolgung von drahtlosen Clients aus",
                     "track_clients": "Nachverfolgen von Netzwerkclients",
                     "track_devices": "Verfolgen von Netzwerkger\u00e4ten (Ubiquiti-Ger\u00e4te)",
                     "track_wired_clients": "Einbinden von kabelgebundenen Netzwerk-Clients"
-                }
+                },
+                "description": "Konfigurieren Sie die Ger\u00e4teverfolgung",
+                "title": "UniFi-Optionen"
             },
             "init": {
                 "data": {
@@ -42,7 +45,9 @@
             "statistics_sensors": {
                 "data": {
                     "allow_bandwidth_sensors": "Erstellen von Bandbreiten-Nutzungssensoren f\u00fcr Netzwerk-Clients"
-                }
+                },
+                "description": "Konfigurieren Sie Statistiksensoren",
+                "title": "UniFi-Optionen"
             }
         }
     }
