@@ -289,21 +289,12 @@ class LIFXManager:
     def register_set_state(self):
         """Register the LIFX set_state service call."""
 
-        async def service_handler(service):
+        async def service_handler(entity, service):
             """Apply a service."""
-            tasks = []
-            for light in await self.platform.async_extract_from_service(service):
-                if service.service == SERVICE_LIFX_SET_STATE:
-                    task = light.set_state(**service.data)
-                tasks.append(self.hass.async_create_task(task))
-            if tasks:
-                await asyncio.wait(tasks)
+            await entity.set_state(**service.data)
 
-        self.hass.services.async_register(
-            LIFX_DOMAIN,
-            SERVICE_LIFX_SET_STATE,
-            service_handler,
-            schema=LIFX_SET_STATE_SCHEMA,
+        self.platform.async_register_entity_service(
+            SERVICE_LIFX_SET_STATE, LIFX_SET_STATE_SCHEMA, service_handler
         )
 
     def register_effects(self):
