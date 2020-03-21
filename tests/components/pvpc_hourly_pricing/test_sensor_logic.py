@@ -42,8 +42,7 @@ async def test_availability(hass, caplog, pvpc_aioclient_mock: AiohttpClientMock
         caplog.clear()
         assert pvpc_aioclient_mock.call_count == 2
 
-        # await _process_time_step(hass, mock_data, "price_20h")
-        await _process_time_step(hass, mock_data, "price_21h")
+        await _process_time_step(hass, mock_data, "price_21h", 0.13896)
         await _process_time_step(hass, mock_data, "price_22h", 0.06893)
         assert pvpc_aioclient_mock.call_count == 4
         await _process_time_step(hass, mock_data, "price_23h", 0.06935)

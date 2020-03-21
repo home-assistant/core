@@ -138,14 +138,16 @@ class ElecPriceSensor(RestoreEntity):
             self._num_retries += 1
             if self._num_retries > 2:
                 _LOGGER.warning(
-                    "Repeated bad data update, mark component as unavailable source"
+                    "%s: repeated bad data update, mark component as unavailable source",
+                    self.entity_id,
                 )
                 self._pvpc_data.source_available = False
                 return
 
             retry_delay = 2 * self._pvpc_data.timeout
             _LOGGER.debug(
-                "Bad update[retry:%d], will try again in %d s",
+                "%s: Bad update[retry:%d], will try again in %d s",
+                self.entity_id,
                 self._num_retries,
                 retry_delay,
             )
@@ -157,7 +159,7 @@ class ElecPriceSensor(RestoreEntity):
             return
 
         if not prices:
-            _LOGGER.debug("Data source is not yet available")
+            _LOGGER.debug("%s: data source is not yet available", self.entity_id)
             return
 
         self._num_retries = 0
