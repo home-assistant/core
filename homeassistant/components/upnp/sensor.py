@@ -1,9 +1,8 @@
 """Support for UPnP/IGD Sensors."""
 from datetime import timedelta
 from typing import Mapping
-import logging
 
-from homeassistant.const import DATA_BYTES, DATA_KIBIBYTES, STATE_UNKNOWN, TIME_SECONDS
+from homeassistant.const import DATA_BYTES, DATA_KIBIBYTES, STATE_UNKNOWN
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -21,7 +20,6 @@ from .const import (
     SIGNAL_REMOVE_DEVICE,
 )
 from .device import Device
-
 
 SENSOR_TYPES = {
     BYTES_RECEIVED: {

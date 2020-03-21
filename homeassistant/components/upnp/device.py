@@ -12,11 +12,11 @@ from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
 
 from .const import (
+    BYTES_RECEIVED,
+    BYTES_SENT,
     CONF_LOCAL_IP,
     DOMAIN,
     LOGGER as _LOGGER,
-    BYTES_RECEIVED,
-    BYTES_SENT,
     PACKETS_RECEIVED,
     PACKETS_SENT,
 )
