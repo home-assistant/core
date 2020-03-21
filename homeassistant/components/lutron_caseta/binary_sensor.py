@@ -1,9 +1,10 @@
 """Support for Lutron Caseta Occupancy/Vacancy Sensors."""
+from pylutron_caseta import OCCUPANCY_GROUP_OCCUPIED
+
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_OCCUPANCY,
     BinarySensorDevice,
 )
-from pylutron_caseta import OCCUPANCY_GROUP_OCCUPIED
 
 from . import LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice
 
