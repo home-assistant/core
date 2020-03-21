@@ -25,3 +25,4 @@ ATTR_UDP_PORT = "udp_port"
 
 # Units of measurement
 CURRENT_MA = "mA"
+SIGNAL_DBM = "dBm"
