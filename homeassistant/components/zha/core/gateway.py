@@ -156,8 +156,8 @@ class ZHAGateway:
         self._hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(
             self.application_controller.ieee
         )
-        self._initialize_groups()
         await self.async_load_devices()
+        self._initialize_groups()
 
     async def async_load_devices(self) -> None:
         """Restore ZHA devices from zigpy application state."""

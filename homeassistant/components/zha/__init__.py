@@ -100,7 +100,7 @@ async def async_setup_entry(hass, config_entry):
     for component in COMPONENTS:
         zha_data[component] = []
         coro = hass.config_entries.async_forward_entry_setup(config_entry, component)
-        zha_data[DATA_ZHA_PLATFORM_LOADED][component] = hass.loop.create_task(coro)
+        zha_data[DATA_ZHA_PLATFORM_LOADED][component] = hass.async_create_task(coro)
 
     if config.get(CONF_ENABLE_QUIRKS, True):
         # needs to be done here so that the ZHA module is finished loading
