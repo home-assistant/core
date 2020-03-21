@@ -202,26 +202,26 @@ class HassEzvizCamera(Camera):
         """Initialize an Ezviz camera."""
         super().__init__()
 
-        self._username = data["username"]
-        self._password = data["password"]
-        self._rtsp_stream = data["rtsp_stream"]
+        self._username = data.get("username")
+        self._password = data.get("password")
+        self._rtsp_stream = data.get("rtsp_stream")
+        self._ezviz_camera = data.get("ezviz_camera")
 
-        self._ezviz_camera = data["ezviz_camera"]
-        self._serial = data["serial"]
-        self._name = data["name"]
-        self._status = data["status"]
-        self._privacy = data["privacy"]
-        self._audio = data["audio"]
-        self._ir_led = data["ir_led"]
-        self._state_led = data["state_led"]
-        self._follow_move = data["follow_move"]
-        self._alarm_notify = data["alarm_notify"]
-        self._alarm_sound_mod = data["alarm_sound_mod"]
-        self._encrypted = data["encrypted"]
-        self._local_ip = data["local_ip"]
-        self._detection_sensibility = data["detection_sensibility"]
-        self._device_sub_category = data["device_sub_category"]
-        self._local_rtsp_port = data["local_rtsp_port"]
+        self._serial = data.get("serial")
+        self._name = data.get("name")
+        self._status = data.get("status", 0)
+        self._privacy = data.get("privacy")
+        self._audio = data.get("audio")
+        self._ir_led = data.get("ir_led", 0)
+        self._state_led = data.get("state_led", 0)
+        self._follow_move = data.get("follow_move", 0)
+        self._alarm_notify = data.get("alarm_notify", 0)
+        self._alarm_sound_mod = data.get("alarm_sound_mod", 0)
+        self._encrypted = data.get("encrypted", 0)
+        self._local_ip = data.get("local_ip")
+        self._detection_sensibility = data.get("detection_sensibility")
+        self._device_sub_category = data.get("device_sub_category")
+        self._local_rtsp_port = data.get("local_rtsp_port", 554)
 
         self._ffmpeg = None
 
