@@ -127,31 +127,15 @@ class ElecPriceSensor(RestoreEntity):
         """Return the state attributes."""
         return self._pvpc_data.attributes
 
-    async def async_update(self, *_args):
+    async def async_update(self, *args):
         """Update the sensor state."""
         if not self._init_done:
             # abort until added_to_hass is finished
             return
 
-        now = dt_util.utcnow()
-        if self._pvpc_data.process_state_and_attributes(now):
-            await self.async_update_ha_state()
-        else:
-            # If no prices present, download and schedule a future state update
-            self._pvpc_data.state_available = False
-            self.async_schedule_update_ha_state()
-
-            if self._pvpc_data.source_available:
-                _LOGGER.debug(
-                    "[%s]: Downloading prices as there are no valid ones",
-                    self.entity_id,
-                )
-                async_track_point_in_time(
-                    self.hass,
-                    self.async_update,
-                    now + timedelta(seconds=self._pvpc_data.timeout),
-                )
-            await self.async_update_prices(now)
+        now = dt_util.utcnow() if not args else args[0]
+        self._pvpc_data.process_state_and_attributes(now)
+        self.async_write_ha_state()
 
     async def async_update_prices(self, now):
         """Update electricity prices from the ESIOS API."""
@@ -165,7 +149,7 @@ class ElecPriceSensor(RestoreEntity):
                 self._pvpc_data.source_available = False
                 return
 
-            retry_delay = 3 * self._pvpc_data.timeout
+            retry_delay = 2 * self._pvpc_data.timeout
             _LOGGER.debug(
                 "Bad update[retry:%d], will try again in %d s",
                 self._num_retries,
