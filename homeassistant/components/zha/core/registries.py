@@ -123,9 +123,9 @@ DEVICE_CLASS = {
 DEVICE_CLASS = collections.defaultdict(dict, DEVICE_CLASS)
 
 DEVICE_TRACKER_CLUSTERS = SetRegistry()
-EVENT_RELAY_CLUSTERS = SetRegistry()
 LIGHT_CLUSTERS = SetRegistry()
 OUTPUT_CHANNEL_ONLY_CLUSTERS = SetRegistry()
+CLIENT_CHANNELS_REGISTRY = DictRegistry()
 
 RADIO_TYPES = {
     RadioType.deconz.name: {

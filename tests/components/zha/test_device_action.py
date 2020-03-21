@@ -103,7 +103,7 @@ async def test_action(hass, device_ias):
         await hass.async_block_till_done()
         calls = async_mock_service(hass, DOMAIN, "warning_device_warn")
 
-        channel = zha_device.channels.pools[0].relay_channels["1:0x0006"]
+        channel = zha_device.channels.pools[0].client_channels["1:0x0006"]
         channel.zha_send_event(COMMAND_SINGLE, [])
         await hass.async_block_till_done()
 
