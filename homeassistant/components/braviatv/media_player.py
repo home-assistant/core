@@ -22,7 +22,6 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util.json import load_json, save_json
 
 BRAVIA_CONFIG_FILE = "bravia.conf"
@@ -179,9 +178,9 @@ class BraviaTVDevice(MediaPlayerDevice):
         self._min_volume = None
         self._max_volume = None
         self._volume = None
-        self._unique_id = format_mac(mac)
 
         self._braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
+        self._unique_id = self._braviarc.get_system_info().get("cid").lower()
         if self._braviarc.is_connected():
             self.update()
         else:
