@@ -185,7 +185,7 @@ class TankerkoenigData:
             _LOGGER.warning(
                 "Found more than 10 stations to check. "
                 "This might invalidate your api-key on the long run. "
-                "Try using a smaller radius."
+                "Try using a smaller radius"
             )
         return True
 
