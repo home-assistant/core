@@ -36,7 +36,6 @@ from .const import (
     DATA_ZHA,
     DATA_ZHA_BRIDGE_ID,
     DATA_ZHA_GATEWAY,
-    DATA_ZHA_PLATFORM_LOADED,
     DEBUG_COMP_BELLOWS,
     DEBUG_COMP_ZHA,
     DEBUG_COMP_ZIGPY,
@@ -158,11 +157,10 @@ class ZHAGateway:
             self.application_controller.ieee
         )
         self._initialize_groups()
+        await self.async_load_devices()
 
     async def async_load_devices(self) -> None:
         """Restore ZHA devices from zigpy application state."""
-        await self._hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED].wait()
-
         semaphore = asyncio.Semaphore(2)
 
         async def _throttle(device: zha_typing.ZigpyDeviceType):
@@ -178,13 +176,11 @@ class ZHAGateway:
                 if not dev.node_desc.is_mains_powered
             ]
         )
-        async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES)
 
         _LOGGER.debug("Loading mains powered devices")
         await asyncio.gather(
             *[_throttle(dev) for dev in zigpy_devices if dev.node_desc.is_mains_powered]
         )
-        async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES)
 
     def device_joined(self, device):
         """Handle device joined.

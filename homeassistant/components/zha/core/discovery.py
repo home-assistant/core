@@ -8,6 +8,16 @@ from homeassistant.core import callback
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import const as zha_const, registries as zha_regs, typing as zha_typing
+from .. import (  # noqa: F401 pylint: disable=unused-import,
+    binary_sensor,
+    cover,
+    device_tracker,
+    fan,
+    light,
+    lock,
+    sensor,
+    switch,
+)
 from .channels import base
 
 _LOGGER = logging.getLogger(__name__)
