@@ -4,9 +4,7 @@ import unittest.mock as mock
 
 import pytest
 
-from homeassistant.components import scene
 from homeassistant.components.magichome import scene as magichome
-from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 
@@ -45,8 +43,7 @@ class TestMagichomeScene(unittest.TestCase):
     def test_activate(self):
         """Test turn_off."""
         self.scene.activate()
-    
+
     def teardown_method(self, method):
         """Stop everything that was started."""
         self.hass.stop()
-    

@@ -106,7 +106,7 @@ class TestMagichomeLight(unittest.TestCase):
         self.light.turn_on()
 
     def test_turn_on_with_brightness(self):
-        """Test brightness"""
+        """Test brightness."""
         self.light.turn_on(brightness=45)
 
     def test_turn_off(self):
