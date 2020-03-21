@@ -75,30 +75,26 @@ def brightness_from_percentage(percent):
     return (percent * 255.0) / 100.0
 
 
-LightState = NamedTuple(
-    "LightState",
-    (
-        ("state", bool),
-        ("brightness", int),
-        ("color_temp", float),
-        ("hs", Tuple[int, int]),
-        ("emeter_params", dict),
-    ),
-)
+class LightState(NamedTuple):
+    """Light state."""
+
+    state: bool
+    brightness: int
+    color_temp: float
+    hs: Tuple[int, int]
+    emeter_params: dict
 
 
-LightFeatures = NamedTuple(
-    "LightFeatures",
-    (
-        ("sysinfo", Dict[str, Any]),
-        ("mac", str),
-        ("alias", str),
-        ("model", str),
-        ("supported_features", int),
-        ("min_mireds", float),
-        ("max_mireds", float),
-    ),
-)
+class LightFeatures(NamedTuple):
+    """Light features."""
+
+    sysinfo: Dict[str, Any]
+    mac: str
+    alias: str
+    model: str
+    supported_features: int
+    min_mireds: float
+    max_mireds: float
 
 
 class TPLinkSmartBulb(Light):
