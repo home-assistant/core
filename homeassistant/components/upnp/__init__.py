@@ -1,12 +1,14 @@
 """Open ports in your router for Home Assistant and provide statistics."""
 from ipaddress import ip_address
 from operator import itemgetter
+from typing import Mapping
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -23,7 +25,7 @@ from .const import (
     CONF_PORTS,
     DOMAIN,
     LOGGER as _LOGGER,
-    SIGNAL_REMOVE_SENSOR,
+    SIGNAL_REMOVE_DEVICE,
 )
 from .device import Device
 
@@ -47,7 +49,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def _substitute_hass_ports(ports, hass_port=None):
+def _substitute_hass_ports(ports: Mapping, hass_port: int = None) -> Mapping:
     """
     Substitute 'hass' for the hass_port.
 
@@ -86,7 +88,9 @@ def _substitute_hass_ports(ports, hass_port=None):
     return ports
 
 
-async def async_discover_and_construct(hass, udn=None) -> Device:
+async def async_discover_and_construct(
+    hass: HomeAssistantType, udn: str = None
+) -> Device:
     """Discovery devices and construct a Device for one."""
     discovery_infos = await Device.async_discover(hass)
     if not discovery_infos:
@@ -139,7 +143,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
     """Set up UPnP/IGD device from a config entry."""
     domain_data = hass.data[DOMAIN]
     conf = domain_data["config"]
@@ -148,7 +152,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
     device = await async_discover_and_construct(hass, config_entry.data.get("udn"))
     if not device:
         _LOGGER.info("Unable to create UPnP/IGD, aborting")
-        return False
+        raise ConfigEntryNotReady
 
     # 'register'/save UDN
     hass.data[DOMAIN]["devices"][device.udn] = device
@@ -200,7 +204,9 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
+async def async_unload_entry(
+    hass: HomeAssistantType, config_entry: ConfigEntry
+) -> bool:
     """Unload a UPnP/IGD device from a config entry."""
     udn = config_entry.data["udn"]
     device = hass.data[DOMAIN]["devices"][udn]
@@ -211,6 +217,6 @@ async def async_unload_entry(hass: HomeAssistantType, config_entry: ConfigEntry)
 
     # remove sensors
     _LOGGER.debug("Deleting sensors")
-    dispatcher.async_dispatcher_send(hass, SIGNAL_REMOVE_SENSOR, device)
+    dispatcher.async_dispatcher_send(hass, SIGNAL_REMOVE_DEVICE, device)
 
     return True

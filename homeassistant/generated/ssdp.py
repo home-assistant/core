@@ -70,6 +70,14 @@ SSDP = {
             "st": "urn:schemas-upnp-org:device:ZonePlayer:1"
         }
     ],
+    "upnp": [
+        {
+            "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
+        },
+        {
+            "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:2"
+        }
+    ],
     "wemo": [
         {
             "manufacturer": "Belkin International Inc."

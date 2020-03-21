@@ -9,8 +9,17 @@ from async_upnp_client.profiles.igd import IgdDevice
 
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import HomeAssistantType
+import homeassistant.util.dt as dt_util
 
-from .const import CONF_LOCAL_IP, DOMAIN, LOGGER as _LOGGER
+from .const import (
+    CONF_LOCAL_IP,
+    DOMAIN,
+    LOGGER as _LOGGER,
+    BYTES_RECEIVED,
+    BYTES_SENT,
+    PACKETS_RECEIVED,
+    PACKETS_SENT,
+)
 
 
 class Device:
@@ -80,6 +89,10 @@ class Device:
         """Get the model name."""
         return self._igd_device.model_name
 
+    def __str__(self):
+        """Get string representation."""
+        return "IGD Device: %s/%s" % (self.name, self.udn)
+
     async def async_add_port_mappings(self, ports, local_ip):
         """Add port mappings."""
         if local_ip == "127.0.0.1":
@@ -124,7 +137,7 @@ class Device:
             )
 
     async def async_delete_port_mappings(self):
-        """Remove a port mapping."""
+        """Remove port mappings."""
         for port in self._mapped_ports:
             await self._async_delete_port_mapping(port)
 
@@ -142,6 +155,7 @@ class Device:
 
     async def async_get_total_bytes_received(self):
         """Get total bytes received."""
+        _LOGGER.debug("%s: Getting total bytes received", self)
         try:
             return await self._igd_device.async_get_total_bytes_received()
         except asyncio.TimeoutError:
@@ -149,6 +163,7 @@ class Device:
 
     async def async_get_total_bytes_sent(self):
         """Get total bytes sent."""
+        _LOGGER.debug("%s: Getting total bytes sent", self)
         try:
             return await self._igd_device.async_get_total_bytes_sent()
         except asyncio.TimeoutError:
@@ -156,6 +171,7 @@ class Device:
 
     async def async_get_total_packets_received(self):
         """Get total packets received."""
+        _LOGGER.debug("%s: Getting total packets received", self)
         try:
             return await self._igd_device.async_get_total_packets_received()
         except asyncio.TimeoutError:
@@ -163,7 +179,41 @@ class Device:
 
     async def async_get_total_packets_sent(self):
         """Get total packets sent."""
+        _LOGGER.debug("%s: Getting total packets sent", self)
         try:
             return await self._igd_device.async_get_total_packets_sent()
         except asyncio.TimeoutError:
             _LOGGER.warning("Timeout during get_total_packets_sent")
+
+    async def async_get_traffic_data(self):
+        """
+        Get all traffic data in one go.
+
+        Traffic data consists of:
+        - total bytes sent
+        - total bytes received
+        - total packets sent
+        - total packats received
+
+        All data is timestamped.
+        """
+        _LOGGER.debug("Getting traffic statistics from device: %s", self)
+
+        data = {}
+        data[BYTES_RECEIVED] = {
+            "value": await self.async_get_total_bytes_received(),
+            "timestamp": dt_util.utcnow(),
+        }
+        data[BYTES_SENT] = {
+            "value": await self.async_get_total_bytes_sent(),
+            "timestamp": dt_util.utcnow(),
+        }
+        data[PACKETS_RECEIVED] = {
+            "value": await self.async_get_total_packets_received(),
+            "timestamp": dt_util.utcnow(),
+        }
+        data[PACKETS_SENT] = {
+            "value": await self.async_get_total_packets_sent(),
+            "timestamp": dt_util.utcnow(),
+        }
+        return data

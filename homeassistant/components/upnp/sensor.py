@@ -1,34 +1,59 @@
 """Support for UPnP/IGD Sensors."""
 from datetime import timedelta
+from typing import Mapping
 import logging
 
-from homeassistant.const import DATA_BYTES, DATA_KIBIBYTES, TIME_SECONDS
+from homeassistant.const import DATA_BYTES, DATA_KIBIBYTES, STATE_UNKNOWN, TIME_SECONDS
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.util import Throttle
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN as DOMAIN_UPNP, SIGNAL_REMOVE_SENSOR
+from .const import (
+    BYTES_RECEIVED,
+    BYTES_SENT,
+    DOMAIN,
+    LOGGER as _LOGGER,
+    PACKETS_RECEIVED,
+    PACKETS_SENT,
+    SIGNAL_REMOVE_DEVICE,
+)
+from .device import Device
 
-_LOGGER = logging.getLogger(__name__)
-
-BYTES_RECEIVED = "bytes_received"
-BYTES_SENT = "bytes_sent"
-PACKETS_RECEIVED = "packets_received"
-PACKETS_SENT = "packets_sent"
 
 SENSOR_TYPES = {
-    BYTES_RECEIVED: {"name": "bytes received", "unit": DATA_BYTES},
-    BYTES_SENT: {"name": "bytes sent", "unit": DATA_BYTES},
-    PACKETS_RECEIVED: {"name": "packets received", "unit": "packets"},
-    PACKETS_SENT: {"name": "packets sent", "unit": "packets"},
+    BYTES_RECEIVED: {
+        "name": "bytes received",
+        "unit": DATA_BYTES,
+        "derived_name": DATA_KIBIBYTES + "/sec received",
+        "derived_unit": DATA_KIBIBYTES + "/sec",
+        "data_name": BYTES_RECEIVED,
+    },
+    BYTES_SENT: {
+        "name": "bytes sent",
+        "unit": DATA_BYTES,
+        "derived_name": DATA_KIBIBYTES + "/sec sent",
+        "derived_unit": DATA_KIBIBYTES + "/sec",
+        "data_name": BYTES_SENT,
+    },
+    PACKETS_RECEIVED: {
+        "name": "packets received",
+        "unit": "packets",
+        "derived_unit": "packets/sec",
+        "derived_name": "packets/sec received",
+        "data_name": PACKETS_RECEIVED,
+    },
+    PACKETS_SENT: {
+        "name": "packets sent",
+        "unit": "packets",
+        "derived_name": "packets/sec sent",
+        "derived_unit": "packets/sec",
+        "data_name": PACKETS_SENT,
+    },
 }
 
-IN = "received"
-OUT = "sent"
 KIBIBYTE = 1024
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
@@ -36,238 +61,175 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 async def async_setup_platform(
     hass: HomeAssistantType, config, async_add_entities, discovery_info=None
-):
+) -> None:
     """Old way of setting up UPnP/IGD sensors."""
     _LOGGER.debug(
         "async_setup_platform: config: %s, discovery: %s", config, discovery_info
     )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
     """Set up the UPnP/IGD sensor."""
-
-    @callback
-    def async_add_sensor(device):
-        """Add sensors from UPnP/IGD device."""
-        # raw sensors + per-second sensors
-        sensors = [
-            RawUPnPIGDSensor(device, name, sensor_type)
-            for name, sensor_type in SENSOR_TYPES.items()
-        ]
-        sensors += [
-            KBytePerSecondUPnPIGDSensor(device, IN),
-            KBytePerSecondUPnPIGDSensor(device, OUT),
-            PacketsPerSecondUPnPIGDSensor(device, IN),
-            PacketsPerSecondUPnPIGDSensor(device, OUT),
-        ]
-        async_add_entities(sensors, True)
-
     data = config_entry.data
     if "udn" in data:
         udn = data["udn"]
     else:
         # any device will do
-        udn = list(hass.data[DOMAIN_UPNP]["devices"].keys())[0]
+        udn = list(hass.data[DOMAIN]["devices"].keys())[0]
 
-    device = hass.data[DOMAIN_UPNP]["devices"][udn]
-    async_add_sensor(device)
+    device = hass.data[DOMAIN]["devices"][udn]  # type: Device
+
+    _LOGGER.debug("Adding sensors")
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=device.name,
+        update_method=device.async_get_traffic_data,
+        update_interval=timedelta(seconds=MIN_TIME_BETWEEN_UPDATES.seconds),
+    )
+    await coordinator.async_refresh()
+
+    sensors = [
+        RawUpnpSensor(coordinator, device, SENSOR_TYPES[BYTES_RECEIVED]),
+        RawUpnpSensor(coordinator, device, SENSOR_TYPES[BYTES_SENT]),
+        RawUpnpSensor(coordinator, device, SENSOR_TYPES[PACKETS_RECEIVED]),
+        RawUpnpSensor(coordinator, device, SENSOR_TYPES[PACKETS_SENT]),
+        DerivedUpnpSensor(coordinator, device, SENSOR_TYPES[BYTES_RECEIVED]),
+        DerivedUpnpSensor(coordinator, device, SENSOR_TYPES[BYTES_SENT]),
+        DerivedUpnpSensor(coordinator, device, SENSOR_TYPES[PACKETS_RECEIVED]),
+        DerivedUpnpSensor(coordinator, device, SENSOR_TYPES[PACKETS_SENT]),
+    ]
+    async_add_entities(sensors, True)
 
 
 class UpnpSensor(Entity):
     """Base class for UPnP/IGD sensors."""
 
-    def __init__(self, device):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        device: Device,
+        sensor_type: Mapping[str, str],
+    ) -> None:
         """Initialize the base sensor."""
+        self._coordinator = coordinator
         self._device = device
-
-    async def async_added_to_hass(self):
-        """Subscribe to sensors events."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_REMOVE_SENSOR, self._upnp_remove_sensor
-        )
-
-    @callback
-    def _upnp_remove_sensor(self, device):
-        """Remove sensor."""
-        if self._device != device:
-            # not for us
-            return
-
-        self.hass.async_create_task(self.async_remove())
+        self._sensor_type = sensor_type
 
     @property
-    def device_info(self):
+    def should_poll(self) -> bool:
+        """Inform we should not be polled."""
+        return False
+
+    @property
+    def icon(self) -> str:
+        """Icon to use in the frontend, if any."""
+        return "mdi:server-network"
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._coordinator.last_update_success
+
+    @property
+    def name(self) -> str:
+        """Return the name of the sensor."""
+        return f"{self._device.name} {self._sensor_type['name']}"
+
+    @property
+    def unique_id(self) -> str:
+        """Return an unique ID."""
+        return self.name.replace(" ", "_")
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement of this entity, if any."""
+        return self._sensor_type["unit"]
+
+    @property
+    def device_info(self) -> Mapping:
         """Get device info."""
         return {
             "connections": {(dr.CONNECTION_UPNP, self._device.udn)},
-            "identifiers": {(DOMAIN_UPNP, self._device.udn)},
+            "identifiers": {(DOMAIN, self._device.udn)},
             "name": self._device.name,
             "manufacturer": self._device.manufacturer,
             "model": self._device.model_name,
         }
 
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to sensors events."""
+        self._coordinator.async_add_listener(self.async_write_ha_state)
 
-class RawUPnPIGDSensor(UpnpSensor):
-    """Representation of a UPnP/IGD sensor."""
+        async_dispatcher_connect(
+            self.hass, SIGNAL_REMOVE_DEVICE, self._upnp_remove_sensor
+        )
 
-    def __init__(self, device, sensor_type_name, sensor_type):
-        """Initialize the UPnP/IGD sensor."""
-        super().__init__(device)
-        self._type_name = sensor_type_name
-        self._type = sensor_type
-        self._name = "{} {}".format(device.name, sensor_type["name"])
-        self._state = None
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unique_id(self) -> str:
-        """Return an unique ID."""
-        return f"{self._device.udn}_{self._type_name}"
-
-    @property
-    def state(self) -> str:
-        """Return the state of the device."""
-        if self._state is None:
-            return None
-
-        return format(self._state, "d")
-
-    @property
-    def icon(self) -> str:
-        """Icon to use in the frontend, if any."""
-        return "mdi:server-network"
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity, if any."""
-        return self._type["unit"]
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self):
-        """Get the latest information from the IGD."""
-        if self._type_name == BYTES_RECEIVED:
-            self._state = await self._device.async_get_total_bytes_received()
-        elif self._type_name == BYTES_SENT:
-            self._state = await self._device.async_get_total_bytes_sent()
-        elif self._type_name == PACKETS_RECEIVED:
-            self._state = await self._device.async_get_total_packets_received()
-        elif self._type_name == PACKETS_SENT:
-            self._state = await self._device.async_get_total_packets_sent()
-
-
-class PerSecondUPnPIGDSensor(UpnpSensor):
-    """Abstract representation of a X Sent/Received per second sensor."""
-
-    def __init__(self, device, direction):
-        """Initialize sensor."""
-        super().__init__(device)
-        self._direction = direction
-
-        self._state = None
-        self._last_value = None
-        self._last_update_time = None
-
-    @property
-    def unit(self) -> str:
-        """Get unit we are measuring in."""
-        raise NotImplementedError()
-
-    async def _async_fetch_value(self):
-        """Fetch a value from the IGD."""
-        raise NotImplementedError()
-
-    @property
-    def unique_id(self) -> str:
-        """Return an unique ID."""
-        return f"{self._device.udn}_{self.unit}/sec_{self._direction}"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self._device.name} {self.unit}/sec {self._direction}"
-
-    @property
-    def icon(self) -> str:
-        """Icon to use in the frontend, if any."""
-        return "mdi:server-network"
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity, if any."""
-        return f"{self.unit}/{TIME_SECONDS}"
-
-    def _is_overflowed(self, new_value) -> bool:
-        """Check if value has overflowed."""
-        return new_value < self._last_value
-
-    async def async_update(self):
-        """Get the latest information from the UPnP/IGD."""
-        new_value = await self._async_fetch_value()
-
-        if self._last_value is None:
-            self._last_value = new_value
-            self._last_update_time = dt_util.utcnow()
+    @callback
+    def _upnp_remove_sensor(self, device) -> None:
+        """Remove sensor."""
+        if self._device != device:
+            # not for us
             return
 
-        now = dt_util.utcnow()
-        if self._is_overflowed(new_value):
-            self._state = None  # temporarily report nothing
-        else:
-            delta_time = (now - self._last_update_time).seconds
-            delta_value = new_value - self._last_value
-            self._state = delta_value / delta_time
+        _LOGGER.debug("Removing sensor: %s", self.unique_id)
+        self.hass.async_create_task(self.async_remove())
 
-        self._last_value = new_value
-        self._last_update_time = now
+    async def async_will_remove_from_hass(self) -> None:
+        """When entity will be removed from hass."""
+        self._coordinator.async_remove_listener(self.async_write_ha_state)
 
 
-class KBytePerSecondUPnPIGDSensor(PerSecondUPnPIGDSensor):
-    """Representation of a KBytes Sent/Received per second sensor."""
-
-    @property
-    def unit(self) -> str:
-        """Get unit we are measuring in."""
-        return DATA_KIBIBYTES
-
-    async def _async_fetch_value(self) -> float:
-        """Fetch value from device."""
-        if self._direction == IN:
-            return await self._device.async_get_total_bytes_received()
-
-        return await self._device.async_get_total_bytes_sent()
+class RawUpnpSensor(UpnpSensor):
+    """Representation of a UPnP/IGD sensor."""
 
     @property
     def state(self) -> str:
         """Return the state of the device."""
-        if self._state is None:
-            return None
+        data_name = self._sensor_type["data_name"]
+        value = self._coordinator.data[data_name]["value"]
+        return format(value, "d")
 
-        return format(float(self._state / KIBIBYTE), ".1f")
 
+class DerivedUpnpSensor(UpnpSensor):
+    """Abstract representation of a UNIT Sent/Received per second sensor."""
 
-class PacketsPerSecondUPnPIGDSensor(PerSecondUPnPIGDSensor):
-    """Representation of a Packets Sent/Received per second sensor."""
+    def __init__(self, coordinator, device, sensor_type) -> None:
+        """Initialize sensor."""
+        super().__init__(coordinator, device, sensor_type)
+        self._last_data = None
 
     @property
-    def unit(self) -> str:
-        """Get unit we are measuring in."""
-        return "packets"
+    def name(self) -> str:
+        """Return the name of the sensor."""
+        return f"{self._device.name} {self._sensor_type['derived_name']}"
 
-    async def _async_fetch_value(self) -> float:
-        """Fetch value from device."""
-        if self._direction == IN:
-            return await self._device.async_get_total_packets_received()
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement of this entity, if any."""
+        return self._sensor_type["derived_unit"]
 
-        return await self._device.async_get_total_packets_sent()
+    def _has_overflowed(self, current_data) -> bool:
+        """Check if value has overflowed."""
+        return current_data["value"] < self._last_data["value"]
 
     @property
     def state(self) -> str:
         """Return the state of the device."""
-        if self._state is None:
-            return None
+        # Can't calculate any derivative if we have only one value.
+        data_name = self._sensor_type["data_name"]
+        coordinator_data = self._coordinator.data[data_name]
+        if self._last_data is None or self._has_overflowed(coordinator_data):
+            self._last_data = coordinator_data
+            return STATE_UNKNOWN
 
-        return format(float(self._state), ".1f")
+        previous_data = self._last_data
+        self._last_data = coordinator_data
+
+        delta_value = coordinator_data["value"] - previous_data["value"]
+        if self._sensor_type["unit"] == DATA_BYTES:
+            delta_value /= KIBIBYTE
+        delta_time = coordinator_data["timestamp"] - previous_data["timestamp"]
+        derived = delta_value / delta_time.seconds
+
+        return format(derived, ".1f")
