@@ -139,7 +139,7 @@ aio_georss_gdacs==0.3
 aioambient==1.0.4
 
 # homeassistant.components.asuswrt
-aioasuswrt==1.2.2
+aioasuswrt==1.2.3
 
 # homeassistant.components.automatic
 aioautomatic==0.6.5
@@ -1856,7 +1856,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.0.3
+simplisafe-python==9.0.4
 
 # homeassistant.components.sisyphus
 sisyphus-control==2.2.1
