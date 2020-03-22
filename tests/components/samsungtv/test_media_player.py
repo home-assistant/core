@@ -34,8 +34,11 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
     CONF_HOST,
+    CONF_IP_ADDRESS,
+    CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
+    CONF_TOKEN,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -51,7 +54,7 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = f"{DOMAIN}.fake"
 MOCK_CONFIG = {
@@ -64,16 +67,39 @@ MOCK_CONFIG = {
         }
     ]
 }
-
 MOCK_CONFIGWS = {
     SAMSUNGTV_DOMAIN: [
         {
             CONF_HOST: "fake",
             CONF_NAME: "fake",
             CONF_PORT: 8001,
+            CONF_TOKEN: "123456789",
             CONF_ON_ACTION: [{"delay": "00:00:01"}],
         }
     ]
+}
+MOCK_CALLS_WS = {
+    "host": "fake",
+    "port": 8001,
+    "token": None,
+    "timeout": 31,
+    "name": "HomeAssistant",
+}
+
+MOCK_ENTRY_WS = {
+    CONF_IP_ADDRESS: "test",
+    CONF_HOST: "fake",
+    CONF_METHOD: "websocket",
+    CONF_NAME: "fake",
+    CONF_PORT: 8001,
+    CONF_TOKEN: "abcde",
+}
+MOCK_CALLS_ENTRY_WS = {
+    "host": "fake",
+    "name": "HomeAssistant",
+    "port": 8001,
+    "timeout": 1,
+    "token": "abcde",
 }
 
 ENTITY_ID_NOTURNON = f"{DOMAIN}.fake_noturnon"
@@ -153,6 +179,52 @@ async def test_setup_without_turnon(hass, remote):
     """Test setup of platform."""
     await setup_samsungtv(hass, MOCK_CONFIG_NOTURNON)
     assert hass.states.get(ENTITY_ID_NOTURNON)
+
+
+async def test_setup_websocket(hass, remotews, mock_now):
+    """Test setup of platform."""
+    with patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remote_class:
+        enter = mock.Mock()
+        type(enter).token = mock.PropertyMock(return_value="987654321")
+        remote = mock.Mock()
+        remote.__enter__ = mock.Mock(return_value=enter)
+        remote.__exit__ = mock.Mock()
+        remote_class.return_value = remote
+
+        await setup_samsungtv(hass, MOCK_CONFIGWS)
+
+        assert remote_class.call_count == 1
+        assert remote_class.call_args_list == [call(**MOCK_CALLS_WS)]
+        assert hass.states.get(ENTITY_ID)
+
+
+async def test_setup_websocket_2(hass, mock_now):
+    """Test setup of platform from config entry."""
+    entity_id = f"{DOMAIN}.fake"
+
+    entry = MockConfigEntry(
+        domain=SAMSUNGTV_DOMAIN, data=MOCK_ENTRY_WS, unique_id=entity_id,
+    )
+    entry.add_to_hass(hass)
+
+    config_entries = hass.config_entries.async_entries(SAMSUNGTV_DOMAIN)
+    assert len(config_entries) == 1
+    assert entry is config_entries[0]
+
+    assert await async_setup_component(hass, SAMSUNGTV_DOMAIN, {})
+    await hass.async_block_till_done()
+
+    next_update = mock_now + timedelta(minutes=5)
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS"
+    ) as remote, patch("homeassistant.util.dt.utcnow", return_value=next_update):
+        async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert remote.call_count == 1
+    assert remote.call_args_list == [call(**MOCK_CALLS_ENTRY_WS)]
 
 
 async def test_update_on(hass, remote, mock_now):
