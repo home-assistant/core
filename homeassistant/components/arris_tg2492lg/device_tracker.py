@@ -15,12 +15,12 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_IP = "http://192.168.178.1"
+DEFAULT_HOST = "192.168.178.1"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_HOST, default=DEFAULT_IP): cv.string,
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     }
 )
 
@@ -28,16 +28,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def get_scanner(hass, config):
     """Return the Arris device scanner."""
     conf = config[DOMAIN]
-    connect_box = ConnectBox(conf[CONF_HOST], conf[CONF_PASSWORD])
+    url = "http://" + conf[CONF_HOST]
+    connect_box = ConnectBox(url, conf[CONF_PASSWORD])
     return ArrisDeviceScanner(connect_box)
 
 
 class ArrisDeviceScanner(DeviceScanner):
     """This class queries a Arris TG2492LG router for connected devices."""
 
-    def __init__(self, connect_box):
+    def __init__(self, connect_box: ConnectBox):
         """Initialize the scanner."""
-        self.connect_box: ConnectBox = connect_box
+        self.connect_box = connect_box
         self.last_results: List[Device] = []
 
     def scan_devices(self):
