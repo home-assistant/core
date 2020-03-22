@@ -3,7 +3,7 @@
   "name": "Nextcloud",
   "documentation": "https://www.home-assistant.io/integrations/nextcloud",
   "requirements": [
-    "nextcloudmonitor==0.0.3"
+    "nextcloudmonitor==1.0.0"
   ],
   "dependencies": [],
   "codeowners": [
