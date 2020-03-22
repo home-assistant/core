@@ -2,14 +2,15 @@
 .git
 .github
 config
+docs
 
 # Development
-.devcontainer/
-.vscode/
+.devcontainer
+.vscode
 
 # Test related files
 .tox
-tests/
+tests
 
 # Other virtualization methods
 venv
