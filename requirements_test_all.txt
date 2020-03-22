@@ -588,9 +588,6 @@ pysonos==0.0.25
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
 
-# homeassistant.components.tankerkoenig
-pytankerkoenig==0.0.6
-
 # homeassistant.components.ecobee
 python-ecobee-api==0.2.2
 
