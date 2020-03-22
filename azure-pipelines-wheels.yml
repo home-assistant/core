@@ -5,6 +5,7 @@ trigger:
   branches:
     include:
     - dev
+    - rc
   paths:
     include:
     - requirements_all.txt
