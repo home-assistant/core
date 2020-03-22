@@ -28,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def get_scanner(hass, config):
     """Return the Arris device scanner."""
     conf = config[DOMAIN]
-    url = "http://" + conf[CONF_HOST]
+    url = f"http://{conf[CONF_HOST]}"
     connect_box = ConnectBox(url, conf[CONF_PASSWORD])
     return ArrisDeviceScanner(connect_box)
 
