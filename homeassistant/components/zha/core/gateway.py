@@ -170,8 +170,8 @@ class ZHAGateway:
         for zigpy_device in zigpy_devices:
             self._async_get_or_create_device(zigpy_device, restored=True)
 
-    async def async_prepare_entities(self) -> None:
-        """Prepare entities by initializing device channels."""
+    async def async_initialize_devices_and_groups(self) -> None:
+        """Initialize devices, load and init groups and load entities."""
         semaphore = asyncio.Semaphore(2)
 
         async def _throttle(zha_device: zha_typing.ZhaDeviceType, cached: bool):
