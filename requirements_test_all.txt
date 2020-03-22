@@ -503,7 +503,7 @@ pyheos==0.6.0
 pyhomematic==0.1.65
 
 # homeassistant.components.icloud
-pyicloud==0.9.5
+pyicloud==0.9.6.1
 
 # homeassistant.components.ipma
 pyipma==2.0.5
