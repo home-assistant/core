@@ -75,8 +75,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     def token_saver(token):
         _LOGGER.debug("Saving updated token")
-        entry.data[CONF_TOKEN] = token
-        hass.config_entries.async_update_entry(entry, data={**entry.data})
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_TOKEN: token}
+        )
 
     # Force token update.
     entry.data[CONF_TOKEN]["expires_in"] = -1
