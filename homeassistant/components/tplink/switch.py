@@ -132,7 +132,7 @@ class SmartPlugSwitch(SwitchDevice):
         return next(c for c in children if c["id"] == self.smartplug.context)
 
     def update_state(self):
-        """Updates state for single vs multiple plug device"""
+        """Update the state for single and multiple plug devices."""
         if self.smartplug.context is None:
             self._state = self.smartplug.state == self.smartplug.SWITCH_STATE_ON
         else:
