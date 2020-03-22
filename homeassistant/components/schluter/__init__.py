@@ -16,6 +16,7 @@ from homeassistant.const import (
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
@@ -52,7 +53,23 @@ def setup_schluter(hass, config, api, authenticator):
     state = authentication.state
 
     if state == AuthenticationState.AUTHENTICATED:
-        hass.data[DATA_SCHLUTER] = SchluterData(hass, api, authentication.session_id)
+
+        def update_data():
+            try:
+                return api.get_thermostats(authentication.session_id) or []
+            except RequestException as err:
+                raise UpdateFailed(f"Error communicating with Schluter API: {err}")
+
+        coordinator = DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name="schluter",
+            update_method=update_data,
+            update_interval=timedelta(seconds=30),
+        )
+        hass.data[DATA_SCHLUTER] = SchluterData(
+            hass, api, authentication.session_id, coordinator
+        )
 
         for component in PLATFORMS:
             discovery.load_platform(hass, component, DOMAIN, {}, config)
@@ -107,7 +124,7 @@ def setup(hass, config):
 class SchluterData:
     """Schluter data object."""
 
-    def __init__(self, hass, api, session_id):
+    def __init__(self, hass, api, session_id, coordinator):
         """Initialize Schluter data."""
         self._hass = hass
         self._api = api
