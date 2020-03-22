@@ -210,7 +210,6 @@ class MiFloraSensor(Entity):
 
         if data is not None:
             _LOGGER.debug("%s = %s", self.name, data)
-            self._available = True
             if self._unit == TEMP_FAHRENHEIT:
                 data = celsius_to_fahrenheit(data)
             self.data.append(data)
