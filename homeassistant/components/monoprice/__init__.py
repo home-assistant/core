@@ -1,10 +1,20 @@
 """The Monoprice 6-Zone Amplifier integration."""
 import asyncio
+import logging
+
+from pymonoprice import get_monoprice
+from serial import SerialException
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+
+from .const import DOMAIN
 
 PLATFORMS = ["media_player"]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -14,6 +24,15 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Monoprice 6-Zone Amplifier from a config entry."""
+    port = entry.data[CONF_PORT]
+
+    try:
+        monoprice = await hass.async_add_executor_job(get_monoprice, port)
+        hass.data.setdefault(DOMAIN, {})[entry.entry_id] = monoprice
+    except SerialException:
+        _LOGGER.error("Error connecting to Monoprice controller at %s", port)
+        raise ConfigEntryNotReady
+
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
