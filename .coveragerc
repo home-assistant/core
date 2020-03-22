@@ -137,6 +137,7 @@ omit =
     homeassistant/components/dht/sensor.py
     homeassistant/components/digital_ocean/*
     homeassistant/components/digitalloggers/switch.py
+    homeassistant/components/directv/media_player.py
     homeassistant/components/discogs/sensor.py
     homeassistant/components/discord/notify.py
     homeassistant/components/dlib_face_detect/image_processing.py
