@@ -180,9 +180,10 @@ class KNXLight(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        if not self.device.supports_brightness:
-            return None
-        return self.device.current_brightness
+        if self.device.supports_brightness:
+            return self.device.current_brightness
+        if self.device.supports_color and self._hsv_color:
+            return round(self._hsv_color[-1] / 100 * 255)
 
     @property
     def hs_color(self):
@@ -191,6 +192,14 @@ class KNXLight(Light):
         if self.device.supports_rgbw or self.device.supports_color:
             rgb, _ = self.device.current_color
         return color_util.color_RGB_to_hs(*rgb) if rgb else None
+
+    @property
+    def _hsv_color(self):
+        """Return the HSV color value."""
+        rgb = None
+        if self.device.supports_rgbw or self.device.supports_color:
+            rgb, _ = self.device.current_color
+        return color_util.color_RGB_to_hsv(*rgb) if rgb else None
 
     @property
     def white_value(self):
