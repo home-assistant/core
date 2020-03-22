@@ -266,6 +266,68 @@ def test_include_dir_merge_named_recursive(mock_walk):
             }
 
 
+@patch("homeassistant.util.yaml.loader.os.walk")
+def test_include_dir_merge_recursive(mock_walk):
+    """Test include dir merge recursive yaml include tag."""
+    mock_walk.return_value = [
+        ["/test", ["tmp2"], ["first.yaml"]],
+        ["/test/tmp2", [], ["second.yaml", "third.yaml"]],
+    ]
+
+    with patch_yaml_files(
+        {
+            "/test/first.yaml": "{key1: one, list1: [one, two]}",
+            "/test/tmp2/second.yaml": "{key2: two, list1: [three, four], named1: {list2: [five], key3: three}}",
+            "/test/tmp2/third.yaml": "{named1: {key4: four, list2: [six, seven]}}",
+        }
+    ):
+        conf = "key: !include_dir_merge_recursive /test"
+        with io.StringIO(conf) as file:
+            doc = yaml_loader.yaml.safe_load(file)
+            assert doc["key"] == {
+                "key1": "one",
+                "key2": "two",
+                "list1": ["one", "two", "three", "four"],
+                "named1": {
+                    "key3": "three",
+                    "key4": "four",
+                    "list2": ["five", "six", "seven"],
+                },
+            }
+
+
+@patch("homeassistant.util.yaml.loader.os.walk")
+def test_include_dir_merge_recursive_unsupported_merge_type(mock_walk):
+    """Test include dir merge recursive fails when attempting to merge unsupported types."""
+    mock_walk.return_value = [
+        ["/test", [], ["first.yaml", "second.yaml"]],
+    ]
+
+    with patch_yaml_files(
+        {"/test/first.yaml": "key1: one", "/test/second.yaml": "key1: two"}
+    ):
+        conf = "key: !include_dir_merge_recursive /test"
+        with pytest.raises(HomeAssistantError):
+            with io.StringIO(conf) as file:
+                yaml_loader.yaml.safe_load(file)
+
+
+@patch("homeassistant.util.yaml.loader.os.walk")
+def test_include_dir_merge_recursive_merging_dict_and_list_fails(mock_walk):
+    """Test include dir merge recursive fails when attempting to merge different types."""
+    mock_walk.return_value = [
+        ["/test", [], ["first.yaml", "second.yaml"]],
+    ]
+
+    with patch_yaml_files(
+        {"/test/first.yaml": "key1: {foo: bar}", "/test/second.yaml": "key1: [baz]"}
+    ):
+        conf = "key: !include_dir_merge_recursive /test"
+        with pytest.raises(HomeAssistantError):
+            with io.StringIO(conf) as file:
+                yaml_loader.yaml.safe_load(file)
+
+
 @patch("homeassistant.util.yaml.loader.open", create=True)
 def test_load_yaml_encoding_error(mock_open):
     """Test raising a UnicodeDecodeError."""
