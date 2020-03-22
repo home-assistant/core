@@ -94,19 +94,50 @@ SOUND_MODE_MAPPING = {
     "Surround": ["surr"],
     "Auto Surround": ["auto-surround"],
     "Multichannel PCM": ["straight-decode"],
-    "Dolby Digital": ["dolby-atmos", "dolby-surround", "dolby-virtual", "dolby-ex",
-                      "dolby-surround-thx-cinema", "pliix-thx-cinema", "pliix-movie", 
-                      "dolby-surround-thx-music", "pliix-thx-music", "pliix-music",
-                      "dolby-surround-thx-games", "pliix-thx-games", "pliix-game",
-                      "pliiz-height-thx-cinema", "pliiz-height-thx-games", "plii", 
-                      "pliiz-height-thx-music", "pliiz-height-thx-u2", "pliiz-height"],
-    "DTS Surround":  ["dts-x", "neural-x", "dts-surround-sensation", 
-                      "neo-6-cinema-dts-surround-sensation", "dts-neural-x-thx-cinema",
-                      "neo-6-music-dts-surround-sensation", "dts-neural-x-thx-music",
-                      "dts-neural-x-thx-games"],
-    "THX":           ["thx", "thx-surround-ex", "thx-cinema", "thx-music", "thx-musicmode", 
-                      "thx-games", "thx-u2", "neural-thx", "neural-thx-cinema", 
-                      "neural-thx-music", "neural-thx-games"],
+    "Dolby Digital": [
+        "dolby-atmos",
+        "dolby-surround",
+        "dolby-virtual",
+        "dolby-ex",
+        "dolby-surround-thx-cinema",
+        "pliix-thx-cinema",
+        "pliix-movie",
+        "dolby-surround-thx-music",
+        "pliix-thx-music",
+        "pliix-music",
+        "dolby-surround-thx-games",
+        "pliix-thx-games",
+        "pliix-game",
+        "pliiz-height-thx-cinema",
+        "pliiz-height-thx-games",
+        "plii",
+        "pliiz-height-thx-music",
+        "pliiz-height-thx-u2",
+        "pliiz-height",
+    ],
+    "DTS Surround": [
+        "dts-x",
+        "neural-x",
+        "dts-surround-sensation",
+        "neo-6-cinema-dts-surround-sensation",
+        "dts-neural-x-thx-cinema",
+        "neo-6-music-dts-surround-sensation",
+        "dts-neural-x-thx-music",
+        "dts-neural-x-thx-games",
+    ],
+    "THX": [
+        "thx",
+        "thx-surround-ex",
+        "thx-cinema",
+        "thx-music",
+        "thx-musicmode",
+        "thx-games",
+        "thx-u2",
+        "neural-thx",
+        "neural-thx-cinema",
+        "neural-thx-music",
+        "neural-thx-games",
+    ],
     "Mono": ["mono"],
     "Extended Mono": ["full-mono"],
     "Action": ["action", "game-action"],
@@ -117,7 +148,7 @@ SOUND_MODE_MAPPING = {
     "Classical": ["orchestra"],
     "Rock/Pop": ["musical", "game-rock"],
     "Unplugged": ["unplugged"],
-    "Front Stage Surround": ["theater-dimensional"]
+    "Front Stage Surround": ["theater-dimensional"],
 }
 
 DEFAULT_PLAYABLE_SOURCES = ("fm", "am", "tuner")
@@ -182,7 +213,6 @@ def determine_zones(receiver):
         if str(error) != TIMEOUT_MESSAGE:
             raise error
         _LOGGER.debug("Zone 3 timed out, assuming no functionality")
-
     return out
 
 
@@ -287,7 +317,11 @@ class OnkyoDevice(MediaPlayerDevice):
         self._sound_mode = None
         self._sound_mode_list = list(SOUND_MODE_MAPPING.keys())
         self._sound_mode_mapping = SOUND_MODE_MAPPING
-        self._sound_mode_reverse_mapping = {subval: key for key, values in SOUND_MODE_MAPPING.items() for subval in values}
+        self._sound_mode_reverse_mapping = {
+            subval: key
+            for key, values in SOUND_MODE_MAPPING.items()
+            for subval in values
+        }
         self._attributes = {}
 
         self._supports_sound_mode = True
@@ -316,7 +350,6 @@ class OnkyoDevice(MediaPlayerDevice):
         else:
             self._pwstate = STATE_OFF
             return
-
         volume_raw = self.command("volume query")
         mute_raw = self.command("audio-muting query")
         current_source_raw = self.command("input-selector query")
@@ -324,13 +357,11 @@ class OnkyoDevice(MediaPlayerDevice):
         preset_raw = self.command("preset query")
         if not (volume_raw and mute_raw and current_source_raw):
             return
-
         # eiscp can return string or tuple. Make everything tuples.
         if isinstance(current_source_raw[1], str):
             current_source_tuples = (current_source_raw[0], (current_source_raw[1],))
         else:
             current_source_tuples = current_source_raw
-
         for source in current_source_tuples[1]:
             if source in self._source_mapping:
                 self._current_source = self._source_mapping[source]
@@ -340,7 +371,6 @@ class OnkyoDevice(MediaPlayerDevice):
             self._attributes[ATTR_PRESET] = preset_raw[1]
         elif ATTR_PRESET in self._attributes:
             del self._attributes[ATTR_PRESET]
-
         # Only query the listening mode when sound mode is supported
         if self._supports_sound_mode:
             sound_mode_raw = self.command("listening-mode query")
@@ -354,13 +384,11 @@ class OnkyoDevice(MediaPlayerDevice):
                     sound_mode_tuples = (sound_mode_raw[0], (sound_mode_raw[1],))
                 else:
                     sound_mode_tuples = sound_mode_raw
-
                 for sound_mode in sound_mode_tuples[1]:
                     if sound_mode in self._sound_mode_reverse_mapping:
                         self._sound_mode = self._sound_mode_reverse_mapping[sound_mode]
                         break
                     self._sound_mode = "_".join(sound_mode_tuples[1])
-
         self._muted = bool(mute_raw[1] == "on")
         #       AMP_VOL/MAX_RECEIVER_VOL*(MAX_VOL/100)
         self._volume = (
@@ -511,7 +539,6 @@ class OnkyoDeviceZone(OnkyoDevice):
         else:
             self._pwstate = STATE_OFF
             return
-
         volume_raw = self.command(f"zone{self._zone}.volume=query")
         mute_raw = self.command(f"zone{self._zone}.muting=query")
         current_source_raw = self.command(f"zone{self._zone}.selector=query")
@@ -520,10 +547,8 @@ class OnkyoDeviceZone(OnkyoDevice):
         # it's likely this zone permanently does not support volume.
         if current_source_raw and not volume_raw:
             self._supports_volume = False
-
         if not (volume_raw and mute_raw and current_source_raw):
             return
-
         # It's possible for some players to have zones set to HDMI with
         # no sound control. In this case, the string `N/A` is returned.
         self._supports_volume = isinstance(volume_raw[1], (float, int))
@@ -533,7 +558,6 @@ class OnkyoDeviceZone(OnkyoDevice):
             current_source_tuples = (current_source_raw[0], (current_source_raw[1],))
         else:
             current_source_tuples = current_source_raw
-
         for source in current_source_tuples[1]:
             if source in self._source_mapping:
                 self._current_source = self._source_mapping[source]
