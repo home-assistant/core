@@ -3,8 +3,13 @@
 .github
 config
 
+# Development
+.devcontainer/
+.vscode/
+
 # Test related files
 .tox
+tests/
 
 # Other virtualization methods
 venv
