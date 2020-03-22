@@ -1743,3 +1743,15 @@ async def test_if_running_parallel(hass):
         assert len(events) == 4
         assert events[2].data["value"] == 2
         assert events[3].data["value"] == 2
+
+
+async def test_script_logging(caplog):
+    """Test script logging."""
+    script_obj = script.Script(None, [], "Script with % Name")
+    script_obj._log("Test message with name %s", 1)
+
+    assert "Script with % Name: Test message with name 1" in caplog.text
+
+    script_obj = script.Script(None, [])
+    script_obj._log("Test message without name %s", 2)
+    assert "Test message without name 2" in caplog.text
