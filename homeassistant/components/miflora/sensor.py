@@ -95,7 +95,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     for parameter in config[CONF_MONITORED_CONDITIONS]:
         name = SENSOR_TYPES[parameter][0]
-        unit = hass.config.units.temperature_unit if parameter == "temperature" else SENSOR_TYPES[parameter][1]
+        unit = (
+            hass.config.units.temperature_unit
+            if parameter == "temperature"
+            else SENSOR_TYPES[parameter][1]
+        )
         icon = SENSOR_TYPES[parameter][2]
 
         prefix = config.get(CONF_NAME)
