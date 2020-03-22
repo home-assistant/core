@@ -85,6 +85,7 @@ FLOWS = [
     "point",
     "powerwall",
     "ps4",
+    "pvpc_hourly_pricing",
     "rachio",
     "rainmachine",
     "ring",

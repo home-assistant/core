@@ -196,6 +196,9 @@ aionotion==1.1.0
 # homeassistant.components.hunterdouglas_powerview
 aiopvapi==1.6.14
 
+# homeassistant.components.pvpc_hourly_pricing
+aiopvpc==1.0.2
+
 # homeassistant.components.webostv
 aiopylgtv==0.3.3
 
@@ -1313,7 +1316,7 @@ pyhomeworks==0.0.6
 pyialarm==0.3
 
 # homeassistant.components.icloud
-pyicloud==0.9.5
+pyicloud==0.9.6.1
 
 # homeassistant.components.intesishome
 pyintesishome==1.7.1

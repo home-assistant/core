@@ -16,12 +16,14 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
+    TEMP_FAHRENHEIT,
     UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
+from homeassistant.util.temperature import celsius_to_fahrenheit
 
 try:
     import bluepy.btle  # noqa: F401 pylint: disable=unused-import
@@ -93,7 +95,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     for parameter in config[CONF_MONITORED_CONDITIONS]:
         name = SENSOR_TYPES[parameter][0]
-        unit = SENSOR_TYPES[parameter][1]
+        unit = (
+            hass.config.units.temperature_unit
+            if parameter == "temperature"
+            else SENSOR_TYPES[parameter][1]
+        )
         icon = SENSOR_TYPES[parameter][2]
 
         prefix = config.get(CONF_NAME)
@@ -208,6 +214,8 @@ class MiFloraSensor(Entity):
 
         if data is not None:
             _LOGGER.debug("%s = %s", self.name, data)
+            if self._unit == TEMP_FAHRENHEIT:
+                data = celsius_to_fahrenheit(data)
             self.data.append(data)
             self.last_successful_update = dt_util.utcnow()
         else:
