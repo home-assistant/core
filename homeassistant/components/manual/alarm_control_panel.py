@@ -15,11 +15,11 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_TRIGGER,
 )
 from homeassistant.const import (
+    CONF_ARMING_TIME,
     CONF_CODE,
     CONF_DELAY_TIME,
     CONF_DISARM_AFTER_TRIGGER,
     CONF_NAME,
-    CONF_ARMING_TIME,
     CONF_PLATFORM,
     CONF_TRIGGER_TIME,
     STATE_ALARM_ARMED_AWAY,
