@@ -7,10 +7,12 @@ import logging
 import os
 import traceback
 
+from serial import SerialException
 import zigpy.device as zigpy_dev
 
 from homeassistant.components.system_log import LogEntry, _figure_out_source
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import (
     CONNECTION_ZIGBEE,
     async_get_registry as get_dev_reg,
@@ -34,7 +36,6 @@ from .const import (
     DATA_ZHA,
     DATA_ZHA_BRIDGE_ID,
     DATA_ZHA_GATEWAY,
-    DATA_ZHA_PLATFORM_LOADED,
     DEBUG_COMP_BELLOWS,
     DEBUG_COMP_ZHA,
     DEBUG_COMP_ZIGPY,
@@ -98,7 +99,6 @@ class ZHAGateway:
         self.ha_entity_registry = None
         self.application_controller = None
         self.radio_description = None
-        hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
         self._log_levels = {
             DEBUG_LEVEL_ORIGINAL: async_capture_log_levels(),
             DEBUG_LEVEL_CURRENT: async_capture_log_levels(),
@@ -122,7 +122,11 @@ class ZHAGateway:
         radio_details = RADIO_TYPES[radio_type]
         radio = radio_details[ZHA_GW_RADIO]()
         self.radio_description = radio_details[ZHA_GW_RADIO_DESCRIPTION]
-        await radio.connect(usb_path, baudrate)
+        try:
+            await radio.connect(usb_path, baudrate)
+        except (SerialException, OSError) as exception:
+            _LOGGER.error("Couldn't open serial port for ZHA: %s", str(exception))
+            raise ConfigEntryNotReady
 
         if CONF_DATABASE in self._config:
             database = self._config[CONF_DATABASE]
@@ -133,38 +137,59 @@ class ZHAGateway:
         apply_application_controller_patch(self)
         self.application_controller.add_listener(self)
         self.application_controller.groups.add_listener(self)
-        await self.application_controller.startup(auto_form=True)
+
+        try:
+            res = await self.application_controller.startup(auto_form=True)
+            if res is False:
+                await self.application_controller.shutdown()
+                raise ConfigEntryNotReady
+        except asyncio.TimeoutError as exception:
+            _LOGGER.error(
+                "Couldn't start %s coordinator",
+                radio_details[ZHA_GW_RADIO_DESCRIPTION],
+                exc_info=exception,
+            )
+            radio.close()
+            raise ConfigEntryNotReady from exception
+
+        self._hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
         self._hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(
             self.application_controller.ieee
         )
+        await self.async_load_devices()
         self._initialize_groups()
 
     async def async_load_devices(self) -> None:
         """Restore ZHA devices from zigpy application state."""
-        await self._hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED].wait()
+        zigpy_devices = self.application_controller.devices.values()
+        for zigpy_device in zigpy_devices:
+            self._async_get_or_create_device(zigpy_device, restored=True)
 
+    async def async_prepare_entities(self) -> None:
+        """Prepare entities by initializing device channels."""
         semaphore = asyncio.Semaphore(2)
 
-        async def _throttle(device: zha_typing.ZigpyDeviceType):
+        async def _throttle(zha_device: zha_typing.ZhaDeviceType, cached: bool):
             async with semaphore:
-                await self.async_device_restored(device)
+                await zha_device.async_initialize(from_cache=cached)
 
-        zigpy_devices = self.application_controller.devices.values()
         _LOGGER.debug("Loading battery powered devices")
         await asyncio.gather(
             *[
-                _throttle(dev)
-                for dev in zigpy_devices
-                if not dev.node_desc.is_mains_powered
+                _throttle(dev, cached=True)
+                for dev in self.devices.values()
+                if not dev.is_mains_powered
             ]
         )
-        async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES)
 
         _LOGGER.debug("Loading mains powered devices")
         await asyncio.gather(
-            *[_throttle(dev) for dev in zigpy_devices if dev.node_desc.is_mains_powered]
+            *[
+                _throttle(dev, cached=False)
+                for dev in self.devices.values()
+                if dev.is_mains_powered
+            ]
         )
-        async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES)
 
     def device_joined(self, device):
         """Handle device joined.

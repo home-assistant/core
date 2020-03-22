@@ -140,16 +140,7 @@ async def test_webhook_update_registration(webhook_client, authed_api_client):
 async def test_webhook_handle_get_zones(hass, create_registrations, webhook_client):
     """Test that we can get zones properly."""
     await async_setup_component(
-        hass,
-        ZONE_DOMAIN,
-        {
-            ZONE_DOMAIN: {
-                "name": "test",
-                "latitude": 32.880837,
-                "longitude": -117.237561,
-                "radius": 250,
-            }
-        },
+        hass, ZONE_DOMAIN, {ZONE_DOMAIN: {}},
     )
 
     resp = await webhook_client.post(
@@ -160,10 +151,9 @@ async def test_webhook_handle_get_zones(hass, create_registrations, webhook_clie
     assert resp.status == 200
 
     json = await resp.json()
-    assert len(json) == 2
+    assert len(json) == 1
     zones = sorted(json, key=lambda entry: entry["entity_id"])
     assert zones[0]["entity_id"] == "zone.home"
-    assert zones[1]["entity_id"] == "zone.test"
 
 
 async def test_webhook_handle_get_config(hass, create_registrations, webhook_client):

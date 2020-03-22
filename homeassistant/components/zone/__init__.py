@@ -1,6 +1,6 @@
 """Support for the definition of zones."""
 import logging
-from typing import Dict, Optional, cast
+from typing import Any, Dict, Optional, cast
 
 import voluptuous as vol
 
@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_RADIUS,
     EVENT_CORE_CONFIG_UPDATE,
     SERVICE_RELOAD,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
 from homeassistant.helpers import (
@@ -65,8 +66,20 @@ UPDATE_FIELDS = {
 }
 
 
+def empty_value(value: Any) -> Any:
+    """Test if the user has the default config value from adding "zone:"."""
+    if isinstance(value, dict) and len(value) == 0:
+        return []
+
+    raise vol.Invalid("Not a default value")
+
+
 CONFIG_SCHEMA = vol.Schema(
-    {vol.Optional(DOMAIN): vol.All(cv.ensure_list, [vol.Schema(CREATE_FIELDS)])},
+    {
+        vol.Optional(DOMAIN, default=[]): vol.Any(
+            vol.All(cv.ensure_list, [vol.Schema(CREATE_FIELDS)]), empty_value,
+        )
+    },
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -93,7 +106,7 @@ def async_active_zone(
     closest = None
 
     for zone in zones:
-        if zone.attributes.get(ATTR_PASSIVE):
+        if zone.state == STATE_UNAVAILABLE or zone.attributes.get(ATTR_PASSIVE):
             continue
 
         zone_dist = distance(
@@ -126,6 +139,9 @@ def in_zone(zone: State, latitude: float, longitude: float, radius: float = 0) -
 
     Async friendly.
     """
+    if zone.state == STATE_UNAVAILABLE:
+        return False
+
     zone_dist = distance(
         latitude,
         longitude,
@@ -180,7 +196,7 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
         component, storage_collection, lambda conf: Zone(conf, True)
     )
 
-    if DOMAIN in config:
+    if config[DOMAIN]:
         await yaml_collection.async_load(config[DOMAIN])
 
     await storage_collection.async_load()
@@ -206,7 +222,7 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
         conf = await component.async_prepare_reload(skip_reset=True)
         if conf is None:
             return
-        await yaml_collection.async_load(conf.get(DOMAIN, []))
+        await yaml_collection.async_load(conf[DOMAIN])
 
     service.async_register_admin_service(
         hass,

@@ -4,6 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ecobee",
   "dependencies": [],
-  "requirements": ["python-ecobee-api==0.2.2"],
+  "requirements": ["python-ecobee-api==0.2.3"],
   "codeowners": ["@marthoc"]
 }

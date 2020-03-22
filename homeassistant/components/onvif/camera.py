@@ -505,4 +505,6 @@ class ONVIFHassCamera(Camera):
     @property
     def unique_id(self) -> Optional[str]:
         """Return a unique ID."""
+        if self._profile_index:
+            return f"{self._mac}_{self._profile_index}"
         return self._mac

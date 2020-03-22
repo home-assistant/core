@@ -12,7 +12,7 @@ CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)
 ChannelType = "ZigbeeChannel"
 ChannelsType = "Channels"
 ChannelPoolType = "ChannelPool"
-EventRelayChannelType = "EventRelayChannel"
+ClientChannelType = "ClientChannel"
 ZDOChannelType = "ZDOChannel"
 ZhaDeviceType = "ZHADevice"
 ZhaEntityType = "ZHAEntity"
@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     ChannelType = base_channels.ZigbeeChannel
     ChannelsType = channels.Channels
     ChannelPoolType = channels.ChannelPool
-    EventRelayChannelType = base_channels.EventRelayChannel
+    ClientChannelType = base_channels.ClientChannel
     ZDOChannelType = base_channels.ZDOChannel
     ZhaDeviceType = homeassistant.components.zha.core.device.ZHADevice
     ZhaEntityType = homeassistant.components.zha.entity.ZhaEntity

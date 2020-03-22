@@ -28,6 +28,7 @@ from . import api, config_flow
 from .const import (
     AUTH,
     CONF_CLOUDHOOK_URL,
+    DATA_DEVICE_IDS,
     DATA_PERSONS,
     DOMAIN,
     OAUTH2_AUTHORIZE,
@@ -65,6 +66,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Netatmo component."""
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][DATA_PERSONS] = {}
+    hass.data[DOMAIN][DATA_DEVICE_IDS] = {}
 
     if DOMAIN not in config:
         return True
@@ -104,7 +106,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
 
     async def register_webhook(event):
-        # Wait for the could integration to be ready
+        # Wait for the cloud integration to be ready
         await asyncio.sleep(WAIT_FOR_CLOUD)
 
         if CONF_WEBHOOK_ID not in entry.data:
@@ -112,6 +114,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.config_entries.async_update_entry(entry, data=data)
 
         if hass.components.cloud.async_active_subscription():
+            # Wait for cloud connection to be established
+            await asyncio.sleep(WAIT_FOR_CLOUD)
+
             if CONF_CLOUDHOOK_URL not in entry.data:
                 webhook_url = await hass.components.cloud.async_create_cloudhook(
                     entry.data[CONF_WEBHOOK_ID]
@@ -144,6 +149,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
+    if CONF_WEBHOOK_ID in entry.data:
+        await hass.async_add_executor_job(
+            hass.data[DOMAIN][entry.entry_id][AUTH].dropwebhook
+        )
+
     unload_ok = all(
         await asyncio.gather(
             *[
@@ -152,13 +162,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
+
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
-
-    if CONF_WEBHOOK_ID in entry.data:
-        await hass.async_add_executor_job(
-            hass.data[DOMAIN][entry.entry_id][AUTH].dropwebhook()
-        )
 
     return unload_ok
 
