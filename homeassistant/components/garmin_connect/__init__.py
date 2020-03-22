@@ -86,8 +86,6 @@ class GarminConnectData:
         """Initialize."""
         self.client = client
         self.data = None
-        self._activity_data = None
-        self._body_composition_data = None
 
     @Throttle(MIN_SCAN_INTERVAL)
     async def async_update(self):
@@ -95,16 +93,12 @@ class GarminConnectData:
         today = date.today()
 
         try:
-            self._activity_data = self.client.get_stats(today.isoformat())
+            activity_data = self.client.get_stats(today.isoformat())
         except (
             GarminConnectAuthenticationError,
             GarminConnectTooManyRequestsError,
+            GarminConnectConnectionError,
         ) as err:
-            _LOGGER.error(
-                "Error occurred during Garmin Connect get activity data: %s", err
-            )
-            return
-        except (GarminConnectConnectionError) as err:
             _LOGGER.error(
                 "Error occurred during Garmin Connect get activity data: %s", err
             )
@@ -116,27 +110,17 @@ class GarminConnectData:
             return
 
         try:
-            self._body_composition_data = self.client.get_body_composition(
-                today.isoformat()
-            )["totalAverage"]
+            body_composition_data = self.client.get_body_composition(today.isoformat())[
+                "totalAverage"
+            ]
         except (
             GarminConnectAuthenticationError,
             GarminConnectTooManyRequestsError,
+            GarminConnectConnectionError,
         ) as err:
             _LOGGER.error(
                 "Error occurred during Garmin Connect get body composition data: %s",
                 err,
-            )
-            return
-        except (GarminConnectConnectionError) as err:
-            _LOGGER.error(
-                "Error occurred during Garmin Connect get body composition data: %s",
-                err,
-            )
-            return
-        except KeyError:
-            _LOGGER.error(
-                "Keyerror occurred during Garmin Connect get body composition data"
             )
             return
         except Exception:  # pylint: disable=broad-except
@@ -146,6 +130,6 @@ class GarminConnectData:
             return
 
         self.data = {
-            **self._activity_data,
-            **self._body_composition_data,
+            **activity_data,
+            **body_composition_data,
         }
