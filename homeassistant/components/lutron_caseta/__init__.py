@@ -81,9 +81,7 @@ class LutronCasetaDevice(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self._smartbridge.add_subscriber(
-            self.device_id, self.async_schedule_update_ha_state
-        )
+        self._smartbridge.add_subscriber(self.device_id, self.async_write_ha_state)
 
     @property
     def device_id(self):
@@ -108,7 +106,7 @@ class LutronCasetaDevice(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attr = {"Device ID": self.device_id, "Zone ID": self._device["zone"]}
+        attr = {"device_id": self.device_id, "zone_id": self._device["zone"]}
         return attr
 
     @property

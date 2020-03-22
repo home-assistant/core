@@ -25,14 +25,14 @@ def to_hass_level(level):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Lutron Caseta lights."""
-    devs = []
+    entities = []
     bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
     light_devices = bridge.get_devices_by_domain(DOMAIN)
     for light_device in light_devices:
-        dev = LutronCasetaLight(light_device, bridge)
-        devs.append(dev)
+        entity = LutronCasetaLight(light_device, bridge)
+        entities.append(entity)
 
-    async_add_entities(devs, True)
+    async_add_entities(entities, True)
 
 
 class LutronCasetaLight(LutronCasetaDevice, Light):
