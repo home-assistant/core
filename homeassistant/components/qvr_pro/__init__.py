@@ -4,7 +4,7 @@ import logging
 
 from pyqvrpro import Client
 from pyqvrpro.client import AuthenticationError, InsufficientPermissionsError
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
@@ -51,7 +51,7 @@ def setup(hass, config):
     user = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
     host = conf[CONF_HOST]
-    port = conf[CONF_PORT]
+    port = conf.get(CONF_PORT)
     excluded_channels = conf[CONF_EXCLUDE_CHANNELS]
 
     try:
@@ -65,8 +65,8 @@ def setup(hass, config):
     except AuthenticationError:
         _LOGGER.error("Authentication failed")
         return False
-    except ConnectionError:
-        _LOGGER.error("Error connecting to QVR server.")
+    except RequestsConnectionError:
+        _LOGGER.error("Error connecting to QVR server")
         return False
 
     channels = []
