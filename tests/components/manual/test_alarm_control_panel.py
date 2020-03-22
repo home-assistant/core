@@ -1443,7 +1443,7 @@ async def test_arm_away_after_disabled_disarmed(hass):
     await common.async_alarm_trigger(hass, entity_id=entity_id)
 
     state = hass.states.get(entity_id)
-    assert STATE_ALARM_PENDING == state.state
+    assert STATE_ALARM_ARMING == state.state
     assert STATE_ALARM_DISARMED == state.attributes["previous_state"]
     assert STATE_ALARM_ARMED_AWAY == state.attributes["next_state"]
 
