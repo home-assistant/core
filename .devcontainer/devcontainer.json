@@ -1,5 +1,5 @@
 {
-  "name": "Home Assistant Dev1",
+  "name": "Home Assistant Dev",
   "context": "..",
   "dockerFile": "../Dockerfile.dev",
   "postCreateCommand": "mkdir -p config && pip3 install -e .",
