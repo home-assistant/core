@@ -1,8 +1,8 @@
 """Support for controlling projector via the PJLink protocol."""
 import logging
 
-from pypjlink import MUTE_AUDIO, Projector
-from pypjlink.projector import ProjectorError
+from pypjlink2 import MUTE_AUDIO, Projector
+from pypjlink2.projector import ProjectorError
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
