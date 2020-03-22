@@ -911,7 +911,7 @@ netdisco==2.6.0
 neurio==0.3.1
 
 # homeassistant.components.nextcloud
-nextcloudmonitor==0.0.3
+nextcloudmonitor==1.0.0
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1

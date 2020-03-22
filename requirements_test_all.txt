@@ -61,6 +61,12 @@ aiobotocore==0.11.1
 # homeassistant.components.esphome
 aioesphomeapi==2.6.1
 
+# homeassistant.components.freebox
+aiofreepybox==0.0.8
+
+# homeassistant.components.harmony
+aioharmony==0.1.13
+
 # homeassistant.components.homekit_controller
 aiohomekit[IP]==0.2.15
 
@@ -515,6 +521,9 @@ pymodbus==1.5.2
 # homeassistant.components.monoprice
 pymonoprice==0.3
 
+# homeassistant.components.myq
+pymyq==2.0.1
+
 # homeassistant.components.nws
 pynws==0.10.4
 
@@ -607,6 +616,9 @@ pyvizio==0.1.26
 # homeassistant.components.html5
 pywebpush==1.9.2
 
+# homeassistant.components.rachio
+rachiopy==0.1.3
+
 # homeassistant.components.rainmachine
 regenmaschine==1.5.1
 
@@ -618,6 +630,9 @@ rflink==0.0.51
 
 # homeassistant.components.ring
 ring_doorbell==0.6.0
+
+# homeassistant.components.roku
+roku==4.0.0
 
 # homeassistant.components.yamaha
 rxv==0.6.0
