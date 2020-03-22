@@ -156,14 +156,13 @@ async def async_migrate_entry(hass, config_entry):
 
     # 1 -> 2: One geography per config entry
     if version == 1:
-        # Update the config entry to only include the first geography (there is always
-        # guaranteed to be at least one):
         version = config_entry.version = 2
 
-        # geographies = dict(config_entry.data).pop(CONF_GEOGRAPHIES)
+        # Update the config entry to only include the first geography (there is always
+        # guaranteed to be at least one):
         data = {**config_entry.data}
         geographies = data.pop(CONF_GEOGRAPHIES)
-        first_geography = geographies[0]
+        first_geography = geographies.pop(0)
         first_id = async_get_geography_id(first_geography)
 
         hass.config_entries.async_update_entry(
