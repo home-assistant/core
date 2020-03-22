@@ -1,0 +1,31 @@
+{
+  "config": {
+    "title": "Rollease Acmeda Automate",
+    "step": {
+      "init": {
+        "title": "Pick Pulse hub",
+        "data": {
+          "host": "Host"
+        }
+      },
+      "link": {
+        "title": "Link Hub",
+        "description": "Ready to connect"
+      }
+    },
+    "error": {
+      "register_failed": "Failed to register, please try again",
+      "linking": "Unknown linking error occurred."
+    },
+    "abort": {
+      "discover_timeout": "Unable to discover Pulse hubs",
+      "no_hubs": "No Pulse hubs discovered",
+      "all_configured": "All Pulse hubs are already configured",
+      "unknown": "Unknown error occurred",
+      "cannot_connect": "Unable to connect to the hub",
+      "already_configured": "Hub is already configured",
+      "already_in_progress": "Config flow for hub is already in progress.",
+      "not_pulse_bridge": "Not a Pulse hub"
+    }
+  }
+}

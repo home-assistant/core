@@ -1,0 +1,14 @@
+{
+  "domain": "acmeda",
+  "name": "Rollease Acmeda Automate",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/acmeda",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@atmurray"
+  ]
+}
