@@ -20,15 +20,11 @@ from homeassistant.util import Throttle
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=5)
-
 DATA_SCHLUTER = "schluter"
 PLATFORMS = ["climate"]
 DEFAULT_TIMEOUT = 10
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 SCHLUTER_CONFIG_FILE = ".schluter.conf"
-NOTIFICATION_ID = "schluter_notification"
-NOTIFICATION_TITLE = "Schluter Setup"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -51,15 +47,7 @@ def setup_schluter(hass, config, api, authenticator):
     try:
         authentication = authenticator.authenticate()
     except RequestException as ex:
-        _LOGGER.error("Unable to connect to Schluter service: %s", str(ex))
-
-        hass.components.persistent_notification.create(
-            "Error: {}<br />"
-            "You will need to restart hass after fixing."
-            "".format(ex),
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID,
-        )
+        _LOGGER.error("Unable to connect to Schluter service: %s", ex)
 
     state = authentication.state
 
@@ -88,7 +76,7 @@ def setup(hass, config):
     try:
         api_http_session = Session()
     except RequestException as ex:
-        _LOGGER.warning("Creating HTTP session failed with: %s", str(ex))
+        _LOGGER.warning("Creating HTTP session failed with: %s", ex)
 
     api = Api(timeout=conf.get(CONF_TIMEOUT), http_session=api_http_session)
 

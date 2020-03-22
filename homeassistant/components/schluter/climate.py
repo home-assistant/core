@@ -21,11 +21,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_SCAN_INTERVAL): vol.All(vol.Coerce(int), vol.Range(min=1))}
 )
 
-MODE_SCHLUTER_TO_HASS = {
-    False: HVAC_MODE_OFF,
-    True: HVAC_MODE_HEAT,
-}
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Schluter thermostats."""
@@ -35,7 +30,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for thermostat in data.thermostats:
         devices.append(SchluterThermostat(thermostat, temp_unit, data))
-        _LOGGER.debug("Adding thermostat: %s", thermostat.name)
 
     add_entities(devices, True)
 
@@ -108,7 +102,7 @@ class SchluterThermostat(ClimateDevice):
     @property
     def hvac_mode(self):
         """Return current operation ie. heat, idle."""
-        return MODE_SCHLUTER_TO_HASS[self._is_heating]
+        return HVAC_MODE_HEAT if self._is_heating else HVAC_MODE_OFF
 
     @property
     def target_temperature(self):
