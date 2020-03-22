@@ -4,7 +4,7 @@
   "dockerFile": "../Dockerfile.dev",
   "postCreateCommand": "mkdir -p config && pip3 install -e .",
   "appPort": 8123,
-  "runArgs": ["-e", "GIT_EDITOR=code --wait"],
+  "runArgs": ["-e", "GIT_EDITOR=code --wait", "--net=host"],
   "extensions": [
     "ms-python.python",
     "visualstudioexptteam.vscodeintellicode",
