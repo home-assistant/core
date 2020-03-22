@@ -139,7 +139,7 @@ homeassistant/components/glances/* @fabaff @engrbm87
 homeassistant/components/gntp/* @robbiet480
 homeassistant/components/google_assistant/* @home-assistant/cloud
 homeassistant/components/google_cloud/* @lufton
-homeassistant/components/google_stackdriver/* @frog32
+homeassistant/components/google_cloud_logging/* @frog32
 homeassistant/components/google_translate/* @awarecan
 homeassistant/components/google_travel_time/* @robbiet480
 homeassistant/components/gpsd/* @fabaff

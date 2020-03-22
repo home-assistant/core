@@ -1,8 +1,8 @@
-"""Tests for the Google Stackdriver integration."""
+"""Tests for the Google Cloud Logging integration."""
 from asynctest import Mock, patch
 from google.cloud.logging import Client
 
-from homeassistant.components.google_stackdriver import DOMAIN
+from homeassistant.components.google_cloud_logging import DOMAIN
 from homeassistant.setup import async_setup_component
 
 

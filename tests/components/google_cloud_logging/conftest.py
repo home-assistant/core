@@ -1,7 +1,7 @@
-"""Configuration for Google Stackdriver tests."""
+"""Configuration for Google Cloud Logging tests."""
 import pytest
 
-from homeassistant.components.google_stackdriver import CONF_KEY_FILE, DOMAIN
+from homeassistant.components.google_cloud_logging import CONF_KEY_FILE, DOMAIN
 
 
 @pytest.fixture(name="config")

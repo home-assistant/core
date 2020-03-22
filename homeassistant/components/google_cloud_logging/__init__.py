@@ -1,4 +1,4 @@
-"""The Google Stackdriver integration."""
+"""The Google Cloud Logging integration."""
 
 import logging
 
@@ -23,7 +23,7 @@ LOGSEVERITY = {
 
 _VALID_LOG_LEVEL = vol.All(vol.Upper, vol.In(LOGSEVERITY))
 
-DOMAIN = "google_stackdriver"
+DOMAIN = "google_cloud_logging"
 
 CONF_KEY_FILE = "key_file"
 CONF_LEVEL = "level"
@@ -44,7 +44,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Google Stackdriver integration."""
+    """Set up the Google Cloud Logging integration."""
     sd_config = config[DOMAIN]
     try:
         client = Client.from_service_account_json(sd_config[CONF_KEY_FILE])
