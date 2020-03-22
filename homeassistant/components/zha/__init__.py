@@ -8,6 +8,8 @@ import voluptuous as vol
 from homeassistant import config_entries, const as ha_const
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import HomeAssistantType
 
 from . import api
 from .core import ZHAGateway
@@ -27,6 +29,7 @@ from .core.const import (
     DEFAULT_BAUDRATE,
     DEFAULT_RADIO_TYPE,
     DOMAIN,
+    SIGNAL_ADD_ENTITIES,
     RadioType,
 )
 
@@ -90,7 +93,14 @@ async def async_setup_entry(hass, config_entry):
     """
 
     zha_data = hass.data.setdefault(DATA_ZHA, {})
+    zha_data[DATA_ZHA_PLATFORM_LOADED] = {}
     config = zha_data.get(DATA_ZHA_CONFIG, {})
+
+    zha_data[DATA_ZHA_DISPATCHERS] = []
+    for component in COMPONENTS:
+        zha_data[component] = []
+        coro = hass.config_entries.async_forward_entry_setup(config_entry, component)
+        zha_data[DATA_ZHA_PLATFORM_LOADED][component] = hass.async_create_task(coro)
 
     if config.get(CONF_ENABLE_QUIRKS, True):
         # needs to be done here so that the ZHA module is finished loading
@@ -99,22 +109,6 @@ async def async_setup_entry(hass, config_entry):
 
     zha_gateway = ZHAGateway(hass, config, config_entry)
     await zha_gateway.async_initialize()
-
-    zha_data[DATA_ZHA_DISPATCHERS] = []
-    zha_data[DATA_ZHA_PLATFORM_LOADED] = asyncio.Event()
-    platforms = []
-    for component in COMPONENTS:
-        platforms.append(
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(config_entry, component)
-            )
-        )
-
-    async def _platforms_loaded():
-        await asyncio.gather(*platforms)
-        zha_data[DATA_ZHA_PLATFORM_LOADED].set()
-
-    hass.async_create_task(_platforms_loaded())
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
     device_registry.async_get_or_create(
@@ -134,7 +128,7 @@ async def async_setup_entry(hass, config_entry):
         await zha_data[DATA_ZHA_GATEWAY].async_update_device_storage()
 
     hass.bus.async_listen_once(ha_const.EVENT_HOMEASSISTANT_STOP, async_zha_shutdown)
-    hass.async_create_task(zha_gateway.async_load_devices())
+    hass.async_create_task(async_load_entities(hass, config_entry))
     return True
 
 
@@ -152,3 +146,20 @@ async def async_unload_entry(hass, config_entry):
         await hass.config_entries.async_forward_entry_unload(config_entry, component)
 
     return True
+
+
+async def async_load_entities(
+    hass: HomeAssistantType, config_entry: config_entries.ConfigEntry
+) -> None:
+    """Load entities after integration was setup."""
+    await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].async_prepare_entities()
+    to_setup = [
+        hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED][comp]
+        for comp in COMPONENTS
+        if hass.data[DATA_ZHA][comp]
+    ]
+    results = await asyncio.gather(*to_setup, return_exceptions=True)
+    for res in results:
+        if isinstance(res, Exception):
+            _LOGGER.warning("Couldn't setup zha platform: %s", res)
+    async_dispatcher_send(hass, SIGNAL_ADD_ENTITIES)
