@@ -335,7 +335,11 @@ class VizioDevice(MediaPlayerDevice):
                     if _input not in INPUT_APPS
                 ],
                 *self._available_apps,
-                *self._get_additional_app_names(),
+                *[
+                    app
+                    for app in self._get_additional_app_names()
+                    if app not in self._available_apps
+                ],
             ]
 
         return self._available_inputs
