@@ -1,5 +1,4 @@
 """Support for MyQ-Enabled Garage Doors."""
-from datetime import timedelta
 import logging
 import time
 
@@ -24,8 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.event import async_track_point_in_time
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.event import async_call_later
 
 from .const import (
     DOMAIN,
@@ -162,10 +160,10 @@ class MyQDevice(CoverDevice):
         # Schedule an update for when we expect the transition
         # to be completed so the garage door or gate does not
         # seem like its closing or opening for a long time
-        self._scheduled_transition_update = async_track_point_in_time(
+        self._scheduled_transition_update = async_call_later(
             self.hass,
+            TRANSITION_COMPLETE_DURATION,
             self._async_complete_schedule_update,
-            dt_util.utcnow() + timedelta(seconds=TRANSITION_COMPLETE_DURATION),
         )
 
     async def _async_complete_schedule_update(self, _):
