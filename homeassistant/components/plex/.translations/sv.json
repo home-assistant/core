@@ -1,10 +1,62 @@
 {
+    "config": {
+        "abort": {
+            "all_configured": "Alla l\u00e4nkade servrar har redan konfigurerats",
+            "already_configured": "Denna Plex-server \u00e4r redan konfigurerad",
+            "already_in_progress": "Plex konfigureras",
+            "discovery_no_file": "Ingen \u00e4ldre konfigurationsfil hittades",
+            "invalid_import": "Importerad konfiguration \u00e4r ogiltig",
+            "non-interactive": "Icke-interaktiv import",
+            "token_request_timeout": "Timeout att erh\u00e5lla token",
+            "unknown": "Misslyckades av ok\u00e4nd anledning"
+        },
+        "error": {
+            "faulty_credentials": "Auktoriseringen misslyckades",
+            "no_servers": "Inga servrar l\u00e4nkade till konto",
+            "no_token": "Ange en token eller v\u00e4lj manuell inst\u00e4llning",
+            "not_found": "Plex-server hittades inte"
+        },
+        "step": {
+            "manual_setup": {
+                "data": {
+                    "host": "V\u00e4rd",
+                    "port": "Port",
+                    "ssl": "Anv\u00e4nd SSL",
+                    "token": "Token (om det beh\u00f6vs)",
+                    "verify_ssl": "Verifiera SSL-certifikat"
+                },
+                "title": "Plex-server"
+            },
+            "select_server": {
+                "data": {
+                    "server": "Server"
+                },
+                "description": "V\u00e4lj flera servrar tillg\u00e4ngliga, v\u00e4lj en:",
+                "title": "V\u00e4lj Plex-server"
+            },
+            "start_website_auth": {
+                "description": "Forts\u00e4tt att auktorisera p\u00e5 plex.tv.",
+                "title": "Anslut Plex-servern"
+            },
+            "user": {
+                "data": {
+                    "manual_setup": "Manuell inst\u00e4llning",
+                    "token": "Plex-token"
+                },
+                "description": "Forts\u00e4tt att auktorisera p\u00e5 plex.tv eller konfigurera en server manuellt.",
+                "title": "Anslut Plex-servern"
+            }
+        },
+        "title": "Plex"
+    },
     "options": {
         "step": {
             "plex_mp_settings": {
                 "data": {
-                    "show_all_controls": "Visa alla kontroller"
-                }
+                    "show_all_controls": "Visa alla kontroller",
+                    "use_episode_art": "Anv\u00e4nd avsnittsbild"
+                },
+                "description": "Alternativ f\u00f6r Plex-mediaspelare"
             }
         }
     }

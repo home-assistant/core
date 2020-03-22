@@ -124,9 +124,7 @@ def setup(hass, config):
             # for the charging request to reach the car.
             result = await hass.async_add_executor_job(data_store.leaf.start_charging)
             if result:
-                _LOGGER.debug(
-                    "Start charging sent, " "request updated data in 1 minute"
-                )
+                _LOGGER.debug("Start charging sent, request updated data in 1 minute")
                 check_charge_at = utcnow() + timedelta(minutes=1)
                 data_store.next_update = check_charge_at
                 async_track_point_in_utc_time(
@@ -414,7 +412,7 @@ class LeafDataStore:
         for attempt in range(MAX_RESPONSE_ATTEMPTS):
             if attempt > 0:
                 _LOGGER.debug(
-                    "Climate data not in yet (%s) (%s). " "Waiting (%s) seconds",
+                    "Climate data not in yet (%s) (%s). Waiting (%s) seconds",
                     self.leaf.vin,
                     attempt,
                     PYCARWINGS2_SLEEP,

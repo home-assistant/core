@@ -9,7 +9,11 @@ from homeassistant.components.vera import CONF_CONTROLLER, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-ComponentData = NamedTuple("ComponentData", (("controller", VeraController),))
+
+class ComponentData(NamedTuple):
+    """Component data."""
+
+    controller: VeraController
 
 
 class ComponentFactory:
@@ -54,7 +58,7 @@ class ComponentFactory:
 
         self.init_controller_mock.side_effect = init_controller
 
-        # Setup home assistant.
+        # Setup Home Assistant.
         assert await async_setup_component(hass, DOMAIN, hass_config)
         await hass.async_block_till_done()
 

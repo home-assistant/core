@@ -663,13 +663,12 @@ class TestStateMachine(unittest.TestCase):
 def test_service_call_repr():
     """Test ServiceCall repr."""
     call = ha.ServiceCall("homeassistant", "start")
-    assert str(call) == "<ServiceCall homeassistant.start (c:{})>".format(
-        call.context.id
-    )
+    assert str(call) == f"<ServiceCall homeassistant.start (c:{call.context.id})>"
 
     call2 = ha.ServiceCall("homeassistant", "start", {"fast": "yes"})
-    assert str(call2) == "<ServiceCall homeassistant.start (c:{}): fast=yes>".format(
-        call2.context.id
+    assert (
+        str(call2)
+        == f"<ServiceCall homeassistant.start (c:{call2.context.id}): fast=yes>"
     )
 
 
@@ -882,17 +881,17 @@ class TestConfig(unittest.TestCase):
 
     def test_path_with_file(self):
         """Test get_config_path method."""
-        self.config.config_dir = "/tmp/ha-config"
-        assert "/tmp/ha-config/test.conf" == self.config.path("test.conf")
+        self.config.config_dir = "/test/ha-config"
+        assert "/test/ha-config/test.conf" == self.config.path("test.conf")
 
     def test_path_with_dir_and_file(self):
         """Test get_config_path method."""
-        self.config.config_dir = "/tmp/ha-config"
-        assert "/tmp/ha-config/dir/test.conf" == self.config.path("dir", "test.conf")
+        self.config.config_dir = "/test/ha-config"
+        assert "/test/ha-config/dir/test.conf" == self.config.path("dir", "test.conf")
 
     def test_as_dict(self):
         """Test as dict."""
-        self.config.config_dir = "/tmp/ha-config"
+        self.config.config_dir = "/test/ha-config"
         expected = {
             "latitude": 0,
             "longitude": 0,
@@ -901,10 +900,11 @@ class TestConfig(unittest.TestCase):
             "location_name": "Home",
             "time_zone": "UTC",
             "components": set(),
-            "config_dir": "/tmp/ha-config",
+            "config_dir": "/test/ha-config",
             "whitelist_external_dirs": set(),
             "version": __version__,
             "config_source": "default",
+            "safe_mode": False,
         }
 
         assert expected == self.config.as_dict()
@@ -1181,3 +1181,59 @@ def test_context():
     assert c.user_id == 23
     assert c.parent_id == 100
     assert c.id is not None
+
+
+async def test_async_functions_with_callback(hass):
+    """Test we deal with async functions accidentally marked as callback."""
+    runs = []
+
+    @ha.callback
+    async def test():
+        runs.append(True)
+
+    await hass.async_add_job(test)
+    assert len(runs) == 1
+
+    hass.async_run_job(test)
+    await hass.async_block_till_done()
+    assert len(runs) == 2
+
+    @ha.callback
+    async def service_handler(call):
+        runs.append(True)
+
+    hass.services.async_register("test_domain", "test_service", service_handler)
+
+    await hass.services.async_call("test_domain", "test_service", blocking=True)
+    assert len(runs) == 3
+
+
+def test_valid_entity_id():
+    """Test valid entity ID."""
+    for invalid in [
+        "_light.kitchen",
+        ".kitchen",
+        ".light.kitchen",
+        "light_.kitchen",
+        "light._kitchen",
+        "light.",
+        "light.kitchen__ceiling",
+        "light.kitchen_yo_",
+        "light.kitchen.",
+        "Light.kitchen",
+        "light.Kitchen",
+        "lightkitchen",
+    ]:
+        assert not ha.valid_entity_id(invalid), invalid
+
+    for valid in [
+        "1.a",
+        "1light.kitchen",
+        "a.1",
+        "a.a",
+        "input_boolean.hello_world_0123",
+        "light.1kitchen",
+        "light.kitchen",
+        "light.something_yoo",
+    ]:
+        assert ha.valid_entity_id(valid), valid

@@ -121,67 +121,49 @@ class AlarmControlPanel(Entity):
         """Send disarm command."""
         raise NotImplementedError()
 
-    def async_alarm_disarm(self, code=None):
-        """Send disarm command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_executor_job(self.alarm_disarm, code)
+    async def async_alarm_disarm(self, code=None):
+        """Send disarm command."""
+        await self.hass.async_add_executor_job(self.alarm_disarm, code)
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
         raise NotImplementedError()
 
-    def async_alarm_arm_home(self, code=None):
-        """Send arm home command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_executor_job(self.alarm_arm_home, code)
+    async def async_alarm_arm_home(self, code=None):
+        """Send arm home command."""
+        await self.hass.async_add_executor_job(self.alarm_arm_home, code)
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         raise NotImplementedError()
 
-    def async_alarm_arm_away(self, code=None):
-        """Send arm away command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_executor_job(self.alarm_arm_away, code)
+    async def async_alarm_arm_away(self, code=None):
+        """Send arm away command."""
+        await self.hass.async_add_executor_job(self.alarm_arm_away, code)
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
         raise NotImplementedError()
 
-    def async_alarm_arm_night(self, code=None):
-        """Send arm night command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_executor_job(self.alarm_arm_night, code)
+    async def async_alarm_arm_night(self, code=None):
+        """Send arm night command."""
+        await self.hass.async_add_executor_job(self.alarm_arm_night, code)
 
     def alarm_trigger(self, code=None):
         """Send alarm trigger command."""
         raise NotImplementedError()
 
-    def async_alarm_trigger(self, code=None):
-        """Send alarm trigger command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_executor_job(self.alarm_trigger, code)
+    async def async_alarm_trigger(self, code=None):
+        """Send alarm trigger command."""
+        await self.hass.async_add_executor_job(self.alarm_trigger, code)
 
     def alarm_arm_custom_bypass(self, code=None):
         """Send arm custom bypass command."""
         raise NotImplementedError()
 
-    def async_alarm_arm_custom_bypass(self, code=None):
-        """Send arm custom bypass command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_executor_job(self.alarm_arm_custom_bypass, code)
+    async def async_alarm_arm_custom_bypass(self, code=None):
+        """Send arm custom bypass command."""
+        await self.hass.async_add_executor_job(self.alarm_arm_custom_bypass, code)
 
     @property
     @abstractmethod

@@ -13,6 +13,7 @@
                 "data": {
                     "host": "Hostnaam of IP-adres"
                 },
+                "description": "Stel uw WLED in op integratie met Home Assistant.",
                 "title": "Koppel je WLED"
             },
             "zeroconf_confirm": {

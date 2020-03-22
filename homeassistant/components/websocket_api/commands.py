@@ -107,7 +107,6 @@ def handle_unsubscribe_events(hass, connection, msg):
         )
 
 
-@decorators.async_response
 @decorators.websocket_command(
     {
         vol.Required("type"): "call_service",
@@ -116,6 +115,7 @@ def handle_unsubscribe_events(hass, connection, msg):
         vol.Optional("service_data"): dict,
     }
 )
+@decorators.async_response
 async def handle_call_service(hass, connection, msg):
     """Handle call service command.
 
@@ -181,8 +181,8 @@ def handle_get_states(hass, connection, msg):
     connection.send_message(messages.result_message(msg["id"], states))
 
 
-@decorators.async_response
 @decorators.websocket_command({vol.Required("type"): "get_services"})
+@decorators.async_response
 async def handle_get_services(hass, connection, msg):
     """Handle get services command.
 

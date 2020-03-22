@@ -1,5 +1,5 @@
 """Support for HERE travel time sensors."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Callable, Dict, Optional, Union
 
@@ -18,11 +18,14 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
     EVENT_HOMEASSISTANT_START,
+    TIME_MINUTES,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import location
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import DiscoveryInfoType
+import homeassistant.util.dt as dt
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,10 +35,11 @@ CONF_DESTINATION_ENTITY_ID = "destination_entity_id"
 CONF_ORIGIN_LATITUDE = "origin_latitude"
 CONF_ORIGIN_LONGITUDE = "origin_longitude"
 CONF_ORIGIN_ENTITY_ID = "origin_entity_id"
-CONF_APP_ID = "app_id"
-CONF_APP_CODE = "app_code"
+CONF_API_KEY = "api_key"
 CONF_TRAFFIC_MODE = "traffic_mode"
 CONF_ROUTE_MODE = "route_mode"
+CONF_ARRIVAL = "arrival"
+CONF_DEPARTURE = "departure"
 
 DEFAULT_NAME = "HERE Travel Time"
 
@@ -86,39 +90,53 @@ ATTR_DURATION_IN_TRAFFIC = "duration_in_traffic"
 ATTR_ORIGIN_NAME = "origin_name"
 ATTR_DESTINATION_NAME = "destination_name"
 
-UNIT_OF_MEASUREMENT = "min"
-
 SCAN_INTERVAL = timedelta(minutes=5)
 
 NO_ROUTE_ERROR_MESSAGE = "HERE could not find a route based on the input"
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Inclusive(
+            CONF_DESTINATION_LATITUDE, "destination_coordinates"
+        ): cv.latitude,
+        vol.Inclusive(
+            CONF_DESTINATION_LONGITUDE, "destination_coordinates"
+        ): cv.longitude,
+        vol.Exclusive(CONF_DESTINATION_LATITUDE, "destination"): cv.latitude,
+        vol.Exclusive(CONF_DESTINATION_ENTITY_ID, "destination"): cv.entity_id,
+        vol.Inclusive(CONF_ORIGIN_LATITUDE, "origin_coordinates"): cv.latitude,
+        vol.Inclusive(CONF_ORIGIN_LONGITUDE, "origin_coordinates"): cv.longitude,
+        vol.Exclusive(CONF_ORIGIN_LATITUDE, "origin"): cv.latitude,
+        vol.Exclusive(CONF_ORIGIN_ENTITY_ID, "origin"): cv.entity_id,
+        vol.Optional(CONF_DEPARTURE): cv.time,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_MODE, default=TRAVEL_MODE_CAR): vol.In(TRAVEL_MODE),
+        vol.Optional(CONF_ROUTE_MODE, default=ROUTE_MODE_FASTEST): vol.In(ROUTE_MODE),
+        vol.Optional(CONF_TRAFFIC_MODE, default=False): cv.boolean,
+        vol.Optional(CONF_UNIT_SYSTEM): vol.In(UNITS),
+    }
+)
+
 PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_DESTINATION_LATITUDE, CONF_DESTINATION_ENTITY_ID),
     cv.has_at_least_one_key(CONF_ORIGIN_LATITUDE, CONF_ORIGIN_ENTITY_ID),
-    PLATFORM_SCHEMA.extend(
+    cv.key_value_schemas(
+        CONF_MODE,
         {
-            vol.Required(CONF_APP_ID): cv.string,
-            vol.Required(CONF_APP_CODE): cv.string,
-            vol.Inclusive(
-                CONF_DESTINATION_LATITUDE, "destination_coordinates"
-            ): cv.latitude,
-            vol.Inclusive(
-                CONF_DESTINATION_LONGITUDE, "destination_coordinates"
-            ): cv.longitude,
-            vol.Exclusive(CONF_DESTINATION_LATITUDE, "destination"): cv.latitude,
-            vol.Exclusive(CONF_DESTINATION_ENTITY_ID, "destination"): cv.entity_id,
-            vol.Inclusive(CONF_ORIGIN_LATITUDE, "origin_coordinates"): cv.latitude,
-            vol.Inclusive(CONF_ORIGIN_LONGITUDE, "origin_coordinates"): cv.longitude,
-            vol.Exclusive(CONF_ORIGIN_LATITUDE, "origin"): cv.latitude,
-            vol.Exclusive(CONF_ORIGIN_ENTITY_ID, "origin"): cv.entity_id,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_MODE, default=TRAVEL_MODE_CAR): vol.In(TRAVEL_MODE),
-            vol.Optional(CONF_ROUTE_MODE, default=ROUTE_MODE_FASTEST): vol.In(
-                ROUTE_MODE
+            None: PLATFORM_SCHEMA,
+            TRAVEL_MODE_BICYCLE: PLATFORM_SCHEMA,
+            TRAVEL_MODE_CAR: PLATFORM_SCHEMA,
+            TRAVEL_MODE_PEDESTRIAN: PLATFORM_SCHEMA,
+            TRAVEL_MODE_PUBLIC: PLATFORM_SCHEMA,
+            TRAVEL_MODE_TRUCK: PLATFORM_SCHEMA,
+            TRAVEL_MODE_PUBLIC_TIME_TABLE: PLATFORM_SCHEMA.extend(
+                {
+                    vol.Exclusive(CONF_ARRIVAL, "arrival_departure"): cv.time,
+                    vol.Exclusive(CONF_DEPARTURE, "arrival_departure"): cv.time,
+                }
             ),
-            vol.Optional(CONF_TRAFFIC_MODE, default=False): cv.boolean,
-            vol.Optional(CONF_UNIT_SYSTEM): vol.In(UNITS),
-        }
+        },
     ),
 )
 
@@ -127,13 +145,12 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: Dict[str, Union[str, bool]],
     async_add_entities: Callable,
-    discovery_info: None = None,
+    discovery_info: Optional[DiscoveryInfoType] = None,
 ) -> None:
     """Set up the HERE travel time platform."""
 
-    app_id = config[CONF_APP_ID]
-    app_code = config[CONF_APP_CODE]
-    here_client = herepy.RoutingApi(app_id, app_code)
+    api_key = config[CONF_API_KEY]
+    here_client = herepy.RoutingApi(api_key)
 
     if not await hass.async_add_executor_job(
         _are_valid_client_credentials, here_client
@@ -164,9 +181,11 @@ async def async_setup_platform(
     route_mode = config[CONF_ROUTE_MODE]
     name = config[CONF_NAME]
     units = config.get(CONF_UNIT_SYSTEM, hass.config.units.name)
+    arrival = config.get(CONF_ARRIVAL)
+    departure = config.get(CONF_DEPARTURE)
 
     here_data = HERETravelTimeData(
-        here_client, travel_mode, traffic_mode, route_mode, units
+        here_client, travel_mode, traffic_mode, route_mode, units, arrival, departure
     )
 
     sensor = HERETravelTimeSensor(
@@ -212,7 +231,7 @@ class HERETravelTimeSensor(Entity):
         self._origin_entity_id = origin_entity_id
         self._destination_entity_id = destination_entity_id
         self._here_data = here_data
-        self._unit_of_measurement = UNIT_OF_MEASUREMENT
+        self._unit_of_measurement = TIME_MINUTES
         self._attrs = {
             ATTR_UNIT_SYSTEM: self._here_data.units,
             ATTR_MODE: self._here_data.travel_mode,
@@ -229,7 +248,7 @@ class HERETravelTimeSensor(Entity):
 
         @callback
         def delayed_sensor_update(event):
-            """Update sensor after homeassistant started."""
+            """Update sensor after Home Assistant started."""
             self.async_schedule_update_ha_state(True)
 
         self.hass.bus.async_listen_once(
@@ -319,7 +338,7 @@ class HERETravelTimeSensor(Entity):
             return self._get_location_from_attributes(entity)
 
         # Check if device is in a zone
-        zone_entity = self.hass.states.get("zone.{}".format(entity.state))
+        zone_entity = self.hass.states.get(f"zone.{entity.state}")
         if location.has_location(zone_entity):
             _LOGGER.debug(
                 "%s is in %s, getting zone location", entity_id, zone_entity.entity_id
@@ -352,7 +371,7 @@ class HERETravelTimeSensor(Entity):
     def _get_location_from_attributes(entity: State) -> str:
         """Get the lat/long string from an entities attributes."""
         attr = entity.attributes
-        return "{},{}".format(attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
+        return f"{attr.get(ATTR_LATITUDE)},{attr.get(ATTR_LONGITUDE)}"
 
 
 class HERETravelTimeData:
@@ -365,6 +384,8 @@ class HERETravelTimeData:
         traffic_mode: bool,
         route_mode: str,
         units: str,
+        arrival: datetime,
+        departure: datetime,
     ) -> None:
         """Initialize herepy."""
         self.origin = None
@@ -372,6 +393,8 @@ class HERETravelTimeData:
         self.travel_mode = travel_mode
         self.traffic_mode = traffic_mode
         self.route_mode = route_mode
+        self.arrival = arrival
+        self.departure = departure
         self.attribution = None
         self.traffic_time = None
         self.distance = None
@@ -381,6 +404,7 @@ class HERETravelTimeData:
         self.destination_name = None
         self.units = units
         self._client = here_client
+        self.combine_change = True
 
     def update(self) -> None:
         """Get the latest data from HERE."""
@@ -393,24 +417,36 @@ class HERETravelTimeData:
             # Convert location to HERE friendly location
             destination = self.destination.split(",")
             origin = self.origin.split(",")
+            arrival = self.arrival
+            if arrival is not None:
+                arrival = convert_time_to_isodate(arrival)
+            departure = self.departure
+            if departure is not None:
+                departure = convert_time_to_isodate(departure)
 
             _LOGGER.debug(
-                "Requesting route for origin: %s, destination: %s, route_mode: %s, mode: %s, traffic_mode: %s",
+                "Requesting route for origin: %s, destination: %s, route_mode: %s, mode: %s, traffic_mode: %s, arrival: %s, departure: %s",
                 origin,
                 destination,
                 herepy.RouteMode[self.route_mode],
                 herepy.RouteMode[self.travel_mode],
                 herepy.RouteMode[traffic_mode],
+                arrival,
+                departure,
             )
+
             try:
-                response = self._client.car_route(
+                response = self._client.public_transport_timetable(
                     origin,
                     destination,
+                    self.combine_change,
                     [
                         herepy.RouteMode[self.route_mode],
                         herepy.RouteMode[self.travel_mode],
                         herepy.RouteMode[traffic_mode],
                     ],
+                    arrival=arrival,
+                    departure=departure,
                 )
             except herepy.NoRouteFoundError:
                 # Better error message for cryptic no route error codes
@@ -457,3 +493,11 @@ class HERETravelTimeData:
             joined_supplier_titles = ",".join(supplier_titles)
             attribution = f"With the support of {joined_supplier_titles}. All information is provided without warranty of any kind."
             return attribution
+
+
+def convert_time_to_isodate(timestr: str) -> str:
+    """Take a string like 08:00:00 and combine it with the current date."""
+    combined = datetime.combine(dt.start_of_local_day(), dt.parse_time(timestr))
+    if combined < datetime.now():
+        combined = combined + timedelta(days=1)
+    return combined.isoformat()

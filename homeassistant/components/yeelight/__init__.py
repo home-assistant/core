@@ -49,6 +49,7 @@ ACTION_STAY = "stay"
 ACTION_OFF = "off"
 
 ACTIVE_MODE_NIGHTLIGHT = "1"
+ACTIVE_COLOR_FLOWING = "1"
 
 NIGHTLIGHT_SWITCH_TYPE_LIGHT = "light"
 
@@ -124,6 +125,7 @@ UPDATE_REQUEST_PROPERTIES = [
     "hue",
     "sat",
     "color_mode",
+    "flowing",
     "bg_power",
     "bg_lmode",
     "bg_flowing",
@@ -236,24 +238,46 @@ class YeelightDevice:
         return self._model
 
     @property
-    def is_nightlight_enabled(self) -> bool:
-        """Return true / false if nightlight is currently enabled."""
-        if self.bulb is None:
-            return False
-
-        return self._active_mode == ACTIVE_MODE_NIGHTLIGHT
-
-    @property
     def is_nightlight_supported(self) -> bool:
         """Return true / false if nightlight is supported."""
         if self.model:
             return self.bulb.get_model_specs().get("night_light", False)
 
-        return self._active_mode is not None
+        # It should support both ceiling and other lights
+        return self._nightlight_brightness is not None
+
+    @property
+    def is_nightlight_enabled(self) -> bool:
+        """Return true / false if nightlight is currently enabled."""
+        if self.bulb is None:
+            return False
+
+        # Only ceiling lights have active_mode, from SDK docs:
+        # active_mode 0: daylight mode / 1: moonlight mode (ceiling light only)
+        if self._active_mode is not None:
+            return self._active_mode == ACTIVE_MODE_NIGHTLIGHT
+
+        if self._nightlight_brightness is not None:
+            return int(self._nightlight_brightness) > 0
+
+        return False
+
+    @property
+    def is_color_flow_enabled(self) -> bool:
+        """Return true / false if color flow is currently running."""
+        return self._color_flow == ACTIVE_COLOR_FLOWING
 
     @property
     def _active_mode(self):
         return self.bulb.last_properties.get("active_mode")
+
+    @property
+    def _color_flow(self):
+        return self.bulb.last_properties.get("flowing")
+
+    @property
+    def _nightlight_brightness(self):
+        return self.bulb.last_properties.get("nl_br")
 
     @property
     def type(self):

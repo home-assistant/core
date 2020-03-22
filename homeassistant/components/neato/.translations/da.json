@@ -5,7 +5,7 @@
             "invalid_credentials": "Ugyldige legitimationsoplysninger"
         },
         "create_entry": {
-            "default": "Se [Neato-dokumentation] ({docs_url})."
+            "default": "Se [Neato-dokumentation]({docs_url})."
         },
         "error": {
             "invalid_credentials": "Ugyldige legitimationsoplysninger",
@@ -15,10 +15,11 @@
             "user": {
                 "data": {
                     "password": "Adgangskode",
-                    "username": "Brugernavn"
+                    "username": "Brugernavn",
+                    "vendor": "Udbyder"
                 },
-                "description": "Se [Neato-dokumentation] ({docs_url}).",
-                "title": "Neato kontooplysninger"
+                "description": "Se [Neato-dokumentation]({docs_url}).",
+                "title": "Neato-kontooplysninger"
             }
         },
         "title": "Neato"

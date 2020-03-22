@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "username_exists": "Account already configured"
+            "already_configured": "Account already configured",
+            "no_device": "None of your devices have \"Find my iPhone\" activated"
         },
         "error": {
             "login": "Login error: please check your email & password",
             "send_verification_code": "Failed to send verification code",
-            "username_exists": "Account already configured",
             "validate_verification_code": "Failed to verify your verification code, choose a trust device and start the verification again"
         },
         "step": {
@@ -20,7 +20,8 @@
             "user": {
                 "data": {
                     "password": "Password",
-                    "username": "Email"
+                    "username": "Email",
+                    "with_family": "With family"
                 },
                 "description": "Enter your credentials",
                 "title": "iCloud credentials"

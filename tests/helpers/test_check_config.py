@@ -23,7 +23,7 @@ BASE_CONFIG = (
     "\n\n"
 )
 
-BAD_CORE_CONFIG = "homeassistant:\n" "  unit_system: bad\n" "\n\n"
+BAD_CORE_CONFIG = "homeassistant:\n  unit_system: bad\n\n\n"
 
 
 def log_ha_config(conf):
@@ -106,8 +106,7 @@ async def test_component_platform_not_found_2(hass, loop):
 async def test_package_invalid(hass, loop):
     """Test a valid platform setup."""
     files = {
-        YAML_CONFIG_FILE: BASE_CONFIG
-        + ("  packages:\n" "    p1:\n" '      group: ["a"]')
+        YAML_CONFIG_FILE: BASE_CONFIG + ("  packages:\n    p1:\n" '      group: ["a"]')
     }
     with patch("os.path.isfile", return_value=True), patch_yaml_files(files):
         res = await async_check_ha_config_file(hass)

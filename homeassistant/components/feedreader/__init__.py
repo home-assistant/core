@@ -102,11 +102,13 @@ class FeedManager:
             # during the initial parsing of the XML, but it doesn't indicate
             # whether this is an unrecoverable error. In this case the
             # feedparser lib is trying a less strict parsing approach.
-            # If an error is detected here, log error message but continue
+            # If an error is detected here, log warning message but continue
             # processing the feed entries if present.
             if self._feed.bozo != 0:
-                _LOGGER.error(
-                    "Error parsing feed %s: %s", self._url, self._feed.bozo_exception
+                _LOGGER.warning(
+                    "Possible issue parsing feed %s: %s",
+                    self._url,
+                    self._feed.bozo_exception,
                 )
             # Using etag and modified, if there's no new data available,
             # the entries list will be empty
@@ -131,7 +133,7 @@ class FeedManager:
         """Filter the entries provided and return the ones to keep."""
         if len(self._feed.entries) > self._max_entries:
             _LOGGER.debug(
-                "Processing only the first %s entries " "in feed %s",
+                "Processing only the first %s entries in feed %s",
                 self._max_entries,
                 self._url,
             )

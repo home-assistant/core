@@ -4,6 +4,7 @@
   "documentation": "https://www.home-assistant.io/integrations/camera",
   "requirements": [],
   "dependencies": ["http"],
-  "after_dependencies": ["stream", "media_player"],
-  "codeowners": []
+  "after_dependencies": ["media_player"],
+  "codeowners": [],
+  "quality_scale": "internal"
 }

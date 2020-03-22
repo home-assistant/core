@@ -923,9 +923,9 @@ async def test_flux_with_multiple_lights(hass):
 
     def event_date(hass, event, now=None):
         if event == SUN_EVENT_SUNRISE:
-            print("sunrise {}".format(sunrise_time))
+            print(f"sunrise {sunrise_time}")
             return sunrise_time
-        print("sunset {}".format(sunset_time))
+        print(f"sunset {sunset_time}")
         return sunset_time
 
     with patch(

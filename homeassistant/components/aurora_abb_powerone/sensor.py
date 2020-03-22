@@ -96,7 +96,6 @@ class AuroraABBSolarPVMonitorSensor(Entity):
             if "No response after" in str(error):
                 _LOGGER.debug("No response from inverter (could be dark)")
             else:
-                # print("Exception!!: {}".format(str(e)))
                 raise error
             self._state = None
         finally:

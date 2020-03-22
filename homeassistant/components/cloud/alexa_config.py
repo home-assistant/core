@@ -79,6 +79,12 @@ class AlexaConfig(alexa_config.AbstractConfig):
         return self._endpoint
 
     @property
+    def locale(self):
+        """Return config locale."""
+        # Not clear how to determine locale atm.
+        return "en-US"
+
+    @property
     def entity_config(self):
         """Return entity config."""
         return self._config.get(CONF_ENTITY_CONFIG) or {}

@@ -11,6 +11,7 @@ from homeassistant.const import (
     ATTR_VOLTAGE,
     CONF_PASSWORD,
     CONF_USERNAME,
+    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -199,7 +200,7 @@ def setup(hass, config):
     except (ConnectTimeout, HTTPError, WirelessTagsException) as ex:
         _LOGGER.error("Unable to connect to wirelesstag.net service: %s", str(ex))
         hass.components.persistent_notification.create(
-            "Error: {}<br />" "Please restart hass after fixing this." "".format(ex),
+            "Error: {}<br />Please restart hass after fixing this.".format(ex),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
@@ -284,5 +285,5 @@ class WirelessTagBaseSensor(Entity):
             ATTR_VOLTAGE: f"{self._tag.battery_volts:.2f}V",
             ATTR_TAG_SIGNAL_STRENGTH: f"{self._tag.signal_strength}dBm",
             ATTR_TAG_OUT_OF_RANGE: not self._tag.is_in_range,
-            ATTR_TAG_POWER_CONSUMPTION: f"{self._tag.power_consumption:.2f}%",
+            ATTR_TAG_POWER_CONSUMPTION: f"{self._tag.power_consumption:.2f}{UNIT_PERCENTAGE}",
         }

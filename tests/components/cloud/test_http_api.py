@@ -1,8 +1,9 @@
 """Tests for the HTTP API for the cloud component."""
 import asyncio
 from ipaddress import ip_network
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock
 
+from asynctest import patch
 from hass_nabucasa import thingtalk
 from hass_nabucasa.auth import Unauthenticated, UnknownError
 from hass_nabucasa.const import STATE_CONNECTED
@@ -21,7 +22,6 @@ from . import mock_cloud, mock_cloud_prefs
 from tests.common import mock_coro
 from tests.components.google_assistant import MockConfig
 
-GOOGLE_ACTIONS_SYNC_URL = "https://api-test.hass.io/google_actions_sync"
 SUBSCRIPTION_INFO_URL = "https://api-test.hass.io/subscription_info"
 
 
@@ -59,7 +59,6 @@ def setup_api(hass, aioclient_mock):
                 "user_pool_id": "user_pool_id",
                 "region": "region",
                 "relayer": "relayer",
-                "google_actions_sync_url": GOOGLE_ACTIONS_SYNC_URL,
                 "subscription_info_url": SUBSCRIPTION_INFO_URL,
                 "google_actions": {"filter": {"include_domains": "light"}},
                 "alexa": {
@@ -85,22 +84,26 @@ def mock_cognito():
         yield mock_cog()
 
 
-async def test_google_actions_sync(
-    mock_cognito, mock_cloud_login, cloud_client, aioclient_mock
-):
+async def test_google_actions_sync(mock_cognito, mock_cloud_login, cloud_client):
     """Test syncing Google Actions."""
-    aioclient_mock.post(GOOGLE_ACTIONS_SYNC_URL)
-    req = await cloud_client.post("/api/cloud/google_actions/sync")
-    assert req.status == 200
+    with patch(
+        "hass_nabucasa.cloud_api.async_google_actions_request_sync",
+        return_value=mock_coro(Mock(status=200)),
+    ) as mock_request_sync:
+        req = await cloud_client.post("/api/cloud/google_actions/sync")
+        assert req.status == 200
+        assert len(mock_request_sync.mock_calls) == 1
 
 
-async def test_google_actions_sync_fails(
-    mock_cognito, mock_cloud_login, cloud_client, aioclient_mock
-):
+async def test_google_actions_sync_fails(mock_cognito, mock_cloud_login, cloud_client):
     """Test syncing Google Actions gone bad."""
-    aioclient_mock.post(GOOGLE_ACTIONS_SYNC_URL, status=403)
-    req = await cloud_client.post("/api/cloud/google_actions/sync")
-    assert req.status == 403
+    with patch(
+        "hass_nabucasa.cloud_api.async_google_actions_request_sync",
+        return_value=mock_coro(Mock(status=500)),
+    ) as mock_request_sync:
+        req = await cloud_client.post("/api/cloud/google_actions/sync")
+        assert req.status == 500
+        assert len(mock_request_sync.mock_calls) == 1
 
 
 async def test_login_view(hass, cloud_client):
@@ -129,7 +132,7 @@ async def test_login_view_random_exception(cloud_client):
 
 async def test_login_view_invalid_json(cloud_client):
     """Try logging in with invalid JSON."""
-    with patch("hass_nabucasa.auth.CognitoAuth.login") as mock_login:
+    with patch("hass_nabucasa.auth.CognitoAuth.async_login") as mock_login:
         req = await cloud_client.post("/api/cloud/login", data="Not JSON")
     assert req.status == 400
     assert len(mock_login.mock_calls) == 0
@@ -137,7 +140,7 @@ async def test_login_view_invalid_json(cloud_client):
 
 async def test_login_view_invalid_schema(cloud_client):
     """Try logging in with invalid schema."""
-    with patch("hass_nabucasa.auth.CognitoAuth.login") as mock_login:
+    with patch("hass_nabucasa.auth.CognitoAuth.async_login") as mock_login:
         req = await cloud_client.post("/api/cloud/login", json={"invalid": "schema"})
     assert req.status == 400
     assert len(mock_login.mock_calls) == 0
@@ -146,7 +149,7 @@ async def test_login_view_invalid_schema(cloud_client):
 async def test_login_view_request_timeout(cloud_client):
     """Test request timeout while trying to log in."""
     with patch(
-        "hass_nabucasa.auth.CognitoAuth.login", side_effect=asyncio.TimeoutError
+        "hass_nabucasa.auth.CognitoAuth.async_login", side_effect=asyncio.TimeoutError
     ):
         req = await cloud_client.post(
             "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
@@ -157,7 +160,9 @@ async def test_login_view_request_timeout(cloud_client):
 
 async def test_login_view_invalid_credentials(cloud_client):
     """Test logging in with invalid credentials."""
-    with patch("hass_nabucasa.auth.CognitoAuth.login", side_effect=Unauthenticated):
+    with patch(
+        "hass_nabucasa.auth.CognitoAuth.async_login", side_effect=Unauthenticated
+    ):
         req = await cloud_client.post(
             "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
         )
@@ -167,7 +172,7 @@ async def test_login_view_invalid_credentials(cloud_client):
 
 async def test_login_view_unknown_error(cloud_client):
     """Test unknown error while logging in."""
-    with patch("hass_nabucasa.auth.CognitoAuth.login", side_effect=UnknownError):
+    with patch("hass_nabucasa.auth.CognitoAuth.async_login", side_effect=UnknownError):
         req = await cloud_client.post(
             "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
         )
@@ -321,7 +326,7 @@ async def test_websocket_status(
     client = await hass_ws_client(hass)
 
     with patch.dict(
-        "homeassistant.components.google_assistant.const." "DOMAIN_TO_GOOGLE_TYPES",
+        "homeassistant.components.google_assistant.const.DOMAIN_TO_GOOGLE_TYPES",
         {"light": None},
         clear=True,
     ), patch.dict(
@@ -380,7 +385,7 @@ async def test_websocket_subscription_reconnect(
     client = await hass_ws_client(hass)
 
     with patch(
-        "hass_nabucasa.auth.CognitoAuth.renew_access_token"
+        "hass_nabucasa.auth.CognitoAuth.async_renew_access_token"
     ) as mock_renew, patch("hass_nabucasa.iot.CloudIoT.connect") as mock_connect:
         await client.send_json({"id": 5, "type": "cloud/subscription"})
         response = await client.receive_json()
@@ -399,7 +404,7 @@ async def test_websocket_subscription_no_reconnect_if_connected(
     client = await hass_ws_client(hass)
 
     with patch(
-        "hass_nabucasa.auth.CognitoAuth.renew_access_token"
+        "hass_nabucasa.auth.CognitoAuth.async_renew_access_token"
     ) as mock_renew, patch("hass_nabucasa.iot.CloudIoT.connect") as mock_connect:
         await client.send_json({"id": 5, "type": "cloud/subscription"})
         response = await client.receive_json()
@@ -417,7 +422,7 @@ async def test_websocket_subscription_no_reconnect_if_expired(
     client = await hass_ws_client(hass)
 
     with patch(
-        "hass_nabucasa.auth.CognitoAuth.renew_access_token"
+        "hass_nabucasa.auth.CognitoAuth.async_renew_access_token"
     ) as mock_renew, patch("hass_nabucasa.iot.CloudIoT.connect") as mock_connect:
         await client.send_json({"id": 5, "type": "cloud/subscription"})
         response = await client.receive_json()
@@ -683,7 +688,7 @@ async def test_list_google_entities(hass, hass_ws_client, setup_api, mock_cloud_
         hass, MockConfig(should_expose=lambda *_: False), State("light.kitchen", "on")
     )
     with patch(
-        "homeassistant.components.google_assistant.helpers" ".async_get_entities",
+        "homeassistant.components.google_assistant.helpers.async_get_entities",
         return_value=[entity],
     ):
         await client.send_json({"id": 5, "type": "cloud/google_assistant/entities"})
@@ -779,7 +784,7 @@ async def test_list_alexa_entities(hass, hass_ws_client, setup_api, mock_cloud_l
         hass, MagicMock(entity_config={}), State("light.kitchen", "on")
     )
     with patch(
-        "homeassistant.components.alexa.entities" ".async_get_entities",
+        "homeassistant.components.alexa.entities.async_get_entities",
         return_value=[entity],
     ):
         await client.send_json({"id": 5, "type": "cloud/alexa/entities"})

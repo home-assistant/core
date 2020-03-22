@@ -134,11 +134,11 @@ class FibaroController:
             info = self._client.info.get()
             self.hub_serial = slugify(info.serialNumber)
         except AssertionError:
-            _LOGGER.error("Can't connect to Fibaro HC. " "Please check URL.")
+            _LOGGER.error("Can't connect to Fibaro HC. Please check URL.")
             return False
         if login is None or login.status is False:
             _LOGGER.error(
-                "Invalid login for Fibaro HC. " "Please check username and password"
+                "Invalid login for Fibaro HC. Please check username and password"
             )
             return False
 
@@ -247,8 +247,8 @@ class FibaroController:
                 room_name = self._room_map[device.roomID].name
             device.room_name = room_name
             device.friendly_name = f"{room_name} {device.name}"
-            device.ha_id = "scene_{}_{}_{}".format(
-                slugify(room_name), slugify(device.name), device.id
+            device.ha_id = (
+                f"scene_{slugify(room_name)}_{slugify(device.name)}_{device.id}"
             )
             device.unique_id_str = f"{self.hub_serial}.scene.{device.id}"
             self._scene_map[device.id] = device
@@ -268,9 +268,9 @@ class FibaroController:
                 else:
                     room_name = self._room_map[device.roomID].name
                 device.room_name = room_name
-                device.friendly_name = room_name + " " + device.name
-                device.ha_id = "{}_{}_{}".format(
-                    slugify(room_name), slugify(device.name), device.id
+                device.friendly_name = f"{room_name} {device.name}"
+                device.ha_id = (
+                    f"{slugify(room_name)}_{slugify(device.name)}_{device.id}"
                 )
                 if (
                     device.enabled
@@ -380,7 +380,7 @@ class FibaroDevice(Entity):
     def dont_know_message(self, action):
         """Make a warning in case we don't know how to perform an action."""
         _LOGGER.warning(
-            "Not sure how to setValue: %s " "(available actions: %s)",
+            "Not sure how to setValue: %s (available actions: %s)",
             str(self.ha_id),
             str(self.fibaro_device.actions),
         )
@@ -424,11 +424,6 @@ class FibaroDevice(Entity):
             _LOGGER.debug("-> %s.%s%s called", str(self.ha_id), str(cmd), str(args))
         else:
             self.dont_know_message(cmd)
-
-    @property
-    def hidden(self) -> bool:
-        """Return True if the entity should be hidden from UIs."""
-        return self.fibaro_device.visible is False
 
     @property
     def current_power_w(self):

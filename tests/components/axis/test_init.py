@@ -4,27 +4,9 @@ from unittest.mock import Mock, patch
 from homeassistant.components import axis
 from homeassistant.setup import async_setup_component
 
+from .test_device import MAC, setup_axis_integration
+
 from tests.common import MockConfigEntry, mock_coro
-
-
-async def test_setup(hass):
-    """Test configured options for a device are loaded via config entry."""
-    with patch.object(hass.config_entries, "flow") as mock_config_flow:
-
-        assert await async_setup_component(
-            hass,
-            axis.DOMAIN,
-            {
-                axis.DOMAIN: {
-                    "device_name": {
-                        axis.config_flow.CONF_HOST: "1.2.3.4",
-                        axis.config_flow.CONF_PORT: 80,
-                    }
-                }
-            },
-        )
-
-    assert len(mock_config_flow.mock_calls) == 1
 
 
 async def test_setup_device_already_configured(hass):
@@ -34,7 +16,7 @@ async def test_setup_device_already_configured(hass):
         assert await async_setup_component(
             hass,
             axis.DOMAIN,
-            {axis.DOMAIN: {"device_name": {axis.config_flow.CONF_HOST: "1.2.3.4"}}},
+            {axis.DOMAIN: {"device_name": {axis.CONF_HOST: "1.2.3.4"}}},
         )
 
     assert not mock_config_entries.flow.mock_calls
@@ -48,29 +30,17 @@ async def test_setup_no_config(hass):
 
 async def test_setup_entry(hass):
     """Test successful setup of entry."""
-    entry = MockConfigEntry(domain=axis.DOMAIN, data={axis.device.CONF_MAC: "0123"})
-
-    mock_device = axis.AxisNetworkDevice(hass, entry)
-    mock_device.async_setup = Mock(return_value=mock_coro(True))
-    mock_device.async_update_device_registry = Mock(return_value=mock_coro(True))
-    mock_device.async_reset = Mock(return_value=mock_coro(True))
-
-    with patch.object(axis, "AxisNetworkDevice") as mock_device_class, patch.object(
-        axis, "async_populate_options", return_value=mock_coro(True)
-    ):
-        mock_device_class.return_value = mock_device
-
-        assert await axis.async_setup_entry(hass, entry)
-
+    await setup_axis_integration(hass)
     assert len(hass.data[axis.DOMAIN]) == 1
-    assert "0123" in hass.data[axis.DOMAIN]
+    assert MAC in hass.data[axis.DOMAIN]
 
 
 async def test_setup_entry_fails(hass):
     """Test successful setup of entry."""
-    entry = MockConfigEntry(
-        domain=axis.DOMAIN, data={axis.device.CONF_MAC: "0123"}, options=True
+    config_entry = MockConfigEntry(
+        domain=axis.DOMAIN, data={axis.CONF_MAC: "0123"}, version=2
     )
+    config_entry.add_to_hass(hass)
 
     mock_device = Mock()
     mock_device.async_setup.return_value = mock_coro(False)
@@ -78,42 +48,64 @@ async def test_setup_entry_fails(hass):
     with patch.object(axis, "AxisNetworkDevice") as mock_device_class:
         mock_device_class.return_value = mock_device
 
-        assert not await axis.async_setup_entry(hass, entry)
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert not hass.data[axis.DOMAIN]
 
 
 async def test_unload_entry(hass):
     """Test successful unload of entry."""
-    entry = MockConfigEntry(domain=axis.DOMAIN, data={axis.device.CONF_MAC: "0123"})
+    device = await setup_axis_integration(hass)
+    assert hass.data[axis.DOMAIN]
 
-    mock_device = axis.AxisNetworkDevice(hass, entry)
-    mock_device.async_setup = Mock(return_value=mock_coro(True))
-    mock_device.async_update_device_registry = Mock(return_value=mock_coro(True))
-    mock_device.async_reset = Mock(return_value=mock_coro(True))
-
-    with patch.object(axis, "AxisNetworkDevice") as mock_device_class, patch.object(
-        axis, "async_populate_options", return_value=mock_coro(True)
-    ):
-        mock_device_class.return_value = mock_device
-
-        assert await axis.async_setup_entry(hass, entry)
-
-    assert await axis.async_unload_entry(hass, entry)
+    assert await hass.config_entries.async_unload(device.config_entry.entry_id)
     assert not hass.data[axis.DOMAIN]
 
 
 async def test_populate_options(hass):
     """Test successful populate options."""
-    entry = MockConfigEntry(domain=axis.DOMAIN, data={"device": {}})
-    entry.add_to_hass(hass)
+    device = await setup_axis_integration(hass, options=None)
 
-    with patch.object(axis, "get_device", return_value=mock_coro(Mock())):
-
-        await axis.async_populate_options(hass, entry)
-
-    assert entry.options == {
+    assert device.config_entry.options == {
         axis.CONF_CAMERA: True,
         axis.CONF_EVENTS: True,
         axis.CONF_TRIGGER_TIME: axis.DEFAULT_TRIGGER_TIME,
     }
+
+
+async def test_migrate_entry(hass):
+    """Test successful migration of entry data."""
+    legacy_config = {
+        axis.CONF_DEVICE: {
+            axis.CONF_HOST: "1.2.3.4",
+            axis.CONF_USERNAME: "username",
+            axis.CONF_PASSWORD: "password",
+            axis.CONF_PORT: 80,
+        },
+        axis.CONF_MAC: "mac",
+        axis.device.CONF_MODEL: "model",
+        axis.device.CONF_NAME: "name",
+    }
+    entry = MockConfigEntry(domain=axis.DOMAIN, data=legacy_config)
+
+    assert entry.data == legacy_config
+    assert entry.version == 1
+
+    await entry.async_migrate(hass)
+
+    assert entry.data == {
+        axis.CONF_DEVICE: {
+            axis.CONF_HOST: "1.2.3.4",
+            axis.CONF_USERNAME: "username",
+            axis.CONF_PASSWORD: "password",
+            axis.CONF_PORT: 80,
+        },
+        axis.CONF_HOST: "1.2.3.4",
+        axis.CONF_USERNAME: "username",
+        axis.CONF_PASSWORD: "password",
+        axis.CONF_PORT: 80,
+        axis.CONF_MAC: "mac",
+        axis.device.CONF_MODEL: "model",
+        axis.device.CONF_NAME: "name",
+    }
+    assert entry.version == 2

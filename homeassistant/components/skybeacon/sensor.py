@@ -15,6 +15,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -82,7 +83,7 @@ class SkybeaconHumid(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return "%"
+        return UNIT_PERCENTAGE
 
     @property
     def device_state_attributes(self):

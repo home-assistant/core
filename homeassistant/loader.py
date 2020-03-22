@@ -41,12 +41,11 @@ DATA_INTEGRATIONS = "integrations"
 DATA_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_BUILTIN = "homeassistant.components"
-LOOKUP_PATHS = [PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]
 CUSTOM_WARNING = (
     "You are using a custom integration for %s which has not "
     "been tested by Home Assistant. This component might "
     "cause stability problems, be sure to disable it if you "
-    "do experience issues with Home Assistant."
+    "experience issues with Home Assistant."
 )
 _UNDEF = object()
 
@@ -67,12 +66,15 @@ async def _async_get_custom_components(
     hass: "HomeAssistant",
 ) -> Dict[str, "Integration"]:
     """Return list of custom integrations."""
+    if hass.config.safe_mode:
+        return {}
+
     try:
         import custom_components
     except ImportError:
         return {}
 
-    def get_sub_directories(paths: List) -> List:
+    def get_sub_directories(paths: List[str]) -> List[pathlib.Path]:
         """Return all sub directories in a set of paths."""
         return [
             entry
@@ -178,7 +180,7 @@ class Integration:
 
         Will create a stub manifest.
         """
-        comp = _load_file(hass, domain, LOOKUP_PATHS)
+        comp = _load_file(hass, domain, _lookup_path(hass))
 
         if comp is None:
             return None
@@ -233,6 +235,26 @@ class Integration:
     def config_flow(self) -> bool:
         """Return config_flow."""
         return cast(bool, self.manifest.get("config_flow", False))
+
+    @property
+    def documentation(self) -> Optional[str]:
+        """Return documentation."""
+        return cast(str, self.manifest.get("documentation"))
+
+    @property
+    def quality_scale(self) -> Optional[str]:
+        """Return Integration Quality Scale."""
+        return cast(str, self.manifest.get("quality_scale"))
+
+    @property
+    def logo(self) -> Optional[str]:
+        """Return Integration Logo."""
+        return cast(str, self.manifest.get("logo"))
+
+    @property
+    def icon(self) -> Optional[str]:
+        """Return Integration Icon."""
+        return cast(str, self.manifest.get("icon"))
 
     @property
     def is_built_in(self) -> bool:
@@ -402,7 +424,7 @@ def _load_file(
 
             if str(err) not in white_listed_errors:
                 _LOGGER.exception(
-                    ("Error loading %s. Make sure all " "dependencies are installed"),
+                    ("Error loading %s. Make sure all dependencies are installed"),
                     path,
                 )
 
@@ -444,7 +466,7 @@ class Components:
             component: Optional[ModuleType] = integration.get_component()
         else:
             # Fallback to importing old-school
-            component = _load_file(self._hass, comp_name, LOOKUP_PATHS)
+            component = _load_file(self._hass, comp_name, _lookup_path(self._hass))
 
         if component is None:
             raise ImportError(f"Unable to load {comp_name}")
@@ -484,7 +506,7 @@ async def async_component_dependencies(hass: "HomeAssistant", domain: str) -> Se
 
 
 async def _async_component_dependencies(
-    hass: "HomeAssistant", domain: str, loaded: Set[str], loading: Set
+    hass: "HomeAssistant", domain: str, loaded: Set[str], loading: Set[str]
 ) -> Set[str]:
     """Recursive function to get component dependencies.
 
@@ -521,8 +543,15 @@ def _async_mount_config_dir(hass: "HomeAssistant") -> bool:
     Async friendly but not a coroutine.
     """
     if hass.config.config_dir is None:
-        _LOGGER.error("Can't load integrations - config dir is not set")
+        _LOGGER.error("Can't load integrations - configuration directory is not set")
         return False
     if hass.config.config_dir not in sys.path:
         sys.path.insert(0, hass.config.config_dir)
     return True
+
+
+def _lookup_path(hass: "HomeAssistant") -> List[str]:
+    """Return the lookup paths for legacy lookups."""
+    if hass.config.safe_mode:
+        return [PACKAGE_BUILTIN]
+    return [PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]

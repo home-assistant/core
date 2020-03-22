@@ -76,8 +76,8 @@ async def async_setup(hass, config):
     """Track the state of the sun."""
     if config.get(CONF_ELEVATION) is not None:
         _LOGGER.warning(
-            "Elevation is now configured in home assistant core. "
-            "See https://home-assistant.io/docs/configuration/basic/"
+            "Elevation is now configured in Home Assistant core. "
+            "See https://www.home-assistant.io/docs/configuration/basic/"
         )
     Sun(hass)
     return True

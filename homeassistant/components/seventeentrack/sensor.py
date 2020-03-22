@@ -45,7 +45,7 @@ ENTITY_ID_TEMPLATE = "sensor.seventeentrack_package_{0}"
 NOTIFICATION_DELIVERED_ID = "package_delivered_{0}"
 NOTIFICATION_DELIVERED_TITLE = "Package {0} delivered"
 NOTIFICATION_DELIVERED_MESSAGE = (
-    "Package Delivered: {0}<br />" + "Visit 17.track for more information: "
+    "Package Delivered: {0}<br />Visit 17.track for more information: "
     "https://t.17track.net/track#nums={1}"
 )
 
@@ -129,7 +129,7 @@ class SeventeenTrackSummarySensor(Entity):
 
     @property
     def unique_id(self):
-        """Return a unique, HASS-friendly identifier for this entity."""
+        """Return a unique, Home Assistant friendly identifier for this entity."""
         return "summary_{0}_{1}".format(self._data.account_id, slugify(self._status))
 
     @property
@@ -212,7 +212,7 @@ class SeventeenTrackPackageSensor(Entity):
 
     @property
     def unique_id(self):
-        """Return a unique, HASS-friendly identifier for this entity."""
+        """Return a unique, Home Assistant friendly identifier for this entity."""
         return UNIQUE_ID_TEMPLATE.format(self._data.account_id, self._tracking_number)
 
     async def async_update(self):

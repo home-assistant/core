@@ -4,7 +4,8 @@
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "bad_config_file": "Fehlerhafte Daten aus der Konfigurationsdatei",
             "link_local_address": "Link-local Adressen werden nicht unterst\u00fctzt",
-            "not_axis_device": "Erkanntes Ger\u00e4t ist kein Axis-Ger\u00e4t"
+            "not_axis_device": "Erkanntes Ger\u00e4t ist kein Axis-Ger\u00e4t",
+            "updated_configuration": "Ger\u00e4tekonfiguration mit neuer Hostadresse aktualisiert"
         },
         "error": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
@@ -12,6 +13,7 @@
             "device_unavailable": "Ger\u00e4t ist nicht verf\u00fcgbar",
             "faulty_credentials": "Ung\u00fcltige Anmeldeinformationen"
         },
+        "flow_title": "Achsenger\u00e4t: {name} ({host})",
         "step": {
             "user": {
                 "data": {

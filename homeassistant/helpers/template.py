@@ -192,7 +192,7 @@ class Template:
             raise TemplateError(err)
 
     def extract_entities(
-        self, variables: Dict[str, Any] = None
+        self, variables: Optional[Dict[str, Any]] = None
     ) -> Union[str, List[str]]:
         """Extract all entities for state_changed listener."""
         return extract_entities(self.template, variables)
@@ -328,7 +328,7 @@ class AllStates:
             if not valid_entity_id(name):
                 raise TemplateError(f"Invalid entity ID '{name}'")
             return _get_state(self._hass, name)
-        if not valid_entity_id(name + ".entity"):
+        if not valid_entity_id(f"{name}.entity"):
             raise TemplateError(f"Invalid domain name '{name}'")
         return DomainStates(self._hass, name)
 
@@ -378,7 +378,7 @@ class DomainStates:
             raise TemplateError(f"Invalid entity ID '{entity_id}'")
         return _get_state(self._hass, entity_id)
 
-    def _collect_domain(self):
+    def _collect_domain(self) -> None:
         entity_collect = self._hass.data.get(_RENDER_INFO)
         if entity_collect is not None:
             # pylint: disable=protected-access
@@ -398,12 +398,12 @@ class DomainStates:
             )
         )
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return number of states."""
         self._collect_domain()
         return len(self._hass.states.async_entity_ids(self._domain))
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Representation of Domain States."""
         return f"<template DomainStates('{self._domain}')>"
 
@@ -426,7 +426,7 @@ class TemplateState(State):
         return state
 
     @property
-    def state_with_unit(self):
+    def state_with_unit(self) -> str:
         """Return the state concatenated with the unit if available."""
         state = object.__getattribute__(self, "_access_state")()
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -447,11 +447,11 @@ class TemplateState(State):
         state = object.__getattribute__(self, "_access_state")()
         return getattr(state, name)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Representation of Template State."""
         state = object.__getattribute__(self, "_access_state")()
         rep = state.__repr__()
-        return "<template " + rep[1:]
+        return f"<template {rep[1:]}"
 
 
 def _collect_state(hass, entity_id):
@@ -469,7 +469,7 @@ def _wrap_state(hass, state):
 def _get_state(hass, entity_id):
     state = hass.states.get(entity_id)
     if state is None:
-        # Only need to collect if none, if not none collect first actuall
+        # Only need to collect if none, if not none collect first actual
         # access to the state properties in the state wrapper.
         _collect_state(hass, entity_id)
         return None
@@ -615,7 +615,7 @@ def distance(hass, *args):
 
             if latitude is None or longitude is None:
                 _LOGGER.warning(
-                    "Distance:Unable to process latitude and " "longitude: %s, %s",
+                    "Distance:Unable to process latitude and longitude: %s, %s",
                     value,
                     value_2,
                 )

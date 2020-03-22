@@ -7,15 +7,15 @@ from tests.common import load_fixture
 
 
 async def test_entity_registry(hass, requests_mock):
-    """Tests that the devices are registed in the entity registry."""
+    """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, SWITCH_DOMAIN)
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
     entry = entity_registry.async_get("switch.front_siren")
-    assert entry.unique_id == "aacdef123-siren"
+    assert entry.unique_id == "765432-siren"
 
     entry = entity_registry.async_get("switch.internal_siren")
-    assert entry.unique_id == "aacdef124-siren"
+    assert entry.unique_id == "345678-siren"
 
 
 async def test_siren_off_reports_correctly(hass, requests_mock):
@@ -43,7 +43,7 @@ async def test_siren_can_be_turned_on(hass, requests_mock):
 
     # Mocks the response for turning a siren on
     requests_mock.put(
-        "https://api.ring.com/clients_api/doorbots/987652/siren_on",
+        "https://api.ring.com/clients_api/doorbots/765432/siren_on",
         text=load_fixture("ring_doorbot_siren_on_response.json"),
     )
 

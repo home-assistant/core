@@ -18,8 +18,8 @@
                 "title": "Indtast adgangskode"
             },
             "discovery_confirm": {
-                "description": "Vil du tilf\u00f8je ESPHome node `{name}` til Home Assistant?",
-                "title": "Fandt ESPHome node"
+                "description": "Vil du tilf\u00f8je ESPHome-knudepunkt `{name}` til Home Assistant?",
+                "title": "Fandt ESPHome-knudepunkt"
             },
             "user": {
                 "data": {

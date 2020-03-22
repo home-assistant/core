@@ -53,7 +53,7 @@ async def component_translation_file(
     assert integration is not None, domain
 
     if is_platform:
-        filename = "{}.{}.json".format(parts[0], language)
+        filename = f"{parts[0]}.{language}.json"
         return str(integration.file_path / ".translations" / filename)
 
     # If it's a component that is just one file, we don't support translations

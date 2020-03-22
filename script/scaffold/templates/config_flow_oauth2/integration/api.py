@@ -1,4 +1,4 @@
-"""API for NEW_NAME bound to HASS OAuth."""
+"""API for NEW_NAME bound to Home Assistant OAuth."""
 from asyncio import run_coroutine_threadsafe
 
 from aiohttp import ClientSession

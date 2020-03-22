@@ -44,6 +44,7 @@ from homeassistant.const import (
     STATE_LOCKED,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -391,9 +392,7 @@ class ColorSettingTrait(_Trait):
             if temp < min_temp or temp > max_temp:
                 raise SmartHomeError(
                     ERR_VALUE_OUT_OF_RANGE,
-                    "Temperature should be between {} and {}".format(
-                        min_temp, max_temp
-                    ),
+                    f"Temperature should be between {min_temp} and {max_temp}",
                 )
 
             await self.hass.services.async_call(
@@ -406,7 +405,7 @@ class ColorSettingTrait(_Trait):
 
         elif "spectrumRGB" in params["color"]:
             # Convert integer to hex format and left pad with 0's till length 6
-            hex_value = "{0:06x}".format(params["color"]["spectrumRGB"])
+            hex_value = f"{params['color']['spectrumRGB']:06x}"
             color = color_util.color_RGB_to_hs(
                 *color_util.rgb_hex_to_rgb_list(hex_value)
             )
@@ -666,7 +665,7 @@ class TemperatureSettingTrait(_Trait):
             device_class = attrs.get(ATTR_DEVICE_CLASS)
             if device_class == sensor.DEVICE_CLASS_TEMPERATURE:
                 current_temp = self.state.state
-                if current_temp is not None:
+                if current_temp not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                     response["thermostatTemperatureAmbient"] = round(
                         temp_util.convert(float(current_temp), unit, TEMP_CELSIUS), 1
                     )
@@ -745,9 +744,7 @@ class TemperatureSettingTrait(_Trait):
             if temp < min_temp or temp > max_temp:
                 raise SmartHomeError(
                     ERR_VALUE_OUT_OF_RANGE,
-                    "Temperature should be between {} and {}".format(
-                        min_temp, max_temp
-                    ),
+                    f"Temperature should be between {min_temp} and {max_temp}",
                 )
 
             await self.hass.services.async_call(
@@ -768,8 +765,10 @@ class TemperatureSettingTrait(_Trait):
             if temp_high < min_temp or temp_high > max_temp:
                 raise SmartHomeError(
                     ERR_VALUE_OUT_OF_RANGE,
-                    "Upper bound for temperature range should be between "
-                    "{} and {}".format(min_temp, max_temp),
+                    (
+                        f"Upper bound for temperature range should be between "
+                        f"{min_temp} and {max_temp}"
+                    ),
                 )
 
             temp_low = temp_util.convert(
@@ -781,8 +780,10 @@ class TemperatureSettingTrait(_Trait):
             if temp_low < min_temp or temp_low > max_temp:
                 raise SmartHomeError(
                     ERR_VALUE_OUT_OF_RANGE,
-                    "Lower bound for temperature range should be between "
-                    "{} and {}".format(min_temp, max_temp),
+                    (
+                        f"Lower bound for temperature range should be between "
+                        f"{min_temp} and {max_temp}"
+                    ),
                 )
 
             supported = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
@@ -887,7 +888,7 @@ class HumiditySettingTrait(_Trait):
             device_class = attrs.get(ATTR_DEVICE_CLASS)
             if device_class == sensor.DEVICE_CLASS_HUMIDITY:
                 current_humidity = self.state.state
-                if current_humidity is not None:
+                if current_humidity not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                     response["humidityAmbientPercent"] = round(float(current_humidity))
 
         return response
@@ -1120,98 +1121,9 @@ class ModesTrait(_Trait):
     name = TRAIT_MODES
     commands = [COMMAND_MODES]
 
-    # Google requires specific mode names and settings. Here is the full list.
-    # https://developers.google.com/actions/reference/smarthome/traits/modes
-    # All settings are mapped here as of 2018-11-28 and can be used for other
-    # entity types.
-
-    HA_TO_GOOGLE = {media_player.ATTR_INPUT_SOURCE: "input source"}
-    SUPPORTED_MODE_SETTINGS = {
-        "xsmall": ["xsmall", "extra small", "min", "minimum", "tiny", "xs"],
-        "small": ["small", "half"],
-        "large": ["large", "big", "full"],
-        "xlarge": ["extra large", "xlarge", "xl"],
-        "Cool": ["cool", "rapid cool", "rapid cooling"],
-        "Heat": ["heat"],
-        "Low": ["low"],
-        "Medium": ["medium", "med", "mid", "half"],
-        "High": ["high"],
-        "Auto": ["auto", "automatic"],
-        "Bake": ["bake"],
-        "Roast": ["roast"],
-        "Convection Bake": ["convection bake", "convect bake"],
-        "Convection Roast": ["convection roast", "convect roast"],
-        "Favorite": ["favorite"],
-        "Broil": ["broil"],
-        "Warm": ["warm"],
-        "Off": ["off"],
-        "On": ["on"],
-        "Normal": [
-            "normal",
-            "normal mode",
-            "normal setting",
-            "standard",
-            "schedule",
-            "original",
-            "default",
-            "old settings",
-        ],
-        "None": ["none"],
-        "Tap Cold": ["tap cold"],
-        "Cold Warm": ["cold warm"],
-        "Hot": ["hot"],
-        "Extra Hot": ["extra hot"],
-        "Eco": ["eco"],
-        "Wool": ["wool", "fleece"],
-        "Turbo": ["turbo"],
-        "Rinse": ["rinse", "rinsing", "rinse wash"],
-        "Away": ["away", "holiday"],
-        "maximum": ["maximum"],
-        "media player": ["media player"],
-        "chromecast": ["chromecast"],
-        "tv": [
-            "tv",
-            "television",
-            "tv position",
-            "television position",
-            "watching tv",
-            "watching tv position",
-            "entertainment",
-            "entertainment position",
-        ],
-        "am fm": ["am fm", "am radio", "fm radio"],
-        "internet radio": ["internet radio"],
-        "satellite": ["satellite"],
-        "game console": ["game console"],
-        "antifrost": ["antifrost", "anti-frost"],
-        "boost": ["boost"],
-        "Clock": ["clock"],
-        "Message": ["message"],
-        "Messages": ["messages"],
-        "News": ["news"],
-        "Disco": ["disco"],
-        "antifreeze": ["antifreeze", "anti-freeze", "anti freeze"],
-        "balanced": ["balanced", "normal"],
-        "swing": ["swing"],
-        "media": ["media", "media mode"],
-        "panic": ["panic"],
-        "ring": ["ring"],
-        "frozen": ["frozen", "rapid frozen", "rapid freeze"],
-        "cotton": ["cotton", "cottons"],
-        "blend": ["blend", "mix"],
-        "baby wash": ["baby wash"],
-        "synthetics": ["synthetic", "synthetics", "compose"],
-        "hygiene": ["hygiene", "sterilization"],
-        "smart": ["smart", "intelligent", "intelligence"],
-        "comfortable": ["comfortable", "comfort"],
-        "manual": ["manual"],
-        "energy saving": ["energy saving"],
-        "sleep": ["sleep"],
-        "quick wash": ["quick wash", "fast wash"],
-        "cold": ["cold"],
-        "airsupply": ["airsupply", "air supply"],
-        "dehumidification": ["dehumidication", "dehumidify"],
-        "game": ["game", "game mode"],
+    SYNONYMS = {
+        "input source": ["input source", "input", "source"],
+        "sound mode": ["sound mode", "effects"],
     }
 
     @staticmethod
@@ -1220,42 +1132,51 @@ class ModesTrait(_Trait):
         if domain != media_player.DOMAIN:
             return False
 
-        return features & media_player.SUPPORT_SELECT_SOURCE
+        return (
+            features & media_player.SUPPORT_SELECT_SOURCE
+            or features & media_player.SUPPORT_SELECT_SOUND_MODE
+        )
 
     def sync_attributes(self):
         """Return mode attributes for a sync request."""
-        sources_list = self.state.attributes.get(
-            media_player.ATTR_INPUT_SOURCE_LIST, []
-        )
-        modes = []
-        sources = {}
 
-        if sources_list:
-            sources = {
-                "name": self.HA_TO_GOOGLE.get(media_player.ATTR_INPUT_SOURCE),
-                "name_values": [{"name_synonym": ["input source"], "lang": "en"}],
+        def _generate(name, settings):
+            mode = {
+                "name": name,
+                "name_values": [
+                    {"name_synonym": self.SYNONYMS.get(name, [name]), "lang": "en"}
+                ],
                 "settings": [],
                 "ordered": False,
             }
-            for source in sources_list:
-                if source in self.SUPPORTED_MODE_SETTINGS:
-                    src = source
-                    synonyms = self.SUPPORTED_MODE_SETTINGS.get(src)
-                elif source.lower() in self.SUPPORTED_MODE_SETTINGS:
-                    src = source.lower()
-                    synonyms = self.SUPPORTED_MODE_SETTINGS.get(src)
-
-                else:
-                    continue
-
-                sources["settings"].append(
+            for setting in settings:
+                mode["settings"].append(
                     {
-                        "setting_name": src,
-                        "setting_values": [{"setting_synonym": synonyms, "lang": "en"}],
+                        "setting_name": setting,
+                        "setting_values": [
+                            {
+                                "setting_synonym": self.SYNONYMS.get(
+                                    setting, [setting]
+                                ),
+                                "lang": "en",
+                            }
+                        ],
                     }
                 )
-        if sources:
-            modes.append(sources)
+            return mode
+
+        attrs = self.state.attributes
+        modes = []
+        if media_player.ATTR_INPUT_SOURCE_LIST in attrs:
+            modes.append(
+                _generate("input source", attrs[media_player.ATTR_INPUT_SOURCE_LIST])
+            )
+
+        if media_player.ATTR_SOUND_MODE_LIST in attrs:
+            modes.append(
+                _generate("sound mode", attrs[media_player.ATTR_SOUND_MODE_LIST])
+            )
+
         payload = {"availableModes": modes}
 
         return payload
@@ -1266,14 +1187,12 @@ class ModesTrait(_Trait):
         response = {}
         mode_settings = {}
 
-        if attrs.get(media_player.ATTR_INPUT_SOURCE_LIST):
-            mode_settings.update(
-                {
-                    media_player.ATTR_INPUT_SOURCE: attrs.get(
-                        media_player.ATTR_INPUT_SOURCE
-                    )
-                }
-            )
+        if media_player.ATTR_INPUT_SOURCE_LIST in attrs:
+            mode_settings["input source"] = attrs.get(media_player.ATTR_INPUT_SOURCE)
+
+        if media_player.ATTR_SOUND_MODE_LIST in attrs:
+            mode_settings["sound mode"] = attrs.get(media_player.ATTR_SOUND_MODE)
+
         if mode_settings:
             response["on"] = self.state.state != STATE_OFF
             response["online"] = True
@@ -1284,25 +1203,32 @@ class ModesTrait(_Trait):
     async def execute(self, command, data, params, challenge):
         """Execute an SetModes command."""
         settings = params.get("updateModeSettings")
-        requested_source = settings.get(
-            self.HA_TO_GOOGLE.get(media_player.ATTR_INPUT_SOURCE)
-        )
+        requested_source = settings.get("input source")
+        sound_mode = settings.get("sound mode")
 
         if requested_source:
-            for src in self.state.attributes.get(media_player.ATTR_INPUT_SOURCE_LIST):
-                if src.lower() == requested_source.lower():
-                    source = src
+            await self.hass.services.async_call(
+                media_player.DOMAIN,
+                media_player.SERVICE_SELECT_SOURCE,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    media_player.ATTR_INPUT_SOURCE: requested_source,
+                },
+                blocking=True,
+                context=data.context,
+            )
 
-                    await self.hass.services.async_call(
-                        media_player.DOMAIN,
-                        media_player.SERVICE_SELECT_SOURCE,
-                        {
-                            ATTR_ENTITY_ID: self.state.entity_id,
-                            media_player.ATTR_INPUT_SOURCE: source,
-                        },
-                        blocking=True,
-                        context=data.context,
-                    )
+        if sound_mode:
+            await self.hass.services.async_call(
+                media_player.DOMAIN,
+                media_player.SERVICE_SELECT_SOUND_MODE,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    media_player.ATTR_SOUND_MODE: sound_mode,
+                },
+                blocking=True,
+                context=data.context,
+            )
 
 
 @register_trait
@@ -1521,6 +1447,8 @@ def _verify_pin_challenge(data, state, challenge):
 
 
 def _verify_ack_challenge(data, state, challenge):
-    """Verify a pin challenge."""
+    """Verify an ack challenge."""
+    if not data.config.should_2fa(state):
+        return
     if not challenge or not challenge.get("ack"):
         raise ChallengeNeeded(CHALLENGE_ACK_NEEDED)

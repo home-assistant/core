@@ -74,8 +74,8 @@ async def setup_verisure_locks(hass, config):
     with mock_hub(config):
         await async_setup_component(hass, VERISURE_DOMAIN, config)
         await hass.async_block_till_done()
-        # lock.door_lock, group.all_locks, ethernet_status
-        assert len(hass.states.async_all()) == 3
+        # lock.door_lock, ethernet_status
+        assert len(hass.states.async_all()) == 2
 
 
 async def test_verisure_no_default_code(hass):

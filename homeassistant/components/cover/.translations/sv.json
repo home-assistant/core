@@ -1,0 +1,20 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_closed": "{entity_name} \u00e4r st\u00e4ngd",
+            "is_closing": "{entity_name} st\u00e4ngs",
+            "is_open": "{entity_name} \u00e4r \u00f6ppen",
+            "is_opening": "{entity_name} \u00f6ppnas",
+            "is_position": "Aktuell position f\u00f6r {entity_name} \u00e4r",
+            "is_tilt_position": "Aktuell {entity_name} lutningsposition \u00e4r"
+        },
+        "trigger_type": {
+            "closed": "{entity_name} st\u00e4ngd",
+            "closing": "{entity_name} st\u00e4nger",
+            "opened": "{entity_name} \u00f6ppnades",
+            "opening": "{entity_name} \u00f6ppnas",
+            "position": "{entity_name} position \u00e4ndras",
+            "tilt_position": "{entity_name} lutningsposition \u00e4ndras"
+        }
+    }
+}

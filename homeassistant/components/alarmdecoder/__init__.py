@@ -24,6 +24,7 @@ CONF_DEVICE_BAUD = "baudrate"
 CONF_DEVICE_PATH = "path"
 CONF_DEVICE_PORT = "port"
 CONF_DEVICE_TYPE = "type"
+CONF_AUTO_BYPASS = "autobypass"
 CONF_PANEL_DISPLAY = "panel_display"
 CONF_ZONE_NAME = "name"
 CONF_ZONE_TYPE = "type"
@@ -32,6 +33,7 @@ CONF_ZONE_RFID = "rfid"
 CONF_ZONES = "zones"
 CONF_RELAY_ADDR = "relayaddr"
 CONF_RELAY_CHAN = "relaychan"
+CONF_CODE_ARM_REQUIRED = "code_arm_required"
 
 DEFAULT_DEVICE_TYPE = "socket"
 DEFAULT_DEVICE_HOST = "localhost"
@@ -39,7 +41,9 @@ DEFAULT_DEVICE_PORT = 10000
 DEFAULT_DEVICE_PATH = "/dev/ttyUSB0"
 DEFAULT_DEVICE_BAUD = 115200
 
+DEFAULT_AUTO_BYPASS = False
 DEFAULT_PANEL_DISPLAY = False
+DEFAULT_CODE_ARM_REQUIRED = True
 
 DEFAULT_ZONE_TYPE = "opening"
 
@@ -102,6 +106,10 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(
                     CONF_PANEL_DISPLAY, default=DEFAULT_PANEL_DISPLAY
                 ): cv.boolean,
+                vol.Optional(CONF_AUTO_BYPASS, default=DEFAULT_AUTO_BYPASS): cv.boolean,
+                vol.Optional(
+                    CONF_CODE_ARM_REQUIRED, default=DEFAULT_CODE_ARM_REQUIRED
+                ): cv.boolean,
                 vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
             }
         )
@@ -115,11 +123,13 @@ def setup(hass, config):
     conf = config.get(DOMAIN)
 
     restart = False
-    device = conf.get(CONF_DEVICE)
-    display = conf.get(CONF_PANEL_DISPLAY)
+    device = conf[CONF_DEVICE]
+    display = conf[CONF_PANEL_DISPLAY]
+    auto_bypass = conf[CONF_AUTO_BYPASS]
+    code_arm_required = conf[CONF_CODE_ARM_REQUIRED]
     zones = conf.get(CONF_ZONES)
 
-    device_type = device.get(CONF_DEVICE_TYPE)
+    device_type = device[CONF_DEVICE_TYPE]
     host = DEFAULT_DEVICE_HOST
     port = DEFAULT_DEVICE_PORT
     path = DEFAULT_DEVICE_PATH
@@ -201,7 +211,13 @@ def setup(hass, config):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_alarmdecoder)
 
-    load_platform(hass, "alarm_control_panel", DOMAIN, conf, config)
+    load_platform(
+        hass,
+        "alarm_control_panel",
+        DOMAIN,
+        {CONF_AUTO_BYPASS: auto_bypass, CONF_CODE_ARM_REQUIRED: code_arm_required},
+        config,
+    )
 
     if zones:
         load_platform(hass, "binary_sensor", DOMAIN, {CONF_ZONES: zones}, config)

@@ -269,9 +269,6 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
 
         entity_id = "alarm_control_panel.test"
 
-        self.hass.start()
-        self.hass.block_till_done()
-
         assert STATE_ALARM_DISARMED == self.hass.states.get(entity_id).state
 
         common.alarm_arm_home(self.hass, "abc")
@@ -1470,9 +1467,6 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         )
 
         entity_id = "alarm_control_panel.test"
-
-        self.hass.start()
-        self.hass.block_till_done()
 
         assert STATE_ALARM_DISARMED == self.hass.states.get(entity_id).state
 

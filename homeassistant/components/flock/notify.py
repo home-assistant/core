@@ -16,7 +16,7 @@ _RESOURCE = "https://api.flock.com/hooks/sendMessage/"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_ACCESS_TOKEN): cv.string})
 
 
-async def get_service(hass, config, discovery_info=None):
+async def async_get_service(hass, config, discovery_info=None):
     """Get the Flock notification service."""
     access_token = config.get(CONF_ACCESS_TOKEN)
     url = f"{_RESOURCE}{access_token}"

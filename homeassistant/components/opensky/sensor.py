@@ -40,7 +40,7 @@ EVENT_OPENSKY_EXIT = f"{DOMAIN}_exit"
 SCAN_INTERVAL = timedelta(seconds=12)  # opensky public limit is 10 seconds
 
 OPENSKY_ATTRIBUTION = (
-    "Information provided by the OpenSky Network " "(https://opensky-network.org)"
+    "Information provided by the OpenSky Network (https://opensky-network.org)"
 )
 OPENSKY_API_URL = "https://opensky-network.org/api/states/all"
 OPENSKY_API_FIELDS = [

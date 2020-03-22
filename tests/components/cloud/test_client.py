@@ -103,13 +103,17 @@ async def test_handler_google_actions(hass):
     reqid = "5711642932632160983"
     data = {"requestId": reqid, "inputs": [{"intent": "action.devices.SYNC"}]}
 
-    config = await cloud.client.get_google_config()
-    resp = await cloud.client.async_google_message(data)
+    with patch(
+        "hass_nabucasa.Cloud._decode_claims",
+        return_value={"cognito:username": "myUserName"},
+    ):
+        await cloud.client.get_google_config()
+        resp = await cloud.client.async_google_message(data)
 
     assert resp["requestId"] == reqid
     payload = resp["payload"]
 
-    assert payload["agentUserId"] == config.cloud_user
+    assert payload["agentUserId"] == "myUserName"
 
     devices = payload["devices"]
     assert len(devices) == 1
@@ -117,7 +121,7 @@ async def test_handler_google_actions(hass):
     device = devices[0]
     assert device["id"] == "switch.test"
     assert device["name"]["name"] == "Config name"
-    assert device["name"]["nicknames"] == ["Config alias"]
+    assert device["name"]["nicknames"] == ["Config name", "Config alias"]
     assert device["type"] == "action.devices.types.SWITCH"
     assert device["roomHint"] == "living room"
 
@@ -213,7 +217,7 @@ async def test_google_config_should_2fa(hass, mock_cloud_setup, mock_cloud_login
 
 
 async def test_set_username(hass):
-    """Test we set username during loggin."""
+    """Test we set username during login."""
     prefs = MagicMock(
         alexa_enabled=False,
         google_enabled=False,

@@ -141,6 +141,7 @@ class Mailbox:
         self.hass = hass
         self.name = name
 
+    @callback
     def async_update(self):
         """Send event notification of updated mailbox."""
         self.hass.bus.async_fire(EVENT)
@@ -168,7 +169,7 @@ class Mailbox:
         """Return a list of the current messages."""
         raise NotImplementedError()
 
-    def async_delete(self, msgid):
+    async def async_delete(self, msgid):
         """Delete the specified messages."""
         raise NotImplementedError()
 
@@ -236,7 +237,7 @@ class MailboxDeleteView(MailboxView):
     async def delete(self, request, platform, msgid):
         """Delete items."""
         mailbox = self.get_mailbox(platform)
-        mailbox.async_delete(msgid)
+        await mailbox.async_delete(msgid)
 
 
 class MailboxMediaView(MailboxView):

@@ -5,6 +5,7 @@ from datetime import timedelta
 from functools import partial
 import ipaddress
 import logging
+import time
 from typing import Any, Callable, Dict, List, Set, Tuple
 from urllib.parse import urlparse
 
@@ -28,6 +29,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_RECIPIENT,
     CONF_URL,
@@ -51,19 +53,28 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
+    ADMIN_SERVICES,
     ALL_KEYS,
     CONNECTION_TIMEOUT,
     DEFAULT_DEVICE_NAME,
+    DEFAULT_NOTIFY_SERVICE_NAME,
     DOMAIN,
     KEY_DEVICE_BASIC_INFORMATION,
     KEY_DEVICE_INFORMATION,
     KEY_DEVICE_SIGNAL,
     KEY_DIALUP_MOBILE_DATASWITCH,
+    KEY_MONITORING_MONTH_STATISTICS,
     KEY_MONITORING_STATUS,
     KEY_MONITORING_TRAFFIC_STATISTICS,
+    KEY_NET_CURRENT_PLMN,
+    KEY_NET_NET_MODE,
     KEY_WLAN_HOST_LIST,
+    KEY_WLAN_WIFI_FEATURE_SWITCH,
+    NOTIFY_SUPPRESS_TIMEOUT,
     SERVICE_CLEAR_TRAFFIC_STATISTICS,
     SERVICE_REBOOT,
+    SERVICE_RESUME_INTEGRATION,
+    SERVICE_SUSPEND_INTEGRATION,
     UPDATE_OPTIONS_SIGNAL,
     UPDATE_SIGNAL,
 )
@@ -74,17 +85,16 @@ _LOGGER = logging.getLogger(__name__)
 # https://github.com/quandyfactory/dicttoxml/issues/60
 logging.getLogger("dicttoxml").setLevel(logging.WARNING)
 
-DEFAULT_NAME_TEMPLATE = "Huawei {} {}"
-
 SCAN_INTERVAL = timedelta(seconds=10)
 
 NOTIFY_SCHEMA = vol.Any(
     None,
     vol.Schema(
         {
+            vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_RECIPIENT): vol.Any(
                 None, vol.All(cv.ensure_list, [cv.string])
-            )
+            ),
         }
     ),
 )
@@ -132,8 +142,11 @@ class Router:
         init=False,
         factory=lambda: defaultdict(set, ((x, {"initial_scan"}) for x in ALL_KEYS)),
     )
+    inflight_gets: Set[str] = attr.ib(init=False, factory=set)
     unload_handlers: List[CALLBACK_TYPE] = attr.ib(init=False, factory=list)
     client: Client
+    suspended = attr.ib(init=False, default=False)
+    notify_last_attempt: float = attr.ib(init=False, default=-1)
 
     def __attrs_post_init__(self):
         """Set up internal state on init."""
@@ -160,6 +173,10 @@ class Router:
     def _get_data(self, key: str, func: Callable[[None], Any]) -> None:
         if not self.subscriptions.get(key):
             return
+        if key in self.inflight_gets:
+            _LOGGER.debug("Skipping already inflight get for %s", key)
+            return
+        self.inflight_gets.add(key)
         _LOGGER.debug("Getting %s for subscribers %s", key, self.subscriptions[key])
         try:
             self.data[key] = func()
@@ -182,11 +199,29 @@ class Router:
                 "%s requires authorization, excluding from future updates", key
             )
             self.subscriptions.pop(key)
+        except Timeout:
+            grace_left = (
+                self.notify_last_attempt - time.monotonic() + NOTIFY_SUPPRESS_TIMEOUT
+            )
+            if grace_left > 0:
+                _LOGGER.debug(
+                    "%s timed out, %.1fs notify timeout suppress grace remaining",
+                    key,
+                    grace_left,
+                    exc_info=True,
+                )
+            else:
+                raise
         finally:
+            self.inflight_gets.discard(key)
             _LOGGER.debug("%s=%s", key, self.data.get(key))
 
     def update(self) -> None:
         """Update router data."""
+
+        if self.suspended:
+            _LOGGER.debug("Integration suspended, not updating data")
+            return
 
         self._get_data(KEY_DEVICE_INFORMATION, self.client.device.information)
         if self.data.get(KEY_DEVICE_INFORMATION):
@@ -199,23 +234,24 @@ class Router:
         self._get_data(
             KEY_DIALUP_MOBILE_DATASWITCH, self.client.dial_up.mobile_dataswitch
         )
+        self._get_data(
+            KEY_MONITORING_MONTH_STATISTICS, self.client.monitoring.month_statistics
+        )
         self._get_data(KEY_MONITORING_STATUS, self.client.monitoring.status)
         self._get_data(
             KEY_MONITORING_TRAFFIC_STATISTICS, self.client.monitoring.traffic_statistics
         )
+        self._get_data(KEY_NET_CURRENT_PLMN, self.client.net.current_plmn)
+        self._get_data(KEY_NET_NET_MODE, self.client.net.net_mode)
         self._get_data(KEY_WLAN_HOST_LIST, self.client.wlan.host_list)
+        self._get_data(
+            KEY_WLAN_WIFI_FEATURE_SWITCH, self.client.wlan.wifi_feature_switch
+        )
 
         self.signal_update()
 
-    def cleanup(self, *_) -> None:
-        """Clean up resources."""
-
-        self.subscriptions.clear()
-
-        for handler in self.unload_handlers:
-            handler()
-        self.unload_handlers.clear()
-
+    def logout(self) -> None:
+        """Log out router session."""
         if not isinstance(self.connection, AuthorizedConnection):
             return
         try:
@@ -226,6 +262,17 @@ class Router:
             _LOGGER.debug("Logout not supported when not logged in", exc_info=True)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.warning("Logout error", exc_info=True)
+
+    def cleanup(self, *_) -> None:
+        """Clean up resources."""
+
+        self.subscriptions.clear()
+
+        for handler in self.unload_handlers:
+            handler()
+        self.unload_handlers.clear()
+
+        self.logout()
 
 
 @attr.s
@@ -262,6 +309,13 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
         ):
             new_options[f"{CONF_RECIPIENT}_from_yaml"] = yaml_recipient
             new_options[CONF_RECIPIENT] = yaml_recipient
+        yaml_notify_name = yaml_config.get(NOTIFY_DOMAIN, {}).get(CONF_NAME)
+        if (
+            yaml_notify_name is not None
+            and yaml_notify_name != config_entry.options.get(f"{CONF_NAME}_from_yaml")
+        ):
+            new_options[f"{CONF_NAME}_from_yaml"] = yaml_notify_name
+            new_options[CONF_NAME] = yaml_notify_name
         # Update entry if overrides were found
         if new_data or new_options:
             hass.config_entries.async_update_entry(
@@ -353,7 +407,11 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
         hass,
         NOTIFY_DOMAIN,
         DOMAIN,
-        {CONF_URL: url, CONF_RECIPIENT: config_entry.options.get(CONF_RECIPIENT)},
+        {
+            CONF_URL: url,
+            CONF_NAME: config_entry.options.get(CONF_NAME, DEFAULT_NOTIFY_SERVICE_NAME),
+            CONF_RECIPIENT: config_entry.options.get(CONF_RECIPIENT),
+        },
         hass.data[DOMAIN].hass_config,
     )
 
@@ -413,6 +471,9 @@ async def async_setup(hass: HomeAssistantType, config) -> bool:
         routers = hass.data[DOMAIN].routers
         if url:
             router = routers.get(url)
+        elif not routers:
+            _LOGGER.error("%s: no routers configured", service.service)
+            return
         elif len(routers) == 1:
             router = next(iter(routers.values()))
         else:
@@ -427,15 +488,29 @@ async def async_setup(hass: HomeAssistantType, config) -> bool:
             return
 
         if service.service == SERVICE_CLEAR_TRAFFIC_STATISTICS:
+            if router.suspended:
+                _LOGGER.debug("%s: ignored, integration suspended", service.service)
+                return
             result = router.client.monitoring.set_clear_traffic()
             _LOGGER.debug("%s: %s", service.service, result)
         elif service.service == SERVICE_REBOOT:
+            if router.suspended:
+                _LOGGER.debug("%s: ignored, integration suspended", service.service)
+                return
             result = router.client.device.reboot()
             _LOGGER.debug("%s: %s", service.service, result)
+        elif service.service == SERVICE_RESUME_INTEGRATION:
+            # Login will be handled automatically on demand
+            router.suspended = False
+            _LOGGER.debug("%s: %s", service.service, "done")
+        elif service.service == SERVICE_SUSPEND_INTEGRATION:
+            router.logout()
+            router.suspended = True
+            _LOGGER.debug("%s: %s", service.service, "done")
         else:
             _LOGGER.error("%s: unsupported service", service.service)
 
-    for service in (SERVICE_CLEAR_TRAFFIC_STATISTICS, SERVICE_REBOOT):
+    for service in ADMIN_SERVICES:
         hass.helpers.service.async_register_admin_service(
             DOMAIN, service, service_handler, schema=SERVICE_SCHEMA,
         )
@@ -461,6 +536,19 @@ async def async_signal_options_update(
 ) -> None:
     """Handle config entry options update."""
     async_dispatcher_send(hass, UPDATE_OPTIONS_SIGNAL, config_entry)
+
+
+async def async_migrate_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
+    """Migrate config entry to new version."""
+    if config_entry.version == 1:
+        options = config_entry.options
+        recipient = options.get(CONF_RECIPIENT)
+        if isinstance(recipient, str):
+            options[CONF_RECIPIENT] = [x.strip() for x in recipient.split(",")]
+        config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry, options=options)
+        _LOGGER.info("Migrated config entry to version %d", config_entry.version)
+    return True
 
 
 @attr.s
@@ -489,7 +577,7 @@ class HuaweiLteBaseEntity(Entity):
     @property
     def name(self) -> str:
         """Return entity name."""
-        return DEFAULT_NAME_TEMPLATE.format(self.router.device_name, self._entity_name)
+        return f"Huawei {self.router.device_name} {self._entity_name}"
 
     @property
     def available(self) -> bool:

@@ -13,6 +13,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -110,7 +111,7 @@ class MoldIndicator(Entity):
         def mold_indicator_sensors_state_listener(entity, old_state, new_state):
             """Handle for state changes for dependent sensors."""
             _LOGGER.debug(
-                "Sensor state change for %s that had old state %s " "and new state %s",
+                "Sensor state change for %s that had old state %s and new state %s",
                 entity,
                 old_state,
                 new_state,
@@ -188,7 +189,7 @@ class MoldIndicator(Entity):
         # Return an error if the sensor change its state to Unknown.
         if state.state == STATE_UNKNOWN:
             _LOGGER.error(
-                "Unable to parse temperature sensor %s with state:" " %s",
+                "Unable to parse temperature sensor %s with state: %s",
                 state.entity_id,
                 state.state,
             )
@@ -199,7 +200,7 @@ class MoldIndicator(Entity):
 
         if temp is None:
             _LOGGER.error(
-                "Unable to parse temperature sensor %s with state:" " %s",
+                "Unable to parse temperature sensor %s with state: %s",
                 state.entity_id,
                 state.state,
             )
@@ -211,7 +212,7 @@ class MoldIndicator(Entity):
         if unit == TEMP_CELSIUS:
             return temp
         _LOGGER.error(
-            "Temp sensor %s has unsupported unit: %s (allowed: %s, " "%s)",
+            "Temp sensor %s has unsupported unit: %s (allowed: %s, %s)",
             state.entity_id,
             unit,
             TEMP_CELSIUS,
@@ -245,7 +246,7 @@ class MoldIndicator(Entity):
             )
             return None
 
-        if unit != "%":
+        if unit != UNIT_PERCENTAGE:
             _LOGGER.error(
                 "Humidity sensor %s has unsupported unit: %s %s",
                 state.entity_id,
@@ -306,7 +307,7 @@ class MoldIndicator(Entity):
         if None in (self._dewpoint, self._calib_factor) or self._calib_factor == 0:
 
             _LOGGER.debug(
-                "Invalid inputs - dewpoint: %s," " calibration-factor: %s",
+                "Invalid inputs - dewpoint: %s, calibration-factor: %s",
                 self._dewpoint,
                 self._calib_factor,
             )
@@ -343,7 +344,7 @@ class MoldIndicator(Entity):
         elif crit_humidity < 0:
             self._state = "0"
         else:
-            self._state = "{0:d}".format(int(crit_humidity))
+            self._state = f"{int(crit_humidity):d}"
 
         _LOGGER.debug("Mold indicator humidity: %s", self._state)
 
@@ -360,7 +361,7 @@ class MoldIndicator(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "%"
+        return UNIT_PERCENTAGE
 
     @property
     def state(self):

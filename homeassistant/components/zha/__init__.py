@@ -1,5 +1,6 @@
 """Support for Zigbee Home Automation devices."""
 
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -7,6 +8,8 @@ import voluptuous as vol
 from homeassistant import config_entries, const as ha_const
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import HomeAssistantType
 
 from . import api
 from .core import ZHAGateway
@@ -22,12 +25,13 @@ from .core.const import (
     DATA_ZHA_CONFIG,
     DATA_ZHA_DISPATCHERS,
     DATA_ZHA_GATEWAY,
+    DATA_ZHA_PLATFORM_LOADED,
     DEFAULT_BAUDRATE,
     DEFAULT_RADIO_TYPE,
     DOMAIN,
+    SIGNAL_ADD_ENTITIES,
     RadioType,
 )
-from .core.registries import establish_device_mappings
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(ha_const.CONF_TYPE): cv.string})
 
@@ -87,14 +91,16 @@ async def async_setup_entry(hass, config_entry):
 
     Will automatically load components to support devices found on the network.
     """
-    establish_device_mappings()
 
+    zha_data = hass.data.setdefault(DATA_ZHA, {})
+    zha_data[DATA_ZHA_PLATFORM_LOADED] = {}
+    config = zha_data.get(DATA_ZHA_CONFIG, {})
+
+    zha_data[DATA_ZHA_DISPATCHERS] = []
     for component in COMPONENTS:
-        hass.data[DATA_ZHA][component] = hass.data[DATA_ZHA].get(component, {})
-
-    hass.data[DATA_ZHA] = hass.data.get(DATA_ZHA, {})
-    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS] = []
-    config = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {})
+        zha_data[component] = []
+        coro = hass.config_entries.async_forward_entry_setup(config_entry, component)
+        zha_data[DATA_ZHA_PLATFORM_LOADED][component] = hass.async_create_task(coro)
 
     if config.get(CONF_ENABLE_QUIRKS, True):
         # needs to be done here so that the ZHA module is finished loading
@@ -114,19 +120,15 @@ async def async_setup_entry(hass, config_entry):
         model=zha_gateway.radio_description,
     )
 
-    for component in COMPONENTS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
-        )
-
     api.async_load_api(hass)
 
     async def async_zha_shutdown(event):
         """Handle shutdown tasks."""
-        await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].shutdown()
-        await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].async_update_device_storage()
+        await zha_data[DATA_ZHA_GATEWAY].shutdown()
+        await zha_data[DATA_ZHA_GATEWAY].async_update_device_storage()
 
     hass.bus.async_listen_once(ha_const.EVENT_HOMEASSISTANT_STOP, async_zha_shutdown)
+    hass.async_create_task(async_load_entities(hass, config_entry))
     return True
 
 
@@ -144,3 +146,20 @@ async def async_unload_entry(hass, config_entry):
         await hass.config_entries.async_forward_entry_unload(config_entry, component)
 
     return True
+
+
+async def async_load_entities(
+    hass: HomeAssistantType, config_entry: config_entries.ConfigEntry
+) -> None:
+    """Load entities after integration was setup."""
+    await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].async_prepare_entities()
+    to_setup = [
+        hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED][comp]
+        for comp in COMPONENTS
+        if hass.data[DATA_ZHA][comp]
+    ]
+    results = await asyncio.gather(*to_setup, return_exceptions=True)
+    for res in results:
+        if isinstance(res, Exception):
+            _LOGGER.warning("Couldn't setup zha platform: %s", res)
+    async_dispatcher_send(hass, SIGNAL_ADD_ENTITIES)

@@ -1,5 +1,22 @@
 {
     "config": {
         "title": "Demo"
+    },
+    "options": {
+        "step": {
+            "options_1": {
+                "data": {
+                    "bool": "Optionaler Boolescher Wert",
+                    "int": "Numerische Eingabe"
+                }
+            },
+            "options_2": {
+                "data": {
+                    "multi": "Mehrfachauswahl",
+                    "select": "W\u00e4hlen Sie eine Option",
+                    "string": "String-Wert"
+                }
+            }
+        }
     }
 }

@@ -6,7 +6,7 @@ import socket
 import threading
 import time
 
-import fritzconnection as fc  # pylint: disable=import-error
+from fritzconnection.lib.fritzphonebook import FritzPhonebook
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -256,7 +256,7 @@ class FritzBoxPhonebook:
         self.prefixes = prefixes or []
 
         # Establish a connection to the FRITZ!Box.
-        self.fph = fc.FritzPhonebook(
+        self.fph = FritzPhonebook(
             address=self.host, user=self.username, password=self.password
         )
 

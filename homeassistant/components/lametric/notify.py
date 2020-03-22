@@ -113,7 +113,7 @@ class LaMetricNotificationService(BaseNotificationService):
             self._devices = lmn.get_devices()
         except RequestsConnectionError:
             _LOGGER.warning(
-                "Problem connecting to LaMetric, " "using cached devices instead"
+                "Problem connecting to LaMetric, using cached devices instead"
             )
         for dev in self._devices:
             if targets is None or dev["name"] in targets:

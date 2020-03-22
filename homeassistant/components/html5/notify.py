@@ -345,12 +345,12 @@ class HTML5PushCallbackView(HomeAssistantView):
 
         if parts[0].lower() != "bearer":
             return self.json_message(
-                "Authorization header must " "start with Bearer",
+                "Authorization header must start with Bearer",
                 status_code=HTTP_UNAUTHORIZED,
             )
         if len(parts) != 2:
             return self.json_message(
-                "Authorization header must " "be Bearer token",
+                "Authorization header must be Bearer token",
                 status_code=HTTP_UNAUTHORIZED,
             )
 
@@ -392,7 +392,7 @@ class HTML5PushCallbackView(HomeAssistantView):
                 humanize_error(event_payload, ex),
             )
 
-        event_name = "{}.{}".format(NOTIFY_CALLBACK_EVENT, event_payload[ATTR_TYPE])
+        event_name = f"{NOTIFY_CALLBACK_EVENT}.{event_payload[ATTR_TYPE]}"
         request.app["hass"].bus.fire(event_name, event_payload)
         return self.json({"status": "ok", "event": event_payload[ATTR_TYPE]})
 
@@ -507,7 +507,7 @@ class HTML5NotificationService(BaseNotificationService):
                 info = REGISTER_SCHEMA(info)
             except vol.Invalid:
                 _LOGGER.error(
-                    "%s is not a valid HTML5 push notification" " target", target
+                    "%s is not a valid HTML5 push notification target", target
                 )
                 continue
             payload[ATTR_DATA][ATTR_JWT] = add_jwt(

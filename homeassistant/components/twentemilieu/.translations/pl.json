@@ -1,16 +1,16 @@
 {
     "config": {
         "abort": {
-            "address_exists": "Adres ju\u017c skonfigurowany."
+            "address_exists": "Adres jest ju\u017c skonfigurowany."
         },
         "error": {
-            "connection_error": "Po\u0142\u0105czenie nieudane.",
+            "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia.",
             "invalid_address": "Nie znaleziono adresu w obszarze us\u0142ugi Twente Milieu."
         },
         "step": {
             "user": {
                 "data": {
-                    "house_letter": "List domowy / dodatkowy",
+                    "house_letter": "List domowy/dodatkowy",
                     "house_number": "Numer domu",
                     "post_code": "Kod pocztowy"
                 },

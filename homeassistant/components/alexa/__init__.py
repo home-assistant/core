@@ -4,6 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import CONF_NAME
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entityfilter
 
 from . import flash_briefings, intent, smart_home_http
@@ -17,16 +18,20 @@ from .const import (
     CONF_ENDPOINT,
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
+    CONF_LOCALE,
+    CONF_SUPPORTED_LOCALES,
     CONF_TEXT,
     CONF_TITLE,
     CONF_UID,
     DOMAIN,
+    EVENT_ALEXA_SMART_HOME,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_FLASH_BRIEFINGS = "flash_briefings"
 CONF_SMART_HOME = "smart_home"
+DEFAULT_LOCALE = "en-US"
 
 ALEXA_ENTITY_SCHEMA = vol.Schema(
     {
@@ -41,6 +46,9 @@ SMART_HOME_SCHEMA = vol.Schema(
         vol.Optional(CONF_ENDPOINT): cv.string,
         vol.Optional(CONF_CLIENT_ID): cv.string,
         vol.Optional(CONF_CLIENT_SECRET): cv.string,
+        vol.Optional(CONF_LOCALE, default=DEFAULT_LOCALE): vol.In(
+            CONF_SUPPORTED_LOCALES
+        ),
         vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
         vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ALEXA_ENTITY_SCHEMA},
     }
@@ -74,7 +82,37 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Activate the Alexa component."""
-    config = config.get(DOMAIN, {})
+
+    @callback
+    def async_describe_logbook_event(event):
+        """Describe a logbook event."""
+        data = event.data
+        entity_id = data["request"].get("entity_id")
+
+        if entity_id:
+            state = hass.states.get(entity_id)
+            name = state.name if state else entity_id
+            message = f"send command {data['request']['namespace']}/{data['request']['name']} for {name}"
+        else:
+            message = (
+                f"send command {data['request']['namespace']}/{data['request']['name']}"
+            )
+
+        return {
+            "name": "Amazon Alexa",
+            "message": message,
+            "entity_id": entity_id,
+        }
+
+    hass.components.logbook.async_describe_event(
+        DOMAIN, EVENT_ALEXA_SMART_HOME, async_describe_logbook_event
+    )
+
+    if DOMAIN not in config:
+        return True
+
+    config = config[DOMAIN]
+
     flash_briefings_config = config.get(CONF_FLASH_BRIEFINGS)
 
     intent.async_setup(hass)

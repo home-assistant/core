@@ -4,7 +4,7 @@
             "clean": "Laisser {entity_name} vide",
             "dock": "Laisser {entity_name} retourner \u00e0 la base"
         },
-        "condtion_type": {
+        "condition_type": {
             "is_cleaning": "{entity_name} nettoie",
             "is_docked": "{entity_name} est connect\u00e9"
         },

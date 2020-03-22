@@ -33,6 +33,7 @@
         "step": {
             "init": {
                 "data": {
+                    "name": "Ime storitve obve\u0161\u010danja (sprememba zahteva ponovni zagon)",
                     "recipient": "Prejemniki obvestil SMS",
                     "track_new_devices": "Sledi novim napravam"
                 }

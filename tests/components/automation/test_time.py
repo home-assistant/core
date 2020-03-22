@@ -18,7 +18,7 @@ from tests.common import (
 
 @pytest.fixture
 def calls(hass):
-    """Track calls to a mock serivce."""
+    """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
@@ -39,7 +39,7 @@ async def test_if_fires_using_at(hass, calls):
                 "action": {
                     "service": "test.automation",
                     "data_template": {
-                        "some": "{{ trigger.platform }} - " "{{ trigger.now.hour }}"
+                        "some": "{{ trigger.platform }} - {{ trigger.now.hour }}"
                     },
                 },
             }

@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Lokacija je \u017ee nastavljena."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "radius": "Radij"
+                },
+                "title": "Izpolnite podrobnosti filtra."
+            }
+        },
+        "title": "Globalni sistem opozarjanja in koordinacije nesre\u010d (GDACS)"
+    }
+}

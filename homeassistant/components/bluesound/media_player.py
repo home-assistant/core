@@ -421,7 +421,7 @@ class BluesoundPlayer(MediaPlayerDevice):
                     # sync_status. We will force an update if the player is
                     # grouped this isn't a foolproof solution. A better
                     # solution would be to fetch sync_status more often when
-                    # the device is playing. This would solve alot of
+                    # the device is playing. This would solve a lot of
                     # problems. This change will be done when the
                     # communication is moved to a separate library
                     await self.force_update_sync_status()
@@ -500,7 +500,7 @@ class BluesoundPlayer(MediaPlayerDevice):
                     "image": item.get("@image", ""),
                     "is_raw_url": True,
                     "url2": item.get("@url", ""),
-                    "url": "Preset?id={}".format(item.get("@id", "")),
+                    "url": f"Preset?id={item.get('@id', '')}",
                 }
             )
 
@@ -934,9 +934,7 @@ class BluesoundPlayer(MediaPlayerDevice):
             return
 
         selected_source = items[0]
-        url = "Play?url={}&preset_id&image={}".format(
-            selected_source["url"], selected_source["image"]
-        )
+        url = f"Play?url={selected_source['url']}&preset_id&image={selected_source['image']}"
 
         if "is_raw_url" in selected_source and selected_source["is_raw_url"]:
             url = selected_source["url"]
@@ -1002,7 +1000,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         if self.is_grouped and not self.is_master:
             return
 
-        return await self.send_bluesound_command("Play?seek={}".format(float(position)))
+        return await self.send_bluesound_command(f"Play?seek={float(position)}")
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """

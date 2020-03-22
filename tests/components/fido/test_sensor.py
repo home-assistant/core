@@ -1,5 +1,4 @@
 """The test for the fido sensor platform."""
-import asyncio
 import logging
 import sys
 from unittest.mock import MagicMock, patch
@@ -27,8 +26,7 @@ class FidoClientMock:
         """Return fake fido data."""
         return {"balance": 160.12, "1112223344": {"data_remaining": 100.33}}
 
-    @asyncio.coroutine
-    def fetch_data(self):
+    async def fetch_data(self):
         """Return fake fetching data."""
         pass
 
@@ -36,8 +34,7 @@ class FidoClientMock:
 class FidoClientMockError(FidoClientMock):
     """Fake Fido client error."""
 
-    @asyncio.coroutine
-    def fetch_data(self):
+    async def fetch_data(self):
         """Return fake fetching data."""
         raise PyFidoErrorMock("Fake Error")
 
@@ -63,8 +60,7 @@ def fake_async_add_entities(component, update_before_add=False):
     pass
 
 
-@asyncio.coroutine
-def test_fido_sensor(loop, hass):
+async def test_fido_sensor(loop, hass):
     """Test the Fido number sensor."""
     with patch(
         "homeassistant.components.fido.sensor.FidoClient", new=FidoClientMock
@@ -79,7 +75,7 @@ def test_fido_sensor(loop, hass):
             }
         }
         with assert_setup_component(1):
-            yield from async_setup_component(hass, "sensor", config)
+            await async_setup_component(hass, "sensor", config)
         state = hass.states.get("sensor.fido_1112223344_balance")
         assert state.state == "160.12"
         assert state.attributes.get("number") == "1112223344"
@@ -87,8 +83,7 @@ def test_fido_sensor(loop, hass):
         assert state.state == "100.33"
 
 
-@asyncio.coroutine
-def test_error(hass, caplog):
+async def test_error(hass, caplog):
     """Test the Fido sensor errors."""
     caplog.set_level(logging.ERROR)
     sys.modules["pyfido"] = PyFidoFakeModule()
@@ -96,5 +91,5 @@ def test_error(hass, caplog):
 
     config = {}
     fake_async_add_entities = MagicMock()
-    yield from fido.async_setup_platform(hass, config, fake_async_add_entities)
+    await fido.async_setup_platform(hass, config, fake_async_add_entities)
     assert fake_async_add_entities.called is False

@@ -18,7 +18,7 @@
                     "allow_clip_sensor": "Dovoli uvoz virtualnih senzorjev",
                     "allow_deconz_groups": "Dovoli uvoz deCONZ skupin"
                 },
-                "description": "\u017delite konfigurirati Home Assistant-a za povezavo z deCONZ prehodom, ki ga ponuja hass.io dodatek {addon} ?",
+                "description": "Ali \u017eelite konfigurirati Home Assistant za povezavo s prehodom deCONZ, ki ga ponuja dodatek Hass.io {addon} ?",
                 "title": "deCONZ Zigbee prehod preko dodatka Hass.io"
             },
             "init": {
@@ -77,15 +77,21 @@
             "remote_button_short_release": "Gumb \"{subtype}\" spro\u0161\u010den",
             "remote_button_triple_press": "Gumb \"{subtype}\" trikrat kliknjen",
             "remote_double_tap": "Naprava \"{subtype}\" dvakrat dotaknjena",
+            "remote_double_tap_any_side": "Naprava je bila dvojno tapnjena na katerokoli stran",
             "remote_falling": "Naprava v prostem padu",
+            "remote_flip_180_degrees": "Naprava se je obrnila za 180 stopinj",
+            "remote_flip_90_degrees": "Naprava se je obrnila za 90 stopinj",
             "remote_gyro_activated": "Naprava se je pretresla",
             "remote_moved": "Naprava je premaknjena s \"{subtype}\" navzgor",
+            "remote_moved_any_side": "Naprava se je premikala s katero koli stranjo navzgor",
             "remote_rotate_from_side_1": "Naprava je zasukana iz \"strani 1\" v \"{subtype}\"",
             "remote_rotate_from_side_2": "Naprava je zasukana iz \"strani 2\" v \"{subtype}\"",
             "remote_rotate_from_side_3": "Naprava je zasukana iz \"strani 3\" v \"{subtype}\"",
             "remote_rotate_from_side_4": "Naprava je zasukana iz \"strani 4\" v \"{subtype}\"",
             "remote_rotate_from_side_5": "Naprava je zasukana iz \"strani 5\" v \"{subtype}\"",
-            "remote_rotate_from_side_6": "Naprava je zasukana iz \"strani 6\" v \"{subtype}\""
+            "remote_rotate_from_side_6": "Naprava je zasukana iz \"strani 6\" v \"{subtype}\"",
+            "remote_turned_clockwise": "Naprava se je obrnila v smeri urinega kazalca",
+            "remote_turned_counter_clockwise": "Naprava se je obrnila v nasprotni smeri urinega kazalca"
         }
     },
     "options": {

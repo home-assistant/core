@@ -44,9 +44,9 @@ def _optional_zone(value):
 def _zone_name_validator(config):
     for zone, zone_config in config[CONF_ZONE].items():
         if CONF_NAME not in zone_config:
-            zone_config[CONF_NAME] = "{} ({}:{}) - {}".format(
-                DEFAULT_NAME, config[CONF_HOST], config[CONF_PORT], zone
-            )
+            zone_config[
+                CONF_NAME
+            ] = f"{DEFAULT_NAME} ({config[CONF_HOST]}:{config[CONF_PORT]}) - {zone}"
     return config
 
 

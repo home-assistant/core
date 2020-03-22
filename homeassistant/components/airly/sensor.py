@@ -2,12 +2,14 @@
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONF_NAME,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     PRESSURE_HPA,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.entity import Entity
 
@@ -26,21 +28,18 @@ ATTR_ICON = "icon"
 ATTR_LABEL = "label"
 ATTR_UNIT = "unit"
 
-HUMI_PERCENT = "%"
-VOLUME_MICROGRAMS_PER_CUBIC_METER = "µg/m³"
-
 SENSOR_TYPES = {
     ATTR_API_PM1: {
         ATTR_DEVICE_CLASS: None,
         ATTR_ICON: "mdi:blur",
         ATTR_LABEL: ATTR_API_PM1,
-        ATTR_UNIT: VOLUME_MICROGRAMS_PER_CUBIC_METER,
+        ATTR_UNIT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     },
     ATTR_API_HUMIDITY: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
         ATTR_ICON: None,
         ATTR_LABEL: ATTR_API_HUMIDITY.capitalize(),
-        ATTR_UNIT: HUMI_PERCENT,
+        ATTR_UNIT: UNIT_PERCENTAGE,
     },
     ATTR_API_PRESSURE: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_PRESSURE,
@@ -65,7 +64,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     sensors = []
     for sensor in SENSOR_TYPES:
-        sensors.append(AirlySensor(data, name, sensor))
+        unique_id = f"{config_entry.unique_id}-{sensor.lower()}"
+        sensors.append(AirlySensor(data, name, sensor, unique_id))
+
     async_add_entities(sensors, True)
 
 
@@ -84,11 +85,12 @@ def round_state(func):
 class AirlySensor(Entity):
     """Define an Airly sensor."""
 
-    def __init__(self, airly, name, kind):
+    def __init__(self, airly, name, kind, unique_id):
         """Initialize."""
         self.airly = airly
         self.data = airly.data
         self._name = name
+        self._unique_id = unique_id
         self.kind = kind
         self._device_class = None
         self._state = None
@@ -130,7 +132,7 @@ class AirlySensor(Entity):
     @property
     def unique_id(self):
         """Return a unique_id for this entity."""
-        return f"{self.airly.latitude}-{self.airly.longitude}-{self.kind.lower()}"
+        return self._unique_id
 
     @property
     def unit_of_measurement(self):
@@ -140,7 +142,7 @@ class AirlySensor(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return bool(self.airly.data)
+        return bool(self.data)
 
     async def async_update(self):
         """Update the sensor."""

@@ -8,7 +8,7 @@ import time
 from sqlalchemy import and_, func
 import voluptuous as vol
 
-from homeassistant.components import recorder, script
+from homeassistant.components import recorder
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.recorder.models import States
 from homeassistant.components.recorder.util import execute, session_scope
@@ -430,4 +430,4 @@ def _is_significant(state):
     Will only test for things that are not filtered out in SQL.
     """
     # scripts that are not cancellable will never change state
-    return state.domain != "script" or state.attributes.get(script.ATTR_CAN_CANCEL)
+    return state.domain != "script" or state.attributes.get("can_cancel")

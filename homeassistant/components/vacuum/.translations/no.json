@@ -4,7 +4,7 @@
             "clean": "La {entity_name} rengj\u00f8res",
             "dock": "La {entity_name} tilbake til dock"
         },
-        "condtion_type": {
+        "condition_type": {
             "is_cleaning": "{entity_name} rengj\u00f8res",
             "is_docked": "{entity_name} er docked"
         },

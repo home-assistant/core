@@ -88,7 +88,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hub_is_initialized = False
 
     async def startup():
-        """Start hub socket after all climate entity is setted up."""
+        """Start hub socket after all climate entity is set up."""
         nonlocal hub_is_initialized
         if not all([device.is_initialized for device in devices]):
             return
@@ -161,9 +161,7 @@ class ZhongHongClimate(ClimateDevice):
     @property
     def unique_id(self):
         """Return the unique ID of the HVAC."""
-        return "zhong_hong_hvac_{}_{}".format(
-            self._device.addr_out, self._device.addr_in
-        )
+        return f"zhong_hong_hvac_{self._device.addr_out}_{self._device.addr_in}"
 
     @property
     def supported_features(self):

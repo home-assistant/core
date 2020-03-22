@@ -142,7 +142,7 @@ class FluNearYouSensor(Entity):
 
     @property
     def unique_id(self):
-        """Return a unique, HASS-friendly identifier for this entity."""
+        """Return a unique, Home Assistant friendly identifier for this entity."""
         return f"{self.fny.latitude},{self.fny.longitude}_{self._kind}"
 
     @property

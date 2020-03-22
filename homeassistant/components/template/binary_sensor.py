@@ -103,12 +103,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 attribute_templates,
             )
         )
-    if not sensors:
-        _LOGGER.error("No sensors added")
-        return False
 
     async_add_entities(sensors)
-    return True
 
 
 class BinarySensorTemplate(BinarySensorDevice):
@@ -223,7 +219,7 @@ class BinarySensorTemplate(BinarySensorDevice):
             ):
                 # Common during HA startup - so just a warning
                 _LOGGER.warning(
-                    "Could not render template %s, " "the state is unknown", self._name
+                    "Could not render template %s, the state is unknown", self._name
                 )
                 return
             _LOGGER.error("Could not render template %s: %s", self._name, ex)
@@ -259,7 +255,7 @@ class BinarySensorTemplate(BinarySensorDevice):
                 ):
                     # Common during HA startup - so just a warning
                     _LOGGER.warning(
-                        "Could not render %s template %s," " the state is unknown.",
+                        "Could not render %s template %s, the state is unknown.",
                         friendly_property_name,
                         self._name,
                     )

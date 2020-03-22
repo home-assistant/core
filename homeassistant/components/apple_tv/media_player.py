@@ -229,62 +229,42 @@ class AppleTvDevice(MediaPlayerDevice):
         self._playing = None
         self._power.set_power_on(False)
 
-    def async_media_play_pause(self):
-        """Pause media on media player.
+    async def async_media_play_pause(self):
+        """Pause media on media player."""
+        if not self._playing:
+            return
+        state = self.state
+        if state == STATE_PAUSED:
+            await self.atv.remote_control.play()
+        elif state == STATE_PLAYING:
+            await self.atv.remote_control.pause()
 
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_media_play(self):
+        """Play media."""
         if self._playing:
-            state = self.state
-            if state == STATE_PAUSED:
-                return self.atv.remote_control.play()
-            if state == STATE_PLAYING:
-                return self.atv.remote_control.pause()
+            await self.atv.remote_control.play()
 
-    def async_media_play(self):
-        """Play media.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_media_stop(self):
+        """Stop the media player."""
         if self._playing:
-            return self.atv.remote_control.play()
+            await self.atv.remote_control.stop()
 
-    def async_media_stop(self):
-        """Stop the media player.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_media_pause(self):
+        """Pause the media player."""
         if self._playing:
-            return self.atv.remote_control.stop()
+            await self.atv.remote_control.pause()
 
-    def async_media_pause(self):
-        """Pause the media player.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_media_next_track(self):
+        """Send next track command."""
         if self._playing:
-            return self.atv.remote_control.pause()
+            await self.atv.remote_control.next()
 
-    def async_media_next_track(self):
-        """Send next track command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_media_previous_track(self):
+        """Send previous track command."""
         if self._playing:
-            return self.atv.remote_control.next()
+            await self.atv.remote_control.previous()
 
-    def async_media_previous_track(self):
-        """Send previous track command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_media_seek(self, position):
+        """Send seek command."""
         if self._playing:
-            return self.atv.remote_control.previous()
-
-    def async_media_seek(self, position):
-        """Send seek command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        if self._playing:
-            return self.atv.remote_control.set_position(position)
+            await self.atv.remote_control.set_position(position)
