@@ -28,7 +28,6 @@ from homeassistant.helpers.event import async_track_time_interval
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_FUEL_LEVEL = "fuel_level"
-AUTOMATIC_CONFIG_FILE = ".automatic/session-{}.json"
 
 CONF_CLIENT_ID = "client_id"
 CONF_CURRENT_LOCATION = "current_location"
@@ -95,7 +94,7 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
         request_kwargs={"timeout": DEFAULT_TIMEOUT},
     )
 
-    filename = AUTOMATIC_CONFIG_FILE.format(config[CONF_CLIENT_ID])
+    filename = f".automatic/session-{config[CONF_CLIENT_ID]}.json"
     refresh_token = yield from hass.async_add_job(
         _get_refresh_token_from_file, hass, filename
     )

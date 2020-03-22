@@ -1,6 +1,5 @@
 """Support for Abode Security System cameras."""
 from datetime import timedelta
-import logging
 
 import abodepy.helpers.constants as CONST
 import abodepy.helpers.timeline as TIMELINE
@@ -11,11 +10,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import Throttle
 
 from . import AbodeDevice
-from .const import DOMAIN, SIGNAL_CAPTURE_IMAGE
+from .const import DOMAIN, LOGGER
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=90)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -50,7 +47,7 @@ class AbodeCamera(AbodeDevice, Camera):
             self._capture_callback,
         )
 
-        signal = SIGNAL_CAPTURE_IMAGE.format(self.entity_id)
+        signal = f"abode_camera_capture_{self.entity_id}"
         async_dispatcher_connect(self.hass, signal, self.capture)
 
     def capture(self):
@@ -71,7 +68,7 @@ class AbodeCamera(AbodeDevice, Camera):
 
                 self._response.raise_for_status()
             except requests.HTTPError as err:
-                _LOGGER.warning("Failed to get camera image: %s", err)
+                LOGGER.warning("Failed to get camera image: %s", err)
                 self._response = None
         else:
             self._response = None

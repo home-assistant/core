@@ -1,7 +1,9 @@
 """Tests for the update coordinator."""
+import asyncio
 from datetime import timedelta
 import logging
 
+import aiohttp
 from asynctest import CoroutineMock, Mock
 import pytest
 
@@ -23,7 +25,11 @@ def crd(hass):
         return len(calls)
 
     crd = update_coordinator.DataUpdateCoordinator(
-        hass, LOGGER, "test", refresh, timedelta(seconds=10),
+        hass,
+        LOGGER,
+        name="test",
+        update_method=refresh,
+        update_interval=timedelta(seconds=10),
     )
     return crd
 
@@ -33,7 +39,7 @@ async def test_async_refresh(crd):
     assert crd.data is None
     await crd.async_refresh()
     assert crd.data == 1
-    assert crd.failed_last_update is False
+    assert crd.last_update_success is True
 
     updates = []
 
@@ -58,39 +64,54 @@ async def test_request_refresh(crd):
     assert crd.data is None
     await crd.async_request_refresh()
     assert crd.data == 1
-    assert crd.failed_last_update is False
+    assert crd.last_update_success is True
 
     # Second time we hit the debonuce
     await crd.async_request_refresh()
     assert crd.data == 1
-    assert crd.failed_last_update is False
+    assert crd.last_update_success is True
 
 
-async def test_refresh_fail(crd, caplog):
-    """Test a failing update function."""
-    crd.update_method = CoroutineMock(side_effect=update_coordinator.UpdateFailed)
+@pytest.mark.parametrize(
+    "err_msg",
+    [
+        (asyncio.TimeoutError, "Timeout fetching test data"),
+        (aiohttp.ClientError, "Error requesting test data"),
+        (update_coordinator.UpdateFailed, "Error fetching test data"),
+    ],
+)
+async def test_refresh_known_errors(err_msg, crd, caplog):
+    """Test raising known errors."""
+    crd.update_method = CoroutineMock(side_effect=err_msg[0])
 
     await crd.async_refresh()
 
     assert crd.data is None
-    assert crd.failed_last_update is True
-    assert "Error fetching test data" in caplog.text
+    assert crd.last_update_success is False
+    assert err_msg[1] in caplog.text
 
-    crd.update_method = CoroutineMock(return_value=1)
 
+async def test_refresh_fail_unknown(crd, caplog):
+    """Test raising unknown error."""
     await crd.async_refresh()
 
-    assert crd.data == 1
-    assert crd.failed_last_update is False
-
     crd.update_method = CoroutineMock(side_effect=ValueError)
-    caplog.clear()
 
     await crd.async_refresh()
 
     assert crd.data == 1  # value from previous fetch
-    assert crd.failed_last_update is True
+    assert crd.last_update_success is False
     assert "Unexpected error fetching test data" in caplog.text
+
+
+async def test_refresh_no_update_method(crd):
+    """Test raising error is no update method is provided."""
+    await crd.async_refresh()
+
+    crd.update_method = None
+
+    with pytest.raises(NotImplementedError):
+        await crd.async_refresh()
 
 
 async def test_update_interval(hass, crd):
@@ -121,3 +142,13 @@ async def test_update_interval(hass, crd):
 
     # Test we stop updating after we lose last subscriber
     assert crd.data == 2
+
+
+async def test_refresh_recover(crd, caplog):
+    """Test recovery of freshing data."""
+    crd.last_update_success = False
+
+    await crd.async_refresh()
+
+    assert crd.last_update_success is True
+    assert "Fetching test data recovered" in caplog.text

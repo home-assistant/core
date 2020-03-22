@@ -121,7 +121,7 @@ async def test_handler_google_actions(hass):
     device = devices[0]
     assert device["id"] == "switch.test"
     assert device["name"]["name"] == "Config name"
-    assert device["name"]["nicknames"] == ["Config alias"]
+    assert device["name"]["nicknames"] == ["Config name", "Config alias"]
     assert device["type"] == "action.devices.types.SWITCH"
     assert device["roomHint"] == "living room"
 

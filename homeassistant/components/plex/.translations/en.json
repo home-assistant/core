@@ -4,7 +4,7 @@
             "all_configured": "All linked servers already configured",
             "already_configured": "This Plex server is already configured",
             "already_in_progress": "Plex is being configured",
-            "discovery_no_file": "No legacy config file found",
+            "discovery_no_file": "No legacy configuration file found",
             "invalid_import": "Imported configuration is invalid",
             "non-interactive": "Non-interactive import",
             "token_request_timeout": "Timed out obtaining token",
@@ -53,6 +53,8 @@
         "step": {
             "plex_mp_settings": {
                 "data": {
+                    "ignore_new_shared_users": "Ignore new managed/shared users",
+                    "monitored_users": "Monitored users",
                     "show_all_controls": "Show all controls",
                     "use_episode_art": "Use episode art"
                 },

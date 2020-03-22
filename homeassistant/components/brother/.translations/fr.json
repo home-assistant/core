@@ -9,6 +9,7 @@
             "snmp_error": "Serveur SNMP d\u00e9sactiv\u00e9 ou imprimante non prise en charge.",
             "wrong_host": "Nom d'h\u00f4te ou adresse IP invalide."
         },
+        "flow_title": "Imprimante Brother: {model} {serial_number}",
         "step": {
             "user": {
                 "data": {
@@ -21,7 +22,9 @@
             "zeroconf_confirm": {
                 "data": {
                     "type": "Type d'imprimante"
-                }
+                },
+                "description": "Voulez-vous ajouter l'imprimante Brother {model} avec le num\u00e9ro de s\u00e9rie `{serial_number}` \u00e0 Home Assistant ?",
+                "title": "Imprimante Brother d\u00e9couverte"
             }
         },
         "title": "Imprimante Brother"

@@ -53,6 +53,8 @@
         "step": {
             "plex_mp_settings": {
                 "data": {
+                    "ignore_new_shared_users": "Nei verwalt / gedeelt Benotzer ignor\u00e9ieren",
+                    "monitored_users": "Iwwerwaachte Benotzer",
                     "show_all_controls": "Weis all Kontrollen",
                     "use_episode_art": "Benotz Biller vun der Episode"
                 },

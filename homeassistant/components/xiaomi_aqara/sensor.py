@@ -7,6 +7,7 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 
 from . import PY_XIAOMI_GATEWAY, XiaomiDevice
@@ -15,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
     "temperature": [TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
-    "humidity": ["%", None, DEVICE_CLASS_HUMIDITY],
+    "humidity": [UNIT_PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
     "illumination": ["lm", None, DEVICE_CLASS_ILLUMINANCE],
     "lux": ["lx", None, DEVICE_CLASS_ILLUMINANCE],
     "pressure": ["hPa", None, DEVICE_CLASS_PRESSURE],

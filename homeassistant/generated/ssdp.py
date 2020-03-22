@@ -11,6 +11,18 @@ SSDP = {
             "manufacturer": "Royal Philips Electronics"
         }
     ],
+    "directv": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
+            "manufacturer": "DIRECTV"
+        }
+    ],
+    "harmony": [
+        {
+            "deviceType": "urn:myharmony-com:device:harmony:1",
+            "manufacturer": "Logitech"
+        }
+    ],
     "heos": [
         {
             "st": "urn:schemas-denon-com:device:ACT-Denon:1"
@@ -36,9 +48,21 @@ SSDP = {
             "modelName": "Philips hue bridge 2015"
         }
     ],
+    "konnected": [
+        {
+            "manufacturer": "konnected.io"
+        }
+    ],
+    "roku": [
+        {
+            "deviceType": "urn:roku-com:device:player:1-0",
+            "manufacturer": "Roku",
+            "st": "roku:ecp"
+        }
+    ],
     "samsungtv": [
         {
-            "deviceType": "urn:samsung.com:device:RemoteControlReceiver:1"
+            "st": "urn:samsung.com:device:RemoteControlReceiver:1"
         }
     ],
     "sonos": [

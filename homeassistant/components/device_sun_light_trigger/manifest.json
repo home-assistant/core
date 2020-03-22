@@ -3,7 +3,8 @@
   "name": "Presence-based Lights",
   "documentation": "https://www.home-assistant.io/integrations/device_sun_light_trigger",
   "requirements": [],
-  "dependencies": ["device_tracker", "group", "light", "person"],
+  "dependencies": [],
+  "after_dependencies": ["device_tracker", "group", "light", "person"],
   "codeowners": [],
   "quality_scale": "internal"
 }

@@ -89,7 +89,7 @@ scene: !include {SCENE_CONFIG_PATH}
 """
 DEFAULT_SECRETS = """
 # Use this file to store secrets like usernames and passwords.
-# Learn more at https://home-assistant.io/docs/configuration/secrets/
+# Learn more at https://www.home-assistant.io/docs/configuration/secrets/
 some_password: welcome
 """
 TTS_PRE_92 = """
@@ -562,18 +562,36 @@ def _log_pkg_error(package: str, component: str, config: Dict, message: str) -> 
     _LOGGER.error(message)
 
 
-def _identify_config_schema(module: ModuleType) -> Tuple[Optional[str], Optional[Dict]]:
+def _identify_config_schema(module: ModuleType) -> Optional[str]:
     """Extract the schema and identify list or dict based."""
     try:
-        schema = module.CONFIG_SCHEMA.schema[module.DOMAIN]  # type: ignore
-    except (AttributeError, KeyError):
-        return None, None
+        key = next(k for k in module.CONFIG_SCHEMA.schema if k == module.DOMAIN)  # type: ignore
+    except (AttributeError, StopIteration):
+        return None
+
+    schema = module.CONFIG_SCHEMA.schema[key]  # type: ignore
+
+    if hasattr(key, "default") and not isinstance(
+        key.default, vol.schema_builder.Undefined
+    ):
+        default_value = module.CONFIG_SCHEMA({module.DOMAIN: key.default()})[  # type: ignore
+            module.DOMAIN  # type: ignore
+        ]
+
+        if isinstance(default_value, dict):
+            return "dict"
+
+        if isinstance(default_value, list):
+            return "list"
+
+        return None
+
     t_schema = str(schema)
     if t_schema.startswith("{") or "schema_with_slug_keys" in t_schema:
-        return ("dict", schema)
+        return "dict"
     if t_schema.startswith(("[", "All(<function ensure_list")):
-        return ("list", schema)
-    return "", schema
+        return "list"
+    return None
 
 
 def _recursive_merge(conf: Dict[str, Any], package: Dict[str, Any]) -> Union[bool, str]:
@@ -626,8 +644,7 @@ async def merge_packages_config(
             merge_list = hasattr(component, "PLATFORM_SCHEMA")
 
             if not merge_list and hasattr(component, "CONFIG_SCHEMA"):
-                merge_type, _ = _identify_config_schema(component)
-                merge_list = merge_type == "list"
+                merge_list = _identify_config_schema(component) == "list"
 
             if merge_list:
                 config[comp_name] = cv.remove_falsy(
@@ -697,6 +714,9 @@ async def async_process_component_config(
         except (vol.Invalid, HomeAssistantError) as ex:
             async_log_exception(ex, domain, config, hass, integration.documentation)
             return None
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unknown error calling %s config validator", domain)
+            return None
 
     # No custom config validator, proceed with schema validation
     if hasattr(component, "CONFIG_SCHEMA"):
@@ -704,6 +724,9 @@ async def async_process_component_config(
             return component.CONFIG_SCHEMA(config)  # type: ignore
         except vol.Invalid as ex:
             async_log_exception(ex, domain, config, hass, integration.documentation)
+            return None
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unknown error calling %s CONFIG_SCHEMA", domain)
             return None
 
     component_platform_schema = getattr(
@@ -720,6 +743,13 @@ async def async_process_component_config(
             p_validated = component_platform_schema(p_config)
         except vol.Invalid as ex:
             async_log_exception(ex, domain, p_config, hass, integration.documentation)
+            continue
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception(
+                "Unknown error validating %s platform config with %s component platform schema",
+                p_name,
+                domain,
+            )
             continue
 
         # Not all platform components follow same pattern for platforms
@@ -754,6 +784,13 @@ async def async_process_component_config(
                     p_config,
                     hass,
                     p_integration.documentation,
+                )
+                continue
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception(
+                    "Unknown error validating config for %s platform for %s component with PLATFORM_SCHEMA",
+                    p_name,
+                    domain,
                 )
                 continue
 

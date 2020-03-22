@@ -28,8 +28,6 @@ from homeassistant.loader import bind_hass
 
 DOMAIN = "input_boolean"
 
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_INITIAL = "initial"
@@ -155,7 +153,7 @@ class InputBoolean(ToggleEntity, RestoreEntity):
         self._state = config.get(CONF_INITIAL)
         if from_yaml:
             self._editable = False
-            self.entity_id = ENTITY_ID_FORMAT.format(self.unique_id)
+            self.entity_id = f"{DOMAIN}.{self.unique_id}"
 
     @property
     def should_poll(self):

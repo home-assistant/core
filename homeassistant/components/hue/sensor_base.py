@@ -1,5 +1,4 @@
 """Support for the Philips Hue sensors as a platform."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -42,10 +41,12 @@ class SensorManager:
         self.coordinator = DataUpdateCoordinator(
             bridge.hass,
             _LOGGER,
-            "sensor",
-            self.async_update_data,
-            self.SCAN_INTERVAL,
-            debounce.Debouncer(bridge.hass, _LOGGER, REQUEST_REFRESH_DELAY, True),
+            name="sensor",
+            update_method=self.async_update_data,
+            update_interval=self.SCAN_INTERVAL,
+            request_refresh_debouncer=debounce.Debouncer(
+                bridge.hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True
+            ),
         )
 
     async def async_update_data(self):
@@ -53,17 +54,17 @@ class SensorManager:
         try:
             with async_timeout.timeout(4):
                 return await self.bridge.async_request_call(
-                    self.bridge.api.sensors.update()
+                    self.bridge.api.sensors.update
                 )
         except Unauthorized:
             await self.bridge.handle_unauthorized_error()
-            raise UpdateFailed
-        except (asyncio.TimeoutError, AiohueException):
-            raise UpdateFailed
+            raise UpdateFailed("Unauthorized")
+        except AiohueException as err:
+            raise UpdateFailed(f"Hue error: {err}")
 
-    async def async_register_component(self, binary, async_add_entities):
+    async def async_register_component(self, platform, async_add_entities):
         """Register async_add_entities methods for components."""
-        self._component_add_entities[binary] = async_add_entities
+        self._component_add_entities[platform] = async_add_entities
 
         if len(self._component_add_entities) < 2:
             return
@@ -83,8 +84,7 @@ class SensorManager:
         if len(self._component_add_entities) < 2:
             return
 
-        new_sensors = []
-        new_binary_sensors = []
+        to_add = {}
         primary_sensor_devices = {}
         current = self.current
 
@@ -128,10 +128,10 @@ class SensorManager:
             current[api[item_id].uniqueid] = sensor_config["class"](
                 api[item_id], name, self.bridge, primary_sensor=primary_sensor
             )
-            if sensor_config["binary"]:
-                new_binary_sensors.append(current[api[item_id].uniqueid])
-            else:
-                new_sensors.append(current[api[item_id].uniqueid])
+
+            to_add.setdefault(sensor_config["platform"], []).append(
+                current[api[item_id].uniqueid]
+            )
 
         self.bridge.hass.async_create_task(
             remove_devices(
@@ -139,10 +139,8 @@ class SensorManager:
             )
         )
 
-        if new_sensors:
-            self._component_add_entities[False](new_sensors)
-        if new_binary_sensors:
-            self._component_add_entities[True](new_binary_sensors)
+        for platform in to_add:
+            self._component_add_entities[platform](to_add[platform])
 
 
 class GenericHueSensor(entity.Entity):
@@ -183,7 +181,7 @@ class GenericHueSensor(entity.Entity):
     @property
     def available(self):
         """Return if sensor is available."""
-        return not self.bridge.sensor_manager.coordinator.failed_last_update and (
+        return self.bridge.sensor_manager.coordinator.last_update_success and (
             self.bridge.allow_unreachable or self.sensor.config["reachable"]
         )
 
@@ -209,7 +207,7 @@ class GenericHueSensor(entity.Entity):
 
         Only used by the generic entity update service.
         """
-        await self.bridge.sensor_manager.coordinator.coordinator.async_request_refresh()
+        await self.bridge.sensor_manager.coordinator.async_request_refresh()
 
     @property
     def device_info(self):

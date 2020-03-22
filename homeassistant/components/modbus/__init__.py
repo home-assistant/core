@@ -159,10 +159,10 @@ def setup(hass, config):
 
     def write_register(service):
         """Write Modbus registers."""
-        unit = int(float(service.data.get(ATTR_UNIT)))
-        address = int(float(service.data.get(ATTR_ADDRESS)))
-        value = service.data.get(ATTR_VALUE)
-        client_name = service.data.get(ATTR_HUB)
+        unit = int(float(service.data[ATTR_UNIT]))
+        address = int(float(service.data[ATTR_ADDRESS]))
+        value = service.data[ATTR_VALUE]
+        client_name = service.data[ATTR_HUB]
         if isinstance(value, list):
             hub_collect[client_name].write_registers(
                 unit, address, [int(float(i)) for i in value]
@@ -172,10 +172,10 @@ def setup(hass, config):
 
     def write_coil(service):
         """Write Modbus coil."""
-        unit = service.data.get(ATTR_UNIT)
-        address = service.data.get(ATTR_ADDRESS)
-        state = service.data.get(ATTR_STATE)
-        client_name = service.data.get(ATTR_HUB)
+        unit = service.data[ATTR_UNIT]
+        address = service.data[ATTR_ADDRESS]
+        state = service.data[ATTR_STATE]
+        client_name = service.data[ATTR_HUB]
         hub_collect[client_name].write_coil(unit, address, state)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_modbus)
@@ -212,6 +212,12 @@ class ModbusHub:
         with self._lock:
             kwargs = {"unit": unit} if unit else {}
             return self._client.read_coils(address, count, **kwargs)
+
+    def read_discrete_inputs(self, unit, address, count):
+        """Read discrete inputs."""
+        with self._lock:
+            kwargs = {"unit": unit} if unit else {}
+            return self._client.read_discrete_inputs(address, count, **kwargs)
 
     def read_input_registers(self, unit, address, count):
         """Read input registers."""

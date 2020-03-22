@@ -258,3 +258,33 @@ async def test_entities_in_scene(hass):
         ("scene.scene_3", ["light.kitchen", "light.living_room"]),
     ):
         assert ha_scene.entities_in_scene(hass, scene_id) == entities
+
+
+async def test_config(hass):
+    """Test passing config in YAML."""
+    assert await async_setup_component(
+        hass,
+        "scene",
+        {
+            "scene": [
+                {
+                    "id": "scene_id",
+                    "name": "Scene Icon",
+                    "icon": "mdi:party",
+                    "entities": {"light.kitchen": "on"},
+                },
+                {
+                    "name": "Scene No Icon",
+                    "entities": {"light.kitchen": {"state": "on"}},
+                },
+            ]
+        },
+    )
+
+    icon = hass.states.get("scene.scene_icon")
+    assert icon is not None
+    assert icon.attributes["icon"] == "mdi:party"
+
+    no_icon = hass.states.get("scene.scene_no_icon")
+    assert no_icon is not None
+    assert "icon" not in no_icon.attributes

@@ -16,6 +16,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP,
 )
 import homeassistant.components.vacuum as vacuum
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -886,6 +887,7 @@ async def test_media_player(hass):
             | SUPPORT_VOLUME_MUTE
             | SUPPORT_VOLUME_SET,
             "volume_level": 0.75,
+            "source_list": ["hdmi", "tv"],
         },
     )
     appliance = await discovery_test(device, hass)
@@ -904,7 +906,6 @@ async def test_media_player(hass):
         "Alexa.PlaybackStateReporter",
         "Alexa.PowerController",
         "Alexa.Speaker",
-        "Alexa.StepSpeaker",
     )
 
     playback_capability = get_capability(capabilities, "Alexa.PlaybackController")
@@ -958,93 +959,6 @@ async def test_media_player(hass):
         hass,
     )
 
-    call, _ = await assert_request_calls_service(
-        "Alexa.Speaker",
-        "SetVolume",
-        "media_player#test",
-        "media_player.volume_set",
-        hass,
-        payload={"volume": 50},
-    )
-    assert call.data["volume_level"] == 0.5
-
-    call, _ = await assert_request_calls_service(
-        "Alexa.Speaker",
-        "SetMute",
-        "media_player#test",
-        "media_player.volume_mute",
-        hass,
-        payload={"mute": True},
-    )
-    assert call.data["is_volume_muted"]
-
-    call, _, = await assert_request_calls_service(
-        "Alexa.Speaker",
-        "SetMute",
-        "media_player#test",
-        "media_player.volume_mute",
-        hass,
-        payload={"mute": False},
-    )
-    assert not call.data["is_volume_muted"]
-
-    await assert_percentage_changes(
-        hass,
-        [(0.7, "-5"), (0.8, "5"), (0, "-80")],
-        "Alexa.Speaker",
-        "AdjustVolume",
-        "media_player#test",
-        "volume",
-        "media_player.volume_set",
-        "volume_level",
-    )
-
-    call, _ = await assert_request_calls_service(
-        "Alexa.StepSpeaker",
-        "SetMute",
-        "media_player#test",
-        "media_player.volume_mute",
-        hass,
-        payload={"mute": True},
-    )
-    assert call.data["is_volume_muted"]
-
-    call, _, = await assert_request_calls_service(
-        "Alexa.StepSpeaker",
-        "SetMute",
-        "media_player#test",
-        "media_player.volume_mute",
-        hass,
-        payload={"mute": False},
-    )
-    assert not call.data["is_volume_muted"]
-
-    call, _ = await assert_request_calls_service(
-        "Alexa.StepSpeaker",
-        "AdjustVolume",
-        "media_player#test",
-        "media_player.volume_up",
-        hass,
-        payload={"volumeSteps": 1, "volumeStepsDefault": False},
-    )
-
-    call, _ = await assert_request_calls_service(
-        "Alexa.StepSpeaker",
-        "AdjustVolume",
-        "media_player#test",
-        "media_player.volume_down",
-        hass,
-        payload={"volumeSteps": -1, "volumeStepsDefault": False},
-    )
-
-    call, _ = await assert_request_calls_service(
-        "Alexa.StepSpeaker",
-        "AdjustVolume",
-        "media_player#test",
-        "media_player.volume_up",
-        hass,
-        payload={"volumeSteps": 10, "volumeStepsDefault": True},
-    )
     call, _ = await assert_request_calls_service(
         "Alexa.ChannelController",
         "ChangeChannel",
@@ -1134,13 +1048,11 @@ async def test_media_player_power(hass):
         "Alexa",
         "Alexa.ChannelController",
         "Alexa.EndpointHealth",
-        "Alexa.InputController",
         "Alexa.PlaybackController",
         "Alexa.PlaybackStateReporter",
         "Alexa.PowerController",
         "Alexa.SeekController",
         "Alexa.Speaker",
-        "Alexa.StepSpeaker",
     )
 
     await assert_request_calls_service(
@@ -1264,23 +1176,177 @@ async def test_media_player_inputs(hass):
     assert call.data["source"] == "tv"
 
 
-async def test_media_player_speaker(hass):
-    """Test media player discovery with device class speaker."""
+async def test_media_player_no_supported_inputs(hass):
+    """Test media player discovery with no supported inputs."""
     device = (
-        "media_player.test",
+        "media_player.test_no_inputs",
         "off",
         {
             "friendly_name": "Test media player",
-            "supported_features": 51765,
+            "supported_features": SUPPORT_SELECT_SOURCE,
+            "volume_level": 0.75,
+            "source_list": [
+                "foo",
+                "foo_2",
+                "vcr",
+                "betamax",
+                "record_player",
+                "f.m.",
+                "a.m.",
+                "tape_deck",
+                "laser_disc",
+                "hd_dvd",
+            ],
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "media_player#test_no_inputs"
+    assert appliance["displayCategories"][0] == "TV"
+    assert appliance["friendlyName"] == "Test media player"
+
+    # Assert Alexa.InputController is not in capabilities list.
+    assert_endpoint_capabilities(
+        appliance, "Alexa", "Alexa.EndpointHealth", "Alexa.PowerController"
+    )
+
+
+async def test_media_player_speaker(hass):
+    """Test media player with speaker interface."""
+    device = (
+        "media_player.test_speaker",
+        "off",
+        {
+            "friendly_name": "Test media player speaker",
+            "supported_features": SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET,
             "volume_level": 0.75,
             "device_class": "speaker",
         },
     )
     appliance = await discovery_test(device, hass)
 
-    assert appliance["endpointId"] == "media_player#test"
+    assert appliance["endpointId"] == "media_player#test_speaker"
     assert appliance["displayCategories"][0] == "SPEAKER"
-    assert appliance["friendlyName"] == "Test media player"
+    assert appliance["friendlyName"] == "Test media player speaker"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa",
+        "Alexa.EndpointHealth",
+        "Alexa.PowerController",
+        "Alexa.Speaker",
+    )
+
+    speaker_capability = get_capability(capabilities, "Alexa.Speaker")
+    properties = speaker_capability["properties"]
+    assert {"name": "volume"} in properties["supported"]
+    assert {"name": "muted"} in properties["supported"]
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.Speaker",
+        "SetVolume",
+        "media_player#test_speaker",
+        "media_player.volume_set",
+        hass,
+        payload={"volume": 50},
+    )
+    assert call.data["volume_level"] == 0.5
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.Speaker",
+        "SetMute",
+        "media_player#test_speaker",
+        "media_player.volume_mute",
+        hass,
+        payload={"mute": True},
+    )
+    assert call.data["is_volume_muted"]
+
+    call, _, = await assert_request_calls_service(
+        "Alexa.Speaker",
+        "SetMute",
+        "media_player#test_speaker",
+        "media_player.volume_mute",
+        hass,
+        payload={"mute": False},
+    )
+    assert not call.data["is_volume_muted"]
+
+    await assert_percentage_changes(
+        hass,
+        [(0.7, "-5"), (0.8, "5"), (0, "-80")],
+        "Alexa.Speaker",
+        "AdjustVolume",
+        "media_player#test_speaker",
+        "volume",
+        "media_player.volume_set",
+        "volume_level",
+    )
+
+
+async def test_media_player_step_speaker(hass):
+    """Test media player with step speaker interface."""
+    device = (
+        "media_player.test_step_speaker",
+        "off",
+        {
+            "friendly_name": "Test media player step speaker",
+            "supported_features": SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP,
+            "device_class": "speaker",
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "media_player#test_step_speaker"
+    assert appliance["displayCategories"][0] == "SPEAKER"
+    assert appliance["friendlyName"] == "Test media player step speaker"
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.StepSpeaker",
+        "SetMute",
+        "media_player#test_step_speaker",
+        "media_player.volume_mute",
+        hass,
+        payload={"mute": True},
+    )
+    assert call.data["is_volume_muted"]
+
+    call, _, = await assert_request_calls_service(
+        "Alexa.StepSpeaker",
+        "SetMute",
+        "media_player#test_step_speaker",
+        "media_player.volume_mute",
+        hass,
+        payload={"mute": False},
+    )
+    assert not call.data["is_volume_muted"]
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.StepSpeaker",
+        "AdjustVolume",
+        "media_player#test_step_speaker",
+        "media_player.volume_up",
+        hass,
+        payload={"volumeSteps": 1, "volumeStepsDefault": False},
+    )
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.StepSpeaker",
+        "AdjustVolume",
+        "media_player#test_step_speaker",
+        "media_player.volume_down",
+        hass,
+        payload={"volumeSteps": -1, "volumeStepsDefault": False},
+    )
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.StepSpeaker",
+        "AdjustVolume",
+        "media_player#test_step_speaker",
+        "media_player.volume_up",
+        hass,
+        payload={"volumeSteps": 10, "volumeStepsDefault": True},
+    )
 
 
 async def test_media_player_seek(hass):
@@ -2526,33 +2592,25 @@ async def test_mode_unsupported_domain(hass):
     assert msg["payload"]["type"] == "INVALID_DIRECTIVE"
 
 
-async def test_cover(hass):
-    """Test garage cover discovery and powerController."""
+async def test_cover_garage_door(hass):
+    """Test garage door cover discovery."""
     device = (
-        "cover.test",
+        "cover.test_garage_door",
         "off",
         {
-            "friendly_name": "Test cover",
+            "friendly_name": "Test cover garage door",
             "supported_features": 3,
             "device_class": "garage",
         },
     )
     appliance = await discovery_test(device, hass)
 
-    assert appliance["endpointId"] == "cover#test"
+    assert appliance["endpointId"] == "cover#test_garage_door"
     assert appliance["displayCategories"][0] == "GARAGE_DOOR"
-    assert appliance["friendlyName"] == "Test cover"
+    assert appliance["friendlyName"] == "Test cover garage door"
 
     assert_endpoint_capabilities(
-        appliance,
-        "Alexa.ModeController",
-        "Alexa.PowerController",
-        "Alexa.EndpointHealth",
-        "Alexa",
-    )
-
-    await assert_power_controller_works(
-        "cover#test", "cover.open_cover", "cover.close_cover", hass
+        appliance, "Alexa.ModeController", "Alexa.EndpointHealth", "Alexa"
     )
 
 
@@ -3290,7 +3348,7 @@ async def test_timer_hold(hass):
     assert appliance["friendlyName"] == "Laundry"
 
     capabilities = assert_endpoint_capabilities(
-        appliance, "Alexa", "Alexa.TimeHoldController"
+        appliance, "Alexa", "Alexa.TimeHoldController", "Alexa.PowerController"
     )
 
     time_hold_capability = get_capability(capabilities, "Alexa.TimeHoldController")
@@ -3312,8 +3370,45 @@ async def test_timer_resume(hass):
     )
     await discovery_test(device, hass)
 
+    properties = await reported_properties(hass, "timer#laundry")
+    properties.assert_equal("Alexa.PowerController", "powerState", "ON")
+
     await assert_request_calls_service(
         "Alexa.TimeHoldController", "Resume", "timer#laundry", "timer.start", hass
+    )
+
+
+async def test_timer_start(hass):
+    """Test timer start."""
+    device = (
+        "timer.laundry",
+        "idle",
+        {"friendly_name": "Laundry", "duration": "00:01:00", "remaining": "00:50:00"},
+    )
+    await discovery_test(device, hass)
+
+    properties = await reported_properties(hass, "timer#laundry")
+    properties.assert_equal("Alexa.PowerController", "powerState", "OFF")
+
+    await assert_request_calls_service(
+        "Alexa.PowerController", "TurnOn", "timer#laundry", "timer.start", hass
+    )
+
+
+async def test_timer_cancel(hass):
+    """Test timer cancel."""
+    device = (
+        "timer.laundry",
+        "active",
+        {"friendly_name": "Laundry", "duration": "00:01:00", "remaining": "00:50:00"},
+    )
+    await discovery_test(device, hass)
+
+    properties = await reported_properties(hass, "timer#laundry")
+    properties.assert_equal("Alexa.PowerController", "powerState", "ON")
+
+    await assert_request_calls_service(
+        "Alexa.PowerController", "TurnOff", "timer#laundry", "timer.cancel", hass
     )
 
 
@@ -3328,6 +3423,7 @@ async def test_vacuum_discovery(hass):
             | vacuum.SUPPORT_TURN_OFF
             | vacuum.SUPPORT_START
             | vacuum.SUPPORT_STOP
+            | vacuum.SUPPORT_RETURN_HOME
             | vacuum.SUPPORT_PAUSE,
         },
     )
@@ -3343,6 +3439,17 @@ async def test_vacuum_discovery(hass):
         "Alexa.TimeHoldController",
         "Alexa.EndpointHealth",
         "Alexa",
+    )
+
+    properties = await reported_properties(hass, "vacuum#test_1")
+    properties.assert_equal("Alexa.PowerController", "powerState", "OFF")
+
+    await assert_request_calls_service(
+        "Alexa.PowerController", "TurnOn", "vacuum#test_1", "vacuum.turn_on", hass,
+    )
+
+    await assert_request_calls_service(
+        "Alexa.PowerController", "TurnOff", "vacuum#test_1", "vacuum.turn_off", hass,
     )
 
 
@@ -3537,5 +3644,95 @@ async def test_vacuum_resume(hass):
         "Resume",
         "vacuum#test_4",
         "vacuum.start_pause",
+        hass,
+    )
+
+
+async def test_vacuum_discovery_no_turn_on(hass):
+    """Test vacuum discovery for vacuums without turn_on."""
+    device = (
+        "vacuum.test_5",
+        "cleaning",
+        {
+            "friendly_name": "Test vacuum 5",
+            "supported_features": vacuum.SUPPORT_TURN_OFF
+            | vacuum.SUPPORT_START
+            | vacuum.SUPPORT_RETURN_HOME,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert_endpoint_capabilities(
+        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa",
+    )
+
+    properties = await reported_properties(hass, "vacuum#test_5")
+    properties.assert_equal("Alexa.PowerController", "powerState", "ON")
+
+    await assert_request_calls_service(
+        "Alexa.PowerController", "TurnOn", "vacuum#test_5", "vacuum.start", hass,
+    )
+
+    await assert_request_calls_service(
+        "Alexa.PowerController", "TurnOff", "vacuum#test_5", "vacuum.turn_off", hass,
+    )
+
+
+async def test_vacuum_discovery_no_turn_off(hass):
+    """Test vacuum discovery for vacuums without turn_off."""
+    device = (
+        "vacuum.test_6",
+        "cleaning",
+        {
+            "friendly_name": "Test vacuum 6",
+            "supported_features": vacuum.SUPPORT_TURN_ON
+            | vacuum.SUPPORT_START
+            | vacuum.SUPPORT_RETURN_HOME,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert_endpoint_capabilities(
+        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa",
+    )
+
+    await assert_request_calls_service(
+        "Alexa.PowerController", "TurnOn", "vacuum#test_6", "vacuum.turn_on", hass,
+    )
+
+    await assert_request_calls_service(
+        "Alexa.PowerController",
+        "TurnOff",
+        "vacuum#test_6",
+        "vacuum.return_to_base",
+        hass,
+    )
+
+
+async def test_vacuum_discovery_no_turn_on_or_off(hass):
+    """Test vacuum discovery vacuums without on or off."""
+    device = (
+        "vacuum.test_7",
+        "cleaning",
+        {
+            "friendly_name": "Test vacuum 7",
+            "supported_features": vacuum.SUPPORT_START | vacuum.SUPPORT_RETURN_HOME,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert_endpoint_capabilities(
+        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa",
+    )
+
+    await assert_request_calls_service(
+        "Alexa.PowerController", "TurnOn", "vacuum#test_7", "vacuum.start", hass,
+    )
+
+    await assert_request_calls_service(
+        "Alexa.PowerController",
+        "TurnOff",
+        "vacuum#test_7",
+        "vacuum.return_to_base",
         hass,
     )

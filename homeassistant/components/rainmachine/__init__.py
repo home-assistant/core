@@ -24,8 +24,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import verify_domain_control
 
-from .config_flow import configured_instances
 from .const import (
+    CONF_ZONE_RUN_TIME,
     DATA_CLIENT,
     DATA_PROGRAMS,
     DATA_PROVISION_SETTINGS,
@@ -35,7 +35,7 @@ from .const import (
     DATA_ZONES_DETAILS,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
-    DEFAULT_SSL,
+    DEFAULT_ZONE_RUN,
     DOMAIN,
     PROGRAM_UPDATE_TOPIC,
     SENSOR_UPDATE_TOPIC,
@@ -44,17 +44,14 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_LISTENER = "listener"
-
 CONF_CONTROLLERS = "controllers"
 CONF_PROGRAM_ID = "program_id"
 CONF_SECONDS = "seconds"
 CONF_ZONE_ID = "zone_id"
-CONF_ZONE_RUN_TIME = "zone_run_time"
 
 DEFAULT_ATTRIBUTION = "Data provided by Green Electronics LLC"
 DEFAULT_ICON = "mdi:water"
-DEFAULT_ZONE_RUN = 60 * 10
+DEFAULT_SSL = True
 
 SERVICE_ALTER_PROGRAM = vol.Schema({vol.Required(CONF_PROGRAM_ID): cv.positive_int})
 
@@ -85,8 +82,10 @@ CONTROLLER_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
-        vol.Optional(CONF_ZONE_RUN_TIME): cv.positive_int,
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
+            cv.time_period, lambda value: value.total_seconds()
+        ),
+        vol.Optional(CONF_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN): cv.positive_int,
     }
 )
 
@@ -108,7 +107,6 @@ async def async_setup(hass, config):
     """Set up the RainMachine component."""
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][DATA_CLIENT] = {}
-    hass.data[DOMAIN][DATA_LISTENER] = {}
 
     if DOMAIN not in config:
         return True
@@ -116,9 +114,6 @@ async def async_setup(hass, config):
     conf = config[DOMAIN]
 
     for controller in conf[CONF_CONTROLLERS]:
-        if controller[CONF_IP_ADDRESS] in configured_instances(hass):
-            continue
-
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}, data=controller
@@ -130,6 +125,11 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up RainMachine as config entry."""
+    if not config_entry.unique_id:
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=config_entry.data[CONF_IP_ADDRESS]
+        )
+
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
     websession = aiohttp_client.async_get_clientsession(hass)
@@ -140,7 +140,7 @@ async def async_setup_entry(hass, config_entry):
             config_entry.data[CONF_IP_ADDRESS],
             config_entry.data[CONF_PASSWORD],
             port=config_entry.data[CONF_PORT],
-            ssl=config_entry.data[CONF_SSL],
+            ssl=config_entry.data.get(CONF_SSL, DEFAULT_SSL),
         )
     except RainMachineError as err:
         _LOGGER.error("An error occurred: %s", err)
@@ -154,7 +154,9 @@ async def async_setup_entry(hass, config_entry):
             hass,
             controller,
             config_entry.data.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN),
-            config_entry.data[CONF_SCAN_INTERVAL],
+            config_entry.data.get(
+                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL.total_seconds()
+            ),
         )
 
     # Update the data object, which at this point (prior to any sensors registering
@@ -256,9 +258,6 @@ async def async_setup_entry(hass, config_entry):
 async def async_unload_entry(hass, config_entry):
     """Unload an OpenUV config entry."""
     hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
-
-    remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(config_entry.entry_id)
-    remove_listener()
 
     tasks = [
         hass.config_entries.async_forward_entry_unload(config_entry, component)
@@ -452,9 +451,16 @@ class RainMachineEntity(Entity):
     @callback
     def _update_state(self):
         """Update the state."""
-        self.async_schedule_update_ha_state(True)
+        self.update_from_latest_data()
+        self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self):
         """Disconnect dispatcher listener when removed."""
         for handler in self._dispatcher_handlers:
             handler()
+        self._dispatcher_handlers = []
+
+    @callback
+    def update_from_latest_data(self):
+        """Update the entity."""
+        raise NotImplementedError

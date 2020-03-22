@@ -6,6 +6,7 @@
             "already_setup_with_diff_host_and_name": "Wygl\u0105da na to, \u017ce ten wpis zosta\u0142 ju\u017c skonfigurowany z innym hostem i nazw\u0105 na podstawie jego numeru seryjnego. Usu\u0144 wszystkie stare wpisy z pliku configuration.yaml i z menu Integracje przed ponown\u0105 pr\u00f3b\u0105 dodania tego urz\u0105dzenia.",
             "host_exists": "Komponent Vizio dla tego hosta jest ju\u017c skonfigurowany.",
             "name_exists": "Komponent Vizio dla tej nazwy jest ju\u017c skonfigurowany.",
+            "updated_entry": "Ten wpis zosta\u0142 ju\u017c skonfigurowany, ale nazwa i/lub opcje zdefiniowane w konfiguracji nie pasuj\u0105 do wcze\u015bniej zaimportowanych warto\u015bci, wi\u0119c wpis konfiguracji zosta\u0142 odpowiednio zaktualizowany.",
             "updated_options": "Ten wpis zosta\u0142 ju\u017c skonfigurowany, ale opcje zdefiniowane w konfiguracji nie pasuj\u0105 do wcze\u015bniej zaimportowanych warto\u015bci, wi\u0119c wpis konfiguracji zosta\u0142 odpowiednio zaktualizowany.",
             "updated_volume_step": "Ten wpis zosta\u0142 ju\u017c skonfigurowany, ale rozmiar skoku g\u0142o\u015bno\u015bci w konfiguracji nie pasuje do wpisu konfiguracji, wi\u0119c wpis konfiguracji zosta\u0142 odpowiednio zaktualizowany."
         },
