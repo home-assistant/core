@@ -94,8 +94,7 @@ async def test_cannot_connect(hass):
     """Test connection error."""
 
     with patch(
-        "homeassistant.components.monoprice.media_player.get_monoprice",
-        side_effect=SerialException,
+        "homeassistant.components.monoprice.get_monoprice", side_effect=SerialException,
     ):
         config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
         config_entry.add_to_hass(hass)
@@ -108,8 +107,7 @@ async def test_cannot_connect(hass):
 
 async def _setup_monoprice(hass, monoprice):
     with patch(
-        "homeassistant.components.monoprice.media_player.get_monoprice",
-        new=lambda *a: monoprice,
+        "homeassistant.components.monoprice.get_monoprice", new=lambda *a: monoprice,
     ):
         config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
         config_entry.add_to_hass(hass)
