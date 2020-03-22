@@ -22,7 +22,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Schluter thermostats."""
     data = hass.data[DATA_SCHLUTER]
     devices = []
@@ -31,7 +31,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for thermostat in data.thermostats:
         devices.append(SchluterThermostat(thermostat, temp_unit, data))
 
-    add_entities(devices, True)
+    async_add_entities(devices, True)
 
 
 class SchluterThermostat(ClimateDevice):
@@ -149,17 +149,15 @@ class SchluterThermostat(ClimateDevice):
         """Identify max_temp in Schluter API."""
         return self._max_temperature
 
-    def update(self):
+    async def async_update(self):
         """Cache value from py-schluter."""
+        await self.data.coordinator.async_request_refresh()
         self._serial_number = self.device.serial_number
         self._group = self.device.group_name
         self._name = self.device.name
         self._min_temperature = self.device.min_temp
         self._max_temperature = self.device.max_temp
         self._temperature_scale = TEMP_CELSIUS
-
-        self._temperature = self.data.get_thermostat_temp(self._serial_number)
-        self._is_heating = self.data.get_thermostat_heating_status(self._serial_number)
-        self._target_temperature = self.data.get_thermostat_set_temp(
-            self._serial_number
-        )
+        self._temperature = self.device.temperature
+        self._is_heating = self.device.is_heating
+        self._target_temperature = self.device.set_point_temp

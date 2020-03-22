@@ -1,6 +1,7 @@
 """The Schluter DITRA-HEAT integration."""
 from datetime import timedelta
 import logging
+import pickle
 
 from requests import RequestException, Session
 from schluter.api import Api
@@ -41,7 +42,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup_schluter(hass, config, api, authenticator):
+async def async_setup_schluter(hass, config, api, authenticator):
     """Set up the Schluter component."""
 
     authentication = None
@@ -54,7 +55,7 @@ def setup_schluter(hass, config, api, authenticator):
 
     if state == AuthenticationState.AUTHENTICATED:
 
-        def update_data():
+        async def async_update_data():
             try:
                 return api.get_thermostats(authentication.session_id) or []
             except RequestException as err:
@@ -64,9 +65,12 @@ def setup_schluter(hass, config, api, authenticator):
             hass,
             _LOGGER,
             name="schluter",
-            update_method=update_data,
+            update_method=async_update_data,
             update_interval=timedelta(seconds=30),
         )
+
+        await coordinator.async_refresh()
+
         hass.data[DATA_SCHLUTER] = SchluterData(
             hass, api, authentication.session_id, coordinator
         )
@@ -85,7 +89,7 @@ def setup_schluter(hass, config, api, authenticator):
     return False
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Schluter component."""
     _LOGGER.debug("Starting setup of schluter")
     conf = config[DOMAIN]
@@ -104,21 +108,21 @@ def setup(hass, config):
         session_id_cache_file=hass.config.path(SCHLUTER_CONFIG_FILE),
     )
 
-    def close_http_session(event):
-        """Close API sessions used to connect to Schluter."""
-        _LOGGER.debug("Closing HTTP sessions")
-        if api_http_session:
-            try:
-                api_http_session.close()
-            except RequestException:
-                pass
+    # def close_http_session(event):
+    #     """Close API sessions used to connect to Schluter."""
+    #     _LOGGER.debug("Closing HTTP sessions")
+    #     if api_http_session:
+    #         try:
+    #             api_http_session.close()
+    #         except RequestException:
+    #             pass
 
-        _LOGGER.debug("HTTP session closed.")
+    #     _LOGGER.debug("HTTP session closed.")
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, close_http_session)
-    _LOGGER.debug("Registered for Home Assistant stop event")
+    # hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, close_http_session)
+    # _LOGGER.debug("Registered for Home Assistant stop event")
 
-    return setup_schluter(hass, config, api, authenticator)
+    return await async_setup_schluter(hass, config, api, authenticator)
 
 
 class SchluterData:
@@ -129,55 +133,59 @@ class SchluterData:
         self._hass = hass
         self._api = api
         self._session_id = session_id
-        self._thermostats = self._api.get_thermostats(self._session_id) or []
-
-        self._thermostat_temp_by_id = {}
-        self._thermostat_set_temp_by_id = {}
-        self._thermostat_is_heating_by_id = {}
+        self._coordinator = coordinator
+        self._thermostats = coordinator.data
 
     @property
     def thermostats(self):
         """Get thermostats."""
         return self._thermostats
 
-    def get_thermostat_temp(self, serial_number):
-        """Get thermostat current temperatures."""
-        self._update_thermostats()
-        return self._thermostat_temp_by_id.get(serial_number)
+    @property
+    def coordinator(self):
+        return self._coordinator
 
-    def get_thermostat_set_temp(self, serial_number):
-        """Get thermostat set temperatures."""
-        self._update_thermostats()
-        return self._thermostat_set_temp_by_id.get(serial_number)
+    async def async_update(self):
+        await self._coordinator.async_request_refresh()
 
-    def get_thermostat_heating_status(self, serial_number):
-        """Get thermostat heating statuses."""
-        self._update_thermostats()
-        return self._thermostat_is_heating_by_id.get(serial_number)
+    # def get_thermostat_temp(self, serial_number):
+    #     """Get thermostat current temperatures."""
+    #     self._update_thermostats()
+    #     return self._thermostat_temp_by_id.get(serial_number)
 
-    def set_thermostat_temp(self, serial_number, temperature):
-        """Set thermostat temperature.."""
-        result = self._api.set_temperature(self._session_id, serial_number, temperature)
-        return result
+    # def get_thermostat_set_temp(self, serial_number):
+    #     """Get thermostat set temperatures."""
+    #     self._update_thermostats()
+    #     return self._thermostat_set_temp_by_id.get(serial_number)
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def _update_thermostats(self):
-        temp_by_id = {}
-        set_temp_by_id = {}
-        is_heating_by_id = {}
+    # def get_thermostat_heating_status(self, serial_number):
+    #     """Get thermostat heating statuses."""
+    #     self._update_thermostats()
+    #     return self._thermostat_is_heating_by_id.get(serial_number)
 
-        try:
-            _LOGGER.debug("Updating thermostats from API")
-            self._thermostats = self._api.get_thermostats(self._session_id)
+    # def set_thermostat_temp(self, serial_number, temperature):
+    #     """Set thermostat temperature.."""
+    #     result = self._api.set_temperature(self._session_id, serial_number, temperature)
+    #     return result
 
-            for thermostat in self._thermostats:
-                temp_by_id[thermostat.serial_number] = thermostat.temperature
-                set_temp_by_id[thermostat.serial_number] = thermostat.set_point_temp
-                is_heating_by_id[thermostat.serial_number] = thermostat.is_heating
-        except RequestException as ex:
-            _LOGGER.error("Request error trying to retrieve thermostats. %s", ex)
+    # @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    # def _update_thermostats(self):
+    #     temp_by_id = {}
+    #     set_temp_by_id = {}
+    #     is_heating_by_id = {}
 
-        _LOGGER.debug("Successfully retrieved thermostats from API")
-        self._thermostat_temp_by_id = temp_by_id
-        self._thermostat_set_temp_by_id = set_temp_by_id
-        self._thermostat_is_heating_by_id = is_heating_by_id
+    #     try:
+    #         _LOGGER.debug("Updating thermostats from API")
+    #         self._thermostats = self._api.get_thermostats(self._session_id)
+
+    #         for thermostat in self._thermostats:
+    #             temp_by_id[thermostat.serial_number] = thermostat.temperature
+    #             set_temp_by_id[thermostat.serial_number] = thermostat.set_point_temp
+    #             is_heating_by_id[thermostat.serial_number] = thermostat.is_heating
+    #     except RequestException as ex:
+    #         _LOGGER.error("Request error trying to retrieve thermostats. %s", ex)
+
+    #     _LOGGER.debug("Successfully retrieved thermostats from API")
+    #     self._thermostat_temp_by_id = temp_by_id
+    #     self._thermostat_set_temp_by_id = set_temp_by_id
+    #     self._thermostat_is_heating_by_id = is_heating_by_id
