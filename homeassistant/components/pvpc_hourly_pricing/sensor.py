@@ -13,7 +13,7 @@ from aiopvpc import PVPCData
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import (
     async_track_point_in_time,
@@ -81,7 +81,7 @@ class ElecPriceSensor(RestoreEntity):
 
         # Update 'state' value in hour changes
         self._hourly_tracker = async_track_time_change(
-            self.hass, self.async_update, second=[0], minute=[0]
+            self.hass, self.update_current_price, second=[0], minute=[0]
         )
         # Update prices at random time, 2 times/hour (don't want to upset API)
         random_minute = randint(1, 29)
@@ -98,7 +98,7 @@ class ElecPriceSensor(RestoreEntity):
             mins_update,
         )
         await self.async_update_prices(dt_util.utcnow())
-        await self.async_update()
+        self.update_current_price(dt_util.utcnow())
 
     @property
     def unique_id(self) -> Optional[str]:
@@ -125,9 +125,9 @@ class ElecPriceSensor(RestoreEntity):
         """Return the state attributes."""
         return self._pvpc_data.attributes
 
-    async def async_update(self, *args):
-        """Update the sensor state."""
-        now = dt_util.utcnow() if not args else args[0]
+    @callback
+    def update_current_price(self, now):
+        """Update the sensor state, by selecting the current price for this hour."""
         self._pvpc_data.process_state_and_attributes(now)
         self.async_write_ha_state()
 
@@ -166,4 +166,4 @@ class ElecPriceSensor(RestoreEntity):
         if not self._pvpc_data.source_available:
             self._pvpc_data.source_available = True
             _LOGGER.warning("%s: component has recovered data access", self.entity_id)
-            await self.async_update(now)
+            self.update_current_price(now)
