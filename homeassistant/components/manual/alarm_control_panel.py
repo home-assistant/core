@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_DELAY_TIME,
     CONF_DISARM_AFTER_TRIGGER,
     CONF_NAME,
-    CONF_PENDING_TIME,
+    CONF_ARMING_TIME,
     CONF_PLATFORM,
     CONF_TRIGGER_TIME,
     STATE_ALARM_ARMED_AWAY,
@@ -43,7 +43,7 @@ CONF_CODE_ARM_REQUIRED = "code_arm_required"
 
 DEFAULT_ALARM_NAME = "HA Alarm"
 DEFAULT_DELAY_TIME = datetime.timedelta(seconds=0)
-DEFAULT_PENDING_TIME = datetime.timedelta(seconds=60)
+DEFAULT_ARMING_TIME = datetime.timedelta(seconds=60)
 DEFAULT_TRIGGER_TIME = datetime.timedelta(seconds=120)
 DEFAULT_DISARM_AFTER_TRIGGER = False
 
@@ -60,7 +60,7 @@ SUPPORTED_PRETRIGGER_STATES = [
     state for state in SUPPORTED_STATES if state != STATE_ALARM_TRIGGERED
 ]
 
-SUPPORTED_PENDING_STATES = [
+SUPPORTED_ARMING_STATES = [
     state for state in SUPPORTED_STATES if state != STATE_ALARM_DISARMED
 ]
 
@@ -76,9 +76,9 @@ def _state_validator(config):
             config[state][CONF_DELAY_TIME] = config[CONF_DELAY_TIME]
         if CONF_TRIGGER_TIME not in config[state]:
             config[state][CONF_TRIGGER_TIME] = config[CONF_TRIGGER_TIME]
-    for state in SUPPORTED_PENDING_STATES:
-        if CONF_PENDING_TIME not in config[state]:
-            config[state][CONF_PENDING_TIME] = config[CONF_PENDING_TIME]
+    for state in SUPPORTED_ARMING_STATES:
+        if CONF_ARMING_TIME not in config[state]:
+            config[state][CONF_ARMING_TIME] = config[CONF_ARMING_TIME]
 
     return config
 
@@ -93,8 +93,8 @@ def _state_schema(state):
         schema[vol.Optional(CONF_TRIGGER_TIME)] = vol.All(
             cv.time_period, cv.positive_timedelta
         )
-    if state in SUPPORTED_PENDING_STATES:
-        schema[vol.Optional(CONF_PENDING_TIME)] = vol.All(
+    if state in SUPPORTED_ARMING_STATES:
+        schema[vol.Optional(CONF_ARMING_TIME)] = vol.All(
             cv.time_period, cv.positive_timedelta
         )
     return vol.Schema(schema)
@@ -111,7 +111,7 @@ PLATFORM_SCHEMA = vol.Schema(
             vol.Optional(CONF_DELAY_TIME, default=DEFAULT_DELAY_TIME): vol.All(
                 cv.time_period, cv.positive_timedelta
             ),
-            vol.Optional(CONF_PENDING_TIME, default=DEFAULT_PENDING_TIME): vol.All(
+            vol.Optional(CONF_ARMING_TIME, default=DEFAULT_ARMING_TIME): vol.All(
                 cv.time_period, cv.positive_timedelta
             ),
             vol.Optional(CONF_TRIGGER_TIME, default=DEFAULT_TRIGGER_TIME): vol.All(
@@ -165,9 +165,9 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
     """
     Representation of an alarm status.
 
-    When armed, will be pending for 'pending_time', after that armed.
+    When armed, will be arming for 'arming_time', after that armed.
     When triggered, will be pending for the triggering state's 'delay_time'
-    plus the triggered state's 'pending_time'.
+    plus the triggered state's 'arming_time'.
     After that will be triggered for 'trigger_time', after that we return to
     the previous state or disarm if `disarm_after_trigger` is true.
     A trigger_time of zero disables the alarm_trigger service.
@@ -205,9 +205,8 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
             state: config[state][CONF_TRIGGER_TIME]
             for state in SUPPORTED_PRETRIGGER_STATES
         }
-        self._pending_time_by_state = {
-            state: config[state][CONF_PENDING_TIME]
-            for state in SUPPORTED_PENDING_STATES
+        self._arming_time_by_state = {
+            state: config[state][CONF_ARMING_TIME] for state in SUPPORTED_ARMING_STATES
         }
 
     @property
@@ -235,7 +234,7 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
                 self._state = self._previous_state
                 return self._state
 
-        if self._state in SUPPORTED_PENDING_STATES and self._within_pending_time(
+        if self._state in SUPPORTED_ARMING_STATES and self._within_arming_time(
             self._state
         ):
             return STATE_ALARM_ARMING
@@ -260,12 +259,20 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
             return self._previous_state
         return self._state
 
+    def _arming_time(self, state):
+        """Get the arming time."""
+        return self._arming_time_by_state[state]
+
     def _pending_time(self, state):
         """Get the pending time."""
-        pending_time = self._pending_time_by_state[state]
-        if state == STATE_ALARM_TRIGGERED:
-            pending_time += self._delay_time_by_state[self._previous_state]
-        return pending_time
+        return (
+            self._arming_time_by_state[state]
+            + self._delay_time_by_state[self._previous_state]
+        )
+
+    def _within_arming_time(self, state):
+        """Get if the action is in the arming time window."""
+        return self._state_ts + self._arming_time(state) > dt_util.utcnow()
 
     def _within_pending_time(self, state):
         """Get if the action is in the pending time window."""
@@ -352,6 +359,7 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
         self.schedule_update_ha_state()
 
         pending_time = self._pending_time(state)
+        arming_time = self._arming_time(state)
         if state == STATE_ALARM_TRIGGERED:
             track_point_in_time(
                 self._hass, self.async_update_ha_state, self._state_ts + pending_time
@@ -363,9 +371,9 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
                 self.async_update_ha_state,
                 self._state_ts + pending_time + trigger_time,
             )
-        elif state in SUPPORTED_PENDING_STATES and pending_time:
+        elif state in SUPPORTED_ARMING_STATES and arming_time:
             track_point_in_time(
-                self._hass, self.async_update_ha_state, self._state_ts + pending_time
+                self._hass, self.async_update_ha_state, self._state_ts + arming_time
             )
 
     def _validate_code(self, code, state):
@@ -405,7 +413,7 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
                 and hasattr(state, "attributes")
                 and state.attributes[ATTR_PREVIOUS_STATE]
             ):
-                # If in pending state, we return to the ATTR_PREVIOUS_STATE
+                # If in arming or pending state, we return to the ATTR_PREVIOUS_STATE
                 self._state = state.attributes[ATTR_PREVIOUS_STATE]
                 self._state_ts = dt_util.utcnow()
             else:
