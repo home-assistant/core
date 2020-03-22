@@ -2,17 +2,15 @@
 from datetime import timedelta
 import logging
 
-from nextcloudmonitor import NextcloudMonitor
+from nextcloudmonitor import NextcloudMonitor, NextcloudMonitorError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_URL,
     CONF_USERNAME,
 )
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.event import track_time_interval
 
@@ -23,13 +21,18 @@ DOMAIN = "nextcloud"
 SCAN_INTERVAL = timedelta(seconds=60)
 
 # Validate user configuration
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_URL): cv.url,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
-    }
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_URL): cv.url,
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 BINARY_SENSORS = (
     "nextcloud_system_enable_avatars",
@@ -45,8 +48,8 @@ def setup(hass, config):
     conf = config["sensor"][0]
     try:
         ncm = NextcloudMonitor(conf[CONF_URL], conf[CONF_USERNAME], conf[CONF_PASSWORD])
-    except Exception:
-        raise PlatformNotReady("Nextcloud setup failed.")
+    except NextcloudMonitorError:
+        _LOGGER.error("Nextcloud setup failed. Check configuration.")
 
     hass.data[DOMAIN] = get_sensors(ncm.data)
 
@@ -54,8 +57,8 @@ def setup(hass, config):
         """Update data from nextcloud api."""
         try:
             ncm.update()
-        except Exception:
-            raise PlatformNotReady("Nextcloud update failed.")
+        except NextcloudMonitorError:
+            _LOGGER.error("Nextcloud update failed.")
 
         hass.data[DOMAIN] = get_sensors(ncm.data)
 
@@ -85,5 +88,5 @@ def get_sensors(api_data, key_path=""):
             key_path += f"{key}_"
             result.update(get_sensors(value, key_path))
         else:
-            result[key_path + key] = value
+            result[f"{key_path}{key}"] = value
     return result
