@@ -1,7 +1,7 @@
 """Account linking via the cloud."""
 import asyncio
 import logging
-from typing import Any
+from typing import Any, Optional
 
 import aiohttp
 from hass_nabucasa import account_link
@@ -109,7 +109,13 @@ class CloudOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implement
         """Domain that is providing the implementation."""
         return DOMAIN
 
-    async def async_generate_authorize_url(self, flow_id: str) -> str:
+    async def async_generate_authorize_url(
+        self,
+        flow_id: str,
+        flow_type: Optional[str] = None,
+        nonce: Optional[str] = None,
+        scope: Optional[str] = None,
+    ) -> str:
         """Generate a url for the user to authorize."""
         helper = account_link.AuthorizeAccountHelper(
             self.hass.data[DOMAIN], self.service

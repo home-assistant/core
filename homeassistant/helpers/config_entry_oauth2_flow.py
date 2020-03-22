@@ -48,7 +48,13 @@ class AbstractOAuth2Implementation(ABC):
         """Domain that is providing the implementation."""
 
     @abstractmethod
-    async def async_generate_authorize_url(self, flow_id: str) -> str:
+    async def async_generate_authorize_url(
+        self,
+        flow_id: str,
+        flow_type: Optional[str] = None,
+        nonce: Optional[str] = None,
+        scope: Optional[str] = None,
+    ) -> str:
         """Generate a url for the user to authorize.
 
         This step is called when a config flow is initialized. It should redirect the
@@ -129,20 +135,28 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         """Extra data that needs to be appended to the authorize url."""
         return {}
 
-    async def async_generate_authorize_url(self, flow_id: str) -> str:
+    async def async_generate_authorize_url(
+        self,
+        flow_id: str,
+        flow_type: Optional[str] = None,
+        nonce: Optional[str] = None,
+        scope: Optional[str] = None,
+    ) -> str:
         """Generate a url for the user to authorize."""
-        return str(
-            URL(self.authorize_url)
-            .with_query(
-                {
-                    "response_type": "code",
-                    "client_id": self.client_id,
-                    "redirect_uri": self.redirect_uri,
-                    "state": _encode_jwt(self.hass, {"flow_id": flow_id}),
-                }
-            )
-            .update_query(self.extra_authorize_data)
-        )
+        query = {
+            "response_type": "code",
+            "client_id": self.client_id,
+            "redirect_uri": self.redirect_uri,
+            "state": _encode_jwt(
+                self.hass, {"flow_type": flow_type, "flow_id": flow_id}
+            ),
+        }
+        if nonce:
+            query["nonce"] = nonce
+        if scope:
+            query["scope"] = scope
+
+        return str(URL(self.authorize_url).with_query(query).update_query(self.extra_authorize_data))
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve the authorization code to tokens."""

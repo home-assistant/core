@@ -7,16 +7,14 @@ from typing import Any, Dict, Optional, cast
 from aiohttp import ClientResponseError
 from aiohttp.client import ClientResponse
 import voluptuous as vol
-from yarl import URL
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    AUTH_CALLBACK_PATH,
-    _encode_jwt,
+    AbstractOAuth2Implementation,
+    LocalOAuth2Implementation,
     async_register_view,
 )
-from homeassistant.helpers.network import get_url
 
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
@@ -91,6 +89,7 @@ class OpenIdAuthProvider(AuthProvider):
 
     _configuration: Dict[str, Any]
     _jwks: Dict[str, Any]
+    oauth2: AbstractOAuth2Implementation
 
     async def async_get_configuration(self) -> Dict[str, Any]:
         """Get discovery document for OpenID."""
@@ -109,10 +108,13 @@ class OpenIdAuthProvider(AuthProvider):
         return cast(Dict[str, Any], data)
 
     @property
-    def redirect_uri(self) -> str:
-        """Return the redirect uri."""
-        url = URL(get_url(self.hass, prefer_external=True, allow_cloud=False))
-        return str(url.with_path(AUTH_CALLBACK_PATH))
+    def scope(self) -> str:
+        """Return scopes wanted from endpoint."""
+        return " ".join(
+            sorted(
+                WANTED_SCOPES.intersection(self._configuration["scopes_supported"])
+            )
+        )
 
     async def async_login_flow(self, context: Optional[Dict]) -> LoginFlow:
         """Return a flow to login."""
@@ -123,27 +125,18 @@ class OpenIdAuthProvider(AuthProvider):
         if not hasattr(self, "_jwks"):
             self._jwks = await self.async_get_jwks()
 
+        self.oauth2 = LocalOAuth2Implementation(
+            self.hass,
+            "auth",
+            self.config[CONF_CLIENT_ID],
+            self.config[CONF_CLIENT_SECRET],
+            self._configuration["authorization_endpoint"],
+            self._configuration["token_endpoint"],
+        )
+
         async_register_view(self.hass)
 
         return OpenIdLoginFlow(self)
-
-    async def async_retrieve_token(self, code: str) -> Dict[str, Any]:
-        """Convert a token code into an actual token."""
-
-        payload = {
-            "grant_type": "authorization_code",
-            "code": code,
-            "redirect_uri": self.redirect_uri,
-            "client_id": self.config[CONF_CLIENT_ID],
-            "client_secret": self.config[CONF_CLIENT_SECRET],
-        }
-
-        session = async_get_clientsession(self.hass)
-        async with session.post(
-            self._configuration["token_endpoint"], data=payload
-        ) as response:
-            await raise_for_status(response)
-            return cast(Dict[str, Any], await response.json())
 
     async def async_validate_token(
         self, token: Dict[str, Any], nonce: str
@@ -179,21 +172,6 @@ class OpenIdAuthProvider(AuthProvider):
                 return id_token
 
         raise InvalidAuthError(f"Subject {id_token['sub']} is not allowed")
-
-    async def async_generate_authorize_url(self, flow_id: str, nonce: str) -> str:
-        """Generate a authorization url for a given flow."""
-        scopes = WANTED_SCOPES.intersection(self._configuration["scopes_supported"])
-
-        query = {
-            "response_type": "code",
-            "client_id": self.config["client_id"],
-            "redirect_uri": self.redirect_uri,
-            "state": _encode_jwt(self.hass, {"flow_id": flow_id, "flow_type": "login"}),
-            "scope": " ".join(sorted(scopes)),
-            "nonce": nonce,
-        }
-
-        return str(URL(self._configuration["authorization_endpoint"]).with_query(query))
 
     @property
     def support_mfa(self) -> bool:
@@ -258,7 +236,9 @@ class OpenIdLoginFlow(LoginFlow):
             self.external_data = str(user_input)
             return self.async_external_step_done(next_step_id="authorize")
         self.nonce = token_hex()
-        url = await provider.async_generate_authorize_url(self.flow_id, self.nonce)
+        url = await provider.oauth2.async_generate_authorize_url(
+            self.flow_id, flow_type="login", nonce=self.nonce, scope=provider.scope
+        )
         return self.async_external_step(step_id="authenticate", url=url)
 
     async def async_step_authorize(
@@ -268,7 +248,9 @@ class OpenIdLoginFlow(LoginFlow):
 
         provider = cast(OpenIdAuthProvider, self._auth_provider)
         try:
-            token = await provider.async_retrieve_token(self.external_data)
+            token = await provider.oauth2.async_resolve_external_data(
+                self.external_data
+            )
             result = await provider.async_validate_token(token, self.nonce)
         except InvalidAuthError as error:
             _LOGGER.error("Login failed: %s", str(error))
