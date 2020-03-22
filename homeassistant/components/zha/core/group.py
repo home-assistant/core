@@ -1,13 +1,11 @@
 """Group for Zigbee Home Automation."""
 import asyncio
-from collections import Counter
 import logging
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity_registry import async_entries_for_device
 
 from .helpers import LogMixin
-from .registries import GROUP_ENTITY_DOMAINS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +19,6 @@ class ZHAGroup(LogMixin):
         self._zigpy_group = zigpy_group
         self._zha_gateway = zha_gateway
         self._entity_domain = None
-        self._determine_default_entity_domain()
 
     @property
     def name(self):
@@ -117,24 +114,6 @@ class ZHAGroup(LogMixin):
                 ]
             )
         return domain_entity_ids
-
-    def _determine_default_entity_domain(self):
-        """Determine the default entity domain for this group."""
-        all_domain_occurrences = []
-        for device in self.members:
-            entities = async_entries_for_device(
-                self._zha_gateway.ha_entity_registry, device.device_id
-            )
-            all_domain_occurrences.extend(
-                [
-                    entity.domain
-                    for entity in entities
-                    if entity.domain in GROUP_ENTITY_DOMAINS
-                ]
-            )
-        counts = Counter(all_domain_occurrences)
-        domain = counts.most_common(1)[0][0]
-        self.warning("entity domain would be: %s", domain)
 
     @callback
     def async_get_info(self):

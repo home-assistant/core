@@ -49,7 +49,6 @@ from .core.const import (
     EFFECT_BREATHE,
     EFFECT_DEFAULT_VARIANT,
     SIGNAL_ADD_ENTITIES,
-    SIGNAL_ADD_GROUP_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_REMOVE_GROUP,
     SIGNAL_REMOVE_GROUP_ENTITIES,
@@ -74,6 +73,7 @@ FLASH_EFFECTS = {light.FLASH_SHORT: EFFECT_BLINK, light.FLASH_LONG: EFFECT_BREAT
 
 UNSUPPORTED_ATTRIBUTE = 0x86
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, light.DOMAIN)
+GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, light.DOMAIN)
 PARALLEL_UPDATES = 0
 
 SUPPORT_GROUP_LIGHT = (
@@ -97,18 +97,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         functools.partial(
             discovery.async_add_entities, async_add_entities, entities_to_create
         ),
-    )
-    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
-
-    def add_group_entities(discovery_info):
-        """Add light group entities for ZHA."""
-        group_entities = []
-        for group_info in discovery_info:
-            group_entities.append(LightGroup(**group_info))
-        async_add_entities(group_entities)
-
-    unsub = async_dispatcher_connect(
-        hass, SIGNAL_ADD_GROUP_ENTITIES, add_group_entities
     )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
@@ -462,6 +450,7 @@ class HueLight(Light):
     _REFRESH_INTERVAL = (3, 5)
 
 
+@GROUP_MATCH()
 class LightGroup(BaseZhaEntity, light.Light):
     """Representation of a light group."""
 
