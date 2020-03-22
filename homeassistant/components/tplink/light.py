@@ -33,9 +33,6 @@ ATTR_CURRENT_POWER_W = "current_power_w"
 ATTR_DAILY_ENERGY_KWH = "daily_energy_kwh"
 ATTR_MONTHLY_ENERGY_KWH = "monthly_energy_kwh"
 
-MAX_ATTEMPTS = 20
-SLEEP_TIME = 2
-
 
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the platform.
@@ -51,7 +48,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
     """Set up switches."""
     await async_add_entities_retry(
-        hass, async_add_entities, hass.data[TPLINK_DOMAIN][CONF_LIGHT], add_entity
+        hass, async_add_entities, hass.data[TPLINK_DOMAIN][CONF_LIGHT], async_add_entity
     )
 
     return True
