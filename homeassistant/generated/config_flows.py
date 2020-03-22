@@ -24,6 +24,7 @@ FLOWS = [
     "deconz",
     "dialogflow",
     "directv",
+    "doorbird",
     "dynalite",
     "ecobee",
     "elgato",

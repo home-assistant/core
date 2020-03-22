@@ -179,6 +179,9 @@ directpy==0.7
 # homeassistant.components.updater
 distro==1.4.0
 
+# homeassistant.components.doorbird
+doorbirdpy==2.0.8
+
 # homeassistant.components.dsmr
 dsmr_parser==0.18
 
