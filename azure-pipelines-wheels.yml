@@ -71,9 +71,5 @@ jobs:
           sed -i "s|# py_noaa|py_noaa|g" ${requirement_file}
           sed -i "s|# bme680|bme680|g" ${requirement_file}
           sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
-
-          if [[ "$(buildArch)" =~ arm ]]; then
-            sed -i "s|# VL53L1X|VL53L1X|g" ${requirement_file}
-          fi
         done
       displayName: 'Prepare requirements files for Hass.io'
