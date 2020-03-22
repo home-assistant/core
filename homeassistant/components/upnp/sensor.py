@@ -54,7 +54,7 @@ SENSOR_TYPES = {
 
 KIBIBYTE = 1024
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(seconds=30)
 
 
 async def async_setup_platform(
@@ -83,7 +83,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
         _LOGGER,
         name=device.name,
         update_method=device.async_get_traffic_data,
-        update_interval=timedelta(seconds=MIN_TIME_BETWEEN_UPDATES.seconds),
+        update_interval=timedelta(seconds=SCAN_INTERVAL.seconds),
     )
     await coordinator.async_refresh()
 
