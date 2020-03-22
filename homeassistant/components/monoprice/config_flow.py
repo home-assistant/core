@@ -96,6 +96,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return MonopriceOptionsFlowHandler(config_entry)
 
 
+@core.callback
+def _key_for_source(index, source, previous_sources):
+    if str(index) in previous_sources:
+        key = vol.Optional(source, default=previous_sources[str(index)])
+    else:
+        key = vol.Optional(source)
+
+    return key
+
+
 class MonopriceOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a Monoprice options flow."""
 
@@ -106,16 +116,11 @@ class MonopriceOptionsFlowHandler(config_entries.OptionsFlow):
     @core.callback
     def _previous_sources(self):
         if CONF_SOURCES in self.config_entry.options:
-            return self.config_entry.options[CONF_SOURCES]
+            previous = self.config_entry.options[CONF_SOURCES]
         else:
-            return self.config_entry.data[CONF_SOURCES]
+            previous = self.config_entry.data[CONF_SOURCES]
 
-    @core.callback
-    def _key_for_source(self, index, source, previous_sources):
-        if str(index) in previous_sources:
-            return vol.Optional(source, default=previous_sources[str(index)])
-        else:
-            return vol.Optional(source)
+        return previous
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
@@ -127,7 +132,7 @@ class MonopriceOptionsFlowHandler(config_entries.OptionsFlow):
         previous_sources = self._previous_sources()
 
         options = {
-            self._key_for_source(idx + 1, source, previous_sources): str
+            _key_for_source(idx + 1, source, previous_sources): str
             for idx, source in enumerate(SOURCES)
         }
 

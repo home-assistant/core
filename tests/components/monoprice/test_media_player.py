@@ -271,7 +271,6 @@ async def test_restore_without_snapshort(hass):
 
 async def test_update(hass):
     """Test updating values from monoprice."""
-    """Test snapshot save/restore service calls."""
     monoprice = MockMonoprice()
     await _setup_monoprice(hass, monoprice)
 
