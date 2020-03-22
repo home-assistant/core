@@ -1,5 +1,5 @@
 """Sensor platform for hvv."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
 from aiohttp import ClientConnectorError
@@ -17,6 +17,7 @@ from homeassistant.const import (
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+from homeassistant.util.dt import utcnow
 
 from .const import ATTRIBUTION, DOMAIN, MANUFACTURER
 
@@ -80,7 +81,7 @@ class HVVDepartureSensor(Entity):
     async def async_update(self, **kwargs):
         """Update the sensor."""
 
-        departure_time = datetime.now() + timedelta(
+        departure_time = utcnow() + timedelta(
             minutes=self.config_entry.options.get("offset", 0)
         )
 
