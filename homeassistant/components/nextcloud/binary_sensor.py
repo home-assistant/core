@@ -3,15 +3,15 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
-from . import BINARY_SENSORS
+from . import BINARY_SENSORS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "nextcloud"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
     """Set up the Nextcloud sensors."""
+    if not discovery_info:
+        return
     binary_sensors = []
     for name in hass.data[DOMAIN]:
         if name in BINARY_SENSORS:

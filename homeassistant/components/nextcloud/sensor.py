@@ -3,18 +3,18 @@ import logging
 
 from homeassistant.helpers.entity import Entity
 
-from . import BINARY_SENSORS
+from . import DOMAIN, SENSORS
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "nextcloud"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
     """Set up the Nextcloud sensors."""
+    if not discovery_info:
+        return
     sensors = []
     for name in hass.data[DOMAIN]:
-        if name not in BINARY_SENSORS:
+        if name in SENSORS:
             sensors.append(NextcloudSensor(name))
     add_entities(sensors, True)
 
