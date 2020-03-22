@@ -69,6 +69,7 @@ FLOWS = [
     "mikrotik",
     "minecraft_server",
     "mobile_app",
+    "monoprice",
     "mqtt",
     "myq",
     "neato",
