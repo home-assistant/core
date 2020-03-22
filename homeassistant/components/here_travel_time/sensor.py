@@ -338,56 +338,6 @@ class HERETravelTimeSensor(Entity):
             return self._get_location_from_attributes(entity)
 
         # Check if device is in a zone
-        zone_entity = self.hass.states.get("zone.{}".format(entity.state))
-        if location.has_location(zone_entity):
-            _LOGGER.debug(
-                "%s is in %s, getting zone location", entity_id, zone_entity.entity_id
-            )
-            return self._get_location_from_attributes(zone_entity)
-
-        # Check if state is valid coordinate set
-        if self._entity_state_is_valid_coordinate_set(entity.state):
-            return entity.state
-
-        _LOGGER.error(
-            "The state of %s is not a valid set of coordinates: %s",
-            entity_id,
-            entity.state,
-        )
-        return None
-
-    @staticmethod
-    def _entity_state_is_valid_coordinate_set(state: str) -> bool:
-        """Check that the given string is a valid set of coordinates."""
-        schema = vol.Schema(cv.gps)
-        try:
-            coordinates = state.split(",")
-            schema(coordinates)
-            return True
-        except (vol.MultipleInvalid):
-            return False
-
-    @staticmethod
-    def _get_location_from_attributes(entity: State) -> str:
-        """Get the lat/long string from an entities attributes."""
-        attr = entity.attributes
-        return "{},{}".format(attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
-
-    async def _get_location_from_entity(
-        self, entity_id: str, recursion_history: Optional[list] = None
-    ) -> Optional[str]:
-        """Get the location from the entity state or attributes."""
-        entity = self.hass.states.get(entity_id)
-
-        if entity is None:
-            _LOGGER.error("Unable to find entity %s", entity_id)
-            return None
-
-        # Check if the entity has location attributes
-        if location.has_location(entity):
-            return self._get_location_from_attributes(entity)
-
-        # Check if device is in a zone
         zone_entity = self.hass.states.get(f"zone.{entity.state}")
         if location.has_location(zone_entity):
             _LOGGER.debug(
@@ -398,22 +348,6 @@ class HERETravelTimeSensor(Entity):
         # Check if state is valid coordinate set
         if self._entity_state_is_valid_coordinate_set(entity.state):
             return entity.state
-
-        # Resolve nested entity
-        if recursion_history is None:
-            recursion_history = []
-        recursion_history.append(entity_id)
-        if entity.state in recursion_history:
-            _LOGGER.error(
-                "Circular Reference detected. The state of %s has already been checked.",
-                entity.state,
-            )
-            return None
-        _LOGGER.debug("Getting nested entity for state: %s", entity.state)
-        nested_entity = self.hass.states.get(entity.state)
-        if nested_entity is not None:
-            _LOGGER.debug("Resolving nested entity_id: %s", entity.state)
-            return await self._get_location_from_entity(entity.state, recursion_history)
 
         _LOGGER.error(
             "The state of %s is not a valid set of coordinates: %s",
