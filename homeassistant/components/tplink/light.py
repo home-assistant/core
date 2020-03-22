@@ -209,7 +209,6 @@ class TPLinkSmartBulb(Light):
         """Return True if device is on."""
         return self._light_state.state
 
-
     def update(self):
         """Update the TP-Link Bulb's state."""
         # State is currently being set, ignore.
