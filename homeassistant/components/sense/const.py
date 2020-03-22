@@ -1,4 +1,9 @@
 """Constants for monitoring a Sense energy sensor."""
+
+import asyncio
+
+from sense_energy import SenseAPITimeoutException
+
 DOMAIN = "sense"
 DEFAULT_TIMEOUT = 10
 ACTIVE_UPDATE_RATE = 60
@@ -17,6 +22,8 @@ PRODUCTION_NAME = "Production"
 PRODUCTION_ID = "production"
 
 ICON = "mdi:flash"
+
+SENSE_TIMEOUT_EXCEPTIONS = (asyncio.TimeoutError, SenseAPITimeoutException)
 
 MDI_ICONS = {
     "ac": "air-conditioner",
