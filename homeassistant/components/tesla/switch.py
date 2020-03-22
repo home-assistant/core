@@ -121,11 +121,6 @@ class UpdateSwitch(TeslaDevice, SwitchDevice):
 class SentryModeSwitch(TeslaDevice, SwitchDevice):
     """Representation of a Tesla sentry mode switch."""
 
-    def __init__(self, tesla_device, controller, config_entry):
-        """Initialise the switch."""
-        self._state = None
-        super().__init__(tesla_device, controller, config_entry)
-
     async def async_turn_on(self, **kwargs):
         """Send the on command."""
         _LOGGER.debug("Enable sentry mode: %s", self._name)
@@ -139,10 +134,14 @@ class SentryModeSwitch(TeslaDevice, SwitchDevice):
     @property
     def is_on(self):
         """Get whether the switch is in on state."""
-        return self._state
+        return self.tesla_device.is_on()
+
+    @property
+    def available(self):
+        """Indicate if Home Assistant is able to read the state and control the underlying device."""
+        return self.tesla_device.available()
 
     async def async_update(self):
         """Update the state of the switch."""
         _LOGGER.debug("Updating state for: %s", self._name)
         await super().async_update()
-        self._state = bool(self.tesla_device.get_value())
