@@ -693,7 +693,7 @@ sunwatcher==0.2.1
 tellduslive==0.10.10
 
 # homeassistant.components.tesla
-teslajsonpy==0.5.1
+teslajsonpy==0.6.0
 
 # homeassistant.components.toon
 toonapilib==3.2.4
