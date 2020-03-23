@@ -24,6 +24,7 @@ FLOWS = [
     "coronavirus",
     "daikin",
     "deconz",
+    "devolo_home_control",
     "dialogflow",
     "directv",
     "doorbird",
