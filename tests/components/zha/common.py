@@ -157,6 +157,19 @@ async def find_entity_id(domain, zha_device, hass):
     return None
 
 
+def async_find_group_entity_id(hass, domain, group):
+    """Find the group entity id under test."""
+    entity_id = (
+        f"{domain}.{group.name.lower().replace(' ','_')}_group_0x{group.group_id:04x}"
+    )
+
+    entity_ids = hass.states.async_entity_ids(domain)
+
+    if entity_id in entity_ids:
+        return entity_id
+    return None
+
+
 async def async_enable_traffic(hass, zha_devices):
     """Allow traffic to flow through the gateway and the zha device."""
     for zha_device in zha_devices:

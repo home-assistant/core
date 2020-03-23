@@ -1,4 +1,6 @@
 """Test ZHA Gateway."""
+import logging
+
 import pytest
 import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.general as general
@@ -6,10 +8,11 @@ import zigpy.zcl.clusters.lighting as lighting
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 
-from .common import async_enable_traffic, get_zha_gateway
+from .common import async_enable_traffic, async_find_group_entity_id, get_zha_gateway
 
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
 IEEE_GROUPABLE_DEVICE2 = "02:2d:6f:00:0a:90:69:e8"
+_LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture
@@ -134,4 +137,5 @@ async def test_create_group(hass, device_light_1, device_light_2, coordinator):
     for member in zha_group.members:
         assert member.ieee in member_ieee_addresses
 
-    assert hass.states.get("light.test_group_group_0x0001") is not None
+    entity_id = async_find_group_entity_id(hass, LIGHT_DOMAIN, zha_group)
+    assert hass.states.get(entity_id) is not None
