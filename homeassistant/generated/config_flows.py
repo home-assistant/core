@@ -77,6 +77,7 @@ FLOWS = [
     "netatmo",
     "nexia",
     "notion",
+    "nuheat",
     "opentherm_gw",
     "openuv",
     "owntracks",
