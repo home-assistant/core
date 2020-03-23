@@ -44,13 +44,6 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
-SERVICE_EFFECT_SCHEMA = {
-    vol.Optional(ATTR_EFFECT): vol.Any(cv.positive_int, cv.string),
-    vol.Optional(ATTR_INTENSITY): vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
-    vol.Optional(ATTR_REVERSE): cv.boolean,
-    vol.Optional(ATTR_SPEED): vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistantType,
@@ -63,7 +56,18 @@ async def async_setup_entry(
     platform = entity_platform.current_platform.get()
 
     platform.async_register_entity_service(
-        SERVICE_EFFECT, SERVICE_EFFECT_SCHEMA, "async_effect",
+        SERVICE_EFFECT,
+        {
+            vol.Optional(ATTR_EFFECT): vol.Any(cv.positive_int, cv.string),
+            vol.Optional(ATTR_INTENSITY): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=255)
+            ),
+            vol.Optional(ATTR_REVERSE): cv.boolean,
+            vol.Optional(ATTR_SPEED): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=255)
+            ),
+        },
+        "async_effect",
     )
 
     lights = [
