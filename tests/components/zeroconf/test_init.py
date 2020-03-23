@@ -62,7 +62,10 @@ async def test_setup(hass, mock_zeroconf):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
 
     assert len(mock_service_browser.mock_calls) == len(zc_gen.ZEROCONF)
-    assert len(mock_config_flow.mock_calls) == len(zc_gen.ZEROCONF) * 2
+    expected_flow_calls = 0
+    for matching_components in zc_gen.ZEROCONF.values():
+        expected_flow_calls += len(matching_components)
+    assert len(mock_config_flow.mock_calls) == expected_flow_calls * 2
 
 
 async def test_homekit_match_partial(hass, mock_zeroconf):
