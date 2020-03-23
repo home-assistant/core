@@ -336,8 +336,8 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateDevice):
         if not self._has_relative_humidity:
             return data
 
-        min_humidity = percent_conv(self._thermostat.get_humidity_setpoint_limits()[0],)
-        max_humidity = percent_conv(self._thermostat.get_humidity_setpoint_limits()[1],)
+        min_humidity = percent_conv(self._thermostat.get_humidity_setpoint_limits()[0])
+        max_humidity = percent_conv(self._thermostat.get_humidity_setpoint_limits()[1])
         data.update(
             {
                 ATTR_MIN_HUMIDITY: min_humidity,
