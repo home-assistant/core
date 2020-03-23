@@ -616,6 +616,7 @@ class ZHAGateway:
         if entity_domain is not None:
             discovery.GROUP_PROBE.discover_group_entities(group)
             async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES)
+        self.zha_storage.async_update_group(group)
         return group
 
     async def shutdown(self):
