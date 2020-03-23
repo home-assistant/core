@@ -871,6 +871,9 @@ async def test_platforms_sharing_services(hass):
         entities.append(entity)
 
     entity_platform1.async_register_entity_service("hello", {}, handle_service)
+    entity_platform2.async_register_entity_service(
+        "hello", {}, Mock(side_effect=AssertionError("Should not be called"))
+    )
 
     await hass.services.async_call(
         "mock_platform", "hello", {"entity_id": "all"}, blocking=True
@@ -879,6 +882,3 @@ async def test_platforms_sharing_services(hass):
     assert len(entities) == 2
     assert entity1 in entities
     assert entity2 in entities
-
-    # Make sure this doesn't riase
-    entity_platform2.async_register_entity_service("hello", {}, handle_service)
