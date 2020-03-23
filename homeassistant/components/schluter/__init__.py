@@ -85,8 +85,9 @@ async def async_setup(hass, config):
 
 
 class SchluterPlatformData:
-    """Data object for passing necessary objects to platform"""
+    """Data object for passing necessary objects to platform."""
 
     def __init__(self, session_id, api):
+        """Initialize platform data object."""
         self.session_id = session_id
         self.api = api
