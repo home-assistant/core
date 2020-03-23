@@ -66,7 +66,9 @@ async def async_setup_entry(
 
     for location in dtv.device.locations:
         entities.append(
-            DIRECTVMediaPlayer(dtv=dtv, name=str.title(location.name), address=location.address)
+            DIRECTVMediaPlayer(
+                dtv=dtv, name=str.title(location.name), address=location.address,
+            )
         )
 
     async_add_entities(entities, True)
