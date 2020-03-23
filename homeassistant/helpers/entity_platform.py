@@ -465,12 +465,12 @@ class EntityPlatform:
             self._async_unsub_polling()
             self._async_unsub_polling = None
 
-    @callback
-    def async_destroy(self) -> None:
+    async def async_destroy(self) -> None:
         """Destroy an entity platform.
 
         Call before discarding the object.
         """
+        await self.async_reset()
         self.hass.data[DATA_ENTITY_PLATFORM][self.platform_name].remove(self)
 
     async def async_remove_entity(self, entity_id: str) -> None:
