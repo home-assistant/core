@@ -117,8 +117,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         status = await hass.async_add_executor_job(device.ready)
         info = await hass.async_add_executor_job(device.info)
-    except urllib.error.HTTPError:
-        if urllib.error.HTTPError.code == 401:
+    except urllib.error.HTTPError as err:
+        if err.code == 401:
             _LOGGER.error(
                 "Authorization rejected by DoorBird for %s@%s", username, device_ip
             )
