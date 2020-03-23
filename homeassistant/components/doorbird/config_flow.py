@@ -88,7 +88,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Prepare configuration for a discovered doorbird device."""
         macaddress = discovery_info["properties"]["macaddress"]
 
-        if macaddress[:6] not in DOORBIRD_OUI:
+        if macaddress[:6] != DOORBIRD_OUI:
             return self.async_abort(reason="not_doorbird_device")
 
         await self.async_set_unique_id(macaddress)
