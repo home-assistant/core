@@ -22,7 +22,7 @@ CONF_TCP_TIMEOUT = "tcp_timeout"
 DEFAULT_BUFFER_SIZE = 1024
 DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "paloopback"
-DEFAULT_PORT = 4713
+DEFAULT_PORT = 4712
 DEFAULT_TCP_TIMEOUT = 3
 
 IGNORED_SWITCH_WARN = "Switch is already in the desired state. Ignoring."

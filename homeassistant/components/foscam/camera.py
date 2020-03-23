@@ -190,12 +190,7 @@ class HassFoscamCamera(Camera):
     async def stream_source(self):
         """Return the stream source."""
         if self._rtsp_port:
-            return "rtsp://{}:{}@{}:{}/videoMain".format(
-                self._username,
-                self._password,
-                self._foscam_session.host,
-                self._rtsp_port,
-            )
+            return f"rtsp://{self._username}:{self._password}@{self._foscam_session.host}:{self._rtsp_port}/videoMain"
         return None
 
     @property

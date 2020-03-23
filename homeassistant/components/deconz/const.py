@@ -1,7 +1,7 @@
 """Constants for the deCONZ component."""
 import logging
 
-_LOGGER = logging.getLogger(__package__)
+LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "deconz"
 
@@ -31,13 +31,6 @@ NEW_LIGHT = "lights"
 NEW_SCENE = "scenes"
 NEW_SENSOR = "sensors"
 
-NEW_DEVICE = {
-    NEW_GROUP: "deconz_new_group_{}",
-    NEW_LIGHT: "deconz_new_light_{}",
-    NEW_SCENE: "deconz_new_scene_{}",
-    NEW_SENSOR: "deconz_new_sensor_{}",
-}
-
 ATTR_DARK = "dark"
 ATTR_OFFSET = "offset"
 ATTR_ON = "on"
@@ -47,7 +40,7 @@ DAMPERS = ["Level controllable output"]
 WINDOW_COVERS = ["Window covering device"]
 COVER_TYPES = DAMPERS + WINDOW_COVERS
 
-POWER_PLUGS = ["On/Off plug-in unit", "Smart plug"]
+POWER_PLUGS = ["On/Off light", "On/Off plug-in unit", "Smart plug"]
 SIRENS = ["Warning device"]
 SWITCH_TYPES = POWER_PLUGS + SIRENS
 

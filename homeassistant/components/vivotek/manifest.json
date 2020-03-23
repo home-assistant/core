@@ -1,6 +1,6 @@
 {
   "domain": "vivotek",
-  "name": "Vivotek",
+  "name": "VIVOTEK",
   "documentation": "https://www.home-assistant.io/integrations/vivotek",
   "requirements": ["libpyvivotek==0.4.0"],
   "dependencies": [],

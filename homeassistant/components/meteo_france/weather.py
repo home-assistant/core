@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+from meteofrance.client import meteofranceClient
+
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_TEMP,
@@ -9,29 +11,30 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
     WeatherEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS
+from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
 
-from .const import ATTRIBUTION, CONDITION_CLASSES, CONF_CITY, DATA_METEO_FRANCE
+from .const import ATTRIBUTION, CONDITION_CLASSES, CONF_CITY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
     """Set up the Meteo-France weather platform."""
-    if discovery_info is None:
-        return
+    city = entry.data[CONF_CITY]
+    client = hass.data[DOMAIN][city]
 
-    city = discovery_info[CONF_CITY]
-    client = hass.data[DATA_METEO_FRANCE][city]
-
-    add_entities([MeteoFranceWeather(client)], True)
+    async_add_entities([MeteoFranceWeather(client)], True)
 
 
 class MeteoFranceWeather(WeatherEntity):
     """Representation of a weather condition."""
 
-    def __init__(self, client):
+    def __init__(self, client: meteofranceClient):
         """Initialise the platform with a data instance and station name."""
         self._client = client
         self._data = {}
@@ -45,6 +48,11 @@ class MeteoFranceWeather(WeatherEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._data["name"]
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return self.name
 
     @property
     def condition(self):

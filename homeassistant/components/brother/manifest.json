@@ -4,6 +4,8 @@
   "documentation": "https://www.home-assistant.io/integrations/brother",
   "dependencies": [],
   "codeowners": ["@bieniu"],
-  "requirements": ["brother==0.1.4"],
-  "config_flow": true
+  "requirements": ["brother==0.1.9"],
+  "zeroconf": ["_printer._tcp.local."],
+  "config_flow": true,
+  "quality_scale": "platinum"
 }

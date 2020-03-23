@@ -201,7 +201,7 @@ class Light(HomeAccessory):
                     # But if it is set to 0, HomeKit will update the brightness to 100 as
                     # it thinks 0 is off.
                     #
-                    # Therefore, if the the brighness is 0 and the device is still on,
+                    # Therefore, if the the brightness is 0 and the device is still on,
                     # the brightness is mapped to 1 otherwise the update is ignored in
                     # order to avoid this incorrect behavior.
                     if brightness == 0:

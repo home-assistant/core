@@ -1,12 +1,11 @@
 {
     "config": {
         "abort": {
-            "username_exists": "Konto jest ju\u017c skonfigurowane"
+            "already_configured": "Konto jest ju\u017c skonfigurowane."
         },
         "error": {
             "login": "B\u0142\u0105d logowania: sprawd\u017a adres e-mail i has\u0142o",
             "send_verification_code": "Nie uda\u0142o si\u0119 wys\u0142a\u0107 kodu weryfikacyjnego",
-            "username_exists": "Konto jest ju\u017c skonfigurowane",
             "validate_verification_code": "Nie uda\u0142o si\u0119 zweryfikowa\u0107 kodu weryfikacyjnego, wybierz urz\u0105dzenie zaufane i ponownie rozpocznij weryfikacj\u0119"
         },
         "step": {

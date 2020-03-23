@@ -475,7 +475,7 @@ async def test_track_sunrise_update_location(hass):
     with patch("homeassistant.util.dt.utcnow", return_value=utc_now):
         async_track_sunrise(hass, lambda: runs.append(1))
 
-    # Mimick sunrise
+    # Mimic sunrise
     _send_time_changed(hass, next_rising)
     await hass.async_block_till_done()
     assert len(runs) == 1
@@ -485,7 +485,7 @@ async def test_track_sunrise_update_location(hass):
         await hass.config.async_update(latitude=40.755931, longitude=-73.984606)
         await hass.async_block_till_done()
 
-    # Mimick sunrise
+    # Mimic sunrise
     _send_time_changed(hass, next_rising)
     await hass.async_block_till_done()
     # Did not increase
@@ -501,7 +501,7 @@ async def test_track_sunrise_update_location(hass):
             break
         mod += 1
 
-    # Mimick sunrise at new location
+    # Mimic sunrise at new location
     _send_time_changed(hass, next_rising)
     await hass.async_block_till_done()
     assert len(runs) == 2

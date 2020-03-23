@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
+    ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     CONF_ACCESS_TOKEN,
     CONF_PASSWORD,
@@ -26,7 +27,16 @@ from .config_flow import (
     configured_instances,
     validate_input,
 )
-from .const import DATA_LISTENER, DOMAIN, ICONS, TESLA_COMPONENTS
+from .const import (
+    CONF_WAKE_ON_START,
+    DATA_LISTENER,
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_WAKE_ON_START,
+    DOMAIN,
+    ICONS,
+    MIN_SCAN_INTERVAL,
+    TESLA_COMPONENTS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,9 +46,9 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_SCAN_INTERVAL, default=300): vol.All(
-                    cv.positive_int, vol.Clamp(min=300)
-                ),
+                vol.Optional(
+                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                ): vol.All(cv.positive_int, vol.Clamp(min=MIN_SCAN_INTERVAL)),
             }
         )
     },
@@ -63,7 +73,10 @@ async def async_setup(hass, base_config):
 
     def _update_entry(email, data=None, options=None):
         data = data or {}
-        options = options or {CONF_SCAN_INTERVAL: 300}
+        options = options or {
+            CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+            CONF_WAKE_ON_START: DEFAULT_WAKE_ON_START,
+        }
         for entry in hass.config_entries.async_entries(DOMAIN):
             if email != entry.title:
                 continue
@@ -118,9 +131,16 @@ async def async_setup_entry(hass, config_entry):
         controller = TeslaAPI(
             websession,
             refresh_token=config[CONF_TOKEN],
-            update_interval=config_entry.options.get(CONF_SCAN_INTERVAL, 300),
+            access_token=config[CONF_ACCESS_TOKEN],
+            update_interval=config_entry.options.get(
+                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+            ),
         )
-        (refresh_token, access_token) = await controller.connect()
+        (refresh_token, access_token) = await controller.connect(
+            wake_if_asleep=config_entry.options.get(
+                CONF_WAKE_ON_START, DEFAULT_WAKE_ON_START
+            )
+        )
     except TeslaException as ex:
         _LOGGER.error("Unable to communicate with Tesla API: %s", ex.message)
         return False
@@ -214,6 +234,7 @@ class TeslaDevice(Entity):
         attr = self._attributes
         if self.tesla_device.has_battery():
             attr[ATTR_BATTERY_LEVEL] = self.tesla_device.battery_level()
+            attr[ATTR_BATTERY_CHARGING] = self.tesla_device.battery_charging()
         return attr
 
     @property

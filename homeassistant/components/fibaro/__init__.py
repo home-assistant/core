@@ -247,8 +247,8 @@ class FibaroController:
                 room_name = self._room_map[device.roomID].name
             device.room_name = room_name
             device.friendly_name = f"{room_name} {device.name}"
-            device.ha_id = "scene_{}_{}_{}".format(
-                slugify(room_name), slugify(device.name), device.id
+            device.ha_id = (
+                f"scene_{slugify(room_name)}_{slugify(device.name)}_{device.id}"
             )
             device.unique_id_str = f"{self.hub_serial}.scene.{device.id}"
             self._scene_map[device.id] = device
@@ -269,8 +269,8 @@ class FibaroController:
                     room_name = self._room_map[device.roomID].name
                 device.room_name = room_name
                 device.friendly_name = f"{room_name} {device.name}"
-                device.ha_id = "{}_{}_{}".format(
-                    slugify(room_name), slugify(device.name), device.id
+                device.ha_id = (
+                    f"{slugify(room_name)}_{slugify(device.name)}_{device.id}"
                 )
                 if (
                     device.enabled

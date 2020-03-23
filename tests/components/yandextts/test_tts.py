@@ -67,7 +67,9 @@ class TestTTSYandexPlatform:
             setup_component(self.hass, tts.DOMAIN, config)
 
         self.hass.services.call(
-            tts.DOMAIN, "yandextts_say", {tts.ATTR_MESSAGE: "HomeAssistant"}
+            tts.DOMAIN,
+            "yandextts_say",
+            {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
         )
         self.hass.block_till_done()
 
@@ -103,7 +105,9 @@ class TestTTSYandexPlatform:
             setup_component(self.hass, tts.DOMAIN, config)
 
         self.hass.services.call(
-            tts.DOMAIN, "yandextts_say", {tts.ATTR_MESSAGE: "HomeAssistant"}
+            tts.DOMAIN,
+            "yandextts_say",
+            {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
         )
         self.hass.block_till_done()
 
@@ -135,7 +139,11 @@ class TestTTSYandexPlatform:
         self.hass.services.call(
             tts.DOMAIN,
             "yandextts_say",
-            {tts.ATTR_MESSAGE: "HomeAssistant", tts.ATTR_LANGUAGE: "ru-RU"},
+            {
+                "entity_id": "media_player.something",
+                tts.ATTR_MESSAGE: "HomeAssistant",
+                tts.ATTR_LANGUAGE: "ru-RU",
+            },
         )
         self.hass.block_till_done()
 
@@ -165,7 +173,9 @@ class TestTTSYandexPlatform:
             setup_component(self.hass, tts.DOMAIN, config)
 
         self.hass.services.call(
-            tts.DOMAIN, "yandextts_say", {tts.ATTR_MESSAGE: "HomeAssistant"}
+            tts.DOMAIN,
+            "yandextts_say",
+            {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
         )
         self.hass.block_till_done()
 
@@ -195,7 +205,9 @@ class TestTTSYandexPlatform:
             setup_component(self.hass, tts.DOMAIN, config)
 
         self.hass.services.call(
-            tts.DOMAIN, "yandextts_say", {tts.ATTR_MESSAGE: "HomeAssistant"}
+            tts.DOMAIN,
+            "yandextts_say",
+            {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
         )
         self.hass.block_till_done()
 
@@ -230,7 +242,9 @@ class TestTTSYandexPlatform:
             setup_component(self.hass, tts.DOMAIN, config)
 
         self.hass.services.call(
-            tts.DOMAIN, "yandextts_say", {tts.ATTR_MESSAGE: "HomeAssistant"}
+            tts.DOMAIN,
+            "yandextts_say",
+            {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
         )
         self.hass.block_till_done()
 
@@ -266,7 +280,9 @@ class TestTTSYandexPlatform:
             setup_component(self.hass, tts.DOMAIN, config)
 
         self.hass.services.call(
-            tts.DOMAIN, "yandextts_say", {tts.ATTR_MESSAGE: "HomeAssistant"}
+            tts.DOMAIN,
+            "yandextts_say",
+            {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
         )
         self.hass.block_till_done()
 
@@ -298,7 +314,9 @@ class TestTTSYandexPlatform:
             setup_component(self.hass, tts.DOMAIN, config)
 
         self.hass.services.call(
-            tts.DOMAIN, "yandextts_say", {tts.ATTR_MESSAGE: "HomeAssistant"}
+            tts.DOMAIN,
+            "yandextts_say",
+            {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
         )
         self.hass.block_till_done()
 
@@ -330,7 +348,9 @@ class TestTTSYandexPlatform:
             setup_component(self.hass, tts.DOMAIN, config)
 
         self.hass.services.call(
-            tts.DOMAIN, "yandextts_say", {tts.ATTR_MESSAGE: "HomeAssistant"}
+            tts.DOMAIN,
+            "yandextts_say",
+            {"entity_id": "media_player.something", tts.ATTR_MESSAGE: "HomeAssistant"},
         )
         self.hass.block_till_done()
 
@@ -362,6 +382,7 @@ class TestTTSYandexPlatform:
             tts.DOMAIN,
             "yandextts_say",
             {
+                "entity_id": "media_player.something",
                 tts.ATTR_MESSAGE: "HomeAssistant",
                 "options": {"emotion": "evil", "speed": 2},
             },

@@ -10,6 +10,10 @@
         },
         "flow_title": "Br\u00e1na deCONZ ZigBee ({host})",
         "step": {
+            "hassio_confirm": {
+                "description": "Chcete nakonfigurovat slu\u017ebu Home Assistant pro p\u0159ipojen\u00ed k deCONZ br\u00e1n\u011b pomoc\u00ed hass.io {addon}?",
+                "title": "deCONZ Zigbee br\u00e1na prost\u0159ednictv\u00edm dopl\u0148ku Hass.io"
+            },
             "init": {
                 "data": {
                     "host": "Hostitel",

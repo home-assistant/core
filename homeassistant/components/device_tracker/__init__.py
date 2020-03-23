@@ -25,12 +25,10 @@ from .const import (
     ATTR_LOCATION_NAME,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
-    CONF_AWAY_HIDE,
     CONF_CONSIDER_HOME,
     CONF_NEW_DEVICE_DEFAULTS,
     CONF_SCAN_INTERVAL,
     CONF_TRACK_NEW,
-    DEFAULT_AWAY_HIDE,
     DEFAULT_CONSIDER_HOME,
     DEFAULT_TRACK_NEW,
     DOMAIN,
@@ -53,15 +51,7 @@ SOURCE_TYPES = (
 
 NEW_DEVICE_DEFAULTS_SCHEMA = vol.Any(
     None,
-    vol.All(
-        cv.deprecated(CONF_AWAY_HIDE, invalidation_version="0.107.0"),
-        vol.Schema(
-            {
-                vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean,
-                vol.Optional(CONF_AWAY_HIDE, default=DEFAULT_AWAY_HIDE): cv.boolean,
-            }
-        ),
-    ),
+    vol.Schema({vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean}),
 )
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {

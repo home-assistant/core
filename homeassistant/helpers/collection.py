@@ -31,11 +31,11 @@ ChangeListener = Callable[
         str,
         # Item ID
         str,
-        # New config (None if removed)
-        Optional[dict],
+        # New or removed config
+        dict,
     ],
     Awaitable[None],
-]  # pylint: disable=invalid-name
+]
 
 
 class CollectionError(HomeAssistantError):
@@ -104,9 +104,7 @@ class ObservableCollection(ABC):
         """
         self.listeners.append(listener)
 
-    async def notify_change(
-        self, change_type: str, item_id: str, item: Optional[dict]
-    ) -> None:
+    async def notify_change(self, change_type: str, item_id: str, item: dict) -> None:
         """Notify listeners of a change."""
         self.logger.debug("%s %s: %s", change_type, item_id, item)
         for listener in self.listeners:
@@ -114,7 +112,7 @@ class ObservableCollection(ABC):
 
 
 class YamlCollection(ObservableCollection):
-    """Offer a fake CRUD interface on top of static YAML."""
+    """Offer a collection based on static data."""
 
     async def async_load(self, data: List[dict]) -> None:
         """Load the YAML collection. Overrides existing data."""
@@ -133,11 +131,11 @@ class YamlCollection(ObservableCollection):
                 event = CHANGE_ADDED
 
             self.data[item_id] = item
-            await self.notify_change(event, item[CONF_ID], item)
+            await self.notify_change(event, item_id, item)
 
         for item_id in old_ids:
-            self.data.pop(item_id)
-            await self.notify_change(CHANGE_REMOVED, item_id, None)
+
+            await self.notify_change(CHANGE_REMOVED, item_id, self.data.pop(item_id))
 
 
 class StorageCollection(ObservableCollection):
@@ -158,9 +156,13 @@ class StorageCollection(ObservableCollection):
         """Home Assistant object."""
         return self.store.hass
 
+    async def _async_load_data(self) -> Optional[dict]:
+        """Load the data."""
+        return cast(Optional[dict], await self.store.async_load())
+
     async def async_load(self) -> None:
         """Load the storage Manager."""
-        raw_storage = cast(Optional[dict], await self.store.async_load())
+        raw_storage = await self._async_load_data()
 
         if raw_storage is None:
             raw_storage = {"items": []}
@@ -215,10 +217,10 @@ class StorageCollection(ObservableCollection):
         if item_id not in self.data:
             raise ItemNotFound(item_id)
 
-        self.data.pop(item_id)
+        item = self.data.pop(item_id)
         self._async_schedule_save()
 
-        await self.notify_change(CHANGE_REMOVED, item_id, None)
+        await self.notify_change(CHANGE_REMOVED, item_id, item)
 
     @callback
     def _async_schedule_save(self) -> None:
@@ -231,6 +233,26 @@ class StorageCollection(ObservableCollection):
         return {"items": list(self.data.values())}
 
 
+class IDLessCollection(ObservableCollection):
+    """A collection without IDs."""
+
+    counter = 0
+
+    async def async_load(self, data: List[dict]) -> None:
+        """Load the collection. Overrides existing data."""
+        for item_id, item in list(self.data.items()):
+            await self.notify_change(CHANGE_REMOVED, item_id, item)
+
+        self.data.clear()
+
+        for item in data:
+            self.counter += 1
+            item_id = f"fakeid-{self.counter}"
+
+            self.data[item_id] = item
+            await self.notify_change(CHANGE_ADDED, item_id, item)
+
+
 @callback
 def attach_entity_component_collection(
     entity_component: EntityComponent,
@@ -240,12 +262,10 @@ def attach_entity_component_collection(
     """Map a collection to an entity component."""
     entities = {}
 
-    async def _collection_changed(
-        change_type: str, item_id: str, config: Optional[dict]
-    ) -> None:
+    async def _collection_changed(change_type: str, item_id: str, config: dict) -> None:
         """Handle a collection change."""
         if change_type == CHANGE_ADDED:
-            entity = create_entity(cast(dict, config))
+            entity = create_entity(config)
             await entity_component.async_add_entities([entity])
             entities[item_id] = entity
             return
@@ -270,9 +290,7 @@ def attach_entity_registry_cleaner(
 ) -> None:
     """Attach a listener to clean up entity registry on collection changes."""
 
-    async def _collection_changed(
-        change_type: str, item_id: str, config: Optional[Dict]
-    ) -> None:
+    async def _collection_changed(change_type: str, item_id: str, config: Dict) -> None:
         """Handle a collection change: clean up entity registry on removals."""
         if change_type != CHANGE_REMOVED:
             return

@@ -1,6 +1,7 @@
 """Asuswrt status sensors."""
 import logging
 
+from homeassistant.const import DATA_GIGABYTES, DATA_RATE_MEGABITS_PER_SECOND
 from homeassistant.helpers.entity import Entity
 
 from . import DATA_ASUSWRT
@@ -61,7 +62,7 @@ class AsuswrtRXSensor(AsuswrtSensor):
     """Representation of a asuswrt download speed sensor."""
 
     _name = "Asuswrt Download Speed"
-    _unit = "Mbit/s"
+    _unit = DATA_RATE_MEGABITS_PER_SECOND
 
     @property
     def unit_of_measurement(self):
@@ -79,7 +80,7 @@ class AsuswrtTXSensor(AsuswrtSensor):
     """Representation of a asuswrt upload speed sensor."""
 
     _name = "Asuswrt Upload Speed"
-    _unit = "Mbit/s"
+    _unit = DATA_RATE_MEGABITS_PER_SECOND
 
     @property
     def unit_of_measurement(self):
@@ -97,7 +98,7 @@ class AsuswrtTotalRXSensor(AsuswrtSensor):
     """Representation of a asuswrt total download sensor."""
 
     _name = "Asuswrt Download"
-    _unit = "Gigabyte"
+    _unit = DATA_GIGABYTES
 
     @property
     def unit_of_measurement(self):
@@ -115,7 +116,7 @@ class AsuswrtTotalTXSensor(AsuswrtSensor):
     """Representation of a asuswrt total upload sensor."""
 
     _name = "Asuswrt Upload"
-    _unit = "Gigabyte"
+    _unit = DATA_GIGABYTES
 
     @property
     def unit_of_measurement(self):

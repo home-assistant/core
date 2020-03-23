@@ -17,6 +17,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers import entityfilter, state as state_helper
 import homeassistant.helpers.config_validation as cv
@@ -168,7 +169,10 @@ class PrometheusMetrics:
         return "".join(
             [
                 c
-                if c in string.ascii_letters or c.isdigit() or c == "_" or c == ":"
+                if c in string.ascii_letters
+                or c in string.digits
+                or c == "_"
+                or c == ":"
                 else f"u{hex(ord(c))}"
                 for c in metric
             ]
@@ -331,7 +335,7 @@ class PrometheusMetrics:
 
     @staticmethod
     def _sensor_fallback_metric(state, unit):
-        """Get metric from fallback logic for compatability."""
+        """Get metric from fallback logic for compatibility."""
         if unit in (None, ""):
             _LOGGER.debug("Unsupported sensor: %s", state.entity_id)
             return None
@@ -346,7 +350,7 @@ class PrometheusMetrics:
         units = {
             TEMP_CELSIUS: "c",
             TEMP_FAHRENHEIT: "c",  # F should go into C metric
-            "%": "percent",
+            UNIT_PERCENTAGE: "percent",
         }
         default = unit.replace("/", "_per_")
         default = default.lower()

@@ -1,7 +1,7 @@
 """Helper for HomematicIP Cloud Tests."""
 import json
 
-from asynctest import Mock
+from asynctest import Mock, patch
 from homematicip.aio.class_maps import (
     TYPE_CLASS_MAP,
     TYPE_GROUP_MAP,
@@ -12,10 +12,15 @@ from homematicip.aio.group import AsyncGroup
 from homematicip.aio.home import AsyncHome
 from homematicip.home import Home
 
+from homeassistant import config_entries
+from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.components.homematicip_cloud.device import (
     ATTR_IS_GROUP,
     ATTR_MODEL_TYPE,
 )
+from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
+from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.setup import async_setup_component
 
 from tests.common import load_fixture
 
@@ -23,11 +28,10 @@ HAPID = "3014F7110000000000000001"
 HAPPIN = "5678"
 AUTH_TOKEN = "1234"
 HOME_JSON = "homematicip_cloud.json"
+FIXTURE_DATA = load_fixture(HOME_JSON)
 
 
-def get_and_check_entity_basics(
-    hass, default_mock_hap, entity_id, entity_name, device_model
-):
+def get_and_check_entity_basics(hass, mock_hap, entity_id, entity_name, device_model):
     """Get and test basic device."""
     ha_state = hass.states.get(entity_id)
     assert ha_state is not None
@@ -35,13 +39,13 @@ def get_and_check_entity_basics(
         assert ha_state.attributes[ATTR_MODEL_TYPE] == device_model
     assert ha_state.name == entity_name
 
-    hmip_device = default_mock_hap.hmip_device_by_entity_id.get(entity_id)
+    hmip_device = mock_hap.hmip_device_by_entity_id.get(entity_id)
 
     if hmip_device:
         if isinstance(hmip_device, AsyncDevice):
             assert ha_state.attributes[ATTR_IS_GROUP] is False
         elif isinstance(hmip_device, AsyncGroup):
-            assert ha_state.attributes[ATTR_IS_GROUP] is True
+            assert ha_state.attributes[ATTR_IS_GROUP]
     return ha_state, hmip_device
 
 
@@ -67,6 +71,51 @@ async def async_manipulate_test_data(
     await hass.async_block_till_done()
 
 
+class HomeFactory:
+    """Factory to create a HomematicIP Cloud Home."""
+
+    def __init__(
+        self,
+        hass: HomeAssistantType,
+        mock_connection,
+        hmip_config_entry: config_entries.ConfigEntry,
+    ):
+        """Initialize the Factory."""
+        self.hass = hass
+        self.mock_connection = mock_connection
+        self.hmip_config_entry = hmip_config_entry
+
+    async def async_get_mock_hap(
+        self, test_devices=[], test_groups=[]
+    ) -> HomematicipHAP:
+        """Create a mocked homematic access point."""
+        home_name = self.hmip_config_entry.data["name"]
+        mock_home = (
+            HomeTemplate(
+                connection=self.mock_connection,
+                home_name=home_name,
+                test_devices=test_devices,
+                test_groups=test_groups,
+            )
+            .init_home()
+            .get_async_home_mock()
+        )
+
+        self.hmip_config_entry.add_to_hass(self.hass)
+        with patch(
+            "homeassistant.components.homematicip_cloud.hap.HomematicipHAP.get_hap",
+            return_value=mock_home,
+        ):
+            assert await async_setup_component(self.hass, HMIPC_DOMAIN, {})
+
+        await self.hass.async_block_till_done()
+
+        hap = self.hass.data[HMIPC_DOMAIN][HAPID]
+        mock_home.on_update(hap.async_update)
+        mock_home.on_create(hap.async_create_entity)
+        return hap
+
+
 class HomeTemplate(Home):
     """
     Home template as builder for home mock.
@@ -84,17 +133,36 @@ class HomeTemplate(Home):
     _typeGroupMap = TYPE_GROUP_MAP
     _typeSecurityEventMap = TYPE_SECURITY_EVENT_MAP
 
-    def __init__(self, connection=None, home_name=""):
+    def __init__(self, connection=None, home_name="", test_devices=[], test_groups=[]):
         """Init template with connection."""
         super().__init__(connection=connection)
         self.label = "Access Point"
         self.name = home_name
         self.model_type = "HmIP-HAP"
         self.init_json_state = None
+        self.test_devices = test_devices
+        self.test_groups = test_groups
 
-    def init_home(self, json_path=HOME_JSON):
+    def _cleanup_json(self, json):
+        if self.test_devices is not None:
+            new_devices = {}
+            for json_device in json["devices"].items():
+                if json_device[1]["label"] in self.test_devices:
+                    new_devices.update([json_device])
+            json["devices"] = new_devices
+
+        if self.test_groups is not None:
+            new_groups = {}
+            for json_group in json["groups"].items():
+                if json_group[1]["label"] in self.test_groups:
+                    new_groups.update([json_group])
+            json["groups"] = new_groups
+
+        return json
+
+    def init_home(self):
         """Init template with json."""
-        self.init_json_state = json.loads(load_fixture(HOME_JSON))
+        self.init_json_state = self._cleanup_json(json.loads(FIXTURE_DATA))
         self.update_home(json_state=self.init_json_state, clearConfig=True)
         return self
 

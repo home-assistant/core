@@ -11,6 +11,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_STATE,
     CONF_ENTITIES,
+    CONF_ICON,
     CONF_ID,
     CONF_NAME,
     CONF_PLATFORM,
@@ -75,16 +76,21 @@ CONF_SNAPSHOT = "snapshot_entities"
 DATA_PLATFORM = f"homeassistant_scene"
 STATES_SCHEMA = vol.All(dict, _convert_states)
 
+
 PLATFORM_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PLATFORM): HA_DOMAIN,
         vol.Required(STATES): vol.All(
             cv.ensure_list,
             [
-                {
-                    vol.Required(CONF_NAME): cv.string,
-                    vol.Required(CONF_ENTITIES): STATES_SCHEMA,
-                }
+                vol.Schema(
+                    {
+                        vol.Optional(CONF_ID): cv.string,
+                        vol.Required(CONF_NAME): cv.string,
+                        vol.Optional(CONF_ICON): cv.icon,
+                        vol.Required(CONF_ENTITIES): STATES_SCHEMA,
+                    }
+                )
             ],
         ),
     },
@@ -105,7 +111,7 @@ CREATE_SCENE_SCHEMA = vol.All(
 
 SERVICE_APPLY = "apply"
 SERVICE_CREATE = "create"
-SCENECONFIG = namedtuple("SceneConfig", [CONF_NAME, STATES])
+SCENECONFIG = namedtuple("SceneConfig", [CONF_ID, CONF_NAME, CONF_ICON, STATES])
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -213,7 +219,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             _LOGGER.warning("Empty scenes are not allowed")
             return
 
-        scene_config = SCENECONFIG(call.data[CONF_SCENE_ID], entities)
+        scene_config = SCENECONFIG(None, call.data[CONF_SCENE_ID], None, entities)
         entity_id = f"{SCENE_DOMAIN}.{scene_config.name}"
         old = platform.entities.get(entity_id)
         if old is not None:
@@ -239,8 +245,12 @@ def _process_scenes_config(hass, async_add_entities, config):
     async_add_entities(
         HomeAssistantScene(
             hass,
-            SCENECONFIG(scene[CONF_NAME], scene[CONF_ENTITIES]),
-            scene.get(CONF_ID),
+            SCENECONFIG(
+                scene.get(CONF_ID),
+                scene[CONF_NAME],
+                scene.get(CONF_ICON),
+                scene[CONF_ENTITIES],
+            ),
         )
         for scene in scene_config
     )
@@ -249,9 +259,8 @@ def _process_scenes_config(hass, async_add_entities, config):
 class HomeAssistantScene(Scene):
     """A scene is a group of entities and the states we want them to be."""
 
-    def __init__(self, hass, scene_config, scene_id=None, from_service=False):
+    def __init__(self, hass, scene_config, from_service=False):
         """Initialize the scene."""
-        self._id = scene_id
         self.hass = hass
         self.scene_config = scene_config
         self.from_service = from_service
@@ -262,11 +271,22 @@ class HomeAssistantScene(Scene):
         return self.scene_config.name
 
     @property
+    def icon(self):
+        """Return the icon of the scene."""
+        return self.scene_config.icon
+
+    @property
+    def unique_id(self):
+        """Return unique ID."""
+        return self.scene_config.id
+
+    @property
     def device_state_attributes(self):
         """Return the scene state attributes."""
         attributes = {ATTR_ENTITY_ID: list(self.scene_config.states)}
-        if self._id is not None:
-            attributes[CONF_ID] = self._id
+        unique_id = self.unique_id
+        if unique_id is not None:
+            attributes[CONF_ID] = unique_id
         return attributes
 
     async def async_activate(self):

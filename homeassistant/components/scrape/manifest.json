@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/scrape",
   "requirements": ["beautifulsoup4==4.8.2"],
   "dependencies": [],
+  "after_dependencies": ["rest"],
   "codeowners": ["@fabaff"]
 }

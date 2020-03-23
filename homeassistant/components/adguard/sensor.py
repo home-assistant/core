@@ -11,6 +11,7 @@ from homeassistant.components.adguard.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import TIME_MILLISECONDS, UNIT_PERCENTAGE
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -51,14 +52,20 @@ class AdGuardHomeSensor(AdGuardHomeDeviceEntity):
     """Defines a AdGuard Home sensor."""
 
     def __init__(
-        self, adguard, name: str, icon: str, measurement: str, unit_of_measurement: str
+        self,
+        adguard,
+        name: str,
+        icon: str,
+        measurement: str,
+        unit_of_measurement: str,
+        enabled_default: bool = True,
     ) -> None:
         """Initialize AdGuard Home sensor."""
         self._state = None
         self._unit_of_measurement = unit_of_measurement
         self.measurement = measurement
 
-        super().__init__(adguard, name, icon)
+        super().__init__(adguard, name, icon, enabled_default)
 
     @property
     def unique_id(self) -> str:
@@ -109,6 +116,7 @@ class AdGuardHomeBlockedFilteringSensor(AdGuardHomeSensor):
             "mdi:magnify-close",
             "blocked_filtering",
             "queries",
+            enabled_default=False,
         )
 
     async def _adguard_update(self) -> None:
@@ -126,7 +134,7 @@ class AdGuardHomePercentageBlockedSensor(AdGuardHomeSensor):
             "AdGuard DNS Queries Blocked Ratio",
             "mdi:magnify-close",
             "blocked_percentage",
-            "%",
+            UNIT_PERCENTAGE,
         )
 
     async def _adguard_update(self) -> None:
@@ -199,7 +207,7 @@ class AdGuardHomeAverageProcessingTimeSensor(AdGuardHomeSensor):
             "AdGuard Average Processing Speed",
             "mdi:speedometer",
             "average_speed",
-            "ms",
+            TIME_MILLISECONDS,
         )
 
     async def _adguard_update(self) -> None:
@@ -214,7 +222,12 @@ class AdGuardHomeRulesCountSensor(AdGuardHomeSensor):
     def __init__(self, adguard):
         """Initialize AdGuard Home sensor."""
         super().__init__(
-            adguard, "AdGuard Rules Count", "mdi:counter", "rules_count", "rules"
+            adguard,
+            "AdGuard Rules Count",
+            "mdi:counter",
+            "rules_count",
+            "rules",
+            enabled_default=False,
         )
 
     async def _adguard_update(self) -> None:

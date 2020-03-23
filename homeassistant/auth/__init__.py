@@ -301,7 +301,7 @@ class AuthManager:
     async def async_deactivate_user(self, user: models.User) -> None:
         """Deactivate a user."""
         if user.is_owner:
-            raise ValueError("Unable to deactive the owner")
+            raise ValueError("Unable to deactivate the owner")
         await self._store.async_deactivate_user(user)
 
     async def async_remove_credentials(self, credentials: models.Credentials) -> None:

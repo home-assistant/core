@@ -23,11 +23,6 @@ from .const import (
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up the ecobee weather platform."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the ecobee weather platform."""
     data = hass.data[DOMAIN]

@@ -18,7 +18,13 @@
     "sun",
     "system_health",
     "updater",
-    "zeroconf"
+    "zeroconf",
+    "zone",
+    "input_boolean",
+    "input_datetime",
+    "input_text",
+    "input_number",
+    "input_select"
   ],
   "codeowners": []
 }

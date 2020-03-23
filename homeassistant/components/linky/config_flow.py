@@ -12,9 +12,9 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
-from homeassistant.core import callback
 
-from .const import DEFAULT_TIMEOUT, DOMAIN
+from .const import DEFAULT_TIMEOUT
+from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,20 +25,6 @@ class LinkyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    def __init__(self):
-        """Initialize Linky config flow."""
-        self._username = None
-        self._password = None
-        self._timeout = None
-
-    def _configuration_exists(self, username: str) -> bool:
-        """Return True if username exists in configuration."""
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.data[CONF_USERNAME] == username:
-                return True
-        return False
-
-    @callback
     def _show_setup_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""
 
@@ -67,15 +53,16 @@ class LinkyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self._show_setup_form(user_input, None)
 
-        self._username = user_input[CONF_USERNAME]
-        self._password = user_input[CONF_PASSWORD]
-        self._timeout = user_input.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
+        username = user_input[CONF_USERNAME]
+        password = user_input[CONF_PASSWORD]
+        timeout = user_input.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
 
-        if self._configuration_exists(self._username):
-            errors[CONF_USERNAME] = "username_exists"
-            return self._show_setup_form(user_input, errors)
+        # Check if already configured
+        if self.unique_id is None:
+            await self.async_set_unique_id(username)
+            self._abort_if_unique_id_configured()
 
-        client = LinkyClient(self._username, self._password, None, self._timeout)
+        client = LinkyClient(username, password, None, timeout)
         try:
             await self.hass.async_add_executor_job(client.login)
             await self.hass.async_add_executor_job(client.fetch_data)
@@ -99,20 +86,14 @@ class LinkyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             client.close_session()
 
         return self.async_create_entry(
-            title=self._username,
+            title=username,
             data={
-                CONF_USERNAME: self._username,
-                CONF_PASSWORD: self._password,
-                CONF_TIMEOUT: self._timeout,
+                CONF_USERNAME: username,
+                CONF_PASSWORD: password,
+                CONF_TIMEOUT: timeout,
             },
         )
 
     async def async_step_import(self, user_input=None):
-        """Import a config entry.
-
-        Only host was required in the yaml file all other fields are optional
-        """
-        if self._configuration_exists(user_input[CONF_USERNAME]):
-            return self.async_abort(reason="username_exists")
-
+        """Import a config entry."""
         return await self.async_step_user(user_input)

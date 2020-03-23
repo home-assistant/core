@@ -12,10 +12,7 @@ if TYPE_CHECKING:
     from .connection import ActiveConnection  # noqa
 
 
-WebSocketCommandHandler = Callable[
-    [HomeAssistant, "ActiveConnection", dict], None
-]  # pylint: disable=invalid-name
-
+WebSocketCommandHandler = Callable[[HomeAssistant, "ActiveConnection", dict], None]
 
 DOMAIN = "websocket_api"
 URL = "/api/websocket"

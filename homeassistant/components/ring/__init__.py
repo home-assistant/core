@@ -7,13 +7,11 @@ from pathlib import Path
 from typing import Optional
 
 from oauthlib.oauth2 import AccessDeniedError
+import requests
 from ring_doorbell import Auth, Ring
-import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, __version__
+from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.async_ import run_callback_threadsafe
 
@@ -29,18 +27,6 @@ DEFAULT_ENTITY_NAMESPACE = "ring"
 
 PLATFORMS = ("binary_sensor", "light", "sensor", "switch", "camera")
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Optional(DOMAIN): vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
 
 async def async_setup(hass, config):
     """Set up the Ring component."""
@@ -55,16 +41,6 @@ async def async_setup(hass, config):
 
     await hass.async_add_executor_job(legacy_cleanup)
 
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                "username": config[DOMAIN]["username"],
-                "password": config[DOMAIN]["password"],
-            },
-        )
-    )
     return True
 
 
@@ -95,13 +71,19 @@ async def async_setup_entry(hass, entry):
         "api": ring,
         "devices": ring.devices(),
         "device_data": GlobalDataUpdater(
-            hass, entry.entry_id, ring, "update_devices", timedelta(minutes=1)
+            hass, "device", entry.entry_id, ring, "update_devices", timedelta(minutes=1)
         ),
         "dings_data": GlobalDataUpdater(
-            hass, entry.entry_id, ring, "update_dings", timedelta(seconds=5)
+            hass,
+            "active dings",
+            entry.entry_id,
+            ring,
+            "update_dings",
+            timedelta(seconds=5),
         ),
         "history_data": DeviceDataUpdater(
             hass,
+            "history",
             entry.entry_id,
             ring,
             lambda device: device.history(limit=10),
@@ -109,6 +91,7 @@ async def async_setup_entry(hass, entry):
         ),
         "health_data": DeviceDataUpdater(
             hass,
+            "health",
             entry.entry_id,
             ring,
             lambda device: device.update_health_data(),
@@ -168,6 +151,7 @@ class GlobalDataUpdater:
     def __init__(
         self,
         hass: HomeAssistant,
+        data_type: str,
         config_entry_id: str,
         ring: Ring,
         update_method: str,
@@ -175,6 +159,7 @@ class GlobalDataUpdater:
     ):
         """Initialize global data updater."""
         self.hass = hass
+        self.data_type = data_type
         self.config_entry_id = config_entry_id
         self.ring = ring
         self.update_method = update_method
@@ -215,6 +200,16 @@ class GlobalDataUpdater:
             _LOGGER.error("Ring access token is no longer valid. Set up Ring again")
             await self.hass.config_entries.async_unload(self.config_entry_id)
             return
+        except requests.Timeout:
+            _LOGGER.warning(
+                "Time out fetching Ring %s data", self.data_type,
+            )
+            return
+        except requests.RequestException as err:
+            _LOGGER.warning(
+                "Error fetching Ring %s data: %s", self.data_type, err,
+            )
+            return
 
         for update_callback in self.listeners:
             update_callback()
@@ -226,12 +221,14 @@ class DeviceDataUpdater:
     def __init__(
         self,
         hass: HomeAssistant,
+        data_type: str,
         config_entry_id: str,
         ring: Ring,
         update_method: str,
         update_interval: timedelta,
     ):
         """Initialize device data updater."""
+        self.data_type = data_type
         self.hass = hass
         self.config_entry_id = config_entry_id
         self.ring = ring
@@ -282,7 +279,7 @@ class DeviceDataUpdater:
 
     def refresh_all(self, _=None):
         """Refresh all registered devices."""
-        for info in self.devices.values():
+        for device_id, info in self.devices.items():
             try:
                 data = info["data"] = self.update_method(info["device"])
             except AccessDeniedError:
@@ -291,6 +288,21 @@ class DeviceDataUpdater:
                     self.hass.config_entries.async_unload(self.config_entry_id)
                 )
                 return
+            except requests.Timeout:
+                _LOGGER.warning(
+                    "Time out fetching Ring %s data for device %s",
+                    self.data_type,
+                    device_id,
+                )
+                continue
+            except requests.RequestException as err:
+                _LOGGER.warning(
+                    "Error fetching Ring %s data for device %s: %s",
+                    self.data_type,
+                    device_id,
+                    err,
+                )
+                continue
 
             for update_callback in info["update_callbacks"]:
                 self.hass.loop.call_soon_threadsafe(update_callback, data)

@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+import requests
+
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
@@ -74,7 +76,12 @@ class SirenSwitch(BaseRingSwitch):
 
     def _set_switch(self, new_state):
         """Update switch state, and causes Home Assistant to correctly update."""
-        self._device.siren = new_state
+        try:
+            self._device.siren = new_state
+        except requests.Timeout:
+            _LOGGER.error("Time out setting %s siren to %s", self.entity_id, new_state)
+            return
+
         self._siren_on = new_state > 0
         self._no_updates_until = dt_util.utcnow() + SKIP_UPDATES_DELAY
         self.schedule_update_ha_state()

@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/octoprint",
   "requirements": [],
   "dependencies": [],
+  "after_dependencies": ["discovery"],
   "codeowners": []
 }
