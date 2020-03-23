@@ -74,13 +74,13 @@ async def async_setup_entry(
 
 class DIRECTVMediaPlayer(DIRECTVDeviceEntity, MediaPlayerDevice):
     """Representation of a DirecTV receiver on the network."""
-    
+
     def __init__(
         self,
         *,
         dtv: DIRECTV,
         name: str,
-        address: str ="0",
+        address: str = "0",
     ) -> None:
         """Initialize DirecTV media player."""
         super().__init__(
