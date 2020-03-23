@@ -59,7 +59,7 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_USERNAME: user_input.get(CONF_USERNAME),
                 },
             )
-        except (WrongCredentialsError, CannotConnect):
+        except (WrongCredentialsError, CannotConnect, InvalidAuth):
             return self._show_form({"base": "invalid_credentials"})
 
     @callback

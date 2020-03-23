@@ -58,7 +58,7 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.devolo_home_control.config_flow.validate_input",
+        "homeassistant.components.devolo_home_control.config_flow._login_data_valid",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -71,7 +71,7 @@ async def test_form_invalid_auth(hass):
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result2["errors"] == {"base": "invalid_credentials"}
 
 
 async def test_form_cannot_connect(hass):
@@ -81,7 +81,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.devolo_home_control.config_flow.validate_input",
+        "homeassistant.components.devolo_home_control.config_flow._login_data_valid",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -94,4 +94,4 @@ async def test_form_cannot_connect(hass):
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": "invalid_credentials"}
