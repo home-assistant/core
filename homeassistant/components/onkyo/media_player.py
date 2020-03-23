@@ -11,13 +11,13 @@ from homeassistant.components.media_player.const import (
     DOMAIN,
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
+    SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
-    SUPPORT_SELECT_SOUND_MODE,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
