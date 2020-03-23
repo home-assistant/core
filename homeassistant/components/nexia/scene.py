@@ -41,7 +41,7 @@ class NexiaAutomationScene(NexiaEntity, Scene):
     def device_state_attributes(self):
         """Return the scene specific state attributes."""
         data = super().device_state_attributes
-        data.update({ATTR_DESCRIPTION: self._automation.description})
+        data[ATTR_DESCRIPTION] = self._automation.description
         return data
 
     @property

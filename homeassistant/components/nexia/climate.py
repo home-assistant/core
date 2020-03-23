@@ -331,7 +331,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateDevice):
         """Return the device specific state attributes."""
         data = super().device_state_attributes
 
-        data.update({ATTR_ZONE_STATUS: self._zone.get_status()})
+        data[ATTR_ZONE_STATUS] = self._zone.get_status()
 
         if not self._has_relative_humidity:
             return data
@@ -351,11 +351,11 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateDevice):
             dehumdify_setpoint = percent_conv(
                 self._thermostat.get_dehumidify_setpoint()
             )
-            data.update({ATTR_DEHUMIDIFY_SETPOINT: dehumdify_setpoint})
+            data[ATTR_DEHUMIDIFY_SETPOINT] = dehumdify_setpoint
 
         if self._has_humidify_support:
             humdify_setpoint = percent_conv(self._thermostat.get_humidify_setpoint())
-            data.update({ATTR_HUMIDIFY_SETPOINT: humdify_setpoint})
+            data[ATTR_HUMIDIFY_SETPOINT] = humdify_setpoint
 
         return data
 
