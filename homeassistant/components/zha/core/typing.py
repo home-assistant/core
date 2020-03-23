@@ -21,6 +21,7 @@ ZhaGroupType = "ZHAGroupType"
 ZigpyClusterType = zigpy.zcl.Cluster
 ZigpyDeviceType = zigpy.device.Device
 ZigpyEndpointType = zigpy.endpoint.Endpoint
+ZigpyGroupType = zigpy.group.Group
 ZigpyZdoType = zigpy.zdo.ZDO
 
 if TYPE_CHECKING:

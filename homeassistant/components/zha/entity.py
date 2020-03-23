@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import time
+from typing import Any, Dict
 
 from homeassistant.core import callback
 from homeassistant.helpers import entity
@@ -20,6 +21,7 @@ from .core.const import (
     SIGNAL_REMOVE,
 )
 from .core.helpers import LogMixin
+from .core.typing import CALLABLE_T, ChannelsType, ChannelType, ZhaDeviceType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +32,7 @@ RESTART_GRACE_PERIOD = 7200  # 2 hours
 class BaseZhaEntity(RestoreEntity, LogMixin, entity.Entity):
     """A base class for ZHA entities."""
 
-    def __init__(self, unique_id, zha_device, **kwargs):
+    def __init__(self, unique_id: str, zha_device, **kwargs):
         """Init ZHA entity."""
         self._name = ""
         self._force_update = False
@@ -44,7 +46,7 @@ class BaseZhaEntity(RestoreEntity, LogMixin, entity.Entity):
         self.remove_future = None
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return Entity's default name."""
         return self._name
 
@@ -54,12 +56,12 @@ class BaseZhaEntity(RestoreEntity, LogMixin, entity.Entity):
         return self._unique_id
 
     @property
-    def zha_device(self):
+    def zha_device(self) -> ZhaDeviceType:
         """Return the zha device this entity is attached to."""
         return self._zha_device
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return device specific state attributes."""
         return self._device_state_attributes
 
@@ -74,7 +76,7 @@ class BaseZhaEntity(RestoreEntity, LogMixin, entity.Entity):
         return self._should_poll
 
     @property
-    def device_info(self):
+    def device_info(self) -> Dict[str, Any]:
         """Return a device description for device registry."""
         zha_device_info = self._zha_device.device_info
         ieee = zha_device_info["ieee"]
@@ -88,28 +90,28 @@ class BaseZhaEntity(RestoreEntity, LogMixin, entity.Entity):
         }
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return entity availability."""
         return self._available
 
     @callback
-    def async_set_available(self, available):
+    def async_set_available(self, available: bool) -> None:
         """Set entity availability."""
         self._available = available
         self.async_write_ha_state()
 
     @callback
-    def async_update_state_attribute(self, key, value):
+    def async_update_state_attribute(self, key: str, value: Any) -> None:
         """Update a single device state attribute."""
         self._device_state_attributes.update({key: value})
         self.async_write_ha_state()
 
     @callback
-    def async_set_state(self, attr_id, attr_name, value):
+    def async_set_state(self, attr_id: int, attr_name: str, value: Any) -> None:
         """Set the entity state."""
         pass
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self.remove_future = asyncio.Future()
@@ -129,11 +131,13 @@ class BaseZhaEntity(RestoreEntity, LogMixin, entity.Entity):
         self.remove_future.set_result(True)
 
     @callback
-    def async_restore_last_state(self, last_state):
+    def async_restore_last_state(self, last_state) -> None:
         """Restore previous state."""
         pass
 
-    async def async_accept_signal(self, channel, signal, func, signal_override=False):
+    async def async_accept_signal(
+        self, channel: ChannelType, signal: str, func: CALLABLE_T, signal_override=False
+    ):
         """Accept a signal from a channel."""
         unsub = None
         if signal_override:
@@ -144,7 +148,7 @@ class BaseZhaEntity(RestoreEntity, LogMixin, entity.Entity):
             )
         self._unsubs.append(unsub)
 
-    def log(self, level, msg, *args):
+    def log(self, level: int, msg: str, *args):
         """Log a message."""
         msg = f"%s: {msg}"
         args = (self.entity_id,) + args
@@ -154,7 +158,13 @@ class BaseZhaEntity(RestoreEntity, LogMixin, entity.Entity):
 class ZhaEntity(BaseZhaEntity):
     """A base class for non group ZHA entities."""
 
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: ChannelsType,
+        **kwargs,
+    ):
         """Init ZHA entity."""
         super().__init__(unique_id, zha_device, **kwargs)
         ieeetail = "".join([f"{o:02x}" for o in zha_device.ieee[:4]])
@@ -165,7 +175,7 @@ class ZhaEntity(BaseZhaEntity):
         for channel in channels:
             self.cluster_channels[channel.name] = channel
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         await self.async_check_recently_seen()
@@ -184,7 +194,7 @@ class ZhaEntity(BaseZhaEntity):
             self.remove_future,
         )
 
-    async def async_check_recently_seen(self):
+    async def async_check_recently_seen(self) -> None:
         """Check if the device was seen within the last 2 hours."""
         last_state = await self.async_get_last_state()
         if (
@@ -198,7 +208,7 @@ class ZhaEntity(BaseZhaEntity):
                 self.async_restore_last_state(last_state)
             self._zha_device.set_available(True)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Retrieve latest state."""
         for channel in self.cluster_channels.values():
             if hasattr(channel, "async_update"):

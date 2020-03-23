@@ -6,7 +6,7 @@ import itertools
 import logging
 import os
 import traceback
-from typing import Optional
+from typing import List, Optional
 
 from serial import SerialException
 import zigpy.device as zigpy_dev
@@ -78,6 +78,7 @@ from .group import ZHAGroup
 from .patches import apply_application_controller_patch
 from .registries import RADIO_TYPES
 from .store import async_get_registry
+from .typing import ZhaDeviceType, ZhaGroupType, ZigpyEndpointType, ZigpyGroupType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -174,7 +175,7 @@ class ZHAGateway:
                 self.coordinator_zha_device = zha_device
 
     @callback
-    def async_load_groups(self):
+    def async_load_groups(self) -> None:
         """Initialize ZHA groups."""
         for group_id in self.application_controller.groups:
             group = self.application_controller.groups[group_id]
@@ -250,28 +251,32 @@ class ZHAGateway:
         """Handle device leaving the network."""
         self.async_update_device(device, False)
 
-    def group_member_removed(self, zigpy_group, endpoint):
+    def group_member_removed(
+        self, zigpy_group: ZigpyGroupType, endpoint: ZigpyEndpointType
+    ) -> None:
         """Handle zigpy group member removed event."""
         # need to handle endpoint correctly on groups
         zha_group = self._async_get_or_create_group(zigpy_group)
         zha_group.info("group_member_removed - endpoint: %s", endpoint)
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_MEMBER_REMOVED)
 
-    def group_member_added(self, zigpy_group, endpoint):
+    def group_member_added(
+        self, zigpy_group: ZigpyGroupType, endpoint: ZigpyEndpointType
+    ) -> None:
         """Handle zigpy group member added event."""
         # need to handle endpoint correctly on groups
         zha_group = self._async_get_or_create_group(zigpy_group)
         zha_group.info("group_member_added - endpoint: %s", endpoint)
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_MEMBER_ADDED)
 
-    def group_added(self, zigpy_group):
+    def group_added(self, zigpy_group: ZigpyGroupType) -> None:
         """Handle zigpy group added event."""
         zha_group = self._async_get_or_create_group(zigpy_group)
         zha_group.info("group_added")
         # need to dispatch for entity creation here
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_ADDED)
 
-    def group_removed(self, zigpy_group):
+    def group_removed(self, zigpy_group: ZigpyGroupType) -> None:
         """Handle zigpy group added event."""
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_REMOVED)
         zha_group = self._groups.pop(zigpy_group.group_id, None)
@@ -280,7 +285,9 @@ class ZHAGateway:
             self._hass, f"{SIGNAL_REMOVE_GROUP}_{zigpy_group.group_id}"
         )
 
-    def _send_group_gateway_message(self, zigpy_group, gateway_message_type):
+    def _send_group_gateway_message(
+        self, zigpy_group: ZigpyGroupType, gateway_message_type: str
+    ) -> None:
         """Send the gateway event for a zigpy group event."""
         zha_group = self._groups.get(zigpy_group.group_id)
         if zha_group is not None:
@@ -328,12 +335,12 @@ class ZHAGateway:
         """Return ZHADevice for given ieee."""
         return self._devices.get(ieee)
 
-    def get_group(self, group_id):
+    def get_group(self, group_id: str) -> Optional[ZhaGroupType]:
         """Return Group for given group id."""
         return self.groups.get(group_id)
 
     @callback
-    def async_get_group_by_name(self, group_name):
+    def async_get_group_by_name(self, group_name: str) -> Optional[ZhaGroupType]:
         """Get ZHA group by name."""
         for group in self.groups.values():
             if group.name == group_name:
@@ -435,7 +442,7 @@ class ZHAGateway:
         return zha_device
 
     @callback
-    def _async_get_or_create_group(self, zigpy_group):
+    def _async_get_or_create_group(self, zigpy_group: ZigpyGroupType) -> ZhaGroupType:
         """Get or create a ZHA group."""
         zha_group = self._groups.get(zigpy_group.group_id)
         if zha_group is None:
@@ -544,7 +551,9 @@ class ZHAGateway:
         # will cause async_init to fire so don't explicitly call it
         zha_device.update_available(True)
 
-    async def async_create_zigpy_group(self, name, members):
+    async def async_create_zigpy_group(
+        self, name: str, members: List[ZhaDeviceType]
+    ) -> ZhaGroupType:
         """Create a new Zigpy Zigbee group."""
         # we start with one to fill any gaps from a user removing existing groups
         group_id = 1
@@ -577,7 +586,7 @@ class ZHAGateway:
             async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES)
         return zha_group
 
-    async def async_remove_zigpy_group(self, group_id):
+    async def async_remove_zigpy_group(self, group_id: int) -> None:
         """Remove a Zigbee group from Zigpy."""
         group = self.groups.get(group_id)
         if not group:

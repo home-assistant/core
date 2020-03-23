@@ -10,6 +10,8 @@ from homeassistant.core import callback
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 
+from .typing import ZhaDeviceType, ZhaGroupType
+
 _LOGGER = logging.getLogger(__name__)
 
 DATA_REGISTRY = "zha_storage"
@@ -42,15 +44,15 @@ class ZhaStorage:
 
     def __init__(self, hass: HomeAssistantType) -> None:
         """Initialize the zha device storage."""
-        self.hass = hass
+        self.hass: HomeAssistantType = hass
         self.devices: MutableMapping[str, ZhaDeviceEntry] = {}
         self.groups: MutableMapping[str, ZhaGroupEntry] = {}
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     @callback
-    def async_create_device(self, device) -> ZhaDeviceEntry:
+    def async_create_device(self, device: ZhaDeviceType) -> ZhaDeviceEntry:
         """Create a new ZhaDeviceEntry."""
-        device_entry = ZhaDeviceEntry(
+        device_entry: ZhaDeviceEntry = ZhaDeviceEntry(
             name=device.name, ieee=str(device.ieee), last_seen=device.last_seen
         )
         self.devices[device_entry.ieee] = device_entry
@@ -58,9 +60,9 @@ class ZhaStorage:
         return self.async_update_device(device)
 
     @callback
-    def async_create_group(self, group) -> ZhaGroupEntry:
+    def async_create_group(self, group: ZhaGroupType) -> ZhaGroupEntry:
         """Create a new ZhaGroupEntry."""
-        group_entry = ZhaGroupEntry(
+        group_entry: ZhaGroupEntry = ZhaGroupEntry(
             name=group.name,
             group_id=str(group.group_id),
             entity_domain=group.entity_domain,
@@ -69,55 +71,55 @@ class ZhaStorage:
         return self.async_update_group(group)
 
     @callback
-    def async_get_or_create_device(self, device) -> ZhaDeviceEntry:
+    def async_get_or_create_device(self, device: ZhaDeviceType) -> ZhaDeviceEntry:
         """Create a new ZhaDeviceEntry."""
-        ieee_str = str(device.ieee)
+        ieee_str: str = str(device.ieee)
         if ieee_str in self.devices:
             return self.devices[ieee_str]
         return self.async_create_device(device)
 
     @callback
-    def async_get_or_create_group(self, group) -> ZhaGroupEntry:
+    def async_get_or_create_group(self, group: ZhaGroupType) -> ZhaGroupEntry:
         """Create a new ZhaGroupEntry."""
-        group_id = str(group.group_id)
+        group_id: str = str(group.group_id)
         if group_id in self.groups:
             return self.groups[group_id]
         return self.async_create_group(group)
 
     @callback
-    def async_create_or_update_device(self, device) -> ZhaDeviceEntry:
+    def async_create_or_update_device(self, device: ZhaDeviceType) -> ZhaDeviceEntry:
         """Create or update a ZhaDeviceEntry."""
         if str(device.ieee) in self.devices:
             return self.async_update_device(device)
         return self.async_create_device(device)
 
     @callback
-    def async_create_or_update_group(self, group) -> ZhaGroupEntry:
+    def async_create_or_update_group(self, group: ZhaGroupType) -> ZhaGroupEntry:
         """Create or update a ZhaGroupEntry."""
         if str(group.group_id) in self.groups:
             return self.async_update_group(group)
         return self.async_create_group(group)
 
     @callback
-    def async_delete_device(self, device) -> None:
+    def async_delete_device(self, device: ZhaDeviceType) -> None:
         """Delete ZhaDeviceEntry."""
-        ieee_str = str(device.ieee)
+        ieee_str: str = str(device.ieee)
         if ieee_str in self.devices:
             del self.devices[ieee_str]
             self.async_schedule_save()
 
     @callback
-    def async_delete_group(self, group) -> None:
+    def async_delete_group(self, group: ZhaGroupType) -> None:
         """Delete ZhaGroupEntry."""
-        group_id = str(group.group_id)
+        group_id: str = str(group.group_id)
         if group_id in self.groups:
             del self.groups[group_id]
             self.async_schedule_save()
 
     @callback
-    def async_update_device(self, device) -> ZhaDeviceEntry:
+    def async_update_device(self, device: ZhaDeviceType) -> ZhaDeviceEntry:
         """Update name of ZhaDeviceEntry."""
-        ieee_str = str(device.ieee)
+        ieee_str: str = str(device.ieee)
         old = self.devices[ieee_str]
 
         changes = {}
@@ -128,9 +130,9 @@ class ZhaStorage:
         return new
 
     @callback
-    def async_update_group(self, group) -> ZhaGroupEntry:
+    def async_update_group(self, group: ZhaGroupType) -> ZhaGroupEntry:
         """Update name of ZhaGroupEntry."""
-        group_id = str(group.group_id)
+        group_id: str = str(group.group_id)
         old = self.groups[group_id]
 
         changes = {}

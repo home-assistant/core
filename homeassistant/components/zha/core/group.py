@@ -1,11 +1,16 @@
 """Group for Zigbee Home Automation."""
 import asyncio
 import logging
+from typing import Any, Dict, List, Optional
+
+from zigpy.types.named import EUI64
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity_registry import async_entries_for_device
+from homeassistant.helpers.typing import HomeAssistantType
 
 from .helpers import LogMixin
+from .typing import ZhaDeviceType, ZhaGatewayType, ZigpyEndpointType, ZigpyGroupType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -13,40 +18,45 @@ _LOGGER = logging.getLogger(__name__)
 class ZHAGroup(LogMixin):
     """ZHA Zigbee group object."""
 
-    def __init__(self, hass, zha_gateway, zigpy_group):
+    def __init__(
+        self,
+        hass: HomeAssistantType,
+        zha_gateway: ZhaGatewayType,
+        zigpy_group: ZigpyGroupType,
+    ):
         """Initialize the group."""
-        self.hass = hass
-        self._zigpy_group = zigpy_group
-        self._zha_gateway = zha_gateway
-        self._entity_domain = None
+        self.hass: HomeAssistantType = hass
+        self._zigpy_group: ZigpyGroupType = zigpy_group
+        self._zha_gateway: ZhaGatewayType = zha_gateway
+        self._entity_domain: str = None
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return group name."""
         return self._zigpy_group.name
 
     @property
-    def group_id(self):
+    def group_id(self) -> int:
         """Return group name."""
         return self._zigpy_group.group_id
 
     @property
-    def endpoint(self):
+    def endpoint(self) -> ZigpyEndpointType:
         """Return the endpoint for this group."""
         return self._zigpy_group.endpoint
 
     @property
-    def entity_domain(self):
+    def entity_domain(self) -> Optional[str]:
         """Return the domain that will be used for the entity representing this group."""
         return self._entity_domain
 
     @entity_domain.setter
-    def entity_domain(self, domain):
+    def entity_domain(self, domain: Optional[str]) -> None:
         """Set the domain that will be used for the entity representing this group."""
         self._entity_domain = domain
 
     @property
-    def members(self):
+    def members(self) -> List[ZhaDeviceType]:
         """Return the ZHA devices that are members of this group."""
         return [
             self._zha_gateway.devices.get(member_ieee[0])
@@ -54,7 +64,7 @@ class ZHAGroup(LogMixin):
             if member_ieee[0] in self._zha_gateway.devices
         ]
 
-    async def async_add_members(self, member_ieee_addresses):
+    async def async_add_members(self, member_ieee_addresses: List[EUI64]) -> None:
         """Add members to this group."""
         if len(member_ieee_addresses) > 1:
             tasks = []
@@ -68,7 +78,7 @@ class ZHAGroup(LogMixin):
                 member_ieee_addresses[0]
             ].async_add_to_group(self.group_id)
 
-    async def async_remove_members(self, member_ieee_addresses):
+    async def async_remove_members(self, member_ieee_addresses: List[EUI64]) -> None:
         """Remove members from this group."""
         if len(member_ieee_addresses) > 1:
             tasks = []
@@ -85,9 +95,9 @@ class ZHAGroup(LogMixin):
             ].async_remove_from_group(self.group_id)
 
     @property
-    def member_entity_ids(self):
+    def member_entity_ids(self) -> List[str]:
         """Return the ZHA entity ids for all entities for the members of this group."""
-        all_entity_ids = []
+        all_entity_ids: List[str] = []
         for device in self.members:
             entities = async_entries_for_device(
                 self._zha_gateway.ha_entity_registry, device.device_id
@@ -97,11 +107,11 @@ class ZHAGroup(LogMixin):
         return all_entity_ids
 
     @property
-    def domain_entity_ids(self):
+    def domain_entity_ids(self) -> List[str]:
         """Return entity ids from the entity domain for this group."""
         if self.entity_domain is None:
             return
-        domain_entity_ids = []
+        domain_entity_ids: List[str] = []
         for device in self.members:
             entities = async_entries_for_device(
                 self._zha_gateway.ha_entity_registry, device.device_id
@@ -116,9 +126,9 @@ class ZHAGroup(LogMixin):
         return domain_entity_ids
 
     @callback
-    def async_get_info(self):
+    def async_get_info(self) -> Dict[str, Any]:
         """Get ZHA group info."""
-        group_info = {}
+        group_info: Dict[str, Any] = {}
         group_info["group_id"] = self.group_id
         group_info["entity_domain"] = self.entity_domain
         group_info["name"] = self.name
@@ -127,7 +137,7 @@ class ZHAGroup(LogMixin):
         ]
         return group_info
 
-    def log(self, level, msg, *args):
+    def log(self, level: int, msg: str, *args):
         """Log a message."""
         msg = f"[%s](%s): {msg}"
         args = (self.name, self.group_id) + args

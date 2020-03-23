@@ -5,7 +5,7 @@ import functools
 import itertools
 import logging
 import random
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from zigpy.zcl.clusters.general import Identify, LevelControl, OnOff
 from zigpy.zcl.clusters.lighting import Color
@@ -505,7 +505,7 @@ class LightGroup(BaseZhaEntity, light.Light):
         )
         await self.async_update()
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Handle removal from Home Assistant."""
         await super().async_will_remove_from_hass()
         if self._async_unsub_state_changed is not None:
@@ -573,12 +573,12 @@ class LightGroup(BaseZhaEntity, light.Light):
         return self._supported_features
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return state attributes."""
         attributes = {"off_brightness": self._off_brightness}
         return attributes
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs) -> None:
         """Forward the turn_on command to all lights in the light group."""
         group = self.zha_device.gateway.get_group(self._group_id)
         if group is None:
@@ -693,7 +693,7 @@ class LightGroup(BaseZhaEntity, light.Light):
         self.debug("turned on: %s", t_log)
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs) -> None:
         """Forward the turn_off command to all lights in the light group."""
         group = self.zha_device.gateway.get_group(self._group_id)
         if group is None:
@@ -719,7 +719,7 @@ class LightGroup(BaseZhaEntity, light.Light):
 
         self.async_write_ha_state()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Query all members and determine the light group state."""
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
         states: List[State] = list(filter(None, all_states))
