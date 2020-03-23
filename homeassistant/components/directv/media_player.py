@@ -66,7 +66,7 @@ async def async_setup_entry(
 
     for location in dtv.device.locations:
         entities.append(
-            DIRECTVMediaPlayer(dtv, str.title(location.name), location.address)
+            DIRECTVMediaPlayer(dtv=dtv, name=str.title(location.name), address=location.address)
         )
 
     async_add_entities(entities, True)
@@ -93,7 +93,7 @@ class DIRECTVMediaPlayer(DIRECTVDeviceEntity, MediaPlayerDevice):
 
     async def async_update(self):
         """Retrieve latest state."""
-        self._state = await self.dtv.state(self._device)
+        self._state = await self.dtv.state(self._address)
         self._available = self._state.available
         self._is_standby = self._state.standby
         self._program = self._state.program
