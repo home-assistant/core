@@ -4,7 +4,7 @@ import logging
 from devolo_home_control_api.mydevolo import Mydevolo, WrongCredentialsError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
@@ -59,7 +59,7 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_USERNAME: user_input.get(CONF_USERNAME),
                 },
             )
-        except WrongCredentialsError:
+        except (WrongCredentialsError, CannotConnect):
             return self._show_form({"base": "invalid_credentials"})
 
     @callback
@@ -79,3 +79,11 @@ def create_config_flow(hass):
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
         )
     )
+
+
+class CannotConnect(exceptions.HomeAssistantError):
+    """Error to indicate we cannot connect."""
+
+
+class InvalidAuth(exceptions.HomeAssistantError):
+    """Error to indicate there is invalid auth."""
