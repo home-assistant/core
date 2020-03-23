@@ -440,9 +440,12 @@ async def async_test_zha_group_light_entity(
     entity_id = async_find_group_entity_id(hass, DOMAIN, zha_group)
     assert hass.states.get(entity_id) is not None
 
-    cluster_on_off = zha_group.endpoint[general.OnOff.cluster_id]
-    cluster_level = zha_group.endpoint[general.LevelControl.cluster_id]
-    cluster_identify = zha_group.endpoint[general.Identify.cluster_id]
+    group_cluster_on_off = zha_group.endpoint[general.OnOff.cluster_id]
+    group_cluster_level = zha_group.endpoint[general.LevelControl.cluster_id]
+    group_cluster_identify = zha_group.endpoint[general.Identify.cluster_id]
+
+    dev1_cluster_on_off = device_light_1.endpoints[1].on_off
+    dev2_cluster_on_off = device_light_2.endpoints[1].on_off
 
     # test that the lights were created and that they are unavailable
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
@@ -454,22 +457,50 @@ async def async_test_zha_group_light_entity(
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # test turning the lights on and off from the light
-    await async_test_on_off_from_light(hass, cluster_on_off, entity_id)
+    await async_test_on_off_from_light(hass, group_cluster_on_off, entity_id)
 
     # test turning the lights on and off from the HA
-    await async_test_on_off_from_hass(hass, cluster_on_off, entity_id)
+    await async_test_on_off_from_hass(hass, group_cluster_on_off, entity_id)
 
     # test short flashing the lights from the HA
-    await async_test_flash_from_hass(hass, cluster_identify, entity_id, FLASH_SHORT)
+    await async_test_flash_from_hass(
+        hass, group_cluster_identify, entity_id, FLASH_SHORT
+    )
 
     # test turning the lights on and off from the HA
     await async_test_level_on_off_from_hass(
-        hass, cluster_on_off, cluster_level, entity_id
+        hass, group_cluster_on_off, group_cluster_level, entity_id
     )
 
     # test getting a brightness change from the network
-    await async_test_on_from_light(hass, cluster_on_off, entity_id)
-    await async_test_dimmer_from_light(hass, cluster_level, entity_id, 150, STATE_ON)
+    await async_test_on_from_light(hass, group_cluster_on_off, entity_id)
+    await async_test_dimmer_from_light(
+        hass, group_cluster_level, entity_id, 150, STATE_ON
+    )
 
     # test long flashing the lights from the HA
-    await async_test_flash_from_hass(hass, cluster_identify, entity_id, FLASH_LONG)
+    await async_test_flash_from_hass(
+        hass, group_cluster_identify, entity_id, FLASH_LONG
+    )
+
+    # test some of the group logic to make sure we key off states correctly
+    await dev1_cluster_on_off.on()
+    await dev2_cluster_on_off.on()
+
+    # test that group light is on
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    await dev1_cluster_on_off.off()
+
+    # test that group light is still on
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    await dev2_cluster_on_off.off()
+
+    # test that group light is now off
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    await dev1_cluster_on_off.on()
+
+    # test that group light is now back on
+    assert hass.states.get(entity_id).state == STATE_ON
