@@ -2,7 +2,7 @@
 import logging
 from typing import Optional
 
-from pymodbus.exceptions import ConnectionException, ModbusException
+from pymodbus.exceptions import ModbusException
 from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
@@ -160,14 +160,12 @@ class ModbusCoilSwitch(ToggleEntity, RestoreEntity):
 
     async def _read_coil(self, coil) -> Optional[bool]:
         """Read coil using the Modbus hub slave."""
-        try:
-            result = await self._hub.read_coils(self._slave, coil, 1)
-        except ConnectionException:
-            self._set_unavailable()
+        result = await self._hub.read_coils(self._slave, coil, 1)
+        if result is None:
+            self._available = False
             return
-
         if isinstance(result, (ModbusException, ExceptionResponse)):
-            self._set_unavailable()
+            self._available = False
             return
 
         value = bool(result.bits[0])
@@ -177,26 +175,8 @@ class ModbusCoilSwitch(ToggleEntity, RestoreEntity):
 
     async def _write_coil(self, coil, value):
         """Write coil using the Modbus hub slave."""
-        try:
-            await self._hub.write_coil(self._slave, coil, value)
-        except ConnectionException:
-            self._set_unavailable()
-            return
-
+        await self._hub.write_coil(self._slave, coil, value)
         self._available = True
-
-    def _set_unavailable(self):
-        """Set unavailable state and log it as an error."""
-        if not self._available:
-            return
-
-        _LOGGER.error(
-            "No response from hub %s, slave %s, coil %s",
-            self._hub.name,
-            self._slave,
-            self._coil,
-        )
-        self._available = False
 
 
 class ModbusRegisterSwitch(ModbusCoilSwitch):
@@ -284,21 +264,19 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
             )
 
     async def _read_register(self) -> Optional[int]:
-        try:
-            if self._register_type == CALL_TYPE_REGISTER_INPUT:
-                result = await self._hub.read_input_registers(
-                    self._slave, self._register, 1
-                )
-            else:
-                result = await self._hub.read_holding_registers(
-                    self._slave, self._register, 1
-                )
-        except ConnectionException:
-            self._set_unavailable()
+        if self._register_type == CALL_TYPE_REGISTER_INPUT:
+            result = await self._hub.read_input_registers(
+                self._slave, self._register, 1
+            )
+        else:
+            result = await self._hub.read_holding_registers(
+                self._slave, self._register, 1
+            )
+        if result is None:
+            self._available = False
             return
-
         if isinstance(result, (ModbusException, ExceptionResponse)):
-            self._set_unavailable()
+            self._available = False
             return
 
         value = int(result.registers[0])
@@ -308,23 +286,5 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
 
     async def _write_register(self, value):
         """Write holding register using the Modbus hub slave."""
-        try:
-            await self._hub.write_register(self._slave, self._register, value)
-        except ConnectionException:
-            self._set_unavailable()
-            return
-
+        await self._hub.write_register(self._slave, self._register, value)
         self._available = True
-
-    def _set_unavailable(self):
-        """Set unavailable state and log it as an error."""
-        if not self._available:
-            return
-
-        _LOGGER.error(
-            "No response from hub %s, slave %s, register %s",
-            self._hub.name,
-            self._slave,
-            self._register,
-        )
-        self._available = False

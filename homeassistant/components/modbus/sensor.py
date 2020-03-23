@@ -3,7 +3,7 @@ import logging
 import struct
 from typing import Any, Optional, Union
 
-from pymodbus.exceptions import ConnectionException, ModbusException
+from pymodbus.exceptions import ModbusException
 from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
@@ -221,21 +221,19 @@ class ModbusRegisterSensor(RestoreEntity):
 
     async def async_update(self):
         """Update the state of the sensor."""
-        try:
-            if self._register_type == CALL_TYPE_REGISTER_INPUT:
-                result = await self._hub.read_input_registers(
-                    self._slave, self._register, self._count
-                )
-            else:
-                result = await self._hub.read_holding_registers(
-                    self._slave, self._register, self._count
-                )
-        except ConnectionException:
-            self._set_unavailable()
+        if self._register_type == CALL_TYPE_REGISTER_INPUT:
+            result = await self._hub.read_input_registers(
+                self._slave, self._register, self._count
+            )
+        else:
+            result = await self._hub.read_holding_registers(
+                self._slave, self._register, self._count
+            )
+        if result is None:
+            self._available = False
             return
-
         if isinstance(result, (ModbusException, ExceptionResponse)):
-            self._set_unavailable()
+            self._available = False
             return
 
         registers = result.registers
@@ -253,16 +251,3 @@ class ModbusRegisterSensor(RestoreEntity):
             self._value = f"{val:.{self._precision}f}"
 
         self._available = True
-
-    def _set_unavailable(self):
-        """Set unavailable state and log it as an error."""
-        if not self._available:
-            return
-
-        _LOGGER.error(
-            "No response from hub %s, slave %s, address %s",
-            self._hub.name,
-            self._slave,
-            self._register,
-        )
-        self._available = False

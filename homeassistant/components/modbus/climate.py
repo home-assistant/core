@@ -3,7 +3,7 @@ import logging
 import struct
 from typing import Optional
 
-from pymodbus.exceptions import ConnectionException, ModbusException
+from pymodbus.exceptions import ModbusException
 from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
@@ -242,21 +242,19 @@ class ModbusThermostat(ClimateDevice):
 
     async def _read_register(self, register_type, register) -> Optional[float]:
         """Read register using the Modbus hub slave."""
-        try:
-            if register_type == CALL_TYPE_REGISTER_INPUT:
-                result = await self._hub.read_input_registers(
-                    self._slave, register, self._count
-                )
-            else:
-                result = await self._hub.read_holding_registers(
-                    self._slave, register, self._count
-                )
-        except ConnectionException:
-            self._set_unavailable(register)
+        if register_type == CALL_TYPE_REGISTER_INPUT:
+            result = await self._hub.read_input_registers(
+                self._slave, register, self._count
+            )
+        else:
+            result = await self._hub.read_holding_registers(
+                self._slave, register, self._count
+            )
+        if result is None:
+            self._available = False
             return
-
         if isinstance(result, (ModbusException, ExceptionResponse)):
-            self._set_unavailable(register)
+            self._available = False
             return
 
         byte_string = b"".join(
@@ -273,23 +271,5 @@ class ModbusThermostat(ClimateDevice):
 
     async def _write_register(self, register, value):
         """Write holding register using the Modbus hub slave."""
-        try:
-            await self._hub.write_registers(self._slave, register, [value, 0])
-        except ConnectionException:
-            self._set_unavailable(register)
-            return
-
+        await self._hub.write_registers(self._slave, register, [value, 0])
         self._available = True
-
-    def _set_unavailable(self, register):
-        """Set unavailable state and log it as an error."""
-        if not self._available:
-            return
-
-        _LOGGER.error(
-            "No response from hub %s, slave %s, register %s",
-            self._hub.name,
-            self._slave,
-            register,
-        )
-        self._available = False

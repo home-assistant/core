@@ -2,7 +2,7 @@
 import logging
 from typing import Optional
 
-from pymodbus.exceptions import ConnectionException, ModbusException
+from pymodbus.exceptions import ModbusException
 from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
@@ -109,33 +109,16 @@ class ModbusBinarySensor(BinarySensorDevice):
 
     async def async_update(self):
         """Update the state of the sensor."""
-        try:
-            if self._input_type == CALL_TYPE_COIL:
-                result = await self._hub.read_coils(self._slave, self._address, 1)
-            else:
-                result = await self._hub.read_discrete_inputs(
-                    self._slave, self._address, 1
-                )
-        except ConnectionException:
-            self._set_unavailable()
+        if self._input_type == CALL_TYPE_COIL:
+            result = await self._hub.read_coils(self._slave, self._address, 1)
+        else:
+            result = await self._hub.read_discrete_inputs(self._slave, self._address, 1)
+        if result is None:
+            self._available = False
             return
-
         if isinstance(result, (ModbusException, ExceptionResponse)):
-            self._set_unavailable()
+            self._available = False
             return
 
         self._value = result.bits[0]
         self._available = True
-
-    def _set_unavailable(self):
-        """Set unavailable state and log it as an error."""
-        if not self._available:
-            return
-
-        _LOGGER.error(
-            "No response from hub %s, slave %s, address %s",
-            self._hub.name,
-            self._slave,
-            self._address,
-        )
-        self._available = False

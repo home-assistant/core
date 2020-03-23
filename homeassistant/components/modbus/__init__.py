@@ -6,6 +6,8 @@ from pymodbus.client.asynchronous import schedulers
 from pymodbus.client.asynchronous.serial import AsyncModbusSerialClient as ClientSerial
 from pymodbus.client.asynchronous.tcp import AsyncModbusTCPClient as ClientTCP
 from pymodbus.client.asynchronous.udp import AsyncModbusUDPClient as ClientUDP
+from pymodbus.exceptions import ModbusException
+from pymodbus.pdu import ExceptionResponse
 from pymodbus.transaction import ModbusRtuFramer
 import voluptuous as vol
 
@@ -200,7 +202,7 @@ class ModbusHub:
 
         _LOGGER.debug("doing setup")
         if self._config_type == "serial":
-            _, client = ClientSerial(
+            _, self._client = ClientSerial(
                 schedulers.ASYNC_IO,
                 method=self._config_method,
                 port=self._config_port,
@@ -212,7 +214,7 @@ class ModbusHub:
                 loop=self._loop,
             )
         elif self._config_type == "rtuovertcp":
-            _, client = ClientTCP(
+            _, self._client = ClientTCP(
                 schedulers.ASYNC_IO,
                 host=self._config_host,
                 port=self._config_port,
@@ -221,7 +223,7 @@ class ModbusHub:
                 loop=self._loop,
             )
         elif self._config_type == "tcp":
-            _, client = ClientTCP(
+            _, self._client = ClientTCP(
                 schedulers.ASYNC_IO,
                 host=self._config_host,
                 port=self._config_port,
@@ -229,7 +231,7 @@ class ModbusHub:
                 loop=self._loop,
             )
         elif self._config_type == "udp":
-            _, client = ClientUDP(
+            _, self._client = ClientUDP(
                 schedulers.ASYNC_IO,
                 host=self._config_host,
                 port=self._config_port,
@@ -238,57 +240,76 @@ class ModbusHub:
             )
         else:
             assert False
-        self._client = client.protocol
 
     def close(self):
         """Disconnect client."""
         self._client.close()
 
-    async def read_coils(self, unit, address, count):
-        """Read coils."""
+    async def _read(self, unit, address, count, func):
+        """Read generic with error handling."""
         await self._connect_delay()
         async with self._lock:
             kwargs = {"unit": unit} if unit else {}
-            return await self._client.read_coils(address, count, **kwargs)
+            result = await func(address, count, **kwargs)
+            if isinstance(result, (ModbusException, ExceptionResponse)):
+                _LOGGER.error("Hub %s Exception (%s)", self._config_name, result)
+            return result
+
+    async def _write(self, unit, address, value, func):
+        """Read generic with error handling."""
+        await self._connect_delay()
+        async with self._lock:
+            kwargs = {"unit": unit} if unit else {}
+            await func(address, value, **kwargs)
+
+    async def read_coils(self, unit, address, count):
+        """Read coils."""
+        if self._client.protocol is None:
+            return None
+        return await self._read(unit, address, count, self._client.protocol.read_coils)
 
     async def read_discrete_inputs(self, unit, address, count):
         """Read discrete inputs."""
-        await self._connect_delay()
-        async with self._lock:
-            kwargs = {"unit": unit} if unit else {}
-            return await self._client.read_discrete_inputs(address, count, **kwargs)
+        if self._client.protocol is None:
+            return None
+        return await self._read(
+            unit, address, count, self._client.protocol.read_discrete_inputs
+        )
 
     async def read_input_registers(self, unit, address, count):
         """Read input registers."""
-        await self._connect_delay()
-        async with self._lock:
-            kwargs = {"unit": unit} if unit else {}
-            return await self._client.read_input_registers(address, count, **kwargs)
+        if self._client.protocol is None:
+            return None
+        return await self._read(
+            unit, address, count, self._client.protocol.read_input_registers
+        )
 
     async def read_holding_registers(self, unit, address, count):
         """Read holding registers."""
-        await self._connect_delay()
-        async with self._lock:
-            kwargs = {"unit": unit} if unit else {}
-            return await self._client.read_holding_registers(address, count, **kwargs)
+        if self._client.protocol is None:
+            return None
+        return await self._read(
+            unit, address, count, self._client.protocol.read_holding_registers
+        )
 
     async def write_coil(self, unit, address, value):
         """Write coil."""
-        await self._connect_delay()
-        async with self._lock:
-            kwargs = {"unit": unit} if unit else {}
-            await self._client.write_coil(address, value, **kwargs)
+        if self._client.protocol is None:
+            return None
+        return await self._write(unit, address, value, self._client.protocol.write_coil)
 
     async def write_register(self, unit, address, value):
         """Write register."""
-        await self._connect_delay()
-        async with self._lock:
-            kwargs = {"unit": unit} if unit else {}
-            await self._client.write_register(address, value, **kwargs)
+        if self._client.protocol is None:
+            return None
+        return await self._write(
+            unit, address, value, self._client.protocol.write_register
+        )
 
     async def write_registers(self, unit, address, values):
         """Write registers."""
-        await self._connect_delay()
-        async with self._lock:
-            kwargs = {"unit": unit} if unit else {}
-            await self._client.write_registers(address, values, **kwargs)
+        if self._client.protocol is None:
+            return None
+        return await self._write(
+            unit, address, values, self._client.protocol.write_registers
+        )
