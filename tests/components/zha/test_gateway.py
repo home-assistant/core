@@ -139,3 +139,6 @@ async def test_create_group(hass, device_light_1, device_light_2, coordinator):
 
     entity_id = async_find_group_entity_id(hass, LIGHT_DOMAIN, zha_group)
     assert hass.states.get(entity_id) is not None
+
+    # test get group by name
+    assert zha_group == zha_gateway.async_get_group_by_name(zha_group.name)
