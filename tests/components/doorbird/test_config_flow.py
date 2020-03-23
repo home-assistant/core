@@ -36,7 +36,9 @@ def _get_mock_doorbirdapi_side_effects(ready=None, info=None):
 
 async def test_user_form(hass):
     """Test we get the user form."""
-    await hass.async_add_job(init_recorder_component, hass)  # force in memory db
+    await hass.async_add_executor_job(
+        init_recorder_component, hass
+    )  # force in memory db
 
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -75,7 +77,9 @@ async def test_user_form(hass):
 
 async def test_form_import(hass):
     """Test we get the form with import source."""
-    await hass.async_add_job(init_recorder_component, hass)  # force in memory db
+    await hass.async_add_executor_job(
+        init_recorder_component, hass
+    )  # force in memory db
 
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -125,7 +129,9 @@ async def test_form_import(hass):
 
 async def test_form_zeroconf_wrong_oui(hass):
     """Test we abort when we get the wrong OUI via zeroconf."""
-    await hass.async_add_job(init_recorder_component, hass)  # force in memory db
+    await hass.async_add_executor_job(
+        init_recorder_component, hass
+    )  # force in memory db
 
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -142,7 +148,9 @@ async def test_form_zeroconf_wrong_oui(hass):
 
 async def test_form_zeroconf_correct_oui(hass):
     """Test we can setup from zeroconf with the correct OUI source."""
-    await hass.async_add_job(init_recorder_component, hass)  # force in memory db
+    await hass.async_add_executor_job(
+        init_recorder_component, hass
+    )  # force in memory db
 
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -188,7 +196,9 @@ async def test_form_zeroconf_correct_oui(hass):
 
 async def test_form_user_cannot_connect(hass):
     """Test we handle cannot connect error."""
-    await hass.async_add_job(init_recorder_component, hass)  # force in memory db
+    await hass.async_add_executor_job(
+        init_recorder_component, hass
+    )  # force in memory db
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -209,7 +219,9 @@ async def test_form_user_cannot_connect(hass):
 
 async def test_form_user_invalid_auth(hass):
     """Test we handle cannot invalid auth error."""
-    await hass.async_add_job(init_recorder_component, hass)  # force in memory db
+    await hass.async_add_executor_job(
+        init_recorder_component, hass
+    )  # force in memory db
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
