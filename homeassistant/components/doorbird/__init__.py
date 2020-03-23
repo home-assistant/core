@@ -144,7 +144,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     doorstation = ConfiguredDoorBird(device, name, events, custom_url, token)
     # Subscribe to doorbell or motion events
     if not await _async_register_events(hass, doorstation):
-        return False
+        raise ConfigEntryNotReady
 
     hass.data[DOMAIN][config_entry_id] = {
         DOOR_STATION: doorstation,
