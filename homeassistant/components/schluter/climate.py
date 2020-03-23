@@ -14,7 +14,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE, CONF_SCAN_INTERVAL
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from . import DATA_SCHLUTER_API, DATA_SCHLUTER_SESSION, DOMAIN as SCHLUTER_DOMAIN
+from . import DATA_SCHLUTER_API, DATA_SCHLUTER_SESSION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -25,8 +25,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Schluter thermostats."""
-    session_id = hass.data[DATA_SCHLUTER_SESSION]
-    api = hass.data[DATA_SCHLUTER_API]
+    session_id = hass.data[DOMAIN][DATA_SCHLUTER_SESSION]
+    api = hass.data[DOMAIN][DATA_SCHLUTER_API]
     temp_unit = hass.config.units.temperature_unit
 
     async def async_update_data():
@@ -82,9 +82,7 @@ class SchluterThermostat(ClimateDevice):
     def device_info(self):
         """Return information about the device."""
         return {
-            "identifiers": {
-                (SCHLUTER_DOMAIN, self.coordinator.data[self.idx].serial_number)
-            },
+            "identifiers": {(DOMAIN, self.coordinator.data[self.idx].serial_number)},
             "name": self.coordinator.data[self.idx].name,
             "manufacturer": "Schluter",
             "model": "Thermostat",
@@ -123,17 +121,6 @@ class SchluterThermostat(ClimateDevice):
     @property
     def hvac_modes(self):
         """List of available operation modes."""
-        return None
-
-    @property
-    def fan_mode(self):
-        """Return whether the fan is on."""
-        # No Fan available
-        return None
-
-    @property
-    def fan_modes(self):
-        """List of available fan modes."""
         return None
 
     @property

@@ -16,7 +16,6 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 DATA_SCHLUTER_SESSION = "schluter_session"
 DATA_SCHLUTER_API = "schluter_api"
-PLATFORMS = ["climate"]
 DEFAULT_TIMEOUT = 10
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 SCHLUTER_CONFIG_FILE = ".schluter.conf"
@@ -47,12 +46,11 @@ async def async_setup_schluter(hass, config, api, authenticator):
     state = authentication.state
 
     if state == AuthenticationState.AUTHENTICATED:
-        hass.data[DATA_SCHLUTER_SESSION] = authentication.session_id
-        hass.data[DATA_SCHLUTER_API] = api
-
-        for component in PLATFORMS:
-            discovery.load_platform(hass, component, DOMAIN, {}, config)
-
+        hass.data[DOMAIN] = {
+            DATA_SCHLUTER_API: api,
+            DATA_SCHLUTER_SESSION: authentication.session_id,
+        }
+        discovery.load_platform(hass, "climate", DOMAIN, {}, config)
         return True
     if state == AuthenticationState.BAD_PASSWORD:
         _LOGGER.error("Invalid password provided")
