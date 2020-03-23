@@ -127,7 +127,7 @@ class SchluterThermostat(ClimateDevice):
     @property
     def hvac_modes(self):
         """List of available operation modes."""
-        return None
+        return [HVAC_MODE_HEAT]
 
     @property
     def min_temp(self):
@@ -138,6 +138,9 @@ class SchluterThermostat(ClimateDevice):
     def max_temp(self):
         """Identify max_temp in Schluter API."""
         return self.coordinator.data[self.idx].max_temp
+
+    async def async_set_hvac_mode(self, hvac_mode):
+        """Mode is always heating, so do nothing."""
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
