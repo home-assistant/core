@@ -97,7 +97,7 @@ def setup(hass, config):
     try:
         ncm = NextcloudMonitor(conf[CONF_URL], conf[CONF_USERNAME], conf[CONF_PASSWORD])
     except NextcloudMonitorError:
-        _LOGGER.error("Nextcloud setup failed. Check configuration.")
+        _LOGGER.error("Nextcloud setup failed - Check configuration")
 
     hass.data[DOMAIN] = get_data_points(ncm.data)
 
@@ -106,7 +106,7 @@ def setup(hass, config):
         try:
             ncm.update()
         except NextcloudMonitorError:
-            _LOGGER.error("Nextcloud update failed.")
+            _LOGGER.error("Nextcloud update failed")
             return False
 
         hass.data[DOMAIN] = get_data_points(ncm.data)
