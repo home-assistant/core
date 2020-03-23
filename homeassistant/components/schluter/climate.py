@@ -11,7 +11,8 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import ATTR_TEMPERATURE, CONF_SCAN_INTERVAL, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, CONF_SCAN_INTERVAL
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import DATA_SCHLUTER, DOMAIN as SCHLUTER_DOMAIN
 
@@ -24,39 +25,43 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Schluter thermostats."""
-    data = hass.data[DATA_SCHLUTER]
-    devices = []
+    session_id = hass.data[DATA_SCHLUTER].session_id
+    api = hass.data[DATA_SCHLUTER].api
     temp_unit = hass.config.units.temperature_unit
 
-    for thermostat in data.thermostats:
-        devices.append(SchluterThermostat(thermostat, temp_unit, data))
+    async def async_update_data():
+        try:
+            return api.get_thermostats(session_id) or []
+        except RequestException as err:
+            raise UpdateFailed(f"Error communicating with Schluter API: {err}")
 
-    async_add_entities(devices, True)
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="schluter",
+        update_method=async_update_data,
+        update_interval=timedelta(seconds=10),
+    )
+
+    await coordinator.async_refresh()
+
+    async_add_entities(
+        SchluterThermostat(coordinator, idx, temp_unit, api, session_id)
+        for idx, ent in enumerate(coordinator.data)
+    )
 
 
 class SchluterThermostat(ClimateDevice):
     """Representation of a Schluter thermostat."""
 
-    def __init__(self, device, temp_unit, data):
+    def __init__(self, coordinator, idx, temp_unit, api, session_id):
         """Initialize the thermostat."""
         self._unit = temp_unit
-        self.device = device
-        self.data = data
-
-        # Set the default supported features
+        self.coordinator = coordinator
+        self.idx = idx
+        self._api = api
+        self._session_id = session_id
         self._support_flags = SUPPORT_TARGET_TEMPERATURE
-
-        # data attributes
-        self._serial_number = None
-        self._group = None
-        self._name = None
-        self._target_temperature = None
-        self._temperature = None
-        self._temperature_scale = None
-        self._is_heating = None
-        self._action = None
-        self._min_temperature = None
-        self._max_temperature = None
 
     @property
     def should_poll(self):
@@ -71,23 +76,25 @@ class SchluterThermostat(ClimateDevice):
     @property
     def unique_id(self):
         """Return unique ID for this device."""
-        return self.device.serial_number
+        return self.coordinator.data[self.idx].serial_number
 
     @property
     def device_info(self):
         """Return information about the device."""
         return {
-            "identifiers": {(SCHLUTER_DOMAIN, self.device.serial_number)},
-            "name": self.device.name,
+            "identifiers": {
+                (SCHLUTER_DOMAIN, self.coordinator.data[self.idx].serial_number)
+            },
+            "name": self.coordinator.data[self.idx].name,
             "manufacturer": "Schluter",
             "model": "Thermostat",
-            "sw_version": self.device.sw_version,
+            "sw_version": self.coordinator.data[self.idx].sw_version,
         }
 
     @property
     def name(self):
         """Return the name of the thermostat."""
-        return self._name
+        return self.coordinator.data[self.idx].name
 
     @property
     def temperature_unit(self):
@@ -97,28 +104,32 @@ class SchluterThermostat(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self._temperature
+        return self.coordinator.data[self.idx].temperature
 
     @property
     def hvac_mode(self):
         """Return current operation ie. heat, idle."""
-        return HVAC_MODE_HEAT if self._is_heating else HVAC_MODE_OFF
+        return (
+            HVAC_MODE_HEAT
+            if self.coordinator.data[self.idx].is_heating
+            else HVAC_MODE_OFF
+        )
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self._target_temperature
+        return self.coordinator.data[self.idx].set_point_temp
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temp = None
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        _LOGGER.debug("Setting thermostat temperature: %s", temp)
+        target_temp = None
+        target_temp = kwargs.get(ATTR_TEMPERATURE)
+        serial_number = self.coordinator.data[self.idx].serial_number
+        _LOGGER.debug("Setting thermostat temperature: %s", target_temp)
 
         try:
-            if temp is not None:
-                self.device.target = temp
-                self.data.set_thermostat_temp(self._serial_number, temp)
+            if target_temp is not None:
+                self._api.set_temperature(self._session_id, serial_number, target_temp)
         except RequestException as ex:
             _LOGGER.error("An error occurred while setting temperature: %s", ex)
             self.schedule_update_ha_state(True)
@@ -142,22 +153,9 @@ class SchluterThermostat(ClimateDevice):
     @property
     def min_temp(self):
         """Identify min_temp in Schluter API."""
-        return self._min_temperature
+        return self.coordinator.data[self.idx].min_temp
 
     @property
     def max_temp(self):
         """Identify max_temp in Schluter API."""
-        return self._max_temperature
-
-    async def async_update(self):
-        """Cache value from py-schluter."""
-        await self.data.coordinator.async_request_refresh()
-        self._serial_number = self.device.serial_number
-        self._group = self.device.group_name
-        self._name = self.device.name
-        self._min_temperature = self.device.min_temp
-        self._max_temperature = self.device.max_temp
-        self._temperature_scale = TEMP_CELSIUS
-        self._temperature = self.device.temperature
-        self._is_heating = self.device.is_heating
-        self._target_temperature = self.device.set_point_temp
+        return self.coordinator.data[self.idx].max_temp
