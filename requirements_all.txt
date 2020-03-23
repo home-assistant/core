@@ -83,6 +83,7 @@ PyViCare==0.1.7
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.12.4
 
+# homeassistant.components.bmp280
 # homeassistant.components.mcp23017
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.7.0
@@ -110,6 +111,9 @@ abodepy==0.18.1
 
 # homeassistant.components.mcp23017
 adafruit-blinka==3.9.0
+
+# homeassistant.components.bmp280
+adafruit-circuitpython-bmp280==3.1.1
 
 # homeassistant.components.mcp23017
 adafruit-circuitpython-mcp230xx==2.2.2
