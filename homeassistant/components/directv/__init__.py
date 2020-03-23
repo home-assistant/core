@@ -89,13 +89,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class DIRECTVEntity(Entity):
     """Defines a base DirecTV entity."""
 
-    def __init__(
-        self,
-        *,
-        dtv: DIRECTV,
-        name: str,
-        address: str = "0",
-    ) -> None:
+    def __init__(self, *, dtv: DIRECTV, name: str, address: str = "0") -> None:
         """Initialize the DirecTV entity."""
         self._address = address
         self._is_client = address != "0"
