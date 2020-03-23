@@ -175,11 +175,27 @@ class GroupProbe:
         """Process a group and create any entities that are needed."""
         # only create a group entity if there are 2 or more members in a group
         if len(group.members) < 2:
+            _LOGGER.debug(
+                "Group: %s:0x%04x has less than 2 members - skipping entity discovery",
+                group.name,
+                group.group_id,
+            )
             return
 
         if group.entity_domain is None:
+            _LOGGER.debug(
+                "Group: %s:0x%04x has no user set entity domain - attempting entity domain discovery",
+                group.name,
+                group.group_id,
+            )
             group.entity_domain = GroupProbe.determine_default_entity_domain(
                 self._hass, group
+            )
+            _LOGGER.debug(
+                "Group: %s:0x%04x has an entity domain of: %s after discovery",
+                group.name,
+                group.group_id,
+                group.entity_domain,
             )
         if group.entity_domain is not None:
             zha_gateway = self._hass.data[zha_const.DATA_ZHA][
@@ -192,7 +208,7 @@ class GroupProbe:
                         entity_class,
                         (
                             group.domain_entity_ids,
-                            f"light_group_{group.group_id}",
+                            f"{group.entity_domain}_group_{group.group_id}",
                             group.group_id,
                             zha_gateway.coordinator_zha_device,
                         ),
