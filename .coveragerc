@@ -75,6 +75,7 @@ omit =
     homeassistant/components/bluetooth_tracker/*
     homeassistant/components/bme280/sensor.py
     homeassistant/components/bme680/sensor.py
+    homeassistant/components/bmp280/sensor.py
     homeassistant/components/bmw_connected_drive/*
     homeassistant/components/bom/camera.py
     homeassistant/components/bom/sensor.py
