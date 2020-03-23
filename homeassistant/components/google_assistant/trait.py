@@ -647,6 +647,14 @@ class TemperatureSettingTrait(_Trait):
 
         elif domain == climate.DOMAIN:
             modes = self.climate_google_modes
+
+            # Some integrations don't support modes (e.g. opentherm), but Google doesn't
+            # support changing the temperature if we don't have any modes. If there's
+            # only one Google doesn't support changing it, so the default mode here is
+            # only cosmetic.
+            if len(modes) == 0:
+                modes.append("heat")
+
             if "off" in modes and any(
                 mode in modes for mode in ("heatcool", "heat", "cool")
             ):
