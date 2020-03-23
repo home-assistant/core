@@ -85,6 +85,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     return unload_ok
 
+
 class DIRECTVEntity(Entity):
     """Defines a base DirecTV entity."""
 
