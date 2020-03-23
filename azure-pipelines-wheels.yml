@@ -19,7 +19,7 @@ schedules:
   always: true
 variables:
   - name: versionWheels
-    value: '1.9.0-3.7-alpine3.11'
+    value: '1.10.0-3.7-alpine3.11'
 resources:
   repositories:
     - repository: azure
@@ -36,6 +36,7 @@ jobs:
     skipBinary: 'aiohttp'
     wheelsRequirement: 'requirements_wheels.txt'
     wheelsRequirementDiff: 'requirements_diff.txt'
+    wheelsConstraint: 'homeassistant/package_constraints.txt'
     preBuild:
     - script: |
         cp requirements_all.txt requirements_wheels.txt
