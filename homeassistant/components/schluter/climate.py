@@ -66,7 +66,7 @@ class SchluterThermostat(ClimateDevice):
     @property
     def should_poll(self):
         """Return if platform should poll."""
-        return True
+        return False
 
     @property
     def supported_features(self):
@@ -120,20 +120,6 @@ class SchluterThermostat(ClimateDevice):
         """Return the temperature we try to reach."""
         return self.coordinator.data[self.idx].set_point_temp
 
-    def set_temperature(self, **kwargs):
-        """Set new target temperature."""
-        target_temp = None
-        target_temp = kwargs.get(ATTR_TEMPERATURE)
-        serial_number = self.coordinator.data[self.idx].serial_number
-        _LOGGER.debug("Setting thermostat temperature: %s", target_temp)
-
-        try:
-            if target_temp is not None:
-                self._api.set_temperature(self._session_id, serial_number, target_temp)
-        except RequestException as ex:
-            _LOGGER.error("An error occurred while setting temperature: %s", ex)
-            self.schedule_update_ha_state(True)
-
     @property
     def hvac_modes(self):
         """List of available operation modes."""
@@ -159,3 +145,25 @@ class SchluterThermostat(ClimateDevice):
     def max_temp(self):
         """Identify max_temp in Schluter API."""
         return self.coordinator.data[self.idx].max_temp
+
+    def set_temperature(self, **kwargs):
+        """Set new target temperature."""
+        target_temp = None
+        target_temp = kwargs.get(ATTR_TEMPERATURE)
+        serial_number = self.coordinator.data[self.idx].serial_number
+        _LOGGER.debug("Setting thermostat temperature: %s", target_temp)
+
+        try:
+            if target_temp is not None:
+                self._api.set_temperature(self._session_id, serial_number, target_temp)
+        except RequestException as ex:
+            _LOGGER.error("An error occurred while setting temperature: %s", ex)
+            self.schedule_update_ha_state(True)
+
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        self.coordinator.async_add_listener(self.async_write_ha_state)
+
+    async def async_will_remove_from_hass(self):
+        """When entity will be removed from hass."""
+        self.coordinator.async_remove_listener(self.async_write_ha_state)
