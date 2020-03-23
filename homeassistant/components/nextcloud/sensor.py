@@ -8,7 +8,7 @@ from . import DOMAIN, SENSORS
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nextcloud sensors."""
     if not discovery_info:
         return

@@ -17,7 +17,7 @@ from homeassistant.helpers.event import track_time_interval
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "nextcloud"
-
+NEXTCLOUD_COMPONENTS = ("sensor", "binary_sensor")
 SCAN_INTERVAL = timedelta(seconds=60)
 
 # Validate user configuration
@@ -90,9 +90,10 @@ SENSORS = (
 
 
 def setup(hass, config):
-    """Set up the Nextcloud sensor platform."""
+    """Set up the Nextcloud integration."""
     # Fetch Nextcloud Monitor api data
-    conf = config["sensor"][0]
+    conf = config[DOMAIN]
+
     try:
         ncm = NextcloudMonitor(conf[CONF_URL], conf[CONF_USERNAME], conf[CONF_PASSWORD])
     except NextcloudMonitorError:
@@ -106,14 +107,15 @@ def setup(hass, config):
             ncm.update()
         except NextcloudMonitorError:
             _LOGGER.error("Nextcloud update failed.")
+            return False
 
         hass.data[DOMAIN] = get_data_points(ncm.data)
 
     # Update sensors on time interval
     track_time_interval(hass, nextcloud_update, conf[CONF_SCAN_INTERVAL])
 
-    discovery.load_platform(hass, "sensor", DOMAIN, conf, config)
-    discovery.load_platform(hass, "binary_sensor", DOMAIN, conf, config)
+    for component in NEXTCLOUD_COMPONENTS:
+        discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
 
