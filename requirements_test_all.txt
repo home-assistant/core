@@ -719,7 +719,7 @@ tellduslive==0.10.10
 tesla-powerwall==0.1.1
 
 # homeassistant.components.tesla
-teslajsonpy==0.5.1
+teslajsonpy==0.6.0
 
 # homeassistant.components.toon
 toonapilib==3.2.4
