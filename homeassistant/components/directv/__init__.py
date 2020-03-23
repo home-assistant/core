@@ -7,11 +7,12 @@ from directv import DIRECTV, DIRECTVError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import Entity
 
 from .const import (
     ATTR_IDENTIFIERS,
