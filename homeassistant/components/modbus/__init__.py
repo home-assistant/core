@@ -23,24 +23,22 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
+from .const import (
+    ATTR_ADDRESS,
+    ATTR_HUB,
+    ATTR_UNIT,
+    ATTR_VALUE,
+    CONF_BAUDRATE,
+    CONF_BYTESIZE,
+    CONF_PARITY,
+    CONF_STOPBITS,
+    DEFAULT_HUB,
+    MODBUS_DOMAIN,
+    SERVICE_WRITE_COIL,
+    SERVICE_WRITE_REGISTER,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_ADDRESS = "address"
-ATTR_HUB = "hub"
-ATTR_UNIT = "unit"
-ATTR_VALUE = "value"
-
-CONF_BAUDRATE = "baudrate"
-CONF_BYTESIZE = "bytesize"
-CONF_HUB = "hub"
-CONF_PARITY = "parity"
-CONF_STOPBITS = "stopbits"
-
-DEFAULT_HUB = "default"
-DOMAIN = "modbus"
-
-SERVICE_WRITE_COIL = "write_coil"
-SERVICE_WRITE_REGISTER = "write_register"
 
 BASE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string})
 
@@ -68,7 +66,7 @@ ETHERNET_SCHEMA = BASE_SCHEMA.extend(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA)])},
+    {MODBUS_DOMAIN: vol.All(cv.ensure_list, [vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA)])},
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -95,10 +93,10 @@ SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up Modbus component."""
-    hass.data[DOMAIN] = hub_collect = {}
+    hass.data[MODBUS_DOMAIN] = hub_collect = {}
 
     _LOGGER.debug("registering hubs")
-    for client_config in config[DOMAIN]:
+    for client_config in config[MODBUS_DOMAIN]:
         hub_collect[client_config[CONF_NAME]] = ModbusHub(client_config, hass.loop)
 
     def stop_modbus(event):
@@ -116,13 +114,16 @@ async def async_setup(hass, config):
 
         # Register services for modbus
         hass.services.async_register(
-            DOMAIN,
+            MODBUS_DOMAIN,
             SERVICE_WRITE_REGISTER,
             write_register,
             schema=SERVICE_WRITE_REGISTER_SCHEMA,
         )
         hass.services.async_register(
-            DOMAIN, SERVICE_WRITE_COIL, write_coil, schema=SERVICE_WRITE_COIL_SCHEMA
+            MODBUS_DOMAIN,
+            SERVICE_WRITE_COIL,
+            write_coil,
+            schema=SERVICE_WRITE_COIL_SCHEMA,
         )
 
     async def write_register(service):

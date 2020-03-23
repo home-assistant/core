@@ -18,22 +18,25 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN
+from .const import (
+    CALL_TYPE_COIL,
+    CALL_TYPE_COILS,
+    CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_REGISTER_INPUT,
+    CONF_HUB,
+    CONF_REGISTER,
+    CONF_REGISTER_TYPE,
+    CONF_REGISTERS,
+    CONF_STATE_OFF,
+    CONF_STATE_ON,
+    CONF_VERIFY_REGISTER,
+    CONF_VERIFY_STATE,
+    DEFAULT_HUB,
+    MODBUS_DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_COIL = "coil"
-CONF_COILS = "coils"
-CONF_REGISTER = "register"
-CONF_REGISTER_TYPE = "register_type"
-CONF_REGISTERS = "registers"
-CONF_STATE_OFF = "state_off"
-CONF_STATE_ON = "state_on"
-CONF_VERIFY_REGISTER = "verify_register"
-CONF_VERIFY_STATE = "verify_state"
-
-DEFAULT_REGISTER_TYPE_HOLDING = "holding"
-DEFAULT_REGISTER_TYPE_INPUT = "input"
 
 REGISTERS_SCHEMA = vol.Schema(
     {
@@ -42,8 +45,8 @@ REGISTERS_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_REGISTER): cv.positive_int,
         vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
-        vol.Optional(CONF_REGISTER_TYPE, default=DEFAULT_REGISTER_TYPE_HOLDING): vol.In(
-            [DEFAULT_REGISTER_TYPE_HOLDING, DEFAULT_REGISTER_TYPE_INPUT]
+        vol.Optional(CONF_REGISTER_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
+            [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]
         ),
         vol.Optional(CONF_SLAVE): cv.positive_int,
         vol.Optional(CONF_STATE_OFF): cv.positive_int,
@@ -55,7 +58,7 @@ REGISTERS_SCHEMA = vol.Schema(
 
 COILS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_COIL): cv.positive_int,
+        vol.Required(CALL_TYPE_COIL): cv.positive_int,
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_SLAVE): cv.positive_int,
         vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
@@ -63,10 +66,10 @@ COILS_SCHEMA = vol.Schema(
 )
 
 PLATFORM_SCHEMA = vol.All(
-    cv.has_at_least_one_key(CONF_COILS, CONF_REGISTERS),
+    cv.has_at_least_one_key(CALL_TYPE_COILS, CONF_REGISTERS),
     PLATFORM_SCHEMA.extend(
         {
-            vol.Optional(CONF_COILS): [COILS_SCHEMA],
+            vol.Optional(CALL_TYPE_COILS): [COILS_SCHEMA],
             vol.Optional(CONF_REGISTERS): [REGISTERS_SCHEMA],
         }
     ),
@@ -76,13 +79,13 @@ PLATFORM_SCHEMA = vol.All(
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Read configuration and create Modbus devices."""
     switches = []
-    if CONF_COILS in config:
-        for coil in config[CONF_COILS]:
+    if CALL_TYPE_COILS in config:
+        for coil in config[CALL_TYPE_COILS]:
             hub_name = coil[CONF_HUB]
             hub = hass.data[MODBUS_DOMAIN][hub_name]
             switches.append(
                 ModbusCoilSwitch(
-                    hub, coil[CONF_NAME], coil[CONF_SLAVE], coil[CONF_COIL]
+                    hub, coil[CONF_NAME], coil[CONF_SLAVE], coil[CALL_TYPE_COIL]
                 )
             )
     if CONF_REGISTERS in config:
@@ -242,7 +245,7 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
         """Set switch on."""
 
         # Only holding register is writable
-        if self._register_type == DEFAULT_REGISTER_TYPE_HOLDING:
+        if self._register_type == CALL_TYPE_REGISTER_HOLDING:
             await self._write_register(self._command_on)
             if not self._verify_state:
                 self._is_on = True
@@ -251,7 +254,7 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
         """Set switch off."""
 
         # Only holding register is writable
-        if self._register_type == DEFAULT_REGISTER_TYPE_HOLDING:
+        if self._register_type == CALL_TYPE_REGISTER_HOLDING:
             await self._write_register(self._command_off)
             if not self._verify_state:
                 self._is_on = False
@@ -282,7 +285,7 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
 
     async def _read_register(self) -> Optional[int]:
         try:
-            if self._register_type == DEFAULT_REGISTER_TYPE_INPUT:
+            if self._register_type == CALL_TYPE_REGISTER_INPUT:
                 result = await self._hub.read_input_registers(
                     self._slave, self._register, 1
                 )

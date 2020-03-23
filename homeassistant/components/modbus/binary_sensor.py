@@ -14,27 +14,27 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_SLAVE
 from homeassistant.helpers import config_validation as cv
 
-from . import CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN
+from .const import (
+    CALL_TYPE_COIL,
+    CALL_TYPE_COILS,
+    CALL_TYPE_DISCRETE,
+    CONF_ADDRESS,
+    CONF_HUB,
+    CONF_INPUT_TYPE,
+    CONF_INPUTS,
+    DEFAULT_HUB,
+    MODBUS_DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DEPRECATED_COIL = "coil"
-CONF_DEPRECATED_COILS = "coils"
-
-CONF_INPUTS = "inputs"
-CONF_INPUT_TYPE = "input_type"
-CONF_ADDRESS = "address"
-
-DEFAULT_INPUT_TYPE_COIL = "coil"
-DEFAULT_INPUT_TYPE_DISCRETE = "discrete_input"
-
 PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_DEPRECATED_COILS, CONF_INPUTS),
+    cv.deprecated(CALL_TYPE_COILS, CONF_INPUTS),
     PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_INPUTS): [
                 vol.All(
-                    cv.deprecated(CONF_DEPRECATED_COIL, CONF_ADDRESS),
+                    cv.deprecated(CALL_TYPE_COIL, CONF_ADDRESS),
                     vol.Schema(
                         {
                             vol.Required(CONF_ADDRESS): cv.positive_int,
@@ -43,10 +43,8 @@ PLATFORM_SCHEMA = vol.All(
                             vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
                             vol.Optional(CONF_SLAVE): cv.positive_int,
                             vol.Optional(
-                                CONF_INPUT_TYPE, default=DEFAULT_INPUT_TYPE_COIL
-                            ): vol.In(
-                                [DEFAULT_INPUT_TYPE_COIL, DEFAULT_INPUT_TYPE_DISCRETE]
-                            ),
+                                CONF_INPUT_TYPE, default=CALL_TYPE_COIL
+                            ): vol.In([CALL_TYPE_COIL, CALL_TYPE_DISCRETE]),
                         }
                     ),
                 )
@@ -112,7 +110,7 @@ class ModbusBinarySensor(BinarySensorDevice):
     async def async_update(self):
         """Update the state of the sensor."""
         try:
-            if self._input_type == DEFAULT_INPUT_TYPE_COIL:
+            if self._input_type == CALL_TYPE_COIL:
                 result = await self._hub.read_coils(self._slave, self._address, 1)
             else:
                 result = await self._hub.read_discrete_inputs(

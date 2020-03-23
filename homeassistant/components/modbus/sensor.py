@@ -19,26 +19,27 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN
+from .const import (
+    CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_REGISTER_INPUT,
+    CONF_COUNT,
+    CONF_DATA_TYPE,
+    CONF_HUB,
+    CONF_PRECISION,
+    CONF_REGISTER,
+    CONF_REGISTER_TYPE,
+    CONF_REGISTERS,
+    CONF_REVERSE_ORDER,
+    CONF_SCALE,
+    DATA_TYPE_CUSTOM,
+    DATA_TYPE_FLOAT,
+    DATA_TYPE_INT,
+    DATA_TYPE_UINT,
+    DEFAULT_HUB,
+    MODBUS_DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_COUNT = "count"
-CONF_DATA_TYPE = "data_type"
-CONF_PRECISION = "precision"
-CONF_REGISTER = "register"
-CONF_REGISTER_TYPE = "register_type"
-CONF_REGISTERS = "registers"
-CONF_REVERSE_ORDER = "reverse_order"
-CONF_SCALE = "scale"
-
-DATA_TYPE_CUSTOM = "custom"
-DATA_TYPE_FLOAT = "float"
-DATA_TYPE_INT = "int"
-DATA_TYPE_UINT = "uint"
-
-DEFAULT_REGISTER_TYPE_HOLDING = "holding"
-DEFAULT_REGISTER_TYPE_INPUT = "input"
 
 
 def number(value: Any) -> Union[int, float]:
@@ -75,8 +76,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 vol.Optional(CONF_OFFSET, default=0): number,
                 vol.Optional(CONF_PRECISION, default=0): cv.positive_int,
                 vol.Optional(
-                    CONF_REGISTER_TYPE, default=DEFAULT_REGISTER_TYPE_HOLDING
-                ): vol.In([DEFAULT_REGISTER_TYPE_HOLDING, DEFAULT_REGISTER_TYPE_INPUT]),
+                    CONF_REGISTER_TYPE, default=CALL_TYPE_REGISTER_HOLDING
+                ): vol.In([CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]),
                 vol.Optional(CONF_REVERSE_ORDER, default=False): cv.boolean,
                 vol.Optional(CONF_SCALE, default=1): number,
                 vol.Optional(CONF_SLAVE): cv.positive_int,
@@ -221,7 +222,7 @@ class ModbusRegisterSensor(RestoreEntity):
     async def async_update(self):
         """Update the state of the sensor."""
         try:
-            if self._register_type == DEFAULT_REGISTER_TYPE_INPUT:
+            if self._register_type == CALL_TYPE_REGISTER_INPUT:
                 result = await self._hub.read_input_registers(
                     self._slave, self._register, self._count
                 )
