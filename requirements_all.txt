@@ -205,6 +205,9 @@ aionotion==1.1.0
 # homeassistant.components.hunterdouglas_powerview
 aiopvapi==1.6.14
 
+# homeassistant.components.pvpc_hourly_pricing
+aiopvpc==1.0.2
+
 # homeassistant.components.webostv
 aiopylgtv==0.3.3
 
@@ -233,7 +236,7 @@ alpha_vantage==2.1.3
 ambiclimate==0.2.1
 
 # homeassistant.components.amcrest
-amcrest==1.5.6
+amcrest==1.7.0
 
 # homeassistant.components.androidtv
 androidtv==0.0.41
@@ -902,9 +905,6 @@ minio==4.0.9
 # homeassistant.components.mitemp_bt
 mitemp_bt==0.0.3
 
-# homeassistant.components.mopar
-motorparts==1.1.0
-
 # homeassistant.components.tts
 mutagen==1.44.0
 
@@ -1052,6 +1052,7 @@ pilight==0.1.1
 # homeassistant.components.proxy
 # homeassistant.components.qrcode
 # homeassistant.components.seven_segments
+# homeassistant.components.sighthound
 # homeassistant.components.tensorflow
 pillow==7.1.2
 
@@ -1185,9 +1186,6 @@ pyaftership==0.1.2
 
 # homeassistant.components.airvisual
 pyairvisual==4.4.0
-
-# homeassistant.components.alarmdotcom
-pyalarmdotcom==0.3.2
 
 # homeassistant.components.almond
 pyalmond==0.0.2
@@ -1335,7 +1333,7 @@ pygogogate2==0.1.1
 pygtfs==0.1.5
 
 # homeassistant.components.version
-pyhaversion==3.2.0
+pyhaversion==3.3.0
 
 # homeassistant.components.heos
 pyheos==0.6.0
@@ -1589,7 +1587,7 @@ pysnmp==4.4.12
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.24
+pysonos==0.0.25
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0

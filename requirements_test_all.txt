@@ -199,6 +199,9 @@ directv==0.3.0
 # homeassistant.components.updater
 distro==1.5.0
 
+# homeassistant.components.doorbird
+doorbirdpy==2.0.8
+
 # homeassistant.components.dsmr
 dsmr_parser==0.18
 
@@ -543,7 +546,7 @@ pyfttt==0.3
 pygatt[GATTTOOL]==4.0.5
 
 # homeassistant.components.version
-pyhaversion==3.2.0
+pyhaversion==3.3.0
 
 # homeassistant.components.heos
 pyheos==0.6.0
@@ -644,7 +647,7 @@ pysmartthings==0.7.1
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.24
+pysonos==0.0.25
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
