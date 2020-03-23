@@ -19,7 +19,7 @@ schedules:
   always: true
 variables:
   - name: versionWheels
-    value: '1.8.0-3.7-alpine3.11'
+    value: '1.9.0-3.7-alpine3.11'
 resources:
   repositories:
     - repository: azure
