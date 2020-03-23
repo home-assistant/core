@@ -3,7 +3,7 @@
 import asyncio
 import logging
 import time
-from typing import Any, Dict
+from typing import Any, Awaitable, Dict, List
 
 from homeassistant.core import callback
 from homeassistant.helpers import entity
@@ -32,18 +32,18 @@ RESTART_GRACE_PERIOD = 7200  # 2 hours
 class BaseZhaEntity(RestoreEntity, LogMixin, entity.Entity):
     """A base class for ZHA entities."""
 
-    def __init__(self, unique_id: str, zha_device, **kwargs):
+    def __init__(self, unique_id: str, zha_device: ZhaDeviceType, **kwargs):
         """Init ZHA entity."""
-        self._name = ""
-        self._force_update = False
-        self._should_poll = False
-        self._unique_id = unique_id
-        self._state = None
-        self._device_state_attributes = {}
-        self._zha_device = zha_device
-        self._available = False
-        self._unsubs = []
-        self.remove_future = None
+        self._name: str = ""
+        self._force_update: bool = False
+        self._should_poll: bool = False
+        self._unique_id: str = unique_id
+        self._state: Any = None
+        self._device_state_attributes: Dict[str, Any] = {}
+        self._zha_device: ZhaDeviceType = zha_device
+        self._available: bool = False
+        self._unsubs: List[CALLABLE_T] = []
+        self.remove_future: Awaitable[None] = None
 
     @property
     def name(self) -> str:
@@ -170,8 +170,8 @@ class ZhaEntity(BaseZhaEntity):
         ieeetail = "".join([f"{o:02x}" for o in zha_device.ieee[:4]])
         ch_names = [ch.cluster.ep_attribute for ch in channels]
         ch_names = ", ".join(sorted(ch_names))
-        self._name = f"{zha_device.name} {ieeetail} {ch_names}"
-        self.cluster_channels = {}
+        self._name: str = f"{zha_device.name} {ieeetail} {ch_names}"
+        self.cluster_channels: Dict[str, ChannelType] = {}
         for channel in channels:
             self.cluster_channels[channel.name] = channel
 
