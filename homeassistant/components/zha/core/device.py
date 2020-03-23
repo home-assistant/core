@@ -93,8 +93,11 @@ class ZHADevice(LogMixin):
             self.name, self.ieee, SIGNAL_AVAILABLE
         )
         self._checkins_missed_count = 0
-        self._unsub = async_dispatcher_connect(
-            self.hass, self._available_signal, self.async_initialize
+        self.unsubs = []
+        self.unsubs.append(
+            async_dispatcher_connect(
+                self.hass, self._available_signal, self.async_initialize
+            )
         )
         self.quirk_applied = isinstance(self._zigpy_device, zigpy.quirks.CustomDevice)
         self.quirk_class = "{}.{}".format(
@@ -106,8 +109,10 @@ class ZHADevice(LogMixin):
         else:
             self._consider_unavailable_time = _CONSIDER_UNAVAILABLE_BATTERY
         keep_alive_interval = random.randint(*_UPDATE_ALIVE_INTERVAL)
-        self._cancel_available_check = async_track_time_interval(
-            self.hass, self._check_available, timedelta(seconds=keep_alive_interval)
+        self.unsubs.append(
+            async_track_time_interval(
+                self.hass, self._check_available, timedelta(seconds=keep_alive_interval)
+            )
         )
         self._ha_device_id = None
         self.status = DeviceStatus.CREATED
@@ -277,10 +282,12 @@ class ZHADevice(LogMixin):
         """Create new device."""
         zha_dev = cls(hass, zigpy_dev, gateway)
         zha_dev.channels = channels.Channels.new(zha_dev)
-        async_dispatcher_connect(
-            hass,
-            SIGNAL_UPDATE_DEVICE.format(zha_dev.channels.unique_id),
-            zha_dev.async_update_sw_build_id,
+        zha_dev.unsubs.append(
+            async_dispatcher_connect(
+                hass,
+                SIGNAL_UPDATE_DEVICE.format(zha_dev.channels.unique_id),
+                zha_dev.async_update_sw_build_id,
+            )
         )
         return zha_dev
 
@@ -385,8 +392,8 @@ class ZHADevice(LogMixin):
     @callback
     def async_cleanup_handles(self) -> None:
         """Unsubscribe the dispatchers and timers."""
-        self._unsub()
-        self._cancel_available_check()
+        for unsubscribe in self.unsubs:
+            unsubscribe()
 
     @callback
     def async_update_last_seen(self, last_seen):
