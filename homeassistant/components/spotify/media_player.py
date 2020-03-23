@@ -319,6 +319,8 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
                     device["id"], self.state == STATE_PLAYING
                 )
                 return
+        """If no matching device is found, try sending as an ID""""
+        self._spotify.transfer_playback(source, self.state == STATE_PLAYING)
 
     @spotify_exception_handler
     def set_shuffle(self, shuffle: bool) -> None:
