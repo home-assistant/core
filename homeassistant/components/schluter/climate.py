@@ -14,7 +14,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE, CONF_SCAN_INTERVAL
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from . import DATA_SCHLUTER_SESSION, DATA_SCHLUTER_API, DOMAIN as SCHLUTER_DOMAIN
+from . import DATA_SCHLUTER_API, DATA_SCHLUTER_SESSION, DOMAIN as SCHLUTER_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=5)
