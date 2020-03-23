@@ -7,9 +7,9 @@ import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
+    HVAC_MODE_HEAT,
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, CONF_SCAN_INTERVAL
