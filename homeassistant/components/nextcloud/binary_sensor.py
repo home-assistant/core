@@ -10,7 +10,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
     """Set up the Nextcloud sensors."""
-    if not discovery_info:
+    if discovery_info is None:
         return
     binary_sensors = []
     for name in hass.data[DOMAIN]:
