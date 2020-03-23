@@ -1,4 +1,4 @@
-"""Tests for the pvpc_hourly_pricing component."""
+"""Tests for the pvpc_hourly_pricing sensor component."""
 from datetime import datetime, timedelta
 import logging
 from unittest.mock import patch
@@ -27,7 +27,9 @@ async def _process_time_step(
     return state
 
 
-async def test_availability(hass, caplog, pvpc_aioclient_mock: AiohttpClientMocker):
+async def test_sensor_availability(
+    hass, caplog, pvpc_aioclient_mock: AiohttpClientMocker
+):
     """Test sensor availability and handling of cloud access."""
     hass.config.time_zone = timezone("Europe/Madrid")
     config = {DOMAIN: [{CONF_NAME: "test_dst", ATTR_TARIFF: "discrimination"}]}
@@ -59,7 +61,7 @@ async def test_availability(hass, caplog, pvpc_aioclient_mock: AiohttpClientMock
         )
         assert num_warnings == 1
         assert num_errors == 0
-        assert pvpc_aioclient_mock.call_count == 7
+        assert pvpc_aioclient_mock.call_count == 9
 
         # check that it is silent until it becomes available again
         caplog.clear()
@@ -67,19 +69,19 @@ async def test_availability(hass, caplog, pvpc_aioclient_mock: AiohttpClientMock
             # silent mode
             for _ in range(21):
                 await _process_time_step(hass, mock_data, value="unavailable")
-            assert pvpc_aioclient_mock.call_count == 28
+            assert pvpc_aioclient_mock.call_count == 30
             assert len(caplog.messages) == 0
 
             # warning about data access recovered
             await _process_time_step(hass, mock_data, value="unavailable")
-            assert pvpc_aioclient_mock.call_count == 29
+            assert pvpc_aioclient_mock.call_count == 31
             assert len(caplog.messages) == 1
             assert caplog.records[0].levelno == logging.WARNING
 
             # working ok again
             await _process_time_step(hass, mock_data, "price_00h", value=0.06821)
-            assert pvpc_aioclient_mock.call_count == 30
+            assert pvpc_aioclient_mock.call_count == 32
             await _process_time_step(hass, mock_data, "price_01h", value=0.06627)
-            assert pvpc_aioclient_mock.call_count == 31
+            assert pvpc_aioclient_mock.call_count == 33
             assert len(caplog.messages) == 1
             assert caplog.records[0].levelno == logging.WARNING
