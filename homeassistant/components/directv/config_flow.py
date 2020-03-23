@@ -47,7 +47,10 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason=ERROR_CANNOT_CONNECT)
 
         host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
-        receiver_id = discovery_info[ATTR_UPNP_SERIAL][4:]  # strips off RID-
+        receiver_id = None
+
+        if discovery_info.get(ATTR_UPNP_SERIAL):
+            receiver_id = discovery_info[ATTR_UPNP_SERIAL][4:]  # strips off RID-
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update(

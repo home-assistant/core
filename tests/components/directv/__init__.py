@@ -1,5 +1,6 @@
 """Tests for the DirecTV component."""
 from homeassistant.components.directv.const import CONF_RECEIVER_ID, DOMAIN
+from homeassistant.components.ssdp import ATTR_SSDP_LOCATION
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -12,6 +13,8 @@ SSDP_LOCATION = "http://127.0.0.1/"
 UPNP_SERIAL = "RID-028877455858"
 
 MOCK_CONFIG = {DOMAIN: [{CONF_HOST: HOST}]}
+MOCK_SSDP_DISCOVERY_INFO = {ATTR_SSDP_LOCATION: SSDP_LOCATION}
+MOCK_USER_INPUT = {CONF_HOST: HOST}
 
 
 def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
