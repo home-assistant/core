@@ -1892,7 +1892,7 @@ class AlexaCameraStreamController(AlexaCapability):
         """Return cameraStreamConfigurations object."""
         camera_stream_configurations = [
             {
-                "protocols": ["RTSP"],
+                "protocols": ["HLS"],
                 "resolutions": [
                     {"width": 1920, "height": 1080},
                     {"width": 1280, "height": 720},

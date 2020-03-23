@@ -3775,7 +3775,7 @@ async def test_camera_discovery(hass):
         capabilities, "Alexa.CameraStreamController"
     )
     configuration = camera_stream_capability["cameraStreamConfigurations"][0]
-    assert "RTSP" in configuration["protocols"]
+    assert "HLS" in configuration["protocols"]
     assert {"width": 1920, "height": 1080} in configuration["resolutions"]
     assert {"width": 1280, "height": 720} in configuration["resolutions"]
     assert {"width": 640, "height": 480} in configuration["resolutions"]
