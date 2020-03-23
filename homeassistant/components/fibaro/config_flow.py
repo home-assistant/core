@@ -53,7 +53,7 @@ class DriveFlowHandler(config_entries.ConfigFlow):
     async def async_step_auth(self, user_input=None):
         """Handle a flow start."""
         errors = {}
-        description_placeholders = {}
+        description_placeholders = {"error_info": ""}
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_URL): str,
@@ -78,7 +78,7 @@ class DriveFlowHandler(config_entries.ConfigFlow):
             except Exception as e:
                 errors = {CONF_URL: "auth_error"}
                 description_placeholders = {
-                    "error_info": "Can't connect to Fibaro HC. Fibaro info: " + str(e)
+                    "error_info": "Can not connect to Fibaro HC. Fibaro info: " + str(e)
                 }
 
         return self.async_show_form(
