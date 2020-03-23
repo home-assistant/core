@@ -8,7 +8,8 @@ import voluptuous as vol
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, CONF_SCAN_INTERVAL
@@ -106,11 +107,16 @@ class SchluterThermostat(ClimateDevice):
 
     @property
     def hvac_mode(self):
-        """Return current operation ie. heat, idle."""
+        """Return current mode. Only heat available for floor thermostat."""
+        return HVAC_MODE_HEAT
+
+    @property
+    def hvac_action(self):
+        """Return current operation. Can only be heating or idle."""
         return (
-            HVAC_MODE_HEAT
+            CURRENT_HVAC_HEAT
             if self.coordinator.data[self.idx].is_heating
-            else HVAC_MODE_OFF
+            else CURRENT_HVAC_IDLE
         )
 
     @property
