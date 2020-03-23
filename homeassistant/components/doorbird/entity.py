@@ -1,4 +1,4 @@
-"""The Tesla Powerwall integration base entity."""
+"""The DoorBird integration base entity."""
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
