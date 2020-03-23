@@ -56,9 +56,7 @@ async def test_climate_thermostat_schedule_hold_unavailable(hass):
         await hass.async_block_till_done()
 
     state = hass.states.get("climate.guest_bathroom")
-    import pprint
 
-    pprint.pprint(state.attributes)
     assert state.state == "unavailable"
     expected_attributes = {
         "friendly_name": "Guest bathroom",
@@ -85,9 +83,7 @@ async def test_climate_thermostat_schedule_hold_available(hass):
         await hass.async_block_till_done()
 
     state = hass.states.get("climate.available_bathroom")
-    import pprint
 
-    pprint.pprint(state.attributes)
     assert state.state == "auto"
     expected_attributes = {
         "current_temperature": 38.9,
@@ -118,9 +114,7 @@ async def test_climate_thermostat_schedule_temporary_hold(hass):
         await hass.async_block_till_done()
 
     state = hass.states.get("climate.temp_bathroom")
-    import pprint
 
-    pprint.pprint(state.attributes)
     assert state.state == "auto"
     expected_attributes = {
         "current_temperature": 94.4,
