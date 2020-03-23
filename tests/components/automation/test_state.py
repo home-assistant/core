@@ -519,6 +519,28 @@ async def test_if_fires_on_entity_change_with_for(hass, calls):
     assert 1 == len(calls)
 
 
+async def test_if_fires_on_entity_removal(hass, calls):
+    """Test for firing on entity removal, when new_state is None."""
+    hass.states.async_set("test.entity", "hello")
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "state", "entity_id": "test.entity"},
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.async_remove("test.entity")
+    await hass.async_block_till_done()
+    assert 1 == len(calls)
+
+
 async def test_if_fires_on_for_condition(hass, calls):
     """Test for firing if condition is on."""
     point1 = dt_util.utcnow()
