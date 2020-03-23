@@ -34,7 +34,6 @@ from .const import (
     SERVICE_CHANGE_CHANNEL,
     SERVICE_SYNC,
 )
-from .util import find_unique_id_for_remote
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -130,7 +129,7 @@ def register_services(hass):
 class HarmonyRemote(remote.RemoteDevice):
     """Remote representation used to control a Harmony device."""
 
-    def __init__(self, name, host, activity, out_path, delay_secs):
+    def __init__(self, name, unique_id, host, activity, out_path, delay_secs):
         """Initialize HarmonyRemote class."""
         self._name = name
         self.host = host
@@ -141,6 +140,7 @@ class HarmonyRemote(remote.RemoteDevice):
         self._config_path = out_path
         self.delay_secs = delay_secs
         self._available = False
+        self._unique_id = unique_id
         self._undo_dispatch_subscription = None
 
     @property
@@ -217,7 +217,7 @@ class HarmonyRemote(remote.RemoteDevice):
     @property
     def unique_id(self):
         """Return the unique id."""
-        return find_unique_id_for_remote(self._client)
+        return self._unique_id
 
     @property
     def name(self):
