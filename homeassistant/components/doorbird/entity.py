@@ -4,7 +4,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 
 from .const import (
-    DOMAIN,
     DOORBIRD_INFO_KEY_BUILD_NUMBER,
     DOORBIRD_INFO_KEY_DEVICE_TYPE,
     DOORBIRD_INFO_KEY_FIRMWARE,
@@ -29,7 +28,6 @@ class DoorBirdEntity(Entity):
         firmware = self._doorstation_info[DOORBIRD_INFO_KEY_FIRMWARE]
         firmware_build = self._doorstation_info[DOORBIRD_INFO_KEY_BUILD_NUMBER]
         return {
-            "identifiers": {(DOMAIN, self._mac_addr)},
             "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac_addr)},
             "name": self._doorstation.name,
             "manufacturer": MANUFACTURER,
