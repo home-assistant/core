@@ -14,7 +14,8 @@ import homeassistant.helpers.config_validation as cv
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-DATA_SCHLUTER = "schluter"
+DATA_SCHLUTER_SESSION = "schluter_session"
+DATA_SCHLUTER_API = "schluter_api"
 PLATFORMS = ["climate"]
 DEFAULT_TIMEOUT = 10
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
@@ -46,7 +47,8 @@ async def async_setup_schluter(hass, config, api, authenticator):
     state = authentication.state
 
     if state == AuthenticationState.AUTHENTICATED:
-        hass.data[DATA_SCHLUTER] = SchluterPlatformData(authentication.session_id, api)
+        hass.data[DATA_SCHLUTER_SESSION] = authentication.session_id
+        hass.data[DATA_SCHLUTER_API] = api
 
         for component in PLATFORMS:
             discovery.load_platform(hass, component, DOMAIN, {}, config)
@@ -82,12 +84,3 @@ async def async_setup(hass, config):
     )
 
     return await async_setup_schluter(hass, config, api, authenticator)
-
-
-class SchluterPlatformData:
-    """Data object for passing necessary objects to platform."""
-
-    def __init__(self, session_id, api):
-        """Initialize platform data object."""
-        self.session_id = session_id
-        self.api = api

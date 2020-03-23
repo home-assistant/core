@@ -14,7 +14,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE, CONF_SCAN_INTERVAL
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from . import DATA_SCHLUTER, DOMAIN as SCHLUTER_DOMAIN
+from . import DATA_SCHLUTER_SESSION, DATA_SCHLUTER_API, DOMAIN as SCHLUTER_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -25,8 +25,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Schluter thermostats."""
-    session_id = hass.data[DATA_SCHLUTER].session_id
-    api = hass.data[DATA_SCHLUTER].api
+    session_id = hass.data[DATA_SCHLUTER_SESSION]
+    api = hass.data[DATA_SCHLUTER_API]
     temp_unit = hass.config.units.temperature_unit
 
     async def async_update_data():
@@ -40,7 +40,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         _LOGGER,
         name="schluter",
         update_method=async_update_data,
-        update_interval=timedelta(seconds=10),
+        update_interval=SCAN_INTERVAL,
     )
 
     await coordinator.async_refresh()
