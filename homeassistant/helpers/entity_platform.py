@@ -24,6 +24,7 @@ if TYPE_CHECKING:
 SLOW_SETUP_WARNING = 10
 SLOW_SETUP_MAX_WAIT = 60
 PLATFORM_NOT_READY_RETRIES = 10
+DATA_ENTITY_PLATFORM = "entity_platform"
 
 
 class EntityPlatform:
@@ -57,15 +58,15 @@ class EntityPlatform:
         self._async_cancel_retry_setup: Optional[CALLBACK_TYPE] = None
         self._process_updates: Optional[asyncio.Lock] = None
 
+        self.parallel_updates: Optional[asyncio.Semaphore] = None
+
         # Platform is None for the EntityComponent "catch-all" EntityPlatform
         # which powers entity_component.add_entities
-        if platform is None:
-            self.parallel_updates_created = True
-            self.parallel_updates: Optional[asyncio.Semaphore] = None
-            return
+        self.parallel_updates_created = platform is None
 
-        self.parallel_updates_created = False
-        self.parallel_updates = None
+        hass.data.setdefault(DATA_ENTITY_PLATFORM, {}).setdefault(
+            self.platform_name, []
+        ).append(self)
 
     @callback
     def _get_parallel_updates_semaphore(
@@ -464,6 +465,14 @@ class EntityPlatform:
             self._async_unsub_polling()
             self._async_unsub_polling = None
 
+    async def async_destroy(self) -> None:
+        """Destroy an entity platform.
+
+        Call before discarding the object.
+        """
+        await self.async_reset()
+        self.hass.data[DATA_ENTITY_PLATFORM][self.platform_name].remove(self)
+
     async def async_remove_entity(self, entity_id: str) -> None:
         """Remove entity id from platform."""
         await self.entities[entity_id].async_remove()
@@ -488,14 +497,24 @@ class EntityPlatform:
 
     @callback
     def async_register_entity_service(self, name, schema, func, required_features=None):
-        """Register an entity service."""
+        """Register an entity service.
+
+        Services will automatically be shared by all platforms of the same domain.
+        """
+        if self.hass.services.has_service(self.platform_name, name):
+            return
+
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
         async def handle_service(call):
             """Handle the service."""
             await service.entity_service_call(
-                self.hass, [self], func, call, required_features
+                self.hass,
+                self.hass.data[DATA_ENTITY_PLATFORM][self.platform_name],
+                func,
+                call,
+                required_features,
             )
 
         self.hass.services.async_register(
