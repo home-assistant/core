@@ -4,7 +4,13 @@ from unittest.mock import patch
 from teslajsonpy import TeslaException
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.tesla.const import DOMAIN, MIN_SCAN_INTERVAL
+from homeassistant.components.tesla.const import (
+    CONF_WAKE_ON_START,
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_WAKE_ON_START,
+    DOMAIN,
+    MIN_SCAN_INTERVAL,
+)
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_PASSWORD,
@@ -137,10 +143,34 @@ async def test_option_flow(hass):
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_SCAN_INTERVAL: 350}
+        result["flow_id"],
+        user_input={CONF_SCAN_INTERVAL: 350, CONF_WAKE_ON_START: True},
     )
     assert result["type"] == "create_entry"
-    assert result["data"] == {CONF_SCAN_INTERVAL: 350}
+    assert result["data"] == {
+        CONF_SCAN_INTERVAL: 350,
+        CONF_WAKE_ON_START: True,
+    }
+
+
+async def test_option_flow_defaults(hass):
+    """Test config flow options."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options=None)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] == "create_entry"
+    assert result["data"] == {
+        CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+        CONF_WAKE_ON_START: DEFAULT_WAKE_ON_START,
+    }
 
 
 async def test_option_flow_input_floor(hass):
@@ -157,4 +187,7 @@ async def test_option_flow_input_floor(hass):
         result["flow_id"], user_input={CONF_SCAN_INTERVAL: 1}
     )
     assert result["type"] == "create_entry"
-    assert result["data"] == {CONF_SCAN_INTERVAL: MIN_SCAN_INTERVAL}
+    assert result["data"] == {
+        CONF_SCAN_INTERVAL: MIN_SCAN_INTERVAL,
+        CONF_WAKE_ON_START: DEFAULT_WAKE_ON_START,
+    }
