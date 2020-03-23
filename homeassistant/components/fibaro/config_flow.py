@@ -5,15 +5,15 @@ import logging
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_URL
 from homeassistant.core import callback
-import json
 from homeassistant.components import ais_cloud
+from fiblary3.client.v4.client import Client as FibaroClient
+
 
 aisCloudWS = ais_cloud.AisCloudWS()
 
 _LOGGER = logging.getLogger(__name__)
 DRIVE_NAME_INPUT = None
 DRIVE_TYPE_INPUT = None
-AUTH_URL = None
 DOMAIN = "fibaro"
 CONF_OAUTH_JSON = ""
 
@@ -52,26 +52,34 @@ class DriveFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_auth(self, user_input=None):
         """Handle a flow start."""
-        global AUTH_URL
-        description_placeholders = {"error_info": "", "auth_url": AUTH_URL}
         errors = {}
+        description_placeholders = {}
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_URL): str,
                 vol.Required(CONF_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
-            },
+            }
         )
         if user_input is not None and CONF_URL in user_input:
             # test the connection
-            ws_ret = None
             try:
-                response = ws_ret.json()
-                ret = response["message"]
+                fibaro_client = FibaroClient(
+                    user_input[CONF_URL],
+                    user_input[CONF_USERNAME],
+                    user_input[CONF_PASSWORD],
+                )
+                login = fibaro_client.login.get()
+                info = fibaro_client.info.get()
+                _LOGGER.warning("Fibaro login: " + str(login))
+                _LOGGER.warning("Fibaro info: " + str(info))
+                _LOGGER.warning("Fibaro serialNumber: " + info.serialNumber)
                 return self.async_create_entry(title="Fibaro Hub", data=user_input)
             except Exception as e:
                 errors = {CONF_URL: "auth_error"}
-                description_placeholders = {"auth_url": AUTH_URL, "error_info": str(e)}
+                description_placeholders = {
+                    "error_info": "Can't connect to Fibaro HC. Fibaro info: " + str(e)
+                }
 
         return self.async_show_form(
             step_id="auth",

@@ -7,7 +7,7 @@
                   "title": "AIS Fibaro"
              },
             "auth": {
-                "description": "Konfiguracja komunikacji z Fibaro Hub wymaga podania danych dostępu.\n\n ![AIS logo](/static/icons/ais_fibaro.png)\n\n{error_info}",
+                "description": "Konfiguracja komunikacji z Fibaro Hub wymaga podania danych dostępu.\n\n ![AIS logo](/static/icons/ais_fibaro.png)\n\n Aby użyć urządzeń Fibaro w Asystencie domowym, podaj następujące dane dotyczące kontrolera Fibaro:  \n\n{error_info}",
                 "title": "Połączenie z Fibaro Hub",
                 "data": {
                     "url": "URL: http://fibaro-gate-ip/api/",
@@ -17,9 +17,7 @@
             }
         },
         "error": {
-            "auth_error": "Niepoprawne dane logowania",
-            "user_error": "Niepoprawny login",
-            "ip_error": "Niepoprawny IP"
+            "auth_error": "Niepoprawne dane logowania"
         },
         "abort": {
             "single_instance_allowed": "Masz już skonfigurowany Hub Fibaro.\n\n Jeśli chcesz skonfigurować ponownie to najpierw usuń bieżącą integrację."

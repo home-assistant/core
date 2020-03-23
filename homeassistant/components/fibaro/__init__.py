@@ -5,6 +5,7 @@ from typing import Optional
 
 from fiblary3.client.v4.client import Client as FibaroClient, StateHandler
 import voluptuous as vol
+from homeassistant.config_entries import SOURCE_IMPORT
 
 from homeassistant.const import (
     ATTR_ARMED,
@@ -310,10 +311,40 @@ class FibaroController:
                 pass
 
 
-def setup(hass, base_config):
+# AIS
+async def async_setup(hass, config):
     """Set up the Fibaro Component."""
-    gateways = base_config[DOMAIN][CONF_GATEWAYS]
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][CONF_GATEWAYS] = {}
     hass.data[FIBARO_CONTROLLERS] = {}
+
+
+async def async_setup_entry(hass, config_entry):
+    """Set up config entry."""
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+    hass.async_create_task(async_discover_devices(hass, config_entry))
+    return True
+
+
+async def async_unload_entry(hass, config_entry):
+    """Unload a config entry."""
+    # TODO await hass.config_entries.async_forward_entry_unload(config_entry, "xxx")
+    return True
+
+
+async def async_discover_devices(hass, config_entry):
+    """
+    Run periodically to discover new devices.
+
+    Currently it's only run at startup.
+    """
+    # ------------
+    gateway = (
+        config_entry[CONF_URL],
+        config_entry[CONF_USERNAME],
+        config_entry[CONF_PASSWORD],
+    )
 
     def stop_fibaro(event):
         """Stop Fibaro Thread."""
@@ -325,24 +356,58 @@ def setup(hass, base_config):
     for component in FIBARO_COMPONENTS:
         hass.data[FIBARO_DEVICES][component] = []
 
-    for gateway in gateways:
-        controller = FibaroController(gateway)
-        if controller.connect():
-            hass.data[FIBARO_CONTROLLERS][controller.hub_serial] = controller
-            for component in FIBARO_COMPONENTS:
-                hass.data[FIBARO_DEVICES][component].extend(
-                    controller.fibaro_devices[component]
-                )
+    controller = FibaroController(gateway)
+    if controller.connect():
+        hass.data[FIBARO_CONTROLLERS][controller.hub_serial] = controller
+        for component in FIBARO_COMPONENTS:
+            hass.data[FIBARO_DEVICES][component].extend(
+                controller.fibaro_devices[component]
+            )
 
     if hass.data[FIBARO_CONTROLLERS]:
         for component in FIBARO_COMPONENTS:
-            discovery.load_platform(hass, component, DOMAIN, {}, base_config)
+            discovery.load_platform(hass, component, DOMAIN, {}, config_entry)
         for controller in hass.data[FIBARO_CONTROLLERS].values():
             controller.enable_state_handler()
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_fibaro)
         return True
 
     return False
+
+
+# def setup(hass, base_config):
+#     """Set up the Fibaro Component."""
+#     gateways = base_config[DOMAIN][CONF_GATEWAYS]
+#     hass.data[FIBARO_CONTROLLERS] = {}
+#
+#     def stop_fibaro(event):
+#         """Stop Fibaro Thread."""
+#         _LOGGER.info("Shutting down Fibaro connection")
+#         for controller in hass.data[FIBARO_CONTROLLERS].values():
+#             controller.disable_state_handler()
+#
+#     hass.data[FIBARO_DEVICES] = {}
+#     for component in FIBARO_COMPONENTS:
+#         hass.data[FIBARO_DEVICES][component] = []
+#
+#     for gateway in gateways:
+#         controller = FibaroController(gateway)
+#         if controller.connect():
+#             hass.data[FIBARO_CONTROLLERS][controller.hub_serial] = controller
+#             for component in FIBARO_COMPONENTS:
+#                 hass.data[FIBARO_DEVICES][component].extend(
+#                     controller.fibaro_devices[component]
+#                 )
+#
+#     if hass.data[FIBARO_CONTROLLERS]:
+#         for component in FIBARO_COMPONENTS:
+#             discovery.load_platform(hass, component, DOMAIN, {}, base_config)
+#         for controller in hass.data[FIBARO_CONTROLLERS].values():
+#             controller.enable_state_handler()
+#         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_fibaro)
+#         return True
+#
+#     return False
 
 
 class FibaroDevice(Entity):
