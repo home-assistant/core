@@ -21,7 +21,7 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.devolo_home_control.config_flow.validate_input",
+        "homeassistant.components.devolo_home_control.config_flow._login_data_valid",
         return_value=mock_coro({"title": "Test Title"}),
     ), patch(
         "homeassistant.components.devolo_home_control.async_setup",
