@@ -117,7 +117,7 @@ async def test_device_left(hass, zigpy_dev_basic, zha_dev_basic):
     assert zha_dev_basic.available is False
 
 
-async def test_create_group(hass, device_light_1, device_light_2, coordinator):
+async def test_gateway_group_methods(hass, device_light_1, device_light_2, coordinator):
     """Test creating a group with 2 members."""
     zha_gateway = get_zha_gateway(hass)
     assert zha_gateway is not None
@@ -126,6 +126,8 @@ async def test_create_group(hass, device_light_1, device_light_2, coordinator):
     device_light_1._zha_gateway = zha_gateway
     device_light_2._zha_gateway = zha_gateway
     member_ieee_addresses = [device_light_1.ieee, device_light_2.ieee]
+
+    # test creating a group with 2 members
     zha_group = await zha_gateway.async_create_zigpy_group(
         "Test Group", member_ieee_addresses
     )
@@ -142,3 +144,28 @@ async def test_create_group(hass, device_light_1, device_light_2, coordinator):
 
     # test get group by name
     assert zha_group == zha_gateway.async_get_group_by_name(zha_group.name)
+
+    # test removing a group
+    await zha_gateway.async_remove_zigpy_group(zha_group.group_id)
+    await hass.async_block_till_done()
+
+    # we shouldn't have the group anymore
+    assert zha_gateway.async_get_group_by_name(zha_group.name) is None
+
+    # the group entity should be cleaned up
+    assert entity_id not in hass.states.async_entity_ids(LIGHT_DOMAIN)
+
+    # test creating a group with 1 member
+    zha_group = await zha_gateway.async_create_zigpy_group(
+        "Test Group", [device_light_1.ieee]
+    )
+    await hass.async_block_till_done()
+
+    assert zha_group is not None
+    assert zha_group.entity_domain is None
+    assert len(zha_group.members) == 1
+    for member in zha_group.members:
+        assert member.ieee in [device_light_1.ieee]
+
+    # the group entity should not have been cleaned up
+    assert entity_id not in hass.states.async_entity_ids(LIGHT_DOMAIN)
