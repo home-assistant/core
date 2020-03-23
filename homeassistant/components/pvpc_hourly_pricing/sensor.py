@@ -1,10 +1,4 @@
-"""
-Sensor to collect the reference daily prices of electricity ('PVPC') in Spain.
-
-For more details about this platform, please refer to the documentation at
-https://www.home-assistant.io/integrations/pvpc_hourly_pricing/
-"""
-from datetime import timedelta
+"""Sensor to collect the reference daily prices of electricity ('PVPC') in Spain."""
 import logging
 from random import randint
 from typing import Optional
@@ -15,10 +9,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import (
-    async_track_point_in_time,
-    async_track_time_change,
-)
+from homeassistant.helpers.event import async_call_later, async_track_time_change
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.dt as dt_util
 
@@ -144,18 +135,14 @@ class ElecPriceSensor(RestoreEntity):
                 self._pvpc_data.source_available = False
                 return
 
-            retry_delay = 2 * self._pvpc_data.timeout
+            retry_delay = 2 * self._num_retries * self._pvpc_data.timeout
             _LOGGER.debug(
                 "%s: Bad update[retry:%d], will try again in %d s",
                 self.entity_id,
                 self._num_retries,
                 retry_delay,
             )
-            async_track_point_in_time(
-                self.hass,
-                self.async_update_prices,
-                dt_util.now() + timedelta(seconds=retry_delay),
-            )
+            async_call_later(self.hass, retry_delay, self.async_update_prices)
             return
 
         if not prices:
