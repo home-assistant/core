@@ -15,6 +15,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.components.directv import (
     HOST,
+    RECEIVER_ID,
     SSDP_LOCATION,
     UPNP_SERIAL,
     mock_connection,
@@ -76,7 +77,7 @@ async def test_form(
     assert result["title"] == HOST
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_RECEIVER_ID] == UPNP_SERIAL
+    assert result["data"][CONF_RECEIVER_ID] == RECEIVER_ID
 
 
 async def test_form_cannot_connect(
@@ -141,7 +142,7 @@ async def test_import(
     assert result["title"] == HOST
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_RECEIVER_ID] == UPNP_SERIAL
+    assert result["data"][CONF_RECEIVER_ID] == RECEIVER_ID
 
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
@@ -177,7 +178,7 @@ async def test_ssdp_discovery(
     assert result["title"] == HOST
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_RECEIVER_ID] == UPNP_SERIAL
+    assert result["data"][CONF_RECEIVER_ID] == RECEIVER_ID
 
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
