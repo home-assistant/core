@@ -16,7 +16,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, NEXIA_DEVICE, PLATFORMS, UPDATE_COORDINATOR
-from .services import register_climate_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,8 +41,6 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
     conf = config.get(DOMAIN)
     hass.data.setdefault(DOMAIN, {})
-
-    register_climate_services(hass)
 
     if not conf:
         return True

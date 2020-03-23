@@ -12,6 +12,7 @@ from nexia.const import (
     SYSTEM_STATUS_IDLE,
     UNIT_FAHRENHEIT,
 )
+import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -42,7 +43,9 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers import entity_platform
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
     ATTR_AIRCLEANER_MODE,
@@ -53,14 +56,32 @@ from .const import (
     ATTR_ZONE_STATUS,
     DOMAIN,
     NEXIA_DEVICE,
-    SIGNAL_AIRCLEANER_SERVICE,
-    SIGNAL_HUMIDIFY_SERVICE,
     SIGNAL_THERMOSTAT_UPDATE,
     SIGNAL_ZONE_UPDATE,
     UPDATE_COORDINATOR,
 )
 from .entity import NexiaThermostatZoneEntity
 from .util import percent_conv
+
+SERVICE_SET_AIRCLEANER_MODE = "set_aircleaner_mode"
+SERVICE_SET_HUMIDIFY_SETPOINT = "set_humidify_setpoint"
+
+SET_AIRCLEANER_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required(ATTR_AIRCLEANER_MODE): cv.string,
+    }
+)
+
+SET_HUMIDITY_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required(ATTR_HUMIDITY): vol.All(
+            vol.Coerce(int), vol.Range(min=35, max=65)
+        ),
+    }
+)
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,6 +112,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     nexia_data = hass.data[DOMAIN][config_entry.entry_id]
     nexia_home = nexia_data[NEXIA_DEVICE]
     coordinator = nexia_data[UPDATE_COORDINATOR]
+
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_SET_HUMIDIFY_SETPOINT,
+        SET_HUMIDITY_SCHEMA,
+        SERVICE_SET_HUMIDIFY_SETPOINT,
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_AIRCLEANER_MODE, SET_AIRCLEANER_SCHEMA, SERVICE_SET_AIRCLEANER_MODE,
+    )
 
     entities = []
     for thermostat_id in nexia_home.get_thermostat_ids():
@@ -400,9 +432,9 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateDevice):
         self._thermostat.set_air_cleaner(aircleaner_mode)
         self._signal_thermostat_update()
 
-    def set_humidify_setpoint(self, humidify_setpoint):
+    def set_humidify_setpoint(self, humidity):
         """Set the humidify setpoint."""
-        self._thermostat.set_humidify_setpoint(humidify_setpoint / 100.0)
+        self._thermostat.set_humidify_setpoint(humidity / 100.0)
         self._signal_thermostat_update()
 
     def _signal_thermostat_update(self):
@@ -434,43 +466,3 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateDevice):
         Only used by the generic entity update service.
         """
         await self._coordinator.async_request_refresh()
-
-    async def async_added_to_hass(self):
-        """Listen for signals for services."""
-        await super().async_added_to_hass()
-
-        self._undo_humidfy_dispatcher = async_dispatcher_connect(
-            self.hass, SIGNAL_HUMIDIFY_SERVICE, self._async_humdify_service
-        )
-        self._undo_aircleaner_dispatcher = async_dispatcher_connect(
-            self.hass, SIGNAL_AIRCLEANER_SERVICE, self._async_aircleaner_service
-        )
-
-    async def async_will_remove_from_hass(self):
-        """Unsub from signals for services."""
-        await super().async_will_remove_from_hass()
-
-        if self._undo_humidfy_dispatcher:
-            self._undo_humidfy_dispatcher()
-        if self._undo_aircleaner_dispatcher:
-            self._undo_aircleaner_dispatcher()
-
-    async def _async_humdify_service(self, data):
-        entity_ids = data.get(ATTR_ENTITY_ID)
-        if self.entity_id not in entity_ids:
-            return
-
-        humidity = data.get(ATTR_HUMIDITY)
-        await self.hass.async_add_executor_job(
-            self.set_humidify_setpoint, (int(humidity) / 100.0),
-        )
-
-    async def _async_aircleaner_service(self, data):
-        entity_ids = data.get(ATTR_ENTITY_ID)
-        if self.entity_id not in entity_ids:
-            return
-
-        aircleaner_mode = data.get(ATTR_AIRCLEANER_MODE)
-        await self.hass.async_add_executor_job(
-            self.set_aircleaner_mode, aircleaner_mode,
-        )
