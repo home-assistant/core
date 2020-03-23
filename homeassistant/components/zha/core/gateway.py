@@ -590,6 +590,7 @@ class ZHAGateway:
             if tasks:
                 await asyncio.gather(*tasks)
         self.application_controller.groups.pop(group_id)
+        self.zha_storage.async_delete_group(group)
 
     async def async_update_zha_group(self, group_id: int, entity_domain: Optional[str]):
         """Update a ZHA group."""
