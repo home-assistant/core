@@ -4,7 +4,7 @@ import urllib
 from asynctest import MagicMock, patch
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.doorbird import CONF_TOKEN
+from homeassistant.components.doorbird import CONF_CUSTOM_URL, CONF_TOKEN
 from homeassistant.components.doorbird.const import CONF_EVENTS, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 
@@ -82,6 +82,9 @@ async def test_form_import(hass):
     import_config = VALID_CONFIG.copy()
     import_config[CONF_EVENTS] = ["event1", "event2", "event3"]
     import_config[CONF_TOKEN] = "imported_token"
+    import_config[
+        CONF_CUSTOM_URL
+    ] = "http://legacy.custom.url/should/only/come/in/from/yaml"
 
     doorbirdapi = _get_mock_doorbirdapi_return_values(
         ready=[True], info={"WIFI_MAC_ADDR": "macaddr"}
@@ -109,6 +112,8 @@ async def test_form_import(hass):
         "username": "friend",
         "events": ["event1", "event2", "event3"],
         "token": "imported_token",
+        # This will go away once we convert to cloud hooks
+        "hass_url_override": "http://legacy.custom.url/should/only/come/in/from/yaml",
     }
     # It is not possible to import options at this time
     # so they end up in the config entry data and are
