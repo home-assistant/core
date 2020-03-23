@@ -259,6 +259,10 @@ class EntityComponent:
         if tasks:
             await asyncio.wait(tasks)
 
+        for key, platform in self._platforms.items():
+            if key != self.domain:
+                platform.async_destroy()
+
         self._platforms = {self.domain: self._platforms[self.domain]}
         self.config = None
 

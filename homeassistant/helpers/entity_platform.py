@@ -454,8 +454,6 @@ class EntityPlatform:
             self._async_cancel_retry_setup()
             self._async_cancel_retry_setup = None
 
-        self.hass.data[DATA_ENTITY_PLATFORM][self.platform_name].remove(self)
-
         if not self.entities:
             return
 
@@ -466,6 +464,14 @@ class EntityPlatform:
         if self._async_unsub_polling is not None:
             self._async_unsub_polling()
             self._async_unsub_polling = None
+
+    @callback
+    def async_destroy(self) -> None:
+        """Destroy an entity platform.
+
+        Call before discarding the object.
+        """
+        self.hass.data[DATA_ENTITY_PLATFORM][self.platform_name].remove(self)
 
     async def async_remove_entity(self, entity_id: str) -> None:
         """Remove entity id from platform."""
