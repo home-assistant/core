@@ -557,11 +557,23 @@ class ZHAGateway:
             if members is not None:
                 tasks = []
                 for ieee in members:
+                    _LOGGER.debug(
+                        "Adding member with IEEE: %s to group: %s:0x%04x",
+                        ieee,
+                        name,
+                        group_id,
+                    )
                     tasks.append(self.devices[ieee].async_add_to_group(group_id))
                 await asyncio.gather(*tasks)
         zha_group = self.groups.get(group_id)
+        _LOGGER.debug(
+            "Probing group: %s:0x%04x for entity discovery",
+            zha_group.name,
+            zha_group.group_id,
+        )
         discovery.GROUP_PROBE.discover_group_entities(zha_group)
         if zha_group.entity_domain is not None:
+            self.zha_storage.async_update_group(zha_group)
             async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES)
         return zha_group
 
