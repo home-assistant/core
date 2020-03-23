@@ -152,6 +152,7 @@ aioautomatic==0.6.5
 aiobotocore==0.11.1
 
 # homeassistant.components.dnsip
+# homeassistant.components.minecraft_server
 aiodns==2.0.0
 
 # homeassistant.components.esphome
