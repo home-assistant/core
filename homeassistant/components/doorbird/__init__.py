@@ -207,11 +207,11 @@ async def _update_listener(hass: HomeAssistant, entry: ConfigEntry):
 @callback
 def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: ConfigEntry):
     options = dict(entry.options)
-    modified = 0
+    modified = False
     for importable_option in [CONF_EVENTS]:
         if importable_option not in entry.options and importable_option in entry.data:
             options[importable_option] = entry.data[importable_option]
-            modified = 1
+            modified = True
 
     if modified:
         hass.config_entries.async_update_entry(entry, options=options)
