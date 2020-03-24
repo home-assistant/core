@@ -333,9 +333,6 @@ bellows==0.18.0
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.7.7
 
-# homeassistant.components.comfoair
-bitstring==3.1.5
-
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
 
@@ -1262,7 +1259,7 @@ pychromecast==7.1.2
 pycmus==0.1.1
 
 # homeassistant.components.comfoair
-pycomfoair==0.0.1
+pycomfoair==0.0.3
 
 # homeassistant.components.comfoconnect
 pycomfoconnect==0.3

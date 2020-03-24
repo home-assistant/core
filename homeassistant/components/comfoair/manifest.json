@@ -1,10 +1,9 @@
 {
   "domain": "comfoair",
   "name": "ComfoAir",
-  "documentation": "https://www.home-assistant.io/components/comfoair",
+  "documentation": "https://www.home-assistant.io/integrations/comfoair",
   "requirements": [
-    "bitstring==3.1.5",
-    "pycomfoair==0.0.2"
+    "pycomfoair==0.0.3"
   ],
   "dependencies": [],
   "codeowners": [
