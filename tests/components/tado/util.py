@@ -13,7 +13,7 @@ from tests.common import load_fixture
 async def async_init_integration(
     hass: HomeAssistant, skip_setup: bool = False,
 ):
-    """Set up the nexia integration in Home Assistant."""
+    """Set up the tado integration in Home Assistant."""
 
     token_fixture = "tado/token.json"
     devices_fixture = "tado/devices.json"
