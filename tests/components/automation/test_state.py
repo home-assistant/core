@@ -521,6 +521,7 @@ async def test_if_fires_on_entity_change_with_for(hass, calls):
 
 async def test_if_fires_on_entity_removal(hass, calls):
     """Test for firing on entity removal, when new_state is None."""
+    context = Context()
     hass.states.async_set("test.entity", "hello")
     await hass.async_block_till_done()
 
@@ -536,9 +537,10 @@ async def test_if_fires_on_entity_removal(hass, calls):
     )
     await hass.async_block_till_done()
 
-    assert hass.states.async_remove("test.entity")
+    assert hass.states.async_remove("test.entity", context=context)
     await hass.async_block_till_done()
     assert 1 == len(calls)
+    assert calls[0].context.parent_id == context.id
 
 
 async def test_if_fires_on_for_condition(hass, calls):
