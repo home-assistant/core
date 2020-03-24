@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Callable, TypeVar
 
 import zigpy.device
 import zigpy.endpoint
+import zigpy.group
 import zigpy.zcl
 import zigpy.zdo
 
