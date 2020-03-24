@@ -8,7 +8,7 @@ from . import BINARY_SENSORS, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nextcloud sensors."""
     if discovery_info is None:
         return
@@ -45,7 +45,7 @@ class NextcloudBinarySensor(BinarySensorDevice):
     @property
     def unique_id(self):
         """Return the unique ID for this binary sensor."""
-        return self._name
+        return f"{self.hass.data[DOMAIN]['instance']}#{self._name}"
 
     def update(self):
         """Update the binary sensor."""

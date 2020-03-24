@@ -100,6 +100,7 @@ def setup(hass, config):
         _LOGGER.error("Nextcloud setup failed - Check configuration")
 
     hass.data[DOMAIN] = get_data_points(ncm.data)
+    hass.data[DOMAIN]["instance"] = conf[CONF_URL]
 
     def nextcloud_update(event_time):
         """Update data from nextcloud api."""

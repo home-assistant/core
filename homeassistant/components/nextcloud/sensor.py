@@ -45,7 +45,7 @@ class NextcloudSensor(Entity):
     @property
     def unique_id(self):
         """Return the unique ID for this sensor."""
-        return self._name
+        return f"{self.hass.data[DOMAIN]['instance']}#{self._name}"
 
     def update(self):
         """Update the sensor."""
