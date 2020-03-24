@@ -64,7 +64,6 @@ class AirlyAirQuality(AirQualityEntity):
         self._name = name
         self._unique_id = unique_id
         self._icon = "mdi:blur"
-        self._attrs = {}
 
     @property
     def name(self):
@@ -117,20 +116,15 @@ class AirlyAirQuality(AirQualityEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        self._attrs[LABEL_AQI_DESCRIPTION] = self.coordinator.data[
-            ATTR_API_CAQI_DESCRIPTION
-        ]
-        self._attrs[LABEL_ADVICE] = self.coordinator.data[ATTR_API_ADVICE]
-        self._attrs[LABEL_AQI_LEVEL] = self.coordinator.data[ATTR_API_CAQI_LEVEL]
-        self._attrs[LABEL_PM_2_5_LIMIT] = self.coordinator.data[ATTR_API_PM25_LIMIT]
-        self._attrs[LABEL_PM_2_5_PERCENT] = round(
-            self.coordinator.data[ATTR_API_PM25_PERCENT]
-        )
-        self._attrs[LABEL_PM_10_LIMIT] = self.coordinator.data[ATTR_API_PM10_LIMIT]
-        self._attrs[LABEL_PM_10_PERCENT] = round(
-            self.coordinator.data[ATTR_API_PM10_PERCENT]
-        )
-        return self._attrs
+        return {
+            LABEL_AQI_DESCRIPTION: self.coordinator.data[ATTR_API_CAQI_DESCRIPTION],
+            LABEL_ADVICE: self.coordinator.data[ATTR_API_ADVICE],
+            LABEL_AQI_LEVEL: self.coordinator.data[ATTR_API_CAQI_LEVEL],
+            LABEL_PM_2_5_LIMIT: self.coordinator.data[ATTR_API_PM25_LIMIT],
+            LABEL_PM_2_5_PERCENT: round(self.coordinator.data[ATTR_API_PM25_PERCENT]),
+            LABEL_PM_10_LIMIT: self.coordinator.data[ATTR_API_PM10_LIMIT],
+            LABEL_PM_10_PERCENT: round(self.coordinator.data[ATTR_API_PM10_PERCENT]),
+        }
 
     async def async_added_to_hass(self):
         """Connect to dispatcher listening for entity data notifications."""
