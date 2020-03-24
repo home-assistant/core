@@ -21,7 +21,7 @@ from homeassistant.util import Throttle
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "BMP280"
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
+SCAN_INTERVAL = timedelta(seconds=15)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=3)
 
@@ -51,13 +51,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         # this usually happens when the board is I2C capable, but the device can't be found at the configured address
         if str(error.args[0]).startswith("No I2C device at address"):
             _LOGGER.error(
-                "%s. Hint: Check wiring and make sure that the SDO pin is tied to either ground (0x76) or VCC (0x77)!",
+                "%s. Hint: Check wiring and make sure that the SDO pin is tied to either ground (0x76) or VCC (0x77)",
                 error.args[0],
             )
             raise PlatformNotReady()
-        raise error
+        _LOGGER.error(error)
+        return
     # use custom name if there's any
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
     # BMP280 has both temperature and pressure sensing capability
     add_entities(
         [Bmp280TemperatureSensor(bmp280, name), Bmp280PressureSensor(bmp280, name)]
