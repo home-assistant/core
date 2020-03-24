@@ -4,6 +4,12 @@
     },
     "options": {
         "step": {
+            "init": {
+                "data": {
+                    "one": "eins",
+                    "other": "andere"
+                }
+            },
             "options_1": {
                 "data": {
                     "bool": "Optionaler Boolescher Wert",

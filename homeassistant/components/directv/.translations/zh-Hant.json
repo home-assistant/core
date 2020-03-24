@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "DirectTV \u63a5\u6536\u5668\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "flow_title": "DirecTV\uff1a{name}",
+        "step": {
+            "ssdp_confirm": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name}\uff1f",
+                "title": "\u9023\u7dda\u81f3 DirecTV \u63a5\u6536\u5668"
+            },
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u6216 IP \u4f4d\u5740"
+                },
+                "title": "\u9023\u7dda\u81f3 DirecTV \u63a5\u6536\u5668"
+            }
+        },
+        "title": "DirecTV"
+    }
+}

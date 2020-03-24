@@ -6,7 +6,7 @@
             "already_setup_with_diff_host_and_name": "Denne oppf\u00f8ringen ser ut til \u00e5 allerede v\u00e6re konfigurert med en annen vert og navn basert p\u00e5 serienummeret. Fjern den gamle oppf\u00f8ringer fra konfigurasjonen.yaml og fra integrasjonsmenyen f\u00f8r du pr\u00f8ver ut \u00e5 legge til denne enheten p\u00e5 nytt.",
             "host_exists": "Vizio komponent med vert allerede konfigurert.",
             "name_exists": "Vizio-komponent med navn som allerede er konfigurert.",
-            "updated_entry": "Denne oppf\u00f8ringen er allerede konfigurert, men navnet og / eller alternativene som er definert i konfigurasjonen samsvarer ikke med den tidligere importerte konfigurasjonen, s\u00e5 konfigurasjonsoppf\u00f8ringen er oppdatert deretter.",
+            "updated_entry": "Dette innlegget har allerede v\u00e6rt oppsett, men navnet, apps, og/eller alternativer som er definert i konfigurasjon som ikke stemmer med det som tidligere er importert konfigurasjon, s\u00e5 konfigurasjonen innlegget har blitt oppdatert i henhold til dette.",
             "updated_options": "Denne oppf\u00f8ringen er allerede konfigurert, men alternativene som er definert i konfigurasjonen samsvarer ikke med de tidligere importerte alternativverdiene, s\u00e5 konfigurasjonsoppf\u00f8ringen er oppdatert deretter.",
             "updated_volume_step": "Denne oppf\u00f8ringen er allerede konfigurert, men volumstrinnst\u00f8rrelsen i konfigurasjonen samsvarer ikke med konfigurasjonsoppf\u00f8ringen, s\u00e5 konfigurasjonsoppf\u00f8ringen er oppdatert deretter."
         },
@@ -30,8 +30,16 @@
                 "title": "Sammenkoblingen Er Fullf\u00f8rt"
             },
             "pairing_complete_import": {
-                "description": "Vizio SmartCast-enheten er n\u00e5 koblet til Home Assistant.\n\nTilgangstokenet er **{access_token}**.",
+                "description": "Din Vizio SmartCast TV er n\u00e5 koblet til Home Assistant.\n\nTilgangstokenet er **{access_token}**.",
                 "title": "Sammenkoblingen Er Fullf\u00f8rt"
+            },
+            "tv_apps": {
+                "data": {
+                    "apps_to_include_or_exclude": "Apper \u00e5 inkludere eller ekskludere",
+                    "include_or_exclude": "Inkluder eller ekskludere apper?"
+                },
+                "description": "Hvis du har en Smart TV, kan du eventuelt filtrere kildelisten din ved \u00e5 velge hvilke apper du vil inkludere eller ekskludere i kildelisten. Du kan hoppe over dette trinnet for TV-er som ikke st\u00f8tter apper.",
+                "title": "Konfigurere Apper for Smart TV"
             },
             "user": {
                 "data": {
@@ -40,8 +48,16 @@
                     "host": "<Host/IP>:<Port>",
                     "name": "Navn"
                 },
-                "description": "Alle felt er obligatoriske unntatt Access Token. Hvis du velger \u00e5 ikke oppgi et Access-token, og enhetstypen din er \u00abtv\u00bb, g\u00e5r du gjennom en sammenkoblingsprosess med enheten slik at et Tilgangstoken kan hentes.\n\nHvis du vil g\u00e5 gjennom paringsprosessen, m\u00e5 du kontrollere at TV-en er sl\u00e5tt p\u00e5 og koblet til nettverket f\u00f8r du klikker p\u00e5 Send. Du m\u00e5 ogs\u00e5 kunne se skjermen.",
+                "description": "En tilgangstoken er bare n\u00f8dvendig for TV-er. Hvis du konfigurerer en TV og ikke har tilgangstoken enn\u00e5, m\u00e5 du la den st\u00e5 tom for \u00e5 g\u00e5 gjennom en sammenkoblingsprosess.",
                 "title": "Sett opp Vizio SmartCast-enhet"
+            },
+            "user_tv": {
+                "data": {
+                    "apps_to_include_or_exclude": "Apper \u00e5 inkludere eller ekskludere",
+                    "include_or_exclude": "Inkluder eller ekskludere apper?"
+                },
+                "description": "Hvis du har en Smart TV, kan du eventuelt filtrere kildelisten din ved \u00e5 velge hvilke apper du vil inkludere eller ekskludere i kildelisten. Du kan hoppe over dette trinnet for TV-er som ikke st\u00f8tter apper.",
+                "title": "Konfigurere Apper for Smart TV"
             }
         },
         "title": "Vizio SmartCast"
@@ -50,9 +66,12 @@
         "step": {
             "init": {
                 "data": {
+                    "apps_to_include_or_exclude": "Apper \u00e5 inkludere eller ekskludere",
+                    "include_or_exclude": "Inkluder eller ekskludere apper?",
                     "timeout": "Tidsavbrudd for API-foresp\u00f8rsel (sekunder)",
                     "volume_step": "St\u00f8rrelse p\u00e5 volum trinn"
                 },
+                "description": "Hvis du har en Smart-TV, kan du eventuelt filtrere kildelisten ved \u00e5 velge hvilke apper som skal inkluderes eller utelates i kildelisten.",
                 "title": "Oppdater Vizo SmartCast alternativer"
             }
         },

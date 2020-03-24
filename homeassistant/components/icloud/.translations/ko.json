@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\uacc4\uc815\uc774 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
+            "already_configured": "\uacc4\uc815\uc774 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
+            "no_device": "\"\ub098\uc758 iPhone \ucc3e\uae30\"\uac00 \ud65c\uc131\ud654\ub41c \uae30\uae30\uac00 \uc5c6\uc2b5\ub2c8\ub2e4"
         },
         "error": {
             "login": "\ub85c\uadf8\uc778 \uc624\ub958: \uc774\uba54\uc77c \ubc0f \ube44\ubc00\ubc88\ud638\ub97c \ud655\uc778\ud574\uc8fc\uc138\uc694",
@@ -19,7 +20,8 @@
             "user": {
                 "data": {
                     "password": "\ube44\ubc00\ubc88\ud638",
-                    "username": "\uc774\uba54\uc77c"
+                    "username": "\uc774\uba54\uc77c",
+                    "with_family": "\uac00\uc871\uc6a9"
                 },
                 "description": "\uc790\uaca9 \uc99d\uba85\uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694",
                 "title": "iCloud \uc790\uaca9 \uc99d\uba85"

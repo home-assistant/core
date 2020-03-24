@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Naprava roku je \u017ee konfigurirana",
+            "unknown": "Nepri\u010dakovana napaka"
+        },
+        "error": {
+            "cannot_connect": "Povezava ni uspela, poskusite znova",
+            "unknown": "Nepri\u010dakovana napaka"
+        },
+        "flow_title": "Roku: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "data": {
+                    "few": "nekaj",
+                    "one": "ena",
+                    "other": "drugo",
+                    "two": "dva"
+                },
+                "description": "Ali \u017eelite nastaviti {name}?",
+                "title": "Roku"
+            },
+            "user": {
+                "data": {
+                    "host": "Gostitelj ali IP naslov"
+                },
+                "description": "Vnesite va\u0161e Roku podatke.",
+                "title": "Roku"
+            }
+        },
+        "title": "Roku"
+    }
+}
