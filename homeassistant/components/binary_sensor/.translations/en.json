@@ -41,7 +41,8 @@
             "is_problem": "{entity_name} is detecting problem",
             "is_smoke": "{entity_name} is detecting smoke",
             "is_sound": "{entity_name} is detecting sound",
-            "is_unsafe": "{entity_name} is unsafe"
+            "is_unsafe": "{entity_name} is unsafe",
+            "is_vibration": "{entity_name} is detecting vibration"
         },
         "trigger_type": {
             "bat_low": "{entity_name} battery low",
