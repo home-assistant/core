@@ -3,10 +3,11 @@ import asyncio
 import datetime as dt
 import logging
 import os
-import async_timeout
 from typing import Optional
 
+from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectionError, ServerDisconnectedError
+import async_timeout
 from haffmpeg.camera import CameraMjpeg
 from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 import onvif
@@ -189,6 +190,7 @@ class ONVIFHassCamera(Camera):
     async def async_initialize(self):
         """
         Initialize the camera.
+
         Initializes the camera by obtaining the input uri and connecting to
         the camera. Also retrieves the ONVIF profiles.
         """
@@ -510,7 +512,7 @@ class ONVIFHassCamera(Camera):
 
         _LOGGER.debug("Retrieving image from camera '%s'", self._name)
 
-        if self._snapshot != None:
+        if self._snapshot is not None:
             try:
                 websession = async_get_clientsession(self.hass)
                 with async_timeout.timeout(10):
@@ -519,11 +521,11 @@ class ONVIFHassCamera(Camera):
             except asyncio.TimeoutError:
                 _LOGGER.error("Timeout getting image from: %s", self._name)
                 image = None
-            except aiohttp.ClientError as err:
+            except ClientError as err:
                 _LOGGER.error("Error getting new camera image: %s", err)
                 image = None
 
-        if self._snapshot == None or image == None:
+        if self._snapshot is None or image is None:
             ffmpeg = ImageFrame(self.hass.data[DATA_FFMPEG].binary, loop=self.hass.loop)
 
             image = await asyncio.shield(
