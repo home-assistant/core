@@ -177,6 +177,24 @@ async def async_setup(hass, config):
                 device_info = get_device_info(event.pathname)
                 if device_info is not None:
                     if (
+                        device_info["id"] not in (G_AIS_REMOTE_ID, G_ZIGBEE_ID)
+                        and ais_global.G_USB_INTERNAL_MIC_RESET is False
+                    ):
+                        if "info" in device_info:
+                            if (
+                                device_info["info"]
+                                != "xHCI Host Controller producent Linux 3.14.29 xhci-hcd"
+                            ):
+                                # quick stop audio - to prevent
+                                # ProcessKiller: Process pl.sviete.dom (10754) has open file /mnt/media_rw/...
+                                # ProcessKiller: Sending Interrupt to process 10754
+                                hass.services.call(
+                                    "ais_ai_service",
+                                    "publish_command_to_frame",
+                                    {"key": "stopAudio", "val": True},
+                                )
+                if device_info is not None:
+                    if (
                         device_info["id"] != G_AIS_REMOTE_ID
                         or ais_global.G_USB_INTERNAL_MIC_RESET is False
                     ):
@@ -184,11 +202,16 @@ async def async_setup(hass, config):
                             text = "Usunięto: " + device_info["info"]
                         else:
                             text = "Usunięto urządzenie"
-                        hass.async_add_job(
-                            hass.services.async_call(
-                                "ais_ai_service", "say_it", {"text": text}
+
+                        if (
+                            text
+                            != "Usunięto: xHCI Host Controller producent Linux 3.14.29 xhci-hcd"
+                        ):
+                            hass.async_add_job(
+                                hass.services.async_call(
+                                    "ais_ai_service", "say_it", {"text": text}
+                                )
                             )
-                        )
                     # remove device
                     remove_usb_device(hass, device_info)
 
