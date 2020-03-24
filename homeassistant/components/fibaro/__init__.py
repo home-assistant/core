@@ -317,6 +317,7 @@ async def async_setup(hass, config):
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][CONF_GATEWAYS] = {}
     hass.data[FIBARO_CONTROLLERS] = {}
+    return True
 
 
 async def async_setup_entry(hass, config_entry):
