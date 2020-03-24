@@ -6,7 +6,7 @@
             "already_setup_with_diff_host_and_name": "Sembra che questa voce sia gi\u00e0 stata configurata con un host e un nome diversi in base al suo numero seriale. Rimuovere eventuali voci precedenti da configuration.yaml e dal menu Integrazioni prima di tentare nuovamente di aggiungere questo dispositivo.",
             "host_exists": "Componente Vizio con host gi\u00e0 configurato.",
             "name_exists": "Componente Vizio con nome gi\u00e0 configurato.",
-            "updated_entry": "Questa voce \u00e8 gi\u00e0 stata configurata, ma il nome e/o le opzioni definite nella configurazione non corrispondono alla configurazione importata in precedenza, pertanto la voce di configurazione \u00e8 stata aggiornata di conseguenza.",
+            "updated_entry": "Questa voce \u00e8 gi\u00e0 stata configurata, ma il nome, le app e/o le opzioni definite nella configurazione non corrispondono alla configurazione importata in precedenza, pertanto la voce di configurazione \u00e8 stata aggiornata di conseguenza.",
             "updated_options": "Questa voce \u00e8 gi\u00e0 stata impostata, ma le opzioni definite nella configurazione non corrispondono ai valori delle opzioni importate in precedenza, quindi la voce di configurazione \u00e8 stata aggiornata di conseguenza.",
             "updated_volume_step": "Questa voce \u00e8 gi\u00e0 stata impostata, ma la dimensione del passo del volume nella configurazione non corrisponde alla voce di configurazione, quindi \u00e8 stata aggiornata di conseguenza."
         },
@@ -30,8 +30,16 @@
                 "title": "Associazione completata"
             },
             "pairing_complete_import": {
-                "description": "Il dispositivo Vizio SmartCast \u00e8 ora connesso a Home Assistant. \n\n Il token di accesso \u00e8 '**{access_token}**'.",
+                "description": "Il dispositivo Vizio SmartCast TV \u00e8 ora connesso a Home Assistant. \n\nIl tuo Token di Accesso \u00e8 '**{access_token}**'.",
                 "title": "Associazione completata"
+            },
+            "tv_apps": {
+                "data": {
+                    "apps_to_include_or_exclude": "App da includere o escludere",
+                    "include_or_exclude": "Includere o Escludere le App?"
+                },
+                "description": "Se si dispone di una Smart TV, \u00e8 possibile filtrare facoltativamente l'elenco di origine scegliendo le app da includere o escludere in esso. \u00c8 possibile saltare questo passaggio per i televisori che non supportano le app.",
+                "title": "Configura le app per Smart TV"
             },
             "user": {
                 "data": {
@@ -40,8 +48,16 @@
                     "host": "< Host / IP >: <Port>",
                     "name": "Nome"
                 },
-                "description": "Tutti i campi sono obbligatori tranne il token di accesso. Se si sceglie di non fornire un token di accesso e il tipo di dispositivo \u00e8 \"tv\", si passer\u00e0 attraverso un processo di associazione con il dispositivo in modo da poter recuperare un token di accesso. \n\n Per completare il processo di associazione, prima di fare clic su Invia, assicurarsi che il televisore sia acceso e collegato alla rete. Devi anche essere in grado di vedere lo schermo.",
+                "description": "Un Token di Accesso \u00e8 necessario solo per i televisori. Se si sta configurando un televisore e non si dispone ancora di un Token di Accesso, lasciarlo vuoto per passare attraverso un processo di associazione.",
                 "title": "Configurazione del dispositivo SmartCast Vizio"
+            },
+            "user_tv": {
+                "data": {
+                    "apps_to_include_or_exclude": "App da Includere o Escludere",
+                    "include_or_exclude": "Includere o Escludere le App?"
+                },
+                "description": "Se si dispone di una Smart TV, \u00e8 possibile filtrare facoltativamente l'elenco di origine scegliendo le app da includere o escludere in esso. \u00c8 possibile saltare questo passaggio per i televisori che non supportano le app.",
+                "title": "Configura le app per Smart TV"
             }
         },
         "title": "Vizio SmartCast"
@@ -50,9 +66,12 @@
         "step": {
             "init": {
                 "data": {
+                    "apps_to_include_or_exclude": "App da includere o escludere",
+                    "include_or_exclude": "Includere o escludere app?",
                     "timeout": "Timeout richiesta API (secondi)",
                     "volume_step": "Dimensione del passo del volume"
                 },
+                "description": "Se si dispone di una Smart TV, \u00e8 possibile filtrare l'elenco di origine scegliendo le app da includere o escludere in esso.",
                 "title": "Aggiornamento delle opzioni di Vizo SmartCast"
             }
         },

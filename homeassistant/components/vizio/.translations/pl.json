@@ -17,6 +17,25 @@
             "tv_needs_token": "Gdy typem urz\u0105dzenia jest `tv` potrzebny jest prawid\u0142owy token dost\u0119pu."
         },
         "step": {
+            "pair_tv": {
+                "data": {
+                    "pin": "PIN"
+                }
+            },
+            "pairing_complete": {
+                "title": "Parowanie zako\u0144czone"
+            },
+            "pairing_complete_import": {
+                "title": "Parowanie zako\u0144czone"
+            },
+            "tv_apps": {
+                "data": {
+                    "apps_to_include_or_exclude": "Aplikacje do do\u0142\u0105czenia lub wykluczenia",
+                    "include_or_exclude": "Do\u0142\u0105cz lub wyklucz aplikacje?"
+                },
+                "description": "Je\u015bli masz telewizor Smart TV, mo\u017cesz opcjonalnie filtrowa\u0107 list\u0119 \u017ar\u00f3de\u0142, wybieraj\u0105c aplikacje, kt\u00f3re maj\u0105 zosta\u0107 uwzgl\u0119dnione lub wykluczone na li\u015bcie \u017ar\u00f3d\u0142owej. Mo\u017cesz pomin\u0105\u0107 ten krok dla telewizor\u00f3w, kt\u00f3re nie obs\u0142uguj\u0105 aplikacji.",
+                "title": "Konfigurowanie aplikacji dla smart TV"
+            },
             "user": {
                 "data": {
                     "access_token": "Token dost\u0119pu",
@@ -25,6 +44,14 @@
                     "name": "Nazwa"
                 },
                 "title": "Konfiguracja klienta Vizio SmartCast"
+            },
+            "user_tv": {
+                "data": {
+                    "apps_to_include_or_exclude": "Aplikacje do do\u0142\u0105czenia lub wykluczenia",
+                    "include_or_exclude": "Do\u0142\u0105czy\u0107 czy wykluczy\u0107 aplikacje?"
+                },
+                "description": "Je\u015bli masz telewizor Smart TV, mo\u017cesz opcjonalnie filtrowa\u0107 list\u0119 \u017ar\u00f3de\u0142, wybieraj\u0105c aplikacje, kt\u00f3re maj\u0105 zosta\u0107 uwzgl\u0119dnione lub wykluczone na li\u015bcie \u017ar\u00f3d\u0142owej. Mo\u017cesz pomin\u0105\u0107 ten krok dla telewizor\u00f3w, kt\u00f3re nie obs\u0142uguj\u0105 aplikacji.",
+                "title": "Skonfiguruj aplikacje dla Smart TV"
             }
         },
         "title": "Vizio SmartCast"

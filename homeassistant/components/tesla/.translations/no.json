@@ -22,6 +22,7 @@
         "step": {
             "init": {
                 "data": {
+                    "enable_wake_on_start": "Tving biler til \u00e5 v\u00e5kne ved oppstart",
                     "scan_interval": "Sekunder mellom skanninger"
                 }
             }

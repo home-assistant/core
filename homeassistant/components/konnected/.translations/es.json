@@ -11,7 +11,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Modelo: {model}\nHost: {host}\nPuerto: {port}\n\nPuede configurar las E/S y el comportamiento del panel en los ajustes del panel de alarmas Konnected.",
+                "description": "Modelo: {model}\nID: {id}\nHost: {host}\nPuerto: {port}\n\nPuede configurar las E/S y el comportamiento del panel en los ajustes del Panel de Alarmas Konnected.",
                 "title": "Dispositivo Konnected Listo"
             },
             "import_confirm": {

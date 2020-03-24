@@ -19,5 +19,16 @@
             }
         },
         "title": "AirVisual"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Mostra l'area geografica monitorata sulla mappa"
+                },
+                "description": "Impostare varie opzioni per l'integrazione AirVisual.",
+                "title": "Configurare AirVisual"
+            }
+        }
     }
 }
