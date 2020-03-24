@@ -328,3 +328,31 @@ async def test_record_service(hass, mock_camera, mock_stream):
         # So long as we call stream.record, the rest should be covered
         # by those tests.
         assert mock_record_service.called
+
+
+async def test_get_image_url(hass, image_mock_url):
+    """Test get image URL from camera entity."""
+    with patch(
+        "homeassistant.components.demo.camera.DemoCamera.access_tokens",
+        new_callable=PropertyMock,
+        create=True,
+        return_value=[1234],
+    ):
+        camera_image_url = await camera.async_get_image_url(hass, "camera.demo_camera")
+        assert camera_image_url == "/api/camera_proxy/camera.demo_camera?token=1234"
+
+
+async def test_get_mjpeg_stream_url(hass, image_mock_url):
+    """Test get mjpeg stream URL from camera entity."""
+    with patch(
+        "homeassistant.components.demo.camera.DemoCamera.access_tokens",
+        new_callable=PropertyMock,
+        create=True,
+        return_value=[1234],
+    ):
+        camera_image_url = await camera.async_get_mjpeg_stream_url(
+            hass, "camera.demo_camera"
+        )
+        assert (
+            camera_image_url == "/api/camera_proxy_stream/camera.demo_camera?token=1234"
+        )
