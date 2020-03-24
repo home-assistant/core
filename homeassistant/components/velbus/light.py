@@ -81,10 +81,10 @@ class VelbusLight(VelbusEntity, Light):
         else:
             if ATTR_BRIGHTNESS in kwargs:
                 # Make sure a low but non-zero value is not rounded down to zero
-                if 0 < kwargs[ATTR_BRIGHTNESS] < 3:
-                    brightness = 1
+                if kwargs[ATTR_BRIGHTNESS] == 0:
+                    brightness = 0
                 else:
-                    brightness = int((kwargs[ATTR_BRIGHTNESS] * 100) / 255)
+                    brightness = max(int((kwargs[ATTR_BRIGHTNESS] * 100) / 255), 1)
                 attr, *args = (
                     "set_dimmer_state",
                     self._channel,
