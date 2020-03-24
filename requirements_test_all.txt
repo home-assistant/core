@@ -282,7 +282,7 @@ holidays==0.10.1
 home-assistant-frontend==20200318.1
 
 # homeassistant.components.zwave
-homeassistant-pyozw==0.1.9
+homeassistant-pyozw==0.1.10
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.10.17
