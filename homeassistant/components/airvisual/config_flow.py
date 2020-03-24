@@ -1,4 +1,6 @@
 """Define a config flow manager for AirVisual."""
+import asyncio
+
 from pyairvisual import Client
 from pyairvisual.errors import InvalidKeyError
 import voluptuous as vol
@@ -15,8 +17,6 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from . import async_get_geography_id
 from .const import DOMAIN  # pylint: disable=unused-import
-
-DATA_CHECKED_API_KEYS = "checked_api_keys"
 
 
 class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -76,14 +76,23 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # If this is the first (and only the first) time we've seen this API key, check
         # that it's valid:
         checked_keys = self.hass.data.setdefault("airvisual_checked_api_keys", set())
-        if user_input[CONF_API_KEY] not in checked_keys:
-            checked_keys.add(user_input[CONF_API_KEY])
-            try:
-                await client.api.nearest_city()
-            except InvalidKeyError:
-                return await self._show_form(errors={CONF_API_KEY: "invalid_api_key"})
+        check_keys_lock = self.hass.data.setdefault(
+            "airvisual_checked_api_keys_lock", asyncio.Lock()
+        )
 
-        return self.async_create_entry(title=f"Cloud API ({geo_id})", data=user_input)
+        async with check_keys_lock:
+            if user_input[CONF_API_KEY] not in checked_keys:
+                try:
+                    await client.api.nearest_city()
+                except InvalidKeyError:
+                    return await self._show_form(
+                        errors={CONF_API_KEY: "invalid_api_key"}
+                    )
+
+                checked_keys.add(user_input[CONF_API_KEY])
+                return self.async_create_entry(
+                    title=f"Cloud API ({geo_id})", data=user_input
+                )
 
 
 class AirVisualOptionsFlowHandler(config_entries.OptionsFlow):
