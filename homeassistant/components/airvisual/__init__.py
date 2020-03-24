@@ -82,9 +82,7 @@ def async_get_geography_id(geography_dict):
 
 async def async_setup(hass, config):
     """Set up the AirVisual component."""
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_CLIENT] = {}
-    hass.data[DOMAIN][DATA_LISTENER] = {}
+    hass.data[DOMAIN] = {DATA_CLIENT: {}, DATA_LISTENER: {}}
 
     if DOMAIN not in config:
         return True

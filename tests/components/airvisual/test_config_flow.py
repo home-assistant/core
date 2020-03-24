@@ -3,11 +3,7 @@ from asynctest import patch
 from pyairvisual.errors import InvalidKeyError
 
 from homeassistant import data_entry_flow
-from homeassistant.components.airvisual import (
-    CONF_GEOGRAPHIES,
-    DOMAIN,
-    async_migrate_entry,
-)
+from homeassistant.components.airvisual import CONF_GEOGRAPHIES, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
@@ -15,6 +11,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_SHOW_ON_MAP,
 )
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -60,7 +57,10 @@ async def test_migration_1_2(hass):
     """Test migrating from version 1 to version 2."""
     conf = {
         CONF_API_KEY: "abcde12345",
-        CONF_GEOGRAPHIES: [{CONF_LATITUDE: 51.528308, CONF_LONGITUDE: -0.3817765}],
+        CONF_GEOGRAPHIES: [
+            {CONF_LATITUDE: 51.528308, CONF_LONGITUDE: -0.3817765},
+            {CONF_LATITUDE: 35.48847, CONF_LONGITUDE: 137.5263065},
+        ],
     }
 
     config_entry = MockConfigEntry(
@@ -68,14 +68,29 @@ async def test_migration_1_2(hass):
     )
     config_entry.add_to_hass(hass)
 
-    await async_migrate_entry(hass, config_entry)
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-    assert config_entry.unique_id == "51.528308, -0.3817765"
-    assert config_entry.title == "Cloud API (51.528308, -0.3817765)"
-    assert config_entry.data == {
+    with patch("pyairvisual.api.API.nearest_city"):
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: conf})
+
+    config_entries = hass.config_entries.async_entries(DOMAIN)
+
+    assert len(config_entries) == 2
+
+    assert config_entries[0].unique_id == "51.528308, -0.3817765"
+    assert config_entries[0].title == "Cloud API (51.528308, -0.3817765)"
+    assert config_entries[0].data == {
         CONF_API_KEY: "abcde12345",
         CONF_LATITUDE: 51.528308,
         CONF_LONGITUDE: -0.3817765,
+    }
+
+    assert config_entries[1].unique_id == "35.48847, 137.5263065"
+    assert config_entries[1].title == "Cloud API (35.48847, 137.5263065)"
+    assert config_entries[1].data == {
+        CONF_API_KEY: "abcde12345",
+        CONF_LATITUDE: 35.48847,
+        CONF_LONGITUDE: 137.5263065,
     }
 
 

@@ -16,16 +16,14 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from . import async_get_geography_id
 from .const import DOMAIN  # pylint: disable=unused-import
 
+DATA_CHECKED_API_KEYS = "checked_api_keys"
+
 
 class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle an AirVisual config flow."""
 
     VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
-
-    def __init__(self):
-        """Initialize."""
-        self._api_key_checked = False
 
     @property
     def cloud_api_schema(self):
@@ -75,15 +73,15 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         websession = aiohttp_client.async_get_clientsession(self.hass)
         client = Client(websession, api_key=user_input[CONF_API_KEY])
 
-        if not self._api_key_checked:
-            # If the user configures multiple geographies via configuration.yaml, we
-            # only need to determine the API key's validity once:
+        # If this is the first (and only the first) time we've seen this API key, check
+        # that it's valid:
+        checked_keys = self.hass.data.setdefault("airvisual_checked_api_keys", set())
+        if user_input[CONF_API_KEY] not in checked_keys:
+            checked_keys.add(user_input[CONF_API_KEY])
             try:
                 await client.api.nearest_city()
             except InvalidKeyError:
                 return await self._show_form(errors={CONF_API_KEY: "invalid_api_key"})
-
-            self._api_key_checked = True
 
         return self.async_create_entry(title=f"Cloud API ({geo_id})", data=user_input)
 
