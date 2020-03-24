@@ -209,8 +209,6 @@ class ZHAGateway:
             ]
         )
 
-        async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES)
-
     def device_joined(self, device):
         """Handle device joined.
 
@@ -520,25 +518,6 @@ class ZHAGateway:
         # will cause async_init to fire so don't explicitly call it
         zha_device.update_available(True)
         async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES)
-
-    # only public for testing
-    async def async_device_restored(self, device: zha_typing.ZigpyDeviceType):
-        """Add an existing device to the ZHA zigbee network when ZHA first starts."""
-        zha_device = self._async_get_or_create_device(device, restored=True)
-
-        if zha_device.is_mains_powered:
-            # the device isn't a battery powered device so we should be able
-            # to update it now
-            _LOGGER.debug(
-                "attempting to request fresh state for device - %s:%s %s with power source %s",
-                zha_device.nwk,
-                zha_device.ieee,
-                zha_device.name,
-                zha_device.power_source,
-            )
-            await zha_device.async_initialize(from_cache=False)
-        else:
-            await zha_device.async_initialize(from_cache=True)
 
     async def _async_device_rejoined(self, zha_device):
         _LOGGER.debug(
