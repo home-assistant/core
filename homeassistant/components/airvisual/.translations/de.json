@@ -11,11 +11,24 @@
                 "data": {
                     "api_key": "API-Schl\u00fcssel",
                     "latitude": "Breitengrad",
-                    "longitude": "L\u00e4ngengrad"
+                    "longitude": "L\u00e4ngengrad",
+                    "show_on_map": "Zeigen Sie die \u00fcberwachte Geografie auf der Karte an"
                 },
+                "description": "\u00dcberwachen Sie die Luftqualit\u00e4t an einem geografischen Ort.",
                 "title": "Konfigurieren Sie AirVisual"
             }
         },
         "title": "AirVisual"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Zeigen Sie die \u00fcberwachte Geografie auf der Karte an"
+                },
+                "description": "Legen Sie verschiedene Optionen f\u00fcr die AirVisual-Integration fest.",
+                "title": "Konfigurieren Sie AirVisual"
+            }
+        }
     }
 }

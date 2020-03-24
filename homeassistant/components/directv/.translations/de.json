@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Der DirecTV-Empf\u00e4nger ist bereits konfiguriert",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "flow_title": "DirecTV: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "data": {
+                    "one": "eins",
+                    "other": "andere"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host oder IP-Adresse"
+                },
+                "title": "Schlie\u00dfen Sie den DirecTV-Empf\u00e4nger an"
+            }
+        },
+        "title": "DirecTV"
+    }
+}

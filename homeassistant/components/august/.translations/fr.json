@@ -1,0 +1,22 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Authentification non valide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "login_method": "M\u00e9thode de connexion",
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                }
+            },
+            "validation": {
+                "data": {
+                    "code": "Code de v\u00e9rification"
+                }
+            }
+        }
+    }
+}

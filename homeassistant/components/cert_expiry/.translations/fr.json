@@ -1,11 +1,14 @@
 {
     "config": {
         "abort": {
-            "host_port_exists": "Cette combinaison h\u00f4te / port est d\u00e9j\u00e0 configur\u00e9e"
+            "already_configured": "Cette combinaison h\u00f4te et port est d\u00e9j\u00e0 configur\u00e9e",
+            "host_port_exists": "Cette combinaison h\u00f4te / port est d\u00e9j\u00e0 configur\u00e9e",
+            "import_failed": "\u00c9chec de l'importation \u00e0 partir de la configuration"
         },
         "error": {
             "certificate_error": "Le certificat n'a pas pu \u00eatre valid\u00e9",
             "certificate_fetch_failed": "Impossible de r\u00e9cup\u00e9rer le certificat de cette combinaison h\u00f4te / port",
+            "connection_refused": "Connexion refus\u00e9e lors de la connexion \u00e0 l'h\u00f4te",
             "connection_timeout": "D\u00e9lai d'attente lors de la connexion \u00e0 cet h\u00f4te",
             "host_port_exists": "Cette combinaison h\u00f4te / port est d\u00e9j\u00e0 configur\u00e9e",
             "resolve_failed": "Cet h\u00f4te ne peut pas \u00eatre r\u00e9solu",

@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Verten er allerede konfigurert"
+        },
+        "error": {
+            "connection_failed": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
+            "register_failed": "Registrering feilet, vennligst pr\u00f8v igjen",
+            "unknown": "Ukjent feil: pr\u00f8v p\u00e5 nytt senere"
+        },
+        "step": {
+            "link": {
+                "description": "Klikk p\u00e5 \"Submit\", deretter trykker du p\u00e5 den h\u00f8yre pilen p\u00e5 ruteren for \u00e5 registrere Freebox med Home Assistent.\n\n![Plasseringen av knappen p\u00e5 ruteren](/statisk/bilder/config_freebox.png)",
+                "title": "Link Freebox-ruter"
+            },
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "port": "Port"
+                },
+                "title": "Freebox"
+            }
+        },
+        "title": "Freebox"
+    }
+}

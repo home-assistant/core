@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Der API-Schl\u00fcssel f\u00fcr das Rachio-Konto."
+                },
+                "title": "Stellen Sie eine Verbindung zu Ihrem Rachio-Ger\u00e4t her"
+            }
+        },
+        "title": "Rachio"
+    }
+}

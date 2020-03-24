@@ -1,22 +1,22 @@
 {
-  "config": {
-    "title": "MyQ",
-    "step": {
-      "user": {
-        "title": "Connect to the MyQ Gateway",
-        "data": {
-          "username": "Username",
-          "password": "Password"
-        }
-      }
-    },
-    "error": {
-      "cannot_connect": "Failed to connect, please try again",
-      "invalid_auth": "Invalid authentication",
-      "unknown": "Unexpected error"
-    },
-    "abort": {
-      "already_configured": "MyQ is already configured"
+    "config": {
+        "abort": {
+            "already_configured": "MyQ is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect, please try again",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "title": "Connect to the MyQ Gateway"
+            }
+        },
+        "title": "MyQ"
     }
-  }
 }

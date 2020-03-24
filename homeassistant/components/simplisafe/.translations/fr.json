@@ -15,5 +15,15 @@
             }
         },
         "title": "SimpliSafe"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Code (utilis\u00e9 dans l'interface Home Assistant)"
+                },
+                "title": "Configurer SimpliSafe"
+            }
+        }
     }
 }

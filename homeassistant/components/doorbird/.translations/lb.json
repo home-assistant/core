@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "D\u00ebse DoorBird ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Numm (IP Adresse)",
+                    "name": "Numm vum Apparat",
+                    "password": "Passwuert",
+                    "username": "Benotzernumm"
+                },
+                "title": "Mat DoorBird verbannen"
+            }
+        },
+        "title": "DoorBird"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "events": "Komma getrennte L\u00ebscht vun Evenementer"
+                }
+            }
+        }
+    }
+}

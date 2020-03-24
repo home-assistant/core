@@ -18,5 +18,15 @@
             }
         },
         "title": "SimpliSafe"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Codi (per la UI de Home Assistant)"
+                },
+                "title": "Configuraci\u00f3 de SimpliSafe"
+            }
+        }
     }
 }

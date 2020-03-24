@@ -25,6 +25,9 @@
     },
     "options": {
         "step": {
+            "client_control": {
+                "title": "UniFi Optiounen 2/3"
+            },
             "device_tracker": {
                 "data": {
                     "detection_time": "Z\u00e4it a Sekonne vum leschten Z\u00e4itpunkt un bis den Apparat als \u00ebnnerwee consider\u00e9iert g\u00ebtt",

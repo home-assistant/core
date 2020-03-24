@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El receptor DirecTV ja est\u00e0 configurat",
+            "unknown": "Error inesperat"
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar, torna-ho a provar",
+            "unknown": "Error inesperat"
+        },
+        "flow_title": "DirecTV: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "description": "Vols configurar {name}?",
+                "title": "Connexi\u00f3 amb el receptor DirecTV"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3 o adre\u00e7a IP"
+                },
+                "title": "Connexi\u00f3 amb el receptor DirecTV"
+            }
+        },
+        "title": "DirecTV"
+    }
+}
