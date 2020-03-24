@@ -92,7 +92,7 @@ class DIRECTVEntity(Entity):
     def __init__(self, *, dtv: DIRECTV, name: str, address: str = "0") -> None:
         """Initialize the DirecTV entity."""
         self._address = address
-        self._device_id = address if address != "0" else dtv.info.receiver_id
+        self._device_id = address if address != "0" else dtv.device.info.receiver_id
         self._is_client = address != "0"
         self._name = name
         self.dtv = dtv
