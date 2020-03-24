@@ -4,6 +4,9 @@ from pymyq.errors import InvalidCredentialsError, MyQError
 
 from homeassistant import config_entries, setup
 from homeassistant.components.myq.const import DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+
+from tests.common import MockConfigEntry
 
 
 async def test_form_user(hass):
@@ -101,3 +104,24 @@ async def test_form_cannot_connect(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_homekit(hass):
+    """Test that we abort from homekit if myq is already setup."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "homekit"}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_USERNAME: "mock", CONF_PASSWORD: "mock"}
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "homekit"}
+    )
+    assert result["type"] == "abort"
