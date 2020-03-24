@@ -78,6 +78,7 @@ async def mock_magichome_api_fail(hass):
 
 async def test_light(hass):
     """Test MagicHome Light."""
+
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = hass
@@ -122,6 +123,7 @@ async def test_light(hass):
 
 async def test_scene(hass):
     """Test for Magichome scene platform."""
+
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = hass
