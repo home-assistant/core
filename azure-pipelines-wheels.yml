@@ -5,6 +5,7 @@ trigger:
   branches:
     include:
     - dev
+    - rc
   paths:
     include:
     - requirements_all.txt
@@ -18,7 +19,7 @@ schedules:
   always: true
 variables:
   - name: versionWheels
-    value: '1.4-3.7-alpine3.10'
+    value: '1.10.1-3.7-alpine3.11'
 resources:
   repositories:
     - repository: azure
@@ -32,8 +33,10 @@ jobs:
     builderVersion: '$(versionWheels)'
     builderApk: 'build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev'
     builderPip: 'Cython;numpy'
+    skipBinary: 'aiohttp'
     wheelsRequirement: 'requirements_wheels.txt'
     wheelsRequirementDiff: 'requirements_diff.txt'
+    wheelsConstraint: 'homeassistant/package_constraints.txt'
     preBuild:
     - script: |
         cp requirements_all.txt requirements_wheels.txt
@@ -69,9 +72,5 @@ jobs:
           sed -i "s|# py_noaa|py_noaa|g" ${requirement_file}
           sed -i "s|# bme680|bme680|g" ${requirement_file}
           sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
-
-          if [[ "$(buildArch)" =~ arm ]]; then
-            sed -i "s|# VL53L1X|VL53L1X|g" ${requirement_file}
-          fi
         done
       displayName: 'Prepare requirements files for Hass.io'
