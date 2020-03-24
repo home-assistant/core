@@ -576,7 +576,7 @@ fritzconnection==1.2.0
 gTTS-token==1.1.3
 
 # homeassistant.components.garmin_connect
-garminconnect==0.1.8
+garminconnect==0.1.10
 
 # homeassistant.components.gearbest
 gearbest_parser==1.0.7
