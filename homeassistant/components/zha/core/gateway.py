@@ -54,7 +54,6 @@ from .const import (
     SIGNAL_ADD_ENTITIES,
     SIGNAL_REMOVE,
     SIGNAL_REMOVE_GROUP,
-    SIGNAL_REMOVE_GROUP_ENTITIES,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
     ZHA_GW_MSG,
@@ -579,34 +578,6 @@ class ZHAGateway:
                 await asyncio.gather(*tasks)
         self.application_controller.groups.pop(group_id)
         self.zha_storage.async_delete_group(group)
-
-    async def async_update_zha_group(self, group_id: int, entity_domain: Optional[str]):
-        """Update a ZHA group."""
-        group = self.groups.get(group_id)
-        if not group:
-            _LOGGER.debug("Group: %s:0x%04x could not be found", group.name, group_id)
-            return
-        previous_entity_domain = group.entity_domain
-        if previous_entity_domain == entity_domain:
-            _LOGGER.debug(
-                "Group: %s:0x%04x entity domain was unchanged", group.name, group_id
-            )
-            return
-        group.entity_domain = entity_domain
-        self.zha_storage.async_update_group(group)
-        await self.zha_storage.async_save()
-
-        # cleanup previous entity if there is one
-        if previous_entity_domain is not None:
-            async_dispatcher_send(
-                self._hass, f"{SIGNAL_REMOVE_GROUP_ENTITIES}_{group.group_id}"
-            )
-
-        if entity_domain is not None:
-            discovery.GROUP_PROBE.discover_group_entities(group)
-            async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES)
-        self.zha_storage.async_update_group(group)
-        return group
 
     async def shutdown(self):
         """Stop ZHA Controller Application."""

@@ -51,7 +51,6 @@ from .core.const import (
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_REMOVE_GROUP,
-    SIGNAL_REMOVE_GROUP_ENTITIES,
     SIGNAL_SET_LEVEL,
 )
 from .core.registries import ZHA_ENTITIES
@@ -482,13 +481,6 @@ class LightGroup(BaseZhaEntity, light.Light):
         await self.async_accept_signal(
             None,
             f"{SIGNAL_REMOVE_GROUP}_{self._group_id}",
-            self.async_remove,
-            signal_override=True,
-        )
-        # group isn't removed but the entity domain changes or is set to None
-        await self.async_accept_signal(
-            None,
-            f"{SIGNAL_REMOVE_GROUP_ENTITIES}_{self._group_id}",
             self.async_remove,
             signal_override=True,
         )
