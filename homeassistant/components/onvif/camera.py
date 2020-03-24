@@ -189,7 +189,6 @@ class ONVIFHassCamera(Camera):
     async def async_initialize(self):
         """
         Initialize the camera.
-
         Initializes the camera by obtaining the input uri and connecting to
         the camera. Also retrieves the ONVIF profiles.
         """
@@ -529,7 +528,9 @@ class ONVIFHassCamera(Camera):
 
             image = await asyncio.shield(
                 ffmpeg.get_image(
-                    self._input, output_format=IMAGE_JPEG, extra_cmd=self._ffmpeg_arguments
+                    self._input,
+                    output_format=IMAGE_JPEG,
+                    extra_cmd=self._ffmpeg_arguments,
                 )
             )
 
