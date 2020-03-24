@@ -1,5 +1,6 @@
 """The Airly component."""
 import asyncio
+from datetime import timedelta
 import logging
 from math import ceil
 
@@ -11,19 +12,16 @@ import async_timeout
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import Config, HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     ATTR_API_ADVICE,
     ATTR_API_CAQI,
     ATTR_API_CAQI_DESCRIPTION,
     ATTR_API_CAQI_LEVEL,
-    DATA_CLIENT,
     DOMAIN,
     MAX_REQUESTS_PER_DAY,
     NO_AIRLY_SENSORS,
-    TOPIC_DATA_UPDATE,
 )
 
 PLATFORMS = ["air_quality", "sensor"]
@@ -33,8 +31,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: Config) -> bool:
     """Set up configured Airly."""
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_CLIENT] = {}
     return True
 
 
@@ -52,16 +48,32 @@ async def async_setup_entry(hass, config_entry):
 
     websession = async_get_clientsession(hass)
 
-    airly = AirlyData(hass, websession, api_key, latitude, longitude)
+    # We check how many Airly config entries are and calculate interval to not
+    # exceed allowed numbers of requests.
+    instances = len(hass.config_entries.async_entries(DOMAIN))
+    update_interval = timedelta(
+        minutes=ceil(24 * 60 / MAX_REQUESTS_PER_DAY) * instances
+    )
 
-    await airly.async_update()
+    coordinator = AirlyDataUpdateCoordinator(
+        hass, websession, api_key, latitude, longitude, update_interval
+    )
+    await coordinator.async_refresh()
 
-    hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = airly
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
+
+    # Change update_interval for another Airly instances
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.entry_id != config_entry.entry_id and hass.data.get(DOMAIN).get(
+            entry.entry_id
+        ):
+            hass.data.get(DOMAIN).get(entry.entry_id).update_interval = update_interval
 
     return True
 
@@ -77,26 +89,36 @@ async def async_unload_entry(hass, config_entry):
         )
     )
     if unload_ok:
-        hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
+        hass.data[DOMAIN].pop(config_entry.entry_id)
+
+    # Change update_interval for another Airly instances
+    instances = len(hass.config_entries.async_entries(DOMAIN)) - 1
+    update_interval = timedelta(
+        minutes=ceil(24 * 60 / MAX_REQUESTS_PER_DAY) * instances
+    )
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.entry_id != config_entry.entry_id and hass.data.get(DOMAIN).get(
+            entry.entry_id
+        ):
+            hass.data.get(DOMAIN).get(entry.entry_id).update_interval = update_interval
 
     return unload_ok
 
 
-class AirlyData:
+class AirlyDataUpdateCoordinator(DataUpdateCoordinator):
     """Define an object to hold Airly data."""
 
-    def __init__(self, hass, session, api_key, latitude, longitude):
+    def __init__(self, hass, session, api_key, latitude, longitude, update_interval):
         """Initialize."""
         self.latitude = latitude
         self.longitude = longitude
         self.airly = Airly(api_key, session)
-        self.data = {}
-        self._hass = hass
 
-        self._unsub_fetch_data = None
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
 
-    async def async_update(self, *args):
-        """Update Airly data."""
+    async def _async_update_data(self):
+        """Update data via library."""
+        data = {}
         try:
             with async_timeout.timeout(20):
                 measurements = self.airly.create_measurements_session_point(
@@ -109,30 +131,16 @@ class AirlyData:
             standards = measurements.current["standards"]
 
             if index["description"] == NO_AIRLY_SENSORS:
-                _LOGGER.error("Can't retrieve data: no Airly sensors in this area")
-                return
+                raise UpdateFailed("Can't retrieve data: no Airly sensors in this area")
             for value in values:
-                self.data[value["name"]] = value["value"]
+                data[value["name"]] = value["value"]
             for standard in standards:
-                self.data[f"{standard['pollutant']}_LIMIT"] = standard["limit"]
-                self.data[f"{standard['pollutant']}_PERCENT"] = standard["percent"]
-            self.data[ATTR_API_CAQI] = index["value"]
-            self.data[ATTR_API_CAQI_LEVEL] = index["level"].lower().replace("_", " ")
-            self.data[ATTR_API_CAQI_DESCRIPTION] = index["description"]
-            self.data[ATTR_API_ADVICE] = index["advice"]
-            _LOGGER.debug("Data retrieved from Airly")
-        except asyncio.TimeoutError:
-            _LOGGER.error("Asyncio Timeout Error")
+                data[f"{standard['pollutant']}_LIMIT"] = standard["limit"]
+                data[f"{standard['pollutant']}_PERCENT"] = standard["percent"]
+            data[ATTR_API_CAQI] = index["value"]
+            data[ATTR_API_CAQI_LEVEL] = index["level"].lower().replace("_", " ")
+            data[ATTR_API_CAQI_DESCRIPTION] = index["description"]
+            data[ATTR_API_ADVICE] = index["advice"]
         except (ValueError, AirlyError, ClientConnectorError) as error:
-            _LOGGER.error(error)
-            self.data = {}
-
-        # We check how many Airly config entries are and calculate interval to not
-        # exceed allowed numbers of requests.
-        instances = len(self._hass.config_entries.async_entries(DOMAIN))
-        interval = ceil(24 * 60 / MAX_REQUESTS_PER_DAY) * instances
-        _LOGGER.debug("Next update in %i minutes", interval)
-        self._unsub_fetch_data = async_call_later(
-            self._hass, interval * 60, self.async_update
-        )
-        async_dispatcher_send(self._hass, TOPIC_DATA_UPDATE)
+            raise UpdateFailed(error)
+        return data
