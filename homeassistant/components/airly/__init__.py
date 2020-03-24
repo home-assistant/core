@@ -61,9 +61,10 @@ async def async_setup_entry(hass, config_entry):
         )
 
     websession = async_get_clientsession(hass)
+    upd_interval = update_interval(hass)
 
     coordinator = AirlyDataUpdateCoordinator(
-        hass, websession, api_key, latitude, longitude, update_interval(hass)
+        hass, websession, api_key, latitude, longitude, upd_interval
     )
     await coordinator.async_refresh()
 
@@ -77,7 +78,7 @@ async def async_setup_entry(hass, config_entry):
 
     # Change update_interval for all Airly instances
     for instance in hass.data[DOMAIN].values():
-        instance.update_interval = update_interval(hass)
+        instance.update_interval = upd_interval
 
     return True
 
