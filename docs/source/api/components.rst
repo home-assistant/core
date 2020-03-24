@@ -41,7 +41,7 @@ calendar
     :undoc-members:
     :show-inheritance:
 
-climate integration
+climate
 ---------------------------
 
 .. automodule:: homeassistant.components.climate
