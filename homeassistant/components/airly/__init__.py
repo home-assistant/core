@@ -29,6 +29,11 @@ PLATFORMS = ["air_quality", "sensor"]
 _LOGGER = logging.getLogger(__name__)
 
 
+def instances(hass):
+    """Return number of configured Airly instances."""
+    return len(hass.config_entries.async_entries(DOMAIN))
+
+
 async def async_setup(hass: HomeAssistant, config: Config) -> bool:
     """Set up configured Airly."""
     return True
@@ -50,9 +55,8 @@ async def async_setup_entry(hass, config_entry):
 
     # We check how many Airly config entries are and calculate interval to not
     # exceed allowed numbers of requests.
-    instances = len(hass.config_entries.async_entries(DOMAIN))
     update_interval = timedelta(
-        minutes=ceil(24 * 60 / MAX_REQUESTS_PER_DAY) * instances
+        minutes=ceil(24 * 60 / MAX_REQUESTS_PER_DAY) * instances(hass)
     )
 
     coordinator = AirlyDataUpdateCoordinator(
@@ -92,9 +96,8 @@ async def async_unload_entry(hass, config_entry):
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
     # Change update_interval for another Airly instances
-    instances = len(hass.config_entries.async_entries(DOMAIN)) - 1
     update_interval = timedelta(
-        minutes=ceil(24 * 60 / MAX_REQUESTS_PER_DAY) * instances
+        minutes=ceil(24 * 60 / MAX_REQUESTS_PER_DAY) * (instances(hass) - 1)
     )
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.entry_id != config_entry.entry_id and hass.data.get(DOMAIN).get(
