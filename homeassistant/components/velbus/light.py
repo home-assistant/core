@@ -64,7 +64,7 @@ class VelbusLight(VelbusEntity, Light):
     @property
     def brightness(self):
         """Return the brightness of the light."""
-        return self._module.get_dimmer_state(self._channel)
+        return int((self._module.get_dimmer_state(self._channel) * 255) / 100)
 
     def turn_on(self, **kwargs):
         """Instruct the Velbus light to turn on."""
@@ -80,10 +80,15 @@ class VelbusLight(VelbusEntity, Light):
                 attr, *args = "set_led_state", self._channel, "on"
         else:
             if ATTR_BRIGHTNESS in kwargs:
+                # Make sure a low but non-zero value is not rounded down to zero
+                if kwargs[ATTR_BRIGHTNESS] == 0:
+                    brightness = 0
+                else:
+                    brightness = max(int((kwargs[ATTR_BRIGHTNESS] * 100) / 255), 1)
                 attr, *args = (
                     "set_dimmer_state",
                     self._channel,
-                    kwargs[ATTR_BRIGHTNESS],
+                    brightness,
                     kwargs.get(ATTR_TRANSITION, 0),
                 )
             else:
