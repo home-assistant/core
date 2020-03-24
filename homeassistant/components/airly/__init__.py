@@ -116,28 +116,28 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via library."""
         data = {}
-        try:
-            with async_timeout.timeout(20):
-                measurements = self.airly.create_measurements_session_point(
-                    self.latitude, self.longitude
-                )
+        with async_timeout.timeout(20):
+            measurements = self.airly.create_measurements_session_point(
+                self.latitude, self.longitude
+            )
+            try:
                 await measurements.update()
+            except (AirlyError, ClientConnectorError) as error:
+                raise UpdateFailed(error)
 
-            values = measurements.current["values"]
-            index = measurements.current["indexes"][0]
-            standards = measurements.current["standards"]
+        values = measurements.current["values"]
+        index = measurements.current["indexes"][0]
+        standards = measurements.current["standards"]
 
-            if index["description"] == NO_AIRLY_SENSORS:
-                raise UpdateFailed("Can't retrieve data: no Airly sensors in this area")
-            for value in values:
-                data[value["name"]] = value["value"]
-            for standard in standards:
-                data[f"{standard['pollutant']}_LIMIT"] = standard["limit"]
-                data[f"{standard['pollutant']}_PERCENT"] = standard["percent"]
-            data[ATTR_API_CAQI] = index["value"]
-            data[ATTR_API_CAQI_LEVEL] = index["level"].lower().replace("_", " ")
-            data[ATTR_API_CAQI_DESCRIPTION] = index["description"]
-            data[ATTR_API_ADVICE] = index["advice"]
-        except (ValueError, AirlyError, ClientConnectorError) as error:
-            raise UpdateFailed(error)
+        if index["description"] == NO_AIRLY_SENSORS:
+            raise UpdateFailed("Can't retrieve data: no Airly sensors in this area")
+        for value in values:
+            data[value["name"]] = value["value"]
+        for standard in standards:
+            data[f"{standard['pollutant']}_LIMIT"] = standard["limit"]
+            data[f"{standard['pollutant']}_PERCENT"] = standard["percent"]
+        data[ATTR_API_CAQI] = index["value"]
+        data[ATTR_API_CAQI_LEVEL] = index["level"].lower().replace("_", " ")
+        data[ATTR_API_CAQI_DESCRIPTION] = index["description"]
+        data[ATTR_API_ADVICE] = index["advice"]
         return data
