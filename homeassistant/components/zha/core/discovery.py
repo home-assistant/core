@@ -191,29 +191,33 @@ class GroupProbe:
             group.entity_domain = GroupProbe.determine_default_entity_domain(
                 self._hass, group
             )
-            _LOGGER.debug(
-                "Group: %s:0x%04x has an entity domain of: %s after discovery",
-                group.name,
-                group.group_id,
-                group.entity_domain,
+
+        if group.entity_domain is None:
+            return
+
+        _LOGGER.debug(
+            "Group: %s:0x%04x has an entity domain of: %s after discovery",
+            group.name,
+            group.group_id,
+            group.entity_domain,
+        )
+
+        zha_gateway = self._hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
+        entity_class = zha_regs.ZHA_ENTITIES.get_group_entity(group.entity_domain)
+        if entity_class is None:
+            return
+
+        self._hass.data[zha_const.DATA_ZHA][group.entity_domain].append(
+            (
+                entity_class,
+                (
+                    group.domain_entity_ids,
+                    f"{group.entity_domain}_group_{group.group_id}",
+                    group.group_id,
+                    zha_gateway.coordinator_zha_device,
+                ),
             )
-        if group.entity_domain is not None:
-            zha_gateway = self._hass.data[zha_const.DATA_ZHA][
-                zha_const.DATA_ZHA_GATEWAY
-            ]
-            entity_class = zha_regs.ZHA_ENTITIES.get_group_entity(group.entity_domain)
-            if entity_class is not None:
-                self._hass.data[zha_const.DATA_ZHA][group.entity_domain].append(
-                    (
-                        entity_class,
-                        (
-                            group.domain_entity_ids,
-                            f"{group.entity_domain}_group_{group.group_id}",
-                            group.group_id,
-                            zha_gateway.coordinator_zha_device,
-                        ),
-                    )
-                )
+        )
 
     @staticmethod
     def determine_default_entity_domain(
