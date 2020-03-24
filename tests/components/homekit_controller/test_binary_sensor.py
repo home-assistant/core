@@ -123,11 +123,11 @@ async def test_leak_sensor_read_state(hass, utcnow):
     """Test that we can read the state of a HomeKit leak sensor accessory."""
     helper = await setup_test_component(hass, create_leak_sensor_service)
 
-    helper.characteristics[LEAK_DETECTED].value = False
+    helper.characteristics[LEAK_DETECTED].value = 0
     state = await helper.poll_and_get_state()
     assert state.state == "off"
 
-    helper.characteristics[LEAK_DETECTED].value = True
+    helper.characteristics[LEAK_DETECTED].value = 1
     state = await helper.poll_and_get_state()
     assert state.state == "on"
 
