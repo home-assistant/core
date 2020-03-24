@@ -89,9 +89,6 @@ DEVICE_CLASS_VIBRATION = "vibration"
 # On means open, Off means closed
 DEVICE_CLASS_WINDOW = "window"
 
-# On means leak detected, Off means no leak
-DEVICE_CLASS_LEAK = "leak"
-
 DEVICE_CLASSES = [
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_COLD,
@@ -116,7 +113,6 @@ DEVICE_CLASSES = [
     DEVICE_CLASS_SOUND,
     DEVICE_CLASS_VIBRATION,
     DEVICE_CLASS_WINDOW,
-    DEVICE_CLASS_LEAK,
 ]
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))

@@ -4,7 +4,7 @@ import logging
 from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_LEAK,
+    DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_OCCUPANCY,
     DEVICE_CLASS_OPENING,
@@ -100,7 +100,7 @@ class HomeKitLeakSensor(HomeKitEntity, BinarySensorDevice):
     @property
     def device_class(self):
         """Define this binary_sensor as a leak sensor."""
-        return DEVICE_CLASS_LEAK
+        return DEVICE_CLASS_MOISTURE
 
     @property
     def is_on(self):

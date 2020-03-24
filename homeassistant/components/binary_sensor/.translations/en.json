@@ -18,7 +18,6 @@
             "is_no_smoke": "{entity_name} is not detecting smoke",
             "is_no_sound": "{entity_name} is not detecting sound",
             "is_no_vibration": "{entity_name} is not detecting vibration",
-            "is_no_leak": "{entity_name} is not detecting leak",
             "is_not_bat_low": "{entity_name} battery is normal",
             "is_not_cold": "{entity_name} is not cold",
             "is_not_connected": "{entity_name} is disconnected",
@@ -42,9 +41,7 @@
             "is_problem": "{entity_name} is detecting problem",
             "is_smoke": "{entity_name} is detecting smoke",
             "is_sound": "{entity_name} is detecting sound",
-            "is_unsafe": "{entity_name} is unsafe",
-            "is_vibration": "{entity_name} is detecting vibration",
-            "is_leak": "{entity_name} is detecting leak"
+            "is_unsafe": "{entity_name} is unsafe"
         },
         "trigger_type": {
             "bat_low": "{entity_name} battery low",
@@ -66,7 +63,6 @@
             "no_smoke": "{entity_name} stopped detecting smoke",
             "no_sound": "{entity_name} stopped detecting sound",
             "no_vibration": "{entity_name} stopped detecting vibration",
-            "no_leak": "{entity_name} stopped detecting leak",
             "not_bat_low": "{entity_name} battery normal",
             "not_cold": "{entity_name} became not cold",
             "not_connected": "{entity_name} disconnected",
@@ -91,8 +87,7 @@
             "turned_off": "{entity_name} turned off",
             "turned_on": "{entity_name} turned on",
             "unsafe": "{entity_name} became unsafe",
-            "vibration": "{entity_name} started detecting vibration",
-            "leak": "{entity_name} started detecting leak"
+            "vibration": "{entity_name} started detecting vibration"
         }
     }
 }

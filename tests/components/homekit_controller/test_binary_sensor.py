@@ -3,7 +3,7 @@ from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_LEAK,
+    DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_OCCUPANCY,
     DEVICE_CLASS_OPENING,
@@ -131,4 +131,4 @@ async def test_leak_sensor_read_state(hass, utcnow):
     state = await helper.poll_and_get_state()
     assert state.state == "on"
 
-    assert state.attributes["device_class"] == DEVICE_CLASS_LEAK
+    assert state.attributes["device_class"] == DEVICE_CLASS_MOISTURE

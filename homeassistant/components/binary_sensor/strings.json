@@ -42,9 +42,7 @@
       "is_open": "{entity_name} is open",
       "is_not_open": "{entity_name} is closed",
       "is_on": "{entity_name} is on",
-      "is_off": "{entity_name} is off",
-      "is_no_leak": "{entity_name} is not detecting leak",
-      "is_leak": "{entity_name} is detecting leak"
+      "is_off": "{entity_name} is off"
     },
     "trigger_type": {
       "bat_low": "{entity_name} battery low",
@@ -88,9 +86,7 @@
       "opened": "{entity_name} opened",
       "not_opened": "{entity_name} closed",
       "turned_on": "{entity_name} turned on",
-      "turned_off": "{entity_name} turned off",
-      "no_leak": "{entity_name} stopped detecting leak",
-      "leak": "{entity_name} started detecting leak"
+      "turned_off": "{entity_name} turned off"
     }
   }
 }
