@@ -1,6 +1,10 @@
 """Fans on Zigbee Home Automation networks."""
 import functools
 import logging
+from typing import Any, Dict, List, Optional
+
+from zigpy.exceptions import DeliveryError
+import zigpy.zcl.clusters.hvac as hvac
 
 from homeassistant.components.fan import (
     DOMAIN,
@@ -11,8 +15,10 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     FanEntity,
 )
-from homeassistant.core import callback
+from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import CALLBACK_TYPE, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.event import async_track_state_change
 
 from .core import discovery
 from .core.const import (
@@ -21,9 +27,10 @@ from .core.const import (
     DATA_ZHA_DISPATCHERS,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
+    SIGNAL_REMOVE_GROUP,
 )
 from .core.registries import ZHA_ENTITIES
-from .entity import ZhaEntity
+from .entity import BaseZhaEntity, ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +56,7 @@ SPEED_LIST = [
 VALUE_TO_SPEED = dict(enumerate(SPEED_LIST))
 SPEED_TO_VALUE = {speed: i for i, speed in enumerate(SPEED_LIST)}
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
+GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, DOMAIN)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -142,3 +150,111 @@ class ZhaFan(ZhaEntity, FanEntity):
             state = await self._fan_channel.get_attribute_value("fan_mode")
             if state is not None:
                 self._state = VALUE_TO_SPEED.get(state, self._state)
+
+
+@GROUP_MATCH()
+class FanGroup(BaseZhaEntity, FanEntity):
+    """Representation of a fan group."""
+
+    def __init__(
+        self, entity_ids: List[str], unique_id: str, group_id: int, zha_device, **kwargs
+    ) -> None:
+        """Initialize a fan group."""
+        super().__init__(unique_id, zha_device, **kwargs)
+        self._name: str = f"{zha_device.gateway.groups.get(group_id).name}_group_{group_id}"
+        self._group_id: int = group_id
+        self._available: bool = False
+        self._entity_ids: List[str] = entity_ids
+        self._async_unsub_state_changed: Optional[CALLBACK_TYPE] = None
+
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        await super().async_added_to_hass()
+        await self.async_accept_signal(
+            None,
+            f"{SIGNAL_REMOVE_GROUP}_{self._group_id}",
+            self.async_remove,
+            signal_override=True,
+        )
+
+        @callback
+        def async_state_changed_listener(
+            entity_id: str, old_state: State, new_state: State
+        ):
+            """Handle child updates."""
+            self.async_schedule_update_ha_state(True)
+
+        self._async_unsub_state_changed = async_track_state_change(
+            self.hass, self._entity_ids, async_state_changed_listener
+        )
+        await self.async_update()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Handle removal from Home Assistant."""
+        await super().async_will_remove_from_hass()
+        if self._async_unsub_state_changed is not None:
+            self._async_unsub_state_changed()
+            self._async_unsub_state_changed = None
+
+    @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return SUPPORT_SET_SPEED
+
+    @property
+    def speed_list(self) -> list:
+        """Get the list of available speeds."""
+        return SPEED_LIST
+
+    @property
+    def speed(self) -> str:
+        """Return the current speed."""
+        return self._state
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if entity is on."""
+        if self._state is None:
+            return False
+        return self._state != SPEED_OFF
+
+    @property
+    def device_state_attributes(self) -> Dict[str, Any]:
+        """Return state attributes."""
+        return self.state_attributes
+
+    @callback
+    def async_set_state(self, attr_id, attr_name, value):
+        """Handle state update from channel."""
+        self._state = VALUE_TO_SPEED.get(value, self._state)
+        self.async_write_ha_state()
+
+    async def async_turn_on(self, speed: str = None, **kwargs) -> None:
+        """Turn the entity on."""
+        if speed is None:
+            speed = SPEED_MEDIUM
+        await self.async_set_speed(speed)
+
+    async def async_turn_off(self, **kwargs) -> None:
+        """Turn the entity off."""
+        await self.async_set_speed(SPEED_OFF)
+
+    async def async_set_speed(self, speed: str) -> None:
+        """Set the speed of the fan."""
+        group = self.zha_device.gateway.get_group(self._group_id)
+        if group is None:
+            return
+        cluster = group.endpoint[hvac.Fan.cluster_id]
+        try:
+            await cluster.write_attributes({"fan_mode": SPEED_TO_VALUE[speed]})
+            self.async_set_state(0, "fan_mode", speed)
+        except DeliveryError as ex:
+            self.error("Could not set speed: %s", ex)
+            return
+
+    async def async_update(self):
+        """Attempt to retrieve on off state from the fan."""
+        await super().async_update()
+        all_states = [self.hass.states.get(x) for x in self._entity_ids]
+        states: List[State] = list(filter(None, all_states))
+        self._available = any(state.state != STATE_UNAVAILABLE for state in states)
