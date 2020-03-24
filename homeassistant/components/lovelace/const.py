@@ -11,6 +11,8 @@ from homeassistant.util import slugify
 DOMAIN = "lovelace"
 EVENT_LOVELACE_UPDATED = "lovelace_updated"
 
+DEFAULT_ICON = "hass:view-dashboard"
+
 CONF_MODE = "mode"
 MODE_YAML = "yaml"
 MODE_STORAGE = "storage"
@@ -39,24 +41,26 @@ RESOURCE_UPDATE_FIELDS = {
     vol.Optional(CONF_URL): cv.string,
 }
 
-CONF_SIDEBAR = "sidebar"
+SERVICE_RELOAD_RESOURCES = "reload_resources"
+RESOURCE_RELOAD_SERVICE_SCHEMA = vol.Schema({})
+
 CONF_TITLE = "title"
 CONF_REQUIRE_ADMIN = "require_admin"
-
-SIDEBAR_FIELDS = {
-    vol.Required(CONF_ICON): cv.icon,
-    vol.Required(CONF_TITLE): cv.string,
-}
+CONF_SHOW_IN_SIDEBAR = "show_in_sidebar"
 
 DASHBOARD_BASE_CREATE_FIELDS = {
     vol.Optional(CONF_REQUIRE_ADMIN, default=False): cv.boolean,
-    vol.Optional(CONF_SIDEBAR): SIDEBAR_FIELDS,
+    vol.Optional(CONF_ICON): cv.icon,
+    vol.Required(CONF_TITLE): cv.string,
+    vol.Optional(CONF_SHOW_IN_SIDEBAR, default=True): cv.boolean,
 }
 
 
 DASHBOARD_BASE_UPDATE_FIELDS = {
     vol.Optional(CONF_REQUIRE_ADMIN): cv.boolean,
-    vol.Optional(CONF_SIDEBAR): vol.Any(None, SIDEBAR_FIELDS),
+    vol.Optional(CONF_ICON): vol.Any(cv.icon, None),
+    vol.Optional(CONF_TITLE): cv.string,
+    vol.Optional(CONF_SHOW_IN_SIDEBAR): cv.boolean,
 }
 
 
@@ -68,15 +72,15 @@ STORAGE_DASHBOARD_CREATE_FIELDS = {
     vol.Optional(CONF_MODE, default=MODE_STORAGE): MODE_STORAGE,
 }
 
-STORAGE_DASHBOARD_UPDATE_FIELDS = {
-    **DASHBOARD_BASE_UPDATE_FIELDS,
-}
+STORAGE_DASHBOARD_UPDATE_FIELDS = DASHBOARD_BASE_UPDATE_FIELDS
 
 
 def url_slug(value: Any) -> str:
     """Validate value is a valid url slug."""
     if value is None:
         raise vol.Invalid("Slug should not be None")
+    if "-" not in value:
+        raise vol.Invalid("Url path needs to contain a hyphen (-)")
     str_value = str(value)
     slg = slugify(str_value, separator="-")
     if str_value == slg:

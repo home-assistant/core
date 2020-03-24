@@ -67,8 +67,8 @@ def async_track_state_change(
 
     Must be run within the event loop.
     """
-    match_from_state = _process_state_match(from_state)
-    match_to_state = _process_state_match(to_state)
+    match_from_state = process_state_match(from_state)
+    match_to_state = process_state_match(to_state)
 
     # Ensure it is a lowercase list with entity ids we want to match on
     if entity_ids == MATCH_ALL:
@@ -473,7 +473,7 @@ def async_track_time_change(
 track_time_change = threaded_listener_factory(async_track_time_change)
 
 
-def _process_state_match(
+def process_state_match(
     parameter: Union[None, str, Iterable[str]]
 ) -> Callable[[str], bool]:
     """Convert parameter to function that matches input against parameter."""

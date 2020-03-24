@@ -20,9 +20,6 @@ SCAN_INTERVAL = timedelta(seconds=12)
 CONF_TRACK_NEW = "track_new_devices"
 DEFAULT_TRACK_NEW = True
 
-CONF_AWAY_HIDE = "hide_if_away"
-DEFAULT_AWAY_HIDE = False
-
 CONF_CONSIDER_HOME = "consider_home"
 DEFAULT_CONSIDER_HOME = timedelta(seconds=180)
 

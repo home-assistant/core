@@ -1,9 +1,7 @@
 """Support for the Philips Hue sensors as a platform."""
-import asyncio
 from datetime import timedelta
 import logging
 
-from aiohttp import client_exceptions
 from aiohue import AiohueException, Unauthorized
 from aiohue.sensors import TYPE_ZLL_PRESENCE
 import async_timeout
@@ -60,13 +58,13 @@ class SensorManager:
                 )
         except Unauthorized:
             await self.bridge.handle_unauthorized_error()
-            raise UpdateFailed
-        except (asyncio.TimeoutError, AiohueException, client_exceptions.ClientError):
-            raise UpdateFailed
+            raise UpdateFailed("Unauthorized")
+        except AiohueException as err:
+            raise UpdateFailed(f"Hue error: {err}")
 
-    async def async_register_component(self, binary, async_add_entities):
+    async def async_register_component(self, platform, async_add_entities):
         """Register async_add_entities methods for components."""
-        self._component_add_entities[binary] = async_add_entities
+        self._component_add_entities[platform] = async_add_entities
 
         if len(self._component_add_entities) < 2:
             return
@@ -86,8 +84,7 @@ class SensorManager:
         if len(self._component_add_entities) < 2:
             return
 
-        new_sensors = []
-        new_binary_sensors = []
+        to_add = {}
         primary_sensor_devices = {}
         current = self.current
 
@@ -131,10 +128,10 @@ class SensorManager:
             current[api[item_id].uniqueid] = sensor_config["class"](
                 api[item_id], name, self.bridge, primary_sensor=primary_sensor
             )
-            if sensor_config["binary"]:
-                new_binary_sensors.append(current[api[item_id].uniqueid])
-            else:
-                new_sensors.append(current[api[item_id].uniqueid])
+
+            to_add.setdefault(sensor_config["platform"], []).append(
+                current[api[item_id].uniqueid]
+            )
 
         self.bridge.hass.async_create_task(
             remove_devices(
@@ -142,10 +139,8 @@ class SensorManager:
             )
         )
 
-        if new_sensors:
-            self._component_add_entities[False](new_sensors)
-        if new_binary_sensors:
-            self._component_add_entities[True](new_binary_sensors)
+        for platform in to_add:
+            self._component_add_entities[platform](to_add[platform])
 
 
 class GenericHueSensor(entity.Entity):

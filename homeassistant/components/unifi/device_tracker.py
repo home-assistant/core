@@ -8,6 +8,7 @@ from homeassistant.components.unifi.config_flow import get_controller_from_confi
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.dt as dt_util
 
 from .const import ATTR_MANUFACTURER
@@ -44,6 +45,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     option_track_clients = controller.option_track_clients
     option_track_devices = controller.option_track_devices
     option_track_wired_clients = controller.option_track_wired_clients
+    option_ssid_filter = controller.option_ssid_filter
 
     registry = await hass.helpers.entity_registry.async_get_registry()
 
@@ -85,6 +87,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         nonlocal option_track_clients
         nonlocal option_track_devices
         nonlocal option_track_wired_clients
+        nonlocal option_ssid_filter
 
         update = False
         remove = set()
@@ -114,6 +117,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 for mac, entity in tracked.items():
                     if isinstance(entity, UniFiClientTracker) and entity.is_wired:
                         remove.add(mac)
+
+        if option_ssid_filter != controller.option_ssid_filter:
+            option_ssid_filter = controller.option_ssid_filter
+            update = True
+
+            for mac, entity in tracked.items():
+                if (
+                    isinstance(entity, UniFiClientTracker)
+                    and not entity.is_wired
+                    and entity.client.essid not in option_ssid_filter
+                ):
+                    remove.add(mac)
 
         option_track_clients = controller.option_track_clients
         option_track_devices = controller.option_track_devices
@@ -156,10 +171,18 @@ def add_entities(controller, async_add_entities, tracked):
             if item_id in tracked:
                 continue
 
-            if tracker_class is UniFiClientTracker and (
-                not controller.option_track_wired_clients and items[item_id].is_wired
-            ):
-                continue
+            if tracker_class is UniFiClientTracker:
+                client = items[item_id]
+
+                if not controller.option_track_wired_clients and client.is_wired:
+                    continue
+
+                if (
+                    controller.option_ssid_filter
+                    and not client.is_wired
+                    and client.essid not in controller.option_ssid_filter
+                ):
+                    continue
 
             tracked[item_id] = tracker_class(items[item_id], controller)
             new_tracked.append(tracked[item_id])
@@ -175,6 +198,8 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         """Set up tracked client."""
         super().__init__(client, controller)
 
+        self.cancel_scheduled_update = None
+        self.is_disconnected = None
         self.wired_bug = None
         if self.is_wired != self.client.is_wired:
             self.wired_bug = dt_util.utcnow() - self.controller.option_detection_time
@@ -186,12 +211,42 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         If connected to unwanted ssid return False.
         If is_wired and client.is_wired differ it means that the device is offline and UniFi bug shows device as wired.
         """
+
+        @callback
+        def _scheduled_update(now):
+            """Scheduled callback for update."""
+            self.is_disconnected = True
+            self.cancel_scheduled_update = None
+            self.async_schedule_update_ha_state()
+
         if (
             not self.is_wired
             and self.controller.option_ssid_filter
             and self.client.essid not in self.controller.option_ssid_filter
         ):
             return False
+
+        if (self.is_wired and self.wired_connection) or (
+            not self.is_wired and self.wireless_connection
+        ):
+            if self.cancel_scheduled_update:
+                self.cancel_scheduled_update()
+                self.cancel_scheduled_update = None
+
+            self.is_disconnected = False
+
+        if (self.is_wired and self.wired_connection is False) or (
+            not self.is_wired and self.wireless_connection is False
+        ):
+            if not self.is_disconnected and not self.cancel_scheduled_update:
+                self.cancel_scheduled_update = async_track_point_in_utc_time(
+                    self.hass,
+                    _scheduled_update,
+                    dt_util.utcnow() + self.controller.option_detection_time,
+                )
+
+        if self.is_disconnected is not None:
+            return not self.is_disconnected
 
         if self.is_wired != self.client.is_wired:
             if not self.wired_bug:

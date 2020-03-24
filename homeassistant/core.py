@@ -93,7 +93,7 @@ SOURCE_DISCOVERED = "discovered"
 SOURCE_STORAGE = "storage"
 SOURCE_YAML = "yaml"
 
-# How long to wait till things that run on startup have to finish.
+# How long to wait until things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
 
 _LOGGER = logging.getLogger(__name__)
@@ -249,7 +249,7 @@ class HomeAssistant:
         try:
             # Only block for EVENT_HOMEASSISTANT_START listener
             self.async_stop_track_tasks()
-            with timeout(TIMEOUT_EVENT_START):
+            async with timeout(TIMEOUT_EVENT_START):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
@@ -374,13 +374,13 @@ class HomeAssistant:
             self.async_add_job(target, *args)
 
     def block_till_done(self) -> None:
-        """Block till all pending work is done."""
+        """Block until all pending work is done."""
         asyncio.run_coroutine_threadsafe(
             self.async_block_till_done(), self.loop
         ).result()
 
     async def async_block_till_done(self) -> None:
-        """Block till all pending work is done."""
+        """Block until all pending work is done."""
         # To flush out any call_soon_threadsafe
         await asyncio.sleep(0)
 
@@ -1150,25 +1150,15 @@ class ServiceRegistry:
         service_data: Optional[Dict] = None,
         blocking: bool = False,
         context: Optional[Context] = None,
+        limit: Optional[float] = SERVICE_CALL_LIMIT,
     ) -> Optional[bool]:
         """
         Call a service.
 
-        Specify blocking=True to wait till service is executed.
-        Waits a maximum of SERVICE_CALL_LIMIT.
-
-        If blocking = True, will return boolean if service executed
-        successfully within SERVICE_CALL_LIMIT.
-
-        This method will fire an event to call the service.
-        This event will be picked up by this ServiceRegistry and any
-        other ServiceRegistry that is listening on the EventBus.
-
-        Because the service is sent as an event you are not allowed to use
-        the keys ATTR_DOMAIN and ATTR_SERVICE in your service_data.
+        See description of async_call for details.
         """
         return asyncio.run_coroutine_threadsafe(
-            self.async_call(domain, service, service_data, blocking, context),
+            self.async_call(domain, service, service_data, blocking, context, limit),
             self._hass.loop,
         ).result()
 
@@ -1179,19 +1169,18 @@ class ServiceRegistry:
         service_data: Optional[Dict] = None,
         blocking: bool = False,
         context: Optional[Context] = None,
+        limit: Optional[float] = SERVICE_CALL_LIMIT,
     ) -> Optional[bool]:
         """
         Call a service.
 
-        Specify blocking=True to wait till service is executed.
-        Waits a maximum of SERVICE_CALL_LIMIT.
+        Specify blocking=True to wait until service is executed.
+        Waits a maximum of limit, which may be None for no timeout.
 
         If blocking = True, will return boolean if service executed
-        successfully within SERVICE_CALL_LIMIT.
+        successfully within limit.
 
-        This method will fire an event to call the service.
-        This event will be picked up by this ServiceRegistry and any
-        other ServiceRegistry that is listening on the EventBus.
+        This method will fire an event to indicate the service has been called.
 
         Because the service is sent as an event you are not allowed to use
         the keys ATTR_DOMAIN and ATTR_SERVICE in your service_data.
@@ -1230,7 +1219,7 @@ class ServiceRegistry:
             return None
 
         try:
-            with timeout(SERVICE_CALL_LIMIT):
+            async with timeout(limit):
                 await asyncio.shield(self._execute_service(handler, service_call))
             return True
         except asyncio.TimeoutError:

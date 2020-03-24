@@ -12,7 +12,6 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
-    CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_MILES,
 )
@@ -22,7 +21,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .config_flow import configured_instances
 from .const import (
     CONF_MINIMUM_MAGNITUDE,
     CONF_MMI,
@@ -42,8 +40,8 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Optional(CONF_LATITUDE): cv.latitude,
-                vol.Optional(CONF_LONGITUDE): cv.longitude,
+                vol.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
+                vol.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
                 vol.Optional(CONF_MMI, default=DEFAULT_MMI): vol.All(
                     vol.Coerce(int), vol.Range(min=-1, max=8)
                 ),
@@ -67,15 +65,10 @@ async def async_setup(hass, config):
         return True
 
     conf = config[DOMAIN]
-
     latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
     longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
     mmi = conf[CONF_MMI]
     scan_interval = conf[CONF_SCAN_INTERVAL]
-
-    identifier = f"{latitude}, {longitude}"
-    if identifier in configured_instances(hass):
-        return True
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -97,18 +90,15 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up the GeoNet NZ Quakes component as config entry."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-    if FEED not in hass.data[DOMAIN]:
-        hass.data[DOMAIN][FEED] = {}
+    hass.data.setdefault(DOMAIN, {})
+    feeds = hass.data[DOMAIN].setdefault(FEED, {})
 
     radius = config_entry.data[CONF_RADIUS]
-    unit_system = config_entry.data[CONF_UNIT_SYSTEM]
-    if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+    if hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
         radius = METRIC_SYSTEM.length(radius, LENGTH_MILES)
     # Create feed entity manager for all platforms.
-    manager = GeonetnzQuakesFeedEntityManager(hass, config_entry, radius, unit_system)
-    hass.data[DOMAIN][FEED][config_entry.entry_id] = manager
+    manager = GeonetnzQuakesFeedEntityManager(hass, config_entry, radius)
+    feeds[config_entry.entry_id] = manager
     _LOGGER.debug("Feed entity manager added for %s", config_entry.entry_id)
     await manager.async_init()
     return True
@@ -130,7 +120,7 @@ async def async_unload_entry(hass, config_entry):
 class GeonetnzQuakesFeedEntityManager:
     """Feed Entity Manager for GeoNet NZ Quakes feed."""
 
-    def __init__(self, hass, config_entry, radius_in_km, unit_system):
+    def __init__(self, hass, config_entry, radius_in_km):
         """Initialize the Feed Entity Manager."""
         self._hass = hass
         self._config_entry = config_entry
@@ -153,7 +143,6 @@ class GeonetnzQuakesFeedEntityManager:
         )
         self._config_entry_id = config_entry.entry_id
         self._scan_interval = timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL])
-        self._unit_system = unit_system
         self._track_time_remove_callback = None
         self._status_info = None
         self.listeners = []
@@ -212,8 +201,8 @@ class GeonetnzQuakesFeedEntityManager:
             self._hass,
             self.async_event_new_entity(),
             self,
+            self._config_entry.unique_id,
             external_id,
-            self._unit_system,
         )
 
     async def _update_entity(self, external_id):

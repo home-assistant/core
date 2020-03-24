@@ -8,6 +8,16 @@ from homeassistant.core import callback
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import const as zha_const, registries as zha_regs, typing as zha_typing
+from .. import (  # noqa: F401 pylint: disable=unused-import,
+    binary_sensor,
+    cover,
+    device_tracker,
+    fan,
+    light,
+    lock,
+    sensor,
+    switch,
+)
 from .channels import base
 
 _LOGGER = logging.getLogger(__name__)
@@ -134,7 +144,7 @@ class ProbeEndpoint:
                 continue
 
             channel_class = zha_regs.ZIGBEE_CHANNEL_REGISTRY.get(
-                cluster_id, base.AttributeListeningChannel
+                cluster_id, base.ZigbeeChannel
             )
             channel = channel_class(cluster, ep_channels)
             self.probe_single_cluster(component, channel, ep_channels)

@@ -22,6 +22,7 @@ CONF_REPOS = "repositories"
 
 ATTR_LATEST_COMMIT_MESSAGE = "latest_commit_message"
 ATTR_LATEST_COMMIT_SHA = "latest_commit_sha"
+ATTR_LATEST_RELEASE_TAG = "latest_release_tag"
 ATTR_LATEST_RELEASE_URL = "latest_release_url"
 ATTR_LATEST_OPEN_ISSUE_URL = "latest_open_issue_url"
 ATTR_OPEN_ISSUES = "open_issues"
@@ -78,6 +79,7 @@ class GitHubSensor(Entity):
         self._repository_path = None
         self._latest_commit_message = None
         self._latest_commit_sha = None
+        self._latest_release_tag = None
         self._latest_release_url = None
         self._open_issue_count = None
         self._latest_open_issue_url = None
@@ -109,7 +111,7 @@ class GitHubSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {
+        attrs = {
             ATTR_PATH: self._repository_path,
             ATTR_NAME: self._name,
             ATTR_LATEST_COMMIT_MESSAGE: self._latest_commit_message,
@@ -121,6 +123,9 @@ class GitHubSensor(Entity):
             ATTR_OPEN_PULL_REQUESTS: self._pull_request_count,
             ATTR_STARGAZERS: self._stargazers,
         }
+        if self._latest_release_tag is not None:
+            attrs[ATTR_LATEST_RELEASE_TAG] = self._latest_release_tag
+        return attrs
 
     @property
     def icon(self):
@@ -136,6 +141,12 @@ class GitHubSensor(Entity):
         self._available = self._github_data.available
         self._latest_commit_message = self._github_data.latest_commit_message
         self._latest_commit_sha = self._github_data.latest_commit_sha
+        if self._github_data.latest_release_url is not None:
+            self._latest_release_tag = self._github_data.latest_release_url.split(
+                "tag/"
+            )[1]
+        else:
+            self._latest_release_tag = None
         self._latest_release_url = self._github_data.latest_release_url
         self._state = self._github_data.latest_commit_sha[0:7]
         self._open_issue_count = self._github_data.open_issue_count

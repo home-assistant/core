@@ -37,6 +37,7 @@ from homeassistant.components.here_travel_time.sensor import (
     TRAVEL_MODE_PUBLIC,
     TRAVEL_MODE_PUBLIC_TIME_TABLE,
     TRAVEL_MODE_TRUCK,
+    convert_time_to_isodate,
 )
 from homeassistant.const import ATTR_ICON, EVENT_HOMEASSISTANT_START
 from homeassistant.setup import async_setup_component
@@ -66,7 +67,7 @@ CAR_DESTINATION_LATITUDE = "39.0"
 CAR_DESTINATION_LONGITUDE = "-77.1"
 
 
-def _build_mock_url(origin, destination, modes, api_key, departure):
+def _build_mock_url(origin, destination, modes, api_key, departure=None, arrival=None):
     """Construct a url for HERE."""
     base_url = "https://route.ls.hereapi.com/routing/7.2/calculateroute.json?"
     parameters = {
@@ -74,9 +75,13 @@ def _build_mock_url(origin, destination, modes, api_key, departure):
         "waypoint1": f"geo!{destination}",
         "mode": ";".join(str(herepy.RouteMode[mode]) for mode in modes),
         "apikey": api_key,
-        "departure": departure,
     }
+    if arrival is not None:
+        parameters["arrival"] = arrival
+    if departure is not None:
+        parameters["departure"] = departure
     url = base_url + urllib.parse.urlencode(parameters)
+    print(url)
     return url
 
 
@@ -117,7 +122,6 @@ def requests_mock_credentials_check(requests_mock):
         ",".join([CAR_DESTINATION_LATITUDE, CAR_DESTINATION_LONGITUDE]),
         modes,
         API_KEY,
-        "now",
     )
     requests_mock.get(
         response_url, text=load_fixture("here_travel_time/car_response.json")
@@ -134,7 +138,6 @@ def requests_mock_truck_response(requests_mock_credentials_check):
         ",".join([TRUCK_DESTINATION_LATITUDE, TRUCK_DESTINATION_LONGITUDE]),
         modes,
         API_KEY,
-        "now",
     )
     requests_mock_credentials_check.get(
         response_url, text=load_fixture("here_travel_time/truck_response.json")
@@ -150,7 +153,6 @@ def requests_mock_car_disabled_response(requests_mock_credentials_check):
         ",".join([CAR_DESTINATION_LATITUDE, CAR_DESTINATION_LONGITUDE]),
         modes,
         API_KEY,
-        "now",
     )
     requests_mock_credentials_check.get(
         response_url, text=load_fixture("here_travel_time/car_response.json")
@@ -214,7 +216,6 @@ async def test_traffic_mode_enabled(hass, requests_mock_credentials_check):
         ",".join([CAR_DESTINATION_LATITUDE, CAR_DESTINATION_LONGITUDE]),
         modes,
         API_KEY,
-        "now",
     )
     requests_mock_credentials_check.get(
         response_url, text=load_fixture("here_travel_time/car_enabled_response.json")
@@ -272,7 +273,7 @@ async def test_route_mode_shortest(hass, requests_mock_credentials_check):
     origin = "38.902981,-77.048338"
     destination = "39.042158,-77.119116"
     modes = [ROUTE_MODE_SHORTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_DISABLED]
-    response_url = _build_mock_url(origin, destination, modes, API_KEY, "now")
+    response_url = _build_mock_url(origin, destination, modes, API_KEY)
     requests_mock_credentials_check.get(
         response_url, text=load_fixture("here_travel_time/car_shortest_response.json")
     )
@@ -303,7 +304,7 @@ async def test_route_mode_fastest(hass, requests_mock_credentials_check):
     origin = "38.902981,-77.048338"
     destination = "39.042158,-77.119116"
     modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_ENABLED]
-    response_url = _build_mock_url(origin, destination, modes, API_KEY, "now")
+    response_url = _build_mock_url(origin, destination, modes, API_KEY)
     requests_mock_credentials_check.get(
         response_url, text=load_fixture("here_travel_time/car_enabled_response.json")
     )
@@ -357,7 +358,7 @@ async def test_public_transport(hass, requests_mock_credentials_check):
     origin = "41.9798,-87.8801"
     destination = "41.9043,-87.9216"
     modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_PUBLIC, TRAFFIC_MODE_DISABLED]
-    response_url = _build_mock_url(origin, destination, modes, API_KEY, "now")
+    response_url = _build_mock_url(origin, destination, modes, API_KEY)
     requests_mock_credentials_check.get(
         response_url, text=load_fixture("here_travel_time/public_response.json")
     )
@@ -406,7 +407,7 @@ async def test_public_transport_time_table(hass, requests_mock_credentials_check
     origin = "41.9798,-87.8801"
     destination = "41.9043,-87.9216"
     modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_PUBLIC_TIME_TABLE, TRAFFIC_MODE_DISABLED]
-    response_url = _build_mock_url(origin, destination, modes, API_KEY, "now")
+    response_url = _build_mock_url(origin, destination, modes, API_KEY)
     requests_mock_credentials_check.get(
         response_url,
         text=load_fixture("here_travel_time/public_time_table_response.json"),
@@ -456,7 +457,7 @@ async def test_pedestrian(hass, requests_mock_credentials_check):
     origin = "41.9798,-87.8801"
     destination = "41.9043,-87.9216"
     modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_PEDESTRIAN, TRAFFIC_MODE_DISABLED]
-    response_url = _build_mock_url(origin, destination, modes, API_KEY, "now")
+    response_url = _build_mock_url(origin, destination, modes, API_KEY)
     requests_mock_credentials_check.get(
         response_url, text=load_fixture("here_travel_time/pedestrian_response.json")
     )
@@ -508,7 +509,7 @@ async def test_bicycle(hass, requests_mock_credentials_check):
     origin = "41.9798,-87.8801"
     destination = "41.9043,-87.9216"
     modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_BICYCLE, TRAFFIC_MODE_DISABLED]
-    response_url = _build_mock_url(origin, destination, modes, API_KEY, "now")
+    response_url = _build_mock_url(origin, destination, modes, API_KEY)
     requests_mock_credentials_check.get(
         response_url, text=load_fixture("here_travel_time/bike_response.json")
     )
@@ -841,7 +842,7 @@ async def test_route_not_found(hass, requests_mock_credentials_check, caplog):
     origin = "52.516,13.3779"
     destination = "47.013399,-10.171986"
     modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_DISABLED]
-    response_url = _build_mock_url(origin, destination, modes, API_KEY, "now")
+    response_url = _build_mock_url(origin, destination, modes, API_KEY)
     requests_mock_credentials_check.get(
         response_url,
         text=load_fixture("here_travel_time/routing_error_no_route_found.json"),
@@ -914,7 +915,6 @@ async def test_invalid_credentials(hass, requests_mock, caplog):
         ",".join([CAR_DESTINATION_LATITUDE, CAR_DESTINATION_LONGITUDE]),
         modes,
         API_KEY,
-        "now",
     )
     requests_mock.get(
         response_url,
@@ -942,7 +942,7 @@ async def test_attribution(hass, requests_mock_credentials_check):
     origin = "50.037751372637686,14.39233448220898"
     destination = "50.07993838201255,14.42582157361062"
     modes = [ROUTE_MODE_SHORTEST, TRAVEL_MODE_PUBLIC_TIME_TABLE, TRAFFIC_MODE_ENABLED]
-    response_url = _build_mock_url(origin, destination, modes, API_KEY, "now")
+    response_url = _build_mock_url(origin, destination, modes, API_KEY)
     requests_mock_credentials_check.get(
         response_url, text=load_fixture("here_travel_time/attribution_response.json")
     )
@@ -1051,3 +1051,123 @@ async def test_delayed_update(hass, requests_mock_truck_response, caplog):
     await hass.async_block_till_done()
 
     assert "Unable to find entity" not in caplog.text
+
+
+async def test_arrival(hass, requests_mock_credentials_check):
+    """Test that arrival works."""
+    origin = "41.9798,-87.8801"
+    destination = "41.9043,-87.9216"
+    arrival = "01:00:00"
+    arrival_isodate = convert_time_to_isodate(arrival)
+    modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_PUBLIC_TIME_TABLE, TRAFFIC_MODE_DISABLED]
+    response_url = _build_mock_url(
+        origin, destination, modes, API_KEY, arrival=arrival_isodate
+    )
+    requests_mock_credentials_check.get(
+        response_url,
+        text=load_fixture("here_travel_time/public_time_table_response.json"),
+    )
+
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin_latitude": origin.split(",")[0],
+            "origin_longitude": origin.split(",")[1],
+            "destination_latitude": destination.split(",")[0],
+            "destination_longitude": destination.split(",")[1],
+            "api_key": API_KEY,
+            "mode": TRAVEL_MODE_PUBLIC_TIME_TABLE,
+            "arrival": arrival,
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    sensor = hass.states.get("sensor.test")
+    assert sensor.state == "80"
+
+
+async def test_departure(hass, requests_mock_credentials_check):
+    """Test that arrival works."""
+    origin = "41.9798,-87.8801"
+    destination = "41.9043,-87.9216"
+    departure = "23:00:00"
+    departure_isodate = convert_time_to_isodate(departure)
+    modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_PUBLIC_TIME_TABLE, TRAFFIC_MODE_DISABLED]
+    response_url = _build_mock_url(
+        origin, destination, modes, API_KEY, departure=departure_isodate
+    )
+    requests_mock_credentials_check.get(
+        response_url,
+        text=load_fixture("here_travel_time/public_time_table_response.json"),
+    )
+
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin_latitude": origin.split(",")[0],
+            "origin_longitude": origin.split(",")[1],
+            "destination_latitude": destination.split(",")[0],
+            "destination_longitude": destination.split(",")[1],
+            "api_key": API_KEY,
+            "mode": TRAVEL_MODE_PUBLIC_TIME_TABLE,
+            "departure": departure,
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    sensor = hass.states.get("sensor.test")
+    assert sensor.state == "80"
+
+
+async def test_arrival_only_allowed_for_timetable(hass, caplog):
+    """Test that arrival is only allowed when mode is publicTransportTimeTable."""
+    caplog.set_level(logging.ERROR)
+    origin = "41.9798,-87.8801"
+    destination = "41.9043,-87.9216"
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin_latitude": origin.split(",")[0],
+            "origin_longitude": origin.split(",")[1],
+            "destination_latitude": destination.split(",")[0],
+            "destination_longitude": destination.split(",")[1],
+            "api_key": API_KEY,
+            "arrival": "01:00:00",
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+    assert len(caplog.records) == 1
+    assert "[arrival] is an invalid option" in caplog.text
+
+
+async def test_exclusive_arrival_and_departure(hass, caplog):
+    """Test that arrival and departure are exclusive."""
+    caplog.set_level(logging.ERROR)
+    origin = "41.9798,-87.8801"
+    destination = "41.9043,-87.9216"
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin_latitude": origin.split(",")[0],
+            "origin_longitude": origin.split(",")[1],
+            "destination_latitude": destination.split(",")[0],
+            "destination_longitude": destination.split(",")[1],
+            "api_key": API_KEY,
+            "arrival": "01:00:00",
+            "mode": TRAVEL_MODE_PUBLIC_TIME_TABLE,
+            "departure": "01:00:00",
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+    assert len(caplog.records) == 1
+    assert "two or more values in the same group of exclusion" in caplog.text

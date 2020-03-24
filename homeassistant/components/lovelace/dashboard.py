@@ -3,9 +3,11 @@ from abc import ABC, abstractmethod
 import logging
 import os
 import time
+from typing import Optional, cast
 
 import voluptuous as vol
 
+from homeassistant.components.frontend import DATA_PANELS
 from homeassistant.const import CONF_FILENAME
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -13,7 +15,7 @@ from homeassistant.helpers import collection, storage
 from homeassistant.util.yaml import load_yaml
 
 from .const import (
-    CONF_SIDEBAR,
+    CONF_ICON,
     CONF_URL_PATH,
     DOMAIN,
     EVENT_LOVELACE_UPDATED,
@@ -86,7 +88,7 @@ class LovelaceStorage(LovelaceConfig):
             storage_key = CONFIG_STORAGE_KEY_DEFAULT
         else:
             url_path = config[CONF_URL_PATH]
-            storage_key = CONFIG_STORAGE_KEY.format(url_path)
+            storage_key = CONFIG_STORAGE_KEY.format(config["id"])
 
         super().__init__(hass, url_path, config)
 
@@ -229,10 +231,32 @@ class DashboardsCollection(collection.StorageCollection):
             _LOGGER,
         )
 
+    async def _async_load_data(self) -> Optional[dict]:
+        """Load the data."""
+        data = await self.store.async_load()
+
+        if data is None:
+            return cast(Optional[dict], data)
+
+        updated = False
+
+        for item in data["items"] or []:
+            if "-" not in item[CONF_URL_PATH]:
+                updated = True
+                item[CONF_URL_PATH] = f"lovelace-{item[CONF_URL_PATH]}"
+
+        if updated:
+            await self.store.async_save(data)
+
+        return cast(Optional[dict], data)
+
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
-        if data[CONF_URL_PATH] in self.hass.data[DOMAIN]["dashboards"]:
-            raise vol.Invalid("Dashboard url path needs to be unique")
+        if "-" not in data[CONF_URL_PATH]:
+            raise vol.Invalid("Url path needs to contain a hyphen (-)")
+
+        if data[CONF_URL_PATH] in self.hass.data[DATA_PANELS]:
+            raise vol.Invalid("Panel url path needs to be unique")
 
         return self.CREATE_SCHEMA(data)
 
@@ -246,7 +270,7 @@ class DashboardsCollection(collection.StorageCollection):
         update_data = self.UPDATE_SCHEMA(update_data)
         updated = {**data, **update_data}
 
-        if CONF_SIDEBAR in updated and updated[CONF_SIDEBAR] is None:
-            updated.pop(CONF_SIDEBAR)
+        if CONF_ICON in updated and updated[CONF_ICON] is None:
+            updated.pop(CONF_ICON)
 
         return updated

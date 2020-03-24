@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La integraci\u00f3n ya est\u00e1 configurada con un sensor existente con esa tarifa"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nombre del sensor",
+                    "tariff": "Tarifa contratada (1, 2, o 3 periodos)"
+                },
+                "description": "Este sensor utiliza la API oficial de REE para obtener el [precio horario de la electricidad (PVPC)](https://www.esios.ree.es/es/pvpc) en Espa\\u00f1a.\nPara instrucciones detalladas consulte la [documentación de la integración](https://www.home-assistant.io/integrations/pvpc_hourly_pricing/).\n\nSeleccione la tarifa contratada en base al número de periodos de facturación al día:\n- 1 periodo: normal\n- 2 periodos: discriminación (tarifa nocturna)\n- 3 periodos: coche eléctrico (tarifa nocturna de 3 periodos)",
+                "title": "Selecci\u00f3n de tarifa"
+            }
+        },
+        "title": "Precio horario de la electricidad en Espa\u00f1a (PVPC)"
+    }
+}

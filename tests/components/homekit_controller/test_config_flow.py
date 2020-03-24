@@ -147,7 +147,7 @@ def setup_mock_accessory(controller):
     """Add a bridge accessory to a test controller."""
     bridge = Accessories()
 
-    accessory = Accessory(
+    accessory = Accessory.create_with_info(
         name="Koogeek-LS1-20833F",
         manufacturer="Koogeek",
         model="LS1",
@@ -500,7 +500,9 @@ async def test_user_no_unpaired_devices(hass, controller):
 
 async def test_parse_new_homekit_json(hass):
     """Test migrating recent .homekit/pairings.json files."""
-    accessory = Accessory("TestDevice", "example.com", "Test", "0001", "0.1")
+    accessory = Accessory.create_with_info(
+        "TestDevice", "example.com", "Test", "0001", "0.1"
+    )
     service = accessory.add_service(ServicesTypes.LIGHTBULB)
     on_char = service.add_char(CharacteristicsTypes.ON)
     on_char.value = 0
@@ -549,7 +551,9 @@ async def test_parse_new_homekit_json(hass):
 
 async def test_parse_old_homekit_json(hass):
     """Test migrating original .homekit/hk-00:00:00:00:00:00 files."""
-    accessory = Accessory("TestDevice", "example.com", "Test", "0001", "0.1")
+    accessory = Accessory.create_with_info(
+        "TestDevice", "example.com", "Test", "0001", "0.1"
+    )
     service = accessory.add_service(ServicesTypes.LIGHTBULB)
     on_char = service.add_char(CharacteristicsTypes.ON)
     on_char.value = 0
@@ -602,7 +606,9 @@ async def test_parse_old_homekit_json(hass):
 
 async def test_parse_overlapping_homekit_json(hass):
     """Test migrating .homekit/pairings.json files when hk- exists too."""
-    accessory = Accessory("TestDevice", "example.com", "Test", "0001", "0.1")
+    accessory = Accessory.create_with_info(
+        "TestDevice", "example.com", "Test", "0001", "0.1"
+    )
     service = accessory.add_service(ServicesTypes.LIGHTBULB)
     on_char = service.add_char(CharacteristicsTypes.ON)
     on_char.value = 0

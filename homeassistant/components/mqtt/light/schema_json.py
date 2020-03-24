@@ -284,7 +284,7 @@ class MqttLightJson(
                     )
                 except KeyError:
                     pass
-                except ValueError:
+                except (TypeError, ValueError):
                     _LOGGER.warning("Invalid brightness value received")
 
             if self._color_temp is not None:
@@ -300,8 +300,6 @@ class MqttLightJson(
                     self._effect = values["effect"]
                 except KeyError:
                     pass
-                except ValueError:
-                    _LOGGER.warning("Invalid effect value received")
 
             if self._white_value is not None:
                 try:

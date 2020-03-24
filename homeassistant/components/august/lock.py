@@ -43,16 +43,14 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockDevice):
 
     async def async_lock(self, **kwargs):
         """Lock the device."""
-        await self._call_lock_operation(self._data.lock)
+        await self._call_lock_operation(self._data.async_lock)
 
     async def async_unlock(self, **kwargs):
         """Unlock the device."""
-        await self._call_lock_operation(self._data.unlock)
+        await self._call_lock_operation(self._data.async_unlock)
 
     async def _call_lock_operation(self, lock_operation):
-        activities = await self.hass.async_add_executor_job(
-            lock_operation, self._device_id
-        )
+        activities = await lock_operation(self._device_id)
         for lock_activity in activities:
             update_lock_detail_from_activity(self._detail, lock_activity)
 

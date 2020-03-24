@@ -26,7 +26,7 @@ STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation switch from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][DOMAIN] = []
+    entities_to_create = hass.data[DATA_ZHA][DOMAIN]
 
     unsub = async_dispatcher_connect(
         hass,
@@ -60,7 +60,7 @@ class Switch(ZhaEntity, SwitchDevice):
         if not isinstance(result, list) or result[1] is not Status.SUCCESS:
             return
         self._state = True
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
@@ -68,13 +68,13 @@ class Switch(ZhaEntity, SwitchDevice):
         if not isinstance(result, list) or result[1] is not Status.SUCCESS:
             return
         self._state = False
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
-    def async_set_state(self, state):
+    def async_set_state(self, attr_id, attr_name, value):
         """Handle state update from channel."""
-        self._state = bool(state)
-        self.async_schedule_update_ha_state()
+        self._state = bool(value)
+        self.async_write_ha_state()
 
     @property
     def device_state_attributes(self):
@@ -97,4 +97,6 @@ class Switch(ZhaEntity, SwitchDevice):
         """Attempt to retrieve on off state from the switch."""
         await super().async_update()
         if self._on_off_channel:
-            self._state = await self._on_off_channel.get_attribute_value("on_off")
+            state = await self._on_off_channel.get_attribute_value("on_off")
+            if state is not None:
+                self._state = state

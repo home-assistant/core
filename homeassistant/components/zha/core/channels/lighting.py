@@ -5,7 +5,7 @@ import zigpy.zcl.clusters.lighting as lighting
 
 from .. import registries, typing as zha_typing
 from ..const import REPORT_CONFIG_DEFAULT
-from .base import ZigbeeChannel
+from .base import ClientChannel, ZigbeeChannel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,8 +17,14 @@ class Ballast(ZigbeeChannel):
     pass
 
 
+@registries.CLIENT_CHANNELS_REGISTRY.register(lighting.Color.cluster_id)
+class ColorClientChannel(ClientChannel):
+    """Color client channel."""
+
+    pass
+
+
 @registries.BINDABLE_CLUSTERS.register(lighting.Color.cluster_id)
-@registries.EVENT_RELAY_CLUSTERS.register(lighting.Color.cluster_id)
 @registries.LIGHT_CLUSTERS.register(lighting.Color.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(lighting.Color.cluster_id)
 class ColorChannel(ZigbeeChannel):
@@ -34,7 +40,7 @@ class ColorChannel(ZigbeeChannel):
     )
 
     def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType,
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
     ) -> None:
         """Initialize ColorChannel."""
         super().__init__(cluster, ch_pool)
@@ -52,9 +58,8 @@ class ColorChannel(ZigbeeChannel):
     async def async_initialize(self, from_cache):
         """Initialize channel."""
         await self.fetch_color_capabilities(True)
-        await self.get_attribute_value("color_temperature", from_cache=from_cache)
-        await self.get_attribute_value("current_x", from_cache=from_cache)
-        await self.get_attribute_value("current_y", from_cache=from_cache)
+        attributes = ["color_temperature", "current_x", "current_y"]
+        await self.get_attributes(attributes, from_cache=from_cache)
 
     async def fetch_color_capabilities(self, from_cache):
         """Get the color configuration."""
@@ -72,7 +77,7 @@ class ColorChannel(ZigbeeChannel):
                 "color_temperature", from_cache=from_cache
             )
 
-            if result is not self.UNSUPPORTED_ATTRIBUTE:
+            if result is not None and result is not self.UNSUPPORTED_ATTRIBUTE:
                 capabilities |= self.CAPABILITIES_COLOR_TEMP
         self._color_capabilities = capabilities
         await super().async_initialize(from_cache)

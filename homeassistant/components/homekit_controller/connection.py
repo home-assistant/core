@@ -8,6 +8,7 @@ from aiohomekit.exceptions import (
     AccessoryNotFoundError,
     EncryptionError,
 )
+from aiohomekit.model import Accessories
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
@@ -69,8 +70,10 @@ class HKDevice:
             self.pairing_data["AccessoryPairingID"], self.pairing_data
         )
 
-        self.accessories = {}
+        self.accessories = None
         self.config_num = 0
+
+        self.entity_map = Accessories()
 
         # A list of callbacks that turn HK service metadata into entities
         self.listeners = []
@@ -153,6 +156,8 @@ class HKDevice:
         self.accessories = cache["accessories"]
         self.config_num = cache["config_num"]
 
+        self.entity_map = Accessories.from_list(self.accessories)
+
         self._polling_interval_remover = async_track_time_interval(
             self.hass, self.async_update, DEFAULT_SCAN_INTERVAL
         )
@@ -212,6 +217,8 @@ class HKDevice:
             # If we fail to refresh this data then we will naturally retry
             # later when Bonjour spots c# is still not up to date.
             return False
+
+        self.entity_map = Accessories.from_list(self.accessories)
 
         self.hass.data[ENTITY_MAP].async_create_or_update_map(
             self.unique_id, config_num, self.accessories
@@ -318,6 +325,10 @@ class HKDevice:
             accessory = self.current_state.setdefault(aid, {})
             accessory[cid] = value
 
+        # self.current_state will be replaced by entity_map in a future PR
+        # For now we update both
+        self.entity_map.process_changes(new_values_dict)
+
         self.hass.helpers.dispatcher.async_dispatcher_send(self.signal_state_updated)
 
     async def get_characteristics(self, *args, **kwargs):
@@ -327,12 +338,8 @@ class HKDevice:
 
     async def put_characteristics(self, characteristics):
         """Control a HomeKit device state from Home Assistant."""
-        chars = []
-        for row in characteristics:
-            chars.append((row["aid"], row["iid"], row["value"]))
-
         async with self.pairing_lock:
-            results = await self.pairing.put_characteristics(chars)
+            results = await self.pairing.put_characteristics(characteristics)
 
         # Feed characteristics back into HA and update the current state
         # results will only contain failures, so anythin in characteristics
@@ -340,8 +347,8 @@ class HKDevice:
         # reflect the change immediately.
 
         new_entity_state = {}
-        for row in characteristics:
-            key = (row["aid"], row["iid"])
+        for aid, iid, value in characteristics:
+            key = (aid, iid)
 
             # If the key was returned by put_characteristics() then the
             # change didn't work
@@ -350,7 +357,7 @@ class HKDevice:
 
             # Otherwise it was accepted and we can apply the change to
             # our state
-            new_entity_state[key] = {"value": row["value"]}
+            new_entity_state[key] = {"value": value}
 
         self.process_new_events(new_entity_state)
 

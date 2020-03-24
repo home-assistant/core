@@ -4,7 +4,6 @@ import asyncio
 from enum import Enum
 from functools import wraps
 import logging
-from random import uniform
 from typing import Any, Union
 
 import zigpy.exceptions
@@ -20,15 +19,13 @@ from ..const import (
     ATTR_COMMAND,
     ATTR_UNIQUE_ID,
     ATTR_VALUE,
-    CHANNEL_EVENT_RELAY,
     CHANNEL_ZDO,
-    REPORT_CONFIG_DEFAULT,
     REPORT_CONFIG_MAX_INT,
     REPORT_CONFIG_MIN_INT,
     REPORT_CONFIG_RPT_CHANGE,
     SIGNAL_ATTR_UPDATED,
 )
-from ..helpers import LogMixin, get_attr_id_by_name, safe_read
+from ..helpers import LogMixin, safe_read
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,23 +77,26 @@ class ChannelStatus(Enum):
 class ZigbeeChannel(LogMixin):
     """Base channel for a Zigbee cluster."""
 
-    CHANNEL_NAME = None
     REPORT_CONFIG = ()
 
     def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType,
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
     ) -> None:
         """Initialize ZigbeeChannel."""
-        self._channel_name = cluster.ep_attribute
-        if self.CHANNEL_NAME:
-            self._channel_name = self.CHANNEL_NAME
-        self._ch_pool = ch_pool
         self._generic_id = f"channel_0x{cluster.cluster_id:04x}"
+        self._channel_name = getattr(cluster, "ep_attribute", self._generic_id)
+        self._ch_pool = ch_pool
         self._cluster = cluster
         self._id = f"{ch_pool.id}:0x{cluster.cluster_id:04x}"
         unique_id = ch_pool.unique_id.replace("-", ":")
         self._unique_id = f"{unique_id}:0x{cluster.cluster_id:04x}"
         self._report_config = self.REPORT_CONFIG
+        if not hasattr(self, "_value_attribute") and len(self._report_config) > 0:
+            attr = self._report_config[0].get("attr")
+            if isinstance(attr, str):
+                self.value_attribute = self.cluster.attridx.get(attr)
+            else:
+                self.value_attribute = attr
         self._status = ChannelStatus.CREATED
         self._cluster.add_listener(self)
 
@@ -200,7 +200,6 @@ class ZigbeeChannel(LogMixin):
                     await self.configure_reporting(
                         report_config["attr"], report_config["config"]
                     )
-                    await asyncio.sleep(uniform(0.1, 0.5))
             self.debug("finished channel configuration")
         else:
             self.debug("skipping channel configuration")
@@ -209,6 +208,11 @@ class ZigbeeChannel(LogMixin):
     async def async_initialize(self, from_cache):
         """Initialize channel."""
         self.debug("initializing channel: from_cache: %s", from_cache)
+        attributes = []
+        for report_config in self._report_config:
+            attributes.append(report_config["attr"])
+        if len(attributes) > 0:
+            await self.get_attributes(attributes, from_cache=from_cache)
         self._status = ChannelStatus.INITIALIZED
 
     @callback
@@ -219,7 +223,12 @@ class ZigbeeChannel(LogMixin):
     @callback
     def attribute_updated(self, attrid, value):
         """Handle attribute updates on this cluster."""
-        pass
+        self.async_send_signal(
+            f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
+            attrid,
+            self.cluster.attributes.get(attrid, [attrid])[0],
+            value,
+        )
 
     @callback
     def zdo_command(self, *args, **kwargs):
@@ -257,6 +266,30 @@ class ZigbeeChannel(LogMixin):
         )
         return result.get(attribute)
 
+    async def get_attributes(self, attributes, from_cache=True):
+        """Get the values for a list of attributes."""
+        manufacturer = None
+        manufacturer_code = self._ch_pool.manufacturer_code
+        if self.cluster.cluster_id >= 0xFC00 and manufacturer_code:
+            manufacturer = manufacturer_code
+        try:
+            result, _ = await self.cluster.read_attributes(
+                attributes,
+                allow_cache=from_cache,
+                only_cache=from_cache,
+                manufacturer=manufacturer,
+            )
+            results = {attribute: result.get(attribute) for attribute in attributes}
+        except (asyncio.TimeoutError, zigpy.exceptions.DeliveryError) as ex:
+            self.debug(
+                "failed to get attributes '%s' on '%s' cluster: %s",
+                attributes,
+                self.cluster.ep_attribute,
+                str(ex),
+            )
+            results = {}
+        return results
+
     def log(self, level, msg, *args):
         """Log a message."""
         msg = f"[%s:%s]: {msg}"
@@ -270,36 +303,6 @@ class ZigbeeChannel(LogMixin):
             command.__name__ = name
             return decorate_command(self, command)
         return self.__getattribute__(name)
-
-
-class AttributeListeningChannel(ZigbeeChannel):
-    """Channel for attribute reports from the cluster."""
-
-    REPORT_CONFIG = [{"attr": 0, "config": REPORT_CONFIG_DEFAULT}]
-
-    def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType,
-    ) -> None:
-        """Initialize AttributeListeningChannel."""
-        super().__init__(cluster, ch_pool)
-        attr = self._report_config[0].get("attr")
-        if isinstance(attr, str):
-            self.value_attribute = get_attr_id_by_name(self.cluster, attr)
-        else:
-            self.value_attribute = attr
-
-    @callback
-    def attribute_updated(self, attrid, value):
-        """Handle attribute updates on this cluster."""
-        if attrid == self.value_attribute:
-            self.async_send_signal(f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value)
-
-    async def async_initialize(self, from_cache):
-        """Initialize listener."""
-        await self.get_attribute_value(
-            self._report_config[0].get("attr"), from_cache=from_cache
-        )
-        await super().async_initialize(from_cache)
 
 
 class ZDOChannel(LogMixin):
@@ -354,10 +357,8 @@ class ZDOChannel(LogMixin):
         _LOGGER.log(level, msg, *args)
 
 
-class EventRelayChannel(ZigbeeChannel):
-    """Event relay that can be attached to zigbee clusters."""
-
-    CHANNEL_NAME = CHANNEL_EVENT_RELAY
+class ClientChannel(ZigbeeChannel):
+    """Channel listener for Zigbee client (output) clusters."""
 
     @callback
     def attribute_updated(self, attrid, value):

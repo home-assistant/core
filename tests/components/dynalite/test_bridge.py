@@ -20,7 +20,7 @@ async def test_update_device(hass):
         mock_dyn_dev().async_setup = CoroutineMock(return_value=True)
         assert await hass.config_entries.async_setup(entry.entry_id)
         # Not waiting so it add the devices before registration
-        update_device_func = mock_dyn_dev.mock_calls[1][2]["updateDeviceFunc"]
+        update_device_func = mock_dyn_dev.mock_calls[1][2]["update_device_func"]
     device = Mock()
     device.unique_id = "abcdef"
     wide_func = Mock()
@@ -50,7 +50,7 @@ async def test_add_devices_then_register(hass):
         mock_dyn_dev().async_setup = CoroutineMock(return_value=True)
         assert await hass.config_entries.async_setup(entry.entry_id)
         # Not waiting so it add the devices before registration
-        new_device_func = mock_dyn_dev.mock_calls[1][2]["newDeviceFunc"]
+        new_device_func = mock_dyn_dev.mock_calls[1][2]["new_device_func"]
     # Now with devices
     device1 = Mock()
     device1.category = "light"
@@ -73,7 +73,7 @@ async def test_register_then_add_devices(hass):
         mock_dyn_dev().async_setup = CoroutineMock(return_value=True)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        new_device_func = mock_dyn_dev.mock_calls[1][2]["newDeviceFunc"]
+        new_device_func = mock_dyn_dev.mock_calls[1][2]["new_device_func"]
     # Now with devices
     device1 = Mock()
     device1.category = "light"

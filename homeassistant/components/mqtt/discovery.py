@@ -11,7 +11,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .abbreviations import ABBREVIATIONS, DEVICE_ABBREVIATIONS
-from .const import ATTR_DISCOVERY_HASH, ATTR_DISCOVERY_TOPIC, CONF_STATE_TOPIC
+from .const import ATTR_DISCOVERY_HASH, ATTR_DISCOVERY_TOPIC
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,15 +49,6 @@ CONFIG_ENTRY_COMPONENTS = [
     "switch",
     "vacuum",
 ]
-
-DEPRECATED_PLATFORM_TO_SCHEMA = {
-    "light": {"mqtt_json": "json", "mqtt_template": "template"}
-}
-
-# These components require state_topic to be set.
-# If not specified, infer state_topic from discovery topic.
-IMPLICIT_STATE_TOPIC_COMPONENTS = ["alarm_control_panel", "binary_sensor", "sensor"]
-
 
 ALREADY_DISCOVERED = "mqtt_discovered_components"
 DATA_CONFIG_ENTRY_LOCK = "mqtt_config_entry_lock"
@@ -126,9 +117,9 @@ async def async_start(
             for key, value in payload.items():
                 if isinstance(value, str) and value:
                     if value[0] == TOPIC_BASE and key.endswith("_topic"):
-                        payload[key] = "{}{}".format(base, value[1:])
+                        payload[key] = f"{base}{value[1:]}"
                     if value[-1] == TOPIC_BASE and key.endswith("_topic"):
-                        payload[key] = "{}{}".format(value[:-1], base)
+                        payload[key] = f"{value[:-1]}{base}"
 
         # If present, the node_id will be included in the discovered object id
         discovery_id = " ".join((node_id, object_id)) if node_id else object_id
@@ -143,40 +134,7 @@ async def async_start(
             }
             setattr(payload, "discovery_data", discovery_data)
 
-            if CONF_PLATFORM in payload and "schema" not in payload:
-                platform = payload[CONF_PLATFORM]
-                if (
-                    component in DEPRECATED_PLATFORM_TO_SCHEMA
-                    and platform in DEPRECATED_PLATFORM_TO_SCHEMA[component]
-                ):
-                    schema = DEPRECATED_PLATFORM_TO_SCHEMA[component][platform]
-                    payload["schema"] = schema
-                    _LOGGER.warning(
-                        '"platform": "%s" is deprecated, ' 'replace with "schema":"%s"',
-                        platform,
-                        schema,
-                    )
             payload[CONF_PLATFORM] = "mqtt"
-
-            if (
-                CONF_STATE_TOPIC not in payload
-                and component in IMPLICIT_STATE_TOPIC_COMPONENTS
-            ):
-                # state_topic not specified, infer from discovery topic
-                payload[CONF_STATE_TOPIC] = "{}/{}/{}{}/state".format(
-                    discovery_topic,
-                    component,
-                    "%s/" % node_id if node_id else "",
-                    object_id,
-                )
-                _LOGGER.warning(
-                    'implicit %s is deprecated, add "%s":"%s" to '
-                    "%s discovery message",
-                    CONF_STATE_TOPIC,
-                    CONF_STATE_TOPIC,
-                    payload[CONF_STATE_TOPIC],
-                    topic,
-                )
 
         if ALREADY_DISCOVERED not in hass.data:
             hass.data[ALREADY_DISCOVERED] = {}
@@ -199,7 +157,7 @@ async def async_start(
                 await async_load_platform(hass, component, "mqtt", payload, hass_config)
                 return
 
-            config_entries_key = "{}.{}".format(component, "mqtt")
+            config_entries_key = f"{component}.mqtt"
             async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
                 if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
                     if component == "device_automation":
