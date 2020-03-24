@@ -92,21 +92,35 @@ class EDL21:
         """Handle events from pysml."""
         assert isinstance(message_body, SmlGetListResponse)
 
+        electricity_id = None
+        for telegram in message_body.get("valList", []):
+            if telegram.get("objName") == "1-0:0.0.9*255":
+                electricity_id = telegram.get("value")
+                break
+
+        if electricity_id is None:
+            return
+        electricity_id = electricity_id.replace(" ", "")
+
         new_entities = []
         for telegram in message_body.get("valList", []):
             obis = telegram.get("objName")
             if not obis:
                 continue
 
-            if obis in self._registered_obis:
-                async_dispatcher_send(self._hass, SIGNAL_EDL21_TELEGRAM, telegram)
+            if (electricity_id, obis) in self._registered_obis:
+                async_dispatcher_send(
+                    self._hass, SIGNAL_EDL21_TELEGRAM, electricity_id, telegram
+                )
             else:
                 name = self._OBIS_NAMES.get(obis)
                 if name:
                     if self._name:
                         name = f"{self._name}: {name}"
-                    new_entities.append(EDL21Entity(obis, name, telegram))
-                    self._registered_obis.add(obis)
+                    new_entities.append(
+                        EDL21Entity(electricity_id, obis, name, telegram)
+                    )
+                    self._registered_obis.add((electricity_id, obis))
                 elif obis not in self._OBIS_BLACKLIST:
                     _LOGGER.warning(
                         "Unhandled sensor %s detected. Please report at "
@@ -122,10 +136,12 @@ class EDL21:
 class EDL21Entity(Entity):
     """Entity reading values from EDL21 telegram."""
 
-    def __init__(self, obis, name, telegram):
+    def __init__(self, electricity_id, obis, name, telegram):
         """Initialize an EDL21Entity."""
+        self._electricity_id = electricity_id
         self._obis = obis
         self._name = name
+        self._unique_id = f"{DOMAIN}_{electricity_id}_{obis}"
         self._telegram = telegram
         self._min_time = MIN_TIME_BETWEEN_UPDATES
         self._last_update = utcnow()
@@ -141,8 +157,10 @@ class EDL21Entity(Entity):
         """Run when entity about to be added to hass."""
 
         @callback
-        def handle_telegram(telegram):
+        def handle_telegram(electricity_id, telegram):
             """Update attributes from last received telegram for this object."""
+            if self._electricity_id != electricity_id:
+                return
             if self._obis != telegram.get("objName"):
                 return
             if self._telegram == telegram:
@@ -173,7 +191,7 @@ class EDL21Entity(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return self._obis
+        return self._unique_id
 
     @property
     def name(self) -> Optional[str]:
