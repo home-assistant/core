@@ -92,6 +92,7 @@ class DIRECTVEntity(Entity):
     def __init__(self, *, dtv: DIRECTV, name: str, address: str = "0") -> None:
         """Initialize the DirecTV entity."""
         self._address = address
+        self._device_id = address if address != "0" else dtv.info.receiver_id
         self._is_client = address != "0"
         self._name = name
         self.dtv = dtv
@@ -109,7 +110,7 @@ class DIRECTVDeviceEntity(DIRECTVEntity):
     def device_info(self) -> Dict[str, Any]:
         """Return device information about this DirecTV receiver."""
         return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self.unique_id)},
+            ATTR_IDENTIFIERS: {(DOMAIN, self._device_id)},
             ATTR_NAME: self.name,
             ATTR_MANUFACTURER: self.dtv.device.info.brand,
             ATTR_MODEL: None,
