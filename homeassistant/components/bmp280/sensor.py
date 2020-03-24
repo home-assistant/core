@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 error.args[0],
             )
             raise PlatformNotReady()
-        _LOGGER.error(error.args[0])
+        _LOGGER.error(error)
         return
     # use custom name if there's any
     name = config[CONF_NAME]
