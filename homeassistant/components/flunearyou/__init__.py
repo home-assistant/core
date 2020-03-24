@@ -30,10 +30,13 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
-    },
-    extra=vol.ALLOW_EXTRA,
+        vol.Optional(DOMAIN): vol.Schema(
+            {
+                vol.Optional(CONF_LATITUDE): cv.latitude,
+                vol.Optional(CONF_LONGITUDE): cv.longitude,
+            }
+        )
+    }
 )
 
 
@@ -55,9 +58,7 @@ def async_get_api_category(sensor_type):
 
 async def async_setup(hass, config):
     """Set up the Flu Near You component."""
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_CLIENT] = {}
-    hass.data[DOMAIN][DATA_LISTENER] = {}
+    hass.data[DOMAIN] = {DATA_CLIENT: {}, DATA_LISTENER: {}}
 
     if DOMAIN not in config:
         return True
