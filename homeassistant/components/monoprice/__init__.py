@@ -33,6 +33,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.error("Error connecting to Monoprice controller at %s", port)
         raise ConfigEntryNotReady
 
+    entry.add_update_listener(_update_listener)
+
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
@@ -53,3 +55,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     return unload_ok
+
+
+async def _update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
