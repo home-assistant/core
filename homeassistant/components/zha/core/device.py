@@ -373,7 +373,7 @@ class ZHADevice(LogMixin):
         self.debug("started configuration")
         await self._channels.async_configure()
         self.debug("completed configuration")
-        entry = self.gateway.zha_storage.async_create_or_update(self)
+        entry = self.gateway.zha_storage.async_create_or_update_device(self)
         self.debug("stored in registry: %s", entry)
 
         if self._channels.identify_ch is not None:
