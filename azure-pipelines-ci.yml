@@ -127,7 +127,7 @@ stages:
 
           . venv/bin/activate
           pip install -U pip setuptools pytest-azurepipelines pytest-xdist -c homeassistant/package_constraints.txt
-          pip install --no-binary smhi-pkg -r requirements_test_all.txt -c homeassistant/package_constraints.txt
+          pip install -r requirements_test_all.txt -c homeassistant/package_constraints.txt
           # This is a TEMP. Eventually we should make sure our 4 dependencies drop typing.
           # Find offending deps with `pipdeptree -r -p typing`
           pip uninstall -y typing
@@ -171,7 +171,7 @@ stages:
 
           . venv/bin/activate
           pip install -U pip setuptools wheel
-          pip install --no-binary smhi-pkg -r requirements_all.txt -c homeassistant/package_constraints.txt
+          pip install -r requirements_all.txt -c homeassistant/package_constraints.txt
           pip install -r requirements_test.txt -c homeassistant/package_constraints.txt
     - script: |
         . venv/bin/activate
