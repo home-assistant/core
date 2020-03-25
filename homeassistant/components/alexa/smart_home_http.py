@@ -8,12 +8,12 @@ from homeassistant.helpers import network
 from .auth import Auth
 from .config import AbstractConfig
 from .const import (
-    CONF_HASS_URL,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_ENDPOINT,
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
+    CONF_HASS_URL,
     CONF_LOCALE,
 )
 from .smart_home import async_handle_message

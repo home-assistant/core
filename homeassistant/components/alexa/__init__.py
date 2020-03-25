@@ -10,7 +10,6 @@ from homeassistant.helpers import config_validation as cv, entityfilter
 from . import flash_briefings, intent, smart_home_http
 from .const import (
     CONF_AUDIO,
-    CONF_HASS_URL,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_DESCRIPTION,
@@ -19,6 +18,7 @@ from .const import (
     CONF_ENDPOINT,
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
+    CONF_HASS_URL,
     CONF_LOCALE,
     CONF_SUPPORTED_LOCALES,
     CONF_TEXT,
