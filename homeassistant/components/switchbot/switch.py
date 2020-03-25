@@ -19,7 +19,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MAC): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PASSWORD, default=None): cv.string
+        vol.Optional(CONF_PASSWORD, default=None): cv.string,
     }
 )
 
