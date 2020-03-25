@@ -42,7 +42,7 @@ class SwitchBot(SwitchDevice, RestoreEntity):
         self._last_run_success = None
         self._name = name
         self._mac = mac
-        self._device = switchbot.Switchbot(mac=mac, retry_count=switchbot.DEFAULT_RETRY_COUNT, password=password)
+        self._device = switchbot.Switchbot(mac=mac, password=password)
 
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
