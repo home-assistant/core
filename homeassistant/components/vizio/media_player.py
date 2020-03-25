@@ -4,8 +4,8 @@ import logging
 from typing import Any, Callable, Dict, List, Optional
 
 from pyvizio import VizioAsync
-from pyvizio.const import INPUT_APPS, NO_APP_RUNNING, UNKNOWN_APP
-from pyvizio.helpers import find_app_name
+from pyvizio.api.apps import find_app_name
+from pyvizio.const import APP_HOME, APPS, INPUT_APPS, NO_APP_RUNNING, UNKNOWN_APP
 
 from homeassistant.components.media_player import (
     DEVICE_CLASS_SPEAKER,
@@ -132,6 +132,7 @@ class VizioDevice(MediaPlayerDevice):
         self._is_muted = None
         self._current_input = None
         self._current_app = None
+        self._current_app_config = None
         self._available_inputs = []
         self._available_apps = []
         self._conf_apps = config_entry.options.get(CONF_APPS, {})
@@ -156,20 +157,6 @@ class VizioDevice(MediaPlayerDevice):
             return [app for app in apps if app not in self._conf_apps[CONF_EXCLUDE]]
 
         return apps
-
-    async def _current_app_name(self) -> Optional[str]:
-        """Return name of the currently running app by parsing pyvizio output."""
-        app = await self._device.get_current_app(log_api_exception=False)
-        if app in [None, NO_APP_RUNNING]:
-            return None
-
-        if app == UNKNOWN_APP and self._additional_app_configs:
-            return find_app_name(
-                await self._device.get_current_app_config(log_api_exception=False),
-                self._additional_app_configs,
-            )
-
-        return app
 
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
@@ -202,6 +189,7 @@ class VizioDevice(MediaPlayerDevice):
             self._current_input = None
             self._available_inputs = None
             self._current_app = None
+            self._current_app_config = None
             self._available_apps = None
             return
 
@@ -237,9 +225,16 @@ class VizioDevice(MediaPlayerDevice):
         if not self._available_apps:
             self._available_apps = self._apps_list(self._device.get_apps_list())
 
-        # Attempt to get current app name. If app name is unknown, check list
-        # of additional apps specified in configuration
-        self._current_app = await self._current_app_name()
+        self._current_app_config = await self._device.get_current_app_config(
+            log_api_exception=False
+        )
+
+        self._current_app = find_app_name(
+            self._current_app_config, [APP_HOME, *APPS, *self._additional_app_configs]
+        )
+
+        if self._current_app == NO_APP_RUNNING:
+            self._current_app = None
 
     def _get_additional_app_names(self) -> List[Dict[str, Any]]:
         """Return list of additional apps that were included in configuration.yaml."""
@@ -346,8 +341,15 @@ class VizioDevice(MediaPlayerDevice):
 
     @property
     def app_id(self) -> Optional[str]:
-        """Return the current app."""
-        return self._current_app
+        """Return the ID of the current app if it is unknown by pyvizio."""
+        if self._current_app_config and self.app_name == UNKNOWN_APP:
+            return {
+                "APP_ID": self._current_app_config.APP_ID,
+                "NAME_SPACE": self._current_app_config.NAME_SPACE,
+                "MESSAGE": self._current_app_config.MESSAGE,
+            }
+
+        return None
 
     @property
     def app_name(self) -> Optional[str]:
