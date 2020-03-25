@@ -1,13 +1,7 @@
 """Support for Wi-Fi enabled iRobot Roombas."""
-import asyncio
 import logging
 
-import async_timeout
-from roomba import Roomba
-import voluptuous as vol
-
 from homeassistant.components.vacuum import (
-    PLATFORM_SCHEMA,
     SUPPORT_BATTERY,
     SUPPORT_FAN_SPEED,
     SUPPORT_LOCATE,
@@ -20,9 +14,8 @@ from homeassistant.components.vacuum import (
     SUPPORT_TURN_ON,
     VacuumDevice,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,34 +30,11 @@ ATTR_SOFTWARE_VERSION = "software_version"
 CAP_POSITION = "position"
 CAP_CARPET_BOOST = "carpet_boost"
 
-CONF_CERT = "certificate"
-CONF_CONTINUOUS = "continuous"
-CONF_DELAY = "delay"
-
-DEFAULT_CERT = "/etc/ssl/certs/ca-certificates.crt"
-DEFAULT_CONTINUOUS = True
-DEFAULT_DELAY = 1
-DEFAULT_NAME = "Roomba"
-
-PLATFORM = "roomba"
-
 FAN_SPEED_AUTOMATIC = "Automatic"
 FAN_SPEED_ECO = "Eco"
 FAN_SPEED_PERFORMANCE = "Performance"
 FAN_SPEEDS = [FAN_SPEED_AUTOMATIC, FAN_SPEED_ECO, FAN_SPEED_PERFORMANCE]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_CERT, default=DEFAULT_CERT): cv.string,
-        vol.Optional(CONF_CONTINUOUS, default=DEFAULT_CONTINUOUS): cv.boolean,
-        vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): cv.positive_int,
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 # Commonly supported features
 SUPPORT_ROOMBA = (
@@ -83,39 +53,12 @@ SUPPORT_ROOMBA = (
 SUPPORT_ROOMBA_CARPET_BOOST = SUPPORT_ROOMBA | SUPPORT_FAN_SPEED
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the iRobot Roomba vacuum cleaner platform."""
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the iRobot Roomba vacuum cleaner."""
 
-    if PLATFORM not in hass.data:
-        hass.data[PLATFORM] = {}
-
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    certificate = config.get(CONF_CERT)
-    continuous = config.get(CONF_CONTINUOUS)
-    delay = config.get(CONF_DELAY)
-
-    roomba = Roomba(
-        address=host,
-        blid=username,
-        password=password,
-        cert_name=certificate,
-        continuous=continuous,
-        delay=delay,
-    )
-    _LOGGER.debug("Initializing communication with host %s", host)
-
-    try:
-        with async_timeout.timeout(9):
-            await hass.async_add_job(roomba.connect)
-    except asyncio.TimeoutError:
-        raise PlatformNotReady
-
+    name = hass.data[DOMAIN]["name"]
+    roomba = hass.data[DOMAIN]["roomba"]
     roomba_vac = RoombaVacuum(name, roomba)
-    hass.data[PLATFORM][host] = roomba_vac
-
     async_add_entities([roomba_vac], True)
 
 
@@ -134,6 +77,20 @@ class RoombaVacuum(VacuumDevice):
         self._status = None
         self.vacuum = roomba
         self.vacuum_state = None
+
+    @property
+    def unique_id(self):
+        """Return the uniqueid of the vacuum cleaner."""
+        return self._name
+
+    @property
+    def device_info(self):
+        """Return the device info of the vacuum cleaner."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "manufacturer": "iRobots",
+            "name": str(self._name),
+        }
 
     @property
     def supported_features(self):

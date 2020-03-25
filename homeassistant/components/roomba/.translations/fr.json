@@ -1,0 +1,45 @@
+{
+  "config": {
+    "title": "iRobot Roomba",
+    "step": {
+      "user": {
+        "title": "Connect to the device",
+        "data": {
+          "host": "Nom ou Addresse IP",
+          "username": "Utilisateur",
+          "password": "Mot de passe",
+          "name": "Nom",
+          "certificate": "Certificat",
+          "continuous": "Continue",
+          "delay": "Delais"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "certificate": "Certificat",
+          "continuous": "Continue",
+          "delay": "Delais"
+        }
+      },
+      "options": {
+        "data": {
+          "certificate": "Certificate",
+          "continuous": "Continuous",
+          "delay": "Delay"
+        }
+      }
+    }
+  }
+}
