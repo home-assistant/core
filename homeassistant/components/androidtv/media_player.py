@@ -490,7 +490,7 @@ class ADBDevice(MediaPlayerDevice):
 
             try:
                 response = self.aftv.adb_shell("screencap -p | base64")
-            except UnicodeDecodeError:
+            except Exception:
                 return None
 
             if isinstance(response, str) and response.strip():
