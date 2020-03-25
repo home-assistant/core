@@ -5,13 +5,13 @@ import logging
 import os
 from typing import Optional
 
-from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectionError, ServerDisconnectedError
-import async_timeout
 from haffmpeg.camera import CameraMjpeg
 from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 import onvif
 from onvif import ONVIFCamera, exceptions
+import requests
+from requests.auth import HTTPDigestAuth
 import voluptuous as vol
 from zeep.asyncio import AsyncTransport
 from zeep.exceptions import Fault
@@ -412,17 +412,12 @@ class ONVIFHassCamera(Camera):
             req.ProfileToken = profiles[self._profile_index].token
 
             snapshot_uri = await media_service.GetSnapshotUri(req)
-            uri_no_auth = snapshot_uri.Uri
-            uri_for_log = uri_no_auth.replace("http://", "http://<user>:<password>@", 1)
-            # Same authentication as rtsp
-            self._snapshot = uri_no_auth.replace(
-                "http://", f"http://{self._username}:{self._password}@", 1
-            )
+            self._snapshot = snapshot_uri.Uri
 
             _LOGGER.debug(
                 "ONVIF Camera Using the following URL for %s snapshot: %s",
                 self._name,
-                uri_for_log,
+                self._snapshot,
             )
         except exceptions.ONVIFError as err:
             _LOGGER.error("Couldn't setup camera '%s'. Error: %s", self._name, err)
@@ -509,25 +504,33 @@ class ONVIFHassCamera(Camera):
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
-
         _LOGGER.debug("Retrieving image from camera '%s'", self._name)
+        image = None
 
         if self._snapshot is not None:
-            try:
-                websession = async_get_clientsession(self.hass)
-                with async_timeout.timeout(10):
-                    response = await websession.get(self._snapshot)
-                image = await response.read()
-            except asyncio.TimeoutError:
-                _LOGGER.error("Timeout getting image from: %s", self._name)
-                image = None
-            except ClientError as err:
-                _LOGGER.error("Error getting new camera image: %s", err)
-                image = None
+            auth = None
+            if self._username and self._password:
+                auth = HTTPDigestAuth(self._username, self._password)
 
-        if self._snapshot is None or image is None:
+            def fetch():
+                """Read image from a URL."""
+                try:
+                    response = requests.get(self._snapshot, timeout=5, auth=auth)
+                    return response.content
+                except requests.exceptions.RequestException as error:
+                    _LOGGER.error(
+                        "Fetch snapshot image failed from %s, falling back to FFmpeg; %s",
+                        self._name,
+                        error,
+                    )
+
+            image = await self.hass.async_add_job(fetch)
+
+        if image is None:
+            # Don't keep trying the snapshot URL
+            self._snapshot = None
+
             ffmpeg = ImageFrame(self.hass.data[DATA_FFMPEG].binary, loop=self.hass.loop)
-
             image = await asyncio.shield(
                 ffmpeg.get_image(
                     self._input,
