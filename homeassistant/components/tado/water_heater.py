@@ -115,7 +115,6 @@ class TadoWaterHeater(WaterHeaterDevice):
         self._overlay_mode = CONST_MODE_SMART_SCHEDULE
         self._tado_zone_data = None
         self._undo_dispatcher = None
-        self._async_update_data()
 
     async def async_will_remove_from_hass(self):
         """When entity will be removed from hass."""
@@ -130,6 +129,7 @@ class TadoWaterHeater(WaterHeaterDevice):
             SIGNAL_TADO_UPDATE_RECEIVED.format("zone", self.zone_id),
             self._async_update_callback,
         )
+        self._async_update_data()
 
     @property
     def supported_features(self):

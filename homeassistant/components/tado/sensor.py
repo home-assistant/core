@@ -92,7 +92,6 @@ class TadoZoneSensor(Entity):
         self._state_attributes = None
         self._tado_zone_data = None
         self._undo_dispatcher = None
-        self._async_update_zone_data()
 
     async def async_will_remove_from_hass(self):
         """When entity will be removed from hass."""
@@ -107,6 +106,7 @@ class TadoZoneSensor(Entity):
             SIGNAL_TADO_UPDATE_RECEIVED.format("zone", self.zone_id),
             self._async_update_callback,
         )
+        self._async_update_zone_data()
 
     @property
     def unique_id(self):
@@ -237,7 +237,6 @@ class TadoDeviceSensor(Entity):
         self._state_attributes = None
         self._tado_device_data = None
         self._undo_dispatcher = None
-        self._async_update_device_data()
 
     async def async_will_remove_from_hass(self):
         """When entity will be removed from hass."""
@@ -252,6 +251,7 @@ class TadoDeviceSensor(Entity):
             SIGNAL_TADO_UPDATE_RECEIVED.format("device", self.device_id),
             self._async_update_callback,
         )
+        self._async_update_device_data()
 
     @property
     def unique_id(self):
