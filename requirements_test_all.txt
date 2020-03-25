@@ -683,7 +683,7 @@ simplisafe-python==9.0.5
 sleepyq==0.7
 
 # homeassistant.components.smhi
-smhi-pkg==1.0.10
+smhi-pkg==1.0.13
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
