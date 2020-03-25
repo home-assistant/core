@@ -12,3 +12,7 @@ class NoServersFound(PlexException):
 
 class ServerNotSpecified(PlexException):
     """Multiple servers linked to account without choice provided."""
+
+
+class ShouldUpdateConfigEntry(PlexException):
+    """Config entry data is out of date and should be updated."""
