@@ -14,6 +14,8 @@ from homeassistant.components.recorder.models import States
 from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.const import (
     ATTR_HIDDEN,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
     CONF_DOMAINS,
     CONF_ENTITIES,
     CONF_EXCLUDE,
@@ -50,6 +52,7 @@ def get_significant_states(
     entity_ids=None,
     filters=None,
     include_start_time_state=True,
+    include_location_attributes=False,
 ):
     """
     Return states changes during UTC period start_time - end_time.
@@ -64,6 +67,7 @@ def get_significant_states(
         query = session.query(States).filter(
             (
                 States.domain.in_(SIGNIFICANT_DOMAINS)
+                | (include_location_attributes and States.domain.is_("device_tracker"))
                 | (States.last_changed == States.last_updated)
             )
             & (States.last_updated > start_time)
@@ -77,11 +81,15 @@ def get_significant_states(
 
         query = query.order_by(States.last_updated)
 
-        states = (
-            state
-            for state in execute(query)
-            if (_is_significant(state) and not state.attributes.get(ATTR_HIDDEN, False))
-        )
+        states = []
+        for state in execute(query):
+            last_state = states[-1] if len(states) > 0 else None
+            if (
+                _is_significant(state)
+                and _has_different_location(state, last_state)
+                and not state.attributes.get(ATTR_HIDDEN, False)
+            ):
+                states.append(state)
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
         elapsed = time.perf_counter() - timer_start
@@ -327,6 +335,7 @@ class HistoryPeriodView(HomeAssistantView):
         if entity_ids:
             entity_ids = entity_ids.lower().split(",")
         include_start_time_state = "skip_initial_state" not in request.query
+        include_location_attributes = "include_location_attributes" in request.query
 
         hass = request.app["hass"]
 
@@ -338,6 +347,7 @@ class HistoryPeriodView(HomeAssistantView):
             entity_ids,
             self.filters,
             include_start_time_state,
+            include_location_attributes,
         )
         result = list(result.values())
         if _LOGGER.isEnabledFor(logging.DEBUG):
@@ -431,3 +441,22 @@ def _is_significant(state):
     """
     # scripts that are not cancellable will never change state
     return state.domain != "script" or state.attributes.get("can_cancel")
+
+
+def _has_different_location(state, other):
+    """Test if two states differ in lat, long attributes.
+
+    Returns False if both states are States objects and lat/long are not None and equal.
+    """
+    if not isinstance(state, States) or not isinstance(other, States):
+        # One of the given states is not a States object
+        return True
+
+    lat1 = state.attributes.get(ATTR_LATITUDE)
+    long1 = state.attributes.get(ATTR_LONGITUDE)
+    lat2 = other.attributes.get(ATTR_LATITUDE)
+    long2 = other.attributes.get(ATTR_LONGITUDE)
+
+    lat_is_none_or_different = lat1 is None or lat1 != lat2
+    long_is_none_or_different = long1 is None or long1 != long2
+    return lat_is_none_or_different or long_is_none_or_different

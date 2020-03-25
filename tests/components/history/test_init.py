@@ -522,6 +522,18 @@ class TestComponentHistory(unittest.TestCase):
         )
         assert list(hist.keys()) == entity_ids
 
+    def test_get_last_state_changes_include_location(self):
+        """Test significant states when including location attributes.
+
+        We should get back only some device_tracker test changes where lat and long differs.
+        """
+        zero, four, states = self.record_states()
+        entity_ids = ["device_tracker.test"]
+        hist = history.get_significant_states(
+            self.hass, zero, four, entity_ids, include_location_attributes=True
+        )
+        assert len(hist) == 2
+
     def check_significant_states(self, zero, four, states, config):
         """Check if significant states are retrieved."""
         filters = history.Filters()
@@ -551,6 +563,7 @@ class TestComponentHistory(unittest.TestCase):
         zone = "zone.home"
         script_nc = "script.cannot_cancel_this_one"
         script_c = "script.can_cancel_this_one"
+        dt = "device_tracker.test"
 
         def set_state(entity_id, state, **kwargs):
             """Set the state."""
@@ -564,7 +577,7 @@ class TestComponentHistory(unittest.TestCase):
         three = two + timedelta(seconds=1)
         four = three + timedelta(seconds=1)
 
-        states = {therm: [], therm2: [], mp: [], mp2: [], script_c: []}
+        states = {therm: [], therm2: [], mp: [], mp2: [], script_c: [], dt: []}
         with patch(
             "homeassistant.components.recorder.dt_util.utcnow", return_value=one
         ):
@@ -579,6 +592,9 @@ class TestComponentHistory(unittest.TestCase):
             )
             states[therm].append(
                 set_state(therm, 20, attributes={"current_temperature": 19.5})
+            )
+            states[dt].append(
+                set_state(dt, "home", attributes={"latitude": 10.2, "longitude": 42.4})
             )
 
         with patch(
@@ -598,6 +614,10 @@ class TestComponentHistory(unittest.TestCase):
             states[therm2].append(
                 set_state(therm2, 20, attributes={"current_temperature": 19})
             )
+            # Equal location attributes
+            states[dt].append(
+                set_state(dt, "home", attributes={"latitude": 10.2, "longitude": 42.4})
+            )
 
         with patch(
             "homeassistant.components.recorder.dt_util.utcnow", return_value=three
@@ -611,6 +631,10 @@ class TestComponentHistory(unittest.TestCase):
             )
             # state will be skipped since entity is hidden
             set_state(therm, 22, attributes={"current_temperature": 21, "hidden": True})
+            # same state, but different attributes
+            states[dt].append(
+                set_state(dt, "home", attributes={"latitude": 12.3, "longitude": 43.2})
+            )
 
         return zero, four, states
 
