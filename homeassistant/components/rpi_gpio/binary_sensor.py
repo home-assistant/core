@@ -70,7 +70,7 @@ class RPiGPIOBinarySensor(BinarySensorDevice):
 
         def edge_detected(port):
             """Edge detection handler."""
-            threading.Timer(float(self._bouncetime)/1000, read_gpio).start()
+            threading.Timer(float(self._bouncetime) / 1000, read_gpio).start()
 
         rpi_gpio.edge_detect(self._port, edge_detected, self._bouncetime)
 
