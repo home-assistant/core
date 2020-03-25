@@ -701,7 +701,9 @@ class Script:
 
     def _log(self, msg, *args, level=logging.INFO):
         if self.name:
-            msg = f"{self.name}: {msg}"
+            msg = f"%s: {msg}"
+            args = [self.name, *args]
+
         if level == _LOG_EXCEPTION:
             self._logger.exception(msg, *args)
         else:
