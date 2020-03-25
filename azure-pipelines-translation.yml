@@ -7,7 +7,7 @@ trigger:
     - dev
 pr: none
 schedules:
-  - cron: "30 0 * * *"
+  - cron: "0 0 * * *"
     displayName: "translation update"
     branches:
       include:
