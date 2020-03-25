@@ -221,7 +221,6 @@ class TadoWaterHeater(WaterHeaterDevice):
         _LOGGER.debug("Updating water_heater platform for zone %d", self.zone_id)
         self._tado_zone_data = self._tado.data["zone"][self.zone_id]
         self._current_tado_hvac_mode = self._tado_zone_data.current_hvac_mode
-        self._current_tado_hvac_action = self._tado_zone_data.current_hvac_action
 
     def _control_heater(self, hvac_mode=None, target_temp=None):
         """Send new target temperature."""
