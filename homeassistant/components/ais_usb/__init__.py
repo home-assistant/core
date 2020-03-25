@@ -21,7 +21,6 @@ G_ZIGBEE_ID = "0451:16a8"
 G_AIS_REMOTE_ID = "0c45:5102"
 
 G_USB_DRIVES_PATH = "/mnt/media_rw"
-G_USB_DRIVES_NO = 0
 if platform.machine() == "x86_64":
     # local test
     G_USB_DRIVES_PATH = "/mnt"
@@ -109,19 +108,20 @@ async def async_setup(hass, config):
         def process_IN_CREATE(self, event):
             if event.pathname.startswith(G_USB_DRIVES_PATH):
                 # create symlink
-                global G_USB_DRIVES_NO
-                G_USB_DRIVES_NO += 1
                 try:
+                    drive_id = event.pathname.replace(
+                        G_USB_DRIVES_PATH + "/", ""
+                    ).strip()
                     os.symlink(
                         str(event.pathname),
                         "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/dysk_"
-                        + str(G_USB_DRIVES_NO),
+                        + str(drive_id),
                     )
                     hass.async_add_job(
                         hass.services.async_call(
                             "ais_ai_service",
                             "say_it",
-                            {"text": "Dodano wymienny dysk_" + str(G_USB_DRIVES_NO)},
+                            {"text": "Dodano wymienny dysk_" + str(drive_id)},
                         )
                     )
                     # fill the list
@@ -185,14 +185,22 @@ async def async_setup(hass, config):
                                 device_info["info"]
                                 != "xHCI Host Controller producent Linux 3.14.29 xhci-hcd"
                             ):
-                                # quick stop audio - to prevent
-                                # ProcessKiller: Process pl.sviete.dom (10754) has open file /mnt/media_rw/...
-                                # ProcessKiller: Sending Interrupt to process 10754
-                                hass.services.call(
-                                    "ais_ai_service",
-                                    "publish_command_to_frame",
-                                    {"key": "stopAudio", "val": True},
+                                state = hass.states.get(
+                                    "media_player.wbudowany_glosnik"
                                 )
+                                attr = state.attributes
+                                media_content_id = attr.get("media_content_id")
+                                if media_content_id.startswith(
+                                    "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/"
+                                ):
+                                    # quick stop audio - to prevent
+                                    # ProcessKiller: Process pl.sviete.dom (10754) has open file /mnt/media_rw/...
+                                    # ProcessKiller: Sending Interrupt to process 10754
+                                    hass.services.call(
+                                        "ais_ai_service",
+                                        "publish_command_to_frame",
+                                        {"key": "stopAudio", "val": True},
+                                    )
                 if device_info is not None:
                     if (
                         device_info["id"] != G_AIS_REMOTE_ID
@@ -243,17 +251,13 @@ async def async_setup(hass, config):
 
     async def mount_external_drives(call):
         """mount_external_drives."""
-        global G_USB_DRIVES_NO
         try:
             os.system("rm /data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/*")
             dirs = os.listdir(G_USB_DRIVES_PATH)
-            _LOGGER.info("mount_external_drives dirs: " + str(len(dirs)))
-            for i in range(0, len(dirs)):
-                G_USB_DRIVES_NO = i + 1
+            for d in dirs:
                 os.symlink(
-                    G_USB_DRIVES_PATH + "/" + dirs[i],
-                    "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/dysk_"
-                    + str(G_USB_DRIVES_NO),
+                    G_USB_DRIVES_PATH + "/" + d,
+                    "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/dysk_" + d,
                 )
         except Exception as e:
             _LOGGER.error("mount_external_drives " + str(e))
@@ -261,8 +265,8 @@ async def async_setup(hass, config):
     async def ls_flash_drives(call):
         ais_usb_flash_drives = [ais_global.G_EMPTY_OPTION]
         dirs = os.listdir("/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/")
-        for i in range(0, len(dirs)):
-            ais_usb_flash_drives.append("dysk_" + str(i + 1))
+        for d in dirs:
+            ais_usb_flash_drives.append(d)
         hass.async_add_job(
             hass.services.async_call(
                 "input_select",

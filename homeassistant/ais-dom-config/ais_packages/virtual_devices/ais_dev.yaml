@@ -12,6 +12,9 @@ input_boolean:
   ais_quiet_mode:
     name: Tryb nocny
     icon: mdi:volume-off
+  ais_logs_rec_mode:
+    name: Zapis do plików
+    icon: mdi:database-settings
 
 input_datetime:
   ais_quiet_mode_start:

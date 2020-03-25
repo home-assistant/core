@@ -786,8 +786,8 @@ def do_download_upgrade(hass, call):
                 f.write("#!/bin/sh" + os.linesep)
             else:
                 f.write("#!/data/data/pl.sviete.dom/files/usr/bin/sh" + os.linesep)
-            for l in release_script.split("-#-"):
-                f.write(l + os.linesep)
+            for ln in release_script.split("-#-"):
+                f.write(ln + os.linesep)
             f.close()
         except Exception as e:
             _LOGGER.error("Can't download release_script, error: " + str(e))
@@ -819,6 +819,17 @@ def do_download_upgrade(hass, call):
         _set_update_status(hass, UPDATE_STATUS_UNKNOWN)
 
 
+def do_fix_scripts_permissions():
+    # fix permissions
+    try:
+        subprocess.check_output(
+            'su -c "chmod -R 777 ' + str(os.path.dirname(__file__)) + "/scripts/" + '"',
+            shell=True,  # nosec
+        )
+    except Exception as e:
+        _LOGGER.error("do_fix_scripts_permissions: " + str(e))
+
+
 def do_install_upgrade(hass, call):
 
     # get the version status from sensor
@@ -836,6 +847,7 @@ def do_install_upgrade(hass, call):
     if reinstall_linux_apt and release_script != "":
         _LOGGER.info("We have release_script to execute " + str(release_script))
         try:
+            do_fix_scripts_permissions()
             file_script = str(os.path.dirname(__file__))
             file_script += "/scripts/release_script.sh"
             apt_process = subprocess.Popen(
@@ -922,11 +934,13 @@ def do_applay_the_fix(hass, call):
                 f.write("#!/bin/sh" + os.linesep)
             else:
                 f.write("#!/data/data/pl.sviete.dom/files/usr/bin/sh" + os.linesep)
-            for l in fix_script.split("-#-"):
-                f.write(l + os.linesep)
+            for ln in fix_script.split("-#-"):
+                f.write(ln + os.linesep)
             f.close()
+
             # execute fix script
             try:
+                do_fix_scripts_permissions()
                 fix_process = subprocess.Popen(
                     file_script, shell=True, stdout=None, stderr=None
                 )

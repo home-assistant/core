@@ -164,8 +164,7 @@ def _change_remote_access(hass, call):
     else:
         text = "Zatrzymuje " + text
 
-    if ais_global.G_AIS_START_IS_DONE:
-        hass.services.call("ais_ai_service", "say_it", {"text": text})
+    hass.services.call("ais_ai_service", "say_it", {"text": text})
 
     if access == "on":
         os.system("pm2 stop tunnel")
