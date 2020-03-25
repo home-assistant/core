@@ -71,7 +71,9 @@ SERVICE_TURN_ON_WITH_TIMER_NAME = "turn_on_with_timer"
 SERVICE_TURN_ON_WITH_TIMER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Required(CONF_TIMER_MINUTES): vol.All(cv.positive_int, vol.Range(min=1, max=90)),
+        vol.Required(CONF_TIMER_MINUTES): vol.All(
+            cv.positive_int, vol.Range(min=1, max=90)
+        ),
     }
 )
 
@@ -86,13 +88,11 @@ async def _validate_edit_permission(
         raise Unauthorized(
             context=context, entity_id=entity_id, permission=(POLICY_EDIT,)
         )
-
     user = await hass.auth.async_get_user(context.user_id)
     if user is None:
         raise UnknownUser(
             context=context, entity_id=entity_id, permission=(POLICY_EDIT,)
         )
-
     if not user.permissions.check_entity(entity_id, POLICY_EDIT):
         raise Unauthorized(
             context=context, entity_id=entity_id, permission=(POLICY_EDIT,)
@@ -122,7 +122,6 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
         _LOGGER.exception("Failed to get response from device")
         await v2bridge.stop()
         return False
-
     hass.data[DOMAIN] = {DATA_DEVICE: device_data}
 
     async def async_switch_platform_discovered(
