@@ -132,5 +132,48 @@
       ],
       "reportAvailable" : false,
       "type" : "AIR_CONDITIONING"
+   },
+   {
+      "type" : "HOT_WATER",
+      "reportAvailable" : false,
+      "deviceTypes" : [
+         "WR02"
+      ],
+      "devices" : [
+         {
+            "connectionState" : {
+               "value" : true,
+               "timestamp" : "2020-03-23T18:30:07.377Z"
+            },
+            "accessPointWiFi" : {
+               "ssid" : "tado8480"
+            },
+            "characteristics" : {
+               "capabilities" : [
+                  "INSIDE_TEMPERATURE_MEASUREMENT",
+                  "IDENTIFY"
+               ]
+            },
+            "duties" : [
+               "ZONE_UI",
+               "ZONE_DRIVER",
+               "ZONE_LEADER"
+            ],
+            "currentFwVersion" : "59.4",
+            "deviceType" : "WR02",
+            "serialNo" : "WR4",
+            "shortSerialNo" : "WR4",
+            "commandTableUploadState" : "FINISHED"
+         }
+      ],
+      "dazzleEnabled" : true,
+      "dateCreated" : "2019-11-28T15:58:48.968Z",
+      "name" : "Second Water Heater",
+      "dazzleMode" : {
+         "enabled" : true,
+         "supported" : true
+      },
+      "id" : 4,
+      "supportsDazzle" : true
    }
 ]
