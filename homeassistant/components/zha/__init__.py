@@ -152,7 +152,7 @@ async def async_unload_entry(hass, config_entry):
 
 async def async_load_entities(hass: HomeAssistantType) -> None:
     """Load entities after integration was setup."""
-    await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].async_initialize_devices_and_groups()
+    await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].async_initialize_devices_and_entities()
     to_setup = hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED]
     results = await asyncio.gather(*to_setup, return_exceptions=True)
     for res in results:
