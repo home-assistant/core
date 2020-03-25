@@ -29,18 +29,15 @@ PLATFORMS = ["air_quality", "sensor"]
 _LOGGER = logging.getLogger(__name__)
 
 
-def update_interval(hass, unload=False):
-    """Return update_interval for configured Airly instances."""
-    # We check how many Airly config entries are and calculate interval to not
-    # exceed allowed numbers of requests.
-    instances = len(hass.config_entries.async_entries(DOMAIN))
-    if unload:
-        result = timedelta(
-            minutes=ceil(24 * 60 / MAX_REQUESTS_PER_DAY) * (instances - 1)
-        )
-    else:
-        result = timedelta(minutes=ceil(24 * 60 / MAX_REQUESTS_PER_DAY) * instances)
-    return result
+def set_update_interval(hass, instances):
+    """Set update_interval to another configured Airly instances."""
+    interval = timedelta(minutes=ceil(24 * 60 / MAX_REQUESTS_PER_DAY) * instances)
+
+    if hass.data.get(DOMAIN):
+        for instance in hass.data[DOMAIN].values():
+            instance.update_interval = interval
+
+    return interval
 
 
 async def async_setup(hass: HomeAssistant, config: Config) -> bool:
@@ -61,10 +58,13 @@ async def async_setup_entry(hass, config_entry):
         )
 
     websession = async_get_clientsession(hass)
-    upd_interval = update_interval(hass)
+    # Change update_interval for other Airly instances
+    update_interval = set_update_interval(
+        hass, len(hass.config_entries.async_entries(DOMAIN))
+    )
 
     coordinator = AirlyDataUpdateCoordinator(
-        hass, websession, api_key, latitude, longitude, upd_interval
+        hass, websession, api_key, latitude, longitude, update_interval
     )
     await coordinator.async_refresh()
 
@@ -75,10 +75,6 @@ async def async_setup_entry(hass, config_entry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
-
-    # Change update_interval for all Airly instances
-    for instance in hass.data[DOMAIN].values():
-        instance.update_interval = upd_interval
 
     return True
 
@@ -96,9 +92,8 @@ async def async_unload_entry(hass, config_entry):
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
-    # Change update_interval for another Airly instances
-    for instance in hass.data[DOMAIN].values():
-        instance.update_interval = update_interval(hass, unload=True)
+    # Change update_interval for other Airly instances
+    set_update_interval(hass, len(hass.data[DOMAIN]))
 
     return unload_ok
 
