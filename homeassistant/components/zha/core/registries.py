@@ -32,6 +32,8 @@ from .const import CONTROLLER, ZHA_GW_RADIO, ZHA_GW_RADIO_DESCRIPTION, RadioType
 from .decorators import CALLABLE_T, DictRegistry, SetRegistry
 from .typing import ChannelType
 
+GROUP_ENTITY_DOMAINS = [LIGHT]
+
 SMARTTHINGS_ACCELERATION_CLUSTER = 0xFC02
 SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE = 0x8000
 SMARTTHINGS_HUMIDITY_CLUSTER = 0xFC45
@@ -275,6 +277,9 @@ RegistryDictType = Dict[
 ]  # pylint: disable=invalid-name
 
 
+GroupRegistryDictType = Dict[str, CALLABLE_T]  # pylint: disable=invalid-name
+
+
 class ZHAEntityRegistry:
     """Channel to ZHA Entity mapping."""
 
@@ -282,6 +287,7 @@ class ZHAEntityRegistry:
         """Initialize Registry instance."""
         self._strict_registry: RegistryDictType = collections.defaultdict(dict)
         self._loose_registry: RegistryDictType = collections.defaultdict(dict)
+        self._group_registry: GroupRegistryDictType = {}
 
     def get_entity(
         self,
@@ -299,6 +305,10 @@ class ZHAEntityRegistry:
                 return self._strict_registry[component][match], claimed
 
         return default, []
+
+    def get_group_entity(self, component: str) -> CALLABLE_T:
+        """Match a ZHA group to a ZHA Entity class."""
+        return self._group_registry.get(component)
 
     def strict_match(
         self,
@@ -347,6 +357,16 @@ class ZHAEntityRegistry:
             """
             self._loose_registry[component][rule] = zha_entity
             return zha_entity
+
+        return decorator
+
+    def group_match(self, component: str) -> Callable[[CALLABLE_T], CALLABLE_T]:
+        """Decorate a group match rule."""
+
+        def decorator(zha_ent: CALLABLE_T) -> CALLABLE_T:
+            """Register a group match rule."""
+            self._group_registry[component] = zha_ent
+            return zha_ent
 
         return decorator
 
