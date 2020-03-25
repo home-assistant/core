@@ -64,10 +64,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             )
 
         # Create device sensors
-        for home in devices:
+        for device in devices:
             entities.extend(
                 [
-                    TadoDeviceSensor(tado, home["name"], home["id"], variable)
+                    TadoDeviceSensor(tado, device["name"], device["id"], variable)
                     for variable in DEVICE_SENSORS
                 ]
             )
