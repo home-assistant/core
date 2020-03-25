@@ -341,7 +341,7 @@ class VizioDevice(MediaPlayerDevice):
 
     @property
     def app_id(self) -> Optional[str]:
-        """Return the ID of the current app."""
+        """Return the ID of the current app if it is unknown by pyvizio."""
         if self._current_app_config and self.app_name == UNKNOWN_APP:
             return {
                 "APP_ID": self._current_app_config.APP_ID,
