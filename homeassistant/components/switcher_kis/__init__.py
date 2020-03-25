@@ -7,6 +7,7 @@ from typing import Dict, Optional
 
 from aioswitcher.api import SwitcherV2Api
 from aioswitcher.bridge import SwitcherV2Bridge
+from aioswitcher.consts import COMMAND_ON
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import POLICY_EDIT
@@ -32,6 +33,7 @@ _LOGGER = getLogger(__name__)
 DOMAIN = "switcher_kis"
 
 CONF_AUTO_OFF = "auto_off"
+CONF_TIMER_MINUTES = "timer_minutes"
 CONF_DEVICE_ID = "device_id"
 CONF_DEVICE_PASSWORD = "device_password"
 CONF_PHONE_ID = "phone_id"
@@ -65,6 +67,13 @@ SERVICE_SET_AUTO_OFF_SCHEMA = vol.Schema(
     }
 )
 
+SERVICE_TURN_ON_WITH_TIMER_NAME = "turn_on_with_timer"
+SERVICE_TURN_ON_WITH_TIMER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_TIMER_MINUTES): vol.All(cv.positive_int, vol.Range(min=1, max=90)),
+    }
+)
 
 @bind_hass
 async def _validate_edit_permission(
@@ -134,11 +143,30 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
             ) as swapi:
                 await swapi.set_auto_shutdown(service.data[CONF_AUTO_OFF])
 
+        async def async_turn_on_with_timer_service(service: ServiceCallType) -> None:
+            """Use for handling setting device auto-off service calls."""
+
+            await _validate_edit_permission(
+                hass, service.context, service.data[CONF_ENTITY_ID]
+            )
+
+            async with SwitcherV2Api(
+                hass.loop, device_data.ip_addr, phone_id, device_id, device_password
+            ) as swapi:
+                await swapi.control_device(COMMAND_ON, service.data[CONF_TIMER_MINUTES])
+
         hass.services.async_register(
             DOMAIN,
             SERVICE_SET_AUTO_OFF_NAME,
             async_set_auto_off_service,
             schema=SERVICE_SET_AUTO_OFF_SCHEMA,
+        )
+
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_TURN_ON_WITH_TIMER_NAME,
+            async_turn_on_with_timer_service,
+            schema=SERVICE_TURN_ON_WITH_TIMER_SCHEMA,
         )
 
     async_listen_platform(hass, SWITCH_DOMAIN, async_switch_platform_discovered)
@@ -160,4 +188,4 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
 
     async_track_time_interval(hass, device_updates, timedelta(seconds=4))
 
-    return True
+    return True 
