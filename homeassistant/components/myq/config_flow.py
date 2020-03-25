@@ -67,6 +67,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_homekit(self, homekit_info):
         """Handle HomeKit discovery."""
+        if self._async_current_entries():
+            # We can see myq on the network to tell them to configure
+            # it, but since the device will not give up the account it is
+            # bound to and there can be multiple myq gateways on a single
+            # account, we avoid showing the device as discovered once
+            # they already have one configured as they can always
+            # add a new one via "+"
+            return self.async_abort(reason="already_configured")
         return await self.async_step_user()
 
     async def async_step_import(self, user_input):
