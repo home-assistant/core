@@ -103,6 +103,22 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class BaseLight(light.Light):
     """Operations common to all light entities."""
 
+    def __init__(self, *args, **kwargs):
+        """Initialize the light."""
+        super().__init__(*args, **kwargs)
+        self._is_on: bool = False
+        self._available: bool = False
+        self._brightness: Optional[int] = None
+        self._off_brightness: Optional[int] = None
+        self._hs_color: Optional[Tuple[float, float]] = None
+        self._color_temp: Optional[int] = None
+        self._min_mireds: Optional[int] = 154
+        self._max_mireds: Optional[int] = 500
+        self._white_value: Optional[int] = None
+        self._effect_list: Optional[List[str]] = None
+        self._effect: Optional[str] = None
+        self._supported_features: int = 0
+
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
         """Return state attributes."""
@@ -287,7 +303,7 @@ class BaseLight(light.Light):
 
 
 @STRICT_MATCH(channel_names=CHANNEL_ON_OFF, aux_channels={CHANNEL_COLOR, CHANNEL_LEVEL})
-class Light(ZhaEntity, BaseLight):
+class Light(BaseLight, ZhaEntity):
     """Representation of a ZHA or ZLL light."""
 
     _REFRESH_INTERVAL = (45, 75)
@@ -295,13 +311,6 @@ class Light(ZhaEntity, BaseLight):
     def __init__(self, unique_id, zha_device: ZhaDeviceType, channels, **kwargs):
         """Initialize the ZHA light."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._supported_features = 0
-        self._color_temp = None
-        self._hs_color = None
-        self._brightness = None
-        self._off_brightness = None
-        self._effect_list = []
-        self._effect = None
         self._on_off_channel = self.cluster_channels.get(CHANNEL_ON_OFF)
         self._level_channel = self.cluster_channels.get(CHANNEL_LEVEL)
         self._color_channel = self.cluster_channels.get(CHANNEL_COLOR)
@@ -454,7 +463,7 @@ class HueLight(Light):
 
 
 @GROUP_MATCH()
-class LightGroup(BaseZhaEntity, BaseLight):
+class LightGroup(BaseLight, BaseZhaEntity):
     """Representation of a light group."""
 
     def __init__(
@@ -465,18 +474,6 @@ class LightGroup(BaseZhaEntity, BaseLight):
         self._name = f"{zha_device.gateway.groups.get(group_id).name}_group_{group_id}"
         self._group_id: int = group_id
         self._entity_ids: List[str] = entity_ids
-        self._is_on: bool = False
-        self._available: bool = False
-        self._brightness: Optional[int] = None
-        self._off_brightness: Optional[int] = None
-        self._hs_color: Optional[Tuple[float, float]] = None
-        self._color_temp: Optional[int] = None
-        self._min_mireds: Optional[int] = 154
-        self._max_mireds: Optional[int] = 500
-        self._white_value: Optional[int] = None
-        self._effect_list: Optional[List[str]] = None
-        self._effect: Optional[str] = None
-        self._supported_features: int = 0
         group = self.zha_device.gateway.get_group(self._group_id)
         self._on_off_channel = group.endpoint[OnOff.cluster_id]
         self._level_channel = group.endpoint[LevelControl.cluster_id]
