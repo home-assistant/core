@@ -33,7 +33,7 @@ jobs:
     builderVersion: '$(versionWheels)'
     builderApk: 'build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev'
     builderPip: 'Cython;numpy'
-    skipBinary: 'aiohttp'
+    skipBinary: 'aiohttp,smhi-pkg'
     wheelsRequirement: 'requirements_wheels.txt'
     wheelsRequirementDiff: 'requirements_diff.txt'
     wheelsConstraint: 'homeassistant/package_constraints.txt'
