@@ -13,6 +13,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import DOMAIN, SIGNAL_TADO_UPDATE_RECEIVED
 from .const import (
     CONST_HVAC_HEAT,
+    CONST_MODE_AUTO,
     CONST_MODE_HEAT,
     CONST_MODE_OFF,
     CONST_MODE_SMART_SCHEDULE,
@@ -207,7 +208,15 @@ class TadoWaterHeater(WaterHeaterDevice):
         if not self._supports_temperature_control or temperature is None:
             return
 
-        self._control_heater(target_temp=temperature)
+        if self._current_tado_hvac_mode not in (
+            CONST_MODE_OFF,
+            CONST_MODE_AUTO,
+            CONST_MODE_SMART_SCHEDULE,
+        ):
+            self._control_heater(target_temp=temperature)
+            return
+
+        self._control_heater(target_temp=temperature, hvac_mode=CONST_MODE_HEAT)
 
     @callback
     def _async_update_callback(self):

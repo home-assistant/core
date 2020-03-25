@@ -21,6 +21,7 @@ from . import DOMAIN, SIGNAL_TADO_UPDATE_RECEIVED
 from .const import (
     CONST_FAN_AUTO,
     CONST_FAN_OFF,
+    CONST_MODE_AUTO,
     CONST_MODE_COOL,
     CONST_MODE_HEAT,
     CONST_MODE_OFF,
@@ -330,7 +331,16 @@ class TadoClimate(ClimateDevice):
         if temperature is None:
             return
 
-        self._control_hvac(target_temp=temperature)
+        if self._current_tado_hvac_mode not in (
+            CONST_MODE_OFF,
+            CONST_MODE_AUTO,
+            CONST_MODE_SMART_SCHEDULE,
+        ):
+            self._control_hvac(target_temp=temperature)
+            return
+
+        new_hvac_mode = CONST_MODE_COOL if self._ac_device else CONST_MODE_HEAT
+        self._control_hvac(target_temp=temperature, hvac_mode=new_hvac_mode)
 
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
