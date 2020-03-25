@@ -92,6 +92,7 @@ FLOWS = [
     "rainmachine",
     "ring",
     "roku",
+    "roomba",
     "samsungtv",
     "sense",
     "sentry",
