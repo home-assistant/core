@@ -209,7 +209,7 @@ class VizioDevice(MediaPlayerDevice):
 
             if "eq" in audio_settings:
                 self._supported_commands = (
-                    SUPPORTED_COMMANDS[self._device_class] | SUPPORT_SELECT_SOUND_MODE
+                    self._supported_commands | SUPPORT_SELECT_SOUND_MODE
                 )
                 self._current_sound_mode = audio_settings["eq"]
                 if self._available_sound_modes is None:
@@ -217,7 +217,9 @@ class VizioDevice(MediaPlayerDevice):
                         "audio", "eq"
                     )
             else:
-                self._supported_commands = SUPPORTED_COMMANDS[self._device_class]
+                self._supported_commands = (
+                    self._supported_commands ^ SUPPORT_SELECT_SOUND_MODE
+                )
 
         input_ = await self._device.get_current_input(log_api_exception=False)
         if input_ is not None:
