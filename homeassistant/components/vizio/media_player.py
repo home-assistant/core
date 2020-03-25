@@ -5,7 +5,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from pyvizio import VizioAsync
 from pyvizio.api.apps import find_app_name
-from pyvizio.const import APP_HOME, APPS, INPUT_APPS, NO_APP_RUNNING
+from pyvizio.const import APP_HOME, APPS, INPUT_APPS, NO_APP_RUNNING, UNKNOWN_APP
 
 from homeassistant.components.media_player import (
     DEVICE_CLASS_SPEAKER,
@@ -342,8 +342,12 @@ class VizioDevice(MediaPlayerDevice):
     @property
     def app_id(self) -> Optional[str]:
         """Return the ID of the current app."""
-        if self._current_app_config:
-            return vars(self._current_app_config)
+        if self._current_app_config and self.app_name == UNKNOWN_APP:
+            return {
+                "APP_ID": self._current_app_config.APP_ID,
+                "NAME_SPACE": self._current_app_config.NAME_SPACE,
+                "MESSAGE": self._current_app_config.MESSAGE,
+            }
 
         return None
 
