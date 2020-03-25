@@ -1,0 +1,9 @@
+{
+  "domain": "myio_valet_mega",
+  "name": "myIO-server",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/myio_valet_mega",
+  "requirements": ["myio==0.0.5"],
+  "dependencies": [],
+  "codeowners": ["@smarthomeninja"]
+}

@@ -36,6 +36,7 @@ from homeassistant.const import (
     CONF_ENTITIES,
     CONF_NAME,
     STATE_CLOSED,
+    STATE_OPEN,
 )
 from homeassistant.core import State, callback
 import homeassistant.helpers.config_validation as cv
@@ -252,14 +253,33 @@ class CoverGroup(CoverDevice):
         """Update state and attributes."""
         self._assumed_state = False
 
-        self._is_closed = True
+        """ MODIFIED CODE
+        This code was modified, because the original code had a little BUG
+        If the cover what hasn't got a SUPPORT_SET_POSITION,
+            and the is_closed variable is None :
+                the Group's is_closed variable always stayed on False
+                It was problem, because naver can't Open the group.
+        Now this code counts, how much cover is opened, and closed in the group
+        and when one of them reach the groups elements quantity:
+            then change the self._is_closed variable
+            else it stays on None
+        """
+        self._is_closed = None
+        _counter_opened = 0
+        _counter_closed = 0
         for entity_id in self._entities:
             state = self.hass.states.get(entity_id)
-            if not state:
+            if state.state == STATE_CLOSED:
+                _counter_closed += 1
                 continue
-            if state.state != STATE_CLOSED:
-                self._is_closed = False
-                break
+            if state.state == STATE_OPEN:
+                _counter_opened += 1
+                continue
+        if _counter_opened == len(self._entities):
+            self._is_closed = False
+        if _counter_closed == len(self._entities):
+            self._is_closed = True
+        """END OF MODIFIED CODE"""
 
         self._cover_position = None
         if self._covers[KEY_POSITION]:

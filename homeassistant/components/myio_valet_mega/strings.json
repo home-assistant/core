@@ -1,0 +1,35 @@
+{
+  "config": {
+    "title": "myIO server",
+    "step": {
+      "user": {
+        "title": "Connect to the device",
+        "data": {
+          "host": "Host",
+          "username": "Username",
+          "password": "Password",
+          "name": "Name"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "myio_options": {
+        "data": {
+          "option_1": "Option 1",
+          "option_2": "Option 2",
+          "refresh_time": "refresh time"
+        }
+      }
+    }
+  }
+}
