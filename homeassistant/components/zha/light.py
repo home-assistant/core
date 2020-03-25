@@ -100,7 +100,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
 
-class BaseLight(light.Light):
+class BaseLight(BaseZhaEntity, light.Light):
     """Operations common to all light entities."""
 
     def __init__(self, *args, **kwargs):
@@ -118,6 +118,11 @@ class BaseLight(light.Light):
         self._effect_list: Optional[List[str]] = None
         self._effect: Optional[str] = None
         self._supported_features: int = 0
+        self._state: bool = False
+        self._on_off_channel = None
+        self._level_channel = None
+        self._color_channel = None
+        self._identify_channel = None
 
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
@@ -303,7 +308,7 @@ class BaseLight(light.Light):
 
 
 @STRICT_MATCH(channel_names=CHANNEL_ON_OFF, aux_channels={CHANNEL_COLOR, CHANNEL_LEVEL})
-class Light(BaseLight, ZhaEntity):
+class Light(ZhaEntity, BaseLight):
     """Representation of a ZHA or ZLL light."""
 
     _REFRESH_INTERVAL = (45, 75)
@@ -463,7 +468,7 @@ class HueLight(Light):
 
 
 @GROUP_MATCH()
-class LightGroup(BaseLight, BaseZhaEntity):
+class LightGroup(BaseLight):
     """Representation of a light group."""
 
     def __init__(
