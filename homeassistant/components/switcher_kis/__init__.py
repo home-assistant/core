@@ -75,6 +75,7 @@ SERVICE_TURN_ON_WITH_TIMER_SCHEMA = vol.Schema(
     }
 )
 
+
 @bind_hass
 async def _validate_edit_permission(
     hass: HomeAssistantType, context: ContextType, entity_id: str
@@ -188,4 +189,4 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
 
     async_track_time_interval(hass, device_updates, timedelta(seconds=4))
 
-    return True 
+    return True
