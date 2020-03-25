@@ -6,7 +6,8 @@
         },
         "error": {
             "faulty_credentials": "Mauvaises informations d'identification de l'utilisateur",
-            "service_unavailable": "Aucun service disponible"
+            "service_unavailable": "Aucun service disponible",
+            "unknown_client_mac": "Aucun client disponible sur cette adresse MAC"
         },
         "step": {
             "user": {
@@ -23,8 +24,18 @@
         },
         "title": "Contr\u00f4leur UniFi"
     },
+    "error": {
+        "unknown_client_mac": "Aucun client disponible dans UniFi sur cette adresse MAC"
+    },
     "options": {
         "step": {
+            "client_control": {
+                "data": {
+                    "block_client": "Clients contr\u00f4l\u00e9s par acc\u00e8s r\u00e9seau",
+                    "new_client": "Ajouter un nouveau client pour le contr\u00f4le d'acc\u00e8s au r\u00e9seau"
+                },
+                "title": "Options UniFi 2/3"
+            },
             "device_tracker": {
                 "data": {
                     "detection_time": "Temps en secondes depuis la derni\u00e8re vue avant de consid\u00e9rer comme absent",

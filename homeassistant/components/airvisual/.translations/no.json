@@ -19,5 +19,16 @@
             }
         },
         "title": "AirVisual"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Vis overv\u00e5ket geografi p\u00e5 kartet"
+                },
+                "description": "Angi forskjellige alternativer for AirVisual-integrasjonen.",
+                "title": "Konfigurer AirVisual"
+            }
+        }
     }
 }

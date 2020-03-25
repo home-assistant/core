@@ -3,15 +3,18 @@
         "abort": {
             "already_in_progress": "Konfigurationsablauf f\u00fcr die Vizio-Komponente wird bereits ausgef\u00fchrt.",
             "already_setup": "Dieser Eintrag wurde bereits eingerichtet.",
+            "already_setup_with_diff_host_and_name": "Dieser Eintrag scheint bereits mit einem anderen Host und Namen basierend auf seiner Seriennummer eingerichtet worden zu sein. Bitte entfernen Sie alle alten Eintr\u00e4ge aus Ihrer configuration.yaml und aus dem Men\u00fc Integrationen, bevor Sie erneut versuchen, dieses Ger\u00e4t hinzuzuf\u00fcgen.",
             "host_exists": "Vizio-Komponent mit bereits konfiguriertem Host.",
             "name_exists": "Vizio-Komponent mit bereits konfiguriertem Namen.",
+            "updated_entry": "Dieser Eintrag wurde bereits eingerichtet, aber der Name, die Apps und / oder die in der Konfiguration definierten Optionen stimmen nicht mit der zuvor importierten Konfiguration \u00fcberein, sodass der Konfigurationseintrag entsprechend aktualisiert wurde.",
             "updated_options": "Dieser Eintrag wurde bereits eingerichtet, aber die in der Konfiguration definierten Optionen stimmen nicht mit den zuvor importierten Optionswerten \u00fcberein, daher wurde der Konfigurationseintrag entsprechend aktualisiert.",
             "updated_volume_step": "Dieser Eintrag wurde bereits eingerichtet, aber die Lautst\u00e4rken-Schrittgr\u00f6\u00dfe in der Konfiguration stimmt nicht mit dem Konfigurationseintrag \u00fcberein, sodass der Konfigurationseintrag entsprechend aktualisiert wurde."
         },
         "error": {
             "cant_connect": "Es konnte keine Verbindung zum Ger\u00e4t hergestellt werden. [\u00dcberpr\u00fcfen Sie die Dokumentation] (https://www.home-assistant.io/integrations/vizio/) und \u00fcberpr\u00fcfen Sie Folgendes erneut:\n- Das Ger\u00e4t ist eingeschaltet\n- Das Ger\u00e4t ist mit dem Netzwerk verbunden\n- Die von Ihnen eingegebenen Werte sind korrekt\nbevor sie versuchen, erneut zu \u00fcbermitteln.",
-            "host_exists": "Host bereits konfiguriert.",
-            "name_exists": "Name bereits konfiguriert.",
+            "complete_pairing failed": "Das Pairing kann nicht abgeschlossen werden. Stellen Sie sicher, dass die von Ihnen angegebene PIN korrekt ist und das Fernsehger\u00e4t weiterhin mit Strom versorgt und mit dem Netzwerk verbunden ist, bevor Sie es erneut versuchen.",
+            "host_exists": "Vizio-Ger\u00e4t mit angegebenem Host bereits konfiguriert.",
+            "name_exists": "Vizio-Ger\u00e4t mit angegebenem Namen bereits konfiguriert.",
             "tv_needs_token": "Wenn der Ger\u00e4tetyp \"TV\" ist, wird ein g\u00fcltiger Zugriffstoken ben\u00f6tigt."
         },
         "step": {
@@ -19,13 +22,24 @@
                 "data": {
                     "pin": "PIN"
                 },
+                "description": "Ihr Fernseher sollte einen Code anzeigen. Geben Sie diesen Code in das Formular ein und fahren Sie mit dem n\u00e4chsten Schritt fort, um die Kopplung abzuschlie\u00dfen.",
                 "title": "Schlie\u00dfen Sie den Pairing-Prozess ab"
             },
             "pairing_complete": {
+                "description": "Ihr Vizio SmartCast-Ger\u00e4t ist jetzt mit Home Assistant verbunden.",
                 "title": "Kopplung abgeschlossen"
             },
             "pairing_complete_import": {
+                "description": "Ihr Vizio SmartCast-Fernseher ist jetzt mit Home Assistant verbunden. \n\n Ihr Zugriffstoken ist '**{access_token}**'.",
                 "title": "Kopplung abgeschlossen"
+            },
+            "tv_apps": {
+                "data": {
+                    "apps_to_include_or_exclude": "Apps zum Einschlie\u00dfen oder Ausschlie\u00dfen",
+                    "include_or_exclude": "Apps einschlie\u00dfen oder ausschlie\u00dfen?"
+                },
+                "description": "Wenn Sie \u00fcber ein Smart TV verf\u00fcgen, k\u00f6nnen Sie Ihre Quellliste optional filtern, indem Sie ausw\u00e4hlen, welche Apps in Ihre Quellliste aufgenommen oder ausgeschlossen werden sollen. Sie k\u00f6nnen diesen Schritt f\u00fcr Fernsehger\u00e4te \u00fcberspringen, die keine Apps unterst\u00fctzen.",
+                "title": "Konfigurieren Sie Apps f\u00fcr Ihr Smart TV"
             },
             "user": {
                 "data": {
@@ -34,7 +48,16 @@
                     "host": "<Host/IP>:<Port>",
                     "name": "Name"
                 },
-                "title": "Richten Sie den Vizio SmartCast-Client ein"
+                "description": "Ein Zugriffstoken wird nur f\u00fcr Fernsehger\u00e4te ben\u00f6tigt. Wenn Sie ein Fernsehger\u00e4t konfigurieren und noch kein Zugriffstoken haben, lassen Sie es leer, um einen Pairing-Vorgang durchzuf\u00fchren.",
+                "title": "Richten Sie das Vizio SmartCast-Ger\u00e4t ein"
+            },
+            "user_tv": {
+                "data": {
+                    "apps_to_include_or_exclude": "Apps zum Einschlie\u00dfen oder Ausschlie\u00dfen",
+                    "include_or_exclude": "Apps einschlie\u00dfen oder ausschlie\u00dfen?"
+                },
+                "description": "Wenn Sie \u00fcber ein Smart TV verf\u00fcgen, k\u00f6nnen Sie Ihre Quellliste optional filtern, indem Sie ausw\u00e4hlen, welche Apps in Ihre Quellliste aufgenommen oder ausgeschlossen werden sollen. Sie k\u00f6nnen diesen Schritt f\u00fcr Fernsehger\u00e4te \u00fcberspringen, die keine Apps unterst\u00fctzen.",
+                "title": "Konfigurieren Sie Apps f\u00fcr Ihr Smart TV"
             }
         },
         "title": "Vizio SmartCast"
@@ -43,6 +66,8 @@
         "step": {
             "init": {
                 "data": {
+                    "apps_to_include_or_exclude": "Apps zum Einschlie\u00dfen oder Ausschlie\u00dfen",
+                    "include_or_exclude": "Apps einschlie\u00dfen oder ausschlie\u00dfen?",
                     "timeout": "API Request Timeout (Sekunden)",
                     "volume_step": "Lautst\u00e4rken-Schrittgr\u00f6\u00dfe"
                 },

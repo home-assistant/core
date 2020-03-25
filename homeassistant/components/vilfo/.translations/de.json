@@ -14,6 +14,7 @@
                     "access_token": "Zugriffstoken f\u00fcr die Vilfo Router-API",
                     "host": "Router-Hostname oder IP"
                 },
+                "description": "Richten Sie die Vilfo Router-Integration ein. Sie ben\u00f6tigen Ihren Vilfo Router-Hostnamen / Ihre IP-Adresse und ein API-Zugriffstoken. Weitere Informationen zu dieser Integration und wie Sie diese Details erhalten, finden Sie unter: https://www.home-assistant.io/integrations/vilfo",
                 "title": "Stellen Sie eine Verbindung zum Vilfo Router her"
             }
         },

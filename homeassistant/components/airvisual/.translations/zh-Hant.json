@@ -19,5 +19,16 @@
             }
         },
         "title": "AirVisual"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "\u65bc\u5730\u5716\u4e0a\u986f\u793a\u76e3\u63a7\u4f4d\u7f6e\u3002"
+                },
+                "description": "\u8a2d\u5b9a AirVisual \u6574\u5408\u9078\u9805\u3002",
+                "title": "\u8a2d\u5b9a AirVisual"
+            }
+        }
     }
 }

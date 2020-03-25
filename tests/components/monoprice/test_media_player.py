@@ -37,6 +37,7 @@ from homeassistant.helpers.entity_component import async_update_entity
 from tests.common import MockConfigEntry
 
 MOCK_CONFIG = {CONF_PORT: "fake port", CONF_SOURCES: {"1": "one", "3": "three"}}
+MOCK_OPTIONS = {CONF_SOURCES: {"2": "two", "4": "four"}}
 
 ZONE_1_ID = "media_player.zone_11"
 ZONE_2_ID = "media_player.zone_12"
@@ -110,6 +111,20 @@ async def _setup_monoprice(hass, monoprice):
         "homeassistant.components.monoprice.get_monoprice", new=lambda *a: monoprice,
     ):
         config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        # setup_component(self.hass, DOMAIN, MOCK_CONFIG)
+        # self.hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+
+async def _setup_monoprice_with_options(hass, monoprice):
+    with patch(
+        "homeassistant.components.monoprice.get_monoprice", new=lambda *a: monoprice,
+    ):
+        config_entry = MockConfigEntry(
+            domain=DOMAIN, data=MOCK_CONFIG, options=MOCK_OPTIONS
+        )
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         # setup_component(self.hass, DOMAIN, MOCK_CONFIG)
@@ -256,7 +271,6 @@ async def test_restore_without_snapshort(hass):
 
 async def test_update(hass):
     """Test updating values from monoprice."""
-    """Test snapshot save/restore service calls."""
     monoprice = MockMonoprice()
     await _setup_monoprice(hass, monoprice)
 
@@ -303,6 +317,15 @@ async def test_source_list(hass):
     state = hass.states.get(ZONE_1_ID)
     # Note, the list is sorted!
     assert ["one", "three"] == state.attributes[ATTR_INPUT_SOURCE_LIST]
+
+
+async def test_source_list_with_options(hass):
+    """Test source list property."""
+    await _setup_monoprice_with_options(hass, MockMonoprice())
+
+    state = hass.states.get(ZONE_1_ID)
+    # Note, the list is sorted!
+    assert ["two", "four"] == state.attributes[ATTR_INPUT_SOURCE_LIST]
 
 
 async def test_select_source(hass):

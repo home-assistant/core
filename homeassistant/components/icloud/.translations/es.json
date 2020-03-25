@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Cuenta ya configurada"
+            "already_configured": "Cuenta ya configurada",
+            "no_device": "Ninguno de tus dispositivos tiene activado \"Buscar mi iPhone\""
         },
         "error": {
             "login": "Error de inicio de sesi\u00f3n: compruebe su direcci\u00f3n de correo electr\u00f3nico y contrase\u00f1a",
@@ -19,7 +20,8 @@
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Correo electr\u00f3nico"
+                    "username": "Correo electr\u00f3nico",
+                    "with_family": "Con la familia"
                 },
                 "description": "Ingrese sus credenciales",
                 "title": "Credenciales iCloud"

@@ -22,13 +22,24 @@
                 "data": {
                     "pin": "PIN"
                 },
-                "description": "El televisor hauria d'estar mostrant un codi. Introdueix aquest codi al formulari i segueix amb els seg\u00fcents passos per completar l'emparellament."
+                "description": "El televisor hauria d'estar mostrant un codi. Introdueix aquest codi al formulari i segueix amb els seg\u00fcents passos per completar l'emparellament.",
+                "title": "Proc\u00e9s d'aparellament complet"
             },
             "pairing_complete": {
-                "description": "El dispositiu Vizio SmartCast est\u00e0 connectat a Home Assistant."
+                "description": "El dispositiu Vizio SmartCast est\u00e0 connectat a Home Assistant.",
+                "title": "Emparellament completat"
             },
             "pairing_complete_import": {
-                "description": "El dispositiu Vizio SmartCast est\u00e0 connectat a Home Assistant.\n\nEl testimoni d'acc\u00e9s (Access Token) \u00e9s '**{access_token}**'."
+                "description": "El dispositiu Vizio SmartCast est\u00e0 connectat a Home Assistant.\n\nEl testimoni d'acc\u00e9s (Access Token) \u00e9s '**{access_token}**'.",
+                "title": "Emparellament completat"
+            },
+            "tv_apps": {
+                "data": {
+                    "apps_to_include_or_exclude": "Aplicacions a incloure o excloure",
+                    "include_or_exclude": "Incloure o excloure aplicacions?"
+                },
+                "description": "Si tens una Smart TV, pots filtrar de manera opcional la teva llista de canals escollint quines aplicacions vols incloure o excloure de la llista. Pots ometre aquest pas si el teu televisor no admet aplicacions.",
+                "title": "Configuraci\u00f3 d'Aplicacions per a Smart TV"
             },
             "user": {
                 "data": {
@@ -37,7 +48,16 @@
                     "host": "<Amfitri\u00f3/IP>:<Port>",
                     "name": "Nom"
                 },
+                "description": "Nom\u00e9s es necessita testimoni d'acc\u00e9s per als televisors. Si est\u00e0s configurant un televisor i encara no tens un testimoni d'acc\u00e9s, deixeu-ho en blanc per poder fer el proc\u00e9s d'emparellament.",
                 "title": "Configuraci\u00f3 del client de Vizio SmartCast"
+            },
+            "user_tv": {
+                "data": {
+                    "apps_to_include_or_exclude": "Aplicacions a incloure o excloure",
+                    "include_or_exclude": "Incloure o excloure aplicacions?"
+                },
+                "description": "Si tens una Smart TV, pots filtrar de manera opcional la teva llista de canals escollint quines aplicacions vols incloure o excloure de la llista. Pots ometre aquest pas si el teu televisor no admet aplicacions.",
+                "title": "Configuraci\u00f3 d'Aplicacions per a Smart TV"
             }
         },
         "title": "Vizio SmartCast"
@@ -46,9 +66,12 @@
         "step": {
             "init": {
                 "data": {
+                    "apps_to_include_or_exclude": "Aplicacions a incloure o excloure",
+                    "include_or_exclude": "Incloure o excloure aplicacions?",
                     "timeout": "Temps d'espera de les sol\u00b7licituds API (en segons)",
                     "volume_step": "Mida del pas de volum"
                 },
+                "description": "Si tens una Smart TV, pots filtrar de manera opcional la teva llista de canals escollint quines aplicacions vols incloure o excloure de la llista.",
                 "title": "Actualitzaci\u00f3 de les opcions de Vizo SmartCast"
             }
         },

@@ -75,6 +75,7 @@ omit =
     homeassistant/components/bluetooth_tracker/*
     homeassistant/components/bme280/sensor.py
     homeassistant/components/bme680/sensor.py
+    homeassistant/components/bmp280/sensor.py
     homeassistant/components/bmw_connected_drive/*
     homeassistant/components/bom/camera.py
     homeassistant/components/bom/sensor.py
@@ -424,6 +425,7 @@ omit =
     homeassistant/components/minecraft_server/__init__.py
     homeassistant/components/minecraft_server/binary_sensor.py
     homeassistant/components/minecraft_server/const.py
+    homeassistant/components/minecraft_server/helpers.py
     homeassistant/components/minecraft_server/sensor.py
     homeassistant/components/minio/*
     homeassistant/components/mitemp_bt/sensor.py
@@ -466,6 +468,7 @@ omit =
     homeassistant/components/netgear_lte/*
     homeassistant/components/netio/switch.py
     homeassistant/components/neurio_energy/sensor.py
+    homeassistant/components/nextcloud/*
     homeassistant/components/nfandroidtv/notify.py
     homeassistant/components/niko_home_control/light.py
     homeassistant/components/nilu/air_quality.py
