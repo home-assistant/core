@@ -31,6 +31,8 @@ _LOGGER = logging.getLogger(__name__)
 
 def set_update_interval(hass, instances):
     """Set update_interval to another configured Airly instances."""
+    # We check how many Airly configured instances are and calculate interval to not
+    # exceed allowed numbers of requests.
     interval = timedelta(minutes=ceil(24 * 60 / MAX_REQUESTS_PER_DAY) * instances)
 
     if hass.data.get(DOMAIN):
