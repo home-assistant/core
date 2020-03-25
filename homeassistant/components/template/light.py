@@ -194,6 +194,7 @@ class LightTemplate(Light):
         if color_action is not None:
             self._color_script = Script(hass, color_action)
         self._color_template = color_template
+        self._white_value_script = None
         if white_value_action is not None:
             self._white_value_script = Script(hass, white_value_action)
         self._white_value_template = white_value_template
@@ -220,7 +221,7 @@ class LightTemplate(Light):
 
     @property
     def white_value(self):
-        """Return the CT color value in mireds."""
+        """Return the white value."""
         return self._white_value
 
     @property
@@ -439,7 +440,7 @@ class LightTemplate(Light):
                 self._white_value = int(white_value)
             else:
                 _LOGGER.error(
-                    "Received invalid white value : %s. Expected: 0-255", white_value
+                    "Received invalid white value: %s. Expected: 0-255", white_value
                 )
                 self._white_value = None
         except TemplateError as ex:
