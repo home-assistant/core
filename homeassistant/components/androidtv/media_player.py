@@ -479,11 +479,12 @@ class ADBDevice(MediaPlayerDevice):
 
     async def async_get_media_image(self):
         """Fetch current playing image."""
-        media_data = self.get_raw_media_data()
+        media_data = await self.hass.async_add_executor_job(self.get_raw_media_data)
         if media_data:
-            return binascii.a2b_base64(media_data), "image/png"
+            return media_data, "image/png"
         return None, None
 
+    @adb_decorator()
     def get_raw_media_data(self):
         """Raw base64 image data."""
         if self.state not in [STATE_OFF, None]:
@@ -494,7 +495,7 @@ class ADBDevice(MediaPlayerDevice):
                 return None
 
             if isinstance(response, str) and response.strip():
-                return response.strip().replace("\n", "")
+                return binascii.a2b_base64(response.strip().replace("\n", ""))
 
         return None
 
