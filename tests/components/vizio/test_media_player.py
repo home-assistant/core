@@ -200,7 +200,10 @@ async def _test_setup_with_apps(
             assert app in attr["source_list"] or app == UNKNOWN_APP
             assert attr["source"] == app
             assert attr["app_name"] == app
-            assert attr["app_id"] == app_config
+            if app == UNKNOWN_APP:
+                assert attr["app_id"] == app_config
+            else:
+                assert "app_id" not in attr
         else:
             assert attr["source"] == "CAST"
             assert "app_id" not in attr
