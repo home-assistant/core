@@ -1,4 +1,6 @@
 """Support for functionality to interact with Android TV / Fire TV devices."""
+import binascii
+from datetime import datetime
 import functools
 import logging
 import os
@@ -474,6 +476,32 @@ class ADBDevice(MediaPlayerDevice):
     def unique_id(self):
         """Return the device unique id."""
         return self._unique_id
+
+    async def async_get_media_image(self):
+        """Fetch current playing image."""
+        media_data = self.get_raw_media_data()
+        if media_data:
+            return binascii.a2b_base64(media_data), "image/png"
+        return None, None
+
+    def get_raw_media_data(self):
+        """Raw base64 image data."""
+        if self.state not in [STATE_OFF, None]:
+
+            try:
+                response = self.aftv.adb_shell("screencap -p | base64")
+            except UnicodeDecodeError:
+                return None
+
+            if isinstance(response, str) and response.strip():
+                return response.strip().replace("\n", "")
+
+        return None
+
+    @property
+    def media_image_url(self):
+        """URL for obtaining a screen capture."""
+        return f"{datetime.now().timestamp()}"
 
     @adb_decorator()
     def media_play(self):
