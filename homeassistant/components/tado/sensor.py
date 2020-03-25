@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
             entities.extend(
                 [
-                    TadoZoneSensor(hass, tado, zone["name"], zone["id"], variable)
+                    TadoZoneSensor(tado, zone["name"], zone["id"], variable)
                     for variable in ZONE_SENSORS[zone_type]
                 ]
             )
@@ -67,7 +67,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for home in devices:
             entities.extend(
                 [
-                    TadoDeviceSensor(hass, tado, home["name"], home["id"], variable)
+                    TadoDeviceSensor(tado, home["name"], home["id"], variable)
                     for variable in DEVICE_SENSORS
                 ]
             )
@@ -78,9 +78,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class TadoZoneSensor(Entity):
     """Representation of a tado Sensor."""
 
-    def __init__(self, hass, tado, zone_name, zone_id, zone_variable):
+    def __init__(self, tado, zone_name, zone_id, zone_variable):
         """Initialize of the Tado Sensor."""
-        self.hass = hass
         self._tado = tado
 
         self.zone_name = zone_name
@@ -224,9 +223,8 @@ class TadoZoneSensor(Entity):
 class TadoDeviceSensor(Entity):
     """Representation of a tado Sensor."""
 
-    def __init__(self, hass, tado, device_name, device_id, device_variable):
+    def __init__(self, tado, device_name, device_id, device_variable):
         """Initialize of the Tado Sensor."""
-        self.hass = hass
         self._tado = tado
 
         self.device_name = device_name

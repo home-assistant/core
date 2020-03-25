@@ -52,22 +52,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for tado in api_list:
         for zone in tado.zones:
             if zone["type"] == TYPE_HOT_WATER:
-                entity = create_water_heater_entity(
-                    hass, tado, zone["name"], zone["id"]
-                )
+                entity = create_water_heater_entity(tado, zone["name"], zone["id"])
                 entities.append(entity)
 
     if entities:
         add_entities(entities, True)
 
 
-def create_water_heater_entity(hass, tado, name: str, zone_id: int):
+def create_water_heater_entity(tado, name: str, zone_id: int):
     """Create a Tado water heater device."""
     capabilities = tado.get_capabilities(zone_id)
 
-    import pprint
-
-    pprint.pprint(["get_capabilities", capabilities])
     supports_temperature_control = capabilities["canSetTemperature"]
 
     if supports_temperature_control and "temperatures" in capabilities:
@@ -79,7 +74,7 @@ def create_water_heater_entity(hass, tado, name: str, zone_id: int):
         max_temp = None
 
     entity = TadoWaterHeater(
-        hass, tado, name, zone_id, supports_temperature_control, min_temp, max_temp
+        tado, name, zone_id, supports_temperature_control, min_temp, max_temp
     )
 
     return entity
@@ -90,7 +85,6 @@ class TadoWaterHeater(WaterHeaterDevice):
 
     def __init__(
         self,
-        hass,
         tado,
         zone_name,
         zone_id,
@@ -99,7 +93,6 @@ class TadoWaterHeater(WaterHeaterDevice):
         max_temp,
     ):
         """Initialize of Tado water heater entity."""
-        self.hass = hass
         self._tado = tado
 
         self.zone_name = zone_name
