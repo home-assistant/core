@@ -1,10 +1,12 @@
 """Device discovery functions for Zigbee Home Automation."""
 
+from collections import Counter
 import logging
 from typing import Callable, List, Tuple
 
 from homeassistant import const as ha_const
 from homeassistant.core import callback
+from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import const as zha_const, registries as zha_regs, typing as zha_typing
@@ -157,4 +159,102 @@ class ProbeEndpoint:
             self._device_configs.update(overrides)
 
 
+class GroupProbe:
+    """Determine the appropriate component for a group."""
+
+    def __init__(self):
+        """Initialize instance."""
+        self._hass = None
+
+    def initialize(self, hass: HomeAssistantType) -> None:
+        """Initialize the group probe."""
+        self._hass = hass
+
+    @callback
+    def discover_group_entities(self, group: zha_typing.ZhaGroupType) -> None:
+        """Process a group and create any entities that are needed."""
+        # only create a group entity if there are 2 or more members in a group
+        if len(group.members) < 2:
+            _LOGGER.debug(
+                "Group: %s:0x%04x has less than 2 members - skipping entity discovery",
+                group.name,
+                group.group_id,
+            )
+            return
+
+        if group.entity_domain is None:
+            _LOGGER.debug(
+                "Group: %s:0x%04x has no user set entity domain - attempting entity domain discovery",
+                group.name,
+                group.group_id,
+            )
+            group.entity_domain = GroupProbe.determine_default_entity_domain(
+                self._hass, group
+            )
+
+        if group.entity_domain is None:
+            return
+
+        _LOGGER.debug(
+            "Group: %s:0x%04x has an entity domain of: %s after discovery",
+            group.name,
+            group.group_id,
+            group.entity_domain,
+        )
+
+        zha_gateway = self._hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
+        entity_class = zha_regs.ZHA_ENTITIES.get_group_entity(group.entity_domain)
+        if entity_class is None:
+            return
+
+        self._hass.data[zha_const.DATA_ZHA][group.entity_domain].append(
+            (
+                entity_class,
+                (
+                    group.domain_entity_ids,
+                    f"{group.entity_domain}_group_{group.group_id}",
+                    group.group_id,
+                    zha_gateway.coordinator_zha_device,
+                ),
+            )
+        )
+
+    @staticmethod
+    def determine_default_entity_domain(
+        hass: HomeAssistantType, group: zha_typing.ZhaGroupType
+    ):
+        """Determine the default entity domain for this group."""
+        if len(group.members) < 2:
+            _LOGGER.debug(
+                "Group: %s:0x%04x has less than 2 members so cannot default an entity domain",
+                group.name,
+                group.group_id,
+            )
+            return None
+
+        zha_gateway = hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
+        all_domain_occurrences = []
+        for device in group.members:
+            entities = async_entries_for_device(
+                zha_gateway.ha_entity_registry, device.device_id
+            )
+            all_domain_occurrences.extend(
+                [
+                    entity.domain
+                    for entity in entities
+                    if entity.domain in zha_regs.GROUP_ENTITY_DOMAINS
+                ]
+            )
+        counts = Counter(all_domain_occurrences)
+        domain = counts.most_common(1)[0][0]
+        _LOGGER.debug(
+            "The default entity domain is: %s for group: %s:0x%04x",
+            domain,
+            group.name,
+            group.group_id,
+        )
+        return domain
+
+
 PROBE = ProbeEndpoint()
+GROUP_PROBE = GroupProbe()
