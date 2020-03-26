@@ -259,6 +259,8 @@ def create_mock_bridge(hass):
         authorized=True,
         allow_unreachable=False,
         allow_groups=False,
+        add_sensors=True,
+        add_remotes=False,
         api=Mock(),
         reset_jobs=[],
         spec=hue.HueBridge,

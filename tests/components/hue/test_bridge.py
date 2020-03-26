@@ -14,7 +14,7 @@ async def test_bridge_setup(hass):
     entry = Mock()
     api = Mock(initialize=mock_coro)
     entry.data = {"host": "1.2.3.4", "username": "mock-username"}
-    hue_bridge = bridge.HueBridge(hass, entry, False, False)
+    hue_bridge = bridge.HueBridge(hass, entry, False, False, True, False)
 
     with patch("aiohue.Bridge", return_value=api), patch.object(
         hass.config_entries, "async_forward_entry_setup"
@@ -31,7 +31,7 @@ async def test_bridge_setup_invalid_username(hass):
     """Test we start config flow if username is no longer whitelisted."""
     entry = Mock()
     entry.data = {"host": "1.2.3.4", "username": "mock-username"}
-    hue_bridge = bridge.HueBridge(hass, entry, False, False)
+    hue_bridge = bridge.HueBridge(hass, entry, False, False, True, False)
 
     with patch.object(
         bridge, "authenticate_bridge", side_effect=errors.AuthenticationRequired
@@ -48,7 +48,7 @@ async def test_bridge_setup_timeout(hass):
     """Test we retry to connect if we cannot connect."""
     entry = Mock()
     entry.data = {"host": "1.2.3.4", "username": "mock-username"}
-    hue_bridge = bridge.HueBridge(hass, entry, False, False)
+    hue_bridge = bridge.HueBridge(hass, entry, False, False, True, False)
 
     with patch.object(
         bridge, "authenticate_bridge", side_effect=errors.CannotConnect
@@ -60,7 +60,7 @@ async def test_reset_if_entry_had_wrong_auth(hass):
     """Test calling reset when the entry contained wrong auth."""
     entry = Mock()
     entry.data = {"host": "1.2.3.4", "username": "mock-username"}
-    hue_bridge = bridge.HueBridge(hass, entry, False, False)
+    hue_bridge = bridge.HueBridge(hass, entry, False, False, True, False)
 
     with patch.object(
         bridge, "authenticate_bridge", side_effect=errors.AuthenticationRequired
@@ -76,7 +76,7 @@ async def test_reset_unloads_entry_if_setup(hass):
     """Test calling reset while the entry has been setup."""
     entry = Mock()
     entry.data = {"host": "1.2.3.4", "username": "mock-username"}
-    hue_bridge = bridge.HueBridge(hass, entry, False, False)
+    hue_bridge = bridge.HueBridge(hass, entry, False, False, True, False)
 
     with patch.object(
         bridge, "authenticate_bridge", return_value=mock_coro(Mock())
@@ -101,7 +101,7 @@ async def test_handle_unauthorized(hass):
     """Test handling an unauthorized error on update."""
     entry = Mock()
     entry.data = {"host": "1.2.3.4", "username": "mock-username"}
-    hue_bridge = bridge.HueBridge(hass, entry, False, False)
+    hue_bridge = bridge.HueBridge(hass, entry, False, False, True, False)
 
     with patch.object(
         bridge, "authenticate_bridge", return_value=mock_coro(Mock())
