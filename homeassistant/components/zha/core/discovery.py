@@ -223,6 +223,8 @@ class GroupProbe:
         zha_gateway = hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
         all_domain_occurrences = []
         for device in group.members:
+            if device.is_coordinator:
+                continue
             entities = async_entries_for_device(
                 zha_gateway.ha_entity_registry, device.device_id
             )
@@ -233,6 +235,8 @@ class GroupProbe:
                     if entity.domain in zha_regs.GROUP_ENTITY_DOMAINS
                 ]
             )
+        if not all_domain_occurrences:
+            return entity_domains
         # get all domains we care about if there are more than 2 entities of this domain
         counts = Counter(all_domain_occurrences)
         entity_domains = [domain[0] for domain in counts.items() if domain[1] >= 2]
