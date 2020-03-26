@@ -611,7 +611,7 @@ georss_qld_bushfire_alert_client==0.3
 getmac==0.8.1
 
 # homeassistant.components.gios
-gios==0.0.4
+gios==0.0.5
 
 # homeassistant.components.gitter
 gitterpy==0.1.7
@@ -1896,7 +1896,7 @@ smarthab==0.20
 # smbus-cffi==0.5.1
 
 # homeassistant.components.smhi
-smhi-pkg==1.0.10
+smhi-pkg==1.0.13
 
 # homeassistant.components.snapcast
 snapcast==2.0.10
