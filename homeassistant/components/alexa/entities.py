@@ -782,15 +782,23 @@ class CameraCapabilities(AlexaEntity):
 
     def interfaces(self):
         """Yield the supported interfaces."""
-        if self._validate_hass_url():
+        if self._check_requirements():
             supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
             if supported & camera.SUPPORT_STREAM:
                 yield AlexaCameraStreamController(self.entity)
-            yield AlexaEndpointHealth(self.hass, self.entity)
-            yield Alexa(self.hass)
 
-    def _validate_hass_url(self):
+        yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.hass)
+
+    def _check_requirements(self):
         """Check the hass URL for HTTPS scheme and port 443."""
+        if "stream" not in self.hass.config.components:
+            _LOGGER.error(
+                "%s requires stream component for AlexaCameraStreamController",
+                self.entity_id,
+            )
+            return False
+
         url = urlparse(network.async_get_external_url(self.hass))
         if url.scheme != "https" or (url.port is not None and url.port != 443):
             _LOGGER.error(

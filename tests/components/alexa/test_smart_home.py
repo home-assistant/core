@@ -3758,7 +3758,7 @@ async def test_vacuum_discovery_no_turn_on_or_off(hass):
     )
 
 
-async def test_camera_discovery(hass):
+async def test_camera_discovery(hass, mock_stream):
     """Test camera discovery."""
     device = (
         "camera.test",
@@ -3786,34 +3786,48 @@ async def test_camera_discovery(hass):
     assert "AAC" in configuration["audioCodecs"]
 
 
+async def test_camera_discovery_without_stream(hass):
+    """Test camera discovery without stream integration."""
+    device = (
+        "camera.test",
+        "idle",
+        {"friendly_name": "Test camera", "supported_features": 3},
+    )
+    with patch(
+        "homeassistant.helpers.network.async_get_external_url",
+        return_value="https://example.nabu.casa",
+    ):
+        appliance = await discovery_test(device, hass)
+
+        capabilities = assert_endpoint_capabilities(
+            appliance, "Alexa.EndpointHealth", "Alexa"
+        )
+
+
 @pytest.mark.parametrize(
     "url,result",
     [
-        ("http://nohttpswrongport.org:8123", 0),
-        ("https://httpswrongport.org:8123", 0),
-        ("http://nohttpsport443.org:443", 0),
-        ("tls://nohttpsport443.org:443", 0),
-        ("https://correctschemaandport.org:443", 1),
-        ("https://correctschemaandport.org", 1),
+        ("http://nohttpswrongport.org:8123", 2),
+        ("https://httpswrongport.org:8123", 2),
+        ("http://nohttpsport443.org:443", 2),
+        ("tls://nohttpsport443.org:443", 2),
+        ("https://correctschemaandport.org:443", 3),
+        ("https://correctschemaandport.org", 3),
     ],
 )
-async def test_camera_hass_urls(hass, url, result):
+async def test_camera_hass_urls(hass, mock_stream, url, result):
     """Test camera discovery with unsupported urls."""
-    request = get_new_request("Alexa.Discovery", "Discover")
-
-    # setup test devices
-    hass.states.async_set(
-        "camera.test", "idle", {"friendly_name": "Test camera", "supported_features": 3}
+    device = (
+        "camera.test",
+        "idle",
+        {"friendly_name": "Test camera", "supported_features": 3},
     )
-
-    alexa_config = MockConfig(hass)
-
     with patch(
         "homeassistant.helpers.network.async_get_external_url", return_value=url
     ):
-        msg = await smart_home.async_handle_message(hass, alexa_config, request)
-        await hass.async_block_till_done()
-        assert len(msg["event"]["payload"]["endpoints"]) == result
+        appliance = await discovery_test(device, hass)
+        capabilities = appliance["capabilities"]
+        assert len(appliance["capabilities"]) == result
 
 
 async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
