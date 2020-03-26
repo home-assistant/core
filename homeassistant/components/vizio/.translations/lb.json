@@ -50,6 +50,8 @@
         "step": {
             "init": {
                 "data": {
+                    "apps_to_include_or_exclude": "Apps fir mat abegr\u00e4ifen oder auszeschl\u00e9issen",
+                    "include_or_exclude": "Apps mat abez\u00e9ien oder auschl\u00e9issen?",
                     "timeout": "Z\u00e4itiwwerscheidung bei der Ufro vun der API (sekonnen)",
                     "volume_step": "Lautst\u00e4erkt Schr\u00ebtt Gr\u00e9isst"
                 },

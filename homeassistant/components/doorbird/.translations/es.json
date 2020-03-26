@@ -4,7 +4,7 @@
             "already_configured": "DoorBird ya est\u00e1 configurado"
         },
         "error": {
-            "cannot_connect": "No se pudo conectar, por favor int\u00e9ntelo de nuevo",
+            "cannot_connect": "No se pudo conectar, por favor int\u00e9ntalo de nuevo",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "unknown": "Error inesperado"
         },
@@ -16,7 +16,7 @@
                     "password": "Contrase\u00f1a",
                     "username": "Nombre de usuario"
                 },
-                "title": "Con\u00e9ctese a DoorBird"
+                "title": "Conectar con DoorBird"
             }
         },
         "title": "DoorBird"
@@ -27,7 +27,7 @@
                 "data": {
                     "events": "Lista de eventos separados por comas."
                 },
-                "description": "Agregue un nombre de evento separado por comas para cada evento del que desee realizar un seguimiento. Despu\u00e9s de introducirlos aqu\u00ed, utilice la aplicaci\u00f3n DoorBird para asignarlos a un evento espec\u00edfico. Consulte la documentaci\u00f3n en https://www.home-assistant.io/integrations/doorbird/#events. Ejemplo: somebody_pressed_the_button, movimiento"
+                "description": "A\u00f1ade un nombre de evento separado por comas para cada evento del que deseas realizar un seguimiento. Despu\u00e9s de introducirlos aqu\u00ed, utiliza la aplicaci\u00f3n DoorBird para asignarlos a un evento espec\u00edfico. Consulta la documentaci\u00f3n en https://www.home-assistant.io/integrations/doorbird/#events. Ejemplo: somebody_pressed_the_button, motion"
             }
         }
     }
