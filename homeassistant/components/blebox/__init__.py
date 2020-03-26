@@ -7,7 +7,7 @@ from blebox_uniapi.session import ApiHost
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TIMEOUT
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -54,7 +54,8 @@ async def async_add_blebox(klass, method, hass, config, async_add):
     """Add a BleBox device from the given config."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
-    timeout = config.get(CONF_TIMEOUT)
+    # timeout = config.get(CONF_TIMEOUT)
+    timeout = 3
 
     websession = async_get_clientsession(hass)
     api_host = ApiHost(host, port, timeout, websession, hass.loop, _LOGGER)
