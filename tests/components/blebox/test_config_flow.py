@@ -17,6 +17,7 @@ def init_config_flow(hass):
     """Init a configuration flow."""
     flow = config_flow.BleBoxConfigFlow()
     flow.hass = hass
+    flow.context = {"source": config_entries.SOURCE_USER}
     return flow
 
 
@@ -24,7 +25,7 @@ def init_config_flow(hass):
 def feature_mock():
     """Return a mocked feature."""
     feature = mock_only_feature(
-        blebox_uniapi.feature.Temperature,
+        blebox_uniapi.sensor.Temperature,
         unique_id="BleBox-tempSensor-1afe34db9437-0.temperature",
         full_name="tempSensor-0.temperature",
         device_class="temperature",
@@ -110,11 +111,24 @@ async def test_flow_with_unknown_failure(hass, product_class_mock):
         assert result["errors"] == {"base": "unknown"}
 
 
+async def test_flow_with_unsupported_version(hass, product_class_mock):
+    """Test that config flow works."""
+    with product_class_mock as products_class:
+        products_class.async_from_host = CoroutineMock(
+            side_effect=blebox_uniapi.error.UnsupportedBoxVersion
+        )
+
+        flow = init_config_flow(hass)
+        result = await flow.async_step_user()
+        result = await flow.async_step_user({"host": "172.2.3.4", "port": 80})
+        assert result["errors"] == {"base": "unsupported_version"}
+
+
 async def test_already_configured(hass):
     """Test that same device cannot be added twice."""
 
     feature = mock_only_feature(
-        blebox_uniapi.feature.Cover,
+        blebox_uniapi.cover.Cover,
         unique_id="BleBox-gateBox-1afe34db9437-0.position",
         full_name="gateBox-0.position",
         device_class="gate",
@@ -138,7 +152,7 @@ async def test_already_configured(hass):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "address_already_configured"
 
 
 async def test_async_setup(hass):
