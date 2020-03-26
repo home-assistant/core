@@ -19,7 +19,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MAC): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PASSWORD, default=None): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
     }
 )
 
@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Perform the setup for Switchbot devices."""
     name = config.get(CONF_NAME)
     mac_addr = config[CONF_MAC]
-    password = config[CONF_PASSWORD]
+    password = config.get(CONF_PASSWORD)
     add_entities([SwitchBot(mac_addr, name, password)])
 
 
