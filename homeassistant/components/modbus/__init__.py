@@ -108,7 +108,7 @@ async def async_setup(hass, config):
     def stop_modbus(event):
         """Stop Modbus service."""
         for client in hub_collect.values():
-            client.close()
+            del client
 
     def start_modbus(event):
         """Start Modbus service."""
