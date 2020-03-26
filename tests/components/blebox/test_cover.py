@@ -1,6 +1,6 @@
 """BleBox cover entities tests."""
 
-from asynctest import CoroutineMock
+from asynctest import CoroutineMock, call, patch
 import blebox_uniapi
 import pytest
 
@@ -19,13 +19,19 @@ from homeassistant.components.cover import (
     SUPPORT_STOP,
 )
 
-from .conftest import DefaultBoxTest, mock_config, mock_feature
+from .conftest import DefaultBoxTest, mock_feature
 
 
 class CoverTest(DefaultBoxTest):
     """Shared test helpers for Cover tests."""
 
     HASS_TYPE = cover
+
+    @pytest.fixture(autouse=True)
+    def feature_mock(self):
+        """Return the default mocked Cover feature."""
+        self._feature_mock = self.default_mock()
+        return self._feature_mock
 
     def assert_state(self, entity, state):
         """Assert that cover state is correct."""
@@ -143,27 +149,15 @@ class CoverTest(DefaultBoxTest):
         await entity.async_stop_cover()
         self.assert_state(entity, STATE_OPEN)
 
-    async def test_async_setup_platform(self, hass):
-        """Test async_setup_platform (for coverage)."""
-        config = mock_config("172.90.80.70")
-        config.add_to_hass(hass)
-
-        def async_add(entities, state):
-            assert state is True
-            assert len(entities) == 1
-
-        assert await cover.async_setup_platform(hass, config.data, async_add)
-
 
 class TestShutter(CoverTest):
     """Tests for cover devices representing a BleBox ShutterBox."""
 
-    @pytest.fixture(autouse=True)
-    def feature_mock(self):
-        """Return a mocked Cover feature representing a shutterBox."""
-        self._feature_mock = mock_feature(
+    def default_mock(self):
+        """Return a default cover entity mock."""
+        return mock_feature(
             "covers",
-            blebox_uniapi.feature.Cover,
+            blebox_uniapi.cover.Cover,
             unique_id="BleBox-shutterBox-2bee34e750b8-position",
             full_name="shutterBox-position",
             device_class="shutter",
@@ -172,12 +166,11 @@ class TestShutter(CoverTest):
             has_stop=True,
             is_slider=True,
         )
-        return self._feature_mock
 
     async def test_init(self, hass):
         """Test cover default state."""
 
-        entity = (await self.async_entities(hass))[0]
+        entity = (await self.async_mock_entities(hass))[0]
 
         assert entity.name == "shutterBox-position"
         assert entity.unique_id == "BleBox-shutterBox-2bee34e750b8-position"
@@ -213,16 +206,42 @@ class TestShutter(CoverTest):
         await entity.async_set_cover_position(**{ATTR_POSITION: 1})  # almost closed
         self.assert_state(entity, STATE_OPENING)
 
+    def unkown_position_feature_mock(self):
+        """Return mocked feature representing an invalid+possible position."""
+        feature_mock = self._feature_mock
+
+        def update():
+            feature_mock.state = 4  # opening
+            feature_mock.current = -1
+
+        feature_mock.async_update = CoroutineMock(side_effect=update)
+
+    async def test_unknown_position(self, hass):
+        """Test cover position setting."""
+        self.unkown_position_feature_mock()
+
+        with patch("homeassistant.components.blebox.cover._LOGGER.warning") as warn:
+            entity = await self.async_updated_entity(hass, 0)
+            self.assert_state(entity, STATE_OPEN)
+            assert entity.current_cover_position is None
+            warn.assert_has_calls(
+                [
+                    call(
+                        "Position for %s is unknown. Try calibrating the device.",
+                        "shutterBox-position",
+                    )
+                ]
+            )
+
 
 class TestGateBox(CoverTest):
     """Tests for cover devices representing a BleBox gateBox."""
 
-    @pytest.fixture(autouse=True)
-    def feature_mock(self):
-        """Return a mocked Cover feature representing a gateBox."""
-        self._feature_mock = mock_feature(
+    def default_mock(self):
+        """Return a default gatebox cover entity mock."""
+        return mock_feature(
             "covers",
-            blebox_uniapi.feature.Cover,
+            blebox_uniapi.cover.Cover,
             unique_id="BleBox-gateBox-1afe34db9437-position",
             device_class="gatebox",
             full_name="gateBox-position",
@@ -231,7 +250,6 @@ class TestGateBox(CoverTest):
             has_stop=False,
             is_slider=False,
         )
-        return self._feature_mock
 
     def updateable_feature_mock(self):
         """Set up a mocked feature that can be updated."""
@@ -247,7 +265,7 @@ class TestGateBox(CoverTest):
     async def test_init(self, hass):
         """Test cover default state."""
 
-        entity = (await self.async_entities(hass))[0]
+        entity = (await self.async_mock_entities(hass))[0]
 
         assert entity.name == "gateBox-position"
         assert entity.unique_id == "BleBox-gateBox-1afe34db9437-position"
@@ -295,12 +313,11 @@ class TestGateBox(CoverTest):
 class TestGateController(CoverTest):
     """Tests for cover devices representing a BleBox gateController."""
 
-    @pytest.fixture(autouse=True)
-    def feature_mock(self):
-        """Return a mocked Cover feature representing a gateController."""
-        self._feature_mock = mock_feature(
+    def default_mock(self):
+        """Return a default gateController cover entity mock."""
+        return mock_feature(
             "covers",
-            blebox_uniapi.feature.Cover,
+            blebox_uniapi.cover.Cover,
             unique_id="BleBox-gateController-2bee34e750b8-position",
             full_name="gateController-position",
             device_class="gate",
@@ -309,12 +326,11 @@ class TestGateController(CoverTest):
             has_stop=True,
             is_slider=True,
         )
-        return self._feature_mock
 
     async def test_init(self, hass):
         """Test cover default state."""
 
-        entity = (await self.async_entities(hass))[0]
+        entity = (await self.async_mock_entities(hass))[0]
 
         assert entity.name == "gateController-position"
         assert entity.unique_id == "BleBox-gateController-2bee34e750b8-position"

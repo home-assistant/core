@@ -1,4 +1,6 @@
-"""BleBox cover entity implementation."""
+"""BleBox cover entity."""
+
+import logging
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -14,22 +16,29 @@ from homeassistant.components.cover import (
     SUPPORT_STOP,
     CoverDevice,
 )
+from homeassistant.exceptions import PlatformNotReady
 
 from . import CommonEntity, async_add_blebox
 
-# NOTE: this should be removed once client library uses a semaphore
-PARALLEL_UPDATES = 1
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add, discovery_info=None):
-    """Set up BleBox platform."""
-    return await async_add_blebox(BleBoxCoverEntity, "covers", hass, config, async_add)
+    """Set up BleBox cover."""
+    return await async_add_blebox(
+        BleBoxCoverEntity, "covers", hass, config, async_add, PlatformNotReady
+    )
 
 
 async def async_setup_entry(hass, config_entry, async_add):
     """Set up a BleBox entry."""
     return await async_add_blebox(
-        BleBoxCoverEntity, "covers", hass, config_entry.data, async_add,
+        BleBoxCoverEntity,
+        "covers",
+        hass,
+        config_entry.data,
+        async_add,
+        PlatformNotReady,
     )
 
 
@@ -77,6 +86,13 @@ class BleBoxCoverEntity(CommonEntity, CoverDevice):
     def current_cover_position(self):
         """Return the current cover position."""
         position = self._feature.current
+        if position == -1:  # possible for shutterBox
+            name = self.name
+            _LOGGER.warning(
+                "Position for %s is unknown. Try calibrating the device.", name
+            )
+            return None
+
         return None if position is None else 100 - position
 
     @property

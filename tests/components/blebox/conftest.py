@@ -2,11 +2,13 @@
 
 from unittest import mock
 
-from asynctest import CoroutineMock, patch
+from asynctest import CoroutineMock, call, patch
 import blebox_uniapi
+import pytest
 
 from homeassistant.components.blebox import const
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.exceptions import PlatformNotReady
 
 from tests.common import MockConfigEntry
 
@@ -50,7 +52,7 @@ class DefaultBoxTest:
     IP = "172.0.0.1"
     HASS_TYPE = None  # Must be set in subclass
 
-    async def async_entities(self, hass):
+    async def async_mock_entities(self, hass):
         """Return a new entities configured through HASS."""
 
         config = mock_config(self.IP)
@@ -62,6 +64,7 @@ class DefaultBoxTest:
 
         def add_entries(entries, update):
             for entry in entries:
+                entry.hass = hass
                 all_entries.append(entry)
 
         assert await mod.async_setup_entry(hass, config, add_entries) is True
@@ -69,6 +72,57 @@ class DefaultBoxTest:
 
     async def async_updated_entity(self, hass, index):
         """Return an already-updated entity created through HASS."""
-        entity = (await self.async_entities(hass))[index]
+        entity = (await self.async_mock_entities(hass))[index]
         await entity.async_update()
         return entity
+
+    async def test_setup_failure(self, hass):
+        """Mock the Product class."""
+
+        path = "homeassistant.components.blebox.Products"
+        patcher = patch(path, mock.DEFAULT, blebox_uniapi.products.Products, True, True)
+        products_class = patcher.start()
+
+        products_class.async_from_host = CoroutineMock(
+            side_effect=blebox_uniapi.error.ClientError
+        )
+
+        with patch("homeassistant.components.blebox._LOGGER.error") as error:
+            with pytest.raises(PlatformNotReady):
+                await self.async_mock_entities(hass)
+
+            error.assert_has_calls(
+                [call("Identify failed at %s:%d (%s)", "172.0.0.1", 80, mock.ANY,)]
+            )
+            assert isinstance(error.call_args[0][3], blebox_uniapi.error.ClientError)
+
+    def default_mock(self):
+        """Return a default entity mock."""
+        raise NotImplementedError("Implement me")  # pragma: no cover
+
+    async def test_update_failure(self, hass):
+        """Set up a mocked feature which can be updated."""
+
+        feature_mock = self.default_mock()
+        feature_mock.async_update = CoroutineMock(
+            side_effect=blebox_uniapi.error.ClientError
+        )
+        name = feature_mock.full_name
+
+        with patch("homeassistant.components.blebox._LOGGER.error") as error:
+            await self.async_updated_entity(hass, 0)
+
+            error.assert_has_calls([call("Updating '%s' failed: %s", name, mock.ANY)])
+            assert isinstance(error.call_args[0][2], blebox_uniapi.error.ClientError)
+
+    async def test_async_setup_platform(self, hass):
+        """Test async_setup_platform (for coverage)."""
+        config = mock_config("172.90.80.70")
+        config.add_to_hass(hass)
+
+        def async_add(entities, state):
+            assert state is True
+            assert len(entities) in (1, 2)  # 2 only for switchbox
+
+        mod = self.HASS_TYPE
+        assert await mod.async_setup_platform(hass, config.data, async_add)

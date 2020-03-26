@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+from blebox_uniapi.error import ConnectionError, Error
 from blebox_uniapi.products import Products
 from blebox_uniapi.session import ApiHost
 import voluptuous as vol
@@ -52,7 +53,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-async def async_add_blebox(klass, method, hass, config, async_add):
+async def async_add_blebox(klass, method, hass, config, async_add, exception):
     """Add a BleBox device from the given config."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -61,7 +62,14 @@ async def async_add_blebox(klass, method, hass, config, async_add):
 
     websession = async_get_clientsession(hass)
     api_host = ApiHost(host, port, timeout, websession, hass.loop, _LOGGER)
-    product = await Products.async_from_host(api_host)
+    try:
+        product = await Products.async_from_host(api_host)
+    except ConnectionError as ex:
+        _LOGGER.error("Identify failed (%s)", ex)
+        raise exception from ex
+    except Error as ex:
+        _LOGGER.error("Identify failed at %s:%d (%s)", host, port, ex)
+        raise exception from ex
 
     entities = []
     for entity in product.features[method]:
@@ -90,4 +98,7 @@ class CommonEntity:
 
     async def async_update(self):
         """Update the cover state."""
-        await self._feature.async_update()
+        try:
+            await self._feature.async_update()
+        except Error as ex:
+            _LOGGER.error("Updating '%s' failed: %s", self.name, ex)
