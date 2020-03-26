@@ -922,7 +922,7 @@ netdisco==2.6.0
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==0.7.1
+nexia==0.7.2
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.1.0
