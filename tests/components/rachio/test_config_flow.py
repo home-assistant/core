@@ -123,3 +123,4 @@ async def test_form_homekit(hass):
         DOMAIN, context={"source": "homekit"}
     )
     assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
