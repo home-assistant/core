@@ -217,7 +217,6 @@ class FanGroup(BaseFan):
 
     async def async_update(self):
         """Attempt to retrieve on off state from the fan."""
-        await super().async_update()
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
         states: List[State] = list(filter(None, all_states))
         on_states: List[State] = [
