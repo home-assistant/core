@@ -16,17 +16,14 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 DATA_SCHLUTER_SESSION = "schluter_session"
 DATA_SCHLUTER_API = "schluter_api"
-DEFAULT_TIMEOUT = 10
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 SCHLUTER_CONFIG_FILE = ".schluter.conf"
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
+        vol.Required(DOMAIN): vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+                vol.Required(CONF_PASSWORD): cv.string
             }
         )
     },
@@ -34,14 +31,27 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_schluter(hass, config, api, authenticator):
+def setup(hass, config):
     """Set up the Schluter component."""
+    _LOGGER.debug("Starting setup of schluter")
+    
+    conf = config[DOMAIN]
+    api_http_session = Session()
+    api = Api(timeout=conf.get(CONF_TIMEOUT), http_session=api_http_session)
+
+    authenticator = Authenticator(
+        api,
+        conf.get(CONF_USERNAME),
+        conf.get(CONF_PASSWORD),
+        session_id_cache_file=hass.config.path(SCHLUTER_CONFIG_FILE),
+    )
 
     authentication = None
     try:
         authentication = authenticator.authenticate()
     except RequestException as ex:
         _LOGGER.error("Unable to connect to Schluter service: %s", ex)
+        return
 
     state = authentication.state
 
@@ -59,26 +69,5 @@ async def async_setup_schluter(hass, config, api, authenticator):
         _LOGGER.error("Invalid email provided")
         return False
 
+    _LOGGER.error("Unknown set up error: %s", state)
     return False
-
-
-async def async_setup(hass, config):
-    """Set up the Schluter component."""
-    _LOGGER.debug("Starting setup of schluter")
-    conf = config[DOMAIN]
-    api_http_session = None
-    try:
-        api_http_session = Session()
-    except RequestException as ex:
-        _LOGGER.warning("Creating HTTP session failed with: %s", ex)
-
-    api = Api(timeout=conf.get(CONF_TIMEOUT), http_session=api_http_session)
-
-    authenticator = Authenticator(
-        api,
-        conf.get(CONF_USERNAME),
-        conf.get(CONF_PASSWORD),
-        session_id_cache_file=hass.config.path(SCHLUTER_CONFIG_FILE),
-    )
-
-    return await async_setup_schluter(hass, config, api, authenticator)
