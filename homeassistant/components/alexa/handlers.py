@@ -1538,7 +1538,7 @@ async def async_api_initialize_camera_stream(hass, config, directive, context):
         "cameraStreams": [
             {
                 "uri": f"{external_url}{stream_source}",
-                "protocol": "RTSP",
+                "protocol": "HLS",
                 "resolution": {"width": 1280, "height": 720},
                 "authorizationType": "NONE",
                 "videoCodec": "H264",

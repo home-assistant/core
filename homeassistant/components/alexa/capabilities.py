@@ -1893,11 +1893,7 @@ class AlexaCameraStreamController(AlexaCapability):
         camera_stream_configurations = [
             {
                 "protocols": ["HLS"],
-                "resolutions": [
-                    {"width": 1920, "height": 1080},
-                    {"width": 1280, "height": 720},
-                    {"width": 640, "height": 480},
-                ],
+                "resolutions": [{"width": 1280, "height": 720}],
                 "authorizationTypes": ["NONE"],
                 "videoCodecs": ["H264"],
                 "audioCodecs": ["AAC"],
