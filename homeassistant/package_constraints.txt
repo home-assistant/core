@@ -14,7 +14,7 @@ distro==1.4.0
 hass-nabucasa==0.32.2
 home-assistant-frontend==20200318.1
 importlib-metadata==1.5.0
-jinja2>=2.10.3
+jinja2>=2.11.1
 netdisco==2.6.0
 pip>=8.0.3
 python-slugify==4.0.0
