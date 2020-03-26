@@ -144,7 +144,7 @@ base36==0.1.1
 bellows-homeassistant==0.15.2
 
 # homeassistant.components.blebox
-blebox_uniapi==0.1.1
+blebox_uniapi==1.2.0
 
 # homeassistant.components.bom
 bomradarloop==0.1.4
