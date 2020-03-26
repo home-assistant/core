@@ -96,6 +96,26 @@ class DefaultBoxTest:
             )
             assert isinstance(error.call_args[0][3], blebox_uniapi.error.ClientError)
 
+    async def test_setup_failure_on_connection(self, hass):
+        """Mock the Product class."""
+
+        path = "homeassistant.components.blebox.Products"
+        patcher = patch(path, mock.DEFAULT, blebox_uniapi.products.Products, True, True)
+        products_class = patcher.start()
+
+        products_class.async_from_host = CoroutineMock(
+            side_effect=blebox_uniapi.error.ConnectionError
+        )
+
+        with patch("homeassistant.components.blebox._LOGGER.error") as error:
+            with pytest.raises(PlatformNotReady):
+                await self.async_mock_entities(hass)
+
+            error.assert_has_calls([call("Identify failed (%s)", mock.ANY,)])
+            assert isinstance(
+                error.call_args[0][1], blebox_uniapi.error.ConnectionError
+            )
+
     def default_mock(self):
         """Return a default entity mock."""
         raise NotImplementedError("Implement me")  # pragma: no cover
