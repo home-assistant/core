@@ -36,11 +36,6 @@ class AbstractConfig(ABC):
         """Return config locale."""
 
     @property
-    def hass_url(self):
-        """Return hass url."""
-        return None
-
-    @property
     def entity_config(self):
         """Return entity config."""
         return {}

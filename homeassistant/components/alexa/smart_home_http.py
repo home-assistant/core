@@ -3,7 +3,6 @@ import logging
 
 from homeassistant import core
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.helpers import network
 
 from .auth import Auth
 from .config import AbstractConfig
@@ -13,7 +12,6 @@ from .const import (
     CONF_ENDPOINT,
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
-    CONF_HASS_URL,
     CONF_LOCALE,
 )
 from .smart_home import async_handle_message
@@ -60,14 +58,6 @@ class AlexaConfig(AbstractConfig):
     def locale(self):
         """Return config locale."""
         return self._config.get(CONF_LOCALE)
-
-    @property
-    def hass_url(self):
-        """Return hass url."""
-        hass_url = network.async_get_external_url(self.hass)
-        if self._config.get(CONF_HASS_URL) is not None:
-            hass_url = self._config.get(CONF_HASS_URL)
-        return hass_url
 
     def should_expose(self, entity_id):
         """If an entity should be exposed."""

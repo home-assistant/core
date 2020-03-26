@@ -42,6 +42,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.helpers import network
 import homeassistant.util.color as color_util
 from homeassistant.util.decorator import Registry
 import homeassistant.util.dt as dt_util
@@ -1532,10 +1533,11 @@ async def async_api_initialize_camera_stream(hass, config, directive, context):
     entity = directive.entity
     stream_source = await camera.async_request_stream(hass, entity.entity_id, fmt="hls")
     camera_image = await camera.async_get_image_url(hass, entity.entity_id)
+    external_url = network.async_get_external_url(hass)
     payload = {
         "cameraStreams": [
             {
-                "uri": f"{config.hass_url}{stream_source}",
+                "uri": f"{external_url}{stream_source}",
                 "protocol": "RTSP",
                 "resolution": {"width": 1280, "height": 720},
                 "authorizationType": "NONE",
@@ -1543,7 +1545,7 @@ async def async_api_initialize_camera_stream(hass, config, directive, context):
                 "audioCodec": "AAC",
             }
         ],
-        "imageUri": f"{config.hass_url}{camera_image}",
+        "imageUri": f"{external_url}{camera_image}",
     }
     return directive.response(
         name="Response", namespace="Alexa.CameraStreamController", payload=payload

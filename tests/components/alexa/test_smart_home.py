@@ -3765,7 +3765,11 @@ async def test_camera_discovery(hass):
         "idle",
         {"friendly_name": "Test camera", "supported_features": 3},
     )
-    appliance = await discovery_test(device, hass)
+    with patch(
+        "homeassistant.helpers.network.async_get_external_url",
+        return_value="https://example.nabu.casa",
+    ):
+        appliance = await discovery_test(device, hass)
 
     capabilities = assert_endpoint_capabilities(
         appliance, "Alexa.CameraStreamController", "Alexa.EndpointHealth", "Alexa"
@@ -3784,7 +3788,18 @@ async def test_camera_discovery(hass):
     assert "AAC" in configuration["audioCodecs"]
 
 
-async def test_camera_hass_urls(hass):
+@pytest.mark.parametrize(
+    "url,result",
+    [
+        ("http://nohttpswrongport.org:8123", 0),
+        ("https://httpswrongport.org:8123", 0),
+        ("http://nohttpsport443.org:443", 0),
+        ("tls://nohttpsport443.org:443", 0),
+        ("https://correctschemaandport.org:443", 1),
+        ("https://correctschemaandport.org", 1),
+    ],
+)
+async def test_camera_hass_urls(hass, url, result):
     """Test camera discovery with unsupported urls."""
     request = get_new_request("Alexa.Discovery", "Discover")
 
@@ -3795,35 +3810,12 @@ async def test_camera_hass_urls(hass):
 
     alexa_config = MockConfig(hass)
 
-    alexa_config.hass_url = "http://nohttpswrongport.org:8123"
-    msg = await smart_home.async_handle_message(hass, alexa_config, request)
-    await hass.async_block_till_done()
-    assert len(msg["event"]["payload"]["endpoints"]) == 0
-
-    alexa_config.hass_url = "https://httpswrongport.org:8123"
-    msg = await smart_home.async_handle_message(hass, alexa_config, request)
-    await hass.async_block_till_done()
-    assert len(msg["event"]["payload"]["endpoints"]) == 0
-
-    alexa_config.hass_url = "http://nohttpsport443.org:443"
-    msg = await smart_home.async_handle_message(hass, alexa_config, request)
-    await hass.async_block_till_done()
-    assert len(msg["event"]["payload"]["endpoints"]) == 0
-
-    alexa_config.hass_url = "tls://nohttpsport443.org:443"
-    msg = await smart_home.async_handle_message(hass, alexa_config, request)
-    await hass.async_block_till_done()
-    assert len(msg["event"]["payload"]["endpoints"]) == 0
-
-    alexa_config.hass_url = "https://correctschemaandport.org:443"
-    msg = await smart_home.async_handle_message(hass, alexa_config, request)
-    await hass.async_block_till_done()
-    assert len(msg["event"]["payload"]["endpoints"]) == 1
-
-    alexa_config.hass_url = "https://correctschemaandport.org"
-    msg = await smart_home.async_handle_message(hass, alexa_config, request)
-    await hass.async_block_till_done()
-    assert len(msg["event"]["payload"]["endpoints"]) == 1
+    with patch(
+        "homeassistant.helpers.network.async_get_external_url", return_value=url
+    ):
+        msg = await smart_home.async_handle_message(hass, alexa_config, request)
+        await hass.async_block_till_done()
+        assert len(msg["event"]["payload"]["endpoints"]) == result
 
 
 async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
@@ -3855,6 +3847,9 @@ async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
         return_value=mock_coro("rtsp://example.local"),
+    ), patch(
+        "homeassistant.helpers.network.async_get_external_url",
+        return_value="https://mycamerastream.test",
     ):
         msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request)
         await hass.async_block_till_done()

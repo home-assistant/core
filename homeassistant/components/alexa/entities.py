@@ -1,4 +1,5 @@
 """Alexa entity adapters."""
+import logging
 from typing import List
 from urllib.parse import urlparse
 
@@ -35,6 +36,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import network
 from homeassistant.util.decorator import Registry
 
 from .capabilities import (
@@ -70,6 +72,8 @@ from .capabilities import (
     AlexaToggleController,
 )
 from .const import CONF_DESCRIPTION, CONF_DISPLAY_CATEGORIES
+
+_LOGGER = logging.getLogger(__name__)
 
 ENTITY_ADAPTERS = Registry()
 
@@ -786,15 +790,13 @@ class CameraCapabilities(AlexaEntity):
             yield Alexa(self.hass)
 
     def _validate_hass_url(self):
-        """Validate the hass URL for cameras.
-
-        Check the URL for HTTPS scheme and port 443.
-        """
-        hass_url = self.config.hass_url
-        if urlparse(hass_url).scheme not in ["https"]:
-            return False
-
-        if urlparse(hass_url).port is not None and urlparse(hass_url).port != 443:
+        """Check the hass URL for HTTPS scheme and port 443."""
+        url = urlparse(network.async_get_external_url(self.hass))
+        if url.scheme != "https" or (url.port is not None and url.port != 443):
+            _LOGGER.error(
+                "%s requires HTTPS support on port 443 for AlexaCameraStreamController",
+                self.entity_id,
+            )
             return False
 
         return True

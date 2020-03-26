@@ -18,7 +18,6 @@ from .const import (
     CONF_ENDPOINT,
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
-    CONF_HASS_URL,
     CONF_LOCALE,
     CONF_SUPPORTED_LOCALES,
     CONF_TEXT,
@@ -50,7 +49,6 @@ SMART_HOME_SCHEMA = vol.Schema(
         vol.Optional(CONF_LOCALE, default=DEFAULT_LOCALE): vol.In(
             CONF_SUPPORTED_LOCALES
         ),
-        vol.Optional(CONF_HASS_URL): cv.url,
         vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
         vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ALEXA_ENTITY_SCHEMA},
     }
