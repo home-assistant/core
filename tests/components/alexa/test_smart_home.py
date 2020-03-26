@@ -3780,9 +3780,7 @@ async def test_camera_discovery(hass):
     )
     configuration = camera_stream_capability["cameraStreamConfigurations"][0]
     assert "HLS" in configuration["protocols"]
-    assert {"width": 1920, "height": 1080} in configuration["resolutions"]
     assert {"width": 1280, "height": 720} in configuration["resolutions"]
-    assert {"width": 640, "height": 480} in configuration["resolutions"]
     assert "NONE" in configuration["authorizationTypes"]
     assert "H264" in configuration["videoCodecs"]
     assert "AAC" in configuration["audioCodecs"]
@@ -3865,7 +3863,7 @@ async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
         assert msg["header"]["name"] == "Response"
         camera_streams = msg["payload"]["cameraStreams"]
         assert "https://mycamerastream.test/api/hls/" in camera_streams[0]["uri"]
-        assert camera_streams[0]["protocol"] == "RTSP"
+        assert camera_streams[0]["protocol"] == "HLS"
         assert camera_streams[0]["resolution"]["width"] == 1280
         assert camera_streams[0]["resolution"]["height"] == 720
         assert camera_streams[0]["authorizationType"] == "NONE"
