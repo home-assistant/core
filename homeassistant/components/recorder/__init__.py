@@ -346,7 +346,6 @@ class Recorder(threading.Thread):
         # has changed.  This reduces the disk io.
         while True:
             event = self.queue.get()
-
             if event is None:
                 self._close_run()
                 self._close_connection()
@@ -360,7 +359,7 @@ class Recorder(threading.Thread):
                 self.queue.task_done()
                 if self.commit_interval:
                     self._timechanges_seen += 1
-                    if self.commit_interval >= self._timechanges_seen:
+                    if self._timechanges_seen >= self.commit_interval:
                         self._timechanges_seen = 0
                         self._commit_event_session_or_retry()
                 continue
@@ -380,6 +379,9 @@ class Recorder(threading.Thread):
                 self.event_session.flush()
             except (TypeError, ValueError):
                 _LOGGER.warning("Event is not JSON serializable: %s", event)
+            except Exception as err:  # pylint: disable=broad-except
+                # Must catch the exception to prevent the loop from collapsing
+                _LOGGER.exception("Error adding event: %s", err)
 
             if dbevent and event.event_type == EVENT_STATE_CHANGED:
                 try:
@@ -391,6 +393,9 @@ class Recorder(threading.Thread):
                         "State is not JSON serializable: %s",
                         event.data.get("new_state"),
                     )
+                except Exception as err:  # pylint: disable=broad-except
+                    # Must catch the exception to prevent the loop from collapsing
+                    _LOGGER.exception("Error adding state change: %s", err)
 
             # If they do not have a commit interval
             # than we commit right away
@@ -408,17 +413,26 @@ class Recorder(threading.Thread):
             try:
                 self._commit_event_session()
                 return
-
-            except exc.OperationalError as err:
-                _LOGGER.error(
-                    "Error in database connectivity: %s. " "(retrying in %s seconds)",
-                    err,
-                    self.db_retry_wait,
-                )
+            except (exc.InternalError, exc.OperationalError) as err:
+                if err.connection_invalidated:
+                    _LOGGER.error(
+                        "Database connection invalidated: %s. "
+                        "(retrying in %s seconds)",
+                        err,
+                        self.db_retry_wait,
+                    )
+                else:
+                    _LOGGER.error(
+                        "Error in database connectivity: %s. "
+                        "(retrying in %s seconds)",
+                        err,
+                        self.db_retry_wait,
+                    )
                 tries += 1
 
-            except exc.SQLAlchemyError:
-                _LOGGER.exception("Error saving events")
+            except Exception as err:  # pylint: disable=broad-except
+                # Must catch the exception to prevent the loop from collapsing
+                _LOGGER.exception("Error saving events: %s", err)
                 return
 
         _LOGGER.error(
@@ -427,10 +441,15 @@ class Recorder(threading.Thread):
         )
         try:
             self.event_session.close()
-        except exc.SQLAlchemyError:
-            _LOGGER.exception("Failed to close event session.")
+        except Exception as err:  # pylint: disable=broad-except
+            # Must catch the exception to prevent the loop from collapsing
+            _LOGGER.exception("Error while closing event session: %s", err)
 
-        self.event_session = self.get_session()
+        try:
+            self.event_session = self.get_session()
+        except Exception as err:  # pylint: disable=broad-except
+            # Must catch the exception to prevent the loop from collapsing
+            _LOGGER.exception("Error while creating new event session: %s", err)
 
     def _commit_event_session(self):
         try:

@@ -93,14 +93,10 @@ async def async_setup_entry(hass, config_entry):
     """
 
     zha_data = hass.data.setdefault(DATA_ZHA, {})
-    zha_data[DATA_ZHA_PLATFORM_LOADED] = {}
     config = zha_data.get(DATA_ZHA_CONFIG, {})
 
-    zha_data[DATA_ZHA_DISPATCHERS] = []
     for component in COMPONENTS:
-        zha_data[component] = []
-        coro = hass.config_entries.async_forward_entry_setup(config_entry, component)
-        zha_data[DATA_ZHA_PLATFORM_LOADED][component] = hass.async_create_task(coro)
+        zha_data.setdefault(component, [])
 
     if config.get(CONF_ENABLE_QUIRKS, True):
         # needs to be done here so that the ZHA module is finished loading
@@ -109,6 +105,12 @@ async def async_setup_entry(hass, config_entry):
 
     zha_gateway = ZHAGateway(hass, config, config_entry)
     await zha_gateway.async_initialize()
+
+    zha_data[DATA_ZHA_DISPATCHERS] = []
+    zha_data[DATA_ZHA_PLATFORM_LOADED] = []
+    for component in COMPONENTS:
+        coro = hass.config_entries.async_forward_entry_setup(config_entry, component)
+        zha_data[DATA_ZHA_PLATFORM_LOADED].append(hass.async_create_task(coro))
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
     device_registry.async_get_or_create(
@@ -128,7 +130,7 @@ async def async_setup_entry(hass, config_entry):
         await zha_data[DATA_ZHA_GATEWAY].async_update_device_storage()
 
     hass.bus.async_listen_once(ha_const.EVENT_HOMEASSISTANT_STOP, async_zha_shutdown)
-    hass.async_create_task(async_load_entities(hass, config_entry))
+    asyncio.create_task(async_load_entities(hass, config_entry))
     return True
 
 
@@ -153,11 +155,7 @@ async def async_load_entities(
 ) -> None:
     """Load entities after integration was setup."""
     await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].async_prepare_entities()
-    to_setup = [
-        hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED][comp]
-        for comp in COMPONENTS
-        if hass.data[DATA_ZHA][comp]
-    ]
+    to_setup = hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED]
     results = await asyncio.gather(*to_setup, return_exceptions=True)
     for res in results:
         if isinstance(res, Exception):
