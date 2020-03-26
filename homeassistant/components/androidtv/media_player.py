@@ -500,9 +500,11 @@ class ADBDevice(MediaPlayerDevice):
         return None
 
     @property
-    def media_image_url(self):
-        """URL for obtaining a screen capture."""
+    def media_image_hash(self):
+        """Hash value for media image."""
         return f"{datetime.now().timestamp()}"
+
+        return None
 
     @adb_decorator()
     def media_play(self):
