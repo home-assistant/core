@@ -823,7 +823,7 @@ def do_fix_scripts_permissions():
     # fix permissions
     try:
         subprocess.check_output(
-            'su -c "chmod -R 777 ' + str(os.path.dirname(__file__)) + "/scripts/" + '"',
+            "chmod -R 777 " + str(os.path.dirname(__file__)) + "/scripts/",
             shell=True,  # nosec
         )
     except Exception as e:

@@ -267,6 +267,7 @@ async def async_setup(hass, config):
         dirs = os.listdir("/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/")
         for d in dirs:
             ais_usb_flash_drives.append(d)
+        # set drives on list
         hass.async_add_job(
             hass.services.async_call(
                 "input_select",

@@ -91,3 +91,6 @@ ais_usb:
 
 zone:
 
+logger:
+  default: info
+
