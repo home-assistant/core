@@ -8,14 +8,22 @@ import voluptuous as vol
 from homeassistant import config_entries, core
 from homeassistant.components import persistent_notification
 from homeassistant.const import CONF_HOST
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 
 from .bridge import HueBridge
 from .const import (
     CONF_ALLOW_HUE_GROUPS,
     CONF_ALLOW_UNREACHABLE,
+    CONF_INCLUDE_HUE_REMOTES,
+    CONF_INCLUDE_HUE_SENSORS,
     DEFAULT_ALLOW_HUE_GROUPS,
     DEFAULT_ALLOW_UNREACHABLE,
+    DEFAULT_INCLUDE_HUE_REMOTES,
+    DEFAULT_INCLUDE_HUE_SENSORS,
     DOMAIN,
 )
 
@@ -98,6 +106,38 @@ async def async_setup(hass, config):
     return True
 
 
+async def update_listener(hass: core.HomeAssistant, entry: config_entries.ConfigEntry):
+    """Update entry data with selected hue options and reload."""
+    if entry.options.items() < entry.data.items():
+        # Entry update with no changes, abort.
+        return
+
+    # Instead of individually disable all entities from the undesired platforms,
+    # we remove the unselected device types, clearing the device View.
+    add_remotes = entry.options.get(CONF_INCLUDE_HUE_REMOTES)
+    add_sensors = entry.options.get(CONF_INCLUDE_HUE_SENSORS)
+    if not add_remotes or not add_sensors:
+        devices_to_remove = set()
+        entity_registry = await er.async_get_registry(hass)
+        for entity_data in entity_registry.entities.values():
+            if entity_data.platform != DOMAIN:
+                continue
+
+            if (
+                not add_sensors and entity_data.domain in ("binary_sensor", "sensor")
+            ) or (not add_remotes and entity_data.domain == "remote"):
+                devices_to_remove.add(entity_data.device_id)
+
+        if devices_to_remove:
+            device_registry = await dr.async_get_registry(hass)
+            for device_id in devices_to_remove:
+                device_registry.async_remove_device(device_id)
+
+    # Update entry with new selected options and reload.
+    hass.config_entries.async_update_entry(entry, data={**entry.data, **entry.options})
+    hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+
+
 async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
@@ -105,6 +145,11 @@ async def async_setup_entry(
     host = entry.data["host"]
     config = hass.data[DATA_CONFIGS].get(host)
 
+    if not entry.update_listeners:
+        entry.add_update_listener(update_listener)
+
+    add_sensors = entry.data.get(CONF_INCLUDE_HUE_SENSORS, DEFAULT_INCLUDE_HUE_SENSORS)
+    add_remotes = entry.data.get(CONF_INCLUDE_HUE_REMOTES, DEFAULT_INCLUDE_HUE_REMOTES)
     if config is None:
         allow_unreachable = entry.data.get(
             CONF_ALLOW_UNREACHABLE, DEFAULT_ALLOW_UNREACHABLE
@@ -114,7 +159,9 @@ async def async_setup_entry(
         allow_unreachable = config[CONF_ALLOW_UNREACHABLE]
         allow_groups = config[CONF_ALLOW_HUE_GROUPS]
 
-    bridge = HueBridge(hass, entry, allow_unreachable, allow_groups)
+    bridge = HueBridge(
+        hass, entry, allow_unreachable, allow_groups, add_sensors, add_remotes
+    )
 
     if not await bridge.async_setup():
         return False

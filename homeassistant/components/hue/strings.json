@@ -27,5 +27,17 @@
       "already_in_progress": "Config flow for bridge is already in progress.",
       "not_hue_bridge": "Not a Hue bridge"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "add_hue_remotes": "Include Hue remotes",
+          "add_hue_sensors": "Include Hue motion sensors"
+        },
+        "description": "Select 'Friends of Hue' accessories to setup in HomeAssistant",
+        "title": "Hue accessory settings"
+      }
+    }
   }
 }

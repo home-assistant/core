@@ -38,6 +38,14 @@ class SensorManager:
         self.bridge = bridge
         self._component_add_entities = {}
         self.current = {}
+
+        self._enabled_platforms = []
+        if self.bridge.add_remotes:
+            self._enabled_platforms.append("remote")
+        if self.bridge.add_sensors:
+            self._enabled_platforms.append("binary_sensor")
+            self._enabled_platforms.append("sensor")
+
         self.coordinator = DataUpdateCoordinator(
             bridge.hass,
             _LOGGER,
@@ -64,9 +72,14 @@ class SensorManager:
 
     async def async_register_component(self, platform, async_add_entities):
         """Register async_add_entities methods for components."""
+        if platform not in self._enabled_platforms:
+            _LOGGER.debug("Aborting %s. It is not enabled", platform)
+            return
+
         self._component_add_entities[platform] = async_add_entities
 
-        if len(self._component_add_entities) < 2:
+        if len(self._component_add_entities) < len(self._enabled_platforms):
+            _LOGGER.debug("Aborting start with %s, waiting for the rest", platform)
             return
 
         # We have all components available, start the updating.
@@ -81,7 +94,7 @@ class SensorManager:
         """Update sensors from the bridge."""
         api = self.bridge.api.sensors
 
-        if len(self._component_add_entities) < 2:
+        if len(self._component_add_entities) < len(self._enabled_platforms):
             return
 
         to_add = {}
@@ -114,9 +127,11 @@ class SensorManager:
             if existing is not None:
                 continue
 
-            primary_sensor = None
             sensor_config = SENSOR_CONFIG_MAP.get(api[item_id].type)
-            if sensor_config is None:
+            if (
+                sensor_config is None
+                or sensor_config["platform"] not in self._enabled_platforms
+            ):
                 continue
 
             base_name = api[item_id].name
@@ -182,7 +197,9 @@ class GenericHueSensor(entity.Entity):
     def available(self):
         """Return if sensor is available."""
         return self.bridge.sensor_manager.coordinator.last_update_success and (
-            self.bridge.allow_unreachable or self.sensor.config["reachable"]
+            self.bridge.allow_unreachable
+            # remotes like Hue Tap (ZGPSwitchSensor) have no _reachability_
+            or self.sensor.config.get("reachable", True)
         )
 
     @property

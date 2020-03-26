@@ -32,12 +32,22 @@ _LOGGER = logging.getLogger(__name__)
 class HueBridge:
     """Manages a single Hue bridge."""
 
-    def __init__(self, hass, config_entry, allow_unreachable, allow_groups):
+    def __init__(
+        self,
+        hass,
+        config_entry,
+        allow_unreachable,
+        allow_groups,
+        add_sensors,
+        add_remotes,
+    ):
         """Initialize the system."""
         self.config_entry = config_entry
         self.hass = hass
         self.allow_unreachable = allow_unreachable
         self.allow_groups = allow_groups
+        self.add_sensors = add_sensors
+        self.add_remotes = add_remotes
         self.available = True
         self.authorized = False
         self.api = None
@@ -87,14 +97,26 @@ class HueBridge:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(self.config_entry, "light")
         )
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(
-                self.config_entry, "binary_sensor"
+
+        if self.add_sensors:
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(
+                    self.config_entry, "binary_sensor"
+                )
             )
-        )
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(self.config_entry, "sensor")
-        )
+
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(
+                    self.config_entry, "sensor"
+                )
+            )
+
+        if self.add_remotes:
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(
+                    self.config_entry, "remote"
+                )
+            )
 
         hass.services.async_register(
             DOMAIN, SERVICE_HUE_SCENE, self.hue_activate_scene, schema=SCENE_SCHEMA
@@ -161,17 +183,17 @@ class HueBridge:
 
         # If setup was successful, we set api variable, forwarded entry and
         # register service
-        results = await asyncio.gather(
+        unload_tasks = [
             self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, "light"
-            ),
-            self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, "binary_sensor"
-            ),
-            self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, "sensor"
-            ),
-        )
+                self.config_entry, platform
+            )
+            for include, platform in zip(
+                [True, self.add_sensors, self.add_sensors, self.add_remotes],
+                ["light", "binary_sensor", "sensor", "remote"],
+            )
+            if include
+        ]
+        results = await asyncio.gather(*unload_tasks)
 
         # None and True are OK
         return False not in results

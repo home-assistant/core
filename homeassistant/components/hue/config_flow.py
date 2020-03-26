@@ -16,6 +16,10 @@ from homeassistant.helpers import aiohttp_client
 from .bridge import authenticate_bridge
 from .const import (  # pylint: disable=unused-import
     CONF_ALLOW_HUE_GROUPS,
+    CONF_INCLUDE_HUE_REMOTES,
+    CONF_INCLUDE_HUE_SENSORS,
+    DEFAULT_INCLUDE_HUE_REMOTES,
+    DEFAULT_INCLUDE_HUE_SENSORS,
     DOMAIN,
     LOGGER,
 )
@@ -131,6 +135,8 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     "host": bridge.host,
                     "username": bridge.username,
                     CONF_ALLOW_HUE_GROUPS: False,
+                    CONF_INCLUDE_HUE_REMOTES: DEFAULT_INCLUDE_HUE_REMOTES,
+                    CONF_INCLUDE_HUE_SENSORS: DEFAULT_INCLUDE_HUE_SENSORS,
                 },
             )
         except AuthenticationRequired:
@@ -211,3 +217,44 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.bridge = self._async_get_bridge(import_info["host"])
         return await self.async_step_link()
+
+    @staticmethod
+    @core.callback
+    def async_get_options_flow(config_entry):
+        """Define the config flow to handle options."""
+        return HueOptionsFlowHandler(config_entry)
+
+
+class HueOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle the Options flow for `hue` to select devices to be added."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry):
+        """Initialize the options flow handler with the config entry to modify."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self.config_entry.title, data=user_input
+            )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_INCLUDE_HUE_SENSORS,
+                        default=self.config_entry.data.get(
+                            CONF_INCLUDE_HUE_SENSORS, DEFAULT_INCLUDE_HUE_SENSORS
+                        ),
+                    ): bool,
+                    vol.Required(
+                        CONF_INCLUDE_HUE_REMOTES,
+                        default=self.config_entry.data.get(
+                            CONF_INCLUDE_HUE_REMOTES, DEFAULT_INCLUDE_HUE_REMOTES
+                        ),
+                    ): bool,
+                }
+            ),
+        )
