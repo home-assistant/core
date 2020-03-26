@@ -479,7 +479,7 @@ class ADBDevice(MediaPlayerDevice):
 
     async def async_get_media_image(self):
         """Fetch current playing image."""
-        if self.state in [STATE_OFF, None]:
+        if self.state in [STATE_OFF, None] or not self.available:
             return None, None
 
         media_data = await self.hass.async_add_executor_job(self.get_raw_media_data)
