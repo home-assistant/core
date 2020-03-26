@@ -75,7 +75,11 @@ async def async_get_service(hass, config, discovery_info=None):
 
 
 def _get_remote_file_contents(url, username=None, password=None, auth_type=None):
-    """Retrieve a remote file via URL and return its binary content."""
+    """Retrieve a remote file via URL and return its binary content.
+
+    Note that we use a sync method (and the requests library) because aiohttp does not
+    currently have a helper for digest authentication.
+    """
     if auth_type == HTTP_BASIC_AUTHENTICATION:
         resp = requests.get(
             url,
