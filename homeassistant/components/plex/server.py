@@ -109,12 +109,11 @@ class PlexServer:
             try:
                 _connect_with_url()
             except requests.exceptions.SSLError as error:
-                context = error.__context__
-                while context and not isinstance(context, ssl.SSLCertVerificationError):
-                    context = context.__context__  # pylint: disable=no-member
-                if isinstance(context, ssl.SSLCertVerificationError):
+                while error and not isinstance(error, ssl.SSLCertVerificationError):
+                    error = error.__context__  # pylint: disable=no-member
+                if isinstance(error, ssl.SSLCertVerificationError):
                     domain = urlparse(self._url).netloc.split(":")[0]
-                    if domain.endswith("plex.direct") and context.args[0].startswith(
+                    if domain.endswith("plex.direct") and error.args[0].startswith(
                         f"hostname '{domain}' doesn't match"
                     ):
                         _LOGGER.warning(
