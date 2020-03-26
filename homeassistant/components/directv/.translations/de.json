@@ -14,7 +14,8 @@
                 "data": {
                     "one": "eins",
                     "other": "andere"
-                }
+                },
+                "description": "M\u00f6chten Sie {name} einrichten?"
             },
             "user": {
                 "data": {

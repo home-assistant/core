@@ -1,0 +1,30 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host (IP-Adresse)",
+                    "name": "Ger\u00e4tename",
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "title": "Stellen Sie eine Verbindung zu DoorBird her"
+            }
+        },
+        "title": "DoorBird"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "events": "Durch Kommas getrennte Liste von Ereignissen."
+                }
+            }
+        }
+    }
+}
