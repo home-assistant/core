@@ -555,8 +555,7 @@ class ZHAGateway:
             zha_group.group_id,
         )
         discovery.GROUP_PROBE.discover_group_entities(zha_group)
-        if zha_group.entity_domain is not None:
-            async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES)
+
         return zha_group
 
     async def async_remove_zigpy_group(self, group_id: int) -> None:

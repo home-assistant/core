@@ -6,6 +6,7 @@ from typing import Callable, List, Tuple
 
 from homeassistant import const as ha_const
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -189,20 +190,21 @@ class GroupProbe:
 
         zha_gateway = self._hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
         for domain in entity_domains:
-            entity_class = zha_regs.ZHA_ENTITIES.get_group_entity(group.entity_domain)
+            entity_class = zha_regs.ZHA_ENTITIES.get_group_entity(domain)
             if entity_class is None:
                 continue
-            self._hass.data[zha_const.DATA_ZHA][group.entity_domain].append(
+            self._hass.data[zha_const.DATA_ZHA][domain].append(
                 (
                     entity_class,
                     (
-                        group.domain_entity_ids(domain),
+                        group.get_domain_entity_ids(domain),
                         f"{domain}_group_{group.group_id}",
                         group.group_id,
                         zha_gateway.coordinator_zha_device,
                     ),
                 )
             )
+        async_dispatcher_send(self._hass, zha_const.SIGNAL_ADD_ENTITIES)
 
     @staticmethod
     def determine_entity_domains(

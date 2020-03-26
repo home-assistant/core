@@ -95,8 +95,7 @@ class ZHAGroup(LogMixin):
                 all_entity_ids.append(entity.entity_id)
         return all_entity_ids
 
-    @property
-    def domain_entity_ids(self, domain) -> List[str]:
+    def get_domain_entity_ids(self, domain) -> List[str]:
         """Return entity ids from the entity domain for this group."""
         domain_entity_ids: List[str] = []
         for device in self.members:
