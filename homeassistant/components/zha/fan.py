@@ -175,11 +175,10 @@ class FanGroup(BaseFan):
         self._fan_channel = group.endpoint[hvac.Fan.cluster_id]
 
         # what should we do with this hack?
-        async def async_set_speed(self, value) -> None:
+        async def async_set_speed(value) -> None:
             """Set the speed of the fan."""
-
             try:
-                await self.cluster.write_attributes({"fan_mode": value})
+                await self._fan_channel.write_attributes({"fan_mode": value})
             except DeliveryError as ex:
                 self.error("Could not set speed: %s", ex)
                 return
