@@ -395,15 +395,15 @@ class KefMediaPlayer(MediaPlayerDevice):
     async def update_dsp(self):
         """Update the DSP settings."""
         mode = await self._speaker.get_mode()
-        self._dsp = dict(
+        self._dsp = {
+            "desk_db": await self._speaker.get_desk_db(),
+            "wall_db": await self._speaker.get_wall_db(),
+            "treble_db": await self._speaker.get_treble_db(),
+            "high_hz": await self._speaker.get_high_hz(),
+            "low_hz": await self._speaker.get_low_hz(),
+            "sub_db": await self._speaker.get_sub_db(),
             **mode._asdict(),
-            desk_db=await self._speaker.get_desk_db(),
-            wall_db=await self._speaker.get_wall_db(),
-            treble_db=await self._speaker.get_treble_db(),
-            high_hz=await self._speaker.get_high_hz(),
-            low_hz=await self._speaker.get_low_hz(),
-            sub_db=await self._speaker.get_sub_db(),
-        )
+        }
         return self._dsp
 
     async def async_added_to_hass(self):
