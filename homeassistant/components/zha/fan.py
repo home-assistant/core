@@ -221,7 +221,7 @@ class FanGroup(BaseFan):
         on_states: List[State] = [state for state in states if state.state != SPEED_OFF]
         self._available = any(state.state != STATE_UNAVAILABLE for state in states)
         # for now just use first non off state since its kind of arbitrary
-        if len(on_states) < 1:
+        if not on_states:
             self._state = SPEED_OFF
         else:
             self._state = states[0].state
