@@ -479,6 +479,9 @@ class ADBDevice(MediaPlayerDevice):
 
     async def async_get_media_image(self):
         """Fetch current playing image."""
+        if self.state in [STATE_OFF, None]:
+            return None, None
+
         media_data = await self.hass.async_add_executor_job(self.get_raw_media_data)
         if media_data:
             return media_data, "image/png"
@@ -487,9 +490,6 @@ class ADBDevice(MediaPlayerDevice):
     @adb_decorator()
     def get_raw_media_data(self):
         """Raw base64 image data."""
-        if self.state in [STATE_OFF, None]:
-            return None
-
         try:
             response = self.aftv.adb_shell("screencap -p | base64")
         except UnicodeDecodeError:
