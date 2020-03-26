@@ -1,5 +1,5 @@
 """Test for smart home alexa support."""
-from unittest.mock import patch
+from unittest.mock import patch, PropertyMock
 
 import pytest
 
@@ -3850,6 +3850,11 @@ async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
     ), patch(
         "homeassistant.helpers.network.async_get_external_url",
         return_value="https://mycamerastream.test",
+    ), patch(
+        "homeassistant.components.demo.camera.DemoCamera.access_tokens",
+        new_callable=PropertyMock,
+        create=True,
+        return_value=[1234],
     ):
         msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request)
         await hass.async_block_till_done()
@@ -3867,6 +3872,6 @@ async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
         assert camera_streams[0]["videoCodec"] == "H264"
         assert camera_streams[0]["audioCodec"] == "AAC"
         assert (
-            "https://mycamerastream.test/api/camera_proxy/camera.demo_camera?token="
+            "https://mycamerastream.test/api/camera_proxy/camera.demo_camera?token=1234"
             in msg["payload"]["imageUri"]
         )
