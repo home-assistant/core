@@ -406,13 +406,13 @@ class KefMediaPlayer(MediaPlayerDevice):
         )
         return self._dsp
 
+    async def async_added_to_hass(self):
+        """Update the DSP settings after adding to HASS."""
+        await self.update_dsp()
+
     @property
     def device_state_attributes(self):
         """Return the DSP settings of the KEF device."""
-        if self._dsp is None:
-            return dict(
-                dsp_settings="Run the `kef.update_dsp` service to get the DSP settings as attributes."
-            )
         return self._dsp
 
     async def set_mode(
