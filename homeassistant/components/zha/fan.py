@@ -218,9 +218,7 @@ class FanGroup(BaseFan):
         """Attempt to retrieve on off state from the fan."""
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
         states: List[State] = list(filter(None, all_states))
-        on_states: List[State] = [
-            state for state in states if state.state is not SPEED_OFF
-        ]
+        on_states: List[State] = [state for state in states if state.state != SPEED_OFF]
         self._available = any(state.state != STATE_UNAVAILABLE for state in states)
         # for now just use first non off state since its kind of arbitrary
         if len(on_states) < 1:
