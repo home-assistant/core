@@ -505,8 +505,6 @@ class ADBDevice(MediaPlayerDevice):
         """Hash value for media image."""
         return f"{datetime.now().timestamp()}"
 
-        return None
-
     @adb_decorator()
     def media_play(self):
         """Send play command."""
