@@ -156,7 +156,7 @@ def _change_host_name(hass, call):
 def _change_remote_access(hass, call):
     import os
 
-    text = " dostęp z Internetu"
+    text = " zdalny dostęp do bramki z Internetu"
     access = hass.states.get("input_boolean.ais_remote_access").state
     gate_id = hass.states.get("sensor.ais_secure_android_id_dom").state
     if access == "on":

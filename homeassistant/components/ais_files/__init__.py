@@ -220,8 +220,8 @@ async def _async_save_log_file_path_info(hass, path):
         _LOGGER.error("Error save_db_file_path_info " + str(e))
 
     # inform about loging
-    info = "Logowanie wyłączone"
-    if path != "":
+    info = "Logowanie do pliku wyłączone"
+    if path not in ("", "-"):
         info = "Logi systemowe zapisywane do pliku ais.log na " + path
     hass.async_add_job(
         hass.services.async_call("ais_ai_service", "say_it", {"text": info})

@@ -101,7 +101,7 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Coerce(int), vol.Range(min=0)
                 ),
                 vol.Optional(CONF_DB_URL): cv.string,
-                vol.Optional(CONF_COMMIT_INTERVAL, default=1): vol.All(
+                vol.Optional(CONF_COMMIT_INTERVAL, default=60): vol.All(
                     vol.Coerce(int), vol.Range(min=0)
                 ),
                 vol.Optional(

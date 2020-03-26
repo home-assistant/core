@@ -106,12 +106,16 @@ async def async_setup(hass, config):
 
     class EventHandler(pyinotify.ProcessEvent):
         def process_IN_CREATE(self, event):
-            if event.pathname.startswith(G_USB_DRIVES_PATH):
+            if (
+                event.pathname.startswith(G_USB_DRIVES_PATH)
+                and event.pathname.count("/") == 2
+            ):
                 # create symlink
                 try:
                     drive_id = event.pathname.replace(
                         G_USB_DRIVES_PATH + "/", ""
                     ).strip()
+
                     os.symlink(
                         str(event.pathname),
                         "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/dysk_"
