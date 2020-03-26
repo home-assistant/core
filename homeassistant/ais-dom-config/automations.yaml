@@ -84,6 +84,7 @@
    - delay: '1'
    - service: ais_usb.lsusb
    - service: ais_usb.mount_external_drives
+   - service: ais_usb.ls_flash_drives
    - service: ais_drives_service.rclone_mount_drives
    - delay: '6000'
    - service: ais_updater.check_version

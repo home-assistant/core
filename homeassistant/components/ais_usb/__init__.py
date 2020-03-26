@@ -23,7 +23,7 @@ G_AIS_REMOTE_ID = "0c45:5102"
 G_USB_DRIVES_PATH = "/mnt/media_rw"
 if platform.machine() == "x86_64":
     # local test
-    G_USB_DRIVES_PATH = "/media/andrzej"
+    G_USB_DRIVES_PATH = "/mnt"
 
 
 def get_device_info(pathname):
@@ -103,33 +103,34 @@ def remove_usb_device(hass, device_info):
 @asyncio.coroutine
 async def async_setup(hass, config):
     """Set up the usb events component."""
-    wm = pyinotify.WatchManager()  # Watch Manager
-    mask = pyinotify.IN_DELETE | pyinotify.IN_CREATE  # watched events
 
     class EventHandler(pyinotify.ProcessEvent):
         def process_IN_CREATE(self, event):
             if event.pathname.startswith(G_USB_DRIVES_PATH):
                 # create symlink
-                lno = len(
-                    os.listdir(
-                        "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/"
-                    )
-                )
                 try:
+                    drive_id = event.pathname.replace(
+                        G_USB_DRIVES_PATH + "/", ""
+                    ).strip()
                     os.symlink(
                         str(event.pathname),
                         "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/dysk_"
-                        + str(lno + 1),
+                        + str(drive_id),
                     )
                     hass.async_add_job(
                         hass.services.async_call(
                             "ais_ai_service",
                             "say_it",
-                            {"text": "Dodano wymienny dysk_" + str(lno + 1)},
+                            {"text": "Dodano wymienny dysk_" + str(drive_id)},
                         )
+                    )
+                    # fill the list
+                    hass.async_add_job(
+                        hass.services.async_call("ais_usb", "ls_flash_drives")
                     )
                 except Exception as e:
                     _LOGGER.error("mount_external_drives" + str(e))
+
             else:
                 ais_global.G_USB_DEVICES = _lsusb()
                 device_info = get_device_info(event.pathname)
@@ -168,9 +169,38 @@ async def async_setup(hass, config):
                                 {"text": "Usunięto wymienny " + str(f)},
                             )
                         )
-
+                        # fill the list
+                        hass.async_add_job(
+                            hass.services.async_call("ais_usb", "ls_flash_drives")
+                        )
             else:
                 device_info = get_device_info(event.pathname)
+                if device_info is not None:
+                    if (
+                        device_info["id"] not in (G_AIS_REMOTE_ID, G_ZIGBEE_ID)
+                        and ais_global.G_USB_INTERNAL_MIC_RESET is False
+                    ):
+                        if "info" in device_info:
+                            if (
+                                device_info["info"]
+                                != "xHCI Host Controller producent Linux 3.14.29 xhci-hcd"
+                            ):
+                                state = hass.states.get(
+                                    "media_player.wbudowany_glosnik"
+                                )
+                                attr = state.attributes
+                                media_content_id = attr.get("media_content_id")
+                                if media_content_id.startswith(
+                                    "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/"
+                                ):
+                                    # quick stop audio - to prevent
+                                    # ProcessKiller: Process pl.sviete.dom (10754) has open file /mnt/media_rw/...
+                                    # ProcessKiller: Sending Interrupt to process 10754
+                                    hass.services.call(
+                                        "ais_ai_service",
+                                        "publish_command_to_frame",
+                                        {"key": "stopAudio", "val": True},
+                                    )
                 if device_info is not None:
                     if (
                         device_info["id"] != G_AIS_REMOTE_ID
@@ -180,19 +210,29 @@ async def async_setup(hass, config):
                             text = "Usunięto: " + device_info["info"]
                         else:
                             text = "Usunięto urządzenie"
-                        hass.async_add_job(
-                            hass.services.async_call(
-                                "ais_ai_service", "say_it", {"text": text}
+
+                        if (
+                            text
+                            != "Usunięto: xHCI Host Controller producent Linux 3.14.29 xhci-hcd"
+                        ):
+                            hass.async_add_job(
+                                hass.services.async_call(
+                                    "ais_ai_service", "say_it", {"text": text}
+                                )
                             )
-                        )
                     # remove device
                     remove_usb_device(hass, device_info)
 
     # USB
-    notifier = pyinotify.ThreadedNotifier(wm, EventHandler())
-    notifier.start()
-    wm.add_watch("/dev/bus", mask, rec=True)
-    wm.add_watch(G_USB_DRIVES_PATH, mask, rec=True)
+    async def usb_load_notifiers():
+        _LOGGER.info("usb_load_notifiers start")
+        wm = pyinotify.WatchManager()  # Watch Manager
+        mask = pyinotify.IN_DELETE | pyinotify.IN_CREATE  # watched events
+        notifier = pyinotify.ThreadedNotifier(wm, EventHandler())
+        notifier.start()
+        wm.add_watch("/dev/bus", mask, rec=True)
+        wm.add_watch(G_USB_DRIVES_PATH, mask, rec=True)
+        _LOGGER.info("usb_load_notifiers stop")
 
     async def stop_devices(call):
         # remove zigbee service on start - to prevent pm2 for restarting when usb is not connected
@@ -210,21 +250,40 @@ async def async_setup(hass, config):
                 prepare_usb_device(hass, device)
 
     async def mount_external_drives(call):
+        """mount_external_drives."""
         try:
             os.system("rm /data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/*")
             dirs = os.listdir(G_USB_DRIVES_PATH)
-            for i in range(0, len(dirs)):
+            for d in dirs:
                 os.symlink(
-                    G_USB_DRIVES_PATH + "/" + dirs[i],
-                    "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/dysk_"
-                    + str(i + 1),
+                    G_USB_DRIVES_PATH + "/" + d,
+                    "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/dysk_" + d,
                 )
         except Exception as e:
-            _LOGGER.error("mount_external_drives" + str(e))
+            _LOGGER.error("mount_external_drives " + str(e))
+
+    async def ls_flash_drives(call):
+        ais_usb_flash_drives = [ais_global.G_EMPTY_OPTION]
+        dirs = os.listdir("/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/")
+        for d in dirs:
+            ais_usb_flash_drives.append(d)
+        hass.async_add_job(
+            hass.services.async_call(
+                "input_select",
+                "set_options",
+                {
+                    "entity_id": "input_select.ais_usb_flash_drives",
+                    "options": ais_usb_flash_drives,
+                },
+            )
+        )
 
     hass.services.async_register(DOMAIN, "stop_devices", stop_devices)
     hass.services.async_register(DOMAIN, "lsusb", lsusb)
     hass.services.async_register(DOMAIN, "mount_external_drives", mount_external_drives)
+    hass.services.async_register(DOMAIN, "ls_flash_drives", ls_flash_drives)
+
+    hass.async_add_job(usb_load_notifiers)
     return True
 
 

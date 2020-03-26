@@ -2,11 +2,19 @@ sensor:
   - platform: ais_device_search_mqtt
     name: network_devices_info_value
     state_topic: "+/stat/#"
+  - platform: command_line
+    command: "find /data/data/pl.sviete.dom/files | wc -l"
+    name: AIS all files
+    scan_interval: 3600
+    command_timeout: 5
 
 input_boolean:
   ais_quiet_mode:
     name: Tryb nocny
     icon: mdi:volume-off
+  ais_logs_rec_mode:
+    name: Zapis do plików
+    icon: mdi:database-settings
 
 input_datetime:
   ais_quiet_mode_start:
@@ -32,6 +40,11 @@ input_select:
       - "Andrzej"
     icon: mdi:voice
     initial: "Jola lokalnie"
+  ais_usb_flash_drives:
+    name: "Usb flash drives"
+    options: ["-"]
+    icon: mdi:usb-flash-drive
+    initial: "-"
 
 input_number:
   assistant_rate:
@@ -51,3 +64,4 @@ timer:
   ais_dom_pin_join:
     name: Parowanie z bramką za pomocą PIN
     duration: 120
+
