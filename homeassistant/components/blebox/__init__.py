@@ -2,7 +2,7 @@
 import asyncio
 import logging
 
-from blebox_uniapi.error import ConnectionError, Error
+from blebox_uniapi import error
 from blebox_uniapi.products import Products
 from blebox_uniapi.session import ApiHost
 import voluptuous as vol
@@ -64,10 +64,10 @@ async def async_add_blebox(klass, method, hass, config, async_add, exception):
     api_host = ApiHost(host, port, timeout, websession, hass.loop, _LOGGER)
     try:
         product = await Products.async_from_host(api_host)
-    except ConnectionError as ex:
+    except error.ConnectionError as ex:
         _LOGGER.error("Identify failed (%s)", ex)
         raise exception from ex
-    except Error as ex:
+    except error.Error as ex:
         _LOGGER.error("Identify failed at %s:%d (%s)", host, port, ex)
         raise exception from ex
 
@@ -100,5 +100,5 @@ class CommonEntity:
         """Update the cover state."""
         try:
             await self._feature.async_update()
-        except Error as ex:
+        except error.Error as ex:
             _LOGGER.error("Updating '%s' failed: %s", self.name, ex)
