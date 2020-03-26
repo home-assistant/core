@@ -86,7 +86,7 @@ def get_significant_states(
             last_state = states[-1] if len(states) > 0 else None
             if (
                 _is_significant(state)
-                and _has_different_location(state, last_state)
+                and _location_differs(state, last_state)
                 and not state.attributes.get(ATTR_HIDDEN, False)
             ):
                 states.append(state)
@@ -443,7 +443,7 @@ def _is_significant(state):
     return state.domain != "script" or state.attributes.get("can_cancel")
 
 
-def _has_different_location(state, other):
+def _location_differs(state, other):
     """Test if two states differ in lat, long attributes.
 
     Returns False if both states are States objects and lat/long are not None and equal.
@@ -457,6 +457,7 @@ def _has_different_location(state, other):
     lat2 = other.attributes.get(ATTR_LATITUDE)
     long2 = other.attributes.get(ATTR_LONGITUDE)
 
+    state_is_different = state.state != other.state
     lat_is_none_or_different = lat1 is None or lat1 != lat2
     long_is_none_or_different = long1 is None or long1 != long2
-    return lat_is_none_or_different or long_is_none_or_different
+    return state_is_different or lat_is_none_or_different or long_is_none_or_different
