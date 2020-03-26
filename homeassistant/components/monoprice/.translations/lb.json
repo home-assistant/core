@@ -21,5 +21,20 @@
                 "title": "Mam Apparat verbannen"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "source_1": "Numm vun der Quell #1",
+                    "source_2": "Numm vun der Quell #2",
+                    "source_3": "Numm vun der Quell #3",
+                    "source_4": "Numm vun der Quell #4",
+                    "source_5": "Numm vun der Quell #5",
+                    "source_6": "Numm vun der Quell #6"
+                },
+                "title": "Quelle konfigur\u00e9ieren"
+            }
+        }
     }
 }
