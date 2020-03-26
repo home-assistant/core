@@ -16,9 +16,9 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CALL_TYPE_COIL,
-    CALL_TYPE_COILS,
     CALL_TYPE_DISCRETE,
     CONF_ADDRESS,
+    CONF_COILS,
     CONF_HUB,
     CONF_INPUT_TYPE,
     CONF_INPUTS,
@@ -29,7 +29,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CALL_TYPE_COILS, CONF_INPUTS),
+    cv.deprecated(CONF_COILS, CONF_INPUTS),
     PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_INPUTS): [

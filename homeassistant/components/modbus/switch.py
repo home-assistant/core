@@ -20,9 +20,9 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     CALL_TYPE_COIL,
-    CALL_TYPE_COILS,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
+    CONF_COILS,
     CONF_HUB,
     CONF_REGISTER,
     CONF_REGISTER_TYPE,
@@ -66,10 +66,10 @@ COILS_SCHEMA = vol.Schema(
 )
 
 PLATFORM_SCHEMA = vol.All(
-    cv.has_at_least_one_key(CALL_TYPE_COILS, CONF_REGISTERS),
+    cv.has_at_least_one_key(CONF_COILS, CONF_REGISTERS),
     PLATFORM_SCHEMA.extend(
         {
-            vol.Optional(CALL_TYPE_COILS): [COILS_SCHEMA],
+            vol.Optional(CONF_COILS): [COILS_SCHEMA],
             vol.Optional(CONF_REGISTERS): [REGISTERS_SCHEMA],
         }
     ),
@@ -79,8 +79,8 @@ PLATFORM_SCHEMA = vol.All(
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Read configuration and create Modbus devices."""
     switches = []
-    if CALL_TYPE_COILS in config:
-        for coil in config[CALL_TYPE_COILS]:
+    if CONF_COILS in config:
+        for coil in config[CONF_COILS]:
             hub_name = coil[CONF_HUB]
             hub = hass.data[MODBUS_DOMAIN][hub_name]
             switches.append(

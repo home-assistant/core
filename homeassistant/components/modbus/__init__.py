@@ -245,10 +245,6 @@ class ModbusHub:
         else:
             assert False
 
-    def close(self):
-        """Disconnect client."""
-        self._client.close()
-
     async def _read(self, unit, address, count, func):
         """Read generic with error handling."""
         await self._connect_delay()

@@ -14,6 +14,7 @@ CONF_SCALE = "scale"
 CONF_COUNT = "count"
 CONF_PRECISION = "precision"
 CONF_OFFSET = "offset"
+CONF_COILS = "coils"
 
 # integration names
 DEFAULT_HUB = "default"
@@ -25,9 +26,8 @@ DATA_TYPE_FLOAT = "float"
 DATA_TYPE_INT = "int"
 DATA_TYPE_UINT = "uint"
 
-# register types
+# call types
 CALL_TYPE_COIL = "coil"
-CALL_TYPE_COILS = "coils"
 CALL_TYPE_DISCRETE = "discrete_input"
 CALL_TYPE_REGISTER_HOLDING = "holding"
 CALL_TYPE_REGISTER_INPUT = "input"
