@@ -3799,9 +3799,7 @@ async def test_camera_discovery_without_stream(hass):
     ):
         appliance = await discovery_test(device, hass)
 
-        capabilities = assert_endpoint_capabilities(
-            appliance, "Alexa.EndpointHealth", "Alexa"
-        )
+        assert_endpoint_capabilities(appliance, "Alexa.EndpointHealth", "Alexa")
 
 
 @pytest.mark.parametrize(
@@ -3826,7 +3824,6 @@ async def test_camera_hass_urls(hass, mock_stream, url, result):
         "homeassistant.helpers.network.async_get_external_url", return_value=url
     ):
         appliance = await discovery_test(device, hass)
-        capabilities = appliance["capabilities"]
         assert len(appliance["capabilities"]) == result
 
 
