@@ -107,7 +107,7 @@ async def test_form_cannot_connect(hass):
 
 
 async def test_form_homekit(hass):
-    """Test that we abort from homekit if myq is already setup."""
+    """Test that we abort from homekit if rachio is already setup."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
