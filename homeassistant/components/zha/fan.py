@@ -3,6 +3,7 @@ import functools
 import logging
 from typing import List, Optional
 
+from zigpy.exceptions import DeliveryError
 import zigpy.zcl.clusters.hvac as hvac
 
 from homeassistant.components.fan import (
@@ -172,6 +173,18 @@ class FanGroup(BaseFan):
         self._async_unsub_state_changed: Optional[CALLBACK_TYPE] = None
         group = self.zha_device.gateway.get_group(self._group_id)
         self._fan_channel = group.endpoint[hvac.Fan.cluster_id]
+
+        # what should we do with this hack?
+        async def async_set_speed(self, value) -> None:
+            """Set the speed of the fan."""
+
+            try:
+                await self.cluster.write_attributes({"fan_mode": value})
+            except DeliveryError as ex:
+                self.error("Could not set speed: %s", ex)
+                return
+
+        self._fan_channel.async_set_speed = async_set_speed
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
