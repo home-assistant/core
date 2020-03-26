@@ -228,4 +228,3 @@ class FanGroup(BaseFan):
             self._state = SPEED_OFF
         else:
             self._state = states[0].state
-        self.async_write_ha_state()
