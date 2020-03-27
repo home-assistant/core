@@ -185,6 +185,20 @@ def test_parse_time_expression():
 
     assert [42] == dt_util.parse_time_expression(42, 0, 59)
 
+    assert [21, 22, 23] == dt_util.parse_time_expression("21,22,23", 0, 23)
+
+    assert [0, 3, 4, 12, 20, 21, 22] == dt_util.parse_time_expression(
+        "0,3,4,12,20,21,22", 0, 23
+    )
+
+    assert [8] == dt_util.parse_time_expression("8,", 0, 23)
+
+    assert [8] == dt_util.parse_time_expression("8,,,", 0, 23)
+
+    assert [] == dt_util.parse_time_expression(",", 0, 23)
+
+    assert [] == dt_util.parse_time_expression(",,,,,", 0, 23)
+
     with pytest.raises(ValueError):
         dt_util.parse_time_expression(61, 0, 60)
 

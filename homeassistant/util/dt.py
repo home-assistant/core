@@ -229,6 +229,8 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> Lis
     elif isinstance(parameter, str) and parameter.startswith("/"):
         parameter = int(parameter[1:])
         res = [x for x in range(min_value, max_value + 1) if x % parameter == 0]
+    elif isinstance(parameter, str) and parameter.find(",") >= 0:
+        res = [int(x) for x in parameter.split(",") if x]
     elif not hasattr(parameter, "__iter__"):
         res = [int(parameter)]
     else:
