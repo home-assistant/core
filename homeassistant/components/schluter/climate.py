@@ -32,7 +32,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async def async_update_data():
         try:
-            return api.get_thermostats(session_id) or []
+            return (
+                await hass.async_add_executor_job(api.get_thermostats, session_id)
+            ) or []
         except RequestException as err:
             raise UpdateFailed(f"Error communicating with Schluter API: {err}")
 
@@ -65,6 +67,11 @@ class SchluterThermostat(ClimateDevice):
         self._support_flags = SUPPORT_TARGET_TEMPERATURE
 
     @property
+    def available(self):
+        """Return if thermostat is available."""
+        return self.coordinator.last_update_success
+
+    @property
     def should_poll(self):
         """Return if platform should poll."""
         return False
@@ -78,17 +85,6 @@ class SchluterThermostat(ClimateDevice):
     def unique_id(self):
         """Return unique ID for this device."""
         return self.coordinator.data[self.idx].serial_number
-
-    @property
-    def device_info(self):
-        """Return information about the device."""
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.data[self.idx].serial_number)},
-            "name": self.coordinator.data[self.idx].name,
-            "manufacturer": "Schluter",
-            "model": "Thermostat",
-            "sw_version": self.coordinator.data[self.idx].sw_version,
-        }
 
     @property
     def name(self):
@@ -154,7 +150,7 @@ class SchluterThermostat(ClimateDevice):
                 self._api.set_temperature(self._session_id, serial_number, target_temp)
         except RequestException as ex:
             _LOGGER.error("An error occurred while setting temperature: %s", ex)
-            self.schedule_update_ha_state(True)
+            self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""
