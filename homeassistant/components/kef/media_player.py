@@ -1,5 +1,6 @@
 """Platform for the KEF Wireless Speakers."""
 
+import asyncio
 from datetime import timedelta
 from functools import partial
 import ipaddress
@@ -129,6 +130,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         inverse_speaker_mode,
         supports_on,
         sources,
+        speaker_type,
         ioloop=hass.loop,
         unique_id=unique_id,
     )
@@ -229,6 +231,7 @@ class KefMediaPlayer(MediaPlayerDevice):
         inverse_speaker_mode,
         supports_on,
         sources,
+        speaker_type,
         ioloop,
         unique_id,
     ):
@@ -246,6 +249,7 @@ class KefMediaPlayer(MediaPlayerDevice):
         )
         self._unique_id = unique_id
         self._supports_on = supports_on
+        self._speaker_type = speaker_type
 
         self._state = None
         self._muted = None
@@ -277,6 +281,9 @@ class KefMediaPlayer(MediaPlayerDevice):
                 state = await self._speaker.get_state()
                 self._source = state.source
                 self._state = STATE_ON if state.is_on else STATE_OFF
+                if state.is_on and self._dsp is None:
+                    # Only do this once because it is a slow operation
+                    await self.update_dsp()
             else:
                 self._muted = None
                 self._source = None
@@ -392,19 +399,24 @@ class KefMediaPlayer(MediaPlayerDevice):
         """Send next track command."""
         await self._speaker.next_track()
 
-    async def update_dsp(self):
+    async def update_dsp(self) -> None:
         """Update the DSP settings."""
+        if self._speaker_type == "LS50" and self._state == STATE_OFF:
+            # The LSX is able to respond when off the LS50 has to be on.
+            return
+
         mode = await self._speaker.get_mode()
-        self._dsp = {
-            "desk_db": await self._speaker.get_desk_db(),
-            "wall_db": await self._speaker.get_wall_db(),
-            "treble_db": await self._speaker.get_treble_db(),
-            "high_hz": await self._speaker.get_high_hz(),
-            "low_hz": await self._speaker.get_low_hz(),
-            "sub_db": await self._speaker.get_sub_db(),
-            **mode._asdict(),
-        }
-        return self._dsp
+        (mode, *rest) = await asyncio.gather(
+            self._speaker.get_mode(),
+            self._speaker.get_desk_db(),
+            self._speaker.get_wall_db(),
+            self._speaker.get_treble_db(),
+            self._speaker.get_high_hz(),
+            self._speaker.get_low_hz(),
+            self._speaker.get_sub_db(),
+        )
+        keys = ["desk_db", "wall_db", "treble_db", "high_hz", "low_hz", "sub_db"]
+        self._dsp = dict(zip(keys, rest), **mode._asdict())
 
     async def async_added_to_hass(self):
         """Update the DSP settings after adding to HASS."""
@@ -413,7 +425,7 @@ class KefMediaPlayer(MediaPlayerDevice):
     @property
     def device_state_attributes(self):
         """Return the DSP settings of the KEF device."""
-        return self._dsp
+        return self._dsp or {}
 
     async def set_mode(
         self,
