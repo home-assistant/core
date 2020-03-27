@@ -8,6 +8,7 @@ import asyncio
 import threading
 import os
 import logging
+import subprocess
 from PIL import Image
 from aiohttp.web import Request, Response
 
@@ -22,18 +23,7 @@ LOG_PATH_INFO_FILE = "/data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_log_path
 DB_PATH_INFO_FILE = "/data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_db_path_info"
 LOG_PATH_INFO = None
 DB_PATH_INFO = None
-
-
-class LogThreading(object):
-    def __init__(self, log_path):
-        self.log_path = log_path
-        thread = threading.Thread(target=self.start_logs(log_path), args=())
-        thread.daemon = True
-        thread.start()
-
-    @staticmethod
-    def start_logs(log_path):
-        os.system("pm2 logs >> " + log_path + " &")
+G_LOG_PROCESS = None
 
 
 @asyncio.coroutine
@@ -109,24 +99,41 @@ async def _async_refresh_files(hass):
 
 async def _async_change_logger_settings(hass, call):
     # on logger change
+    global G_LOG_PROCESS
     if "value" not in call.data:
         _LOGGER.error("No value")
         return
+
+    log_drive = call.data["value"]
+
     hass.async_add_job(
         hass.services.async_call(
             "input_text",
             "set_value",
-            {"entity_id": "input_text.ais_logs_path", "value": call.data["value"]},
+            {"entity_id": "input_text.ais_logs_path", "value": log_drive},
         )
     )
     # save to file
-    await _async_save_log_file_path_info(hass, call.data["value"])
+    await _async_save_log_file_path_info(hass, log_drive)
+
+    # Stop current log process
+    if G_LOG_PROCESS is not None:
+        _LOGGER.info("terminate log process pid: " + str(G_LOG_PROCESS.pid))
+        G_LOG_PROCESS.terminate()
+        G_LOG_PROCESS = None
+
+    # check if drive is -
+    if log_drive == "-":
+        hass.services.async_call(
+            "ais_ai_service", "say_it", {"text": "Logowanie do pliku wyłączone"}
+        )
+        return
 
     # change log settings
     # Log errors to a file if we have write access to file or config dir
     file_log_path = os.path.abspath(
         "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/"
-        + call.data["value"]
+        + log_drive
         + "/ais.log"
     )
 
@@ -138,11 +145,23 @@ async def _async_change_logger_settings(hass, call):
     if (err_path_exists and os.access(file_log_path, os.W_OK)) or (
         not err_path_exists and os.access(err_dir, os.W_OK)
     ):
-
-        lt = LogThreading(log_path=file_log_path)
-
+        command = "pm2 logs >> " + file_log_path
+        G_LOG_PROCESS = subprocess.Popen(command, shell=True)
+        _LOGGER.info("start log process pid: " + str(G_LOG_PROCESS.pid))
+        info = "Logi systemowe zapisywane do pliku log na " + log_drive
     else:
         _LOGGER.error("Unable to set up log %s (access denied)", file_log_path)
+        info = "Nie można skonfigurować zapisu do pliku na " + log_drive
+
+    # inform about loging
+    hass.async_add_job(
+        hass.services.async_call("ais_ai_service", "say_it", {"text": info})
+    )
+    # re-set log level
+    log_level = hass.states.get("input_select.ais_system_logs_level").state
+    hass.async_add_job(
+        hass.services.async_call("logger", "set_default_level", {"level": log_level})
+    )
 
 
 async def _async_change_db_settings(hass, call):
@@ -174,7 +193,7 @@ async def _async_get_ext_drivers_info(hass, call):
             log_drive = fptr.read().replace("\n", "")
             fptr.close()
         except Exception as e:
-            _LOGGER.error("Error get_log_file_path_info " + str(e))
+            _LOGGER.info("Error get_log_file_path_info " + str(e))
     else:
         log_drive = LOG_PATH_INFO
 
@@ -184,7 +203,7 @@ async def _async_get_ext_drivers_info(hass, call):
             db_drive = fptr.read().replace("\n", "")
             fptr.close()
         except Exception as e:
-            _LOGGER.error("Error get_db_file_path_info " + str(e))
+            _LOGGER.info("Error get_db_file_path_info " + str(e))
     else:
         db_drive = DB_PATH_INFO
 
@@ -218,14 +237,6 @@ async def _async_save_log_file_path_info(hass, path):
         LOG_PATH_INFO = path
     except Exception as e:
         _LOGGER.error("Error save_db_file_path_info " + str(e))
-
-    # inform about loging
-    info = "Logowanie do pliku wyłączone"
-    if path not in ("", "-"):
-        info = "Logi systemowe zapisywane do pliku ais.log na " + path
-    hass.async_add_job(
-        hass.services.async_call("ais_ai_service", "say_it", {"text": info})
-    )
 
 
 async def _async_save_db_file_path_info(hass, path):

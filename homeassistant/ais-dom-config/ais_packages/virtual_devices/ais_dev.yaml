@@ -46,7 +46,6 @@ input_select:
     name: "System logs level"
     options: ["critical", "fatal", "error", "warning", "warn", "info", "debug"]
     icon: mdi:bug-check
-    initial: "warning"
 
 input_text:
   ais_logs_path:
