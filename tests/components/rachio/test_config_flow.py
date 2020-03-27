@@ -10,6 +10,8 @@ from homeassistant.components.rachio.const import (
 )
 from homeassistant.const import CONF_API_KEY
 
+from tests.common import MockConfigEntry
+
 
 def _mock_rachio_return_value(get=None, getInfo=None):
     rachio_mock = MagicMock()
@@ -102,3 +104,23 @@ async def test_form_cannot_connect(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_homekit(hass):
+    """Test that we abort from homekit if rachio is already setup."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "homekit"}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_API_KEY: "api_key"})
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "homekit"}
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
