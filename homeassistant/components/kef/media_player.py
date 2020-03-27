@@ -405,7 +405,6 @@ class KefMediaPlayer(MediaPlayerDevice):
             # The LSX is able to respond when off the LS50 has to be on.
             return
 
-        mode = await self._speaker.get_mode()
         (mode, *rest) = await asyncio.gather(
             self._speaker.get_mode(),
             self._speaker.get_desk_db(),
