@@ -205,6 +205,7 @@ homeassistant/components/lcn/* @alengwenus
 homeassistant/components/life360/* @pnbruckner
 homeassistant/components/linky/* @Quentame
 homeassistant/components/linux_battery/* @fabaff
+homeassistant/components/lm75/* @KarlKl
 homeassistant/components/local_ip/* @issacg
 homeassistant/components/logger/* @home-assistant/core
 homeassistant/components/logi_circle/* @evanjd
