@@ -1532,7 +1532,7 @@ async def async_api_initialize_camera_stream(hass, config, directive, context):
     """Process a InitializeCameraStreams request."""
     entity = directive.entity
     stream_source = await camera.async_request_stream(hass, entity.entity_id, fmt="hls")
-    camera_image = await camera.async_get_image_url(hass, entity.entity_id)
+    camera_image = hass.states.get(entity.entity_id).attributes["entity_picture"]
     external_url = network.async_get_external_url(hass)
     payload = {
         "cameraStreams": [

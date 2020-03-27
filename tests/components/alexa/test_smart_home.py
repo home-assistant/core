@@ -1,5 +1,5 @@
 """Test for smart home alexa support."""
-from unittest.mock import PropertyMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -3798,7 +3798,7 @@ async def test_camera_discovery_without_stream(hass):
         return_value="https://example.nabu.casa",
     ):
         appliance = await discovery_test(device, hass)
-
+        # assert Alexa.CameraStreamController is not yielded.
         assert_endpoint_capabilities(appliance, "Alexa.EndpointHealth", "Alexa")
 
 
@@ -3828,30 +3828,10 @@ async def test_camera_hass_urls(hass, mock_stream, url, result):
 
 
 async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
-    """Test camera/stream command."""
+    """Test InitializeCameraStreams handler."""
     request = get_new_request(
         "Alexa.CameraStreamController", "InitializeCameraStreams", "camera#demo_camera"
     )
-
-    # add payload
-    request["directive"]["payload"]["cameraStreams"] = [
-        {
-            "protocol": "RTSP",
-            "resolution": {"width": 1920, "height": 1080},
-            "authorizationType": "NONE",
-            "videoCodec": "H264",
-            "audioCodec": "AAC",
-        },
-        {
-            "protocol": "RTSP",
-            "resolution": {"width": 1280, "height": 720},
-            "authorizationType": "NONE",
-            "videoCodec": "MJPEG",
-            "audioCodec": "AAC",
-        },
-    ]
-
-    await async_setup_component(hass, "camera", {})
 
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
@@ -3859,28 +3839,23 @@ async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
     ), patch(
         "homeassistant.helpers.network.async_get_external_url",
         return_value="https://mycamerastream.test",
-    ), patch(
-        "homeassistant.components.demo.camera.DemoCamera.access_tokens",
-        new_callable=PropertyMock,
-        create=True,
-        return_value=[1234],
     ):
         msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request)
         await hass.async_block_till_done()
 
-        assert "event" in msg
-        msg = msg["event"]
-        assert msg["header"]["namespace"] == "Alexa.CameraStreamController"
-        assert msg["header"]["name"] == "Response"
-        camera_streams = msg["payload"]["cameraStreams"]
-        assert "https://mycamerastream.test/api/hls/" in camera_streams[0]["uri"]
-        assert camera_streams[0]["protocol"] == "HLS"
-        assert camera_streams[0]["resolution"]["width"] == 1280
-        assert camera_streams[0]["resolution"]["height"] == 720
-        assert camera_streams[0]["authorizationType"] == "NONE"
-        assert camera_streams[0]["videoCodec"] == "H264"
-        assert camera_streams[0]["audioCodec"] == "AAC"
-        assert (
-            "https://mycamerastream.test/api/camera_proxy/camera.demo_camera?token=1234"
-            in msg["payload"]["imageUri"]
-        )
+    assert "event" in msg
+    response = msg["event"]
+    assert response["header"]["namespace"] == "Alexa.CameraStreamController"
+    assert response["header"]["name"] == "Response"
+    camera_streams = response["payload"]["cameraStreams"]
+    assert "https://mycamerastream.test/api/hls/" in camera_streams[0]["uri"]
+    assert camera_streams[0]["protocol"] == "HLS"
+    assert camera_streams[0]["resolution"]["width"] == 1280
+    assert camera_streams[0]["resolution"]["height"] == 720
+    assert camera_streams[0]["authorizationType"] == "NONE"
+    assert camera_streams[0]["videoCodec"] == "H264"
+    assert camera_streams[0]["audioCodec"] == "AAC"
+    assert (
+        "https://mycamerastream.test/api/camera_proxy/camera.demo_camera?token="
+        in response["payload"]["imageUri"]
+    )
