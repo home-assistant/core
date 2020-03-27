@@ -14,6 +14,15 @@ from .const import ATTR_STATION, DOMAIN, ICONS_MAP
 
 ATTRIBUTION = "Data provided by GIOŚ"
 
+SENSOR_MAP = {
+    "CO": ATTR_CO,
+    "NO2": ATTR_NO2,
+    "O3": ATTR_OZONE,
+    "PM10": ATTR_PM_10,
+    "PM2.5": ATTR_PM_2_5,
+    "SO2": ATTR_SO2,
+}
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a GIOS entities from a config_entry."""
@@ -60,85 +69,43 @@ class GiosAirQuality(AirQualityEntity):
     @property
     def air_quality_index(self):
         """Return the air quality index."""
-        # Different measuring stations have different sets of sensors. We don't know
-        # what data we will get.
-        return (
-            self.coordinator.data["AQI"]["value"]
-            if "AQI" in self.coordinator.data
-            else None
-        )
+        return self._get_sensor_value("AQI")
 
     @property
     @round_state
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
-        # Different measuring stations have different sets of sensors. We don't know
-        # what data we will get.
-        return (
-            self.coordinator.data["PM2.5"]["value"]
-            if "PM2.5" in self.coordinator.data
-            else None
-        )
+        return self._get_sensor_value("PM2.5")
 
     @property
     @round_state
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
-        # Different measuring stations have different sets of sensors. We don't know
-        # what data we will get.
-        return (
-            self.coordinator.data["PM10"]["value"]
-            if "PM10" in self.coordinator.data
-            else None
-        )
+        return self._get_sensor_value("PM10")
 
     @property
     @round_state
     def ozone(self):
         """Return the O3 (ozone) level."""
-        # Different measuring stations have different sets of sensors. We don't know
-        # what data we will get.
-        return (
-            self.coordinator.data["O3"]["value"]
-            if "O3" in self.coordinator.data
-            else None
-        )
+        return self._get_sensor_value("O3")
 
     @property
     @round_state
     def carbon_monoxide(self):
         """Return the CO (carbon monoxide) level."""
-        # Different measuring stations have different sets of sensors. We don't know
-        # what data we will get.
-        return (
-            self.coordinator.data["CO"]["value"]
-            if "CO" in self.coordinator.data
-            else None
-        )
+        return self._get_sensor_value("CO")
 
     @property
     @round_state
     def sulphur_dioxide(self):
         """Return the SO2 (sulphur dioxide) level."""
-        # Different measuring stations have different sets of sensors. We don't know
-        # what data we will get.
-        return (
-            self.coordinator.data["SO2"]["value"]
-            if "SO2" in self.coordinator.data
-            else None
-        )
+        return self._get_sensor_value("SO2")
 
     @property
     @round_state
     def nitrogen_dioxide(self):
         """Return the NO2 (nitrogen dioxide) level."""
-        # Different measuring stations have different sets of sensors. We don't know
-        # what data we will get.
-        return (
-            self.coordinator.data["NO2"]["value"]
-            if "NO2" in self.coordinator.data
-            else None
-        )
+        return self._get_sensor_value("NO2")
 
     @property
     def attribution(self):
@@ -165,20 +132,11 @@ class GiosAirQuality(AirQualityEntity):
         """Return the state attributes."""
         # Different measuring stations have different sets of sensors. We don't know
         # what data we will get.
-        if "CO" in self.coordinator.data:
-            self._attrs[f"{ATTR_CO}_index"] = self.coordinator.data["CO"]["index"]
-        if "NO2" in self.coordinator.data:
-            self._attrs[f"{ATTR_NO2}_index"] = self.coordinator.data["NO2"]["index"]
-        if "O3" in self.coordinator.data:
-            self._attrs[f"{ATTR_OZONE}_index"] = self.coordinator.data["O3"]["index"]
-        if "PM2.5" in self.coordinator.data:
-            self._attrs[f"{ATTR_PM_2_5}_index"] = self.coordinator.data["PM2.5"][
-                "index"
-            ]
-        if "PM10" in self.coordinator.data:
-            self._attrs[f"{ATTR_PM_10}_index"] = self.coordinator.data["PM10"]["index"]
-        if "SO2" in self.coordinator.data:
-            self._attrs[f"{ATTR_SO2}_index"] = self.coordinator.data["SO2"]["index"]
+        for sensor in SENSOR_MAP:
+            if sensor in self.coordinator.data:
+                self._attrs[f"{SENSOR_MAP[sensor]}_index"] = self.coordinator.data[
+                    sensor
+                ]["index"]
         self._attrs[ATTR_STATION] = self.coordinator.gios.station_name
         return self._attrs
 
@@ -193,3 +151,9 @@ class GiosAirQuality(AirQualityEntity):
     async def async_update(self):
         """Update GIOS entity."""
         await self.coordinator.async_request_refresh()
+
+    def _get_sensor_value(self, sensor):
+        """Return value of specified sensor."""
+        if sensor in self.coordinator.data:
+            return self.coordinator.data[sensor]["value"]
+        return None
