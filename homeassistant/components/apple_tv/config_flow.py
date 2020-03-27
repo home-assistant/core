@@ -264,6 +264,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except exceptions.BackOffError:
             abort_reason = "backoff"
         except exceptions.PairingError:
+            _LOGGER.exception("Authentication problem")
             abort_reason = "auth"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
@@ -290,6 +291,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.credentials[self.protocol.value] = self.pairing.service.credentials
                 return await self.async_begin_pairing()
             except exceptions.PairingError:
+                _LOGGER.exception("Authentication problem")
                 errors["base"] = "auth"
             except AbortFlow:
                 raise
