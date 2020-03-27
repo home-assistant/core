@@ -185,7 +185,7 @@ class GroupProbe:
 
         entity_domains = GroupProbe.determine_entity_domains(self._hass, group)
 
-        if len(entity_domains) < 1:
+        if not entity_domains:
             return
 
         zha_gateway = self._hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
