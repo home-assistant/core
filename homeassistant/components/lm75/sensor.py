@@ -97,7 +97,7 @@ class LM75(Entity):
 
     def update(self):
         """Get the latest data from the sensor."""
-        temp_celsius = self.__readTemperature()
+        temp_celsius = self.__read_temperature()
         if temp_celsius is not None:
             self._state = display_temp(
                 self.hass, temp_celsius, TEMP_CELSIUS, PRECISION_TENTHS
@@ -105,12 +105,12 @@ class LM75(Entity):
         else:
             _LOGGER.warning("Problem reading temperature from sensor.")
 
-    def __regdata2float(self, regdata):
+    def __regdata_to_float(self, regdata):
         """Convert raw sensor data to temperature."""
         return (regdata / 32.0) / 8.0
 
-    def __readTemperature(self):
+    def __read_temperature(self):
         """Read raw data from the SMBus and convert it to human readable temperature."""
         raw = self._bus.read_word_data(self._address, self._register) & 0xFFFF
         raw = ((raw << 8) & 0xFF00) + (raw >> 8)
-        return self.__regdata2float(raw)
+        return self.__regdata_to_float(raw)
