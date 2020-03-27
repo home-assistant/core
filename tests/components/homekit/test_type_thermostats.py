@@ -102,7 +102,7 @@ async def test_thermostat(hass, hk_driver, cls, events):
 
     assert acc.char_target_temp.properties[PROP_MAX_VALUE] == DEFAULT_MAX_TEMP
     assert acc.char_target_temp.properties[PROP_MIN_VALUE] == DEFAULT_MIN_TEMP
-    assert acc.char_target_temp.properties[PROP_MIN_STEP] == 0.5
+    assert acc.char_target_temp.properties[PROP_MIN_STEP] == 0.1
 
     hass.states.async_set(
         entity_id,
@@ -276,10 +276,10 @@ async def test_thermostat_auto(hass, hk_driver, cls, events):
 
     assert acc.char_cooling_thresh_temp.properties[PROP_MAX_VALUE] == DEFAULT_MAX_TEMP
     assert acc.char_cooling_thresh_temp.properties[PROP_MIN_VALUE] == DEFAULT_MIN_TEMP
-    assert acc.char_cooling_thresh_temp.properties[PROP_MIN_STEP] == 0.5
+    assert acc.char_cooling_thresh_temp.properties[PROP_MIN_STEP] == 0.1
     assert acc.char_heating_thresh_temp.properties[PROP_MAX_VALUE] == DEFAULT_MAX_TEMP
     assert acc.char_heating_thresh_temp.properties[PROP_MIN_VALUE] == DEFAULT_MIN_TEMP
-    assert acc.char_heating_thresh_temp.properties[PROP_MIN_STEP] == 0.5
+    assert acc.char_heating_thresh_temp.properties[PROP_MIN_STEP] == 0.1
 
     hass.states.async_set(
         entity_id,
@@ -517,7 +517,7 @@ async def test_thermostat_temperature_step_whole(hass, hk_driver, cls):
     await hass.async_add_job(acc.run)
     await hass.async_block_till_done()
 
-    assert acc.char_target_temp.properties[PROP_MIN_STEP] == 1.0
+    assert acc.char_target_temp.properties[PROP_MIN_STEP] == 0.1
 
 
 async def test_thermostat_restore(hass, hk_driver, cls, events):
@@ -618,7 +618,7 @@ async def test_water_heater(hass, hk_driver, cls, events):
     assert (
         acc.char_target_temp.properties[PROP_MIN_VALUE] == DEFAULT_MIN_TEMP_WATER_HEATER
     )
-    assert acc.char_target_temp.properties[PROP_MIN_STEP] == 0.5
+    assert acc.char_target_temp.properties[PROP_MIN_STEP] == 0.1
 
     hass.states.async_set(
         entity_id,
