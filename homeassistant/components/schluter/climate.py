@@ -59,7 +59,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async_add_entities(
         SchluterThermostat(coordinator, serial_number, temp_unit, api, session_id)
-        for idx, (serial_number, thermostat) in enumerate(coordinator.data.items())
+        for serial_number, thermostat in coordinator.data.items()
     )
 
 
