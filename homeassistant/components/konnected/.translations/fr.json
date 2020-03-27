@@ -9,6 +9,9 @@
             "confirm": {
                 "title": "Appareil Konnected pr\u00eat"
             },
+            "import_confirm": {
+                "title": "Importer un appareil connect\u00e9"
+            },
             "user": {
                 "data": {
                     "host": "Adresse IP de l\u2019appareil Konnected"

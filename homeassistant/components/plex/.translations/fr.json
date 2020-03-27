@@ -53,6 +53,8 @@
         "step": {
             "plex_mp_settings": {
                 "data": {
+                    "ignore_new_shared_users": "Ignorer les nouveaux utilisateurs g\u00e9r\u00e9s/partag\u00e9s",
+                    "monitored_users": "Utilisateurs surveill\u00e9s",
                     "show_all_controls": "Afficher tous les contr\u00f4les",
                     "use_episode_art": "Utiliser l'art de l'\u00e9pisode"
                 },
