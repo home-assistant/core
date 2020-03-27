@@ -321,6 +321,7 @@ class Light(ZhaEntity, BaseLight):
         self._color_channel = self.cluster_channels.get(CHANNEL_COLOR)
         self._identify_channel = self.zha_device.channels.identify_ch
         self._cancel_refresh_handle = None
+        effect_list = []
 
         if self._level_channel:
             self._supported_features |= light.SUPPORT_BRIGHTNESS
@@ -338,10 +339,13 @@ class Light(ZhaEntity, BaseLight):
 
             if color_capabilities & CAPABILITIES_COLOR_LOOP:
                 self._supported_features |= light.SUPPORT_EFFECT
-                self._effect_list.append(light.EFFECT_COLORLOOP)
+                effect_list.append(light.EFFECT_COLORLOOP)
 
         if self._identify_channel:
             self._supported_features |= light.SUPPORT_FLASH
+
+        if effect_list:
+            self._effect_list = effect_list
 
     @callback
     def async_set_state(self, attr_id, attr_name, value):
