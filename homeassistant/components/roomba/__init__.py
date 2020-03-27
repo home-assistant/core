@@ -49,9 +49,9 @@ async def async_setup_entry(hass, config_entry):
             address=config_entry.data[CONF_HOST],
             blid=config_entry.data[CONF_USERNAME],
             password=config_entry.data[CONF_PASSWORD],
-            cert_name=config_entry.data[CONF_CERT],
-            continuous=config_entry.data[CONF_CONTINUOUS],
-            delay=config_entry.data[CONF_DELAY],
+            cert_name=config_entry.options[CONF_CERT],
+            continuous=config_entry.options[CONF_CONTINUOUS],
+            delay=config_entry.options[CONF_DELAY],
         )
         hass.data[DOMAIN]["roomba"] = roomba
         try:
