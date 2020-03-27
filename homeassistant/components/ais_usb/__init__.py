@@ -140,15 +140,17 @@ async def async_setup(hass, config):
                         device_info["id"] != G_AIS_REMOTE_ID
                         or ais_global.G_USB_INTERNAL_MIC_RESET is False
                     ):
-                        if "info" in device_info:
+                        if (
+                            "info" in device_info
+                            and "xHCI Host Controller" not in device_info["info"]
+                            and "Mass Storage" not in device_info["info"]
+                        ):
                             text = "Dodano: " + device_info["info"]
-                        else:
-                            text = "Dodano urządzenie"
-                        hass.async_add_job(
-                            hass.services.async_call(
-                                "ais_ai_service", "say_it", {"text": text}
+                            hass.async_add_job(
+                                hass.services.async_call(
+                                    "ais_ai_service", "say_it", {"text": text}
+                                )
                             )
-                        )
                     # reset flag
                     ais_global.G_USB_INTERNAL_MIC_RESET = False
                     # prepare device
@@ -183,8 +185,8 @@ async def async_setup(hass, config):
                     ):
                         if "info" in device_info:
                             if (
-                                device_info["info"]
-                                != "xHCI Host Controller producent Linux 3.14.29 xhci-hcd"
+                                "info" in device_info
+                                and "xHCI Host Controller " not in device_info["info"]
                             ):
                                 state = hass.states.get(
                                     "media_player.wbudowany_glosnik"
@@ -205,20 +207,17 @@ async def async_setup(hass, config):
                                         "publish_command_to_frame",
                                         {"key": "stopAudio", "val": True},
                                     )
-                if device_info is not None:
+                    # info to user
                     if (
                         device_info["id"] != G_AIS_REMOTE_ID
                         or ais_global.G_USB_INTERNAL_MIC_RESET is False
                     ):
-                        if "info" in device_info:
-                            text = "Usunięto: " + device_info["info"]
-                        else:
-                            text = "Usunięto urządzenie"
-
                         if (
-                            text
-                            != "Usunięto: xHCI Host Controller producent Linux 3.14.29 xhci-hcd"
+                            "info" in device_info
+                            and "xHCI Host Controller" not in device_info["info"]
+                            and "Mass Storage" not in device_info["info"]
                         ):
+                            text = "Usunięto: " + device_info["info"]
                             hass.async_add_job(
                                 hass.services.async_call(
                                     "ais_ai_service", "say_it", {"text": text}

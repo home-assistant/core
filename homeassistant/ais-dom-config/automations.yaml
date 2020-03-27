@@ -5,6 +5,8 @@
   - event: start
     platform: homeassistant
   action:
+   - service: ais_cloud.get_players
+     data: {}
    - service: ais_ai_service.publish_command_to_frame
      data:
        key: WifiConnectionInfo
@@ -21,8 +23,6 @@
      data:
        key: relaunch
        val: true
-   - service: ais_cloud.get_players
-     data: {}
    - service: ais_shell_command.init_local_sdcard
    - service: ais_ai_service.publish_command_to_frame
      data:
