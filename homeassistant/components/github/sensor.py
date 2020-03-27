@@ -30,6 +30,11 @@ ATTR_LATEST_OPEN_PULL_REQUEST_URL = "latest_open_pull_request_url"
 ATTR_OPEN_PULL_REQUESTS = "open_pull_requests"
 ATTR_PATH = "path"
 ATTR_STARGAZERS = "stargazers"
+ATTR_FORKS = "forks"
+ATTR_CLONES = "clones"
+ATTR_CLONES_UNIQUES = "clones_uniques"
+ATTR_VIEWS = "views"
+ATTR_VIEWS_UNIQUES = "views_uniques"
 
 DEFAULT_NAME = "GitHub"
 
@@ -86,6 +91,11 @@ class GitHubSensor(Entity):
         self._pull_request_count = None
         self._latest_open_pr_url = None
         self._stargazers = None
+        self._forks = None
+        self._clones = None
+        self._clones_uniques = None
+        self._views = None
+        self._views_uniques = None
         self._github_data = github_data
 
     @property
@@ -122,6 +132,11 @@ class GitHubSensor(Entity):
             ATTR_LATEST_OPEN_PULL_REQUEST_URL: self._latest_open_pr_url,
             ATTR_OPEN_PULL_REQUESTS: self._pull_request_count,
             ATTR_STARGAZERS: self._stargazers,
+            ATTR_FORKS: self._forks,
+            ATTR_CLONES: self._clones,
+            ATTR_CLONES_UNIQUES: self._clones_uniques,
+            ATTR_VIEWS: self._views,
+            ATTR_VIEWS_UNIQUES: self._views_uniques,
         }
         if self._latest_release_tag is not None:
             attrs[ATTR_LATEST_RELEASE_TAG] = self._latest_release_tag
@@ -154,6 +169,11 @@ class GitHubSensor(Entity):
         self._pull_request_count = self._github_data.pull_request_count
         self._latest_open_pr_url = self._github_data.latest_open_pr_url
         self._stargazers = self._github_data.stargazers
+        self._forks = self._github_data.forks
+        self._clones = self._github_data.clones
+        self._clones_uniques = self._github_data.clones_uniques
+        self._views = self._github_data.views
+        self._views_uniques = self._github_data.views_uniques
 
 
 class GitHubData:
@@ -190,6 +210,11 @@ class GitHubData:
         self.pull_request_count = None
         self.latest_open_pr_url = None
         self.stargazers = None
+        self.forks = None
+        self.clones = None
+        self.clones_uniques = None
+        self.views = None
+        self.views_uniques = None
 
     def update(self):
         """Update GitHub Sensor."""
@@ -197,6 +222,7 @@ class GitHubData:
             repo = self._github_obj.get_repo(self.repository_path)
 
             self.stargazers = repo.stargazers_count
+            self.forks = repo.forks_count
 
             open_issues = repo.get_issues(state="open", sort="created")
             if open_issues is not None:
@@ -217,6 +243,16 @@ class GitHubData:
             releases = repo.get_releases()
             if releases and releases.totalCount > 0:
                 self.latest_release_url = releases[0].html_url
+
+            clones = repo.get_clones_traffic()
+            if clones is not None:
+                self.clones = clones.get("count")
+                self.clones_uniques = clones.get("uniques")
+
+            views = repo.get_views_traffic()
+            if views is not None:
+                self.views = views.get("count")
+                self.views_uniques = views.get("uniques")
 
             self.available = True
         except self._github.GithubException as err:
