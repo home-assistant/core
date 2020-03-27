@@ -281,7 +281,7 @@ class KefMediaPlayer(MediaPlayerDevice):
                 state = await self._speaker.get_state()
                 self._source = state.source
                 self._state = STATE_ON if state.is_on else STATE_OFF
-                if state.is_on and self._dsp is None:
+                if self._dsp is None:
                     # Only do this once because it is a slow operation
                     await self.update_dsp()
             else:
