@@ -34,7 +34,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -141,43 +141,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         hass.data[DOMAIN][host] = media_player
         async_add_entities([media_player], update_before_add=True)
 
-    async def service_handler(service):
-        """Handle service."""
-        entity_id = service.data.get(ATTR_ENTITY_ID)
+    platform = entity_platform.current_platform.get()
 
-        media_player = next(
-            (d for d in hass.data[DOMAIN].values() if d.entity_id == entity_id), None,
-        )
-
-        if media_player is None:
-            _LOGGER.warning("Unable to find KEF speaker with entity_id: %s", entity_id)
-            return
-
-        if service.service == SERVICE_MODE:
-            await media_player.set_mode(
-                desk_mode=service.data.get("desk_mode"),
-                wall_mode=service.data.get("wall_mode"),
-                phase_correction=service.data.get("phase_correction"),
-                high_pass=service.data.get("high_pass"),
-                sub_polarity=service.data.get("sub_polarity"),
-                bass_extension=service.data.get("bass_extension"),
-            )
-        elif service.service == SERVICE_DESK_DB:
-            await media_player.set_desk_db(service.data.get("db"))
-        elif service.service == SERVICE_WALL_DB:
-            await media_player.set_wall_db(service.data.get("db"))
-        elif service.service == SERVICE_TREBLE_DB:
-            await media_player.set_treble_db(service.data.get("db"))
-        elif service.service == SERVICE_HIGH_HZ:
-            await media_player.set_high_hz(service.data.get("hz"))
-        elif service.service == SERVICE_LOW_HZ:
-            await media_player.set_low_hz(service.data.get("hz"))
-        elif service.service == SERVICE_SUB_DB:
-            await media_player.set_sub_db(service.data.get("db"))
-        elif service.service == SERVICE_UPDATE_DSP:
-            await media_player.update_dsp()
-
-    mode_schema = vol.Schema(
+    platform.async_register_entity_service(
+        SERVICE_MODE,
         {
             vol.Required(ATTR_ENTITY_ID): cv.entity_id,
             vol.Optional("desk_mode"): cv.boolean,
@@ -186,27 +153,21 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             vol.Optional("high_pass"): cv.boolean,
             vol.Optional("sub_polarity"): vol.In(["-", "+"]),
             vol.Optional("bass_extension"): vol.In(["Less", "Standard", "Extra"]),
-        }
+        },
+        "set_mode",
     )
-    hass.services.async_register(
-        DOMAIN, SERVICE_MODE, service_handler, schema=mode_schema,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_UPDATE_DSP,
-        service_handler,
-        schema=vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_id}),
+    platform.async_register_entity_service(
+        SERVICE_UPDATE_DSP, {vol.Required(ATTR_ENTITY_ID): cv.entity_id}, "update_dsp"
     )
 
     def add_service(name, which, option):
-        schema = vol.Schema(
+        platform.async_register_entity_service(
+            name,
             {
                 vol.Required(ATTR_ENTITY_ID): cv.entity_id,
                 vol.Required(option): vol.In(DSP_OPTION_MAPPING[which]),
-            }
-        )
-        hass.services.async_register(
-            DOMAIN, name, service_handler, schema=schema,
+            },
+            f"set_{which}",
         )
 
     add_service(SERVICE_DESK_DB, "desk_db", "db")
