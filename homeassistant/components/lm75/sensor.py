@@ -1,12 +1,17 @@
 """Support for LM75 temperature sensor."""
 import logging
 
-import homeassistant.helpers.config_validation as cv
 import smbus  # pylint: disable=import-error
 import voluptuous as vol
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, DEVICE_CLASS_TEMPERATURE,
-                                 PRECISION_TENTHS, TEMP_CELSIUS)
+from homeassistant.const import (
+    CONF_NAME,
+    DEVICE_CLASS_TEMPERATURE,
+    PRECISION_TENTHS,
+    TEMP_CELSIUS,
+)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.temperature import display_temp
 
@@ -37,11 +42,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS): vol.Coerce(int),
         vol.Optional(CONF_I2C_BUS, default=DEFAULT_I2C_BUS): vol.Coerce(int),
-        vol.Optional(CONF_REGISTER, default=DEFAULT_REGISTER): vol.In(
-            REGISTER
-        ),
+        vol.Optional(CONF_REGISTER, default=DEFAULT_REGISTER): vol.In(REGISTER),
     }
 )
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
@@ -50,7 +54,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     i2c_address = config.get(CONF_I2C_ADDRESS)
     bus_number = config.get(CONF_I2C_BUS)
     register = config.get(CONF_REGISTER)
-    
+
     _LOGGER.info(
         "Setup of temperature sensor at address %s with bus number %s is complete",
         i2c_address,
@@ -93,7 +97,7 @@ class LM75(Entity):
 
     def update(self):
         """Get the latest data from the sensor."""
-        temp_celsius = self.readTemperature()
+        temp_celsius = self.__readTemperature()
         if temp_celsius is not None:
             self._state = display_temp(
                 self.hass, temp_celsius, TEMP_CELSIUS, PRECISION_TENTHS
@@ -101,10 +105,12 @@ class LM75(Entity):
         else:
             _LOGGER.warning("Problem reading temperature from sensor.")
 
-    def regdata2float (self, regdata):
+    def __regdata2float(self, regdata):
+        """Convert raw sensor data to temperature."""
         return (regdata / 32.0) / 8.0
 
-    def readTemperature(self):
+    def __readTemperature(self):
+        """Read raw data from the SMBus and convert it to human readable temperature."""
         raw = self._bus.read_word_data(self._address, self._register) & 0xFFFF
         raw = ((raw << 8) & 0xFF00) + (raw >> 8)
-        return self.regdata2float(raw)
+        return self.__regdata2float(raw)
