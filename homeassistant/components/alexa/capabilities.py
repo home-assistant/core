@@ -172,7 +172,7 @@ class AlexaCapability:
     @staticmethod
     def camera_stream_configurations():
         """Applicable only to CameraStreamController."""
-        return []
+        return None
 
     def serialize_discovery(self):
         """Serialize according to the Discovery API."""
