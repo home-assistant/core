@@ -17,11 +17,7 @@
     },
     "error": {
       "cannot_connect": "Failed to connect, please try again",
-      "invalid_auth": "Invalid authentication",
-      "unknown": "Unexpected error"
-    },
-    "abort": {
-      "already_configured": "Device is already configured"
+      "invalid_auth": "Invalid authentication"
     }
   },
   "options": {
@@ -31,13 +27,6 @@
           "certificate": "Certificat",
           "continuous": "Continue",
           "delay": "Delais"
-        }
-      },
-      "options": {
-        "data": {
-          "certificate": "Certificate",
-          "continuous": "Continuous",
-          "delay": "Delay"
         }
       }
     }
