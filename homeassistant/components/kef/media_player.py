@@ -26,7 +26,6 @@ from homeassistant.components.media_player import (
     MediaPlayerDevice,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
@@ -146,7 +145,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     platform.async_register_entity_service(
         SERVICE_MODE,
         {
-            vol.Required(ATTR_ENTITY_ID): cv.entity_id,
             vol.Optional("desk_mode"): cv.boolean,
             vol.Optional("wall_mode"): cv.boolean,
             vol.Optional("phase_correction"): cv.boolean,
@@ -156,26 +154,21 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         },
         "set_mode",
     )
-    platform.async_register_entity_service(
-        SERVICE_UPDATE_DSP, {vol.Required(ATTR_ENTITY_ID): cv.entity_id}, "update_dsp"
-    )
+    platform.async_register_entity_service(SERVICE_UPDATE_DSP, {}, "update_dsp")
 
     def add_service(name, which, option):
         platform.async_register_entity_service(
             name,
-            {
-                vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-                vol.Required(option): vol.In(DSP_OPTION_MAPPING[which]),
-            },
+            {vol.Required(option): vol.In(DSP_OPTION_MAPPING[which])},
             f"set_{which}",
         )
 
-    add_service(SERVICE_DESK_DB, "desk_db", "db")
-    add_service(SERVICE_WALL_DB, "wall_db", "db")
-    add_service(SERVICE_TREBLE_DB, "treble_db", "db")
-    add_service(SERVICE_HIGH_HZ, "high_hz", "hz")
-    add_service(SERVICE_LOW_HZ, "low_hz", "hz")
-    add_service(SERVICE_SUB_DB, "sub_db", "db")
+    add_service(SERVICE_DESK_DB, "desk_db", "db_value")
+    add_service(SERVICE_WALL_DB, "wall_db", "db_value")
+    add_service(SERVICE_TREBLE_DB, "treble_db", "db_value")
+    add_service(SERVICE_HIGH_HZ, "high_hz", "hz_value")
+    add_service(SERVICE_LOW_HZ, "low_hz", "hz_value")
+    add_service(SERVICE_SUB_DB, "sub_db", "db_value")
 
 
 class KefMediaPlayer(MediaPlayerDevice):
