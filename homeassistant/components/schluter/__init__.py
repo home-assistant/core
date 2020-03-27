@@ -1,5 +1,4 @@
 """The Schluter DITRA-HEAT integration."""
-from datetime import timedelta
 import logging
 
 from requests import RequestException, Session
@@ -23,7 +22,7 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Required(DOMAIN): vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string
+                vol.Required(CONF_PASSWORD): cv.string,
             }
         )
     },
@@ -34,7 +33,7 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass, config):
     """Set up the Schluter component."""
     _LOGGER.debug("Starting setup of schluter")
-    
+
     conf = config[DOMAIN]
     api_http_session = Session()
     api = Api(timeout=conf.get(CONF_TIMEOUT), http_session=api_http_session)
