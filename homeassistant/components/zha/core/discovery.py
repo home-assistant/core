@@ -6,6 +6,7 @@ from typing import Callable, List, Tuple
 
 from homeassistant import const as ha_const
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -182,59 +183,48 @@ class GroupProbe:
             )
             return
 
-        if group.entity_domain is None:
-            _LOGGER.debug(
-                "Group: %s:0x%04x has no user set entity domain - attempting entity domain discovery",
-                group.name,
-                group.group_id,
-            )
-            group.entity_domain = GroupProbe.determine_default_entity_domain(
-                self._hass, group
-            )
+        entity_domains = GroupProbe.determine_entity_domains(self._hass, group)
 
-        if group.entity_domain is None:
+        if not entity_domains:
             return
-
-        _LOGGER.debug(
-            "Group: %s:0x%04x has an entity domain of: %s after discovery",
-            group.name,
-            group.group_id,
-            group.entity_domain,
-        )
 
         zha_gateway = self._hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
-        entity_class = zha_regs.ZHA_ENTITIES.get_group_entity(group.entity_domain)
-        if entity_class is None:
-            return
-
-        self._hass.data[zha_const.DATA_ZHA][group.entity_domain].append(
-            (
-                entity_class,
+        for domain in entity_domains:
+            entity_class = zha_regs.ZHA_ENTITIES.get_group_entity(domain)
+            if entity_class is None:
+                continue
+            self._hass.data[zha_const.DATA_ZHA][domain].append(
                 (
-                    group.domain_entity_ids,
-                    f"{group.entity_domain}_group_{group.group_id}",
-                    group.group_id,
-                    zha_gateway.coordinator_zha_device,
-                ),
+                    entity_class,
+                    (
+                        group.get_domain_entity_ids(domain),
+                        f"{domain}_group_{group.group_id}",
+                        group.group_id,
+                        zha_gateway.coordinator_zha_device,
+                    ),
+                )
             )
-        )
+        async_dispatcher_send(self._hass, zha_const.SIGNAL_ADD_ENTITIES)
 
     @staticmethod
-    def determine_default_entity_domain(
+    def determine_entity_domains(
         hass: HomeAssistantType, group: zha_typing.ZhaGroupType
-    ):
-        """Determine the default entity domain for this group."""
+    ) -> List[str]:
+        """Determine the entity domains for this group."""
+        entity_domains: List[str] = []
         if len(group.members) < 2:
             _LOGGER.debug(
                 "Group: %s:0x%04x has less than 2 members so cannot default an entity domain",
                 group.name,
                 group.group_id,
             )
-            return None
+            return entity_domains
 
         zha_gateway = hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
         all_domain_occurrences = []
         for device in group.members:
+            if device.is_coordinator:
+                continue
             entities = async_entries_for_device(
                 zha_gateway.ha_entity_registry, device.device_id
             )
@@ -245,15 +235,18 @@ class GroupProbe:
                     if entity.domain in zha_regs.GROUP_ENTITY_DOMAINS
                 ]
             )
+        if not all_domain_occurrences:
+            return entity_domains
+        # get all domains we care about if there are more than 2 entities of this domain
         counts = Counter(all_domain_occurrences)
-        domain = counts.most_common(1)[0][0]
+        entity_domains = [domain[0] for domain in counts.items() if domain[1] >= 2]
         _LOGGER.debug(
-            "The default entity domain is: %s for group: %s:0x%04x",
-            domain,
+            "The entity domains are: %s for group: %s:0x%04x",
+            entity_domains,
             group.name,
             group.group_id,
         )
-        return domain
+        return entity_domains
 
 
 PROBE = ProbeEndpoint()

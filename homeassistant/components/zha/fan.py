@@ -1,6 +1,10 @@
 """Fans on Zigbee Home Automation networks."""
 import functools
 import logging
+from typing import List, Optional
+
+from zigpy.exceptions import DeliveryError
+import zigpy.zcl.clusters.hvac as hvac
 
 from homeassistant.components.fan import (
     DOMAIN,
@@ -11,8 +15,10 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     FanEntity,
 )
-from homeassistant.core import callback
+from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import CALLBACK_TYPE, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.event import async_track_state_change
 
 from .core import discovery
 from .core.const import (
@@ -21,9 +27,10 @@ from .core.const import (
     DATA_ZHA_DISPATCHERS,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
+    SIGNAL_REMOVE_GROUP,
 )
 from .core.registries import ZHA_ENTITIES
-from .entity import ZhaEntity
+from .entity import BaseZhaEntity, ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +56,7 @@ SPEED_LIST = [
 VALUE_TO_SPEED = dict(enumerate(SPEED_LIST))
 SPEED_TO_VALUE = {speed: i for i, speed in enumerate(SPEED_LIST)}
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
+GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, DOMAIN)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -65,31 +73,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
 
-@STRICT_MATCH(channel_names=CHANNEL_FAN)
-class ZhaFan(ZhaEntity, FanEntity):
-    """Representation of a ZHA fan."""
+class BaseFan(BaseZhaEntity, FanEntity):
+    """Base representation of a ZHA fan."""
 
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
-        """Init this sensor."""
-        super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._fan_channel = self.cluster_channels.get(CHANNEL_FAN)
-
-    async def async_added_to_hass(self):
-        """Run when about to be added to hass."""
-        await super().async_added_to_hass()
-        await self.async_accept_signal(
-            self._fan_channel, SIGNAL_ATTR_UPDATED, self.async_set_state
-        )
-
-    @callback
-    def async_restore_last_state(self, last_state):
-        """Restore previous state."""
-        self._state = VALUE_TO_SPEED.get(last_state.state, last_state.state)
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_SET_SPEED
+    def __init__(self, *args, **kwargs):
+        """Initialize the fan."""
+        super().__init__(*args, **kwargs)
+        self._state = None
+        self._fan_channel = None
 
     @property
     def speed_list(self) -> list:
@@ -109,15 +100,9 @@ class ZhaFan(ZhaEntity, FanEntity):
         return self._state != SPEED_OFF
 
     @property
-    def device_state_attributes(self):
-        """Return state attributes."""
-        return self.state_attributes
-
-    @callback
-    def async_set_state(self, attr_id, attr_name, value):
-        """Handle state update from channel."""
-        self._state = VALUE_TO_SPEED.get(value, self._state)
-        self.async_write_ha_state()
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return SUPPORT_SET_SPEED
 
     async def async_turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn the entity on."""
@@ -135,6 +120,34 @@ class ZhaFan(ZhaEntity, FanEntity):
         await self._fan_channel.async_set_speed(SPEED_TO_VALUE[speed])
         self.async_set_state(0, "fan_mode", speed)
 
+
+@STRICT_MATCH(channel_names=CHANNEL_FAN)
+class ZhaFan(ZhaEntity, BaseFan):
+    """Representation of a ZHA fan."""
+
+    def __init__(self, unique_id, zha_device, channels, **kwargs):
+        """Init this sensor."""
+        super().__init__(unique_id, zha_device, channels, **kwargs)
+        self._fan_channel = self.cluster_channels.get(CHANNEL_FAN)
+
+    async def async_added_to_hass(self):
+        """Run when about to be added to hass."""
+        await super().async_added_to_hass()
+        await self.async_accept_signal(
+            self._fan_channel, SIGNAL_ATTR_UPDATED, self.async_set_state
+        )
+
+    @callback
+    def async_restore_last_state(self, last_state):
+        """Restore previous state."""
+        self._state = VALUE_TO_SPEED.get(last_state.state, last_state.state)
+
+    @callback
+    def async_set_state(self, attr_id, attr_name, value):
+        """Handle state update from channel."""
+        self._state = VALUE_TO_SPEED.get(value, self._state)
+        self.async_write_ha_state()
+
     async def async_update(self):
         """Attempt to retrieve on off state from the fan."""
         await super().async_update()
@@ -142,3 +155,73 @@ class ZhaFan(ZhaEntity, FanEntity):
             state = await self._fan_channel.get_attribute_value("fan_mode")
             if state is not None:
                 self._state = VALUE_TO_SPEED.get(state, self._state)
+
+
+@GROUP_MATCH()
+class FanGroup(BaseFan):
+    """Representation of a fan group."""
+
+    def __init__(
+        self, entity_ids: List[str], unique_id: str, group_id: int, zha_device, **kwargs
+    ) -> None:
+        """Initialize a fan group."""
+        super().__init__(unique_id, zha_device, **kwargs)
+        self._name: str = f"{zha_device.gateway.groups.get(group_id).name}_group_{group_id}"
+        self._group_id: int = group_id
+        self._available: bool = False
+        self._entity_ids: List[str] = entity_ids
+        self._async_unsub_state_changed: Optional[CALLBACK_TYPE] = None
+        group = self.zha_device.gateway.get_group(self._group_id)
+        self._fan_channel = group.endpoint[hvac.Fan.cluster_id]
+
+        # what should we do with this hack?
+        async def async_set_speed(value) -> None:
+            """Set the speed of the fan."""
+            try:
+                await self._fan_channel.write_attributes({"fan_mode": value})
+            except DeliveryError as ex:
+                self.error("Could not set speed: %s", ex)
+                return
+
+        self._fan_channel.async_set_speed = async_set_speed
+
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        await super().async_added_to_hass()
+        await self.async_accept_signal(
+            None,
+            f"{SIGNAL_REMOVE_GROUP}_{self._group_id}",
+            self.async_remove,
+            signal_override=True,
+        )
+
+        @callback
+        def async_state_changed_listener(
+            entity_id: str, old_state: State, new_state: State
+        ):
+            """Handle child updates."""
+            self.async_schedule_update_ha_state(True)
+
+        self._async_unsub_state_changed = async_track_state_change(
+            self.hass, self._entity_ids, async_state_changed_listener
+        )
+        await self.async_update()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Handle removal from Home Assistant."""
+        await super().async_will_remove_from_hass()
+        if self._async_unsub_state_changed is not None:
+            self._async_unsub_state_changed()
+            self._async_unsub_state_changed = None
+
+    async def async_update(self):
+        """Attempt to retrieve on off state from the fan."""
+        all_states = [self.hass.states.get(x) for x in self._entity_ids]
+        states: List[State] = list(filter(None, all_states))
+        on_states: List[State] = [state for state in states if state.state != SPEED_OFF]
+        self._available = any(state.state != STATE_UNAVAILABLE for state in states)
+        # for now just use first non off state since its kind of arbitrary
+        if not on_states:
+            self._state = SPEED_OFF
+        else:
+            self._state = states[0].state

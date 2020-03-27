@@ -134,7 +134,6 @@ async def test_gateway_group_methods(hass, device_light_1, device_light_2, coord
     await hass.async_block_till_done()
 
     assert zha_group is not None
-    assert zha_group.entity_domain == LIGHT_DOMAIN
     assert len(zha_group.members) == 2
     for member in zha_group.members:
         assert member.ieee in member_ieee_addresses
@@ -162,7 +161,6 @@ async def test_gateway_group_methods(hass, device_light_1, device_light_2, coord
     await hass.async_block_till_done()
 
     assert zha_group is not None
-    assert zha_group.entity_domain is None
     assert len(zha_group.members) == 1
     for member in zha_group.members:
         assert member.ieee in [device_light_1.ieee]
