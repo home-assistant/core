@@ -43,7 +43,6 @@
    - service: ais_cloud.get_rss_news_category
    - service: ais_yt_service.search
    - service: ais_audiobooks_service.get_authors
-   - service: ais_shell_command.change_remote_access
    - service: ais_shell_command.disable_irda_remote
    - service: ais_ai_service.check_local_ip
    - service: ais_amplifier_service.get_audio_mono
@@ -59,6 +58,7 @@
        payload: 0
        topic: dom/cmnd/state
    - service: ais_ai_service.prepare_remote_menu
+   - service: ais_shell_command.change_remote_access
    - service: ais_ai_service.welcome_home
    - service: camera.snapshot
      data:

@@ -106,7 +106,6 @@ async def async_setup(hass, config):
 
     class EventHandler(pyinotify.ProcessEvent):
         def process_IN_CREATE(self, event):
-            _LOGGER.error("IN_CREATE: " + str(event.pathname))
             if event.pathname.startswith(G_USB_DRIVES_PATH):
                 # create symlink
                 try:
@@ -156,7 +155,6 @@ async def async_setup(hass, config):
                     prepare_usb_device(hass, device_info)
 
         def process_IN_DELETE(self, event):
-            _LOGGER.error("IN_DELETE: " + str(event.pathname))
             if event.pathname.startswith(G_USB_DRIVES_PATH):
                 # delete symlink
                 td = "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne"
@@ -236,7 +234,7 @@ async def async_setup(hass, config):
         mask = pyinotify.IN_DELETE | pyinotify.IN_CREATE  # watched events
         notifier = pyinotify.ThreadedNotifier(wm, EventHandler())
         notifier.start()
-        wm.add_watch("/dev/bus/usb", mask, rec=False)
+        wm.add_watch("/dev/bus", mask, rec=True)
         wm.add_watch(G_USB_DRIVES_PATH, mask, rec=False)
         _LOGGER.info("usb_load_notifiers stop")
 
