@@ -173,7 +173,6 @@ async def async_test_zha_group_switch_entity(
     await hass.async_block_till_done()
 
     assert zha_group is not None
-    assert zha_group.entity_domain == DOMAIN
     assert len(zha_group.members) == 2
     for member in zha_group.members:
         assert member.ieee in member_ieee_addresses

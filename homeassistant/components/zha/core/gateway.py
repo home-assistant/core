@@ -445,8 +445,6 @@ class ZHAGateway:
         if zha_group is None:
             zha_group = ZHAGroup(self._hass, self, zigpy_group)
             self._groups[zigpy_group.group_id] = zha_group
-        group_entry = self.zha_storage.async_get_or_create_group(zha_group)
-        zha_group.entity_domain = group_entry.entity_domain
         return zha_group
 
     @callback
@@ -469,8 +467,6 @@ class ZHAGateway:
         """Update the devices in the store."""
         for device in self.devices.values():
             self.zha_storage.async_update_device(device)
-        for group in self.groups.values():
-            self.zha_storage.async_update_group(group)
         await self.zha_storage.async_save()
 
     async def async_device_initialized(self, device: zha_typing.ZigpyDeviceType):
@@ -559,9 +555,7 @@ class ZHAGateway:
             zha_group.group_id,
         )
         discovery.GROUP_PROBE.discover_group_entities(zha_group)
-        if zha_group.entity_domain is not None:
-            self.zha_storage.async_update_group(zha_group)
-            async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES)
+
         return zha_group
 
     async def async_remove_zigpy_group(self, group_id: int) -> None:
@@ -577,7 +571,6 @@ class ZHAGateway:
             if tasks:
                 await asyncio.gather(*tasks)
         self.application_controller.groups.pop(group_id)
-        self.zha_storage.async_delete_group(group)
 
     async def shutdown(self):
         """Stop ZHA Controller Application."""

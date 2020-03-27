@@ -1,7 +1,7 @@
 """Group for Zigbee Home Automation."""
 import asyncio
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from zigpy.types.named import EUI64
 
@@ -28,7 +28,6 @@ class ZHAGroup(LogMixin):
         self.hass: HomeAssistantType = hass
         self._zigpy_group: ZigpyGroupType = zigpy_group
         self._zha_gateway: ZhaGatewayType = zha_gateway
-        self._entity_domain: str = None
 
     @property
     def name(self) -> str:
@@ -44,16 +43,6 @@ class ZHAGroup(LogMixin):
     def endpoint(self) -> ZigpyEndpointType:
         """Return the endpoint for this group."""
         return self._zigpy_group.endpoint
-
-    @property
-    def entity_domain(self) -> Optional[str]:
-        """Return the domain that will be used for the entity representing this group."""
-        return self._entity_domain
-
-    @entity_domain.setter
-    def entity_domain(self, domain: Optional[str]) -> None:
-        """Set the domain that will be used for the entity representing this group."""
-        self._entity_domain = domain
 
     @property
     def members(self) -> List[ZhaDeviceType]:
@@ -106,22 +95,15 @@ class ZHAGroup(LogMixin):
                 all_entity_ids.append(entity.entity_id)
         return all_entity_ids
 
-    @property
-    def domain_entity_ids(self) -> List[str]:
+    def get_domain_entity_ids(self, domain) -> List[str]:
         """Return entity ids from the entity domain for this group."""
-        if self.entity_domain is None:
-            return
         domain_entity_ids: List[str] = []
         for device in self.members:
             entities = async_entries_for_device(
                 self._zha_gateway.ha_entity_registry, device.device_id
             )
             domain_entity_ids.extend(
-                [
-                    entity.entity_id
-                    for entity in entities
-                    if entity.domain == self.entity_domain
-                ]
+                [entity.entity_id for entity in entities if entity.domain == domain]
             )
         return domain_entity_ids
 
@@ -130,7 +112,6 @@ class ZHAGroup(LogMixin):
         """Get ZHA group info."""
         group_info: Dict[str, Any] = {}
         group_info["group_id"] = self.group_id
-        group_info["entity_domain"] = self.entity_domain
         group_info["name"] = self.name
         group_info["members"] = [
             zha_device.async_get_info() for zha_device in self.members
