@@ -609,6 +609,7 @@ omit =
     homeassistant/components/saj/sensor.py
     homeassistant/components/salt/device_tracker.py
     homeassistant/components/satel_integra/*
+    homeassistant/components/schluter/*
     homeassistant/components/scrape/sensor.py
     homeassistant/components/scsgate/*
     homeassistant/components/scsgate/cover.py
