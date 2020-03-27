@@ -37,13 +37,6 @@ from . import (
 )
 from .const import DOMAIN
 
-ARM_SERVICES = {
-    SERVICE_ALARM_ARM_VACATION: "async_alarm_arm_vacation",
-    SERVICE_ALARM_ARM_HOME_INSTANT: "async_alarm_arm_home_instant",
-    SERVICE_ALARM_ARM_NIGHT_INSTANT: "async_alarm_arm_night_instant",
-}
-
-
 ELK_ALARM_SERVICE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
@@ -86,11 +79,21 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     platform = entity_platform.current_platform.get()
 
-    for service in ARM_SERVICES:
-        platform.async_register_entity_service(
-            service, ELK_ALARM_SERVICE_SCHEMA, ARM_SERVICES[service],
-        )
-
+    platform.async_register_entity_service(
+        SERVICE_ALARM_ARM_VACATION,
+        ELK_ALARM_SERVICE_SCHEMA,
+        "async_alarm_arm_vacation",
+    )
+    platform.async_register_entity_service(
+        SERVICE_ALARM_ARM_HOME_INSTANT,
+        ELK_ALARM_SERVICE_SCHEMA,
+        "async_alarm_arm_home_instant",
+    )
+    platform.async_register_entity_service(
+        SERVICE_ALARM_ARM_NIGHT_INSTANT,
+        ELK_ALARM_SERVICE_SCHEMA,
+        "async_alarm_arm_night_instant",
+    )
     platform.async_register_entity_service(
         SERVICE_ALARM_DISPLAY_MESSAGE,
         DISPLAY_MESSAGE_SERVICE_SCHEMA,
