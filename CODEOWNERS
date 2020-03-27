@@ -313,6 +313,7 @@ homeassistant/components/saj/* @fredericvl
 homeassistant/components/salt/* @bjornorri
 homeassistant/components/samsungtv/* @escoand
 homeassistant/components/scene/* @home-assistant/core
+homeassistant/components/schluter/* @prairieapps
 homeassistant/components/scrape/* @fabaff
 homeassistant/components/script/* @home-assistant/core
 homeassistant/components/search/* @home-assistant/core
