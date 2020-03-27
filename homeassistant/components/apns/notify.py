@@ -177,7 +177,7 @@ class ApnsNotificationService(BaseNotificationService):
 
     def device_state_changed_listener(self, entity_id, from_s, to_s):
         """
-        Listen for sate change.
+        Listen for state change.
 
         Track device state change if a device has a tracking id specified.
         """

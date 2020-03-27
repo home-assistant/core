@@ -5,6 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
 DEFAULT_NAME = "myStrom Switch"
@@ -30,7 +31,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         MyStromPlug(host).get_status()
     except exceptions.MyStromConnectionError:
         _LOGGER.error("No route to device: %s", host)
-        return
+        raise PlatformNotReady()
 
     add_entities([MyStromSwitch(name, host)])
 
@@ -46,7 +47,7 @@ class MyStromSwitch(SwitchDevice):
         self._resource = resource
         self.data = {}
         self.plug = MyStromPlug(self._resource)
-        self.update()
+        self._available = True
 
     @property
     def name(self):
@@ -62,6 +63,11 @@ class MyStromSwitch(SwitchDevice):
     def current_power_w(self):
         """Return the current power consumption in W."""
         return round(self.data["power"], 2)
+
+    @property
+    def available(self):
+        """Could the device be accessed during the last update call."""
+        return self._available
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
@@ -87,6 +93,8 @@ class MyStromSwitch(SwitchDevice):
 
         try:
             self.data = self.plug.get_status()
+            self._available = True
         except exceptions.MyStromConnectionError:
             self.data = {"power": 0, "relay": False}
+            self._available = False
             _LOGGER.error("No route to device: %s", self._resource)

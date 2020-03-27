@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Mostek jest ju\u017c skonfigurowany",
-            "already_in_progress": "Konfigurowanie mostka jest ju\u017c w toku.",
+            "already_configured": "Mostek jest ju\u017c skonfigurowany.",
+            "already_in_progress": "Konfiguracja mostka jest ju\u017c w toku.",
             "no_bridges": "Nie odkryto mostk\u00f3w deCONZ",
             "not_deconz_bridge": "To nie jest mostek deCONZ",
             "one_instance_only": "Komponent obs\u0142uguje tylko jedn\u0105 instancj\u0119 deCONZ",
@@ -108,7 +108,8 @@
                     "allow_clip_sensor": "Zezwalaj na czujniki deCONZ CLIP",
                     "allow_deconz_groups": "Zezwalaj na grupy \u015bwiate\u0142 deCONZ"
                 },
-                "description": "Skonfiguruj widoczno\u015b\u0107 typ\u00f3w urz\u0105dze\u0144 deCONZ"
+                "description": "Skonfiguruj widoczno\u015b\u0107 typ\u00f3w urz\u0105dze\u0144 deCONZ",
+                "title": "Opcje deCONZ"
             }
         }
     }

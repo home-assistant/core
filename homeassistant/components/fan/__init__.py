@@ -111,25 +111,20 @@ class FanEntity(ToggleEntity):
         """Set the speed of the fan."""
         raise NotImplementedError()
 
-    def async_set_speed(self, speed: str):
-        """Set the speed of the fan.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_set_speed(self, speed: str):
+        """Set the speed of the fan."""
         if speed is SPEED_OFF:
-            return self.async_turn_off()
-        return self.hass.async_add_job(self.set_speed, speed)
+            await self.async_turn_off()
+        else:
+            await self.hass.async_add_job(self.set_speed, speed)
 
     def set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         raise NotImplementedError()
 
-    def async_set_direction(self, direction: str):
-        """Set the direction of the fan.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.set_direction, direction)
+    async def async_set_direction(self, direction: str):
+        """Set the direction of the fan."""
+        await self.hass.async_add_job(self.set_direction, direction)
 
     # pylint: disable=arguments-differ
     def turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
@@ -137,25 +132,20 @@ class FanEntity(ToggleEntity):
         raise NotImplementedError()
 
     # pylint: disable=arguments-differ
-    def async_turn_on(self, speed: Optional[str] = None, **kwargs):
-        """Turn on the fan.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_turn_on(self, speed: Optional[str] = None, **kwargs):
+        """Turn on the fan."""
         if speed is SPEED_OFF:
-            return self.async_turn_off()
-        return self.hass.async_add_job(ft.partial(self.turn_on, speed, **kwargs))
+            await self.async_turn_off()
+        else:
+            await self.hass.async_add_job(ft.partial(self.turn_on, speed, **kwargs))
 
     def oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
         pass
 
-    def async_oscillate(self, oscillating: bool):
-        """Oscillate the fan.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.oscillate, oscillating)
+    async def async_oscillate(self, oscillating: bool):
+        """Oscillate the fan."""
+        await self.hass.async_add_job(self.oscillate, oscillating)
 
     @property
     def is_on(self):
@@ -179,7 +169,7 @@ class FanEntity(ToggleEntity):
 
     @property
     def capability_attributes(self):
-        """Return capabilitiy attributes."""
+        """Return capability attributes."""
         return {ATTR_SPEED_LIST: self.speed_list}
 
     @property

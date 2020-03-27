@@ -1,18 +1,32 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Deze printer is al geconfigureerd.",
             "unsupported_model": "Dit printermodel wordt niet ondersteund."
         },
         "error": {
             "connection_error": "Verbindingsfout.",
+            "snmp_error": "SNMP-server uitgeschakeld of printer wordt niet ondersteund.",
             "wrong_host": "Ongeldige hostnaam of IP-adres."
         },
+        "flow_title": "Brother Printer: {model} {serial_number}",
         "step": {
             "user": {
                 "data": {
-                    "host": "Printerhostnaam of IP-adres"
-                }
+                    "host": "Printerhostnaam of IP-adres",
+                    "type": "Type printer"
+                },
+                "description": "Zet Brother printerintegratie op. Als u problemen heeft met de configuratie ga dan naar: https://www.home-assistant.io/integrations/brother",
+                "title": "Brother Printer"
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "type": "Type printer"
+                },
+                "description": "Wilt u het Brother Printer {model} met serienummer {serial_number}' toevoegen aan Home Assistant?",
+                "title": "Ontdekte Brother Printer"
             }
-        }
+        },
+        "title": "Brother Printer"
     }
 }

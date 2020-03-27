@@ -4,6 +4,7 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.entity import Entity
 
@@ -23,7 +24,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 12,
             ),
             DemoSensor(
-                "sensor_2", "Outside Humidity", 54, DEVICE_CLASS_HUMIDITY, "%", None
+                "sensor_2",
+                "Outside Humidity",
+                54,
+                DEVICE_CLASS_HUMIDITY,
+                UNIT_PERCENTAGE,
+                None,
             ),
         ]
     )

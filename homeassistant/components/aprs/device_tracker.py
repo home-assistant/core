@@ -57,7 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def make_filter(callsigns: list) -> str:
     """Make a server-side filter from a list of callsigns."""
-    return " ".join("b/{0}".format(cs.upper()) for cs in callsigns)
+    return " ".join(f"b/{sign.upper()}" for sign in callsigns)
 
 
 def gps_accuracy(gps, posambiguity: int) -> int:

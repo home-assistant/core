@@ -1,5 +1,6 @@
 """Support for Essent API."""
 from datetime import timedelta
+from typing import Optional
 
 from pyessent import PyEssent
 import voluptuous as vol
@@ -73,7 +74,7 @@ class EssentBase:
     def update(self):
         """Retrieve the latest meter data from Essent."""
         essent = PyEssent(self._username, self._password)
-        eans = essent.get_EANs()
+        eans = set(essent.get_EANs())
         for possible_meter in eans:
             meter_data = essent.read_meter(possible_meter, only_last_meter_reading=True)
             if meter_data:
@@ -91,6 +92,11 @@ class EssentMeter(Entity):
         self._type = meter_type
         self._tariff = tariff
         self._unit = unit
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+        return f"{self._meter}-{self._type}-{self._tariff}"
 
     @property
     def name(self):

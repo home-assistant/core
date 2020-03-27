@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 
 from pyflume import FlumeData, FlumeDeviceList
+from requests import Session
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -42,23 +43,37 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config[CONF_NAME]
     flume_entity_list = []
 
+    http_session = Session()
+
     flume_devices = FlumeDeviceList(
-        username, password, client_id, client_secret, flume_token_file
+        username,
+        password,
+        client_id,
+        client_secret,
+        flume_token_file,
+        http_session=http_session,
     )
 
     for device in flume_devices.device_list:
         if device["type"] == FLUME_TYPE_SENSOR:
+            device_id = device["id"]
+            device_name = device["location"]["name"]
+
             flume = FlumeData(
                 username,
                 password,
                 client_id,
                 client_secret,
-                device["id"],
+                device_id,
                 time_zone,
                 SCAN_INTERVAL,
                 flume_token_file,
+                update_on_init=False,
+                http_session=http_session,
             )
-            flume_entity_list.append(FlumeSensor(flume, f"{name} {device['id']}"))
+            flume_entity_list.append(
+                FlumeSensor(flume, f"{name} {device_name}", device_id)
+            )
 
     if flume_entity_list:
         add_entities(flume_entity_list, True)
@@ -67,11 +82,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class FlumeSensor(Entity):
     """Representation of the Flume sensor."""
 
-    def __init__(self, flume, name):
+    def __init__(self, flume, name, device_id):
         """Initialize the Flume sensor."""
         self.flume = flume
         self._name = name
+        self._device_id = device_id
         self._state = None
+        self._available = False
 
     @property
     def name(self):
@@ -86,9 +103,24 @@ class FlumeSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return "gal"
+        # This is in gallons per SCAN_INTERVAL
+        return "gal/m"
+
+    @property
+    def available(self):
+        """Device is available."""
+        return self._available
+
+    @property
+    def unique_id(self):
+        """Device unique ID."""
+        return self._device_id
 
     def update(self):
         """Get the latest data and updates the states."""
+        self._available = False
         self.flume.update()
-        self._state = self.flume.value
+        new_value = self.flume.value
+        if new_value is not None:
+            self._available = True
+            self._state = new_value

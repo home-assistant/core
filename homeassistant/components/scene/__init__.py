@@ -94,9 +94,6 @@ class Scene(Entity):
         """Activate scene. Try to get entities into requested state."""
         raise NotImplementedError()
 
-    def async_activate(self):
-        """Activate scene. Try to get entities into requested state.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.activate)
+    async def async_activate(self):
+        """Activate scene. Try to get entities into requested state."""
+        await self.hass.async_add_job(self.activate)

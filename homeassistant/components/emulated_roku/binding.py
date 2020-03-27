@@ -109,7 +109,7 @@ class EmulatedRoku:
                 )
 
         LOGGER.debug(
-            "Intializing emulated_roku %s on %s:%s",
+            "Initializing emulated_roku %s on %s:%s",
             self.roku_usn,
             self.host_ip,
             self.listen_port,

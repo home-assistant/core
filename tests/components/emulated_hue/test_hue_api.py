@@ -32,10 +32,20 @@ from homeassistant.components.emulated_hue.hue_api import (
     HueOneLightStateView,
     HueUsernameView,
 )
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+)
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed, get_test_instance_port
+from tests.common import (
+    async_fire_time_changed,
+    async_mock_service,
+    get_test_instance_port,
+)
 
 HTTP_SERVER_PORT = get_test_instance_port()
 BRIDGE_SERVER_PORT = get_test_instance_port()
@@ -120,50 +130,8 @@ def hass_hue(loop, hass):
         )
     )
 
-    # Kitchen light is explicitly excluded from being exposed
-    kitchen_light_entity = hass.states.get("light.kitchen_lights")
-    attrs = dict(kitchen_light_entity.attributes)
-    attrs[emulated_hue.ATTR_EMULATED_HUE] = False
-    hass.states.async_set(
-        kitchen_light_entity.entity_id, kitchen_light_entity.state, attributes=attrs
-    )
-
     # create a lamp without brightness support
     hass.states.async_set("light.no_brightness", "on", {})
-
-    # Ceiling Fan is explicitly excluded from being exposed
-    ceiling_fan_entity = hass.states.get("fan.ceiling_fan")
-    attrs = dict(ceiling_fan_entity.attributes)
-    attrs[emulated_hue.ATTR_EMULATED_HUE_HIDDEN] = True
-    hass.states.async_set(
-        ceiling_fan_entity.entity_id, ceiling_fan_entity.state, attributes=attrs
-    )
-
-    # Expose the script
-    script_entity = hass.states.get("script.set_kitchen_light")
-    attrs = dict(script_entity.attributes)
-    attrs[emulated_hue.ATTR_EMULATED_HUE] = True
-    hass.states.async_set(
-        script_entity.entity_id, script_entity.state, attributes=attrs
-    )
-
-    # Expose cover
-    cover_entity = hass.states.get("cover.living_room_window")
-    attrs = dict(cover_entity.attributes)
-    attrs[emulated_hue.ATTR_EMULATED_HUE_HIDDEN] = False
-    hass.states.async_set(cover_entity.entity_id, cover_entity.state, attributes=attrs)
-
-    # Expose Hvac
-    hvac_entity = hass.states.get("climate.hvac")
-    attrs = dict(hvac_entity.attributes)
-    attrs[emulated_hue.ATTR_EMULATED_HUE_HIDDEN] = False
-    hass.states.async_set(hvac_entity.entity_id, hvac_entity.state, attributes=attrs)
-
-    # Expose HeatPump
-    hp_entity = hass.states.get("climate.heatpump")
-    attrs = dict(hp_entity.attributes)
-    attrs[emulated_hue.ATTR_EMULATED_HUE_HIDDEN] = False
-    hass.states.async_set(hp_entity.entity_id, hp_entity.state, attributes=attrs)
 
     return hass
 
@@ -178,7 +146,18 @@ def hue_client(loop, hass_hue, aiohttp_client):
             emulated_hue.CONF_TYPE: emulated_hue.TYPE_ALEXA,
             emulated_hue.CONF_ENTITIES: {
                 "light.bed_light": {emulated_hue.CONF_ENTITY_HIDDEN: True},
+                # Kitchen light is explicitly excluded from being exposed
+                "light.kitchen_lights": {emulated_hue.CONF_ENTITY_HIDDEN: True},
+                # Ceiling Fan is explicitly excluded from being exposed
+                "fan.ceiling_fan": {emulated_hue.CONF_ENTITY_HIDDEN: True},
+                # Expose the script
+                "script.set_kitchen_light": {emulated_hue.CONF_ENTITY_HIDDEN: False},
+                # Expose cover
                 "cover.living_room_window": {emulated_hue.CONF_ENTITY_HIDDEN: False},
+                # Expose Hvac
+                "climate.hvac": {emulated_hue.CONF_ENTITY_HIDDEN: False},
+                # Expose HeatPump
+                "climate.heatpump": {emulated_hue.CONF_ENTITY_HIDDEN: False},
             },
         },
     )
@@ -228,7 +207,65 @@ async def test_light_without_brightness_supported(hass_hue, hue_client):
     )
 
     assert light_without_brightness_json["state"][HUE_API_STATE_ON] is True
-    assert light_without_brightness_json["type"] == "On/off light"
+    assert light_without_brightness_json["type"] == "Dimmable light"
+
+
+async def test_light_without_brightness_can_be_turned_off(hass_hue, hue_client):
+    """Test that light without brightness can be turned off."""
+    hass_hue.states.async_set("light.no_brightness", "on", {})
+
+    # Check if light can be turned off
+    turn_off_calls = async_mock_service(hass_hue, light.DOMAIN, SERVICE_TURN_OFF)
+
+    no_brightness_result = await perform_put_light_state(
+        hass_hue, hue_client, "light.no_brightness", False
+    )
+    no_brightness_result_json = await no_brightness_result.json()
+
+    assert no_brightness_result.status == 200
+    assert "application/json" in no_brightness_result.headers["content-type"]
+    assert len(no_brightness_result_json) == 1
+
+    # Verify that SERVICE_TURN_OFF has been called
+    await hass_hue.async_block_till_done()
+    assert 1 == len(turn_off_calls)
+    call = turn_off_calls[-1]
+
+    assert light.DOMAIN == call.domain
+    assert SERVICE_TURN_OFF == call.service
+    assert "light.no_brightness" in call.data[ATTR_ENTITY_ID]
+
+
+async def test_light_without_brightness_can_be_turned_on(hass_hue, hue_client):
+    """Test that light without brightness can be turned on."""
+    hass_hue.states.async_set("light.no_brightness", "off", {})
+
+    # Check if light can be turned on
+    turn_on_calls = async_mock_service(hass_hue, light.DOMAIN, SERVICE_TURN_ON)
+
+    no_brightness_result = await perform_put_light_state(
+        hass_hue,
+        hue_client,
+        "light.no_brightness",
+        True,
+        # Some remotes, like HarmonyHub send brightness value regardless of light's features
+        brightness=0,
+    )
+
+    no_brightness_result_json = await no_brightness_result.json()
+
+    assert no_brightness_result.status == 200
+    assert "application/json" in no_brightness_result.headers["content-type"]
+    assert len(no_brightness_result_json) == 1
+
+    # Verify that SERVICE_TURN_ON has been called
+    await hass_hue.async_block_till_done()
+    assert 1 == len(turn_on_calls)
+    call = turn_on_calls[-1]
+
+    assert light.DOMAIN == call.domain
+    assert SERVICE_TURN_ON == call.service
+    assert "light.no_brightness" in call.data[ATTR_ENTITY_ID]
 
 
 @pytest.mark.parametrize(
@@ -542,7 +579,7 @@ async def test_close_cover(hass_hue, hue_client):
 
 
 async def test_set_position_cover(hass_hue, hue_client):
-    """Test setting postion cover ."""
+    """Test setting position cover ."""
     COVER_ID = "cover.living_room_window"
     # Turn the office light off first
     await hass_hue.services.async_call(

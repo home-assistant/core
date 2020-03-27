@@ -7,6 +7,7 @@ from homeassistant.components import (
     image_processing,
     input_number,
     light,
+    timer,
     vacuum,
 )
 from homeassistant.components.alarm_control_panel import ATTR_CODE_FORMAT, FORMAT_NUMBER
@@ -25,6 +26,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_IDLE,
     STATE_LOCKED,
     STATE_OFF,
     STATE_ON,
@@ -226,7 +228,6 @@ class AlexaCapability:
         """Return properties serialized for an API response."""
         for prop in self.properties_supported():
             prop_name = prop["name"]
-            # pylint: disable=assignment-from-no-return
             prop_value = self.get_property(prop_name)
             if prop_value is not None:
                 result = {
@@ -364,6 +365,10 @@ class AlexaPowerController(AlexaCapability):
 
         if self.entity.domain == climate.DOMAIN:
             is_on = self.entity.state != climate.HVAC_MODE_OFF
+        elif self.entity.domain == vacuum.DOMAIN:
+            is_on = self.entity.state == vacuum.STATE_CLEANING
+        elif self.entity.domain == timer.DOMAIN:
+            is_on = self.entity.state != STATE_IDLE
 
         else:
             is_on = self.entity.state != STATE_OFF
@@ -645,6 +650,40 @@ class AlexaSpeaker(AlexaCapability):
         """Return the Alexa API name of this interface."""
         return "Alexa.Speaker"
 
+    def properties_supported(self):
+        """Return what properties this entity supports."""
+        properties = [{"name": "volume"}]
+
+        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if supported & media_player.SUPPORT_VOLUME_MUTE:
+            properties.append({"name": "muted"})
+
+        return properties
+
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return True
+
+    def properties_retrievable(self):
+        """Return True if properties can be retrieved."""
+        return True
+
+    def get_property(self, name):
+        """Read and return a property."""
+        if name == "volume":
+            current_level = self.entity.attributes.get(
+                media_player.ATTR_MEDIA_VOLUME_LEVEL
+            )
+            if current_level is not None:
+                return round(float(current_level) * 100)
+
+        if name == "muted":
+            return bool(
+                self.entity.attributes.get(media_player.ATTR_MEDIA_VOLUME_MUTED)
+            )
+
+        return None
+
 
 class AlexaStepSpeaker(AlexaCapability):
     """Implements Alexa.StepSpeaker.
@@ -711,6 +750,13 @@ class AlexaInputController(AlexaCapability):
         source_list = self.entity.attributes.get(
             media_player.ATTR_INPUT_SOURCE_LIST, []
         )
+        input_list = AlexaInputController.get_valid_inputs(source_list)
+
+        return input_list
+
+    @staticmethod
+    def get_valid_inputs(source_list):
+        """Return list of supported inputs."""
         input_list = []
         for source in source_list:
             formatted_source = (
@@ -1326,14 +1372,20 @@ class AlexaRangeController(AlexaCapability):
         if name != "rangeValue":
             raise UnsupportedProperty(name)
 
+        # Return None for unavailable and unknown states.
+        # Allows the Alexa.EndpointHealth Interface to handle the unavailable state in a stateReport.
+        if self.entity.state in (STATE_UNAVAILABLE, STATE_UNKNOWN, None):
+            return None
+
         # Fan Speed
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
-            speed_list = self.entity.attributes[fan.ATTR_SPEED_LIST]
-            speed = self.entity.attributes[fan.ATTR_SPEED]
-            speed_index = next(
-                (i for i, v in enumerate(speed_list) if v == speed), None
-            )
-            return speed_index
+            speed_list = self.entity.attributes.get(fan.ATTR_SPEED_LIST)
+            speed = self.entity.attributes.get(fan.ATTR_SPEED)
+            if speed_list is not None and speed is not None:
+                speed_index = next(
+                    (i for i, v in enumerate(speed_list) if v == speed), None
+                )
+                return speed_index
 
         # Cover Position
         if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
@@ -1349,12 +1401,13 @@ class AlexaRangeController(AlexaCapability):
 
         # Vacuum Fan Speed
         if self.instance == f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
-            speed_list = self.entity.attributes[vacuum.ATTR_FAN_SPEED_LIST]
-            speed = self.entity.attributes[vacuum.ATTR_FAN_SPEED]
-            speed_index = next(
-                (i for i, v in enumerate(speed_list) if v == speed), None
-            )
-            return speed_index
+            speed_list = self.entity.attributes.get(vacuum.ATTR_FAN_SPEED_LIST)
+            speed = self.entity.attributes.get(vacuum.ATTR_FAN_SPEED)
+            if speed_list is not None and speed is not None:
+                speed_index = next(
+                    (i for i, v in enumerate(speed_list) if v == speed), None
+                )
+                return speed_index
 
         return None
 
@@ -1379,12 +1432,16 @@ class AlexaRangeController(AlexaCapability):
                 precision=1,
             )
             for index, speed in enumerate(speed_list):
-                labels = [speed.replace("_", " ")]
+                labels = []
+                if isinstance(speed, str):
+                    labels.append(speed.replace("_", " "))
                 if index == 1:
                     labels.append(AlexaGlobalCatalog.VALUE_MINIMUM)
                 if index == max_value:
                     labels.append(AlexaGlobalCatalog.VALUE_MAXIMUM)
-                self._resource.add_preset(value=index, labels=labels)
+
+                if len(labels) > 0:
+                    self._resource.add_preset(value=index, labels=labels)
 
             return self._resource.serialize_capability_resources()
 

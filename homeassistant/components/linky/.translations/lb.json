@@ -1,13 +1,12 @@
 {
     "config": {
         "abort": {
-            "username_exists": "Kont ass scho konfigur\u00e9iert"
+            "already_configured": "Kont ass scho konfigur\u00e9iert"
         },
         "error": {
             "access": "Keng Verbindung zu Enedis.fr, iwwerpr\u00e9ift d'Internet Verbindung",
             "enedis": "Enedis.fr huet mat engem Feeler ge\u00e4ntwert:  prob\u00e9iert sp\u00e9ider nach emol (normalerweis net t\u00ebscht 23h00 an 2h00)",
             "unknown": "Onbekannte Feeler: prob\u00e9iert sp\u00e9ider nach emol (normalerweis net t\u00ebscht 23h00 an 2h00)",
-            "username_exists": "Kont ass scho konfigur\u00e9iert",
             "wrong_login": "Feeler beim Login: iwwerpr\u00e9ift \u00e4r E-Mail & Passwuert"
         },
         "step": {

@@ -400,6 +400,10 @@ class CoverCapabilities(AlexaEntity):
 
     def interfaces(self):
         """Yield the supported interfaces."""
+        device_class = self.entity.attributes.get(ATTR_DEVICE_CLASS)
+        if device_class != cover.DEVICE_CLASS_GARAGE:
+            yield AlexaPowerController(self.entity)
+
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & cover.SUPPORT_SET_POSITION:
             yield AlexaRangeController(
@@ -507,12 +511,7 @@ class MediaPlayerCapabilities(AlexaEntity):
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & media_player.const.SUPPORT_VOLUME_SET:
             yield AlexaSpeaker(self.entity)
-
-        step_volume_features = (
-            media_player.const.SUPPORT_VOLUME_MUTE
-            | media_player.const.SUPPORT_VOLUME_STEP
-        )
-        if supported & step_volume_features:
+        elif supported & media_player.const.SUPPORT_VOLUME_STEP:
             yield AlexaStepSpeaker(self.entity)
 
         playback_features = (
@@ -530,7 +529,13 @@ class MediaPlayerCapabilities(AlexaEntity):
             yield AlexaSeekController(self.entity)
 
         if supported & media_player.SUPPORT_SELECT_SOURCE:
-            yield AlexaInputController(self.entity)
+            inputs = AlexaInputController.get_valid_inputs(
+                self.entity.attributes.get(
+                    media_player.const.ATTR_INPUT_SOURCE_LIST, []
+                )
+            )
+            if len(inputs) > 0:
+                yield AlexaInputController(self.entity)
 
         if supported & media_player.const.SUPPORT_PLAY_MEDIA:
             yield AlexaChannelController(self.entity)
@@ -722,6 +727,7 @@ class TimerCapabilities(AlexaEntity):
     def interfaces(self):
         """Yield the supported interfaces."""
         yield AlexaTimeHoldController(self.entity, allow_remote_resume=True)
+        yield AlexaPowerController(self.entity)
         yield Alexa(self.entity)
 
 
@@ -736,8 +742,11 @@ class VacuumCapabilities(AlexaEntity):
     def interfaces(self):
         """Yield the supported interfaces."""
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if (supported & vacuum.SUPPORT_TURN_ON) and (
-            supported & vacuum.SUPPORT_TURN_OFF
+        if (
+            (supported & vacuum.SUPPORT_TURN_ON) or (supported & vacuum.SUPPORT_START)
+        ) and (
+            (supported & vacuum.SUPPORT_TURN_OFF)
+            or (supported & vacuum.SUPPORT_RETURN_HOME)
         ):
             yield AlexaPowerController(self.entity)
 

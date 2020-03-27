@@ -1,5 +1,9 @@
 {
     "device_automation": {
+        "action_type": {
+            "close": "Schlie\u00dfe {entity_name}",
+            "open": "\u00d6ffne {entity_name}"
+        },
         "condition_type": {
             "is_closed": "{entity_name} ist geschlossen",
             "is_closing": "{entity_name} wird geschlossen",

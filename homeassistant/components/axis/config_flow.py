@@ -4,7 +4,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
-    CONF_DEVICE,
     CONF_HOST,
     CONF_MAC,
     CONF_NAME,
@@ -33,16 +32,12 @@ DEFAULT_PORT = 80
 class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Axis config flow."""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize the Axis config flow."""
         self.device_config = {}
-        self.model = None
-        self.name = None
-        self.serial_number = None
-
         self.discovery_schema = {}
         self.import_schema = {}
 
@@ -55,24 +50,32 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
+                device = await get_device(
+                    self.hass,
+                    host=user_input[CONF_HOST],
+                    port=user_input[CONF_PORT],
+                    username=user_input[CONF_USERNAME],
+                    password=user_input[CONF_PASSWORD],
+                )
+
+                serial_number = device.vapix.params.system_serialnumber
+                await self.async_set_unique_id(serial_number)
+
+                self._abort_if_unique_id_configured(
+                    updates={
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_PORT: user_input[CONF_PORT],
+                    }
+                )
+
                 self.device_config = {
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_PORT: user_input[CONF_PORT],
                     CONF_USERNAME: user_input[CONF_USERNAME],
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    CONF_MAC: serial_number,
+                    CONF_MODEL: device.vapix.params.prodnbr,
                 }
-                device = await get_device(self.hass, self.device_config)
-
-                self.serial_number = device.vapix.params.system_serialnumber
-                config_entry = await self.async_set_unique_id(self.serial_number)
-                if config_entry:
-                    return self._update_entry(
-                        config_entry,
-                        host=user_input[CONF_HOST],
-                        port=user_input[CONF_PORT],
-                    )
-
-                self.model = device.vapix.params.prodnbr
 
                 return await self._create_entry()
 
@@ -101,41 +104,23 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         Generate a name to be used as a prefix for device entities.
         """
+        model = self.device_config[CONF_MODEL]
         same_model = [
             entry.data[CONF_NAME]
             for entry in self.hass.config_entries.async_entries(DOMAIN)
-            if entry.data[CONF_MODEL] == self.model
+            if entry.data[CONF_MODEL] == model
         ]
 
-        self.name = f"{self.model}"
+        name = model
         for idx in range(len(same_model) + 1):
-            self.name = f"{self.model} {idx}"
-            if self.name not in same_model:
+            name = f"{model} {idx}"
+            if name not in same_model:
                 break
 
-        data = {
-            CONF_DEVICE: self.device_config,
-            CONF_NAME: self.name,
-            CONF_MAC: self.serial_number,
-            CONF_MODEL: self.model,
-        }
+        self.device_config[CONF_NAME] = name
 
-        title = f"{self.model} - {self.serial_number}"
-        return self.async_create_entry(title=title, data=data)
-
-    def _update_entry(self, entry, host, port):
-        """Update existing entry."""
-        if (
-            entry.data[CONF_DEVICE][CONF_HOST] == host
-            and entry.data[CONF_DEVICE][CONF_PORT] == port
-        ):
-            return self.async_abort(reason="already_configured")
-
-        entry.data[CONF_DEVICE][CONF_HOST] = host
-        entry.data[CONF_DEVICE][CONF_PORT] = port
-
-        self.hass.config_entries.async_update_entry(entry)
-        return self.async_abort(reason="updated_configuration")
+        title = f"{model} - {self.device_config[CONF_MAC]}"
+        return self.async_create_entry(title=title, data=self.device_config)
 
     async def async_step_zeroconf(self, discovery_info):
         """Prepare configuration for a discovered Axis device."""
@@ -147,18 +132,19 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if discovery_info[CONF_HOST].startswith("169.254"):
             return self.async_abort(reason="link_local_address")
 
-        config_entry = await self.async_set_unique_id(serial_number)
-        if config_entry:
-            return self._update_entry(
-                config_entry,
-                host=discovery_info[CONF_HOST],
-                port=discovery_info[CONF_PORT],
-            )
+        await self.async_set_unique_id(serial_number)
+
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_HOST: discovery_info[CONF_HOST],
+                CONF_PORT: discovery_info[CONF_PORT],
+            }
+        )
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
-            "name": discovery_info["hostname"][:-7],
-            "host": discovery_info[CONF_HOST],
+            CONF_NAME: discovery_info["hostname"][:-7],
+            CONF_HOST: discovery_info[CONF_HOST],
         }
 
         self.discovery_schema = {

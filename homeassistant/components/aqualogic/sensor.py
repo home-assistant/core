@@ -4,7 +4,12 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    CONF_MONITORED_CONDITIONS,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -14,7 +19,7 @@ from . import DOMAIN, UPDATE_TOPIC
 _LOGGER = logging.getLogger(__name__)
 
 TEMP_UNITS = [TEMP_CELSIUS, TEMP_FAHRENHEIT]
-PERCENT_UNITS = ["%", "%"]
+PERCENT_UNITS = [UNIT_PERCENTAGE, UNIT_PERCENTAGE]
 SALT_UNITS = ["g/L", "PPM"]
 WATT_UNITS = ["W", "W"]
 NO_UNITS = [None, None]
@@ -70,7 +75,7 @@ class AquaLogicSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "AquaLogic {}".format(SENSOR_TYPES[self._type][0])
+        return f"AquaLogic {SENSOR_TYPES[self._type][0]}"
 
     @property
     def unit_of_measurement(self):

@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Mikronik jest ju\u017c skonfigurowany."
+        },
+        "error": {
+            "cannot_connect": "Po\u0142\u0105czenie nie powiod\u0142o si\u0119",
+            "name_exists": "Nazwa ju\u017c istnieje.",
+            "wrong_credentials": "B\u0142\u0119dne dane uwierzytelniaj\u0105ce"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nazwa",
+                    "password": "Has\u0142o",
+                    "port": "Port",
+                    "username": "Nazwa u\u017cytkownika",
+                    "verify_ssl": "U\u017cyj SSL"
+                },
+                "title": "Konfiguracja routera Mikrotik"
+            }
+        },
+        "title": "Mikrotik"
+    },
+    "options": {
+        "step": {
+            "device_tracker": {
+                "data": {
+                    "arp_ping": "W\u0142\u0105cz ping ARP",
+                    "detection_time": "Czas przed oznaczeniem \"poza domem\"",
+                    "force_dhcp": "Wymu\u015b skanowanie przy u\u017cyciu DHCP"
+                }
+            }
+        }
+    }
+}
