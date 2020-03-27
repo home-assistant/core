@@ -93,6 +93,17 @@ def _elk_range_validator(rng):
     return (start, end)
 
 
+def _has_all_unique_prefixes(value):
+    """Validate that each m1 configured has a unique prefix.
+
+    Uniqueness is determined case-independently.
+    """
+    prefixes = [device[CONF_PREFIX] for device in value]
+    schema = vol.Schema(vol.Unique())
+    schema(prefixes)
+    return value
+
+
 DEVICE_SCHEMA_SUBDOMAIN = vol.Schema(
     {
         vol.Optional(CONF_ENABLED, default=True): cv.boolean,
@@ -123,7 +134,8 @@ DEVICE_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [DEVICE_SCHEMA])}, extra=vol.ALLOW_EXTRA,
+    {DOMAIN: vol.All(cv.ensure_list, [DEVICE_SCHEMA], _has_all_unique_prefixes)},
+    extra=vol.ALLOW_EXTRA,
 )
 
 
