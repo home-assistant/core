@@ -105,6 +105,7 @@ class LM75(Entity):
         else:
             _LOGGER.warning("Problem reading temperature from sensor.")
 
+    @staticmethod
     def regdata_to_float(regdata):
         """Convert raw sensor data to temperature."""
         return (regdata / 32.0) / 8.0
@@ -113,4 +114,4 @@ class LM75(Entity):
         """Read raw data from the SMBus and convert it to human readable temperature."""
         raw = self._bus.read_word_data(self._address, self._register) & 0xFFFF
         raw = ((raw << 8) & 0xFF00) + (raw >> 8)
-        return regdata_to_float(raw)
+        return LM75.regdata_to_float(raw)
