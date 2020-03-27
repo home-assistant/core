@@ -58,7 +58,7 @@ async def async_setup_entry(hass, config_entry):
             with async_timeout.timeout(9):
                 await hass.async_add_job(roomba.connect)
         except RoombaConnectionError:
-            _LOGGER.error("Error to connect to {}".format(config_entry.data[CONF_HOST]))
+            _LOGGER.error("Error to connect to %s", config_entry.data[CONF_HOST])
             return False
 
     hass.data[DOMAIN]["name"] = config_entry.data[CONF_NAME]

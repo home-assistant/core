@@ -57,13 +57,13 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if DOMAIN not in self.hass.data:
             self.hass.data[DOMAIN] = {}
         if user_input is not None:
-            self.host = user_input[CONF_HOST]
-            self.username = user_input[CONF_USERNAME]
-            self.password = user_input[CONF_PASSWORD]
-            self.name = user_input[CONF_NAME]
-            self.certificate = user_input[CONF_CERT]
-            self.continuous = user_input[CONF_CONTINUOUS]
-            self.delay = user_input[CONF_DELAY]
+            self.host = user_input["host"]
+            self.username = user_input["username"]
+            self.password = user_input["password"]
+            self.name = user_input["name"]
+            self.certificate = user_input["certificate"]
+            self.continuous = user_input["continuous"]
+            self.delay = user_input["delay"]
 
             roomba = Roomba(
                 address=self.host,
