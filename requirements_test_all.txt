@@ -198,6 +198,9 @@ eebrightbox==0.0.4
 # homeassistant.components.elgato
 elgato==0.2.0
 
+# homeassistant.components.elkm1
+elkm1-lib==0.7.17
+
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1
 
