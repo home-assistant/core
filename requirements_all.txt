@@ -1111,6 +1111,9 @@ py-cpuinfo==5.0.0
 # homeassistant.components.melissa
 py-melissa-climate==2.0.0
 
+# homeassistant.components.schluter
+py-schluter==0.1.7
+
 # homeassistant.components.synology
 py-synology==0.2.0
 
