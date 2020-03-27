@@ -79,7 +79,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     areas = []
     for area in elk.areas:
-        if area.index in areas_with_keypad:
+        if area.index in areas_with_keypad or elk_data["auto_configure"] is False:
             areas.append(area)
     create_elk_entities(elk_data, areas, "area", ElkArea, entities)
     async_add_entities(entities, True)
