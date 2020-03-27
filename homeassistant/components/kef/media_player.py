@@ -417,10 +417,6 @@ class KefMediaPlayer(MediaPlayerDevice):
         keys = ["desk_db", "wall_db", "treble_db", "high_hz", "low_hz", "sub_db"]
         self._dsp = dict(zip(keys, rest), **mode._asdict())
 
-    async def async_added_to_hass(self):
-        """Update the DSP settings after adding to HASS."""
-        await self.update_dsp()
-
     @property
     def device_state_attributes(self):
         """Return the DSP settings of the KEF device."""
