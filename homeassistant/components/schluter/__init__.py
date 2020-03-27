@@ -6,7 +6,7 @@ from schluter.api import Api
 from schluter.authenticator import AuthenticationState, Authenticator
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
@@ -16,6 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHLUTER_SESSION = "schluter_session"
 DATA_SCHLUTER_API = "schluter_api"
 SCHLUTER_CONFIG_FILE = ".schluter.conf"
+API_TIMEOUT = 10
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -36,7 +37,7 @@ def setup(hass, config):
 
     conf = config[DOMAIN]
     api_http_session = Session()
-    api = Api(timeout=conf.get(CONF_TIMEOUT), http_session=api_http_session)
+    api = Api(timeout=API_TIMEOUT, http_session=api_http_session)
 
     authenticator = Authenticator(
         api,
@@ -59,7 +60,7 @@ def setup(hass, config):
             DATA_SCHLUTER_API: api,
             DATA_SCHLUTER_SESSION: authentication.session_id,
         }
-        discovery.load_platform(hass, "climate", DOMAIN, {}, config)
+        discovery.load_platform(hass, "climate", DOMAIN, None, config)
         return True
     if state == AuthenticationState.BAD_PASSWORD:
         _LOGGER.error("Invalid password provided")
