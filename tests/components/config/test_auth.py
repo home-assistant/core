@@ -156,9 +156,7 @@ async def test_create(hass, hass_ws_client, hass_access_token):
 
     assert len(await hass.auth.async_get_users()) == 1
 
-    await client.send_json(
-        {"id": 5, "type": auth_config.WS_TYPE_CREATE, "name": "Paulus"}
-    )
+    await client.send_json({"id": 5, "type": "config/auth/create", "name": "Paulus"})
 
     result = await client.receive_json()
     assert result["success"], result
@@ -176,7 +174,7 @@ async def test_create_requires_admin(hass, hass_ws_client, hass_read_only_access
     """Test create command requires an admin."""
     client = await hass_ws_client(hass, hass_read_only_access_token)
 
-    await client.send_json({"id": 5, "type": auth_config.WS_TYPE_CREATE, "name": "YO"})
+    await client.send_json({"id": 5, "type": "config/auth/create", "name": "YO"})
 
     result = await client.receive_json()
     assert not result["success"], result
