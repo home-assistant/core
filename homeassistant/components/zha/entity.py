@@ -284,3 +284,7 @@ class ZhaGroupEntity(BaseZhaEntity):
         if self._async_unsub_state_changed is not None:
             self._async_unsub_state_changed()
             self._async_unsub_state_changed = None
+
+    async def async_update(self) -> None:
+        """Update the state of the group entity."""
+        pass

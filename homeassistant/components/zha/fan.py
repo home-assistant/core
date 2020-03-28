@@ -118,6 +118,11 @@ class BaseFan(FanEntity):
         await self._fan_channel.async_set_speed(SPEED_TO_VALUE[speed])
         self.async_set_state(0, "fan_mode", speed)
 
+    @callback
+    def async_set_state(self, attr_id, attr_name, value):
+        """Handle state update from channel."""
+        pass
+
 
 @STRICT_MATCH(channel_names=CHANNEL_FAN)
 class ZhaFan(BaseFan, ZhaEntity):
