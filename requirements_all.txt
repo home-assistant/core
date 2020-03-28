@@ -78,7 +78,7 @@ PySocks==1.7.1
 PyTransportNSW==0.1.1
 
 # homeassistant.components.vicare
-PyViCare==0.1.7
+PyViCare==0.1.10
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.12.4
