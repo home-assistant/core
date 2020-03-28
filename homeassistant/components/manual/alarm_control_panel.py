@@ -166,8 +166,7 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
     Representation of an alarm status.
 
     When armed, will be arming for 'arming_time', after that armed.
-    When triggered, will be pending for the triggering state's 'delay_time'
-    plus the triggered state's 'arming_time'.
+    When triggered, will be pending for the triggering state's 'delay_time'.
     After that will be triggered for 'trigger_time', after that we return to
     the previous state or disarm if `disarm_after_trigger` is true.
     A trigger_time of zero disables the alarm_trigger service.
@@ -265,10 +264,7 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
 
     def _pending_time(self, state):
         """Get the pending time."""
-        return (
-            self._arming_time_by_state[state]
-            + self._delay_time_by_state[self._previous_state]
-        )
+        return self._delay_time_by_state[self._previous_state]
 
     def _within_arming_time(self, state):
         """Get if the action is in the arming time window."""
