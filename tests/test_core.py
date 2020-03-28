@@ -22,6 +22,7 @@ from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_STOP,
+    EVENT_HOMEASSISTANT_WRITE_DATA,
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
@@ -151,10 +152,14 @@ def test_stage_shutdown():
     """Simulate a shutdown, test calling stuff."""
     hass = get_test_home_assistant()
     test_stop = []
+    test_write_data = []
     test_close = []
     test_all = []
 
     hass.bus.listen(EVENT_HOMEASSISTANT_STOP, lambda event: test_stop.append(event))
+    hass.bus.listen(
+        EVENT_HOMEASSISTANT_WRITE_DATA, lambda event: test_write_data.append(event)
+    )
     hass.bus.listen(EVENT_HOMEASSISTANT_CLOSE, lambda event: test_close.append(event))
     hass.bus.listen("*", lambda event: test_all.append(event))
 
@@ -162,7 +167,8 @@ def test_stage_shutdown():
 
     assert len(test_stop) == 1
     assert len(test_close) == 1
-    assert len(test_all) == 1
+    assert len(test_write_data) == 1
+    assert len(test_all) == 2
 
 
 class TestHomeAssistant(unittest.TestCase):
