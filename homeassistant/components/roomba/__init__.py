@@ -84,8 +84,6 @@ async def async_connect(hass, config_entry):
         delay=config_entry.options[CONF_DELAY],
     )
 
-    hass.data[DOMAIN]["roomba"] = roomba
-
     try:
         name = None
         with async_timeout.timeout(9):
@@ -98,6 +96,7 @@ async def async_connect(hass, config_entry):
                     .get("name", None)
                 )
                 await asyncio.sleep(0.5)
+            hass.data[DOMAIN]["roomba"] = roomba
     except asyncio.TimeoutError:
         # api looping if user or password incorrect and roomba exist
         _LOGGER.error("Timeout exceeded")
