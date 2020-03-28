@@ -49,6 +49,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
+    EVENT_HOMEASSISTANT_WRITE_DATA,
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
@@ -426,6 +427,12 @@ class HomeAssistant:
         await self.async_block_till_done()
 
         # stage 2
+        self.state = CoreState.stopping
+        self.async_track_tasks()
+        self.bus.async_fire(EVENT_HOMEASSISTANT_WRITE_DATA)
+        await self.async_block_till_done()
+
+        # stage 3
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
         await self.async_block_till_done()
