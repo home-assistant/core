@@ -14,6 +14,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_TURN_ON,
     VacuumDevice,
 )
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .const import DOMAIN
 
@@ -55,41 +56,49 @@ SUPPORT_ROOMBA_CARPET_BOOST = SUPPORT_ROOMBA | SUPPORT_FAN_SPEED
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the iRobot Roomba vacuum cleaner."""
-
-    name = hass.data[DOMAIN]["name"]
     roomba = hass.data[DOMAIN]["roomba"]
-    roomba_vac = RoombaVacuum(name, roomba)
+    roomba_vac = RoombaVacuum(roomba)
     async_add_entities([roomba_vac], True)
 
 
 class RoombaVacuum(VacuumDevice):
     """Representation of a Roomba Vacuum cleaner robot."""
 
-    def __init__(self, name, roomba):
+    def __init__(self, roomba):
         """Initialize the Roomba handler."""
         self._available = False
         self._battery_level = None
         self._capabilities = {}
         self._fan_speed = None
         self._is_on = False
-        self._name = name
         self._state_attrs = {}
         self._status = None
         self.vacuum = roomba
-        self.vacuum_state = None
+        self.vacuum_state = self.vacuum.master_state.get("state", {}).get(
+            "reported", {}
+        )
+        self._mac = self.vacuum_state.get("mac")
+        self._name = self.vacuum_state.get("name")
 
     @property
     def unique_id(self):
         """Return the uniqueid of the vacuum cleaner."""
-        return self._name
+        return "roomba_{}".format(self._mac)
 
     @property
     def device_info(self):
         """Return the device info of the vacuum cleaner."""
         return {
             "identifiers": {(DOMAIN, self.unique_id)},
+            "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
             "manufacturer": "iRobots",
             "name": str(self._name),
+            "sw_version": self.vacuum.master_state.get("state", {})
+            .get("reported", {})
+            .get("softwareVer"),
+            "model": self.vacuum.master_state.get("state", {})
+            .get("reported", {})
+            .get("sku"),
         }
 
     @property
