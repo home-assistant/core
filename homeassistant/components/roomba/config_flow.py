@@ -6,7 +6,7 @@ import async_timeout
 from roomba import Roomba, RoombaConnectionError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
@@ -34,6 +34,41 @@ DATA_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
+async def validate_input(hass: core.HomeAssistant, data):
+    """Validate the user input allows us to connect.
+
+    Data has the keys from DATA_SCHEMA with values provided by the user.
+    """
+    api = Roomba(
+        address=data[CONF_HOST],
+        blid=data[CONF_USERNAME],
+        password=data[CONF_PASSWORD],
+        cert_name=data[CONF_CERT],
+        continuous=data[CONF_CONTINUOUS],
+        delay=data[CONF_DELAY],
+    )
+    try:
+        name = None
+        with async_timeout.timeout(10):
+            await hass.async_add_job(api.connect)
+            while not api.roomba_connected or name is None:
+                name = (
+                    api.master_state.get("state", {})
+                    .get("reported", {})
+                    .get("name", None)
+                )
+                await asyncio.sleep(0.5)
+            hass.data[DOMAIN]["roomba"] = api
+    except RoombaConnectionError:
+        raise CannotConnect
+    except asyncio.TimeoutError:
+        # Api looping if user or password incorrect and roomba exist
+        await hass.async_add_job(api.disconnect)
+        raise InvalidAuth
+
+    return {"title": name}
+
+
 class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Demo configuration flow."""
 
@@ -57,51 +92,18 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass.data[DOMAIN] = {}
 
         if user_input is not None:
-            self.name = None
-            self.host = user_input["host"]
-            self.username = user_input["username"]
-            self.password = user_input["password"]
-            self.certificate = user_input["certificate"]
-            self.continuous = user_input["continuous"]
-            self.delay = user_input["delay"]
-
-            roomba = Roomba(
-                address=self.host,
-                blid=self.username,
-                password=self.password,
-                cert_name=self.certificate,
-                continuous=self.continuous,
-                delay=self.delay,
-            )
-            _LOGGER.debug("Initializing communication with host %s", self.host)
-
             try:
-                with async_timeout.timeout(10):
-                    await self.hass.async_add_job(roomba.connect)
-                    while not roomba.roomba_connected:
-                        await asyncio.sleep(0.5)
-            except RoombaConnectionError as exc:
-                _LOGGER.error(f"Error: {exc}")
+                info = await validate_input(self.hass, user_input)
+            except CannotConnect:
                 errors = {"base": "cannot_connect"}
-            except asyncio.TimeoutError:
-                _LOGGER.error("Error: Timeout exceeded, user or password incorrect")
-                # Api looping if user or password incorrect and roomba exist
-                await self.hass.async_add_job(roomba.disconnect)
+            except InvalidAuth:
                 errors = {"base": "invalid_auth"}
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
 
-            if roomba.roomba_connected:
-                self.hass.data[DOMAIN]["roomba"] = roomba
-                return self.async_create_entry(
-                    title=self.name,
-                    data={
-                        "host": self.host,
-                        "username": self.username,
-                        "password": self.password,
-                        "certificate": self.certificate,
-                        "continuous": self.continuous,
-                        "delay": self.delay,
-                    },
-                )
+            if "base" not in errors:
+                return self.async_create_entry(title=info["title"], data=user_input)
 
         # If there was no user input, do not show the errors.
         if user_input is None:
@@ -147,3 +149,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 }
             ),
         )
+
+
+class CannotConnect(exceptions.HomeAssistantError):
+    """Error to indicate we cannot connect."""
+
+
+class InvalidAuth(exceptions.HomeAssistantError):
+    """Error to indicate there is invalid auth."""
