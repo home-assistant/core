@@ -236,7 +236,7 @@ class KefMediaPlayer(MediaPlayerDevice):
                 self._source = state.source
                 self._state = STATE_ON if state.is_on else STATE_OFF
                 if self._dsp is None:
-                    # Only do this once because it is a slow operation
+                    # Only do this when necessary because it is a slow operation
                     await self.update_dsp()
             else:
                 self._muted = None
@@ -394,27 +394,34 @@ class KefMediaPlayer(MediaPlayerDevice):
             sub_polarity=sub_polarity,
             bass_extension=bass_extension,
         )
+        self._dsp = None
 
     async def set_desk_db(self, db_value):
         """Set desk_db of the KEF speakers."""
         await self._speaker.set_desk_db(db_value)
+        self._dsp = None
 
     async def set_wall_db(self, db_value):
         """Set wall_db of the KEF speakers."""
         await self._speaker.set_wall_db(db_value)
+        self._dsp = None
 
     async def set_treble_db(self, db_value):
         """Set treble_db of the KEF speakers."""
         await self._speaker.set_treble_db(db_value)
+        self._dsp = None
 
     async def set_high_hz(self, hz_value):
         """Set high_hz of the KEF speakers."""
         await self._speaker.set_high_hz(hz_value)
+        self._dsp = None
 
     async def set_low_hz(self, hz_value):
         """Set low_hz of the KEF speakers."""
         await self._speaker.set_low_hz(hz_value)
+        self._dsp = None
 
     async def set_sub_db(self, db_value):
         """Set sub_db of the KEF speakers."""
         await self._speaker.set_sub_db(db_value)
+        self._dsp = None
