@@ -34,6 +34,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.event import async_track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,6 +66,8 @@ SERVICE_HIGH_HZ = "set_high_hz"
 SERVICE_LOW_HZ = "set_low_hz"
 SERVICE_SUB_DB = "set_sub_db"
 SERVICE_UPDATE_DSP = "update_dsp"
+
+DSP_SCAN_INTERVAL = 3600
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -169,6 +172,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     add_service(SERVICE_HIGH_HZ, "high_hz", "hz_value")
     add_service(SERVICE_LOW_HZ, "low_hz", "hz_value")
     add_service(SERVICE_SUB_DB, "sub_db", "db_value")
+
+    # Update the DSP settings at an interval
+    async_track_time_interval(hass, media_player.update_dsp, DSP_SCAN_INTERVAL)
 
 
 class KefMediaPlayer(MediaPlayerDevice):
