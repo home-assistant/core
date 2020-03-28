@@ -199,21 +199,29 @@ class Device:
         """
         _LOGGER.debug("Getting traffic statistics from device: %s", self)
 
-        data = {}
-        data[BYTES_RECEIVED] = {
-            "value": await self.async_get_total_bytes_received(),
-            "timestamp": dt_util.utcnow(),
+        values = await asyncio.gather(
+            self.async_get_total_bytes_received(),
+            self.async_get_total_bytes_sent(),
+            self.async_get_total_packets_received(),
+            self.async_get_total_packets_sent(),
+            return_exceptions=True,
+        )
+
+        return {
+            BYTES_RECEIVED: {
+                "value": values[0],
+                "timestamp": dt_util.utcnow(),
+            },
+            BYTES_SENT: {
+                "value": values[1],
+                "timestamp": dt_util.utcnow(),
+            },
+            PACKETS_RECEIVED: {
+                "value": values[2],
+                "timestamp": dt_util.utcnow(),
+            },
+            PACKETS_SENT: {
+                "value": values[3],
+                "timestamp": dt_util.utcnow(),
+            },
         }
-        data[BYTES_SENT] = {
-            "value": await self.async_get_total_bytes_sent(),
-            "timestamp": dt_util.utcnow(),
-        }
-        data[PACKETS_RECEIVED] = {
-            "value": await self.async_get_total_packets_received(),
-            "timestamp": dt_util.utcnow(),
-        }
-        data[PACKETS_SENT] = {
-            "value": await self.async_get_total_packets_sent(),
-            "timestamp": dt_util.utcnow(),
-        }
-        return data
