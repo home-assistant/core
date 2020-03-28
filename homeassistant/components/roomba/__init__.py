@@ -70,7 +70,7 @@ async def async_unload_entry(hass, config_entry):
 
 async def async_connect(hass, config_entry):
     """Connect to vacuum."""
-    # Check if triggred listerner
+    # Check if triggered listener
     if "roomba" in hass.data[DOMAIN]:
         await hass.async_add_job(hass.data[DOMAIN]["roomba"].disconnect)
         await asyncio.sleep(1)
