@@ -356,9 +356,8 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
         self._state_ts = dt_util.utcnow()
         self.schedule_update_ha_state()
 
-        pending_time = self._pending_time(state)
-        arming_time = self._arming_time(state)
         if state == STATE_ALARM_TRIGGERED:
+            pending_time = self._pending_time(state)
             track_point_in_time(
                 self._hass, self.async_update_ha_state, self._state_ts + pending_time
             )
@@ -369,10 +368,12 @@ class ManualAlarm(alarm.AlarmControlPanel, RestoreEntity):
                 self.async_update_ha_state,
                 self._state_ts + pending_time + trigger_time,
             )
-        elif state in SUPPORTED_ARMING_STATES and arming_time:
-            track_point_in_time(
-                self._hass, self.async_update_ha_state, self._state_ts + arming_time
-            )
+        elif state in SUPPORTED_ARMING_STATES:
+            arming_time = self._arming_time(state)
+            if arming_time:
+                track_point_in_time(
+                    self._hass, self.async_update_ha_state, self._state_ts + arming_time
+                )
 
     def _validate_code(self, code, state):
         """Validate given code."""
