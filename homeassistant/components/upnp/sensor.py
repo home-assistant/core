@@ -4,7 +4,6 @@ from typing import Mapping
 
 from homeassistant.const import (
     DATA_BYTES,
-    DATA_KIBIBYTES,
     DATA_PACKETS,
     DATA_RATE_KIBIBYTES_PER_SECOND,
     DATA_RATE_PACKETS_PER_SECOND,

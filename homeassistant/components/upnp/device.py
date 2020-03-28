@@ -208,20 +208,8 @@ class Device:
         )
 
         return {
-            BYTES_RECEIVED: {
-                "value": values[0],
-                "timestamp": dt_util.utcnow(),
-            },
-            BYTES_SENT: {
-                "value": values[1],
-                "timestamp": dt_util.utcnow(),
-            },
-            PACKETS_RECEIVED: {
-                "value": values[2],
-                "timestamp": dt_util.utcnow(),
-            },
-            PACKETS_SENT: {
-                "value": values[3],
-                "timestamp": dt_util.utcnow(),
-            },
+            BYTES_RECEIVED: {"value": values[0], "timestamp": dt_util.utcnow(),},
+            BYTES_SENT: {"value": values[1], "timestamp": dt_util.utcnow(),},
+            PACKETS_RECEIVED: {"value": values[2], "timestamp": dt_util.utcnow(),},
+            PACKETS_SENT: {"value": values[3], "timestamp": dt_util.utcnow(),},
         }
