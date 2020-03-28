@@ -133,6 +133,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         supports_on,
         sources,
         speaker_type,
+        hass,
         ioloop=hass.loop,
         unique_id=unique_id,
     )
@@ -173,9 +174,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     add_service(SERVICE_LOW_HZ, "low_hz", "hz_value")
     add_service(SERVICE_SUB_DB, "sub_db", "db_value")
 
-    # Update the DSP settings at an interval
-    async_track_time_interval(hass, media_player.update_dsp, DSP_SCAN_INTERVAL)
-
 
 class KefMediaPlayer(MediaPlayerDevice):
     """Kef Player Object."""
@@ -192,6 +190,7 @@ class KefMediaPlayer(MediaPlayerDevice):
         supports_on,
         sources,
         speaker_type,
+        hass,
         ioloop,
         unique_id,
     ):
@@ -210,6 +209,7 @@ class KefMediaPlayer(MediaPlayerDevice):
         self._unique_id = unique_id
         self._supports_on = supports_on
         self._speaker_type = speaker_type
+        self._hass = hass
 
         self._state = None
         self._muted = None
@@ -376,6 +376,16 @@ class KefMediaPlayer(MediaPlayerDevice):
         )
         keys = ["desk_db", "wall_db", "treble_db", "high_hz", "low_hz", "sub_db"]
         self._dsp = dict(zip(keys, rest), **mode._asdict())
+
+    async def async_added_to_hass(self):
+        """Subscribe to DSP updates."""
+        self._update_dsp_task_remover = async_track_time_interval(
+            self._hass, self.update_dsp, DSP_SCAN_INTERVAL
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe to DSP updates."""
+        self._update_dsp_task_remover()
 
     @property
     def device_state_attributes(self):
