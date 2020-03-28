@@ -6,7 +6,6 @@ from datetime import timedelta
 import itertools
 import logging
 import os
-import random
 import traceback
 from typing import List, Optional
 
@@ -83,7 +82,7 @@ from .store import async_get_registry
 from .typing import ZhaDeviceType, ZhaGroupType, ZigpyEndpointType, ZigpyGroupType
 
 _LOGGER = logging.getLogger(__name__)
-_STORAGE_UPDATE_INTERVAL = (15, 25)
+_STORAGE_UPDATE_INTERVAL = timedelta(minutes=15)
 
 EntityReference = collections.namedtuple(
     "EntityReference",
@@ -168,12 +167,9 @@ class ZHAGateway:
         )
         self.async_load_devices()
         self.async_load_groups()
-        update_store_interval = random.randint(*_STORAGE_UPDATE_INTERVAL)
         self._unsubs.append(
             async_track_time_interval(
-                self._hass,
-                self._async_update_device_storage,
-                timedelta(minutes=update_store_interval),
+                self._hass, self._async_update_device_storage, _STORAGE_UPDATE_INTERVAL
             )
         )
 
