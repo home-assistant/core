@@ -97,7 +97,7 @@ class GlowRing(Light):
         self._name = f"{lightpad.friendly_name} Glow Ring"
 
         self._state = lightpad.glow_enabled
-        self._glowIntensity = lightpad.glow_intensity
+        self._glow_intensity = lightpad.glow_intensity
 
         self._red = lightpad.glow_color["red"]
         self._green = lightpad.glow_color["green"]
@@ -112,7 +112,7 @@ class GlowRing(Light):
         config = event["changes"]
 
         self._state = config["glowEnabled"]
-        self._glowIntensity = config["glowIntensity"]
+        self._glow_intensity = config["glowIntensity"]
 
         self._red = config["glowColor"]["red"]
         self._green = config["glowColor"]["green"]
@@ -138,12 +138,12 @@ class GlowRing(Light):
     @property
     def brightness(self) -> int:
         """Return the brightness of this switch between 0..255."""
-        return self._glowIntensity * 255
+        return self._glow_intensity * 255
 
     @property
     def glow_intensity(self):
         """Brightness in float form."""
-        return self._glowIntensity
+        return self._glow_intensity
 
     @property
     def is_on(self) -> bool:
