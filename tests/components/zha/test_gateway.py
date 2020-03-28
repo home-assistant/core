@@ -1,5 +1,7 @@
 """Test ZHA Gateway."""
+from datetime import timedelta
 import logging
+import time
 
 import pytest
 import zigpy.profiles.zha as zha
@@ -7,8 +9,11 @@ import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.lighting as lighting
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.util import dt
 
 from .common import async_enable_traffic, async_find_group_entity_id, get_zha_gateway
+
+from tests.common import async_fire_time_changed
 
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
 IEEE_GROUPABLE_DEVICE2 = "02:2d:6f:00:0a:90:69:e8"
@@ -167,3 +172,23 @@ async def test_gateway_group_methods(hass, device_light_1, device_light_2, coord
 
     # the group entity should not have been cleaned up
     assert entity_id not in hass.states.async_entity_ids(LIGHT_DOMAIN)
+
+
+async def test_saving_devices_with_delay(hass, zigpy_dev_basic, zha_dev_basic):
+    """Test saving data after a delay."""
+    zha_gateway = get_zha_gateway(hass)
+    assert zha_gateway is not None
+    await async_enable_traffic(hass, [zha_dev_basic])
+
+    assert zha_dev_basic.last_seen is not None
+    entry = zha_gateway.zha_storage.async_get_or_create_device(zha_dev_basic)
+    assert entry.last_seen == zha_dev_basic.last_seen
+
+    zigpy_dev_basic.last_seen = None
+    last_seen = time.time()
+    zha_dev_basic.async_update_last_seen(last_seen)
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(minutes=20))
+    await hass.async_block_till_done()
+
+    entry = zha_gateway.zha_storage.async_get_or_create_device(zha_dev_basic)
+    assert entry.last_seen == last_seen
