@@ -290,6 +290,22 @@ class AbodeEntity(Entity):
         """Return the polling state."""
         return self._data.polling
 
+    async def async_added_to_hass(self):
+        """Subscribe to Abode connection status updates."""
+        self.hass.async_add_job(
+            self._data.abode.events.add_connection_status_callback,
+            self.unique_id,
+            self._update_connection_status,
+        )
+
+        self.hass.data[DOMAIN].entity_ids.add(self.entity_id)
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe from Abode connection status updates."""
+        self.hass.async_add_job(
+            self._data.abode.events.remove_connection_status_callback, self.unique_id,
+        )
+
     def _update_connection_status(self):
         """Update the entity available property."""
         self._available = self._data.abode.events.connected
@@ -306,28 +322,22 @@ class AbodeDevice(AbodeEntity):
 
     async def async_added_to_hass(self):
         """Subscribe to device events."""
+        await super().async_added_to_hass()
         self.hass.async_add_job(
             self._data.abode.events.add_device_callback,
             self._device.device_id,
             self._update_callback,
         )
 
-        self.hass.async_add_job(
-            self._data.abode.events.add_connection_status_callback,
-            self._device.device_id,
-            self._update_connection_status,
-        )
-
-        self.hass.data[DOMAIN].entity_ids.add(self.entity_id)
-
     async def async_will_remove_from_hass(self):
         """Unsubscribe from device events."""
+        await super().async_will_remove_from_hass()
         self.hass.async_add_job(
             self._data.abode.events.remove_all_device_callbacks, self._device.device_id
         )
 
     def update(self):
-        """Update device and automation states."""
+        """Update device state."""
         self._device.refresh()
 
     @property
@@ -373,16 +383,6 @@ class AbodeAutomation(AbodeEntity):
         """Initialize for Abode automation."""
         super().__init__(data)
         self._automation = automation
-
-    async def async_added_to_hass(self):
-        """Set up automation entity."""
-        self.hass.async_add_job(
-            self._data.abode.events.add_connection_status_callback,
-            self._automation.automation_id,
-            self._update_connection_status,
-        )
-
-        self.hass.data[DOMAIN].entity_ids.add(self.entity_id)
 
     def update(self):
         """Update automation state."""
