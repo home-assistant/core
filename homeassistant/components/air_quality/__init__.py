@@ -46,8 +46,6 @@ PROP_TO_ATTR = {
     "sulphur_dioxide": ATTR_SO2,
 }
 
-VOLUME_MICROGRAMS_PER_CUBIC_METER = "µg/m³"
-
 
 async def async_setup(hass, config):
     """Set up the air quality component."""
