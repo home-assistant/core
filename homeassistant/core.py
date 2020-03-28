@@ -152,6 +152,7 @@ class CoreState(enum.Enum):
     starting = "STARTING"
     running = "RUNNING"
     stopping = "STOPPING"
+    writing_data = "WRITING_DATA"
 
     def __str__(self) -> str:
         """Return the event."""
@@ -427,7 +428,7 @@ class HomeAssistant:
         await self.async_block_till_done()
 
         # stage 2
-        self.state = CoreState.stopping
+        self.state = CoreState.writing_data
         self.async_track_tasks()
         self.bus.async_fire(EVENT_HOMEASSISTANT_WRITE_DATA)
         await self.async_block_till_done()
