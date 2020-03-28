@@ -106,7 +106,6 @@ class BaseLight(BaseZhaEntity, light.Light):
     def __init__(self, *args, **kwargs):
         """Initialize the light."""
         super().__init__(*args, **kwargs)
-        self._is_on: bool = False
         self._available: bool = False
         self._brightness: Optional[int] = None
         self._off_brightness: Optional[int] = None
@@ -525,7 +524,7 @@ class LightGroup(BaseLight):
         states: List[State] = list(filter(None, all_states))
         on_states = [state for state in states if state.state == STATE_ON]
 
-        self._is_on = len(on_states) > 0
+        self._state = len(on_states) > 0
         self._available = any(state.state != STATE_UNAVAILABLE for state in states)
 
         self._brightness = helpers.reduce_attribute(on_states, ATTR_BRIGHTNESS)
