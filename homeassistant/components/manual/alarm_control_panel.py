@@ -61,7 +61,9 @@ SUPPORTED_PRETRIGGER_STATES = [
 ]
 
 SUPPORTED_ARMING_STATES = [
-    state for state in SUPPORTED_STATES if state != STATE_ALARM_DISARMED
+    state
+    for state in SUPPORTED_STATES
+    if (state != STATE_ALARM_DISARMED and state != STATE_ALARM_TRIGGERED)
 ]
 
 ATTR_PREVIOUS_STATE = "previous_state"
