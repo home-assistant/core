@@ -2,7 +2,9 @@
 from datetime import timedelta
 import logging
 import re
+import select
 import socket
+from time import monotonic
 
 import voluptuous as vol
 
@@ -104,12 +106,21 @@ class PAServer:
     def _get_full_response(self, sock):
         """Get the full response back from pulseaudio."""
         result = ""
-        rcv_buffer = sock.recv(self._buffer_size)
-        result += rcv_buffer.decode("utf-8")
 
-        while len(rcv_buffer) == self._buffer_size:
-            rcv_buffer = sock.recv(self._buffer_size)
-            result += rcv_buffer.decode("utf-8")
+        sock.setblocking(False)
+
+        start_time = monotonic()
+        remaining_timeout = float(self._tcp_timeout)
+
+        while remaining_timeout > 0:
+            ready = select.select([sock], [], [], remaining_timeout)
+            if ready[0]:
+                rcv_buffer = sock.recv(self._buffer_size)
+                result += rcv_buffer.decode("utf-8")
+            else:
+                break
+
+            remaining_timeout -= monotonic() - start_time
 
         return result
 
