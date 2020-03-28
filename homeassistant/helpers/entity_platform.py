@@ -183,7 +183,7 @@ class EntityPlatform:
                 self._tasks.clear()
 
                 if pending:
-                    await asyncio.wait(pending)
+                    await asyncio.gather(*pending)
 
             hass.config.components.add(full_name)
             return True
@@ -292,7 +292,7 @@ class EntityPlatform:
         if not tasks:
             return
 
-        await asyncio.wait(tasks)
+        await asyncio.gather(*tasks)
 
         if self._async_unsub_polling is not None or not any(
             entity.should_poll for entity in self.entities.values()
@@ -459,7 +459,7 @@ class EntityPlatform:
 
         tasks = [self.async_remove_entity(entity_id) for entity_id in self.entities]
 
-        await asyncio.wait(tasks)
+        await asyncio.gather(*tasks)
 
         if self._async_unsub_polling is not None:
             self._async_unsub_polling()
@@ -548,7 +548,7 @@ class EntityPlatform:
                 tasks.append(entity.async_update_ha_state(True))  # type: ignore
 
             if tasks:
-                await asyncio.wait(tasks)
+                await asyncio.gather(*tasks)
 
 
 current_platform: ContextVar[Optional[EntityPlatform]] = ContextVar(

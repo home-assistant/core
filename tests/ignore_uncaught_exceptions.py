@@ -114,12 +114,4 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
     ("tests.components.yr.test_sensor", "test_custom_setup"),
     ("tests.components.yr.test_sensor", "test_forecast_setup"),
     ("tests.components.zwave.test_init", "test_power_schemes"),
-    (
-        "tests.helpers.test_entity_platform",
-        "test_adding_entities_with_generator_and_thread_callback",
-    ),
-    (
-        "tests.helpers.test_entity_platform",
-        "test_not_adding_duplicate_entities_with_unique_id",
-    ),
 ]
