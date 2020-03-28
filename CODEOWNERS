@@ -99,6 +99,7 @@ homeassistant/components/edl21/* @mtdcr
 homeassistant/components/egardia/* @jeroenterheerdt
 homeassistant/components/eight_sleep/* @mezz64
 homeassistant/components/elgato/* @frenck
+homeassistant/components/elkm1/* @bdraco
 homeassistant/components/elv/* @majuss
 homeassistant/components/emby/* @mezz64
 homeassistant/components/emoncms/* @borpin
@@ -313,6 +314,7 @@ homeassistant/components/saj/* @fredericvl
 homeassistant/components/salt/* @bjornorri
 homeassistant/components/samsungtv/* @escoand
 homeassistant/components/scene/* @home-assistant/core
+homeassistant/components/schluter/* @prairieapps
 homeassistant/components/scrape/* @fabaff
 homeassistant/components/script/* @home-assistant/core
 homeassistant/components/search/* @home-assistant/core

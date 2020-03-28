@@ -495,7 +495,7 @@ elgato==0.2.0
 eliqonline==1.2.2
 
 # homeassistant.components.elkm1
-elkm1-lib==0.7.15
+elkm1-lib==0.7.17
 
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1
@@ -922,7 +922,7 @@ netdisco==2.6.0
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==0.7.2
+nexia==0.7.3
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.1.0
@@ -1110,6 +1110,9 @@ py-cpuinfo==5.0.0
 
 # homeassistant.components.melissa
 py-melissa-climate==2.0.0
+
+# homeassistant.components.schluter
+py-schluter==0.1.7
 
 # homeassistant.components.synology
 py-synology==0.2.0
