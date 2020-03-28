@@ -98,11 +98,7 @@ async def async_setup(hass, config):
                 f"send command {data['request']['namespace']}/{data['request']['name']}"
             )
 
-        return {
-            "name": "Amazon Alexa",
-            "message": message,
-            "entity_id": entity_id,
-        }
+        return {"name": "Amazon Alexa", "message": message, "entity_id": entity_id}
 
     hass.components.logbook.async_describe_event(
         DOMAIN, EVENT_ALEXA_SMART_HOME, async_describe_logbook_event
