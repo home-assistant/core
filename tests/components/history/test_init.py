@@ -527,12 +527,113 @@ class TestComponentHistory(unittest.TestCase):
 
         We should get back only some device_tracker test changes where lat and long differs.
         """
-        zero, four, states = self.record_states()
-        entity_ids = ["device_tracker.test"]
+        self.init_recorder()
+        entity_id = "device_tracker.test"
+
+        def set_state(state, **kwargs):
+            """Set the state."""
+            self.hass.states.set(entity_id, state, **kwargs)
+            wait_recording_done(self.hass)
+            return self.hass.states.get(entity_id)
+
+        start = dt_util.utcnow() - timedelta(minutes=6)
+        points = []
+        for i in range(1, 6):
+            points.append(start + timedelta(minutes=i))
+
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=start
+        ):
+            set_state(
+                "home",
+                attributes={"latitude": 10.64, "longitude": 42.23, "battery_level": 97},
+            )
+
+        states = []
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=points[0]
+        ):
+            # state differs, location not (this can't happen in reality)
+            states.append(
+                set_state(
+                    "not_home",
+                    attributes={
+                        "latitude": 10.64,
+                        "longitude": 42.23,
+                        "battery_level": 97,
+                    },
+                )
+            )
+
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=points[1]
+        ):
+            # location differs, state not (this happens a lot)
+            states.append(
+                set_state(
+                    "not_home",
+                    attributes={
+                        "latitude": 10.23,
+                        "longitude": 34.12,
+                        "battery_level": 97,
+                    },
+                )
+            )
+
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=points[2]
+        ):
+            # same as before, but battery has changed
+            states.append(
+                set_state(
+                    "not_home",
+                    attributes={
+                        "latitude": 10.23,
+                        "longitude": 34.12,
+                        "battery_level": 34,
+                    },
+                )
+            )
+
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=points[3]
+        ):
+            # everything differs
+            states.append(
+                set_state(
+                    "home",
+                    attributes={
+                        "latitude": 11.42,
+                        "longitude": 42.43,
+                        "battery_level": 26,
+                    },
+                )
+            )
+
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=points[4]
+        ):
+            # nothing differs
+            states.append(
+                set_state(
+                    "home",
+                    attributes={
+                        "latitude": 11.42,
+                        "longitude": 42.43,
+                        "battery_level": 26,
+                    },
+                )
+            )
+
         hist = history.get_significant_states(
-            self.hass, zero, four, entity_ids, include_location_attributes=True
+            self.hass, start, points[-1], significant_changes_only=True
         )
-        assert len(hist) == 2
+
+        assert len(hist[entity_id]) == 3
+        assert states[0] in hist[entity_id]
+        assert states[1] in hist[entity_id]
+        assert states[3] in hist[entity_id]
+        # we know that states[2] and states[4] is not in hist, since we've tested the length of hist
 
     def check_significant_states(self, zero, four, states, config):
         """Check if significant states are retrieved."""
@@ -563,7 +664,6 @@ class TestComponentHistory(unittest.TestCase):
         zone = "zone.home"
         script_nc = "script.cannot_cancel_this_one"
         script_c = "script.can_cancel_this_one"
-        dt = "device_tracker.test"
 
         def set_state(entity_id, state, **kwargs):
             """Set the state."""
@@ -577,7 +677,7 @@ class TestComponentHistory(unittest.TestCase):
         three = two + timedelta(seconds=1)
         four = three + timedelta(seconds=1)
 
-        states = {therm: [], therm2: [], mp: [], mp2: [], script_c: [], dt: []}
+        states = {therm: [], therm2: [], mp: [], mp2: [], script_c: []}
         with patch(
             "homeassistant.components.recorder.dt_util.utcnow", return_value=one
         ):
@@ -592,9 +692,6 @@ class TestComponentHistory(unittest.TestCase):
             )
             states[therm].append(
                 set_state(therm, 20, attributes={"current_temperature": 19.5})
-            )
-            states[dt].append(
-                set_state(dt, "home", attributes={"latitude": 10.2, "longitude": 42.4})
             )
 
         with patch(
@@ -614,10 +711,6 @@ class TestComponentHistory(unittest.TestCase):
             states[therm2].append(
                 set_state(therm2, 20, attributes={"current_temperature": 19})
             )
-            # Equal location attributes
-            states[dt].append(
-                set_state(dt, "home", attributes={"latitude": 10.2, "longitude": 42.4})
-            )
 
         with patch(
             "homeassistant.components.recorder.dt_util.utcnow", return_value=three
@@ -631,10 +724,6 @@ class TestComponentHistory(unittest.TestCase):
             )
             # state will be skipped since entity is hidden
             set_state(therm, 22, attributes={"current_temperature": 21, "hidden": True})
-            # same state, but different attributes
-            states[dt].append(
-                set_state(dt, "home", attributes={"latitude": 12.3, "longitude": 43.2})
-            )
 
         return zero, four, states
 
