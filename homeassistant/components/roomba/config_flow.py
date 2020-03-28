@@ -1,12 +1,13 @@
 """Config flow to configure demo component."""
+import asyncio
 import logging
-import time
 
+import async_timeout
 from roomba import Roomba, RoombaConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
 from .const import (
@@ -16,7 +17,6 @@ from .const import (
     DEFAULT_CERT,
     DEFAULT_CONTINUOUS,
     DEFAULT_DELAY,
-    DEFAULT_NAME,
     DOMAIN,
 )
 
@@ -25,7 +25,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Optional(CONF_CERT, default=DEFAULT_CERT): str,
         vol.Optional(CONF_CONTINUOUS, default=DEFAULT_CONTINUOUS): bool,
         vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): int,
@@ -56,11 +55,12 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if DOMAIN not in self.hass.data:
             self.hass.data[DOMAIN] = {}
+
         if user_input is not None:
+            self.name = None
             self.host = user_input["host"]
             self.username = user_input["username"]
             self.password = user_input["password"]
-            self.name = user_input["name"]
             self.certificate = user_input["certificate"]
             self.continuous = user_input["continuous"]
             self.delay = user_input["delay"]
@@ -76,27 +76,27 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Initializing communication with host %s", self.host)
 
             try:
-                await self.hass.async_add_job(roomba.connect)
-            except RoombaConnectionError:
+                with async_timeout.timeout(10):
+                    await self.hass.async_add_job(roomba.connect)
+                    while not roomba.roomba_connected:
+                        await asyncio.sleep(0.5)
+            except RoombaConnectionError as exc:
+                _LOGGER.error(f"Error: {exc}")
                 errors = {"base": "cannot_connect"}
-
-            timeout = time.time() + 1
-            while not roomba.roomba_connected and not errors:
-                if time.time() > timeout:
-                    errors = {"base": "invalid_auth"}
-                    await self.hass.async_add_job(roomba.disconnect)
-                time.sleep(0.2)
+            except asyncio.TimeoutError:
+                _LOGGER.error("Error: Timeout exceeded, user or password incorrect")
+                # Api looping if user or password incorrect and roomba exist
+                await self.hass.async_add_job(roomba.disconnect)
+                errors = {"base": "invalid_auth"}
 
             if roomba.roomba_connected:
                 self.hass.data[DOMAIN]["roomba"] = roomba
-                self.hass.data[DOMAIN]["name"] = self.name
                 return self.async_create_entry(
                     title=self.name,
                     data={
                         "host": self.host,
                         "username": self.username,
                         "password": self.password,
-                        "name": self.name,
                         "certificate": self.certificate,
                         "continuous": self.continuous,
                         "delay": self.delay,

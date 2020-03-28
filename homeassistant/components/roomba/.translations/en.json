@@ -8,7 +8,6 @@
           "host": "Hostname or IP Address",
           "username": "Username",
           "password": "Password",
-          "name": "Friendly Name",
           "certificate": "Certificate",
           "continuous": "Continuous",
           "delay": "Delay"
