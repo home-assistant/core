@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 
 from nuheat.config import SCHEDULE_HOLD, SCHEDULE_RUN, SCHEDULE_TEMPORARY_HOLD
+from nuheat.util import celsius_to_nuheat, fahrenheit_to_nuheat
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -186,20 +187,26 @@ class NuHeatThermostat(ClimateDevice):
 
     def _set_temperature(self, temperature):
         if self._temperature_unit == "C":
-            self._thermostat.target_celsius = temperature
+            target_temp = celsius_to_nuheat(temperature)
         else:
-            self._thermostat.target_fahrenheit = temperature
+            target_temp = fahrenheit_to_nuheat(temperature)
+
         # If they set a temperature without changing the mode
         # to heat, we behave like the device does locally
         # and set a temp hold.
-        if self._thermostat.schedule_mode == SCHEDULE_RUN:
-            self._thermostat.schedule_mode = SCHEDULE_TEMPORARY_HOLD
+        target_schedule_mode = SCHEDULE_HOLD
+        if self._thermostat.schedule_mode in (SCHEDULE_RUN, SCHEDULE_TEMPORARY_HOLD):
+            target_schedule_mode = SCHEDULE_TEMPORARY_HOLD
 
         _LOGGER.debug(
-            "Setting NuHeat thermostat temperature to %s %s",
+            "Setting NuHeat thermostat temperature to %s %s and schedule mode: %s",
             temperature,
             self.temperature_unit,
+            target_schedule_mode,
         )
+        # If we do not send schedule_mode we always get
+        # SCHEDULE_HOLD
+        self._thermostat.set_target_temperature(target_temp, target_schedule_mode)
         self._schedule_update()
 
     def _schedule_update(self):
