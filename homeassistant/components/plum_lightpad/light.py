@@ -138,7 +138,7 @@ class GlowRing(Light):
     @property
     def brightness(self) -> int:
         """Return the brightness of this switch between 0..255."""
-        return self._glow_intensity * 255
+        return min(max(int(round(self._glow_intensity * 255, 0)), 0), 255)
 
     @property
     def glow_intensity(self):
