@@ -2,7 +2,14 @@
 from datetime import timedelta
 from typing import Mapping
 
-from homeassistant.const import DATA_BYTES, DATA_KIBIBYTES, STATE_UNKNOWN
+from homeassistant.const import (
+    DATA_BYTES,
+    DATA_KIBIBYTES,
+    DATA_PACKETS,
+    DATA_RATE_KIBIBYTES_PER_SECOND,
+    DATA_RATE_PACKETS_PER_SECOND,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -23,31 +30,31 @@ from .device import Device
 
 SENSOR_TYPES = {
     BYTES_RECEIVED: {
-        "name": "bytes received",
+        "name": DATA_BYTES + " received",
         "unit": DATA_BYTES,
-        "derived_name": DATA_KIBIBYTES + "/sec received",
-        "derived_unit": DATA_KIBIBYTES + "/sec",
+        "derived_name": DATA_RATE_KIBIBYTES_PER_SECOND + " received",
+        "derived_unit": DATA_RATE_KIBIBYTES_PER_SECOND,
         "data_name": BYTES_RECEIVED,
     },
     BYTES_SENT: {
-        "name": "bytes sent",
+        "name": DATA_BYTES + " sent",
         "unit": DATA_BYTES,
-        "derived_name": DATA_KIBIBYTES + "/sec sent",
-        "derived_unit": DATA_KIBIBYTES + "/sec",
+        "derived_name": DATA_RATE_KIBIBYTES_PER_SECOND + " sent",
+        "derived_unit": DATA_RATE_KIBIBYTES_PER_SECOND,
         "data_name": BYTES_SENT,
     },
     PACKETS_RECEIVED: {
-        "name": "packets received",
-        "unit": "packets",
-        "derived_unit": "packets/sec",
-        "derived_name": "packets/sec received",
+        "name": DATA_PACKETS + " received",
+        "unit": DATA_PACKETS,
+        "derived_name": DATA_RATE_PACKETS_PER_SECOND + " received",
+        "derived_unit": DATA_RATE_PACKETS_PER_SECOND,
         "data_name": PACKETS_RECEIVED,
     },
     PACKETS_SENT: {
-        "name": "packets sent",
-        "unit": "packets",
-        "derived_name": "packets/sec sent",
-        "derived_unit": "packets/sec",
+        "name": DATA_PACKETS + " sent",
+        "unit": DATA_PACKETS,
+        "derived_name": DATA_RATE_PACKETS_PER_SECOND + " sent",
+        "derived_unit": DATA_RATE_PACKETS_PER_SECOND,
         "data_name": PACKETS_SENT,
     },
 }
