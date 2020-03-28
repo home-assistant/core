@@ -8,10 +8,12 @@ import pytest
 import zigpy.zcl.clusters.general as general
 
 import homeassistant.components.zha.core.device as zha_core_device
-import homeassistant.core as ha
+import homeassistant.helpers.device_registry as ha_dev_reg
 import homeassistant.util.dt as dt_util
 
-from .common import async_enable_traffic
+from .common import async_enable_traffic, make_zcl_header
+
+from tests.common import async_fire_time_changed
 
 
 @pytest.fixture
@@ -32,9 +34,28 @@ def zigpy_device(zigpy_device_mock):
 
 
 @pytest.fixture
-def device_with_basic_channel(zigpy_device):
+def zigpy_device_mains(zigpy_device_mock):
+    """Device tracker zigpy device."""
+
+    def _dev(with_basic_channel: bool = True):
+        in_clusters = [general.OnOff.cluster_id]
+        if with_basic_channel:
+            in_clusters.append(general.Basic.cluster_id)
+
+        endpoints = {
+            3: {"in_clusters": in_clusters, "out_clusters": [], "device_type": 0}
+        }
+        return zigpy_device_mock(
+            endpoints, node_descriptor=b"\x02@\x84_\x11\x7fd\x00\x00,d\x00\x00"
+        )
+
+    return _dev
+
+
+@pytest.fixture
+def device_with_basic_channel(zigpy_device_mains):
     """Return a zha device with a basic channel present."""
-    return zigpy_device(with_basic_channel=True)
+    return zigpy_device_mains(with_basic_channel=True)
 
 
 @pytest.fixture
@@ -43,10 +64,30 @@ def device_without_basic_channel(zigpy_device):
     return zigpy_device(with_basic_channel=False)
 
 
+@pytest.fixture
+async def ota_zha_device(zha_device_restored, zigpy_device_mock):
+    """ZHA device with OTA cluster fixture."""
+    zigpy_dev = zigpy_device_mock(
+        {
+            1: {
+                "in_clusters": [general.Basic.cluster_id],
+                "out_clusters": [general.Ota.cluster_id],
+                "device_type": 0x1234,
+            }
+        },
+        "00:11:22:33:44:55:66:77",
+        "test manufacturer",
+        "test model",
+    )
+
+    zha_device = await zha_device_restored(zigpy_dev)
+    return zha_device
+
+
 def _send_time_changed(hass, seconds):
     """Send a time changed event."""
-    now = dt_util.utcnow() + timedelta(seconds)
-    hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: now})
+    now = dt_util.utcnow() + timedelta(seconds=seconds)
+    async_fire_time_changed(hass, now)
 
 
 @asynctest.patch(
@@ -66,13 +107,13 @@ async def test_check_available_success(
     basic_ch.read_attributes.reset_mock()
     device_with_basic_channel.last_seen = None
     assert zha_device.available is True
-    _send_time_changed(hass, 61)
+    _send_time_changed(hass, zha_core_device._CONSIDER_UNAVAILABLE_MAINS + 2)
     await hass.async_block_till_done()
     assert zha_device.available is False
     assert basic_ch.read_attributes.await_count == 0
 
     device_with_basic_channel.last_seen = (
-        time.time() - zha_core_device._KEEP_ALIVE_INTERVAL - 2
+        time.time() - zha_core_device._CONSIDER_UNAVAILABLE_MAINS - 2
     )
     _seens = [time.time(), device_with_basic_channel.last_seen]
 
@@ -121,7 +162,7 @@ async def test_check_available_unsuccessful(
     assert basic_ch.read_attributes.await_count == 0
 
     device_with_basic_channel.last_seen = (
-        time.time() - zha_core_device._KEEP_ALIVE_INTERVAL - 2
+        time.time() - zha_core_device._CONSIDER_UNAVAILABLE_MAINS - 2
     )
 
     # unsuccessfuly ping zigpy device, but zha_device is still available
@@ -162,7 +203,7 @@ async def test_check_available_no_basic_channel(
     assert zha_device.available is True
 
     device_without_basic_channel.last_seen = (
-        time.time() - zha_core_device._KEEP_ALIVE_INTERVAL - 2
+        time.time() - zha_core_device._CONSIDER_UNAVAILABLE_BATTERY - 2
     )
 
     assert "does not have a mandatory basic cluster" not in caplog.text
@@ -170,3 +211,20 @@ async def test_check_available_no_basic_channel(
     await hass.async_block_till_done()
     assert zha_device.available is False
     assert "does not have a mandatory basic cluster" in caplog.text
+
+
+async def test_ota_sw_version(hass, ota_zha_device):
+    """Test device entry gets sw_version updated via OTA channel."""
+
+    ota_ch = ota_zha_device.channels.pools[0].client_channels["1:0x0019"]
+    dev_registry = await ha_dev_reg.async_get_registry(hass)
+    entry = dev_registry.async_get(ota_zha_device.device_id)
+    assert entry.sw_version is None
+
+    cluster = ota_ch.cluster
+    hdr = make_zcl_header(1, global_command=False)
+    sw_version = 0x2345
+    cluster.handle_message(hdr, [1, 2, 3, sw_version, None])
+    await hass.async_block_till_done()
+    entry = dev_registry.async_get(ota_zha_device.device_id)
+    assert int(entry.sw_version, base=16) == sw_version

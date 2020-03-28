@@ -434,6 +434,9 @@ class MqttTemplate(
         if ATTR_EFFECT in kwargs:
             values["effect"] = kwargs.get(ATTR_EFFECT)
 
+            if self._optimistic:
+                self._effect = kwargs[ATTR_EFFECT]
+
         if ATTR_FLASH in kwargs:
             values["flash"] = kwargs.get(ATTR_FLASH)
 

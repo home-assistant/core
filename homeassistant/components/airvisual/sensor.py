@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    CONF_SHOW_ON_MAP,
     CONF_STATE,
 )
 from homeassistant.core import callback
@@ -110,15 +111,6 @@ class AirVisualSensor(Entity):
             ATTR_COUNTRY: airvisual.data[geography_id].get(CONF_COUNTRY),
         }
 
-        geography = airvisual.geographies[geography_id]
-        if geography.get(CONF_LATITUDE):
-            if airvisual.show_on_map:
-                self._attrs[ATTR_LATITUDE] = geography[CONF_LATITUDE]
-                self._attrs[ATTR_LONGITUDE] = geography[CONF_LONGITUDE]
-            else:
-                self._attrs["lati"] = geography[CONF_LATITUDE]
-                self._attrs["long"] = geography[CONF_LONGITUDE]
-
     @property
     def available(self):
         """Return True if entity is available."""
@@ -198,6 +190,22 @@ class AirVisualSensor(Entity):
                     ATTR_POLLUTANT_UNIT: POLLUTANT_MAPPING[symbol]["unit"],
                 }
             )
+
+        if CONF_LATITUDE in self._airvisual.geography_data:
+            if self._airvisual.options[CONF_SHOW_ON_MAP]:
+                self._attrs[ATTR_LATITUDE] = self._airvisual.geography_data[
+                    CONF_LATITUDE
+                ]
+                self._attrs[ATTR_LONGITUDE] = self._airvisual.geography_data[
+                    CONF_LONGITUDE
+                ]
+                self._attrs.pop("lati", None)
+                self._attrs.pop("long", None)
+            else:
+                self._attrs["lati"] = self._airvisual.geography_data[CONF_LATITUDE]
+                self._attrs["long"] = self._airvisual.geography_data[CONF_LONGITUDE]
+                self._attrs.pop(ATTR_LATITUDE, None)
+                self._attrs.pop(ATTR_LONGITUDE, None)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect dispatcher listener when removed."""

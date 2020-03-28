@@ -4,6 +4,7 @@ import math
 
 from homeassistant import core as ha
 from homeassistant.components import (
+    camera,
     cover,
     fan,
     group,
@@ -41,6 +42,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.helpers import network
 import homeassistant.util.color as color_util
 from homeassistant.util.decorator import Registry
 import homeassistant.util.dt as dt_util
@@ -125,6 +127,8 @@ async def async_api_turn_on(hass, config, directive, context):
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if not supported & vacuum.SUPPORT_TURN_ON and supported & vacuum.SUPPORT_START:
             service = vacuum.SERVICE_START
+    elif domain == timer.DOMAIN:
+        service = timer.SERVICE_START
     elif domain == media_player.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         power_features = media_player.SUPPORT_TURN_ON | media_player.SUPPORT_TURN_OFF
@@ -160,6 +164,8 @@ async def async_api_turn_off(hass, config, directive, context):
             and supported & vacuum.SUPPORT_RETURN_HOME
         ):
             service = vacuum.SERVICE_RETURN_TO_BASE
+    elif domain == timer.DOMAIN:
+        service = timer.SERVICE_CANCEL
     elif domain == media_player.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         power_features = media_player.SUPPORT_TURN_ON | media_player.SUPPORT_TURN_OFF
@@ -1519,3 +1525,28 @@ async def async_api_resume(hass, config, directive, context):
     )
 
     return directive.response()
+
+
+@HANDLERS.register(("Alexa.CameraStreamController", "InitializeCameraStreams"))
+async def async_api_initialize_camera_stream(hass, config, directive, context):
+    """Process a InitializeCameraStreams request."""
+    entity = directive.entity
+    stream_source = await camera.async_request_stream(hass, entity.entity_id, fmt="hls")
+    camera_image = hass.states.get(entity.entity_id).attributes["entity_picture"]
+    external_url = network.async_get_external_url(hass)
+    payload = {
+        "cameraStreams": [
+            {
+                "uri": f"{external_url}{stream_source}",
+                "protocol": "HLS",
+                "resolution": {"width": 1280, "height": 720},
+                "authorizationType": "NONE",
+                "videoCodec": "H264",
+                "audioCodec": "AAC",
+            }
+        ],
+        "imageUri": f"{external_url}{camera_image}",
+    }
+    return directive.response(
+        name="Response", namespace="Alexa.CameraStreamController", payload=payload
+    )

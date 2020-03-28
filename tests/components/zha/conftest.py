@@ -110,10 +110,11 @@ def zigpy_device_mock(zigpy_app_controller):
         manufacturer="FakeManufacturer",
         model="FakeModel",
         node_descriptor=b"\x02@\x807\x10\x7fd\x00\x00*d\x00\x00",
+        nwk=0xB79C,
     ):
         """Make a fake device using the specified cluster classes."""
         device = FakeDevice(
-            zigpy_app_controller, ieee, manufacturer, model, node_descriptor
+            zigpy_app_controller, ieee, manufacturer, model, node_descriptor, nwk=nwk
         )
         for epid, ep in endpoints.items():
             endpoint = FakeEndpoint(manufacturer, model, epid)
@@ -157,7 +158,6 @@ def zha_device_restored(hass, zigpy_app_controller, setup_zha):
         zigpy_app_controller.devices[zigpy_dev.ieee] = zigpy_dev
         await setup_zha()
         zha_gateway = hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
-        await zha_gateway.async_load_devices()
         return zha_gateway.get_device(zigpy_dev.ieee)
 
     return _zha_device

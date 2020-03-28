@@ -1,8 +1,9 @@
 """Support for the Roku media player."""
-import logging
-
-import requests.exceptions
-from roku import Roku
+from requests.exceptions import (
+    ConnectionError as RequestsConnectionError,
+    ReadTimeout as RequestsReadTimeout,
+)
+from roku import RokuException
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
@@ -16,17 +17,9 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    STATE_HOME,
-    STATE_IDLE,
-    STATE_PLAYING,
-    STATE_STANDBY,
-)
+from homeassistant.const import STATE_HOME, STATE_IDLE, STATE_PLAYING, STATE_STANDBY
 
-from .const import DEFAULT_PORT
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DATA_CLIENT, DEFAULT_MANUFACTURER, DEFAULT_PORT, DOMAIN
 
 SUPPORT_ROKU = (
     SUPPORT_PREVIOUS_TRACK
@@ -40,23 +33,19 @@ SUPPORT_ROKU = (
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Roku platform."""
-    if not discovery_info:
-        return
-
-    host = discovery_info[CONF_HOST]
-    async_add_entities([RokuDevice(host)], True)
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up the Roku config entry."""
+    roku = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
+    async_add_entities([RokuDevice(roku)], True)
 
 
 class RokuDevice(MediaPlayerDevice):
     """Representation of a Roku device on the network."""
 
-    def __init__(self, host):
+    def __init__(self, roku):
         """Initialize the Roku device."""
-
-        self.roku = Roku(host)
-        self.ip_address = host
+        self.roku = roku
+        self.ip_address = roku.host
         self.channels = []
         self.current_app = None
         self._available = False
@@ -77,7 +66,7 @@ class RokuDevice(MediaPlayerDevice):
                 self.current_app = None
 
             self._available = True
-        except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout):
+        except (RequestsConnectionError, RequestsReadTimeout, RokuException):
             self._available = False
             pass
 
@@ -129,6 +118,17 @@ class RokuDevice(MediaPlayerDevice):
     def unique_id(self):
         """Return a unique, Home Assistant friendly identifier for this entity."""
         return self._device_info.serial_num
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "name": self.name,
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "manufacturer": DEFAULT_MANUFACTURER,
+            "model": self._device_info.model_num,
+            "sw_version": self._device_info.software_version,
+        }
 
     @property
     def media_content_type(self):

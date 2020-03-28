@@ -8,6 +8,7 @@ import asynctest
 import pytest
 
 from homeassistant.const import UNIT_PERCENTAGE
+from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import entity_platform, entity_registry
 from homeassistant.helpers.entity import async_generate_entity_id
@@ -847,3 +848,37 @@ async def test_platform_with_no_setup(hass, caplog):
         "The mock-platform platform for the mock-integration integration does not support platform setup."
         in caplog.text
     )
+
+
+async def test_platforms_sharing_services(hass):
+    """Test platforms share services."""
+    entity_platform1 = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity1 = MockEntity(entity_id="mock_integration.entity_1")
+    await entity_platform1.async_add_entities([entity1])
+
+    entity_platform2 = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity2 = MockEntity(entity_id="mock_integration.entity_2")
+    await entity_platform2.async_add_entities([entity2])
+
+    entities = []
+
+    @callback
+    def handle_service(entity, data):
+        entities.append(entity)
+
+    entity_platform1.async_register_entity_service("hello", {}, handle_service)
+    entity_platform2.async_register_entity_service(
+        "hello", {}, Mock(side_effect=AssertionError("Should not be called"))
+    )
+
+    await hass.services.async_call(
+        "mock_platform", "hello", {"entity_id": "all"}, blocking=True
+    )
+
+    assert len(entities) == 2
+    assert entity1 in entities
+    assert entity2 in entities

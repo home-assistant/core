@@ -6,11 +6,14 @@ import itertools
 import logging
 import os
 import traceback
+from typing import List, Optional
 
+from serial import SerialException
 import zigpy.device as zigpy_dev
 
 from homeassistant.components.system_log import LogEntry, _figure_out_source
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import (
     CONNECTION_ZIGBEE,
     async_get_registry as get_dev_reg,
@@ -34,7 +37,6 @@ from .const import (
     DATA_ZHA,
     DATA_ZHA_BRIDGE_ID,
     DATA_ZHA_GATEWAY,
-    DATA_ZHA_PLATFORM_LOADED,
     DEBUG_COMP_BELLOWS,
     DEBUG_COMP_ZHA,
     DEBUG_COMP_ZIGPY,
@@ -51,6 +53,7 @@ from .const import (
     DOMAIN,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_REMOVE,
+    SIGNAL_REMOVE_GROUP,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
     ZHA_GW_MSG,
@@ -74,6 +77,7 @@ from .group import ZHAGroup
 from .patches import apply_application_controller_patch
 from .registries import RADIO_TYPES
 from .store import async_get_registry
+from .typing import ZhaDeviceType, ZhaGroupType, ZigpyEndpointType, ZigpyGroupType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,13 +96,13 @@ class ZHAGateway:
         self._config = config
         self._devices = {}
         self._groups = {}
+        self.coordinator_zha_device = None
         self._device_registry = collections.defaultdict(list)
         self.zha_storage = None
         self.ha_device_registry = None
         self.ha_entity_registry = None
         self.application_controller = None
         self.radio_description = None
-        hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
         self._log_levels = {
             DEBUG_LEVEL_ORIGINAL: async_capture_log_levels(),
             DEBUG_LEVEL_CURRENT: async_capture_log_levels(),
@@ -110,6 +114,7 @@ class ZHAGateway:
     async def async_initialize(self):
         """Initialize controller and connect radio."""
         discovery.PROBE.initialize(self._hass)
+        discovery.GROUP_PROBE.initialize(self._hass)
 
         self.zha_storage = await async_get_registry(self._hass)
         self.ha_device_registry = await get_dev_reg(self._hass)
@@ -122,7 +127,11 @@ class ZHAGateway:
         radio_details = RADIO_TYPES[radio_type]
         radio = radio_details[ZHA_GW_RADIO]()
         self.radio_description = radio_details[ZHA_GW_RADIO_DESCRIPTION]
-        await radio.connect(usb_path, baudrate)
+        try:
+            await radio.connect(usb_path, baudrate)
+        except (SerialException, OSError) as exception:
+            _LOGGER.error("Couldn't open serial port for ZHA: %s", str(exception))
+            raise ConfigEntryNotReady
 
         if CONF_DATABASE in self._config:
             database = self._config[CONF_DATABASE]
@@ -133,38 +142,71 @@ class ZHAGateway:
         apply_application_controller_patch(self)
         self.application_controller.add_listener(self)
         self.application_controller.groups.add_listener(self)
-        await self.application_controller.startup(auto_form=True)
+
+        try:
+            res = await self.application_controller.startup(auto_form=True)
+            if res is False:
+                await self.application_controller.shutdown()
+                raise ConfigEntryNotReady
+        except asyncio.TimeoutError as exception:
+            _LOGGER.error(
+                "Couldn't start %s coordinator",
+                radio_details[ZHA_GW_RADIO_DESCRIPTION],
+                exc_info=exception,
+            )
+            radio.close()
+            raise ConfigEntryNotReady from exception
+
+        self._hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
         self._hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(
             self.application_controller.ieee
         )
-        self._initialize_groups()
+        self.async_load_devices()
+        self.async_load_groups()
 
-    async def async_load_devices(self) -> None:
+    @callback
+    def async_load_devices(self) -> None:
         """Restore ZHA devices from zigpy application state."""
-        await self._hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED].wait()
+        zigpy_devices = self.application_controller.devices.values()
+        for zigpy_device in zigpy_devices:
+            zha_device = self._async_get_or_create_device(zigpy_device, restored=True)
+            if zha_device.nwk == 0x0000:
+                self.coordinator_zha_device = zha_device
 
+    @callback
+    def async_load_groups(self) -> None:
+        """Initialize ZHA groups."""
+        for group_id in self.application_controller.groups:
+            group = self.application_controller.groups[group_id]
+            zha_group = self._async_get_or_create_group(group)
+            # we can do this here because the entities are in the entity registry tied to the devices
+            discovery.GROUP_PROBE.discover_group_entities(zha_group)
+
+    async def async_initialize_devices_and_entities(self) -> None:
+        """Initialize devices and load entities."""
         semaphore = asyncio.Semaphore(2)
 
-        async def _throttle(device: zha_typing.ZigpyDeviceType):
+        async def _throttle(zha_device: zha_typing.ZhaDeviceType, cached: bool):
             async with semaphore:
-                await self.async_device_restored(device)
+                await zha_device.async_initialize(from_cache=cached)
 
-        zigpy_devices = self.application_controller.devices.values()
         _LOGGER.debug("Loading battery powered devices")
         await asyncio.gather(
             *[
-                _throttle(dev)
-                for dev in zigpy_devices
-                if not dev.node_desc.is_mains_powered
+                _throttle(dev, cached=True)
+                for dev in self.devices.values()
+                if not dev.is_mains_powered
             ]
         )
-        async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES)
 
         _LOGGER.debug("Loading mains powered devices")
         await asyncio.gather(
-            *[_throttle(dev) for dev in zigpy_devices if dev.node_desc.is_mains_powered]
+            *[
+                _throttle(dev, cached=False)
+                for dev in self.devices.values()
+                if dev.is_mains_powered
+            ]
         )
-        async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES)
 
     def device_joined(self, device):
         """Handle device joined.
@@ -206,36 +248,45 @@ class ZHAGateway:
         """Handle device leaving the network."""
         self.async_update_device(device, False)
 
-    def group_member_removed(self, zigpy_group, endpoint):
+    def group_member_removed(
+        self, zigpy_group: ZigpyGroupType, endpoint: ZigpyEndpointType
+    ) -> None:
         """Handle zigpy group member removed event."""
         # need to handle endpoint correctly on groups
         zha_group = self._async_get_or_create_group(zigpy_group)
         zha_group.info("group_member_removed - endpoint: %s", endpoint)
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_MEMBER_REMOVED)
 
-    def group_member_added(self, zigpy_group, endpoint):
+    def group_member_added(
+        self, zigpy_group: ZigpyGroupType, endpoint: ZigpyEndpointType
+    ) -> None:
         """Handle zigpy group member added event."""
         # need to handle endpoint correctly on groups
         zha_group = self._async_get_or_create_group(zigpy_group)
         zha_group.info("group_member_added - endpoint: %s", endpoint)
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_MEMBER_ADDED)
 
-    def group_added(self, zigpy_group):
+    def group_added(self, zigpy_group: ZigpyGroupType) -> None:
         """Handle zigpy group added event."""
         zha_group = self._async_get_or_create_group(zigpy_group)
         zha_group.info("group_added")
         # need to dispatch for entity creation here
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_ADDED)
 
-    def group_removed(self, zigpy_group):
+    def group_removed(self, zigpy_group: ZigpyGroupType) -> None:
         """Handle zigpy group added event."""
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_REMOVED)
         zha_group = self._groups.pop(zigpy_group.group_id, None)
         zha_group.info("group_removed")
+        async_dispatcher_send(
+            self._hass, f"{SIGNAL_REMOVE_GROUP}_{zigpy_group.group_id}"
+        )
 
-    def _send_group_gateway_message(self, zigpy_group, gateway_message_type):
-        """Send the gareway event for a zigpy group event."""
-        zha_group = self._groups.get(zigpy_group.group_id, None)
+    def _send_group_gateway_message(
+        self, zigpy_group: ZigpyGroupType, gateway_message_type: str
+    ) -> None:
+        """Send the gateway event for a zigpy group event."""
+        zha_group = self._groups.get(zigpy_group.group_id)
         if zha_group is not None:
             async_dispatcher_send(
                 self._hass,
@@ -262,7 +313,7 @@ class ZHAGateway:
         entity_refs = self._device_registry.pop(device.ieee, None)
         if zha_device is not None:
             device_info = zha_device.async_get_info()
-            zha_device.async_unsub_dispatcher()
+            zha_device.async_cleanup_handles()
             async_dispatcher_send(
                 self._hass, "{}_{}".format(SIGNAL_REMOVE, str(zha_device.ieee))
             )
@@ -281,12 +332,12 @@ class ZHAGateway:
         """Return ZHADevice for given ieee."""
         return self._devices.get(ieee)
 
-    def get_group(self, group_id):
+    def get_group(self, group_id: str) -> Optional[ZhaGroupType]:
         """Return Group for given group id."""
         return self.groups.get(group_id)
 
     @callback
-    def async_get_group_by_name(self, group_name):
+    def async_get_group_by_name(self, group_name: str) -> Optional[ZhaGroupType]:
         """Get ZHA group by name."""
         for group in self.groups.values():
             if group.name == group_name:
@@ -365,12 +416,6 @@ class ZHAGateway:
             logging.getLogger(logger_name).removeHandler(self._log_relay_handler)
         self.debug_enabled = False
 
-    def _initialize_groups(self):
-        """Initialize ZHA groups."""
-        for group_id in self.application_controller.groups:
-            group = self.application_controller.groups[group_id]
-            self._async_get_or_create_group(group)
-
     @callback
     def _async_get_or_create_device(
         self, zigpy_device: zha_typing.ZigpyDeviceType, restored: bool = False
@@ -389,12 +434,12 @@ class ZHAGateway:
                 model=zha_device.model,
             )
             zha_device.set_device_id(device_registry_device.id)
-        entry = self.zha_storage.async_get_or_create(zha_device)
+        entry = self.zha_storage.async_get_or_create_device(zha_device)
         zha_device.async_update_last_seen(entry.last_seen)
         return zha_device
 
     @callback
-    def _async_get_or_create_group(self, zigpy_group):
+    def _async_get_or_create_group(self, zigpy_group: ZigpyGroupType) -> ZhaGroupType:
         """Get or create a ZHA group."""
         zha_group = self._groups.get(zigpy_group.group_id)
         if zha_group is None:
@@ -421,7 +466,7 @@ class ZHAGateway:
     async def async_update_device_storage(self):
         """Update the devices in the store."""
         for device in self.devices.values():
-            self.zha_storage.async_update(device)
+            self.zha_storage.async_update_device(device)
         await self.zha_storage.async_save()
 
     async def async_device_initialized(self, device: zha_typing.ZigpyDeviceType):
@@ -469,25 +514,6 @@ class ZHAGateway:
         zha_device.update_available(True)
         async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES)
 
-    # only public for testing
-    async def async_device_restored(self, device: zha_typing.ZigpyDeviceType):
-        """Add an existing device to the ZHA zigbee network when ZHA first starts."""
-        zha_device = self._async_get_or_create_device(device, restored=True)
-
-        if zha_device.is_mains_powered:
-            # the device isn't a battery powered device so we should be able
-            # to update it now
-            _LOGGER.debug(
-                "attempting to request fresh state for device - %s:%s %s with power source %s",
-                zha_device.nwk,
-                zha_device.ieee,
-                zha_device.name,
-                zha_device.power_source,
-            )
-            await zha_device.async_initialize(from_cache=False)
-        else:
-            await zha_device.async_initialize(from_cache=True)
-
     async def _async_device_rejoined(self, zha_device):
         _LOGGER.debug(
             "skipping discovery for previously discovered device - %s:%s",
@@ -499,7 +525,9 @@ class ZHAGateway:
         # will cause async_init to fire so don't explicitly call it
         zha_device.update_available(True)
 
-    async def async_create_zigpy_group(self, name, members):
+    async def async_create_zigpy_group(
+        self, name: str, members: List[ZhaDeviceType]
+    ) -> ZhaGroupType:
         """Create a new Zigpy Zigbee group."""
         # we start with one to fill any gaps from a user removing existing groups
         group_id = 1
@@ -512,24 +540,37 @@ class ZHAGateway:
             if members is not None:
                 tasks = []
                 for ieee in members:
+                    _LOGGER.debug(
+                        "Adding member with IEEE: %s to group: %s:0x%04x",
+                        ieee,
+                        name,
+                        group_id,
+                    )
                     tasks.append(self.devices[ieee].async_add_to_group(group_id))
                 await asyncio.gather(*tasks)
-        return self.groups.get(group_id)
+        zha_group = self.groups.get(group_id)
+        _LOGGER.debug(
+            "Probing group: %s:0x%04x for entity discovery",
+            zha_group.name,
+            zha_group.group_id,
+        )
+        discovery.GROUP_PROBE.discover_group_entities(zha_group)
 
-    async def async_remove_zigpy_group(self, group_id):
+        return zha_group
+
+    async def async_remove_zigpy_group(self, group_id: int) -> None:
         """Remove a Zigbee group from Zigpy."""
         group = self.groups.get(group_id)
+        if not group:
+            _LOGGER.debug("Group: %s:0x%04x could not be found", group.name, group_id)
+            return
         if group and group.members:
             tasks = []
             for member in group.members:
                 tasks.append(member.async_remove_from_group(group_id))
             if tasks:
                 await asyncio.gather(*tasks)
-            else:
-                # we have members but none are tracked by ZHA for whatever reason
-                self.application_controller.groups.pop(group_id)
-        else:
-            self.application_controller.groups.pop(group_id)
+        self.application_controller.groups.pop(group_id)
 
     async def shutdown(self):
         """Stop ZHA Controller Application."""

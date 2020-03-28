@@ -1,6 +1,4 @@
 """The tests for the MQTT cover platform."""
-import json
-
 from homeassistant.components import cover
 from homeassistant.components.cover import ATTR_POSITION, ATTR_TILT_POSITION
 from homeassistant.components.mqtt.cover import MqttCover
@@ -20,26 +18,35 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
-    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.setup import async_setup_component
 
 from .common import (
+    help_test_availability_without_topic,
+    help_test_custom_availability_payload,
+    help_test_default_availability_payload,
     help_test_discovery_broken,
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_attr,
+    help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
+    help_test_entity_device_info_with_connection,
     help_test_entity_device_info_with_identifier,
     help_test_entity_id_update,
     help_test_setting_attribute_via_mqtt_json_message,
+    help_test_setting_attribute_with_template,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
 )
 
 from tests.common import async_fire_mqtt_message
+
+DEFAULT_CONFIG = {
+    cover.DOMAIN: {"platform": "mqtt", "name": "test", "state_topic": "test-topic"}
+}
 
 
 async def test_state_via_state_topic(hass, mqtt_mock):
@@ -1577,87 +1584,23 @@ async def test_find_in_range_altered_inverted(hass, mqtt_mock):
 
 async def test_availability_without_topic(hass, mqtt_mock):
     """Test availability without defined availability topic."""
-    assert await async_setup_component(
-        hass,
-        cover.DOMAIN,
-        {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-            }
-        },
+    await help_test_availability_without_topic(
+        hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG
     )
 
-    state = hass.states.get("cover.test")
-    assert state.state != STATE_UNAVAILABLE
 
-
-async def test_availability_by_defaults(hass, mqtt_mock):
-    """Test availability by defaults with defined topic."""
-    assert await async_setup_component(
-        hass,
-        cover.DOMAIN,
-        {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "availability_topic": "availability-topic",
-            }
-        },
+async def test_default_availability_payload(hass, mqtt_mock):
+    """Test availability by default payload with defined topic."""
+    await help_test_default_availability_payload(
+        hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG
     )
 
-    state = hass.states.get("cover.test")
-    assert state.state == STATE_UNAVAILABLE
 
-    async_fire_mqtt_message(hass, "availability-topic", "online")
-    await hass.async_block_till_done()
-
-    state = hass.states.get("cover.test")
-    assert state.state != STATE_UNAVAILABLE
-
-    async_fire_mqtt_message(hass, "availability-topic", "offline")
-    await hass.async_block_till_done()
-
-    state = hass.states.get("cover.test")
-    assert state.state == STATE_UNAVAILABLE
-
-
-async def test_availability_by_custom_payload(hass, mqtt_mock):
+async def test_custom_availability_payload(hass, mqtt_mock):
     """Test availability by custom payload with defined topic."""
-    assert await async_setup_component(
-        hass,
-        cover.DOMAIN,
-        {
-            cover.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "state_topic": "state-topic",
-                "command_topic": "command-topic",
-                "availability_topic": "availability-topic",
-                "payload_available": "good",
-                "payload_not_available": "nogood",
-            }
-        },
+    await help_test_custom_availability_payload(
+        hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG
     )
-
-    state = hass.states.get("cover.test")
-    assert state.state == STATE_UNAVAILABLE
-
-    async_fire_mqtt_message(hass, "availability-topic", "good")
-    await hass.async_block_till_done()
-
-    state = hass.states.get("cover.test")
-    assert state.state != STATE_UNAVAILABLE
-
-    async_fire_mqtt_message(hass, "availability-topic", "nogood")
-    await hass.async_block_till_done()
-
-    state = hass.states.get("cover.test")
-    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_valid_device_class(hass, mqtt_mock):
@@ -1700,63 +1643,36 @@ async def test_invalid_device_class(hass, mqtt_mock):
 
 async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
-    config = {
-        cover.DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "state_topic": "test-topic",
-            "json_attributes_topic": "attr-topic",
-        }
-    }
     await help_test_setting_attribute_via_mqtt_json_message(
-        hass, mqtt_mock, cover.DOMAIN, config
+        hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_setting_attribute_with_template(hass, mqtt_mock):
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await help_test_setting_attribute_with_template(
+        hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
     """Test attributes get extracted from a JSON result."""
-    config = {
-        cover.DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "state_topic": "test-topic",
-            "json_attributes_topic": "attr-topic",
-        }
-    }
     await help_test_update_with_json_attrs_not_dict(
-        hass, mqtt_mock, caplog, cover.DOMAIN, config
+        hass, mqtt_mock, caplog, cover.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_update_with_json_attrs_bad_JSON(hass, mqtt_mock, caplog):
     """Test attributes get extracted from a JSON result."""
-    config = {
-        cover.DOMAIN: {
-            "platform": "mqtt",
-            "name": "test",
-            "state_topic": "test-topic",
-            "json_attributes_topic": "attr-topic",
-        }
-    }
     await help_test_update_with_json_attrs_bad_JSON(
-        hass, mqtt_mock, caplog, cover.DOMAIN, config
+        hass, mqtt_mock, caplog, cover.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_discovery_update_attr(hass, mqtt_mock, caplog):
     """Test update of discovered MQTTAttributes."""
-    data1 = (
-        '{ "name": "Beer",'
-        '  "command_topic": "test_topic",'
-        '  "json_attributes_topic": "attr-topic1" }'
-    )
-    data2 = (
-        '{ "name": "Beer",'
-        '  "command_topic": "test_topic",'
-        '  "json_attributes_topic": "attr-topic2" }'
-    )
     await help_test_discovery_update_attr(
-        hass, mqtt_mock, caplog, cover.DOMAIN, data1, data2
+        hass, mqtt_mock, caplog, cover.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -1783,7 +1699,7 @@ async def test_unique_id(hass):
 
 async def test_discovery_removal_cover(hass, mqtt_mock, caplog):
     """Test removal of discovered cover."""
-    data = '{ "name": "Beer",' '  "command_topic": "test_topic" }'
+    data = '{ "name": "test",' '  "command_topic": "test_topic" }'
     await help_test_discovery_removal(hass, mqtt_mock, caplog, cover.DOMAIN, data)
 
 
@@ -1805,61 +1721,34 @@ async def test_discovery_broken(hass, mqtt_mock, caplog):
     )
 
 
+async def test_entity_device_info_with_connection(hass, mqtt_mock):
+    """Test MQTT cover device registry integration."""
+    await help_test_entity_device_info_with_connection(
+        hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG
+    )
+
+
 async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     """Test MQTT cover device registry integration."""
-    data = json.dumps(
-        {
-            "platform": "mqtt",
-            "name": "Test 1",
-            "state_topic": "test-topic",
-            "command_topic": "test-command-topic",
-            "device": {
-                "identifiers": ["helloworld"],
-                "connections": [["mac", "02:5b:26:a8:dc:12"]],
-                "manufacturer": "Whatever",
-                "name": "Beer",
-                "model": "Glass",
-                "sw_version": "0.1-beta",
-            },
-            "unique_id": "veryunique",
-        }
-    )
     await help_test_entity_device_info_with_identifier(
-        hass, mqtt_mock, cover.DOMAIN, data
+        hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_entity_device_info_update(hass, mqtt_mock):
     """Test device registry update."""
-    config = {
-        "platform": "mqtt",
-        "name": "Test 1",
-        "state_topic": "test-topic",
-        "command_topic": "test-command-topic",
-        "device": {
-            "identifiers": ["helloworld"],
-            "connections": [["mac", "02:5b:26:a8:dc:12"]],
-            "manufacturer": "Whatever",
-            "name": "Beer",
-            "model": "Glass",
-            "sw_version": "0.1-beta",
-        },
-        "unique_id": "veryunique",
-    }
-    await help_test_entity_device_info_update(hass, mqtt_mock, cover.DOMAIN, config)
+    await help_test_entity_device_info_update(
+        hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_entity_device_info_remove(hass, mqtt_mock):
+    """Test device registry remove."""
+    await help_test_entity_device_info_remove(
+        hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG
+    )
 
 
 async def test_entity_id_update(hass, mqtt_mock):
     """Test MQTT subscriptions are managed when entity_id is updated."""
-    config = {
-        cover.DOMAIN: [
-            {
-                "platform": "mqtt",
-                "name": "beer",
-                "state_topic": "test-topic",
-                "availability_topic": "avty-topic",
-                "unique_id": "TOTALLY_UNIQUE",
-            }
-        ]
-    }
-    await help_test_entity_id_update(hass, mqtt_mock, cover.DOMAIN, config)
+    await help_test_entity_id_update(hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG)

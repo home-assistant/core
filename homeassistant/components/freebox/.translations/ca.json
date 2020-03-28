@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'amfitri\u00f3 ja est\u00e0 configurat"
+        },
+        "error": {
+            "connection_failed": "No s'ha pogut connectar, torna-ho a provar",
+            "register_failed": "No s'ha pogut registrar, torna-ho a provar",
+            "unknown": "Error desconegut: torna-ho a provar m\u00e9s tard"
+        },
+        "step": {
+            "link": {
+                "description": "Prem \"Envia\", a continuaci\u00f3, toca la fletxa dreta del router per registrar Freebox amb Home Assistant.\n\n![Ubicaci\u00f3 del boto del router](/static/images/config_freebox.png)",
+                "title": "Enlla\u00e7 amb router Freebox"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "port": "Port"
+                },
+                "title": "Freebox"
+            }
+        },
+        "title": "Freebox"
+    }
+}

@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Naprava je \u017ee konfigurirana",
-            "bad_config_file": "Napa\u010dni podatki iz konfiguracijske datoteke",
+            "bad_config_file": "Slabi podatki iz konfiguracijske datoteke",
             "link_local_address": "Lokalni naslovi povezave niso podprti",
             "not_axis_device": "Odkrita naprava ni naprava Axis",
             "updated_configuration": "Posodobljena konfiguracija naprave z novim naslovom gostitelja"

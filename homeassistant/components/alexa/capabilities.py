@@ -7,6 +7,7 @@ from homeassistant.components import (
     image_processing,
     input_number,
     light,
+    timer,
     vacuum,
 )
 from homeassistant.components.alarm_control_panel import ATTR_CODE_FORMAT, FORMAT_NUMBER
@@ -25,6 +26,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_IDLE,
     STATE_LOCKED,
     STATE_OFF,
     STATE_ON,
@@ -167,6 +169,11 @@ class AlexaCapability:
         """Return the supportedOperations object."""
         return []
 
+    @staticmethod
+    def camera_stream_configurations():
+        """Applicable only to CameraStreamController."""
+        return None
+
     def serialize_discovery(self):
         """Serialize according to the Discovery API."""
         result = {"type": "AlexaInterface", "interface": self.name(), "version": "3"}
@@ -219,6 +226,10 @@ class AlexaCapability:
         inputs = self.inputs()
         if inputs:
             result["inputs"] = inputs
+
+        camera_stream_configurations = self.camera_stream_configurations()
+        if camera_stream_configurations:
+            result["cameraStreamConfigurations"] = camera_stream_configurations
 
         return result
 
@@ -365,6 +376,8 @@ class AlexaPowerController(AlexaCapability):
             is_on = self.entity.state != climate.HVAC_MODE_OFF
         elif self.entity.domain == vacuum.DOMAIN:
             is_on = self.entity.state == vacuum.STATE_CLEANING
+        elif self.entity.domain == timer.DOMAIN:
+            is_on = self.entity.state != STATE_IDLE
 
         else:
             is_on = self.entity.state != STATE_OFF
@@ -1850,3 +1863,40 @@ class AlexaTimeHoldController(AlexaCapability):
         When false, Alexa does not send the Resume directive.
         """
         return {"allowRemoteResume": self._allow_remote_resume}
+
+
+class AlexaCameraStreamController(AlexaCapability):
+    """Implements Alexa.CameraStreamController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-camerastreamcontroller.html
+    """
+
+    supported_locales = {
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "fr-FR",
+        "it-IT",
+        "ja-JP",
+    }
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.CameraStreamController"
+
+    def camera_stream_configurations(self):
+        """Return cameraStreamConfigurations object."""
+        camera_stream_configurations = [
+            {
+                "protocols": ["HLS"],
+                "resolutions": [{"width": 1280, "height": 720}],
+                "authorizationTypes": ["NONE"],
+                "videoCodecs": ["H264"],
+                "audioCodecs": ["AAC"],
+            }
+        ]
+        return camera_stream_configurations

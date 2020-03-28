@@ -29,7 +29,7 @@ STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation cover from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][DOMAIN] = []
+    entities_to_create = hass.data[DATA_ZHA][DOMAIN]
 
     unsub = async_dispatcher_connect(
         hass,
@@ -99,14 +99,14 @@ class ZhaCover(ZhaEntity, CoverDevice):
             self._state = STATE_CLOSED
         elif self._current_position == 100:
             self._state = STATE_OPEN
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def async_update_state(self, state):
         """Handle state update from channel."""
         _LOGGER.debug("state=%s", state)
         self._state = state
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_open_cover(self, **kwargs):
         """Open the window cover."""
@@ -134,7 +134,7 @@ class ZhaCover(ZhaEntity, CoverDevice):
         res = await self._cover_channel.stop()
         if isinstance(res, list) and res[1] is Status.SUCCESS:
             self._state = STATE_OPEN if self._current_position > 0 else STATE_CLOSED
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_update(self):
         """Attempt to retrieve the open/close state of the cover."""

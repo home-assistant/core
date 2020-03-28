@@ -338,12 +338,8 @@ class HKDevice:
 
     async def put_characteristics(self, characteristics):
         """Control a HomeKit device state from Home Assistant."""
-        chars = []
-        for row in characteristics:
-            chars.append((row["aid"], row["iid"], row["value"]))
-
         async with self.pairing_lock:
-            results = await self.pairing.put_characteristics(chars)
+            results = await self.pairing.put_characteristics(characteristics)
 
         # Feed characteristics back into HA and update the current state
         # results will only contain failures, so anythin in characteristics
@@ -351,8 +347,8 @@ class HKDevice:
         # reflect the change immediately.
 
         new_entity_state = {}
-        for row in characteristics:
-            key = (row["aid"], row["iid"])
+        for aid, iid, value in characteristics:
+            key = (aid, iid)
 
             # If the key was returned by put_characteristics() then the
             # change didn't work
@@ -361,7 +357,7 @@ class HKDevice:
 
             # Otherwise it was accepted and we can apply the change to
             # our state
-            new_entity_state[key] = {"value": row["value"]}
+            new_entity_state[key] = {"value": value}
 
         self.process_new_events(new_entity_state)
 

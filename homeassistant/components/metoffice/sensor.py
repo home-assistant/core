@@ -141,7 +141,7 @@ class MetOfficeCurrentSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._name, SENSOR_TYPES[self._condition][0])
+        return f"{self._name} {SENSOR_TYPES[self._condition][0]}"
 
     @property
     def state(self):

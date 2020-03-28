@@ -25,7 +25,19 @@ async def init_integration(
 
     aioclient_mock.post(
         "http://example.local:80/json/state",
-        json={"success": True},
+        json={},
+        headers={"Content-Type": "application/json"},
+    )
+
+    aioclient_mock.get(
+        "http://example.local:80/json/info",
+        json={},
+        headers={"Content-Type": "application/json"},
+    )
+
+    aioclient_mock.get(
+        "http://example.local:80/json/state",
+        json={},
         headers={"Content-Type": "application/json"},
     )
 

@@ -504,7 +504,7 @@ class Entity(ABC):
             while self._on_remove:
                 self._on_remove.pop()()
 
-        self.hass.states.async_remove(self.entity_id)
+        self.hass.states.async_remove(self.entity_id, context=self._context)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass.
@@ -542,6 +542,7 @@ class Entity(ABC):
         data = event.data
         if data["action"] == "remove" and data["entity_id"] == self.entity_id:
             await self.async_removed_from_registry()
+            await self.async_remove()
 
         if (
             data["action"] != "update"

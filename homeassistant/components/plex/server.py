@@ -171,7 +171,7 @@ class PlexServer:
                 continue
             session_username = session.usernames[0]
             for player in session.players:
-                if session_username not in monitored_users:
+                if session_username and session_username not in monitored_users:
                     ignored_clients.add(player.machineIdentifier)
                     _LOGGER.debug("Ignoring Plex client owned by %s", session_username)
                     continue
