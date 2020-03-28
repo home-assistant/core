@@ -54,8 +54,6 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
     ("tests.components.dyson.test_fan", "test_purecool_update_state_filter_inv"),
     ("tests.components.dyson.test_fan", "test_purecool_component_setup_only_once"),
     ("tests.components.dyson.test_sensor", "test_purecool_component_setup_only_once"),
-    ("tests.components.gdacs.test_geo_location", "test_setup"),
-    ("tests.components.gdacs.test_sensor", "test_setup"),
     ("tests.components.geonetnz_quakes.test_geo_location", "test_setup"),
     ("tests.components.geonetnz_quakes.test_sensor", "test_setup"),
     ("test_homeassistant_bridge", "test_homeassistant_bridge_fan_setup"),
