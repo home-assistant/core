@@ -544,7 +544,7 @@ async def test_trigger_with_pending(hass):
             "alarm_control_panel": {
                 "platform": "manual",
                 "name": "test",
-                "arming_time": 2,
+                "delay_time": 2,
                 "trigger_time": 3,
                 "disarm_after_trigger": False,
             }
@@ -683,9 +683,8 @@ async def test_trigger_with_pending_and_delay(hass):
                 "platform": "manual",
                 "name": "test",
                 "code": CODE,
-                "delay_time": 1,
+                "delay_time": 2,
                 "arming_time": 0,
-                "triggered": {"arming_time": 1},
                 "disarm_after_trigger": False,
             }
         },
@@ -741,8 +740,7 @@ async def test_trigger_with_pending_and_specific_delay(hass):
                 "code": CODE,
                 "delay_time": 10,
                 "arming_time": 0,
-                "armed_away": {"delay_time": 1},
-                "triggered": {"arming_time": 1},
+                "armed_away": {"delay_time": 2},
                 "disarm_after_trigger": False,
             }
         },
@@ -891,8 +889,8 @@ async def test_trigger_with_specific_pending(hass):
             "alarm_control_panel": {
                 "platform": "manual",
                 "name": "test",
-                "arming_time": 10,
-                "triggered": {"arming_time": 2},
+                "delay_time": 10,
+                "disarmed": {"delay_time": 2},
                 "trigger_time": 3,
                 "disarm_after_trigger": False,
             }
@@ -936,7 +934,7 @@ async def test_trigger_with_disarm_after_trigger(hass):
                 "platform": "manual",
                 "name": "test",
                 "trigger_time": 5,
-                "arming_time": 0,
+                "delay_time": 0,
                 "disarm_after_trigger": True,
             }
         },
@@ -998,7 +996,7 @@ async def test_trigger_with_unused_zero_specific_trigger_time(hass):
                 "name": "test",
                 "trigger_time": 5,
                 "armed_home": {"trigger_time": 0},
-                "arming_time": 0,
+                "delay_time": 0,
                 "disarm_after_trigger": True,
             }
         },
@@ -1033,7 +1031,7 @@ async def test_trigger_with_specific_trigger_time(hass):
                 "platform": "manual",
                 "name": "test",
                 "disarmed": {"trigger_time": 5},
-                "arming_time": 0,
+                "delay_time": 0,
                 "disarm_after_trigger": True,
             }
         },
@@ -1069,6 +1067,7 @@ async def test_trigger_with_no_disarm_after_trigger(hass):
                 "name": "test",
                 "trigger_time": 5,
                 "arming_time": 0,
+                "delay_time": 0,
                 "disarm_after_trigger": False,
             }
         },
@@ -1108,6 +1107,7 @@ async def test_back_to_back_trigger_with_no_disarm_after_trigger(hass):
                 "name": "test",
                 "trigger_time": 5,
                 "arming_time": 0,
+                "delay_time": 0,
                 "disarm_after_trigger": False,
             }
         },
@@ -1197,7 +1197,7 @@ async def test_disarm_during_trigger_with_invalid_code(hass):
             "alarm_control_panel": {
                 "platform": "manual",
                 "name": "test",
-                "arming_time": 5,
+                "delay_time": 5,
                 "code": CODE + "2",
                 "disarm_after_trigger": False,
             }
