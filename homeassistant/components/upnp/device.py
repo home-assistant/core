@@ -153,38 +153,6 @@ class Device:
         except (asyncio.TimeoutError, aiohttp.ClientError, UpnpError):
             _LOGGER.error("Could not delete port mapping")
 
-    async def async_get_total_bytes_received(self):
-        """Get total bytes received."""
-        _LOGGER.debug("%s: Getting total bytes received", self)
-        try:
-            return await self._igd_device.async_get_total_bytes_received()
-        except asyncio.TimeoutError:
-            _LOGGER.warning("Timeout during get_total_bytes_received")
-
-    async def async_get_total_bytes_sent(self):
-        """Get total bytes sent."""
-        _LOGGER.debug("%s: Getting total bytes sent", self)
-        try:
-            return await self._igd_device.async_get_total_bytes_sent()
-        except asyncio.TimeoutError:
-            _LOGGER.warning("Timeout during get_total_bytes_sent")
-
-    async def async_get_total_packets_received(self):
-        """Get total packets received."""
-        _LOGGER.debug("%s: Getting total packets received", self)
-        try:
-            return await self._igd_device.async_get_total_packets_received()
-        except asyncio.TimeoutError:
-            _LOGGER.warning("Timeout during get_total_packets_received")
-
-    async def async_get_total_packets_sent(self):
-        """Get total packets sent."""
-        _LOGGER.debug("%s: Getting total packets sent", self)
-        try:
-            return await self._igd_device.async_get_total_packets_sent()
-        except asyncio.TimeoutError:
-            _LOGGER.warning("Timeout during get_total_packets_sent")
-
     async def async_get_traffic_data(self):
         """
         Get all traffic data in one go.
@@ -200,10 +168,10 @@ class Device:
         _LOGGER.debug("Getting traffic statistics from device: %s", self)
 
         values = await asyncio.gather(
-            self.async_get_total_bytes_received(),
-            self.async_get_total_bytes_sent(),
-            self.async_get_total_packets_received(),
-            self.async_get_total_packets_sent(),
+            self._igd_device.async_get_total_bytes_received(),
+            self._igd_device.async_get_total_bytes_sent(),
+            self._igd_device.async_get_total_packets_received(),
+            self._igd_device.async_get_total_packets_sent(),
             return_exceptions=True,
         )
 
