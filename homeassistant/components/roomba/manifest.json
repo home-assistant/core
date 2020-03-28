@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/roomba",
   "requirements": [
-    "roombapy==1.4.3"
+    "roombapy==1.5.0"
   ],
   "dependencies": [],
   "codeowners": [
