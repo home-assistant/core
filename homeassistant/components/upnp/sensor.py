@@ -7,6 +7,7 @@ from homeassistant.const import (
     DATA_PACKETS,
     DATA_RATE_KIBIBYTES_PER_SECOND,
     DATA_RATE_PACKETS_PER_SECOND,
+    KIBIBYTE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import callback
@@ -57,8 +58,6 @@ SENSOR_TYPES = {
         "data_name": PACKETS_SENT,
     },
 }
-
-KIBIBYTE = 1024
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
