@@ -1,12 +1,18 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Integratioun ass scho konfigur\u00e9iert mat engem Sensor mat deem Tarif"
+        },
         "step": {
             "user": {
                 "data": {
-                    "name": "Numm vum Sensor"
+                    "name": "Numm vum Sensor",
+                    "tariff": "Kontraktuellen Tarif (1, 2 oder 3 Perioden)"
                 },
+                "description": "D\u00ebse Sensor benotzt d\u00e9i offiziell API fir de [Stonne Pr\u00e4is fir Elektrizit\u00e9it a Spuenien (PVPC)](https://www.esios.ree.es/es/pvpc) ze kr\u00e9ien. Fir m\u00e9i pr\u00e4zise Erkl\u00e4runge kuck [Dokumentatioun vun der Integratioun](https://www.home-assistant.io/integrations/pvpc_hourly_pricing/).\n\nWiel den Taux bas\u00e9ierend op der Unzuel vun de Rechnungsz\u00e4ite pro Dag aus:\n- 1 Period: Normal\n- 2 perioden: Nuets Tarif\n- 3 Perioden: Elektreschen Auto (Nuets Tarif fir 3 Perioden)",
                 "title": "Auswiel vum Tarif"
             }
-        }
+        },
+        "title": "Stonne Pr\u00e4is fir Elektrizit\u00e9it a Spuenien (PVPC)"
     }
 }

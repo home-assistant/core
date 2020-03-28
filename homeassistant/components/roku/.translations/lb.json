@@ -11,6 +11,10 @@
         "flow_title": "Roku: {name}",
         "step": {
             "ssdp_confirm": {
+                "data": {
+                    "one": "Een",
+                    "other": "Aaner"
+                },
                 "description": "Soll {name} konfigur\u00e9iert ginn?",
                 "title": "Roku"
             },
