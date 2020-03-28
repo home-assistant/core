@@ -2,9 +2,11 @@
 
 import asyncio
 import collections
+from datetime import timedelta
 import itertools
 import logging
 import os
+import random
 import traceback
 from typing import List, Optional
 
@@ -20,6 +22,7 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_get_registry as get_ent_reg
+from homeassistant.helpers.event import async_track_time_interval
 
 from . import discovery, typing as zha_typing
 from .const import (
@@ -80,6 +83,7 @@ from .store import async_get_registry
 from .typing import ZhaDeviceType, ZhaGroupType, ZigpyEndpointType, ZigpyGroupType
 
 _LOGGER = logging.getLogger(__name__)
+_STORAGE_UPDATE_INTERVAL = (15, 25)
 
 EntityReference = collections.namedtuple(
     "EntityReference",
@@ -110,6 +114,7 @@ class ZHAGateway:
         self.debug_enabled = False
         self._log_relay_handler = LogRelayHandler(hass, self)
         self._config_entry = config_entry
+        self._unsubs = []
 
     async def async_initialize(self):
         """Initialize controller and connect radio."""
@@ -163,6 +168,14 @@ class ZHAGateway:
         )
         self.async_load_devices()
         self.async_load_groups()
+        update_store_interval = random.randint(*_STORAGE_UPDATE_INTERVAL)
+        self._unsubs.append(
+            async_track_time_interval(
+                self._hass,
+                self._async_update_device_storage,
+                timedelta(minutes=update_store_interval),
+            )
+        )
 
     @callback
     def async_load_devices(self) -> None:
@@ -463,11 +476,10 @@ class ZHAGateway:
             if device.status is DeviceStatus.INITIALIZED:
                 device.update_available(available)
 
-    async def async_update_device_storage(self):
+    def _async_update_device_storage(self, *_):
         """Update the devices in the store."""
         for device in self.devices.values():
             self.zha_storage.async_update_device(device)
-        await self.zha_storage.async_save()
 
     async def async_device_initialized(self, device: zha_typing.ZigpyDeviceType):
         """Handle device joined and basic information discovered (async)."""
@@ -576,6 +588,10 @@ class ZHAGateway:
         """Stop ZHA Controller Application."""
         _LOGGER.debug("Shutting down ZHA ControllerApplication")
         await self.application_controller.shutdown()
+        for device in self.devices.values():
+            device.async_cleanup_handles()
+        for unsubscribe in self._unsubs:
+            unsubscribe()
 
 
 @callback
