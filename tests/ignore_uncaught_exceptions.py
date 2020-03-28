@@ -21,9 +21,6 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
     ("tests.components.dsmr.test_sensor", "test_belgian_meter_low"),
     ("tests.components.dsmr.test_sensor", "test_tcp"),
     ("tests.components.dsmr.test_sensor", "test_connection_errors_retry"),
-    ("tests.components.dynalite.test_bridge", "test_add_devices_then_register"),
-    ("tests.components.dynalite.test_bridge", "test_register_then_add_devices"),
-    ("tests.components.dynalite.test_config_flow", "test_existing_update"),
     ("tests.components.dyson.test_air_quality", "test_purecool_aiq_attributes"),
     ("tests.components.dyson.test_air_quality", "test_purecool_aiq_update_state"),
     (
