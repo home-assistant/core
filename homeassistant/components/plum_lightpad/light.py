@@ -74,7 +74,7 @@ class PlumLight(Light):
         """Flag supported features."""
         if self._load.dimmable:
             return SUPPORT_BRIGHTNESS
-        return None
+        return 0
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
