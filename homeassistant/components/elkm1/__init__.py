@@ -149,6 +149,11 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
 
     for index, conf in enumerate(hass_config[DOMAIN]):
         _LOGGER.debug("Importing elkm1 #%d - %s", index, conf[CONF_HOST])
+
+        # The update of the config entry is done in async_setup
+        # to ensure the entry if updated before async_setup_entry
+        # is called to avoid a situation where the user has to restart
+        # twice for the changes to take effect
         current_config_entry = _async_find_matching_config_entry(
             hass, conf[CONF_PREFIX]
         )
