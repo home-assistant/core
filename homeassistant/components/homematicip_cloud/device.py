@@ -121,9 +121,13 @@ class HomematicipGenericDevice(Entity):
 
         # Only go further if the device/entity should be removed from registries
         # due to a removal of the HmIP device.
+
         if self.hmip_device_removed:
-            del self._hap.hmip_device_by_entity_id[self.entity_id]
-            await self.async_remove_from_registries()
+            try:
+                del self._hap.hmip_device_by_entity_id[self.entity_id]
+                await self.async_remove_from_registries()
+            except KeyError as err:
+                _LOGGER.debug("Error removing HMIP entity from registry: %s", err)
 
     async def async_remove_from_registries(self) -> None:
         """Remove entity/device from registry."""
