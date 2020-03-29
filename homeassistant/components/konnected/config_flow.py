@@ -121,7 +121,7 @@ SWITCH_SCHEMA = vol.Schema(
         vol.Required(CONF_ZONE): vol.In(ZONES),
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_ACTIVATION, default=STATE_HIGH): vol.All(
-            vol.Lower, vol.Any(STATE_HIGH, STATE_LOW)
+            vol.Lower, vol.In([STATE_HIGH, STATE_LOW])
         ),
         vol.Optional(CONF_MOMENTARY): vol.All(vol.Coerce(int), vol.Range(min=10)),
         vol.Optional(CONF_PAUSE): vol.All(vol.Coerce(int), vol.Range(min=10)),
@@ -681,7 +681,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
             # only go to next zone if all states are entered
             self.current_state += 1
-            if user_input[CONF_MORE_STATES] is CONF_NO:
+            if user_input[CONF_MORE_STATES] == CONF_NO:
                 self.io_cfg.pop(self.active_cfg)
                 self.active_cfg = None
 
@@ -697,7 +697,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         vol.Optional(
                             CONF_ACTIVATION,
                             default=current_cfg.get(CONF_ACTIVATION, STATE_HIGH),
-                        ): vol.All(vol.Lower, vol.Any(STATE_HIGH, STATE_LOW)),
+                        ): vol.All(vol.Lower, vol.In([STATE_HIGH, STATE_LOW])),
                         vol.Optional(
                             CONF_MOMENTARY,
                             default=current_cfg.get(CONF_MOMENTARY, vol.UNDEFINED),
@@ -715,7 +715,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             default=CONF_YES
                             if len(self.current_states) > 1
                             else CONF_NO,
-                        ): vol.Any(CONF_YES, CONF_NO),
+                        ): vol.In([CONF_YES, CONF_NO]),
                     }
                 ),
                 description_placeholders={
@@ -748,7 +748,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             ): str,
                             vol.Optional(
                                 CONF_ACTIVATION,
-                                default=current_cfg.get(CONF_ACTIVATION, "high"),
+                                default=current_cfg.get(CONF_ACTIVATION, STATE_HIGH),
                             ): vol.In(["low", "high"]),
                             vol.Optional(
                                 CONF_MOMENTARY,
@@ -767,7 +767,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                                 default=CONF_YES
                                 if len(self.current_states) > 1
                                 else CONF_NO,
-                            ): vol.Any(CONF_YES, CONF_NO),
+                            ): vol.In([CONF_YES, CONF_NO]),
                         }
                     ),
                     description_placeholders={
