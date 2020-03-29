@@ -133,7 +133,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         supports_on,
         sources,
         speaker_type,
-        hass,
         ioloop=hass.loop,
         unique_id=unique_id,
     )
@@ -190,7 +189,6 @@ class KefMediaPlayer(MediaPlayerDevice):
         supports_on,
         sources,
         speaker_type,
-        hass,
         ioloop,
         unique_id,
     ):
@@ -209,7 +207,6 @@ class KefMediaPlayer(MediaPlayerDevice):
         self._unique_id = unique_id
         self._supports_on = supports_on
         self._speaker_type = speaker_type
-        self._hass = hass
 
         self._state = None
         self._muted = None
@@ -217,6 +214,7 @@ class KefMediaPlayer(MediaPlayerDevice):
         self._volume = None
         self._is_online = None
         self._dsp = None
+        self._update_dsp_task_remover = None
 
     @property
     def name(self):
@@ -380,12 +378,13 @@ class KefMediaPlayer(MediaPlayerDevice):
     async def async_added_to_hass(self):
         """Subscribe to DSP updates."""
         self._update_dsp_task_remover = async_track_time_interval(
-            self._hass, self.update_dsp, DSP_SCAN_INTERVAL
+            self.hass, self.update_dsp, DSP_SCAN_INTERVAL
         )
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe to DSP updates."""
         self._update_dsp_task_remover()
+        self._update_dsp_task_remover = None
 
     @property
     def device_state_attributes(self):
