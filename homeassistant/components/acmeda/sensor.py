@@ -1,4 +1,4 @@
-"""Support for Acmeda Roller Blinds."""
+"""Support for Acmeda Roller Blind Batteries."""
 import asyncio
 import logging
 from time import monotonic
@@ -6,7 +6,14 @@ from time import monotonic
 import aiopulse
 import async_timeout
 
-from homeassistant.components.cover import ATTR_POSITION, CoverDevice
+from homeassistant.const import (
+    ATTR_BATTERY_CHARGING,
+    ATTR_BATTERY_LEVEL,
+    DEVICE_CLASS_BATTERY,
+    UNIT_PERCENTAGE,
+)
+from homeassistant.helpers import entity
+from homeassistant.helpers.icon import icon_for_battery_level
 
 from .base import AcmedaBase
 from .const import DOMAIN
@@ -171,7 +178,7 @@ async def async_update_items(
 
     for item_id, item in api.items():
         if item_id not in current:
-            current[item_id] = AcmedaCover(hass, item, hub, is_group)
+            current[item_id] = AcmedaBattery(hass, item, hub, is_group)
 
             new_items.append(current[item_id])
         elif item_id not in progress_waiting:
@@ -183,48 +190,50 @@ async def async_update_items(
         async_add_entities(new_items)
 
 
-class AcmedaCover(AcmedaBase, CoverDevice):
+class AcmedaBattery(AcmedaBase, entity.Entity):
     """Representation of a Acmeda cover device."""
+
+    device_class = DEVICE_CLASS_BATTERY
+    unit_of_measurement = UNIT_PERCENTAGE
 
     def __init__(
         self, hass, roller: aiopulse.Roller, hub: aiopulse.Hub, is_group=False
     ):
         """Initialize the roller."""
         super().__init__(hass, roller, hub)
-        self.is_group = is_group
-        self.roller.set_callback(self.notify_update)
 
     @property
-    def current_cover_position(self):
-        """Return the current position of the roller blind.
-
-        None is unknown, 0 is closed, 100 is fully open.
-        """
-        position = 100 - self.roller.closed_percent
-        return position
+    def name(self):
+        """Return the name of roller."""
+        return super().name + " Battery"
 
     @property
-    def is_closed(self):
-        """Return if the cover is closed."""
-        is_closed = self.roller.closed_percent == 100
-        return is_closed
+    def battery_level(self):
+        """Return the battery level of the device."""
+        return self.roller.battery
 
-    async def close_cover(self, **kwargs):
-        """Close the roller."""
-        await self.roller.move_down()
+    @property
+    def state(self):
+        """Return the state of the device."""
+        return self.roller.battery
 
-    async def open_cover(self, **kwargs):
-        """Open the roller."""
-        await self.roller.move_up()
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        attr = {}
+        super_attr = super().device_state_attributes
+        if super_attr is not None:
+            attr.update(super_attr)
 
-    async def stop_cover(self, **kwargs):
-        """Stop the roller."""
-        await self.roller.move_stop()
+        attr[ATTR_BATTERY_LEVEL] = self.roller.battery
+        attr[ATTR_BATTERY_CHARGING] = False
 
-    async def set_cover_position(self, **kwargs):
-        """Move the roller shutter to a specific position."""
-        await self.roller.move_to(100 - kwargs[ATTR_POSITION])
+        return attr
 
-    def notify_update(self):
-        """Tell HA that the device has been updated."""
-        self.schedule_update_ha_state()
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend, if any."""
+        charging = False
+        return icon_for_battery_level(
+            battery_level=self.roller.battery, charging=charging
+        )

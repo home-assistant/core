@@ -61,6 +61,10 @@ class PulseHub:
             hass.config_entries.async_forward_entry_setup(self.config_entry, "cover")
         )
 
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(self.config_entry, "sensor")
+        )
+
         self.parallel_updates_semaphore = asyncio.Semaphore(10)
 
         self.authorized = True
