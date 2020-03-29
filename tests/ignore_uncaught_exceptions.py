@@ -54,21 +54,6 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
     ("tests.components.geonetnz_quakes.test_geo_location", "test_setup"),
     ("tests.components.geonetnz_quakes.test_sensor", "test_setup"),
     ("test_homeassistant_bridge", "test_homeassistant_bridge_fan_setup"),
-    ("tests.components.homematicip_cloud.test_config_flow", "test_flow_works"),
-    ("tests.components.homematicip_cloud.test_config_flow", "test_import_config"),
-    ("tests.components.homematicip_cloud.test_device", "test_hmip_remove_group"),
-    (
-        "tests.components.homematicip_cloud.test_init",
-        "test_config_with_accesspoint_passed_to_config_entry",
-    ),
-    (
-        "tests.components.homematicip_cloud.test_init",
-        "test_config_already_registered_not_passed_to_config_entry",
-    ),
-    (
-        "tests.components.homematicip_cloud.test_init",
-        "test_load_entry_fails_due_to_generic_exception",
-    ),
     ("tests.components.hue.test_bridge", "test_handle_unauthorized"),
     ("tests.components.hue.test_init", "test_security_vuln_check"),
     ("tests.components.hue.test_light", "test_group_features"),
