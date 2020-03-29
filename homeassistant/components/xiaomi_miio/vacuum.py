@@ -245,6 +245,7 @@ class MiroboVacuum(StateVacuumDevice):
         self.dnd_state = None
         self.last_clean = None
         self._fan_speeds = None
+        self._fan_speeds_reverse = None
 
     @property
     def name(self):
@@ -280,10 +281,11 @@ class MiroboVacuum(StateVacuumDevice):
         """Return the fan speed of the vacuum cleaner."""
         if self.vacuum_state is not None:
             speed = self.vacuum_state.fanspeed
-            if speed in self._fan_speeds.values():
-                return [
-                    key for key, value in self._fan_speeds.items() if value == speed
-                ][0]
+            if speed in self._fan_speeds_reverse:
+                return self._fan_speeds_reverse[speed]
+            else:
+                _LOGGER.debug("Unable to find reverse for %s", speed)
+
             return speed
 
     @property
@@ -373,8 +375,8 @@ class MiroboVacuum(StateVacuumDevice):
 
     async def async_set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed."""
-        if fan_speed.capitalize() in self._fan_speeds:
-            fan_speed = self._fan_speeds[fan_speed.capitalize()]
+        if fan_speed in self._fan_speeds:
+            fan_speed = self._fan_speeds[fan_speed]
         else:
             try:
                 fan_speed = int(fan_speed)
@@ -455,6 +457,7 @@ class MiroboVacuum(StateVacuumDevice):
             self.vacuum_state = state
 
             self._fan_speeds = self._vacuum.fan_speed_presets()
+            self._fan_speeds_reverse = {v: k for k, v in self._fan_speeds.items()}
 
             self.consumable_state = self._vacuum.consumable_status()
             self.clean_history = self._vacuum.clean_history()
