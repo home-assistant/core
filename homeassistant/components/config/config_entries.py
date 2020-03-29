@@ -8,6 +8,7 @@ from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES
 from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.exceptions import Unauthorized
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView,
     FlowManagerResourceView,
@@ -45,7 +46,9 @@ def _prepare_json(result):
     if schema is None:
         data["data_schema"] = []
     else:
-        data["data_schema"] = voluptuous_serialize.convert(schema)
+        data["data_schema"] = voluptuous_serialize.convert(
+            schema, custom_serializer=cv.custom_serializer
+        )
 
     return data
 

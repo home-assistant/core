@@ -87,7 +87,6 @@ class AlmondFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
             )
             return self.async_abort(reason="cannot_connect")
 
-        # pylint: disable=invalid-name
         self.CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
         return self.async_create_entry(

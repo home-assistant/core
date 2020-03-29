@@ -61,7 +61,7 @@ class PushoverNotificationService(BaseNotificationService):
         url = data.get(ATTR_URL, None)
         url_title = data.get(ATTR_URL_TITLE, None)
         priority = data.get(ATTR_PRIORITY, None)
-        retry = data.get(ATTR_PRIORITY, None)
+        retry = data.get(ATTR_RETRY, None)
         expire = data.get(ATTR_EXPIRE, None)
         callback_url = data.get(ATTR_CALLBACK_URL, None)
         timestamp = data.get(ATTR_TIMESTAMP, None)

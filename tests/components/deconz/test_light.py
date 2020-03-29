@@ -245,3 +245,29 @@ async def test_disable_light_groups(hass):
 
     empty_group = hass.states.get("light.empty_group")
     assert empty_group is None
+
+    hass.config_entries.async_update_entry(
+        gateway.config_entry, options={deconz.gateway.CONF_ALLOW_DECONZ_GROUPS: True}
+    )
+    await hass.async_block_till_done()
+
+    assert "light.rgb_light" in gateway.deconz_ids
+    assert "light.tunable_white_light" in gateway.deconz_ids
+    assert "light.light_group" in gateway.deconz_ids
+    assert "light.empty_group" not in gateway.deconz_ids
+    assert "light.on_off_switch" not in gateway.deconz_ids
+    # 3 entities
+    assert len(hass.states.async_all()) == 5
+
+    hass.config_entries.async_update_entry(
+        gateway.config_entry, options={deconz.gateway.CONF_ALLOW_DECONZ_GROUPS: False}
+    )
+    await hass.async_block_till_done()
+
+    assert "light.rgb_light" in gateway.deconz_ids
+    assert "light.tunable_white_light" in gateway.deconz_ids
+    assert "light.light_group" not in gateway.deconz_ids
+    assert "light.empty_group" not in gateway.deconz_ids
+    assert "light.on_off_switch" not in gateway.deconz_ids
+    # 3 entities
+    assert len(hass.states.async_all()) == 4

@@ -1,6 +1,6 @@
 {
   "domain": "caldav",
-  "name": "CalDav",
+  "name": "CalDAV",
   "documentation": "https://www.home-assistant.io/integrations/caldav",
   "requirements": ["caldav==0.6.1"],
   "dependencies": [],

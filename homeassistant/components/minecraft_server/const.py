@@ -2,7 +2,7 @@
 
 ATTR_PLAYERS_LIST = "players_list"
 
-DEFAULT_HOST = "localhost"
+DEFAULT_HOST = "localhost:25565"
 DEFAULT_NAME = "Minecraft Server"
 DEFAULT_PORT = 25565
 
@@ -30,7 +30,8 @@ SCAN_INTERVAL = 60
 
 SIGNAL_NAME_PREFIX = f"signal_{DOMAIN}"
 
-UNIT_LATENCY_TIME = "ms"
+SRV_RECORD_PREFIX = "_minecraft._tcp"
+
 UNIT_PLAYERS_MAX = "players"
 UNIT_PLAYERS_ONLINE = "players"
 UNIT_PROTOCOL_VERSION = None

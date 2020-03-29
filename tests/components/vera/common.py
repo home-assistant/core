@@ -9,7 +9,11 @@ from homeassistant.components.vera import CONF_CONTROLLER, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-ComponentData = NamedTuple("ComponentData", (("controller", VeraController),))
+
+class ComponentData(NamedTuple):
+    """Component data."""
+
+    controller: VeraController
 
 
 class ComponentFactory:

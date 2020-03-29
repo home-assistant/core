@@ -82,6 +82,12 @@ def main():
     subprocess.run(["python", "-m", "script.gen_requirements_all"], **pipe_null)
     print()
 
+    print("Running script/translations_develop to pick up new translation strings.")
+    subprocess.run(
+        ["script/translations_develop", "--integration", info.domain], **pipe_null
+    )
+    print()
+
     if args.develop:
         print("Running tests")
         print(f"$ pytest -vvv tests/components/{info.domain}")

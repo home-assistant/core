@@ -27,6 +27,7 @@ from .const import (
     DHCP,
     IDENTITY,
     INFO,
+    IS_CAPSMAN,
     IS_WIRELESS,
     MIKROTIK_SERVICES,
     NAME,
@@ -95,7 +96,8 @@ class MikrotikData:
         self.all_devices = {}
         self.devices = {}
         self.available = True
-        self.support_wireless = bool(self.command(MIKROTIK_SERVICES[IS_WIRELESS]))
+        self.support_capsman = False
+        self.support_wireless = False
         self.hostname = None
         self.model = None
         self.firmware = None
@@ -135,6 +137,8 @@ class MikrotikData:
         self.model = self.get_info(ATTR_MODEL)
         self.firmware = self.get_info(ATTR_FIRMWARE)
         self.serial_number = self.get_info(ATTR_SERIAL_NUMBER)
+        self.support_capsman = bool(self.command(MIKROTIK_SERVICES[IS_CAPSMAN]))
+        self.support_wireless = bool(self.command(MIKROTIK_SERVICES[IS_WIRELESS]))
 
     def connect_to_hub(self):
         """Connect to hub."""
@@ -158,25 +162,23 @@ class MikrotikData:
     def update_devices(self):
         """Get list of devices with latest status."""
         arp_devices = {}
-        wireless_devices = {}
         device_list = {}
+        wireless_devices = {}
         try:
             self.all_devices = self.get_list_from_interface(DHCP)
-            if self.support_wireless:
-                _LOGGER.debug("wireless is supported")
-                for interface in [CAPSMAN, WIRELESS]:
-                    wireless_devices = self.get_list_from_interface(interface)
-                    if wireless_devices:
-                        _LOGGER.debug("Scanning wireless devices using %s", interface)
-                        break
+            if self.support_capsman:
+                _LOGGER.debug("Hub is a CAPSman manager")
+                device_list = wireless_devices = self.get_list_from_interface(CAPSMAN)
+            elif self.support_wireless:
+                _LOGGER.debug("Hub supports wireless Interface")
+                device_list = wireless_devices = self.get_list_from_interface(WIRELESS)
 
-            if self.support_wireless and not self.force_dhcp:
-                device_list = wireless_devices
-            else:
+            if not device_list or self.force_dhcp:
                 device_list = self.all_devices
                 _LOGGER.debug("Falling back to DHCP for scanning devices")
 
             if self.arp_enabled:
+                _LOGGER.debug("Using arp-ping to check devices")
                 arp_devices = self.get_list_from_interface(ARP)
 
             # get new hub firmware version if updated
@@ -330,16 +332,17 @@ class MikrotikHub:
     async def async_add_options(self):
         """Populate default options for Mikrotik."""
         if not self.config_entry.options:
+            data = dict(self.config_entry.data)
             options = {
-                CONF_ARP_PING: self.config_entry.data.pop(CONF_ARP_PING, False),
-                CONF_FORCE_DHCP: self.config_entry.data.pop(CONF_FORCE_DHCP, False),
-                CONF_DETECTION_TIME: self.config_entry.data.pop(
+                CONF_ARP_PING: data.pop(CONF_ARP_PING, False),
+                CONF_FORCE_DHCP: data.pop(CONF_FORCE_DHCP, False),
+                CONF_DETECTION_TIME: data.pop(
                     CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME
                 ),
             }
 
             self.hass.config_entries.async_update_entry(
-                self.config_entry, options=options
+                self.config_entry, data=data, options=options
             )
 
     async def request_update(self):

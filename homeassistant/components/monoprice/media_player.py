@@ -1,11 +1,8 @@
 """Support for interfacing with Monoprice 6 zone home audio controller."""
 import logging
 
-from pymonoprice import get_monoprice
-from serial import SerialException
-import voluptuous as vol
-
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant import core
+from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
@@ -14,16 +11,10 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_NAME,
-    CONF_PORT,
-    STATE_OFF,
-    STATE_ON,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_PORT, STATE_OFF, STATE_ON
+from homeassistant.helpers import config_validation as cv, entity_platform, service
 
-from .const import DOMAIN, SERVICE_RESTORE, SERVICE_SNAPSHOT
+from .const import CONF_SOURCES, DOMAIN, SERVICE_RESTORE, SERVICE_SNAPSHOT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,104 +27,97 @@ SUPPORT_MONOPRICE = (
     | SUPPORT_SELECT_SOURCE
 )
 
-ZONE_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
 
-SOURCE_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
+@core.callback
+def _get_sources_from_dict(data):
+    sources_config = data[CONF_SOURCES]
 
-CONF_ZONES = "zones"
-CONF_SOURCES = "sources"
+    source_id_name = {int(index): name for index, name in sources_config.items()}
 
-DATA_MONOPRICE = "monoprice"
+    source_name_id = {v: k for k, v in source_id_name.items()}
 
-# Valid zone ids: 11-16 or 21-26 or 31-36
-ZONE_IDS = vol.All(
-    vol.Coerce(int),
-    vol.Any(
-        vol.Range(min=11, max=16), vol.Range(min=21, max=26), vol.Range(min=31, max=36)
-    ),
-)
+    source_names = sorted(source_name_id.keys(), key=lambda v: source_name_id[v])
 
-# Valid source ids: 1-6
-SOURCE_IDS = vol.All(vol.Coerce(int), vol.Range(min=1, max=6))
-
-MEDIA_PLAYER_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.comp_entity_ids})
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_PORT): cv.string,
-        vol.Required(CONF_ZONES): vol.Schema({ZONE_IDS: ZONE_SCHEMA}),
-        vol.Required(CONF_SOURCES): vol.Schema({SOURCE_IDS: SOURCE_SCHEMA}),
-    }
-)
+    return [source_id_name, source_name_id, source_names]
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+@core.callback
+def _get_sources(config_entry):
+    if CONF_SOURCES in config_entry.options:
+        data = config_entry.options
+    else:
+        data = config_entry.data
+    return _get_sources_from_dict(data)
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Monoprice 6-zone amplifier platform."""
-    port = config.get(CONF_PORT)
+    port = config_entry.data[CONF_PORT]
 
-    try:
-        monoprice = get_monoprice(port)
-    except SerialException:
-        _LOGGER.error("Error connecting to Monoprice controller")
-        return
+    monoprice = hass.data[DOMAIN][config_entry.entry_id]
 
-    sources = {
-        source_id: extra[CONF_NAME] for source_id, extra in config[CONF_SOURCES].items()
-    }
+    sources = _get_sources(config_entry)
 
-    hass.data[DATA_MONOPRICE] = []
-    for zone_id, extra in config[CONF_ZONES].items():
-        _LOGGER.info("Adding zone %d - %s", zone_id, extra[CONF_NAME])
-        hass.data[DATA_MONOPRICE].append(
-            MonopriceZone(monoprice, sources, zone_id, extra[CONF_NAME])
-        )
+    entities = []
+    for i in range(1, 4):
+        for j in range(1, 7):
+            zone_id = (i * 10) + j
+            _LOGGER.info("Adding zone %d for port %s", zone_id, port)
+            entities.append(
+                MonopriceZone(monoprice, sources, config_entry.entry_id, zone_id)
+            )
 
-    add_entities(hass.data[DATA_MONOPRICE], True)
+    async_add_entities(entities, True)
 
-    def service_handle(service):
+    platform = entity_platform.current_platform.get()
+
+    def _call_service(entities, service_call):
+        for entity in entities:
+            if service_call.service == SERVICE_SNAPSHOT:
+                entity.snapshot()
+            elif service_call.service == SERVICE_RESTORE:
+                entity.restore()
+
+    @service.verify_domain_control(hass, DOMAIN)
+    async def async_service_handle(service_call):
         """Handle for services."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        entities = await platform.async_extract_from_service(service_call)
 
-        if entity_ids:
-            devices = [
-                device
-                for device in hass.data[DATA_MONOPRICE]
-                if device.entity_id in entity_ids
-            ]
-        else:
-            devices = hass.data[DATA_MONOPRICE]
+        if not entities:
+            return
 
-        for device in devices:
-            if service.service == SERVICE_SNAPSHOT:
-                device.snapshot()
-            elif service.service == SERVICE_RESTORE:
-                device.restore()
+        hass.async_add_executor_job(_call_service, entities, service_call)
 
-    hass.services.register(
-        DOMAIN, SERVICE_SNAPSHOT, service_handle, schema=MEDIA_PLAYER_SCHEMA
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SNAPSHOT,
+        async_service_handle,
+        schema=cv.make_entity_service_schema({}),
     )
 
-    hass.services.register(
-        DOMAIN, SERVICE_RESTORE, service_handle, schema=MEDIA_PLAYER_SCHEMA
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_RESTORE,
+        async_service_handle,
+        schema=cv.make_entity_service_schema({}),
     )
 
 
 class MonopriceZone(MediaPlayerDevice):
     """Representation of a Monoprice amplifier zone."""
 
-    def __init__(self, monoprice, sources, zone_id, zone_name):
+    def __init__(self, monoprice, sources, namespace, zone_id):
         """Initialize new zone."""
         self._monoprice = monoprice
         # dict source_id -> source name
-        self._source_id_name = sources
+        self._source_id_name = sources[0]
         # dict source name -> source_id
-        self._source_name_id = {v: k for k, v in sources.items()}
+        self._source_name_id = sources[1]
         # ordered list of all source names
-        self._source_names = sorted(
-            self._source_name_id.keys(), key=lambda v: self._source_name_id[v]
-        )
+        self._source_names = sources[2]
         self._zone_id = zone_id
-        self._name = zone_name
+        self._unique_id = f"{namespace}_{self._zone_id}"
+        self._name = f"Zone {self._zone_id}"
 
         self._snapshot = None
         self._state = None
@@ -155,6 +139,26 @@ class MonopriceZone(MediaPlayerDevice):
         else:
             self._source = None
         return True
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._zone_id < 20
+
+    @property
+    def device_info(self):
+        """Return device info for this device."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": "Monoprice",
+            "model": "6-Zone Amplifier",
+        }
+
+    @property
+    def unique_id(self):
+        """Return unique ID for this device."""
+        return self._unique_id
 
     @property
     def name(self):

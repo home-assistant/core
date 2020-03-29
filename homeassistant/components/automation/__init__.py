@@ -57,7 +57,6 @@ CONDITION_TYPE_AND = "and"
 CONDITION_TYPE_OR = "or"
 
 DEFAULT_CONDITION_TYPE = CONDITION_TYPE_AND
-DEFAULT_HIDE_ENTITY = False
 DEFAULT_INITIAL_STATE = True
 
 ATTR_LAST_TRIGGERED = "last_triggered"
@@ -72,9 +71,7 @@ AutomationActionType = Callable[[HomeAssistant, TemplateVarsType], Awaitable[Non
 def _platform_validator(config):
     """Validate it is a valid platform."""
     try:
-        platform = importlib.import_module(
-            ".{}".format(config[CONF_PLATFORM]), __name__
-        )
+        platform = importlib.import_module(f".{config[CONF_PLATFORM]}", __name__)
     except ImportError:
         raise vol.Invalid("Invalid platform specified") from None
 
@@ -94,7 +91,7 @@ _TRIGGER_SCHEMA = vol.All(
 _CONDITION_SCHEMA = vol.All(cv.ensure_list, [cv.CONDITION_SCHEMA])
 
 PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_HIDE_ENTITY, invalidation_version="0.107"),
+    cv.deprecated(CONF_HIDE_ENTITY, invalidation_version="0.110"),
     vol.Schema(
         {
             # str on purpose
@@ -102,7 +99,7 @@ PLATFORM_SCHEMA = vol.All(
             CONF_ALIAS: cv.string,
             vol.Optional(CONF_DESCRIPTION): cv.string,
             vol.Optional(CONF_INITIAL_STATE): cv.boolean,
-            vol.Optional(CONF_HIDE_ENTITY, default=DEFAULT_HIDE_ENTITY): cv.boolean,
+            vol.Optional(CONF_HIDE_ENTITY): cv.boolean,
             vol.Required(CONF_TRIGGER): _TRIGGER_SCHEMA,
             vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
             vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
@@ -221,7 +218,7 @@ async def async_setup(hass, config):
         await _async_process_config(hass, conf, component)
 
     async_register_admin_service(
-        hass, DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({}),
+        hass, DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
     )
 
     return True
@@ -237,7 +234,6 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         trigger_config,
         cond_func,
         action_script,
-        hidden,
         initial_state,
     ):
         """Initialize an automation entity."""
@@ -248,7 +244,6 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._cond_func = cond_func
         self.action_script = action_script
         self._last_triggered = None
-        self._hidden = hidden
         self._initial_state = initial_state
         self._is_enabled = False
         self._referenced_entities: Optional[Set[str]] = None
@@ -273,11 +268,6 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
     def state_attributes(self):
         """Return the entity state attributes."""
         return {ATTR_LAST_TRIGGERED: self._last_triggered}
-
-    @property
-    def hidden(self) -> bool:
-        """Return True if the automation entity should be hidden from UIs."""
-        return self._hidden
 
     @property
     def is_on(self) -> bool:
@@ -395,10 +385,8 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
 
         try:
             await self.action_script.async_run(variables, trigger_context)
-        except Exception as err:  # pylint: disable=broad-except
-            self.action_script.async_log_exception(
-                _LOGGER, f"Error while executing automation {self.entity_id}", err
-            )
+        except Exception:  # pylint: disable=broad-except
+            pass
 
         self._last_triggered = utcnow()
         await self.async_update_ha_state()
@@ -456,9 +444,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         info = {"name": self._name}
 
         for conf in self._trigger_config:
-            platform = importlib.import_module(
-                ".{}".format(conf[CONF_PLATFORM]), __name__
-            )
+            platform = importlib.import_module(f".{conf[CONF_PLATFORM]}", __name__)
 
             remove = await platform.async_attach_trigger(
                 self.hass, conf, self.async_trigger, info
@@ -505,10 +491,11 @@ async def _async_process_config(hass, config, component):
             automation_id = config_block.get(CONF_ID)
             name = config_block.get(CONF_ALIAS) or f"{config_key} {list_no}"
 
-            hidden = config_block[CONF_HIDE_ENTITY]
             initial_state = config_block.get(CONF_INITIAL_STATE)
 
-            action_script = script.Script(hass, config_block.get(CONF_ACTION, {}), name)
+            action_script = script.Script(
+                hass, config_block.get(CONF_ACTION, {}), name, logger=_LOGGER
+            )
 
             if CONF_CONDITION in config_block:
                 cond_func = await _async_process_if(hass, config, config_block)
@@ -524,7 +511,6 @@ async def _async_process_config(hass, config, component):
                 config_block[CONF_TRIGGER],
                 cond_func,
                 action_script,
-                hidden,
                 initial_state,
             )
 

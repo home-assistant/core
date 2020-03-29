@@ -1,0 +1,41 @@
+{
+  "config": {
+    "title": "Monoprice 6-Zone Amplifier",
+    "step": {
+      "user": {
+        "title": "Connect to the device",
+        "data": {
+          "port": "Serial port",
+          "source_1": "Name of source #1",
+          "source_2": "Name of source #2",
+          "source_3": "Name of source #3",
+          "source_4": "Name of source #4",
+          "source_5": "Name of source #5",
+          "source_6": "Name of source #6"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure sources",
+        "data": {
+          "source_1": "Name of source #1",
+          "source_2": "Name of source #2",
+          "source_3": "Name of source #3",
+          "source_4": "Name of source #4",
+          "source_5": "Name of source #5",
+          "source_6": "Name of source #6"
+        }
+      }
+    }
+  }
+}

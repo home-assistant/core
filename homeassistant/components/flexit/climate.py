@@ -1,16 +1,4 @@
-"""
-Platform for Flexit AC units with CI66 Modbus adapter.
-
-Example configuration:
-
-climate:
-  - platform: flexit
-    name: Main AC
-    slave: 21
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/climate.flexit/
-"""
+"""Platform for Flexit AC units with CI66 Modbus adapter."""
 import logging
 from typing import List
 

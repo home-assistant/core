@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Lokacija je \u017ee nastavljena."
+        },
         "error": {
             "identifier_exists": "Lokacija je \u017ee registrirana"
         },

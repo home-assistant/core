@@ -6,7 +6,7 @@ from os import O_CREAT, O_TRUNC, O_WRONLY, stat_result
 from typing import Dict, List, Optional, Union
 
 import ruamel.yaml
-from ruamel.yaml import YAML
+from ruamel.yaml import YAML  # type: ignore
 from ruamel.yaml.compat import StringIO
 from ruamel.yaml.constructor import SafeConstructor
 from ruamel.yaml.error import YAMLError
@@ -89,8 +89,7 @@ def load_yaml(fname: str, round_trip: bool = False) -> JSON_TYPE:
     """Load a YAML file."""
     if round_trip:
         yaml = YAML(typ="rt")
-        # type ignore: https://bitbucket.org/ruamel/yaml/pull-requests/42
-        yaml.preserve_quotes = True  # type: ignore
+        yaml.preserve_quotes = True
     else:
         if ExtSafeConstructor.name is None:
             ExtSafeConstructor.name = fname

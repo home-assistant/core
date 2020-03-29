@@ -1,5 +1,6 @@
 """Support for Netgear routers."""
 import logging
+from pprint import pformat
 
 from pynetgear import Netgear
 import voluptuous as vol
@@ -30,7 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_SSL, default=False): cv.boolean,
         vol.Optional(CONF_USERNAME, default=""): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PORT, default=None): vol.Any(None, cv.port),
+        vol.Optional(CONF_PORT): cv.port,
         vol.Optional(CONF_DEVICES, default=[]): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_EXCLUDE, default=[]): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_APS, default=[]): vol.All(cv.ensure_list, [cv.string]),
@@ -41,55 +42,43 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def get_scanner(hass, config):
     """Validate the configuration and returns a Netgear scanner."""
     info = config[DOMAIN]
-    host = info.get(CONF_HOST)
-    ssl = info.get(CONF_SSL)
-    username = info.get(CONF_USERNAME)
-    password = info.get(CONF_PASSWORD)
+    host = info[CONF_HOST]
+    ssl = info[CONF_SSL]
+    username = info[CONF_USERNAME]
+    password = info[CONF_PASSWORD]
     port = info.get(CONF_PORT)
-    devices = info.get(CONF_DEVICES)
-    excluded_devices = info.get(CONF_EXCLUDE)
-    accesspoints = info.get(CONF_APS)
+    devices = info[CONF_DEVICES]
+    excluded_devices = info[CONF_EXCLUDE]
+    accesspoints = info[CONF_APS]
 
-    scanner = NetgearDeviceScanner(
-        host, ssl, username, password, port, devices, excluded_devices, accesspoints
-    )
+    api = Netgear(password, host, username, port, ssl)
+    scanner = NetgearDeviceScanner(api, devices, excluded_devices, accesspoints)
 
-    return scanner if scanner.success_init else None
+    _LOGGER.debug("Logging in")
+
+    results = scanner.get_attached_devices()
+
+    if results is not None:
+        scanner.last_results = results
+    else:
+        _LOGGER.error("Failed to Login")
+        return None
+
+    return scanner
 
 
 class NetgearDeviceScanner(DeviceScanner):
     """Queries a Netgear wireless router using the SOAP-API."""
 
     def __init__(
-        self,
-        host,
-        ssl,
-        username,
-        password,
-        port,
-        devices,
-        excluded_devices,
-        accesspoints,
+        self, api, devices, excluded_devices, accesspoints,
     ):
         """Initialize the scanner."""
-
         self.tracked_devices = devices
         self.excluded_devices = excluded_devices
         self.tracked_accesspoints = accesspoints
-
         self.last_results = []
-        self._api = Netgear(password, host, username, port, ssl)
-
-        _LOGGER.info("Logging in")
-
-        results = self.get_attached_devices()
-
-        self.success_init = results is not None
-
-        if self.success_init:
-            self.last_results = results
-        else:
-            _LOGGER.error("Failed to Login")
+        self._api = api
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -110,10 +99,7 @@ class NetgearDeviceScanner(DeviceScanner):
                     or dev.name in self.excluded_devices
                 )
             )
-
-            # when link_rate is None this means the router still knows about
-            # the device, but it is not in range.
-            if tracked and dev.link_rate is not None:
+            if tracked:
                 devices.append(dev.mac)
                 if (
                     self.tracked_accesspoints
@@ -156,12 +142,12 @@ class NetgearDeviceScanner(DeviceScanner):
 
         Returns boolean if scanning successful.
         """
-        if not self.success_init:
-            return
-
-        _LOGGER.info("Scanning")
+        _LOGGER.debug("Scanning")
 
         results = self.get_attached_devices()
+
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("Scan result: \n%s", pformat(results))
 
         if results is None:
             _LOGGER.warning("Error scanning devices")
@@ -169,8 +155,7 @@ class NetgearDeviceScanner(DeviceScanner):
         self.last_results = results or []
 
     def get_attached_devices(self):
-        """
-        List attached devices with pynetgear.
+        """List attached devices with pynetgear.
 
         The v2 method takes more time and is more heavy on the router
         so we only use it if we need connected AP info.

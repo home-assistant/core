@@ -3,7 +3,12 @@ import logging
 import os
 
 from pyicloud import PyiCloudService
-from pyicloud.exceptions import PyiCloudException, PyiCloudFailedLoginException
+from pyicloud.exceptions import (
+    PyiCloudException,
+    PyiCloudFailedLoginException,
+    PyiCloudNoDevicesException,
+    PyiCloudServiceNotActivatedException,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -12,8 +17,10 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from .const import (
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,
+    CONF_WITH_FAMILY,
     DEFAULT_GPS_ACCURACY_THRESHOLD,
     DEFAULT_MAX_INTERVAL,
+    DEFAULT_WITH_FAMILY,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
@@ -36,7 +43,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.api = None
         self._username = None
         self._password = None
-        self._account_name = None
+        self._with_family = None
         self._max_interval = None
         self._gps_accuracy_threshold = None
 
@@ -59,6 +66,10 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
                     ): str,
+                    vol.Optional(
+                        CONF_WITH_FAMILY,
+                        default=user_input.get(CONF_WITH_FAMILY, DEFAULT_WITH_FAMILY),
+                    ): bool,
                 }
             ),
             errors=errors or {},
@@ -78,6 +89,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
+        self._with_family = user_input.get(CONF_WITH_FAMILY, DEFAULT_WITH_FAMILY)
         self._max_interval = user_input.get(CONF_MAX_INTERVAL, DEFAULT_MAX_INTERVAL)
         self._gps_accuracy_threshold = user_input.get(
             CONF_GPS_ACCURACY_THRESHOLD, DEFAULT_GPS_ACCURACY_THRESHOLD
@@ -90,7 +102,13 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             self.api = await self.hass.async_add_executor_job(
-                PyiCloudService, self._username, self._password, icloud_dir.path
+                PyiCloudService,
+                self._username,
+                self._password,
+                icloud_dir.path,
+                True,
+                None,
+                self._with_family,
             )
         except PyiCloudFailedLoginException as error:
             _LOGGER.error("Error logging into iCloud service: %s", error)
@@ -101,11 +119,23 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self.api.requires_2sa:
             return await self.async_step_trusted_device()
 
+        try:
+            devices = await self.hass.async_add_executor_job(
+                getattr, self.api, "devices"
+            )
+            if not devices:
+                raise PyiCloudNoDevicesException()
+        except (PyiCloudServiceNotActivatedException, PyiCloudNoDevicesException):
+            _LOGGER.error("No device found in the iCloud account: %s", self._username)
+            self.api = None
+            return self.async_abort(reason="no_device")
+
         return self.async_create_entry(
             title=self._username,
             data={
                 CONF_USERNAME: self._username,
                 CONF_PASSWORD: self._password,
+                CONF_WITH_FAMILY: self._with_family,
                 CONF_MAX_INTERVAL: self._max_interval,
                 CONF_GPS_ACCURACY_THRESHOLD: self._gps_accuracy_threshold,
             },
@@ -195,6 +225,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 CONF_USERNAME: self._username,
                 CONF_PASSWORD: self._password,
+                CONF_WITH_FAMILY: self._with_family,
                 CONF_MAX_INTERVAL: self._max_interval,
                 CONF_GPS_ACCURACY_THRESHOLD: self._gps_accuracy_threshold,
             }

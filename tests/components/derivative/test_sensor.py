@@ -2,6 +2,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from homeassistant.const import TIME_HOURS, TIME_MINUTES, TIME_SECONDS
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -79,7 +80,7 @@ async def test_dataSet1(hass):
     """Test derivative sensor state."""
     await setup_tests(
         hass,
-        {"unit_time": "s"},
+        {"unit_time": TIME_SECONDS},
         times=[20, 30, 40, 50],
         values=[10, 30, 5, 0],
         expected_state=-0.5,
@@ -89,30 +90,46 @@ async def test_dataSet1(hass):
 async def test_dataSet2(hass):
     """Test derivative sensor state."""
     await setup_tests(
-        hass, {"unit_time": "s"}, times=[20, 30], values=[5, 0], expected_state=-0.5
+        hass,
+        {"unit_time": TIME_SECONDS},
+        times=[20, 30],
+        values=[5, 0],
+        expected_state=-0.5,
     )
 
 
 async def test_dataSet3(hass):
     """Test derivative sensor state."""
     state = await setup_tests(
-        hass, {"unit_time": "s"}, times=[20, 30], values=[5, 10], expected_state=0.5
+        hass,
+        {"unit_time": TIME_SECONDS},
+        times=[20, 30],
+        values=[5, 10],
+        expected_state=0.5,
     )
 
-    assert state.attributes.get("unit_of_measurement") == "/s"
+    assert state.attributes.get("unit_of_measurement") == f"/{TIME_SECONDS}"
 
 
 async def test_dataSet4(hass):
     """Test derivative sensor state."""
     await setup_tests(
-        hass, {"unit_time": "s"}, times=[20, 30], values=[5, 5], expected_state=0
+        hass,
+        {"unit_time": TIME_SECONDS},
+        times=[20, 30],
+        values=[5, 5],
+        expected_state=0,
     )
 
 
 async def test_dataSet5(hass):
     """Test derivative sensor state."""
     await setup_tests(
-        hass, {"unit_time": "s"}, times=[20, 30], values=[10, -10], expected_state=-2
+        hass,
+        {"unit_time": TIME_SECONDS},
+        times=[20, 30],
+        values=[10, -10],
+        expected_state=-2,
     )
 
 
@@ -124,20 +141,25 @@ async def test_dataSet6(hass):
 async def test_data_moving_average_for_discrete_sensor(hass):
     """Test derivative sensor state."""
     # We simulate the following situation:
-    # The temperature rises 1 °C per minute for 1 hour long.
-    # There is a data point every second, however, the sensor returns
+    # The temperature rises 1 °C per minute for 30 minutes long.
+    # There is a data point every 30 seconds, however, the sensor returns
     # the temperature rounded down to an integer value.
     # We use a time window of 10 minutes and therefore we can expect
     # (because the true derivative is 1 °C/min) an error of less than 10%.
 
     temperature_values = []
-    for temperature in range(6):
-        temperature_values += [temperature] * 6
+    for temperature in range(30):
+        temperature_values += [temperature] * 2  # two values per minute
     time_window = 600
+    times = list(range(0, 1800 + 30, 30))
 
-    times = list(range(len(temperature_values)))
     config, entity_id = await _setup_sensor(
-        hass, {"time_window": {"seconds": time_window}, "unit_time": "min", "round": 1}
+        hass,
+        {
+            "time_window": {"seconds": time_window},
+            "unit_time": TIME_MINUTES,
+            "round": 1,
+        },
     )  # two minute window
 
     for time, value in zip(times, temperature_values):
@@ -150,8 +172,8 @@ async def test_data_moving_average_for_discrete_sensor(hass):
             state = hass.states.get("sensor.power")
             derivative = round(float(state.state), config["sensor"]["round"])
             # Test that the error is never more than
-            # (time_window_in_minutes / true_derivative * 100) = 10%
-            assert abs(1 - derivative) <= 0.1
+            # (time_window_in_minutes / true_derivative * 100) = 10% + ε
+            assert abs(1 - derivative) <= 0.1 + 1e-6
 
 
 async def test_prefix(hass):
@@ -186,7 +208,7 @@ async def test_prefix(hass):
 
     # Testing a power sensor at 1000 Watts for 1hour = 0kW/h
     assert round(float(state.state), config["sensor"]["round"]) == 0.0
-    assert state.attributes.get("unit_of_measurement") == "kW/h"
+    assert state.attributes.get("unit_of_measurement") == f"kW/{TIME_HOURS}"
 
 
 async def test_suffix(hass):
@@ -198,7 +220,7 @@ async def test_suffix(hass):
             "source": "sensor.bytes_per_second",
             "round": 2,
             "unit_prefix": "k",
-            "unit_time": "s",
+            "unit_time": TIME_SECONDS,
         }
     }
 
