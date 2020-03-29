@@ -97,7 +97,7 @@ class GlowRing(Light):
         self._name = f"{lightpad.friendly_name} Glow Ring"
 
         self._state = lightpad.glow_enabled
-        self._brightness = lightpad.glow_intensity * 255.0
+        self._glow_intensity = lightpad.glow_intensity
 
         self._red = lightpad.glow_color["red"]
         self._green = lightpad.glow_color["green"]
@@ -112,7 +112,7 @@ class GlowRing(Light):
         config = event["changes"]
 
         self._state = config["glowEnabled"]
-        self._brightness = config["glowIntensity"] * 255.0
+        self._glow_intensity = config["glowIntensity"]
 
         self._red = config["glowColor"]["red"]
         self._green = config["glowColor"]["green"]
@@ -138,12 +138,12 @@ class GlowRing(Light):
     @property
     def brightness(self) -> int:
         """Return the brightness of this switch between 0..255."""
-        return self._brightness
+        return min(max(int(round(self._glow_intensity * 255, 0)), 0), 255)
 
     @property
     def glow_intensity(self):
         """Brightness in float form."""
-        return self._brightness / 255.0
+        return self._glow_intensity
 
     @property
     def is_on(self) -> bool:
@@ -163,7 +163,8 @@ class GlowRing(Light):
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
-            await self._lightpad.set_config({"glowIntensity": kwargs[ATTR_BRIGHTNESS]})
+            brightness_pct = kwargs[ATTR_BRIGHTNESS] / 255.0
+            await self._lightpad.set_config({"glowIntensity": brightness_pct})
         elif ATTR_HS_COLOR in kwargs:
             hs_color = kwargs[ATTR_HS_COLOR]
             red, green, blue = color_util.color_hs_to_RGB(*hs_color)
@@ -174,6 +175,7 @@ class GlowRing(Light):
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
         if ATTR_BRIGHTNESS in kwargs:
-            await self._lightpad.set_config({"glowIntensity": kwargs[ATTR_BRIGHTNESS]})
+            brightness_pct = kwargs[ATTR_BRIGHTNESS] / 255.0
+            await self._lightpad.set_config({"glowIntensity": brightness_pct})
         else:
             await self._lightpad.set_config({"glowEnabled": False})
