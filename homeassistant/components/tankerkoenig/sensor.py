@@ -59,7 +59,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 )
                 continue
             sensor = FuelPriceSensor(
-                fuel, station, coordinator, f"{NAME}_{station['name']}_{fuel}", show
+                fuel, station, coordinator, f"{NAME}_{station['name']}_{fuel}", tankerkoenig.show_on_map
             )
             entities.append(sensor)
     _LOGGER.debug("Added sensors %s", entities)
