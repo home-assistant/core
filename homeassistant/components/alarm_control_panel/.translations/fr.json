@@ -7,6 +7,13 @@
             "disarm": "D\u00e9sarmer {entity_name}",
             "trigger": "D\u00e9clencheur {entity_name}"
         },
+        "condition_type": {
+            "is_armed_away": "{entity_name} est arm\u00e9",
+            "is_armed_home": "{entity_name} est arm\u00e9 \u00e0 la maison",
+            "is_armed_night": "{entity_name} est arm\u00e9 la nuit",
+            "is_disarmed": "{entity_name} est d\u00e9sarm\u00e9",
+            "is_triggered": "{entity_name} est d\u00e9clench\u00e9"
+        },
         "trigger_type": {
             "armed_away": "Armer {entity_name} en mode \"sortie\"",
             "armed_home": "Armer {entity_name} en mode \"maison\"",

@@ -19,7 +19,6 @@ from ..const import (
     ATTR_COMMAND,
     ATTR_UNIQUE_ID,
     ATTR_VALUE,
-    CHANNEL_EVENT_RELAY,
     CHANNEL_ZDO,
     REPORT_CONFIG_MAX_INT,
     REPORT_CONFIG_MIN_INT,
@@ -78,7 +77,6 @@ class ChannelStatus(Enum):
 class ZigbeeChannel(LogMixin):
     """Base channel for a Zigbee cluster."""
 
-    CHANNEL_NAME = None
     REPORT_CONFIG = ()
 
     def __init__(
@@ -87,8 +85,6 @@ class ZigbeeChannel(LogMixin):
         """Initialize ZigbeeChannel."""
         self._generic_id = f"channel_0x{cluster.cluster_id:04x}"
         self._channel_name = getattr(cluster, "ep_attribute", self._generic_id)
-        if self.CHANNEL_NAME:
-            self._channel_name = self.CHANNEL_NAME
         self._ch_pool = ch_pool
         self._cluster = cluster
         self._id = f"{ch_pool.id}:0x{cluster.cluster_id:04x}"
@@ -361,10 +357,8 @@ class ZDOChannel(LogMixin):
         _LOGGER.log(level, msg, *args)
 
 
-class EventRelayChannel(ZigbeeChannel):
-    """Event relay that can be attached to zigbee clusters."""
-
-    CHANNEL_NAME = CHANNEL_EVENT_RELAY
+class ClientChannel(ZigbeeChannel):
+    """Channel listener for Zigbee client (output) clusters."""
 
     @callback
     def attribute_updated(self, attrid, value):

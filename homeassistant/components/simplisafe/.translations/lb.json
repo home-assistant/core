@@ -18,5 +18,15 @@
             }
         },
         "title": "SimpliSafe"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Code (den am Home Assistant Interface benotzt g\u00ebtt)"
+                },
+                "title": "Simplisafe konfigur\u00e9ieren"
+            }
+        }
     }
 }

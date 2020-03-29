@@ -234,7 +234,10 @@ async def create_yaml_resource_col(hass, yaml_resources):
 
 async def system_health_info(hass):
     """Get info for the info page."""
-    return await hass.data[DOMAIN]["dashboards"][None].async_get_info()
+    health_info = {"dashboards": len(hass.data[DOMAIN]["dashboards"])}
+    health_info.update(await hass.data[DOMAIN]["dashboards"][None].async_get_info())
+    health_info.update(await hass.data[DOMAIN]["resources"].async_get_info())
+    return health_info
 
 
 @callback

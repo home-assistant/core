@@ -58,6 +58,10 @@ aioautomatic==0.6.5
 # homeassistant.components.aws
 aiobotocore==0.11.1
 
+# homeassistant.components.dnsip
+# homeassistant.components.minecraft_server
+aiodns==2.0.0
+
 # homeassistant.components.esphome
 aioesphomeapi==2.6.1
 
@@ -75,10 +79,13 @@ aiohomekit[IP]==0.2.35
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==2.0.0
+aiohue==2.1.0
 
 # homeassistant.components.notion
 aionotion==1.1.0
+
+# homeassistant.components.pvpc_hourly_pricing
+aiopvpc==1.0.2
 
 # homeassistant.components.webostv
 aiopylgtv==0.3.3
@@ -168,13 +175,16 @@ datadog==0.15.0
 defusedxml==0.6.0
 
 # homeassistant.components.denonavr
-denonavr==0.8.0
+denonavr==0.8.1
 
 # homeassistant.components.directv
 directpy==0.7
 
 # homeassistant.components.updater
 distro==1.4.0
+
+# homeassistant.components.doorbird
+doorbirdpy==2.0.8
 
 # homeassistant.components.dsmr
 dsmr_parser==0.18
@@ -187,6 +197,9 @@ eebrightbox==0.0.4
 
 # homeassistant.components.elgato
 elgato==0.2.0
+
+# homeassistant.components.elkm1
+elkm1-lib==0.7.17
 
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1
@@ -204,7 +217,7 @@ foobot_async==0.3.1
 gTTS-token==1.1.3
 
 # homeassistant.components.garmin_connect
-garminconnect==0.1.8
+garminconnect==0.1.10
 
 # homeassistant.components.geo_json_events
 # homeassistant.components.usgs_earthquakes_feed
@@ -230,7 +243,7 @@ georss_qld_bushfire_alert_client==0.3
 getmac==0.8.1
 
 # homeassistant.components.gios
-gios==0.0.3
+gios==0.0.5
 
 # homeassistant.components.glances
 glances_api==0.2.0
@@ -263,7 +276,7 @@ hdate==0.9.5
 herepy==2.0.0
 
 # homeassistant.components.pi_hole
-hole==0.5.0
+hole==0.5.1
 
 # homeassistant.components.workday
 holidays==0.10.1
@@ -272,7 +285,7 @@ holidays==0.10.1
 home-assistant-frontend==20200318.1
 
 # homeassistant.components.zwave
-homeassistant-pyozw==0.1.9
+homeassistant-pyozw==0.1.10
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.10.17
@@ -344,7 +357,7 @@ nessclient==0.9.15
 netdisco==2.6.0
 
 # homeassistant.components.nexia
-nexia==0.7.1
+nexia==0.7.3
 
 # homeassistant.components.nsw_fuel_station
 nsw-fuel-api-client==1.0.10
@@ -500,7 +513,7 @@ pyheos==0.6.0
 pyhomematic==0.1.65
 
 # homeassistant.components.icloud
-pyicloud==0.9.5
+pyicloud==0.9.6.1
 
 # homeassistant.components.ipma
 pyipma==2.0.5
@@ -583,16 +596,13 @@ pysmartthings==0.7.0
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.24
+pysonos==0.0.25
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
 
-# homeassistant.components.tankerkoenig
-pytankerkoenig==0.0.6
-
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.2
+python-ecobee-api==0.2.3
 
 # homeassistant.components.darksky
 python-forecastio==1.4.0
@@ -628,7 +638,7 @@ pyvera==0.3.7
 pyvesync==1.1.0
 
 # homeassistant.components.vizio
-pyvizio==0.1.35
+pyvizio==0.1.44
 
 # homeassistant.components.html5
 pywebpush==1.9.2
@@ -670,13 +680,13 @@ sentry-sdk==0.13.5
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.0.4
+simplisafe-python==9.0.5
 
 # homeassistant.components.sleepiq
 sleepyq==0.7
 
 # homeassistant.components.smhi
-smhi-pkg==1.0.10
+smhi-pkg==1.0.13
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
@@ -688,7 +698,7 @@ somecomfort==0.5.2
 speak2mary==1.4.0
 
 # homeassistant.components.spotify
-spotipy==2.7.1
+spotipy==2.10.0
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
@@ -716,7 +726,7 @@ tellduslive==0.10.10
 tesla-powerwall==0.1.1
 
 # homeassistant.components.tesla
-teslajsonpy==0.5.1
+teslajsonpy==0.6.0
 
 # homeassistant.components.toon
 toonapilib==3.2.4

@@ -12,7 +12,6 @@ from homeassistant.components.climate.const import (
     ATTR_MIN_TEMP,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    ATTR_TARGET_TEMP_STEP,
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -55,7 +54,6 @@ from .const import (
     DEFAULT_MAX_TEMP_WATER_HEATER,
     DEFAULT_MIN_TEMP_WATER_HEATER,
     PROP_MAX_VALUE,
-    PROP_MIN_STEP,
     PROP_MIN_VALUE,
     SERV_THERMOSTAT,
 )
@@ -67,6 +65,7 @@ HC_HOMEKIT_VALID_MODES_WATER_HEATER = {
     "Heat": 1,
 }
 UNIT_HASS_TO_HOMEKIT = {TEMP_CELSIUS: 0, TEMP_FAHRENHEIT: 1}
+
 UNIT_HOMEKIT_TO_HASS = {c: s for s, c in UNIT_HASS_TO_HOMEKIT.items()}
 HC_HASS_TO_HOMEKIT = {
     HVAC_MODE_OFF: 0,
@@ -99,9 +98,6 @@ class Thermostat(HomeAccessory):
         self._flag_coolingthresh = False
         self._flag_heatingthresh = False
         min_temp, max_temp = self.get_temperature_range()
-        temp_step = self.hass.states.get(self.entity_id).attributes.get(
-            ATTR_TARGET_TEMP_STEP, 0.5
-        )
 
         # Add additional characteristics if auto mode is supported
         self.chars = []
@@ -162,11 +158,10 @@ class Thermostat(HomeAccessory):
         self.char_target_temp = serv_thermostat.configure_char(
             CHAR_TARGET_TEMPERATURE,
             value=21.0,
-            properties={
-                PROP_MIN_VALUE: min_temp,
-                PROP_MAX_VALUE: max_temp,
-                PROP_MIN_STEP: temp_step,
-            },
+            # We do not set PROP_MIN_STEP here and instead use the HomeKit
+            # default of 0.1 in order to have enough precision to convert
+            # temperature units and avoid setting to 73F will result in 74F
+            properties={PROP_MIN_VALUE: min_temp, PROP_MAX_VALUE: max_temp},
             setter_callback=self.set_target_temperature,
         )
 
@@ -182,22 +177,20 @@ class Thermostat(HomeAccessory):
             self.char_cooling_thresh_temp = serv_thermostat.configure_char(
                 CHAR_COOLING_THRESHOLD_TEMPERATURE,
                 value=23.0,
-                properties={
-                    PROP_MIN_VALUE: min_temp,
-                    PROP_MAX_VALUE: max_temp,
-                    PROP_MIN_STEP: temp_step,
-                },
+                # We do not set PROP_MIN_STEP here and instead use the HomeKit
+                # default of 0.1 in order to have enough precision to convert
+                # temperature units and avoid setting to 73F will result in 74F
+                properties={PROP_MIN_VALUE: min_temp, PROP_MAX_VALUE: max_temp},
                 setter_callback=self.set_cooling_threshold,
             )
         if CHAR_HEATING_THRESHOLD_TEMPERATURE in self.chars:
             self.char_heating_thresh_temp = serv_thermostat.configure_char(
                 CHAR_HEATING_THRESHOLD_TEMPERATURE,
                 value=19.0,
-                properties={
-                    PROP_MIN_VALUE: min_temp,
-                    PROP_MAX_VALUE: max_temp,
-                    PROP_MIN_STEP: temp_step,
-                },
+                # We do not set PROP_MIN_STEP here and instead use the HomeKit
+                # default of 0.1 in order to have enough precision to convert
+                # temperature units and avoid setting to 73F will result in 74F
+                properties={PROP_MIN_VALUE: min_temp, PROP_MAX_VALUE: max_temp},
                 setter_callback=self.set_heating_threshold,
             )
 
@@ -370,11 +363,10 @@ class WaterHeater(HomeAccessory):
         self.char_target_temp = serv_thermostat.configure_char(
             CHAR_TARGET_TEMPERATURE,
             value=50.0,
-            properties={
-                PROP_MIN_VALUE: min_temp,
-                PROP_MAX_VALUE: max_temp,
-                PROP_MIN_STEP: 0.5,
-            },
+            # We do not set PROP_MIN_STEP here and instead use the HomeKit
+            # default of 0.1 in order to have enough precision to convert
+            # temperature units and avoid setting to 73F will result in 74F
+            properties={PROP_MIN_VALUE: min_temp, PROP_MAX_VALUE: max_temp},
             setter_callback=self.set_target_temperature,
         )
 

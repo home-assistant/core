@@ -6,6 +6,7 @@ import urllib
 from PyTado.interface import Tado
 import voluptuous as vol
 
+from homeassistant.components.climate.const import PRESET_AWAY, PRESET_HOME
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -161,6 +162,15 @@ class TadoConnector:
         """Reset the zone back to the default operation."""
         self.tado.resetZoneOverlay(zone_id)
         self.update_sensor("zone", zone_id)
+
+    def set_presence(
+        self, presence=PRESET_HOME,
+    ):
+        """Set the presence to home or away."""
+        if presence == PRESET_AWAY:
+            self.tado.setAway()
+        elif presence == PRESET_HOME:
+            self.tado.setHome()
 
     def set_zone_overlay(
         self,

@@ -254,7 +254,13 @@ class EntityComponent:
 
         This method must be run in the event loop.
         """
-        tasks = [platform.async_reset() for platform in self._platforms.values()]
+        tasks = []
+
+        for key, platform in self._platforms.items():
+            if key == self.domain:
+                tasks.append(platform.async_reset())
+            else:
+                tasks.append(platform.async_destroy())
 
         if tasks:
             await asyncio.wait(tasks)

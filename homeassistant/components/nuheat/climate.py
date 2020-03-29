@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 
 from nuheat.config import SCHEDULE_HOLD, SCHEDULE_RUN, SCHEDULE_TEMPORARY_HOLD
-import voluptuous as vol
+from nuheat.util import celsius_to_nuheat, fahrenheit_to_nuheat
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -14,16 +14,10 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.util import Throttle
 
-from . import DOMAIN
+from .const import DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,55 +43,29 @@ SCHEDULE_MODE_TO_PRESET_MODE_MAP = {
     value: key for key, value in PRESET_MODE_TO_SCHEDULE_MODE_MAP.items()
 }
 
-SERVICE_RESUME_PROGRAM = "resume_program"
-
-RESUME_PROGRAM_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
-
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the NuHeat thermostat(s)."""
-    if discovery_info is None:
-        return
+    api, serial_number = hass.data[DOMAIN][config_entry.entry_id]
 
     temperature_unit = hass.config.units.temperature_unit
-    api, serial_numbers = hass.data[DOMAIN]
-    thermostats = [
-        NuHeatThermostat(api, serial_number, temperature_unit)
-        for serial_number in serial_numbers
-    ]
-    add_entities(thermostats, True)
+    thermostat = await hass.async_add_executor_job(api.get_thermostat, serial_number)
+    entity = NuHeatThermostat(thermostat, temperature_unit)
 
-    def resume_program_set_service(service):
-        """Resume the program on the target thermostats."""
-        entity_id = service.data.get(ATTR_ENTITY_ID)
-        if entity_id:
-            target_thermostats = [
-                device for device in thermostats if device.entity_id in entity_id
-            ]
-        else:
-            target_thermostats = thermostats
+    # No longer need a service as set_hvac_mode to auto does this
+    # since climate 1.0 has been implemented
 
-        for thermostat in target_thermostats:
-            thermostat.resume_program()
-
-            thermostat.schedule_update_ha_state(True)
-
-    hass.services.register(
-        DOMAIN,
-        SERVICE_RESUME_PROGRAM,
-        resume_program_set_service,
-        schema=RESUME_PROGRAM_SCHEMA,
-    )
+    async_add_entities([entity], True)
 
 
 class NuHeatThermostat(ClimateDevice):
     """Representation of a NuHeat Thermostat."""
 
-    def __init__(self, api, serial_number, temperature_unit):
+    def __init__(self, thermostat, temperature_unit):
         """Initialize the thermostat."""
-        self._thermostat = api.get_thermostat(serial_number)
+        self._thermostat = thermostat
         self._temperature_unit = temperature_unit
         self._force_update = False
 
@@ -140,8 +108,9 @@ class NuHeatThermostat(ClimateDevice):
     def set_hvac_mode(self, hvac_mode):
         """Set the system mode."""
 
+        # This is the same as what res
         if hvac_mode == HVAC_MODE_AUTO:
-            self._thermostat.schedule_mode = SCHEDULE_RUN
+            self._thermostat.resume_schedule()
         elif hvac_mode == HVAC_MODE_HEAT:
             self._thermostat.schedule_mode = SCHEDULE_HOLD
 
@@ -218,20 +187,26 @@ class NuHeatThermostat(ClimateDevice):
 
     def _set_temperature(self, temperature):
         if self._temperature_unit == "C":
-            self._thermostat.target_celsius = temperature
+            target_temp = celsius_to_nuheat(temperature)
         else:
-            self._thermostat.target_fahrenheit = temperature
+            target_temp = fahrenheit_to_nuheat(temperature)
+
         # If they set a temperature without changing the mode
         # to heat, we behave like the device does locally
         # and set a temp hold.
-        if self._thermostat.schedule_mode == SCHEDULE_RUN:
-            self._thermostat.schedule_mode = SCHEDULE_TEMPORARY_HOLD
+        target_schedule_mode = SCHEDULE_HOLD
+        if self._thermostat.schedule_mode in (SCHEDULE_RUN, SCHEDULE_TEMPORARY_HOLD):
+            target_schedule_mode = SCHEDULE_TEMPORARY_HOLD
 
         _LOGGER.debug(
-            "Setting NuHeat thermostat temperature to %s %s",
+            "Setting NuHeat thermostat temperature to %s %s and schedule mode: %s",
             temperature,
             self.temperature_unit,
+            target_schedule_mode,
         )
+        # If we do not send schedule_mode we always get
+        # SCHEDULE_HOLD
+        self._thermostat.set_target_temperature(target_temp, target_schedule_mode)
         self._schedule_update()
 
     def _schedule_update(self):
@@ -251,3 +226,12 @@ class NuHeatThermostat(ClimateDevice):
     def _throttled_update(self, **kwargs):
         """Get the latest state from the thermostat with a throttle."""
         self._thermostat.get_data()
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        return {
+            "identifiers": {(DOMAIN, self._thermostat.serial_number)},
+            "name": self._thermostat.room,
+            "manufacturer": MANUFACTURER,
+        }

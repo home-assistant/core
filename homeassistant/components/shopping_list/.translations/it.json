@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La lista della spesa \u00e8 gi\u00e0 configurata."
+        },
+        "step": {
+            "user": {
+                "description": "Vuoi configurare la lista della spesa?",
+                "title": "Lista della Spesa"
+            }
+        },
+        "title": "Lista della Spesa"
+    }
+}

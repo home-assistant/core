@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Aquesta zona de c\u00e0rrega ja est\u00e0 configurada"
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar, torna-ho a provar",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "loadzone": "Zona de c\u00e0rrega (Load Zone)"
+                },
+                "description": "La teva zona de c\u00e0rrega (Load Zone) est\u00e0 al teu compte de Griddy v\u00e9s a \"Account > Meter > Load Zone\".",
+                "title": "Configuraci\u00f3 de la zona de c\u00e0rrega  (Load Zone) de Griddy"
+            }
+        },
+        "title": "Griddy"
+    }
+}
