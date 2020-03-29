@@ -543,7 +543,7 @@ pymfy==0.7.1
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==1.5.2
+pymodbus==2.3.0
 
 # homeassistant.components.monoprice
 pymonoprice==0.3
