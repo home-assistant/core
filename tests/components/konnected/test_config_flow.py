@@ -403,6 +403,14 @@ async def test_import_existing_config(hass, mock_panel):
                         "pause": 100,
                         "repeat": 4,
                     },
+                    {
+                        "zone": 8,
+                        "name": "alarm",
+                        "activation": "low",
+                        "momentary": 100,
+                        "pause": 100,
+                        "repeat": -1,
+                    },
                     {"zone": "out1"},
                     {"zone": "alarm1"},
                 ],
@@ -462,6 +470,14 @@ async def test_import_existing_config(hass, mock_panel):
                     "momentary": 50,
                     "pause": 100,
                     "repeat": 4,
+                },
+                {
+                    "zone": "8",
+                    "name": "alarm",
+                    "activation": "low",
+                    "momentary": 100,
+                    "pause": 100,
+                    "repeat": -1,
                 },
                 {"activation": "high", "zone": "out1"},
                 {"activation": "high", "zone": "alarm1"},
@@ -713,6 +729,7 @@ async def test_option_flow(hass, mock_panel):
     assert result["step_id"] == "options_switch"
     assert result["description_placeholders"] == {
         "zone": "Zone 4",
+        "state": "1",
     }
 
     # zone 4
@@ -723,6 +740,7 @@ async def test_option_flow(hass, mock_panel):
     assert result["step_id"] == "options_switch"
     assert result["description_placeholders"] == {
         "zone": "OUT",
+        "state": "1",
     }
 
     # zone out
@@ -734,6 +752,27 @@ async def test_option_flow(hass, mock_panel):
             "momentary": 50,
             "pause": 100,
             "repeat": 4,
+            "more_states": "Yes",
+        },
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "options_switch"
+    assert result["description_placeholders"] == {
+        "zone": "OUT",
+        "state": "2",
+    }
+
+    # zone out - state 2
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "name": "alarm",
+            "activation": "low",
+            "momentary": 100,
+            "pause": 100,
+            "repeat": -1,
+            "more_states": "No",
         },
     )
 
@@ -767,6 +806,14 @@ async def test_option_flow(hass, mock_panel):
                 "momentary": 50,
                 "pause": 100,
                 "repeat": 4,
+            },
+            {
+                "zone": "out",
+                "name": "alarm",
+                "activation": "low",
+                "momentary": 100,
+                "pause": 100,
+                "repeat": -1,
             },
         ],
     }
@@ -977,6 +1024,14 @@ async def test_option_flow_import(hass, mock_panel):
                     "pause": 100,
                     "repeat": 4,
                 },
+                {
+                    "zone": "3",
+                    "name": "alarm",
+                    "activation": "low",
+                    "momentary": 100,
+                    "pause": 100,
+                    "repeat": -1,
+                },
             ],
         }
     )
@@ -1056,8 +1111,9 @@ async def test_option_flow_import(hass, mock_panel):
     assert schema["momentary"] == 50
     assert schema["pause"] == 100
     assert schema["repeat"] == 4
+    assert schema["more_states"] == "Yes"
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"activation": "high"}
+        result["flow_id"], user_input={"activation": "high", "more_states": "No"}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "options_misc"

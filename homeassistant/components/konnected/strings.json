@@ -80,13 +80,14 @@
       },
       "options_switch": {
         "title": "Configure Switchable Output",
-        "description": "Please select the output options for {zone}",
+        "description": "Please select the output options for {zone}: state {state}",
         "data": {
           "name": "Name (optional)",
           "activation": "Output when on",
           "momentary": "Pulse duration (ms) (optional)",
           "pause": "Pause between pulses (ms) (optional)",
-          "repeat": "Times to repeat (-1=infinite) (optional)"
+          "repeat": "Times to repeat (-1=infinite) (optional)",
+          "more_states": "Configure additional states for this zone"
         }
       },
       "options_misc": {
