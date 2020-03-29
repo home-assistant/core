@@ -1,7 +1,7 @@
 """Config flow for Vera."""
 import logging
 import re
-from typing import List
+from typing import List, cast
 
 import pyvera as pv
 from requests.exceptions import RequestException
@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 def str_to_int_list(data: str) -> List[str]:
     """Convert a string to an int list."""
     if isinstance(str, list):
-        return data
+        return cast(List[str], data)
 
     return [s for s in LIST_REGEX.split(data) if len(s) > 0]
 
@@ -86,7 +86,7 @@ class VeraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input: dict = None):
         """Handle user initiated flow."""
         if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason="already_setup")
+            return self.async_abort(reason="already_configured")
 
         if user_input is not None:
             return await self.async_step_finish(
@@ -124,31 +124,7 @@ class VeraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 reason="cannot_connect", description_placeholders={"base_url": base_url}
             )
 
-        domain_entries = self.hass.config_entries.async_entries(DOMAIN)
-        existing_config_entry = next(
-            iter(
-                [
-                    entry
-                    for entry in domain_entries
-                    if entry.unique_id == controller.serial_number
-                ]
-            ),
-            None,
-        )
-
-        if existing_config_entry:
-            _LOGGER.debug(
-                "Updating existing import config for %s", controller.serial_number
-            )
-            # Note: the options get updated in async_setup_entry()
-            self.hass.config_entries.async_update_entry(
-                entry=existing_config_entry, data=config,
-            )
-
-        # Integration does not support multiple controllers yet.
-        if domain_entries:
-            return self.async_abort(reason="already_setup")
-
         await self.async_set_unique_id(controller.serial_number)
+        self._abort_if_unique_id_configured(config)
 
         return self.async_create_entry(title=base_url, data=config)

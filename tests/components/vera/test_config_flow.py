@@ -55,7 +55,7 @@ async def test_aync_step_user_success(hass: HomeAssistant) -> None:
     assert entries
 
 
-async def test_async_step_user_already_setup(hass: HomeAssistant) -> None:
+async def test_async_step_user_already_configured(hass: HomeAssistant) -> None:
     """Test function."""
     entry = MockConfigEntry(domain=DOMAIN, data={}, options={}, unique_id="12345")
     entry.add_to_hass(hass)
@@ -68,7 +68,7 @@ async def test_async_step_user_already_setup(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result.get("type") == RESULT_TYPE_ABORT
-    assert result.get("reason") == "already_setup"
+    assert result.get("reason") == "already_configured"
 
 
 async def test_aync_step_import_success(hass: HomeAssistant) -> None:
@@ -115,7 +115,7 @@ async def test_async_step_import_alredy_setup(hass: HomeAssistant) -> None:
             data={CONF_CONTROLLER: "http://localhost:445"},
         )
         assert result.get("type") == RESULT_TYPE_ABORT
-        assert result.get("reason") == "already_setup"
+        assert result.get("reason") == "already_configured"
 
 
 async def test_async_step_finish_error(hass: HomeAssistant) -> None:
@@ -162,9 +162,11 @@ async def test_options(hass):
     """Test updating options."""
     base_url = "http://127.0.0.1/"
     entry = MockConfigEntry(
-        domain=DOMAIN, title=base_url, data={CONF_CONTROLLER: "http://127.0.0.1/"},
+        domain=DOMAIN,
+        title=base_url,
+        data={CONF_CONTROLLER: "http://127.0.0.1/"},
+        options={CONF_LIGHTS: [1, 2, 3]},
     )
-    entry.options[CONF_LIGHTS] = [1, 2, 3]
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(

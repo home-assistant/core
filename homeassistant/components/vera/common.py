@@ -9,14 +9,12 @@ from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-ControllerData = NamedTuple(
-    "ControllerData",
-    (
-        ("controller", pv.VeraController),
-        ("devices", DefaultDict[str, List[pv.VeraDevice]]),
-        ("scenes", List[pv.VeraScene]),
-    ),
-)
+class ControllerData(NamedTuple):
+    """Controller data."""
+
+    controller: pv.VeraController
+    devices: DefaultDict[str, List[pv.VeraDevice]]
+    scenes: List[pv.VeraScene]
 
 
 def get_configured_platforms(controller_data: ControllerData) -> Set[str]:
