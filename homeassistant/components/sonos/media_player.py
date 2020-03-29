@@ -490,6 +490,11 @@ class SonosEntity(MediaPlayerDevice):
         """Return True if entity is available."""
         return self._seen_timer is not None
 
+    def _clear_media_position(self):
+        """Clear the media_position."""
+        self._media_position = None
+        self._media_position_updated_at = None
+
     def _set_favorites(self):
         """Set available favorites."""
         self._favorites = []
@@ -553,8 +558,6 @@ class SonosEntity(MediaPlayerDevice):
         self._shuffle = self.soco.shuffle
         self._uri = None
         self._media_duration = None
-        self._media_position = None
-        self._media_position_updated_at = None
         self._media_image_url = None
         self._media_artist = None
         self._media_album_name = None
@@ -570,16 +573,20 @@ class SonosEntity(MediaPlayerDevice):
             self.update_media_linein(SOURCE_LINEIN)
         else:
             track_info = self.soco.get_current_track_info()
-            self._uri = track_info["uri"]
-            self._media_artist = track_info.get("artist")
-            self._media_album_name = track_info.get("album")
-            self._media_title = track_info.get("title")
-
-            if self.soco.is_radio_uri(track_info["uri"]):
-                variables = event and event.variables
-                self.update_media_radio(variables, track_info)
+            if not track_info["uri"]:
+                self._clear_media_position()
             else:
-                self.update_media_music(update_position, track_info)
+                self._uri = track_info["uri"]
+                self._media_artist = track_info.get("artist")
+                self._media_album_name = track_info.get("album")
+                self._media_title = track_info.get("title")
+
+                if self.soco.is_radio_uri(track_info["uri"]):
+                    variables = event and event.variables
+                    self.update_media_radio(variables, track_info)
+                else:
+                    variables = event and event.variables
+                    self.update_media_music(update_position, track_info)
 
         self.schedule_update_ha_state()
 
@@ -591,11 +598,15 @@ class SonosEntity(MediaPlayerDevice):
 
     def update_media_linein(self, source):
         """Update state when playing from line-in/tv."""
+        self._clear_media_position()
+
         self._media_title = source
         self._source_name = source
 
     def update_media_radio(self, variables, track_info):
         """Update state when streaming radio."""
+        self._clear_media_position()
+
         try:
             library = pysonos.music_library.MusicLibrary(self.soco)
             album_art_uri = variables["current_track_meta_data"].album_art_uri
@@ -627,26 +638,24 @@ class SonosEntity(MediaPlayerDevice):
         )
         rel_time = _timespan_secs(position_info.get("RelTime"))
 
-        # player no longer reports position?
-        update_media_position |= rel_time is None and self._media_position is not None
-
         # player started reporting position?
         update_media_position |= rel_time is not None and self._media_position is None
 
         # position jumped?
-        if (
-            self.state == STATE_PLAYING
-            and rel_time is not None
-            and self._media_position is not None
-        ):
-            time_diff = utcnow() - self._media_position_updated_at
-            time_diff = time_diff.total_seconds()
+        if rel_time is not None and self._media_position is not None:
+            if self.state == STATE_PLAYING:
+                time_diff = utcnow() - self._media_position_updated_at
+                time_diff = time_diff.total_seconds()
+            else:
+                time_diff = 0
 
             calculated_position = self._media_position + time_diff
 
             update_media_position |= abs(calculated_position - rel_time) > 1.5
 
-        if update_media_position:
+        if rel_time is None:
+            self._clear_media_position()
+        elif update_media_position:
             self._media_position = rel_time
             self._media_position_updated_at = utcnow()
 
@@ -770,6 +779,7 @@ class SonosEntity(MediaPlayerDevice):
         return self._shuffle
 
     @property
+    @soco_coordinator
     def media_content_id(self):
         """Content id of current playing media."""
         return self._uri

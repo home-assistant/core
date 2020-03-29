@@ -5,12 +5,12 @@
             "unknown": "Unexpected error"
         },
         "error": {
-            "cannot_connect": "Failed to connect, please try again"
+            "cannot_connect": "Failed to connect, please try again",
+            "unknown": "Unexpected error"
         },
         "flow_title": "DirecTV: {name}",
         "step": {
             "ssdp_confirm": {
-                "data": {},
                 "description": "Do you want to set up {name}?",
                 "title": "Connect to the DirecTV receiver"
             },

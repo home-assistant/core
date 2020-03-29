@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ten kraj jest ju\u017c skonfigurowany."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "country": "Kraj"
+                },
+                "title": "Wybierz kraj do monitorowania"
+            }
+        },
+        "title": "Koronawirus"
+    }
+}

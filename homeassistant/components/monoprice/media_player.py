@@ -1,6 +1,7 @@
 """Support for interfacing with Monoprice 6 zone home audio controller."""
 import logging
 
+from homeassistant import core
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
@@ -27,7 +28,10 @@ SUPPORT_MONOPRICE = (
 )
 
 
-def _get_sources(sources_config):
+@core.callback
+def _get_sources_from_dict(data):
+    sources_config = data[CONF_SOURCES]
+
     source_id_name = {int(index): name for index, name in sources_config.items()}
 
     source_name_id = {v: k for k, v in source_id_name.items()}
@@ -37,13 +41,22 @@ def _get_sources(sources_config):
     return [source_id_name, source_name_id, source_names]
 
 
+@core.callback
+def _get_sources(config_entry):
+    if CONF_SOURCES in config_entry.options:
+        data = config_entry.options
+    else:
+        data = config_entry.data
+    return _get_sources_from_dict(data)
+
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Monoprice 6-zone amplifier platform."""
     port = config_entry.data[CONF_PORT]
 
     monoprice = hass.data[DOMAIN][config_entry.entry_id]
 
-    sources = _get_sources(config_entry.data.get(CONF_SOURCES))
+    sources = _get_sources(config_entry)
 
     entities = []
     for i in range(1, 4):

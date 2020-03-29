@@ -10,6 +10,8 @@ from haffmpeg.camera import CameraMjpeg
 from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 import onvif
 from onvif import ONVIFCamera, exceptions
+import requests
+from requests.auth import HTTPDigestAuth
 import voluptuous as vol
 from zeep.asyncio import AsyncTransport
 from zeep.exceptions import Fault
@@ -166,6 +168,7 @@ class ONVIFHassCamera(Camera):
         self._profile_index = config.get(CONF_PROFILE)
         self._ptz_service = None
         self._input = None
+        self._snapshot = None
         self.stream_options[CONF_RTSP_TRANSPORT] = config.get(CONF_RTSP_TRANSPORT)
         self._mac = None
 
@@ -198,6 +201,7 @@ class ONVIFHassCamera(Camera):
             await self.async_obtain_mac_address()
             await self.async_check_date_and_time()
             await self.async_obtain_input_uri()
+            await self.async_obtain_snapshot_uri()
             self.setup_ptz()
         except ClientConnectionError as err:
             _LOGGER.warning(
@@ -372,6 +376,52 @@ class ONVIFHassCamera(Camera):
         except exceptions.ONVIFError as err:
             _LOGGER.error("Couldn't setup camera '%s'. Error: %s", self._name, err)
 
+    async def async_obtain_snapshot_uri(self):
+        """Set the snapshot uri for the camera."""
+        _LOGGER.debug(
+            "Connecting with ONVIF Camera: %s on port %s", self._host, self._port
+        )
+
+        try:
+            _LOGGER.debug("Retrieving profiles")
+
+            media_service = self._camera.create_media_service()
+
+            profiles = await media_service.GetProfiles()
+
+            _LOGGER.debug("Retrieved '%d' profiles", len(profiles))
+
+            if self._profile_index >= len(profiles):
+                _LOGGER.warning(
+                    "ONVIF Camera '%s' doesn't provide profile %d."
+                    " Using the last profile.",
+                    self._name,
+                    self._profile_index,
+                )
+                self._profile_index = -1
+
+            _LOGGER.debug("Using profile index '%d'", self._profile_index)
+
+            _LOGGER.debug("Retrieving snapshot uri")
+
+            # Fix Onvif setup error on Goke GK7102 based IP camera
+            # where we need to recreate media_service  #26781
+            media_service = self._camera.create_media_service()
+
+            req = media_service.create_type("GetSnapshotUri")
+            req.ProfileToken = profiles[self._profile_index].token
+
+            snapshot_uri = await media_service.GetSnapshotUri(req)
+            self._snapshot = snapshot_uri.Uri
+
+            _LOGGER.debug(
+                "ONVIF Camera Using the following URL for %s snapshot: %s",
+                self._name,
+                self._snapshot,
+            )
+        except exceptions.ONVIFError as err:
+            _LOGGER.error("Couldn't setup camera '%s'. Error: %s", self._name, err)
+
     def setup_ptz(self):
         """Set up PTZ if available."""
         _LOGGER.debug("Setting up the ONVIF PTZ service")
@@ -454,16 +504,41 @@ class ONVIFHassCamera(Camera):
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
-
         _LOGGER.debug("Retrieving image from camera '%s'", self._name)
+        image = None
 
-        ffmpeg = ImageFrame(self.hass.data[DATA_FFMPEG].binary, loop=self.hass.loop)
+        if self._snapshot is not None:
+            auth = None
+            if self._username and self._password:
+                auth = HTTPDigestAuth(self._username, self._password)
 
-        image = await asyncio.shield(
-            ffmpeg.get_image(
-                self._input, output_format=IMAGE_JPEG, extra_cmd=self._ffmpeg_arguments
+            def fetch():
+                """Read image from a URL."""
+                try:
+                    response = requests.get(self._snapshot, timeout=5, auth=auth)
+                    return response.content
+                except requests.exceptions.RequestException as error:
+                    _LOGGER.error(
+                        "Fetch snapshot image failed from %s, falling back to FFmpeg; %s",
+                        self._name,
+                        error,
+                    )
+
+            image = await self.hass.async_add_job(fetch)
+
+        if image is None:
+            # Don't keep trying the snapshot URL
+            self._snapshot = None
+
+            ffmpeg = ImageFrame(self.hass.data[DATA_FFMPEG].binary, loop=self.hass.loop)
+            image = await asyncio.shield(
+                ffmpeg.get_image(
+                    self._input,
+                    output_format=IMAGE_JPEG,
+                    extra_cmd=self._ffmpeg_arguments,
+                )
             )
-        )
+
         return image
 
     async def handle_async_mjpeg_stream(self, request):

@@ -21,17 +21,31 @@ from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_PORT): str,
-        vol.Optional(CONF_SOURCE_1): str,
-        vol.Optional(CONF_SOURCE_2): str,
-        vol.Optional(CONF_SOURCE_3): str,
-        vol.Optional(CONF_SOURCE_4): str,
-        vol.Optional(CONF_SOURCE_5): str,
-        vol.Optional(CONF_SOURCE_6): str,
+SOURCES = [
+    CONF_SOURCE_1,
+    CONF_SOURCE_2,
+    CONF_SOURCE_3,
+    CONF_SOURCE_4,
+    CONF_SOURCE_5,
+    CONF_SOURCE_6,
+]
+
+OPTIONS_FOR_DATA = {vol.Optional(source): str for source in SOURCES}
+
+DATA_SCHEMA = vol.Schema({vol.Required(CONF_PORT): str, **OPTIONS_FOR_DATA})
+
+
+@core.callback
+def _sources_from_config(data):
+    sources_config = {
+        str(idx + 1): data.get(source) for idx, source in enumerate(SOURCES)
     }
-)
+
+    return {
+        index: name.strip()
+        for index, name in sources_config.items()
+        if (name is not None and name.strip() != "")
+    }
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -45,19 +59,8 @@ async def validate_input(hass: core.HomeAssistant, data):
         _LOGGER.error("Error connecting to Monoprice controller")
         raise CannotConnect
 
-    sources_config = {
-        1: data.get(CONF_SOURCE_1),
-        2: data.get(CONF_SOURCE_2),
-        3: data.get(CONF_SOURCE_3),
-        4: data.get(CONF_SOURCE_4),
-        5: data.get(CONF_SOURCE_5),
-        6: data.get(CONF_SOURCE_6),
-    }
-    sources = {
-        index: name.strip()
-        for index, name in sources_config.items()
-        if (name is not None and name.strip() != "")
-    }
+    sources = _sources_from_config(data)
+
     # Return info that you want to store in the config entry.
     return {CONF_PORT: data[CONF_PORT], CONF_SOURCES: sources}
 
@@ -85,6 +88,55 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
+
+    @staticmethod
+    @core.callback
+    def async_get_options_flow(config_entry):
+        """Define the config flow to handle options."""
+        return MonopriceOptionsFlowHandler(config_entry)
+
+
+@core.callback
+def _key_for_source(index, source, previous_sources):
+    if str(index) in previous_sources:
+        key = vol.Optional(source, default=previous_sources[str(index)])
+    else:
+        key = vol.Optional(source)
+
+    return key
+
+
+class MonopriceOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a Monoprice options flow."""
+
+    def __init__(self, config_entry):
+        """Initialize."""
+        self.config_entry = config_entry
+
+    @core.callback
+    def _previous_sources(self):
+        if CONF_SOURCES in self.config_entry.options:
+            previous = self.config_entry.options[CONF_SOURCES]
+        else:
+            previous = self.config_entry.data[CONF_SOURCES]
+
+        return previous
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title="", data={CONF_SOURCES: _sources_from_config(user_input)}
+            )
+
+        previous_sources = self._previous_sources()
+
+        options = {
+            _key_for_source(idx + 1, source, previous_sources): str
+            for idx, source in enumerate(SOURCES)
+        }
+
+        return self.async_show_form(step_id="init", data_schema=vol.Schema(options),)
 
 
 class CannotConnect(exceptions.HomeAssistantError):

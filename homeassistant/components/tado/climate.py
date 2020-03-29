@@ -289,7 +289,7 @@ class TadoClimate(ClimateDevice):
 
     def set_preset_mode(self, preset_mode):
         """Set new preset mode."""
-        pass
+        self._tado.set_presence(preset_mode)
 
     @property
     def temperature_unit(self):

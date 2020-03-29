@@ -29,6 +29,7 @@ FLOWS = [
     "dynalite",
     "ecobee",
     "elgato",
+    "elkm1",
     "emulated_roku",
     "esphome",
     "freebox",

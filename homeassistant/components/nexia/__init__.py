@@ -15,7 +15,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DATA_NEXIA, DOMAIN, NEXIA_DEVICE, PLATFORMS, UPDATE_COORDINATOR
+from .const import DOMAIN, NEXIA_DEVICE, PLATFORMS, UPDATE_COORDINATOR
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,8 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         update_interval=timedelta(seconds=DEFAULT_UPDATE_RATE),
     )
 
-    hass.data[DOMAIN][entry.entry_id] = {}
-    hass.data[DOMAIN][entry.entry_id][DATA_NEXIA] = {
+    hass.data[DOMAIN][entry.entry_id] = {
         NEXIA_DEVICE: nexia_home,
         UPDATE_COORDINATOR: coordinator,
     }

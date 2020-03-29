@@ -19,6 +19,7 @@ from ..const import (
     SIGNAL_MOVE_LEVEL,
     SIGNAL_SET_LEVEL,
     SIGNAL_STATE_ATTR,
+    SIGNAL_UPDATE_DEVICE,
 )
 from .base import ClientChannel, ZigbeeChannel, parse_and_log_command
 
@@ -333,11 +334,20 @@ class OnOffConfiguration(ZigbeeChannel):
     pass
 
 
+@registries.CLIENT_CHANNELS_REGISTRY.register(general.Ota.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Ota.cluster_id)
 class Ota(ZigbeeChannel):
     """OTA Channel."""
 
-    pass
+    @callback
+    def cluster_command(
+        self, tsn: int, command_id: int, args: Optional[List[Any]]
+    ) -> None:
+        """Handle OTA commands."""
+        cmd_name = self.cluster.server_commands.get(command_id, [command_id])[0]
+        signal_id = self._ch_pool.unique_id.split("-")[0]
+        if cmd_name == "query_next_image":
+            self.async_send_signal(SIGNAL_UPDATE_DEVICE.format(signal_id), args[3])
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Partition.cluster_id)
