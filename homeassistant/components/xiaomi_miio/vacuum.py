@@ -281,7 +281,9 @@ class MiroboVacuum(StateVacuumDevice):
         if self.vacuum_state is not None:
             speed = self.vacuum_state.fanspeed
             if speed in self._fan_speeds.values():
-                return [key for key, value in self._fan_speeds.items() if value == speed][0]
+                return [
+                    key for key, value in self._fan_speeds.items() if value == speed
+                ][0]
             return speed
 
     @property
