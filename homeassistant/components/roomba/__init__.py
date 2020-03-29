@@ -83,8 +83,8 @@ async def async_connect_or_timeout(hass, roomba):
                     .get("name", None)
                 )
                 await asyncio.sleep(0.5)
-                hass.data[DOMAIN]["roomba"] = roomba
-                hass.data[DOMAIN]["name"] = name
+            hass.data[DOMAIN]["roomba"] = roomba
+            hass.data[DOMAIN]["name"] = name
     except RoombaConnectionError:
         _LOGGER.error("Error to connect to vacuum")
         raise CannotConnect
