@@ -112,6 +112,7 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
     ("tests.components.plex.test_init", "test_set_config_entry_unique_id"),
     ("tests.components.plex.test_init", "test_setup_with_insecure_config_entry"),
     ("tests.components.plex.test_init", "test_setup_with_photo_session"),
+    ("tests.components.plex.test_init", "test_setup_when_certificate_changed"),
     ("tests.components.plex.test_server", "test_new_users_available"),
     ("tests.components.plex.test_server", "test_new_ignored_users_available"),
     ("tests.components.plex.test_server", "test_mark_sessions_idle"),
