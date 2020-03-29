@@ -133,7 +133,7 @@ class FuelPriceSensor(Entity):
             ATTR_CITY: self._city,
         }
 
-        if (self._show_on_map):
+        if self._show_on_map:
             attrs[ATTR_LATITUDE] = self._latitude
             attrs[ATTR_LONGITUDE] = self._longitude
 

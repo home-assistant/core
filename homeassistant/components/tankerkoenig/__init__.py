@@ -53,7 +53,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_STATIONS, default=[]): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
-                vol.Optional(CONF_SHOW_ON_MAP, default=False
+                vol.Optional(CONF_SHOW_ON_MAP, default=True
                 ): cv.boolean, 
             }
         )
@@ -109,8 +109,8 @@ class TankerkoenigData:
         self.stations = {}
         self.fuel_types = conf[CONF_FUEL_TYPES]
         self.update_interval = conf[CONF_SCAN_INTERVAL]
-        self._hass = hass
         self.show_on_map = conf[CONF_SHOW_ON_MAP]
+        self._hass = hass
 
     def setup(self, latitude, longitude, radius, additional_stations):
         """Set up the tankerkoenig API.
