@@ -5,8 +5,8 @@ import logging
 from typing import Any, Awaitable, Dict, List, Optional, Set, cast
 
 from homeassistant.const import (
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_WRITE_DATA,
 )
 from homeassistant.core import (
     CoreState,
@@ -188,7 +188,7 @@ class RestoreStateData:
 
         # Dump states when stopping hass
         self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_WRITE_DATA, _async_dump_states
+            EVENT_HOMEASSISTANT_FINAL_WRITE, _async_dump_states
         )
 
     @callback

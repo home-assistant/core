@@ -47,9 +47,9 @@ from homeassistant.const import (
     EVENT_CALL_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_WRITE_DATA,
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
@@ -429,7 +429,7 @@ class HomeAssistant:
 
         # stage 2
         self.state = CoreState.writing_data
-        self.bus.async_fire(EVENT_HOMEASSISTANT_WRITE_DATA)
+        self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
         await self.async_block_till_done()
 
         # stage 3
