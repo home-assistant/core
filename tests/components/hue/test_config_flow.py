@@ -80,8 +80,6 @@ async def test_flow_works(hass):
         "host": "1.2.3.4",
         "username": "home-assistant#test-home",
         "allow_hue_groups": False,
-        "add_hue_sensors": True,
-        "add_hue_remotes": False,
     }
 
     assert len(mock_bridge.initialize.mock_calls) == 1
@@ -444,8 +442,6 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(hass):
         "host": "2.2.2.2",
         "username": "username-abc",
         "allow_hue_groups": False,
-        "add_hue_sensors": True,
-        "add_hue_remotes": False,
     }
     entries = hass.config_entries.async_entries("hue")
     assert len(entries) == 2
