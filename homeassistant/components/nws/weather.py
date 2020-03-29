@@ -114,6 +114,8 @@ class NWSWeather(WeatherEntity):
         self.observation = None
         self._forecast = None
 
+        self._unsub_listener = None
+
     async def async_added_to_hass(self) -> None:
         """Set up a listener and load data."""
         self._unsub_listener = async_dispatcher_connect(
