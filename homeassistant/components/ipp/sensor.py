@@ -10,16 +10,16 @@ from homeassistant.util.dt import utcnow
 
 from . import IPPDataUpdateCoordinator, IPPDeviceEntity
 from .const import (
+    ATTR_COMMAND_SET,
+    ATTR_INFO,
+    ATTR_LOCATION,
     ATTR_MARKER_HIGH_LEVEL,
     ATTR_MARKER_LOW_LEVEL,
     ATTR_MARKER_TYPE,
-    ATTR_PRINTER_COMMAND_SET,
-    ATTR_PRINTER_INFO,
-    ATTR_PRINTER_LOCATION,
-    ATTR_PRINTER_SERIAL,
-    ATTR_PRINTER_STATE_MESSAGE,
-    ATTR_PRINTER_STATE_REASON,
-    ATTR_PRINTER_URI_SUPPORTED,
+    ATTR_SERIAL,
+    ATTR_STATE_MESSAGE,
+    ATTR_STATE_REASON,
+    ATTR_URI_SUPPORTED,
     DOMAIN,
 )
 
@@ -137,13 +137,13 @@ class IPPPrinterSensor(IPPSensor):
     def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the entity."""
         return {
-            ATTR_PRINTER_INFO: self.coordinator.data.info.printer_info,
-            ATTR_PRINTER_SERIAL: self.coordinator.data.info.serial,
-            ATTR_PRINTER_LOCATION: self.coordinator.data.info.location,
-            ATTR_PRINTER_STATE_MESSAGE: self.coordinator.data.state.message,
-            ATTR_PRINTER_STATE_REASON: self.coordinator.data.state.reasons,
-            ATTR_PRINTER_COMMAND_SET: self.coordinator.data.info.command_set,
-            ATTR_PRINTER_URI_SUPPORTED: self.coordinator.data.info.printer_uri_supported,
+            ATTR_INFO: self.coordinator.data.info.printer_info,
+            ATTR_SERIAL: self.coordinator.data.info.serial,
+            ATTR_LOCATION: self.coordinator.data.info.location,
+            ATTR_STATE_MESSAGE: self.coordinator.data.state.message,
+            ATTR_STATE_REASON: self.coordinator.data.state.reasons,
+            ATTR_COMMAND_SET: self.coordinator.data.info.command_set,
+            ATTR_URI_SUPPORTED: self.coordinator.data.info.printer_uri_supported,
         }
 
     @property
