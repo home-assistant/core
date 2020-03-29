@@ -112,6 +112,11 @@ class FuelPriceSensor(Entity):
         return self._coordinator.data[self._station_id].get(self._fuel_type)
 
     @property
+    def unique_id(self) -> str:
+        """Return a unique, friendly identifier for this entity."""
+        return f"{self._station_id}_{self._fuel_type}"
+
+   @property
     def device_state_attributes(self):
         """Return the attributes of the device."""
         data = self._coordinator.data[self._station_id]
