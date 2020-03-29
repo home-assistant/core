@@ -188,7 +188,11 @@ class TestComponentHistory(unittest.TestCase):
         """
         zero, four, states = self.record_states()
         hist = history.get_significant_states(
-            self.hass, zero, four, filters=history.Filters()
+            self.hass,
+            zero,
+            four,
+            filters=history.Filters(),
+            significant_changes_only=True,
         )
         assert states == hist
 
@@ -215,6 +219,7 @@ class TestComponentHistory(unittest.TestCase):
             four,
             filters=history.Filters(),
             include_start_time_state=True,
+            significant_changes_only=True,
         )
         assert states == hist
 
@@ -240,6 +245,7 @@ class TestComponentHistory(unittest.TestCase):
             four,
             filters=history.Filters(),
             include_start_time_state=False,
+            significant_changes_only=True,
         )
         assert states == hist
 
@@ -252,7 +258,12 @@ class TestComponentHistory(unittest.TestCase):
         del states["script.can_cancel_this_one"]
 
         hist = history.get_significant_states(
-            self.hass, zero, four, ["media_player.test"], filters=history.Filters()
+            self.hass,
+            zero,
+            four,
+            ["media_player.test"],
+            filters=history.Filters(),
+            significant_changes_only=True,
         )
         assert states == hist
 
@@ -269,6 +280,7 @@ class TestComponentHistory(unittest.TestCase):
             four,
             ["media_player.test", "thermostat.test"],
             filters=history.Filters(),
+            significant_changes_only=True,
         )
         assert states == hist
 
@@ -513,22 +525,29 @@ class TestComponentHistory(unittest.TestCase):
         zero, four, states = self.record_states()
         entity_ids = ["media_player.test", "media_player.test2"]
         hist = history.get_significant_states(
-            self.hass, zero, four, entity_ids, filters=history.Filters()
+            self.hass,
+            zero,
+            four,
+            entity_ids,
+            filters=history.Filters(),
+            significant_changes_only=True,
         )
         assert list(hist.keys()) == entity_ids
         entity_ids = ["media_player.test2", "media_player.test"]
         hist = history.get_significant_states(
-            self.hass, zero, four, entity_ids, filters=history.Filters()
+            self.hass,
+            zero,
+            four,
+            entity_ids,
+            filters=history.Filters(),
+            significant_changes_only=True,
         )
         assert list(hist.keys()) == entity_ids
 
     def test_get_significant_states_only(self):
-        """Test significant states when significant_states_only is set.
-
-        We should get back only some device_tracker test changes where lat and long differs.
-        """
+        """Test significant states when significant_states_only is set."""
         self.init_recorder()
-        entity_id = "device_tracker.test"
+        entity_id = "sensor.test"
 
         def set_state(state, **kwargs):
             """Set the state."""
@@ -545,61 +564,34 @@ class TestComponentHistory(unittest.TestCase):
         with patch(
             "homeassistant.components.recorder.dt_util.utcnow", return_value=start
         ):
-            set_state(
-                "home",
-                attributes={"latitude": 10.64, "longitude": 42.23, "battery_level": 97},
-            )
+            set_state("123", attributes={"attribute": 10.64})
 
         with patch(
             "homeassistant.components.recorder.dt_util.utcnow", return_value=points[0]
         ):
             # Attributes are different, state not
-            states.append(
-                set_state(
-                    "home",
-                    attributes={
-                        "latitude": 10.23,
-                        "longitude": 34.12,
-                        "battery_level": 83,
-                    },
-                )
-            )
+            states.append(set_state("123", attributes={"attribute": 21.42}))
 
         with patch(
             "homeassistant.components.recorder.dt_util.utcnow", return_value=points[1]
         ):
             # state is different, attributes not
-            states.append(
-                set_state(
-                    "not_home",
-                    attributes={
-                        "latitude": 10.23,
-                        "longitude": 34.12,
-                        "battery_level": 83,
-                    },
-                )
-            )
+            states.append(set_state("32", attributes={"attribute": 21.42}))
 
         with patch(
             "homeassistant.components.recorder.dt_util.utcnow", return_value=points[2]
         ):
             # everything is different
-            states.append(
-                set_state(
-                    "home",
-                    attributes={
-                        "latitude": 10.32,
-                        "longitude": 35.73,
-                        "battery_level": 62,
-                    },
-                )
-            )
+            states.append(set_state("412", attributes={"attribute": 54.23}))
 
         hist = history.get_significant_states(
             self.hass, start, significant_changes_only=True
         )
 
         assert len(hist[entity_id]) == 2
+        assert states[0] not in hist[entity_id]
+        assert states[1] in hist[entity_id]
+        assert states[2] in hist[entity_id]
 
         hist = history.get_significant_states(
             self.hass, start, significant_changes_only=False
@@ -620,7 +612,9 @@ class TestComponentHistory(unittest.TestCase):
             filters.included_entities = include.get(history.CONF_ENTITIES, [])
             filters.included_domains = include.get(history.CONF_DOMAINS, [])
 
-        hist = history.get_significant_states(self.hass, zero, four, filters=filters)
+        hist = history.get_significant_states(
+            self.hass, zero, four, filters=filters, significant_changes_only=True
+        )
         assert states == hist
 
     def record_states(self):

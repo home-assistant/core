@@ -39,7 +39,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SIGNIFICANT_DOMAINS = ("thermostat", "climate", "water_heater")
+SIGNIFICANT_DOMAINS = ("climate", "device_tracker", "thermostat", "water_heater")
 IGNORE_DOMAINS = ("zone", "scene")
 
 
@@ -62,14 +62,16 @@ def get_significant_states(
     timer_start = time.perf_counter()
 
     with session_scope(hass=hass) as session:
-        query = session.query(States).filter(
-            (
-                States.domain.in_(SIGNIFICANT_DOMAINS)
-                | (not significant_changes_only and States.domain.is_("device_tracker"))
-                | (States.last_changed == States.last_updated)
+        if significant_changes_only:
+            query = session.query(States).filter(
+                (
+                    States.domain.in_(SIGNIFICANT_DOMAINS)
+                    | (States.last_changed == States.last_updated)
+                )
+                & (States.last_updated > start_time)
             )
-            & (States.last_updated > start_time)
-        )
+        else:
+            query = session.query(States).filter(States.last_updated > start_time)
 
         if filters:
             query = filters.apply(query, entity_ids)
