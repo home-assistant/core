@@ -1,5 +1,7 @@
 """Shared class to maintain Plex server instances."""
 import logging
+import ssl
+from urllib.parse import urlparse
 
 import plexapi.myplex
 import plexapi.playqueue
@@ -26,7 +28,7 @@ from .const import (
     X_PLEX_PRODUCT,
     X_PLEX_VERSION,
 )
-from .errors import NoServersFound, ServerNotSpecified
+from .errors import NoServersFound, ServerNotSpecified, ShouldUpdateConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +42,7 @@ plexapi.X_PLEX_VERSION = X_PLEX_VERSION
 class PlexServer:
     """Manages a single Plex server connection."""
 
-    def __init__(self, hass, server_config, options=None):
+    def __init__(self, hass, server_config, known_server_id=None, options=None):
         """Initialize a Plex server instance."""
         self._hass = hass
         self._plex_server = None
@@ -50,6 +52,7 @@ class PlexServer:
         self._token = server_config.get(CONF_TOKEN)
         self._server_name = server_config.get(CONF_SERVER)
         self._verify_ssl = server_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
+        self._server_id = known_server_id
         self.options = options
         self.server_choice = None
         self._accounts = []
@@ -64,6 +67,7 @@ class PlexServer:
 
     def connect(self):
         """Connect to a Plex server directly, obtaining direct URL if necessary."""
+        config_entry_update_needed = False
 
         def _connect_with_token():
             account = plexapi.myplex.MyPlexAccount(token=self._token)
@@ -92,8 +96,33 @@ class PlexServer:
                 self._url, self._token, session
             )
 
+        def _update_plexdirect_hostname():
+            account = plexapi.myplex.MyPlexAccount(token=self._token)
+            matching_server = [
+                x.name
+                for x in account.resources()
+                if x.clientIdentifier == self._server_id
+            ][0]
+            self._plex_server = account.resource(matching_server).connect(timeout=10)
+
         if self._url:
-            _connect_with_url()
+            try:
+                _connect_with_url()
+            except requests.exceptions.SSLError as error:
+                while error and not isinstance(error, ssl.SSLCertVerificationError):
+                    error = error.__context__  # pylint: disable=no-member
+                if isinstance(error, ssl.SSLCertVerificationError):
+                    domain = urlparse(self._url).netloc.split(":")[0]
+                    if domain.endswith("plex.direct") and error.args[0].startswith(
+                        f"hostname '{domain}' doesn't match"
+                    ):
+                        _LOGGER.warning(
+                            "Plex SSL certificate's hostname changed, updating."
+                        )
+                        _update_plexdirect_hostname()
+                        config_entry_update_needed = True
+                else:
+                    raise
         else:
             _connect_with_token()
 
@@ -112,6 +141,9 @@ class PlexServer:
             self._owner_username = owner_account[0]
 
         self._version = self._plex_server.version
+
+        if config_entry_update_needed:
+            raise ShouldUpdateConfigEntry
 
     def refresh_entity(self, machine_identifier, device, session):
         """Forward refresh dispatch to media_player."""
