@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "protocol": "Protokoll",
+                    "temperature_unit": "Die von ElkM1 verwendete Temperatureinheit."
+                },
+                "title": "Stellen Sie eine Verbindung zur Elk-M1-Steuerung her"
+            }
+        },
+        "title": "Elk-M1-Steuerung"
+    }
+}
