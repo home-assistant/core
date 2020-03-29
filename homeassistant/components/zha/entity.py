@@ -226,7 +226,9 @@ class ZhaGroupEntity(BaseZhaEntity):
     ) -> None:
         """Initialize a light group."""
         super().__init__(unique_id, zha_device, **kwargs)
-        self._name = f"{zha_device.gateway.groups.get(group_id).name}_group_{group_id}"
+        self._name = (
+            f"{zha_device.gateway.groups.get(group_id).name}_zha_group_0x{group_id:04x}"
+        )
         self._group_id: int = group_id
         self._entity_ids: List[str] = entity_ids
         self._async_unsub_state_changed: Optional[CALLBACK_TYPE] = None
@@ -236,29 +238,29 @@ class ZhaGroupEntity(BaseZhaEntity):
         await super().async_added_to_hass()
         await self.async_accept_signal(
             None,
-            f"{SIGNAL_REMOVE_GROUP}_{self._group_id}",
+            f"{SIGNAL_REMOVE_GROUP}_0x{self._group_id:04x}",
             self.async_remove,
             signal_override=True,
         )
 
         await self.async_accept_signal(
             None,
-            f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_{self._group_id}",
+            f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_0x{self._group_id:04x}",
             self._update_group_entities,
             signal_override=True,
         )
 
-        @callback
-        def async_state_changed_listener(
-            entity_id: str, old_state: State, new_state: State
-        ):
-            """Handle child updates."""
-            self.async_schedule_update_ha_state(True)
-
         self._async_unsub_state_changed = async_track_state_change(
-            self.hass, self._entity_ids, async_state_changed_listener
+            self.hass, self._entity_ids, self.async_state_changed_listener
         )
         await self.async_update()
+
+    @callback
+    def async_state_changed_listener(
+        self, entity_id: str, old_state: State, new_state: State
+    ):
+        """Handle child updates."""
+        self.async_schedule_update_ha_state(True)
 
     def _update_group_entities(self):
         """Update tracked entities when membership changes."""
@@ -267,15 +269,8 @@ class ZhaGroupEntity(BaseZhaEntity):
         if self._async_unsub_state_changed is not None:
             self._async_unsub_state_changed()
 
-        @callback
-        def async_state_changed_listener(
-            entity_id: str, old_state: State, new_state: State
-        ):
-            """Handle child updates."""
-            self.async_schedule_update_ha_state(True)
-
         self._async_unsub_state_changed = async_track_state_change(
-            self.hass, self._entity_ids, async_state_changed_listener
+            self.hass, self._entity_ids, self.async_state_changed_listener
         )
 
     async def async_will_remove_from_hass(self) -> None:
