@@ -61,13 +61,6 @@ async def async_get_service(hass, config, discovery_info=None):
 
 
 @callback
-def _async_get_filename_from_url(url):
-    """Return the filename of a passed URL."""
-    parsed_url = urlparse(url)
-    return os.path.basename(parsed_url.path)
-
-
-@callback
 def _async_sanitize_channel_names(channel_list):
     """Remove any # symbols from a channel list."""
     return [channel.replace("#", "") for channel in channel_list]
@@ -96,7 +89,8 @@ class SlackNotificationService(BaseNotificationService):
             _LOGGER.error("Path does not exist or is not allowed: %s", path)
             return
 
-        filename = _async_get_filename_from_url(path)
+        parsed_url = urlparse(path)
+        filename = os.path.basename(parsed_url.path)
 
         try:
             await self._client.files_upload(
