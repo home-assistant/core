@@ -66,8 +66,6 @@ def _create_entities(hass, config_entry):
         zones = controller.list_zones()
         schedules = controller.list_schedules()
         current_schedule = controller.current_schedule
-        _LOGGER.debug("Rachio setting up zones: %s", zones)
-        _LOGGER.debug("Added schedule: %s", schedules)
         for zone in zones:
             _LOGGER.debug("Rachio setting up zone: %s", zone)
             entities.append(RachioZone(person, controller, zone, current_schedule))
