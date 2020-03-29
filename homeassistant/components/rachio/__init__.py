@@ -95,7 +95,11 @@ SUBTYPE_ZONE_CYCLING = "ZONE_CYCLING"
 SUBTYPE_ZONE_CYCLING_COMPLETED = "ZONE_CYCLING_COMPLETED"
 
 # Webhook callbacks
-LISTEN_EVENT_TYPES = ["DEVICE_STATUS_EVENT", "ZONE_STATUS_EVENT", "SCHEDULE_STATUS_EVENT"]
+LISTEN_EVENT_TYPES = [
+    "DEVICE_STATUS_EVENT",
+    "ZONE_STATUS_EVENT",
+    "SCHEDULE_STATUS_EVENT",
+]
 WEBHOOK_CONST_ID = "homeassistant.rachio:"
 WEBHOOK_PATH = URL_API + DOMAIN
 SIGNAL_RACHIO_UPDATE = DOMAIN + "_update"
@@ -297,7 +301,6 @@ class RachioIro:
         for event_type in self.rachio.notification.getWebhookEventType()[1]:
             if event_type[KEY_NAME] in LISTEN_EVENT_TYPES:
                 event_types.append({"id": event_type[KEY_ID]})
-                
 
         # Register to listen to these events from the device
         url = self.rachio.webhook_url
@@ -344,7 +347,7 @@ class RachioIro:
                 return zone
 
         return None
-    
+
     def list_schedules(self) -> list:
         """Return a list of schedules."""
         return self._schedules

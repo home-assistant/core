@@ -278,6 +278,7 @@ class RachioZone(RachioSwitch):
             self.hass, SIGNAL_RACHIO_ZONE_UPDATE, self._handle_update
         )
 
+
 class RachioSchedule(RachioSwitch):
     """Representation of one fixed schedule on the Rachio Iro."""
 
@@ -319,8 +320,11 @@ class RachioSchedule(RachioSwitch):
     @property
     def state_attributes(self) -> dict:
         """Return the optional state attributes."""
-        return {ATTR_SCHEDULE_SUMMARY: self._summary, ATTR_SCHEDULE_ENABLED: self.schedule_is_enabled,
-                ATTR_SCHEDULE_DURATION: self._duration /60}
+        return {
+            ATTR_SCHEDULE_SUMMARY: self._summary,
+            ATTR_SCHEDULE_ENABLED: self.schedule_is_enabled,
+            ATTR_SCHEDULE_DURATION: self._duration / 60,
+        }
 
     @property
     def schedule_is_enabled(self) -> bool:
@@ -329,12 +333,10 @@ class RachioSchedule(RachioSwitch):
 
     def turn_on(self, **kwargs) -> None:
         """Start this schedule."""
-       
+
         self._controller.rachio.schedulerule.start(self.schedule_id)
         _LOGGER.debug(
-            "Schedule %s started on %s",
-            self.name,
-            self._controller.name,
+            "Schedule %s started on %s", self.name, self._controller.name,
         )
 
     def turn_off(self, **kwargs) -> None:
@@ -348,12 +350,15 @@ class RachioSchedule(RachioSwitch):
 
     def _handle_update(self, *args, **kwargs) -> None:
         """Handle incoming webhook schedule data."""
-        #Schedule ID not passed when running indvidual zones, so we catch that error
+        # Schedule ID not passed when running indvidual zones, so we catch that error
         try:
             if args[0][KEY_SCHEDULE_ID] == self.schedule_id:
                 if args[0][KEY_SUBTYPE] in [SUBTYPE_SCHEDULE_STARTED]:
                     self._state = True
-                elif args[0][KEY_SUBTYPE] in [SUBTYPE_SCHEDULE_STOPPED, SUBTYPE_SCHEDULE_COMPLETED]:
+                elif args[0][KEY_SUBTYPE] in [
+                    SUBTYPE_SCHEDULE_STOPPED,
+                    SUBTYPE_SCHEDULE_COMPLETED,
+                ]:
                     self._state = False
         except KeyError:
             pass
@@ -365,4 +370,3 @@ class RachioSchedule(RachioSwitch):
         async_dispatcher_connect(
             self.hass, SIGNAL_RACHIO_SCHEDULE_UPDATE, self._handle_update
         )
-
