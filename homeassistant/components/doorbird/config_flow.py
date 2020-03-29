@@ -90,6 +90,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if macaddress[:6] != DOORBIRD_OUI:
             return self.async_abort(reason="not_doorbird_device")
+        if discovery_info[CONF_HOST].startswith("169.254"):
+            return self.async_abort(reason="link_local_address")
 
         await self.async_set_unique_id(macaddress)
 
