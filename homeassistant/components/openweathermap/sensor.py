@@ -163,8 +163,9 @@ class OpenWeatherMapSensor(Entity):
             elif self.type == "clouds":
                 self._state = data.get_clouds()
             elif self.type == "rain":
-                if data.get_rain():
-                    self._state = round(data.get_rain()["3h"], 0)
+                rain = data.get_rain()
+                if "3h" in rain:
+                    self._state = round(rain["3h"], 0)
                     self._unit_of_measurement = "mm"
                 else:
                     self._state = "not raining"
