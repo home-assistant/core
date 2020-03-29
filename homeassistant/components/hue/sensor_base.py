@@ -129,7 +129,7 @@ class SensorManager:
             if event_config is not None:
                 base_name = api[item_id].name
                 name = event_config["name_format"].format(base_name)
-                new_event = event_config["class"](api[item_id], name, self.bridge,)
+                new_event = event_config["class"](api[item_id], name, self.bridge)
                 self.bridge.hass.async_create_task(
                     new_event.async_update_device_registry()
                 )

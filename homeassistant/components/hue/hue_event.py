@@ -37,18 +37,20 @@ class HueEvent(GenericHueDevice):
         self.bridge.sensor_manager.coordinator.async_add_listener(
             self.async_update_callback
         )
-        self.bridge.reset_jobs.append(
-            self.bridge.sensor_manager.coordinator.async_remove_listener(
-                self.async_update_callback
-            )
-        )
+        self.bridge.reset_jobs.append(self.async_will_remove_from_hass)
         _LOGGER.debug("Hue event created: %s", self.event_id)
+
+    @callback
+    def async_will_remove_from_hass(self):
+        """Remove listener on bridge reset."""
+        self.bridge.sensor_manager.coordinator.async_remove_listener(
+            self.async_update_callback
+        )
 
     @callback
     def async_update_callback(self):
         """Fire the event if reason is that state is updated."""
         if self.sensor.lastupdated == self._last_updated:
-            _LOGGER.debug("%s: Ignoring update", self.event_id)
             return
 
         # Extract the press code as state
