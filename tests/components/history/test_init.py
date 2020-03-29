@@ -522,8 +522,8 @@ class TestComponentHistory(unittest.TestCase):
         )
         assert list(hist.keys()) == entity_ids
 
-    def test_get_last_state_changes_include_location(self):
-        """Test significant states when including location attributes.
+    def test_get_significant_states_only(self):
+        """Test significant states when significant_states_only is set.
 
         We should get back only some device_tracker test changes where lat and long differs.
         """
@@ -536,11 +536,12 @@ class TestComponentHistory(unittest.TestCase):
             wait_recording_done(self.hass)
             return self.hass.states.get(entity_id)
 
-        start = dt_util.utcnow() - timedelta(minutes=6)
+        start = dt_util.utcnow() - timedelta(minutes=4)
         points = []
-        for i in range(1, 6):
+        for i in range(1, 4):
             points.append(start + timedelta(minutes=i))
 
+        states = []
         with patch(
             "homeassistant.components.recorder.dt_util.utcnow", return_value=start
         ):
@@ -549,18 +550,17 @@ class TestComponentHistory(unittest.TestCase):
                 attributes={"latitude": 10.64, "longitude": 42.23, "battery_level": 97},
             )
 
-        states = []
         with patch(
             "homeassistant.components.recorder.dt_util.utcnow", return_value=points[0]
         ):
-            # state differs, location not (this can't happen in reality)
+            # Attributes are different, state not
             states.append(
                 set_state(
-                    "not_home",
+                    "home",
                     attributes={
-                        "latitude": 10.64,
-                        "longitude": 42.23,
-                        "battery_level": 97,
+                        "latitude": 10.23,
+                        "longitude": 34.12,
+                        "battery_level": 83,
                     },
                 )
             )
@@ -568,14 +568,14 @@ class TestComponentHistory(unittest.TestCase):
         with patch(
             "homeassistant.components.recorder.dt_util.utcnow", return_value=points[1]
         ):
-            # location differs, state not (this happens a lot)
+            # state is different, attributes not
             states.append(
                 set_state(
                     "not_home",
                     attributes={
                         "latitude": 10.23,
                         "longitude": 34.12,
-                        "battery_level": 97,
+                        "battery_level": 83,
                     },
                 )
             )
@@ -583,57 +583,30 @@ class TestComponentHistory(unittest.TestCase):
         with patch(
             "homeassistant.components.recorder.dt_util.utcnow", return_value=points[2]
         ):
-            # same as before, but battery has changed
-            states.append(
-                set_state(
-                    "not_home",
-                    attributes={
-                        "latitude": 10.23,
-                        "longitude": 34.12,
-                        "battery_level": 34,
-                    },
-                )
-            )
-
-        with patch(
-            "homeassistant.components.recorder.dt_util.utcnow", return_value=points[3]
-        ):
-            # everything differs
+            # everything is different
             states.append(
                 set_state(
                     "home",
                     attributes={
-                        "latitude": 11.42,
-                        "longitude": 42.43,
-                        "battery_level": 26,
-                    },
-                )
-            )
-
-        with patch(
-            "homeassistant.components.recorder.dt_util.utcnow", return_value=points[4]
-        ):
-            # nothing differs
-            states.append(
-                set_state(
-                    "home",
-                    attributes={
-                        "latitude": 11.42,
-                        "longitude": 42.43,
-                        "battery_level": 26,
+                        "latitude": 10.32,
+                        "longitude": 35.73,
+                        "battery_level": 62,
                     },
                 )
             )
 
         hist = history.get_significant_states(
-            self.hass, start, points[-1], significant_changes_only=True
+            self.hass, start, significant_changes_only=True
+        )
+
+        assert len(hist[entity_id]) == 2
+
+        hist = history.get_significant_states(
+            self.hass, start, significant_changes_only=False
         )
 
         assert len(hist[entity_id]) == 3
-        assert states[0] in hist[entity_id]
-        assert states[1] in hist[entity_id]
-        assert states[3] in hist[entity_id]
-        # we know that states[2] and states[4] is not in hist, since we've tested the length of hist
+        assert states == hist[entity_id]
 
     def check_significant_states(self, zero, four, states, config):
         """Check if significant states are retrieved."""

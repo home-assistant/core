@@ -14,8 +14,6 @@ from homeassistant.components.recorder.models import States
 from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.const import (
     ATTR_HIDDEN,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_DOMAINS,
     CONF_ENTITIES,
     CONF_EXCLUDE,
@@ -67,7 +65,7 @@ def get_significant_states(
         query = session.query(States).filter(
             (
                 States.domain.in_(SIGNIFICANT_DOMAINS)
-                | (significant_changes_only and States.domain.is_("device_tracker"))
+                | (not significant_changes_only and States.domain.is_("device_tracker"))
                 | (States.last_changed == States.last_updated)
             )
             & (States.last_updated > start_time)
@@ -81,17 +79,11 @@ def get_significant_states(
 
         query = query.order_by(States.last_updated)
 
-        states = []
-        for state in execute(query):
-            last_state = states[-1] if len(states) > 0 else None
-            if (
-                _is_significant(state)
-                and (
-                    not significant_changes_only or _location_differs(state, last_state)
-                )
-                and not state.attributes.get(ATTR_HIDDEN, False)
-            ):
-                states.append(state)
+        states = (
+            state
+            for state in execute(query)
+            if (_is_significant(state) and not state.attributes.get(ATTR_HIDDEN, False))
+        )
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
         elapsed = time.perf_counter() - timer_start
@@ -443,22 +435,3 @@ def _is_significant(state):
     """
     # scripts that are not cancellable will never change state
     return state.domain != "script" or state.attributes.get("can_cancel")
-
-
-def _location_differs(state, other):
-    """Test if two states differ in lat, long attributes.
-
-    Returns False if both states are not None and lat/long are not None and equal.
-    """
-    if state is None or other is None:
-        return True
-
-    lat1 = state.attributes.get(ATTR_LATITUDE)
-    long1 = state.attributes.get(ATTR_LONGITUDE)
-    lat2 = other.attributes.get(ATTR_LATITUDE)
-    long2 = other.attributes.get(ATTR_LONGITUDE)
-
-    state_is_different = state.state != other.state
-    lat_is_none_or_different = lat1 is None or lat1 != lat2
-    long_is_none_or_different = long1 is None or long1 != long2
-    return state_is_different or lat_is_none_or_different or long_is_none_or_different
