@@ -52,6 +52,7 @@ from .const import (
     DEFAULT_DATABASE_NAME,
     DOMAIN,
     SIGNAL_ADD_ENTITIES,
+    SIGNAL_GROUP_MEMBERSHIP_CHANGE,
     SIGNAL_REMOVE,
     SIGNAL_REMOVE_GROUP,
     UNKNOWN_MANUFACTURER,
@@ -256,6 +257,9 @@ class ZHAGateway:
         zha_group = self._async_get_or_create_group(zigpy_group)
         zha_group.info("group_member_removed - endpoint: %s", endpoint)
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_MEMBER_REMOVED)
+        async_dispatcher_send(
+            self._hass, f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_{zigpy_group.group_id}"
+        )
 
     def group_member_added(
         self, zigpy_group: ZigpyGroupType, endpoint: ZigpyEndpointType
@@ -265,6 +269,9 @@ class ZHAGateway:
         zha_group = self._async_get_or_create_group(zigpy_group)
         zha_group.info("group_member_added - endpoint: %s", endpoint)
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_MEMBER_ADDED)
+        async_dispatcher_send(
+            self._hass, f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_{zigpy_group.group_id}"
+        )
 
     def group_added(self, zigpy_group: ZigpyGroupType) -> None:
         """Handle zigpy group added event."""
