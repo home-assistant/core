@@ -2,6 +2,7 @@
 from collections import namedtuple
 from datetime import timedelta
 import logging
+import re
 
 from getmac import get_mac_address
 from nmap import PortScanner, PortScannerError
@@ -23,6 +24,8 @@ CONF_EXCLUDE = "exclude"
 CONF_HOME_INTERVAL = "home_interval"
 CONF_OPTIONS = "scan_options"
 DEFAULT_OPTIONS = "-F --host-timeout 5s"
+CONF_ARP_FILE = "arp_file"
+DEFAULT_ARP_FILE = "/host/arp"
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -31,6 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_HOME_INTERVAL, default=0): cv.positive_int,
         vol.Optional(CONF_EXCLUDE, default=[]): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_OPTIONS, default=DEFAULT_OPTIONS): cv.string,
+        vol.Optional(CONF_ARP_FILE, default=DEFAULT_ARP_FILE): cv.string,
     }
 )
 
@@ -41,6 +45,8 @@ def get_scanner(hass, config):
 
 
 Device = namedtuple("Device", ["mac", "name", "ip", "last_update"])
+
+MAC_RE_COLON = r"([0-9a-fA-F]{2}(?::[0-9a-fA-F]{2}){5})"
 
 
 class NmapDeviceScanner(DeviceScanner):
@@ -57,6 +63,7 @@ class NmapDeviceScanner(DeviceScanner):
         minutes = config[CONF_HOME_INTERVAL]
         self._options = config[CONF_OPTIONS]
         self.home_interval = timedelta(minutes=minutes)
+        self._arp_file = config[CONF_ARP_FILE]
 
         _LOGGER.debug("Scanner initialized")
 
@@ -84,6 +91,30 @@ class NmapDeviceScanner(DeviceScanner):
             (result.ip for result in self.last_results if result.mac == device), None
         )
         return {"ip": filter_ip}
+
+    def _search(self, regex, text, group_index=0):
+        match = re.search(regex, text)
+        if match:
+            return match.groups()[group_index]
+        return None
+
+    def _read_file(self, filepath):
+        """Return content of given file."""
+        try:
+            with open(filepath) as f:
+                return f.read()
+        except (OSError, IOError):  # This is IOError on Python 2.7
+            _LOGGER.debug("Could not find file: '%s'", filepath)
+            return None
+
+    def _read_arp_file(self, host):
+        """Return the MAC for given IP."""
+        data = self._read_file(self._arp_file)
+        if data is not None and len(data) > 1:
+            # Need a space, otherwise a search for 192.168.16.2
+            # will match 192.168.16.254 if it comes first!
+            return self._search(re.escape(host) + r" .+" + MAC_RE_COLON, data)
+        return None
 
     def _update_info(self):
         """Scan the network for devices.
@@ -122,7 +153,11 @@ class NmapDeviceScanner(DeviceScanner):
                 continue
             name = info["hostnames"][0]["name"] if info["hostnames"] else ipv4
             # Mac address only returned if nmap ran as root
-            mac = info["addresses"].get("mac") or get_mac_address(ip=ipv4)
+            mac = (
+                info["addresses"].get("mac")
+                or get_mac_address(ip=ipv4)
+                or self._read_arp_file(ipv4)
+            )
             if mac is None:
                 _LOGGER.info("No MAC address found for %s", ipv4)
                 continue
