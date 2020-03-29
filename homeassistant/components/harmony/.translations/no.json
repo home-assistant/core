@@ -11,7 +11,7 @@
         "flow_title": "Logitech Harmony Hub {name}",
         "step": {
             "link": {
-                "description": "Vil du konfigurere {name} ( {host} )?",
+                "description": "Vil du konfigurere {name} ({host})?",
                 "title": "Oppsett Logitech Harmony Hub"
             },
             "user": {

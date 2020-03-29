@@ -11,7 +11,7 @@
                 "data": {
                     "device": "Bane eller URL-adresse",
                     "floor_temperature": "Gulv klimatemperatur",
-                    "id": "ID",
+                    "id": "",
                     "name": "Navn",
                     "precision": "Klima temperaturpresisjon"
                 },
