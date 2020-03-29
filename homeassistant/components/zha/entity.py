@@ -226,7 +226,9 @@ class ZhaGroupEntity(BaseZhaEntity):
     ) -> None:
         """Initialize a light group."""
         super().__init__(unique_id, zha_device, **kwargs)
-        self._name = f"{zha_device.gateway.groups.get(group_id).name}_group_{group_id}"
+        self._name = (
+            f"{zha_device.gateway.groups.get(group_id).name}_zha_group_0x{group_id:04x}"
+        )
         self._group_id: int = group_id
         self._entity_ids: List[str] = entity_ids
         self._async_unsub_state_changed: Optional[CALLBACK_TYPE] = None
@@ -236,14 +238,14 @@ class ZhaGroupEntity(BaseZhaEntity):
         await super().async_added_to_hass()
         await self.async_accept_signal(
             None,
-            f"{SIGNAL_REMOVE_GROUP}_{self._group_id}",
+            f"{SIGNAL_REMOVE_GROUP}_0x{self._group_id:04x}",
             self.async_remove,
             signal_override=True,
         )
 
         await self.async_accept_signal(
             None,
-            f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_{self._group_id}",
+            f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_0x{self._group_id:04x}",
             self._update_group_entities,
             signal_override=True,
         )

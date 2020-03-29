@@ -198,7 +198,7 @@ class GroupProbe:
                     entity_class,
                     (
                         group.get_domain_entity_ids(domain),
-                        f"{domain}_group_{group.group_id}",
+                        f"{domain}_zha_group_0x{group.group_id:04x}",
                         group.group_id,
                         zha_gateway.coordinator_zha_device,
                     ),
