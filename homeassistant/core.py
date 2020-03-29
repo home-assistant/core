@@ -429,7 +429,6 @@ class HomeAssistant:
 
         # stage 2
         self.state = CoreState.writing_data
-        self.async_track_tasks()
         self.bus.async_fire(EVENT_HOMEASSISTANT_WRITE_DATA)
         await self.async_block_till_done()
 
