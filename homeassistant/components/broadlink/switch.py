@@ -89,7 +89,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Broadlink switches."""
-
     devices = config.get(CONF_SWITCHES)
     slots = config.get("slots", {})
     ip_addr = config.get(CONF_HOST)
@@ -433,17 +432,16 @@ class BroadlinkBG1Slot(BroadlinkRMSwitch):
 
     def _turn_on_off(self, state):
         if self._slot == 1:
-            r = self._device.set_state(pwr1=int(state))
+            res = self._device.set_state(pwr1=int(state))
         else:
-            r = self._device.set_state(pwr2=int(state))
-        if r:
-            _LOGGER.debug("Setting device state: " + str(r))
+            res = self._device.set_state(pwr2=int(state))
+        if res:
+            _LOGGER.debug("Setting device state: %s", res)
             self._state = int(state)
             self._parent_device.set_outlet_status(self._slot, int(state))
             self.schedule_update_ha_state()
         else:
-            _LOGGER.warn("No response from switch")
-
+            _LOGGER.warning("No response from switch")
 
     def _sendpacket(self, packet, retry):
         """Send packet to device."""
@@ -467,8 +465,8 @@ class BroadlinkBG1Slot(BroadlinkRMSwitch):
 
     @property
     def slot(self):
+        """Return the slot."""
         return self._slot
-
 
     def update(self):
         """Trigger update for all switches on the parent device."""
@@ -519,7 +517,7 @@ class BroadlinkBG1Switch:
                 }
                 _LOGGER.debug(states)
         except (socket.timeout, ValueError) as error:
-            _LOGGER.debug(f"Polling timeout, trying again: {retry}")
+            _LOGGER.debug("Polling timeout, trying again: %s", retry)
             if retry < 1:
                 _LOGGER.error("Error during updating the state: %s", error)
                 self._states = None
