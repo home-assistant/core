@@ -53,8 +53,8 @@ from .const import (
     SERVICE_SET_DRY_OFF,
     SERVICE_SET_DRY_ON,
     SERVICE_SET_EXTRA_FEATURES,
-    SERVICE_SET_FAVORITE_LEVEL,
     SERVICE_SET_FAN_LEVEL,
+    SERVICE_SET_FAVORITE_LEVEL,
     SERVICE_SET_LEARN_MODE_OFF,
     SERVICE_SET_LEARN_MODE_ON,
     SERVICE_SET_LED_BRIGHTNESS,
@@ -945,6 +945,8 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
 
 
 class XiaomiAirPurifierMiot(XiaomiAirPurifier):
+    """Representation of a Xiaomi Air Purifier (MiOT protocol)."""
+
     @property
     def speed(self):
         """Return the current speed."""
