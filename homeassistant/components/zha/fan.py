@@ -1,7 +1,7 @@
 """Fans on Zigbee Home Automation networks."""
 import functools
 import logging
-from typing import List, Optional
+from typing import List
 
 from zigpy.exceptions import DeliveryError
 import zigpy.zcl.clusters.hvac as hvac
@@ -16,9 +16,8 @@ from homeassistant.components.fan import (
     FanEntity,
 )
 from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.core import CALLBACK_TYPE, State, callback
+from homeassistant.core import State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.event import async_track_state_change
 
 from .core import discovery
 from .core.const import (
@@ -27,10 +26,9 @@ from .core.const import (
     DATA_ZHA_DISPATCHERS,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
-    SIGNAL_REMOVE_GROUP,
 )
 from .core.registries import ZHA_ENTITIES
-from .entity import BaseZhaEntity, ZhaEntity
+from .entity import ZhaEntity, ZhaGroupEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,7 +71,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
 
-class BaseFan(BaseZhaEntity, FanEntity):
+class BaseFan(FanEntity):
     """Base representation of a ZHA fan."""
 
     def __init__(self, *args, **kwargs):
@@ -120,9 +118,14 @@ class BaseFan(BaseZhaEntity, FanEntity):
         await self._fan_channel.async_set_speed(SPEED_TO_VALUE[speed])
         self.async_set_state(0, "fan_mode", speed)
 
+    @callback
+    def async_set_state(self, attr_id, attr_name, value):
+        """Handle state update from channel."""
+        pass
+
 
 @STRICT_MATCH(channel_names=CHANNEL_FAN)
-class ZhaFan(ZhaEntity, BaseFan):
+class ZhaFan(BaseFan, ZhaEntity):
     """Representation of a ZHA fan."""
 
     def __init__(self, unique_id, zha_device, channels, **kwargs):
@@ -158,19 +161,15 @@ class ZhaFan(ZhaEntity, BaseFan):
 
 
 @GROUP_MATCH()
-class FanGroup(BaseFan):
+class FanGroup(BaseFan, ZhaGroupEntity):
     """Representation of a fan group."""
 
     def __init__(
         self, entity_ids: List[str], unique_id: str, group_id: int, zha_device, **kwargs
     ) -> None:
         """Initialize a fan group."""
-        super().__init__(unique_id, zha_device, **kwargs)
-        self._name: str = f"{zha_device.gateway.groups.get(group_id).name}_group_{group_id}"
-        self._group_id: int = group_id
+        super().__init__(entity_ids, unique_id, group_id, zha_device, **kwargs)
         self._available: bool = False
-        self._entity_ids: List[str] = entity_ids
-        self._async_unsub_state_changed: Optional[CALLBACK_TYPE] = None
         group = self.zha_device.gateway.get_group(self._group_id)
         self._fan_channel = group.endpoint[hvac.Fan.cluster_id]
 
@@ -184,35 +183,6 @@ class FanGroup(BaseFan):
                 return
 
         self._fan_channel.async_set_speed = async_set_speed
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        await super().async_added_to_hass()
-        await self.async_accept_signal(
-            None,
-            f"{SIGNAL_REMOVE_GROUP}_{self._group_id}",
-            self.async_remove,
-            signal_override=True,
-        )
-
-        @callback
-        def async_state_changed_listener(
-            entity_id: str, old_state: State, new_state: State
-        ):
-            """Handle child updates."""
-            self.async_schedule_update_ha_state(True)
-
-        self._async_unsub_state_changed = async_track_state_change(
-            self.hass, self._entity_ids, async_state_changed_listener
-        )
-        await self.async_update()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Handle removal from Home Assistant."""
-        await super().async_will_remove_from_hass()
-        if self._async_unsub_state_changed is not None:
-            self._async_unsub_state_changed()
-            self._async_unsub_state_changed = None
 
     async def async_update(self):
         """Attempt to retrieve on off state from the fan."""
