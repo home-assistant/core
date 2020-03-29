@@ -120,7 +120,6 @@ class FuelPriceSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the attributes of the device."""
-
         data = self._coordinator.data[self._station_id]
 
         attrs = {
