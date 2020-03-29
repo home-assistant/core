@@ -114,7 +114,7 @@ class FuelPriceSensor(Entity):
 
     @property
     def unique_id(self) -> str:
-        """Return a unique, friendly identifier for this entity."""
+        """Return a unique identifier for this entity."""
         return f"{self._station_id}_{self._fuel_type}"
 
     @property
