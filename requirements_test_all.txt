@@ -204,9 +204,6 @@ elkm1-lib==0.7.17
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1
 
-# homeassistant.components.entur_public_transport
-enturclient==0.2.1
-
 # homeassistant.components.season
 ephem==3.7.7.0
 
