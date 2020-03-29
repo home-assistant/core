@@ -142,8 +142,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         broadlink_device = broadlink.bg1((ip_addr, 80), mac_addr, None)
         switches = []
         parent_device = BroadlinkBG1Switch(broadlink_device, retry_times)
-        switches.append(BroadlinkBG1Slot(friendly_name + " left", broadlink_device, 1, parent_device, retry_times))
-        switches.append(BroadlinkBG1Slot(friendly_name + " right", broadlink_device, 2, parent_device, retry_times))
+        switches.append(
+            BroadlinkBG1Slot(
+                friendly_name + " left", broadlink_device, 1, parent_device, retry_times
+            )
+        )
+        switches.append(
+            BroadlinkBG1Slot(
+                friendly_name + " right",
+                broadlink_device,
+                2,
+                parent_device,
+                retry_times,
+            )
+        )
 
     broadlink_device.timeout = config.get(CONF_TIMEOUT)
     try:
@@ -508,13 +520,9 @@ class BroadlinkBG1Switch:
         """Update the state of the device."""
         states = None
         try:
-            # states = self._device.check_power()
             resp = self._device.get_state()
             if resp is not None:
-                states = {
-                    "s1": resp["pwr1"],  # Left
-                    "s2": resp["pwr2"]   # Right
-                }
+                states = {"s1": resp["pwr1"], "s2": resp["pwr2"]}  # Left  # Right
                 _LOGGER.debug(states)
         except (socket.timeout, ValueError) as error:
             _LOGGER.debug("Polling timeout, trying again: %s", retry)
