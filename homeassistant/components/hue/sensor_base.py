@@ -39,13 +39,7 @@ class SensorManager:
         self._component_add_entities = {}
         self.current = {}
 
-        self._enabled_platforms = []
-        if self.bridge.add_remotes:
-            self._enabled_platforms.append("remote")
-        if self.bridge.add_sensors:
-            self._enabled_platforms.append("binary_sensor")
-            self._enabled_platforms.append("sensor")
-
+        self._enabled_platforms = ("binary_sensor", "sensor")
         self.coordinator = DataUpdateCoordinator(
             bridge.hass,
             _LOGGER,
