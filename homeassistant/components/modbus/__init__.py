@@ -25,7 +25,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-from .const import (  # DEFAULT_HUB,
+from .const import (
     ATTR_ADDRESS,
     ATTR_HUB,
     ATTR_UNIT,
@@ -34,15 +34,11 @@ from .const import (  # DEFAULT_HUB,
     CONF_BYTESIZE,
     CONF_PARITY,
     CONF_STOPBITS,
+    DEFAULT_HUB,
     MODBUS_DOMAIN,
     SERVICE_WRITE_COIL,
     SERVICE_WRITE_REGISTER,
 )
-
-# Kept for compatibility with other integrations, TO BE REMOVED
-CONF_HUB = "hub"
-DEFAULT_HUB = "default"
-DOMAIN = MODBUS_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
