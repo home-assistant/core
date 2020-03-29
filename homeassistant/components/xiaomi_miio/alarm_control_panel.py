@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-REQUIREMENTS = ["python-miio==0.4.8"]
+REQUIREMENTS = ["python-miio==0.5.0"]
 
 ATTR_MODEL = "model"
 ATTR_FIRMWARE_VERSION = "firmware_version"
