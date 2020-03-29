@@ -731,11 +731,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         for key, value in self.io_cfg.items():
             if value == CONF_IO_SWI:
                 self.active_cfg = key
-                self.current_states = list(
+                self.current_states = [
                     cfg
                     for cfg in self.current_opt.get(CONF_SWITCHES, [])
                     if cfg[CONF_ZONE] == self.active_cfg
-                )
+                ]
                 current_cfg = next(iter(self.current_states), {})
                 self.current_state = 1
                 return self.async_show_form(
