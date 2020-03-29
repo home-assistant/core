@@ -50,7 +50,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     await coordinator.async_refresh()
 
     stations = discovery_info.values()
-    show = tankerkoenig.show_on_map
     entities = []
     for station in stations:
         for fuel in tankerkoenig.fuel_types:
