@@ -234,7 +234,7 @@ class AtaDeviceClimate(MelCloudClimate):
         """Set horizontal vane position."""
         if position not in self._device.vane_horizontal_positions:
             raise ValueError(
-                f"Unsupported horizontal vane position {position}. Check the available modes from state attributes."
+                f"Invalid horizontal vane position {position}. Valid positions: [{self._device.vane_horizontal_positions}]."
             )
         await self._device.set({ata.PROPERTY_VANE_HORIZONTAL: position})
 
@@ -242,7 +242,7 @@ class AtaDeviceClimate(MelCloudClimate):
         """Set vertical vane position."""
         if position not in self._device.vane_vertical_positions:
             raise ValueError(
-                f"Unsupported vertical vane position {position}. Check the available modes from state attributes."
+                f"Invalid vertical vane position {position}. Valid positions: [{self._device.vane_vertical_positions}]."
             )
         await self._device.set({ata.PROPERTY_VANE_VERTICAL: position})
 
