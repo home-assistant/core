@@ -283,8 +283,8 @@ class MiroboVacuum(StateVacuumDevice):
             speed = self.vacuum_state.fanspeed
             if speed in self._fan_speeds_reverse:
                 return self._fan_speeds_reverse[speed]
-            else:
-                _LOGGER.debug("Unable to find reverse for %s", speed)
+
+            _LOGGER.debug("Unable to find reverse for %s", speed)
 
             return speed
 
