@@ -14,6 +14,7 @@ from .const import DOMAIN as HUE_DOMAIN, REQUEST_REFRESH_DELAY
 from .helpers import remove_devices
 
 SENSOR_CONFIG_MAP = {}
+EVENT_CONFIG_MAP = {}
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -121,11 +122,20 @@ class SensorManager:
             if existing is not None:
                 continue
 
-            sensor_config = SENSOR_CONFIG_MAP.get(api[item_id].type)
-            if (
-                sensor_config is None
-                or sensor_config["platform"] not in self._enabled_platforms
-            ):
+            sensor_type = api[item_id].type
+
+            # Check for event generator devices
+            event_config = EVENT_CONFIG_MAP.get(sensor_type)
+            if event_config is not None:
+                base_name = api[item_id].name
+                name = event_config["name_format"].format(base_name)
+                new_event = event_config["class"](api[item_id], name, self.bridge,)
+                self.bridge.hass.async_create_task(
+                    new_event.async_update_device_registry()
+                )
+
+            sensor_config = SENSOR_CONFIG_MAP.get(sensor_type)
+            if sensor_config is None:
                 continue
 
             base_name = api[item_id].name
