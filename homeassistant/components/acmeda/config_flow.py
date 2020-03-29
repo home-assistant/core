@@ -6,7 +6,7 @@ import aiopulse
 import async_timeout
 import voluptuous as vol
 
-from homeassistant import config_entries, core
+from homeassistant import config_entries
 
 from .const import DOMAIN, LOGGER  # pylint: disable=unused-import
 from .errors import AuthenticationRequired, CannotConnect
@@ -27,11 +27,6 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         # This is for backwards compatibility.
         return await self.async_step_init(user_input)
-
-    @core.callback
-    def _async_get_hub(self, host: str, hub_id: Optional[str] = None):
-        """Return a hub object."""
-        return aiopulse.Hub(host)
 
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
@@ -66,10 +61,10 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not hubs:
             return self.async_abort(reason="all_configured")
 
-        # if len(hubs) == 1:
-        #    self.hub = hubs[0]
-        #    await self.async_set_unique_id(self.hub.id, raise_on_progress=False)
-        #    return await self.async_step_link()
+        if len(hubs) == 1:
+            self.hub = hubs[0]
+            await self.async_set_unique_id(self.hub.id, raise_on_progress=False)
+            return await self.async_step_link()
 
         self.discovered_hubs = {hub.id: hub for hub in hubs}
 
@@ -82,16 +77,11 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_link(self, user_input=None):
         """Attempt to link with the Acmeda Hub."""
-        if user_input is None:
-            return self.async_show_form(step_id="link")
-
         hub = self.hub
         assert hub is not None
         errors = {}
 
         try:
-            # await connect_hub(self.hass, hub)
-
             # Can happen if we come from import.
             if self.unique_id is None:
                 await self.async_set_unique_id(hub.id, raise_on_progress=False)
@@ -128,5 +118,5 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ):
             return self.async_abort(reason="already_configured")
 
-        self.hub = self._async_get_hub(import_info["host"])
+        self.hub = aiopulse.Hub(import_info["host"])
         return await self.async_step_link()

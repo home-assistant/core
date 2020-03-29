@@ -199,7 +199,7 @@ aionotify==0.2.0
 aionotion==1.1.0
 
 # homeassistant.components.acmeda
-aiopulse==0.2.1
+aiopulse==0.2.3
 
 # homeassistant.components.hunterdouglas_powerview
 aiopvapi==1.6.14
