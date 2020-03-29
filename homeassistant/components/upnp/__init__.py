@@ -129,8 +129,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     hass.data[DOMAIN] = {
         "config": conf,
         "devices": {},
-        "local_ip": config.get(CONF_LOCAL_IP, local_ip),
-        "ports": conf.get("ports", {}),
+        "local_ip": conf.get(CONF_LOCAL_IP, local_ip),
+        "ports": conf.get(CONF_PORTS, {}),
     }
 
     if conf is not None:
@@ -183,8 +183,8 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     # set up port mapping
     if conf.get(CONF_ENABLE_PORT_MAPPING):
         _LOGGER.debug("Enabling port mapping")
-        local_ip = domain_data["local_ip"]
-        ports = conf.get("ports", {})
+        local_ip = domain_data[CONF_LOCAL_IP]
+        ports = conf.get(CONF_PORTS, {})
 
         hass_port = None
         if hasattr(hass, "http"):

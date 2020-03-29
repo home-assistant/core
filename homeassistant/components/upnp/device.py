@@ -1,6 +1,7 @@
 """Home Assistant representation of an UPnP/IGD."""
 import asyncio
 from ipaddress import IPv4Address
+from typing import Mapping
 
 import aiohttp
 from async_upnp_client import UpnpError, UpnpFactory
@@ -27,7 +28,7 @@ class Device:
 
     def __init__(self, igd_device):
         """Initialize UPnP/IGD device."""
-        self._igd_device = igd_device
+        self._igd_device = igd_device  # type: IgdDevice
         self._mapped_ports = []
 
     @classmethod
@@ -70,30 +71,32 @@ class Device:
         return cls(igd_device)
 
     @property
-    def udn(self):
+    def udn(self) -> str:
         """Get the UDN."""
         return self._igd_device.udn
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Get the name."""
         return self._igd_device.name
 
     @property
-    def manufacturer(self):
+    def manufacturer(self) -> str:
         """Get the manufacturer."""
         return self._igd_device.manufacturer
 
     @property
-    def model_name(self):
+    def model_name(self) -> str:
         """Get the model name."""
         return self._igd_device.model_name
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Get string representation."""
         return "IGD Device: %s/%s" % (self.name, self.udn)
 
-    async def async_add_port_mappings(self, ports, local_ip):
+    async def async_add_port_mappings(
+        self, ports: Mapping[int, int], local_ip: str
+    ) -> None:
         """Add port mappings."""
         if local_ip == "127.0.0.1":
             _LOGGER.error("Could not create port mapping, our IP is 127.0.0.1")
@@ -106,7 +109,9 @@ class Device:
             await self._async_add_port_mapping(external_port, local_ip, internal_port)
             self._mapped_ports.append(external_port)
 
-    async def _async_add_port_mapping(self, external_port, local_ip, internal_port):
+    async def _async_add_port_mapping(
+        self, external_port: int, local_ip: str, internal_port: int
+    ) -> None:
         """Add a port mapping."""
         # create port mapping
         _LOGGER.info(
@@ -136,12 +141,12 @@ class Device:
                 internal_port,
             )
 
-    async def async_delete_port_mappings(self):
+    async def async_delete_port_mappings(self) -> None:
         """Remove port mappings."""
         for port in self._mapped_ports:
             await self._async_delete_port_mapping(port)
 
-    async def _async_delete_port_mapping(self, external_port):
+    async def _async_delete_port_mapping(self, external_port: int) -> None:
         """Remove a port mapping."""
         _LOGGER.info("Deleting port mapping %s (TCP)", external_port)
         try:
@@ -153,7 +158,7 @@ class Device:
         except (asyncio.TimeoutError, aiohttp.ClientError, UpnpError):
             _LOGGER.error("Could not delete port mapping")
 
-    async def async_get_traffic_data(self):
+    async def async_get_traffic_data(self) -> Mapping[str, Mapping[str, any]]:
         """
         Get all traffic data in one go.
 
@@ -176,8 +181,8 @@ class Device:
         )
 
         return {
-            BYTES_RECEIVED: {"value": values[0], "timestamp": dt_util.utcnow(),},
-            BYTES_SENT: {"value": values[1], "timestamp": dt_util.utcnow(),},
-            PACKETS_RECEIVED: {"value": values[2], "timestamp": dt_util.utcnow(),},
-            PACKETS_SENT: {"value": values[3], "timestamp": dt_util.utcnow(),},
+            BYTES_RECEIVED: {"value": values[0], "timestamp": dt_util.utcnow()},
+            BYTES_SENT: {"value": values[1], "timestamp": dt_util.utcnow()},
+            PACKETS_RECEIVED: {"value": values[2], "timestamp": dt_util.utcnow()},
+            PACKETS_SENT: {"value": values[3], "timestamp": dt_util.utcnow()},
         }

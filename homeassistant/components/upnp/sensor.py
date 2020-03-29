@@ -142,7 +142,7 @@ class UpnpSensor(Entity):
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
-        return self.name.replace(" ", "_")
+        return f"{self._device.name}_{self._device.udn}_{self._sensor_type['name']}"
 
     @property
     def unit_of_measurement(self) -> str:
@@ -150,7 +150,7 @@ class UpnpSensor(Entity):
         return self._sensor_type["unit"]
 
     @property
-    def device_info(self) -> Mapping:
+    def device_info(self) -> Mapping[str, any]:
         """Get device info."""
         return {
             "connections": {(dr.CONNECTION_UPNP, self._device.udn)},
@@ -206,6 +206,11 @@ class DerivedUpnpSensor(UpnpSensor):
     def name(self) -> str:
         """Return the name of the sensor."""
         return f"{self._device.name} {self._sensor_type['derived_name']}"
+
+    @property
+    def unique_id(self) -> str:
+        """Return an unique ID."""
+        return f"{self._device.name}_{self._device.udn}_{self._sensor_type['derived_name']}"
 
     @property
     def unit_of_measurement(self) -> str:
