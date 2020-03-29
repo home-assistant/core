@@ -50,8 +50,9 @@ RM_TYPES = [
 SP1_TYPES = ["sp1"]
 SP2_TYPES = ["sp2", "honeywell_sp2", "sp3", "spmini2", "spminiplus"]
 MP1_TYPES = ["mp1"]
+BG1_TYPES = ["bg1"]
 
-SWITCH_TYPES = RM_TYPES + SP1_TYPES + SP2_TYPES + MP1_TYPES
+SWITCH_TYPES = RM_TYPES + SP1_TYPES + SP2_TYPES + MP1_TYPES + BG1_TYPES
 
 SWITCH_SCHEMA = vol.Schema(
     {
@@ -138,6 +139,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 retry_times,
             )
             switches.append(slot)
+    elif switch_type in BG1_TYPES:
+        broadlink_device = broadlink.bg1((ip_addr, 80), mac_addr, None)
+        switches = []
+        parent_device = BroadlinkBG1Switch(broadlink_device, retry_times)
+        switches.append(BroadlinkBG1Slot(friendly_name + " left", broadlink_device, 1, parent_device, retry_times))
+        switches.append(BroadlinkBG1Slot(friendly_name + " right", broadlink_device, 2, parent_device, retry_times))
 
     broadlink_device.timeout = config.get(CONF_TIMEOUT)
     try:
@@ -383,6 +390,143 @@ class BroadlinkMP1Switch:
                 _LOGGER.error("Error during updating the state: %s", error)
                 return
             if not self._auth(self._retry_times):
+                return
+            return self._update(max(0, retry - 1))
+        if states is None and retry > 0:
+            return self._update(max(0, retry - 1))
+        self._states = states
+
+    def _auth(self, retry):
+        """Authenticate the device."""
+        try:
+            auth = self._device.auth()
+        except OSError:
+            auth = False
+        if not auth and retry > 0:
+            return self._auth(retry - 1)
+        return auth
+
+
+class BroadlinkBG1Slot(BroadlinkRMSwitch):
+    """Representation of a slot of Broadlink switch."""
+
+    def __init__(self, friendly_name, device, slot, parent_device, retry_times):
+        """Initialize the slot of switch."""
+        super().__init__(friendly_name, friendly_name, device, None, None, retry_times)
+        self._command_on = 1
+        self._command_off = 0
+        self._slot = slot
+        self._parent_device = parent_device
+
+    @property
+    def assumed_state(self):
+        """Return true if unable to access real state of entity."""
+        return False
+
+    def turn_on(self, **kwargs):
+        """Turn the device on."""
+        self._turn_on_off(True)
+
+    def turn_off(self, **kwargs):
+        """Turn the device off."""
+        self._turn_on_off(False)
+
+    def _turn_on_off(self, state):
+        if self._slot == 1:
+            r = self._device.set_state(pwr1=int(state))
+        else:
+            r = self._device.set_state(pwr2=int(state))
+        if r:
+            _LOGGER.debug("Setting device state: " + str(r))
+            self._state = int(state)
+            self._parent_device.set_outlet_status(self._slot, int(state))
+            self.schedule_update_ha_state()
+        else:
+            _LOGGER.warn("No response from switch")
+
+
+    def _sendpacket(self, packet, retry):
+        """Send packet to device."""
+        try:
+            self._device.set_power(self._slot, packet)
+        except (socket.timeout, ValueError) as error:
+            if retry < 1:
+                _LOGGER.error("Error during sending a packet: %s", error)
+                self._is_available = False
+                return False
+            if not self._auth(self._retry_times):
+                return False
+            return self._sendpacket(packet, max(0, retry - 1))
+        self._is_available = True
+        return True
+
+    @property
+    def should_poll(self):
+        """Return the polling state."""
+        return True
+
+    @property
+    def slot(self):
+        return self._slot
+
+
+    def update(self):
+        """Trigger update for all switches on the parent device."""
+        self._parent_device.update()
+        self._state = self._parent_device.get_outlet_status(self._slot)
+        if self._state is None:
+            self._is_available = False
+        else:
+            self._is_available = True
+
+
+class BroadlinkBG1Switch:
+    """Representation of a Broadlink BG1 switch - To fetch states of all slots."""
+
+    def __init__(self, device, retry_times):
+        """Initialize the switch."""
+        self._device = device
+        self._states = None
+        self._retry_times = retry_times
+
+    def get_outlet_status(self, slot):
+        """Get status of outlet from cached status list."""
+        if self._states is None:
+            return None
+        return self._states[f"s{slot}"]
+
+    def set_outlet_status(self, slot, status):
+        """Get status of outlet from cached status list."""
+        if self._states is not None:
+            self._states[f"s{slot}"] = status
+
+    @Throttle(TIME_BETWEEN_UPDATES)
+    def update(self):
+        """Fetch new state data for this device."""
+        _LOGGER.debug("Polling:")
+        self._update(self._retry_times)
+
+    def _update(self, retry):
+        """Update the state of the device."""
+        states = None
+        try:
+            # states = self._device.check_power()
+            resp = self._device.get_state()
+            if resp is not None:
+                states = {
+                    "s1": resp["pwr1"],  # Left
+                    "s2": resp["pwr2"]   # Right
+                }
+                _LOGGER.debug(states)
+        except (socket.timeout, ValueError) as error:
+            _LOGGER.debug(f"Polling timeout, trying again: {retry}")
+            if retry < 1:
+                _LOGGER.error("Error during updating the state: %s", error)
+                self._states = None
+                return
+            if not self._auth(self._retry_times):
+                _LOGGER.error("Auth failed: %s", error)
+                self._states = None
                 return
             return self._update(max(0, retry - 1))
         if states is None and retry > 0:
