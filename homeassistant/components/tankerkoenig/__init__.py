@@ -54,7 +54,7 @@ CONFIG_SCHEMA = vol.Schema(
                     cv.ensure_list, [cv.string]
                 ),
                 vol.Optional(CONF_SHOW_ON_MAP, default=True
-                ): cv.boolean, 
+                ): cv.boolean,
             }
         )
     },
