@@ -124,7 +124,7 @@ class SlackNotificationService(BaseNotificationService):
         for target, result in zip(tasks, results):
             if isinstance(result, SlackApiError):
                 _LOGGER.error(
-                    "There was a Slack API error while sending a message to %s: %s",
+                    "There was a Slack API error while sending to %s: %s",
                     target,
                     result,
                 )
