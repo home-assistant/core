@@ -51,7 +51,7 @@ class RoombaBinStatus(BinarySensorDevice):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._bin_status == "Full"
+        return self._bin_status
 
     @property
     def device_info(self):
