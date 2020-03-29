@@ -35,7 +35,6 @@ from .const import (
     KEY_SUMMARY,
     KEY_ZONE_ID,
     KEY_ZONE_NUMBER,
-    KEY_SCHEDULES,
     KEY_SCHEDULE_ID,
 )
 
