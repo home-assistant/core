@@ -67,9 +67,13 @@ def _create_entities(hass, config_entry):
         schedules = controller.list_schedules()
         current_schedule = controller.current_schedule
         _LOGGER.debug("Rachio setting up zones: %s", zones)
+        _LOGGER.debug("Added schedule: %s", schedules)
         for zone in zones:
             _LOGGER.debug("Rachio setting up zone: %s", zone)
             entities.append(RachioZone(person, controller, zone, current_schedule))
+        for sched in schedules:
+            _LOGGER.debug("Added schedule: %s", sched)
+            entities.append(RachioSchedule(person, controller, sched, current_schedule))
     return entities
 
 
@@ -276,3 +280,93 @@ class RachioZone(RachioSwitch):
         async_dispatcher_connect(
             self.hass, SIGNAL_RACHIO_ZONE_UPDATE, self._handle_update
         )
+
+class RachioSchedule(RachioSwitch):
+    """Representation of one fixed schedule on the Rachio Iro."""
+
+    def __init__(self, person, controller, data, current_schedule):
+        """Initialize a new Rachio Schedule."""
+        self._id = data[KEY_ID]
+        self._schedule_name = data[KEY_NAME]
+        self._duration = data[KEY_DURATION]
+        self._schedule_enabled = data[KEY_ENABLED]
+        self._person = person
+        self._summary = data[KEY_SUMMARY]
+        self._current_schedule = current_schedule
+        super().__init__(controller, poll=False)
+        self._state = self.schedule_id == self._current_schedule.get(KEY_SCHEDULE_ID)
+
+    def __str__(self):
+        """Display the schedule as a string."""
+        return 'Rachio Schedule "{}" on {}'.format(self.name, str(self._controller))
+
+    @property
+    def schedule_id(self) -> str:
+        """How the Rachio API refers to the schedule."""
+        return self._id
+
+    @property
+    def name(self) -> str:
+        """Return the friendly name of the schedule."""
+        return self._schedule_name
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique id by combining controller id and schedule."""
+        return f"{self._controller.controller_id}-schedule-{self.schedule_id}"
+
+    @property
+    def icon(self) -> str:
+        """Return the icon to display."""
+        return "mdi:water"
+
+    @property
+    def state_attributes(self) -> dict:
+        """Return the optional state attributes."""
+        return {ATTR_SCHEDULE_SUMMARY: self._summary, ATTR_SCHEDULE_ENABLED: self.schedule_is_enabled,
+                ATTR_SCHEDULE_DURATION: self._duration /60}
+
+    @property
+    def schedule_is_enabled(self) -> bool:
+        """Return whether the schedule is allowed to run."""
+        return self._schedule_enabled
+
+    def turn_on(self, **kwargs) -> None:
+        """Start this schedule."""
+       
+        self._controller.rachio.schedulerule.start(self.schedule_id)
+        _LOGGER.debug(
+            "Schedule %s started on %s",
+            self.name,
+            self._controller.name,
+        )
+
+    def turn_off(self, **kwargs) -> None:
+        """Stop watering all zones."""
+        self._controller.stop_watering()
+
+    def _poll_update(self, data=None) -> bool:
+        """Poll the API to check whether the schedule is running."""
+        self._current_schedule = self._controller.current_schedule
+        return self.schedule_id == self._current_schedule.get(KEY_SCHEDULE_ID)
+
+    def _handle_update(self, *args, **kwargs) -> None:
+        """Handle incoming webhook schedule data."""
+        #Schedule ID not passed when running indvidual zones, so we catch that error
+        try:
+            if args[0][KEY_SCHEDULE_ID] == self.schedule_id:
+                if args[0][KEY_SUBTYPE] in [SUBTYPE_SCHEDULE_STARTED]:
+                    self._state = True
+                elif args[0][KEY_SUBTYPE] in [SUBTYPE_SCHEDULE_STOPPED, SUBTYPE_SCHEDULE_COMPLETED]:
+                    self._state = False
+        except KeyError:
+            pass
+
+        self.schedule_update_ha_state()
+
+    async def async_added_to_hass(self):
+        """Subscribe to updates."""
+        async_dispatcher_connect(
+            self.hass, SIGNAL_RACHIO_SCHEDULE_UPDATE, self._handle_update
+        )
+
