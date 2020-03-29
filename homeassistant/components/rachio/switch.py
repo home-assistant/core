@@ -9,15 +9,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import (
     SIGNAL_RACHIO_CONTROLLER_UPDATE,
     SIGNAL_RACHIO_ZONE_UPDATE,
-    SIGNAL_RACHIO_SCHEDULE_UPDATE,
     SUBTYPE_SLEEP_MODE_OFF,
     SUBTYPE_SLEEP_MODE_ON,
     SUBTYPE_ZONE_COMPLETED,
     SUBTYPE_ZONE_STARTED,
     SUBTYPE_ZONE_STOPPED,
-    SUBTYPE_SCHEDULE_COMPLETED,
-    SUBTYPE_SCHEDULE_STOPPED,
-    SUBTYPE_SCHEDULE_STARTED,
     RachioDeviceInfoProvider,
 )
 from .const import (
@@ -29,23 +25,17 @@ from .const import (
     KEY_ID,
     KEY_IMAGE_URL,
     KEY_NAME,
-    KEY_DURATION,
     KEY_ON,
     KEY_SUBTYPE,
     KEY_SUMMARY,
     KEY_ZONE_ID,
     KEY_ZONE_NUMBER,
-    KEY_SCHEDULES,
-    KEY_SCHEDULE_ID,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ZONE_SUMMARY = "Summary"
 ATTR_ZONE_NUMBER = "Zone number"
-ATTR_SCHEDULE_SUMMARY = "Summary"
-ATTR_SCHEDULE_ENABLED = "Enabled"
-ATTR_SCHEDULE_DURATION = "Duration"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -64,7 +54,6 @@ def _create_entities(hass, config_entry):
     for controller in person.controllers:
         entities.append(RachioStandbySwitch(controller))
         zones = controller.list_zones()
-        schedules = controller.list_schedules()
         current_schedule = controller.current_schedule
         _LOGGER.debug("Rachio setting up zones: %s", zones)
         for zone in zones:

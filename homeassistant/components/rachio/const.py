@@ -22,7 +22,6 @@ KEY_ID = "id"
 KEY_NAME = "name"
 KEY_MODEL = "model"
 KEY_ON = "on"
-KEY_DURATION = "totalDuration"
 KEY_STATUS = "status"
 KEY_SUBTYPE = "subType"
 KEY_SUMMARY = "summary"
@@ -34,8 +33,6 @@ KEY_USERNAME = "username"
 KEY_ZONE_ID = "zoneId"
 KEY_ZONE_NUMBER = "zoneNumber"
 KEY_ZONES = "zones"
-KEY_SCHEDULES = "scheduleRules"
-KEY_SCHEDULE_ID = "scheduleId"
 
 # Yes we really do get all these exceptions (hopefully rachiopy switches to requests)
 RACHIO_API_EXCEPTIONS = (
