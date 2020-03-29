@@ -258,7 +258,7 @@ class ZHAGateway:
         zha_group.info("group_member_removed - endpoint: %s", endpoint)
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_MEMBER_REMOVED)
         async_dispatcher_send(
-            self._hass, f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_{zigpy_group.group_id}"
+            self._hass, f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_0x{zigpy_group.group_id:04x}"
         )
 
     def group_member_added(
@@ -270,7 +270,7 @@ class ZHAGateway:
         zha_group.info("group_member_added - endpoint: %s", endpoint)
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_MEMBER_ADDED)
         async_dispatcher_send(
-            self._hass, f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_{zigpy_group.group_id}"
+            self._hass, f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_0x{zigpy_group.group_id:04x}"
         )
 
     def group_added(self, zigpy_group: ZigpyGroupType) -> None:
@@ -286,7 +286,7 @@ class ZHAGateway:
         zha_group = self._groups.pop(zigpy_group.group_id, None)
         zha_group.info("group_removed")
         async_dispatcher_send(
-            self._hass, f"{SIGNAL_REMOVE_GROUP}_{zigpy_group.group_id}"
+            self._hass, f"{SIGNAL_REMOVE_GROUP}_0x{zigpy_group.group_id:04x}"
         )
 
     def _send_group_gateway_message(
