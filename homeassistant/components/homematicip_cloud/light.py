@@ -72,6 +72,14 @@ class HomematicipLight(HomematicipGenericDevice, Light):
         super().__init__(hap, device)
 
     @property
+    def name(self) -> str:
+        """Return the name of the multi switch channel."""
+        label = self._get_label_by_channel(1)
+        if label:
+            return label
+        return super().name
+
+    @property
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._device.on
@@ -193,6 +201,9 @@ class HomematicipNotificationLight(HomematicipGenericDevice, Light):
     @property
     def name(self) -> str:
         """Return the name of the generic device."""
+        label = self._get_label_by_channel(self.channel)
+        if label:
+            return label
         return f"{super().name} Notification"
 
     @property
