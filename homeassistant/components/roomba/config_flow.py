@@ -1,15 +1,14 @@
 """Config flow to configure demo component."""
-import asyncio
 import logging
 
-import async_timeout
-from roomba import Roomba, RoombaConnectionError
+from roomba import Roomba
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
+from . import CannotConnect, InvalidAuth, async_connect_or_timeout
 from .const import (
     CONF_CERT,
     CONF_CONTINUOUS,
@@ -39,7 +38,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    api = Roomba(
+    roomba = Roomba(
         address=data[CONF_HOST],
         blid=data[CONF_USERNAME],
         password=data[CONF_PASSWORD],
@@ -47,26 +46,8 @@ async def validate_input(hass: core.HomeAssistant, data):
         continuous=data[CONF_CONTINUOUS],
         delay=data[CONF_DELAY],
     )
-    try:
-        name = None
-        with async_timeout.timeout(10):
-            await hass.async_add_job(api.connect)
-            while not api.roomba_connected or name is None:
-                name = (
-                    api.master_state.get("state", {})
-                    .get("reported", {})
-                    .get("name", None)
-                )
-                await asyncio.sleep(0.5)
-            hass.data[DOMAIN]["roomba"] = api
-    except RoombaConnectionError:
-        raise CannotConnect
-    except asyncio.TimeoutError:
-        # Api looping if user or password incorrect and roomba exist
-        await hass.async_add_job(api.disconnect)
-        raise InvalidAuth
 
-    return {"title": name}
+    await async_connect_or_timeout(hass, roomba)
 
 
 class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -93,17 +74,18 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
+                await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors = {"base": "cannot_connect"}
             except InvalidAuth:
                 errors = {"base": "invalid_auth"}
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                errors = {"base": "unknown"}
 
             if "base" not in errors:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(
+                    title=self.hass.data[DOMAIN]["name"], data=user_input
+                )
 
         # If there was no user input, do not show the errors.
         if user_input is None:
@@ -149,11 +131,3 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 }
             ),
         )
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""
