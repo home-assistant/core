@@ -777,7 +777,7 @@ class BluesoundPlayer(MediaPlayerDevice):
     def supported_features(self):
         """Flag of media commands that are supported."""
         if self._status is None:
-            return None
+            return 0
 
         if self.is_grouped and not self.is_master:
             return SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE
