@@ -1,4 +1,4 @@
-"""Config flow to configure demo component."""
+"""Config flow to configure roomba component."""
 import logging
 
 from roomba import Roomba
