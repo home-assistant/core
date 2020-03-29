@@ -84,6 +84,11 @@ class PAServer:
         self._buffer_size = int(buff_sz)
         self._tcp_timeout = int(tcp_timeout)
 
+    @property
+    def available(self):
+        """Return true if module state was updated."""
+        return len(self._current_module_state)
+
     def _send_command(self, cmd, response_expected):
         """Send a command to the pa server using a socket."""
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -147,12 +152,18 @@ class PALoopbackSwitch(SwitchDevice):
         self._name = name
         self._sink_name = sink_name
         self._source_name = source_name
+        self._available = False
         self._pa_svr = pa_server
 
     @property
     def name(self):
         """Return the name of the switch."""
         return self._name
+
+    @property
+    def available(self):
+        """Return true if Pulse is available and connected."""
+        return self._available
 
     @property
     def is_on(self):
@@ -186,6 +197,11 @@ class PALoopbackSwitch(SwitchDevice):
     def update(self):
         """Refresh state in case an alternate process modified this data."""
         self._pa_svr.update_module_state()
+
+        if not self._pa_svr.available:
+            return
+
         self._module_idx = self._pa_svr.get_module_idx(
             self._sink_name, self._source_name
         )
+        self._available = True
