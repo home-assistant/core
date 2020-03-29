@@ -288,7 +288,6 @@ class RachioSchedule(RachioSwitch):
         self._schedule_name = data[KEY_NAME]
         self._duration = data[KEY_DURATION]
         self._schedule_enabled = data[KEY_ENABLED]
-        self._person = person
         self._summary = data[KEY_SUMMARY]
         self._current_schedule = current_schedule
         super().__init__(controller, poll=False)
