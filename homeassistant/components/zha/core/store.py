@@ -78,6 +78,9 @@ class ZhaStorage:
         ieee_str: str = str(device.ieee)
         old = self.devices[ieee_str]
 
+        if old is not None and device.last_seen is None:
+            return
+
         changes = {}
         changes["last_seen"] = device.last_seen
 
