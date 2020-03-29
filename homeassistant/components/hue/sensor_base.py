@@ -152,10 +152,8 @@ class SensorManager:
             self._component_add_entities[platform](to_add[platform])
 
 
-class GenericHueSensor(entity.Entity):
-    """Representation of a Hue sensor."""
-
-    should_poll = False
+class GenericHueDevice:
+    """Representation of a Hue device."""
 
     def __init__(self, sensor, name, bridge, primary_sensor=None):
         """Initialize the sensor."""
@@ -163,9 +161,6 @@ class GenericHueSensor(entity.Entity):
         self._name = name
         self._primary_sensor = primary_sensor
         self.bridge = bridge
-
-    async def _async_update_ha_state(self, *args, **kwargs):
-        raise NotImplementedError
 
     @property
     def primary_sensor(self):
@@ -188,6 +183,35 @@ class GenericHueSensor(entity.Entity):
         return self._name
 
     @property
+    def swupdatestate(self):
+        """Return detail of available software updates for this device."""
+        return self.primary_sensor.raw.get("swupdate", {}).get("state")
+
+    @property
+    def device_info(self):
+        """Return the device info.
+
+        Links individual entities together in the hass device registry.
+        """
+        return {
+            "identifiers": {(HUE_DOMAIN, self.device_id)},
+            "name": self.primary_sensor.name,
+            "manufacturer": self.primary_sensor.manufacturername,
+            "model": (self.primary_sensor.productname or self.primary_sensor.modelid),
+            "sw_version": self.primary_sensor.swversion,
+            "via_device": (HUE_DOMAIN, self.bridge.api.config.bridgeid),
+        }
+
+
+class GenericHueSensor(GenericHueDevice, entity.Entity):
+    """Representation of a Hue sensor."""
+
+    should_poll = False
+
+    async def _async_update_ha_state(self, *args, **kwargs):
+        raise NotImplementedError
+
+    @property
     def available(self):
         """Return if sensor is available."""
         return self.bridge.sensor_manager.coordinator.last_update_success and (
@@ -195,11 +219,6 @@ class GenericHueSensor(entity.Entity):
             # remotes like Hue Tap (ZGPSwitchSensor) have no _reachability_
             or self.sensor.config.get("reachable", True)
         )
-
-    @property
-    def swupdatestate(self):
-        """Return detail of available software updates for this device."""
-        return self.primary_sensor.raw.get("swupdate", {}).get("state")
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""
@@ -219,21 +238,6 @@ class GenericHueSensor(entity.Entity):
         Only used by the generic entity update service.
         """
         await self.bridge.sensor_manager.coordinator.async_request_refresh()
-
-    @property
-    def device_info(self):
-        """Return the device info.
-
-        Links individual entities together in the hass device registry.
-        """
-        return {
-            "identifiers": {(HUE_DOMAIN, self.device_id)},
-            "name": self.primary_sensor.name,
-            "manufacturer": self.primary_sensor.manufacturername,
-            "model": (self.primary_sensor.productname or self.primary_sensor.modelid),
-            "sw_version": self.primary_sensor.swversion,
-            "via_device": (HUE_DOMAIN, self.bridge.api.config.bridgeid),
-        }
 
 
 class GenericZLLSensor(GenericHueSensor):
