@@ -3,7 +3,7 @@
     "title": "iRobot Roomba",
     "step": {
       "user": {
-        "title": "Connect to the device",
+        "title": "Connexion au périphérique",
         "data": {
           "host": "Nom ou Addresse IP",
           "username": "Utilisateur",
