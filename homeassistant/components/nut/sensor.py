@@ -253,15 +253,6 @@ class NUTSensor(Entity):
         """Return the sensor attributes."""
         return {ATTR_STATE: self._display_state}
 
-    def _format_display_state(self, status):
-        """Return UPS display state."""
-        if status is None:
-            return STATE_TYPES["OFF"]
-        try:
-            return " ".join(STATE_TYPES[state] for state in status[KEY_STATUS].split())
-        except KeyError:
-            return STATE_UNKNOWN
-
     def update(self):
         """Get the latest status and use it to update our sensor state."""
         status = self._data.status
@@ -271,7 +262,7 @@ class NUTSensor(Entity):
             return
 
         self._available = True
-        self._display_state = self._format_display_state(status)
+        self._display_state = _format_display_state(status)
         # In case of the display status sensor, keep a human-readable form
         # as the sensor state.
         if self.type == KEY_STATUS_DISPLAY:
@@ -280,6 +271,16 @@ class NUTSensor(Entity):
             self._state = None
         else:
             self._state = status[self.type]
+
+
+def _format_display_state(status):
+    """Return UPS display state."""
+    if status is None:
+        return STATE_TYPES["OFF"]
+    try:
+        return " ".join(STATE_TYPES[state] for state in status[KEY_STATUS].split())
+    except KeyError:
+        return STATE_UNKNOWN
 
 
 class PyNUTData:
