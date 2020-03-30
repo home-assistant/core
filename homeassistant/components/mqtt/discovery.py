@@ -64,6 +64,11 @@ def clear_discovery_hash(hass, discovery_hash):
     del hass.data[ALREADY_DISCOVERED][discovery_hash]
 
 
+def set_discovery_hash(hass, discovery_hash):
+    """Clear entry in ALREADY_DISCOVERED list."""
+    hass.data[ALREADY_DISCOVERED][discovery_hash] = {}
+
+
 class MQTTConfig(dict):
     """Dummy class to allow adding attributes."""
 
