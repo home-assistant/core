@@ -39,6 +39,9 @@ CONF_KNX_EXPOSE = "expose"
 CONF_KNX_EXPOSE_TYPE = "type"
 CONF_KNX_EXPOSE_ADDRESS = "address"
 
+DEFAULT_KNX_AUTO_RECONNECT = True
+DEFAULT_KNX_AUTO_RECONNECT_WAIT = 3
+
 SERVICE_KNX_SEND = "send"
 SERVICE_KNX_ATTR_ADDRESS = "address"
 SERVICE_KNX_ATTR_PAYLOAD = "payload"
@@ -48,8 +51,12 @@ ATTR_DISCOVER_DEVICES = "devices"
 TUNNELING_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_KNX_AUTO_RECONNECT, default=True): cv.boolean,
-        vol.Optional(CONF_KNX_AUTO_RECONNECT_WAIT, default=3): cv.positive_int,
+        vol.Optional(
+            CONF_KNX_AUTO_RECONNECT, default=DEFAULT_KNX_AUTO_RECONNECT
+        ): cv.boolean,
+        vol.Optional(
+            CONF_KNX_AUTO_RECONNECT_WAIT, default=DEFAULT_KNX_AUTO_RECONNECT_WAIT
+        ): cv.positive_int,
         vol.Optional(CONF_KNX_LOCAL_IP): cv.string,
         vol.Optional(CONF_PORT): cv.port,
     }
@@ -212,12 +219,12 @@ class KNXModule:
         gateway_ip = self.config[DOMAIN][CONF_KNX_TUNNELING].get(CONF_HOST)
         gateway_port = self.config[DOMAIN][CONF_KNX_TUNNELING].get(CONF_PORT)
         local_ip = self.config[DOMAIN][CONF_KNX_TUNNELING].get(CONF_KNX_LOCAL_IP)
-        auto_reconnect = self.config[DOMAIN][CONF_KNX_TUNNELING].get(
+        auto_reconnect = self.config[DOMAIN][CONF_KNX_TUNNELING][
             CONF_KNX_AUTO_RECONNECT
-        )
-        auto_reconnect_wait = self.config[DOMAIN][CONF_KNX_TUNNELING].get(
+        ]
+        auto_reconnect_wait = self.config[DOMAIN][CONF_KNX_TUNNELING][
             CONF_KNX_AUTO_RECONNECT_WAIT
-        )
+        ]
         if gateway_port is None:
             gateway_port = DEFAULT_MCAST_PORT
         return ConnectionConfig(
