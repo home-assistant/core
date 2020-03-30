@@ -222,7 +222,7 @@ class AuthManager:
         kwargs: Dict[str, Any] = {
             "name": name,
             "is_active": True,
-            "group_ids": group_ids or [GROUP_ID_ADMIN],
+            "group_ids": group_ids or [],
         }
 
         if await self._user_should_be_owner():
