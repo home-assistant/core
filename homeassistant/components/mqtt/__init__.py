@@ -56,7 +56,7 @@ from .const import (
     DEFAULT_QOS,
     PROTOCOL_311,
 )
-from .discovery import MQTT_DISCOVERY_UPDATED, clear_discovery_hash
+from .discovery import MQTT_DISCOVERY_UPDATED, clear_discovery_hash, set_discovery_hash
 from .models import Message, MessageCallbackType, PublishPayloadType
 from .subscription import async_subscribe_topics, async_unsubscribe_topics
 
@@ -1181,10 +1181,12 @@ class MqttDiscoveryUpdate(Entity):
         self._discovery_data = discovery_data
         self._discovery_update = discovery_update
         self._remove_signal = None
+        self._removed_from_hass = False
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to discovery updates."""
         await super().async_added_to_hass()
+        self._removed_from_hass = False
         discovery_hash = (
             self._discovery_data[ATTR_DISCOVERY_HASH] if self._discovery_data else None
         )
@@ -1217,6 +1219,8 @@ class MqttDiscoveryUpdate(Entity):
                 await self._discovery_update(payload)
 
         if discovery_hash:
+            # Set in case the entity has been removed and is re-added
+            set_discovery_hash(self.hass, discovery_hash)
             self._remove_signal = async_dispatcher_connect(
                 self.hass,
                 MQTT_DISCOVERY_UPDATED.format(discovery_hash),
@@ -1225,7 +1229,7 @@ class MqttDiscoveryUpdate(Entity):
 
     async def async_removed_from_registry(self) -> None:
         """Clear retained discovery topic in broker."""
-        if self._discovery_data:
+        if not self._removed_from_hass:
             discovery_topic = self._discovery_data[ATTR_DISCOVERY_TOPIC]
             publish(
                 self.hass, discovery_topic, "", retain=True,
@@ -1237,9 +1241,9 @@ class MqttDiscoveryUpdate(Entity):
 
     def _cleanup_on_remove(self) -> None:
         """Stop listening to signal and cleanup discovery data."""
-        if self._discovery_data:
+        if self._discovery_data and not self._removed_from_hass:
             clear_discovery_hash(self.hass, self._discovery_data[ATTR_DISCOVERY_HASH])
-            self._discovery_data = None
+            self._removed_from_hass = True
 
         if self._remove_signal:
             self._remove_signal()
