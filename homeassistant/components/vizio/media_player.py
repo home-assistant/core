@@ -210,18 +210,14 @@ class VizioDevice(MediaPlayerDevice):
             self._is_muted = audio_settings["mute"].lower() == "on"
 
             if VIZIO_SOUND_MODE in audio_settings:
-                self._supported_commands = (
-                    self._supported_commands | SUPPORT_SELECT_SOUND_MODE
-                )
+                self._supported_commands |= SUPPORT_SELECT_SOUND_MODE
                 self._current_sound_mode = audio_settings[VIZIO_SOUND_MODE]
                 if self._available_sound_modes is None:
                     self._available_sound_modes = await self._device.get_setting_options(
                         VIZIO_AUDIO_SETTINGS, VIZIO_SOUND_MODE
                     )
             else:
-                self._supported_commands = (
-                    self._supported_commands ^ SUPPORT_SELECT_SOUND_MODE
-                )
+                self._supported_commands ^= SUPPORT_SELECT_SOUND_MODE
 
         input_ = await self._device.get_current_input(log_api_exception=False)
         if input_ is not None:
@@ -416,7 +412,9 @@ class VizioDevice(MediaPlayerDevice):
     async def async_select_sound_mode(self, sound_mode):
         """Select sound mode."""
         if sound_mode in self._available_sound_modes:
-            await self._device.set_setting("audio", "eq", sound_mode)
+            await self._device.set_setting(
+                VIZIO_AUDIO_SETTINGS, VIZIO_SOUND_MODE, sound_mode
+            )
 
     async def async_turn_on(self) -> None:
         """Turn the device on."""
