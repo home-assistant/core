@@ -63,7 +63,7 @@ async def async_get_service(hass, config, discovery_info=None):
 @callback
 def _async_sanitize_channel_names(channel_list):
     """Remove any # symbols from a channel list."""
-    return [channel.replace("#", "") for channel in channel_list]
+    return [channel.lstrip("#", "") for channel in channel_list]
 
 
 class SlackNotificationService(BaseNotificationService):
