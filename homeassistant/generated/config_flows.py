@@ -54,6 +54,7 @@ FLOWS = [
     "ifttt",
     "ios",
     "ipma",
+    "ipp",
     "iqvia",
     "izone",
     "konnected",
