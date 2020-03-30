@@ -440,7 +440,9 @@ async def help_test_entity_device_info_update(hass, mqtt_mock, domain, config):
     assert device.name == "Milk"
 
 
-async def help_test_entity_id_update(hass, mqtt_mock, domain, config, topics=None):
+async def help_test_entity_id_update_subscriptions(
+    hass, mqtt_mock, domain, config, topics=None
+):
     """Test MQTT subscriptions are managed when entity_id is updated."""
     # Add unique_id to config
     config = copy.deepcopy(config)
@@ -473,3 +475,47 @@ async def help_test_entity_id_update(hass, mqtt_mock, domain, config, topics=Non
     assert state is not None
     for topic in topics:
         mock_mqtt.async_subscribe.assert_any_call(topic, ANY, ANY, ANY)
+
+
+async def help_test_entity_id_update_discovery_update(
+    hass, mqtt_mock, domain, config, topic=None
+):
+    """Test MQTT discovery update after entity_id is updated."""
+    # Add unique_id to config
+    config = copy.deepcopy(config)
+    config[domain]["unique_id"] = "TOTALLY_UNIQUE"
+
+    if topic is None:
+        # Add default topic to config
+        config[domain]["availability_topic"] = "avty-topic"
+        topic = "avty-topic"
+
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, entry)
+    ent_registry = mock_registry(hass, {})
+
+    data = json.dumps(config[domain])
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, topic, "online")
+    state = hass.states.get(f"{domain}.test")
+    assert state.state != STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(hass, topic, "offline")
+    state = hass.states.get(f"{domain}.test")
+    assert state.state == STATE_UNAVAILABLE
+
+    ent_registry.async_update_entity(f"{domain}.test", new_entity_id=f"{domain}.milk")
+    await hass.async_block_till_done()
+
+    config[domain]["availability_topic"] = f"{topic}_2"
+    data = json.dumps(config[domain])
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids(domain)) == 1
+
+    async_fire_mqtt_message(hass, f"{topic}_2", "online")
+    state = hass.states.get(f"{domain}.milk")
+    assert state.state != STATE_UNAVAILABLE

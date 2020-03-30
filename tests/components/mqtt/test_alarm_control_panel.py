@@ -13,7 +13,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 
-from .common import (
+from .test_common import (
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
     help_test_default_availability_payload,
@@ -25,7 +25,8 @@ from .common import (
     help_test_entity_device_info_update,
     help_test_entity_device_info_with_connection,
     help_test_entity_device_info_with_identifier,
-    help_test_entity_id_update,
+    help_test_entity_id_update_discovery_update,
+    help_test_entity_id_update_subscriptions,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_unique_id,
@@ -481,8 +482,15 @@ async def test_entity_device_info_remove(hass, mqtt_mock):
     )
 
 
-async def test_entity_id_update(hass, mqtt_mock):
+async def test_entity_id_update_subscriptions(hass, mqtt_mock):
     """Test MQTT subscriptions are managed when entity_id is updated."""
-    await help_test_entity_id_update(
+    await help_test_entity_id_update_subscriptions(
+        hass, mqtt_mock, alarm_control_panel.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_entity_id_update_discovery_update(hass, mqtt_mock):
+    """Test MQTT discovery update when entity_id is updated."""
+    await help_test_entity_id_update_discovery_update(
         hass, mqtt_mock, alarm_control_panel.DOMAIN, DEFAULT_CONFIG
     )
