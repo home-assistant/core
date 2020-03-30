@@ -294,18 +294,18 @@ async def test_full_zeroconf_tls_flow_implementation(
     flow = config_flow.IPPFlowHandler()
     flow.hass = hass
     flow.context = {"source": SOURCE_ZEROCONF}
-    
+
     discovery_info = MOCK_ZEROCONF_IPPS_SERVICE_INFO.copy()
     result = await flow.async_step_zeroconf(discovery_info)
 
     assert result["step_id"] == "zeroconf_confirm"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["description_placeholders"] == {CONF_NAME: "EPSON123456"}
-    
+
     result = await flow.async_step_zeroconf_confirm(
         user_input={CONF_HOST: "EPSON123456.local"}
     )
-    
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "EPSON123456"
 
