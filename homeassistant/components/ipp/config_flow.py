@@ -105,6 +105,11 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self.discovery_info[CONF_UUID] = info[CONF_UUID]
 
+        await self.async_set_unique_id(self.discovery_info[CONF_UUID])
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: self.discovery_info[CONF_HOST]}
+        )
+
         return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(
@@ -117,11 +122,6 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
                 description_placeholders={"name": self.discovery_info[CONF_NAME]},
                 errors={},
             )
-
-        await self.async_set_unique_id(self.discovery_info[CONF_UUID])
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: self.discovery_info[CONF_HOST]}
-        )
 
         return self.async_create_entry(
             title=self.discovery_info[CONF_NAME], data=self.discovery_info,
