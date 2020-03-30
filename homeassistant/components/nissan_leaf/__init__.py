@@ -382,6 +382,9 @@ class LeafDataStore:
         except CarwingsError:
             _LOGGER.error("An error occurred getting battery status.")
             return None
+        except KeyError:
+            _LOGGER.error("An error occurred parsing response from server.")
+            return None
 
     async def async_get_climate(self):
         """Request climate data from Nissan servers."""
