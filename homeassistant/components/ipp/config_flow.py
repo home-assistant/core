@@ -49,6 +49,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
     CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
+        """Set up the instance."""
         self.discovery_info = {}
 
     async def async_step_user(
