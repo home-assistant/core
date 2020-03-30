@@ -1,9 +1,11 @@
 """Constants used be the HomeKit component."""
 # #### Misc ####
 DEBOUNCE_TIMEOUT = 0.5
+DEVICE_PRECISION_LEEWAY = 6
 DOMAIN = "homekit"
 HOMEKIT_FILE = ".homekit.state"
 HOMEKIT_NOTIFY_ID = 4663548
+
 
 # #### Attributes ####
 ATTR_DISPLAY_NAME = "display_name"

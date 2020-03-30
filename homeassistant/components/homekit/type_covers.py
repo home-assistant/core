@@ -36,6 +36,7 @@ from .const import (
     CHAR_TARGET_DOOR_STATE,
     CHAR_TARGET_POSITION,
     CHAR_TARGET_TILT_ANGLE,
+    DEVICE_PRECISION_LEEWAY,
     SERV_GARAGE_DOOR_OPENER,
     SERV_WINDOW_COVERING,
 )
@@ -161,9 +162,15 @@ class WindowCovering(HomeAccessory):
         if isinstance(current_position, (float, int)):
             current_position = int(current_position)
             self.char_current_position.set_value(current_position)
+
+            # We have to assume that the device has worse precision than HomeKit.
+            # If it reports back a state that is only _close_ to HK's requested
+            # state, we'll "fix" what HomeKit requested so that it won't appear
+            # out of sync.
             if (
                 self._homekit_target is None
-                or abs(current_position - self._homekit_target) < 6
+                or abs(current_position - self._homekit_target)
+                < DEVICE_PRECISION_LEEWAY
             ):
                 self.char_target_position.set_value(current_position)
                 self._homekit_target = None
@@ -183,8 +190,12 @@ class WindowCovering(HomeAccessory):
             current_tilt = int(current_tilt)
             self.char_current_tilt.set_value(current_tilt)
 
+            # We have to assume that the device has worse precision than HomeKit.
+            # If it reports back a state that is only _close_ to HK's requested
+            # state, we'll "fix" what HomeKit requested so that it won't appear
+            # out of sync.
             if self._homekit_target_tilt is None or abs(
-                current_tilt - self._homekit_target_tilt < 1
+                current_tilt - self._homekit_target_tilt < DEVICE_PRECISION_LEEWAY
             ):
                 self.char_target_tilt.set_value(current_tilt)
                 self._homekit_target_tilt = None
