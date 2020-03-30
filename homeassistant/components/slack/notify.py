@@ -53,7 +53,6 @@ async def async_get_service(hass, config, discovery_info=None):
     return SlackNotificationService(
         hass,
         client,
-        session,
         config[CONF_DEFAULT_CHANNEL],
         username=config.get(CONF_USERNAME),
         icon=config.get(CONF_ICON),
@@ -63,22 +62,20 @@ async def async_get_service(hass, config, discovery_info=None):
 @callback
 def _async_sanitize_channel_names(channel_list):
     """Remove any # symbols from a channel list."""
-    return [channel.lstrip("#", "") for channel in channel_list]
+    return [channel.lstrip("#") for channel in channel_list]
 
 
 class SlackNotificationService(BaseNotificationService):
     """Define the Slack notification logic."""
 
-    def __init__(self, hass, client, session, default_channel, username, icon):
+    def __init__(self, hass, client, default_channel, username, icon):
         """Initialize."""
         self._client = client
         self._default_channel = default_channel
         self._hass = hass
         self._icon = icon
-        self._session = session
-        self._username = username
 
-        if self._username or self._icon:
+        if username or self._icon:
             self._as_user = False
         else:
             self._as_user = True
