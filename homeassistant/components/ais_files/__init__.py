@@ -21,8 +21,10 @@ _LOGGER = logging.getLogger(__name__)
 IMG_PATH = "/data/data/pl.sviete.dom/files/home/AIS/www/img/"
 LOG_PATH_INFO_FILE = "/data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_log_path_info"
 DB_PATH_INFO_FILE = "/data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_db_path_info"
+DB_URL_INFO_FILE = "/data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_db_url_info"
 LOG_PATH_INFO = None
 DB_PATH_INFO = None
+DB_URL_INFO = None
 G_LOG_PROCESS = None
 
 
@@ -52,12 +54,20 @@ async def async_setup(hass, config):
         await _async_change_logger_settings(hass, call)
 
     @asyncio.coroutine
-    async def async_change_db_settings(call):
-        await _async_change_db_settings(hass, call)
+    async def async_change_sqlight_path(call):
+        await _async_change_sqlight_path(hass, call)
 
     @asyncio.coroutine
     async def async_get_ext_drivers_info(call):
         await _async_get_ext_drivers_info(hass, call)
+
+    @asyncio.coroutine
+    async def async_check_db_connection(call):
+        await _async_check_db_connection(hass, call)
+
+    @asyncio.coroutine
+    async def async_change_db_connection(call):
+        await _async_change_db_connection(hass, call)
 
     hass.services.async_register(DOMAIN, "pick_file", async_pick_file)
     hass.services.async_register(DOMAIN, "refresh_files", async_refresh_files)
@@ -65,7 +75,15 @@ async def async_setup(hass, config):
     hass.services.async_register(
         DOMAIN, "change_logger_settings", async_change_logger_settings
     )
-    hass.services.async_register(DOMAIN, "change_db_settings", async_change_db_settings)
+    hass.services.async_register(
+        DOMAIN, "change_sqlight_path", async_change_sqlight_path
+    )
+    hass.services.async_register(
+        DOMAIN, "check_db_connection", async_check_db_connection
+    )
+    hass.services.async_register(
+        DOMAIN, "change_db_connection", async_change_db_connection
+    )
     hass.services.async_register(
         DOMAIN, "get_ext_drivers_info", async_get_ext_drivers_info
     )
@@ -164,7 +182,8 @@ async def _async_change_logger_settings(hass, call):
     )
 
 
-async def _async_change_db_settings(hass, call):
+# change SQLight DB patch
+async def _async_change_sqlight_path(hass, call):
     # on logger change
     if "value" not in call.data:
         _LOGGER.error("No value")
@@ -179,13 +198,35 @@ async def _async_change_db_settings(hass, call):
     # save to file
     await _async_save_db_file_path_info(hass, call.data["value"])
 
-    # TODO change db settings
+
+async def _async_change_db_connection(hass, call):
+    # on logger change
+    if "dburl" not in call.data:
+        _LOGGER.error("No dburl value")
+        return
+    db_url = call.data["dburl"]
+    hass.states.async_set("sensor.ais_db_connection_info", "0", {"db_url": db_url})
+
+    # save to file
+    await _async_save_db_file_url_info(db_url)
+
+
+async def _async_check_db_connection(hass, call):
+    # on logger change
+    if "dburl" not in call.data:
+        _LOGGER.error("No dburl value")
+        return
+
+    hass.states.async_set("sensor.ais_db_connection_info", "0", {})
+    # check connection info
+    _LOGGER.error(call.data["dburl"])
 
 
 async def _async_get_ext_drivers_info(hass, call):
     # on page load
     log_drive = ""
     db_drive = ""
+    db_url = ""
     if LOG_PATH_INFO is None:
         # get the info from file
         try:
@@ -207,6 +248,16 @@ async def _async_get_ext_drivers_info(hass, call):
     else:
         db_drive = DB_PATH_INFO
 
+    if DB_URL_INFO is None:
+        try:
+            fptr = open(DB_URL_INFO_FILE)
+            db_url = fptr.read().replace("\n", "")
+            fptr.close()
+        except Exception as e:
+            _LOGGER.info("Error get_db_file_path_info " + str(e))
+        else:
+            db_url = DB_URL_INFO
+
     # fill the drives list
     hass.async_add_job(hass.services.async_call("ais_usb", "ls_flash_drives"))
 
@@ -226,9 +277,15 @@ async def _async_get_ext_drivers_info(hass, call):
         )
     )
 
+    hass.async_add_job(
+        hass.states.async_set(
+            "sensor.ais_db_connection_info", 0, {"db_url": DB_URL_INFO}
+        )
+    )
+
 
 async def _async_save_log_file_path_info(hass, path):
-    """save status in a file."""
+    """save log path info in a file."""
     global LOG_PATH_INFO
     try:
         fptr = open(LOG_PATH_INFO_FILE, "w")
@@ -240,7 +297,7 @@ async def _async_save_log_file_path_info(hass, path):
 
 
 async def _async_save_db_file_path_info(hass, path):
-    """save status in a file."""
+    """save db file path info from SQLight in a file."""
     global DB_PATH_INFO
     try:
         fptr = open(DB_PATH_INFO_FILE, "w")
@@ -257,6 +314,18 @@ async def _async_save_db_file_path_info(hass, path):
     hass.async_add_job(
         hass.services.async_call("ais_ai_service", "say_it", {"text": info})
     )
+
+
+async def _async_save_db_file_url_info(db_url):
+    """save db url info in a file."""
+    global DB_URL_INFO
+    try:
+        fptr = open(DB_URL_INFO_FILE, "w")
+        fptr.write(db_url)
+        fptr.close()
+        DB_URL_INFO = db_url
+    except Exception as e:
+        _LOGGER.error("Error save_db_file_url_info " + str(e))
 
 
 def resize_image(file_name):
