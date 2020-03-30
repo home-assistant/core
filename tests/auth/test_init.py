@@ -899,8 +899,8 @@ async def test_async_remove_user(hass):
     assert events[0].data["user_id"] == user.id
 
 
-async def test_new_users_admin(mock_hass):
-    """Test newly created users are admin."""
+async def test_new_users(mock_hass):
+    """Test newly created users."""
     manager = await auth.auth_manager_from_config(
         mock_hass,
         [
@@ -911,7 +911,17 @@ async def test_new_users_admin(mock_hass):
                         "username": "test-user",
                         "password": "test-pass",
                         "name": "Test Name",
-                    }
+                    },
+                    {
+                        "username": "test-user-2",
+                        "password": "test-pass",
+                        "name": "Test Name",
+                    },
+                    {
+                        "username": "test-user-3",
+                        "password": "test-pass",
+                        "name": "Test Name",
+                    },
                 ],
             }
         ],
@@ -920,7 +930,18 @@ async def test_new_users_admin(mock_hass):
     ensure_auth_manager_loaded(manager)
 
     user = await manager.async_create_user("Hello")
+    # first user in the system is owner and admin
+    assert user.is_owner
     assert user.is_admin
+    assert user.groups == []
+
+    user = await manager.async_create_user("Hello 2")
+    assert not user.is_admin
+    assert user.groups == []
+
+    user = await manager.async_create_user("Hello 3", ["system-admin"])
+    assert user.is_admin
+    assert user.groups[0].id == "system-admin"
 
     user_cred = await manager.async_get_or_create_user(
         auth_models.Credentials(
