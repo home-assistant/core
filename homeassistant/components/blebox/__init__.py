@@ -12,7 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DEFAULT_SETUP_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,8 +57,7 @@ async def async_add_blebox(klass, method, hass, config, async_add, exception):
     """Add a BleBox device from the given config."""
     host = config[CONF_HOST]
     port = config[CONF_PORT]
-    # timeout = config.get(CONF_TIMEOUT)
-    timeout = 3
+    timeout = DEFAULT_SETUP_TIMEOUT
 
     websession = async_get_clientsession(hass)
     api_host = ApiHost(host, port, timeout, websession, hass.loop, _LOGGER)
