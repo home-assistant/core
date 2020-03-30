@@ -10,30 +10,47 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
-from .errors import CannotConnect, UnsupportedVersion
+from .const import (
+    ALREADY_CONFIGURED,
+    CANNOT_CONNECT,
+    DEFAULT_SETUP_TIMEOUT,
+    DOMAIN,
+    UNKNOWN,
+    UNSUPPORTED_VERSION,
+)
 
-PLACEHOLDER_HOST = "192.168.0.2"
-PLACEHOLDER_PORT = 80
+DEFAULT_HOST = "192.168.0.2"
+DEFAULT_PORT = 80
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST, default=PLACEHOLDER_HOST): str,
-        vol.Required(CONF_PORT, default=PLACEHOLDER_PORT): int,
-    }
-)
+
+def host_port(data):
+    """Return a list with host and port."""
+    return (data[CONF_HOST], data[CONF_PORT])
 
 
-def create_schema(host, port):
+def create_schema(previous_input=None):
     """Create a schema with given values as default."""
+    if previous_input is not None:
+        host, port = host_port(previous_input)
+    else:
+        host = DEFAULT_HOST
+        port = DEFAULT_PORT
+
     return vol.Schema(
         {
             vol.Required(CONF_HOST, default=host): str,
             vol.Required(CONF_PORT, default=port): int,
         }
     )
+
+
+LOG_MSG = {
+    UNSUPPORTED_VERSION: "Outdated firmware",
+    CANNOT_CONNECT: "Failed to identify device",
+    UNKNOWN: "Unknown error while identifying device",
+}
 
 
 class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -46,65 +63,64 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the BleBox config flow."""
         self.device_config = {}
 
+    def handle(self, step, exception, schema, addr, message_id):
+        """Handle step exceptions."""
+
+        _LOGGER.error("%s at %s:%d (%s)", LOG_MSG[message_id], *addr, exception)
+
+        address = "{0}:{1}".format(*addr)
+        return self.async_show_form(
+            step_id="user",
+            data_schema=schema,
+            errors={"base": message_id},
+            description_placeholders={"address": address},
+        )
+
+    def abort_because_configured(self, addr):
+        """Return abort flow response for when already configured."""
+
+        address = "{0}:{1}".format(*addr)
+        return self.async_abort(
+            reason=ALREADY_CONFIGURED, description_placeholders={"address": address},
+        )
+
     async def async_step_user(self, user_input=None):
         """Handle initial user-triggered config step."""
 
-        errors = {}
-        if user_input is not None:
+        hass = self.hass
+        schema = create_schema(user_input)
 
-            def host_port(data):
-                return (data[CONF_HOST], data[CONF_PORT])
+        if user_input is None:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=schema,
+                errors={},
+                description_placeholders={},
+            )
 
-            addr = host_port(user_input)
+        addr = host_port(user_input)
 
-            for entry in self.hass.config_entries.async_entries(DOMAIN):
-                if addr == host_port(entry.data):
-                    address = "{0}:{1}".format(*addr)
-                    return self.async_abort(
-                        reason="address_already_configured",
-                        description_placeholders={"address": address},
-                    )
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            if addr == host_port(entry.data):
+                return self.abort_because_configured(addr)
 
-            try:
-                hass = self.hass
-                websession = async_get_clientsession(hass)
-                api_host = ApiHost(*addr, None, websession, hass.loop, _LOGGER)
+        websession = async_get_clientsession(hass)
+        api_host = ApiHost(*addr, DEFAULT_SETUP_TIMEOUT, websession, hass.loop, _LOGGER)
 
-                try:
-                    product = await Products.async_from_host(api_host)
+        try:
+            product = await Products.async_from_host(api_host)
 
-                except UnsupportedBoxVersion as ex:
-                    _LOGGER.error("Outdated device firmware at %s:%d (%s)", *addr, ex)
-                    raise UnsupportedVersion from ex
+        except UnsupportedBoxVersion as ex:
+            return self.handle("user", ex, schema, addr, UNSUPPORTED_VERSION)
 
-                except Error as ex:
-                    _LOGGER.error("Failed to identify device at %s:%d (%s)", *addr, ex)
-                    raise CannotConnect from ex
+        except Error as ex:
+            return self.handle("user", ex, schema, addr, CANNOT_CONNECT)
 
-                # Check if configured but IP changed since
-                mac_address = product.unique_id
-                await self.async_set_unique_id(mac_address)
-                self._abort_if_unique_id_configured()
+        except RuntimeError as ex:
+            return self.handle("user", ex, schema, addr, UNKNOWN)
 
-                # Return some info we want to store in the config entry.
-                info = {"title": product.name}
+        # Check if configured but IP changed since
+        await self.async_set_unique_id(product.unique_id)
+        self._abort_if_unique_id_configured()
 
-                return self.async_create_entry(title=info["title"], data=user_input)
-            except UnsupportedVersion:
-                errors["base"] = "unsupported_version"
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except RuntimeError as ex:
-                _LOGGER.exception("Unexpected exception: %s", ex)
-                errors["base"] = "unknown"
-
-        if user_input is not None:
-            host = user_input[CONF_HOST]
-            port = user_input[CONF_PORT]
-        else:
-            host = PLACEHOLDER_HOST
-            port = PLACEHOLDER_PORT
-
-        return self.async_show_form(
-            step_id="user", data_schema=create_schema(host, port), errors=errors,
-        )
+        return self.async_create_entry(title=product.name, data=user_input)

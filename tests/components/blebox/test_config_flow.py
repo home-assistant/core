@@ -80,7 +80,7 @@ async def test_flow_with_connection_failure(hass, product_class_mock):
     """Test that config flow works."""
     with product_class_mock as products_class:
         products_class.async_from_host = CoroutineMock(
-            side_effect=config_flow.CannotConnect
+            side_effect=blebox_uniapi.error.ConnectionError
         )
         flow = init_config_flow(hass)
         result = await flow.async_step_user()
@@ -92,7 +92,7 @@ async def test_flow_with_api_failure(hass, product_class_mock):
     """Test that config flow works."""
     with product_class_mock as products_class:
         products_class.async_from_host = CoroutineMock(
-            side_effect=blebox_uniapi.error.ClientError
+            side_effect=blebox_uniapi.error.Error
         )
         flow = init_config_flow(hass)
         result = await flow.async_step_user()
