@@ -7,7 +7,7 @@ from homeassistant.const import CONF_EVENT, CONF_ID
 from homeassistant.core import callback
 from homeassistant.util import slugify
 
-from .sensor_base import EVENT_CONFIG_MAP, GenericHueDevice
+from .sensor_device import GenericHueDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,10 +94,8 @@ class HueEvent(GenericHueDevice):
         )
 
 
-EVENT_CONFIG_MAP.update(
-    {
-        TYPE_ZGP_SWITCH: {"name_format": EVENT_NAME_FORMAT, "class": HueEvent},
-        TYPE_ZLL_SWITCH: {"name_format": EVENT_NAME_FORMAT, "class": HueEvent},
-        TYPE_ZLL_ROTARY: {"name_format": EVENT_NAME_FORMAT, "class": HueEvent},
-    }
-)
+EVENT_CONFIG_MAP = {
+    TYPE_ZGP_SWITCH: {"name_format": EVENT_NAME_FORMAT, "class": HueEvent},
+    TYPE_ZLL_SWITCH: {"name_format": EVENT_NAME_FORMAT, "class": HueEvent},
+    TYPE_ZLL_ROTARY: {"name_format": EVENT_NAME_FORMAT, "class": HueEvent},
+}

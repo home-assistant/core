@@ -16,7 +16,6 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN as HUE_DOMAIN
-from .hue_event import EVENT_CONFIG_MAP  # noqa F401,W0611
 from .sensor_base import SENSOR_CONFIG_MAP, GenericHueSensor, GenericZLLSensor
 
 LIGHT_LEVEL_NAME_FORMAT = "{} light level"
