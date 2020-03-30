@@ -1,11 +1,14 @@
 """Support for the Dynalite networks."""
 
 import asyncio
+from typing import Any, Dict, Union
 
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 
@@ -25,7 +28,7 @@ from .const import (
     CONF_FADE,
     CONF_NAME,
     CONF_NO_DEFAULT,
-    CONF_POLLTIMER,
+    CONF_POLL_TIMER,
     CONF_PORT,
     CONF_PRESET,
     DEFAULT_CHANNEL_TYPE,
@@ -37,7 +40,7 @@ from .const import (
 )
 
 
-def num_string(value):
+def num_string(value: Union[int, str]) -> str:
     """Test if value is a string of digits, aka an integer."""
     new_value = str(value)
     if new_value.isdigit():
@@ -85,7 +88,7 @@ BRIDGE_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
         vol.Optional(CONF_AUTO_DISCOVER, default=False): vol.Coerce(bool),
-        vol.Optional(CONF_POLLTIMER, default=1.0): vol.Coerce(float),
+        vol.Optional(CONF_POLL_TIMER, default=1.0): vol.Coerce(float),
         vol.Optional(CONF_AREA): AREA_SCHEMA,
         vol.Optional(CONF_DEFAULT): PLATFORM_DEFAULTS_SCHEMA,
         vol.Optional(CONF_ACTIVE, default=False): vol.Any(
@@ -105,7 +108,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: Dict[str, Any]) -> bool:
     """Set up the Dynalite platform."""
 
     conf = config.get(DOMAIN)
@@ -137,7 +140,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_entry_changed(hass, entry):
+async def async_entry_changed(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload entry since the data has changed."""
     LOGGER.debug("Reconfiguring entry %s", entry.data)
     bridge = hass.data[DOMAIN][entry.entry_id]
@@ -145,7 +148,7 @@ async def async_entry_changed(hass, entry):
     LOGGER.debug("Reconfiguring entry finished %s", entry.data)
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a bridge from a config entry."""
     LOGGER.debug("Setting up entry %s", entry.data)
     bridge = DynaliteBridge(hass, entry.data)
@@ -163,7 +166,7 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     LOGGER.debug("Unloading entry %s", entry.data)
     hass.data[DOMAIN].pop(entry.entry_id)

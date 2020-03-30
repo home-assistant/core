@@ -22,7 +22,7 @@ CONF_FADE = "fade"
 CONF_HOST = "host"
 CONF_NAME = "name"
 CONF_NO_DEFAULT = "nodefault"
-CONF_POLLTIMER = "polltimer"
+CONF_POLL_TIMER = "polltimer"
 CONF_PORT = "port"
 CONF_PRESET = "preset"
 
