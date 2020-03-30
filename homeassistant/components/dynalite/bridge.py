@@ -50,7 +50,7 @@ class DynaliteBridge:
         if device == CONF_ALL:
             # This is used to signal connection or disconnection, so all devices may become available or not.
             log_string = (
-                "Connected" if self.dynalite_devices.available else "Disconnected"
+                "Connected" if self.dynalite_devices.connected else "Disconnected"
             )
             LOGGER.info("%s to dynalite host", log_string)
             async_dispatcher_send(self.hass, self.update_signal())
