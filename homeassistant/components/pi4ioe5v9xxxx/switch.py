@@ -77,7 +77,7 @@ class Pi4ioe5v9Switch(ToggleEntity):
         """Return true if device is on."""
         return self._state
 
-    async def async_turn_on(self, **kwargs):
+    def turn_on(self, **kwargs):
         """Turn the device on."""
         pi4ioe5v9xxxx.pin_to_memory(self._pin, not self._invert_logic)
         pi4ioe5v9xxxx.memory_to_hw()
