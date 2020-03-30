@@ -12,9 +12,6 @@ input_boolean:
   ais_quiet_mode:
     name: Tryb nocny
     icon: mdi:volume-off
-  ais_logs_rec_mode:
-    name: Zapis do plików
-    icon: mdi:database-settings
 
 input_datetime:
   ais_quiet_mode_start:
@@ -45,6 +42,23 @@ input_select:
     options: ["-"]
     icon: mdi:usb-flash-drive
     initial: "-"
+  ais_system_logs_level:
+    name: "System logs level"
+    options: ["critical", "fatal", "error", "warning", "warn", "info", "debug"]
+    icon: mdi:bug-check
+  ais_db_engines:
+    name: "DB engines"
+    options: ["SQLite", "MariaDB", "MySQL", "PostgreSQL"]
+    icon: mdi:database
+
+
+input_text:
+  ais_logs_path:
+    name: Path for logs
+    icon: mdi:file-document-edit-outline
+  ais_db_path:
+    name: Path for SQLight DB
+    icon: mdi:database
 
 input_number:
   assistant_rate:

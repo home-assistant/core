@@ -5,16 +5,16 @@
   - event: start
     platform: homeassistant
   action:
+   - service: ais_cloud.get_players
+     data: {}
    - service: ais_ai_service.publish_command_to_frame
      data:
        key: WifiConnectionInfo
        val: true
-   - delay: '1'
    - service: ais_ai_service.publish_command_to_frame
      data:
        key: getAudioStatus
        val: true
-   - delay: '1'
    - service: ais_ai_service.publish_command_to_frame
      data:
        key: getTtsVoice
@@ -23,17 +23,12 @@
      data:
        key: relaunch
        val: true
-   - service: ais_cloud.get_players
-     data: {}
-   - delay: '1'
    - service: ais_shell_command.init_local_sdcard
    - service: ais_ai_service.publish_command_to_frame
      data:
        key: setupStorageSymlinks
        val: true
-   - delay: '1'
    - service: ais_shell_command.set_ais_secure_android_id_dom
-   - delay: '1'
    - service: ais_updater.check_version
      data:
        autoUpdate: false
@@ -41,19 +36,13 @@
    - service: camera.turn_on
      data:
        entity_id: camera.remote_access
-   - delay: '1'
    - service: ais_bookmarks.get_favorites
-   - delay: '1'
    - service: ais_bookmarks.get_bookmarks
-   - delay: '2'
    - service: ais_cloud.get_radio_types
-   - delay: '2'
    - service: ais_cloud.get_podcast_types
-   - delay: '2'
    - service: ais_cloud.get_rss_news_category
    - service: ais_yt_service.search
    - service: ais_audiobooks_service.get_authors
-   - service: ais_shell_command.change_remote_access
    - service: ais_shell_command.disable_irda_remote
    - service: ais_ai_service.check_local_ip
    - service: ais_amplifier_service.get_audio_mono
@@ -63,25 +52,21 @@
      data:
        payload: 1
        topic: dom/cmnd/SetOption19
-   - delay: '1'
    - service: ais_shell_command.scan_network_for_ais_players
-   - delay: '5'
    - service: mqtt.publish
      data:
        payload: 0
        topic: dom/cmnd/state
-   - delay: '1'
    - service: ais_ai_service.prepare_remote_menu
+   - service: ais_shell_command.change_remote_access
    - service: ais_ai_service.welcome_home
    - service: camera.snapshot
      data:
        entity_id: camera.remote_access
        filename: "/data/data/pl.sviete.dom/files/home/AIS/www/dom_access_code.png"
-   - delay: '1'
    - service: ais_ai_service.check_night_mode
      data:
        timer: false
-   - delay: '1'
    - service: ais_usb.lsusb
    - service: ais_usb.mount_external_drives
    - service: ais_usb.ls_flash_drives
