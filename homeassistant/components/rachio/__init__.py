@@ -30,12 +30,12 @@ from .const import (
     KEY_MAC_ADDRESS,
     KEY_MODEL,
     KEY_NAME,
+    KEY_SCHEDULES,
     KEY_SERIAL_NUMBER,
     KEY_STATUS,
     KEY_TYPE,
     KEY_USERNAME,
     KEY_ZONES,
-    KEY_SCHEDULES,
     RACHIO_API_EXCEPTIONS,
 )
 
