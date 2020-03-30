@@ -75,6 +75,7 @@ async def init_integration(
 
     entry = MockConfigEntry(
         domain=DOMAIN,
+        unique_id="cfe92100-67c4-11d4-a45f-f8d027761251",
         data={
             CONF_HOST: "EPSON123456.local",
             CONF_PORT: 631,

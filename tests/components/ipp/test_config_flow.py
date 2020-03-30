@@ -34,7 +34,9 @@ async def test_show_zeroconf_confirm_form(hass: HomeAssistant) -> None:
     """Test that the zeroconf confirmation form is served."""
     flow = config_flow.IPPFlowHandler()
     flow.hass = hass
-    flow.context = {"source": SOURCE_ZEROCONF, CONF_NAME: "EPSON123456"}
+    flow.context = {"source": SOURCE_ZEROCONF}
+    flow.discovery_info = {CONF_NAME: "EPSON123456"}
+
     result = await flow.async_step_zeroconf_confirm()
 
     assert result["step_id"] == "zeroconf_confirm"
@@ -154,18 +156,6 @@ async def test_zeroconf_connection_upgrade_required(
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "connection_upgrade"
-
-
-async def test_zeroconf_no_data(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test we abort if zeroconf provides no data."""
-    flow = config_flow.IPPFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_zeroconf()
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "connection_error"
 
 
 async def test_user_device_exists_abort(

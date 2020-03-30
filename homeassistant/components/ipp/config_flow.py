@@ -48,7 +48,8 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
-    discovery_info = {}
+    def __init__(self):
+        self.discovery_info = {}
 
     async def async_step_user(
         self, user_input: Optional[ConfigType] = None
@@ -94,36 +95,27 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             }
         )
 
-        if self.discovery_info[CONF_UUID] is None:
-            try:
-                info = await validate_input(self.hass, self.discovery_info)
-            except IPPConnectionUpgradeRequired:
-                return self.async_abort(reason="connection_upgrade")
-            except IPPConnectionError:
-                return self.async_abort(reason="connection_error")
-            self.discovery_info[CONF_UUID] = info[CONF_UUID]
-
-        await self.async_set_unique_id(self.discovery_info[CONF_UUID])
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: self.discovery_info[CONF_HOST]}
-        )
-
-        return await self.async_step_zeroconf_confirm()
-
-    async def async_step_zeroconf_confirm(
-        self, user_input: ConfigType = None
-    ) -> Dict[str, Any]:
-        """Handle a flow initiated by zeroconf."""
-        if user_input is None:
-            return self._show_confirm_dialog()
-
         try:
             info = await validate_input(self.hass, self.discovery_info)
         except IPPConnectionUpgradeRequired:
             return self.async_abort(reason="connection_upgrade")
         except IPPConnectionError:
             return self.async_abort(reason="connection_error")
+
         self.discovery_info[CONF_UUID] = info[CONF_UUID]
+
+        return await self.async_step_zeroconf_confirm()
+
+    async def async_step_zeroconf_confirm(
+        self, user_input: ConfigType = None
+    ) -> Dict[str, Any]:
+        """Handle a confirmation flow initiated by zeroconf."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="zeroconf_confirm",
+                description_placeholders={"name": self.discovery_info[CONF_NAME]},
+                errors={},
+            )
 
         await self.async_set_unique_id(self.discovery_info[CONF_UUID])
         self._abort_if_unique_id_configured(
@@ -147,14 +139,5 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_VERIFY_SSL, default=False): bool,
                 }
             ),
-            errors=errors or {},
-        )
-
-    def _show_confirm_dialog(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
-        """Show the zeroconf confirm dialog to the user."""
-        name = self.discovery_info.get(CONF_NAME)
-        return self.async_show_form(
-            step_id="zeroconf_confirm",
-            description_placeholders={"name": name},
             errors=errors or {},
         )

@@ -40,12 +40,3 @@ async def test_unload_config_entry(
 
     assert entry.entry_id not in hass.data[DOMAIN]
     assert entry.state == ENTRY_STATE_NOT_LOADED
-
-
-async def test_setting_unique_id(hass, aioclient_mock):
-    """Test we set unique ID if not set yet."""
-    entry = await init_integration(hass, aioclient_mock)
-
-    assert hass.data[DOMAIN]
-    assert entry.entry_id in hass.data[DOMAIN]
-    assert entry.unique_id == "cfe92100-67c4-11d4-a45f-f8d027761251"
