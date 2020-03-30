@@ -39,7 +39,7 @@ class BTSmartHubScanner(DeviceScanner):
         """Initialise the scanner."""
         _LOGGER.debug("Initialising BT Smart Hub")
         self.host = config[CONF_HOST]
-        self.smarthub_model = config[CONF_SMARTHUB_MODEL]
+        self.smarthub_model = config.get(CONF_SMARTHUB_MODEL)
         self.last_results = {}
         self.success_init = False
         self.smarthub = BTSmartHub(
