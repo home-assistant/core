@@ -21,12 +21,14 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import (
     DOMAIN,
     POWERWALL_API_CHARGE,
+    POWERWALL_API_DEVICE_TYPE,
     POWERWALL_API_GRID_STATUS,
     POWERWALL_API_METERS,
+    POWERWALL_API_SITE_INFO,
     POWERWALL_API_SITEMASTER,
+    POWERWALL_API_STATUS,
     POWERWALL_COORDINATOR,
     POWERWALL_OBJECT,
-    POWERWALL_SITE_INFO,
     UPDATE_INTERVAL,
 )
 
@@ -64,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN].setdefault(entry_id, {})
     power_wall = PowerWall(entry.data[CONF_IP_ADDRESS])
     try:
-        site_info = await hass.async_add_executor_job(call_site_info, power_wall)
+        powerwall_data = await hass.async_add_executor_job(call_base_info, power_wall)
     except (PowerWallUnreachableError, ApiError, ConnectionError):
         raise ConfigEntryNotReady
 
@@ -80,11 +82,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         update_interval=timedelta(seconds=UPDATE_INTERVAL),
     )
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        POWERWALL_OBJECT: power_wall,
-        POWERWALL_COORDINATOR: coordinator,
-        POWERWALL_SITE_INFO: site_info,
-    }
+    hass.data[DOMAIN][entry.entry_id] = powerwall_data
+    hass.data[DOMAIN][entry.entry_id].update(
+        {POWERWALL_OBJECT: power_wall, POWERWALL_COORDINATOR: coordinator}
+    )
 
     await coordinator.async_refresh()
 
@@ -96,9 +97,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-def call_site_info(power_wall):
-    """Wrap site_info to be a callable."""
-    return power_wall.site_info
+def call_base_info(power_wall):
+    """Wrap powerwall properties to be a callable."""
+    return {
+        POWERWALL_API_SITE_INFO: power_wall.site_info,
+        POWERWALL_API_STATUS: power_wall.status,
+        POWERWALL_API_DEVICE_TYPE: power_wall.device_type,
+    }
 
 
 def _fetch_powerwall_data(power_wall):
