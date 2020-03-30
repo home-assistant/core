@@ -1,7 +1,8 @@
 """Support for SNMP enabled switch."""
 import logging
 
-from pyasn1.type.univ import Integer
+from pysnmp.proto.rfc1902 import *
+
 import pysnmp.hlapi.asyncio as hlapi
 from pysnmp.hlapi.asyncio import (
     CommunityData,
@@ -44,6 +45,8 @@ from .const import (
     MAP_AUTH_PROTOCOLS,
     MAP_PRIV_PROTOCOLS,
     SNMP_VERSIONS,
+    DEFAULT_VARTYPE,
+	CONF_VARTYPE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,6 +81,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PRIV_PROTOCOL, default=DEFAULT_PRIV_PROTOCOL): vol.In(
             MAP_PRIV_PROTOCOLS
         ),
+		vol.Optional(CONF_VARTYPE, default=DEFAULT_VARTYPE): cv.string,
     }
 )
 
@@ -100,6 +104,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     privproto = config.get(CONF_PRIV_PROTOCOL)
     payload_on = config.get(CONF_PAYLOAD_ON)
     payload_off = config.get(CONF_PAYLOAD_OFF)
+    vartype = config.get(CONF_VARTYPE)
 
     async_add_entities(
         [
@@ -120,6 +125,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 payload_off,
                 command_payload_on,
                 command_payload_off,
+				vartype,
             )
         ],
         True,
@@ -147,11 +153,13 @@ class SnmpSwitch(SwitchDevice):
         payload_off,
         command_payload_on,
         command_payload_off,
+		vartype,
     ):
         """Initialize the switch."""
 
         self._name = name
         self._baseoid = baseoid
+        self._vartype = vartype
 
         # Set the command OID to the base OID if command OID is unset
         self._commandoid = commandoid or baseoid
@@ -191,18 +199,49 @@ class SnmpSwitch(SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Turn on the switch."""
-        if self._command_payload_on.isdigit():
-            await self._set(Integer(self._command_payload_on))
-        else:
-            await self._set(self._command_payload_on)
+        # If vartype set, use it - http://snmplabs.com/pysnmp/docs/api-reference.html#pysnmp.smi.rfc1902.ObjectType
+        await self._execute_command(self._command_payload_on)
 
     async def async_turn_off(self, **kwargs):
         """Turn off the switch."""
-        if self._command_payload_on.isdigit():
-            await self._set(Integer(self._command_payload_off))
-        else:
-            await self._set(self._command_payload_off)
+        await self._execute_command(self._command_payload_off)
 
+    async def _execute_command(self, command):
+        if  self._vartype == "Null":
+            await self._set(Null(''))
+        elif self._vartype == "Integer32":
+            await self._set(Integer32(command))		
+        elif self._vartype == "Integer":
+            await self._set(Integer(command))		
+        elif self._vartype == "OctetString":
+            await self._set(OctetString(command))		
+        elif self._vartype == "IpAddress":
+            await self._set(IpAddress(command))	
+        # some work todo to support tuple ObjectIdentifier, this just supports str
+        elif self._vartype == "ObjectIdentifier":
+            await self._set(ObjectIdentifier(command))		
+        elif self._vartype == "Counter32":
+            await self._set(Counter32(command))		
+        elif self._vartype == "Gauge32":
+            await self._set(Gauge32(command))		
+        elif self._vartype == "Unsigned32":
+            await self._set(Unsigned32(command))		
+        elif self._vartype == "TimeTicks":
+            await self._set(TimeTicks(command))		
+        elif self._vartype == "Opaque":
+            await self._set(Opaque(command))		
+        elif self._vartype == "Counter64":
+            await self._set(Counter64(command))	
+        # some work todo to support bits
+        # elif self._vartype == "Bits":
+            # await self._set(Integer(command))	
+        # all other cases failed, vartype not set
+        # try to make an integer, else use the NULL type
+        else:
+            if self._command_payload_on.isdigit():
+                await self._set(Integer(command))
+            else:
+                await self._set(command)
     async def async_update(self):
         """Update the state."""
         errindication, errstatus, errindex, restable = await getCmd(
@@ -245,3 +284,4 @@ class SnmpSwitch(SwitchDevice):
         await setCmd(
             *self._request_args, ObjectType(ObjectIdentity(self._commandoid), value)
         )
+
