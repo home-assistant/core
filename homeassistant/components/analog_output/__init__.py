@@ -260,7 +260,7 @@ class AnalogOutputDevice(ToggleEntity):
         # just in case min/max values changed
         self._value = min(self._value, self.maximum)
         self._value = max(self._value, self.minimum)
-        self._restore_value = self.value
+        self._restore_value = self._value
         self.async_write_ha_state()
 
     async def turn_on(self, **kwargs):
