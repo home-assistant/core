@@ -50,7 +50,7 @@ def get_significant_states(
     entity_ids=None,
     filters=None,
     include_start_time_state=True,
-    significant_changes_only=False,
+    significant_changes_only=True,
 ):
     """
     Return states changes during UTC period start_time - end_time.
@@ -331,7 +331,9 @@ class HistoryPeriodView(HomeAssistantView):
         if entity_ids:
             entity_ids = entity_ids.lower().split(",")
         include_start_time_state = "skip_initial_state" not in request.query
-        significant_changes_only = "significant_changes_only" in request.query
+        significant_changes_only = (
+            request.query.get("significant_changes_only", "1") != "0"
+        )
 
         hass = request.app["hass"]
 
