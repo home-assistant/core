@@ -18,7 +18,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.exceptions import PlatformNotReady
 
-from . import CommonEntity, async_add_blebox
+from . import BleBoxEntity, async_add_blebox
 
 _LOGGER = logging.getLogger(__name__)
 
