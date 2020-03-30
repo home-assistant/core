@@ -79,7 +79,7 @@ async def async_add_blebox(klass, method, hass, config, async_add, exception):
     return True
 
 
-class CommonEntity:
+class BleBoxEntity:
     """Implements methods common among BleBox entities."""
 
     def __init__(self, feature):
