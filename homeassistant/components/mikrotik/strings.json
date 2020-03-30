@@ -3,9 +3,16 @@
         "title": "Mikrotik",
         "step": {
             "user": {
-                "title": "Set up Mikrotik Router",
+                "title": "Set up Mikrotik integration",
                 "data": {
                     "name": "Name",
+                    "num_hubs": "Number of Hubs"
+                }
+            },
+            "hub": {
+                "title": "Setup Mikrotik Hub",
+                "description": "Please enter the configuration for hub {index}",
+                "data": {
                     "host": "Host",
                     "username": "Username",
                     "password": "Password",
@@ -15,7 +22,7 @@
             }
         },
         "error": {
-            "name_exists": "Name exists",
+            "hub_exists": "Hub is already configured",
             "cannot_connect": "Connection Unsuccessful",
             "wrong_credentials": "Wrong Credentials"
         },
@@ -25,7 +32,7 @@
     },
     "options": {
         "step": {
-            "device_tracker": {
+            "init": {
                 "data": {
                     "arp_ping": "Enable ARP ping",
                     "force_dhcp": "Force scanning using DHCP",

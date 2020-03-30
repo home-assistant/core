@@ -4,12 +4,15 @@ DOMAIN = "mikrotik"
 DEFAULT_NAME = "Mikrotik"
 DEFAULT_API_PORT = 8728
 DEFAULT_DETECTION_TIME = 300
+MAX_NUM_HUBS = 3
 
 ATTR_MANUFACTURER = "Mikrotik"
 ATTR_SERIAL_NUMBER = "serial-number"
 ATTR_FIRMWARE = "current-firmware"
 ATTR_MODEL = "model"
 
+CONF_HUBS = "hubs"
+CONF_NUM_HUBS = "num_hubs"
 CONF_ARP_PING = "arp_ping"
 CONF_FORCE_DHCP = "force_dhcp"
 CONF_DETECTION_TIME = "detection_time"
