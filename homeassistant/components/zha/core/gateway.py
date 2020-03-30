@@ -474,7 +474,6 @@ class ZHAGateway:
         """Update the devices in the store."""
         for device in self.devices.values():
             self.zha_storage.async_update_device(device)
-        await self.zha_storage.async_save()
 
     async def async_device_initialized(self, device: zha_typing.ZigpyDeviceType):
         """Handle device joined and basic information discovered (async)."""
