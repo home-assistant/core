@@ -350,7 +350,7 @@ class RachioSchedule(RachioSwitch):
 
     def _handle_update(self, *args, **kwargs) -> None:
         """Handle incoming webhook schedule data."""
-        # Schedule ID not passed when running indvidual zones, so we catch that error
+        # Schedule ID not passed when running individual zones, so we catch that error
         try:
             if args[0][KEY_SCHEDULE_ID] == self.schedule_id:
                 if args[0][KEY_SUBTYPE] in [SUBTYPE_SCHEDULE_STARTED]:
