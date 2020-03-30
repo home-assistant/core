@@ -19,6 +19,11 @@ async def async_init_integration(
     devices_fixture = "tado/devices.json"
     me_fixture = "tado/me.json"
     zones_fixture = "tado/zones.json"
+
+    # Smart AC with Swing
+    zone_5_state_fixture = "tado/smartac3.with_swing.json"
+    zone_5_capabilities_fixture = "tado/zone_with_swing_capabilities.json"
+
     # Water Heater 2
     zone_4_state_fixture = "tado/tadov2.water_heater.heating.json"
     zone_4_capabilities_fixture = "tado/water_heater_zone_capabilities.json"
@@ -31,6 +36,7 @@ async def async_init_integration(
     zone_2_state_fixture = "tado/tadov2.water_heater.auto_mode.json"
     zone_2_capabilities_fixture = "tado/water_heater_zone_capabilities.json"
 
+    # Tado V2 with manual heating
     zone_1_state_fixture = "tado/tadov2.heating.manual_mode.json"
     zone_1_capabilities_fixture = "tado/tadov2.zone_capabilities.json"
 
@@ -48,6 +54,10 @@ async def async_init_integration(
             text=load_fixture(zones_fixture),
         )
         m.get(
+            "https://my.tado.com/api/v2/homes/1/zones/5/capabilities",
+            text=load_fixture(zone_5_capabilities_fixture),
+        )
+        m.get(
             "https://my.tado.com/api/v2/homes/1/zones/4/capabilities",
             text=load_fixture(zone_4_capabilities_fixture),
         )
@@ -62,6 +72,10 @@ async def async_init_integration(
         m.get(
             "https://my.tado.com/api/v2/homes/1/zones/1/capabilities",
             text=load_fixture(zone_1_capabilities_fixture),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/zones/5/state",
+            text=load_fixture(zone_5_state_fixture),
         )
         m.get(
             "https://my.tado.com/api/v2/homes/1/zones/4/state",
