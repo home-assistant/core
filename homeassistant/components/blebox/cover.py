@@ -42,7 +42,7 @@ async def async_setup_entry(hass, config_entry, async_add):
     )
 
 
-class BleBoxCoverEntity(CommonEntity, CoverDevice):
+class BleBoxCoverEntity(BleBoxEntity, CoverDevice):
     """Representation of a BleBox cover feature."""
 
     @property
