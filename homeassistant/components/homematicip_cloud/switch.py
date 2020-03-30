@@ -154,6 +154,14 @@ class HomematicipMultiSwitch(HomematicipGenericDevice, SwitchDevice):
         super().__init__(hap, device, f"Channel{channel}")
 
     @property
+    def name(self) -> str:
+        """Return the name of the multi switch channel."""
+        label = self._get_label_by_channel(self.channel)
+        if label:
+            return label
+        return super().name
+
+    @property
     def unique_id(self) -> str:
         """Return a unique ID."""
         return f"{self.__class__.__name__}_{self.post}_{self._device.id}"

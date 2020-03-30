@@ -1021,16 +1021,16 @@ class BluesoundPlayer(MediaPlayerDevice):
     async def async_volume_up(self):
         """Volume up the media player."""
         current_vol = self.volume_level
-        if not current_vol or current_vol < 0:
+        if not current_vol or current_vol >= 1:
             return
-        return self.async_set_volume_level(((current_vol * 100) + 1) / 100)
+        return await self.async_set_volume_level(current_vol + 0.01)
 
     async def async_volume_down(self):
         """Volume down the media player."""
         current_vol = self.volume_level
-        if not current_vol or current_vol < 0:
+        if not current_vol or current_vol <= 0:
             return
-        return self.async_set_volume_level(((current_vol * 100) - 1) / 100)
+        return await self.async_set_volume_level(current_vol - 0.01)
 
     async def async_set_volume_level(self, volume):
         """Send volume_up command to media player."""

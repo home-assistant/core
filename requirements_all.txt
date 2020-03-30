@@ -140,7 +140,7 @@ aio_geojson_nsw_rfs_incidents==0.3
 aio_georss_gdacs==0.3
 
 # homeassistant.components.ambient_station
-aioambient==1.0.4
+aioambient==1.1.0
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.2.3
@@ -168,7 +168,7 @@ aioftp==0.12.0
 aioharmony==0.1.13
 
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.35
+aiohomekit[IP]==0.2.37
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -355,7 +355,7 @@ boto3==1.9.252
 bravia-tv==1.0.1
 
 # homeassistant.components.broadlink
-broadlink==0.12.0
+broadlink==0.13.0
 
 # homeassistant.components.brother
 brother==0.1.9
@@ -964,7 +964,7 @@ onkyo-eiscp==1.2.7
 onvif-zeep-async==0.2.0
 
 # homeassistant.components.opencv
-# opencv-python-headless==4.1.2.30
+# opencv-python-headless==4.2.0.32
 
 # homeassistant.components.openevse
 openevsewifi==0.4
@@ -1042,7 +1042,7 @@ plexapi==3.3.0
 plexauth==0.0.5
 
 # homeassistant.components.plex
-plexwebsocket==0.0.6
+plexwebsocket==0.0.7
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1399,7 +1399,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==1.5.2
+pymodbus==2.3.0
 
 # homeassistant.components.monoprice
 pymonoprice==0.3
@@ -1596,7 +1596,7 @@ python-clementine-remote==1.0.1
 python-digitalocean==1.13.2
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.3
+python-ecobee-api==0.2.5
 
 # homeassistant.components.eq3btsmart
 # python-eq3bt==0.1.11
