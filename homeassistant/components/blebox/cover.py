@@ -23,13 +23,6 @@ from . import BleBoxEntity, async_add_blebox
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add, discovery_info=None):
-    """Set up BleBox cover."""
-    return await async_add_blebox(
-        BleBoxCoverEntity, "covers", hass, config, async_add, PlatformNotReady
-    )
-
-
 async def async_setup_entry(hass, config_entry, async_add):
     """Set up a BleBox entry."""
     return await async_add_blebox(

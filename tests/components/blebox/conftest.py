@@ -143,15 +143,3 @@ class DefaultBoxTest:
 
             error.assert_has_calls([call("Updating '%s' failed: %s", name, mock.ANY)])
             assert isinstance(error.call_args[0][2], blebox_uniapi.error.ClientError)
-
-    async def test_async_setup_platform(self, hass):
-        """Test async_setup_platform (for coverage)."""
-        config = mock_config("172.90.80.70")
-        config.add_to_hass(hass)
-
-        def async_add(entities, state):
-            assert state is True
-            assert len(entities) in (1, 2)  # 2 only for switchbox
-
-        mod = self.HASS_TYPE
-        assert await mod.async_setup_platform(hass, config.data, async_add)
