@@ -90,11 +90,12 @@ class LastfmSensor(Entity):
         toptitle = re.search("', '(.+?)',", str(top))
         topartist = re.search("'(.+?)',", str(top))
         self._topplayed = f"{topartist.group(1)} - {toptitle.group(1)}"
-        if self._user.get_now_playing() is None:
+        now_playing = now = self._user.get_now_playing()
+        if now_playing is None:
             self._state = "Not Scrobbling"
             return
-        now = self._user.get_now_playing()
-        self._state = f"{now.artist} - {now.title}"
+
+        self._state = f"{now_playing.artist} - {now_playing.title}"
 
     @property
     def device_state_attributes(self):
