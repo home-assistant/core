@@ -61,7 +61,6 @@ class Pi4ioe5v9Switch(ToggleEntity):
         self._pin = pin
         self._invert_logic = invert_logic
         self._state = False
-        pi4ioe5v9xxxx.pin_to_memory(self._pin, self._invert_logic)
         pi4ioe5v9xxxx.memory_to_hw()
 
     @property
