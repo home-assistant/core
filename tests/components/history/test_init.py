@@ -188,7 +188,7 @@ class TestComponentHistory(unittest.TestCase):
         """
         zero, four, states = self.record_states()
         hist = history.get_significant_states(
-            self.hass, zero, four, filters=history.Filters(),
+            self.hass, zero, four, filters=history.Filters()
         )
         assert states == hist
 
@@ -252,7 +252,7 @@ class TestComponentHistory(unittest.TestCase):
         del states["script.can_cancel_this_one"]
 
         hist = history.get_significant_states(
-            self.hass, zero, four, ["media_player.test"], filters=history.Filters(),
+            self.hass, zero, four, ["media_player.test"], filters=history.Filters()
         )
         assert states == hist
 
@@ -513,12 +513,12 @@ class TestComponentHistory(unittest.TestCase):
         zero, four, states = self.record_states()
         entity_ids = ["media_player.test", "media_player.test2"]
         hist = history.get_significant_states(
-            self.hass, zero, four, entity_ids, filters=history.Filters(),
+            self.hass, zero, four, entity_ids, filters=history.Filters()
         )
         assert list(hist.keys()) == entity_ids
         entity_ids = ["media_player.test2", "media_player.test"]
         hist = history.get_significant_states(
-            self.hass, zero, four, entity_ids, filters=history.Filters(),
+            self.hass, zero, four, entity_ids, filters=history.Filters()
         )
         assert list(hist.keys()) == entity_ids
 
