@@ -33,7 +33,9 @@ DOMAIN = "analog_output"
 SCAN_INTERVAL = timedelta(seconds=30)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-CONF_INITIAL = "initial"
+CONF_INITIAL_VALUE = "initial_value"
+CONF_INITIAL_STATE = "initial_state"
+
 CONF_STEP = "step"
 
 MODE_SLIDER = "slider"
@@ -59,13 +61,16 @@ def _cv_input_number(cfg):
         raise vol.Invalid(
             f"Maximum ({minimum}) is not greater than minimum ({maximum})"
         )
-    state = cfg.get(CONF_INITIAL)
+    state = cfg.get(CONF_INITIAL_VALUE)
     if state is not None and (state < minimum or state > maximum):
         raise vol.Invalid(f"Initial value {state} not in range {minimum}-{maximum}")
+    state = cfg.get(CONF_INITIAL_STATE)
+    if state is not None and (state < minimum or state > maximum):
+        raise vol.Invalid(f"Initial state {state} not in range {minimum}-{maximum}")
+
     return cfg
 
 
-# ToDo: how to clamp to config min/max values? Maybe use _cv_input_number?
 VALID_VALUE_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 
 OUTPUT_TURN_ON_SCHEMA = {
@@ -79,7 +84,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_MINIMUM, default=0): vol.Coerce(float),
         vol.Optional(CONF_MAXIMUM, default=255): vol.Coerce(float),
-        vol.Optional(CONF_INITIAL, default=0): vol.Coerce(float),
+        vol.Optional(CONF_INITIAL_VALUE, default=100): vol.Coerce(float),
+        vol.Optional(CONF_INITIAL_STATE, default=0): vol.Coerce(float),
         vol.Optional(CONF_STEP, default=1): vol.All(
             vol.Coerce(float), vol.Range(min=1e-3)
         ),
@@ -165,8 +171,8 @@ class AnalogOutputDevice(ToggleEntity):
         self._config = config
         self._name = config[CONF_NAME]
         self.editable = True
-        self._value = config.get(CONF_INITIAL)
-        self._restore_value = self._value
+        self._value = config[CONF_INITIAL_STATE]
+        self._restore_value = config[CONF_INITIAL_VALUE]
 
     @property
     def should_poll(self):
@@ -213,21 +219,12 @@ class AnalogOutputDevice(ToggleEntity):
         """Return the icon to be used for this entity."""
         return self._config.get(CONF_ICON)
 
-    async def async_added_to_hass(self):
-        """Call when entity is about to be added to Home Assistant."""
-        # If not None, we got an initial value.
-        if self._state is not None:
-            return
-
-        state = await self.async_get_last_state()
-        self._state = state and state.state == state
-
     @property
     def state_attributes(self):
         """Return the optional state attributes."""
         return {
             ATTR_VALUE: self._restore_value,
-            ATTR_INITIAL: self._config.get(CONF_INITIAL),
+            ATTR_INITIAL: self._config.get(CONF_INITIAL_VALUE),
             ATTR_EDITABLE: self.editable,
             ATTR_MINIMAL: self.minimum,
             ATTR_MAXIMAL: self.maximum,

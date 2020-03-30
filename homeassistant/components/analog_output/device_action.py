@@ -11,7 +11,6 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import ATTR_VALUE, ATTR_VALUE_PCT, DOMAIN
 
-# ToDo: how to limit ATTR_VALUE with config min and max?
 ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,

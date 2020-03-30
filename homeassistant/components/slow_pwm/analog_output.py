@@ -115,12 +115,12 @@ class SlowPWM(AnalogOutputDevice):
                 await self._stop_pwm_cycle()  # Stop cycle
                 await self._switch_on()  # Turn continuous on
             else:
-                new_off_time = self._swich_on_time + (
+                new_off_time = self._switch_on_time + (
                     self._config[CONF_CYCLETIME] * self._value
                 ) / (self.maximum - self.minimum)
                 if new_off_time > self._switch_off_time:
                     # Delay switch off function
-                    self.async_cycle_on(False)
+                    await self.async_cycle_on(False)
                 else:
                     # Switch off, switching on will be automatically done in cycle loop
                     if self._listener_off is not None:
@@ -140,9 +140,9 @@ class SlowPWM(AnalogOutputDevice):
             self._listener_off()
             self._listener_off = None
         # Register switch-off event
-        if new_start:
-            self._swich_on_time = dt_util.utcnow().replace(microsecond=0)
-        self._switch_off_time = self._swich_on_time + (
+        if new_start or (self._switch_on_time is None):
+            self._switch_on_time = dt_util.utcnow().replace(microsecond=0)
+        self._switch_off_time = self._switch_on_time + (
             self._config[CONF_CYCLETIME] * self._value
         ) / (self.maximum - self.minimum)
         self._listener_off = async_track_point_in_utc_time(
