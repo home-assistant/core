@@ -20,7 +20,7 @@ CONF_SMARTHUB_MODEL = "smarthub_model"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
-        vol.Optional(CONF_SMARTHUB_MODEL, default=None): vol.In([None, 1, 2]),
+        vol.Optional(CONF_SMARTHUB_MODEL): vol.In([1, 2]),
     }
 )
 
