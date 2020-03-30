@@ -1,7 +1,7 @@
 """Support for interface with a Panasonic Viera TV."""
 import logging
 
-from panasonic_viera import RemoteControl
+from panasonic_viera import *
 import voluptuous as vol
 import wakeonlan
 
@@ -21,6 +21,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_BROADCAST_ADDRESS,
     CONF_HOST,
     CONF_MAC,
@@ -31,7 +32,12 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
+import pickle
+from os import path
+
 _LOGGER = logging.getLogger(__name__)
+
+DOMAIN = "panasonic_viera"
 
 CONF_APP_POWER = "app_power"
 
@@ -39,6 +45,11 @@ DEFAULT_NAME = "Panasonic Viera TV"
 DEFAULT_PORT = 55000
 DEFAULT_BROADCAST_ADDRESS = "255.255.255.255"
 DEFAULT_APP_POWER = False
+
+PANASONIC_VIERA_CONFIG_FILE = "panasonic_viera.conf"
+
+TV_TYPE_NONENCRYPTED = 0
+TV_TYPE_ENCRYPTED = 1
 
 SUPPORT_VIERATV = (
     SUPPORT_PAUSE
@@ -66,6 +77,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+SERVICE_SEND_KEY = "send_key"
+ATTR_KEY = "key"
+
+SEND_KEY_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids, vol.Required(ATTR_KEY): cv.string})
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Panasonic Viera TV platform."""
@@ -92,16 +107,61 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
     remote = RemoteControl(host, port)
 
-    add_entities(
-        [PanasonicVieraTVDevice(mac, name, remote, host, broadcast, app_power)]
-    )
-    return True
+    if remote._type == TV_TYPE_ENCRYPTED:
+        needs_pairing = True
+        if path.exists(PANASONIC_VIERA_CONFIG_FILE):
+            with open(PANASONIC_VIERA_CONFIG_FILE, "rb") as config_dict_file:
+                config_dict = pickle.load(config_dict_file)
+                if host in config_dict:
+                    id = config_dict[host]["id"]
+                    key = config_dict[host]["key"]
 
+                    remote = RemoteControl(host, port, app_id=id, encryption_key=key)
+                    needs_pairing = False
+
+        if needs_pairing:
+            configurator = hass.components.configurator
+
+            async def pairing_callback(data):
+                remote.request_pin_code()
+                configurator.async_request_done(pairing_request)
+
+                async def pin_callback(data):
+                    try:
+                        remote.authorize_pin_code(pincode=data["pin"])
+                        configurator.async_request_done(pin_request)
+
+                        config_dict = {host: {"id": remote._app_id, "key": remote._enc_key}}
+                        with open(PANASONIC_VIERA_CONFIG_FILE, "wb") as config_dict_file:
+                            pickle.dump(config_dict, config_dict_file)
+                    except Exception as e:
+                        _LOGGER.error(str(e))
+
+                pin_request = configurator.async_request_config(
+                    name,
+                    pin_callback,
+                    description="Enter the PIN code displayed on your TV.",
+                    fields=[{"id": "pin", "name": "PIN"}],
+                    submit_caption="Pair"
+                )
+
+            pairing_request = configurator.async_request_config(
+                name,
+                pairing_callback,
+                description="Click start, reopen the configurator window and enter the PIN code displayed on your TV.",
+                submit_caption="Start pairing request"
+            )
+
+    add_entities(
+        [PanasonicVieraTVDevice(hass, mac, name, remote, host, broadcast, app_power)]
+    )
+
+    return True
 
 class PanasonicVieraTVDevice(MediaPlayerDevice):
     """Representation of a Panasonic Viera TV."""
 
-    def __init__(self, mac, name, remote, host, broadcast, app_power, uuid=None):
+    def __init__(self, hass, mac, name, remote, host, broadcast, app_power, uuid=None):
         """Initialize the Panasonic device."""
         # Save a reference to the imported class
         self._wol = wakeonlan
@@ -117,6 +177,14 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
         self._volume = 0
         self._app_power = app_power
 
+        hass.services.async_register(
+            DOMAIN, SERVICE_SEND_KEY, self.send_key_handler, schema=SEND_KEY_SCHEMA
+        )
+
+    async def send_key_handler(self, service):
+        key = service.data['key']
+        self.send_key(Keys[key])
+
     @property
     def unique_id(self) -> str:
         """Return the unique ID of this Viera TV."""
@@ -130,6 +198,11 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
             self._state = STATE_ON
         except OSError:
             self._state = STATE_OFF
+
+        if self._remote._type == TV_TYPE_ENCRYPTED:
+            self._remote = RemoteControl(self._remote._host, self._remote._port, app_id=self._remote._app_id, encryption_key=self._remote._enc_key)
+        else:
+            self._remote = RemoteControl(self._remote._host, self._remote._port)
 
     def send_key(self, key):
         """Send a key to the tv and handles exceptions."""

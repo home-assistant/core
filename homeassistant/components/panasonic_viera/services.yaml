@@ -1,0 +1,11 @@
+# Describes the format for available webostv services	
+
+send_key:
+  description: Send a key press command.
+  fields:
+    entity_id:
+      description: Name of the panasonic_viera entity where to send the key.
+      example: media_player.living_room_tv
+    key:
+      description: Name of the key to press. Please refer to https://github.com/florianholzapfel/panasonic-viera/blob/master/panasonic_viera/__init__.py for the available keys.
+      example: left
