@@ -1,0 +1,9 @@
+{
+  "domain": "slow_pwm",
+  "name": "Slow PWM",
+  "documentation": "https://www.home-assistant.io/integrations/slow_pwm",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": ["@antonverburg"],
+  "quality_scale": "internal"
+}

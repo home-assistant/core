@@ -1,0 +1,9 @@
+{
+  "domain": "analog_output",
+  "name": "AnalogOutput",
+  "documentation": "https://www.home-assistant.io/integrations/analog_output",
+  "requirements": [],
+  "dependencies": ["group"],
+  "codeowners": ["@antonverburg"],
+  "quality_scale": "internal"
+}

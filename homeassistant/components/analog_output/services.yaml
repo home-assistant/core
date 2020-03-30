@@ -1,0 +1,53 @@
+# Describes the format for available analog_output services
+
+turn_on:
+  description: Turn an analog output on.
+  fields:
+    entity_id:
+      description: Name(s) of entities to turn on
+      example: "output.pwm"
+    value:
+      description: Number between min..max indicating output value, where min is the minimal value specified in the config, max is the maximum output value supported by the analog output device.
+      example: 120
+    value_pct:
+      description: Number between 0..100 indicating percentage of full output, where 0 turns the light off, 1 is the minimum output and 100 is the maximum output supported by the analog_output.
+      example: 47
+
+turn_off:
+  description: Turn an analog output off.
+  fields:
+    entity_id:
+      description: Name(s) of entities to turn off.
+      example: "output.pwm"
+
+toggle:
+  description: Toggles an analog output.
+  fields:
+    entity_id:
+      description: Name(s) of entities to turn on
+      example: "output.pwm"
+    value:
+      description: Number between min..max indicating output value, where min is the minimal value specified in the config, max is the maximum output value supported by the analog output device.
+      example: 120
+    value_pct:
+      description: Number between 0..100 indicating percentage of full output, where 0 turns the light off, 1 is the minimum output and 100 is the maximum output supported by the analog_output.
+      example: 47
+
+decrement:
+  description: Decrement the value of an analog output entity by its stepping.
+  fields:
+    entity_id: {description: Entity id of the analog output that should be decremented.,
+      example: analog_output.device}
+increment:
+  description: Increment the value of an analog output entity by its stepping.
+  fields:
+    entity_id: {description: Entity id of the analog output that should be incremented.,
+      example: analog_output.device}
+
+set_value:
+  description: Set the value of an analog output entity.
+  fields:
+    entity_id: {description: Entity id of the analog output to set the new value.,
+      example: analog_outut.device}
+    value: {description: The target value the entity should be set to., example: 42}
+
