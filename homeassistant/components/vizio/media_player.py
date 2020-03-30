@@ -42,7 +42,9 @@ from .const import (
     DOMAIN,
     ICON,
     SUPPORTED_COMMANDS,
+    VIZIO_AUDIO_SETTINGS,
     VIZIO_DEVICE_CLASSES,
+    VIZIO_SOUND_MODE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -201,7 +203,7 @@ class VizioDevice(MediaPlayerDevice):
         self._state = STATE_ON
 
         audio_settings = await self._device.get_all_settings(
-            "audio", log_api_exception=False
+            VIZIO_AUDIO_SETTINGS, log_api_exception=False
         )
         if audio_settings is not None:
             self._volume_level = float(audio_settings["volume"]) / self._max_volume
@@ -211,10 +213,10 @@ class VizioDevice(MediaPlayerDevice):
                 self._supported_commands = (
                     self._supported_commands | SUPPORT_SELECT_SOUND_MODE
                 )
-                self._current_sound_mode = audio_settings["eq"]
+                self._current_sound_mode = audio_settings[VIZIO_SOUND_MODE]
                 if self._available_sound_modes is None:
                     self._available_sound_modes = await self._device.get_setting_options(
-                        "audio", "eq"
+                        VIZIO_AUDIO_SETTINGS, VIZIO_SOUND_MODE
                     )
             else:
                 self._supported_commands = (
