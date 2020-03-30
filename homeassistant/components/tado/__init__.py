@@ -1,9 +1,9 @@
 """Support for the (unofficial) Tado API."""
 from datetime import timedelta
 import logging
-import urllib
 
 from PyTado.interface import Tado
+from requests import RequestException
 import voluptuous as vol
 
 from homeassistant.components.climate.const import PRESET_AWAY, PRESET_HOME
@@ -110,7 +110,7 @@ class TadoConnector:
         """Connect to Tado and fetch the zones."""
         try:
             self.tado = Tado(self._username, self._password)
-        except (RuntimeError, urllib.error.HTTPError) as exc:
+        except (RuntimeError, RequestException) as exc:
             _LOGGER.error("Unable to connect: %s", exc)
             return False
 
@@ -135,9 +135,14 @@ class TadoConnector:
         _LOGGER.debug("Updating %s %s", sensor_type, sensor)
         try:
             if sensor_type == "zone":
-                data = self.tado.getState(sensor)
+                data = self.tado.getZoneState(sensor)
             elif sensor_type == "device":
-                data = self.tado.getDevices()[0]
+                devices_data = self.tado.getDevices()
+                if not devices_data:
+                    _LOGGER.info("There are no devices to setup on this tado account.")
+                    return
+
+                data = devices_data[0]
             else:
                 _LOGGER.debug("Unknown sensor: %s", sensor_type)
                 return
@@ -174,29 +179,40 @@ class TadoConnector:
 
     def set_zone_overlay(
         self,
-        zone_id,
-        overlay_mode,
+        zone_id=None,
+        overlay_mode=None,
         temperature=None,
         duration=None,
         device_type="HEATING",
         mode=None,
+        fan_speed=None,
     ):
         """Set a zone overlay."""
         _LOGGER.debug(
-            "Set overlay for zone %s: mode=%s, temp=%s, duration=%s, type=%s, mode=%s",
+            "Set overlay for zone %s: overlay_mode=%s, temp=%s, duration=%s, type=%s, mode=%s fan_speed=%s",
             zone_id,
             overlay_mode,
             temperature,
             duration,
             device_type,
             mode,
+            fan_speed,
         )
+
         try:
             self.tado.setZoneOverlay(
-                zone_id, overlay_mode, temperature, duration, device_type, "ON", mode
+                zone_id,
+                overlay_mode,
+                temperature,
+                duration,
+                device_type,
+                "ON",
+                mode,
+                fan_speed,
             )
-        except urllib.error.HTTPError as exc:
-            _LOGGER.error("Could not set zone overlay: %s", exc.read())
+
+        except RequestException as exc:
+            _LOGGER.error("Could not set zone overlay: %s", exc)
 
         self.update_sensor("zone", zone_id)
 
@@ -206,7 +222,7 @@ class TadoConnector:
             self.tado.setZoneOverlay(
                 zone_id, overlay_mode, None, None, device_type, "OFF"
             )
-        except urllib.error.HTTPError as exc:
-            _LOGGER.error("Could not set zone overlay: %s", exc.read())
+        except RequestException as exc:
+            _LOGGER.error("Could not set zone overlay: %s", exc)
 
         self.update_sensor("zone", zone_id)

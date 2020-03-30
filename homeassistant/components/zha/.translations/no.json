@@ -12,10 +12,10 @@
                     "radio_type": "Radio type",
                     "usb_path": "USB enhetsbane"
                 },
-                "title": "ZHA"
+                "title": ""
             }
         },
-        "title": "ZHA"
+        "title": ""
     },
     "device_automation": {
         "action_type": {

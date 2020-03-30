@@ -47,7 +47,7 @@ aio_geojson_nsw_rfs_incidents==0.3
 aio_georss_gdacs==0.3
 
 # homeassistant.components.ambient_station
-aioambient==1.0.4
+aioambient==1.1.0
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.2.3
@@ -72,7 +72,7 @@ aiofreepybox==0.0.8
 aioharmony==0.1.13
 
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.35
+aiohomekit[IP]==0.2.37
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -137,7 +137,7 @@ bellows-homeassistant==0.14.0
 bomradarloop==0.1.4
 
 # homeassistant.components.broadlink
-broadlink==0.12.0
+broadlink==0.13.0
 
 # homeassistant.components.brother
 brother==0.1.9
@@ -402,7 +402,7 @@ plexapi==3.3.0
 plexauth==0.0.5
 
 # homeassistant.components.plex
-plexwebsocket==0.0.6
+plexwebsocket==0.0.7
 
 # homeassistant.components.mhz19
 # homeassistant.components.serial_pm
@@ -543,7 +543,7 @@ pymfy==0.7.1
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==1.5.2
+pymodbus==2.3.0
 
 # homeassistant.components.monoprice
 pymonoprice==0.3
@@ -602,7 +602,7 @@ pysonos==0.0.25
 pyspcwebgw==0.4.0
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.3
+python-ecobee-api==0.2.5
 
 # homeassistant.components.darksky
 python-forecastio==1.4.0
@@ -615,6 +615,9 @@ python-miio==0.4.8
 
 # homeassistant.components.nest
 python-nest==4.1.0
+
+# homeassistant.components.tado
+python-tado==0.5.0
 
 # homeassistant.components.twitch
 python-twitch-client==0.6.0

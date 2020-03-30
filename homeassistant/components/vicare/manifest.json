@@ -4,5 +4,5 @@
   "documentation": "https://www.home-assistant.io/integrations/vicare",
   "dependencies": [],
   "codeowners": ["@oischinger"],
-  "requirements": ["PyViCare==0.1.7"]
+  "requirements": ["PyViCare==0.1.10"]
 }
