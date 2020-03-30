@@ -616,6 +616,9 @@ python-miio==0.4.8
 # homeassistant.components.nest
 python-nest==4.1.0
 
+# homeassistant.components.tado
+python-tado==0.5.0
+
 # homeassistant.components.twitch
 python-twitch-client==0.6.0
 
