@@ -41,6 +41,37 @@ async def test_async_setup(hass):
     assert len(hass.config_entries.async_entries(dynalite.DOMAIN)) == 1
 
 
+async def test_async_setup_bad_config1(hass):
+    """Test a successful with bad config on templates."""
+    host = "1.2.3.4"
+    with patch(
+        "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
+        return_value=True,
+    ):
+        assert not await async_setup_component(
+            hass,
+            dynalite.DOMAIN,
+            {
+                dynalite.DOMAIN: {
+                    dynalite.CONF_BRIDGES: [
+                        {
+                            dynalite.CONF_HOST: host,
+                            dynalite.CONF_AREA: {
+                                "1": {
+                                    dynalite.CONF_TEMPLATE: dynalite.const.CONF_TIME_COVER,
+                                    dynalite.CONF_NAME: "Name",
+                                    dynalite.CONF_ROOM_ON: 7,
+                                }
+                            },
+                        }
+                    ]
+                }
+            },
+        )
+        await hass.async_block_till_done()
+    assert dynalite.DOMAIN not in hass.data
+
+
 async def test_async_setup_bad_config2(hass):
     """Test a successful with bad config on numbers."""
     host = "1.2.3.4"
