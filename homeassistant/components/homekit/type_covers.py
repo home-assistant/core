@@ -187,7 +187,7 @@ class WindowCovering(HomeAccessory):
                 current_tilt - self._homekit_target_tilt < 1
             ):
                 self.char_target_tilt.set_value(current_tilt)
-                self._homekit_target = None
+                self._homekit_target_tilt = None
 
 
 @TYPES.register("WindowCoveringBasic")
