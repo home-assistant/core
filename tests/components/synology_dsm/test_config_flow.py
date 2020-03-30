@@ -43,9 +43,19 @@ def mock_controller_service():
     with patch(
         "homeassistant.components.synology_dsm.config_flow.SynologyDSM"
     ) as service_mock:
-        service_mock.return_value.update = Mock()
+        service_mock.return_value.login = Mock(return_value=True)
         service_mock.return_value.storage = Mock(disks=[], volumes=[])
         service_mock.return_value.utilisation = Mock(cpu_user_load=1)
+        yield service_mock
+
+
+@pytest.fixture(name="service_login_failed")
+def mock_controller_service_login_failed():
+    """Mock a failed login."""
+    with patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSM"
+    ) as service_mock:
+        service_mock.return_value.login = Mock(return_value=False)
         yield service_mock
 
 
@@ -55,7 +65,7 @@ def mock_controller_service_failed():
     with patch(
         "homeassistant.components.synology_dsm.config_flow.SynologyDSM"
     ) as service_mock:
-        service_mock.return_value.update = Mock()
+        service_mock.return_value.login = Mock(return_value=True)
         service_mock.return_value.storage = Mock(disks=None, volumes=None)
         service_mock.return_value.utilisation = Mock(cpu_user_load=None)
         yield service_mock
@@ -182,6 +192,17 @@ async def test_abort_if_already_setup(hass: HomeAssistantType):
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_login_failed(hass: HomeAssistantType, service_login_failed: MagicMock):
+    """Test when we have errors during connection."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {CONF_USERNAME: "login"}
 
 
 async def test_connection_failed(hass: HomeAssistantType, service_failed: MagicMock):
