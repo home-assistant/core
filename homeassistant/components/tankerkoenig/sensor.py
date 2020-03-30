@@ -140,6 +140,9 @@ class FuelPriceSensor(Entity):
         if self._show_on_map:
             attrs[ATTR_LATITUDE] = self._latitude
             attrs[ATTR_LONGITUDE] = self._longitude
+        else:
+            attrs["lat"] = self._latitude
+            attrs["long"] = self._longitude
 
         if data is not None and "status" in data:
             attrs[ATTR_IS_OPEN] = data["status"] == "open"
