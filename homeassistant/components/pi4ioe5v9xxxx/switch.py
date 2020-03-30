@@ -84,7 +84,7 @@ class Pi4ioe5v9Switch(ToggleEntity):
         self._state = True
         self.schedule_update_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+   def turn_off(self, **kwargs):
         """Turn the device off."""
         pi4ioe5v9xxxx.pin_to_memory(self._pin, self._invert_logic)
         pi4ioe5v9xxxx.memory_to_hw()
