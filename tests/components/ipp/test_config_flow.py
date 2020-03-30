@@ -37,12 +37,12 @@ async def test_show_zeroconf_confirm_form(hass: HomeAssistant) -> None:
     flow.context = {"source": SOURCE_ZEROCONF, CONF_NAME: "EPSON123456"}
     result = await flow.async_step_zeroconf_confirm()
 
-    assert result["description_placeholders"] == {CONF_NAME: "EPSON123456"}
     assert result["step_id"] == "zeroconf_confirm"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["description_placeholders"] == {CONF_NAME: "EPSON123456"}
 
 
-async def test_show_zerconf_form(
+async def test_show_zeroconf_form(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test that the zeroconf confirmation form is served."""
@@ -55,14 +55,16 @@ async def test_show_zerconf_form(
     flow = config_flow.IPPFlowHandler()
     flow.hass = hass
     flow.context = {"source": SOURCE_ZEROCONF}
+
     discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
     result = await flow.async_step_zeroconf(discovery_info)
 
-    assert flow.context[CONF_HOST] == "EPSON123456.local"
-    assert flow.context[CONF_NAME] == "EPSON123456"
-    assert result["description_placeholders"] == {CONF_NAME: "EPSON123456"}
+    assert flow.discovery_info[CONF_HOST] == "EPSON123456.local"
+    assert flow.discovery_info[CONF_NAME] == "EPSON123456"
+
     assert result["step_id"] == "zeroconf_confirm"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["description_placeholders"] == {CONF_NAME: "EPSON123456"}
 
 
 async def test_connection_error(
@@ -78,9 +80,9 @@ async def test_connection_error(
         config_flow.DOMAIN, context={"source": SOURCE_USER}, data=user_input,
     )
 
-    assert result["errors"] == {"base": "connection_error"}
     assert result["step_id"] == "user"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "connection_error"}
 
 
 async def test_zeroconf_connection_error(
@@ -94,8 +96,8 @@ async def test_zeroconf_connection_error(
         config_flow.DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info,
     )
 
-    assert result["reason"] == "connection_error"
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "connection_error"
 
 
 async def test_zeroconf_confirm_connection_error(
@@ -115,8 +117,8 @@ async def test_zeroconf_confirm_connection_error(
         data=discovery_info,
     )
 
-    assert result["reason"] == "connection_error"
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "connection_error"
 
 
 async def test_user_connection_upgrade_required(
@@ -132,9 +134,9 @@ async def test_user_connection_upgrade_required(
         config_flow.DOMAIN, context={"source": SOURCE_USER}, data=user_input,
     )
 
-    assert result["errors"] == {"base": "connection_upgrade"}
     assert result["step_id"] == "user"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "connection_upgrade"}
 
 
 async def test_zeroconf_connection_upgrade_required(
@@ -150,8 +152,8 @@ async def test_zeroconf_connection_upgrade_required(
         config_flow.DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info,
     )
 
-    assert result["reason"] == "connection_upgrade"
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "connection_upgrade"
 
 
 async def test_zeroconf_no_data(
@@ -162,8 +164,8 @@ async def test_zeroconf_no_data(
     flow.hass = hass
     result = await flow.async_step_zeroconf()
 
-    assert result["reason"] == "connection_error"
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "connection_error"
 
 
 async def test_user_device_exists_abort(
@@ -234,10 +236,12 @@ async def test_full_user_flow_implementation(
         user_input={CONF_HOST: "EPSON123456.local", CONF_BASE_PATH: "/ipp/print"},
     )
 
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "EPSON123456.local"
+
+    assert result["data"]
     assert result["data"][CONF_HOST] == "EPSON123456.local"
     assert result["data"][CONF_UUID] == "cfe92100-67c4-11d4-a45f-f8d027761251"
-    assert result["title"] == "EPSON123456.local"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
 async def test_full_zeroconf_flow_implementation(
@@ -253,23 +257,28 @@ async def test_full_zeroconf_flow_implementation(
     flow = config_flow.IPPFlowHandler()
     flow.hass = hass
     flow.context = {"source": SOURCE_ZEROCONF}
+
     discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
     result = await flow.async_step_zeroconf(discovery_info)
 
-    assert flow.context[CONF_HOST] == "EPSON123456.local"
-    assert flow.context[CONF_NAME] == "EPSON123456"
-    assert result["description_placeholders"] == {CONF_NAME: "EPSON123456"}
+    assert flow.discovery_info
+    assert flow.discovery_info[CONF_HOST] == "EPSON123456.local"
+    assert flow.discovery_info[CONF_NAME] == "EPSON123456"
+
     assert result["step_id"] == "zeroconf_confirm"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
     result = await flow.async_step_zeroconf_confirm(
         user_input={CONF_HOST: "EPSON123456.local"}
     )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "EPSON123456"
+
+    assert result["data"]
     assert result["data"][CONF_HOST] == "EPSON123456.local"
     assert result["data"][CONF_UUID] == "cfe92100-67c4-11d4-a45f-f8d027761251"
     assert not result["data"][CONF_SSL]
-    assert result["title"] == "EPSON123456"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
 async def test_full_zeroconf_tls_flow_implementation(
@@ -285,20 +294,23 @@ async def test_full_zeroconf_tls_flow_implementation(
     flow = config_flow.IPPFlowHandler()
     flow.hass = hass
     flow.context = {"source": SOURCE_ZEROCONF}
+    
     discovery_info = MOCK_ZEROCONF_IPPS_SERVICE_INFO.copy()
     result = await flow.async_step_zeroconf(discovery_info)
 
-    assert flow.context[CONF_HOST] == "EPSON123456.local"
-    assert flow.context[CONF_NAME] == "EPSON123456"
-    assert result["description_placeholders"] == {CONF_NAME: "EPSON123456"}
     assert result["step_id"] == "zeroconf_confirm"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-
+    assert result["description_placeholders"] == {CONF_NAME: "EPSON123456"}
+    
     result = await flow.async_step_zeroconf_confirm(
         user_input={CONF_HOST: "EPSON123456.local"}
     )
+    
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "EPSON123456"
+
+    assert result["data"]
     assert result["data"][CONF_HOST] == "EPSON123456.local"
+    assert result["data"][CONF_NAME] == "EPSON123456"
     assert result["data"][CONF_UUID] == "cfe92100-67c4-11d4-a45f-f8d027761251"
     assert result["data"][CONF_SSL]
-    assert result["title"] == "EPSON123456"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY

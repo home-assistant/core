@@ -61,12 +61,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    # For backwards compat, set unique ID
-    if entry.unique_id is None:
-        hass.config_entries.async_update_entry(
-            entry, unique_id=coordinator.data.info.uuid
-        )
-
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
@@ -183,10 +177,6 @@ class IPPEntity(Entity):
     async def async_update(self) -> None:
         """Update an IPP entity."""
         await self.coordinator.async_request_refresh()
-
-
-class IPPDeviceEntity(IPPEntity):
-    """Defines an IPP device entity."""
 
     @property
     def device_info(self) -> Dict[str, Any]:

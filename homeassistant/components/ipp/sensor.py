@@ -8,7 +8,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import utcnow
 
-from . import IPPDataUpdateCoordinator, IPPDeviceEntity
+from . import IPPDataUpdateCoordinator, IPPEntity
 from .const import (
     ATTR_COMMAND_SET,
     ATTR_INFO,
@@ -43,7 +43,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class IPPSensor(IPPDeviceEntity):
+class IPPSensor(IPPEntity):
     """Defines an IPP sensor."""
 
     def __init__(
