@@ -18,8 +18,7 @@ def async_setup_entry_base(
         # assumes it is called with a single platform
         added_entities = []
         for device in devices:
-            if device.category == platform:
-                added_entities.append(entity_from_device(device, bridge))
+            added_entities.append(entity_from_device(device, bridge))
         if added_entities:
             async_add_entities(added_entities)
 
