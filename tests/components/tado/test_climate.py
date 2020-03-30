@@ -67,10 +67,6 @@ async def test_smartac_with_swing(hass):
     state = hass.states.get("climate.air_conditioning_with_swing")
     assert state.state == "auto"
 
-    import pprint
-
-    pprint.pprint(state.attributes)
-
     expected_attributes = {
         "current_humidity": 42.3,
         "current_temperature": 20.9,
