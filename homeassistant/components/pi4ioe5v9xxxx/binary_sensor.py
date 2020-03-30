@@ -62,8 +62,6 @@ class Pi4ioe5v9BinarySensor(BinarySensorDevice):
         self._name = name or DEVICE_DEFAULT_NAME
         self._pin = pin
         self._invert_logic = invert_logic
-        pi4ioe5v9xxxx.hw_to_memory()
-        self._state = pi4ioe5v9xxxx.pin_from_memory(self._pin)
 
     @property
     def name(self):
