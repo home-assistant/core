@@ -54,12 +54,10 @@ class HueEvent(GenericHueDevice):
             return
 
         # Extract the press code as state
-        if hasattr(self.sensor, "buttonevent"):
-            state = self.sensor.buttonevent
-        elif hasattr(self.sensor, "rotaryevent"):
+        if hasattr(self.sensor, "rotaryevent"):
             state = self.sensor.rotaryevent
         else:
-            state = self.sensor.state
+            state = self.sensor.buttonevent
 
         self._last_updated = self.sensor.lastupdated
 
@@ -71,12 +69,6 @@ class HueEvent(GenericHueDevice):
             CONF_LAST_UPDATED: self.sensor.lastupdated,
         }
         self.bridge.hass.bus.async_fire(CONF_HUE_EVENT, data)
-        _LOGGER.debug(
-            "%s: Event '%s' fired with timestamp %s",
-            self.event_id,
-            state,
-            self._last_updated,
-        )
 
     async def async_update_device_registry(self):
         """Update device registry."""

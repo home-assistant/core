@@ -32,9 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 class HueBridge:
     """Manages a single Hue bridge."""
 
-    def __init__(
-        self, hass, config_entry, allow_unreachable, allow_groups,
-    ):
+    def __init__(self, hass, config_entry, allow_unreachable, allow_groups):
         """Initialize the system."""
         self.config_entry = config_entry
         self.hass = hass

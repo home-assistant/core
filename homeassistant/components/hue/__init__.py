@@ -104,6 +104,7 @@ async def async_setup_entry(
     """Set up a bridge from a config entry."""
     host = entry.data["host"]
     config = hass.data[DATA_CONFIGS].get(host)
+
     if config is None:
         allow_unreachable = entry.data.get(
             CONF_ALLOW_UNREACHABLE, DEFAULT_ALLOW_UNREACHABLE
