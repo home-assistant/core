@@ -1875,9 +1875,6 @@ schiene==0.23
 # homeassistant.components.scsgate
 scsgate==0.1.0
 
-# homeassistant.components.blebox
-semver==2.9.1
-
 # homeassistant.components.sendgrid
 sendgrid==6.2.1
 

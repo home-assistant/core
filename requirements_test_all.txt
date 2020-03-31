@@ -727,9 +727,6 @@ samsungctl[websocket]==0.7.1
 # homeassistant.components.samsungtv
 samsungtvws[websocket]==1.4.0
 
-# homeassistant.components.blebox
-semver==2.9.1
-
 # homeassistant.components.sense
 sense_energy==0.7.1
 
