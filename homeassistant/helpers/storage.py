@@ -135,8 +135,7 @@ class Store:
         if self.hass.state == CoreState.stopping:
             self._async_ensure_stop_listener()
             return
-        else:
-            self._async_cleanup_stop_listener()
+        self._async_cleanup_stop_listener()
         await self._async_handle_write_data()
 
     @callback
