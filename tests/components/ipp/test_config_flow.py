@@ -22,7 +22,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 async def test_show_user_form(hass: HomeAssistant) -> None:
     """Test that the user set up form is served."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": SOURCE_USER},
+        DOMAIN, context={"source": SOURCE_USER},
     )
 
     assert result["step_id"] == "user"
