@@ -91,11 +91,12 @@
                 "data": {
                     "activation": "Ausgabe, wenn eingeschaltet",
                     "momentary": "Impulsdauer (ms) (optional)",
+                    "more_states": "Konfigurieren Sie zus\u00e4tzliche Zust\u00e4nde f\u00fcr diese Zone",
                     "name": "Name (optional)",
                     "pause": "Pause zwischen Impulsen (ms) (optional)",
                     "repeat": "Zeit zum Wiederholen (-1 = unendlich) (optional)"
                 },
-                "description": "Bitte w\u00e4hlen Sie die Ausgabeoptionen f\u00fcr {zone}"
+                "description": "Bitte w\u00e4hlen Sie die Ausgabeoptionen f\u00fcr {zone} : Status {state}"
             }
         },
         "title": "Konnected Alarm Panel-Optionen"
