@@ -54,7 +54,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 
 async def async_create_blebox_entities(
-    klass, method, hass, config, async_add, exception
+    entity_klass, entity_type, hass, config, async_add, exception
 ):
     """Add a BleBox device from the given config."""
     host = config[CONF_HOST]
@@ -70,8 +70,8 @@ async def async_create_blebox_entities(
         raise exception from ex
 
     entities = []
-    for entity in product.features[method]:
-        entities.append(klass(entity))
+    for feature in product.features[entity_type]:
+        entities.append(entity_klass(feature))
 
     async_add(entities, True)
     return True
