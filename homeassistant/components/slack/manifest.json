@@ -2,7 +2,7 @@
   "domain": "slack",
   "name": "Slack",
   "documentation": "https://www.home-assistant.io/integrations/slack",
-  "requirements": ["slacker==0.14.0"],
+  "requirements": ["slackclient==2.5.0"],
   "dependencies": [],
   "codeowners": []
 }
