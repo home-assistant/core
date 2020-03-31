@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant.const import UNIT_PERCENTAGE
 from homeassistant.core import callback
-from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import entity_platform, entity_registry
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_component import (
@@ -375,10 +375,9 @@ async def test_not_adding_duplicate_entities_with_unique_id(hass):
 
     assert len(hass.states.async_entity_ids()) == 1
 
-    with pytest.raises(HomeAssistantError):
-        await component.async_add_entities(
-            [MockEntity(name="test2", unique_id="not_very_unique")]
-        )
+    await component.async_add_entities(
+        [MockEntity(name="test2", unique_id="not_very_unique")]
+    )
 
     assert len(hass.states.async_entity_ids()) == 1
 

@@ -433,8 +433,8 @@ class EntityPlatform:
         if already_exists:
             msg = f"Entity id already exists: {entity.entity_id}"
             if entity.unique_id is not None:
-                msg += f". Platform {self.platform_name} does not generate unique IDs"
-            raise HomeAssistantError(msg)
+                msg += f". Platform {self.platform_name} does not generate unique IDs - ignoring entity"
+            return
 
         entity_id = entity.entity_id
         self.entities[entity_id] = entity
