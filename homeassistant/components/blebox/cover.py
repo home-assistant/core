@@ -113,7 +113,7 @@ class BleBoxCoverEntity(BleBoxEntity, CoverDevice):
 
     async def async_set_cover_position(self, **kwargs):
         """Set the cover position."""
-        if not SUPPORT_SET_POSITION & self.supported_features:
+        if not self.supported_features & SUPPORT_SET_POSITION:
             raise NotImplementedError
 
         position = kwargs[ATTR_POSITION]
