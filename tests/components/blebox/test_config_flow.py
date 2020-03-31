@@ -1,6 +1,6 @@
 """Test Home Assistant config flow for BleBox devices."""
 
-from asynctest import CoroutineMock, mock, patch
+from asynctest import CoroutineMock, PropertyMock, mock, patch
 import blebox_uniapi
 import pytest
 
@@ -140,6 +140,14 @@ async def test_already_configured(hass):
     setup_product_mock(
         "covers", [feature], "homeassistant.components.blebox.Products",
     )
+
+    product = feature.product
+    type(product).name = PropertyMock(return_value="My gate controller")
+    type(product).model = PropertyMock(return_value="gateController")
+    type(product).type = PropertyMock(return_value="gateBox")
+    type(product).brand = PropertyMock(return_value="BleBox")
+    type(product).firmware_version = PropertyMock(return_value="1.23")
+    type(product).unique_id = PropertyMock(return_value="abcd0123ef5678")
 
     config = mock_config("172.1.2.3")
     config.add_to_hass(hass)

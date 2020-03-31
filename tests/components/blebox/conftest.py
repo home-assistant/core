@@ -2,7 +2,7 @@
 
 from unittest import mock
 
-from asynctest import CoroutineMock, call, patch
+from asynctest import CoroutineMock, PropertyMock, call, patch
 import blebox_uniapi
 import pytest
 
@@ -35,7 +35,16 @@ def mock_only_feature(spec, **kwargs):
 def mock_feature(category, spec, **kwargs):
     """Mock a feature along with whole product setup."""
     feature_mock = mock_only_feature(spec, **kwargs)
-    setup_product_mock(category, [feature_mock])
+    product = setup_product_mock(category, [feature_mock])
+
+    feature_mock.product = PropertyMock(return_value=product)
+
+    type(feature_mock.product).name = PropertyMock(return_value="Some name")
+    type(feature_mock.product).type = PropertyMock(return_value="some type")
+    type(feature_mock.product).model = PropertyMock(return_value="some model")
+    type(feature_mock.product).brand = PropertyMock(return_value="BleBox")
+    type(feature_mock.product).firmware_version = PropertyMock(return_value="1.23")
+    type(feature_mock.product).unique_id = PropertyMock(return_value="abcd0123ef5678")
     return feature_mock
 
 

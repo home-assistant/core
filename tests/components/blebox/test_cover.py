@@ -1,6 +1,6 @@
 """BleBox cover entities tests."""
 
-from asynctest import CoroutineMock, call, patch
+from asynctest import CoroutineMock, PropertyMock, call, patch
 import blebox_uniapi
 import pytest
 
@@ -155,7 +155,7 @@ class TestShutter(CoverTest):
 
     def default_mock(self):
         """Return a default cover entity mock."""
-        return mock_feature(
+        feature = mock_feature(
             "covers",
             blebox_uniapi.cover.Cover,
             unique_id="BleBox-shutterBox-2bee34e750b8-position",
@@ -166,6 +166,10 @@ class TestShutter(CoverTest):
             has_stop=True,
             is_slider=True,
         )
+        product = feature.product
+        type(product).name = PropertyMock(return_value="My shutter")
+        type(product).model = PropertyMock(return_value="shutterBox")
+        return feature
 
     async def test_init(self, hass):
         """Test cover default state."""
@@ -185,6 +189,16 @@ class TestShutter(CoverTest):
         assert entity.current_cover_position is None
 
         self.assert_state(entity, None)
+
+    async def test_device_info(self, hass, feature_mock):
+        """Test device info."""
+        entity = (await self.async_mock_entities(hass))[0]
+        info = entity.device_info
+        assert info["name"] == "My shutter"
+        assert info["identifiers"] == {("blebox", "abcd0123ef5678")}
+        assert info["manufacturer"] == "BleBox"
+        assert info["model"] == "shutterBox"
+        assert info["sw_version"] == "1.23"
 
     async def test_update(self, hass):
         """Test cover updating."""
@@ -239,7 +253,7 @@ class TestGateBox(CoverTest):
 
     def default_mock(self):
         """Return a default gatebox cover entity mock."""
-        return mock_feature(
+        feature = mock_feature(
             "covers",
             blebox_uniapi.cover.Cover,
             unique_id="BleBox-gateBox-1afe34db9437-position",
@@ -250,6 +264,10 @@ class TestGateBox(CoverTest):
             has_stop=False,
             is_slider=False,
         )
+        product = feature.product
+        type(product).name = PropertyMock(return_value="My gatebox")
+        type(product).model = PropertyMock(return_value="gateBox")
+        return feature
 
     def updateable_feature_mock(self):
         """Set up a mocked feature that can be updated."""
@@ -279,6 +297,16 @@ class TestGateBox(CoverTest):
         assert not entity.supported_features & SUPPORT_SET_POSITION
         assert entity.current_cover_position is None
         self.assert_state(entity, None)
+
+    async def test_device_info(self, hass, feature_mock):
+        """Test device info."""
+        entity = (await self.async_mock_entities(hass))[0]
+        info = entity.device_info
+        assert info["name"] == "My gatebox"
+        assert info["identifiers"] == {("blebox", "abcd0123ef5678")}
+        assert info["manufacturer"] == "BleBox"
+        assert info["model"] == "gateBox"
+        assert info["sw_version"] == "1.23"
 
     async def test_update(self, hass, aioclient_mock):
         """Test cover updating."""
@@ -315,7 +343,7 @@ class TestGateController(CoverTest):
 
     def default_mock(self):
         """Return a default gateController cover entity mock."""
-        return mock_feature(
+        feature = mock_feature(
             "covers",
             blebox_uniapi.cover.Cover,
             unique_id="BleBox-gateController-2bee34e750b8-position",
@@ -326,6 +354,10 @@ class TestGateController(CoverTest):
             has_stop=True,
             is_slider=True,
         )
+        product = feature.product
+        type(product).name = PropertyMock(return_value="My gate controller")
+        type(product).model = PropertyMock(return_value="gateController")
+        return feature
 
     async def test_init(self, hass):
         """Test cover default state."""
@@ -344,6 +376,16 @@ class TestGateController(CoverTest):
         assert entity.supported_features & SUPPORT_SET_POSITION
         assert entity.current_cover_position is None
         self.assert_state(entity, None)
+
+    async def test_device_info(self, hass, feature_mock):
+        """Test device info."""
+        entity = (await self.async_mock_entities(hass))[0]
+        info = entity.device_info
+        assert info["name"] == "My gate controller"
+        assert info["identifiers"] == {("blebox", "abcd0123ef5678")}
+        assert info["manufacturer"] == "BleBox"
+        assert info["model"] == "gateController"
+        assert info["sw_version"] == "1.23"
 
     def updateable_feature_mock(self):  # overloaded
         """Set up a mocked feature that can be updated."""
