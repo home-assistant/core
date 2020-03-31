@@ -116,17 +116,11 @@ class PyNUTData:
         """Initialize the data object."""
 
         self._host = host
-        self._port = port
         self._alias = alias
-        self._username = username
-        self._password = password
 
-        self.pynuterror = PyNUTError
         # Establish client with persistent=False to open/close connection on
         # each update call.  This is more reliable with async.
-        self._client = PyNUTClient(
-            self._host, self._port, self._username, self._password, 5, False
-        )
+        self._client = PyNUTClient(self._host, port, username, password, 5, False)
         self._status = None
 
     @property
@@ -150,7 +144,7 @@ class PyNUTData:
 
         try:
             return self._client.list_vars(self._alias)
-        except (self.pynuterror, ConnectionResetError) as err:
+        except (PyNUTError, ConnectionResetError) as err:
             _LOGGER.debug("Error getting NUT vars for host %s: %s", self._host, err)
             return None
 
