@@ -893,7 +893,7 @@ async def test_group_features(hass, mock_bridge):
         "modelid": "LCT001",
         "swversion": "66009461",
         "manufacturername": "Philips",
-        "uniqueid": "456",
+        "uniqueid": "4567",
     }
     light_3 = {
         "state": {
@@ -945,7 +945,7 @@ async def test_group_features(hass, mock_bridge):
         "modelid": "LCT001",
         "swversion": "66009461",
         "manufacturername": "Philips",
-        "uniqueid": "123",
+        "uniqueid": "1234",
     }
     light_response = {
         "1": light_1,
