@@ -90,6 +90,7 @@ async def test_saving_on_final_write(hass, hass_storage):
     assert store.key not in hass_storage
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.state = CoreState.stopping
     await hass.async_block_till_done()
 
     async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=10))
@@ -125,6 +126,7 @@ async def test_not_delayed_saving_after_stopping(hass, hass_storage):
     assert store.key not in hass_storage
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.state = CoreState.stopping
     await hass.async_block_till_done()
     assert store.key not in hass_storage
 

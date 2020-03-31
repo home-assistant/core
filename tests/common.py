@@ -1019,9 +1019,6 @@ async def flush_store(store):
 
     store._async_cleanup_final_write_listener()
     store._async_cleanup_delay_listener()
-    if store._unsub_stop_listener is not None:
-        store._unsub_stop_listener()
-        store._unsub_stop_listener = None
     await store._async_handle_write_data()
 
 
