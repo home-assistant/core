@@ -40,6 +40,7 @@ class SensorManager:
         self.bridge = bridge
         self._component_add_entities = {}
         self.current = {}
+        self.current_events = {}
 
         self._enabled_platforms = ("binary_sensor", "sensor")
         self.coordinator = DataUpdateCoordinator(
@@ -68,10 +69,6 @@ class SensorManager:
 
     async def async_register_component(self, platform, async_add_entities):
         """Register async_add_entities methods for components."""
-        if platform not in self._enabled_platforms:
-            _LOGGER.debug("Aborting %s. It is not enabled", platform)
-            return
-
         self._component_add_entities[platform] = async_add_entities
 
         if len(self._component_add_entities) < len(self._enabled_platforms):
@@ -119,8 +116,8 @@ class SensorManager:
         # Iterate again now we have all the presence sensors, and add the
         # related sensors with nice names where appropriate.
         for item_id in api:
-            existing = current.get(api[item_id].uniqueid)
-            if existing is not None:
+            uniqueid = api[item_id].uniqueid
+            if current.get(uniqueid, self.current_events.get(uniqueid)) is not None:
                 continue
 
             sensor_type = api[item_id].type
@@ -134,6 +131,7 @@ class SensorManager:
                 self.bridge.hass.async_create_task(
                     new_event.async_update_device_registry()
                 )
+                self.current_events[uniqueid] = new_event
 
             sensor_config = SENSOR_CONFIG_MAP.get(sensor_type)
             if sensor_config is None:
@@ -145,13 +143,11 @@ class SensorManager:
                 base_name = primary_sensor.name
             name = sensor_config["name_format"].format(base_name)
 
-            current[api[item_id].uniqueid] = sensor_config["class"](
+            current[uniqueid] = sensor_config["class"](
                 api[item_id], name, self.bridge, primary_sensor=primary_sensor
             )
 
-            to_add.setdefault(sensor_config["platform"], []).append(
-                current[api[item_id].uniqueid]
-            )
+            to_add.setdefault(sensor_config["platform"], []).append(current[uniqueid])
 
         self.bridge.hass.async_create_task(
             remove_devices(
