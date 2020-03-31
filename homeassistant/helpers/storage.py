@@ -149,6 +149,7 @@ class Store:
         self._async_cleanup_final_write_listener()
 
         if self.hass.state == CoreState.stopping:
+            self._async_ensure_final_write_listener()
             return
 
         self._unsub_delay_listener = async_call_later(
