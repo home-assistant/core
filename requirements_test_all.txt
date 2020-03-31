@@ -112,7 +112,7 @@ androidtv==0.0.39
 apns2==0.3.0
 
 # homeassistant.components.apprise
-apprise==0.8.4
+apprise==0.8.5
 
 # homeassistant.components.aprs
 aprslib==0.6.46
@@ -178,7 +178,7 @@ defusedxml==0.6.0
 denonavr==0.8.1
 
 # homeassistant.components.directv
-directpy==0.7
+directv==0.2.0
 
 # homeassistant.components.updater
 distro==1.4.0
@@ -620,7 +620,7 @@ python-miio==0.4.8
 python-nest==4.1.0
 
 # homeassistant.components.tado
-python-tado==0.5.0
+python-tado==0.6.0
 
 # homeassistant.components.twitch
 python-twitch-client==0.6.0
@@ -729,7 +729,7 @@ sunwatcher==0.2.1
 tellduslive==0.10.10
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.1.1
+tesla-powerwall==0.1.3
 
 # homeassistant.components.tesla
 teslajsonpy==0.6.0

@@ -91,7 +91,7 @@ def ensure_zone(value):
     return str(value)
 
 
-def import_validator(config):
+def import_device_validator(config):
     """Validate zones and reformat for import."""
     config = copy.deepcopy(config)
     io_cfgs = {}
@@ -117,7 +117,19 @@ def import_validator(config):
     config.pop(CONF_SWITCHES, None)
     config.pop(CONF_BLINK, None)
     config.pop(CONF_DISCOVERY, None)
+    config.pop(CONF_API_HOST, None)
     config.pop(CONF_IO, None)
+    return config
+
+
+def import_validator(config):
+    """Reformat for import."""
+    config = copy.deepcopy(config)
+
+    # push api_host into device configs
+    for device in config.get(CONF_DEVICES, []):
+        device[CONF_API_HOST] = config.get(CONF_API_HOST, "")
+
     return config
 
 
@@ -179,23 +191,27 @@ DEVICE_SCHEMA_YAML = vol.All(
             vol.Inclusive(CONF_HOST, "host_info"): cv.string,
             vol.Inclusive(CONF_PORT, "host_info"): cv.port,
             vol.Optional(CONF_BLINK, default=True): cv.boolean,
+            vol.Optional(CONF_API_HOST, default=""): vol.Any("", cv.url),
             vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
         }
     ),
-    import_validator,
+    import_device_validator,
 )
 
 # pylint: disable=no-value-for-parameter
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_ACCESS_TOKEN): cv.string,
-                vol.Optional(CONF_API_HOST): vol.Url(),
-                vol.Optional(CONF_DEVICES): vol.All(
-                    cv.ensure_list, [DEVICE_SCHEMA_YAML]
-                ),
-            }
+        DOMAIN: vol.All(
+            import_validator,
+            vol.Schema(
+                {
+                    vol.Required(CONF_ACCESS_TOKEN): cv.string,
+                    vol.Optional(CONF_API_HOST): vol.Url(),
+                    vol.Optional(CONF_DEVICES): vol.All(
+                        cv.ensure_list, [DEVICE_SCHEMA_YAML]
+                    ),
+                }
+            ),
         )
     },
     extra=vol.ALLOW_EXTRA,

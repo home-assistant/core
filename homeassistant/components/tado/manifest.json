@@ -3,7 +3,7 @@
   "name": "Tado",
   "documentation": "https://www.home-assistant.io/integrations/tado",
   "requirements": [
-    "python-tado==0.5.0"
+    "python-tado==0.6.0"
   ],
   "dependencies": [],
   "codeowners": [

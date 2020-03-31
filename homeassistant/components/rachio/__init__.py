@@ -2,26 +2,20 @@
 import asyncio
 import logging
 import secrets
-from typing import Optional
 
-from aiohttp import web
 from rachiopy import Rachio
 import voluptuous as vol
 
-from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_API_KEY, EVENT_HOMEASSISTANT_STOP, URL_API
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CONF_CUSTOM_URL,
     CONF_MANUAL_RUN_MINS,
     DEFAULT_MANUAL_RUN_MINS,
-    DEFAULT_NAME,
     DOMAIN,
     KEY_DEVICES,
     KEY_ENABLED,
@@ -36,8 +30,11 @@ from .const import (
     KEY_TYPE,
     KEY_USERNAME,
     KEY_ZONES,
+
     RACHIO_API_EXCEPTIONS,
 )
+from .device import RachioPerson
+from .webhooks import WEBHOOK_PATH, RachioWebhookView
 
 _LOGGER = logging.getLogger(__name__)
 
