@@ -15,7 +15,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.exceptions import PlatformNotReady
 
-from . import BleBoxEntity, async_add_blebox
+from . import BleBoxEntity, async_create_blebox_entities
 from .const import BLEBOX_TO_HASS_COVER_STATES, BLEBOX_TO_HASS_DEVICE_CLASSES
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add):
     """Set up a BleBox entry."""
-    return await async_add_blebox(
+    return await async_create_blebox_entities(
         BleBoxCoverEntity,
         "covers",
         hass,
