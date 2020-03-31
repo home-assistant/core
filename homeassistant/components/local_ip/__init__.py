@@ -30,6 +30,11 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEntry):
     """Set up local_ip from a config entry."""
+
+    # For backwards compat
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(entry, unique_id=entry.data["name"])
+
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, PLATFORM)
     )

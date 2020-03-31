@@ -25,9 +25,19 @@ class IPSensor(Entity):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return self._name
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def icon(self):
+        """Return the icon of the sensor."""
+        return "mdi:ip"
 
     def update(self):
         """Fetch new state data for the sensor."""

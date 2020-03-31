@@ -15,11 +15,9 @@ class SimpleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         if user_input is not None:
-            if any(
-                user_input["name"] == entry.data["name"]
-                for entry in self._async_current_entries()
-            ):
-                return self.async_abort(reason="already_configured")
+            # Check if already configured
+            await self.async_set_unique_id(user_input["name"])
+            self._abort_if_unique_id_configured()
 
             return self.async_create_entry(title=user_input["name"], data=user_input)
 
