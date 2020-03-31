@@ -343,7 +343,7 @@ async def _async_set_up_integrations(
                 _LOGGER.error(
                     "Error setting up integration %s - received exception %s",
                     domain,
-                    str(futures[domain].exception()),
+                    futures[domain].exception(),
                 )
             else:
                 _LOGGER.error(
