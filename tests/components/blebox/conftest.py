@@ -86,7 +86,7 @@ class DefaultBoxTest:
         return entity
 
     async def test_setup_failure(self, hass):
-        """Mock the Product class."""
+        """Test that setup failure is handled."""
 
         path = "homeassistant.components.blebox.Products"
         patcher = patch(path, mock.DEFAULT, blebox_uniapi.products.Products, True, True)
@@ -106,7 +106,7 @@ class DefaultBoxTest:
             assert isinstance(error.call_args[0][3], blebox_uniapi.error.ClientError)
 
     async def test_setup_failure_on_connection(self, hass):
-        """Mock the Product class."""
+        """Test that setup failure is handled."""
 
         path = "homeassistant.components.blebox.Products"
         patcher = patch(path, mock.DEFAULT, blebox_uniapi.products.Products, True, True)
