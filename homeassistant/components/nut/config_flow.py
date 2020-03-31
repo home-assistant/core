@@ -28,12 +28,12 @@ from .const import DOMAIN  # pylint:disable=unused-import
 _LOGGER = logging.getLogger(__name__)
 
 
-sensor_dict = {sensor_id: SENSOR_TYPES[sensor_id][0] for sensor_id in SENSOR_TYPES}
+SENSOR_DICT = {sensor_id: SENSOR_TYPES[sensor_id][0] for sensor_id in SENSOR_TYPES}
 
 DATA_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-        vol.Required(CONF_RESOURCES): cv.multi_select(sensor_dict),
+        vol.Required(CONF_RESOURCES): cv.multi_select(SENSOR_DICT),
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
         vol.Optional(CONF_ALIAS): str,
@@ -122,7 +122,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_RESOURCES, default=resources): cv.multi_select(
-                    sensor_dict
+                    SENSOR_DICT
                 ),
             }
         )
