@@ -133,7 +133,7 @@ class PyNUTData:
         """Get the ups alias from NUT."""
         try:
             return next(iter(self._client.list_ups()))
-        except self.pynuterror as err:
+        except PyNUTError as err:
             _LOGGER.error("Failure getting NUT ups alias, %s", err)
             return None
 
