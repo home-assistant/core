@@ -2,6 +2,7 @@
 
 from homeassistant.components.cover import (
     DEVICE_CLASS_DOOR,
+    DEVICE_CLASS_GATE,
     DEVICE_CLASS_SHUTTER,
     STATE_CLOSED,
     STATE_CLOSING,
@@ -21,7 +22,7 @@ ALREADY_CONFIGURED = "address_already_configured"
 BLEBOX_TO_HASS_DEVICE_CLASSES = {
     "shutter": DEVICE_CLASS_SHUTTER,
     "gatebox": DEVICE_CLASS_DOOR,
-    "gate": DEVICE_CLASS_DOOR,
+    "gate": DEVICE_CLASS_GATE,
 }
 
 BLEBOX_TO_HASS_COVER_STATES = {
