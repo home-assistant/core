@@ -469,4 +469,3 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
             await self._async_control_heating(force=True)
 
         await self.async_update_ha_state()
-

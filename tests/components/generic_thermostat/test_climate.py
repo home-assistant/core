@@ -1249,4 +1249,3 @@ def _mock_restore_cache(hass, temperature=20, hvac_mode=HVAC_MODE_OFF):
             ),
         ),
     )
-
