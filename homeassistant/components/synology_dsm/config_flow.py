@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_API_VERSION,
+    CONF_DISKS,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -16,6 +17,7 @@ from homeassistant.const import (
 )
 
 from .const import (
+    CONF_VOLUMES,
     DEFAULT_DSM_VERSION,
     DEFAULT_NAME,
     DEFAULT_PORT,
@@ -83,6 +85,8 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         password = user_input[CONF_PASSWORD]
         use_ssl = user_input.get(CONF_SSL, DEFAULT_SSL)
         api_version = user_input.get(CONF_API_VERSION, DEFAULT_DSM_VERSION)
+        disks = user_input.get(CONF_DISKS)
+        volumes = user_input.get(CONF_VOLUMES)
 
         if not port:
             if use_ssl is True:
@@ -128,6 +132,8 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_SSL: use_ssl,
                 CONF_USERNAME: username,
                 CONF_PASSWORD: password,
+                CONF_DISKS: disks,
+                CONF_VOLUMES: volumes,
             },
         )
 
