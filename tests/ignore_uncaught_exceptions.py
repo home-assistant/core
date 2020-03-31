@@ -33,6 +33,7 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
     ("tests.components.dyson.test_sensor", "test_purecool_component_setup_only_once"),
     ("tests.components.ios.test_init", "test_creating_entry_sets_up_sensor"),
     ("tests.components.ios.test_init", "test_not_configuring_ios_not_creates_entry"),
+    ("tests.components.local_file.test_camera", "test_file_not_readable"),
     (
         "tests.components.mqtt.test_init",
         "test_setup_uses_certificate_on_certificate_set_to_auto",
@@ -61,6 +62,10 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
     ("tests.components.qwikswitch.test_init", "test_sensor_device"),
     ("tests.components.rflink.test_init", "test_send_command_invalid_arguments"),
     ("tests.components.samsungtv.test_media_player", "test_update_connection_failure"),
+    (
+        "tests.components.tplink.test_init",
+        "test_configuring_devices_from_multiple_sources",
+    ),
     ("tests.components.tradfri.test_light", "test_light"),
     ("tests.components.tradfri.test_light", "test_light_observed"),
     ("tests.components.tradfri.test_light", "test_light_available"),
