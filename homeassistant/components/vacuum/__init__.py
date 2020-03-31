@@ -248,7 +248,7 @@ class VacuumDevice(_BaseVacuum, ToggleEntity):
 
     @property
     def capability_attributes(self):
-        """Return capabilitiy attributes."""
+        """Return capability attributes."""
         if self.fan_speed is not None:
             return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
 
@@ -330,7 +330,7 @@ class StateVacuumDevice(_BaseVacuum):
 
     @property
     def capability_attributes(self):
-        """Return capabilitiy attributes."""
+        """Return capability attributes."""
         if self.fan_speed is not None:
             return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
 

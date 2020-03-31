@@ -6,7 +6,7 @@ from homeassistant.helpers.entity_registry import async_get_registry as get_ent_
 from .const import DOMAIN
 
 
-async def remove_devices(hass, config_entry, api_ids, current):
+async def remove_devices(bridge, api_ids, current):
     """Get items that are removed from api."""
     removed_items = []
 
@@ -18,16 +18,16 @@ async def remove_devices(hass, config_entry, api_ids, current):
         entity = current[item_id]
         removed_items.append(item_id)
         await entity.async_remove()
-        ent_registry = await get_ent_reg(hass)
+        ent_registry = await get_ent_reg(bridge.hass)
         if entity.entity_id in ent_registry.entities:
             ent_registry.async_remove(entity.entity_id)
-        dev_registry = await get_dev_reg(hass)
+        dev_registry = await get_dev_reg(bridge.hass)
         device = dev_registry.async_get_device(
             identifiers={(DOMAIN, entity.device_id)}, connections=set()
         )
         if device is not None:
             dev_registry.async_update_device(
-                device.id, remove_config_entry_id=config_entry.entry_id
+                device.id, remove_config_entry_id=bridge.config_entry.entry_id
             )
 
     for item_id in removed_items:

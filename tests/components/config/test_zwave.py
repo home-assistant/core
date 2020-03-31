@@ -480,7 +480,7 @@ async def test_set_protection_value_failed(hass, client):
 
     resp = await client.post(
         "/api/zwave/protection/18",
-        data=json.dumps({"value_id": "123456", "selection": "Protecton by Seuence"}),
+        data=json.dumps({"value_id": "123456", "selection": "Protecton by Sequence"}),
     )
 
     assert resp.status == 202
@@ -512,7 +512,7 @@ async def test_set_protection_value_nonexisting_node(hass, client):
 
     resp = await client.post(
         "/api/zwave/protection/18",
-        data=json.dumps({"value_id": "123456", "selection": "Protecton by Seuence"}),
+        data=json.dumps({"value_id": "123456", "selection": "Protecton by Sequence"}),
     )
 
     assert resp.status == 404
@@ -532,7 +532,7 @@ async def test_set_protection_value_missing_class(hass, client):
 
     resp = await client.post(
         "/api/zwave/protection/17",
-        data=json.dumps({"value_id": "123456", "selection": "Protecton by Seuence"}),
+        data=json.dumps({"value_id": "123456", "selection": "Protecton by Sequence"}),
     )
 
     assert resp.status == 404

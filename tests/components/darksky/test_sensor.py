@@ -30,7 +30,7 @@ INVALID_CONFIG_MINIMAL = {
         "api_key": "foo",
         "forecast": [1, 2],
         "hourly_forecast": [1, 2],
-        "monitored_conditions": ["sumary", "iocn", "temperature_high"],
+        "monitored_conditions": ["summary", "iocn", "temperature_high"],
         "scan_interval": timedelta(seconds=120),
     }
 }

@@ -1,6 +1,8 @@
 {
     "device_automation": {
         "action_type": {
+            "brightness_decrease": "Formindsk lysstyrken p\u00e5 {entity_name}",
+            "brightness_increase": "For\u00f8g lysstyrken p\u00e5 {entity_name}",
             "toggle": "Skift {entity_name}",
             "turn_off": "Sluk {entity_name}",
             "turn_on": "T\u00e6nd for {entity_name}"

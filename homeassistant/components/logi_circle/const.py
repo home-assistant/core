@@ -1,4 +1,5 @@
 """Constants in Logi Circle component."""
+from homeassistant.const import UNIT_PERCENTAGE
 
 CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
@@ -15,11 +16,11 @@ RECORDING_MODE_KEY = "RECORDING_MODE"
 
 # Sensor types: Name, unit of measure, icon per sensor key.
 LOGI_SENSORS = {
-    "battery_level": ["Battery", "%", "battery-50"],
+    "battery_level": ["Battery", UNIT_PERCENTAGE, "battery-50"],
     "last_activity_time": ["Last Activity", None, "history"],
     "recording": ["Recording Mode", None, "eye"],
     "signal_strength_category": ["WiFi Signal Category", None, "wifi"],
-    "signal_strength_percentage": ["WiFi Signal Strength", "%", "wifi"],
+    "signal_strength_percentage": ["WiFi Signal Strength", UNIT_PERCENTAGE, "wifi"],
     "streaming": ["Streaming Mode", None, "camera"],
 }
 

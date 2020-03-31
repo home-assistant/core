@@ -1,4 +1,4 @@
-"""Support for settting the level of logging for components."""
+"""Support for setting the level of logging for components."""
 from collections import OrderedDict
 import logging
 

@@ -122,7 +122,8 @@ class ViCareWater(WaterHeaterDevice):
         """Set new target temperatures."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None:
-            self._api.setDomesticHotWaterTemperature(self._target_temperature)
+            self._api.setDomesticHotWaterTemperature(temp)
+            self._target_temperature = temp
 
     @property
     def min_temp(self):

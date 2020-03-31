@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_TEMPERATURE,
+    CONCENTRATION_PARTS_PER_MILLION,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     TEMP_FAHRENHEIT,
@@ -28,7 +29,10 @@ ATTR_CO2_CONCENTRATION = "co2_concentration"
 
 SENSOR_TEMPERATURE = "temperature"
 SENSOR_CO2 = "co2"
-SENSOR_TYPES = {SENSOR_TEMPERATURE: ["Temperature", None], SENSOR_CO2: ["CO2", "ppm"]}
+SENSOR_TYPES = {
+    SENSOR_TEMPERATURE: ["Temperature", None],
+    SENSOR_CO2: ["CO2", CONCENTRATION_PARTS_PER_MILLION],
+}
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -81,7 +85,7 @@ class MHZ19Sensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{}: {}".format(self._name, SENSOR_TYPES[self._sensor_type][0])
+        return f"{self._name}: {SENSOR_TYPES[self._sensor_type][0]}"
 
     @property
     def state(self):

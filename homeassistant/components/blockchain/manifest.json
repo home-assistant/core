@@ -1,6 +1,6 @@
 {
   "domain": "blockchain",
-  "name": "Blockchain.info",
+  "name": "Blockchain.com",
   "documentation": "https://www.home-assistant.io/integrations/blockchain",
   "requirements": ["python-blockchain-api==0.0.2"],
   "dependencies": [],

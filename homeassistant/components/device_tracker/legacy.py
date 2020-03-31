@@ -37,15 +37,12 @@ from .const import (
     ATTR_HOST_NAME,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
-    CONF_AWAY_HIDE,
     CONF_CONSIDER_HOME,
     CONF_NEW_DEVICE_DEFAULTS,
     CONF_TRACK_NEW,
-    DEFAULT_AWAY_HIDE,
     DEFAULT_CONSIDER_HOME,
     DEFAULT_TRACK_NEW,
     DOMAIN,
-    ENTITY_ID_FORMAT,
     LOGGER,
     SOURCE_TYPE_GPS,
 )
@@ -182,7 +179,7 @@ class DeviceTracker:
             return
 
         # Guard from calling see on entity registry entities.
-        entity_id = ENTITY_ID_FORMAT.format(dev_id)
+        entity_id = f"{DOMAIN}.{dev_id}"
         if registry.async_is_registered(entity_id):
             LOGGER.error(
                 "The see service is not supported for this entity %s", entity_id
@@ -197,10 +194,8 @@ class DeviceTracker:
             self.track_new,
             dev_id,
             mac,
-            (host_name or dev_id).replace("_", " "),
             picture=picture,
             icon=icon,
-            hide_if_away=self.defaults.get(CONF_AWAY_HIDE, DEFAULT_AWAY_HIDE),
         )
         self.devices[dev_id] = device
         if mac is not None:
@@ -305,11 +300,10 @@ class Device(RestoreEntity):
         picture: str = None,
         gravatar: str = None,
         icon: str = None,
-        hide_if_away: bool = False,
     ) -> None:
         """Initialize a device."""
         self.hass = hass
-        self.entity_id = ENTITY_ID_FORMAT.format(dev_id)
+        self.entity_id = f"{DOMAIN}.{dev_id}"
 
         # Timedelta object how long we consider a device home if it is not
         # detected anymore.
@@ -333,8 +327,6 @@ class Device(RestoreEntity):
 
         self.icon = icon
 
-        self.away_hide = hide_if_away
-
         self.source_type = None
 
         self._attributes = {}
@@ -342,7 +334,7 @@ class Device(RestoreEntity):
     @property
     def name(self):
         """Return the name of the entity."""
-        return self.config_name or self.host_name or DEVICE_DEFAULT_NAME
+        return self.config_name or self.host_name or self.dev_id or DEVICE_DEFAULT_NAME
 
     @property
     def state(self):
@@ -374,11 +366,6 @@ class Device(RestoreEntity):
         """Return device state attributes."""
         return self._attributes
 
-    @property
-    def hidden(self):
-        """If device should be hidden."""
-        return self.away_hide and self.state != STATE_HOME
-
     async def async_seen(
         self,
         host_name: str = None,
@@ -393,7 +380,7 @@ class Device(RestoreEntity):
         """Mark the device as seen."""
         self.source_type = source_type
         self.last_seen = dt_util.utcnow()
-        self.host_name = host_name
+        self.host_name = host_name or self.host_name
         self.location_name = location_name
         self.consider_home = consider_home or self.consider_home
 
@@ -413,7 +400,6 @@ class Device(RestoreEntity):
                 self.gps_accuracy = 0
                 LOGGER.warning("Could not parse gps value for %s: %s", self.dev_id, gps)
 
-        # pylint: disable=not-an-iterable
         await self.async_update()
 
     def stale(self, now: dt_util.dt.datetime = None):
@@ -519,24 +505,20 @@ async def async_load_config(
 
     This method is a coroutine.
     """
-    dev_schema = vol.All(
-        cv.deprecated(CONF_AWAY_HIDE, invalidation_version="0.107.0"),
-        vol.Schema(
-            {
-                vol.Required(CONF_NAME): cv.string,
-                vol.Optional(CONF_ICON, default=None): vol.Any(None, cv.icon),
-                vol.Optional("track", default=False): cv.boolean,
-                vol.Optional(CONF_MAC, default=None): vol.Any(
-                    None, vol.All(cv.string, vol.Upper)
-                ),
-                vol.Optional(CONF_AWAY_HIDE, default=DEFAULT_AWAY_HIDE): cv.boolean,
-                vol.Optional("gravatar", default=None): vol.Any(None, cv.string),
-                vol.Optional("picture", default=None): vol.Any(None, cv.string),
-                vol.Optional(CONF_CONSIDER_HOME, default=consider_home): vol.All(
-                    cv.time_period, cv.positive_timedelta
-                ),
-            }
-        ),
+    dev_schema = vol.Schema(
+        {
+            vol.Required(CONF_NAME): cv.string,
+            vol.Optional(CONF_ICON, default=None): vol.Any(None, cv.icon),
+            vol.Optional("track", default=False): cv.boolean,
+            vol.Optional(CONF_MAC, default=None): vol.Any(
+                None, vol.All(cv.string, vol.Upper)
+            ),
+            vol.Optional("gravatar", default=None): vol.Any(None, cv.string),
+            vol.Optional("picture", default=None): vol.Any(None, cv.string),
+            vol.Optional(CONF_CONSIDER_HOME, default=consider_home): vol.All(
+                cv.time_period, cv.positive_timedelta
+            ),
+        }
     )
     result = []
     try:
@@ -550,6 +532,7 @@ async def async_load_config(
     for dev_id, device in devices.items():
         # Deprecated option. We just ignore it to avoid breaking change
         device.pop("vendor", None)
+        device.pop("hide_if_away", None)
         try:
             device = dev_schema(device)
             device["dev_id"] = cv.slugify(dev_id)
@@ -570,7 +553,6 @@ def update_config(path: str, dev_id: str, device: Device):
                 ATTR_ICON: device.icon,
                 "picture": device.config_picture,
                 "track": device.track,
-                CONF_AWAY_HIDE: device.away_hide,
             }
         }
         out.write("\n")
@@ -583,5 +565,7 @@ def get_gravatar_for_email(email: str):
     Async friendly.
     """
 
-    url = "https://www.gravatar.com/avatar/{}.jpg?s=80&d=wavatar"
-    return url.format(hashlib.md5(email.encode("utf-8").lower()).hexdigest())
+    return (
+        f"https://www.gravatar.com/avatar/"
+        f"{hashlib.md5(email.encode('utf-8').lower()).hexdigest()}.jpg?s=80&d=wavatar"
+    )

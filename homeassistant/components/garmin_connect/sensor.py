@@ -32,9 +32,9 @@ async def async_setup_entry(
         GarminConnectAuthenticationError,
         GarminConnectTooManyRequestsError,
     ) as err:
-        _LOGGER.error("Error occured during Garmin Connect Client update: %s", err)
+        _LOGGER.error("Error occurred during Garmin Connect Client update: %s", err)
     except Exception:  # pylint: disable=broad-except
-        _LOGGER.error("Unknown error occured during Garmin Connect Client update.")
+        _LOGGER.exception("Unknown error occurred during Garmin Connect Client update.")
 
     entities = []
     for (
@@ -160,15 +160,24 @@ class GarminConnectSensor(Entity):
             return
 
         await self._data.async_update()
-        if not self._data.data:
+        data = self._data.data
+        if not data:
             _LOGGER.error("Didn't receive data from Garmin Connect")
             return
+        if data.get(self._type) is None:
+            _LOGGER.debug("Entity type %s not set in fetched data", self._type)
+            self._available = False
+            return
+        self._available = True
 
-        data = self._data.data
-        if "Duration" in self._type:
+        if "Duration" in self._type or "Seconds" in self._type:
             self._state = data[self._type] // 60
-        elif "Seconds" in self._type:
-            self._state = data[self._type] // 60
+        elif "Mass" in self._type or self._type == "weight":
+            self._state = round((data[self._type] / 1000), 2)
+        elif (
+            self._type == "bodyFat" or self._type == "bodyWater" or self._type == "bmi"
+        ):
+            self._state = round(data[self._type], 2)
         else:
             self._state = data[self._type]
 

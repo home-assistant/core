@@ -7,6 +7,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from aiohttp import ClientError
 from spotipy import Spotify, SpotifyException
+from yarl import URL
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
@@ -157,7 +158,8 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     @property
     def media_content_id(self) -> Optional[str]:
         """Return the media URL."""
-        return self._currently_playing.get("item", {}).get("name")
+        item = self._currently_playing.get("item") or {}
+        return item.get("name")
 
     @property
     def media_content_type(self) -> Optional[str]:
@@ -203,7 +205,8 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     @property
     def media_title(self) -> Optional[str]:
         """Return the media title."""
-        return self._currently_playing.get("item", {}).get("name")
+        item = self._currently_playing.get("item") or {}
+        return item.get("name")
 
     @property
     def media_artist(self) -> Optional[str]:
@@ -224,7 +227,8 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     @property
     def media_track(self) -> Optional[int]:
         """Track number of current playing media, music track only."""
-        return self._currently_playing.get("item", {}).get("track_number")
+        item = self._currently_playing.get("item") or {}
+        return item.get("track_number")
 
     @property
     def media_playlist(self):
@@ -291,6 +295,10 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     def play_media(self, media_type: str, media_id: str, **kwargs) -> None:
         """Play media."""
         kwargs = {}
+
+        # Spotify can't handle URI's with query strings or anchors
+        # Yet, they do generate those types of URI in their official clients.
+        media_id = str(URL(media_id).with_query(None).with_fragment(None))
 
         if media_type == MEDIA_TYPE_MUSIC:
             kwargs["uris"] = [media_id]

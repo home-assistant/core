@@ -3,13 +3,15 @@
         "abort": {
             "already_configured": "Questo Samsung TV \u00e8 gi\u00e0 configurato.",
             "already_in_progress": "La configurazione di Samsung TV \u00e8 gi\u00e0 in corso.",
-            "auth_missing": "Home Assistant non \u00e8 autenticato per connettersi a questo Samsung TV.",
+            "auth_missing": "Home Assistant non \u00e8 autorizzato a connettersi a questo Samsung TV. Controlla le impostazioni del tuo TV per autorizzare Home Assistant.",
             "not_found": "Nessun dispositivo Samsung TV supportato trovato sulla rete.",
+            "not_successful": "Impossibile connettersi a questo dispositivo Samsung TV.",
             "not_supported": "Questo dispositivo Samsung TV non \u00e8 attualmente supportato."
         },
+        "flow_title": "Samsung TV: {model}",
         "step": {
             "confirm": {
-                "description": "Vuoi configurare Samsung TV {model} ? Se non hai mai collegato Home Assistant dovresti vedere un popup sul televisore in cui viene richiesta l'autenticazione. Le configurazioni manuali per questo televisore verranno sovrascritte.",
+                "description": "Vuoi configurare Samsung TV {model}? Se non hai mai connesso Home Assistant in precedenza, dovresti vedere un messaggio sul tuo TV in cui \u00e8 richiesta l'autorizzazione. Le configurazioni manuali per questo TV verranno sovrascritte.",
                 "title": "Samsung TV"
             },
             "user": {
@@ -17,7 +19,7 @@
                     "host": "Host o indirizzo IP",
                     "name": "Nome"
                 },
-                "description": "Inserisci le informazioni del tuo Samsung TV. Se non hai mai connesso Home Assistant dovresti vedere un popup sul televisore in cui viene richiesta l'autenticazione.",
+                "description": "Inserisci le informazioni del tuo Samsung TV. Se non hai mai connesso Home Assistant in precedenza, dovresti vedere un messaggio sul TV in cui \u00e8 richiesta l'autorizzazione.",
                 "title": "Samsung TV"
             }
         },

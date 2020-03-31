@@ -100,7 +100,7 @@ async def test_network_key_validation(hass, mock_openzwave):
 
 
 async def test_erronous_network_key_fails_validation(hass, mock_openzwave):
-    """Test failing erronous network key validation."""
+    """Test failing erroneous network key validation."""
     test_values = [
         (
             "0x 01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, "
@@ -1796,6 +1796,31 @@ class TestZWaveServices(unittest.TestCase):
         self.hass.block_till_done()
 
         assert self.zwave_network.nodes[14].values[12].data == 2
+
+    def test_set_node_value_with_long_id_and_text_value(self):
+        """Test zwave set_node_value service."""
+        value = MockValue(
+            index=87512398541236578,
+            command_class=const.COMMAND_CLASS_SWITCH_COLOR,
+            data="#ff0000",
+        )
+        node = MockNode(node_id=14, command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
+        node.values = {87512398541236578: value}
+        node.get_values.return_value = node.values
+        self.zwave_network.nodes = {14: node}
+
+        self.hass.services.call(
+            "zwave",
+            "set_node_value",
+            {
+                const.ATTR_NODE_ID: 14,
+                const.ATTR_VALUE_ID: "87512398541236578",
+                const.ATTR_CONFIG_VALUE: "#00ff00",
+            },
+        )
+        self.hass.block_till_done()
+
+        assert self.zwave_network.nodes[14].values[87512398541236578].data == "#00ff00"
 
     def test_refresh_node_value(self):
         """Test zwave refresh_node_value service."""

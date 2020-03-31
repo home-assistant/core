@@ -1,5 +1,6 @@
 """Config flow to configure deCONZ component."""
 import asyncio
+from pprint import pformat
 from urllib.parse import urlparse
 
 import async_timeout
@@ -26,6 +27,7 @@ from .const import (
     DEFAULT_ALLOW_DECONZ_GROUPS,
     DEFAULT_PORT,
     DOMAIN,
+    LOGGER,
 )
 
 DECONZ_MANUFACTURERURL = "http://www.dresden-elektronik.de"
@@ -93,6 +95,8 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except (asyncio.TimeoutError, ResponseError):
             self.bridges = []
 
+        LOGGER.debug("Discovered deCONZ gateways %s", pformat(self.bridges))
+
         if len(self.bridges) == 1:
             return await self.async_step_user(self.bridges[0])
 
@@ -120,6 +124,10 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_link(self, user_input=None):
         """Attempt to link with the deCONZ bridge."""
         errors = {}
+
+        LOGGER.debug(
+            "Preparing linking with deCONZ gateway %s", pformat(self.deconz_config)
+        )
 
         if user_input is not None:
             session = aiohttp_client.async_get_clientsession(self.hass)
@@ -170,6 +178,8 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ):
             return self.async_abort(reason="not_deconz_bridge")
 
+        LOGGER.debug("deCONZ SSDP discovery %s", pformat(discovery_info))
+
         self.bridge_id = normalize_bridge_id(discovery_info[ssdp.ATTR_UPNP_SERIAL])
         parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
 
@@ -196,6 +206,8 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         This flow is triggered by the discovery component.
         """
+        LOGGER.debug("deCONZ HASSIO discovery %s", pformat(user_input))
+
         self.bridge_id = normalize_bridge_id(user_input[CONF_SERIAL])
         await self.async_set_unique_id(self.bridge_id)
 

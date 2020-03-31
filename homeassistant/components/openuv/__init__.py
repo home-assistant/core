@@ -16,9 +16,13 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_SENSORS,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service import verify_domain_control
 
@@ -104,7 +108,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up OpenUV as config entry."""
-
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
     try:
@@ -230,6 +233,7 @@ class OpenUvEntity(Entity):
 
     def __init__(self, openuv):
         """Initialize."""
+        self._async_unsub_dispatcher_connect = None
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._available = True
         self._name = None
@@ -249,3 +253,28 @@ class OpenUvEntity(Entity):
     def name(self):
         """Return the name of the entity."""
         return self._name
+
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+
+        @callback
+        def update():
+            """Update the state."""
+            self.update_from_latest_data()
+            self.async_write_ha_state()
+
+        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
+            self.hass, TOPIC_UPDATE, update
+        )
+
+        self.update_from_latest_data()
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect dispatcher listener when removed."""
+        if self._async_unsub_dispatcher_connect:
+            self._async_unsub_dispatcher_connect()
+            self._async_unsub_dispatcher_connect = None
+
+    def update_from_latest_data(self):
+        """Update the sensor using the latest data."""
+        raise NotImplementedError

@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "GIO\u015a integracija za to merilno postajo je \u017ee nastavljena."
+        },
         "error": {
             "cannot_connect": "Ne morem se povezati s stre\u017enikom GIO\u015a.",
             "invalid_sensors_data": "Neveljavni podatki senzorjev za to merilno postajo.",

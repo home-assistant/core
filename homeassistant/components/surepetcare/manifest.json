@@ -4,5 +4,5 @@
   "documentation": "https://www.home-assistant.io/integrations/surepetcare",
   "dependencies": [],
   "codeowners": ["@benleb"],
-  "requirements": ["surepy==0.1.10"]
+  "requirements": ["surepy==0.2.3"]
 }

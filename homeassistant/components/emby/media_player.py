@@ -190,9 +190,7 @@ class EmbyDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return (
-            f"Emby - {self.device.client} - {self.device.name}" or DEVICE_DEFAULT_NAME
-        )
+        return f"Emby {self.device.name}" or DEVICE_DEFAULT_NAME
 
     @property
     def should_poll(self):
@@ -307,7 +305,7 @@ class EmbyDevice(MediaPlayerDevice):
         """Flag media player features that are supported."""
         if self.supports_remote_control:
             return SUPPORT_EMBY
-        return None
+        return 0
 
     async def async_media_play(self):
         """Play media."""
