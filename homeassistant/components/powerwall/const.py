@@ -37,6 +37,8 @@ POWERWALL_API_STATUS = "status"
 POWERWALL_API_DEVICE_TYPE = "device_type"
 POWERWALL_API_SITE_INFO = "site_info"
 
+POWERWALL_HTTP_SESSION = "http_session"
+
 POWERWALL_GRID_ONLINE = "SystemGridConnected"
 POWERWALL_CONNECTED_KEY = "connected_to_tesla"
 POWERWALL_RUNNING_KEY = "running"

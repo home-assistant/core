@@ -3,6 +3,7 @@ import asyncio
 from datetime import timedelta
 import logging
 
+import requests
 from tesla_powerwall import (
     ApiError,
     MetersResponse,
@@ -28,6 +29,7 @@ from .const import (
     POWERWALL_API_SITEMASTER,
     POWERWALL_API_STATUS,
     POWERWALL_COORDINATOR,
+    POWERWALL_HTTP_SESSION,
     POWERWALL_OBJECT,
     UPDATE_INTERVAL,
 )
@@ -64,10 +66,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     entry_id = entry.entry_id
 
     hass.data[DOMAIN].setdefault(entry_id, {})
-    power_wall = PowerWall(entry.data[CONF_IP_ADDRESS])
+    http_session = requests.Session()
+    power_wall = PowerWall(entry.data[CONF_IP_ADDRESS], http_session=http_session)
     try:
         powerwall_data = await hass.async_add_executor_job(call_base_info, power_wall)
     except (PowerWallUnreachableError, ApiError, ConnectionError):
+        http_session.close()
         raise ConfigEntryNotReady
 
     async def async_update_data():
@@ -84,7 +88,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data[DOMAIN][entry.entry_id] = powerwall_data
     hass.data[DOMAIN][entry.entry_id].update(
-        {POWERWALL_OBJECT: power_wall, POWERWALL_COORDINATOR: coordinator}
+        {
+            POWERWALL_OBJECT: power_wall,
+            POWERWALL_COORDINATOR: coordinator,
+            POWERWALL_HTTP_SESSION: http_session,
+        }
     )
 
     await coordinator.async_refresh()
@@ -129,6 +137,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
+
+    hass.data[DOMAIN][entry.entry_id][POWERWALL_HTTP_SESSION].close()
+
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
