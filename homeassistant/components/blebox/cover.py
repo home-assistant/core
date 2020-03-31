@@ -4,11 +4,8 @@ import logging
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_SHUTTER,
     STATE_CLOSED,
     STATE_CLOSING,
-    STATE_OPEN,
     STATE_OPENING,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
@@ -19,6 +16,7 @@ from homeassistant.components.cover import (
 from homeassistant.exceptions import PlatformNotReady
 
 from . import BleBoxEntity, async_add_blebox
+from .const import BLEBOX_TO_HASS_COVER_STATES, BLEBOX_TO_HASS_DEVICE_CLASSES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,31 +39,12 @@ class BleBoxCoverEntity(BleBoxEntity, CoverDevice):
     @property
     def state(self):
         """Return the equivalent HA cover state."""
-        states = {
-            None: None,
-            0: STATE_CLOSING,  # moving down
-            1: STATE_OPENING,  # moving up
-            2: STATE_OPEN,  # manually stopped
-            3: STATE_CLOSED,  # lower limit
-            4: STATE_OPEN,  # upper limit / open
-            # gateController
-            5: STATE_OPEN,  # overload
-            6: STATE_OPEN,  # motor failure
-            # 7 is not used
-            8: STATE_OPEN,  # safety stop
-        }
-
-        return states[self._feature.state]
+        return BLEBOX_TO_HASS_COVER_STATES[self._feature.state]
 
     @property
     def device_class(self):
         """Return the device class."""
-        types = {
-            "shutter": DEVICE_CLASS_SHUTTER,
-            "gatebox": DEVICE_CLASS_DOOR,
-            "gate": DEVICE_CLASS_DOOR,
-        }
-        return types[self._feature.device_class]
+        return BLEBOX_TO_HASS_DEVICE_CLASSES[self._feature.device_class]
 
     @property
     def supported_features(self):
