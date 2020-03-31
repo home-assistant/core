@@ -84,12 +84,19 @@ class LastfmSensor(Entity):
         """Update device state."""
         self._cover = self._user.get_image()
         self._playcount = self._user.get_playcount()
-        last = self._user.get_recent_tracks(limit=2)[0]
-        self._lastplayed = f"{last.track.artist} - {last.track.title}"
-        top = self._user.get_top_tracks(limit=1)[0]
-        toptitle = re.search("', '(.+?)',", str(top))
-        topartist = re.search("'(.+?)',", str(top))
-        self._topplayed = f"{topartist.group(1)} - {toptitle.group(1)}"
+
+        recent_tracks = self._user.get_recent_tracks(limit=2)
+        if len(recent_tracks) != 0:
+            last = recent_tracks[0]
+            self._lastplayed = f"{last.track.artist} - {last.track.title}"
+
+        top_tracks = self._user.get_top_tracks(limit=1)
+        if len(top_tracks) != 0:
+            top = top_tracks[0]
+            toptitle = re.search("', '(.+?)',", str(top))
+            topartist = re.search("'(.+?)',", str(top))
+            self._topplayed = f"{topartist.group(1)} - {toptitle.group(1)}"
+
         now_playing = self._user.get_now_playing()
         if now_playing is None:
             self._state = "Not Scrobbling"
