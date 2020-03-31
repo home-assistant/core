@@ -333,22 +333,13 @@ async def _async_set_up_integrations(
             for domain in domains
         }
         await asyncio.wait(futures.values())
-        errors = [
-            domain
-            for domain in domains
-            if futures[domain].exception() or not futures[domain].result()
-        ]
+        errors = [domain for domain in domains if futures[domain].exception()]
         for domain in errors:
-            if futures[domain].exception():
-                _LOGGER.error(
-                    "Error setting up integration %s - received exception %s",
-                    domain,
-                    futures[domain].exception(),
-                )
-            else:
-                _LOGGER.error(
-                    "Error setting up integration %s - returned False", domain
-                )
+            _LOGGER.error(
+                "Error setting up integration %s - received exception %s",
+                domain,
+                futures[domain].exception(),
+            )
 
     domains = _get_domains(hass, config)
 
