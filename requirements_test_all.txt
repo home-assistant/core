@@ -499,7 +499,7 @@ pyfido==2.1.1
 pyflunearyou==1.0.7
 
 # homeassistant.components.flume
-pyflume==0.3.0
+pyflume==0.4.0
 
 # homeassistant.components.fritzbox
 pyfritzhome==0.4.0

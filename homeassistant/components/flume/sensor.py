@@ -10,21 +10,26 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 from .const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     DEFAULT_NAME,
     DOMAIN,
+    FLUME_AUTH,
     FLUME_DEVICES,
     FLUME_HTTP_SESSION,
-    FLUME_TOKEN_FULL_PATH,
     FLUME_TYPE_SENSOR,
+    KEY_DEVICE_ID,
+    KEY_DEVICE_LOCATION,
+    KEY_DEVICE_LOCATION_NAME,
+    KEY_DEVICE_TYPE,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 SCAN_INTERVAL = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -53,58 +58,47 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     flume_domain_data = hass.data[DOMAIN][config_entry.entry_id]
 
-    flume_token_full_path = flume_domain_data[FLUME_TOKEN_FULL_PATH]
+    flume_auth = flume_domain_data[FLUME_AUTH]
     http_session = flume_domain_data[FLUME_HTTP_SESSION]
     flume_devices = flume_domain_data[FLUME_DEVICES]
 
     config = config_entry.data
-    time_zone = str(hass.config.time_zone)
-    username = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
-    client_id = config[CONF_CLIENT_ID]
-    client_secret = config[CONF_CLIENT_SECRET]
     name = config.get(CONF_NAME, DEFAULT_NAME)
 
     flume_entity_list = []
     for device in flume_devices.device_list:
-        if device["type"] != FLUME_TYPE_SENSOR:
+        if device[KEY_DEVICE_TYPE] != FLUME_TYPE_SENSOR:
             continue
 
-        device_id = device["id"]
-        device_name = device["location"]["name"]
-
-        flume = FlumeData(
-            username,
-            password,
-            client_id,
-            client_secret,
+        device_id = device[KEY_DEVICE_ID]
+        device_name = device[KEY_DEVICE_LOCATION][KEY_DEVICE_LOCATION_NAME]
+        device_friendly_name = f"{name} {device_name}"
+        flume_device = FlumeData(
+            flume_auth,
             device_id,
-            time_zone,
             SCAN_INTERVAL,
-            flume_token_full_path,
             update_on_init=False,
             http_session=http_session,
         )
-        flume_entity_list.append(FlumeSensor(flume, f"{name} {device_name}", device_id))
+        flume_entity_list.append(
+            FlumeSensor(flume_device, device_friendly_name, device_id)
+        )
 
     if flume_entity_list:
-        # Flume takes a while to setup currently
-        # which will be fixed upstream.  To prevent
-        # Home Assistant from blocking on startup
-        # we do not do a poll on add.
-        async_add_entities(flume_entity_list, False)
+        async_add_entities(flume_entity_list, True)
 
 
 class FlumeSensor(Entity):
     """Representation of the Flume sensor."""
 
-    def __init__(self, flume, name, device_id):
+    def __init__(self, flume_device, name, device_id):
         """Initialize the Flume sensor."""
-        self.flume = flume
+        self._flume_device = flume_device
         self._name = name
         self._device_id = device_id
-        self._state = None
+        self._undo_track_sensor = None
         self._available = False
+        self._state = None
 
     @property
     def device_info(self):
@@ -142,11 +136,17 @@ class FlumeSensor(Entity):
         """Device unique ID."""
         return self._device_id
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data and updates the states."""
-        self._available = False
-        self.flume.update()
-        new_value = self.flume.value
-        if new_value is not None:
-            self._available = True
-            self._state = new_value
+        _LOGGER.debug("Updating flume sensor: %s", self._name)
+        try:
+            self._flume_device.update_force()
+        except Exception as ex:  # pylint: disable=broad-except
+            if self._available:
+                _LOGGER.error("Update of flume sensor %s failed: %s", self._name, ex)
+            self._available = False
+            return
+        _LOGGER.debug("Successful update of flume sensor: %s", self._name)
+        self._state = self._flume_device.value
+        self._available = True

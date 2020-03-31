@@ -3,7 +3,7 @@ import asyncio
 from functools import partial
 import logging
 
-from pyflume import FlumeDeviceList
+from pyflume import FlumeAuth, FlumeDeviceList
 from requests import Session
 from requests.exceptions import RequestException
 
@@ -17,9 +17,9 @@ from .const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     DOMAIN,
+    FLUME_AUTH,
     FLUME_DEVICES,
     FLUME_HTTP_SESSION,
-    FLUME_TOKEN_FULL_PATH,
     PLATFORMS,
 )
 
@@ -45,17 +45,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     http_session = Session()
 
+    flume_auth = FlumeAuth(
+        username,
+        password,
+        client_id,
+        client_secret,
+        flume_token_file=flume_token_full_path,
+        http_session=http_session,
+    )
+
     try:
         flume_devices = await hass.async_add_executor_job(
-            partial(
-                FlumeDeviceList,
-                username,
-                password,
-                client_id,
-                client_secret,
-                flume_token_full_path,
-                http_session=http_session,
-            )
+            partial(FlumeDeviceList, flume_auth, http_session=http_session,)
         )
     except RequestException:
         raise ConfigEntryNotReady
@@ -65,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data[DOMAIN][entry.entry_id] = {
         FLUME_DEVICES: flume_devices,
-        FLUME_TOKEN_FULL_PATH: flume_token_full_path,
+        FLUME_AUTH: flume_auth,
         FLUME_HTTP_SESSION: http_session,
     }
 
@@ -87,6 +88,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
+
+    hass.data[DOMAIN][entry.entry_id][FLUME_HTTP_SESSION].close()
+
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
