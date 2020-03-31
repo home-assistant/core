@@ -132,11 +132,12 @@ class NUTSensor(Entity):
     @property
     def device_info(self):
         """Device info for the ups."""
+        if not self._unique_id:
+            return None
         device_info = {
+            "identifiers": {(DOMAIN, self._unique_id)},
             "name": self._device_name,
         }
-        if self._unique_id:
-            device_info["identifiers"] = {(DOMAIN, self._unique_id)}
         if self._model:
             device_info["model"] = self._model
         if self._manufacturer:
