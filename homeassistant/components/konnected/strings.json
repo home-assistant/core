@@ -95,7 +95,7 @@
         "description": "Please select the desired behavior for your panel",
         "data": {
           "blink": "Blink panel LED on when sending state change",
-          "override_api_host": "Override default Home Assistant API host panel uses",
+          "override_api_host": "Override default Home Assistant API host panel url",
           "api_host": "Override API host url (optional)"
         }
       }
