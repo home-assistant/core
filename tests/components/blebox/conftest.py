@@ -120,9 +120,11 @@ class DefaultBoxTest:
             with pytest.raises(PlatformNotReady):
                 await self.async_mock_entities(hass)
 
-            error.assert_has_calls([call("Identify failed (%s)", mock.ANY,)])
+            error.assert_has_calls(
+                [call("Identify failed at %s:%d (%s)", "172.0.0.1", 80, mock.ANY,)]
+            )
             assert isinstance(
-                error.call_args[0][1], blebox_uniapi.error.ConnectionError
+                error.call_args[0][3], blebox_uniapi.error.ConnectionError
             )
 
     def default_mock(self):
