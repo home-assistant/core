@@ -91,6 +91,7 @@
                 "data": {
                     "activation": "\u958b\u555f\u6642\u8f38\u51fa",
                     "momentary": "\u6301\u7e8c\u6642\u9593\uff08ms\uff09\uff08\u9078\u9805\uff09",
+                    "more_states": "\u8a2d\u5b9a\u6b64\u5340\u57df\u7684\u9644\u52a0\u72c0\u614b",
                     "name": "\u540d\u7a31\uff08\u9078\u9805\uff09",
                     "pause": "\u66ab\u505c\u9593\u8ddd\uff08ms\uff09\uff08\u9078\u9805\uff09",
                     "repeat": "\u91cd\u8907\u6642\u9593\uff08-1=\u7121\u9650\uff09\uff08\u9078\u9805\uff09"

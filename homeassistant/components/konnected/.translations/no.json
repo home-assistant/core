@@ -91,11 +91,12 @@
                 "data": {
                     "activation": "Utgang n\u00e5r den er p\u00e5",
                     "momentary": "Pulsvarighet (ms) (valgfritt)",
+                    "more_states": "Konfigurere flere tilstander for denne sonen",
                     "name": "Navn (valgfritt)",
                     "pause": "Pause mellom pulser (ms) (valgfritt)",
                     "repeat": "Tider \u00e5 gjenta (-1 = uendelig) (valgfritt)"
                 },
-                "description": "Velg outputalternativer for {zone}",
+                "description": "Velg outputalternativer for {zone} : state {state}",
                 "title": "Konfigurere Valgbare Utgang"
             }
         },

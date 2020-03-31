@@ -250,7 +250,7 @@ apcaccess==0.0.13
 apns2==0.3.0
 
 # homeassistant.components.apprise
-apprise==0.8.4
+apprise==0.8.5
 
 # homeassistant.components.aprs
 aprslib==0.6.46
@@ -704,7 +704,7 @@ hole==0.5.1
 holidays==0.10.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200318.1
+home-assistant-frontend==20200330.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1335,6 +1335,9 @@ pyintesishome==1.7.1
 # homeassistant.components.ipma
 pyipma==2.0.5
 
+# homeassistant.components.ipp
+pyipp==0.8.1
+
 # homeassistant.components.iqvia
 pyiqvia==0.2.1
 
@@ -1876,7 +1879,7 @@ sisyphus-control==2.2.1
 skybellpy==0.4.0
 
 # homeassistant.components.slack
-slacker==0.14.0
+slackclient==2.5.0
 
 # homeassistant.components.sleepiq
 sleepyq==0.7
@@ -2008,7 +2011,7 @@ temperusb==1.5.3
 # tensorflow==1.13.2
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.1.1
+tesla-powerwall==0.1.3
 
 # homeassistant.components.tesla
 teslajsonpy==0.6.0
@@ -2182,7 +2185,7 @@ zhong_hong_hvac==1.0.9
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
-zigpy-cc==0.3.0
+zigpy-cc==0.3.1
 
 # homeassistant.components.zha
 zigpy-deconz==0.7.0
