@@ -43,7 +43,7 @@ async def test_form(hass):
         )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "serial"
+    assert result2["title"] == "ups1@1.1.1.1:2222"
     assert result2["data"] == {
         "alias": "ups1",
         "host": "1.1.1.1",
@@ -83,7 +83,7 @@ async def test_form_import(hass):
         )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == "serial"
+    assert result["title"] == "localhost:123"
     assert result["data"] == {
         "host": "localhost",
         "port": 123,
