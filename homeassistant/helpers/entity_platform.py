@@ -431,9 +431,10 @@ class EntityPlatform:
                 already_exists = True
 
         if already_exists:
-            msg = f"Entity id already exists: {entity.entity_id}"
+            msg = f"Entity id already exists - ignoring: {entity.entity_id}"
             if entity.unique_id is not None:
-                msg += f". Platform {self.platform_name} does not generate unique IDs - ignoring entity"
+                msg += f". Platform {self.platform_name} does not generate unique IDs"
+            self.logger.error(msg)
             return
 
         entity_id = entity.entity_id
