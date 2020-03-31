@@ -2,39 +2,29 @@
 import asyncio
 import logging
 import secrets
+from typing import Optional
 
+from aiohttp import web
 from rachiopy import Rachio
 import voluptuous as vol
 
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, EVENT_HOMEASSISTANT_STOP, URL_API
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import Entity
 
 from .const import (
     CONF_CUSTOM_URL,
     CONF_MANUAL_RUN_MINS,
     DEFAULT_MANUAL_RUN_MINS,
+    DEFAULT_NAME,
     DOMAIN,
-    KEY_DEVICES,
-    KEY_ENABLED,
-    KEY_EXTERNAL_ID,
-    KEY_ID,
-    KEY_MAC_ADDRESS,
-    KEY_MODEL,
-    KEY_NAME,
-    KEY_SCHEDULES,
-    KEY_SERIAL_NUMBER,
-    KEY_STATUS,
-    KEY_TYPE,
-    KEY_USERNAME,
-    KEY_ZONES,
-
     RACHIO_API_EXCEPTIONS,
 )
-from .device import RachioPerson
-from .webhooks import WEBHOOK_PATH, RachioWebhookView
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,56 +44,6 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-
-STATUS_ONLINE = "ONLINE"
-STATUS_OFFLINE = "OFFLINE"
-
-# Device webhook values
-TYPE_CONTROLLER_STATUS = "DEVICE_STATUS"
-SUBTYPE_OFFLINE = "OFFLINE"
-SUBTYPE_ONLINE = "ONLINE"
-SUBTYPE_OFFLINE_NOTIFICATION = "OFFLINE_NOTIFICATION"
-SUBTYPE_COLD_REBOOT = "COLD_REBOOT"
-SUBTYPE_SLEEP_MODE_ON = "SLEEP_MODE_ON"
-SUBTYPE_SLEEP_MODE_OFF = "SLEEP_MODE_OFF"
-SUBTYPE_BROWNOUT_VALVE = "BROWNOUT_VALVE"
-SUBTYPE_RAIN_SENSOR_DETECTION_ON = "RAIN_SENSOR_DETECTION_ON"
-SUBTYPE_RAIN_SENSOR_DETECTION_OFF = "RAIN_SENSOR_DETECTION_OFF"
-SUBTYPE_RAIN_DELAY_ON = "RAIN_DELAY_ON"
-SUBTYPE_RAIN_DELAY_OFF = "RAIN_DELAY_OFF"
-
-# Schedule webhook values
-TYPE_SCHEDULE_STATUS = "SCHEDULE_STATUS"
-SUBTYPE_SCHEDULE_STARTED = "SCHEDULE_STARTED"
-SUBTYPE_SCHEDULE_STOPPED = "SCHEDULE_STOPPED"
-SUBTYPE_SCHEDULE_COMPLETED = "SCHEDULE_COMPLETED"
-SUBTYPE_WEATHER_NO_SKIP = "WEATHER_INTELLIGENCE_NO_SKIP"
-SUBTYPE_WEATHER_SKIP = "WEATHER_INTELLIGENCE_SKIP"
-SUBTYPE_WEATHER_CLIMATE_SKIP = "WEATHER_INTELLIGENCE_CLIMATE_SKIP"
-SUBTYPE_WEATHER_FREEZE = "WEATHER_INTELLIGENCE_FREEZE"
-
-# Zone webhook values
-TYPE_ZONE_STATUS = "ZONE_STATUS"
-SUBTYPE_ZONE_STARTED = "ZONE_STARTED"
-SUBTYPE_ZONE_STOPPED = "ZONE_STOPPED"
-SUBTYPE_ZONE_COMPLETED = "ZONE_COMPLETED"
-SUBTYPE_ZONE_CYCLING = "ZONE_CYCLING"
-SUBTYPE_ZONE_CYCLING_COMPLETED = "ZONE_CYCLING_COMPLETED"
-
-# Webhook callbacks
-LISTEN_EVENT_TYPES = [
-    "DEVICE_STATUS_EVENT",
-    "ZONE_STATUS_EVENT",
-    "SCHEDULE_STATUS_EVENT",
-]
-WEBHOOK_CONST_ID = "homeassistant.rachio:"
-WEBHOOK_PATH = URL_API + DOMAIN
-SIGNAL_RACHIO_UPDATE = DOMAIN + "_update"
-SIGNAL_RACHIO_CONTROLLER_UPDATE = SIGNAL_RACHIO_UPDATE + "_controller"
-SIGNAL_RACHIO_ZONE_UPDATE = SIGNAL_RACHIO_UPDATE + "_zone"
-SIGNAL_RACHIO_SCHEDULE_UPDATE = SIGNAL_RACHIO_UPDATE + "_schedule"
-
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the rachio component from YAML."""
