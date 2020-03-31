@@ -56,9 +56,6 @@ input_text:
   ais_logs_path:
     name: Path for logs
     icon: mdi:file-document-edit-outline
-  ais_db_path:
-    name: Path for SQLight DB
-    icon: mdi:database
 
 input_number:
   assistant_rate:
