@@ -6,7 +6,7 @@ import os
 from typing import Any, Callable, Dict, List, Optional, Type, Union
 
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.loader import bind_hass
 from homeassistant.util import json as json_util
@@ -184,6 +184,9 @@ class Store:
 
     async def _async_handle_write_data(self, *_args):
         """Handle writing the config."""
+        if self.hass.state == CoreState.stopping:
+            self._async_ensure_stop_listener()
+            return
         data = self._data
 
         if "data_func" in data:
