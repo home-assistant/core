@@ -1017,8 +1017,11 @@ async def flush_store(store):
     if store._data is None:
         return
 
-    store._async_cleanup_stop_listener()
+    store._async_cleanup_final_write_listener()
     store._async_cleanup_delay_listener()
+    if store._unsub_stop_listener is not None:
+        store._unsub_stop_listener()
+        store._unsub_stop_listener = None
     await store._async_handle_write_data()
 
 
@@ -1030,7 +1033,7 @@ async def get_system_health_info(hass, domain):
 def mock_integration(hass, module):
     """Mock an integration."""
     integration = loader.Integration(
-        hass, f"homeassistant.components.{module.DOMAIN}", None, module.mock_manifest(),
+        hass, f"homeassistant.components.{module.DOMAIN}", None, module.mock_manifest()
     )
 
     _LOGGER.info("Adding mock integration: %s", module.DOMAIN)

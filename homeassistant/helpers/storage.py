@@ -130,6 +130,7 @@ class Store:
             stored = await self._async_migrate_func(data["version"], data["data"])
 
         self._load_task = None
+        self._async_ensure_stop_listener()
         return stored
 
     async def async_save(self, data: Union[Dict, List]) -> None:
