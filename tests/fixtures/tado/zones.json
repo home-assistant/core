@@ -175,5 +175,53 @@
       },
       "id" : 4,
       "supportsDazzle" : true
+   },
+   {
+      "dazzleMode" : {
+         "supported" : true,
+         "enabled" : true
+      },
+      "name" : "Air Conditioning with swing",
+      "id" : 5,
+      "supportsDazzle" : true,
+      "devices" : [
+         {
+            "deviceType" : "WR02",
+            "shortSerialNo" : "WR4",
+            "serialNo" : "WR4",
+            "commandTableUploadState" : "FINISHED",
+            "duties" : [
+               "ZONE_UI",
+               "ZONE_DRIVER",
+               "ZONE_LEADER"
+            ],
+            "currentFwVersion" : "59.4",
+            "characteristics" : {
+               "capabilities" : [
+                  "INSIDE_TEMPERATURE_MEASUREMENT",
+                  "IDENTIFY"
+               ]
+            },
+            "accessPointWiFi" : {
+               "ssid" : "tado8480"
+            },
+            "connectionState" : {
+               "timestamp" : "2020-03-23T18:30:07.377Z",
+               "value" : true
+            }
+         }
+      ],
+      "dazzleEnabled" : true,
+      "dateCreated" : "2019-11-28T15:58:48.968Z",
+      "openWindowDetection" : {
+         "timeoutInSeconds" : 900,
+         "enabled" : true,
+         "supported" : true
+      },
+      "deviceTypes" : [
+         "WR02"
+      ],
+      "reportAvailable" : false,
+      "type" : "AIR_CONDITIONING"
    }
 ]
