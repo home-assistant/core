@@ -132,7 +132,11 @@ class Store:
         self._data = {"version": self.version, "key": self.key, "data": data}
 
         self._async_cleanup_delay_listener()
-        self._async_cleanup_stop_listener()
+        if self.hass.state == CoreState.stopping:
+            self._async_ensure_stop_listener()
+            return
+        else:
+            self._async_cleanup_stop_listener()
         await self._async_handle_write_data()
 
     @callback
@@ -142,9 +146,10 @@ class Store:
 
         self._async_cleanup_delay_listener()
 
-        self._unsub_delay_listener = async_call_later(
-            self.hass, delay, self._async_callback_delayed_write
-        )
+        if self.hass.state != CoreState.stopping:
+            self._unsub_delay_listener = async_call_later(
+                self.hass, delay, self._async_callback_delayed_write
+            )
 
         self._async_ensure_stop_listener()
 
@@ -184,9 +189,6 @@ class Store:
 
     async def _async_handle_write_data(self, *_args):
         """Handle writing the config."""
-        if self.hass.state == CoreState.stopping:
-            self._async_ensure_stop_listener()
-            return
         data = self._data
 
         if "data_func" in data:
