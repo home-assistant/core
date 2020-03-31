@@ -335,10 +335,13 @@ async def _async_set_up_integrations(
         await asyncio.wait(futures.values())
         errors = [domain for domain in domains if futures[domain].exception()]
         for domain in errors:
+            exception = futures[domain].exception()
+            kwargs = {}
+            kwargs["exc_info"] = (type(exception), exception, exception.__traceback__)
             _LOGGER.error(
-                "Error setting up integration %s - received exception %s",
+                "Error setting up integration %s - received exception",
                 domain,
-                futures[domain].exception(),
+                **kwargs,  # type: ignore
             )
 
     domains = _get_domains(hass, config)
