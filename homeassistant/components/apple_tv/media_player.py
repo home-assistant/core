@@ -73,6 +73,10 @@ class AppleTvDevice(MediaPlayerEntity):
         self._manager.listeners.append(self)
         await self._manager.init()
 
+    async def async_will_remove_from_hass(self):
+        """Handle when an entity is about to be removed from Home Assistant."""
+        self._manager.listeners.remove(self)
+
     @callback
     def device_connected(self):
         """Handle when connection is made to device."""
@@ -82,6 +86,7 @@ class AppleTvDevice(MediaPlayerEntity):
     @callback
     def device_disconnected(self):
         """Handle when connection was lost to device."""
+        self.atv.push_updater.listener = None
         self.atv = None
 
     @property

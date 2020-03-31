@@ -163,15 +163,18 @@ class AppleTVManager:
     def connection_lost(self, exception):
         """Device was unexpectedly disconnected."""
         _LOGGER.warning('Connection lost to Apple TV "%s"', self.atv.name)
-
-        self.atv = None
+        if self.atv:
+            self.atv.close()
+            self.atv = None
         self._connection_was_lost = True
         self._update_state(disconnected=True)
         self._start_connect_loop()
 
     def connection_closed(self):
         """Device connection was (intentionally) closed."""
-        self.atv = None
+        if self.atv:
+            self.atv.close()
+            self.atv = None
         self._update_state(disconnected=True)
         self._start_connect_loop()
 
