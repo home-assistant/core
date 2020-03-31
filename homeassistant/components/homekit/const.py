@@ -1,9 +1,11 @@
 """Constants used be the HomeKit component."""
 # #### Misc ####
 DEBOUNCE_TIMEOUT = 0.5
+DEVICE_PRECISION_LEEWAY = 6
 DOMAIN = "homekit"
 HOMEKIT_FILE = ".homekit.state"
 HOMEKIT_NOTIFY_ID = 4663548
+
 
 # #### Attributes ####
 ATTR_DISPLAY_NAME = "display_name"
@@ -106,6 +108,7 @@ CHAR_CURRENT_POSITION = "CurrentPosition"
 CHAR_CURRENT_HUMIDITY = "CurrentRelativeHumidity"
 CHAR_CURRENT_SECURITY_STATE = "SecuritySystemCurrentState"
 CHAR_CURRENT_TEMPERATURE = "CurrentTemperature"
+CHAR_CURRENT_TILT_ANGLE = "CurrentHorizontalTiltAngle"
 CHAR_CURRENT_VISIBILITY_STATE = "CurrentVisibilityState"
 CHAR_FIRMWARE_REVISION = "FirmwareRevision"
 CHAR_HEATING_THRESHOLD_TEMPERATURE = "HeatingThresholdTemperature"
@@ -141,6 +144,7 @@ CHAR_TARGET_HEATING_COOLING = "TargetHeatingCoolingState"
 CHAR_TARGET_POSITION = "TargetPosition"
 CHAR_TARGET_SECURITY_STATE = "SecuritySystemTargetState"
 CHAR_TARGET_TEMPERATURE = "TargetTemperature"
+CHAR_TARGET_TILT_ANGLE = "TargetHorizontalTiltAngle"
 CHAR_TEMP_DISPLAY_UNITS = "TemperatureDisplayUnits"
 CHAR_VALVE_TYPE = "ValveType"
 CHAR_VOLUME = "Volume"
