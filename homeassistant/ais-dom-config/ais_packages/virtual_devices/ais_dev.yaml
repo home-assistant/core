@@ -48,7 +48,7 @@ input_select:
     icon: mdi:bug-check
   ais_db_engines:
     name: "DB engines"
-    options: ["SQLite", "MariaDB", "MySQL", "PostgreSQL"]
+    options: ["-", "SQLite (memory)", "SQLite (file)", "MariaDB", "MySQL", "PostgreSQL"]
     icon: mdi:database
 
 

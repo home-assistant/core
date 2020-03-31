@@ -5,12 +5,17 @@ For more details about this platform, please refer to the documentation at
 https://www.ai-speaker.com/
 """
 import asyncio
-import threading
 import os
 import logging
 import subprocess
 from PIL import Image
 from aiohttp.web import Request, Response
+from sqlalchemy import create_engine
+from sqlite3 import Connection
+from sqlalchemy.engine import Engine
+from sqlalchemy.event import listens_for
+from sqlalchemy.pool import StaticPool
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 from homeassistant.components.http import HomeAssistantView
 from . import sensor
@@ -217,9 +222,36 @@ async def _async_check_db_connection(hass, call):
         _LOGGER.error("No dburl value")
         return
 
-    hass.states.async_set("sensor.ais_db_connection_info", "0", {})
-    # check connection info
-    _LOGGER.error(call.data["dburl"])
+    """Ensure database is ready to fly."""
+    db_url = call.data["dburl"]
+    kwargs = {}
+
+    # pylint: disable=unused-variable
+    @listens_for(Engine, "connect")
+    def set_sqlite_pragma(dbapi_connection, connection_record):
+        """Set sqlite's WAL mode."""
+        if isinstance(dbapi_connection, Connection):
+            old_isolation = dbapi_connection.isolation_level
+            dbapi_connection.isolation_level = None
+            cursor = dbapi_connection.cursor()
+            cursor.execute("PRAGMA journal_mode=WAL")
+            cursor.close()
+            dbapi_connection.isolation_level = old_isolation
+
+    if "sqlite" in db_url:
+        kwargs["connect_args"] = {"check_same_thread": False}
+        kwargs["poolclass"] = StaticPool
+        kwargs["pool_reset_on_return"] = None
+    else:
+        kwargs["echo"] = False
+    try:
+        engine = create_engine(db_url, **kwargs)
+        get_session = scoped_session(sessionmaker(bind=engine))
+        _LOGGER.error("get_session: " + str(get_session))
+        hass.states.async_set("sensor.ais_db_connection_info", "0", {})
+        engine.dispose()
+    except Exception as e:
+        hass.states.async_set("sensor.ais_db_connection_info", "1", {})
 
 
 async def _async_get_ext_drivers_info(hass, call):
