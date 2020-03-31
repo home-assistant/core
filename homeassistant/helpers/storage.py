@@ -80,6 +80,7 @@ class Store:
         self._write_lock = asyncio.Lock()
         self._load_task: Optional[asyncio.Future] = None
         self._encoder = encoder
+        self._async_ensure_stop_listener()
 
     @property
     def path(self):
@@ -129,7 +130,6 @@ class Store:
             stored = await self._async_migrate_func(data["version"], data["data"])
 
         self._load_task = None
-        self._async_ensure_stop_listener()
         return stored
 
     async def async_save(self, data: Union[Dict, List]) -> None:
@@ -137,10 +137,12 @@ class Store:
         self._data = {"version": self.version, "key": self.key, "data": data}
 
         self._async_cleanup_delay_listener()
+        self._async_cleanup_final_write_listener()
+
         if self.hass.state == CoreState.stopping:
             self._async_ensure_final_write_listener()
             return
-        self._async_cleanup_final_write_listener()
+
         await self._async_handle_write_data()
 
     @callback
@@ -149,13 +151,15 @@ class Store:
         self._data = {"version": self.version, "key": self.key, "data_func": data_func}
 
         self._async_cleanup_delay_listener()
+        self._async_cleanup_final_write_listener()
 
-        if self.hass.state != CoreState.stopping:
-            self._unsub_delay_listener = async_call_later(
-                self.hass, delay, self._async_callback_delayed_write
-            )
+        if self.hass.state == CoreState.stopping:
+            self._async_ensure_final_write_listener()
+            return
 
-        self._async_ensure_final_write_listener()
+        self._unsub_delay_listener = async_call_later(
+            self.hass, delay, self._async_callback_delayed_write
+        )
 
     @callback
     def _async_ensure_final_write_listener(self):
@@ -202,8 +206,9 @@ class Store:
     async def _async_callback_stop(self, _event):
         """Handle the stop event and cancel any delay listener that exists."""
         self._unsub_stop_listener = None
+        if self._unsub_delay_listener is not None:
+            self._async_ensure_final_write_listener()
         self._async_cleanup_delay_listener()
-        self._async_ensure_final_write_listener()
 
     async def _async_handle_write_data(self, *_args):
         """Handle writing the config."""

@@ -6,7 +6,10 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import CoreState
 from homeassistant.helpers import storage
 from homeassistant.util import dt
@@ -83,7 +86,14 @@ async def test_saving_with_delay(hass, store, hass_storage):
 async def test_saving_on_final_write(hass, hass_storage):
     """Test delayed saves trigger when we quit Home Assistant."""
     store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
-    store.async_delay_save(lambda: MOCK_DATA, 1)
+    store.async_delay_save(lambda: MOCK_DATA, 5)
+    assert store.key not in hass_storage
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
     assert store.key not in hass_storage
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
@@ -96,8 +106,10 @@ async def test_saving_on_final_write(hass, hass_storage):
 
 
 async def test_not_delayed_saving_while_stopping(hass, hass_storage):
-    """Test delayed saves don't write when stopping Home Assistant."""
+    """Test delayed saves don't write after the stop event has fired."""
     store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
     hass.state = CoreState.stopping
 
     store.async_delay_save(lambda: MOCK_DATA, 1)
@@ -105,15 +117,20 @@ async def test_not_delayed_saving_while_stopping(hass, hass_storage):
     await hass.async_block_till_done()
     assert store.key not in hass_storage
 
-    hass.state = CoreState.final_write
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
-    await hass.async_block_till_done()
 
-    assert hass_storage[store.key] == {
-        "version": MOCK_VERSION,
-        "key": MOCK_KEY,
-        "data": MOCK_DATA,
-    }
+async def test_not_delayed_saving_after_stopping(hass, hass_storage):
+    """Test delayed saves don't write after stop if issued before stopping Home Assistant."""
+    store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
+    store.async_delay_save(lambda: MOCK_DATA, 10)
+    assert store.key not in hass_storage
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert store.key not in hass_storage
+
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=15))
+    await hass.async_block_till_done()
+    assert store.key not in hass_storage
 
 
 async def test_not_saving_while_stopping(hass, hass_storage):
@@ -122,16 +139,6 @@ async def test_not_saving_while_stopping(hass, hass_storage):
     hass.state = CoreState.stopping
     await store.async_save(MOCK_DATA)
     assert store.key not in hass_storage
-
-    hass.state = CoreState.final_write
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
-    await hass.async_block_till_done()
-
-    assert hass_storage[store.key] == {
-        "version": MOCK_VERSION,
-        "key": MOCK_KEY,
-        "data": MOCK_DATA,
-    }
 
 
 async def test_loading_while_delay(hass, store, hass_storage):
