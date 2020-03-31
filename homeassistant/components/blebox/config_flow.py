@@ -63,7 +63,7 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the BleBox config flow."""
         self.device_config = {}
 
-    def handle(self, step, exception, schema, addr, message_id):
+    def handle_step_exception(self, step, exception, schema, addr, message_id):
         """Handle step exceptions."""
 
         _LOGGER.error("%s at %s:%d (%s)", LOG_MSG[message_id], *addr, exception)
@@ -111,13 +111,15 @@ class BleBoxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             product = await Products.async_from_host(api_host)
 
         except UnsupportedBoxVersion as ex:
-            return self.handle("user", ex, schema, addr, UNSUPPORTED_VERSION)
+            return self.handle_step_exception(
+                "user", ex, schema, addr, UNSUPPORTED_VERSION
+            )
 
         except Error as ex:
-            return self.handle("user", ex, schema, addr, CANNOT_CONNECT)
+            return self.handle_step_exception("user", ex, schema, addr, CANNOT_CONNECT)
 
         except RuntimeError as ex:
-            return self.handle("user", ex, schema, addr, UNKNOWN)
+            return self.handle_step_exception("user", ex, schema, addr, UNKNOWN)
 
         # Check if configured but IP changed since
         await self.async_set_unique_id(product.unique_id)
