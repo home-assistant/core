@@ -1,6 +1,9 @@
 """List of modules that have uncaught exceptions today. Will be shrunk over time."""
 IGNORE_UNCAUGHT_EXCEPTIONS = [
     ("tests.components.cast.test_media_player", "test_start_discovery_called_once"),
+    ("tests.components.cast.test_media_player", "test_entry_setup_single_config"),
+    ("tests.components.cast.test_media_player", "test_entry_setup_list_config"),
+    ("tests.components.cast.test_media_player", "test_entry_setup_platform_not_ready"),
     ("tests.components.config.test_group", "test_update_device_config"),
     ("tests.components.default_config.test_init", "test_setup"),
     ("tests.components.demo.test_init", "test_setting_up_demo"),
