@@ -29,8 +29,6 @@ CONF_KNX_CONFIG = "config_file"
 CONF_KNX_ROUTING = "routing"
 CONF_KNX_TUNNELING = "tunneling"
 CONF_KNX_LOCAL_IP = "local_ip"
-CONF_KNX_AUTO_RECONNECT = "auto_reconnect"
-CONF_KNX_AUTO_RECONNECT_WAIT = "auto_reconnect_wait"
 CONF_KNX_FIRE_EVENT = "fire_event"
 CONF_KNX_FIRE_EVENT_FILTER = "fire_event_filter"
 CONF_KNX_STATE_UPDATER = "state_updater"
@@ -38,9 +36,6 @@ CONF_KNX_RATE_LIMIT = "rate_limit"
 CONF_KNX_EXPOSE = "expose"
 CONF_KNX_EXPOSE_TYPE = "type"
 CONF_KNX_EXPOSE_ADDRESS = "address"
-
-DEFAULT_KNX_AUTO_RECONNECT = True
-DEFAULT_KNX_AUTO_RECONNECT_WAIT = 3
 
 SERVICE_KNX_SEND = "send"
 SERVICE_KNX_ATTR_ADDRESS = "address"
@@ -51,12 +46,6 @@ ATTR_DISCOVER_DEVICES = "devices"
 TUNNELING_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(
-            CONF_KNX_AUTO_RECONNECT, default=DEFAULT_KNX_AUTO_RECONNECT
-        ): cv.boolean,
-        vol.Optional(
-            CONF_KNX_AUTO_RECONNECT_WAIT, default=DEFAULT_KNX_AUTO_RECONNECT_WAIT
-        ): cv.positive_int,
         vol.Optional(CONF_KNX_LOCAL_IP): cv.string,
         vol.Optional(CONF_PORT): cv.port,
     }
@@ -216,15 +205,9 @@ class KNXModule:
 
     def connection_config_tunneling(self):
         """Return the connection_config if tunneling is configured."""
-        gateway_ip = self.config[DOMAIN][CONF_KNX_TUNNELING].get(CONF_HOST)
+        gateway_ip = self.config[DOMAIN][CONF_KNX_TUNNELING][CONF_HOST]
         gateway_port = self.config[DOMAIN][CONF_KNX_TUNNELING].get(CONF_PORT)
         local_ip = self.config[DOMAIN][CONF_KNX_TUNNELING].get(CONF_KNX_LOCAL_IP)
-        auto_reconnect = self.config[DOMAIN][CONF_KNX_TUNNELING][
-            CONF_KNX_AUTO_RECONNECT
-        ]
-        auto_reconnect_wait = self.config[DOMAIN][CONF_KNX_TUNNELING][
-            CONF_KNX_AUTO_RECONNECT_WAIT
-        ]
         if gateway_port is None:
             gateway_port = DEFAULT_MCAST_PORT
         return ConnectionConfig(
@@ -232,8 +215,7 @@ class KNXModule:
             gateway_ip=gateway_ip,
             gateway_port=gateway_port,
             local_ip=local_ip,
-            auto_reconnect=auto_reconnect,
-            auto_reconnect_wait=auto_reconnect_wait,
+            auto_reconnect=True,
         )
 
     def connection_config_auto(self):
