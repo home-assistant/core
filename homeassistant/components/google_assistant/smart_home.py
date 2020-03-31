@@ -174,7 +174,7 @@ async def handle_devices_execute(hass, data, payload):
                 context=data.context,
             )
 
-            # # Happens if error occurred. Skip entity for further processing
+            # Happens if error occurred. Skip entity for further processing
             if entity_id in results:
                 continue
 
