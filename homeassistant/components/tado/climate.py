@@ -494,16 +494,12 @@ class TadoClimate(ClimateDevice):
             # A temperature cannot be passed with these modes
             temperature_to_send = None
 
-        fan_speed = (
-            self._current_tado_fan_speed
-            if (self._support_flags & SUPPORT_FAN_MODE)
-            else None
-        )
-        swing = (
-            self._current_tado_swing_mode
-            if (self._support_flags & SUPPORT_SWING_MODE)
-            else None
-        )
+        fan_speed = None
+        if self._support_flags & SUPPORT_FAN_MODE:
+            fan_speed = self._current_tado_fan_speed
+        swing = None
+        if self._support_flags & SUPPORT_SWING_MODE:
+            swing = self._current_tado_swing_mode
 
         self._tado.set_zone_overlay(
             zone_id=self.zone_id,
