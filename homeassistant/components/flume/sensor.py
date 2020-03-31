@@ -85,7 +85,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
 
     if flume_entity_list:
-        async_add_entities(flume_entity_list, True)
+        async_add_entities(flume_entity_list)
 
 
 class FlumeSensor(Entity):
@@ -150,3 +150,9 @@ class FlumeSensor(Entity):
         _LOGGER.debug("Successful update of flume sensor: %s", self._name)
         self._state = self._flume_device.value
         self._available = True
+
+    async def async_added_to_hass(self):
+        """Request an update when added."""
+        # We do ask for an update with async_add_entities()
+        # because it will update disabled entities
+        self.async_schedule_update_ha_state()
