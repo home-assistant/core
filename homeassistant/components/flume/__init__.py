@@ -45,16 +45,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     http_session = Session()
 
-    flume_auth = FlumeAuth(
-        username,
-        password,
-        client_id,
-        client_secret,
-        flume_token_file=flume_token_full_path,
-        http_session=http_session,
-    )
-
     try:
+        flume_auth = await hass.async_add_executor_job(
+            partial(
+                FlumeAuth,
+                username,
+                password,
+                client_id,
+                client_secret,
+                flume_token_file=flume_token_full_path,
+                http_session=http_session,
+            )
+        )
         flume_devices = await hass.async_add_executor_job(
             partial(FlumeDeviceList, flume_auth, http_session=http_session,)
         )

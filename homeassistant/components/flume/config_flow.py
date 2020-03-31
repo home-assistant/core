@@ -1,4 +1,5 @@
 """Config flow for flume integration."""
+from functools import partial
 import logging
 
 from pyflume import FlumeAuth, FlumeDeviceList
@@ -38,14 +39,18 @@ async def validate_input(hass: core.HomeAssistant, data):
     client_id = data[CONF_CLIENT_ID]
     client_secret = data[CONF_CLIENT_SECRET]
     flume_token_full_path = hass.config.path(f"{BASE_TOKEN_FILENAME}-{username}")
-    flume_auth = FlumeAuth(
-        username,
-        password,
-        client_id,
-        client_secret,
-        flume_token_file=flume_token_full_path,
-    )
+
     try:
+        flume_auth = await hass.async_add_executor_job(
+            partial(
+                FlumeAuth,
+                username,
+                password,
+                client_id,
+                client_secret,
+                flume_token_file=flume_token_full_path,
+            )
+        )
         flume_devices = await hass.async_add_executor_job(FlumeDeviceList, flume_auth)
     except RequestException:
         raise CannotConnect
