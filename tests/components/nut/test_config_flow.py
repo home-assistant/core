@@ -21,7 +21,7 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    mock_pynut = _get_mock_pynutclient(list_vars={"device.serial": "serial"})
+    mock_pynut = _get_mock_pynutclient(list_vars={"battery.voltage": "voltage"})
 
     with patch(
         "homeassistant.components.nut.PyNUTClient", return_value=mock_pynut,
@@ -38,7 +38,7 @@ async def test_form(hass):
                 "password": "test-password",
                 "port": 2222,
                 "alias": "ups1",
-                "resources": ["ups.serial"],
+                "resources": ["battery.charge"],
             },
         )
 
@@ -50,7 +50,7 @@ async def test_form(hass):
         "name": "NUT UPS",
         "password": "test-password",
         "port": 2222,
-        "resources": ["ups.serial"],
+        "resources": ["battery.charge"],
         "username": "test-username",
     }
     await hass.async_block_till_done()
@@ -62,7 +62,7 @@ async def test_form_import(hass):
     """Test we get the form with import source."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    mock_pynut = _get_mock_pynutclient(list_vars={"device.serial": "serial"})
+    mock_pynut = _get_mock_pynutclient(list_vars={"battery.voltage": "serial"})
 
     with patch(
         "homeassistant.components.nut.PyNUTClient", return_value=mock_pynut,
@@ -78,7 +78,7 @@ async def test_form_import(hass):
                 "host": "localhost",
                 "port": 123,
                 "name": "name",
-                "resources": ["ups.serial"],
+                "resources": ["battery.charge"],
             },
         )
 
@@ -88,7 +88,7 @@ async def test_form_import(hass):
         "host": "localhost",
         "port": 123,
         "name": "name",
-        "resources": ["ups.serial"],
+        "resources": ["battery.charge"],
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
@@ -114,7 +114,7 @@ async def test_form_cannot_connect(hass):
                 "password": "test-password",
                 "port": 2222,
                 "alias": "ups1",
-                "resources": ["ups.serial"],
+                "resources": ["battery.charge"],
             },
         )
 
