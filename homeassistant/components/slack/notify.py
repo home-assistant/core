@@ -142,9 +142,9 @@ class SlackNotificationService(BaseNotificationService):
         attachments = data.get(ATTR_ATTACHMENTS, {})
         if attachments:
             _LOGGER.warning(
-                "Attachments are now part of Slack's legacy API; "
-                "in most cases, Blocks should be used instead: "
-                "https://www.home-assistant.io/integrations/slack/"
+                "Attachments are deprecated and part of Slack's legacy API; support "
+                "for them will be dropped in 0.114.0. In most cases, Blocks should be "
+                "used instead: https://www.home-assistant.io/integrations/slack/"
             )
         blocks = data.get(ATTR_BLOCKS, {})
 
