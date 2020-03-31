@@ -5,7 +5,10 @@ import logging
 import os
 from typing import Any, Callable, Dict, List, Optional, Type, Union
 
-from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.loader import bind_hass
@@ -73,6 +76,7 @@ class Store:
         self._data: Optional[Dict[str, Any]] = None
         self._unsub_delay_listener: Optional[CALLBACK_TYPE] = None
         self._unsub_stop_listener: Optional[CALLBACK_TYPE] = None
+        self._unsub_final_write_listener: Optional[CALLBACK_TYPE] = None
         self._write_lock = asyncio.Lock()
         self._load_task: Optional[asyncio.Future] = None
         self._encoder = encoder
@@ -125,6 +129,7 @@ class Store:
             stored = await self._async_migrate_func(data["version"], data["data"])
 
         self._load_task = None
+        self._async_ensure_stop_listener()
         return stored
 
     async def async_save(self, data: Union[Dict, List]) -> None:
@@ -133,9 +138,9 @@ class Store:
 
         self._async_cleanup_delay_listener()
         if self.hass.state == CoreState.stopping:
-            self._async_ensure_stop_listener()
+            self._async_ensure_final_write_listener()
             return
-        self._async_cleanup_stop_listener()
+        self._async_cleanup_final_write_listener()
         await self._async_handle_write_data()
 
     @callback
@@ -150,22 +155,30 @@ class Store:
                 self.hass, delay, self._async_callback_delayed_write
             )
 
-        self._async_ensure_stop_listener()
+        self._async_ensure_final_write_listener()
+
+    @callback
+    def _async_ensure_final_write_listener(self):
+        """Ensure that we write if we quit before delay has passed."""
+        if self._unsub_final_write_listener is None:
+            self._unsub_final_write_listener = self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_callback_final_write
+            )
 
     @callback
     def _async_ensure_stop_listener(self):
         """Ensure that we write if we quit before delay has passed."""
         if self._unsub_stop_listener is None:
             self._unsub_stop_listener = self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_callback_stop_write
+                EVENT_HOMEASSISTANT_STOP, self._async_callback_stop
             )
 
     @callback
-    def _async_cleanup_stop_listener(self):
+    def _async_cleanup_final_write_listener(self):
         """Clean up a stop listener."""
-        if self._unsub_stop_listener is not None:
-            self._unsub_stop_listener()
-            self._unsub_stop_listener = None
+        if self._unsub_final_write_listener is not None:
+            self._unsub_final_write_listener()
+            self._unsub_final_write_listener = None
 
     @callback
     def _async_cleanup_delay_listener(self):
@@ -177,14 +190,20 @@ class Store:
     async def _async_callback_delayed_write(self, _now):
         """Handle a delayed write callback."""
         self._unsub_delay_listener = None
-        self._async_cleanup_stop_listener()
+        self._async_cleanup_final_write_listener()
         await self._async_handle_write_data()
 
-    async def _async_callback_stop_write(self, _event):
-        """Handle a write because Home Assistant is stopping."""
-        self._unsub_stop_listener = None
+    async def _async_callback_final_write(self, _event):
+        """Handle a write because Home Assistant is in final write state."""
+        self._unsub_final_write_listener = None
         self._async_cleanup_delay_listener()
         await self._async_handle_write_data()
+
+    async def _async_callback_stop(self, _event):
+        """Handle the stop event and cancel any delay listener that exists."""
+        self._unsub_stop_listener = None
+        self._async_cleanup_delay_listener()
+        self._async_ensure_final_write_listener()
 
     async def _async_handle_write_data(self, *_args):
         """Handle writing the config."""
