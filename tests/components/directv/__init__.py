@@ -20,26 +20,53 @@ MOCK_USER_INPUT = {CONF_HOST: HOST}
 def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
     """Mock the DirecTV connection for Home Assistant."""
     aioclient_mock.get(
-        "http://127.0.0.1:8080/info/getVersion",
+        f"http://{HOST}:8080/info/getVersion",
         text=load_fixture("directv/info-get-version.json"),
         headers={"Content-Type": "application/json"},
     )
 
     aioclient_mock.get(
-        "http://127.0.0.1:8080/info/getLocations",
+        f"http://{HOST}:8080/info/getLocations",
         text=load_fixture("directv/info-get-locations.json"),
         headers={"Content-Type": "application/json"},
     )
 
     aioclient_mock.get(
-        "http://127.0.0.1:8080/info/mode",
+        f"http://{HOST}:8080/info/mode",
+        params={"clientAddr": "9XXXXXXXXXX9"},
+        status=500,
+        text=load_fixture("directv/info-mode-error.json"),
+        headers={"Content-Type": "application/json"},
+    )
+
+    aioclient_mock.get(
+        f"http://{HOST}:8080/info/mode",
         text=load_fixture("directv/info-mode.json"),
         headers={"Content-Type": "application/json"},
     )
 
     aioclient_mock.get(
-        "http://127.0.0.1:8080/tv/getTuned",
+        f"http://{HOST}:8080/remote/processKey",
+        text=load_fixture("directv/remote-process-key.json"),
+        headers={"Content-Type": "application/json"},
+    )
+
+    aioclient_mock.get(
+        f"http://{HOST}:8080/tv/tune",
+        text=load_fixture("directv/tv-tune.json"),
+        headers={"Content-Type": "application/json"},
+    )
+
+    aioclient_mock.get(
+        f"http://{HOST}:8080/tv/getTuned",
+        params={"clientAddr": "2CA17D1CD30X"},
         text=load_fixture("directv/tv-get-tuned.json"),
+        headers={"Content-Type": "application/json"},
+    )
+
+    aioclient_mock.get(
+        f"http://{HOST}:8080/tv/getTuned",
+        text=load_fixture("directv/tv-get-tuned-movie.json"),
         headers={"Content-Type": "application/json"},
     )
 
@@ -53,7 +80,7 @@ async def setup_integration(
     """Set up the DirecTV integration in Home Assistant."""
     if setup_error:
         aioclient_mock.get(
-            "http://127.0.0.1:8080/info/getVersion", status=500,
+            f"http://{HOST}:8080/info/getVersion", status=500,
         )
     else:
         mock_connection(aioclient_mock)

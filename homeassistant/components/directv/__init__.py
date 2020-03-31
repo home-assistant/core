@@ -53,8 +53,9 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up DirecTV from a config entry."""
+    dtv = DIRECTV(entry.data[CONF_HOST], session=async_get_clientsession(hass))
+
     try:
-        dtv = DIRECTV(entry.data[CONF_HOST], session=async_get_clientsession(hass))
         await dtv.update()
     except DIRECTVError:
         raise ConfigEntryNotReady
@@ -101,10 +102,6 @@ class DIRECTVEntity(Entity):
     def name(self) -> str:
         """Return the name of the entity."""
         return self._name
-
-
-class DIRECTVDeviceEntity(DIRECTVEntity):
-    """Defines a DirecTV device entity."""
 
     @property
     def device_info(self) -> Dict[str, Any]:

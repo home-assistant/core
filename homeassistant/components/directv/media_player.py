@@ -23,7 +23,7 @@ from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
-from . import DIRECTVDeviceEntity
+from . import DIRECTVEntity
 from .const import (
     ATTR_MEDIA_CURRENTLY_RECORDING,
     ATTR_MEDIA_RATING,
@@ -74,7 +74,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class DIRECTVMediaPlayer(DIRECTVDeviceEntity, MediaPlayerDevice):
+class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerDevice):
     """Representation of a DirecTV receiver on the network."""
 
     def __init__(self, *, dtv: DIRECTV, name: str, address: str = "0") -> None:

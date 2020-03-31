@@ -2,7 +2,6 @@
 from aiohttp import ClientError as HTTPClientError
 from asynctest import patch
 
-from homeassistant.components.directv.config_flow import DirecTVConfigFlow
 from homeassistant.components.directv.const import CONF_RECEIVER_ID, DOMAIN
 from homeassistant.components.ssdp import ATTR_UPNP_SERIAL
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
@@ -36,34 +35,16 @@ async def test_show_user_form(hass: HomeAssistantType) -> None:
     assert result["type"] == RESULT_TYPE_FORM
 
 
-async def test_show_ssdp_confirm_form(hass: HomeAssistantType) -> None:
-    """Test that the ssdp confirmation form is served."""
-    flow = DirecTVConfigFlow()
-    flow.hass = hass
-    flow.context = {CONF_SOURCE: SOURCE_SSDP, CONF_NAME: HOST}
-
-    result = await flow.async_step_ssdp_confirm()
-
-    assert result["description_placeholders"] == {CONF_NAME: HOST}
-    assert result["step_id"] == "ssdp_confirm"
-    assert result["type"] == RESULT_TYPE_FORM
-
-
 async def test_show_ssdp_form(
     hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test that the ssdp confirmation form is served."""
     mock_connection(aioclient_mock)
 
-    flow = DirecTVConfigFlow()
-    flow.hass = hass
-    flow.context = {CONF_SOURCE: SOURCE_SSDP}
-
     discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
-    result = await flow.async_step_ssdp(discovery_info)
-
-    assert flow.context[CONF_HOST] == HOST
-    assert flow.context[CONF_NAME] == HOST
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info
+    )
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "ssdp_confirm"
@@ -113,19 +94,6 @@ async def test_ssdp_confirm_cannot_connect(
         context={CONF_SOURCE: SOURCE_SSDP, CONF_HOST: HOST, CONF_NAME: HOST},
         data=discovery_info,
     )
-
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "cannot_connect"
-
-
-async def test_ssdp_no_data(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test we abort if SSDP flow provides no data."""
-    flow = DirecTVConfigFlow()
-    flow.hass = hass
-
-    result = await flow.async_step_ssdp()
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "cannot_connect"
@@ -281,21 +249,18 @@ async def test_full_ssdp_flow_implementation(
     """Test the full SSDP flow from start to finish."""
     mock_connection(aioclient_mock)
 
-    flow = DirecTVConfigFlow()
-    flow.hass = hass
-    flow.context = {CONF_SOURCE: SOURCE_SSDP}
-
     discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
-    result = await flow.async_step_ssdp(discovery_info)
-
-    assert flow.context[CONF_HOST] == HOST
-    assert flow.context[CONF_NAME] == HOST
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info
+    )
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "ssdp_confirm"
     assert result["description_placeholders"] == {CONF_NAME: HOST}
 
-    result = await flow.async_step_ssdp_confirm(user_input={CONF_HOST: HOST})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == HOST
