@@ -16,12 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from . import (
-    PyNUTData,
-    find_resources_in_config_entry,
-    pynutdata_status,
-    unique_id_from_status,
-)
+from . import PyNUTData, find_resources_in_config_entry, pynutdata_status
 from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, SENSOR_TYPES
 from .const import DOMAIN  # pylint:disable=unused-import
 
@@ -62,9 +57,14 @@ async def validate_input(hass: core.HomeAssistant, data):
     if not status:
         raise CannotConnect
 
-    unique_id = unique_id_from_status(status, host, port)
+    return {"title": _format_host_port_alias(host, port, alias)}
 
-    return {"title": unique_id}
+
+def _format_host_port_alias(host, port, alias):
+    """Format a host, port, and alias so it can be used for comparison or display."""
+    if alias:
+        return f"{alias}@{host}:{port}"
+    return f"{host}:{port}"
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -77,6 +77,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
+            if self._host_port_alias_already_configured(
+                user_input[CONF_HOST], user_input[CONF_PORT], user_input.get(CONF_ALIAS)
+            ):
+                return self.async_abort(reason="already_configured")
             try:
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
@@ -86,13 +90,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             if "base" not in errors:
-                await self.async_set_unique_id(info["title"])
-                self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
+
+    def _host_port_alias_already_configured(self, host, port, alias):
+        """See if we already have a nut entry matching user input configured."""
+        existing_host_port_aliases = {
+            _format_host_port_alias(host, port, alias)
+            for entry in self._async_current_entries()
+        }
+        return _format_host_port_alias(host, port, alias) in existing_host_port_aliases
 
     async def async_step_import(self, user_input):
         """Handle import."""

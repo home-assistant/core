@@ -16,6 +16,9 @@ KEY_STATUS_DISPLAY = "ups.status.display"
 PYNUT_DATA = "data"
 PYNUT_STATUS = "status"
 PYNUT_UNIQUE_ID = "unique_id"
+PYNUT_MANUFACTURER = "manufacturer"
+PYNUT_MODEL = "model"
+PYNUT_FIRMWARE = "firmware"
 
 SENSOR_TYPES = {
     "ups.status.display": ["Status", "", "mdi:information-outline"],

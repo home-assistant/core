@@ -28,6 +28,9 @@ from .const import (
     KEY_STATUS,
     KEY_STATUS_DISPLAY,
     PYNUT_DATA,
+    PYNUT_FIRMWARE,
+    PYNUT_MANUFACTURER,
+    PYNUT_MODEL,
     PYNUT_STATUS,
     PYNUT_UNIQUE_ID,
     SENSOR_TYPES,
@@ -71,6 +74,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     data = pynut_data[PYNUT_DATA]
     status = pynut_data[PYNUT_STATUS]
     unique_id = pynut_data[PYNUT_UNIQUE_ID]
+    manufacturer = pynut_data[PYNUT_MANUFACTURER]
+    model = pynut_data[PYNUT_MODEL]
+    firmware = pynut_data[PYNUT_FIRMWARE]
 
     entities = []
 
@@ -88,7 +94,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if sensor_type in status or (
             sensor_type == KEY_STATUS_DISPLAY and KEY_STATUS in status
         ):
-            entities.append(NUTSensor(name, data, sensor_type, unique_id, status))
+            entities.append(
+                NUTSensor(
+                    name, data, sensor_type, unique_id, manufacturer, model, firmware
+                )
+            )
         else:
             _LOGGER.warning(
                 "Sensor type: %s does not appear in the NUT status "
@@ -102,11 +112,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class NUTSensor(Entity):
     """Representation of a sensor entity for NUT status values."""
 
-    def __init__(self, name, data, sensor_type, unique_id, initial_status):
+    def __init__(
+        self, name, data, sensor_type, unique_id, manufacturer, model, firmware
+    ):
         """Initialize the sensor."""
         self._data = data
         self._type = sensor_type
-        self._initial_status = initial_status
+        self._manufacturer = manufacturer
+        self._firmware = firmware
+        self._model = model
         self._device_name = name
         self._name = "{} {}".format(name, SENSOR_TYPES[sensor_type][0])
         self._unit = SENSOR_TYPES[sensor_type][1]
@@ -119,26 +133,23 @@ class NUTSensor(Entity):
     def device_info(self):
         """Device info for the ups."""
         device_info = {
-            "identifiers": {(DOMAIN, self._unique_id)},
             "name": self._device_name,
         }
-        if "device.model" in self._initial_status:
-            device_info["model"] = self._initial_status["device.model"]
-        elif "ups.model" in self._initial_status:
-            device_info["model"] = self._initial_status["ups.model"]
-        if "ups.firmware" in self._initial_status:
-            device_info["sw_version"] = self._initial_status["ups.firmware"]
-        elif "ups.firmware.aux" in self._initial_status:
-            device_info["sw_version"] = self._initial_status["ups.firmware.aux"]
-        if "ups.mfr" in self._initial_status:
-            device_info["manufacturer"] = self._initial_status["ups.mfr"]
-        elif "driver.version.data" in self._initial_status:
-            device_info["manufacturer"] = self._initial_status["driver.version.data"]
+        if self._unique_id:
+            device_info["identifiers"] = {(DOMAIN, self._unique_id)}
+        if self._model:
+            device_info["model"] = self._model
+        if self._manufacturer:
+            device_info["manufacturer"] = self._manufacturer
+        if self._firmware:
+            device_info["sw_version"] = self._firmware
         return device_info
 
     @property
     def unique_id(self):
         """Sensor Unique id."""
+        if not self._unique_id:
+            return None
         return f"{self._unique_id}_{self._type}"
 
     @property

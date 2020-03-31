@@ -16,7 +16,16 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN, PLATFORMS, PYNUT_DATA, PYNUT_STATUS, PYNUT_UNIQUE_ID
+from .const import (
+    DOMAIN,
+    PLATFORMS,
+    PYNUT_DATA,
+    PYNUT_FIRMWARE,
+    PYNUT_MANUFACTURER,
+    PYNUT_MODEL,
+    PYNUT_STATUS,
+    PYNUT_UNIQUE_ID,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +61,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id] = {
         PYNUT_DATA: data,
         PYNUT_STATUS: status,
-        PYNUT_UNIQUE_ID: unique_id_from_status(status, host, port),
+        PYNUT_UNIQUE_ID: _unique_id_from_status(status),
+        PYNUT_MANUFACTURER: _manufacturer_from_status(status),
+        PYNUT_MODEL: _model_from_status(status),
+        PYNUT_FIRMWARE: _firmware_from_status(status),
     }
 
     entry.add_update_listener(_async_update_listener)
@@ -70,11 +82,56 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-def unique_id_from_status(status, host, port):
-    """Find the best unique id from the status."""
-    # The serial number should always exist, however some off brand
-    # UPSs do not send one so we use the next best thing
-    return status.get("device.serial") or status.get("ups.serial") or f"{host}:{port}"
+def _manufacturer_from_status(status):
+    """Find the best manufacturer value from the status."""
+    return (
+        status.get("device.mfr")
+        or status.get("ups.mfr")
+        or status.get("ups.vendorid")
+        or status.get("driver.version.data")
+    )
+
+
+def _model_from_status(status):
+    """Find the best model value from the status."""
+    return (
+        status.get("device.model")
+        or status.get("ups.model")
+        or status.get("ups.productid")
+    )
+
+
+def _firmware_from_status(status):
+    """Find the best firmware value from the status."""
+    return status.get("ups.firmware") or status.get("ups.firmware.aux")
+
+
+def _serial_from_status(status):
+    """Find the best serialvalue from the status."""
+    serial = status.get("device.serial") or status.get("ups.serial")
+    if serial and serial == "unknown":
+        return None
+    return serial
+
+
+def _unique_id_from_status(status):
+    """Find the best unique id value from the status."""
+    serial = _serial_from_status(status)
+    # We must have a serial for this to be unique
+    if not serial:
+        return None
+
+    manufacturer = _manufacturer_from_status(status)
+    model = _model_from_status(status)
+
+    unique_id_group = []
+    if manufacturer:
+        unique_id_group.append(manufacturer)
+    if model:
+        unique_id_group.append(model)
+    if serial:
+        unique_id_group.append(serial)
+    return "_".join(unique_id_group)
 
 
 def find_resources_in_config_entry(config_entry):
