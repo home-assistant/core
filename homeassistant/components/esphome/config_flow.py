@@ -5,8 +5,8 @@ from typing import Optional
 from aioesphomeapi import APIClient, APIConnectionError
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.helpers import ConfigType
+from homeassistant import config_entries, core
+from homeassistant.helpers.typing import ConfigType
 
 from .entry_data import DATA_KEY, RuntimeEntryData
 
@@ -115,6 +115,7 @@ class EsphomeFlowHandler(config_entries.ConfigFlow):
 
         return await self.async_step_discovery_confirm()
 
+    @core.callback
     def _async_get_entry(self):
         return self.async_create_entry(
             title=self._name,

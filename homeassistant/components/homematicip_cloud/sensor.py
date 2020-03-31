@@ -14,6 +14,7 @@ from homematicip.aio.device import (
     AsyncPassageDetector,
     AsyncPlugableSwitchMeasuring,
     AsyncPresenceDetectorIndoor,
+    AsyncRoomControlDeviceAnalog,
     AsyncTemperatureHumiditySensorDisplay,
     AsyncTemperatureHumiditySensorOutdoor,
     AsyncTemperatureHumiditySensorWithoutDisplay,
@@ -30,7 +31,9 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     POWER_WATT,
+    SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -79,6 +82,8 @@ async def async_setup_entry(
         ):
             entities.append(HomematicipTemperatureSensor(hap, device))
             entities.append(HomematicipHumiditySensor(hap, device))
+        elif isinstance(device, (AsyncRoomControlDeviceAnalog,)):
+            entities.append(HomematicipTemperatureSensor(hap, device))
         if isinstance(
             device,
             (
@@ -151,7 +156,7 @@ class HomematicipAccesspointStatus(HomematicipGenericDevice):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
-        return "%"
+        return UNIT_PERCENTAGE
 
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
@@ -190,7 +195,7 @@ class HomematicipHeatingThermostat(HomematicipGenericDevice):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
-        return "%"
+        return UNIT_PERCENTAGE
 
 
 class HomematicipHumiditySensor(HomematicipGenericDevice):
@@ -213,7 +218,7 @@ class HomematicipHumiditySensor(HomematicipGenericDevice):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
-        return "%"
+        return UNIT_PERCENTAGE
 
 
 class HomematicipTemperatureSensor(HomematicipGenericDevice):
@@ -305,7 +310,7 @@ class HomematicipPowerSensor(HomematicipGenericDevice):
 
     @property
     def state(self) -> float:
-        """Representation of the HomematicIP power comsumption value."""
+        """Representation of the HomematicIP power consumption value."""
         return self._device.currentPowerConsumption
 
     @property
@@ -329,7 +334,7 @@ class HomematicipWindspeedSensor(HomematicipGenericDevice):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
-        return "km/h"
+        return SPEED_KILOMETERS_PER_HOUR
 
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
@@ -356,7 +361,7 @@ class HomematicipTodayRainSensor(HomematicipGenericDevice):
 
     @property
     def state(self) -> float:
-        """Representation of the HomematicIP todays rain value."""
+        """Representation of the HomematicIP today's rain value."""
         return round(self._device.todayRainCounter, 2)
 
     @property

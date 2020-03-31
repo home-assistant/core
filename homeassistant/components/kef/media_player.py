@@ -1,16 +1,22 @@
 """Platform for the KEF Wireless Speakers."""
 
+import asyncio
 from datetime import timedelta
 from functools import partial
 import ipaddress
 import logging
 
 from aiokef import AsyncKefSpeaker
+from aiokef.aiokef import DSP_OPTION_MAPPING
 from getmac import get_mac_address
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
@@ -27,7 +33,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.event import async_track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,6 +57,17 @@ CONF_VOLUME_STEP = "volume_step"
 CONF_INVERSE_SPEAKER_MODE = "inverse_speaker_mode"
 CONF_SUPPORTS_ON = "supports_on"
 CONF_STANDBY_TIME = "standby_time"
+
+SERVICE_MODE = "set_mode"
+SERVICE_DESK_DB = "set_desk_db"
+SERVICE_WALL_DB = "set_wall_db"
+SERVICE_TREBLE_DB = "set_treble_db"
+SERVICE_HIGH_HZ = "set_high_hz"
+SERVICE_LOW_HZ = "set_low_hz"
+SERVICE_SUB_DB = "set_sub_db"
+SERVICE_UPDATE_DSP = "update_dsp"
+
+DSP_SCAN_INTERVAL = 3600
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -114,6 +132,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         inverse_speaker_mode,
         supports_on,
         sources,
+        speaker_type,
         ioloop=hass.loop,
         unique_id=unique_id,
     )
@@ -123,6 +142,36 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     else:
         hass.data[DOMAIN][host] = media_player
         async_add_entities([media_player], update_before_add=True)
+
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_MODE,
+        {
+            vol.Optional("desk_mode"): cv.boolean,
+            vol.Optional("wall_mode"): cv.boolean,
+            vol.Optional("phase_correction"): cv.boolean,
+            vol.Optional("high_pass"): cv.boolean,
+            vol.Optional("sub_polarity"): vol.In(["-", "+"]),
+            vol.Optional("bass_extension"): vol.In(["Less", "Standard", "Extra"]),
+        },
+        "set_mode",
+    )
+    platform.async_register_entity_service(SERVICE_UPDATE_DSP, {}, "update_dsp")
+
+    def add_service(name, which, option):
+        platform.async_register_entity_service(
+            name,
+            {vol.Required(option): vol.In(DSP_OPTION_MAPPING[which])},
+            f"set_{which}",
+        )
+
+    add_service(SERVICE_DESK_DB, "desk_db", "db_value")
+    add_service(SERVICE_WALL_DB, "wall_db", "db_value")
+    add_service(SERVICE_TREBLE_DB, "treble_db", "db_value")
+    add_service(SERVICE_HIGH_HZ, "high_hz", "hz_value")
+    add_service(SERVICE_LOW_HZ, "low_hz", "hz_value")
+    add_service(SERVICE_SUB_DB, "sub_db", "db_value")
 
 
 class KefMediaPlayer(MediaPlayerDevice):
@@ -139,6 +188,7 @@ class KefMediaPlayer(MediaPlayerDevice):
         inverse_speaker_mode,
         supports_on,
         sources,
+        speaker_type,
         ioloop,
         unique_id,
     ):
@@ -156,12 +206,15 @@ class KefMediaPlayer(MediaPlayerDevice):
         )
         self._unique_id = unique_id
         self._supports_on = supports_on
+        self._speaker_type = speaker_type
 
         self._state = None
         self._muted = None
         self._source = None
         self._volume = None
         self._is_online = None
+        self._dsp = None
+        self._update_dsp_task_remover = None
 
     @property
     def name(self):
@@ -186,6 +239,9 @@ class KefMediaPlayer(MediaPlayerDevice):
                 state = await self._speaker.get_state()
                 self._source = state.source
                 self._state = STATE_ON if state.is_on else STATE_OFF
+                if self._dsp is None:
+                    # Only do this when necessary because it is a slow operation
+                    await self.update_dsp()
             else:
                 self._muted = None
                 self._source = None
@@ -214,6 +270,10 @@ class KefMediaPlayer(MediaPlayerDevice):
             | SUPPORT_VOLUME_MUTE
             | SUPPORT_SELECT_SOURCE
             | SUPPORT_TURN_OFF
+            | SUPPORT_NEXT_TRACK  # only in Bluetooth and Wifi
+            | SUPPORT_PAUSE  # only in Bluetooth and Wifi
+            | SUPPORT_PLAY  # only in Bluetooth and Wifi
+            | SUPPORT_PREVIOUS_TRACK  # only in Bluetooth and Wifi
         )
         if self._supports_on:
             support_kef |= SUPPORT_TURN_ON
@@ -280,3 +340,103 @@ class KefMediaPlayer(MediaPlayerDevice):
             await self._speaker.set_source(source)
         else:
             raise ValueError(f"Unknown input source: {source}.")
+
+    async def async_media_play(self):
+        """Send play command."""
+        await self._speaker.set_play_pause()
+
+    async def async_media_pause(self):
+        """Send pause command."""
+        await self._speaker.set_play_pause()
+
+    async def async_media_previous_track(self):
+        """Send previous track command."""
+        await self._speaker.prev_track()
+
+    async def async_media_next_track(self):
+        """Send next track command."""
+        await self._speaker.next_track()
+
+    async def update_dsp(self) -> None:
+        """Update the DSP settings."""
+        if self._speaker_type == "LS50" and self._state == STATE_OFF:
+            # The LSX is able to respond when off the LS50 has to be on.
+            return
+
+        (mode, *rest) = await asyncio.gather(
+            self._speaker.get_mode(),
+            self._speaker.get_desk_db(),
+            self._speaker.get_wall_db(),
+            self._speaker.get_treble_db(),
+            self._speaker.get_high_hz(),
+            self._speaker.get_low_hz(),
+            self._speaker.get_sub_db(),
+        )
+        keys = ["desk_db", "wall_db", "treble_db", "high_hz", "low_hz", "sub_db"]
+        self._dsp = dict(zip(keys, rest), **mode._asdict())
+
+    async def async_added_to_hass(self):
+        """Subscribe to DSP updates."""
+        self._update_dsp_task_remover = async_track_time_interval(
+            self.hass, self.update_dsp, DSP_SCAN_INTERVAL
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe to DSP updates."""
+        self._update_dsp_task_remover()
+        self._update_dsp_task_remover = None
+
+    @property
+    def device_state_attributes(self):
+        """Return the DSP settings of the KEF device."""
+        return self._dsp or {}
+
+    async def set_mode(
+        self,
+        desk_mode=None,
+        wall_mode=None,
+        phase_correction=None,
+        high_pass=None,
+        sub_polarity=None,
+        bass_extension=None,
+    ):
+        """Set the speaker mode."""
+        await self._speaker.set_mode(
+            desk_mode=desk_mode,
+            wall_mode=wall_mode,
+            phase_correction=phase_correction,
+            high_pass=high_pass,
+            sub_polarity=sub_polarity,
+            bass_extension=bass_extension,
+        )
+        self._dsp = None
+
+    async def set_desk_db(self, db_value):
+        """Set desk_db of the KEF speakers."""
+        await self._speaker.set_desk_db(db_value)
+        self._dsp = None
+
+    async def set_wall_db(self, db_value):
+        """Set wall_db of the KEF speakers."""
+        await self._speaker.set_wall_db(db_value)
+        self._dsp = None
+
+    async def set_treble_db(self, db_value):
+        """Set treble_db of the KEF speakers."""
+        await self._speaker.set_treble_db(db_value)
+        self._dsp = None
+
+    async def set_high_hz(self, hz_value):
+        """Set high_hz of the KEF speakers."""
+        await self._speaker.set_high_hz(hz_value)
+        self._dsp = None
+
+    async def set_low_hz(self, hz_value):
+        """Set low_hz of the KEF speakers."""
+        await self._speaker.set_low_hz(hz_value)
+        self._dsp = None
+
+    async def set_sub_db(self, db_value):
+        """Set sub_db of the KEF speakers."""
+        await self._speaker.set_sub_db(db_value)
+        self._dsp = None

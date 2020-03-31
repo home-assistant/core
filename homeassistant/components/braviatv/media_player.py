@@ -2,7 +2,7 @@
 import ipaddress
 import logging
 
-from braviarc.braviarc import BraviaRC
+from bravia_tv import BraviaRC
 from getmac import get_mac_address
 import voluptuous as vol
 
@@ -13,6 +13,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE,
+    SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
@@ -47,6 +48,7 @@ SUPPORT_BRAVIA = (
     | SUPPORT_TURN_OFF
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_PLAY
+    | SUPPORT_STOP
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -73,7 +75,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             pin = host_config["pin"]
             mac = host_config["mac"]
             name = config.get(CONF_NAME)
-            add_entities([BraviaTVDevice(host, mac, name, pin)])
+            braviarc = BraviaRC(host, mac)
+            braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
+            unique_id = braviarc.get_system_info()["cid"].lower()
+
+            add_entities([BraviaTVDevice(braviarc, name, pin, unique_id)])
             return
 
     setup_bravia(config, pin, hass, add_entities)
@@ -109,8 +115,11 @@ def setup_bravia(config, pin, hass, add_entities):
         hass.config.path(BRAVIA_CONFIG_FILE),
         {host: {"pin": pin, "host": host, "mac": mac}},
     )
+    braviarc = BraviaRC(host, mac)
+    braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
+    unique_id = braviarc.get_system_info()["cid"].lower()
 
-    add_entities([BraviaTVDevice(host, mac, name, pin)])
+    add_entities([BraviaTVDevice(braviarc, name, pin, unique_id)])
 
 
 def request_configuration(config, hass, add_entities):
@@ -152,11 +161,11 @@ def request_configuration(config, hass, add_entities):
 class BraviaTVDevice(MediaPlayerDevice):
     """Representation of a Sony Bravia TV."""
 
-    def __init__(self, host, mac, name, pin):
+    def __init__(self, client, name, pin, unique_id):
         """Initialize the Sony Bravia device."""
 
         self._pin = pin
-        self._braviarc = BraviaRC(host, mac)
+        self._braviarc = client
         self._name = name
         self._state = STATE_OFF
         self._muted = False
@@ -169,15 +178,14 @@ class BraviaTVDevice(MediaPlayerDevice):
         self._content_mapping = {}
         self._duration = None
         self._content_uri = None
-        self._id = None
         self._playing = False
         self._start_date_time = None
         self._program_media_type = None
         self._min_volume = None
         self._max_volume = None
         self._volume = None
+        self._unique_id = unique_id
 
-        self._braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
         if self._braviarc.is_connected():
             self.update()
         else:
@@ -251,6 +259,11 @@ class BraviaTVDevice(MediaPlayerDevice):
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return a unique_id for this entity."""
+        return self._unique_id
 
     @property
     def state(self):
@@ -350,6 +363,11 @@ class BraviaTVDevice(MediaPlayerDevice):
         """Send media pause command to media player."""
         self._playing = False
         self._braviarc.media_pause()
+
+    def media_stop(self):
+        """Send media stop command to media player."""
+        self._playing = False
+        self._braviarc.media_stop()
 
     def media_next_track(self):
         """Send next track command."""

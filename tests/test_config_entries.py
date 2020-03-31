@@ -456,6 +456,8 @@ async def test_saving_and_loading(hass):
             "test", context={"source": config_entries.SOURCE_USER}
         )
 
+    assert len(hass.config_entries.async_entries()) == 2
+
     # To trigger the call_later
     async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
     # To execute the save
@@ -464,6 +466,8 @@ async def test_saving_and_loading(hass):
     # Now load written data in new config manager
     manager = config_entries.ConfigEntries(hass, {})
     await manager.async_initialize()
+
+    assert len(manager.async_entries()) == 2
 
     # Ensure same order
     for orig, loaded in zip(

@@ -1,4 +1,4 @@
-"""Support for Blockchain.info sensors."""
+"""Support for Blockchain.com sensors."""
 from datetime import timedelta
 import logging
 
@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by blockchain.info"
+ATTRIBUTION = "Data provided by blockchain.com"
 
 CONF_ADDRESSES = "addresses"
 
@@ -31,7 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Blockchain.info sensors."""
+    """Set up the Blockchain.com sensors."""
 
     addresses = config.get(CONF_ADDRESSES)
     name = config.get(CONF_NAME)
@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class BlockchainSensor(Entity):
-    """Representation of a Blockchain.info sensor."""
+    """Representation of a Blockchain.com sensor."""
 
     def __init__(self, name, addresses):
         """Initialize the sensor."""

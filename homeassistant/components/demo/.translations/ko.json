@@ -1,5 +1,22 @@
 {
     "config": {
         "title": "\ub370\ubaa8"
+    },
+    "options": {
+        "step": {
+            "options_1": {
+                "data": {
+                    "bool": "\ub17c\ub9ac \uc120\ud0dd",
+                    "int": "\uc22b\uc790 \uc785\ub825"
+                }
+            },
+            "options_2": {
+                "data": {
+                    "multi": "\ub2e4\uc911 \uc120\ud0dd",
+                    "select": "\uc635\uc158 \uc120\ud0dd",
+                    "string": "\ubb38\uc790\uc5f4 \uac12"
+                }
+            }
+        }
     }
 }

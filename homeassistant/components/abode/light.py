@@ -1,5 +1,4 @@
 """Support for Abode Security System lights."""
-import logging
 from math import ceil
 
 import abodepy.helpers.constants as CONST
@@ -20,8 +19,6 @@ from homeassistant.util.color import (
 
 from . import AbodeDevice
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -45,16 +42,19 @@ class AbodeLight(AbodeDevice, Light):
             self._device.set_color_temp(
                 int(color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP]))
             )
+            return
 
         if ATTR_HS_COLOR in kwargs and self._device.is_color_capable:
             self._device.set_color(kwargs[ATTR_HS_COLOR])
+            return
 
         if ATTR_BRIGHTNESS in kwargs and self._device.is_dimmable:
             # Convert Home Assistant brightness (0-255) to Abode brightness (0-99)
             # If 100 is sent to Abode, response is 99 causing an error
             self._device.set_level(ceil(kwargs[ATTR_BRIGHTNESS] * 99 / 255.0))
-        else:
-            self._device.switch_on()
+            return
+
+        self._device.switch_on()
 
     def turn_off(self, **kwargs):
         """Turn off the light."""

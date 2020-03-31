@@ -75,8 +75,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     def token_saver(token):
         _LOGGER.debug("Saving updated token")
-        entry.data[CONF_TOKEN] = token
-        hass.config_entries.async_update_entry(entry, data={**entry.data})
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_TOKEN: token}
+        )
 
     # Force token update.
     entry.data[CONF_TOKEN]["expires_in"] = -1
@@ -105,12 +106,18 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 async def async_setup_webhook(hass: HomeAssistantType, entry: ConfigEntry, session):
     """Set up a webhook to handle binary sensor events."""
     if CONF_WEBHOOK_ID not in entry.data:
-        entry.data[CONF_WEBHOOK_ID] = hass.components.webhook.async_generate_id()
-        entry.data[CONF_WEBHOOK_URL] = hass.components.webhook.async_generate_url(
-            entry.data[CONF_WEBHOOK_ID]
+        webhook_id = hass.components.webhook.async_generate_id()
+        webhook_url = hass.components.webhook.async_generate_url(webhook_id)
+        _LOGGER.info("Registering new webhook at: %s", webhook_url)
+
+        hass.config_entries.async_update_entry(
+            entry,
+            data={
+                **entry.data,
+                CONF_WEBHOOK_ID: webhook_id,
+                CONF_WEBHOOK_URL: webhook_url,
+            },
         )
-        _LOGGER.info("Registering new webhook at: %s", entry.data[CONF_WEBHOOK_URL])
-        hass.config_entries.async_update_entry(entry, data={**entry.data})
     await hass.async_add_executor_job(
         session.update_webhook,
         entry.data[CONF_WEBHOOK_URL],

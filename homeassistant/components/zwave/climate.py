@@ -529,7 +529,7 @@ class ZWaveClimateBase(ZWaveDeviceEntity, ClimateDevice):
         self._mode().data = operation_mode
 
     def turn_aux_heat_on(self):
-        """Turn auxillary heater on."""
+        """Turn auxiliary heater on."""
         if not self._aux_heat:
             return
         operation_mode = AUX_HEAT_ZWAVE_MODE
@@ -537,7 +537,7 @@ class ZWaveClimateBase(ZWaveDeviceEntity, ClimateDevice):
         self._mode().data = operation_mode
 
     def turn_aux_heat_off(self):
-        """Turn auxillary heater off."""
+        """Turn auxiliary heater off."""
         if not self._aux_heat:
             return
         if HVAC_MODE_HEAT in self._hvac_mapping:

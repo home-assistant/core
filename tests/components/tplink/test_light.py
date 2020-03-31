@@ -26,20 +26,19 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-LightMockData = NamedTuple(
-    "LightMockData",
-    (
-        ("sys_info", dict),
-        ("light_state", dict),
-        ("set_light_state", Callable[[dict], None]),
-        ("set_light_state_mock", Mock),
-        ("get_light_state_mock", Mock),
-        ("current_consumption_mock", Mock),
-        ("get_sysinfo_mock", Mock),
-        ("get_emeter_daily_mock", Mock),
-        ("get_emeter_monthly_mock", Mock),
-    ),
-)
+
+class LightMockData(NamedTuple):
+    """Mock light data."""
+
+    sys_info: dict
+    light_state: dict
+    set_light_state: Callable[[dict], None]
+    set_light_state_mock: Mock
+    get_light_state_mock: Mock
+    current_consumption_mock: Mock
+    get_sysinfo_mock: Mock
+    get_emeter_daily_mock: Mock
+    get_emeter_monthly_mock: Mock
 
 
 @pytest.fixture(name="light_mock_data")

@@ -1,8 +1,9 @@
 """Support for the DirecTV receivers."""
 import logging
+from typing import Callable, Dict, List, Optional
 
 from DirectPy import DIRECTV
-import requests
+from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
@@ -19,6 +20,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_HOST,
@@ -28,19 +30,28 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util import dt as dt_util
+
+from .const import (
+    ATTR_MEDIA_CURRENTLY_RECORDING,
+    ATTR_MEDIA_RATING,
+    ATTR_MEDIA_RECORDED,
+    ATTR_MEDIA_START_TIME,
+    DATA_CLIENT,
+    DATA_LOCATIONS,
+    DATA_VERSION_INFO,
+    DEFAULT_DEVICE,
+    DEFAULT_MANUFACTURER,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    DOMAIN,
+    MODEL_CLIENT,
+    MODEL_HOST,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_MEDIA_CURRENTLY_RECORDING = "media_currently_recording"
-ATTR_MEDIA_RATING = "media_rating"
-ATTR_MEDIA_RECORDED = "media_recorded"
-ATTR_MEDIA_START_TIME = "media_start_time"
-
-DEFAULT_DEVICE = "0"
-DEFAULT_NAME = "DirecTV Receiver"
-DEFAULT_PORT = 8080
 
 SUPPORT_DTV = (
     SUPPORT_PAUSE
@@ -62,8 +73,6 @@ SUPPORT_DTV_CLIENT = (
     | SUPPORT_PLAY
 )
 
-DATA_DIRECTV = "data_directv"
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
@@ -74,91 +83,54 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the DirecTV platform."""
-    known_devices = hass.data.get(DATA_DIRECTV, set())
-    hosts = []
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[List, bool], None],
+) -> bool:
+    """Set up the DirecTV config entry."""
+    locations = hass.data[DOMAIN][entry.entry_id][DATA_LOCATIONS]
+    version_info = hass.data[DOMAIN][entry.entry_id][DATA_VERSION_INFO]
+    entities = []
 
-    if CONF_HOST in config:
-        _LOGGER.debug(
-            "Adding configured device %s with client address %s ",
-            config.get(CONF_NAME),
-            config.get(CONF_DEVICE),
+    for loc in locations["locations"]:
+        if "locationName" not in loc or "clientAddr" not in loc:
+            continue
+
+        if loc["clientAddr"] != "0":
+            dtv = DIRECTV(
+                entry.data[CONF_HOST],
+                DEFAULT_PORT,
+                loc["clientAddr"],
+                determine_state=False,
+            )
+        else:
+            dtv = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
+
+        entities.append(
+            DirecTvDevice(
+                str.title(loc["locationName"]), loc["clientAddr"], dtv, version_info,
+            )
         )
-        hosts.append(
-            [
-                config.get(CONF_NAME),
-                config.get(CONF_HOST),
-                config.get(CONF_PORT),
-                config.get(CONF_DEVICE),
-            ]
-        )
 
-    elif discovery_info:
-        host = discovery_info.get("host")
-        name = "DirecTV_{}".format(discovery_info.get("serial", ""))
-
-        # Attempt to discover additional RVU units
-        _LOGGER.debug("Doing discovery of DirecTV devices on %s", host)
-
-        dtv = DIRECTV(host, DEFAULT_PORT)
-        try:
-            resp = dtv.get_locations()
-        except requests.exceptions.RequestException as ex:
-            # Bail out and just go forward with uPnP data
-            # Make sure that this device is not already configured
-            # Comparing based on host (IP) and clientAddr.
-            _LOGGER.debug("Request exception %s trying to get locations", ex)
-            resp = {"locations": [{"locationName": name, "clientAddr": DEFAULT_DEVICE}]}
-
-        _LOGGER.debug("Known devices: %s", known_devices)
-        for loc in resp.get("locations") or []:
-            if "locationName" not in loc or "clientAddr" not in loc:
-                continue
-
-            # Make sure that this device is not already configured
-            # Comparing based on host (IP) and clientAddr.
-            if (host, loc["clientAddr"]) in known_devices:
-                _LOGGER.debug(
-                    "Discovered device %s on host %s with "
-                    "client address %s is already "
-                    "configured",
-                    str.title(loc["locationName"]),
-                    host,
-                    loc["clientAddr"],
-                )
-            else:
-                _LOGGER.debug(
-                    "Adding discovered device %s with client address %s",
-                    str.title(loc["locationName"]),
-                    loc["clientAddr"],
-                )
-                hosts.append(
-                    [
-                        str.title(loc["locationName"]),
-                        host,
-                        DEFAULT_PORT,
-                        loc["clientAddr"],
-                    ]
-                )
-
-    dtvs = []
-
-    for host in hosts:
-        dtvs.append(DirecTvDevice(*host))
-        hass.data.setdefault(DATA_DIRECTV, set()).add((host[1], host[3]))
-
-    add_entities(dtvs)
+    async_add_entities(entities, True)
 
 
 class DirecTvDevice(MediaPlayerDevice):
     """Representation of a DirecTV receiver on the network."""
 
-    def __init__(self, name, host, port, device):
+    def __init__(
+        self,
+        name: str,
+        device: str,
+        dtv: DIRECTV,
+        version_info: Optional[Dict] = None,
+        enabled_default: bool = True,
+    ):
         """Initialize the device."""
-
-        self.dtv = DIRECTV(host, port, device)
+        self.dtv = dtv
         self._name = name
+        self._unique_id = None
         self._is_standby = True
         self._current = None
         self._last_update = None
@@ -168,12 +140,23 @@ class DirecTvDevice(MediaPlayerDevice):
         self._is_client = device != "0"
         self._assumed_state = None
         self._available = False
+        self._enabled_default = enabled_default
         self._first_error_timestamp = None
+        self._model = None
+        self._receiver_id = None
+        self._software_version = None
 
         if self._is_client:
-            _LOGGER.debug("Created DirecTV client %s for device %s", self._name, device)
-        else:
-            _LOGGER.debug("Created DirecTV device for %s", self._name)
+            self._model = MODEL_CLIENT
+            self._unique_id = device
+
+        if version_info:
+            self._receiver_id = "".join(version_info["receiverId"].split())
+
+            if not self._is_client:
+                self._unique_id = self._receiver_id
+                self._model = MODEL_HOST
+                self._software_version = version_info["stbSoftwareVersion"]
 
     def update(self):
         """Retrieve latest state."""
@@ -204,25 +187,25 @@ class DirecTvDevice(MediaPlayerDevice):
                 else:
                     # If an error is received then only set to unavailable if
                     # this started at least 1 minute ago.
-                    log_message = "{}: Invalid status {} received".format(
-                        self.entity_id, self._current["status"]["code"]
-                    )
+                    log_message = f"{self.entity_id}: Invalid status {self._current['status']['code']} received"
                     if self._check_state_available():
                         _LOGGER.debug(log_message)
                     else:
                         _LOGGER.error(log_message)
 
-        except requests.RequestException as ex:
+        except RequestException as exception:
             _LOGGER.error(
                 "%s: Request error trying to update current status: %s",
                 self.entity_id,
-                ex,
+                exception,
             )
             self._check_state_available()
 
-        except Exception as ex:
+        except Exception as exception:
             _LOGGER.error(
-                "%s: Exception trying to update current status: %s", self.entity_id, ex
+                "%s: Exception trying to update current status: %s",
+                self.entity_id,
+                exception,
             )
             self._available = False
             if not self._first_error_timestamp:
@@ -256,6 +239,28 @@ class DirecTvDevice(MediaPlayerDevice):
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return a unique ID to use for this media player."""
+        return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "name": self.name,
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "manufacturer": DEFAULT_MANUFACTURER,
+            "model": self._model,
+            "sw_version": self._software_version,
+            "via_device": (DOMAIN, self._receiver_id),
+        }
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._enabled_default
 
     # MediaPlayerDevice properties and methods
     @property
@@ -350,7 +355,7 @@ class DirecTvDevice(MediaPlayerDevice):
         if self._is_standby:
             return None
 
-        return "{} ({})".format(self._current["callsign"], self._current["major"])
+        return f"{self._current['callsign']} ({self._current['major']})"
 
     @property
     def source(self):

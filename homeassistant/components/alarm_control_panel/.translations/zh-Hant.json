@@ -7,6 +7,13 @@
             "disarm": "\u89e3\u9664{entity_name}",
             "trigger": "\u89f8\u767c{entity_name}"
         },
+        "condition_type": {
+            "is_armed_away": "{entity_name}\u8a2d\u5b9a\u5916\u51fa",
+            "is_armed_home": "{entity_name}\u8a2d\u5b9a\u5728\u5bb6",
+            "is_armed_night": "{entity_name}\u8a2d\u5b9a\u591c\u9593",
+            "is_disarmed": "{entity_name}\u5df2\u89e3\u9664",
+            "is_triggered": "{entity_name}\u5df2\u89f8\u767c"
+        },
         "trigger_type": {
             "armed_away": "{entity_name}\u8a2d\u5b9a\u5916\u51fa",
             "armed_home": "{entity_name}\u8a2d\u5b9a\u5728\u5bb6",

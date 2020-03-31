@@ -5,7 +5,7 @@ import logging
 import os
 from typing import Any, Callable, Dict, List, Optional, Type, Union
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.loader import bind_hass
@@ -153,7 +153,7 @@ class Store:
         """Ensure that we write if we quit before delay has passed."""
         if self._unsub_stop_listener is None:
             self._unsub_stop_listener = self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, self._async_callback_stop_write
+                EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_callback_stop_write
             )
 
     @callback
@@ -210,3 +210,10 @@ class Store:
     async def _async_migrate_func(self, old_version, old_data):
         """Migrate to the new version."""
         raise NotImplementedError
+
+    async def async_remove(self):
+        """Remove all data."""
+        try:
+            await self.hass.async_add_executor_job(os.unlink, self.path)
+        except FileNotFoundError:
+            pass
