@@ -187,6 +187,7 @@ homeassistant/components/intesishome/* @jnimmo
 homeassistant/components/ios/* @robbiet480
 homeassistant/components/iperf3/* @rohankapoorcom
 homeassistant/components/ipma/* @dgomes @abmantis
+homeassistant/components/ipp/* @ctalkington
 homeassistant/components/iqvia/* @bachya
 homeassistant/components/irish_rail_transport/* @ttroy50
 homeassistant/components/izone/* @Swamp-Ig
@@ -369,7 +370,7 @@ homeassistant/components/switchmate/* @danielhiversen
 homeassistant/components/syncthru/* @nielstron
 homeassistant/components/synology_srm/* @aerialls
 homeassistant/components/syslog/* @fabaff
-homeassistant/components/tado/* @michaelarnauts
+homeassistant/components/tado/* @michaelarnauts @bdraco
 homeassistant/components/tahoma/* @philklei
 homeassistant/components/tankerkoenig/* @guillempages
 homeassistant/components/tautulli/* @ludeeus

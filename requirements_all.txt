@@ -140,7 +140,7 @@ aio_geojson_nsw_rfs_incidents==0.3
 aio_georss_gdacs==0.3
 
 # homeassistant.components.ambient_station
-aioambient==1.0.4
+aioambient==1.1.0
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.2.3
@@ -168,7 +168,7 @@ aioftp==0.12.0
 aioharmony==0.1.13
 
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.35
+aiohomekit[IP]==0.2.37
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -184,7 +184,7 @@ aioimaplib==0.7.15
 aiokafka==0.5.1
 
 # homeassistant.components.kef
-aiokef==0.2.7
+aiokef==0.2.9
 
 # homeassistant.components.lifx
 aiolifx==0.6.7
@@ -704,7 +704,7 @@ hole==0.5.1
 holidays==0.10.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200318.1
+home-assistant-frontend==20200330.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -964,7 +964,7 @@ onkyo-eiscp==1.2.7
 onvif-zeep-async==0.2.0
 
 # homeassistant.components.opencv
-# opencv-python-headless==4.1.2.30
+# opencv-python-headless==4.2.0.32
 
 # homeassistant.components.openevse
 openevsewifi==0.4
@@ -1335,6 +1335,9 @@ pyintesishome==1.7.1
 # homeassistant.components.ipma
 pyipma==2.0.5
 
+# homeassistant.components.ipp
+pyipp==0.8.1
+
 # homeassistant.components.iqvia
 pyiqvia==0.2.1
 
@@ -1596,7 +1599,7 @@ python-clementine-remote==1.0.1
 python-digitalocean==1.13.2
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.3
+python-ecobee-api==0.2.5
 
 # homeassistant.components.eq3btsmart
 # python-eq3bt==0.1.11
@@ -1876,7 +1879,7 @@ sisyphus-control==2.2.1
 skybellpy==0.4.0
 
 # homeassistant.components.slack
-slacker==0.14.0
+slackclient==2.5.0
 
 # homeassistant.components.sleepiq
 sleepyq==0.7
@@ -2182,7 +2185,7 @@ zhong_hong_hvac==1.0.9
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
-zigpy-cc==0.3.0
+zigpy-cc==0.3.1
 
 # homeassistant.components.zha
 zigpy-deconz==0.7.0

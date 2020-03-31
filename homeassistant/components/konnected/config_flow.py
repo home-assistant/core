@@ -57,6 +57,10 @@ CONF_IO_BIN = "Binary Sensor"
 CONF_IO_DIG = "Digital Sensor"
 CONF_IO_SWI = "Switchable Output"
 
+CONF_MORE_STATES = "more_states"
+CONF_YES = "Yes"
+CONF_NO = "No"
+
 KONN_MANUFACTURER = "konnected.io"
 KONN_PANEL_MODEL_NAMES = {
     KONN_MODEL: "Konnected Alarm Panel",
@@ -117,7 +121,7 @@ SWITCH_SCHEMA = vol.Schema(
         vol.Required(CONF_ZONE): vol.In(ZONES),
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_ACTIVATION, default=STATE_HIGH): vol.All(
-            vol.Lower, vol.Any(STATE_HIGH, STATE_LOW)
+            vol.Lower, vol.In([STATE_HIGH, STATE_LOW])
         ),
         vol.Optional(CONF_MOMENTARY): vol.All(vol.Coerce(int), vol.Range(min=10)),
         vol.Optional(CONF_PAUSE): vol.All(vol.Coerce(int), vol.Range(min=10)),
@@ -361,6 +365,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self.new_opt = {CONF_IO: {}}
         self.active_cfg = None
         self.io_cfg = {}
+        self.current_states = []
+        self.current_state = 1
 
     @callback
     def get_current_cfg(self, io_type, zone):
@@ -666,12 +672,21 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             zone = {"zone": self.active_cfg}
             zone.update(user_input)
+            del zone[CONF_MORE_STATES]
             self.new_opt[CONF_SWITCHES] = self.new_opt.get(CONF_SWITCHES, []) + [zone]
-            self.io_cfg.pop(self.active_cfg)
-            self.active_cfg = None
+
+            # iterate through multiple switch states
+            if self.current_states:
+                self.current_states.pop(0)
+
+            # only go to next zone if all states are entered
+            self.current_state += 1
+            if user_input[CONF_MORE_STATES] == CONF_NO:
+                self.io_cfg.pop(self.active_cfg)
+                self.active_cfg = None
 
         if self.active_cfg:
-            current_cfg = self.get_current_cfg(CONF_SWITCHES, self.active_cfg)
+            current_cfg = next(iter(self.current_states), {})
             return self.async_show_form(
                 step_id="options_switch",
                 data_schema=vol.Schema(
@@ -682,7 +697,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         vol.Optional(
                             CONF_ACTIVATION,
                             default=current_cfg.get(CONF_ACTIVATION, STATE_HIGH),
-                        ): vol.All(vol.Lower, vol.Any(STATE_HIGH, STATE_LOW)),
+                        ): vol.All(vol.Lower, vol.In([STATE_HIGH, STATE_LOW])),
                         vol.Optional(
                             CONF_MOMENTARY,
                             default=current_cfg.get(CONF_MOMENTARY, vol.UNDEFINED),
@@ -695,12 +710,19 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             CONF_REPEAT,
                             default=current_cfg.get(CONF_REPEAT, vol.UNDEFINED),
                         ): vol.All(vol.Coerce(int), vol.Range(min=-1)),
+                        vol.Required(
+                            CONF_MORE_STATES,
+                            default=CONF_YES
+                            if len(self.current_states) > 1
+                            else CONF_NO,
+                        ): vol.In([CONF_YES, CONF_NO]),
                     }
                 ),
                 description_placeholders={
                     "zone": f"Zone {self.active_cfg}"
                     if len(self.active_cfg) < 3
-                    else self.active_cfg.upper()
+                    else self.active_cfg.upper(),
+                    "state": str(self.current_state),
                 },
                 errors=errors,
             )
@@ -709,7 +731,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         for key, value in self.io_cfg.items():
             if value == CONF_IO_SWI:
                 self.active_cfg = key
-                current_cfg = self.get_current_cfg(CONF_SWITCHES, self.active_cfg)
+                self.current_states = [
+                    cfg
+                    for cfg in self.current_opt.get(CONF_SWITCHES, [])
+                    if cfg[CONF_ZONE] == self.active_cfg
+                ]
+                current_cfg = next(iter(self.current_states), {})
+                self.current_state = 1
                 return self.async_show_form(
                     step_id="options_switch",
                     data_schema=vol.Schema(
@@ -720,7 +748,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                             ): str,
                             vol.Optional(
                                 CONF_ACTIVATION,
-                                default=current_cfg.get(CONF_ACTIVATION, "high"),
+                                default=current_cfg.get(CONF_ACTIVATION, STATE_HIGH),
                             ): vol.In(["low", "high"]),
                             vol.Optional(
                                 CONF_MOMENTARY,
@@ -734,12 +762,19 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                                 CONF_REPEAT,
                                 default=current_cfg.get(CONF_REPEAT, vol.UNDEFINED),
                             ): vol.All(vol.Coerce(int), vol.Range(min=-1)),
+                            vol.Required(
+                                CONF_MORE_STATES,
+                                default=CONF_YES
+                                if len(self.current_states) > 1
+                                else CONF_NO,
+                            ): vol.In([CONF_YES, CONF_NO]),
                         }
                     ),
                     description_placeholders={
                         "zone": f"Zone {self.active_cfg}"
                         if len(self.active_cfg) < 3
-                        else self.active_cfg.upper()
+                        else self.active_cfg.upper(),
+                        "state": str(self.current_state),
                     },
                     errors=errors,
                 )

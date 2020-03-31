@@ -47,7 +47,7 @@ aio_geojson_nsw_rfs_incidents==0.3
 aio_georss_gdacs==0.3
 
 # homeassistant.components.ambient_station
-aioambient==1.0.4
+aioambient==1.1.0
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.2.3
@@ -72,7 +72,7 @@ aiofreepybox==0.0.8
 aioharmony==0.1.13
 
 # homeassistant.components.homekit_controller
-aiohomekit[IP]==0.2.35
+aiohomekit[IP]==0.2.37
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -282,7 +282,7 @@ hole==0.5.1
 holidays==0.10.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200318.1
+home-assistant-frontend==20200330.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -518,6 +518,9 @@ pyicloud==0.9.6.1
 # homeassistant.components.ipma
 pyipma==2.0.5
 
+# homeassistant.components.ipp
+pyipp==0.8.1
+
 # homeassistant.components.iqvia
 pyiqvia==0.2.1
 
@@ -602,7 +605,7 @@ pysonos==0.0.25
 pyspcwebgw==0.4.0
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.3
+python-ecobee-api==0.2.5
 
 # homeassistant.components.darksky
 python-forecastio==1.4.0
@@ -615,6 +618,9 @@ python-miio==0.4.8
 
 # homeassistant.components.nest
 python-nest==4.1.0
+
+# homeassistant.components.tado
+python-tado==0.5.0
 
 # homeassistant.components.twitch
 python-twitch-client==0.6.0
@@ -792,7 +798,7 @@ zeroconf==0.24.5
 zha-quirks==0.0.37
 
 # homeassistant.components.zha
-zigpy-cc==0.3.0
+zigpy-cc==0.3.1
 
 # homeassistant.components.zha
 zigpy-deconz==0.7.0

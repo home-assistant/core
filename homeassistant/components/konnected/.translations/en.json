@@ -91,11 +91,12 @@
                 "data": {
                     "activation": "Output when on",
                     "momentary": "Pulse duration (ms) (optional)",
+                    "more_states": "Configure additional states for this zone",
                     "name": "Name (optional)",
                     "pause": "Pause between pulses (ms) (optional)",
                     "repeat": "Times to repeat (-1=infinite) (optional)"
                 },
-                "description": "Please select the output options for {zone}",
+                "description": "Please select the output options for {zone}: state {state}",
                 "title": "Configure Switchable Output"
             }
         },

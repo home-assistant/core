@@ -166,10 +166,17 @@ class HomematicipGenericDevice(Entity):
     def name(self) -> str:
         """Return the name of the generic device."""
         name = self._device.label
-        if self._home.name is not None and self._home.name != "":
+        if name and self._home.name:
             name = f"{self._home.name} {name}"
-        if self.post is not None and self.post != "":
+        if name and self.post:
             name = f"{name} {self.post}"
+        return name
+
+    def _get_label_by_channel(self, channel: int) -> str:
+        """Return the name of the channel."""
+        name = self._device.functionalChannels[channel].label
+        if name and self._home.name:
+            name = f"{self._home.name} {name}"
         return name
 
     @property
