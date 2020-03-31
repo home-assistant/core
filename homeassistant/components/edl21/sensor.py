@@ -8,6 +8,7 @@ from sml.asyncio import SmlProtocol
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -26,7 +27,12 @@ ICON_POWER = "mdi:flash"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 SIGNAL_EDL21_TELEGRAM = "edl21_telegram"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_SERIAL_PORT): cv.string})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_SERIAL_PORT): cv.string,
+        vol.Optional(CONF_NAME, default=""): cv.string,
+    },
+)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -74,6 +80,7 @@ class EDL21:
         self._registered_obis = set()
         self._hass = hass
         self._async_add_entities = async_add_entities
+        self._name = config[CONF_NAME]
         self._proto = SmlProtocol(config[CONF_SERIAL_PORT])
         self._proto.add_listener(self.event, ["SmlGetListResponse"])
 
@@ -96,6 +103,8 @@ class EDL21:
             else:
                 name = self._OBIS_NAMES.get(obis)
                 if name:
+                    if self._name:
+                        name = f"{self._name}: {name}"
                     new_entities.append(EDL21Entity(obis, name, telegram))
                     self._registered_obis.add(obis)
                 elif obis not in self._OBIS_BLACKLIST:
