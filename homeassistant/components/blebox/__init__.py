@@ -4,15 +4,12 @@ import logging
 
 from blebox_uniapi.error import Error
 from blebox_uniapi.products import Products
-from blebox_uniapi.session import ApiHost
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_SETUP_TIMEOUT, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,19 +51,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 
 async def async_create_blebox_entities(
-    entity_klass, entity_type, hass, config, async_add, exception
+    api_host, async_add, entity_klass, entity_type, exception
 ):
-    """Add a BleBox device from the given config."""
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
-    timeout = DEFAULT_SETUP_TIMEOUT
-
-    websession = async_get_clientsession(hass)
-    api_host = ApiHost(host, port, timeout, websession, hass.loop, _LOGGER)
+    """Create entities from a BleBox product's features."""
     try:
         product = await Products.async_from_host(api_host)
     except Error as ex:
-        _LOGGER.error("Identify failed at %s:%d (%s)", host, port, ex)
+        _LOGGER.error("Identify failed at %s:%d (%s)", api_host.host, api_host.port, ex)
         raise exception from ex
 
     entities = []

@@ -2,6 +2,8 @@
 
 import logging
 
+from blebox_uniapi.session import ApiHost
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     STATE_CLOSED,
@@ -13,23 +15,33 @@ from homeassistant.components.cover import (
     SUPPORT_STOP,
     CoverDevice,
 )
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import BleBoxEntity, async_create_blebox_entities
-from .const import BLEBOX_TO_HASS_COVER_STATES, BLEBOX_TO_HASS_DEVICE_CLASSES
+from .const import (
+    BLEBOX_TO_HASS_COVER_STATES,
+    BLEBOX_TO_HASS_DEVICE_CLASSES,
+    DEFAULT_SETUP_TIMEOUT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add):
     """Set up a BleBox entry."""
+
+    """Add a BleBox device from the given config."""
+    host = config_entry.data[CONF_HOST]
+    port = config_entry.data[CONF_PORT]
+    timeout = DEFAULT_SETUP_TIMEOUT
+
+    websession = async_get_clientsession(hass)
+    api_host = ApiHost(host, port, timeout, websession, hass.loop, _LOGGER)
+
     return await async_create_blebox_entities(
-        BleBoxCoverEntity,
-        "covers",
-        hass,
-        config_entry.data,
-        async_add,
-        PlatformNotReady,
+        api_host, async_add, BleBoxCoverEntity, "covers", PlatformNotReady,
     )
 
 
