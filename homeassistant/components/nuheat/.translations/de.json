@@ -15,7 +15,9 @@
                     "password": "Passwort",
                     "serial_number": "Seriennummer des Thermostats.",
                     "username": "Benutzername"
-                }
+                },
+                "description": "Sie m\u00fcssen die numerische Seriennummer oder ID Ihres Thermostats erhalten, indem Sie sich bei https://MyNuHeat.com anmelden und Ihre Thermostate ausw\u00e4hlen.",
+                "title": "Stellen Sie eine Verbindung zu NuHeat her"
             }
         },
         "title": "NuHeat"
