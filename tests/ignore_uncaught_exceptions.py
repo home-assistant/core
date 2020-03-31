@@ -15,9 +15,16 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
     ("tests.components.dsmr.test_sensor", "test_belgian_meter_low"),
     ("tests.components.dsmr.test_sensor", "test_tcp"),
     ("tests.components.dsmr.test_sensor", "test_connection_errors_retry"),
+    ("tests.components.dyson.test_air_quality", "test_purecool_aiq_attributes"),
+    ("tests.components.dyson.test_air_quality", "test_purecool_aiq_update_state"),
     (
         "tests.components.dyson.test_air_quality",
         "test_purecool_component_setup_only_once",
+    ),
+    ("tests.components.dyson.test_air_quality", "test_purecool_aiq_without_discovery"),
+    (
+        "tests.components.dyson.test_air_quality",
+        "test_purecool_aiq_empty_environment_state",
     ),
     (
         "tests.components.dyson.test_climate",
