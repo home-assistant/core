@@ -2011,7 +2011,7 @@ temperusb==1.5.3
 # tensorflow==1.13.2
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.1.1
+tesla-powerwall==0.1.3
 
 # homeassistant.components.tesla
 teslajsonpy==0.6.0

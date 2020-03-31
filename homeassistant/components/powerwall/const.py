@@ -6,7 +6,6 @@ POWERWALL_SITE_NAME = "site_name"
 
 POWERWALL_OBJECT = "powerwall"
 POWERWALL_COORDINATOR = "coordinator"
-POWERWALL_SITE_INFO = "site_info"
 
 UPDATE_INTERVAL = 60
 
@@ -24,12 +23,21 @@ SITE_INFO_NOMINAL_SYSTEM_POWER_KW = "nominal_system_power_kW"
 SITE_INFO_NOMINAL_SYSTEM_ENERGY_KWH = "nominal_system_energy_kWh"
 SITE_INFO_REGION = "region"
 
+DEVICE_TYPE_DEVICE_TYPE = "device_type"
+
+STATUS_VERSION = "version"
+
 POWERWALL_SITE_NAME = "site_name"
 
 POWERWALL_API_METERS = "meters"
 POWERWALL_API_CHARGE = "charge"
 POWERWALL_API_GRID_STATUS = "grid_status"
 POWERWALL_API_SITEMASTER = "sitemaster"
+POWERWALL_API_STATUS = "status"
+POWERWALL_API_DEVICE_TYPE = "device_type"
+POWERWALL_API_SITE_INFO = "site_info"
+
+POWERWALL_HTTP_SESSION = "http_session"
 
 POWERWALL_GRID_ONLINE = "SystemGridConnected"
 POWERWALL_CONNECTED_KEY = "connected_to_tesla"
