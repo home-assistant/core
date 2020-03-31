@@ -58,6 +58,43 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_import(hass):
+    """Test we get the form with import source."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    mock_pynut = _get_mock_pynutclient(list_vars={"device.serial": "serial"})
+
+    with patch(
+        "homeassistant.components.nut.PyNUTClient", return_value=mock_pynut,
+    ), patch(
+        "homeassistant.components.nut.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.nut.async_setup_entry", return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                "host": "localhost",
+                "port": 123,
+                "name": "name",
+                "resources": ["ups.serial"],
+            },
+        )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == "serial"
+    assert result["data"] == {
+        "host": "localhost",
+        "port": 123,
+        "name": "name",
+        "resources": ["ups.serial"],
+    }
+    await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_form_cannot_connect(hass):
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
