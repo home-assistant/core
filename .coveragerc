@@ -442,7 +442,6 @@ omit =
     homeassistant/components/mychevy/*
     homeassistant/components/mycroft/*
     homeassistant/components/mycroft/notify.py
-    homeassistant/components/myq/cover.py
     homeassistant/components/mysensors/*
     homeassistant/components/mystrom/binary_sensor.py
     homeassistant/components/mystrom/light.py
