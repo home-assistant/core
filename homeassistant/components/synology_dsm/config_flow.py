@@ -1,7 +1,7 @@
 """Config flow to configure the Synology DSM integration."""
 import logging
 
-from SynologyDSM import SynologyDSM
+from synology_dsm import SynologyDSM
 import voluptuous as vol
 
 from homeassistant import config_entries

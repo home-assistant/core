@@ -2,7 +2,7 @@
 from datetime import timedelta
 from typing import Dict
 
-from SynologyDSM import SynologyDSM
+from synology_dsm import SynologyDSM
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -63,8 +63,8 @@ async def async_setup_entry(
     ]
 
     # Handle all volumes
-    if api.storage.volumes is not None:
-        for volume in entry.data.get(CONF_VOLUMES, api.storage.volumes):
+    if api.storage.volumes_ids:
+        for volume in entry.data.get(CONF_VOLUMES, api.storage.volumes_ids):
             sensors += [
                 SynoNasStorageSensor(
                     api, name, sensor_type, STORAGE_VOL_SENSORS[sensor_type], volume
@@ -73,8 +73,8 @@ async def async_setup_entry(
             ]
 
     # Handle all disks
-    if api.storage.disks is not None:
-        for disk in entry.data.get(CONF_DISKS, api.storage.disks):
+    if api.storage.disks_ids:
+        for disk in entry.data.get(CONF_DISKS, api.storage.disks_ids):
             sensors += [
                 SynoNasStorageSensor(
                     api, name, sensor_type, STORAGE_DISK_SENSORS[sensor_type], disk
@@ -139,7 +139,7 @@ class SynoNasSensor(Entity):
         self._icon = sensor_info[2]
         self.monitored_device = monitored_device
 
-        if self.monitored_device is not None:
+        if self.monitored_device:
             self._name = f"{self._name} ({self.monitored_device})"
 
         self._unique_id = f"{self._api.unique_id} {self._name}"
@@ -226,7 +226,7 @@ class SynoNasStorageSensor(SynoNasSensor):
     @property
     def state(self):
         """Return the state."""
-        if self.monitored_device is not None:
+        if self.monitored_device:
             if self.sensor_type in TEMP_SENSORS_KEYS:
                 attr = getattr(self._api.storage, self.sensor_type)(
                     self.monitored_device
