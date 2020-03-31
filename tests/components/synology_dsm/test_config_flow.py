@@ -30,7 +30,9 @@ _LOGGER = logging.getLogger(__name__)
 
 NAME = "My Syno"
 HOST = "nas.meontheinternet.com"
+SERIAL = "mySerial"
 HOST_2 = "nas.worldwide.me"
+SERIAL_2 = "mySerial2"
 PORT = 1234
 SSL = True
 USERNAME = "Home_Assistant"
@@ -44,8 +46,9 @@ def mock_controller_service():
         "homeassistant.components.synology_dsm.config_flow.SynologyDSM"
     ) as service_mock:
         service_mock.return_value.login = Mock(return_value=True)
-        service_mock.return_value.storage = Mock(disks=[], volumes=[])
+        service_mock.return_value.information = Mock(serial=SERIAL)
         service_mock.return_value.utilisation = Mock(cpu_user_load=1)
+        service_mock.return_value.storage = Mock(disks=[], volumes=[])
         yield service_mock
 
 
@@ -66,8 +69,9 @@ def mock_controller_service_failed():
         "homeassistant.components.synology_dsm.config_flow.SynologyDSM"
     ) as service_mock:
         service_mock.return_value.login = Mock(return_value=True)
-        service_mock.return_value.storage = Mock(disks=None, volumes=None)
+        service_mock.return_value.information = Mock(serial=None)
         service_mock.return_value.utilisation = Mock(cpu_user_load=None)
+        service_mock.return_value.storage = Mock(disks=None, volumes=None)
         yield service_mock
 
 
@@ -93,7 +97,7 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["result"].unique_id == f"{HOST}:{PORT}"
+    assert result["result"].unique_id == SERIAL
     assert result["title"] == HOST
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
@@ -102,6 +106,7 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
 
+    service.return_value.information = Mock(serial=SERIAL_2)
     # test without port + False SSL
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -115,7 +120,7 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["result"].unique_id == f"{HOST}:{DEFAULT_PORT}"
+    assert result["result"].unique_id == SERIAL_2
     assert result["title"] == HOST
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
@@ -134,7 +139,7 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
         data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["result"].unique_id == f"{HOST}:{DEFAULT_PORT_SSL}"
+    assert result["result"].unique_id == SERIAL
     assert result["title"] == HOST
     assert result["data"][CONF_NAME] == DEFAULT_NAME
     assert result["data"][CONF_HOST] == HOST
@@ -143,6 +148,7 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
 
+    service.return_value.information = Mock(serial=SERIAL_2)
     # import with all
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -157,7 +163,7 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["result"].unique_id == f"{HOST_2}:{PORT}"
+    assert result["result"].unique_id == SERIAL_2
     assert result["title"] == HOST_2
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST_2
@@ -167,12 +173,12 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
     assert result["data"][CONF_PASSWORD] == PASSWORD
 
 
-async def test_abort_if_already_setup(hass: HomeAssistantType):
+async def test_abort_if_already_setup(hass: HomeAssistantType, service: MagicMock):
     """Test we abort if the account is already setup."""
     MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
-        unique_id=f"{HOST}:{DEFAULT_PORT_SSL}",
+        unique_id=SERIAL,
     ).add_to_hass(hass)
 
     # Should fail, same HOST:PORT (import)

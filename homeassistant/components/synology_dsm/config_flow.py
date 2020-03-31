@@ -90,10 +90,6 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 port = DEFAULT_PORT
 
-        # Check if already configured
-        await self.async_set_unique_id(f"{host}:{port}")
-        self._abort_if_unique_id_configured()
-
         api = SynologyDSM(
             host, port, username, password, use_ssl, dsm_version=api_version,
         )
@@ -102,18 +98,26 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors[CONF_USERNAME] = "login"
             return await self._show_setup_form(user_input, errors)
 
-        storage = await self.hass.async_add_executor_job(getattr, api, "storage")
+        information = await self.hass.async_add_executor_job(
+            getattr, api, "information"
+        )
         utilisation = await self.hass.async_add_executor_job(
             getattr, api, "utilisation"
         )
+        storage = await self.hass.async_add_executor_job(getattr, api, "storage")
 
         if (
-            storage.volumes is None
-            or storage.disks is None
+            information.serial is None
             or utilisation.cpu_user_load is None
+            or storage.volumes is None
+            or storage.disks is None
         ):
             errors["base"] = "unknown"
             return await self._show_setup_form(user_input, errors)
+
+        # Check if already configured
+        await self.async_set_unique_id(information.serial)
+        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
             title=host,
