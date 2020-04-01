@@ -11,6 +11,7 @@ from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
+    DEFAULT_MIN_TEMP,
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
@@ -331,13 +332,18 @@ class NetatmoThermostat(ClimateDevice):
     def turn_off(self):
         """Turn the entity off."""
         if self._module_type == NA_VALVE:
-            _LOGGER.info("Valves do not support being turned off")
+            self._data.homestatus.setroomThermpoint(
+                self._data.home_id,
+                self._room_id,
+                STATE_NETATMO_MANUAL,
+                DEFAULT_MIN_TEMP,
+            )
         elif self.hvac_mode != STATE_OFF:
             self._data.homestatus.setroomThermpoint(
                 self._data.home_id, self._room_id, HVAC_MODE_OFF
             )
-            self.update_without_throttle = True
-            self.schedule_update_ha_state()
+        self.update_without_throttle = True
+        self.schedule_update_ha_state()
 
     def turn_on(self):
         """Turn the entity on."""
