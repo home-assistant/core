@@ -284,6 +284,11 @@ class RachioZone(RachioSwitch):
             self.hass, SIGNAL_RACHIO_ZONE_UPDATE, self._handle_update
         )
 
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe from updates."""
+        if self._undo_dispatcher:
+            self._undo_dispatcher()
+
 
 class RachioSchedule(RachioSwitch):
     """Representation of one fixed schedule on the Rachio Iro."""
@@ -299,10 +304,6 @@ class RachioSchedule(RachioSwitch):
         super().__init__(controller, poll=False)
         self._state = self.schedule_id == self._current_schedule.get(KEY_SCHEDULE_ID)
         self._undo_dispatcher = None
-
-    def __str__(self):
-        """Display the schedule as a string."""
-        return 'Rachio Schedule "{}" on {}'.format(self.name, str(self._controller))
 
     @property
     def schedule_id(self) -> str:
@@ -325,7 +326,7 @@ class RachioSchedule(RachioSwitch):
         return "mdi:water"
 
     @property
-    def state_attributes(self) -> dict:
+    def device_state_attributes(self) -> dict:
         """Return the optional state attributes."""
         return {
             ATTR_SCHEDULE_SUMMARY: self._summary,
@@ -374,7 +375,7 @@ class RachioSchedule(RachioSwitch):
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        async_dispatcher_connect(
+        self._undo_dispatcher = async_dispatcher_connect(
             self.hass, SIGNAL_RACHIO_SCHEDULE_UPDATE, self._handle_update
         )
 
