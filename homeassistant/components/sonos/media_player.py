@@ -464,7 +464,7 @@ class SonosEntity(MediaPlayerDevice):
             self._seen_timer()
             self.async_unseen()
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def async_unseen(self, now=None):
@@ -483,7 +483,7 @@ class SonosEntity(MediaPlayerDevice):
 
         self._subscriptions = []
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def available(self) -> bool:
@@ -725,7 +725,7 @@ class SonosEntity(MediaPlayerDevice):
 
             self._coordinator = None
             self._sonos_group = sonos_group
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
             for slave_uid in group[1:]:
                 slave = _get_entity_from_soco_uid(self.hass, slave_uid)

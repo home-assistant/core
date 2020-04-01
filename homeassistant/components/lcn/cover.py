@@ -108,7 +108,7 @@ class LcnOutputsCover(LcnDevice, CoverDevice):
         elif self.state_down and not self.state_up:
             self._closed = True  # Cover closed
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
 
 class LcnRelayCover(LcnDevice, CoverDevice):
@@ -167,4 +167,4 @@ class LcnRelayCover(LcnDevice, CoverDevice):
         if states[self.motor_port_onoff]:  # motor is on
             self._closed = states[self.motor_port_updown]  # set direction
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

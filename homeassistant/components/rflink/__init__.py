@@ -313,7 +313,7 @@ class RflinkDevice(Entity):
         self._handle_event(event)
 
         # Propagate changes through ha
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
         # Put command onto bus for user to subscribe to
         if self._should_fire_event and identify_event_type(event) == EVENT_KEY_COMMAND:
@@ -360,7 +360,7 @@ class RflinkDevice(Entity):
     def _availability_callback(self, availability):
         """Update availability state."""
         self._available = availability
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Register update callback."""

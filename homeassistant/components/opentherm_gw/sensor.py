@@ -73,7 +73,7 @@ class OpenThermSensor(Entity):
         if isinstance(value, float):
             value = f"{value:2.1f}"
         self._value = value
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def name(self):

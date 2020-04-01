@@ -426,7 +426,7 @@ class BluesoundPlayer(MediaPlayerDevice):
                     # communication is moved to a separate library
                     await self.force_update_sync_status()
 
-                self.async_schedule_update_ha_state()
+                self.async_write_ha_state()
             elif response.status == 595:
                 _LOGGER.info("Status 595 returned, treating as timeout")
                 raise BluesoundPlayer._TimeoutException()
@@ -439,7 +439,7 @@ class BluesoundPlayer(MediaPlayerDevice):
             self._is_online = False
             self._last_status_update = None
             self._status = None
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
             _LOGGER.info("Client connection error, marking %s as offline", self._name)
             raise
 

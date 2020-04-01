@@ -182,7 +182,7 @@ class DerivativeSensor(RestoreEntity):
                 _LOGGER.error("Could not calculate derivative: %s", err)
             else:
                 self._state = derivative
-                self.async_schedule_update_ha_state()
+                self.async_write_ha_state()
 
         async_track_state_change(self.hass, self._sensor_source_id, calc_derivative)
 

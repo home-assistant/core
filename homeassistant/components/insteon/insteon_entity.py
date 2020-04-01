@@ -80,7 +80,7 @@ class InsteonEntity(Entity):
             group,
             val,
         )
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Register INSTEON update events."""
