@@ -40,7 +40,6 @@
       "turn_on": "Turn on"
     },
     "trigger_type": {
-      "remote_button_long_press": "\"{subtype}\" button continuously pressed",
       "remote_button_long_release": "\"{subtype}\" button released after long press",
       "remote_button_short_press": "\"{subtype}\" button pressed",
       "remote_button_short_release": "\"{subtype}\" button released"
