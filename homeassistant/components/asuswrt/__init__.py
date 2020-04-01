@@ -12,9 +12,9 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.event import async_call_later
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +31,9 @@ DATA_ASUSWRT = DOMAIN
 DEFAULT_SSH_PORT = 22
 DEFAULT_INTERFACE = "eth0"
 DEFAULT_DNSMASQ = "/var/lib/misc"
+
+MAX_RETRY_COUNT = 5
+RETRY_DELAY = 120
 
 SECRET_GROUP = "Password or SSH Key"
 SENSOR_TYPES = ["upload_speed", "download_speed", "download", "upload"]
@@ -62,6 +65,20 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the asuswrt component."""
+    await async_setup_retry(hass, config)
+    return True
+
+
+async def async_retry_task(hass, config, retry_count):
+    async_call_later(hass, RETRY_DELAY, lambda _:
+                        hass.async_create_task(
+                            async_setup_retry(hass, config, retry_count)
+                        )
+                    )
+
+
+async def async_setup_retry(hass, config, retry_count=0):
+    """Set up the asuswrt component."""
 
     conf = config[DOMAIN]
 
@@ -81,10 +98,13 @@ async def async_setup(hass, config):
     try:
         await api.connection.async_connect()
     except OSError as ex:
-        raise PlatformNotReady() from ex
+        if retry_count < MAX_RETRY_COUNT:
+            _LOGGER.warning("Unable to setup integration %s. Retrying in %s seconds...", DOMAIN, RETRY_DELAY)
+            await async_retry_task(hass, config, retry_count+1)
+        else:
+            _LOGGER.error("Failed to setup integration %s.", DOMAIN)
 
-    if not api.is_connected:
-        raise PlatformNotReady()
+        return
 
     hass.data[DATA_ASUSWRT] = api
 
@@ -97,4 +117,4 @@ async def async_setup(hass, config):
         async_load_platform(hass, "device_tracker", DOMAIN, {}, config)
     )
 
-    return True
+    return
