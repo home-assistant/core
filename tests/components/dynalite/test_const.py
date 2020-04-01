@@ -33,7 +33,6 @@ def test_consts():
     assert dynalite.CONF_STOP_PRESET == dyn_const.CONF_STOP_PRESET
     assert dynalite.CONF_TEMPLATE == dyn_const.CONF_TEMPLATE
     assert dynalite.CONF_TILT_TIME == dyn_const.CONF_TILT_TIME
-    assert dynalite.CONF_TRIGGER == dyn_const.CONF_TRIGGER
     assert dynalite.DEFAULT_CHANNEL_TYPE == dyn_const.DEFAULT_CHANNEL_TYPE
     assert dynalite.DEFAULT_NAME == dyn_const.DEFAULT_NAME
     assert dynalite.DEFAULT_PORT == dyn_const.DEFAULT_PORT

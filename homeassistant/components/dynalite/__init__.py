@@ -41,7 +41,6 @@ from .const import (
     CONF_STOP_PRESET,
     CONF_TEMPLATE,
     CONF_TILT_TIME,
-    CONF_TRIGGER,
     DEFAULT_CHANNEL_TYPE,
     DEFAULT_NAME,
     DEFAULT_PORT,
@@ -82,8 +81,6 @@ TEMPLATE_ROOM_SCHEMA = vol.Schema(
     {vol.Optional(CONF_ROOM_ON): num_string, vol.Optional(CONF_ROOM_OFF): num_string}
 )
 
-TEMPLATE_TRIGGER_SCHEMA = vol.Schema({vol.Optional(CONF_TRIGGER): num_string})
-
 TEMPLATE_TIMECOVER_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_CHANNEL_COVER): num_string,
@@ -96,9 +93,7 @@ TEMPLATE_TIMECOVER_SCHEMA = vol.Schema(
     }
 )
 
-TEMPLATE_DATA_SCHEMA = vol.Any(
-    TEMPLATE_ROOM_SCHEMA, TEMPLATE_TRIGGER_SCHEMA, TEMPLATE_TIMECOVER_SCHEMA
-)
+TEMPLATE_DATA_SCHEMA = vol.Any(TEMPLATE_ROOM_SCHEMA, TEMPLATE_TIMECOVER_SCHEMA)
 
 TEMPLATE_SCHEMA = vol.Schema({str: TEMPLATE_DATA_SCHEMA})
 
@@ -132,7 +127,6 @@ AREA_DATA_SCHEMA = vol.Schema(
             # the next ones can be part of the templates
             vol.Optional(CONF_ROOM_ON): num_string,
             vol.Optional(CONF_ROOM_OFF): num_string,
-            vol.Optional(CONF_TRIGGER): num_string,
             vol.Optional(CONF_CHANNEL_COVER): num_string,
             vol.Optional(CONF_DEVICE_CLASS): cv.string,
             vol.Optional(CONF_OPEN_PRESET): num_string,
