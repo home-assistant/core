@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
+
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,6 +24,7 @@ ATTR_VALUE3 = "value3"
 
 CONF_KEY = "key"
 
+SERVICE_PUSH_ALARM_STATE = "push_alarm_state"
 SERVICE_TRIGGER = "trigger"
 
 SERVICE_TRIGGER_SCHEMA = vol.Schema(
@@ -91,10 +93,19 @@ async def handle_webhook(hass, webhook_id, request):
     try:
         data = json.loads(body) if body else {}
     except ValueError:
-        return None
+        _LOGGER.error(
+            "Received invalid data from IFTTT. Data needs to be formatted as JSON: %s",
+            body,
+        )
+        return
 
-    if isinstance(data, dict):
-        data["webhook_id"] = webhook_id
+    if not isinstance(data, dict):
+        _LOGGER.error(
+            "Received invalid data from IFTTT. Data needs to be a dictionary: %s", data
+        )
+        return
+
+    data["webhook_id"] = webhook_id
     hass.bus.async_fire(EVENT_RECEIVED, data)
 
 

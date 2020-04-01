@@ -1,8 +1,8 @@
 """Support for w800rf32 binary sensors."""
 import logging
 
-import voluptuous as vol
 import W800rf32 as w800
+import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,

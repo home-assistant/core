@@ -1,4 +1,6 @@
 """Support for Zigbee Home Automation devices."""
+
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -6,9 +8,9 @@ import voluptuous as vol
 from homeassistant import config_entries, const as ha_const
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import HomeAssistantType
 
-# Loading the config flow file will register the flow
-from . import config_flow  # noqa  # pylint: disable=unused-import
 from . import api
 from .core import ZHAGateway
 from .core.const import (
@@ -23,12 +25,13 @@ from .core.const import (
     DATA_ZHA_CONFIG,
     DATA_ZHA_DISPATCHERS,
     DATA_ZHA_GATEWAY,
+    DATA_ZHA_PLATFORM_LOADED,
     DEFAULT_BAUDRATE,
     DEFAULT_RADIO_TYPE,
     DOMAIN,
+    SIGNAL_ADD_ENTITIES,
     RadioType,
 )
-from .core.registries import establish_device_mappings
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(ha_const.CONF_TYPE): cv.string})
 
@@ -88,23 +91,26 @@ async def async_setup_entry(hass, config_entry):
 
     Will automatically load components to support devices found on the network.
     """
-    establish_device_mappings()
+
+    zha_data = hass.data.setdefault(DATA_ZHA, {})
+    config = zha_data.get(DATA_ZHA_CONFIG, {})
 
     for component in COMPONENTS:
-        hass.data[DATA_ZHA][component] = hass.data[DATA_ZHA].get(component, {})
-
-    hass.data[DATA_ZHA] = hass.data.get(DATA_ZHA, {})
-    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS] = []
-    config = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {})
+        zha_data.setdefault(component, [])
 
     if config.get(CONF_ENABLE_QUIRKS, True):
         # needs to be done here so that the ZHA module is finished loading
         # before zhaquirks is imported
-        # pylint: disable=W0611, W0612
-        import zhaquirks  # noqa
+        import zhaquirks  # noqa: F401 pylint: disable=unused-import, import-outside-toplevel, import-error
 
     zha_gateway = ZHAGateway(hass, config, config_entry)
     await zha_gateway.async_initialize()
+
+    zha_data[DATA_ZHA_DISPATCHERS] = []
+    zha_data[DATA_ZHA_PLATFORM_LOADED] = []
+    for component in COMPONENTS:
+        coro = hass.config_entries.async_forward_entry_setup(config_entry, component)
+        zha_data[DATA_ZHA_PLATFORM_LOADED].append(hass.async_create_task(coro))
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
     device_registry.async_get_or_create(
@@ -116,19 +122,15 @@ async def async_setup_entry(hass, config_entry):
         model=zha_gateway.radio_description,
     )
 
-    for component in COMPONENTS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
-        )
-
     api.async_load_api(hass)
 
     async def async_zha_shutdown(event):
         """Handle shutdown tasks."""
-        await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].shutdown()
-        await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].async_update_device_storage()
+        await zha_data[DATA_ZHA_GATEWAY].shutdown()
+        await zha_data[DATA_ZHA_GATEWAY].async_update_device_storage()
 
     hass.bus.async_listen_once(ha_const.EVENT_HOMEASSISTANT_STOP, async_zha_shutdown)
+    asyncio.create_task(async_load_entities(hass))
     return True
 
 
@@ -145,5 +147,15 @@ async def async_unload_entry(hass, config_entry):
     for component in COMPONENTS:
         await hass.config_entries.async_forward_entry_unload(config_entry, component)
 
-    del hass.data[DATA_ZHA]
     return True
+
+
+async def async_load_entities(hass: HomeAssistantType) -> None:
+    """Load entities after integration was setup."""
+    await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].async_initialize_devices_and_entities()
+    to_setup = hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED]
+    results = await asyncio.gather(*to_setup, return_exceptions=True)
+    for res in results:
+        if isinstance(res, Exception):
+            _LOGGER.warning("Couldn't setup zha platform: %s", res)
+    async_dispatcher_send(hass, SIGNAL_ADD_ENTITIES)

@@ -5,21 +5,22 @@ from unittest.mock import patch
 
 import pytest
 
-import homeassistant.core as ha
-from homeassistant.const import SERVICE_TURN_ON, SERVICE_TURN_OFF
-from homeassistant.util import dt as dt_util
-from homeassistant.helpers import state
-from homeassistant.const import (
-    STATE_OPEN,
-    STATE_CLOSED,
-    STATE_LOCKED,
-    STATE_UNLOCKED,
-    STATE_ON,
-    STATE_OFF,
-    STATE_HOME,
-    STATE_NOT_HOME,
-)
 from homeassistant.components.sun import STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON
+from homeassistant.const import (
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_CLOSED,
+    STATE_HOME,
+    STATE_LOCKED,
+    STATE_NOT_HOME,
+    STATE_OFF,
+    STATE_ON,
+    STATE_OPEN,
+    STATE_UNLOCKED,
+)
+import homeassistant.core as ha
+from homeassistant.helpers import state
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_mock_service
 

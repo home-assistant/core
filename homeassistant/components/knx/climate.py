@@ -330,10 +330,7 @@ class KNXClimate(ClimateDevice):
         return list(filter(None, _presets))
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set new preset mode.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+        """Set new preset mode."""
         if self.device.mode.supports_operation_mode:
             knx_operation_mode = HVACOperationMode(PRESET_MODES_INV.get(preset_mode))
             await self.device.mode.set_operation_mode(knx_operation_mode)

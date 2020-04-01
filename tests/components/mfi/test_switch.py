@@ -2,15 +2,14 @@
 import unittest
 import unittest.mock as mock
 
-from homeassistant.setup import setup_component
-import homeassistant.components.switch as switch
 import homeassistant.components.mfi.switch as mfi
-from tests.components.mfi import test_sensor as test_mfi_sensor
+import homeassistant.components.switch as switch
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 
 
-class TestMfiSwitchSetup(test_mfi_sensor.TestMfiSensorSetup):
+class TestMfiSwitchSetup(unittest.TestCase):
     """Test the mFi switch."""
 
     PLATFORM = mfi
@@ -28,7 +27,15 @@ class TestMfiSwitchSetup(test_mfi_sensor.TestMfiSensorSetup):
         }
     }
 
-    @mock.patch("mficlient.client.MFiClient")
+    def setup_method(self, method):
+        """Set up things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+
+    def teardown_method(self, method):
+        """Stop everything that was started."""
+        self.hass.stop()
+
+    @mock.patch("homeassistant.components.mfi.switch.MFiClient")
     @mock.patch("homeassistant.components.mfi.switch.MfiSwitch")
     def test_setup_adds_proper_devices(self, mock_switch, mock_client):
         """Test if setup adds devices."""

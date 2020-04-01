@@ -1,8 +1,8 @@
 """Models for manifest validator."""
-import json
-from typing import List, Dict, Any
-import pathlib
 import importlib
+import json
+import pathlib
+from typing import Any, Dict, List
 
 import attr
 
@@ -50,9 +50,9 @@ class Integration:
             init = fil / "__init__.py"
             if not init.exists():
                 print(
-                    "Warning: {} missing, skipping directory. "
+                    f"Warning: {init} missing, skipping directory. "
                     "If this is your development environment, "
-                    "you can safely delete this folder.".format(init)
+                    "you can safely delete this folder."
                 )
                 continue
 

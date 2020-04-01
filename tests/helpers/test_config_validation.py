@@ -395,7 +395,7 @@ def test_template_complex():
     """Test template_complex validator."""
     schema = vol.Schema(cv.template_complex)
 
-    for value in (None, "{{ partial_print }", "{% if True %}Hello"):
+    for value in ("{{ partial_print }", "{% if True %}Hello"):
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
@@ -419,6 +419,10 @@ def test_template_complex():
         {"test": 1, "test2": "{{ beer }}"},
         ["{{ beer }}", 1],
     )
+
+    # Ensure we don't mutate non-string types that cannot be templates.
+    for value in (1, True, None):
+        assert schema(value) == value
 
 
 def test_time_zone():
@@ -460,12 +464,36 @@ def test_time():
 def test_datetime():
     """Test date time validation."""
     schema = vol.Schema(cv.datetime)
-    for value in [date.today(), "Wrong DateTime", "2016-11-23"]:
+    for value in [date.today(), "Wrong DateTime"]:
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
     schema(datetime.now())
     schema("2016-11-23T18:59:08")
+
+
+def test_multi_select():
+    """Test multi select validation.
+
+    Expected behavior:
+        - Will not accept any input but a list
+        - Will not accept selections outside of configured scope
+    """
+    schema = vol.Schema(cv.multi_select({"paulus": "Paulus", "robban": "Robban"}))
+
+    with pytest.raises(vol.Invalid):
+        schema("robban")
+        schema(["paulus", "martinhj"])
+
+    schema(["robban", "paulus"])
+
+
+def test_multi_select_in_serializer():
+    """Test multi_select with custom_serializer."""
+    assert cv.custom_serializer(cv.multi_select({"paulus": "Paulus"})) == {
+        "type": "multi_select",
+        "options": {"paulus": "Paulus"},
+    }
 
 
 @pytest.fixture
@@ -959,3 +987,61 @@ def test_uuid4_hex(caplog):
     _hex = uuid.uuid4().hex
     assert schema(_hex) == _hex
     assert schema(_hex.upper()) == _hex
+
+
+def test_key_value_schemas():
+    """Test key value schemas."""
+    schema = vol.Schema(
+        cv.key_value_schemas(
+            "mode",
+            {
+                "number": vol.Schema({"mode": "number", "data": int}),
+                "string": vol.Schema({"mode": "string", "data": str}),
+            },
+        )
+    )
+
+    with pytest.raises(vol.Invalid) as excinfo:
+        schema(True)
+        assert str(excinfo.value) == "Expected a dictionary"
+
+    for mode in None, "invalid":
+        with pytest.raises(vol.Invalid) as excinfo:
+            schema({"mode": mode})
+        assert (
+            str(excinfo.value)
+            == f"Unexpected value for mode: '{mode}'. Expected number, string"
+        )
+
+    with pytest.raises(vol.Invalid) as excinfo:
+        schema({"mode": "number", "data": "string-value"})
+    assert str(excinfo.value) == "expected int for dictionary value @ data['data']"
+
+    with pytest.raises(vol.Invalid) as excinfo:
+        schema({"mode": "string", "data": 1})
+    assert str(excinfo.value) == "expected str for dictionary value @ data['data']"
+
+    for mode, data in (("number", 1), ("string", "hello")):
+        schema({"mode": mode, "data": data})
+
+
+def test_script(caplog):
+    """Test script validation is user friendly."""
+    for data, msg in (
+        ({"delay": "{{ invalid"}, "should be format 'HH:MM'"),
+        ({"wait_template": "{{ invalid"}, "invalid template"),
+        ({"condition": "invalid"}, "Unexpected value for condition: 'invalid'"),
+        ({"event": None}, "string value is None for dictionary value @ data['event']"),
+        (
+            {"device_id": None},
+            "string value is None for dictionary value @ data['device_id']",
+        ),
+        (
+            {"scene": "light.kitchen"},
+            "Entity ID 'light.kitchen' does not belong to domain 'scene'",
+        ),
+    ):
+        with pytest.raises(vol.Invalid) as excinfo:
+            cv.script_action(data)
+
+        assert msg in str(excinfo.value)

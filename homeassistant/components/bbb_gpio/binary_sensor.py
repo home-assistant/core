@@ -4,8 +4,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import bbb_gpio
-from homeassistant.components.binary_sensor import BinarySensorDevice, PLATFORM_SCHEMA
-from homeassistant.const import DEVICE_DEFAULT_NAME, CONF_NAME
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)

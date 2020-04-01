@@ -1,5 +1,6 @@
 """Constants for Google Assistant."""
 from homeassistant.components import (
+    alarm_control_panel,
     binary_sensor,
     camera,
     climate,
@@ -15,7 +16,6 @@ from homeassistant.components import (
     sensor,
     switch,
     vacuum,
-    alarm_control_panel,
 )
 
 DOMAIN = "google_assistant"
@@ -133,10 +133,17 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_OPENING): TYPE_SENSOR,
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_WINDOW): TYPE_SENSOR,
     (media_player.DOMAIN, media_player.DEVICE_CLASS_TV): TYPE_TV,
-    (media_player.DOMAIN, media_player.DEVICE_CLASS_SPEAKER): TYPE_SPEAKER,
     (sensor.DOMAIN, sensor.DEVICE_CLASS_TEMPERATURE): TYPE_SENSOR,
+    (sensor.DOMAIN, sensor.DEVICE_CLASS_HUMIDITY): TYPE_SENSOR,
 }
 
 CHALLENGE_ACK_NEEDED = "ackNeeded"
 CHALLENGE_PIN_NEEDED = "pinNeeded"
 CHALLENGE_FAILED_PIN_NEEDED = "challengeFailedPinNeeded"
+
+STORE_AGENT_USER_IDS = "agent_user_ids"
+
+SOURCE_CLOUD = "cloud"
+SOURCE_LOCAL = "local"
+
+NOT_EXPOSE_LOCAL = {TYPE_ALARM, TYPE_LOCK}

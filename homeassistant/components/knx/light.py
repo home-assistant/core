@@ -180,13 +180,9 @@ class KNXLight(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        if self.device.supports_brightness:
-            return self.device.current_brightness
-        if (
-            self.device.supports_color or self.device.supports_rgbw
-        ) and self.device.current_color:
-            return max(self.device.current_color)
-        return None
+        if not self.device.supports_brightness:
+            return None
+        return self.device.current_brightness
 
     @property
     def hs_color(self):
@@ -273,8 +269,16 @@ class KNXLight(Light):
         update_white_value = ATTR_WHITE_VALUE in kwargs
         update_color_temp = ATTR_COLOR_TEMP in kwargs
 
-        # always only go one path for turning on (avoid conflicting changes
-        # and weird effects)
+        # avoid conflicting changes and weird effects
+        if not (
+            self.is_on
+            or update_brightness
+            or update_color
+            or update_white_value
+            or update_color_temp
+        ):
+            await self.device.set_on()
+
         if self.device.supports_brightness and (update_brightness and not update_color):
             # if we don't need to update the color, try updating brightness
             # directly if supported; don't do it if color also has to be
@@ -283,7 +287,7 @@ class KNXLight(Light):
         elif (self.device.supports_rgbw or self.device.supports_color) and (
             update_brightness or update_color or update_white_value
         ):
-            # change RGB color, white value )if supported), and brightness
+            # change RGB color, white value (if supported), and brightness
             # if brightness or hs_color was not yet set use the default value
             # to calculate RGB from as a fallback
             if brightness is None:
@@ -294,29 +298,20 @@ class KNXLight(Light):
                 white_value = DEFAULT_WHITE_VALUE
             rgb = color_util.color_hsv_to_RGB(*hs_color, brightness * 100 / 255)
             await self.device.set_color(rgb, white_value)
-        elif self.device.supports_color_temperature and update_color_temp:
-            # change color temperature without ON telegram
+
+        if update_color_temp:
             kelvin = int(color_util.color_temperature_mired_to_kelvin(mireds))
-            if kelvin > self._max_kelvin:
-                kelvin = self._max_kelvin
-            elif kelvin < self._min_kelvin:
-                kelvin = self._min_kelvin
-            await self.device.set_color_temperature(kelvin)
-        elif self.device.supports_tunable_white and update_color_temp:
-            # calculate relative_ct from Kelvin to fit typical KNX devices
-            kelvin = min(
-                self._max_kelvin,
-                int(color_util.color_temperature_mired_to_kelvin(mireds)),
-            )
-            relative_ct = int(
-                255
-                * (kelvin - self._min_kelvin)
-                / (self._max_kelvin - self._min_kelvin)
-            )
-            await self.device.set_tunable_white(relative_ct)
-        else:
-            # no color/brightness change requested, so just turn it on
-            await self.device.set_on()
+            kelvin = min(self._max_kelvin, max(self._min_kelvin, kelvin))
+
+            if self.device.supports_color_temperature:
+                await self.device.set_color_temperature(kelvin)
+            elif self.device.supports_tunable_white:
+                relative_ct = int(
+                    255
+                    * (kelvin - self._min_kelvin)
+                    / (self._max_kelvin - self._min_kelvin)
+                )
+                await self.device.set_tunable_white(relative_ct)
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""

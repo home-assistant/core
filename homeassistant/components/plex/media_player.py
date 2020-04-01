@@ -6,7 +6,7 @@ from xml.etree.ElementTree import ParseError
 import plexapi.exceptions
 import requests.exceptions
 
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
@@ -17,22 +17,17 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
-from homeassistant.const import (
-    DEVICE_DEFAULT_NAME,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    COMMON_PLAYERS,
     CONF_SERVER_IDENTIFIER,
     DISPATCHERS,
     DOMAIN as PLEX_DOMAIN,
@@ -56,28 +51,45 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Plex media_player from a config entry."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
+    registry = await async_get_registry(hass)
 
+    @callback
     def async_new_media_players(new_entities):
         _async_add_entities(
-            hass, config_entry, async_add_entities, server_id, new_entities
+            hass, registry, config_entry, async_add_entities, server_id, new_entities
         )
 
     unsub = async_dispatcher_connect(
         hass, PLEX_NEW_MP_SIGNAL.format(server_id), async_new_media_players
     )
     hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
+    _LOGGER.debug("New entity listener created")
 
 
 @callback
 def _async_add_entities(
-    hass, config_entry, async_add_entities, server_id, new_entities
+    hass, registry, config_entry, async_add_entities, server_id, new_entities
 ):
     """Set up Plex media_player entities."""
+    _LOGGER.debug("New entities: %s", new_entities)
     entities = []
     plexserver = hass.data[PLEX_DOMAIN][SERVERS][server_id]
     for entity_params in new_entities:
         plex_mp = PlexMediaPlayer(plexserver, **entity_params)
         entities.append(plex_mp)
+
+        # Migration to per-server unique_ids
+        old_entity_id = registry.async_get_entity_id(
+            MP_DOMAIN, PLEX_DOMAIN, plex_mp.machine_identifier
+        )
+        if old_entity_id is not None:
+            new_unique_id = f"{server_id}:{plex_mp.machine_identifier}"
+            _LOGGER.debug(
+                "Migrating unique_id from [%s] to [%s]",
+                plex_mp.machine_identifier,
+                new_unique_id,
+            )
+            registry.async_update_entity(old_entity_id, new_unique_id=new_unique_id)
 
     async_add_entities(entities, True)
 
@@ -96,6 +108,10 @@ class PlexMediaPlayer(MediaPlayerDevice):
         self._is_player_active = False
         self._machine_identifier = device.machineIdentifier
         self._make = ""
+        self._device_platform = None
+        self._device_product = None
+        self._device_title = None
+        self._device_version = None
         self._name = None
         self._player_state = "idle"
         self._previous_volume_level = 1  # Used in fake muting
@@ -110,6 +126,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
         self._media_content_type = None
         self._media_duration = None
         self._media_image_url = None
+        self._media_summary = None
         self._media_title = None
         self._media_position = None
         self._media_position_updated_at = None
@@ -126,6 +143,8 @@ class PlexMediaPlayer(MediaPlayerDevice):
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
         server_id = self.plex_server.machine_identifier
+
+        _LOGGER.debug("Added %s [%s]", self.entity_id, self.unique_id)
         unsub = async_dispatcher_connect(
             self.hass,
             PLEX_UPDATE_MEDIA_PLAYER_SIGNAL.format(self.unique_id),
@@ -136,6 +155,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
     @callback
     def async_refresh_media_player(self, device, session):
         """Set instance objects and trigger an entity state update."""
+        _LOGGER.debug("Refreshing %s [%s / %s]", self.entity_id, device, session)
         self.device = device
         self.session = session
         self.async_schedule_update_ha_state(True)
@@ -148,6 +168,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
         self._media_content_type = None
         self._media_duration = None
         self._media_image_url = None
+        self._media_summary = None
         self._media_title = None
         # Music
         self._media_album_artist = None
@@ -167,7 +188,6 @@ class PlexMediaPlayer(MediaPlayerDevice):
         self._clear_media_details()
 
         self._available = self.device or self.session
-        name_base = None
 
         if self.device:
             try:
@@ -176,7 +196,10 @@ class PlexMediaPlayer(MediaPlayerDevice):
                 device_url = "127.0.0.1"
             if "127.0.0.1" in device_url:
                 self.device.proxyThroughServer()
-            name_base = self.device.title or self.device.product
+            self._device_platform = self.device.platform
+            self._device_product = self.device.product
+            self._device_title = self.device.title
+            self._device_version = self.device.version
             self._device_protocol_capabilities = self.device.protocolCapabilities
             self._player_state = self.device.state
 
@@ -194,11 +217,15 @@ class PlexMediaPlayer(MediaPlayerDevice):
             if session_device:
                 self._make = session_device.device or ""
                 self._player_state = session_device.state
-                name_base = name_base or session_device.title or session_device.product
+                self._device_platform = self._device_platform or session_device.platform
+                self._device_product = self._device_product or session_device.product
+                self._device_title = self._device_title or session_device.title
+                self._device_version = self._device_version or session_device.version
             else:
                 _LOGGER.warning("No player associated with active session")
 
-            self._session_username = self.session.usernames[0]
+            if self.session.usernames:
+                self._session_username = self.session.usernames[0]
 
             # Calculate throttled position for proper progress display.
             position = int(self.session.viewOffset / 1000)
@@ -216,13 +243,21 @@ class PlexMediaPlayer(MediaPlayerDevice):
             self._media_content_id = self.session.ratingKey
             self._media_content_rating = getattr(self.session, "contentRating", None)
 
-        self._name = self._name or NAME_FORMAT.format(name_base or DEVICE_DEFAULT_NAME)
+        name_parts = [self._device_product, self._device_title or self._device_platform]
+        if (self._device_product in COMMON_PLAYERS) and self.make:
+            # Add more context in name for likely duplicates
+            name_parts.append(self.make)
+        if self.username and self.username != self.plex_server.owner:
+            # Prepend username for shared/managed clients
+            name_parts.insert(0, self.username)
+        self._name = NAME_FORMAT.format(" - ".join(name_parts))
         self._set_player_state()
 
         if self._is_player_active and self.session is not None:
             self._session_type = self.session.type
             self._media_duration = int(self.session.duration / 1000)
             #  title (movie name, tv episode name, music song name)
+            self._media_summary = self.session.summary
             self._media_title = self.session.title
             # media type
             self._set_media_type()
@@ -239,7 +274,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
         thumb_url = self.session.thumbUrl
         if (
             self.media_content_type is MEDIA_TYPE_TVSHOW
-            and not self.plex_server.use_episode_art
+            and not self.plex_server.option_use_episode_art
         ):
             thumb_url = self.session.url(self.session.grandparentThumb)
 
@@ -270,12 +305,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
             self._media_content_type = MEDIA_TYPE_TVSHOW
 
             # season number (00)
-            if callable(self.session.season):
-                self._media_season = str((self.session.season()).index).zfill(2)
-            elif self.session.parentIndex is not None:
-                self._media_season = self.session.parentIndex.zfill(2)
-            else:
-                self._media_season = None
+            self._media_season = self.session.seasonNumber
             # show name
             self._media_series_title = self.session.grandparentTitle
             # episode number (00)
@@ -285,7 +315,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
         elif self._session_type == "movie":
             self._media_content_type = MEDIA_TYPE_MOVIE
             if self.session.year is not None and self._media_title is not None:
-                self._media_title += " (" + str(self.session.year) + ")"
+                self._media_title += f" ({self.session.year!s})"
 
         elif self._session_type == "track":
             self._media_content_type = MEDIA_TYPE_MUSIC
@@ -303,6 +333,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
 
     def force_idle(self):
         """Force client to idle."""
+        self._player_state = STATE_IDLE
         self._state = STATE_IDLE
         self.session = None
         self._clear_media_details()
@@ -315,6 +346,11 @@ class PlexMediaPlayer(MediaPlayerDevice):
     @property
     def unique_id(self):
         """Return the id of this plex client."""
+        return f"{self.plex_server.machine_identifier}:{self._machine_identifier}"
+
+    @property
+    def machine_identifier(self):
+        """Return the Plex-provided identifier of this plex client."""
         return self._machine_identifier
 
     @property
@@ -326,6 +362,11 @@ class PlexMediaPlayer(MediaPlayerDevice):
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def username(self):
+        """Return the username of the client owner."""
+        return self._session_username
 
     @property
     def app_name(self):
@@ -408,6 +449,11 @@ class PlexMediaPlayer(MediaPlayerDevice):
         return self._media_image_url
 
     @property
+    def media_summary(self):
+        """Return the summary of current playing media."""
+        return self._media_summary
+
+    @property
     def media_title(self):
         """Return the title of current playing media."""
         return self._media_title
@@ -435,46 +481,6 @@ class PlexMediaPlayer(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        # force show all controls
-        if self.plex_server.show_all_controls:
-            return (
-                SUPPORT_PAUSE
-                | SUPPORT_PREVIOUS_TRACK
-                | SUPPORT_NEXT_TRACK
-                | SUPPORT_STOP
-                | SUPPORT_VOLUME_SET
-                | SUPPORT_PLAY
-                | SUPPORT_PLAY_MEDIA
-                | SUPPORT_TURN_OFF
-                | SUPPORT_VOLUME_MUTE
-            )
-
-        # no mute support
-        if self.make.lower() == "shield android tv":
-            _LOGGER.debug(
-                "Shield Android TV client detected, disabling mute controls: %s",
-                self.name,
-            )
-            return (
-                SUPPORT_PAUSE
-                | SUPPORT_PREVIOUS_TRACK
-                | SUPPORT_NEXT_TRACK
-                | SUPPORT_STOP
-                | SUPPORT_VOLUME_SET
-                | SUPPORT_PLAY
-                | SUPPORT_PLAY_MEDIA
-                | SUPPORT_TURN_OFF
-            )
-
-        # Only supports play,pause,stop (and off which really is stop)
-        if self.make.lower().startswith("tivo"):
-            _LOGGER.debug(
-                "Tivo client detected, only enabling pause, play, "
-                "stop, and off controls: %s",
-                self.name,
-            )
-            return SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP | SUPPORT_TURN_OFF
-
         if self.device and "playback" in self._device_protocol_capabilities:
             return (
                 SUPPORT_PAUSE
@@ -484,7 +490,6 @@ class PlexMediaPlayer(MediaPlayerDevice):
                 | SUPPORT_VOLUME_SET
                 | SUPPORT_PLAY
                 | SUPPORT_PLAY_MEDIA
-                | SUPPORT_TURN_OFF
                 | SUPPORT_VOLUME_MUTE
             )
 
@@ -547,11 +552,6 @@ class PlexMediaPlayer(MediaPlayerDevice):
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.stop(self._active_media_plexapi_type)
             self.plex_server.update_platforms()
-
-    def turn_off(self):
-        """Turn the client off."""
-        # Fake it since we can't turn the client off
-        self.media_stop()
 
     def media_next_track(self):
         """Send next track command."""
@@ -678,8 +678,24 @@ class PlexMediaPlayer(MediaPlayerDevice):
         """Return the scene state attributes."""
         attr = {
             "media_content_rating": self._media_content_rating,
-            "session_username": self._session_username,
+            "session_username": self.username,
             "media_library_name": self._app_name,
+            "summary": self.media_summary,
         }
 
         return attr
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        if self.machine_identifier is None:
+            return None
+
+        return {
+            "identifiers": {(PLEX_DOMAIN, self.machine_identifier)},
+            "manufacturer": self._device_platform or "Plex",
+            "model": self._device_product or self.make,
+            "name": self.name,
+            "sw_version": self._device_version,
+            "via_device": (PLEX_DOMAIN, self.plex_server.machine_identifier),
+        }

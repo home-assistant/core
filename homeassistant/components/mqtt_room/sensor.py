@@ -1,16 +1,16 @@
 """Support for MQTT room presence detection."""
-import logging
-import json
 from datetime import timedelta
+import json
+import logging
 
 import voluptuous as vol
 
 from homeassistant.components import mqtt
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.mqtt import CONF_STATE_TOPIC
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_TIMEOUT, STATE_NOT_HOME, ATTR_ID
+from homeassistant.const import ATTR_ID, CONF_NAME, CONF_TIMEOUT, STATE_NOT_HOME
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt, slugify
 
@@ -73,7 +73,7 @@ class MQTTRoomSensor(Entity):
         """Initialize the sensor."""
         self._state = STATE_NOT_HOME
         self._name = name
-        self._state_topic = "{}{}".format(state_topic, "/+")
+        self._state_topic = f"{state_topic}/+"
         self._device_id = slugify(device_id).upper()
         self._timeout = timeout
         self._consider_home = (

@@ -1,15 +1,15 @@
 """The tests for the notify yessssms platform."""
+import logging
 import unittest
 from unittest.mock import patch
 
 import pytest
 import requests_mock
 
-from homeassistant.setup import async_setup_component
-import homeassistant.components.yessssms.notify as yessssms
 from homeassistant.components.yessssms.const import CONF_PROVIDER
-
+import homeassistant.components.yessssms.notify as yessssms
 from homeassistant.const import CONF_PASSWORD, CONF_RECIPIENT, CONF_USERNAME
+from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture(name="config")
@@ -36,7 +36,7 @@ def init_valid_settings(hass, config):
 
 @pytest.fixture(name="invalid_provider_settings")
 def init_invalid_provider_settings(hass, config):
-    """Set invalid provider data and initalize component."""
+    """Set invalid provider data and initialize component."""
     config["notify"][CONF_PROVIDER] = "FantasyMobile"  # invalid provider
     return async_setup_component(hass, "notify", config)
 
@@ -101,6 +101,7 @@ async def test_false_login_data_error(hass, caplog, valid_settings, invalid_logi
 
 async def test_init_success(hass, caplog, valid_settings, valid_login_data):
     """Test for successful init of yessssms."""
+    caplog.set_level(logging.DEBUG)
     await valid_settings
     assert hass.services.has_service("notify", "sms")
     messages = []
@@ -119,6 +120,7 @@ async def test_init_success(hass, caplog, valid_settings, valid_login_data):
 
 async def test_connection_error_on_init(hass, caplog, valid_settings, connection_error):
     """Test for connection error on init."""
+    caplog.set_level(logging.DEBUG)
     await valid_settings
     assert hass.services.has_service("notify", "sms")
     for record in caplog.records:
@@ -127,9 +129,7 @@ async def test_connection_error_on_init(hass, caplog, valid_settings, connection
             and record.name == "homeassistant.components.yessssms.notify"
         ):
             assert (
-                "Connection Error, could not verify login data for '{}'".format(
-                    "educom"
-                )
+                "Connection Error, could not verify login data for 'educom'"
                 in record.message
             )
     for record in caplog.records:

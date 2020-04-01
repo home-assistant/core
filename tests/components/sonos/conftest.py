@@ -33,7 +33,7 @@ def soco_fixture(music_library, speaker_info, dummy_soco_service):
         yield mock_soco
 
 
-@pytest.fixture(name="discover")
+@pytest.fixture(name="discover", autouse=True)
 def discover_fixture(soco):
     """Create a mock pysonos discover fixture."""
 

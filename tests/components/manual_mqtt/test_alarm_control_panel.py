@@ -1,26 +1,26 @@
 """The tests for the manual_mqtt Alarm Control Panel component."""
 from datetime import timedelta
 import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
-from homeassistant.setup import setup_component
+from homeassistant.components import alarm_control_panel
 from homeassistant.const import (
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.components import alarm_control_panel
+from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
+    assert_setup_component,
+    fire_mqtt_message,
     fire_time_changed,
     get_test_home_assistant,
     mock_mqtt_component,
-    fire_mqtt_message,
-    assert_setup_component,
 )
 from tests.components.alarm_control_panel import common
 
@@ -268,9 +268,6 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         )
 
         entity_id = "alarm_control_panel.test"
-
-        self.hass.start()
-        self.hass.block_till_done()
 
         assert STATE_ALARM_DISARMED == self.hass.states.get(entity_id).state
 
@@ -1470,9 +1467,6 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         )
 
         entity_id = "alarm_control_panel.test"
-
-        self.hass.start()
-        self.hass.block_till_done()
 
         assert STATE_ALARM_DISARMED == self.hass.states.get(entity_id).state
 

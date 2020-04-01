@@ -3,7 +3,7 @@
 from pycoolmasternet import CoolMasterNet
 import voluptuous as vol
 
-from homeassistant import core, config_entries
+from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 # pylint: disable=unused-import
@@ -26,6 +26,7 @@ class CoolmasterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
+    @core.callback
     def _async_get_entry(self, data):
         supported_modes = [
             key for (key, value) in data.items() if key in AVAILABLE_MODES and value

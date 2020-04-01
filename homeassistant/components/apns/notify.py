@@ -6,10 +6,10 @@ from apns2.errors import Unregistered
 from apns2.payload import Payload
 import voluptuous as vol
 
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
-    DOMAIN,
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
@@ -19,12 +19,12 @@ from homeassistant.helpers import template as template_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_state_change
 
+from .const import DOMAIN
+
 APNS_DEVICES = "apns.yaml"
 CONF_CERTFILE = "cert_file"
 CONF_TOPIC = "topic"
 CONF_SANDBOX = "sandbox"
-DEVICE_TRACKER_DOMAIN = "device_tracker"
-SERVICE_REGISTER = "apns_register"
 
 ATTR_PUSH_ID = "push_id"
 
@@ -150,7 +150,7 @@ class ApnsNotificationService(BaseNotificationService):
         self.app_name = app_name
         self.sandbox = sandbox
         self.certificate = cert_file
-        self.yaml_path = hass.config.path(app_name + "_" + APNS_DEVICES)
+        self.yaml_path = hass.config.path(f"{app_name}_{APNS_DEVICES}")
         self.devices = {}
         self.device_states = {}
         self.topic = topic
@@ -177,7 +177,7 @@ class ApnsNotificationService(BaseNotificationService):
 
     def device_state_changed_listener(self, entity_id, from_s, to_s):
         """
-        Listen for sate change.
+        Listen for state change.
 
         Track device state change if a device has a tracking id specified.
         """

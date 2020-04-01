@@ -1,23 +1,23 @@
 """Support for the Broadlink RM2 Pro (only temperature) and A1 devices."""
 import binascii
-import logging
 from datetime import timedelta
+import logging
 
 import broadlink
-
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
-    TEMP_CELSIUS,
-    CONF_TIMEOUT,
     CONF_SCAN_INTERVAL,
+    CONF_TIMEOUT,
+    TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -30,7 +30,7 @@ SCAN_INTERVAL = timedelta(seconds=300)
 SENSOR_TYPES = {
     "temperature": ["Temperature", TEMP_CELSIUS],
     "air_quality": ["Air Quality", " "],
-    "humidity": ["Humidity", "%"],
+    "humidity": ["Humidity", UNIT_PERCENTAGE],
     "light": ["Light", " "],
     "noise": ["Noise", " "],
 }
@@ -68,7 +68,7 @@ class BroadlinkSensor(Entity):
 
     def __init__(self, name, broadlink_data, sensor_type):
         """Initialize the sensor."""
-        self._name = "{} {}".format(name, SENSOR_TYPES[sensor_type][0])
+        self._name = f"{name} {SENSOR_TYPES[sensor_type][0]}"
         self._state = None
         self._is_available = False
         self._type = sensor_type

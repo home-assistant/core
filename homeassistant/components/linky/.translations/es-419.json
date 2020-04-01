@@ -1,13 +1,9 @@
 {
     "config": {
-        "abort": {
-            "username_exists": "La cuenta ya ha sido configurada"
-        },
         "error": {
             "access": "No se pudo acceder a Enedis.fr, compruebe su conexi\u00f3n a Internet.",
             "enedis": "Enedis.fr respondi\u00f3 con un error: vuelva a intentarlo m\u00e1s tarde (normalmente no entre las 11 p.m. y las 2 a.m.)",
             "unknown": "Error desconocido: por favor, vuelva a intentarlo m\u00e1s tarde (normalmente no entre las 11 p.m. y las 2 a.m.)",
-            "username_exists": "La cuenta ya ha sido configurada",
             "wrong_login": "Error de inicio de sesi\u00f3n: por favor revise su direcci\u00f3n de correo electr\u00f3nico y contrase\u00f1a"
         },
         "step": {

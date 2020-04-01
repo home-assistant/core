@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "D\u00ebsen App Schl\u00ebssel g\u00ebtt scho benotzt"
+        },
+        "error": {
+            "invalid_api_key": "Ong\u00ebltegen API Schl\u00ebssel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Schl\u00ebssel",
+                    "latitude": "Breedegrad",
+                    "longitude": "L\u00e4ngegrad"
+                },
+                "title": "AirVisual konfigur\u00e9ieren"
+            }
+        },
+        "title": "AirVisual"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "description": "Verschidden Optioune fir d'AirVisual Integratioun d\u00e9fin\u00e9ieren.",
+                "title": "Airvisual ariichten"
+            }
+        }
+    }
+}

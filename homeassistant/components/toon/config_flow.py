@@ -1,8 +1,15 @@
 """Config flow to configure the Toon component."""
 from collections import OrderedDict
-import logging
 from functools import partial
+import logging
 
+from toonapilib import Toon
+from toonapilib.toonapilibexceptions import (
+    AgreementsRetrievalError,
+    InvalidConsumerKey,
+    InvalidConsumerSecret,
+    InvalidCredentials,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -67,13 +74,6 @@ class ToonFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_authenticate(self, user_input=None):
         """Attempt to authenticate with the Toon account."""
-        from toonapilib import Toon
-        from toonapilib.toonapilibexceptions import (
-            InvalidConsumerSecret,
-            InvalidConsumerKey,
-            InvalidCredentials,
-            AgreementsRetrievalError,
-        )
 
         if user_input is None:
             return await self._show_authenticaticate_form()
@@ -129,7 +129,6 @@ class ToonFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_display(self, user_input=None):
         """Select Toon display to add."""
-        from toonapilib import Toon
 
         if not self.displays:
             return self.async_abort(reason="no_displays")

@@ -8,6 +8,11 @@
         "create_entry": {
             "default": "Autenticato con successo con Somfy."
         },
+        "step": {
+            "pick_implementation": {
+                "title": "Seleziona il metodo di autenticazione"
+            }
+        },
         "title": "Somfy"
     }
 }

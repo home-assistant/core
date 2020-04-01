@@ -30,6 +30,11 @@ CONDITION_CLASSES = {
 }
 
 
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Demo config entry."""
+    setup_platform(hass, {}, async_add_entities)
+
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo weather."""
     add_entities(
@@ -101,7 +106,7 @@ class DemoWeather(WeatherEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format("Demo Weather", self._name)
+        return f"Demo Weather {self._name}"
 
     @property
     def should_poll(self):

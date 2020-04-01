@@ -1,10 +1,9 @@
 {
-  "domain": "nuheat",
-  "name": "Nuheat",
-  "documentation": "https://www.home-assistant.io/integrations/nuheat",
-  "requirements": [
-    "nuheat==0.3.0"
-  ],
-  "dependencies": [],
-  "codeowners": []
+    "domain": "nuheat",
+    "name": "NuHeat",
+    "documentation": "https://www.home-assistant.io/integrations/nuheat",
+    "requirements": ["nuheat==0.3.0"],
+    "dependencies": [],
+    "codeowners": ["@bdraco"],
+    "config_flow": true
 }

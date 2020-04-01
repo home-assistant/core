@@ -11,7 +11,7 @@
                     "longitude": "Lengdegrad",
                     "name": "Navn",
                     "passive": "Passiv",
-                    "radius": "Radius"
+                    "radius": ""
                 },
                 "title": "Definer sone parametere"
             }

@@ -1,13 +1,16 @@
 """Tests for the Google Assistant traits."""
-from unittest.mock import patch, Mock
 import logging
+from unittest.mock import Mock, patch
+
 import pytest
 
 from homeassistant.components import (
+    alarm_control_panel,
     binary_sensor,
     camera,
     cover,
     fan,
+    group,
     input_boolean,
     light,
     lock,
@@ -17,42 +20,46 @@ from homeassistant.components import (
     sensor,
     switch,
     vacuum,
-    group,
-    alarm_control_panel,
 )
 from homeassistant.components.climate import const as climate
-from homeassistant.components.google_assistant import trait, helpers, const, error
+from homeassistant.components.google_assistant import const, error, helpers, trait
 from homeassistant.const import (
-    STATE_ON,
-    STATE_OFF,
+    ATTR_ASSUMED_STATE,
+    ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    ATTR_TEMPERATURE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_ON,
-    SERVICE_TURN_OFF,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    ATTR_SUPPORTED_FEATURES,
-    ATTR_TEMPERATURE,
-    ATTR_DEVICE_CLASS,
-    ATTR_ASSUMED_STATE,
-    STATE_UNKNOWN,
 )
-from homeassistant.core import State, DOMAIN as HA_DOMAIN, EVENT_CALL_SERVICE
+from homeassistant.core import DOMAIN as HA_DOMAIN, EVENT_CALL_SERVICE, State
 from homeassistant.util import color
-from tests.common import async_mock_service, mock_coro
+
 from . import BASIC_CONFIG, MockConfig
+
+from tests.common import async_mock_service, mock_coro
 
 _LOGGER = logging.getLogger(__name__)
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
 
-BASIC_DATA = helpers.RequestData(BASIC_CONFIG, "test-agent", REQ_ID, None)
+BASIC_DATA = helpers.RequestData(
+    BASIC_CONFIG, "test-agent", const.SOURCE_CLOUD, REQ_ID, None
+)
 
 PIN_CONFIG = MockConfig(secure_devices_pin="1234")
 
-PIN_DATA = helpers.RequestData(PIN_CONFIG, "test-agent", REQ_ID, None)
+PIN_DATA = helpers.RequestData(
+    PIN_CONFIG, "test-agent", const.SOURCE_CLOUD, REQ_ID, None
+)
 
 
 async def test_brightness_light(hass):
@@ -548,6 +555,32 @@ async def test_temperature_setting_climate_onoff(hass):
         trait.COMMAND_THERMOSTAT_SET_MODE, BASIC_DATA, {"thermostatMode": "off"}, {}
     )
     assert len(calls) == 1
+
+
+async def test_temperature_setting_climate_no_modes(hass):
+    """Test TemperatureSetting trait support for climate domain not supporting any modes."""
+    assert helpers.get_google_type(climate.DOMAIN, None) is not None
+    assert trait.TemperatureSettingTrait.supported(climate.DOMAIN, 0, None)
+
+    hass.config.units.temperature_unit = TEMP_CELSIUS
+
+    trt = trait.TemperatureSettingTrait(
+        hass,
+        State(
+            "climate.bla",
+            climate.HVAC_MODE_AUTO,
+            {
+                climate.ATTR_HVAC_MODES: [],
+                climate.ATTR_MIN_TEMP: None,
+                climate.ATTR_MAX_TEMP: None,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+    assert trt.sync_attributes() == {
+        "availableThermostatModes": "heat",
+        "thermostatTemperatureUnit": "C",
+    }
 
 
 async def test_temperature_setting_climate_range(hass):
@@ -1263,24 +1296,99 @@ async def test_modes(hass):
         "availableModes": [
             {
                 "name": "input source",
-                "name_values": [{"name_synonym": ["input source"], "lang": "en"}],
+                "name_values": [
+                    {"name_synonym": ["input source", "input", "source"], "lang": "en"}
+                ],
                 "settings": [
                     {
                         "setting_name": "media",
                         "setting_values": [
-                            {"setting_synonym": ["media", "media mode"], "lang": "en"}
+                            {"setting_synonym": ["media"], "lang": "en"}
                         ],
                     },
                     {
                         "setting_name": "game",
-                        "setting_values": [
-                            {"setting_synonym": ["game", "game mode"], "lang": "en"}
-                        ],
+                        "setting_values": [{"setting_synonym": ["game"], "lang": "en"}],
                     },
                     {
                         "setting_name": "chromecast",
                         "setting_values": [
                             {"setting_synonym": ["chromecast"], "lang": "en"}
+                        ],
+                    },
+                    {
+                        "setting_name": "plex",
+                        "setting_values": [{"setting_synonym": ["plex"], "lang": "en"}],
+                    },
+                ],
+                "ordered": False,
+            }
+        ]
+    }
+
+    assert trt.query_attributes() == {
+        "currentModeSettings": {"input source": "game"},
+        "on": True,
+        "online": True,
+    }
+
+    assert trt.can_execute(
+        trait.COMMAND_MODES, params={"updateModeSettings": {"input source": "media"}},
+    )
+
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOURCE
+    )
+    await trt.execute(
+        trait.COMMAND_MODES,
+        BASIC_DATA,
+        {"updateModeSettings": {"input source": "media"}},
+        {},
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data == {"entity_id": "media_player.living_room", "source": "media"}
+
+
+async def test_sound_modes(hass):
+    """Test Mode trait."""
+    assert helpers.get_google_type(media_player.DOMAIN, None) is not None
+    assert trait.ModesTrait.supported(
+        media_player.DOMAIN, media_player.SUPPORT_SELECT_SOUND_MODE, None
+    )
+
+    trt = trait.ModesTrait(
+        hass,
+        State(
+            "media_player.living_room",
+            media_player.STATE_PLAYING,
+            attributes={
+                media_player.ATTR_SOUND_MODE_LIST: ["stereo", "prologic"],
+                media_player.ATTR_SOUND_MODE: "stereo",
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    attribs = trt.sync_attributes()
+    assert attribs == {
+        "availableModes": [
+            {
+                "name": "sound mode",
+                "name_values": [
+                    {"name_synonym": ["sound mode", "effects"], "lang": "en"}
+                ],
+                "settings": [
+                    {
+                        "setting_name": "stereo",
+                        "setting_values": [
+                            {"setting_synonym": ["stereo"], "lang": "en"}
+                        ],
+                    },
+                    {
+                        "setting_name": "prologic",
+                        "setting_values": [
+                            {"setting_synonym": ["prologic"], "lang": "en"}
                         ],
                     },
                 ],
@@ -1290,36 +1398,30 @@ async def test_modes(hass):
     }
 
     assert trt.query_attributes() == {
-        "currentModeSettings": {"source": "game"},
+        "currentModeSettings": {"sound mode": "stereo"},
         "on": True,
         "online": True,
     }
 
     assert trt.can_execute(
-        trait.COMMAND_MODES,
-        params={
-            "updateModeSettings": {
-                trt.HA_TO_GOOGLE.get(media_player.ATTR_INPUT_SOURCE): "media"
-            }
-        },
+        trait.COMMAND_MODES, params={"updateModeSettings": {"sound mode": "stereo"}},
     )
 
     calls = async_mock_service(
-        hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOURCE
+        hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOUND_MODE
     )
     await trt.execute(
         trait.COMMAND_MODES,
         BASIC_DATA,
-        {
-            "updateModeSettings": {
-                trt.HA_TO_GOOGLE.get(media_player.ATTR_INPUT_SOURCE): "media"
-            }
-        },
+        {"updateModeSettings": {"sound mode": "stereo"}},
         {},
     )
 
     assert len(calls) == 1
-    assert calls[0].data == {"entity_id": "media_player.living_room", "source": "media"}
+    assert calls[0].data == {
+        "entity_id": "media_player.living_room",
+        "sound_mode": "stereo",
+    }
 
 
 async def test_openclose_cover(hass):
@@ -1612,20 +1714,70 @@ async def test_temperature_setting_sensor(hass):
         sensor.DOMAIN, 0, sensor.DEVICE_CLASS_TEMPERATURE
     )
 
-    hass.config.units.temperature_unit = TEMP_FAHRENHEIT
+
+@pytest.mark.parametrize(
+    "unit_in,unit_out,state,ambient",
+    [
+        (TEMP_FAHRENHEIT, "F", "70", 21.1),
+        (TEMP_CELSIUS, "C", "21.1", 21.1),
+        (TEMP_FAHRENHEIT, "F", "unavailable", None),
+        (TEMP_FAHRENHEIT, "F", "unknown", None),
+    ],
+)
+async def test_temperature_setting_sensor_data(hass, unit_in, unit_out, state, ambient):
+    """Test TemperatureSetting trait support for temperature sensor."""
+    hass.config.units.temperature_unit = unit_in
 
     trt = trait.TemperatureSettingTrait(
         hass,
         State(
-            "sensor.test", "70", {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TEMPERATURE}
+            "sensor.test", state, {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TEMPERATURE}
         ),
         BASIC_CONFIG,
     )
 
     assert trt.sync_attributes() == {
         "queryOnlyTemperatureSetting": True,
-        "thermostatTemperatureUnit": "F",
+        "thermostatTemperatureUnit": unit_out,
     }
 
-    assert trt.query_attributes() == {"thermostatTemperatureAmbient": 21.1}
+    if ambient:
+        assert trt.query_attributes() == {"thermostatTemperatureAmbient": ambient}
+    else:
+        assert trt.query_attributes() == {}
     hass.config.units.temperature_unit = TEMP_CELSIUS
+
+
+async def test_humidity_setting_sensor(hass):
+    """Test HumiditySetting trait support for humidity sensor."""
+    assert (
+        helpers.get_google_type(sensor.DOMAIN, sensor.DEVICE_CLASS_HUMIDITY) is not None
+    )
+    assert not trait.HumiditySettingTrait.supported(
+        sensor.DOMAIN, 0, sensor.DEVICE_CLASS_TEMPERATURE
+    )
+    assert trait.HumiditySettingTrait.supported(
+        sensor.DOMAIN, 0, sensor.DEVICE_CLASS_HUMIDITY
+    )
+
+
+@pytest.mark.parametrize(
+    "state,ambient", [("70", 70), ("unavailable", None), ("unknown", None)]
+)
+async def test_humidity_setting_sensor_data(hass, state, ambient):
+    """Test HumiditySetting trait support for humidity sensor."""
+    trt = trait.HumiditySettingTrait(
+        hass,
+        State("sensor.test", state, {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_HUMIDITY}),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {"queryOnlyHumiditySetting": True}
+    if ambient:
+        assert trt.query_attributes() == {"humidityAmbientPercent": ambient}
+    else:
+        assert trt.query_attributes() == {}
+
+    with pytest.raises(helpers.SmartHomeError) as err:
+        await trt.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
+    assert err.value.code == const.ERR_NOT_SUPPORTED

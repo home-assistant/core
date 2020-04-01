@@ -3,28 +3,36 @@
 from collections import OrderedDict
 import logging
 from typing import Optional
+from urllib.parse import urlparse
 
 from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
 from huawei_lte_api.Client import Client
 from huawei_lte_api.Connection import Connection
 from huawei_lte_api.exceptions import (
-    LoginErrorUsernameWrongException,
     LoginErrorPasswordWrongException,
-    LoginErrorUsernamePasswordWrongException,
     LoginErrorUsernamePasswordOverrunException,
+    LoginErrorUsernamePasswordWrongException,
+    LoginErrorUsernameWrongException,
     ResponseErrorException,
 )
+from requests.exceptions import Timeout
 from url_normalize import url_normalize
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_RECIPIENT, CONF_URL, CONF_USERNAME
+from homeassistant.components import ssdp
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_RECIPIENT,
+    CONF_URL,
+    CONF_USERNAME,
+)
 from homeassistant.core import callback
-from .const import DEFAULT_DEVICE_NAME
 
-# https://github.com/PyCQA/pylint/issues/3202
+# see https://github.com/PyCQA/pylint/issues/3202 about the DOMAIN's pylint issue
+from .const import CONNECTION_TIMEOUT, DEFAULT_DEVICE_NAME, DEFAULT_NOTIFY_SERVICE_NAME
 from .const import DOMAIN  # pylint: disable=unused-import
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle Huawei LTE config flow."""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
@@ -51,7 +59,14 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     (
                         (
                             vol.Required(
-                                CONF_URL, default=user_input.get(CONF_URL, "")
+                                CONF_URL,
+                                default=user_input.get(
+                                    CONF_URL,
+                                    # https://github.com/PyCQA/pylint/issues/3167
+                                    self.context.get(  # pylint: disable=no-member
+                                        CONF_URL, ""
+                                    ),
+                                ),
                             ),
                             str,
                         ),
@@ -77,6 +92,14 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle import initiated config flow."""
         return await self.async_step_user(user_input)
 
+    def _already_configured(self, user_input):
+        """See if we already have a router matching user input configured."""
+        existing_urls = {
+            url_normalize(entry.data[CONF_URL], default_scheme="http")
+            for entry in self._async_current_entries()
+        }
+        return user_input[CONF_URL] in existing_urls
+
     async def async_step_user(self, user_input=None):
         """Handle user initiated config flow."""
         if user_input is None:
@@ -94,12 +117,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input=user_input, errors=errors
             )
 
-        # See if we already have a router configured with this URL
-        existing_urls = {  # existing entries
-            url_normalize(entry.data[CONF_URL], default_scheme="http")
-            for entry in self._async_current_entries()
-        }
-        if user_input[CONF_URL] in existing_urls:
+        if self._already_configured(user_input):
             return self.async_abort(reason="already_configured")
 
         conn = None
@@ -115,12 +133,18 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             """Try connecting with given credentials."""
             if username or password:
                 conn = AuthorizedConnection(
-                    user_input[CONF_URL], username=username, password=password
+                    user_input[CONF_URL],
+                    username=username,
+                    password=password,
+                    timeout=CONNECTION_TIMEOUT,
                 )
             else:
                 try:
                     conn = AuthorizedConnection(
-                        user_input[CONF_URL], username="", password=""
+                        user_input[CONF_URL],
+                        username="",
+                        password="",
+                        timeout=CONNECTION_TIMEOUT,
                     )
                     user_input[CONF_USERNAME] = ""
                     user_input[CONF_PASSWORD] = ""
@@ -129,7 +153,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         "Could not login with empty credentials, proceeding unauthenticated",
                         exc_info=True,
                     )
-                    conn = Connection(user_input[CONF_URL])
+                    conn = Connection(user_input[CONF_URL], timeout=CONNECTION_TIMEOUT)
                     del user_input[CONF_USERNAME]
                     del user_input[CONF_PASSWORD]
             return conn
@@ -170,6 +194,9 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except ResponseErrorException:
             _LOGGER.warning("Response error", exc_info=True)
             errors["base"] = "response_error"
+        except Timeout:
+            _LOGGER.warning("Connection timeout", exc_info=True)
+            errors[CONF_URL] = "connection_timeout"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.warning("Unknown error connecting to device", exc_info=True)
             errors[CONF_URL] = "unknown_connection_error"
@@ -184,6 +211,32 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=title, data=user_input)
 
+    async def async_step_ssdp(self, discovery_info):
+        """Handle SSDP initiated config flow."""
+        # Attempt to distinguish from other non-LTE Huawei router devices, at least
+        # some ones we are interested in have "Mobile Wi-Fi" friendlyName.
+        if "mobile" not in discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, "").lower():
+            return self.async_abort(reason="not_huawei_lte")
+
+        # https://github.com/PyCQA/pylint/issues/3167
+        url = self.context[CONF_URL] = url_normalize(  # pylint: disable=no-member
+            discovery_info.get(
+                ssdp.ATTR_UPNP_PRESENTATION_URL,
+                f"http://{urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname}/",
+            )
+        )
+
+        if any(
+            url == flow["context"].get(CONF_URL) for flow in self._async_in_progress()
+        ):
+            return self.async_abort(reason="already_in_progress")
+
+        user_input = {CONF_URL: url}
+        if self._already_configured(user_input):
+            return self.async_abort(reason="already_configured")
+
+        return await self._async_show_user_form(user_input)
+
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Huawei LTE options flow."""
@@ -194,15 +247,32 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Handle options flow."""
+
+        # Recipients are persisted as a list, but handled as comma separated string in UI
+
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            # Preserve existing options, for example *_from_yaml markers
+            data = {**self.config_entry.options, **user_input}
+            if not isinstance(data[CONF_RECIPIENT], list):
+                data[CONF_RECIPIENT] = [
+                    x.strip() for x in data[CONF_RECIPIENT].split(",")
+                ]
+            return self.async_create_entry(title="", data=data)
 
         data_schema = vol.Schema(
             {
                 vol.Optional(
+                    CONF_NAME,
+                    default=self.config_entry.options.get(
+                        CONF_NAME, DEFAULT_NOTIFY_SERVICE_NAME
+                    ),
+                ): str,
+                vol.Optional(
                     CONF_RECIPIENT,
-                    default=self.config_entry.options.get(CONF_RECIPIENT, ""),
-                ): str
+                    default=", ".join(
+                        self.config_entry.options.get(CONF_RECIPIENT, [])
+                    ),
+                ): str,
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

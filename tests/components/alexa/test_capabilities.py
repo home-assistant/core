@@ -1,36 +1,39 @@
 """Test Alexa capabilities."""
 import pytest
 
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
-    TEMP_CELSIUS,
-    STATE_LOCKED,
-    STATE_UNLOCKED,
-    STATE_UNKNOWN,
-    STATE_UNAVAILABLE,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-)
-from homeassistant.components.climate import const as climate
 from homeassistant.components.alexa import smart_home
 from homeassistant.components.alexa.errors import UnsupportedProperty
+from homeassistant.components.climate import const as climate
 from homeassistant.components.media_player.const import (
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_STOP,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
 )
-from tests.common import async_mock_service
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_DISARMED,
+    STATE_LOCKED,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    STATE_UNLOCKED,
+    TEMP_CELSIUS,
+)
 
 from . import (
     DEFAULT_CONFIG,
-    get_new_request,
     assert_request_calls_service,
     assert_request_fails,
+    get_new_request,
     reported_properties,
 )
+
+from tests.common import async_mock_service
 
 
 @pytest.mark.parametrize("result,adjust", [(25, "-5"), (35, "5"), (0, "-80")])
@@ -314,12 +317,22 @@ async def test_report_fan_speed_state(hass):
     hass.states.async_set(
         "fan.off",
         "off",
-        {"friendly_name": "Off fan", "speed": "off", "supported_features": 1},
+        {
+            "friendly_name": "Off fan",
+            "speed": "off",
+            "supported_features": 1,
+            "speed_list": ["off", "low", "medium", "high"],
+        },
     )
     hass.states.async_set(
         "fan.low_speed",
         "on",
-        {"friendly_name": "Low speed fan", "speed": "low", "supported_features": 1},
+        {
+            "friendly_name": "Low speed fan",
+            "speed": "low",
+            "supported_features": 1,
+            "speed_list": ["off", "low", "medium", "high"],
+        },
     )
     hass.states.async_set(
         "fan.medium_speed",
@@ -328,12 +341,18 @@ async def test_report_fan_speed_state(hass):
             "friendly_name": "Medium speed fan",
             "speed": "medium",
             "supported_features": 1,
+            "speed_list": ["off", "low", "medium", "high"],
         },
     )
     hass.states.async_set(
         "fan.high_speed",
         "on",
-        {"friendly_name": "High speed fan", "speed": "high", "supported_features": 1},
+        {
+            "friendly_name": "High speed fan",
+            "speed": "high",
+            "supported_features": 1,
+            "speed_list": ["off", "low", "medium", "high"],
+        },
     )
 
     properties = await reported_properties(hass, "fan.off")
@@ -360,25 +379,24 @@ async def test_report_fan_speed_state(hass):
 async def test_report_fan_oscillating(hass):
     """Test ToggleController reports fan oscillating correctly."""
     hass.states.async_set(
-        "fan.off",
+        "fan.oscillating_off",
         "off",
-        {"friendly_name": "Off fan", "speed": "off", "supported_features": 3},
+        {"friendly_name": "fan oscillating off", "supported_features": 2},
     )
     hass.states.async_set(
-        "fan.low_speed",
+        "fan.oscillating_on",
         "on",
         {
-            "friendly_name": "Low speed fan",
-            "speed": "low",
+            "friendly_name": "Fan oscillating on",
             "oscillating": True,
-            "supported_features": 3,
+            "supported_features": 2,
         },
     )
 
-    properties = await reported_properties(hass, "fan.off")
+    properties = await reported_properties(hass, "fan.oscillating_off")
     properties.assert_equal("Alexa.ToggleController", "toggleState", "OFF")
 
-    properties = await reported_properties(hass, "fan.low_speed")
+    properties = await reported_properties(hass, "fan.oscillating_on")
     properties.assert_equal("Alexa.ToggleController", "toggleState", "ON")
 
 
@@ -410,14 +428,14 @@ async def test_report_fan_direction(hass):
     properties.assert_not_has_property("Alexa.ModeController", "mode")
 
     properties = await reported_properties(hass, "fan.reverse")
-    properties.assert_equal("Alexa.ModeController", "mode", "reverse")
+    properties.assert_equal("Alexa.ModeController", "mode", "direction.reverse")
 
     properties = await reported_properties(hass, "fan.forward")
-    properties.assert_equal("Alexa.ModeController", "mode", "forward")
+    properties.assert_equal("Alexa.ModeController", "mode", "direction.forward")
 
 
-async def test_report_cover_percentage_state(hass):
-    """Test PercentageController reports cover percentage correctly."""
+async def test_report_cover_range_value(hass):
+    """Test RangeController reports cover position correctly."""
     hass.states.async_set(
         "cover.fully_open",
         "open",
@@ -447,13 +465,13 @@ async def test_report_cover_percentage_state(hass):
     )
 
     properties = await reported_properties(hass, "cover.fully_open")
-    properties.assert_equal("Alexa.PercentageController", "percentage", 100)
+    properties.assert_equal("Alexa.RangeController", "rangeValue", 100)
 
     properties = await reported_properties(hass, "cover.half_open")
-    properties.assert_equal("Alexa.PercentageController", "percentage", 50)
+    properties.assert_equal("Alexa.RangeController", "rangeValue", 50)
 
     properties = await reported_properties(hass, "cover.closed")
-    properties.assert_equal("Alexa.PercentageController", "percentage", 0)
+    properties.assert_equal("Alexa.RangeController", "rangeValue", 0)
 
 
 async def test_report_climate_state(hass):
@@ -665,4 +683,76 @@ async def test_report_playback_state(hass):
 
     properties.assert_equal(
         "Alexa.PlaybackStateReporter", "playbackState", {"state": "STOPPED"}
+    )
+
+
+async def test_report_speaker_volume(hass):
+    """Test Speaker reports volume correctly."""
+    hass.states.async_set(
+        "media_player.test_speaker",
+        "on",
+        {
+            "friendly_name": "Test media player speaker",
+            "supported_features": SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET,
+            "volume_level": None,
+            "device_class": "speaker",
+        },
+    )
+    properties = await reported_properties(hass, "media_player.test_speaker")
+    properties.assert_not_has_property("Alexa.Speaker", "volume")
+
+    for good_value in range(101):
+        hass.states.async_set(
+            "media_player.test_speaker",
+            "on",
+            {
+                "friendly_name": "Test media player speaker",
+                "supported_features": SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET,
+                "volume_level": good_value / 100,
+                "device_class": "speaker",
+            },
+        )
+        properties = await reported_properties(hass, "media_player.test_speaker")
+        properties.assert_equal("Alexa.Speaker", "volume", good_value)
+
+
+async def test_report_image_processing(hass):
+    """Test EventDetectionSensor implements humanPresenceDetectionState property."""
+    hass.states.async_set(
+        "image_processing.test_face",
+        0,
+        {
+            "friendly_name": "Test face",
+            "device_class": "face",
+            "faces": [],
+            "total_faces": 0,
+        },
+    )
+
+    properties = await reported_properties(hass, "image_processing#test_face")
+    properties.assert_equal(
+        "Alexa.EventDetectionSensor",
+        "humanPresenceDetectionState",
+        {"value": "NOT_DETECTED"},
+    )
+
+    hass.states.async_set(
+        "image_processing.test_classifier",
+        3,
+        {
+            "friendly_name": "Test classifier",
+            "device_class": "face",
+            "faces": [
+                {"confidence": 98.34, "name": "Hans", "age": 16.0, "gender": "male"},
+                {"name": "Helena", "age": 28.0, "gender": "female"},
+                {"confidence": 62.53, "name": "Luna"},
+            ],
+            "total_faces": 3,
+        },
+    )
+    properties = await reported_properties(hass, "image_processing#test_classifier")
+    properties.assert_equal(
+        "Alexa.EventDetectionSensor",
+        "humanPresenceDetectionState",
+        {"value": "DETECTED"},
     )

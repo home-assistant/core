@@ -1,0 +1,74 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "unknown": "Onbekende fout opgetreden"
+        },
+        "step": {
+            "confirm": {
+                "title": "Konnected Apparaat Klaar"
+            },
+            "user": {
+                "data": {
+                    "host": "IP-adres van Konnected apparaat",
+                    "port": "Konnected apparaat poort"
+                },
+                "description": "Voer de host-informatie in voor uw Konnected-paneel.",
+                "title": "Ontdek Konnected Device"
+            }
+        },
+        "title": "Konnected.io"
+    },
+    "options": {
+        "abort": {
+            "not_konn_panel": "Geen herkend Konnected.io apparaat"
+        },
+        "error": {
+            "one": "Leeg",
+            "other": "Leeg"
+        },
+        "step": {
+            "options_binary": {
+                "data": {
+                    "inverse": "Keer de open / dicht status om",
+                    "name": "Naam (optioneel)",
+                    "type": "Type binaire sensor"
+                },
+                "title": "Binaire sensor configureren"
+            },
+            "options_digital": {
+                "data": {
+                    "name": "Naam (optioneel)",
+                    "type": "Type sensor"
+                }
+            },
+            "options_io": {
+                "data": {
+                    "1": "Zone 1",
+                    "2": "Zone 2",
+                    "3": "Zone 3",
+                    "4": "Zone 4",
+                    "5": "Zone 5",
+                    "6": "Zone 6",
+                    "7": "Zone 7"
+                }
+            },
+            "options_io_ext": {
+                "data": {
+                    "10": "Zone 10",
+                    "11": "Zone 11",
+                    "12": "Zone 12",
+                    "8": "Zone 8",
+                    "9": "Zone 9"
+                }
+            },
+            "options_switch": {
+                "data": {
+                    "name": "Naam (optioneel)"
+                },
+                "title": "Schakelbare uitgang configureren"
+            }
+        },
+        "title": "Konnected Alarm Paneel Opties"
+    }
+}

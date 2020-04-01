@@ -55,10 +55,17 @@
             "left": "L\u00e9nks",
             "open": "Op",
             "right": "Riets",
+            "side_1": "S\u00e4it 1",
+            "side_2": "S\u00e4it 2",
+            "side_3": "S\u00e4it 3",
+            "side_4": "S\u00e4it 4",
+            "side_5": "S\u00e4it 5",
+            "side_6": "S\u00e4it 6",
             "turn_off": "Ausschalten",
             "turn_on": "Uschalten"
         },
         "trigger_type": {
+            "remote_awakened": "Apparat erw\u00e4cht",
             "remote_button_double_press": "\"{subtype}\" Kn\u00e4ppche zwee mol gedr\u00e9ckt",
             "remote_button_long_press": "\"{subtype}\" Kn\u00e4ppche permanent gedr\u00e9ckt",
             "remote_button_long_release": "\"{subtype}\" Kn\u00e4ppche no laangem unhalen lassgelooss",
@@ -69,7 +76,22 @@
             "remote_button_short_press": "\"{subtype}\" Kn\u00e4ppche gedr\u00e9ckt",
             "remote_button_short_release": "\"{subtype}\" Kn\u00e4ppche lassgelooss",
             "remote_button_triple_press": "\"{subtype}\" Kn\u00e4ppche dr\u00e4imol gedr\u00e9ckt",
-            "remote_gyro_activated": "Apparat ger\u00ebselt"
+            "remote_double_tap": "Apparat \"{subtype}\" zwee mol gedr\u00e9ckt",
+            "remote_double_tap_any_side": "Apparat gouf 2 mol ugetippt op enger S\u00e4it",
+            "remote_falling": "Apparat am fr\u00e4ie Fall",
+            "remote_flip_180_degrees": "Apparat \u00ebm 180 Grad gedr\u00e9int",
+            "remote_flip_90_degrees": "Apparat \u00ebm 90 Grad gedr\u00e9int",
+            "remote_gyro_activated": "Apparat ger\u00ebselt",
+            "remote_moved": "Apparat beweegt mat \"{subtype}\" erop",
+            "remote_moved_any_side": "Apparat gouf mat enger S\u00e4it bewegt",
+            "remote_rotate_from_side_1": "Apparat rot\u00e9iert vun der \"S\u00e4it 1\" op \"{subtype}\"",
+            "remote_rotate_from_side_2": "Apparat rot\u00e9iert vun der \"S\u00e4it 2\" op \"{subtype}\"",
+            "remote_rotate_from_side_3": "Apparat rot\u00e9iert vun der \"S\u00e4it 3\" op \"{subtype}\"",
+            "remote_rotate_from_side_4": "Apparat rot\u00e9iert vun der \"S\u00e4it 4\" op \"{subtype}\"",
+            "remote_rotate_from_side_5": "Apparat rot\u00e9iert vun der \"S\u00e4it 5\" op \"{subtype}\"",
+            "remote_rotate_from_side_6": "Apparat rot\u00e9iert vun der \"S\u00e4it\" 6 op \"{subtype}\"",
+            "remote_turned_clockwise": "Apparat mam Auere Wee gedr\u00e9int",
+            "remote_turned_counter_clockwise": "Apparat g\u00e9int den Auere Wee gedr\u00e9int"
         }
     },
     "options": {
@@ -86,7 +108,8 @@
                     "allow_clip_sensor": "deCONZ Clip Sensoren erlaben",
                     "allow_deconz_groups": "deCONZ Luucht Gruppen erlaben"
                 },
-                "description": "Visibilit\u00e9it vun deCONZ Apparater konfigur\u00e9ieren"
+                "description": "Visibilit\u00e9it vun deCONZ Apparater konfigur\u00e9ieren",
+                "title": "deCONZ Optiounen"
             }
         }
     }

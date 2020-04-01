@@ -1,14 +1,16 @@
 """The tests for the Prometheus exporter."""
-import asyncio
 import pytest
-
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, DEVICE_CLASS_POWER
 
 from homeassistant import setup
 from homeassistant.components import climate, sensor
 from homeassistant.components.demo.sensor import DemoSensor
-from homeassistant.setup import async_setup_component
 import homeassistant.components.prometheus as prometheus
+from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    DEVICE_CLASS_POWER,
+    ENERGY_KILO_WATT_HOUR,
+)
+from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture
@@ -24,39 +26,52 @@ async def prometheus_client(loop, hass, hass_client):
         hass, climate.DOMAIN, {"climate": [{"platform": "demo"}]}
     )
 
-    sensor1 = DemoSensor("Television Energy", 74, None, ENERGY_KILO_WATT_HOUR, None)
+    sensor1 = DemoSensor(
+        None, "Television Energy", 74, None, ENERGY_KILO_WATT_HOUR, None
+    )
     sensor1.hass = hass
     sensor1.entity_id = "sensor.television_energy"
     await sensor1.async_update_ha_state()
 
     sensor2 = DemoSensor(
-        "Radio Energy", 14, DEVICE_CLASS_POWER, ENERGY_KILO_WATT_HOUR, None
+        None, "Radio Energy", 14, DEVICE_CLASS_POWER, ENERGY_KILO_WATT_HOUR, None
     )
     sensor2.hass = hass
     sensor2.entity_id = "sensor.radio_energy"
     await sensor2.async_update_ha_state()
 
-    sensor3 = DemoSensor("Electricity price", 0.123, None, "SEK/kWh", None)
+    sensor3 = DemoSensor(None, "Electricity price", 0.123, None, "SEK/kWh", None)
     sensor3.hass = hass
     sensor3.entity_id = "sensor.electricity_price"
     await sensor3.async_update_ha_state()
 
-    sensor4 = DemoSensor("Wind Direction", 25, None, "°", None)
+    sensor4 = DemoSensor(None, "Wind Direction", 25, None, "°", None)
     sensor4.hass = hass
     sensor4.entity_id = "sensor.wind_direction"
     await sensor4.async_update_ha_state()
 
+    sensor5 = DemoSensor(
+        None,
+        "SPS30 PM <1µm Weight concentration",
+        3.7069,
+        None,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        None,
+    )
+    sensor5.hass = hass
+    sensor5.entity_id = "sensor.sps30_pm_1um_weight_concentration"
+    await sensor5.async_update_ha_state()
+
     return await hass_client()
 
 
-@asyncio.coroutine
-def test_view(prometheus_client):  # pylint: disable=redefined-outer-name
+async def test_view(prometheus_client):  # pylint: disable=redefined-outer-name
     """Test prometheus metrics view."""
-    resp = yield from prometheus_client.get(prometheus.API_ENDPOINT)
+    resp = await prometheus_client.get(prometheus.API_ENDPOINT)
 
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/plain"
-    body = yield from resp.text()
+    body = await resp.text()
     body = body.split("\n")
 
     assert len(body) > 3
@@ -113,4 +128,10 @@ def test_view(prometheus_client):  # pylint: disable=redefined-outer-name
         'sensor_unit_u0xb0{domain="sensor",'
         'entity="sensor.wind_direction",'
         'friendly_name="Wind Direction"} 25.0' in body
+    )
+
+    assert (
+        'sensor_unit_u0xb5g_per_mu0xb3{domain="sensor",'
+        'entity="sensor.sps30_pm_1um_weight_concentration",'
+        'friendly_name="SPS30 PM <1µm Weight concentration"} 3.7069' in body
     )

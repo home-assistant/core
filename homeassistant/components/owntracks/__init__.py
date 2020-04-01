@@ -15,11 +15,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_when_setup
 
 from .config_flow import CONF_SECRET
-from .messages import async_handle_message
+from .const import DOMAIN
+from .messages import async_handle_message, encrypt_message
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "owntracks"
 CONF_MAX_GPS_ACCURACY = "max_gps_accuracy"
 CONF_WAYPOINT_IMPORT = "waypoints"
 CONF_WAYPOINT_WHITELIST = "waypoint_whitelist"
@@ -118,7 +118,7 @@ async def async_unload_entry(hass, entry):
 
 async def async_remove_entry(hass, entry):
     """Remove an OwnTracks config entry."""
-    if not entry.data.get("cloudhook") or "cloud" not in hass.config.components:
+    if not entry.data.get("cloudhook"):
         return
 
     await hass.components.cloud.async_delete_cloudhook(entry.data[CONF_WEBHOOK_ID])
@@ -154,6 +154,7 @@ async def handle_webhook(hass, webhook_id, request):
     Android does not set a topic but adds headers to the request.
     """
     context = hass.data[DOMAIN]["context"]
+    topic_base = re.sub("/#$", "", context.mqtt_topic)
 
     try:
         message = await request.json()
@@ -168,7 +169,6 @@ async def handle_webhook(hass, webhook_id, request):
         device = headers.get("X-Limit-D", user)
 
         if user:
-            topic_base = re.sub("/#$", "", context.mqtt_topic)
             message["topic"] = f"{topic_base}/{user}/{device}"
 
         elif message["_type"] != "encrypted":
@@ -180,7 +180,35 @@ async def handle_webhook(hass, webhook_id, request):
             return json_response([])
 
     hass.helpers.dispatcher.async_dispatcher_send(DOMAIN, hass, context, message)
-    return json_response([])
+
+    response = []
+
+    for person in hass.states.async_all():
+        if person.domain != "person":
+            continue
+
+        if "latitude" in person.attributes and "longitude" in person.attributes:
+            response.append(
+                {
+                    "_type": "location",
+                    "lat": person.attributes["latitude"],
+                    "lon": person.attributes["longitude"],
+                    "tid": "".join(p[0] for p in person.name.split(" ")[:2]),
+                    "tst": int(person.last_updated.timestamp()),
+                }
+            )
+
+    if message["_type"] == "encrypted" and context.secret:
+        return json_response(
+            {
+                "_type": "encrypted",
+                "data": encrypt_message(
+                    context.secret, message["topic"], json.dumps(response)
+                ),
+            }
+        )
+
+    return json_response(response)
 
 
 class OwnTracksContext:
@@ -233,7 +261,7 @@ class OwnTracksContext:
 
         if self.max_gps_accuracy is not None and acc > self.max_gps_accuracy:
             _LOGGER.info(
-                "Ignoring %s update because expected GPS " "accuracy %s is not met: %s",
+                "Ignoring %s update because expected GPS accuracy %s is not met: %s",
                 message["_type"],
                 self.max_gps_accuracy,
                 message,

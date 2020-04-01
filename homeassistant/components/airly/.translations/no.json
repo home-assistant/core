@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Airly integrering for disse koordinatene er allerede konfigurert."
+        },
         "error": {
             "auth": "API-n\u00f8kkelen er ikke korrekt.",
             "name_exists": "Navnet finnes allerede.",
@@ -14,9 +17,9 @@
                     "name": "Navn p\u00e5 integrasjonen"
                 },
                 "description": "Sett opp Airly luftkvalitet integrering. For \u00e5 generere API-n\u00f8kkel g\u00e5 til https://developer.airly.eu/register",
-                "title": "Airly"
+                "title": ""
             }
         },
-        "title": "Airly"
+        "title": ""
     }
 }

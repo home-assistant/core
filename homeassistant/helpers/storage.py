@@ -3,14 +3,13 @@ import asyncio
 from json import JSONEncoder
 import logging
 import os
-from typing import Dict, List, Optional, Callable, Union, Any, Type
+from typing import Any, Callable, Dict, List, Optional, Type, Union
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, callback, CALLBACK_TYPE
+from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.loader import bind_hass
 from homeassistant.util import json as json_util
-from homeassistant.helpers.event import async_call_later
-
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-warn-return-any
 # mypy: no-check-untyped-defs
@@ -154,7 +153,7 @@ class Store:
         """Ensure that we write if we quit before delay has passed."""
         if self._unsub_stop_listener is None:
             self._unsub_stop_listener = self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, self._async_callback_stop_write
+                EVENT_HOMEASSISTANT_FINAL_WRITE, self._async_callback_stop_write
             )
 
     @callback
@@ -211,3 +210,10 @@ class Store:
     async def _async_migrate_func(self, old_version, old_data):
         """Migrate to the new version."""
         raise NotImplementedError
+
+    async def async_remove(self):
+        """Remove all data."""
+        try:
+            await self.hass.async_add_executor_job(os.unlink, self.path)
+        except FileNotFoundError:
+            pass

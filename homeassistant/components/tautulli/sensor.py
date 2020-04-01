@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+from pytautulli import Tautulli
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -10,10 +11,10 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    CONF_PATH,
     CONF_PORT,
     CONF_SSL,
     CONF_VERIFY_SSL,
-    CONF_PATH,
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -50,7 +51,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Create the Tautulli sensor."""
-    from pytautulli import Tautulli
 
     name = config.get(CONF_NAME)
     host = config[CONF_HOST]

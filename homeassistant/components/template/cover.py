@@ -3,41 +3,42 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components.cover import (
-    ENTITY_ID_FORMAT,
-    CoverDevice,
-    PLATFORM_SCHEMA,
-    DEVICE_CLASSES_SCHEMA,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_STOP_TILT,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_OPEN,
-    SUPPORT_CLOSE,
-    SUPPORT_STOP,
-    SUPPORT_SET_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
+    DEVICE_CLASSES_SCHEMA,
+    ENTITY_ID_FORMAT,
+    PLATFORM_SCHEMA,
+    SUPPORT_CLOSE,
+    SUPPORT_CLOSE_TILT,
+    SUPPORT_OPEN,
+    SUPPORT_OPEN_TILT,
+    SUPPORT_SET_POSITION,
+    SUPPORT_SET_TILT_POSITION,
+    SUPPORT_STOP,
+    SUPPORT_STOP_TILT,
+    CoverDevice,
 )
 from homeassistant.const import (
-    CONF_FRIENDLY_NAME,
-    CONF_ENTITY_ID,
-    EVENT_HOMEASSISTANT_START,
-    MATCH_ALL,
-    CONF_VALUE_TEMPLATE,
-    CONF_ICON_TEMPLATE,
     CONF_DEVICE_CLASS,
+    CONF_ENTITY_ID,
     CONF_ENTITY_PICTURE_TEMPLATE,
+    CONF_FRIENDLY_NAME,
+    CONF_ICON_TEMPLATE,
     CONF_OPTIMISTIC,
-    STATE_OPEN,
+    CONF_VALUE_TEMPLATE,
+    EVENT_HOMEASSISTANT_START,
     STATE_CLOSED,
+    STATE_OPEN,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
+
+from . import extract_entities, initialise_templates
 from .const import CONF_AVAILABILITY_TEMPLATE
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,30 +65,33 @@ TILT_FEATURES = (
     | SUPPORT_SET_TILT_POSITION
 )
 
-COVER_SCHEMA = vol.Schema(
-    {
-        vol.Inclusive(OPEN_ACTION, CONF_OPEN_OR_CLOSE): cv.SCRIPT_SCHEMA,
-        vol.Inclusive(CLOSE_ACTION, CONF_OPEN_OR_CLOSE): cv.SCRIPT_SCHEMA,
-        vol.Optional(STOP_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Exclusive(
-            CONF_POSITION_TEMPLATE, CONF_VALUE_OR_POSITION_TEMPLATE
-        ): cv.template,
-        vol.Exclusive(
-            CONF_VALUE_TEMPLATE, CONF_VALUE_OR_POSITION_TEMPLATE
-        ): cv.template,
-        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
-        vol.Optional(CONF_POSITION_TEMPLATE): cv.template,
-        vol.Optional(CONF_TILT_TEMPLATE): cv.template,
-        vol.Optional(CONF_ICON_TEMPLATE): cv.template,
-        vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_OPTIMISTIC): cv.boolean,
-        vol.Optional(CONF_TILT_OPTIMISTIC): cv.boolean,
-        vol.Optional(POSITION_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(TILT_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-        vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
-    }
+COVER_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Inclusive(OPEN_ACTION, CONF_OPEN_OR_CLOSE): cv.SCRIPT_SCHEMA,
+            vol.Inclusive(CLOSE_ACTION, CONF_OPEN_OR_CLOSE): cv.SCRIPT_SCHEMA,
+            vol.Optional(STOP_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Exclusive(
+                CONF_POSITION_TEMPLATE, CONF_VALUE_OR_POSITION_TEMPLATE
+            ): cv.template,
+            vol.Exclusive(
+                CONF_VALUE_TEMPLATE, CONF_VALUE_OR_POSITION_TEMPLATE
+            ): cv.template,
+            vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
+            vol.Optional(CONF_POSITION_TEMPLATE): cv.template,
+            vol.Optional(CONF_TILT_TEMPLATE): cv.template,
+            vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+            vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
+            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_OPTIMISTIC): cv.boolean,
+            vol.Optional(CONF_TILT_OPTIMISTIC): cv.boolean,
+            vol.Optional(POSITION_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(TILT_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+            vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
+        }
+    ),
+    cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -100,13 +104,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     covers = []
 
     for device, device_config in config[CONF_COVERS].items():
-        friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
         state_template = device_config.get(CONF_VALUE_TEMPLATE)
         position_template = device_config.get(CONF_POSITION_TEMPLATE)
         tilt_template = device_config.get(CONF_TILT_TEMPLATE)
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
         entity_picture_template = device_config.get(CONF_ENTITY_PICTURE_TEMPLATE)
+
+        friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
         device_class = device_config.get(CONF_DEVICE_CLASS)
         open_action = device_config.get(OPEN_ACTION)
         close_action = device_config.get(CLOSE_ACTION)
@@ -116,46 +121,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         optimistic = device_config.get(CONF_OPTIMISTIC)
         tilt_optimistic = device_config.get(CONF_TILT_OPTIMISTIC)
 
-        if position_action is None and open_action is None:
-            _LOGGER.error(
-                "Must specify at least one of %s" or "%s", OPEN_ACTION, POSITION_ACTION
-            )
-            continue
-        template_entity_ids = set()
-        if state_template is not None:
-            temp_ids = state_template.extract_entities()
-            if str(temp_ids) != MATCH_ALL:
-                template_entity_ids |= set(temp_ids)
+        templates = {
+            CONF_VALUE_TEMPLATE: state_template,
+            CONF_POSITION_TEMPLATE: position_template,
+            CONF_TILT_TEMPLATE: tilt_template,
+            CONF_ICON_TEMPLATE: icon_template,
+            CONF_AVAILABILITY_TEMPLATE: availability_template,
+            CONF_ENTITY_PICTURE_TEMPLATE: entity_picture_template,
+        }
 
-        if position_template is not None:
-            temp_ids = position_template.extract_entities()
-            if str(temp_ids) != MATCH_ALL:
-                template_entity_ids |= set(temp_ids)
-
-        if tilt_template is not None:
-            temp_ids = tilt_template.extract_entities()
-            if str(temp_ids) != MATCH_ALL:
-                template_entity_ids |= set(temp_ids)
-
-        if icon_template is not None:
-            temp_ids = icon_template.extract_entities()
-            if str(temp_ids) != MATCH_ALL:
-                template_entity_ids |= set(temp_ids)
-
-        if entity_picture_template is not None:
-            temp_ids = entity_picture_template.extract_entities()
-            if str(temp_ids) != MATCH_ALL:
-                template_entity_ids |= set(temp_ids)
-
-        if availability_template is not None:
-            temp_ids = availability_template.extract_entities()
-            if str(temp_ids) != MATCH_ALL:
-                template_entity_ids |= set(temp_ids)
-
-        if not template_entity_ids:
-            template_entity_ids = MATCH_ALL
-
-        entity_ids = device_config.get(CONF_ENTITY_ID, template_entity_ids)
+        initialise_templates(hass, templates)
+        entity_ids = extract_entities(
+            device, "cover", device_config.get(CONF_ENTITY_ID), templates
+        )
 
         covers.append(
             CoverTemplate(
@@ -179,12 +157,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 entity_ids,
             )
         )
-    if not covers:
-        _LOGGER.error("No covers added")
-        return False
 
     async_add_entities(covers)
-    return True
 
 
 class CoverTemplate(CoverDevice):
@@ -247,19 +221,6 @@ class CoverTemplate(CoverDevice):
         self._tilt_value = None
         self._entities = entity_ids
         self._available = True
-
-        if self._template is not None:
-            self._template.hass = self.hass
-        if self._position_template is not None:
-            self._position_template.hass = self.hass
-        if self._tilt_template is not None:
-            self._tilt_template.hass = self.hass
-        if self._icon_template is not None:
-            self._icon_template.hass = self.hass
-        if self._entity_picture_template is not None:
-            self._entity_picture_template.hass = self.hass
-        if self._availability_template is not None:
-            self._availability_template.hass = self.hass
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -458,8 +419,7 @@ class CoverTemplate(CoverDevice):
                 if state < 0 or state > 100:
                     self._tilt_value = None
                     _LOGGER.error(
-                        "Tilt value must be between 0 and 100." " Value was: %.2f",
-                        state,
+                        "Tilt value must be between 0 and 100. Value was: %.2f", state,
                     )
                 else:
                     self._tilt_value = state
@@ -487,7 +447,7 @@ class CoverTemplate(CoverDevice):
                 ):
                     # Common during HA startup - so just a warning
                     _LOGGER.warning(
-                        "Could not render %s template %s," " the state is unknown.",
+                        "Could not render %s template %s, the state is unknown.",
                         friendly_property_name,
                         self._name,
                     )

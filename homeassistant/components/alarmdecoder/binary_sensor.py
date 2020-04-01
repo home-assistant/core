@@ -138,7 +138,7 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
 
     def _restore_callback(self, zone):
         """Update the zone's state, if needed."""
-        if zone is None or int(zone) == self._zone_number:
+        if zone is None or (int(zone) == self._zone_number and not self._loop):
             self._state = 0
             self.schedule_update_ha_state()
 

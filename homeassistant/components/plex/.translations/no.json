@@ -4,8 +4,9 @@
             "all_configured": "Alle knyttet servere som allerede er konfigurert",
             "already_configured": "Denne Plex-serveren er allerede konfigurert",
             "already_in_progress": "Plex blir konfigurert",
-            "discovery_no_file": "Ingen eldre konfigurasjonsfil ble funnet",
+            "discovery_no_file": "Ingen eldre konfigurasjonsfil funnet",
             "invalid_import": "Den importerte konfigurasjonen er ugyldig",
+            "non-interactive": "Ikke-interaktiv import",
             "token_request_timeout": "Tidsavbrudd ved innhenting av token",
             "unknown": "Mislyktes av ukjent \u00e5rsak"
         },
@@ -19,7 +20,7 @@
             "manual_setup": {
                 "data": {
                     "host": "Vert",
-                    "port": "Port",
+                    "port": "",
                     "ssl": "Bruk SSL",
                     "token": "Token (hvis n\u00f8dvendig)",
                     "verify_ssl": "Verifisere SSL-sertifikat"
@@ -28,7 +29,7 @@
             },
             "select_server": {
                 "data": {
-                    "server": "Server"
+                    "server": ""
                 },
                 "description": "Flere servere tilgjengelig, velg en:",
                 "title": "Velg Plex-server"
@@ -46,12 +47,14 @@
                 "title": "Koble til Plex-server"
             }
         },
-        "title": "Plex"
+        "title": ""
     },
     "options": {
         "step": {
             "plex_mp_settings": {
                 "data": {
+                    "ignore_new_shared_users": "Ignorer nye administrerte/delte brukere",
+                    "monitored_users": "Overv\u00e5kede brukere",
                     "show_all_controls": "Vis alle kontroller",
                     "use_episode_art": "Bruk episode bilde"
                 },

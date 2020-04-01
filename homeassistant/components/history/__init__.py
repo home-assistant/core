@@ -5,22 +5,23 @@ from itertools import groupby
 import logging
 import time
 
+from sqlalchemy import and_, func
 import voluptuous as vol
 
+from homeassistant.components import recorder
+from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.recorder.models import States
+from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.const import (
-    HTTP_BAD_REQUEST,
+    ATTR_HIDDEN,
     CONF_DOMAINS,
     CONF_ENTITIES,
     CONF_EXCLUDE,
     CONF_INCLUDE,
+    HTTP_BAD_REQUEST,
 )
-import homeassistant.util.dt as dt_util
-from homeassistant.components import recorder, script
-from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import ATTR_HIDDEN
-from homeassistant.components.recorder.util import session_scope, execute
 import homeassistant.helpers.config_validation as cv
-
+import homeassistant.util.dt as dt_util
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -38,7 +39,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SIGNIFICANT_DOMAINS = ("thermostat", "climate", "water_heater")
+SIGNIFICANT_DOMAINS = ("climate", "device_tracker", "thermostat", "water_heater")
 IGNORE_DOMAINS = ("zone", "scene")
 
 
@@ -49,6 +50,7 @@ def get_significant_states(
     entity_ids=None,
     filters=None,
     include_start_time_state=True,
+    significant_changes_only=True,
 ):
     """
     Return states changes during UTC period start_time - end_time.
@@ -58,16 +60,18 @@ def get_significant_states(
     thermostat so that we get current temperature in our graphs).
     """
     timer_start = time.perf_counter()
-    from homeassistant.components.recorder.models import States
 
     with session_scope(hass=hass) as session:
-        query = session.query(States).filter(
-            (
-                States.domain.in_(SIGNIFICANT_DOMAINS)
-                | (States.last_changed == States.last_updated)
+        if significant_changes_only:
+            query = session.query(States).filter(
+                (
+                    States.domain.in_(SIGNIFICANT_DOMAINS)
+                    | (States.last_changed == States.last_updated)
+                )
+                & (States.last_updated > start_time)
             )
-            & (States.last_updated > start_time)
-        )
+        else:
+            query = session.query(States).filter(States.last_updated > start_time)
 
         if filters:
             query = filters.apply(query, entity_ids)
@@ -94,7 +98,6 @@ def get_significant_states(
 
 def state_changes_during_period(hass, start_time, end_time=None, entity_id=None):
     """Return states changes during UTC period start_time - end_time."""
-    from homeassistant.components.recorder.models import States
 
     with session_scope(hass=hass) as session:
         query = session.query(States).filter(
@@ -117,7 +120,6 @@ def state_changes_during_period(hass, start_time, end_time=None, entity_id=None)
 
 def get_last_state_changes(hass, number_of_states, entity_id):
     """Return the last number_of_states."""
-    from homeassistant.components.recorder.models import States
 
     start_time = dt_util.utcnow()
 
@@ -142,7 +144,6 @@ def get_last_state_changes(hass, number_of_states, entity_id):
 
 def get_states(hass, utc_point_in_time, entity_ids=None, run=None, filters=None):
     """Return the states at a specific point in time."""
-    from homeassistant.components.recorder.models import States
 
     if run is None:
         run = recorder.run_information(hass, utc_point_in_time)
@@ -150,8 +151,6 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None, filters=None)
         # History did not run before utc_point_in_time
         if run is None:
             return []
-
-    from sqlalchemy import and_, func
 
     with session_scope(hass=hass) as session:
         query = session.query(States)
@@ -332,6 +331,9 @@ class HistoryPeriodView(HomeAssistantView):
         if entity_ids:
             entity_ids = entity_ids.lower().split(",")
         include_start_time_state = "skip_initial_state" not in request.query
+        significant_changes_only = (
+            request.query.get("significant_changes_only", "1") != "0"
+        )
 
         hass = request.app["hass"]
 
@@ -343,6 +345,7 @@ class HistoryPeriodView(HomeAssistantView):
             entity_ids,
             self.filters,
             include_start_time_state,
+            significant_changes_only,
         )
         result = list(result.values())
         if _LOGGER.isEnabledFor(logging.DEBUG):
@@ -386,7 +389,6 @@ class Filters:
         * if include and exclude is defined - select the entities specified in
           the include and filter out the ones from the exclude list.
         """
-        from homeassistant.components.recorder.models import States
 
         # specific entities requested - do not in/exclude anything
         if entity_ids is not None:
@@ -436,4 +438,4 @@ def _is_significant(state):
     Will only test for things that are not filtered out in SQL.
     """
     # scripts that are not cancellable will never change state
-    return state.domain != "script" or state.attributes.get(script.ATTR_CAN_CANCEL)
+    return state.domain != "script" or state.attributes.get("can_cancel")

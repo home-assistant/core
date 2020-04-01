@@ -1,18 +1,18 @@
 """ruamel.yaml utility functions."""
+from collections import OrderedDict
 import logging
 import os
 from os import O_CREAT, O_TRUNC, O_WRONLY, stat_result
-from collections import OrderedDict
-from typing import Union, List, Dict, Optional
+from typing import Dict, List, Optional, Union
 
 import ruamel.yaml
-from ruamel.yaml import YAML
+from ruamel.yaml import YAML  # type: ignore
+from ruamel.yaml.compat import StringIO
 from ruamel.yaml.constructor import SafeConstructor
 from ruamel.yaml.error import YAMLError
-from ruamel.yaml.compat import StringIO
 
-from homeassistant.util.yaml import secret_yaml
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.yaml import secret_yaml
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,8 +89,7 @@ def load_yaml(fname: str, round_trip: bool = False) -> JSON_TYPE:
     """Load a YAML file."""
     if round_trip:
         yaml = YAML(typ="rt")
-        # type ignore: https://bitbucket.org/ruamel/yaml/pull-requests/42
-        yaml.preserve_quotes = True  # type: ignore
+        yaml.preserve_quotes = True
     else:
         if ExtSafeConstructor.name is None:
             ExtSafeConstructor.name = fname
@@ -114,7 +113,7 @@ def save_yaml(fname: str, data: JSON_TYPE) -> None:
     """Save a YAML file."""
     yaml = YAML(typ="rt")
     yaml.indent(sequence=4, offset=2)
-    tmp_fname = fname + "__TEMP__"
+    tmp_fname = f"{fname}__TEMP__"
     try:
         try:
             file_stat = os.stat(fname)

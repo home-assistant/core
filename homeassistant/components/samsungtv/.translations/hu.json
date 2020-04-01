@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ez a Samsung TV m\u00e1r konfigur\u00e1lva van.",
+            "already_in_progress": "A Samsung TV konfigur\u00e1l\u00e1sa m\u00e1r folyamatban van.",
+            "auth_missing": "A Home Assistant nem jogosult csatlakozni ehhez a Samsung TV-hez. Ellen\u0151rizze a TV-k\u00e9sz\u00fcl\u00e9k\u00e9ben a Home Assistant enged\u00e9lyez\u00e9si be\u00e1ll\u00edt\u00e1sait.",
+            "not_found": "A h\u00e1l\u00f3zaton nem tal\u00e1lhat\u00f3 t\u00e1mogatott Samsung TV-eszk\u00f6z.",
+            "not_successful": "Nem lehet csatlakozni ehhez a Samsung TV k\u00e9sz\u00fcl\u00e9khez.",
+            "not_supported": "Ez a Samsung TV k\u00e9sz\u00fcl\u00e9k jelenleg nem t\u00e1mogatott."
+        },
+        "flow_title": "Samsung TV: {model}",
+        "step": {
+            "confirm": {
+                "description": "Be\u00e1ll\u00edtja a Samsung TV {model} k\u00e9sz\u00fcl\u00e9ket? Ha soha nem csatlakozott home assistant-hez ezel\u0151tt, meg kell jelennie egy felugr\u00f3 ablaknak a TV-ben, ahol hiteles\u00edt\u00e9st k\u00e9r. A tv-k\u00e9sz\u00fcl\u00e9k manu\u00e1lis konfigur\u00e1ci\u00f3i fel\u00fcl\u00edr\u00f3dnak.",
+                "title": "Samsung TV"
+            },
+            "user": {
+                "data": {
+                    "host": "Hosztn\u00e9v vagy IP c\u00edm",
+                    "name": "N\u00e9v"
+                },
+                "description": "\u00cdrja be a Samsung TV adatait. Ha soha nem csatlakoztatta a Home Assistant alkalmaz\u00e1st ezel\u0151tt, l\u00e1tnia kell a t\u00e9v\u00e9ben egy felugr\u00f3 ablakot, amely enged\u00e9lyt k\u00e9r.",
+                "title": "Samsung TV"
+            }
+        },
+        "title": "Samsung TV"
+    }
+}

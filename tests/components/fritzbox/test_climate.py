@@ -91,7 +91,7 @@ class TestFritzboxClimate(unittest.TestCase):
 
     @patch.object(FritzboxThermostat, "set_hvac_mode")
     def test_set_temperature_operation_mode_precedence(self, mock_set_op):
-        """Test set_temperature for precedence of operation_mode arguement."""
+        """Test set_temperature for precedence of operation_mode argument."""
         self.thermostat.set_temperature(hvac_mode="heat", temperature=23.0)
         mock_set_op.assert_called_once_with("heat")
         self.thermostat._device.set_target_temperature.assert_not_called()

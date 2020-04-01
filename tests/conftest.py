@@ -1,35 +1,38 @@
 """Set up some common test helper things."""
-import asyncio
 import functools
 import logging
-import os
 from unittest.mock import patch
 
 import pytest
 import requests_mock as _requests_mock
 
 from homeassistant import util
-from homeassistant.util import location
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
-from homeassistant.auth.providers import legacy_api_password, homeassistant
+from homeassistant.auth.providers import homeassistant, legacy_api_password
+from homeassistant.components.websocket_api.auth import (
+    TYPE_AUTH,
+    TYPE_AUTH_OK,
+    TYPE_AUTH_REQUIRED,
+)
+from homeassistant.components.websocket_api.http import URL
+from homeassistant.exceptions import ServiceNotFound
+from homeassistant.setup import async_setup_component
+from homeassistant.util import location
+
+from tests.ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
 
 pytest.register_assert_rewrite("tests.common")
-from tests.common import (  # noqa: E402 module level import not at top of file
-    async_test_home_assistant,
+
+from tests.common import (  # noqa: E402, isort:skip
+    CLIENT_ID,
     INSTANCES,
+    MockUser,
+    async_test_home_assistant,
     mock_coro,
     mock_storage as mock_storage,
-    MockUser,
-    CLIENT_ID,
 )
-from tests.test_util.aiohttp import (
-    mock_aiohttp_client,
-)  # noqa: E402 module level import not at top of file
+from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
 
-if os.environ.get("UVLOOP") == "1":
-    import uvloop
-
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
@@ -39,7 +42,7 @@ def check_real(func):
     """Force a function to require a keyword _test_real to be passed in."""
 
     @functools.wraps(func)
-    def guard_func(*args, **kwargs):
+    async def guard_func(*args, **kwargs):
         real = kwargs.pop("_test_real", None)
 
         if not real:
@@ -47,7 +50,7 @@ def check_real(func):
                 'Forgot to mock or pass "_test_real=True" to %s', func.__name__
             )
 
-        return func(*args, **kwargs)
+        return await func(*args, **kwargs)
 
     return guard_func
 
@@ -66,9 +69,7 @@ def verify_cleanup():
         count = len(INSTANCES)
         for inst in INSTANCES:
             inst.stop()
-        pytest.exit(
-            "Detected non stopped instances " "({}), aborting test run".format(count)
-        )
+        pytest.exit(f"Detected non stopped instances ({count}), aborting test run")
 
 
 @pytest.fixture
@@ -79,13 +80,31 @@ def hass_storage():
 
 
 @pytest.fixture
-def hass(loop, hass_storage):
-    """Fixture to provide a test instance of HASS."""
+def hass(loop, hass_storage, request):
+    """Fixture to provide a test instance of Home Assistant."""
+
+    def exc_handle(loop, context):
+        """Handle exceptions by rethrowing them, which will fail the test."""
+        exceptions.append(context["exception"])
+        orig_exception_handler(loop, context)
+
+    exceptions = []
     hass = loop.run_until_complete(async_test_home_assistant(loop))
+    orig_exception_handler = loop.get_exception_handler()
+    loop.set_exception_handler(exc_handle)
 
     yield hass
 
     loop.run_until_complete(hass.async_stop(force=True))
+    for ex in exceptions:
+        if (
+            request.module.__name__,
+            request.function.__name__,
+        ) in IGNORE_UNCAUGHT_EXCEPTIONS:
+            continue
+        if isinstance(ex, ServiceNotFound):
+            continue
+        raise ex
 
 
 @pytest.fixture
@@ -192,8 +211,41 @@ def hass_client(hass, aiohttp_client, hass_access_token):
     async def auth_client():
         """Return an authenticated client."""
         return await aiohttp_client(
-            hass.http.app,
-            headers={"Authorization": "Bearer {}".format(hass_access_token)},
+            hass.http.app, headers={"Authorization": f"Bearer {hass_access_token}"},
         )
 
     return auth_client
+
+
+@pytest.fixture
+def hass_ws_client(aiohttp_client, hass_access_token):
+    """Websocket client fixture connected to websocket server."""
+
+    async def create_client(hass, access_token=hass_access_token):
+        """Create a websocket client."""
+        assert await async_setup_component(hass, "websocket_api", {})
+
+        client = await aiohttp_client(hass.http.app)
+
+        with patch("homeassistant.components.http.auth.setup_auth"):
+            websocket = await client.ws_connect(URL)
+            auth_resp = await websocket.receive_json()
+            assert auth_resp["type"] == TYPE_AUTH_REQUIRED
+
+            if access_token is None:
+                await websocket.send_json(
+                    {"type": TYPE_AUTH, "access_token": "incorrect"}
+                )
+            else:
+                await websocket.send_json(
+                    {"type": TYPE_AUTH, "access_token": access_token}
+                )
+
+            auth_ok = await websocket.receive_json()
+            assert auth_ok["type"] == TYPE_AUTH_OK
+
+        # wrap in client
+        websocket.client = client
+        return websocket
+
+    return create_client

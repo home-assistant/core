@@ -1,6 +1,6 @@
 {
   "domain": "opensky",
-  "name": "Opensky",
+  "name": "OpenSky Network",
   "documentation": "https://www.home-assistant.io/integrations/opensky",
   "requirements": [],
   "dependencies": [],

@@ -9,7 +9,7 @@ from .const import DEFAULT_NAME
 
 # Regex for address validation
 PATTERN_ADDRESS = re.compile(
-    "^((?P<conn_id>\\w+)\\.)?s?(?P<seg_id>\\d+)" "\\.(?P<type>m|g)?(?P<id>\\d+)$"
+    "^((?P<conn_id>\\w+)\\.)?s?(?P<seg_id>\\d+)\\.(?P<type>m|g)?(?P<id>\\d+)$"
 )
 
 

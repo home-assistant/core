@@ -1,8 +1,9 @@
 """Support for Alexa skill auth."""
 import asyncio
+from datetime import timedelta
 import json
 import logging
-from datetime import timedelta
+
 import aiohttp
 import async_timeout
 
@@ -50,7 +51,7 @@ class Auth:
             "client_secret": self.client_secret,
         }
         _LOGGER.debug(
-            "Calling LWA to get the access token (first time), " "with: %s",
+            "Calling LWA to get the access token (first time), with: %s",
             json.dumps(lwa_params),
         )
 

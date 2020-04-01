@@ -1,10 +1,10 @@
 """Config flow to configure the IQVIA component."""
 
 from collections import OrderedDict
-import voluptuous as vol
 
 from pyiqvia import Client
 from pyiqvia.errors import InvalidZipError
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback

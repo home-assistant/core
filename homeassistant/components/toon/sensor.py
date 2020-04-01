@@ -2,18 +2,18 @@
 import logging
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT, UNIT_PERCENTAGE
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
 
 from . import (
+    ToonBoilerDeviceEntity,
     ToonData,
-    ToonEntity,
     ToonElectricityMeterDeviceEntity,
+    ToonEntity,
     ToonGasMeterDeviceEntity,
     ToonSolarDeviceEntity,
-    ToonBoilerDeviceEntity,
 )
-from .const import CURRENCY_EUR, DATA_TOON, DOMAIN, VOLUME_CM3, VOLUME_M3, RATIO_PERCENT
+from .const import CURRENCY_EUR, DATA_TOON, DOMAIN, VOLUME_CM3, VOLUME_M3
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -195,7 +195,7 @@ async def async_setup_entry(
                     "current_modulation_level",
                     "Boiler Modulation Level",
                     "mdi:percent",
-                    RATIO_PERCENT,
+                    UNIT_PERCENTAGE,
                 )
             ]
         )

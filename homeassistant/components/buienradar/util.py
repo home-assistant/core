@@ -5,7 +5,6 @@ import logging
 
 import aiohttp
 import async_timeout
-
 from buienradar.buienradar import parse_data
 from buienradar.constants import (
     ATTRIBUTION,
@@ -31,15 +30,32 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
+from .const import SCHEDULE_NOK, SCHEDULE_OK
 
-from .const import SCHEDULE_OK, SCHEDULE_NOK
-
-
+__all__ = ["BrData"]
 _LOGGER = logging.getLogger(__name__)
+
+"""
+Log at WARN level after WARN_THRESHOLD failures, otherwise log at
+DEBUG level.
+"""
+WARN_THRESHOLD = 4
+
+
+def threshold_log(count: int, *args, **kwargs) -> None:
+    """Log at warn level after WARN_THRESHOLD failures, debug otherwise."""
+    if count >= WARN_THRESHOLD:
+        _LOGGER.warning(*args, **kwargs)
+    else:
+        _LOGGER.debug(*args, **kwargs)
 
 
 class BrData:
     """Get the latest data and updates the states."""
+
+    # Initialize to warn immediately if the first call fails.
+    load_error_count: int = WARN_THRESHOLD
+    rain_error_count: int = WARN_THRESHOLD
 
     def __init__(self, hass, coordinates, timeframe, devices):
         """Initialize the data object."""
@@ -99,7 +115,9 @@ class BrData:
 
         if content.get(SUCCESS) is not True:
             # unable to get the data
-            _LOGGER.warning(
+            self.load_error_count += 1
+            threshold_log(
+                self.load_error_count,
                 "Unable to retrieve json data from Buienradar."
                 "(Msg: %s, status: %s,)",
                 content.get(MESSAGE),
@@ -108,6 +126,7 @@ class BrData:
             # schedule new call
             await self.schedule_update(SCHEDULE_NOK)
             return
+        self.load_error_count = 0
 
         # rounding coordinates prevents unnecessary redirects/calls
         lat = self.coordinates[CONF_LATITUDE]
@@ -116,15 +135,18 @@ class BrData:
         raincontent = await self.get_data(rainurl)
 
         if raincontent.get(SUCCESS) is not True:
+            self.rain_error_count += 1
             # unable to get the data
-            _LOGGER.warning(
-                "Unable to retrieve raindata from Buienradar." "(Msg: %s, status: %s,)",
+            threshold_log(
+                self.rain_error_count,
+                "Unable to retrieve rain data from Buienradar." "(Msg: %s, status: %s)",
                 raincontent.get(MESSAGE),
                 raincontent.get(STATUS_CODE),
             )
             # schedule new call
             await self.schedule_update(SCHEDULE_NOK)
             return
+        self.rain_error_count = 0
 
         result = parse_data(
             content.get(CONTENT),
@@ -139,7 +161,7 @@ class BrData:
         if result.get(SUCCESS) is not True:
             if int(datetime.now().strftime("%H")) > 0:
                 _LOGGER.warning(
-                    "Unable to parse data from Buienradar." "(Msg: %s)",
+                    "Unable to parse data from Buienradar. (Msg: %s)",
                     result.get(MESSAGE),
                 )
             await self.schedule_update(SCHEDULE_NOK)

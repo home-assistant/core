@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from homeassistant.components.zwave import switch
 
-from tests.mock.zwave import MockNode, MockValue, MockEntityValues, value_changed
+from tests.mock.zwave import MockEntityValues, MockNode, MockValue, value_changed
 
 
 def test_get_device_detects_switch(mock_openzwave):

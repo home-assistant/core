@@ -3,22 +3,23 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-
-from homeassistant.core import callback
-from homeassistant.components.lock import LockDevice, PLATFORM_SCHEMA
+from homeassistant.components.lock import PLATFORM_SCHEMA, LockDevice
 from homeassistant.const import (
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_START,
-    STATE_ON,
-    STATE_LOCKED,
     MATCH_ALL,
+    STATE_LOCKED,
+    STATE_ON,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
+
+from . import extract_entities, initialise_templates
 from .const import CONF_AVAILABILITY_TEMPLATE
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,39 +44,26 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Template lock."""
-    name = config.get(CONF_NAME)
+    device = config.get(CONF_NAME)
     value_template = config.get(CONF_VALUE_TEMPLATE)
-    value_template.hass = hass
-    value_template_entity_ids = value_template.extract_entities()
-
-    if value_template_entity_ids == MATCH_ALL:
-        _LOGGER.warning(
-            "Template lock '%s' has no entity ids configured to track nor "
-            "were we able to extract the entities to track from the '%s' "
-            "template. This entity will only be able to be updated "
-            "manually.",
-            name,
-            CONF_VALUE_TEMPLATE,
-        )
-
-    template_entity_ids = set()
-    template_entity_ids |= set(value_template_entity_ids)
-
     availability_template = config.get(CONF_AVAILABILITY_TEMPLATE)
-    if availability_template is not None:
-        availability_template.hass = hass
-        temp_ids = availability_template.extract_entities()
-        if str(temp_ids) != MATCH_ALL:
-            template_entity_ids |= set(temp_ids)
+
+    templates = {
+        CONF_VALUE_TEMPLATE: value_template,
+        CONF_AVAILABILITY_TEMPLATE: availability_template,
+    }
+
+    initialise_templates(hass, templates)
+    entity_ids = extract_entities(device, "lock", None, templates)
 
     async_add_devices(
         [
             TemplateLock(
                 hass,
-                name,
+                device,
                 value_template,
                 availability_template,
-                template_entity_ids,
+                entity_ids,
                 config.get(CONF_LOCK),
                 config.get(CONF_UNLOCK),
                 config.get(CONF_OPTIMISTIC),

@@ -1,6 +1,7 @@
 """Support for OpenWRT (luci) routers."""
 import logging
 
+from openwrt_luci_rpc import OpenWrtRpc
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -45,7 +46,6 @@ class LuciDeviceScanner(DeviceScanner):
 
     def __init__(self, config):
         """Initialize the scanner."""
-        from openwrt_luci_rpc import OpenWrtRpc
 
         self.router = OpenWrtRpc(
             config[CONF_HOST],

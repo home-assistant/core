@@ -1,12 +1,11 @@
 """Tests for the jewish_calendar component."""
-from datetime import datetime
 from collections import namedtuple
 from contextlib import contextmanager
+from datetime import datetime
 from unittest.mock import patch
 
 from homeassistant.components import jewish_calendar
 import homeassistant.util.dt as dt_util
-
 
 _LatLng = namedtuple("_LatLng", ["lat", "lng"])
 

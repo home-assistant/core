@@ -14,7 +14,6 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
-
 # mypy: allow-untyped-calls, allow-untyped-defs
 
 ATTR_CREATED_AT = "created_at"
@@ -159,7 +158,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         if entity_id not in persistent_notifications:
             return
 
-        hass.states.async_remove(entity_id)
+        hass.states.async_remove(entity_id, call.context)
 
         del persistent_notifications[entity_id]
         hass.bus.async_fire(EVENT_PERSISTENT_NOTIFICATIONS_UPDATED)

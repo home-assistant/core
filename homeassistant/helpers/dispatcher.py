@@ -6,8 +6,8 @@ from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.logging import catch_log_exception
-from .typing import HomeAssistantType
 
+from .typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 DATA_DISPATCHER = "dispatcher"
@@ -47,7 +47,10 @@ def async_dispatcher_connect(
     wrapped_target = catch_log_exception(
         target,
         lambda *args: "Exception in {} when dispatching '{}': {}".format(
-            target.__name__, signal, args
+            # Functions wrapped in partial do not have a __name__
+            getattr(target, "__name__", None) or str(target),
+            signal,
+            args,
         ),
     )
 

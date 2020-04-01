@@ -4,16 +4,17 @@ from datetime import timedelta
 import unittest
 from unittest.mock import patch, sentinel
 
-from homeassistant.setup import setup_component, async_setup_component
-import homeassistant.core as ha
-import homeassistant.util.dt as dt_util
 from homeassistant.components import history, recorder
+import homeassistant.core as ha
+from homeassistant.setup import async_setup_component, setup_component
+import homeassistant.util.dt as dt_util
 
 from tests.common import (
+    get_test_home_assistant,
     init_recorder_component,
     mock_state_change_event,
-    get_test_home_assistant,
 )
+from tests.components.recorder.common import wait_recording_done
 
 
 class TestComponentHistory(unittest.TestCase):
@@ -31,12 +32,7 @@ class TestComponentHistory(unittest.TestCase):
         """Initialize the recorder."""
         init_recorder_component(self.hass)
         self.hass.start()
-        self.wait_recording_done()
-
-    def wait_recording_done(self):
-        """Block till recording is done."""
-        self.hass.block_till_done()
-        self.hass.data[recorder.DATA_INSTANCE].block_till_done()
+        wait_recording_done(self.hass)
 
     def test_setup(self):
         """Test setup method of history."""
@@ -78,7 +74,7 @@ class TestComponentHistory(unittest.TestCase):
 
                 states.append(state)
 
-            self.wait_recording_done()
+            wait_recording_done(self.hass)
 
         future = now + timedelta(seconds=1)
         with patch(
@@ -93,7 +89,7 @@ class TestComponentHistory(unittest.TestCase):
 
                 mock_state_change_event(self.hass, state)
 
-            self.wait_recording_done()
+            wait_recording_done(self.hass)
 
         # Get states returns everything before POINT
         for state1, state2 in zip(
@@ -115,7 +111,7 @@ class TestComponentHistory(unittest.TestCase):
         def set_state(state):
             """Set the state."""
             self.hass.states.set(entity_id, state)
-            self.wait_recording_done()
+            wait_recording_done(self.hass)
             return self.hass.states.get(entity_id)
 
         start = dt_util.utcnow()
@@ -156,7 +152,7 @@ class TestComponentHistory(unittest.TestCase):
         def set_state(state):
             """Set the state."""
             self.hass.states.set(entity_id, state)
-            self.wait_recording_done()
+            wait_recording_done(self.hass)
             return self.hass.states.get(entity_id)
 
         start = dt_util.utcnow() - timedelta(minutes=2)
@@ -526,6 +522,62 @@ class TestComponentHistory(unittest.TestCase):
         )
         assert list(hist.keys()) == entity_ids
 
+    def test_get_significant_states_only(self):
+        """Test significant states when significant_states_only is set."""
+        self.init_recorder()
+        entity_id = "sensor.test"
+
+        def set_state(state, **kwargs):
+            """Set the state."""
+            self.hass.states.set(entity_id, state, **kwargs)
+            wait_recording_done(self.hass)
+            return self.hass.states.get(entity_id)
+
+        start = dt_util.utcnow() - timedelta(minutes=4)
+        points = []
+        for i in range(1, 4):
+            points.append(start + timedelta(minutes=i))
+
+        states = []
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=start
+        ):
+            set_state("123", attributes={"attribute": 10.64})
+
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=points[0]
+        ):
+            # Attributes are different, state not
+            states.append(set_state("123", attributes={"attribute": 21.42}))
+
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=points[1]
+        ):
+            # state is different, attributes not
+            states.append(set_state("32", attributes={"attribute": 21.42}))
+
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=points[2]
+        ):
+            # everything is different
+            states.append(set_state("412", attributes={"attribute": 54.23}))
+
+        hist = history.get_significant_states(
+            self.hass, start, significant_changes_only=True
+        )
+
+        assert len(hist[entity_id]) == 2
+        assert states[0] not in hist[entity_id]
+        assert states[1] in hist[entity_id]
+        assert states[2] in hist[entity_id]
+
+        hist = history.get_significant_states(
+            self.hass, start, significant_changes_only=False
+        )
+
+        assert len(hist[entity_id]) == 3
+        assert states == hist[entity_id]
+
     def check_significant_states(self, zero, four, states, config):
         """Check if significant states are retrieved."""
         filters = history.Filters()
@@ -559,7 +611,7 @@ class TestComponentHistory(unittest.TestCase):
         def set_state(entity_id, state, **kwargs):
             """Set the state."""
             self.hass.states.set(entity_id, state, **kwargs)
-            self.wait_recording_done()
+            wait_recording_done(self.hass)
             return self.hass.states.get(entity_id)
 
         zero = dt_util.utcnow()
@@ -615,12 +667,13 @@ class TestComponentHistory(unittest.TestCase):
             )
             # state will be skipped since entity is hidden
             set_state(therm, 22, attributes={"current_temperature": 21, "hidden": True})
+
         return zero, four, states
 
 
 async def test_fetch_period_api(hass, hass_client):
     """Test the fetch period view for history."""
-    await hass.async_add_job(init_recorder_component, hass)
+    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "history", {})
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
@@ -632,7 +685,7 @@ async def test_fetch_period_api(hass, hass_client):
 
 async def test_fetch_period_api_with_include_order(hass, hass_client):
     """Test the fetch period view for history."""
-    await hass.async_add_job(init_recorder_component, hass)
+    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(
         hass,
         "history",

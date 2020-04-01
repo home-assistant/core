@@ -5,22 +5,21 @@ from typing import Any, Callable, Dict, Iterable, Optional, Union, cast
 
 import attr
 
-from homeassistant.loader import bind_hass
-from homeassistant.helpers.sun import get_astral_event_next
-from homeassistant.helpers.template import Template
-from homeassistant.core import HomeAssistant, callback, CALLBACK_TYPE, Event, State
 from homeassistant.const import (
     ATTR_NOW,
+    EVENT_CORE_CONFIG_UPDATE,
     EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED,
     MATCH_ALL,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
-    EVENT_CORE_CONFIG_UPDATE,
 )
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, State, callback
+from homeassistant.helpers.sun import get_astral_event_next
+from homeassistant.helpers.template import Template
+from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
-
 
 # PyLint does not like the use of threaded_listener_factory
 # pylint: disable=invalid-name
@@ -68,8 +67,8 @@ def async_track_state_change(
 
     Must be run within the event loop.
     """
-    match_from_state = _process_state_match(from_state)
-    match_to_state = _process_state_match(to_state)
+    match_from_state = process_state_match(from_state)
+    match_to_state = process_state_match(to_state)
 
     # Ensure it is a lowercase list with entity ids we want to match on
     if entity_ids == MATCH_ALL:
@@ -226,7 +225,7 @@ track_point_in_time = threaded_listener_factory(async_track_point_in_time)
 @callback
 @bind_hass
 def async_track_point_in_utc_time(
-    hass: HomeAssistant, action: Callable[..., None], point_in_time: datetime
+    hass: HomeAssistant, action: Callable[..., Any], point_in_time: datetime
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in UTC time."""
     # Ensure point_in_time is UTC
@@ -474,7 +473,7 @@ def async_track_time_change(
 track_time_change = threaded_listener_factory(async_track_time_change)
 
 
-def _process_state_match(
+def process_state_match(
     parameter: Union[None, str, Iterable[str]]
 ) -> Callable[[str], bool]:
     """Convert parameter to function that matches input against parameter."""

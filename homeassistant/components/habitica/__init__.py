@@ -2,6 +2,7 @@
 from collections import namedtuple
 import logging
 
+from habitipy.aio import HabitipyAsync
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -79,7 +80,7 @@ SERVICE_API_CALL = "api_call"
 ATTR_NAME = CONF_NAME
 ATTR_PATH = CONF_PATH
 ATTR_ARGS = "args"
-EVENT_API_CALL_SUCCESS = "{0}_{1}_{2}".format(DOMAIN, SERVICE_API_CALL, "success")
+EVENT_API_CALL_SUCCESS = f"{DOMAIN}_{SERVICE_API_CALL}_success"
 
 SERVICE_API_CALL_SCHEMA = vol.Schema(
     {
@@ -92,7 +93,6 @@ SERVICE_API_CALL_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Habitica service."""
-    from habitipy.aio import HabitipyAsync
 
     conf = config[DOMAIN]
     data = hass.data[DOMAIN] = {}

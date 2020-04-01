@@ -48,12 +48,6 @@ def get_service(hass, config, discovery_info=None):
         hass.config.components.add("notify.ios")
 
     if not ios.devices_with_push(hass):
-        _LOGGER.error(
-            "The notify.ios platform was loaded but no "
-            "devices exist! Please check the documentation at "
-            "https://home-assistant.io/ecosystem/ios/notifications"
-            "/ for more information"
-        )
         return None
 
     return iOSNotificationService()
@@ -99,8 +93,8 @@ class iOSNotificationService(BaseNotificationService):
             if req.status_code != 201:
                 fallback_error = req.json().get("errorMessage", "Unknown error")
                 fallback_message = (
-                    "Internal server error, " "please try again later: " "{}"
-                ).format(fallback_error)
+                    f"Internal server error, please try again later: {fallback_error}"
+                )
                 message = req.json().get("message", fallback_message)
                 if req.status_code == 429:
                     _LOGGER.warning(message)
