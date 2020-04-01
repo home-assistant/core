@@ -1,4 +1,5 @@
 """Config flow for DoorBird integration."""
+from ipaddress import ip_address
 import logging
 import urllib
 
@@ -8,6 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.util.network import is_link_local
 
 from .const import CONF_EVENTS, DOORBIRD_OUI
 from .const import DOMAIN  # pylint:disable=unused-import
@@ -90,7 +92,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if macaddress[:6] != DOORBIRD_OUI:
             return self.async_abort(reason="not_doorbird_device")
-        if discovery_info[CONF_HOST].startswith("169.254"):
+        if is_link_local(ip_address(discovery_info[CONF_HOST])):
             return self.async_abort(reason="link_local_address")
 
         await self.async_set_unique_id(macaddress)
