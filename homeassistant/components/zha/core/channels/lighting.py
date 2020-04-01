@@ -1,7 +1,11 @@
 """Lighting channels module for Zigbee Home Automation."""
+import asyncio
 import logging
+from typing import Dict, List, Tuple, Union
 
+import zigpy.exceptions
 import zigpy.zcl.clusters.lighting as lighting
+import zigpy.zcl.foundation as zcl_f
 
 from .. import registries, typing as zha_typing
 from ..const import REPORT_CONFIG_DEFAULT
@@ -68,6 +72,65 @@ class ColorChannel(ZigbeeChannel):
         await self.fetch_color_capabilities(True)
         attributes = ["color_temperature", "current_x", "current_y"]
         await self.get_attributes(attributes, from_cache=from_cache)
+
+    async def configure_reporting(self):
+        """Configure attribute reporting for a cluster.
+
+        This also swallows DeliveryError exceptions that are thrown when
+        devices are unreachable.
+        """
+        kwargs = {}
+        if self.cluster.cluster_id >= 0xFC00 and self._ch_pool.manufacturer_code:
+            kwargs["manufacturer"] = self._ch_pool.manufacturer_code
+
+        chunk, rest = self._report_config[:4], self._report_config[4:]
+        while chunk:
+            attrs = {record["attr"]: record["config"] for record in chunk}
+            try:
+                res = await self.cluster.configure_reporting_multiple(attrs, **kwargs)
+                self._configure_reporting_status(attrs, res)
+            except (zigpy.exceptions.DeliveryError, asyncio.TimeoutError) as ex:
+                self.debug(
+                    "failed to set reporting on '%s' cluster for: %s",
+                    self.cluster.ep_attribute,
+                    str(ex),
+                )
+                break
+            chunk, rest = rest[:4], rest[4:]
+
+    def _configure_reporting_status(
+        self, attrs: Dict[Union[int, str], Tuple], res: Union[List, Tuple]
+    ) -> None:
+        """Parse configure reporting result."""
+        res = res[0]
+        if not isinstance(res, list):
+            # assume default response
+            self.debug(
+                "attr reporting for '%s' on '%s': %s", attrs, self.name, res,
+            )
+            return
+        if res[0].status == zcl_f.Status.SUCCESS:
+            self.debug(
+                "Successfully configured reporting for '%s' on '%s' cluster: %s",
+                attrs,
+                self.name,
+                res,
+            )
+            return
+
+        failed = {self.cluster.attributes.get(r.attrid, [r.attrid])[0] for r in res}
+        attrs = {self.cluster.attributes.get(r, [r])[0] for r in attrs}
+        self.debug(
+            "Successfully configured reporting for '%s' on '%s' cluster",
+            attrs - failed,
+            self.name,
+        )
+        self.debug(
+            "Failed to configure reporting for '%s' on '%s' cluster: %s",
+            failed,
+            self.name,
+            res,
+        )
 
     async def fetch_color_capabilities(self, from_cache):
         """Get the color configuration."""

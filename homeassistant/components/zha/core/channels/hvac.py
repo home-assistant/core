@@ -7,7 +7,7 @@ https://home-assistant.io/integrations/zha/
 import asyncio
 from collections import namedtuple
 import logging
-from typing import Optional
+from typing import Dict, List, Optional, Tuple, Union
 
 from zigpy.exceptions import ZigbeeException
 import zigpy.zcl.clusters.hvac as hvac
@@ -316,16 +316,49 @@ class ThermostatChannel(ZigbeeChannel):
             attrs = {record["attr"]: record["config"] for record in chunk}
             try:
                 res = await self.cluster.configure_reporting_multiple(attrs, **kwargs)
-                self.debug(
-                    "attr reporting on '%s' result: %s", self.cluster.ep_attribute, res,
-                )
+                self._configure_reporting_status(attrs, res)
             except (zigpy.exceptions.DeliveryError, asyncio.TimeoutError) as ex:
                 self.debug(
-                    "failed to set reporting on '%s' cluster: %s",
+                    "failed to set reporting on '%s' cluster for: %s",
                     self.cluster.ep_attribute,
                     str(ex),
                 )
+                break
             chunk, rest = rest[:4], rest[4:]
+
+    def _configure_reporting_status(
+        self, attrs: Dict[Union[int, str], Tuple], res: Union[List, Tuple]
+    ) -> None:
+        """Parse configure reporting result."""
+        res = res[0]
+        if not isinstance(res, list):
+            # assume default response
+            self.debug(
+                "attr reporting for '%s' on '%s': %s", attrs, self.name, res,
+            )
+            return
+        if res[0].status == Status.SUCCESS:
+            self.debug(
+                "Successfully configured reporting for '%s' on '%s' cluster: %s",
+                attrs,
+                self.name,
+                res,
+            )
+            return
+
+        failed = {self.cluster.attributes.get(r.attrid, [r.attrid])[0] for r in res}
+        attrs = {self.cluster.attributes.get(r, [r])[0] for r in attrs}
+        self.debug(
+            "Successfully configured reporting for '%s' on '%s' cluster",
+            attrs - failed,
+            self.name,
+        )
+        self.debug(
+            "Failed to configure reporting for '%s' on '%s' cluster: %s",
+            failed,
+            self.name,
+            res,
+        )
 
     @retryable_req(delays=(1, 1, 3, 6, 15, 30))
     async def async_initialize(self, from_cache):
