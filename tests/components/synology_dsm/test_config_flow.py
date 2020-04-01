@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.synology_dsm.const import (
+    CONF_VOLUMES,
     DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_PORT_SSL,
@@ -14,6 +15,7 @@ from homeassistant.components.synology_dsm.const import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import (
+    CONF_DISKS,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -48,7 +50,7 @@ def mock_controller_service():
         service_mock.return_value.login = Mock(return_value=True)
         service_mock.return_value.information = Mock(serial=SERIAL)
         service_mock.return_value.utilisation = Mock(cpu_user_load=1)
-        service_mock.return_value.storage = Mock(disks=[], volumes=[])
+        service_mock.return_value.storage = Mock(disks_ids=[], volumes_ids=[])
         yield service_mock
 
 
@@ -71,7 +73,7 @@ def mock_controller_service_failed():
         service_mock.return_value.login = Mock(return_value=True)
         service_mock.return_value.information = Mock(serial=None)
         service_mock.return_value.utilisation = Mock(cpu_user_load=None)
-        service_mock.return_value.storage = Mock(disks=None, volumes=None)
+        service_mock.return_value.storage = Mock(disks_ids=None, volumes_ids=None)
         yield service_mock
 
 
@@ -105,6 +107,8 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
     assert result["data"][CONF_SSL] == SSL
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_DISKS] == []
+    assert result["data"][CONF_VOLUMES] == []
 
     service.return_value.information = Mock(serial=SERIAL_2)
     # test without port + False SSL
@@ -128,6 +132,8 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
     assert not result["data"][CONF_SSL]
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_DISKS] == []
+    assert result["data"][CONF_VOLUMES] == []
 
 
 async def test_import(hass: HomeAssistantType, service: MagicMock):
@@ -147,6 +153,8 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
     assert result["data"][CONF_SSL] == DEFAULT_SSL
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_DISKS] == []
+    assert result["data"][CONF_VOLUMES] == []
 
     service.return_value.information = Mock(serial=SERIAL_2)
     # import with all
@@ -171,6 +179,8 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
     assert result["data"][CONF_SSL] == SSL
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_DISKS] == []
+    assert result["data"][CONF_VOLUMES] == []
 
 
 async def test_abort_if_already_setup(hass: HomeAssistantType, service: MagicMock):

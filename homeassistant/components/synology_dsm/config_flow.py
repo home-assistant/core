@@ -2,6 +2,9 @@
 import logging
 
 from synology_dsm import SynologyDSM
+from synology_dsm.api.core.utilization import SynoCoreUtilization
+from synology_dsm.api.dsm.information import SynoDSMInformation
+from synology_dsm.api.storage.storage import SynoStorage
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -85,8 +88,6 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         password = user_input[CONF_PASSWORD]
         use_ssl = user_input.get(CONF_SSL, DEFAULT_SSL)
         api_version = user_input.get(CONF_API_VERSION, DEFAULT_DSM_VERSION)
-        disks = user_input.get(CONF_DISKS)
-        volumes = user_input.get(CONF_VOLUMES)
 
         if not port:
             if use_ssl is True:
@@ -102,19 +103,21 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors[CONF_USERNAME] = "login"
             return await self._show_setup_form(user_input, errors)
 
-        information = await self.hass.async_add_executor_job(
+        information: SynoDSMInformation = await self.hass.async_add_executor_job(
             getattr, api, "information"
         )
-        utilisation = await self.hass.async_add_executor_job(
+        utilisation: SynoCoreUtilization = await self.hass.async_add_executor_job(
             getattr, api, "utilisation"
         )
-        storage = await self.hass.async_add_executor_job(getattr, api, "storage")
+        storage: SynoStorage = await self.hass.async_add_executor_job(
+            getattr, api, "storage"
+        )
 
         if (
             information.serial is None
             or utilisation.cpu_user_load is None
-            or storage.volumes is None
-            or storage.disks is None
+            or storage.disks_ids is None
+            or storage.volumes_ids is None
         ):
             errors["base"] = "unknown"
             return await self._show_setup_form(user_input, errors)
@@ -132,8 +135,8 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_SSL: use_ssl,
                 CONF_USERNAME: username,
                 CONF_PASSWORD: password,
-                CONF_DISKS: disks,
-                CONF_VOLUMES: volumes,
+                CONF_DISKS: user_input.get(CONF_DISKS, storage.disks_ids),
+                CONF_VOLUMES: user_input.get(CONF_VOLUMES, storage.volumes_ids),
             },
         )
 
