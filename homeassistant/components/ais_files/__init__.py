@@ -250,7 +250,11 @@ async def _async_check_db_connection(hass, call):
         # save to file
         await _async_save_db_settings_info({})
 
-        hass.states.async_set("sensor.ais_db_connection_info", "db_url_not_valid", {})
+        hass.states.async_set(
+            "sensor.ais_db_connection_info",
+            "no_db_url_saved",
+            {"dbUrl": "", "dbDrive": "-", "dbEngine": "-"},
+        )
 
 
 async def _async_get_db_log_settings_info(hass, call):
@@ -298,6 +302,14 @@ async def _async_get_db_log_settings_info(hass, call):
     db_conn_step = "no_db_url_saved"
     if "dbUrl" in db_settings:
         db_conn_step = "db_url_saved"
+
+    if db_conn_step == "no_db_url_saved" and hass.services.has_service(
+        "recorder", "purge"
+    ):
+        # the recorder was enabled via other integration
+        db_settings["errorInfo"] = "Rekorder włączony przez inny komponent!"
+        db_settings["dbEngine"] = "SQLite (memory)"
+
     hass.states.async_set("sensor.ais_db_connection_info", db_conn_step, db_settings)
 
     # enable logs on system start (if set)
