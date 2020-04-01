@@ -86,7 +86,7 @@ class LastfmSensor(Entity):
         self._playcount = self._user.get_playcount()
 
         recent_tracks = self._user.get_recent_tracks(limit=2)
-        if len(recent_tracks) != 0:
+        if recent_tracks:
             last = recent_tracks[0]
             self._lastplayed = f"{last.track.artist} - {last.track.title}"
 
