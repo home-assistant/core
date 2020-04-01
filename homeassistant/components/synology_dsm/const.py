@@ -6,7 +6,6 @@ from homeassistant.const import (
 )
 
 DOMAIN = "synology_dsm"
-SERVICE_UPDATE = f"{DOMAIN}_update"
 
 CONF_VOLUMES = "volumes"
 DEFAULT_NAME = "Synology DSM"

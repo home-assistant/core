@@ -1,34 +1,23 @@
 """Support for Synology DSM Sensors."""
-from datetime import timedelta
 from typing import Dict
-
-from synology_dsm import SynologyDSM
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    CONF_API_VERSION,
     CONF_DISKS,
-    CONF_HOST,
     CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_USERNAME,
     DATA_MEGABYTES,
     DATA_RATE_KILOBYTES_PER_SECOND,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 
+from . import SynoApi
 from .const import (
     CONF_VOLUMES,
-    DEFAULT_DSM_VERSION,
     DOMAIN,
-    SERVICE_UPDATE,
     STORAGE_DISK_SENSORS,
     STORAGE_VOL_SENSORS,
     TEMP_SENSORS_KEYS,
@@ -37,25 +26,14 @@ from .const import (
 
 ATTRIBUTION = "Data provided by Synology"
 
-SCAN_INTERVAL = timedelta(minutes=15)
-
 
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the Synology NAS Sensor."""
     name = entry.data[CONF_NAME]
-    host = entry.data[CONF_HOST]
-    port = entry.data[CONF_PORT]
-    username = entry.data[CONF_USERNAME]
-    password = entry.data[CONF_PASSWORD]
-    unit = hass.config.units.temperature_unit
-    use_ssl = entry.data[CONF_SSL]
-    api_version = entry.data.get(CONF_API_VERSION, DEFAULT_DSM_VERSION)
 
-    api = SynoApi(hass, host, port, username, password, unit, use_ssl, api_version)
-
-    await hass.async_add_executor_job(api.update)
+    api = hass.data[DOMAIN][entry.unique_id]
 
     sensors = [
         SynoNasUtilSensor(api, name, sensor_type, UTILISATION_SENSORS[sensor_type])
@@ -82,42 +60,7 @@ async def async_setup_entry(
                 for sensor_type in STORAGE_DISK_SENSORS
             ]
 
-    async_track_time_interval(hass, api.update, SCAN_INTERVAL)
-
     async_add_entities(sensors, True)
-
-
-class SynoApi:
-    """Class to interface with Synology DSM API."""
-
-    def __init__(
-        self,
-        hass: HomeAssistantType,
-        host: str,
-        port: int,
-        username: str,
-        password: str,
-        temp_unit: str,
-        use_ssl: bool,
-        api_version: int,
-    ):
-        """Initialize the API wrapper class."""
-        self._hass = hass
-        self.temp_unit = temp_unit
-        self.unique_id = f"{host}:{port}"
-
-        self._api = SynologyDSM(
-            host, port, username, password, use_ssl, dsm_version=api_version
-        )
-
-        self.information = self._api.information
-        self.utilisation = self._api.utilisation
-        self.storage = self._api.storage
-
-    def update(self, now=None):
-        """Update function for updating API information."""
-        self._api.update()
-        dispatcher_send(self._hass, SERVICE_UPDATE)
 
 
 class SynoNasSensor(Entity):
@@ -142,7 +85,7 @@ class SynoNasSensor(Entity):
         if self.monitored_device:
             self._name = f"{self._name} ({self.monitored_device})"
 
-        self._unique_id = f"{self._api.unique_id} {self._name}"
+        self._unique_id = f"{self._api.information.serial} {self._name}"
 
         self._unsub_dispatcher = None
 
@@ -192,7 +135,7 @@ class SynoNasSensor(Entity):
     async def async_added_to_hass(self):
         """Register state update callback."""
         self._unsub_dispatcher = async_dispatcher_connect(
-            self.hass, SERVICE_UPDATE, self.async_write_ha_state
+            self.hass, self._api.signal_sensor_update, self.async_write_ha_state
         )
 
     async def async_will_remove_from_hass(self):
