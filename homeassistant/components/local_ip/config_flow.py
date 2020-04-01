@@ -2,6 +2,7 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_NAME
 
 from . import DOMAIN
 
@@ -14,16 +15,16 @@ class SimpleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
-        if user_input is not None:
-            # Check if already configured
-            await self.async_set_unique_id(user_input["name"])
-            self._abort_if_unique_id_configured()
 
-            return self.async_create_entry(title=user_input["name"], data=user_input)
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
+        if user_input is not None:
+            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required("name", default=DOMAIN): str}),
+            data_schema=vol.Schema({vol.Required(CONF_NAME, default=DOMAIN): str}),
             errors={},
         )
 

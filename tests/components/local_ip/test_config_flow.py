@@ -33,7 +33,7 @@ async def test_already_setup(hass):
 
     # Should fail, same NAME
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={CONF_NAME: "test"},
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
