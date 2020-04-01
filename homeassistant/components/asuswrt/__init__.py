@@ -51,7 +51,7 @@ CONFIG_SCHEMA = vol.Schema(
                     cv.ensure_list, [vol.In(SENSOR_TYPES)]
                 ),
                 vol.Optional(CONF_INTERFACE, default=DEFAULT_INTERFACE): cv.string,
-                vol.Optional(CONF_DNSMASQ, default=DEFAULT_DNSMASQ): cv.isdir,
+                vol.Optional(CONF_DNSMASQ, default=DEFAULT_DNSMASQ): cv.string,
             }
         )
     },
