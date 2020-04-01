@@ -65,7 +65,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the asuswrt component."""
-    
+
     await async_setup_retry(hass, config)
     return True
 
@@ -77,7 +77,7 @@ async def async_retry_task(hass, config, retry_count):
         hass,
         RETRY_DELAY,
         lambda _: hass.async_create_task(async_setup_retry(hass, config, retry_count)),
-     )
+    )
 
 
 async def async_setup_retry(hass, config, retry_count=0):
@@ -103,9 +103,9 @@ async def async_setup_retry(hass, config, retry_count=0):
     except OSError:
         if retry_count < MAX_RETRY_COUNT:
             _LOGGER.warning(
-               "Unable to setup integration %s. Retrying in %s seconds...",
-               DOMAIN,
-               RETRY_DELAY,
+                "Unable to setup integration %s. Retrying in %s seconds...",
+                DOMAIN,
+                RETRY_DELAY,
             )
             await async_retry_task(hass, config, retry_count + 1)
         else:
