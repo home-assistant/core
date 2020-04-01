@@ -13,6 +13,7 @@ from .const import (
     KEY_MAC_ADDRESS,
     KEY_MODEL,
     KEY_NAME,
+    KEY_SCHEDULES,
     KEY_SERIAL_NUMBER,
     KEY_STATUS,
     KEY_USERNAME,
@@ -90,6 +91,7 @@ class RachioIro:
         self.mac_address = data[KEY_MAC_ADDRESS]
         self.model = data[KEY_MODEL]
         self._zones = data[KEY_ZONES]
+        self._schedules = data[KEY_SCHEDULES]
         self._init_data = data
         self._webhooks = webhooks
         _LOGGER.debug('%s has ID "%s"', str(self), self.controller_id)
@@ -173,6 +175,10 @@ class RachioIro:
                 return zone
 
         return None
+
+    def list_schedules(self) -> list:
+        """Return a list of schedules."""
+        return self._schedules
 
     def stop_watering(self) -> None:
         """Stop watering all zones connected to this controller."""
