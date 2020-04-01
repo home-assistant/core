@@ -168,7 +168,7 @@ async def test_adding_entities_with_generator_and_thread_callback(hass):
 
     def create_entity(number):
         """Create entity helper."""
-        entity = MockEntity()
+        entity = MockEntity(unique_id=f"unique{number}")
         entity.entity_id = async_generate_entity_id(DOMAIN + ".{}", "Number", hass=hass)
         return entity
 
