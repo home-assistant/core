@@ -6,22 +6,6 @@ import logging
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-
-from . import (
-    SIGNAL_RACHIO_CONTROLLER_UPDATE,
-    SIGNAL_RACHIO_SCHEDULE_UPDATE,
-    SIGNAL_RACHIO_ZONE_UPDATE,
-    SUBTYPE_SCHEDULE_COMPLETED,
-    SUBTYPE_SCHEDULE_STARTED,
-    SUBTYPE_SCHEDULE_STOPPED,
-    SUBTYPE_SLEEP_MODE_OFF,
-    SUBTYPE_SLEEP_MODE_ON,
-    SUBTYPE_ZONE_COMPLETED,
-    SUBTYPE_ZONE_STARTED,
-    SUBTYPE_ZONE_STOPPED,
-    RachioDeviceInfoProvider,
-)
-
 from .const import (
     ATTR_ZONE_SHADE,
     ATTR_ZONE_TYPE,
@@ -43,10 +27,14 @@ from .const import (
     KEY_ZONE_ID,
     KEY_ZONE_NUMBER,
     SIGNAL_RACHIO_CONTROLLER_UPDATE,
+    SIGNAL_RACHIO_SCHEDULE_UPDATE,
     SIGNAL_RACHIO_ZONE_UPDATE,
 )
 from .entity import RachioDevice
 from .webhooks import (
+    SUBTYPE_SCHEDULE_COMPLETED,
+    SUBTYPE_SCHEDULE_STARTED,
+    SUBTYPE_SCHEDULE_STOPPED,
     SUBTYPE_SLEEP_MODE_OFF,
     SUBTYPE_SLEEP_MODE_ON,
     SUBTYPE_ZONE_COMPLETED,
@@ -310,6 +298,7 @@ class RachioSchedule(RachioSwitch):
         self._current_schedule = current_schedule
         super().__init__(controller, poll=False)
         self._state = self.schedule_id == self._current_schedule.get(KEY_SCHEDULE_ID)
+        self._undo_dispatcher = None
 
     def __str__(self):
         """Display the schedule as a string."""
