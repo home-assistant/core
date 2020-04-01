@@ -538,7 +538,7 @@ class Group(Entity):
             return
 
         self._async_update_group_state(new_state)
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def _tracking_states(self):

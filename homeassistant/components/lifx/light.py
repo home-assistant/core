@@ -573,7 +573,7 @@ class LIFXLight(Light):
         """Request new status and push it to hass."""
         self.postponed_update = None
         await self.async_update()
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     async def update_during_transition(self, when):
         """Update state at the start and end of a transition."""
