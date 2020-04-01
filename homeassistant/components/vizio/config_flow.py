@@ -198,7 +198,9 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Check if new config entry matches any existing config entries
             for entry in self.hass.config_entries.async_entries(DOMAIN):
-                if _host_is_same(entry.data[CONF_HOST], user_input[CONF_HOST]):
+                if CONF_HOST in entry.data and _host_is_same(
+                    entry.data[CONF_HOST], user_input[CONF_HOST]
+                ):
                     errors[CONF_HOST] = "host_exists"
                 if entry.data[CONF_NAME] == user_input[CONF_NAME]:
                     errors[CONF_NAME] = "name_exists"
@@ -270,7 +272,9 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry from configuration.yaml."""
         # Check if new config entry matches any existing config entries
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if _host_is_same(entry.data[CONF_HOST], import_config[CONF_HOST]):
+            if CONF_HOST in entry.data and _host_is_same(
+                entry.data[CONF_HOST], import_config[CONF_HOST]
+            ):
                 updated_options = {}
                 updated_data = {}
                 remove_apps = False
@@ -334,7 +338,9 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Check if new config entry matches any existing config entries and abort if so
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if _host_is_same(entry.data[CONF_HOST], discovery_info[CONF_HOST]):
+            if CONF_HOST in entry.data and _host_is_same(
+                entry.data[CONF_HOST], discovery_info[CONF_HOST]
+            ):
                 return self.async_abort(reason="already_setup")
 
         # Set default name to discovered device name by stripping zeroconf service
