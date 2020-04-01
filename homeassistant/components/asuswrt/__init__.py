@@ -84,8 +84,7 @@ async def async_setup(hass, config):
             _LOGGER.error("Unable to setup component")
             return False
     except OSError as ex:
-        # this tipically occur during network startup
-        # raising platform not ready connection is retried
+        """Raise platform not ready to retry setup on network startup."""
         raise PlatformNotReady() from ex
     except:
         raise
