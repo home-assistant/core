@@ -53,12 +53,7 @@ class DIRECTVRemote(DIRECTVEntity, RemoteDevice):
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        status = await self.dtv.status(self._address)
-
-        if status == "active":
-            return True
-
-        return False
+        return True
 
     @property
     def should_poll(self):
