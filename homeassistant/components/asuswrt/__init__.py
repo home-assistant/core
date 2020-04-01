@@ -84,8 +84,7 @@ async def async_setup(hass, config):
         raise PlatformNotReady() from ex
 
     if not api.is_connected:
-        _LOGGER.error("Unable to setup component")
-        return False
+        raise PlatformNotReady()
 
     hass.data[DATA_ASUSWRT] = api
 
