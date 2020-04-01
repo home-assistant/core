@@ -131,7 +131,7 @@ av==6.1.2
 axis==25
 
 # homeassistant.components.zha
-bellows-homeassistant==0.14.0
+bellows-homeassistant==0.15.1
 
 # homeassistant.components.bom
 bomradarloop==0.1.4
@@ -798,19 +798,19 @@ yahooweather==0.10
 zeroconf==0.24.5
 
 # homeassistant.components.zha
-zha-quirks==0.0.37
+zha-quirks==0.0.38
 
 # homeassistant.components.zha
 zigpy-cc==0.3.1
 
 # homeassistant.components.zha
-zigpy-deconz==0.7.0
+zigpy-deconz==0.8.0
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.16.0
+zigpy-homeassistant==0.18.0
 
 # homeassistant.components.zha
-zigpy-xbee-homeassistant==0.10.0
+zigpy-xbee-homeassistant==0.11.0
 
 # homeassistant.components.zha
 zigpy-zigate==0.5.1
