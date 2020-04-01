@@ -255,7 +255,6 @@ class NetatmoThermostat(ClimateDevice):
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-        _LOGGER.debug("set hvac mode: %s", hvac_mode)
         if hvac_mode == HVAC_MODE_OFF:
             self.turn_off()
         elif hvac_mode == HVAC_MODE_AUTO:
@@ -268,7 +267,6 @@ class NetatmoThermostat(ClimateDevice):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        _LOGGER.debug("set preset mode: %s", preset_mode)
         if self.target_temperature == 0:
             self._data.homestatus.setroomThermpoint(
                 self._data.home_id, self._room_id, STATE_NETATMO_HOME,
@@ -332,8 +330,7 @@ class NetatmoThermostat(ClimateDevice):
 
     def turn_off(self):
         """Turn the entity off."""
-        _LOGGER.debug("Turn off home: %s room: %s", self._data.home_id, self._room_id)
-        if self._module_type != NA_VALVE:
+        if self._module_type == NA_VALVE:
             _LOGGER.info("Valves do not support being turned off")
         elif self.hvac_mode != STATE_OFF:
             self._data.homestatus.setroomThermpoint(
