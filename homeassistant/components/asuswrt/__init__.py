@@ -101,6 +101,9 @@ async def async_setup_retry(hass, config, retry_count=0):
     try:
         await api.connection.async_connect()
     except OSError:
+        pass
+
+    if not api.is_connected:
         if retry_count < MAX_RETRY_COUNT:
             _LOGGER.warning(
                 "Unable to setup integration %s. Retrying in %s seconds...",
