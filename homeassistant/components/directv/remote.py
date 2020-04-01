@@ -1,6 +1,7 @@
 """Support for the DIRECTV remote."""
+from datetime import timedelta
 import logging
-from typing import Any, Callable, Dict, Iterable, List, Optional
+from typing import Any, Callable, Iterable, List
 
 from directv import DIRECTV, DIRECTVError
 
@@ -12,6 +13,8 @@ from . import DIRECTVEntity
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(minutes=2)
 
 
 async def async_setup_entry(
@@ -42,6 +45,14 @@ class DIRECTVRemote(DIRECTVEntity, RemoteDevice):
             dtv=dtv, name=name, address=address,
         )
 
+        self._available = False
+        self._is_on = True
+
+    @property
+    def available(self):
+        """Return if able to retrieve information from device or not."""
+        return self._available
+
     @property
     def unique_id(self):
         """Return a unique ID."""
@@ -53,12 +64,18 @@ class DIRECTVRemote(DIRECTVEntity, RemoteDevice):
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        return True
+        return self._is_on
 
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
+    async def async_update(self) -> None:
+        """Update device state."""
+        status = await self.dtv.status(self._address)
+
+        if status == "active" or status == "standby":
+            self._available = True
+            self._is_on = status == "active"
+        else:
+            self._available = False
+            self._is_on = False
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -83,5 +100,7 @@ class DIRECTVRemote(DIRECTVEntity, RemoteDevice):
                 await self.dtv.remote(single_command, self._address)
             except DIRECTVError:
                 _LOGGER.exception(
-                    "Sending command %s to device %s failed", single_command, self._device_id,
+                    "Sending command %s to device %s failed",
+                    single_command,
+                    self._device_id,
                 )

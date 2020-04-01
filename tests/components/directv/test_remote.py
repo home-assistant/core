@@ -1,5 +1,5 @@
 """The tests for the DirecTV remote platform."""
-from typing import Any, List, Optional
+from typing import Any, List
 
 from asynctest import patch
 
@@ -12,12 +12,13 @@ from homeassistant.components.remote import (
     SERVICE_SEND_COMMAND,
 )
 from homeassistant.const import (
-    ENTITY_MATCH_ALL,
     ATTR_ENTITY_ID,
+    ENTITY_MATCH_ALL,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
 from homeassistant.helpers.typing import HomeAssistantType
+
 from tests.components.directv import setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -105,6 +106,7 @@ async def test_unique_id(
 
     unavailable_client = entity_registry.async_get(UNAVAILABLE_ENTITY_ID)
     assert unavailable_client.unique_id == "9XXXXXXXXXX9"
+
 
 async def test_main_services(
     hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
