@@ -81,7 +81,6 @@ async def async_setup(hass, config):
     try:
         await api.connection.async_connect()
     except OSError as ex:
-        """Raise platform not ready to retry setup on network startup."""
         raise PlatformNotReady() from ex
 
     if not api.is_connected:
