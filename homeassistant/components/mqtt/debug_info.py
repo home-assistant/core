@@ -1,6 +1,6 @@
 """Helper to handle a set of topics to subscribe to."""
-import asyncio
-from functools import partial, wraps
+from collections import deque
+from functools import wraps
 import logging
 from typing import Any
 
@@ -22,37 +22,17 @@ def log_messages(hass: HomeAssistantType, entity_id: str) -> MessageCallbackType
         """Log message."""
         debug_info = hass.data[DATA_MQTT_DEBUG_INFO]
         messages = debug_info["entities"][entity_id]["topics"][msg.topic]
-        if len(messages) >= STORED_MESSAGES:
-            messages.pop(0)
         messages.append(msg.payload)
 
     def _decorator(msg_callback: MessageCallbackType):
-        # Check for partials to properly determine if coroutine function
-        check_func = msg_callback
-        while isinstance(check_func, partial):
-            check_func = check_func.func
+        @wraps(msg_callback)
+        def wrapper(msg: Any) -> None:
+            """Log message."""
+            _log_message(msg)
+            msg_callback(msg)
 
-        wrapper_func = None
-        if asyncio.iscoroutinefunction(check_func):
-
-            @wraps(msg_callback)
-            async def async_wrapper(msg: Any) -> None:
-                """Log message."""
-                _log_message(msg)
-                await msg_callback(msg)
-
-            wrapper_func = async_wrapper
-        else:
-
-            @wraps(msg_callback)
-            def wrapper(msg: Any) -> None:
-                """Log message."""
-                _log_message(msg)
-                msg_callback(msg)
-
-            wrapper_func = wrapper
-        setattr(wrapper_func, "__entity_id", entity_id)
-        return wrapper_func
+        setattr(wrapper, "__entity_id", entity_id)
+        return wrapper
 
     return _decorator
 
@@ -67,7 +47,7 @@ def add_topic(hass, message_callback, topic):
         entity_info = debug_info["entities"].setdefault(
             entity_id, {"topics": {}, "discovery_data": {}}
         )
-        entity_info["topics"][topic] = []
+        entity_info["topics"][topic] = deque([], STORED_MESSAGES)
 
 
 def remove_topic(hass, message_callback, topic):
@@ -133,34 +113,38 @@ async def info_for_device(hass, device_id):
         DATA_MQTT_DEBUG_INFO, {"entities": {}, "triggers": {}}
     )
     for entry in entries:
-        if entry.entity_id in mqtt_debug_info["entities"]:
-            entity_info = mqtt_debug_info["entities"][entry.entity_id]
-            topics = [
-                {"topic": topic, "messages": messages}
-                for topic, messages in entity_info["topics"].items()
-            ]
-            discovery_data = {
-                "discovery_topic": entity_info["discovery_data"].get(
-                    ATTR_DISCOVERY_TOPIC, ""
-                ),
-                "discovery_payload": entity_info["discovery_data"].get(
-                    ATTR_DISCOVERY_PAYLOAD, ""
-                ),
+        if entry.entity_id not in mqtt_debug_info["entities"]:
+            continue
+
+        entity_info = mqtt_debug_info["entities"][entry.entity_id]
+        topics = [
+            {"topic": topic, "messages": list(messages)}
+            for topic, messages in entity_info["topics"].items()
+        ]
+        discovery_data = {
+            "discovery_topic": entity_info["discovery_data"].get(
+                ATTR_DISCOVERY_TOPIC, ""
+            ),
+            "discovery_payload": entity_info["discovery_data"].get(
+                ATTR_DISCOVERY_PAYLOAD, ""
+            ),
+        }
+        mqtt_info["entities"].append(
+            {
+                "entity_id": entry.entity_id,
+                "topics": topics,
+                "discovery_data": discovery_data,
             }
-            mqtt_info["entities"].append(
-                {
-                    "entity_id": entry.entity_id,
-                    "topics": topics,
-                    "discovery_data": discovery_data,
-                }
-            )
+        )
 
     for trigger in mqtt_debug_info["triggers"].values():
-        if trigger["device_id"] == device_id:
-            discovery_data = {
-                "discovery_topic": trigger["discovery_data"][ATTR_DISCOVERY_TOPIC],
-                "discovery_payload": trigger["discovery_data"][ATTR_DISCOVERY_PAYLOAD],
-            }
-            mqtt_info["triggers"].append({"discovery_data": discovery_data})
+        if trigger["device_id"] != device_id:
+            continue
+
+        discovery_data = {
+            "discovery_topic": trigger["discovery_data"][ATTR_DISCOVERY_TOPIC],
+            "discovery_payload": trigger["discovery_data"][ATTR_DISCOVERY_PAYLOAD],
+        }
+        mqtt_info["triggers"].append({"discovery_data": discovery_data})
 
     return mqtt_info
