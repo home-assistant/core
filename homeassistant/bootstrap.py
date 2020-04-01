@@ -325,15 +325,30 @@ async def _async_set_up_integrations(
     hass: core.HomeAssistant, config: Dict[str, Any]
 ) -> None:
     """Set up all the integrations."""
+
+    async def async_setup_multi_components(domains: Set[str]) -> None:
+        """Set up multiple domains. Log on failure."""
+        futures = {
+            domain: hass.async_create_task(async_setup_component(hass, domain, config))
+            for domain in domains
+        }
+        await asyncio.wait(futures.values())
+        errors = [domain for domain in domains if futures[domain].exception()]
+        for domain in errors:
+            exception = futures[domain].exception()
+            _LOGGER.error(
+                "Error setting up integration %s - received exception",
+                domain,
+                exc_info=(type(exception), exception, exception.__traceback__),
+            )
+
     domains = _get_domains(hass, config)
 
     # Start up debuggers. Start these first in case they want to wait.
     debuggers = domains & DEBUGGER_INTEGRATIONS
     if debuggers:
         _LOGGER.debug("Starting up debuggers %s", debuggers)
-        await asyncio.gather(
-            *(async_setup_component(hass, domain, config) for domain in debuggers)
-        )
+        await async_setup_multi_components(debuggers)
         domains -= DEBUGGER_INTEGRATIONS
 
     # Resolve all dependencies of all components so we can find the logging
@@ -358,9 +373,7 @@ async def _async_set_up_integrations(
     if logging_domains:
         _LOGGER.info("Setting up %s", logging_domains)
 
-        await asyncio.gather(
-            *(async_setup_component(hass, domain, config) for domain in logging_domains)
-        )
+        await async_setup_multi_components(logging_domains)
 
     # Kick off loading the registries. They don't need to be awaited.
     asyncio.gather(
@@ -370,9 +383,7 @@ async def _async_set_up_integrations(
     )
 
     if stage_1_domains:
-        await asyncio.gather(
-            *(async_setup_component(hass, domain, config) for domain in stage_1_domains)
-        )
+        await async_setup_multi_components(stage_1_domains)
 
     # Load all integrations
     after_dependencies: Dict[str, Set[str]] = {}
@@ -401,9 +412,7 @@ async def _async_set_up_integrations(
 
         _LOGGER.debug("Setting up %s", domains_to_load)
 
-        await asyncio.gather(
-            *(async_setup_component(hass, domain, config) for domain in domains_to_load)
-        )
+        await async_setup_multi_components(domains_to_load)
 
         last_load = domains_to_load
         stage_2_domains -= domains_to_load
@@ -413,9 +422,7 @@ async def _async_set_up_integrations(
     if stage_2_domains:
         _LOGGER.debug("Final set up: %s", stage_2_domains)
 
-        await asyncio.gather(
-            *(async_setup_component(hass, domain, config) for domain in stage_2_domains)
-        )
+        await async_setup_multi_components(stage_2_domains)
 
     # Wrap up startup
     await hass.async_block_till_done()

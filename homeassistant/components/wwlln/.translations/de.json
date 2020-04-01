@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Dieser Standort ist bereits registriert.",
+            "window_too_small": "Ein zu kleines Fenster f\u00fchrt dazu, dass Home Assistant Ereignisse verpasst."
+        },
         "error": {
             "identifier_exists": "Standort bereits registriert"
         },

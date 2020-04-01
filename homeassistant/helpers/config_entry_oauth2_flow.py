@@ -58,11 +58,10 @@ class AbstractOAuth2Implementation(ABC):
 
         Pass external data in with:
 
-        ```python
         await hass.config_entries.flow.async_configure(
             flow_id=flow_id, user_input=external_data
         )
-        ```
+
         """
 
     @abstractmethod

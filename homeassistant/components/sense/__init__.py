@@ -26,6 +26,7 @@ from .const import (
     SENSE_DEVICE_UPDATE,
     SENSE_DEVICES_DATA,
     SENSE_DISCOVERED_DEVICES_DATA,
+    SENSE_TIMEOUT_EXCEPTIONS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -101,11 +102,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except SenseAuthenticationException:
         _LOGGER.error("Could not authenticate with sense server")
         return False
-    except SenseAPITimeoutException:
+    except SENSE_TIMEOUT_EXCEPTIONS:
         raise ConfigEntryNotReady
 
     sense_devices_data = SenseDevicesData()
-    sense_discovered_devices = await gateway.get_discovered_device_data()
+    try:
+        sense_discovered_devices = await gateway.get_discovered_device_data()
+    except SENSE_TIMEOUT_EXCEPTIONS:
+        raise ConfigEntryNotReady
 
     hass.data[DOMAIN][entry.entry_id] = {
         SENSE_DATA: gateway,

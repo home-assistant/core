@@ -88,7 +88,7 @@ class LovelaceStorage(LovelaceConfig):
             storage_key = CONFIG_STORAGE_KEY_DEFAULT
         else:
             url_path = config[CONF_URL_PATH]
-            storage_key = CONFIG_STORAGE_KEY.format(url_path)
+            storage_key = CONFIG_STORAGE_KEY.format(config["id"])
 
         super().__init__(hass, url_path, config)
 
@@ -101,7 +101,7 @@ class LovelaceStorage(LovelaceConfig):
         return MODE_STORAGE
 
     async def async_get_info(self):
-        """Return the YAML storage mode."""
+        """Return the Lovelace storage info."""
         if self._data is None:
             await self._load()
 
@@ -213,7 +213,6 @@ def _config_info(mode, config):
     """Generate info about the config."""
     return {
         "mode": mode,
-        "resources": len(config.get("resources", [])),
         "views": len(config.get("views", [])),
     }
 

@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Callable, TypeVar
 
 import zigpy.device
 import zigpy.endpoint
+import zigpy.group
 import zigpy.zcl
 import zigpy.zdo
 
@@ -12,14 +13,16 @@ CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)
 ChannelType = "ZigbeeChannel"
 ChannelsType = "Channels"
 ChannelPoolType = "ChannelPool"
-EventRelayChannelType = "EventRelayChannel"
+ClientChannelType = "ClientChannel"
 ZDOChannelType = "ZDOChannel"
 ZhaDeviceType = "ZHADevice"
 ZhaEntityType = "ZHAEntity"
 ZhaGatewayType = "ZHAGateway"
+ZhaGroupType = "ZHAGroupType"
 ZigpyClusterType = zigpy.zcl.Cluster
 ZigpyDeviceType = zigpy.device.Device
 ZigpyEndpointType = zigpy.endpoint.Endpoint
+ZigpyGroupType = zigpy.group.Group
 ZigpyZdoType = zigpy.zdo.ZDO
 
 if TYPE_CHECKING:
@@ -33,8 +36,9 @@ if TYPE_CHECKING:
     ChannelType = base_channels.ZigbeeChannel
     ChannelsType = channels.Channels
     ChannelPoolType = channels.ChannelPool
-    EventRelayChannelType = base_channels.EventRelayChannel
+    ClientChannelType = base_channels.ClientChannel
     ZDOChannelType = base_channels.ZDOChannel
     ZhaDeviceType = homeassistant.components.zha.core.device.ZHADevice
     ZhaEntityType = homeassistant.components.zha.entity.ZhaEntity
     ZhaGatewayType = homeassistant.components.zha.core.gateway.ZHAGateway
+    ZhaGroupType = homeassistant.components.zha.core.group.ZHAGroup

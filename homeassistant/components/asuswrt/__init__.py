@@ -73,8 +73,8 @@ async def async_setup(hass, config):
         conf.get("ssh_key", conf.get("pub_key", "")),
         conf[CONF_MODE],
         conf[CONF_REQUIRE_IP],
-        conf[CONF_INTERFACE],
-        conf[CONF_DNSMASQ],
+        interface=conf[CONF_INTERFACE],
+        dnsmasq=conf[CONF_DNSMASQ],
     )
 
     await api.connection.async_connect()

@@ -757,6 +757,40 @@ async def test_attach_remove_late2(hass, device_reg, mqtt_mock):
     assert len(calls) == 0
 
 
+async def test_entity_device_info_with_connection(hass, mqtt_mock):
+    """Test MQTT device registry integration."""
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    data = json.dumps(
+        {
+            "automation_type": "trigger",
+            "topic": "test-topic",
+            "type": "foo",
+            "subtype": "bar",
+            "device": {
+                "connections": [["mac", "02:5b:26:a8:dc:12"]],
+                "manufacturer": "Whatever",
+                "name": "Beer",
+                "model": "Glass",
+                "sw_version": "0.1-beta",
+            },
+        }
+    )
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data)
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device(set(), {("mac", "02:5b:26:a8:dc:12")})
+    assert device is not None
+    assert device.connections == {("mac", "02:5b:26:a8:dc:12")}
+    assert device.manufacturer == "Whatever"
+    assert device.name == "Beer"
+    assert device.model == "Glass"
+    assert device.sw_version == "0.1-beta"
+
+
 async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     """Test MQTT device registry integration."""
     entry = MockConfigEntry(domain=DOMAIN)
@@ -772,7 +806,6 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
             "subtype": "bar",
             "device": {
                 "identifiers": ["helloworld"],
-                "connections": [["mac", "02:5b:26:a8:dc:12"]],
                 "manufacturer": "Whatever",
                 "name": "Beer",
                 "model": "Glass",
@@ -786,7 +819,6 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     device = registry.async_get_device({("mqtt", "helloworld")}, set())
     assert device is not None
     assert device.identifiers == {("mqtt", "helloworld")}
-    assert device.connections == {("mac", "02:5b:26:a8:dc:12")}
     assert device.manufacturer == "Whatever"
     assert device.name == "Beer"
     assert device.model == "Glass"

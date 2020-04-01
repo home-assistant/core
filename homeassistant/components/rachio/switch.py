@@ -6,20 +6,14 @@ import logging
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import (
-    SIGNAL_RACHIO_CONTROLLER_UPDATE,
-    SIGNAL_RACHIO_ZONE_UPDATE,
-    SUBTYPE_SLEEP_MODE_OFF,
-    SUBTYPE_SLEEP_MODE_ON,
-    SUBTYPE_ZONE_COMPLETED,
-    SUBTYPE_ZONE_STARTED,
-    SUBTYPE_ZONE_STOPPED,
-    RachioDeviceInfoProvider,
-)
 from .const import (
+    ATTR_ZONE_SHADE,
+    ATTR_ZONE_TYPE,
     CONF_MANUAL_RUN_MINS,
     DEFAULT_MANUAL_RUN_MINS,
     DOMAIN as DOMAIN_RACHIO,
+    KEY_CUSTOM_CROP,
+    KEY_CUSTOM_SHADE,
     KEY_DEVICE_ID,
     KEY_ENABLED,
     KEY_ID,
@@ -30,6 +24,16 @@ from .const import (
     KEY_SUMMARY,
     KEY_ZONE_ID,
     KEY_ZONE_NUMBER,
+    SIGNAL_RACHIO_CONTROLLER_UPDATE,
+    SIGNAL_RACHIO_ZONE_UPDATE,
+)
+from .entity import RachioDevice
+from .webhooks import (
+    SUBTYPE_SLEEP_MODE_OFF,
+    SUBTYPE_SLEEP_MODE_ON,
+    SUBTYPE_ZONE_COMPLETED,
+    SUBTYPE_ZONE_STARTED,
+    SUBTYPE_ZONE_STOPPED,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,7 +66,7 @@ def _create_entities(hass, config_entry):
     return entities
 
 
-class RachioSwitch(RachioDeviceInfoProvider, SwitchDevice):
+class RachioSwitch(RachioDevice, SwitchDevice):
     """Represent a Rachio state that can be toggled."""
 
     def __init__(self, controller, poll=True):
@@ -73,11 +77,6 @@ class RachioSwitch(RachioDeviceInfoProvider, SwitchDevice):
             self._state = self._poll_update()
         else:
             self._state = None
-
-    @property
-    def should_poll(self) -> bool:
-        """Declare that this entity pushes its state to HA."""
-        return False
 
     @property
     def name(self) -> str:
@@ -92,7 +91,6 @@ class RachioSwitch(RachioDeviceInfoProvider, SwitchDevice):
     @abstractmethod
     def _poll_update(self, data=None) -> bool:
         """Poll the API."""
-        pass
 
     def _handle_any_update(self, *args, **kwargs) -> None:
         """Determine whether an update event applies to this device."""
@@ -106,7 +104,6 @@ class RachioSwitch(RachioDeviceInfoProvider, SwitchDevice):
     @abstractmethod
     def _handle_update(self, *args, **kwargs) -> None:
         """Handle incoming webhook data."""
-        pass
 
 
 class RachioStandbySwitch(RachioSwitch):
@@ -169,15 +166,19 @@ class RachioZone(RachioSwitch):
     def __init__(self, person, controller, data, current_schedule):
         """Initialize a new Rachio Zone."""
         self._id = data[KEY_ID]
+        _LOGGER.debug("zone_data: %s", data)
         self._zone_name = data[KEY_NAME]
         self._zone_number = data[KEY_ZONE_NUMBER]
         self._zone_enabled = data[KEY_ENABLED]
         self._entity_picture = data.get(KEY_IMAGE_URL)
         self._person = person
+        self._shade_type = data.get(KEY_CUSTOM_SHADE, {}).get(KEY_NAME)
+        self._zone_type = data.get(KEY_CUSTOM_CROP, {}).get(KEY_NAME)
         self._summary = str()
         self._current_schedule = current_schedule
         super().__init__(controller, poll=False)
         self._state = self.zone_id == self._current_schedule.get(KEY_ZONE_ID)
+        self._undo_dispatcher = None
 
     def __str__(self):
         """Display the zone as a string."""
@@ -216,7 +217,12 @@ class RachioZone(RachioSwitch):
     @property
     def state_attributes(self) -> dict:
         """Return the optional state attributes."""
-        return {ATTR_ZONE_NUMBER: self._zone_number, ATTR_ZONE_SUMMARY: self._summary}
+        props = {ATTR_ZONE_NUMBER: self._zone_number, ATTR_ZONE_SUMMARY: self._summary}
+        if self._shade_type:
+            props[ATTR_ZONE_SHADE] = self._shade_type
+        if self._zone_type:
+            props[ATTR_ZONE_TYPE] = self._zone_type
+        return props
 
     def turn_on(self, **kwargs) -> None:
         """Start watering this zone."""
@@ -262,6 +268,11 @@ class RachioZone(RachioSwitch):
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        async_dispatcher_connect(
+        self._undo_dispatcher = async_dispatcher_connect(
             self.hass, SIGNAL_RACHIO_ZONE_UPDATE, self._handle_update
         )
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe from updates."""
+        if self._undo_dispatcher:
+            self._undo_dispatcher()

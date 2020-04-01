@@ -22,7 +22,8 @@
     "step": {
       "init": {
         "data": {
-          "scan_interval": "Seconds between scans"
+          "scan_interval": "Seconds between scans",
+          "enable_wake_on_start": "Force cars awake on startup"
         }
       }
     }

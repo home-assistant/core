@@ -3,6 +3,7 @@ from asynctest import CoroutineMock, MagicMock, Mock, patch
 from homematicip.aio.auth import AsyncAuth
 from homematicip.aio.connection import AsyncConnection
 from homematicip.aio.home import AsyncHome
+from homematicip.base.enums import WeatherCondition, WeatherDayTime
 import pytest
 
 from homeassistant import config_entries
@@ -115,10 +116,21 @@ def simple_mock_home_fixture():
         devices=[],
         groups=[],
         location=Mock(),
-        weather=Mock(create=True),
+        weather=Mock(
+            temperature=0.0,
+            weatherCondition=WeatherCondition.UNKNOWN,
+            weatherDayTime=WeatherDayTime.DAY,
+            minTemperature=0.0,
+            maxTemperature=0.0,
+            humidity=0,
+            windSpeed=0.0,
+            windDirection=0,
+            vaporAmount=0.0,
+        ),
         id=42,
         dutyCycle=88,
         connected=True,
+        currentAPVersion="2.0.36",
     )
 
     with patch(

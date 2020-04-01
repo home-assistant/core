@@ -88,8 +88,14 @@ class DataUpdateCoordinator:
             self._unsub_refresh()
             self._unsub_refresh = None
 
+        # We _floor_ utcnow to create a schedule on a rounded second,
+        # minimizing the time between the point and the real activation.
+        # That way we obtain a constant update frequency,
+        # as long as the update process takes less than a second
         self._unsub_refresh = async_track_point_in_utc_time(
-            self.hass, self._handle_refresh_interval, utcnow() + self.update_interval
+            self.hass,
+            self._handle_refresh_interval,
+            utcnow().replace(microsecond=0) + self.update_interval,
         )
 
     async def _handle_refresh_interval(self, _now: datetime) -> None:

@@ -165,7 +165,7 @@ async def test_system_health_info_autogen(hass):
     """Test system health info endpoint."""
     assert await async_setup_component(hass, "lovelace", {})
     info = await get_system_health_info(hass, "lovelace")
-    assert info == {"mode": "auto-gen"}
+    assert info == {"dashboards": 1, "mode": "auto-gen", "resources": 0}
 
 
 async def test_system_health_info_storage(hass, hass_storage):
@@ -177,7 +177,7 @@ async def test_system_health_info_storage(hass, hass_storage):
     }
     assert await async_setup_component(hass, "lovelace", {})
     info = await get_system_health_info(hass, "lovelace")
-    assert info == {"mode": "storage", "resources": 0, "views": 0}
+    assert info == {"dashboards": 1, "mode": "storage", "resources": 0, "views": 0}
 
 
 async def test_system_health_info_yaml(hass):
@@ -188,7 +188,7 @@ async def test_system_health_info_yaml(hass):
         return_value={"views": [{"cards": []}]},
     ):
         info = await get_system_health_info(hass, "lovelace")
-    assert info == {"mode": "yaml", "resources": 0, "views": 1}
+    assert info == {"dashboards": 1, "mode": "yaml", "resources": 0, "views": 1}
 
 
 async def test_system_health_info_yaml_not_found(hass):
@@ -196,8 +196,10 @@ async def test_system_health_info_yaml_not_found(hass):
     assert await async_setup_component(hass, "lovelace", {"lovelace": {"mode": "YAML"}})
     info = await get_system_health_info(hass, "lovelace")
     assert info == {
+        "dashboards": 1,
         "mode": "yaml",
         "error": "{} not found".format(hass.config.path("ui-lovelace.yaml")),
+        "resources": 0,
     }
 
 
@@ -373,7 +375,6 @@ async def test_storage_dashboards(hass, hass_ws_client, hass_storage):
     assert response["result"]["icon"] == "mdi:map"
 
     dashboard_id = response["result"]["id"]
-    dashboard_path = response["result"]["url_path"]
 
     assert "created-url-path" in hass.data[frontend.DATA_PANELS]
 
@@ -408,9 +409,9 @@ async def test_storage_dashboards(hass, hass_ws_client, hass_storage):
     )
     response = await client.receive_json()
     assert response["success"]
-    assert hass_storage[dashboard.CONFIG_STORAGE_KEY.format(dashboard_path)][
-        "data"
-    ] == {"config": {"yo": "hello"}}
+    assert hass_storage[dashboard.CONFIG_STORAGE_KEY.format(dashboard_id)]["data"] == {
+        "config": {"yo": "hello"}
+    }
     assert len(events) == 1
     assert events[0].data["url_path"] == "created-url-path"
 
