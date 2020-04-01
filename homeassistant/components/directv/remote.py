@@ -70,7 +70,7 @@ class DIRECTVRemote(DIRECTVEntity, RemoteDevice):
         """Update device state."""
         status = await self.dtv.status(self._address)
 
-        if status == "active" or status == "standby":
+        if status in ("active", "standby"):
             self._available = True
             self._is_on = status == "active"
         else:
