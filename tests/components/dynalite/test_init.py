@@ -69,7 +69,6 @@ async def test_async_setup_bad_config1(hass):
             },
         )
         await hass.async_block_till_done()
-    assert dynalite.DOMAIN not in hass.data
 
 
 async def test_async_setup_bad_config2(hass):
