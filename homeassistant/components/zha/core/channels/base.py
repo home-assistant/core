@@ -20,9 +20,6 @@ from ..const import (
     ATTR_UNIQUE_ID,
     ATTR_VALUE,
     CHANNEL_ZDO,
-    REPORT_CONFIG_MAX_INT,
-    REPORT_CONFIG_MIN_INT,
-    REPORT_CONFIG_RPT_CHANGE,
     SIGNAL_ATTR_UPDATED,
 )
 from ..helpers import LogMixin, safe_read
@@ -149,57 +146,47 @@ class ZigbeeChannel(LogMixin):
                 "Failed to bind '%s' cluster: %s", self.cluster.ep_attribute, str(ex)
             )
 
-    async def configure_reporting(
-        self,
-        attr,
-        report_config=(
-            REPORT_CONFIG_MIN_INT,
-            REPORT_CONFIG_MAX_INT,
-            REPORT_CONFIG_RPT_CHANGE,
-        ),
-    ):
+    async def configure_reporting(self) -> None:
         """Configure attribute reporting for a cluster.
 
         This also swallows DeliveryError exceptions that are thrown when
         devices are unreachable.
         """
-        attr_name = self.cluster.attributes.get(attr, [attr])[0]
-
         kwargs = {}
         if self.cluster.cluster_id >= 0xFC00 and self._ch_pool.manufacturer_code:
             kwargs["manufacturer"] = self._ch_pool.manufacturer_code
 
-        min_report_int, max_report_int, reportable_change = report_config
-        try:
-            res = await self.cluster.configure_reporting(
-                attr, min_report_int, max_report_int, reportable_change, **kwargs
-            )
-            self.debug(
-                "reporting '%s' attr on '%s' cluster: %d/%d/%d: Result: '%s'",
-                attr_name,
-                self.cluster.ep_attribute,
-                min_report_int,
-                max_report_int,
-                reportable_change,
-                res,
-            )
-        except (zigpy.exceptions.DeliveryError, asyncio.TimeoutError) as ex:
-            self.debug(
-                "failed to set reporting for '%s' attr on '%s' cluster: %s",
-                attr_name,
-                self.cluster.ep_attribute,
-                str(ex),
-            )
+        for report in self._report_config:
+            attr = report["attr"]
+            attr_name = self.cluster.attributes.get(attr, [attr])[0]
+            min_report_int, max_report_int, reportable_change = report["config"]
+            try:
+                res = await self.cluster.configure_reporting(
+                    attr, min_report_int, max_report_int, reportable_change, **kwargs
+                )
+                self.debug(
+                    "reporting '%s' attr on '%s' cluster: %d/%d/%d: Result: '%s'",
+                    attr_name,
+                    self.cluster.ep_attribute,
+                    min_report_int,
+                    max_report_int,
+                    reportable_change,
+                    res,
+                )
+            except (zigpy.exceptions.DeliveryError, asyncio.TimeoutError) as ex:
+                self.debug(
+                    "failed to set reporting for '%s' attr on '%s' cluster: %s",
+                    attr_name,
+                    self.cluster.ep_attribute,
+                    str(ex),
+                )
 
     async def async_configure(self):
         """Set cluster binding and attribute reporting."""
         if not self._ch_pool.skip_configuration:
             await self.bind()
             if self.cluster.is_server:
-                for report_config in self._report_config:
-                    await self.configure_reporting(
-                        report_config["attr"], report_config["config"]
-                    )
+                await self.configure_reporting()
             self.debug("finished channel configuration")
         else:
             self.debug("skipping channel configuration")
