@@ -65,20 +65,23 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the asuswrt component."""
+    
     await async_setup_retry(hass, config)
     return True
 
 
 async def async_retry_task(hass, config, retry_count):
-    async_call_later(hass, RETRY_DELAY, lambda _:
-                        hass.async_create_task(
-                            async_setup_retry(hass, config, retry_count)
-                        )
-                    )
+    """Schedule the asuswrt component setup."""
+
+    async_call_later(
+        hass,
+        RETRY_DELAY,
+        lambda _: hass.async_create_task(async_setup_retry(hass, config, retry_count)),
+     )
 
 
 async def async_setup_retry(hass, config, retry_count=0):
-    """Set up the asuswrt component."""
+    """Set up the asuswrt component with retry."""
 
     conf = config[DOMAIN]
 
@@ -97,10 +100,14 @@ async def async_setup_retry(hass, config, retry_count=0):
 
     try:
         await api.connection.async_connect()
-    except OSError as ex:
+    except OSError:
         if retry_count < MAX_RETRY_COUNT:
-            _LOGGER.warning("Unable to setup integration %s. Retrying in %s seconds...", DOMAIN, RETRY_DELAY)
-            await async_retry_task(hass, config, retry_count+1)
+            _LOGGER.warning(
+               "Unable to setup integration %s. Retrying in %s seconds...",
+               DOMAIN,
+               RETRY_DELAY,
+            )
+            await async_retry_task(hass, config, retry_count + 1)
         else:
             _LOGGER.error("Failed to setup integration %s.", DOMAIN)
 
