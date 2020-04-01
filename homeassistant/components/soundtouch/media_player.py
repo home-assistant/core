@@ -3,6 +3,7 @@ import logging
 import re
 
 from libsoundtouch import soundtouch_device
+from libsoundtouch.utils import Source
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
@@ -17,6 +18,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
+    SUPPORT_SELECT_SOURCE,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -80,6 +82,7 @@ SUPPORT_SOUNDTOUCH = (
     | SUPPORT_TURN_ON
     | SUPPORT_PLAY
     | SUPPORT_PLAY_MEDIA
+    | SUPPORT_SELECT_SOURCE
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -235,6 +238,11 @@ class SoundTouchDevice(MediaPlayerDevice):
         return MAP_STATUS.get(self._status.play_status, STATE_UNAVAILABLE)
 
     @property
+    def source(self):
+        """Return the source of the device."""
+        return self._status.source
+
+    @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._volume.muted
@@ -263,6 +271,13 @@ class SoundTouchDevice(MediaPlayerDevice):
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         self._device.set_volume(int(volume * 100))
+
+    def select_source(self, source):
+        """Set device source. AUX, BLUETOOTH."""
+        if source == Source.AUX:
+            self._device.select_source_aux()
+        if source == Source.BLUETOOTH:
+            self._device.select_source_bluetooth()
 
     def mute_volume(self, mute):
         """Send mute command."""
