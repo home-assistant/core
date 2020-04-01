@@ -122,12 +122,8 @@ async def info_for_device(hass, device_id):
             for topic, messages in entity_info["topics"].items()
         ]
         discovery_data = {
-            "discovery_topic": entity_info["discovery_data"].get(
-                ATTR_DISCOVERY_TOPIC, ""
-            ),
-            "discovery_payload": entity_info["discovery_data"].get(
-                ATTR_DISCOVERY_PAYLOAD, ""
-            ),
+            "topic": entity_info["discovery_data"].get(ATTR_DISCOVERY_TOPIC, ""),
+            "payload": entity_info["discovery_data"].get(ATTR_DISCOVERY_PAYLOAD, ""),
         }
         mqtt_info["entities"].append(
             {
@@ -142,8 +138,8 @@ async def info_for_device(hass, device_id):
             continue
 
         discovery_data = {
-            "discovery_topic": trigger["discovery_data"][ATTR_DISCOVERY_TOPIC],
-            "discovery_payload": trigger["discovery_data"][ATTR_DISCOVERY_PAYLOAD],
+            "topic": trigger["discovery_data"][ATTR_DISCOVERY_TOPIC],
+            "payload": trigger["discovery_data"][ATTR_DISCOVERY_PAYLOAD],
         }
         mqtt_info["triggers"].append({"discovery_data": discovery_data})
 

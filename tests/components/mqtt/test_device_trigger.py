@@ -1141,9 +1141,7 @@ async def test_trigger_debug_info(hass, mqtt_mock):
     assert len(debug_info_data["entities"]) == 0
     assert len(debug_info_data["triggers"]) == 1
     assert (
-        debug_info_data["triggers"][0]["discovery_data"]["discovery_topic"]
+        debug_info_data["triggers"][0]["discovery_data"]["topic"]
         == "homeassistant/device_automation/bla/config"
     )
-    assert (
-        debug_info_data["triggers"][0]["discovery_data"]["discovery_payload"] == config
-    )
+    assert debug_info_data["triggers"][0]["discovery_data"]["payload"] == config

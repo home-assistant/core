@@ -972,8 +972,8 @@ async def test_mqtt_ws_get_device_debug_info(
                 "entity_id": "sensor.mqtt_sensor",
                 "topics": [{"topic": "foobar/sensor", "messages": []}],
                 "discovery_data": {
-                    "discovery_payload": config,
-                    "discovery_topic": "homeassistant/sensor/bla/config",
+                    "payload": config,
+                    "topic": "homeassistant/sensor/bla/config",
                 },
             }
         ],
