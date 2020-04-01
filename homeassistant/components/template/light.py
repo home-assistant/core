@@ -378,6 +378,9 @@ class LightTemplate(Light):
             return
         try:
             brightness = self._level_template.async_render()
+            if brightness is None or brightness == "None" or brightness == "":
+                self._brightness = None
+                return
             if 0 <= int(brightness) <= 255:
                 self._brightness = int(brightness)
             else:

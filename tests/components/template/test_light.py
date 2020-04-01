@@ -543,7 +543,13 @@ class TestTemplateLight:
 
     @pytest.mark.parametrize(
         "expected_level,template",
-        [(255, "{{255}}"), (None, "{{256}}"), (None, "{{x - 12}}")],
+        [
+            (255, "{{255}}"),
+            (None, "{{256}}"),
+            (None, "{{x - 12}}"),
+            (None, "{{ none }}"),
+            (None, ""),
+        ],
     )
     def test_level_template(self, expected_level, template):
         """Test the template for the level."""
