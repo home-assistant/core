@@ -388,9 +388,15 @@ class LightTemplate(Light):
                     "Received invalid brightness : %s. Expected: 0-255", brightness
                 )
                 self._brightness = None
-        except TemplateError as ex:
-            _LOGGER.error(ex)
-            self._state = None
+        except ValueError:
+            _LOGGER.error(
+                "Template must supply an integer brightness from 0-255, or 'None'",
+                exc_info=True,
+            )
+            self._brightness = None
+        except TemplateError:
+            _LOGGER.error("Invalid template", exc_info=True)
+            self._brightness = None
 
     @callback
     def update_state(self):
