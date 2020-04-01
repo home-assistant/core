@@ -14,6 +14,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,10 +78,17 @@ async def async_setup(hass, config):
         dnsmasq=conf[CONF_DNSMASQ],
     )
 
-    await api.connection.async_connect()
-    if not api.is_connected:
-        _LOGGER.error("Unable to setup component")
-        return False
+    try:
+        await api.connection.async_connect()
+        if not api.is_connected:
+            _LOGGER.error("Unable to setup component")
+            return False
+    except OSError as ex:
+        # this tipically occur during network startup
+        # raising platform not ready connection is retried
+        raise PlatformNotReady() from ex
+    except:
+        raise
 
     hass.data[DATA_ASUSWRT] = api
 
