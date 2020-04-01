@@ -33,6 +33,9 @@
         "abort": {
             "not_konn_panel": "Ikke en anerkjent Konnected.io-enhet"
         },
+        "error": {
+            "bad_host": "Ugyldig overstyr API-vertsadresse"
+        },
         "step": {
             "options_binary": {
                 "data": {
@@ -82,7 +85,9 @@
             },
             "options_misc": {
                 "data": {
-                    "blink": "Blink p\u00e5 LED-lampen n\u00e5r du sender statusendring"
+                    "api_host": "Overstyre API-vert-URL (valgfritt)",
+                    "blink": "Blink p\u00e5 LED-lampen n\u00e5r du sender statusendring",
+                    "override_api_host": "Overstyre standard Home Assistant API-vertspanel-URL"
                 },
                 "description": "Vennligst velg \u00f8nsket atferd for din panel",
                 "title": "Konfigurere Diverse"
