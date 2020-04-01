@@ -420,6 +420,7 @@ class LightTemplate(Light):
         try:
             render = self._temperature_template.async_render()
             if render in ("None", ""):
+                self._temperature = None
                 return
             temperature = int(render)
             if self.min_mireds <= temperature <= self.max_mireds:
@@ -441,11 +442,10 @@ class LightTemplate(Light):
         if self._color_template is None:
             return
 
-        self._color = None
-
         try:
             render = self._color_template.async_render()
             if render in ("None", ""):
+                self._color = None
                 return
             h_str, s_str = map(
                 float, render.replace("(", "").replace(")", "").split(",", 1)
@@ -463,7 +463,10 @@ class LightTemplate(Light):
                     h_str,
                     s_str,
                 )
+                self._color = None
             else:
                 _LOGGER.error("Received invalid hs_color : (%s)", render)
-        except TemplateError as ex:
-            _LOGGER.error(ex)
+                self._color = None
+        except TemplateError:
+            _LOGGER.error("Cannot evaluate hs_color template", exc_info=True)
+            self._color = None
