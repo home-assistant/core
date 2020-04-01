@@ -233,9 +233,7 @@ async def _async_check_db_connection(hass, call):
         # save to file
         await _async_save_db_settings_info({})
 
-        hass.states.async_set(
-            "sensor.ais_db_connection_info", "db_url_not_valid", db_connection
-        )
+        hass.states.async_set("sensor.ais_db_connection_info", "db_url_not_valid", {})
 
 
 async def _async_get_db_log_settings_info(hass, call):

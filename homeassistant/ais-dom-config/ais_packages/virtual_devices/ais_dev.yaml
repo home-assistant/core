@@ -7,6 +7,7 @@ sensor:
     name: AIS all files
     scan_interval: 3600
     command_timeout: 5
+    unit_of_measurement: "num"
 
 input_boolean:
   ais_quiet_mode:

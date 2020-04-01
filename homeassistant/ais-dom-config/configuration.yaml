@@ -37,7 +37,7 @@ media_extractor:
 
 # Enables the frontend
 frontend:
-  # development_repo: /home/andrzej/Projects/AIS-home-assistant-polymer
+  development_repo: /home/andrzej/Projects/AIS-home-assistant-polymer
   themes: !include_dir_merge_named themes
 
 
@@ -94,3 +94,4 @@ zone:
 logger:
   default: info
 
+recorder:

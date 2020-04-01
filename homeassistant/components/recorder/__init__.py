@@ -57,9 +57,7 @@ SERVICE_PURGE_SCHEMA = vol.Schema(
     }
 )
 
-# DEFAULT_URL = "sqlite:///{hass_config_path}"
-# AIS performance fix
-DEFAULT_URL = "sqlite:///:memory:"
+DEFAULT_URL = "sqlite:///{hass_config_path}"
 DEFAULT_DB_FILE = "home-assistant_v2.db"
 DEFAULT_DB_MAX_RETRIES = 10
 DEFAULT_DB_RETRY_WAIT = 3
@@ -101,7 +99,7 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Coerce(int), vol.Range(min=0)
                 ),
                 vol.Optional(CONF_DB_URL): cv.string,
-                vol.Optional(CONF_COMMIT_INTERVAL, default=60): vol.All(
+                vol.Optional(CONF_COMMIT_INTERVAL, default=1): vol.All(
                     vol.Coerce(int), vol.Range(min=0)
                 ),
                 vol.Optional(
@@ -154,11 +152,39 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # db_url = conf.get(CONF_DB_URL, None)
     # if not db_url:
     #     db_url = DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
-    # AIS dom fix
-    db_url = DEFAULT_URL
+    # AIS dom fix - get recorder config from file
+    try:
+        import json
 
-    include = conf.get(CONF_INCLUDE, {})
+        with open(
+            "/data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_db_settings_info"
+        ) as json_file:
+            db_settings = json.load(json_file)
+        db_url = db_settings["dbUrl"]
+        if db_url == "sqlite:///:memory:":
+            keep_days = 1
+            purge_interval = 1
+            commit_interval = 60
+            db_max_retries = 10
+            db_retry_wait = 3
+        else:
+            keep_days = 10
+            purge_interval = 1
+            commit_interval = 60
+            db_max_retries = 10
+            db_retry_wait = 3
+        include = conf.get(CONF_INCLUDE, {})
+    except Exception:
+        db_url = "sqlite:///:memory:"
+        keep_days = 1
+        purge_interval = 1
+        commit_interval = 60
+        db_max_retries = 10
+        db_retry_wait = 3
+        include = {"entities": ["sensor.ais_secure_android_id_dom"]}
+
     exclude = conf.get(CONF_EXCLUDE, {})
+
     instance = hass.data[DATA_INSTANCE] = Recorder(
         hass=hass,
         keep_days=keep_days,
