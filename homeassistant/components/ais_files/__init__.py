@@ -313,7 +313,7 @@ async def _async_get_db_log_settings_info(hass, call):
     hass.states.async_set("sensor.ais_db_connection_info", db_conn_step, db_settings)
 
     # enable logs on system start (if set)
-    if on_system_start and LOG_SETTINGS_INFO != {}:
+    if on_system_start and LOG_SETTINGS_INFO is not None:
         # try to reconnect the logging to file on start
         # change log settings
         # Log errors to a file if we have write access to file or config dir
