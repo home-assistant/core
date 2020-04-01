@@ -1,24 +1,15 @@
 """Support for the DIRECTV remote."""
 import logging
-from typing import Callable, List
+from typing import Any, Callable, Dict, Iterable, List, Optional
 
-from DirectPy import DIRECTV
-from requests.exceptions import RequestException
+from directv import DIRECTV, DIRECTVError
 
 from homeassistant.components.remote import RemoteDevice
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import (
-    DATA_CLIENT,
-    DATA_LOCATIONS,
-    DATA_VERSION_INFO,
-    DEFAULT_MANUFACTURER,
-    DOMAIN,
-    MODEL_CLIENT,
-    MODEL_HOST,
-)
+from . import DIRECTVEntity
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,92 +20,61 @@ async def async_setup_entry(
     async_add_entities: Callable[[List, bool], None],
 ) -> bool:
     """Load DirecTV remote based on a config entry."""
-    locations = hass.data[DOMAIN][entry.entry_id][DATA_LOCATIONS]
-    version_info = hass.data[DOMAIN][entry.entry_id][DATA_VERSION_INFO]
+    dtv = hass.data[DOMAIN][entry.entry_id]
     entities = []
 
-    for loc in locations["locations"]:
-        if "locationName" not in loc or "clientAddr" not in loc:
-            continue
-
-        if loc["clientAddr"] != "0":
-            dtv = DIRECTV(
-                entry.data[CONF_HOST],
-                DEFAULT_PORT,
-                loc["clientAddr"],
-                determine_state=False,
-            )
-        else:
-            dtv = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
-
+    for location in dtv.device.locations:
         entities.append(
-            DirecTvRemote(
-                str.title(loc["locationName"]), loc["clientAddr"], dtv, version_info,
+            DIRECTVRemote(
+                dtv=dtv, name=str.title(location.name), address=location.address,
             )
         )
 
     async_add_entities(entities, True)
 
 
-class DirecTvRemote(RemoteDevice):
+class DIRECTVRemote(DIRECTVEntity, RemoteDevice):
     """Device that sends commands to a DirecTV receiver."""
 
-    def __init__(
-        self,
-        name: str,
-        device: str,
-        dtv: DIRECTV,
-        version_info: Optional[Dict] = None,
-    ):
-        """Initialize the DirecTV device."""
-        self.dtv = dtv
-        self._name = name
-        self._unique_id = None
-        self._is_client = device != "0"
-        self._receiver_id = None
-        self._software_version = None
-
-        if self._is_client:
-            self._model = MODEL_CLIENT
-            self._unique_id = device
-
-        if version_info:
-            self._receiver_id = "".join(version_info["receiverId"].split())
-
-            if not self._is_client:
-                self._unique_id = self._receiver_id
-                self._model = MODEL_HOST
-                self._software_version = version_info["stbSoftwareVersion"]
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
+    def __init__(self, *, dtv: DIRECTV, name: str, address: str = "0") -> None:
+        """Initialize DirecTV remote."""
+        super().__init__(
+            dtv=dtv, name=name, address=address,
+        )
 
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._unique_id
+        if self._address == "0":
+            return self.dtv.device.info.receiver_id
+
+        return self._address
 
     @property
-    def device_info(self):
-        """Return device specific attributes."""
-        return {
-            "name": self.name,
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "manufacturer": DEFAULT_MANUFACTURER,
-            "model": self._model,
-            "sw_version": self._software_version,
-            "via_device": (DOMAIN, self._receiver_id),
-        }
+    def is_on(self) -> bool:
+        """Return True if entity is on."""
+        status = await self.dtv.status(self._address)
+
+        if status == "active":
+            return True
+
+        return False
 
     @property
     def should_poll(self):
         """No polling needed."""
         return False
 
-    def _send_key(self, key):
-        """Send a key press command.
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the device on."""
+        await self.dtv.remote("poweron", self._address)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the device off."""
+        await self.dtv.remote("poweroff", self._address)
+
+    async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
+        """Send a command to a device.
 
         Supported keys: power, poweron, poweroff, format,
         pause, rew, replay, stop, advance, ffwd, record,
@@ -123,15 +83,10 @@ class DirecTvRemote(RemoteDevice):
         blue, chanup, chandown, prev, 0, 1, 2, 3, 4, 5,
         6, 7, 8, 9, dash, enter
         """
-        _LOGGER.debug("Sending key: '%s'", key)
-        try:
-            self.dtv.key_press(key)
-        except RequestException as ex:
-            _LOGGER.error(
-                "Transmit of key failed, %s, exception: %s", key, ex
-            )
-
-    def send_command(self, command, **kwargs):
-        """Send a command to a device."""
         for single_command in command:
-            self._send_key(single_command)
+            try:
+                await self.dtv.remote(single_command, self._address)
+            except DIRECTVError:
+                _LOGGER.exception(
+                    "Sending command %s to device %s failed", single_command, self._device_id,
+                )
