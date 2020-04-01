@@ -86,8 +86,6 @@ async def async_setup(hass, config):
     except OSError as ex:
         """Raise platform not ready to retry setup on network startup."""
         raise PlatformNotReady() from ex
-    except:
-        raise
 
     hass.data[DATA_ASUSWRT] = api
 
