@@ -73,4 +73,4 @@ jobs:
           sed -i "s|# bme680|bme680|g" ${requirement_file}
           sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
         done
-      displayName: 'Prepare requirements files for Hass.io'
+      displayName: 'Prepare requirements files for Home Assistant wheels'
