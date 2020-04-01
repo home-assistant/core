@@ -27,6 +27,7 @@ async def async_setup(hass, config):
     hass.states.async_set("sensor.version_info", "", {"friendly_name": "Wersja"})
     hass.states.async_set("sensor.aisbackupinfo", 0, {})
     hass.states.async_set("sensor.ais_db_connection_info", 0, {})
+    hass.states.async_set("sensor.ais_logs_settings_info", 0, {})
     hass.states.async_set(
         "sensor.ais_secure_android_id_dom",
         "",

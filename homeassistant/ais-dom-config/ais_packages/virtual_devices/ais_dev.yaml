@@ -43,20 +43,6 @@ input_select:
     options: ["-"]
     icon: mdi:usb-flash-drive
     initial: "-"
-  ais_system_logs_level:
-    name: "System logs level"
-    options: ["critical", "fatal", "error", "warning", "warn", "info", "debug"]
-    icon: mdi:bug-check
-  ais_db_engines:
-    name: "DB engines"
-    options: ["-", "SQLite (memory)", "SQLite (file)", "MariaDB", "MySQL", "PostgreSQL"]
-    icon: mdi:database
-
-
-input_text:
-  ais_logs_path:
-    name: Path for logs
-    icon: mdi:file-document-edit-outline
 
 input_number:
   assistant_rate:

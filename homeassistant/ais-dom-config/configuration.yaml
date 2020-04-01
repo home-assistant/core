@@ -95,3 +95,30 @@ logger:
   default: info
 
 recorder:
+  exclude:
+    domains:
+      - ais_dom
+      - ais_ai_service
+      - ais_amplifier_service
+      - ais_audiobooks_service
+      - ais_bookmarks
+      - ais_cloud
+      - ais_device_search_mqtt
+      - ais_dom_device
+      - ais_drives_service
+      - ais_exo_player
+      - ais_files
+      - ais_gm_service
+      - ais_google_home
+      - ais_help
+      - ais_host
+      - ais_ingress
+      - ais_knowledge_service
+      - ais_mdns
+      - ais_qrcode
+      - ais_shell_command
+      - ais_spotify_service
+      - ais_updater
+      - ais_usb
+      - ais_wifi_service
+      - ais_yt_service

@@ -21,12 +21,14 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 IMG_PATH = "/data/data/pl.sviete.dom/files/home/AIS/www/img/"
-LOG_PATH_INFO_FILE = "/data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_log_path_info"
+LOG_SETTINGS_INFO_FILE = (
+    "/data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_log_settings_info"
+)
 DB_SETTINGS_INFO_FILE = (
     "/data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_db_settings_info"
 )
-LOG_PATH_INFO = None
-DB_SETTINGS_INFO = {}
+LOG_SETTINGS_INFO = None
+DB_SETTINGS_INFO = None
 G_LOG_PROCESS = None
 
 
@@ -106,21 +108,24 @@ async def _async_refresh_files(hass):
 async def _async_change_logger_settings(hass, call):
     # on logger change
     global G_LOG_PROCESS
-    if "value" not in call.data:
-        _LOGGER.error("No value")
+    if "log_drive" not in call.data:
+        _LOGGER.error("No log_drive")
+        return
+    if "log_level" not in call.data:
+        _LOGGER.error("No log_level")
         return
 
-    log_drive = call.data["value"]
+    log_drive = call.data["log_drive"]
+    log_level = call.data["log_level"]
 
-    hass.async_add_job(
-        hass.services.async_call(
-            "input_text",
-            "set_value",
-            {"entity_id": "input_text.ais_logs_path", "value": log_drive},
-        )
-    )
     # save to file
-    await _async_save_log_file_path_info(hass, log_drive)
+    await _async_save_logs_settings_info(log_drive, log_level)
+    # set the logs settings info
+    hass.states.async_set(
+        "sensor.ais_logs_settings_info",
+        "0",
+        {"logDrive": log_drive, "logLevel": log_level},
+    )
 
     # Stop current log process
     if G_LOG_PROCESS is not None:
@@ -130,8 +135,10 @@ async def _async_change_logger_settings(hass, call):
 
     # check if drive is -
     if log_drive == "-":
-        hass.services.async_call(
-            "ais_ai_service", "say_it", {"text": "Logowanie do pliku wyłączone"}
+        hass.async_add_job(
+            hass.services.async_call(
+                "ais_ai_service", "say_it", {"text": "Logowanie do pliku wyłączone"}
+            )
         )
         return
 
@@ -155,16 +162,26 @@ async def _async_change_logger_settings(hass, call):
         G_LOG_PROCESS = subprocess.Popen(command, shell=True)
         _LOGGER.info("start log process pid: " + str(G_LOG_PROCESS.pid))
         info = "Logi systemowe zapisywane do pliku log na " + log_drive
+        hass.states.async_set(
+            "sensor.ais_logs_settings_info",
+            str(G_LOG_PROCESS.pid),
+            {"logDrive": log_drive, "logLevel": log_level, "logError": ""},
+        )
     else:
-        _LOGGER.error("Unable to set up log %s (access denied)", file_log_path)
+        log_error = "Unable to set up log " + file_log_path + " (access denied)"
+        _LOGGER.error(log_error)
         info = "Nie można skonfigurować zapisu do pliku na " + log_drive
+        hass.states.async_set(
+            "sensor.ais_logs_settings_info",
+            "0",
+            {"logDrive": log_drive, "logLevel": log_level, "logError": log_error},
+        )
 
     # inform about loging
     hass.async_add_job(
         hass.services.async_call("ais_ai_service", "say_it", {"text": info})
     )
     # re-set log level
-    log_level = hass.states.get("input_select.ais_system_logs_level").state
     hass.async_add_job(
         hass.services.async_call("logger", "set_default_level", {"level": log_level})
     )
@@ -237,61 +254,119 @@ async def _async_check_db_connection(hass, call):
 
 
 async def _async_get_db_log_settings_info(hass, call):
+    global G_LOG_PROCESS
+    on_system_start = False
+    if "on_system_start" in call.data:
+        on_system_start = True
     # on page load
-    global LOG_PATH_INFO
+    global LOG_SETTINGS_INFO
     global DB_SETTINGS_INFO
-    log_drive = "-"
+    log_settings = {}
     db_settings = {}
-    if LOG_PATH_INFO is None:
+    if LOG_SETTINGS_INFO is None:
         # get the info from file
         try:
-            fptr = open(LOG_PATH_INFO_FILE)
-            log_drive = fptr.read().replace("\n", "")
-            fptr.close()
-            LOG_PATH_INFO = log_drive
+            with open(LOG_SETTINGS_INFO_FILE) as json_file:
+                log_settings = json.load(json_file)
+            LOG_SETTINGS_INFO = log_settings
         except Exception as e:
-            _LOGGER.info("Error get_log_file_path_info " + str(e))
+            _LOGGER.info("Error get log settings info " + str(e))
     else:
-        log_drive = LOG_PATH_INFO
+        log_settings = LOG_SETTINGS_INFO
 
-    if DB_SETTINGS_INFO == {}:
+    if DB_SETTINGS_INFO is None:
         try:
             with open(DB_SETTINGS_INFO_FILE) as json_file:
                 db_settings = json.load(json_file)
             DB_SETTINGS_INFO = db_settings
         except Exception as e:
-            _LOGGER.info("Error get_db_file_path_info " + str(e))
+            _LOGGER.info("Error get db settings info " + str(e))
     else:
         db_settings = DB_SETTINGS_INFO
 
     # fill the drives list
     hass.async_add_job(hass.services.async_call("ais_usb", "ls_flash_drives"))
 
-    hass.async_add_job(
-        hass.services.async_call(
-            "input_text",
-            "set_value",
-            {"entity_id": "input_text.ais_logs_path", "value": log_drive},
-        )
-    )
+    # set the logs settings info
+    pid = 0
+    if G_LOG_PROCESS is not None:
+        pid = G_LOG_PROCESS.pid
+    hass.states.async_set("sensor.ais_logs_settings_info", str(pid), log_settings)
 
+    # set the db settings sensor info
     # step - no db url saved
     db_conn_step = "no_db_url_saved"
     if "dbUrl" in db_settings:
         db_conn_step = "db_url_saved"
     hass.states.async_set("sensor.ais_db_connection_info", db_conn_step, db_settings)
 
+    # enable logs on system start (if set)
+    if on_system_start and LOG_SETTINGS_INFO != {}:
+        # try to reconnect the logging to file on start
+        # change log settings
+        # Log errors to a file if we have write access to file or config dir
+        file_log_path = os.path.abspath(
+            "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/"
+            + LOG_SETTINGS_INFO["logDrive"]
+            + "/ais.log"
+        )
 
-async def _async_save_log_file_path_info(hass, path):
+        err_path_exists = os.path.isfile(file_log_path)
+        err_dir = os.path.dirname(file_log_path)
+
+        # Check if we can write to the error log if it exists or that
+        # we can create files in the containing directory if not.
+        if (err_path_exists and os.access(file_log_path, os.W_OK)) or (
+            not err_path_exists and os.access(err_dir, os.W_OK)
+        ):
+            command = "pm2 logs >> " + file_log_path
+            G_LOG_PROCESS = subprocess.Popen(command, shell=True)
+            _LOGGER.info("start log process pid: " + str(G_LOG_PROCESS.pid))
+            info = (
+                "Logi systemowe zapisywane do pliku log na "
+                + LOG_SETTINGS_INFO["logDrive"]
+            )
+            hass.states.async_set(
+                "sensor.ais_logs_settings_info",
+                str(G_LOG_PROCESS.pid),
+                {
+                    "logDrive": LOG_SETTINGS_INFO["logDrive"],
+                    "logLevel": LOG_SETTINGS_INFO["logLevel"],
+                    "logError": "",
+                },
+            )
+            # re-set log level
+            hass.async_add_job(
+                hass.services.async_call(
+                    "logger",
+                    "set_default_level",
+                    {"level": LOG_SETTINGS_INFO["logLevel"]},
+                )
+            )
+        else:
+            log_error = "Unable to set up log " + file_log_path + " (access denied)"
+            _LOGGER.error(log_error)
+            hass.states.async_set(
+                "sensor.ais_logs_settings_info",
+                "0",
+                {
+                    "logDrive": LOG_SETTINGS_INFO["logDrive"],
+                    "logLevel": LOG_SETTINGS_INFO["logLevel"],
+                    "logError": log_error,
+                },
+            )
+
+
+async def _async_save_logs_settings_info(log_drive, log_level):
     """save log path info in a file."""
-    global LOG_PATH_INFO
+    global LOG_SETTINGS_INFO
     try:
-        fptr = open(LOG_PATH_INFO_FILE, "w")
-        fptr.write(path)
-        fptr.close()
-        LOG_PATH_INFO = path
+        logs_settings = {"logDrive": log_drive, "logLevel": log_level}
+        with open(LOG_SETTINGS_INFO_FILE, "w") as outfile:
+            json.dump(logs_settings, outfile)
+        LOG_SETTINGS_INFO = logs_settings
     except Exception as e:
-        _LOGGER.error("Error save_db_file_path_info " + str(e))
+        _LOGGER.error("Error save_log_settings_info " + str(e))
 
 
 async def _async_save_db_settings_info(db_settings):
