@@ -7,7 +7,6 @@ import voluptuous as vol
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import ATTR_BATTERY_LEVEL
-from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -62,6 +61,7 @@ class ArloCam(Camera):
         self._ffmpeg_arguments = device_info.get(CONF_FFMPEG_ARGUMENTS)
         self._last_refresh = None
         self.attrs = {}
+        self._unsub_disp = None
 
     def camera_image(self):
         """Return a still image response from the camera."""
@@ -69,12 +69,14 @@ class ArloCam(Camera):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_ARLO, self._update_callback)
+        self._unsub_disp = async_dispatcher_connect(
+            self.hass, SIGNAL_UPDATE_ARLO, self.async_write_ha_state
+        )
 
-    @callback
-    def _update_callback(self):
-        """Call update method."""
-        self.async_schedule_update_ha_state()
+    async def async_will_remove_from_hass(self):
+        """When entity will be removed from hass."""
+        self._unsub_disp()
+        self._unsub_disp = None
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""

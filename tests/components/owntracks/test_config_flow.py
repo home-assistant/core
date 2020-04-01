@@ -16,7 +16,7 @@ CONF_WEBHOOK_URL = "webhook_url"
 
 BASE_URL = "http://example.com"
 CLOUDHOOK = False
-SECRET = "secret"
+SECRET = "test-secret"
 WEBHOOK_ID = "webhook_id"
 WEBHOOK_URL = f"{BASE_URL}/api/webhook/webhook_id"
 
@@ -33,7 +33,7 @@ def mock_webhook_id():
 @pytest.fixture(name="secret")
 def mock_secret():
     """Mock secret."""
-    with patch("binascii.hexlify", return_value=str.encode(SECRET)):
+    with patch("secrets.token_hex", return_value=SECRET):
         yield
 
 

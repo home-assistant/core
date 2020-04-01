@@ -176,17 +176,17 @@ class SnapcastGroupDevice(MediaPlayerDevice):
         streams = self._group.streams_by_name()
         if source in streams:
             await self._group.set_stream(streams[source].identifier)
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_mute_volume(self, mute):
         """Send the mute command."""
         await self._group.set_muted(mute)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_set_volume_level(self, volume):
         """Set the volume level."""
         await self._group.set_volume(round(volume * 100))
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def snapshot(self):
         """Snapshot the group state."""
@@ -273,17 +273,17 @@ class SnapcastClientDevice(MediaPlayerDevice):
         streams = self._client.group.streams_by_name()
         if source in streams:
             await self._client.group.set_stream(streams[source].identifier)
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_mute_volume(self, mute):
         """Send the mute command."""
         await self._client.set_muted(mute)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_set_volume_level(self, volume):
         """Set the volume level."""
         await self._client.set_volume(round(volume * 100))
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_join(self, master):
         """Join the group of the master player."""
@@ -293,12 +293,12 @@ class SnapcastClientDevice(MediaPlayerDevice):
             if master.identifier in group.clients
         ]
         await master_group[0].add_client(self._client.identifier)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_unjoin(self):
         """Unjoin the group the player is currently in."""
         await self._client.group.remove_client(self._client.identifier)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def snapshot(self):
         """Snapshot the client state."""

@@ -138,7 +138,7 @@ class AppleTvDevice(MediaPlayerDevice):
     def playstatus_update(self, updater, playing):
         """Print what is currently playing when it changes."""
         self._playing = playing
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def playstatus_error(self, updater, exception):
@@ -151,7 +151,7 @@ class AppleTvDevice(MediaPlayerDevice):
         # implemented here later.
         updater.start(initial_delay=10)
         self._playing = None
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def media_content_type(self):

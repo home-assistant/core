@@ -25,7 +25,6 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -203,14 +202,18 @@ class AqualinkEntity(Entity):
     def __init__(self, dev: AqualinkDevice):
         """Initialize the entity."""
         self.dev = dev
+        self._unsub_disp = None
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
-        async_dispatcher_connect(self.hass, DOMAIN, self._update_callback)
+        self._unsub_disp = async_dispatcher_connect(
+            self.hass, DOMAIN, self.async_write_ha_state
+        )
 
-    @callback
-    def _update_callback(self) -> None:
-        self.async_schedule_update_ha_state()
+    async def async_will_remove_from_hass(self):
+        """When entity will be removed from hass."""
+        self._unsub_disp()
+        self._unsub_disp = None
 
     @property
     def should_poll(self) -> bool:

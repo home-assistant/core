@@ -80,7 +80,7 @@ class OpenThermClimate(ClimateDevice):
         """Update climate entity options."""
         self.floor_temp = entry.options[CONF_FLOOR_TEMP]
         self.temp_precision = entry.options[CONF_PRECISION]
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Connect to the OpenTherm Gateway device."""
@@ -144,7 +144,7 @@ class OpenThermClimate(ClimateDevice):
             self._away_state_b = (
                 status.get(gw_vars.OTGW_GPIO_B_STATE) == self._away_mode_b
             )
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def name(self):
@@ -253,7 +253,7 @@ class OpenThermClimate(ClimateDevice):
             self._new_target_temperature = await self._gateway.gateway.set_target_temp(
                 temp
             )
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     @property
     def supported_features(self):

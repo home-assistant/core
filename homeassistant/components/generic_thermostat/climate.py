@@ -368,7 +368,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
         """Handle heater switch state changes."""
         if new_state is None:
             return
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def _async_update_temp(self, state):

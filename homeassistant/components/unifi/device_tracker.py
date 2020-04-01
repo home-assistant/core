@@ -217,7 +217,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             """Scheduled callback for update."""
             self.is_disconnected = True
             self.cancel_scheduled_update = None
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if (
             not self.is_wired
@@ -323,7 +323,7 @@ class UniFiDeviceTracker(ScannerEntity):
         """Update the sensor's state."""
         LOGGER.debug("Updating UniFi tracked device %s", self.entity_id)
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def is_connected(self):
