@@ -4,6 +4,7 @@ HVAC channels module for Zigbee Home Automation.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
+import asyncio
 from collections import namedtuple
 import logging
 from typing import Optional
@@ -153,7 +154,7 @@ class ThermostatChannel(ZigbeeChannel):
 
     @property
     def abs_max_cool_setpoint_limit(self) -> int:
-        """Absolute maximim cooling setpoint."""
+        """Absolute maximum cooling setpoint."""
         return self._abs_max_cool_setpoint_limit
 
     @property
@@ -299,6 +300,32 @@ class ThermostatChannel(ZigbeeChannel):
                 )
 
             chunk, attrs = attrs[:4], attrs[4:]
+
+    async def configure_reporting(self):
+        """Configure attribute reporting for a cluster.
+
+        This also swallows DeliveryError exceptions that are thrown when
+        devices are unreachable.
+        """
+        kwargs = {}
+        if self.cluster.cluster_id >= 0xFC00 and self._ch_pool.manufacturer_code:
+            kwargs["manufacturer"] = self._ch_pool.manufacturer_code
+
+        chunk, rest = self._report_config[:4], self._report_config[4:]
+        while chunk:
+            attrs = {record["attr"]: record["config"] for record in chunk}
+            try:
+                res = await self.cluster.configure_reporting_multiple(attrs, **kwargs)
+                self.debug(
+                    "attr reporting on '%s' result: %s", self.cluster.ep_attribute, res,
+                )
+            except (zigpy.exceptions.DeliveryError, asyncio.TimeoutError) as ex:
+                self.debug(
+                    "failed to set reporting on '%s' cluster: %s",
+                    self.cluster.ep_attribute,
+                    str(ex),
+                )
+            chunk, rest = rest[:4], rest[4:]
 
     @retryable_req(delays=(1, 1, 3, 6, 15, 30))
     async def async_initialize(self, from_cache):
