@@ -83,9 +83,6 @@ async def async_setup(hass, config):
     except OSError as ex:
         raise PlatformNotReady() from ex
 
-    if not api.is_connected:
-        raise PlatformNotReady()
-
     hass.data[DATA_ASUSWRT] = api
 
     hass.async_create_task(
