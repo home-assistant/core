@@ -17,5 +17,13 @@
             }
         },
         "title": "AirVisual"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "description": "Verschidden Optioune fir d'AirVisual Integratioun d\u00e9fin\u00e9ieren.",
+                "title": "Airvisual ariichten"
+            }
+        }
     }
 }

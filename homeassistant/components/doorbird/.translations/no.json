@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Denne DoorBird er allerede konfigurert"
+            "already_configured": "Denne DoorBird er allerede konfigurert",
+            "link_local_address": "Linking av lokale adresser st\u00f8ttes ikke",
+            "not_doorbird_device": "Denne enheten er ikke en DoorBird"
         },
         "error": {
             "cannot_connect": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
