@@ -91,7 +91,7 @@ class LastfmSensor(Entity):
             self._lastplayed = f"{last.track.artist} - {last.track.title}"
 
         top_tracks = self._user.get_top_tracks(limit=1)
-        if len(top_tracks) != 0:
+        if top_tracks:
             top = top_tracks[0]
             toptitle = re.search("', '(.+?)',", str(top))
             topartist = re.search("'(.+?)',", str(top))
