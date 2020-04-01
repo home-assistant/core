@@ -12,9 +12,9 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,12 +80,13 @@ async def async_setup(hass, config):
 
     try:
         await api.connection.async_connect()
-        if not api.is_connected:
-            _LOGGER.error("Unable to setup component")
-            return False
     except OSError as ex:
         """Raise platform not ready to retry setup on network startup."""
         raise PlatformNotReady() from ex
+
+    if not api.is_connected:
+        _LOGGER.error("Unable to setup component")
+        return False
 
     hass.data[DATA_ASUSWRT] = api
 
