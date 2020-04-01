@@ -260,7 +260,6 @@ class NetatmoThermostat(ClimateDevice):
             self.turn_off()
         elif hvac_mode == HVAC_MODE_AUTO:
             if self.hvac_mode == STATE_OFF:
-                _LOGGER.debug("Turning on first")
                 self.turn_on()
             self.set_preset_mode(PRESET_SCHEDULE)
         elif hvac_mode == HVAC_MODE_HEAT:
