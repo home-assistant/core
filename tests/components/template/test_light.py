@@ -588,7 +588,14 @@ class TestTemplateLight:
 
     @pytest.mark.parametrize(
         "expected_temp,template",
-        [(500, "{{500}}"), (None, "{{501}}"), (None, "{{x - 12}}")],
+        [
+            (500, "{{500}}"),
+            (None, "{{501}}"),
+            (None, "{{x - 12}}"),
+            (None, "None"),
+            (None, "{{ none }}"),
+            (None, ""),
+        ],
     )
     def test_temperature_template(self, expected_temp, template):
         """Test the template for the temperature."""
@@ -894,6 +901,8 @@ class TestTemplateLight:
             (None, "{{(361, 100)}}"),
             (None, "{{(360, 101)}}"),
             (None, "{{x - 12}}"),
+            (None, ""),
+            (None, "{{ none }}"),
         ],
     )
     def test_color_template(self, expected_hs, template):

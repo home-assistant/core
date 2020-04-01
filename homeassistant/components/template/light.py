@@ -415,7 +415,10 @@ class LightTemplate(Light):
         if self._temperature_template is None:
             return
         try:
-            temperature = int(self._temperature_template.async_render())
+            render = self._temperature_template.async_render()
+            if render is None or render == "None" or render == "":
+                return
+            temperature = int(render)
             if self.min_mireds <= temperature <= self.max_mireds:
                 self._temperature = temperature
             else:
@@ -439,6 +442,8 @@ class LightTemplate(Light):
 
         try:
             render = self._color_template.async_render()
+            if render is None or render == "None" or render == "":
+                return
             h_str, s_str = map(
                 float, render.replace("(", "").replace(")", "").split(",", 1)
             )
