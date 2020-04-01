@@ -11,7 +11,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .abbreviations import ABBREVIATIONS, DEVICE_ABBREVIATIONS
-from .const import ATTR_DISCOVERY_HASH, ATTR_DISCOVERY_TOPIC
+from .const import ATTR_DISCOVERY_HASH, ATTR_DISCOVERY_PAYLOAD, ATTR_DISCOVERY_TOPIC
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,6 +135,7 @@ async def async_start(
             setattr(payload, "__configuration_source__", f"MQTT (topic: '{topic}')")
             discovery_data = {
                 ATTR_DISCOVERY_HASH: discovery_hash,
+                ATTR_DISCOVERY_PAYLOAD: payload,
                 ATTR_DISCOVERY_TOPIC: topic,
             }
             setattr(payload, "discovery_data", discovery_data)
