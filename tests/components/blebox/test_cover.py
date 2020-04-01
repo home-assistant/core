@@ -1,6 +1,6 @@
 """BleBox cover entities tests."""
 
-from asynctest import CoroutineMock, PropertyMock, call, patch
+from asynctest import CoroutineMock, PropertyMock, call, mock, patch
 import blebox_uniapi
 import pytest
 
@@ -19,22 +19,15 @@ from homeassistant.components.cover import (
     SUPPORT_SET_POSITION,
     SUPPORT_STOP,
 )
+from homeassistant.exceptions import PlatformNotReady
 
-from .conftest import DefaultBoxTest, mock_feature
+from .conftest import BleBoxTestHelper, mock_feature
 
 
-class CoverTestData(DefaultBoxTest):
+class CoverTestHelper(BleBoxTestHelper):
     """Shared test helpers for Cover tests."""
 
     HASS_TYPE = cover
-
-    def __init__(self, mock):
-        """Set the mock object."""
-        self._feature_mock = mock
-
-    def default_mock(self):
-        """Implement method needed by shared tests."""
-        return self._feature_mock
 
 
 def shutterbox_data():
@@ -53,7 +46,7 @@ def shutterbox_data():
     product = feature.product
     type(product).name = PropertyMock(return_value="My shutter")
     type(product).model = PropertyMock(return_value="shutterBox")
-    return CoverTestData(feature)
+    return CoverTestHelper(feature)
 
 
 def gatebox_data():
@@ -72,7 +65,7 @@ def gatebox_data():
     product = feature.product
     type(product).name = PropertyMock(return_value="My gatebox")
     type(product).model = PropertyMock(return_value="gateBox")
-    return CoverTestData(feature)
+    return CoverTestHelper(feature)
 
 
 def gatecontroller_data():
@@ -91,7 +84,7 @@ def gatecontroller_data():
     product = feature.product
     type(product).name = PropertyMock(return_value="My gate controller")
     type(product).model = PropertyMock(return_value="gateController")
-    return CoverTestData(feature)
+    return CoverTestHelper(feature)
 
 
 @pytest.fixture
@@ -113,7 +106,7 @@ def gatecontroller():
 
 
 @pytest.fixture(params=[gatecontroller_data, gatebox_data, shutterbox_data])
-def all_types(request):
+def all_cover_types(request):
     """Return a fixture using all cover types."""
     return request.param()
 
@@ -247,20 +240,20 @@ async def test_gate_device_info(gatecontroller, hass):
     assert info["sw_version"] == "1.23"
 
 
-async def test_open(all_types, hass):
+async def test_open(all_cover_types, hass):
     """Test cover opening."""
 
-    data = all_types
-    feature_mock = data._feature_mock
+    data = all_cover_types
+    feature_mock = data.default_mock()
 
     def update():
         feature_mock.state = 3  # manually stopped
 
-    def open():
+    def open_gate():
         feature_mock.state = 1  # opening
 
     feature_mock.async_update = CoroutineMock(side_effect=update)
-    feature_mock.async_open = CoroutineMock(side_effect=open)
+    feature_mock.async_open = CoroutineMock(side_effect=open_gate)
 
     entity = await data.async_updated_entity(hass, 0)
 
@@ -269,11 +262,11 @@ async def test_open(all_types, hass):
     assert_state(entity, STATE_OPENING)
 
 
-async def test_close(all_types, hass):
+async def test_close(all_cover_types, hass):
     """Test cover closing."""
 
-    data = all_types
-    feature_mock = data._feature_mock
+    data = all_cover_types
+    feature_mock = data.default_mock()
 
     def update():
         feature_mock.state = 4  # open
@@ -293,7 +286,7 @@ async def test_close(all_types, hass):
 
 def opening_to_stop_feature_mock(data):
     """Return an mocked feature which can be updated and stopped."""
-    feature_mock = data._feature_mock
+    feature_mock = data.default_mock()
 
     def update():
         feature_mock.state = 1  # opening
@@ -305,10 +298,10 @@ def opening_to_stop_feature_mock(data):
     feature_mock.async_stop = CoroutineMock(side_effect=stop)
 
 
-async def test_stop(all_types, hass):
+async def test_stop(all_cover_types, hass):
     """Test cover stopping."""
 
-    data = all_types
+    data = all_cover_types
     opening_to_stop_feature_mock(data)
 
     entity = await data.async_updated_entity(hass, 0)
@@ -318,11 +311,11 @@ async def test_stop(all_types, hass):
     assert_state(entity, STATE_OPEN)
 
 
-async def test_update(all_types, hass):
+async def test_update(all_cover_types, hass):
     """Test cover updating."""
 
-    data = all_types
-    feature_mock = data._feature_mock
+    data = all_cover_types
+    feature_mock = data.default_mock()
 
     def update():
         feature_mock.current = 29  # inverted
@@ -338,7 +331,7 @@ async def test_update(all_types, hass):
 
 def closed_to_position_almost_closed_feature_mock(data):
     """Return an mocked feature which can be updated and controlled."""
-    feature_mock = data._feature_mock
+    feature_mock = data.default_mock()
 
     def update():
         feature_mock.state = 3  # closed
@@ -382,7 +375,7 @@ async def test_unknown_position(shutterbox, hass):
     """Test cover position setting."""
 
     data = shutterbox
-    feature_mock = data._feature_mock
+    feature_mock = data.default_mock()
 
     def update():
         feature_mock.state = 4  # opening
@@ -409,7 +402,7 @@ async def test_with_stop(gatebox, hass):
 
     data = gatebox
     opening_to_stop_feature_mock(data)
-    feature_mock = data._feature_mock
+    feature_mock = data.default_mock()
     feature_mock.has_stop = True
 
     entity = await data.async_updated_entity(hass, 0)
@@ -421,17 +414,78 @@ async def test_with_no_stop(gatebox, hass):
 
     data = gatebox
     opening_to_stop_feature_mock(data)
-    feature_mock = data._feature_mock
+    feature_mock = data.default_mock()
     feature_mock.has_stop = False
 
     entity = await data.async_updated_entity(hass, 0)
     assert not entity.supported_features & SUPPORT_STOP
 
 
-async def test_basic_setup(all_types, hass):
-    """Run setup tests shared by all platforms."""
+# pylint: disable=fixme
+
+# TODO: the tests bellow should be shared among all BleBox platforms
+@pytest.fixture(params=[gatecontroller_data, gatebox_data, shutterbox_data])
+def all_types(request):
+    """Return a fixture using all cover types."""
+    return request.param()
+
+
+async def test_setup_failure(all_types, hass):
+    """Test that setup failure is handled and logged."""
 
     data = all_types
-    await DefaultBoxTest.test_update_failure(data, hass)
-    await DefaultBoxTest.test_setup_failure(data, hass)
-    await DefaultBoxTest.test_setup_failure_on_connection(data, hass)
+    path = "homeassistant.components.blebox.Products"
+    patcher = patch(path, mock.DEFAULT, blebox_uniapi.products.Products, True, True)
+    products_class = patcher.start()
+
+    products_class.async_from_host = CoroutineMock(
+        side_effect=blebox_uniapi.error.ClientError
+    )
+
+    with patch("homeassistant.components.blebox._LOGGER.error") as error:
+        with pytest.raises(PlatformNotReady):
+            await data.async_mock_entities(hass)
+
+        error.assert_has_calls(
+            [call("Identify failed at %s:%d (%s)", "172.100.123.4", 80, mock.ANY,)]
+        )
+        assert isinstance(error.call_args[0][3], blebox_uniapi.error.ClientError)
+
+
+async def test_setup_failure_on_connection(all_types, hass):
+    """Test that setup failure is handled and logged."""
+
+    data = all_types
+    path = "homeassistant.components.blebox.Products"
+    patcher = patch(path, mock.DEFAULT, blebox_uniapi.products.Products, True, True)
+    products_class = patcher.start()
+
+    products_class.async_from_host = CoroutineMock(
+        side_effect=blebox_uniapi.error.ConnectionError
+    )
+
+    with patch("homeassistant.components.blebox._LOGGER.error") as error:
+        with pytest.raises(PlatformNotReady):
+            await data.async_mock_entities(hass)
+
+        error.assert_has_calls(
+            [call("Identify failed at %s:%d (%s)", "172.100.123.4", 80, mock.ANY,)]
+        )
+        assert isinstance(error.call_args[0][3], blebox_uniapi.error.ConnectionError)
+
+
+async def test_update_failure(all_types, hass):
+    """Test that update failures are logged."""
+
+    data = all_types
+    feature_mock = data.default_mock()
+    feature_mock.async_update = CoroutineMock(
+        side_effect=blebox_uniapi.error.ClientError
+    )
+    name = feature_mock.full_name
+
+    with patch("homeassistant.components.blebox._LOGGER.error") as error:
+        await data.async_updated_entity(hass, 0)
+
+        error.assert_has_calls([call("Updating '%s' failed: %s", name, mock.ANY)])
+        assert isinstance(error.call_args[0][2], blebox_uniapi.error.ClientError)
