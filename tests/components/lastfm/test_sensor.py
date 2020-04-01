@@ -1,7 +1,9 @@
 """Tests for the lastfm sensor."""
 from unittest import mock
-from homeassistant.components.lastfm.sensor import LastfmSensor
+
 from pylast import LastFMNetwork, Track
+
+from homeassistant.components.lastfm.sensor import LastfmSensor
 
 
 class MockUser:
