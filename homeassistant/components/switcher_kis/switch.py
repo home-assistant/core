@@ -121,7 +121,7 @@ class SwitcherControl(SwitchDevice):
             else:
                 self._device_data = device_data
                 self._state = self._device_data.state
-                self.async_schedule_update_ha_state()
+                self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Dict) -> None:
         """Turn the entity on."""
@@ -149,4 +149,4 @@ class SwitcherControl(SwitchDevice):
         if response and response.successful:
             self._self_initiated = True
             self._state = SWITCHER_STATE_ON if send_on else SWITCHER_STATE_OFF
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()

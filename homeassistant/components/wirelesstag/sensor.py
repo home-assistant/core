@@ -111,4 +111,4 @@ class WirelessTagSensor(WirelessTagBaseSensor):
         _LOGGER.debug("Entity to update state: %s event data: %s", self, event.data)
         new_value = self._sensor.value_from_update_event(event.data)
         self._state = self.decorate_value(new_value)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

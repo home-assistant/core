@@ -73,7 +73,7 @@ class EVBinarySensor(BinarySensorDevice):
         """Update state."""
         if self._car is not None:
             self._is_on = getattr(self._car, self._attr, None)
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     @property
     def should_poll(self):

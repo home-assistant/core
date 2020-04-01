@@ -140,4 +140,4 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorDevice):
         """Update state from arrived push notification."""
         # state should be 'on' or 'off'
         self._state = event.data.get("state")
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

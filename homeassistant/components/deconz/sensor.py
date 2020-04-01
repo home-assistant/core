@@ -109,7 +109,7 @@ class DeconzSensor(DeconzDevice):
 
         keys = {"on", "reachable", "state"}
         if force_update or self._device.changed_keys.intersection(keys):
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     @property
     def state(self):
@@ -174,7 +174,7 @@ class DeconzBattery(DeconzDevice):
 
         keys = {"battery", "reachable"}
         if force_update or self._device.changed_keys.intersection(keys):
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     @property
     def unique_id(self):

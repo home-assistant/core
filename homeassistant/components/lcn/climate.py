@@ -125,7 +125,7 @@ class LcnClimate(LcnDevice, ClimateDevice):
             self.address_connection.lock_regulator(self.regulator_id, True)
             self._target_temperature = None
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -137,7 +137,7 @@ class LcnClimate(LcnDevice, ClimateDevice):
         self.address_connection.var_abs(
             self.setpoint, self._target_temperature, self.unit
         )
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def input_received(self, input_obj):
         """Set temperature value when LCN input object is received."""
@@ -151,4 +151,4 @@ class LcnClimate(LcnDevice, ClimateDevice):
             if self._is_on:
                 self._target_temperature = input_obj.get_value().to_var_unit(self.unit)
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

@@ -93,4 +93,4 @@ class HomeworksLight(HomeworksDevice, Light):
             self._level = int((values[1] * 255.0) / 100.0)
             if self._level != 0:
                 self._prev_level = self._level
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
