@@ -32,9 +32,6 @@ class MockUser:
         return self._now_playing_result
 
 
-
-"""Unit test for LastfmSensor."""
-
 @mock.patch("pylast.LastFMNetwork.get_user")
 def test_update_not_playing(self, mock_lastfm_api_get_user):
     """Test update when no playing song."""
@@ -43,6 +40,7 @@ def test_update_not_playing(self, mock_lastfm_api_get_user):
     sensor.update()
 
     self.assertEqual("Not Scrobbling", sensor._state)
+
 
 @mock.patch("pylast.LastFMNetwork.get_user")
 def test_update_playing(self, mock_lastfm_api_get_user):
