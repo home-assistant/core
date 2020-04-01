@@ -164,8 +164,10 @@ class SW16Device(Entity):
             self.handle_event_callback, self._device_port
         )
         self._is_on = await self._client.status(self._device_port)
-        async_dispatcher_connect(
-            self.hass,
-            f"hlk_sw16_device_available_{self._device_id}",
-            self._availability_callback,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"hlk_sw16_device_available_{self._device_id}",
+                self._availability_callback,
+            )
         )
