@@ -1,5 +1,4 @@
 """Tests for the lastfm sensor."""
-import unittest
 from unittest import mock
 from homeassistant.components.lastfm.sensor import LastfmSensor
 from pylast import LastFMNetwork, Track
@@ -33,23 +32,23 @@ class MockUser:
         return self._now_playing_result
 
 
-class TestLastfmSensor(unittest.TestCase):
-    """Unit test for LastfmSensor."""
 
-    @mock.patch("pylast.LastFMNetwork.get_user")
-    def test_update_not_playing(self, mock_lastfm_api_get_user):
-        """Test update when no playing song."""
-        mock_lastfm_api_get_user.return_value = MockUser(None)
-        sensor = LastfmSensor("my-user", LastFMNetwork())
-        sensor.update()
+"""Unit test for LastfmSensor."""
 
-        self.assertEqual("Not Scrobbling", sensor._state)
+@mock.patch("pylast.LastFMNetwork.get_user")
+def test_update_not_playing(self, mock_lastfm_api_get_user):
+    """Test update when no playing song."""
+    mock_lastfm_api_get_user.return_value = MockUser(None)
+    sensor = LastfmSensor("my-user", LastFMNetwork())
+    sensor.update()
 
-    @mock.patch("pylast.LastFMNetwork.get_user")
-    def test_update_playing(self, mock_lastfm_api_get_user):
-        """Test update when song playing."""
-        mock_lastfm_api_get_user.return_value = MockUser(Track("artist", "title", None))
-        sensor = LastfmSensor("my-user", LastFMNetwork())
-        sensor.update()
+    self.assertEqual("Not Scrobbling", sensor._state)
 
-        self.assertEqual("artist - title", sensor._state)
+@mock.patch("pylast.LastFMNetwork.get_user")
+def test_update_playing(self, mock_lastfm_api_get_user):
+    """Test update when song playing."""
+    mock_lastfm_api_get_user.return_value = MockUser(Track("artist", "title", None))
+    sensor = LastfmSensor("my-user", LastFMNetwork())
+    sensor.update()
+
+    self.assertEqual("artist - title", sensor._state)
