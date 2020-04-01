@@ -69,7 +69,7 @@ class OpenThermBinarySensor(BinarySensorDevice):
     def receive_report(self, status):
         """Handle status updates from the component."""
         self._state = bool(status.get(self._var))
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def name(self):

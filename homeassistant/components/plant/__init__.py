@@ -255,7 +255,7 @@ class Plant(Entity):
             self._state = STATE_OK
             self._problems = PROBLEM_NONE
         _LOGGER.debug("New data processed")
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def _check_min(self, sensor_name, value, params):
         """If configured, check the value against the defined minimum value."""
@@ -322,7 +322,7 @@ class Plant(Entity):
                 except ValueError:
                     pass
         _LOGGER.debug("Initializing from database completed")
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def should_poll(self):

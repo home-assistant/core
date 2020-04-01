@@ -249,7 +249,7 @@ class Alert(ToggleEntity):
         else:
             await self._schedule_notify()
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def end_alerting(self):
         """End the alert procedures."""
@@ -259,7 +259,7 @@ class Alert(ToggleEntity):
         self._firing = False
         if self._send_done_message:
             await self._notify_done_message()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def _schedule_notify(self):
         """Schedule a notification."""

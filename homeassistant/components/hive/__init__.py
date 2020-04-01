@@ -193,4 +193,4 @@ class HiveEntity(Entity):
     @callback
     def _update_callback(self):
         """Call update method."""
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

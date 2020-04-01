@@ -109,4 +109,4 @@ class AquaLogicSwitch(SwitchDevice):
     @callback
     def async_update_callback(self):
         """Update callback."""
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

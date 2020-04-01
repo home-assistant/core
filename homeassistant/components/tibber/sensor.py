@@ -169,7 +169,7 @@ class TibberSensorRT(TibberSensor):
                 continue
             self._device_state_attributes[key] = value
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def available(self):

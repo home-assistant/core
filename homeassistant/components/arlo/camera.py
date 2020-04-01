@@ -74,7 +74,7 @@ class ArloCam(Camera):
     @callback
     def _update_callback(self):
         """Call update method."""
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""

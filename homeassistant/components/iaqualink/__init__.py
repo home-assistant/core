@@ -210,7 +210,7 @@ class AqualinkEntity(Entity):
 
     @callback
     def _update_callback(self) -> None:
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def should_poll(self) -> bool:
