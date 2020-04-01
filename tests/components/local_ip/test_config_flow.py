@@ -18,7 +18,6 @@ async def test_config_flow(hass):
         result["flow_id"], {CONF_NAME: "test"}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["result"].unique_id == "test"
 
     await hass.async_block_till_done()
     state = hass.states.get("sensor.test")
