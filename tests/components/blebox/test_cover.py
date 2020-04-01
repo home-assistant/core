@@ -8,6 +8,7 @@ from homeassistant.components.blebox import cover
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DEVICE_CLASS_DOOR,
+    DEVICE_CLASS_GATE,
     DEVICE_CLASS_SHUTTER,
     STATE_CLOSED,
     STATE_CLOSING,
@@ -155,7 +156,7 @@ async def test_init_gatecontroller(gatecontroller, hass):
     assert entity.name == "gateController-position"
     assert entity.unique_id == "BleBox-gateController-2bee34e750b8-position"
 
-    assert entity.device_class == DEVICE_CLASS_DOOR
+    assert entity.device_class == DEVICE_CLASS_GATE
 
     assert entity.supported_features & SUPPORT_OPEN
     assert entity.supported_features & SUPPORT_CLOSE
