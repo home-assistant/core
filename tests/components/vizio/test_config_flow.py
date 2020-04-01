@@ -176,6 +176,33 @@ async def test_tv_options_flow_with_apps(hass: HomeAssistantType) -> None:
     assert result["data"][CONF_APPS] == {CONF_INCLUDE: [CURRENT_APP]}
 
 
+def _create_config_entry_with_no_host_key(hass: HomeAssistantType) -> None:
+    """Add MockConfigEntry to hass that has no host key."""
+    config = MOCK_SPEAKER_CONFIG.copy()
+    config.pop(CONF_HOST)
+    config[CONF_NAME] = "new name to pass dupe check"
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=config, options={CONF_VOLUME_STEP: VOLUME_STEP},
+    )
+    entry.add_to_hass(hass)
+
+
+async def test_user_entity_no_host_key_error(
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_bypass_setup: pytest.fixture,
+) -> None:
+    """Test user setup won't fail if host key isn't available in existing entry."""
+    _create_config_entry_with_no_host_key(hass)
+    pass_entry = vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_CONFIG.copy())
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=pass_entry
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+
 async def test_user_host_already_configured(
     hass: HomeAssistantType,
     vizio_connect: pytest.fixture,
@@ -412,6 +439,22 @@ async def test_import_entity_already_configured(
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_setup"
+
+
+async def test_import_entity_no_host_key_error(
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_bypass_setup: pytest.fixture,
+) -> None:
+    """Test import setup won't fail if host key isn't available in existing entry."""
+    _create_config_entry_with_no_host_key(hass)
+    pass_entry = vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_CONFIG.copy())
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=pass_entry
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
 async def test_import_flow_update_options(
@@ -653,6 +696,39 @@ async def test_zeroconf_flow(
 ) -> None:
     """Test zeroconf config flow."""
     discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
+    )
+
+    # Form should always show even if all required properties are discovered
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    # Apply discovery updates to entry to mimic when user hits submit without changing
+    # defaults which were set from discovery parameters
+    user_input = result["data_schema"](discovery_info)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == NAME
+    assert result["data"][CONF_HOST] == HOST
+    assert result["data"][CONF_NAME] == NAME
+    assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_SPEAKER
+
+
+async def test_zeroconf_flow_no_host_key_error(
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_bypass_setup: pytest.fixture,
+    vizio_guess_device_type: pytest.fixture,
+) -> None:
+    """Test zeroconf setup won't fail if host key isn't available in existing entry."""
+    _create_config_entry_with_no_host_key(hass)
+    discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
