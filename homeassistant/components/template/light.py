@@ -378,7 +378,7 @@ class LightTemplate(Light):
             return
         try:
             brightness = self._level_template.async_render()
-            if brightness == "None" or brightness == "":
+            if brightness in ("None", ""):
                 self._brightness = None
                 return
             if 0 <= int(brightness) <= 255:
@@ -419,7 +419,7 @@ class LightTemplate(Light):
             return
         try:
             render = self._temperature_template.async_render()
-            if render == "None" or render == "":
+            if render in ("None", ""):
                 return
             temperature = int(render)
             if self.min_mireds <= temperature <= self.max_mireds:
@@ -445,7 +445,7 @@ class LightTemplate(Light):
 
         try:
             render = self._color_template.async_render()
-            if render == "None" or render == "":
+            if render in ("None", ""):
                 return
             h_str, s_str = map(
                 float, render.replace("(", "").replace(")", "").split(",", 1)
