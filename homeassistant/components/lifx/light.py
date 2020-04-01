@@ -435,7 +435,7 @@ class LIFXManager:
             entity = self.entities[bulb.mac_addr]
             _LOGGER.debug("%s unregister", entity.who)
             entity.registered = False
-            self.hass.async_create_task(entity.async_update_ha_state())
+            entity.async_write_ha_state()
 
 
 class AwaitAioLIFX:

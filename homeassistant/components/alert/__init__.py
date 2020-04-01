@@ -1,5 +1,4 @@
 """Support for repeating alerts when conditions are met."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -144,9 +143,8 @@ async def async_setup(hass, config):
         DOMAIN, SERVICE_TOGGLE, async_handle_alert_service, schema=ALERT_SERVICE_SCHEMA
     )
 
-    tasks = [alert.async_update_ha_state() for alert in entities]
-    if tasks:
-        await asyncio.wait(tasks)
+    for alert in entities:
+        alert.async_write_ha_state()
 
     return True
 

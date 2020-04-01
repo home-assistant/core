@@ -114,7 +114,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         # Make all device entities aware of new telegram
         for device in devices:
             device.telegram = telegram
-            hass.async_create_task(device.async_update_ha_state())
+            if device.hass:
+                device.async_write_ha_state()
 
     # Creates an asyncio.Protocol factory for reading DSMR telegrams from
     # serial and calls update_entities_telegram to update entities on arrival

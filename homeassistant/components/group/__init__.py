@@ -289,7 +289,7 @@ async def async_setup(hass, config):
                 need_update = True
 
             if need_update:
-                await group.async_update_ha_state()
+                group.async_write_ha_state()
 
             return
 

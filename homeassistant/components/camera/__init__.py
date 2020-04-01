@@ -271,7 +271,7 @@ async def async_setup(hass, config):
         """Update tokens of the entities."""
         for entity in component.entities:
             entity.async_update_token()
-            hass.async_create_task(entity.async_update_ha_state())
+            entity.async_write_ha_state()
 
     hass.helpers.event.async_track_time_interval(update_tokens, TOKEN_CHANGE_INTERVAL)
 
