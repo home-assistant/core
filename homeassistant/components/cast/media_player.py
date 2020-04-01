@@ -948,7 +948,11 @@ class CastDevice(MediaPlayerDevice):
         await self._async_disconnect()
 
     def _handle_signal_show_view(
-        self, controller: HomeAssistantController, entity_id: str, view_path: str
+        self,
+        controller: HomeAssistantController,
+        entity_id: str,
+        view_path: str,
+        url_path: Optional[str],
     ):
         """Handle a show view signal."""
         if entity_id != self.entity_id:
@@ -958,4 +962,4 @@ class CastDevice(MediaPlayerDevice):
             self._hass_cast_controller = controller
             self._chromecast.register_handler(controller)
 
-        self._hass_cast_controller.show_lovelace_view(view_path)
+        self._hass_cast_controller.show_lovelace_view(view_path, url_path)

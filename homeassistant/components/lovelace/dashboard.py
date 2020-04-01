@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 import logging
 import os
 import time
+from typing import Optional, cast
 
 import voluptuous as vol
 
@@ -87,7 +88,7 @@ class LovelaceStorage(LovelaceConfig):
             storage_key = CONFIG_STORAGE_KEY_DEFAULT
         else:
             url_path = config[CONF_URL_PATH]
-            storage_key = CONFIG_STORAGE_KEY.format(url_path)
+            storage_key = CONFIG_STORAGE_KEY.format(config["id"])
 
         super().__init__(hass, url_path, config)
 
@@ -100,7 +101,7 @@ class LovelaceStorage(LovelaceConfig):
         return MODE_STORAGE
 
     async def async_get_info(self):
-        """Return the YAML storage mode."""
+        """Return the Lovelace storage info."""
         if self._data is None:
             await self._load()
 
@@ -212,7 +213,6 @@ def _config_info(mode, config):
     """Generate info about the config."""
     return {
         "mode": mode,
-        "resources": len(config.get("resources", [])),
         "views": len(config.get("views", [])),
     }
 
@@ -230,8 +230,30 @@ class DashboardsCollection(collection.StorageCollection):
             _LOGGER,
         )
 
+    async def _async_load_data(self) -> Optional[dict]:
+        """Load the data."""
+        data = await self.store.async_load()
+
+        if data is None:
+            return cast(Optional[dict], data)
+
+        updated = False
+
+        for item in data["items"] or []:
+            if "-" not in item[CONF_URL_PATH]:
+                updated = True
+                item[CONF_URL_PATH] = f"lovelace-{item[CONF_URL_PATH]}"
+
+        if updated:
+            await self.store.async_save(data)
+
+        return cast(Optional[dict], data)
+
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
+        if "-" not in data[CONF_URL_PATH]:
+            raise vol.Invalid("Url path needs to contain a hyphen (-)")
+
         if data[CONF_URL_PATH] in self.hass.data[DATA_PANELS]:
             raise vol.Invalid("Panel url path needs to be unique")
 

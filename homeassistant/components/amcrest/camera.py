@@ -21,6 +21,7 @@ from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_web,
     async_get_clientsession,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
@@ -51,6 +52,28 @@ _SRV_CBW = "set_color_bw"
 _SRV_TOUR_ON = "start_tour"
 _SRV_TOUR_OFF = "stop_tour"
 
+_SRV_PTZ_CTRL = "ptz_control"
+_ATTR_PTZ_TT = "travel_time"
+_ATTR_PTZ_MOV = "movement"
+_MOV = [
+    "zoom_out",
+    "zoom_in",
+    "right",
+    "left",
+    "up",
+    "down",
+    "right_down",
+    "right_up",
+    "left_down",
+    "left_up",
+]
+_ZOOM_ACTIONS = ["ZoomWide", "ZoomTele"]
+_MOVE_1_ACTIONS = ["Right", "Left", "Up", "Down"]
+_MOVE_2_ACTIONS = ["RightDown", "RightUp", "LeftDown", "LeftUp"]
+_ACTION = _ZOOM_ACTIONS + _MOVE_1_ACTIONS + _MOVE_2_ACTIONS
+
+_DEFAULT_TT = 0.2
+
 _ATTR_PRESET = "preset"
 _ATTR_COLOR_BW = "color_bw"
 
@@ -65,6 +88,12 @@ _SRV_GOTO_SCHEMA = CAMERA_SERVICE_SCHEMA.extend(
 _SRV_CBW_SCHEMA = CAMERA_SERVICE_SCHEMA.extend(
     {vol.Required(_ATTR_COLOR_BW): vol.In(_CBW)}
 )
+_SRV_PTZ_SCHEMA = CAMERA_SERVICE_SCHEMA.extend(
+    {
+        vol.Required(_ATTR_PTZ_MOV): vol.In(_MOV),
+        vol.Optional(_ATTR_PTZ_TT, default=_DEFAULT_TT): cv.small_float,
+    }
+)
 
 CAMERA_SERVICES = {
     _SRV_EN_REC: (CAMERA_SERVICE_SCHEMA, "async_enable_recording", ()),
@@ -77,6 +106,11 @@ CAMERA_SERVICES = {
     _SRV_CBW: (_SRV_CBW_SCHEMA, "async_set_color_bw", (_ATTR_COLOR_BW,)),
     _SRV_TOUR_ON: (CAMERA_SERVICE_SCHEMA, "async_start_tour", ()),
     _SRV_TOUR_OFF: (CAMERA_SERVICE_SCHEMA, "async_stop_tour", ()),
+    _SRV_PTZ_CTRL: (
+        _SRV_PTZ_SCHEMA,
+        "async_ptz_control",
+        (_ATTR_PTZ_MOV, _ATTR_PTZ_TT),
+    ),
 }
 
 _BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
@@ -405,6 +439,29 @@ class AmcrestCam(Camera):
     async def async_stop_tour(self):
         """Call the job and stop camera tour."""
         await self.hass.async_add_executor_job(self._start_tour, False)
+
+    async def async_ptz_control(self, movement, travel_time):
+        """Move or zoom camera in specified direction."""
+        code = _ACTION[_MOV.index(movement)]
+
+        kwargs = {"code": code, "arg1": 0, "arg2": 0, "arg3": 0}
+        if code in _MOVE_1_ACTIONS:
+            kwargs["arg2"] = 1
+        elif code in _MOVE_2_ACTIONS:
+            kwargs["arg1"] = kwargs["arg2"] = 1
+
+        try:
+            await self.hass.async_add_executor_job(
+                partial(self._api.ptz_control_command, action="start", **kwargs)
+            )
+            await asyncio.sleep(travel_time)
+            await self.hass.async_add_executor_job(
+                partial(self._api.ptz_control_command, action="stop", **kwargs)
+            )
+        except AmcrestError as error:
+            log_update_error(
+                _LOGGER, "move", self.name, f"camera PTZ {movement}", error
+            )
 
     # Methods to send commands to Amcrest camera and handle errors
 

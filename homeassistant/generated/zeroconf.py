@@ -7,7 +7,8 @@ To update, run python3 -m script.hassfest
 
 ZEROCONF = {
     "_axis-video._tcp.local.": [
-        "axis"
+        "axis",
+        "doorbird"
     ],
     "_coap._udp.local.": [
         "tradfri"
@@ -24,6 +25,12 @@ ZEROCONF = {
     "_hap._tcp.local.": [
         "homekit_controller"
     ],
+    "_ipp._tcp.local.": [
+        "ipp"
+    ],
+    "_ipps._tcp.local.": [
+        "ipp"
+    ],
     "_printer._tcp.local.": [
         "brother"
     ],
@@ -39,10 +46,12 @@ ZEROCONF = {
 }
 
 HOMEKIT = {
+    "819LMB": "myq",
     "BSB002": "hue",
     "LIFX": "lifx",
     "Netatmo Relay": "netatmo",
     "Presence": "netatmo",
+    "Rachio": "rachio",
     "TRADFRI": "tradfri",
     "Welcome": "netatmo",
     "Wemo": "wemo"

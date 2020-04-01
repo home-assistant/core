@@ -9,7 +9,6 @@ from homeassistant.components.http import real_ip
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.util.json import load_json, save_json
 
 from .hue_api import (
@@ -91,9 +90,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-ATTR_EMULATED_HUE = "emulated_hue"
 ATTR_EMULATED_HUE_NAME = "emulated_hue_name"
-ATTR_EMULATED_HUE_HIDDEN = "emulated_hue_hidden"
 
 
 async def async_setup(hass, yaml_config):
@@ -220,7 +217,9 @@ class Config:
 
         # Get domains that are exposed by default when expose_by_default is
         # True
-        self.exposed_domains = conf.get(CONF_EXPOSED_DOMAINS, DEFAULT_EXPOSED_DOMAINS)
+        self.exposed_domains = set(
+            conf.get(CONF_EXPOSED_DOMAINS, DEFAULT_EXPOSED_DOMAINS)
+        )
 
         # Calculated effective advertised IP and port for network isolation
         self.advertise_ip = conf.get(CONF_ADVERTISE_IP) or self.host_ip_addr
@@ -228,6 +227,12 @@ class Config:
         self.advertise_port = conf.get(CONF_ADVERTISE_PORT) or self.listen_port
 
         self.entities = conf.get(CONF_ENTITIES, {})
+
+        self._entities_with_hidden_attr_in_config = dict()
+        for entity_id in self.entities:
+            hidden_value = self.entities[entity_id].get(CONF_ENTITY_HIDDEN, None)
+            if hidden_value is not None:
+                self._entities_with_hidden_attr_in_config[entity_id] = hidden_value
 
     def entity_id_to_number(self, entity_id):
         """Get a unique number for the entity id."""
@@ -280,35 +285,18 @@ class Config:
             # Ignore entities that are views
             return False
 
-        domain = entity.domain.lower()
-        explicit_expose = entity.attributes.get(ATTR_EMULATED_HUE, None)
-        explicit_hidden = entity.attributes.get(ATTR_EMULATED_HUE_HIDDEN, None)
+        if entity.entity_id in self._entities_with_hidden_attr_in_config:
+            return not self._entities_with_hidden_attr_in_config[entity.entity_id]
 
-        if (
-            entity.entity_id in self.entities
-            and CONF_ENTITY_HIDDEN in self.entities[entity.entity_id]
-        ):
-            explicit_hidden = self.entities[entity.entity_id][CONF_ENTITY_HIDDEN]
-
-        if explicit_expose is True or explicit_hidden is False:
-            expose = True
-        elif explicit_expose is False or explicit_hidden is True:
-            expose = False
-        else:
-            expose = None
-        get_deprecated(
-            entity.attributes, ATTR_EMULATED_HUE_HIDDEN, ATTR_EMULATED_HUE, None
-        )
-        domain_exposed_by_default = (
-            self.expose_by_default and domain in self.exposed_domains
-        )
-
+        if not self.expose_by_default:
+            return False
         # Expose an entity if the entity's domain is exposed by default and
         # the configuration doesn't explicitly exclude it from being
         # exposed, or if the entity is explicitly exposed
-        is_default_exposed = domain_exposed_by_default and expose is not False
+        if entity.domain in self.exposed_domains:
+            return True
 
-        return is_default_exposed or expose
+        return False
 
 
 def _load_json(filename):

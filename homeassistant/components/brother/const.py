@@ -48,7 +48,7 @@ PRINTER_TYPES = ["laser", "ink"]
 
 SENSOR_TYPES = {
     ATTR_STATUS: {
-        ATTR_ICON: "icon:mdi:printer",
+        ATTR_ICON: "mdi:printer",
         ATTR_LABEL: ATTR_STATUS.title(),
         ATTR_UNIT: None,
     },

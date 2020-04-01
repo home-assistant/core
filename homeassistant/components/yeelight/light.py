@@ -141,6 +141,7 @@ MODEL_TO_DEVICE_TYPE = {
     "ceiling2": BulbType.WhiteTemp,
     "ceiling3": BulbType.WhiteTemp,
     "ceiling4": BulbType.WhiteTempMood,
+    "ceiling13": BulbType.WhiteTemp,
 }
 
 EFFECTS_MAP = {

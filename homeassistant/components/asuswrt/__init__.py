@@ -51,7 +51,7 @@ CONFIG_SCHEMA = vol.Schema(
                     cv.ensure_list, [vol.In(SENSOR_TYPES)]
                 ),
                 vol.Optional(CONF_INTERFACE, default=DEFAULT_INTERFACE): cv.string,
-                vol.Optional(CONF_DNSMASQ, default=DEFAULT_DNSMASQ): cv.isdir,
+                vol.Optional(CONF_DNSMASQ, default=DEFAULT_DNSMASQ): cv.string,
             }
         )
     },
@@ -73,8 +73,8 @@ async def async_setup(hass, config):
         conf.get("ssh_key", conf.get("pub_key", "")),
         conf[CONF_MODE],
         conf[CONF_REQUIRE_IP],
-        conf[CONF_INTERFACE],
-        conf[CONF_DNSMASQ],
+        interface=conf[CONF_INTERFACE],
+        dnsmasq=conf[CONF_DNSMASQ],
     )
 
     await api.connection.async_connect()
