@@ -313,7 +313,7 @@ class RachioSchedule(RachioSwitch):
     @property
     def name(self) -> str:
         """Return the friendly name of the schedule."""
-        return self._schedule_name
+        return f"{self._schedule_name} Schedule"
 
     @property
     def unique_id(self) -> str:
