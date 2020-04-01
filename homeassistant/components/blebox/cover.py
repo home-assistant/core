@@ -32,7 +32,6 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add):
     """Set up a BleBox entry."""
 
-    """Add a BleBox device from the given config."""
     host = config_entry.data[CONF_HOST]
     port = config_entry.data[CONF_PORT]
     timeout = DEFAULT_SETUP_TIMEOUT
