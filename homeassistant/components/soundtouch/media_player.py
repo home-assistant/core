@@ -239,8 +239,16 @@ class SoundTouchDevice(MediaPlayerDevice):
 
     @property
     def source(self):
-        """Return the source of the device."""
+        """Name of the current input source."""
         return self._status.source
+
+    @property
+    def source_list(self):
+        """List of available input sources."""
+        return [
+            Source.AUX,
+            Source.BLUETOOTH,
+        ]
 
     @property
     def is_volume_muted(self):
@@ -276,8 +284,10 @@ class SoundTouchDevice(MediaPlayerDevice):
         """Set device source. AUX, BLUETOOTH."""
         if source == Source.AUX:
             self._device.select_source_aux()
-        if source == Source.BLUETOOTH:
+        elif source == Source.BLUETOOTH:
             self._device.select_source_bluetooth()
+        else:
+            _LOGGER.debug("Source %s is not supported yet", source)
 
     def mute_volume(self, mute):
         """Send mute command."""
