@@ -204,7 +204,7 @@ class KNXCover(CoverDevice):
     @callback
     def auto_updater_hook(self, now):
         """Call for the autoupdater."""
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
         if self.device.position_reached():
             self.stop_auto_updater()
 

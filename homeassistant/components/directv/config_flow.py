@@ -3,18 +3,20 @@ import logging
 from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
-from DirectPy import DIRECTV
-from requests.exceptions import RequestException
+from directv import DIRECTV, DIRECTVError
 import voluptuous as vol
 
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_SERIAL
 from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.core import callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import (
+    ConfigType,
+    DiscoveryInfoType,
+    HomeAssistantType,
+)
 
-from .const import DEFAULT_PORT
+from .const import CONF_RECEIVER_ID
 from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,22 +24,17 @@ _LOGGER = logging.getLogger(__name__)
 ERROR_CANNOT_CONNECT = "cannot_connect"
 ERROR_UNKNOWN = "unknown"
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
-
-def validate_input(data: Dict) -> Dict:
+async def validate_input(hass: HomeAssistantType, data: dict) -> Dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    dtv = DIRECTV(data["host"], DEFAULT_PORT, determine_state=False)
-    version_info = dtv.get_version()
+    session = async_get_clientsession(hass)
+    directv = DIRECTV(data[CONF_HOST], session=session)
+    device = await directv.update()
 
-    return {
-        "title": data["host"],
-        "host": data["host"],
-        "receiver_id": "".join(version_info["receiverId"].split()),
-    }
+    return {CONF_RECEIVER_ID: device.info.receiver_id}
 
 
 class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -46,84 +43,91 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
-    @callback
-    def _show_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
-        """Show the form to the user."""
-        return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors or {},
-        )
+    def __init__(self):
+        """Set up the instance."""
+        self.discovery_info = {}
 
     async def async_step_import(
-        self, user_input: Optional[Dict] = None
+        self, user_input: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
-        """Handle a flow initialized by yaml file."""
+        """Handle a flow initiated by configuration file."""
         return await self.async_step_user(user_input)
 
     async def async_step_user(
-        self, user_input: Optional[Dict] = None
+        self, user_input: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
-        """Handle a flow initialized by user."""
-        if not user_input:
-            return self._show_form()
-
-        errors = {}
+        """Handle a flow initiated by the user."""
+        if user_input is None:
+            return self._show_setup_form()
 
         try:
-            info = await self.hass.async_add_executor_job(validate_input, user_input)
-            user_input[CONF_HOST] = info[CONF_HOST]
-        except RequestException:
-            errors["base"] = ERROR_CANNOT_CONNECT
-            return self._show_form(errors)
+            info = await validate_input(self.hass, user_input)
+        except DIRECTVError:
+            return self._show_setup_form({"base": ERROR_CANNOT_CONNECT})
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason=ERROR_UNKNOWN)
 
-        await self.async_set_unique_id(info["receiver_id"])
-        self._abort_if_unique_id_configured()
+        user_input[CONF_RECEIVER_ID] = info[CONF_RECEIVER_ID]
 
-        return self.async_create_entry(title=info["title"], data=user_input)
+        await self.async_set_unique_id(user_input[CONF_RECEIVER_ID])
+        self._abort_if_unique_id_configured(updates={CONF_HOST: user_input[CONF_HOST]})
+
+        return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
     async def async_step_ssdp(
-        self, discovery_info: Optional[DiscoveryInfoType] = None
+        self, discovery_info: DiscoveryInfoType
     ) -> Dict[str, Any]:
-        """Handle a flow initialized by discovery."""
+        """Handle SSDP discovery."""
         host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
-        receiver_id = discovery_info[ATTR_UPNP_SERIAL][4:]  # strips off RID-
+        receiver_id = None
 
-        await self.async_set_unique_id(receiver_id)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        if discovery_info.get(ATTR_UPNP_SERIAL):
+            receiver_id = discovery_info[ATTR_UPNP_SERIAL][4:]  # strips off RID-
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context.update(
-            {CONF_HOST: host, CONF_NAME: host, "title_placeholders": {"name": host}}
+        self.context.update({"title_placeholders": {"name": host}})
+
+        self.discovery_info.update(
+            {CONF_HOST: host, CONF_NAME: host, CONF_RECEIVER_ID: receiver_id}
+        )
+
+        try:
+            info = await validate_input(self.hass, self.discovery_info)
+        except DIRECTVError:
+            return self.async_abort(reason=ERROR_CANNOT_CONNECT)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason=ERROR_UNKNOWN)
+
+        self.discovery_info[CONF_RECEIVER_ID] = info[CONF_RECEIVER_ID]
+
+        await self.async_set_unique_id(self.discovery_info[CONF_RECEIVER_ID])
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: self.discovery_info[CONF_HOST]}
         )
 
         return await self.async_step_ssdp_confirm()
 
     async def async_step_ssdp_confirm(
-        self, user_input: Optional[Dict] = None
+        self, user_input: ConfigType = None
     ) -> Dict[str, Any]:
-        """Handle user-confirmation of discovered device."""
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        name = self.context.get(CONF_NAME)
+        """Handle a confirmation flow initiated by SSDP."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="ssdp_confirm",
+                description_placeholders={"name": self.discovery_info[CONF_NAME]},
+                errors={},
+            )
 
-        if user_input is not None:
-            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-            user_input[CONF_HOST] = self.context.get(CONF_HOST)
-
-            try:
-                await self.hass.async_add_executor_job(validate_input, user_input)
-                return self.async_create_entry(title=name, data=user_input)
-            except (OSError, RequestException):
-                return self.async_abort(reason=ERROR_CANNOT_CONNECT)
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                return self.async_abort(reason=ERROR_UNKNOWN)
-
-        return self.async_show_form(
-            step_id="ssdp_confirm", description_placeholders={"name": name},
+        return self.async_create_entry(
+            title=self.discovery_info[CONF_NAME], data=self.discovery_info,
         )
 
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
+    def _show_setup_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
+        """Show the setup form to the user."""
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            errors=errors or {},
+        )

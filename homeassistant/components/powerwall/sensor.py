@@ -15,9 +15,11 @@ from .const import (
     ATTR_INSTANT_AVERAGE_VOLTAGE,
     DOMAIN,
     POWERWALL_API_CHARGE,
+    POWERWALL_API_DEVICE_TYPE,
     POWERWALL_API_METERS,
+    POWERWALL_API_SITE_INFO,
+    POWERWALL_API_STATUS,
     POWERWALL_COORDINATOR,
-    POWERWALL_SITE_INFO,
 )
 from .entity import PowerWallEntity
 
@@ -30,13 +32,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     _LOGGER.debug("Powerwall_data: %s", powerwall_data)
 
     coordinator = powerwall_data[POWERWALL_COORDINATOR]
-    site_info = powerwall_data[POWERWALL_SITE_INFO]
+    site_info = powerwall_data[POWERWALL_API_SITE_INFO]
+    device_type = powerwall_data[POWERWALL_API_DEVICE_TYPE]
+    status = powerwall_data[POWERWALL_API_STATUS]
 
     entities = []
     for meter in coordinator.data[POWERWALL_API_METERS]:
-        entities.append(PowerWallEnergySensor(meter, coordinator, site_info))
+        entities.append(
+            PowerWallEnergySensor(meter, coordinator, site_info, status, device_type)
+        )
 
-    entities.append(PowerWallChargeSensor(coordinator, site_info))
+    entities.append(PowerWallChargeSensor(coordinator, site_info, status, device_type))
 
     async_add_entities(entities, True)
 
@@ -73,9 +79,9 @@ class PowerWallChargeSensor(PowerWallEntity):
 class PowerWallEnergySensor(PowerWallEntity):
     """Representation of an Powerwall Energy sensor."""
 
-    def __init__(self, meter, coordinator, site_info):
+    def __init__(self, meter, coordinator, site_info, status, device_type):
         """Initialize the sensor."""
-        super().__init__(coordinator, site_info)
+        super().__init__(coordinator, site_info, status, device_type)
         self._meter = meter
 
     @property

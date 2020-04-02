@@ -5,6 +5,7 @@ import collections
 import itertools
 import logging
 import os
+import time
 import traceback
 from typing import List, Optional
 
@@ -474,12 +475,13 @@ class ZHAGateway:
         """Update the devices in the store."""
         for device in self.devices.values():
             self.zha_storage.async_update_device(device)
-        await self.zha_storage.async_save()
 
     async def async_device_initialized(self, device: zha_typing.ZigpyDeviceType):
         """Handle device joined and basic information discovered (async)."""
         zha_device = self._async_get_or_create_device(device)
-
+        # This is an active device so set a last seen if it is none
+        if zha_device.last_seen is None:
+            zha_device.async_update_last_seen(time.time())
         _LOGGER.debug(
             "device - %s:%s entering async_device_initialized - is_new_join: %s",
             device.nwk,

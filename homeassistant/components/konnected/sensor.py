@@ -137,4 +137,4 @@ class KonnectedSensor(Entity):
             self._state = int(float(state))
         else:
             self._state = round(float(state), 1)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

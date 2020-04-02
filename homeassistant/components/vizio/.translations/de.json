@@ -71,6 +71,7 @@
                     "timeout": "API Request Timeout (Sekunden)",
                     "volume_step": "Lautst\u00e4rken-Schrittgr\u00f6\u00dfe"
                 },
+                "description": "Wenn Sie \u00fcber ein Smart-TV-Ger\u00e4t verf\u00fcgen, k\u00f6nnen Sie Ihre Quellliste optional filtern, indem Sie ausw\u00e4hlen, welche Apps in Ihre Quellliste aufgenommen oder ausgeschlossen werden sollen.",
                 "title": "Aktualisieren Sie die Vizo SmartCast-Optionen"
             }
         },
