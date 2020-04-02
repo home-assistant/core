@@ -104,6 +104,9 @@ class PlexSensor(Entity):
             if sess.TYPE == "photo":
                 _LOGGER.debug("Photo session detected, skipping: %s", sess)
                 continue
+            if not sess.usernames:
+                _LOGGER.debug("Session temporarily incomplete, skipping: %s", sess)
+                continue
             user = sess.usernames[0]
             device = sess.players[0].title
             now_playing_user = f"{user} - {device}"
