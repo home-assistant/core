@@ -2,6 +2,7 @@
 import asyncio
 
 import pyotgw
+from pyotgw import vars as gw_vars
 from serial import SerialException
 import voluptuous as vol
 
@@ -53,7 +54,7 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 otgw = pyotgw.pyotgw()
                 status = await otgw.connect(self.hass.loop, device)
                 await otgw.disconnect()
-                return status.get(pyotgw.OTGW_ABOUT)
+                return status.get(gw_vars.OTGW_ABOUT)
 
             try:
                 res = await asyncio.wait_for(test_connection(), timeout=10)
