@@ -3,8 +3,8 @@ from abc import abstractmethod
 from datetime import timedelta
 import logging
 
-from homeassistant.core import callback
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
@@ -321,17 +321,12 @@ class RachioSchedule(RachioSwitch):
         return "mdi:water"
 
     @property
-    def duration(self) -> str:
-        """Return the duration of each schedule."""
-        return f"{round(self._duration / 60)} minutes"
-
-    @property
     def device_state_attributes(self) -> dict:
         """Return the optional state attributes."""
         return {
             ATTR_SCHEDULE_SUMMARY: self._summary,
             ATTR_SCHEDULE_ENABLED: self.schedule_is_enabled,
-            ATTR_SCHEDULE_DURATION: self.duration,
+            ATTR_SCHEDULE_DURATION: f"{round(self._duration / 60)} minutes",
         }
 
     @property
