@@ -15,7 +15,9 @@ from .common import (
 @pytest.fixture
 def mock_device():
     """Mock a Dynalite device."""
-    return create_mock_device("cover", DynaliteTimeCoverWithTiltDevice)
+    mock_dev = create_mock_device("cover", DynaliteTimeCoverWithTiltDevice)
+    mock_dev.device_class = "blind"
+    return mock_dev
 
 
 async def test_cover_setup(hass, mock_device):
