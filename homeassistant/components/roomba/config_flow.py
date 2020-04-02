@@ -84,7 +84,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if "base" not in errors:
                 return self.async_create_entry(
-                    title=self.hass.data[DOMAIN]["name"], data=user_input
+                    title=validated_input["title"], data=user_input
                 )
 
         # If there was no user input, do not show the errors.
