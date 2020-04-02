@@ -155,11 +155,15 @@ def mock_light(test_features={}, test_state={}, n=0):
     """Mock a tradfri light."""
     mock_light_data = Mock(**test_state)
 
+    dev_info_mock = MagicMock()
+    dev_info_mock.manufacturer = "manufacturer"
+    dev_info_mock.model_number = "model"
+    dev_info_mock.firmware_version = "1.2.3"
     mock_light = Mock(
         id=f"mock-light-id-{n}",
         reachable=True,
         observe=Mock(),
-        device_info=MagicMock(),
+        device_info=dev_info_mock,
     )
     mock_light.name = f"tradfri_light_{n}"
 
