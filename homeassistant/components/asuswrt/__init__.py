@@ -85,7 +85,6 @@ async def async_setup(hass, config, retry_delay=FIRST_RETRY_TIME):
         await api.connection.async_connect()
     except OSError as ex:
         _LOGGER.warning(ex)
-        pass
 
     if not api.is_connected:
 
@@ -97,7 +96,7 @@ async def async_setup(hass, config, retry_delay=FIRST_RETRY_TIME):
         )
 
         async def retry_setup(now):
-            """Retry setup if a eroor happens on asuswrt API."""
+            """Retry setup if a error happens on asuswrt API."""
             await async_setup(
                 hass, config, retry_delay=min(2 * retry_delay, MAX_RETRY_TIME)
             )
