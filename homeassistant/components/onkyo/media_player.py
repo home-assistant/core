@@ -5,6 +5,7 @@ from typing import List
 import eiscp
 from eiscp import eISCP
 import voluptuous as vol
+import re
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
@@ -114,6 +115,42 @@ ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
 
 SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
 
+"""
+The main zone will check for any new messages, and put them in this queue.
+All other zones will pop from the queue if the update is for them.
+"""
+MSG_QUEUE = []
+
+
+def iscp_to_command(iscp_message):
+    """This is part of the eISCP library, but does not return the zone in their implementation. TODO: Open a change request in the source library"""
+    command = None
+    for zone, zone_cmds in eiscp.core.commands.COMMANDS.items():
+        # For now, ISCP commands are always three characters, which
+        # makes this easy.
+        command, args = iscp_message[:3], iscp_message[3:]
+        if command in zone_cmds:
+            if args in zone_cmds[command]["values"]:
+                command = (
+                    zone,
+                    zone_cmds[command]["name"],
+                    zone_cmds[command]["values"][args]["name"],
+                )
+                break
+            else:
+                match = re.match("[+-]?[0-9a-f]+$", args, re.IGNORECASE)
+                if match:
+                    command = zone, zone_cmds[command]["name"], int(args, 16)
+                    break
+                else:
+                    command = zone, zone_cmds[command]["name"], args
+                    break
+    else:
+        raise ValueError(
+            "Cannot convert ISCP message to command: {}".format(iscp_message)
+        )
+    return command
+
 
 def determine_zones(receiver):
     """Determine what zones are available for the receiver."""
@@ -134,8 +171,18 @@ def determine_zones(receiver):
         if str(error) != TIMEOUT_MESSAGE:
             raise error
         _LOGGER.debug("Zone 3 timed out, assuming no functionality")
-
     return out
+
+
+def query_volume_enabled(receiver, zones):
+    """Send volume query requests to all enabled zones (except main)
+    Zones will default to not supporting volume until a volume response arrives."""
+    for zone in (zone for zone, enabled in zones.items() if enabled):
+        try:
+            iscp_command = eiscp.core.command_to_iscp(f"{zone}.volume=query")
+            receiver.send(iscp_command)
+        except (ValueError, OSError, AttributeError, AssertionError):
+            _LOGGER.debug("An error occured sending a command")
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -164,6 +211,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             receiver = eiscp.eISCP(host)
             hosts.append(
                 OnkyoDevice(
+                    "main",
                     receiver,
                     config.get(CONF_SOURCES),
                     name=config.get(CONF_NAME),
@@ -174,13 +222,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             KNOWN_HOSTS.append(host)
 
             zones = determine_zones(receiver)
+            query_volume_enabled(receiver, zones)
 
             # Add Zone2 if available
             if zones["zone2"]:
                 _LOGGER.debug("Setting up zone 2")
                 hosts.append(
-                    OnkyoDeviceZone(
-                        "2",
+                    OnkyoDevice(
+                        "zone2",
                         receiver,
                         config.get(CONF_SOURCES),
                         name=f"{config[CONF_NAME]} Zone 2",
@@ -192,8 +241,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             if zones["zone3"]:
                 _LOGGER.debug("Setting up zone 3")
                 hosts.append(
-                    OnkyoDeviceZone(
-                        "3",
+                    OnkyoDevice(
+                        "zone3",
                         receiver,
                         config.get(CONF_SOURCES),
                         name=f"{config[CONF_NAME]} Zone 3",
@@ -206,7 +255,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     else:
         for receiver in eISCP.discover():
             if receiver.host not in KNOWN_HOSTS:
-                hosts.append(OnkyoDevice(receiver, config.get(CONF_SOURCES)))
+                hosts.append(OnkyoDevice("main", receiver, config.get(CONF_SOURCES)))
                 KNOWN_HOSTS.append(receiver.host)
     add_entities(hosts, True)
 
@@ -216,6 +265,7 @@ class OnkyoDevice(MediaPlayerDevice):
 
     def __init__(
         self,
+        zone,
         receiver,
         sources,
         name=None,
@@ -223,8 +273,10 @@ class OnkyoDevice(MediaPlayerDevice):
         receiver_max_volume=DEFAULT_RECEIVER_MAX_VOLUME,
     ):
         """Initialize the Onkyo Receiver."""
+        self._zone = zone
         self._receiver = receiver
         self._muted = False
+        self._supports_volume = zone == "main"  # Main zone supports volume always
         self._volume = 0
         self._pwstate = STATE_OFF
         self._name = (
@@ -239,63 +291,61 @@ class OnkyoDevice(MediaPlayerDevice):
         self._attributes = {}
 
     def command(self, command):
-        """Run an eiscp command and catch connection errors."""
+        """Send a non-blocking request to the reciever."""
         try:
-            result = self._receiver.command(command)
+            iscp_command = eiscp.core.command_to_iscp(f"{self._zone}.{command}")
+            self._receiver.send(iscp_command)
         except (ValueError, OSError, AttributeError, AssertionError):
-            if self._receiver.command_socket:
-                self._receiver.command_socket = None
-                _LOGGER.debug("Resetting connection to %s", self._name)
-            else:
-                _LOGGER.info("%s is disconnected. Attempting to reconnect", self._name)
-            return False
-        return result
+            _LOGGER.debug("An error occured sending a command")
 
     def update(self):
-        """Get the latest state from the device."""
-        status = self.command("system-power query")
+        """Let the main zone do the querying"""
+        _LOGGER.info("Updating %s", self._zone)
 
-        if not status:
-            return
-        if status[1] == "on":
-            self._pwstate = STATE_ON
-        else:
-            self._pwstate = STATE_OFF
-            return
+        if self._zone == "main":
+            try:
+                raw_update = self._receiver.get()
+                while not (raw_update is None):
+                    MSG_QUEUE.append(iscp_to_command(raw_update))
+                    raw_update = self._receiver.get()
+            except (AssertionError):
+                _LOGGER.info("An assertion erorr occured")
 
-        volume_raw = self.command("volume query")
-        mute_raw = self.command("audio-muting query")
-        current_source_raw = self.command("input-selector query")
-        hdmi_out_raw = self.command("hdmi-output-selector query")
-        preset_raw = self.command("preset query")
-        if not (volume_raw and mute_raw and current_source_raw):
-            return
+        if MSG_QUEUE:
+            zone, command, value = MSG_QUEUE[0]
+            if zone == self._zone:
+                MSG_QUEUE.pop(0)
+                if command == "system-power":
+                    if value == "on":
+                        self._pwstate = STATE_ON
+                    else:
+                        self._pwstate = STATE_OFF
+                elif command == "master-volume" or command == "volume":
+                    self._supports_volume = True
+                    self._volume = (
+                        value / self._receiver_max_volume * (self._max_volume / 100)
+                    )
+                elif command == "audio-muting":
+                    self._muted = bool(value == "on")
+                elif command == "input-selector":
+                    # eiscp can return string or tuple. Make everything tuples.
+                    if isinstance(value, str):
+                        current_source_tuples = (command, (value,))
+                    else:
+                        current_source_tuples = (command, value)
 
-        # eiscp can return string or tuple. Make everything tuples.
-        if isinstance(current_source_raw[1], str):
-            current_source_tuples = (current_source_raw[0], (current_source_raw[1],))
-        else:
-            current_source_tuples = current_source_raw
-
-        for source in current_source_tuples[1]:
-            if source in self._source_mapping:
-                self._current_source = self._source_mapping[source]
-                break
-            self._current_source = "_".join(current_source_tuples[1])
-        if preset_raw and self._current_source.lower() == "radio":
-            self._attributes[ATTR_PRESET] = preset_raw[1]
-        elif ATTR_PRESET in self._attributes:
-            del self._attributes[ATTR_PRESET]
-
-        self._muted = bool(mute_raw[1] == "on")
-        #       AMP_VOL/MAX_RECEIVER_VOL*(MAX_VOL/100)
-        self._volume = (
-            volume_raw[1] / self._receiver_max_volume * (self._max_volume / 100)
-        )
-
-        if not hdmi_out_raw:
-            return
-        self._attributes["video_out"] = ",".join(hdmi_out_raw[1])
+                    for source in current_source_tuples[1]:
+                        if source in self._source_mapping:
+                            self._current_source = self._source_mapping[source]
+                            break
+                        self._current_source = "_".join(current_source_tuples[1])
+                elif command == "hdmi-output-selector":
+                    self._attributes["video_out"] = ",".join(value)
+                elif command == "preset":
+                    if self._current_source.lower() == "radio":
+                        self._attributes[ATTR_PRESET] = value
+                    elif ATTR_PRESET in self._attributes:
+                        del self._attributes[ATTR_PRESET]
 
     @property
     def name(self):
@@ -320,7 +370,9 @@ class OnkyoDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Return media player features that are supported."""
-        return SUPPORT_ONKYO
+        if self._supports_volume:
+            return SUPPORT_ONKYO
+        return SUPPORT_ONKYO_WO_VOLUME
 
     @property
     def source(self):
@@ -352,158 +404,40 @@ class OnkyoDevice(MediaPlayerDevice):
         """
         #        HA_VOL * (MAX VOL / 100) * MAX_RECEIVER_VOL
         self.command(
-            f"volume {int(volume * (self._max_volume / 100) * self._receiver_max_volume)}"
+            f"volume={int(volume * (self._max_volume / 100) * self._receiver_max_volume)}"
         )
 
     def volume_up(self):
         """Increase volume by 1 step."""
-        self.command("volume level-up")
+        self.command("volume=level-up")
 
     def volume_down(self):
         """Decrease volume by 1 step."""
-        self.command("volume level-down")
+        self.command("volume=level-down")
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
         if mute:
-            self.command("audio-muting on")
+            self.command("audio-muting=on")
         else:
-            self.command("audio-muting off")
+            self.command("audio-muting=off")
 
     def turn_on(self):
         """Turn the media player on."""
-        self.command("system-power on")
+        self.command("power=on")
 
     def select_source(self, source):
         """Set the input source."""
         if source in self._source_list:
             source = self._reverse_mapping[source]
-        self.command(f"input-selector {source}")
+        self.command(f"input-selector={source}")
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play radio station by preset number."""
         source = self._reverse_mapping[self._current_source]
         if media_type.lower() == "radio" and source in DEFAULT_PLAYABLE_SOURCES:
-            self.command(f"preset {media_id}")
+            self.command(f"preset={media_id}")
 
     def select_output(self, output):
         """Set hdmi-out."""
         self.command(f"hdmi-output-selector={output}")
-
-
-class OnkyoDeviceZone(OnkyoDevice):
-    """Representation of an Onkyo device's extra zone."""
-
-    def __init__(
-        self,
-        zone,
-        receiver,
-        sources,
-        name=None,
-        max_volume=SUPPORTED_MAX_VOLUME,
-        receiver_max_volume=DEFAULT_RECEIVER_MAX_VOLUME,
-    ):
-        """Initialize the Zone with the zone identifier."""
-        self._zone = zone
-        self._supports_volume = True
-        super().__init__(receiver, sources, name, max_volume, receiver_max_volume)
-
-    def update(self):
-        """Get the latest state from the device."""
-        status = self.command(f"zone{self._zone}.power=query")
-
-        if not status:
-            return
-        if status[1] == "on":
-            self._pwstate = STATE_ON
-        else:
-            self._pwstate = STATE_OFF
-            return
-
-        volume_raw = self.command(f"zone{self._zone}.volume=query")
-        mute_raw = self.command(f"zone{self._zone}.muting=query")
-        current_source_raw = self.command(f"zone{self._zone}.selector=query")
-        preset_raw = self.command(f"zone{self._zone}.preset=query")
-        # If we received a source value, but not a volume value
-        # it's likely this zone permanently does not support volume.
-        if current_source_raw and not volume_raw:
-            self._supports_volume = False
-
-        if not (volume_raw and mute_raw and current_source_raw):
-            return
-
-        # It's possible for some players to have zones set to HDMI with
-        # no sound control. In this case, the string `N/A` is returned.
-        self._supports_volume = isinstance(volume_raw[1], (float, int))
-
-        # eiscp can return string or tuple. Make everything tuples.
-        if isinstance(current_source_raw[1], str):
-            current_source_tuples = (current_source_raw[0], (current_source_raw[1],))
-        else:
-            current_source_tuples = current_source_raw
-
-        for source in current_source_tuples[1]:
-            if source in self._source_mapping:
-                self._current_source = self._source_mapping[source]
-                break
-            self._current_source = "_".join(current_source_tuples[1])
-        self._muted = bool(mute_raw[1] == "on")
-        if preset_raw and self._current_source.lower() == "radio":
-            self._attributes[ATTR_PRESET] = preset_raw[1]
-        elif ATTR_PRESET in self._attributes:
-            del self._attributes[ATTR_PRESET]
-        if self._supports_volume:
-            # AMP_VOL/MAX_RECEIVER_VOL*(MAX_VOL/100)
-            self._volume = (
-                volume_raw[1] / self._receiver_max_volume * (self._max_volume / 100)
-            )
-
-    @property
-    def supported_features(self):
-        """Return media player features that are supported."""
-        if self._supports_volume:
-            return SUPPORT_ONKYO
-        return SUPPORT_ONKYO_WO_VOLUME
-
-    def turn_off(self):
-        """Turn the media player off."""
-        self.command(f"zone{self._zone}.power=standby")
-
-    def set_volume_level(self, volume):
-        """
-        Set volume level, input is range 0..1.
-
-        However full volume on the amp is usually far too loud so allow the user to specify the upper range
-        with CONF_MAX_VOLUME.  we change as per max_volume set by user. This means that if max volume is 80 then full
-        volume in HA will give 80% volume on the receiver. Then we convert
-        that to the correct scale for the receiver.
-        """
-        # HA_VOL * (MAX VOL / 100) * MAX_RECEIVER_VOL
-        self.command(
-            f"zone{self._zone}.volume={int(volume * (self._max_volume / 100) * self._receiver_max_volume)}"
-        )
-
-    def volume_up(self):
-        """Increase volume by 1 step."""
-        self.command(f"zone{self._zone}.volume=level-up")
-
-    def volume_down(self):
-        """Decrease volume by 1 step."""
-        self.command(f"zone{self._zone}.volume=level-down")
-
-    def mute_volume(self, mute):
-        """Mute (true) or unmute (false) media player."""
-        if mute:
-            self.command(f"zone{self._zone}.muting=on")
-        else:
-            self.command(f"zone{self._zone}.muting=off")
-
-    def turn_on(self):
-        """Turn the media player on."""
-        self.command(f"zone{self._zone}.power=on")
-
-    def select_source(self, source):
-        """Set the input source."""
-        if source in self._source_list:
-            source = self._reverse_mapping[source]
-        self.command(f"zone{self._zone}.selector={source}")
