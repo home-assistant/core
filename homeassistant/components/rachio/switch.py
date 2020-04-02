@@ -339,10 +339,9 @@ class RachioSchedule(RachioSwitch):
 
         self._controller.rachio.schedulerule.start(self._schedule_id)
         _LOGGER.debug(
-            "Schedule %s started on %s for %s",
+            "Schedule %s started on %s",
             self.name,
             self._controller.name,
-            self.duration,
         )
 
     def turn_off(self, **kwargs) -> None:
