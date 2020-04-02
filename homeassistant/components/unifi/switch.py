@@ -30,6 +30,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     switches_off = []
 
     option_block_clients = controller.option_block_clients
+    option_poe_clients = controller.option_poe_clients
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
@@ -66,6 +67,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     def options_updated():
         """Manage entities affected by config entry options."""
         nonlocal option_block_clients
+        nonlocal option_poe_clients
 
         update = set()
         remove = set()
@@ -82,16 +84,26 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 else:
                     remove.add(block_client_id)
 
-            for block_client_id in remove:
-                entity = switches.pop(block_client_id)
+        if option_poe_clients != controller.option_poe_clients:
+            option_poe_clients = controller.option_poe_clients
 
-                if entity_registry.async_is_registered(entity.entity_id):
-                    entity_registry.async_remove(entity.entity_id)
+            if option_poe_clients:
+                update.add("poe_clients_enabled")
+            else:
+                for poe_client_id, entity in switches.items():
+                    if isinstance(entity, UniFiPOEClientSwitch):
+                        remove.add(poe_client_id)
 
-                hass.async_create_task(entity.async_remove())
+        for client_id in remove:
+            entity = switches.pop(client_id)
 
-            if len(update) != len(option_block_clients):
-                update_controller()
+            if entity_registry.async_is_registered(entity.entity_id):
+                entity_registry.async_remove(entity.entity_id)
+
+            hass.async_create_task(entity.async_remove())
+
+        if len(update) != len(option_block_clients):
+            update_controller()
 
     controller.listeners.append(
         async_dispatcher_connect(
@@ -109,7 +121,6 @@ def add_entities(controller, async_add_entities, switches, switches_off):
     new_switches = []
     devices = controller.api.devices
 
-    # block client
     for client_id in controller.option_block_clients:
 
         client = None
@@ -130,49 +141,49 @@ def add_entities(controller, async_add_entities, switches, switches_off):
         switches[block_client_id] = UniFiBlockClientSwitch(client, controller)
         new_switches.append(switches[block_client_id])
 
-    # control POE
-    for client_id in controller.api.clients:
+    if controller.option_poe_clients:
+        for client_id in controller.api.clients:
 
-        poe_client_id = f"poe-{client_id}"
+            poe_client_id = f"poe-{client_id}"
 
-        if poe_client_id in switches:
-            continue
+            if poe_client_id in switches:
+                continue
 
-        client = controller.api.clients[client_id]
-
-        if poe_client_id in switches_off:
-            pass
-        # Network device with active POE
-        elif (
-            client_id in controller.wireless_clients
-            or client.sw_mac not in devices
-            or not devices[client.sw_mac].ports[client.sw_port].port_poe
-            or not devices[client.sw_mac].ports[client.sw_port].poe_enable
-            or controller.mac == client.mac
-        ):
-            continue
-
-        # Multiple POE-devices on same port means non UniFi POE driven switch
-        multi_clients_on_port = False
-        for client2 in controller.api.clients.values():
+            client = controller.api.clients[client_id]
 
             if poe_client_id in switches_off:
-                break
-
-            if (
-                client2.is_wired
-                and client.mac != client2.mac
-                and client.sw_mac == client2.sw_mac
-                and client.sw_port == client2.sw_port
+                pass
+            # Network device with active POE
+            elif (
+                client_id in controller.wireless_clients
+                or client.sw_mac not in devices
+                or not devices[client.sw_mac].ports[client.sw_port].port_poe
+                or not devices[client.sw_mac].ports[client.sw_port].poe_enable
+                or controller.mac == client.mac
             ):
-                multi_clients_on_port = True
-                break
+                continue
 
-        if multi_clients_on_port:
-            continue
+            # Multiple POE-devices on same port means non UniFi POE driven switch
+            multi_clients_on_port = False
+            for client2 in controller.api.clients.values():
 
-        switches[poe_client_id] = UniFiPOEClientSwitch(client, controller)
-        new_switches.append(switches[poe_client_id])
+                if poe_client_id in switches_off:
+                    break
+
+                if (
+                    client2.is_wired
+                    and client.mac != client2.mac
+                    and client.sw_mac == client2.sw_mac
+                    and client.sw_port == client2.sw_port
+                ):
+                    multi_clients_on_port = True
+                    break
+
+            if multi_clients_on_port:
+                continue
+
+            switches[poe_client_id] = UniFiPOEClientSwitch(client, controller)
+            new_switches.append(switches[poe_client_id])
 
     if new_switches:
         async_add_entities(new_switches)
