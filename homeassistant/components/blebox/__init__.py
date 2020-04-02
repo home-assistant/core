@@ -4,7 +4,6 @@ import logging
 
 from blebox_uniapi.error import Error
 from blebox_uniapi.products import Products
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -12,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 PLATFORMS = ["cover"]
 
