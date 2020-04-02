@@ -1162,7 +1162,7 @@ class MqttAvailability(Entity):
 
 
 async def cleanup_device_registry(hass, device_id):
-    """Remove device registry entry if there are no entities or triggers."""
+    """Remove device registry entry if there are no remaining entities or triggers."""
     # Local import to avoid circular dependencies
     from . import device_trigger
 
@@ -1196,8 +1196,12 @@ class MqttDiscoveryUpdate(Entity):
             self._discovery_data[ATTR_DISCOVERY_HASH] if self._discovery_data else None
         )
 
-        async def async_remove_from_registry(self) -> None:
-            """Remove entity from entity registry."""
+        async def _async_remove_state_and_registry_entry(self) -> None:
+            """Remove entity's state and entity registry entry.
+
+            Remove entity from entity registry if it is registered, this also removes the state.
+            If the entity is not in the entity registry, just remove the state.
+            """
             entity_registry = (
                 await self.hass.helpers.entity_registry.async_get_registry()
             )
@@ -1205,6 +1209,8 @@ class MqttDiscoveryUpdate(Entity):
                 entity_entry = entity_registry.async_get(self.entity_id)
                 entity_registry.async_remove(self.entity_id)
                 await cleanup_device_registry(self.hass, entity_entry.device_id)
+            else:
+                await self.async_remove()
 
         @callback
         async def discovery_callback(payload):
@@ -1216,9 +1222,8 @@ class MqttDiscoveryUpdate(Entity):
             if not payload:
                 # Empty payload: Remove component
                 _LOGGER.info("Removing component: %s", self.entity_id)
-                self._cleanup_on_remove()
-                await async_remove_from_registry(self)
-                await self.async_remove()
+                self._cleanup_discovery_on_remove()
+                await _async_remove_state_and_registry_entry(self)
             elif self._discovery_update:
                 # Non-empty payload: Notify component
                 _LOGGER.info("Updating component: %s", self.entity_id)
@@ -1246,9 +1251,9 @@ class MqttDiscoveryUpdate(Entity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Stop listening to signal and cleanup discovery data.."""
-        self._cleanup_on_remove()
+        self._cleanup_discovery_on_remove()
 
-    def _cleanup_on_remove(self) -> None:
+    def _cleanup_discovery_on_remove(self) -> None:
         """Stop listening to signal and cleanup discovery data."""
         if self._discovery_data and not self._removed_from_hass:
             debug_info.remove_entity_data(self.hass, self.entity_id)
