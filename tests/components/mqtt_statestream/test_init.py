@@ -9,6 +9,7 @@ from tests.common import (
     get_test_home_assistant,
     mock_mqtt_component,
     mock_state_change_event,
+    mock_storage,
 )
 
 
@@ -18,11 +19,14 @@ class TestMqttStateStream:
     def setup_method(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.mock_storage = mock_storage()
+        self.mock_storage.__enter__()
         self.mock_mqtt = mock_mqtt_component(self.hass)
 
     def teardown_method(self):
         """Stop everything that was started."""
         self.hass.stop()
+        self.mock_storage.__exit__(None, None, None)
 
     def add_statestream(
         self,

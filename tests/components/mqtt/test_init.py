@@ -33,6 +33,7 @@ from tests.common import (
     mock_device_registry,
     mock_mqtt_component,
     mock_registry,
+    mock_storage,
     threadsafe_coroutine_factory,
 )
 
@@ -54,6 +55,7 @@ def mock_MQTT():
     """Make sure connection is established."""
     with mock.patch("homeassistant.components.mqtt.MQTT") as mock_MQTT:
         mock_MQTT.return_value.async_connect.return_value = mock_coro(True)
+        mock_MQTT.return_value.async_disconnect.return_value = mock_coro(True)
         yield mock_MQTT
 
 
@@ -83,12 +85,15 @@ class TestMQTTComponent(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.mock_storage = mock_storage()
+        self.mock_storage.__enter__()
         mock_mqtt_component(self.hass)
         self.calls = []
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
         self.hass.stop()
+        self.mock_storage.__exit__(None, None, None)
 
     @callback
     def record_calls(self, *args):
@@ -298,12 +303,15 @@ class TestMQTTCallbacks(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.mock_storage = mock_storage()
+        self.mock_storage.__enter__()
         mock_mqtt_client(self.hass)
         self.calls = []
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
         self.hass.stop()
+        self.mock_storage.__exit__(None, None, None)
 
     @callback
     def record_calls(self, *args):
