@@ -88,7 +88,7 @@ class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanel):
         """Handle state update from channel."""
         _LOGGER.debug("state=%s", state)
         self._state = IAS_ACE_STATE_MAP.get(state)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def async_restore_last_state(self, last_state):
@@ -114,31 +114,37 @@ class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanel):
         """Send disarm command."""
         await self.hass.async_add_executor_job(self.alarm_disarm, code)
         self._state = STATE_ALARM_DISARMED
+        self.async_write_ha_state()
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
         await self.hass.async_add_executor_job(self.alarm_arm_home, code)
         self._state = STATE_ALARM_ARMED_HOME
+        self.async_write_ha_state()
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
         await self.hass.async_add_executor_job(self.alarm_arm_away, code)
         self._state = STATE_ALARM_ARMED_AWAY
+        self.async_write_ha_state()
 
     async def async_alarm_arm_night(self, code=None):
         """Send arm night command."""
         await self.hass.async_add_executor_job(self.alarm_arm_night, code)
         self._state = STATE_ALARM_ARMED_NIGHT
+        self.async_write_ha_state()
 
     async def async_alarm_trigger(self, code=None):
         """Send alarm trigger command."""
         await self.hass.async_add_executor_job(self.alarm_trigger, code)
         self._state = STATE_ALARM_TRIGGERED
+        self.async_write_ha_state()
 
     async def async_alarm_arm_custom_bypass(self, code=None):
         """Send arm custom bypass command."""
         await self.hass.async_add_executor_job(self.alarm_arm_custom_bypass, code)
         self._state = STATE_ALARM_ARMED_CUSTOM_BYPASS
+        self.async_write_ha_state()
 
     @property
     def supported_features(self) -> int:
