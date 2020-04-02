@@ -4,6 +4,7 @@
 from asynctest import call, patch
 
 import homeassistant.components.dynalite.const as dynalite
+from homeassistant.const import CONF_HOST
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -29,7 +30,7 @@ async def test_async_setup(hass):
                 dynalite.DOMAIN: {
                     dynalite.CONF_BRIDGES: [
                         {
-                            dynalite.CONF_HOST: "1.2.3.4",
+                            CONF_HOST: "1.2.3.4",
                             dynalite.CONF_PORT: 1234,
                             dynalite.CONF_AUTO_DISCOVER: True,
                             dynalite.CONF_POLL_TIMER: 5.5,
@@ -94,7 +95,7 @@ async def test_async_setup_bad_config1(hass):
                 dynalite.DOMAIN: {
                     dynalite.CONF_BRIDGES: [
                         {
-                            dynalite.CONF_HOST: "1.2.3.4",
+                            CONF_HOST: "1.2.3.4",
                             dynalite.CONF_AREA: {
                                 "1": {
                                     dynalite.CONF_TEMPLATE: dynalite.CONF_TIME_COVER,
@@ -124,7 +125,7 @@ async def test_async_setup_bad_config2(hass):
                 dynalite.DOMAIN: {
                     dynalite.CONF_BRIDGES: [
                         {
-                            dynalite.CONF_HOST: host,
+                            CONF_HOST: host,
                             dynalite.CONF_AREA: {"WRONG": {dynalite.CONF_NAME: "Name"}},
                         }
                     ]
@@ -138,7 +139,7 @@ async def test_async_setup_bad_config2(hass):
 async def test_unload_entry(hass):
     """Test being able to unload an entry."""
     host = "1.2.3.4"
-    entry = MockConfigEntry(domain=dynalite.DOMAIN, data={dynalite.CONF_HOST: host})
+    entry = MockConfigEntry(domain=dynalite.DOMAIN, data={CONF_HOST: host})
     entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",

@@ -4,14 +4,17 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, List
 
 from dynalite_devices_lib.dynalite_devices import DynaliteDevices
 
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import CONF_ALL, CONF_HOST, ENTITY_PLATFORMS, LOGGER
+from .const import CONF_ALL, ENTITY_PLATFORMS, LOGGER
 from .convert_config import convert_config
 
 if TYPE_CHECKING:  # pragma: no cover
-    from dynalite_devices_lib.dynalitebase import DynaliteBaseDevice
+    from dynalite_devices_lib.dynalite_devices import (  # pylint: disable=ungrouped-imports
+        DynaliteBaseDevice,
+    )
 
 
 class DynaliteBridge:
