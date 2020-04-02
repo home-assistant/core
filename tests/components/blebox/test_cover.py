@@ -21,7 +21,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.exceptions import PlatformNotReady
 
-from .conftest import BleBoxTestHelper, mock_feature
+from .conftest import BleBoxTestHelper, mock_feature, patch_product_identify
 
 
 class CoverTestHelper(BleBoxTestHelper):
@@ -434,13 +434,7 @@ async def test_setup_failure(all_types, hass):
     """Test that setup failure is handled and logged."""
 
     data = all_types
-    path = "homeassistant.components.blebox.Products"
-    patcher = patch(path, mock.DEFAULT, blebox_uniapi.products.Products, True, True)
-    products_class = patcher.start()
-
-    products_class.async_from_host = CoroutineMock(
-        side_effect=blebox_uniapi.error.ClientError
-    )
+    patch_product_identify(None, side_effect=blebox_uniapi.error.ClientError)
 
     with patch("homeassistant.components.blebox._LOGGER.error") as error:
         with pytest.raises(PlatformNotReady):
@@ -456,13 +450,7 @@ async def test_setup_failure_on_connection(all_types, hass):
     """Test that setup failure is handled and logged."""
 
     data = all_types
-    path = "homeassistant.components.blebox.Products"
-    patcher = patch(path, mock.DEFAULT, blebox_uniapi.products.Products, True, True)
-    products_class = patcher.start()
-
-    products_class.async_from_host = CoroutineMock(
-        side_effect=blebox_uniapi.error.ConnectionError
-    )
+    patch_product_identify(None, side_effect=blebox_uniapi.error.ConnectionError)
 
     with patch("homeassistant.components.blebox._LOGGER.error") as error:
         with pytest.raises(PlatformNotReady):
