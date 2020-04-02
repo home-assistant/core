@@ -92,7 +92,7 @@ async def async_connect_or_timeout(hass, roomba):
         # api looping if user or password incorrect and roomba exist
         await async_disconnect_or_timeout(hass, roomba)
         _LOGGER.exception("Timeout expired, user or password incorrect")
-        raise InvalidAuth
+        raise CannotConnect
 
     return True
 
