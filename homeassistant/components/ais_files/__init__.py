@@ -209,6 +209,7 @@ async def _async_check_db_connection(hass, call):
         "dbUser": attributes.get("dbUser", ""),
         "dbServerIp": attributes.get("dbServerIp", ""),
         "dbServerName": attributes.get("dbServerName", ""),
+        "dbKeepDays": attributes.get("dbKeepDays", 10),
         "errorInfo": attributes.get("errorInfo", ""),
     }
     if state in ("no_db_url_saved", "db_url_not_valid"):
@@ -283,6 +284,8 @@ async def _async_get_db_log_settings_info(hass, call):
             with open(DB_SETTINGS_INFO_FILE) as json_file:
                 db_settings = json.load(json_file)
             DB_SETTINGS_INFO = db_settings
+            if "dbKeepDays" not in DB_SETTINGS_INFO:
+                DB_SETTINGS_INFO["dbKeepDays"] = 10
         except Exception as e:
             _LOGGER.info("Error get db settings info " + str(e))
     else:

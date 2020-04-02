@@ -169,6 +169,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             db_retry_wait = 3
         else:
             keep_days = 10
+            if "dbKeepDays" in db_settings:
+                keep_days = db_settings["dbKeepDays"]
+            _LOGGER.error("dbKeepDays " + str(keep_days))
             purge_interval = 1
             commit_interval = 60
             db_max_retries = 10
