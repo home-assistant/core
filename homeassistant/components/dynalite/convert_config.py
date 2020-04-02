@@ -68,11 +68,6 @@ CONF_MAP = {
 }
 
 
-def convert_element(value: str) -> str:
-    """Convert a string if it is in the map."""
-    return CONF_MAP.get(value, value)
-
-
 def convert_config(config: Dict[str, Any]) -> Dict[str, Any]:
     """Convert a config dict by replacing component consts with library consts."""
     result = {}
@@ -80,8 +75,8 @@ def convert_config(config: Dict[str, Any]) -> Dict[str, Any]:
         if isinstance(value, dict):
             new_value = convert_config(value)
         elif isinstance(value, str):
-            new_value = convert_element(value)
+            new_value = CONF_MAP.get(value, value)
         else:
             new_value = value
-        result[convert_element(key)] = new_value
+        result[CONF_MAP.get(key, key)] = new_value
     return result
