@@ -438,6 +438,12 @@ class LightTemplate(Light):
                     self.max_mireds,
                 )
                 self._temperature = None
+        except ValueError:
+            _LOGGER.error(
+                "Template must supply an integer temperature within the range for this light, or 'None'",
+                exc_info=True,
+            )
+            self._temperature = None
         except TemplateError:
             _LOGGER.error("Cannot evaluate temperature template", exc_info=True)
             self._temperature = None
