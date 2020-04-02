@@ -20,6 +20,7 @@ from .const import (
     LOGGER as _LOGGER,
     PACKETS_RECEIVED,
     PACKETS_SENT,
+    TIMESTAMP,
 )
 
 
@@ -168,7 +169,7 @@ class Device:
         - total packets sent
         - total packats received
 
-        All data is timestamped.
+        Data is timestamped.
         """
         _LOGGER.debug("Getting traffic statistics from device: %s", self)
 
@@ -181,8 +182,9 @@ class Device:
         )
 
         return {
-            BYTES_RECEIVED: {"value": values[0], "timestamp": dt_util.utcnow()},
-            BYTES_SENT: {"value": values[1], "timestamp": dt_util.utcnow()},
-            PACKETS_RECEIVED: {"value": values[2], "timestamp": dt_util.utcnow()},
-            PACKETS_SENT: {"value": values[3], "timestamp": dt_util.utcnow()},
+            TIMESTAMP: dt_util.utcnow(),
+            BYTES_RECEIVED: values[0],
+            BYTES_SENT: values[1],
+            PACKETS_RECEIVED: values[2],
+            PACKETS_SENT: values[3],
         }
