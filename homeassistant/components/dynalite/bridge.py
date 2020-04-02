@@ -10,7 +10,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from .const import CONF_ALL, CONF_HOST, ENTITY_PLATFORMS, LOGGER
 
 if TYPE_CHECKING:  # pragma: no cover
-    from .dynalitebase import DynaliteBase
+    from dynalite_devices_lib.dynalitebase import DynaliteBaseDevice
 
 
 class DynaliteBridge:
@@ -41,7 +41,7 @@ class DynaliteBridge:
         LOGGER.debug("Reloading bridge - host %s, config %s", self.host, config)
         self.dynalite_devices.configure(config)
 
-    def update_signal(self, device: "DynaliteBase" = None) -> str:
+    def update_signal(self, device: "DynaliteBaseDevice" = None) -> str:
         """Create signal to use to trigger entity update."""
         if device:
             signal = f"dynalite-update-{self.host}-{device.unique_id}"
@@ -50,7 +50,7 @@ class DynaliteBridge:
         return signal
 
     @callback
-    def update_device(self, device: "DynaliteBase") -> None:
+    def update_device(self, device: "DynaliteBaseDevice") -> None:
         """Call when a device or all devices should be updated."""
         if device == CONF_ALL:
             # This is used to signal connection or disconnection, so all devices may become available or not.
@@ -69,7 +69,7 @@ class DynaliteBridge:
         if platform in self.waiting_devices:
             self.async_add_devices[platform](self.waiting_devices[platform])
 
-    def add_devices_when_registered(self, devices: List["DynaliteBase"]) -> None:
+    def add_devices_when_registered(self, devices: List["DynaliteBaseDevice"]) -> None:
         """Add the devices to HA if the add devices callback was registered, otherwise queue until it is."""
         for platform in ENTITY_PLATFORMS:
             platform_devices = [
