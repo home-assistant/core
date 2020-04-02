@@ -55,6 +55,7 @@ def mock_MQTT():
     """Make sure connection is established."""
     with mock.patch("homeassistant.components.mqtt.MQTT") as mock_MQTT:
         mock_MQTT.return_value.async_connect.return_value = mock_coro(True)
+        mock_MQTT.return_value.async_disconnect.return_value = mock_coro(True)
         yield mock_MQTT
 
 
