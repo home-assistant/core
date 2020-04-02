@@ -138,19 +138,19 @@ class ThermostatChannel(ZigbeeChannel):
         self._system_mode = None
         self._unoccupied_cooling_setpoint = None
         self._unoccupied_heating_setpoint = None
-        self._report_config = (
+        self._report_config = [
             {"attr": "local_temp", "config": REPORT_CONFIG_CLIMATE},
-            {"attr": "occupancy", "config": REPORT_CONFIG_CLIMATE_DISCRETE},
             {"attr": "occupied_cooling_setpoint", "config": REPORT_CONFIG_CLIMATE},
             {"attr": "occupied_heating_setpoint", "config": REPORT_CONFIG_CLIMATE},
-            {"attr": "pi_cooling_demand", "config": REPORT_CONFIG_CLIMATE_DEMAND},
-            {"attr": "pi_heating_demand", "config": REPORT_CONFIG_CLIMATE_DEMAND},
+            {"attr": "unoccupied_cooling_setpoint", "config": REPORT_CONFIG_CLIMATE},
+            {"attr": "unoccupied_heating_setpoint", "config": REPORT_CONFIG_CLIMATE},
             {"attr": "running_mode", "config": REPORT_CONFIG_CLIMATE},
             {"attr": "running_state", "config": REPORT_CONFIG_CLIMATE_DEMAND},
             {"attr": "system_mode", "config": REPORT_CONFIG_CLIMATE},
-            {"attr": "unoccupied_cooling_setpoint", "config": REPORT_CONFIG_CLIMATE},
-            {"attr": "unoccupied_heating_setpoint", "config": REPORT_CONFIG_CLIMATE},
-        )
+            {"attr": "occupancy", "config": REPORT_CONFIG_CLIMATE_DISCRETE},
+            {"attr": "pi_cooling_demand", "config": REPORT_CONFIG_CLIMATE_DEMAND},
+            {"attr": "pi_heating_demand", "config": REPORT_CONFIG_CLIMATE_DEMAND},
+        ]
 
     @property
     def abs_max_cool_setpoint_limit(self) -> int:
@@ -316,7 +316,7 @@ class ThermostatChannel(ZigbeeChannel):
             attrs = {record["attr"]: record["config"] for record in chunk}
             try:
                 res = await self.cluster.configure_reporting_multiple(attrs, **kwargs)
-                self._configure_reporting_status(attrs, res)
+                self._configure_reporting_status(attrs, res[0])
             except (zigpy.exceptions.DeliveryError, asyncio.TimeoutError) as ex:
                 self.debug(
                     "failed to set reporting on '%s' cluster for: %s",
@@ -330,14 +330,13 @@ class ThermostatChannel(ZigbeeChannel):
         self, attrs: Dict[Union[int, str], Tuple], res: Union[List, Tuple]
     ) -> None:
         """Parse configure reporting result."""
-        res = res[0]
         if not isinstance(res, list):
             # assume default response
             self.debug(
                 "attr reporting for '%s' on '%s': %s", attrs, self.name, res,
             )
             return
-        if res[0].status == Status.SUCCESS:
+        if res[0].status == Status.SUCCESS and len(res) == 1:
             self.debug(
                 "Successfully configured reporting for '%s' on '%s' cluster: %s",
                 attrs,
@@ -346,11 +345,15 @@ class ThermostatChannel(ZigbeeChannel):
             )
             return
 
-        failed = {self.cluster.attributes.get(r.attrid, [r.attrid])[0] for r in res}
+        failed = [
+            self.cluster.attributes.get(r.attrid, [r.attrid])[0]
+            for r in res
+            if r.status != Status.SUCCESS
+        ]
         attrs = {self.cluster.attributes.get(r, [r])[0] for r in attrs}
         self.debug(
             "Successfully configured reporting for '%s' on '%s' cluster",
-            attrs - failed,
+            attrs - set(failed),
             self.name,
         )
         self.debug(
