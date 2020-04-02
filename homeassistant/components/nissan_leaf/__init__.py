@@ -380,7 +380,10 @@ class LeafDataStore:
             )
             return server_info
         except CarwingsError:
-            _LOGGER.error("An error occurred getting battery status.")
+            _LOGGER.error("An error occurred getting battery status")
+            return None
+        except KeyError:
+            _LOGGER.error("An error occurred parsing response from server")
             return None
 
     async def async_get_climate(self):
@@ -464,8 +467,10 @@ class LeafEntity(Entity):
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.log_registration()
-        async_dispatcher_connect(
-            self.car.hass, SIGNAL_UPDATE_LEAF, self._update_callback
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.car.hass, SIGNAL_UPDATE_LEAF, self._update_callback
+            )
         )
 
     @callback

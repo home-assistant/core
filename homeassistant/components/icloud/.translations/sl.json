@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ra\u010dun \u017ee nastavljen"
+            "already_configured": "Ra\u010dun \u017ee nastavljen",
+            "no_device": "V nobeni od va\u0161ih naprav ni aktiviran \u00bbFind my iPhone\u00ab"
         },
         "error": {
             "login": "Napaka pri prijavi: preverite svoj e-po\u0161tni naslov in geslo",
@@ -19,7 +20,8 @@
             "user": {
                 "data": {
                     "password": "Geslo",
-                    "username": "E-po\u0161tni naslov"
+                    "username": "E-po\u0161tni naslov",
+                    "with_family": "Z dru\u017eino"
                 },
                 "description": "Vnesite svoje poverilnice",
                 "title": "iCloud poverilnice"

@@ -16,6 +16,7 @@
                     "timeout": "Zeit\u00fcberschreitung (Sekunden)",
                     "username": "Benutzername"
                 },
+                "description": "Wenn die Anmeldemethode \"E-Mail\" lautet, ist Benutzername die E-Mail-Adresse. Wenn die Anmeldemethode \"Telefon\" ist, ist Benutzername die Telefonnummer im Format \"+ NNNNNNNNN\".",
                 "title": "Richten Sie ein August-Konto ein"
             },
             "validation": {

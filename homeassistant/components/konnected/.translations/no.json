@@ -27,11 +27,14 @@
                 "title": "Oppdag Konnected Enheten"
             }
         },
-        "title": "Konnected.io"
+        "title": ""
     },
     "options": {
         "abort": {
             "not_konn_panel": "Ikke en anerkjent Konnected.io-enhet"
+        },
+        "error": {
+            "bad_host": "Ugyldig overstyr API-vertsadresse"
         },
         "step": {
             "options_binary": {
@@ -82,7 +85,9 @@
             },
             "options_misc": {
                 "data": {
-                    "blink": "Blink p\u00e5 LED-lampen n\u00e5r du sender statusendring"
+                    "api_host": "Overstyre API-vert-URL (valgfritt)",
+                    "blink": "Blink p\u00e5 LED-lampen n\u00e5r du sender statusendring",
+                    "override_api_host": "Overstyre standard Home Assistant API-vertspanel-URL"
                 },
                 "description": "Vennligst velg \u00f8nsket atferd for din panel",
                 "title": "Konfigurere Diverse"
@@ -91,11 +96,12 @@
                 "data": {
                     "activation": "Utgang n\u00e5r den er p\u00e5",
                     "momentary": "Pulsvarighet (ms) (valgfritt)",
+                    "more_states": "Konfigurere flere tilstander for denne sonen",
                     "name": "Navn (valgfritt)",
                     "pause": "Pause mellom pulser (ms) (valgfritt)",
                     "repeat": "Tider \u00e5 gjenta (-1 = uendelig) (valgfritt)"
                 },
-                "description": "Velg outputalternativer for {zone}",
+                "description": "Velg outputalternativer for {zone} : state {state}",
                 "title": "Konfigurere Valgbare Utgang"
             }
         },

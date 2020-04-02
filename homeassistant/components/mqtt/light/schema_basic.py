@@ -51,6 +51,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.color as color_util
 
+from ..debug_info import log_messages
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
@@ -292,6 +293,7 @@ class MqttLight(
         last_state = await self.async_get_last_state()
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def state_received(msg):
             """Handle new MQTT messages."""
             payload = templates[CONF_STATE](msg.payload)
@@ -315,6 +317,7 @@ class MqttLight(
             self._state = last_state.state == STATE_ON
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def brightness_received(msg):
             """Handle new MQTT messages for the brightness."""
             payload = templates[CONF_BRIGHTNESS](msg.payload)
@@ -346,6 +349,7 @@ class MqttLight(
             self._brightness = None
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def rgb_received(msg):
             """Handle new MQTT messages for RGB."""
             payload = templates[CONF_RGB](msg.payload)
@@ -377,6 +381,7 @@ class MqttLight(
             self._hs = (0, 0)
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def color_temp_received(msg):
             """Handle new MQTT messages for color temperature."""
             payload = templates[CONF_COLOR_TEMP](msg.payload)
@@ -406,6 +411,7 @@ class MqttLight(
             self._color_temp = None
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def effect_received(msg):
             """Handle new MQTT messages for effect."""
             payload = templates[CONF_EFFECT](msg.payload)
@@ -435,6 +441,7 @@ class MqttLight(
             self._effect = None
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def hs_received(msg):
             """Handle new MQTT messages for hs color."""
             payload = templates[CONF_HS](msg.payload)
@@ -466,6 +473,7 @@ class MqttLight(
             self._hs = (0, 0)
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def white_value_received(msg):
             """Handle new MQTT messages for white value."""
             payload = templates[CONF_WHITE_VALUE](msg.payload)
@@ -497,6 +505,7 @@ class MqttLight(
             self._white_value = None
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def xy_received(msg):
             """Handle new MQTT messages for xy color."""
             payload = templates[CONF_XY](msg.payload)

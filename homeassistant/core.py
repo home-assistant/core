@@ -47,6 +47,7 @@ from homeassistant.const import (
     EVENT_CALL_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_REGISTERED,
@@ -151,6 +152,7 @@ class CoreState(enum.Enum):
     starting = "STARTING"
     running = "RUNNING"
     stopping = "STOPPING"
+    final_write = "FINAL_WRITE"
 
     def __str__(self) -> str:
         """Return the event."""
@@ -412,7 +414,7 @@ class HomeAssistant:
             # regardless of the state of the loop.
             if self.state == CoreState.not_running:  # just ignore
                 return
-            if self.state == CoreState.stopping:
+            if self.state == CoreState.stopping or self.state == CoreState.final_write:
                 _LOGGER.info("async_stop called twice: ignored")
                 return
             if self.state == CoreState.starting:
@@ -426,6 +428,11 @@ class HomeAssistant:
         await self.async_block_till_done()
 
         # stage 2
+        self.state = CoreState.final_write
+        self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+        await self.async_block_till_done()
+
+        # stage 3
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
         await self.async_block_till_done()
@@ -901,7 +908,7 @@ class StateMachine:
         ).result()
 
     @callback
-    def async_remove(self, entity_id: str) -> bool:
+    def async_remove(self, entity_id: str, context: Optional[Context] = None) -> bool:
         """Remove the state of an entity.
 
         Returns boolean to indicate if an entity was removed.
@@ -917,6 +924,8 @@ class StateMachine:
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
             {"entity_id": entity_id, "old_state": old_state, "new_state": None},
+            EventOrigin.local,
+            context=context,
         )
         return True
 

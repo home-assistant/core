@@ -2,12 +2,16 @@
     "config": {
         "abort": {
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "already_in_progress": "Le flux de configuration de l'appareil est d\u00e9j\u00e0 en cours.",
             "not_konn_panel": "Non reconnu comme appareil Konnected.io",
             "unknown": "Une erreur inconnue s'est produite"
         },
         "step": {
             "confirm": {
                 "title": "Appareil Konnected pr\u00eat"
+            },
+            "import_confirm": {
+                "title": "Importer un appareil connect\u00e9"
             },
             "user": {
                 "data": {

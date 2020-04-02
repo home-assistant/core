@@ -73,14 +73,17 @@ class Iperf3Sensor(RestoreEntity):
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, DATA_UPDATED, self._schedule_immediate_update
+            )
+        )
+
         state = await self.async_get_last_state()
         if not state:
             return
         self._state = state.state
-
-        async_dispatcher_connect(
-            self.hass, DATA_UPDATED, self._schedule_immediate_update
-        )
 
     def update(self):
         """Get the latest data and update the states."""

@@ -3,22 +3,15 @@ import logging
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
-    FAN_HIGH,
-    FAN_LOW,
-    FAN_MIDDLE,
-    FAN_OFF,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
+    FAN_AUTO,
     HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_HOME,
+    SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
+    SUPPORT_SWING_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS
@@ -27,48 +20,30 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DOMAIN, SIGNAL_TADO_UPDATE_RECEIVED
 from .const import (
+    CONST_FAN_AUTO,
+    CONST_FAN_OFF,
+    CONST_MODE_AUTO,
+    CONST_MODE_COOL,
+    CONST_MODE_HEAT,
     CONST_MODE_OFF,
     CONST_MODE_SMART_SCHEDULE,
     CONST_OVERLAY_MANUAL,
     CONST_OVERLAY_TADO_MODE,
-    CONST_OVERLAY_TIMER,
     DATA,
+    HA_TO_TADO_FAN_MODE_MAP,
+    HA_TO_TADO_HVAC_MODE_MAP,
+    ORDERED_KNOWN_TADO_MODES,
+    SUPPORT_PRESET,
+    TADO_HVAC_ACTION_TO_HA_HVAC_ACTION,
+    TADO_MODES_WITH_NO_TEMP_SETTING,
+    TADO_SWING_OFF,
+    TADO_TO_HA_FAN_MODE_MAP,
+    TADO_TO_HA_HVAC_MODE_MAP,
     TYPE_AIR_CONDITIONING,
     TYPE_HEATING,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-FAN_MAP_TADO = {"HIGH": FAN_HIGH, "MIDDLE": FAN_MIDDLE, "LOW": FAN_LOW}
-
-HVAC_MAP_TADO_HEAT = {
-    CONST_OVERLAY_MANUAL: HVAC_MODE_HEAT,
-    CONST_OVERLAY_TIMER: HVAC_MODE_HEAT,
-    CONST_OVERLAY_TADO_MODE: HVAC_MODE_HEAT,
-    CONST_MODE_SMART_SCHEDULE: HVAC_MODE_AUTO,
-    CONST_MODE_OFF: HVAC_MODE_OFF,
-}
-HVAC_MAP_TADO_COOL = {
-    CONST_OVERLAY_MANUAL: HVAC_MODE_COOL,
-    CONST_OVERLAY_TIMER: HVAC_MODE_COOL,
-    CONST_OVERLAY_TADO_MODE: HVAC_MODE_COOL,
-    CONST_MODE_SMART_SCHEDULE: HVAC_MODE_AUTO,
-    CONST_MODE_OFF: HVAC_MODE_OFF,
-}
-HVAC_MAP_TADO_HEAT_COOL = {
-    CONST_OVERLAY_MANUAL: HVAC_MODE_HEAT_COOL,
-    CONST_OVERLAY_TIMER: HVAC_MODE_HEAT_COOL,
-    CONST_OVERLAY_TADO_MODE: HVAC_MODE_HEAT_COOL,
-    CONST_MODE_SMART_SCHEDULE: HVAC_MODE_AUTO,
-    CONST_MODE_OFF: HVAC_MODE_OFF,
-}
-
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
-SUPPORT_HVAC_HEAT = [HVAC_MODE_HEAT, HVAC_MODE_AUTO, HVAC_MODE_OFF]
-SUPPORT_HVAC_COOL = [HVAC_MODE_COOL, HVAC_MODE_AUTO, HVAC_MODE_OFF]
-SUPPORT_HVAC_HEAT_COOL = [HVAC_MODE_HEAT_COOL, HVAC_MODE_AUTO, HVAC_MODE_OFF]
-SUPPORT_FAN = [FAN_HIGH, FAN_MIDDLE, FAN_LOW, FAN_OFF]
-SUPPORT_PRESET = [PRESET_AWAY, PRESET_HOME]
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -96,29 +71,83 @@ def create_climate_entity(tado, name: str, zone_id: int):
     _LOGGER.debug("Capabilities for zone %s: %s", zone_id, capabilities)
 
     zone_type = capabilities["type"]
+    support_flags = SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
+    supported_hvac_modes = [
+        TADO_TO_HA_HVAC_MODE_MAP[CONST_MODE_OFF],
+        TADO_TO_HA_HVAC_MODE_MAP[CONST_MODE_SMART_SCHEDULE],
+    ]
+    supported_fan_modes = None
+    heat_temperatures = None
+    cool_temperatures = None
 
-    ac_support_heat = False
     if zone_type == TYPE_AIR_CONDITIONING:
-        # Only use heat if available
-        # (you don't have to setup a heat mode, but cool is required)
         # Heat is preferred as it generally has a lower minimum temperature
-        if "HEAT" in capabilities:
-            temperatures = capabilities["HEAT"]["temperatures"]
-            ac_support_heat = True
-        else:
-            temperatures = capabilities["COOL"]["temperatures"]
-    elif "temperatures" in capabilities:
-        temperatures = capabilities["temperatures"]
+        for mode in ORDERED_KNOWN_TADO_MODES:
+            if mode not in capabilities:
+                continue
+
+            supported_hvac_modes.append(TADO_TO_HA_HVAC_MODE_MAP[mode])
+            if capabilities[mode].get("swings"):
+                support_flags |= SUPPORT_SWING_MODE
+
+            if not capabilities[mode].get("fanSpeeds"):
+                continue
+
+            support_flags |= SUPPORT_FAN_MODE
+
+            if supported_fan_modes:
+                continue
+
+            supported_fan_modes = [
+                TADO_TO_HA_FAN_MODE_MAP[speed]
+                for speed in capabilities[mode]["fanSpeeds"]
+            ]
+
+        cool_temperatures = capabilities[CONST_MODE_COOL]["temperatures"]
     else:
-        _LOGGER.debug("Not adding zone %s since it has no temperature", name)
+        supported_hvac_modes.append(HVAC_MODE_HEAT)
+
+    if CONST_MODE_HEAT in capabilities:
+        heat_temperatures = capabilities[CONST_MODE_HEAT]["temperatures"]
+
+    if heat_temperatures is None and "temperatures" in capabilities:
+        heat_temperatures = capabilities["temperatures"]
+
+    if cool_temperatures is None and heat_temperatures is None:
+        _LOGGER.debug("Not adding zone %s since it has no temperatures", name)
         return None
 
-    min_temp = float(temperatures["celsius"]["min"])
-    max_temp = float(temperatures["celsius"]["max"])
-    step = temperatures["celsius"].get("step", PRECISION_TENTHS)
+    heat_min_temp = None
+    heat_max_temp = None
+    heat_step = None
+    cool_min_temp = None
+    cool_max_temp = None
+    cool_step = None
+
+    if heat_temperatures is not None:
+        heat_min_temp = float(heat_temperatures["celsius"]["min"])
+        heat_max_temp = float(heat_temperatures["celsius"]["max"])
+        heat_step = heat_temperatures["celsius"].get("step", PRECISION_TENTHS)
+
+    if cool_temperatures is not None:
+        cool_min_temp = float(cool_temperatures["celsius"]["min"])
+        cool_max_temp = float(cool_temperatures["celsius"]["max"])
+        cool_step = cool_temperatures["celsius"].get("step", PRECISION_TENTHS)
 
     entity = TadoClimate(
-        tado, name, zone_id, zone_type, min_temp, max_temp, step, ac_support_heat,
+        tado,
+        name,
+        zone_id,
+        zone_type,
+        heat_min_temp,
+        heat_max_temp,
+        heat_step,
+        cool_min_temp,
+        cool_max_temp,
+        cool_step,
+        supported_hvac_modes,
+        supported_fan_modes,
+        support_flags,
     )
     return entity
 
@@ -132,10 +161,15 @@ class TadoClimate(ClimateDevice):
         zone_name,
         zone_id,
         zone_type,
-        min_temp,
-        max_temp,
-        step,
-        ac_support_heat,
+        heat_min_temp,
+        heat_max_temp,
+        heat_step,
+        cool_min_temp,
+        cool_max_temp,
+        cool_step,
+        supported_hvac_modes,
+        supported_fan_modes,
+        support_flags,
     ):
         """Initialize of Tado climate entity."""
         self._tado = tado
@@ -146,49 +180,52 @@ class TadoClimate(ClimateDevice):
         self._unique_id = f"{zone_type} {zone_id} {tado.device_id}"
 
         self._ac_device = zone_type == TYPE_AIR_CONDITIONING
-        self._ac_support_heat = ac_support_heat
-        self._cooling = False
+        self._supported_hvac_modes = supported_hvac_modes
+        self._supported_fan_modes = supported_fan_modes
+        self._support_flags = support_flags
 
-        self._active = False
-        self._device_is_active = False
+        self._available = False
 
         self._cur_temp = None
         self._cur_humidity = None
-        self._is_away = False
-        self._min_temp = min_temp
-        self._max_temp = max_temp
-        self._step = step
+
+        self._heat_min_temp = heat_min_temp
+        self._heat_max_temp = heat_max_temp
+        self._heat_step = heat_step
+
+        self._cool_min_temp = cool_min_temp
+        self._cool_max_temp = cool_max_temp
+        self._cool_step = cool_step
+
         self._target_temp = None
 
-        if tado.fallback:
-            # Fallback to Smart Schedule at next Schedule switch
-            self._default_overlay = CONST_OVERLAY_TADO_MODE
-        else:
-            # Don't fallback to Smart Schedule, but keep in manual mode
-            self._default_overlay = CONST_OVERLAY_MANUAL
+        self._current_tado_fan_speed = CONST_FAN_OFF
+        self._current_tado_hvac_mode = CONST_MODE_OFF
+        self._current_tado_hvac_action = CURRENT_HVAC_OFF
+        self._current_tado_swing_mode = TADO_SWING_OFF
 
-        self._current_fan = CONST_MODE_OFF
-        self._current_operation = CONST_MODE_SMART_SCHEDULE
-        self._overlay_mode = CONST_MODE_SMART_SCHEDULE
+        self._undo_dispatcher = None
+        self._tado_zone_data = None
+        self._async_update_zone_data()
+
+    async def async_will_remove_from_hass(self):
+        """When entity will be removed from hass."""
+        if self._undo_dispatcher:
+            self._undo_dispatcher()
 
     async def async_added_to_hass(self):
         """Register for sensor updates."""
 
-        @callback
-        def async_update_callback():
-            """Schedule an entity update."""
-            self.async_schedule_update_ha_state(True)
-
-        async_dispatcher_connect(
+        self._undo_dispatcher = async_dispatcher_connect(
             self.hass,
             SIGNAL_TADO_UPDATE_RECEIVED.format("zone", self.zone_id),
-            async_update_callback,
+            self._async_update_callback,
         )
 
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_FLAGS
+        return self._support_flags
 
     @property
     def name(self):
@@ -208,12 +245,12 @@ class TadoClimate(ClimateDevice):
     @property
     def current_humidity(self):
         """Return the current humidity."""
-        return self._cur_humidity
+        return self._tado_zone_data.current_humidity
 
     @property
     def current_temperature(self):
         """Return the sensor temperature."""
-        return self._cur_temp
+        return self._tado_zone_data.current_temp
 
     @property
     def hvac_mode(self):
@@ -221,11 +258,7 @@ class TadoClimate(ClimateDevice):
 
         Need to be one of HVAC_MODE_*.
         """
-        if self._ac_device and self._ac_support_heat:
-            return HVAC_MAP_TADO_HEAT_COOL.get(self._current_operation)
-        if self._ac_device and not self._ac_support_heat:
-            return HVAC_MAP_TADO_COOL.get(self._current_operation)
-        return HVAC_MAP_TADO_HEAT.get(self._current_operation)
+        return TADO_TO_HA_HVAC_MODE_MAP.get(self._current_tado_hvac_mode, HVAC_MODE_OFF)
 
     @property
     def hvac_modes(self):
@@ -233,11 +266,7 @@ class TadoClimate(ClimateDevice):
 
         Need to be a subset of HVAC_MODES.
         """
-        if self._ac_device:
-            if self._ac_support_heat:
-                return SUPPORT_HVAC_HEAT_COOL
-            return SUPPORT_HVAC_COOL
-        return SUPPORT_HVAC_HEAT
+        return self._supported_hvac_modes
 
     @property
     def hvac_action(self):
@@ -245,40 +274,30 @@ class TadoClimate(ClimateDevice):
 
         Need to be one of CURRENT_HVAC_*.
         """
-        if not self._device_is_active:
-            return CURRENT_HVAC_OFF
-        if self._ac_device:
-            if self._active:
-                if self._ac_support_heat and not self._cooling:
-                    return CURRENT_HVAC_HEAT
-                return CURRENT_HVAC_COOL
-            return CURRENT_HVAC_IDLE
-        if self._active:
-            return CURRENT_HVAC_HEAT
-        return CURRENT_HVAC_IDLE
+        return TADO_HVAC_ACTION_TO_HA_HVAC_ACTION.get(
+            self._tado_zone_data.current_hvac_action, CURRENT_HVAC_OFF
+        )
 
     @property
     def fan_mode(self):
         """Return the fan setting."""
         if self._ac_device:
-            return FAN_MAP_TADO.get(self._current_fan)
+            return TADO_TO_HA_FAN_MODE_MAP.get(self._current_tado_fan_speed, FAN_AUTO)
         return None
 
     @property
     def fan_modes(self):
         """List of available fan modes."""
-        if self._ac_device:
-            return SUPPORT_FAN
-        return None
+        return self._supported_fan_modes
 
     def set_fan_mode(self, fan_mode: str):
         """Turn fan on/off."""
-        pass
+        self._control_hvac(fan_mode=HA_TO_TADO_FAN_MODE_MAP[fan_mode])
 
     @property
     def preset_mode(self):
         """Return the current preset mode (home, away)."""
-        if self._is_away:
+        if self._tado_zone_data.is_away:
             return PRESET_AWAY
         return PRESET_HOME
 
@@ -289,7 +308,7 @@ class TadoClimate(ClimateDevice):
 
     def set_preset_mode(self, preset_mode):
         """Set new preset mode."""
-        pass
+        self._tado.set_presence(preset_mode)
 
     @property
     def temperature_unit(self):
@@ -299,12 +318,18 @@ class TadoClimate(ClimateDevice):
     @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
-        return self._step
+        if self._tado_zone_data.current_hvac_mode == CONST_MODE_COOL:
+            return self._cool_step or self._heat_step
+        return self._heat_step or self._cool_step
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self._target_temp
+        # If the target temperature will be None
+        # if the device is performing an action
+        # that does not affect the temperature or
+        # the device is switching states
+        return self._tado_zone_data.target_temp or self._tado_zone_data.current_temp
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -312,174 +337,177 @@ class TadoClimate(ClimateDevice):
         if temperature is None:
             return
 
-        self._current_operation = self._default_overlay
-        self._overlay_mode = None
-        self._target_temp = temperature
-        self._control_heating()
+        if self._current_tado_hvac_mode not in (
+            CONST_MODE_OFF,
+            CONST_MODE_AUTO,
+            CONST_MODE_SMART_SCHEDULE,
+        ):
+            self._control_hvac(target_temp=temperature)
+            return
+
+        new_hvac_mode = CONST_MODE_COOL if self._ac_device else CONST_MODE_HEAT
+        self._control_hvac(target_temp=temperature, hvac_mode=new_hvac_mode)
 
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
-        mode = None
 
-        if hvac_mode == HVAC_MODE_OFF:
-            mode = CONST_MODE_OFF
-        elif hvac_mode == HVAC_MODE_AUTO:
-            mode = CONST_MODE_SMART_SCHEDULE
-        elif hvac_mode == HVAC_MODE_HEAT:
-            mode = self._default_overlay
-        elif hvac_mode == HVAC_MODE_COOL:
-            mode = self._default_overlay
-        elif hvac_mode == HVAC_MODE_HEAT_COOL:
-            mode = self._default_overlay
+        self._control_hvac(hvac_mode=HA_TO_TADO_HVAC_MODE_MAP[hvac_mode])
 
-        self._current_operation = mode
-        self._overlay_mode = None
-
-        # Set a target temperature if we don't have any
-        # This can happen when we switch from Off to On
-        if self._target_temp is None:
-            if self._ac_device:
-                self._target_temp = self.max_temp
-            else:
-                self._target_temp = self.min_temp
-            self.schedule_update_ha_state()
-
-        self._control_heating()
+    @property
+    def available(self):
+        """Return if the device is available."""
+        return self._tado_zone_data.available
 
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return self._min_temp
+        if (
+            self._current_tado_hvac_mode == CONST_MODE_COOL
+            and self._cool_min_temp is not None
+        ):
+            return self._cool_min_temp
+        if self._heat_min_temp is not None:
+            return self._heat_min_temp
+
+        return self._cool_min_temp
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return self._max_temp
-
-    def update(self):
-        """Handle update callbacks."""
-        _LOGGER.debug("Updating climate platform for zone %d", self.zone_id)
-        data = self._tado.data["zone"][self.zone_id]
-
-        if "sensorDataPoints" in data:
-            sensor_data = data["sensorDataPoints"]
-
-            if "insideTemperature" in sensor_data:
-                temperature = float(sensor_data["insideTemperature"]["celsius"])
-                self._cur_temp = temperature
-
-            if "humidity" in sensor_data:
-                humidity = float(sensor_data["humidity"]["percentage"])
-                self._cur_humidity = humidity
-
-        # temperature setting will not exist when device is off
         if (
-            "temperature" in data["setting"]
-            and data["setting"]["temperature"] is not None
+            self._current_tado_hvac_mode == CONST_MODE_HEAT
+            and self._heat_max_temp is not None
         ):
-            setting = float(data["setting"]["temperature"]["celsius"])
-            self._target_temp = setting
+            return self._heat_max_temp
+        if self._heat_max_temp is not None:
+            return self._heat_max_temp
 
-        if "tadoMode" in data:
-            mode = data["tadoMode"]
-            self._is_away = mode == "AWAY"
+        return self._heat_max_temp
 
-        if "setting" in data:
-            power = data["setting"]["power"]
-            if power == "OFF":
-                self._current_operation = CONST_MODE_OFF
-                self._current_fan = CONST_MODE_OFF
-                # There is no overlay, the mode will always be
-                # "SMART_SCHEDULE"
-                self._overlay_mode = CONST_MODE_SMART_SCHEDULE
-                self._device_is_active = False
-            else:
-                self._device_is_active = True
+    @property
+    def swing_mode(self):
+        """Active swing mode for the device."""
+        return self._current_tado_swing_mode
 
-        active = False
-        if "activityDataPoints" in data:
-            activity_data = data["activityDataPoints"]
-            if self._ac_device:
-                if "acPower" in activity_data and activity_data["acPower"] is not None:
-                    if not activity_data["acPower"]["value"] == "OFF":
-                        active = True
-            else:
-                if (
-                    "heatingPower" in activity_data
-                    and activity_data["heatingPower"] is not None
-                ):
-                    if float(activity_data["heatingPower"]["percentage"]) > 0.0:
-                        active = True
-        self._active = active
+    @property
+    def swing_modes(self):
+        """Swing modes for the device."""
+        if self._support_flags & SUPPORT_SWING_MODE:
+            # Currently we only support off.
+            # On will be added in the future in an update
+            # to PyTado
+            return [TADO_SWING_OFF]
+        return None
 
-        overlay = False
-        overlay_data = None
-        termination = CONST_MODE_SMART_SCHEDULE
-        cooling = False
-        fan_speed = CONST_MODE_OFF
+    def set_swing_mode(self, swing_mode):
+        """Set swing modes for the device."""
+        self._control_hvac(swing_mode=swing_mode)
 
-        if "overlay" in data:
-            overlay_data = data["overlay"]
-            overlay = overlay_data is not None
+    @callback
+    def _async_update_zone_data(self):
+        """Load tado data into zone."""
+        self._tado_zone_data = self._tado.data["zone"][self.zone_id]
+        self._current_tado_fan_speed = self._tado_zone_data.current_fan_speed
+        self._current_tado_hvac_mode = self._tado_zone_data.current_hvac_mode
+        self._current_tado_hvac_action = self._tado_zone_data.current_hvac_action
 
-        if overlay:
-            termination = overlay_data["termination"]["type"]
-            setting = False
-            setting_data = None
+    @callback
+    def _async_update_callback(self):
+        """Load tado data and update state."""
+        self._async_update_zone_data()
+        self.async_write_ha_state()
 
-            if "setting" in overlay_data:
-                setting_data = overlay_data["setting"]
-                setting = setting_data is not None
+    def _normalize_target_temp_for_hvac_mode(self):
+        # Set a target temperature if we don't have any
+        # This can happen when we switch from Off to On
+        if self._target_temp is None:
+            self._target_temp = self._tado_zone_data.current_temp
+        elif self._current_tado_hvac_mode == CONST_MODE_COOL:
+            if self._target_temp > self._cool_max_temp:
+                self._target_temp = self._cool_max_temp
+            elif self._target_temp < self._cool_min_temp:
+                self._target_temp = self._cool_min_temp
+        elif self._current_tado_hvac_mode == CONST_MODE_HEAT:
+            if self._target_temp > self._heat_max_temp:
+                self._target_temp = self._heat_max_temp
+            elif self._target_temp < self._heat_min_temp:
+                self._target_temp = self._heat_min_temp
 
-            if setting:
-                if "mode" in setting_data:
-                    cooling = setting_data["mode"] == "COOL"
-
-                if "fanSpeed" in setting_data:
-                    fan_speed = setting_data["fanSpeed"]
-
-        if self._device_is_active:
-            # If you set mode manually to off, there will be an overlay
-            # and a termination, but we want to see the mode "OFF"
-            self._overlay_mode = termination
-            self._current_operation = termination
-
-        self._cooling = cooling
-        self._current_fan = fan_speed
-
-    def _control_heating(self):
+    def _control_hvac(
+        self, hvac_mode=None, target_temp=None, fan_mode=None, swing_mode=None
+    ):
         """Send new target temperature to Tado."""
-        if self._current_operation == CONST_MODE_SMART_SCHEDULE:
+
+        if hvac_mode:
+            self._current_tado_hvac_mode = hvac_mode
+
+        if target_temp:
+            self._target_temp = target_temp
+
+        if fan_mode:
+            self._current_tado_fan_speed = fan_mode
+
+        if swing_mode:
+            self._current_tado_swing_mode = swing_mode
+
+        self._normalize_target_temp_for_hvac_mode()
+
+        # tado does not permit setting the fan speed to
+        # off, you must turn off the device
+        if (
+            self._current_tado_fan_speed == CONST_FAN_OFF
+            and self._current_tado_hvac_mode != CONST_MODE_OFF
+        ):
+            self._current_tado_fan_speed = CONST_FAN_AUTO
+
+        if self._current_tado_hvac_mode == CONST_MODE_OFF:
+            _LOGGER.debug(
+                "Switching to OFF for zone %s (%d)", self.zone_name, self.zone_id
+            )
+            self._tado.set_zone_off(self.zone_id, CONST_OVERLAY_MANUAL, self.zone_type)
+            return
+
+        if self._current_tado_hvac_mode == CONST_MODE_SMART_SCHEDULE:
             _LOGGER.debug(
                 "Switching to SMART_SCHEDULE for zone %s (%d)",
                 self.zone_name,
                 self.zone_id,
             )
             self._tado.reset_zone_overlay(self.zone_id)
-            self._overlay_mode = self._current_operation
-            return
-
-        if self._current_operation == CONST_MODE_OFF:
-            _LOGGER.debug(
-                "Switching to OFF for zone %s (%d)", self.zone_name, self.zone_id
-            )
-            self._tado.set_zone_off(self.zone_id, CONST_OVERLAY_MANUAL, self.zone_type)
-            self._overlay_mode = self._current_operation
             return
 
         _LOGGER.debug(
             "Switching to %s for zone %s (%d) with temperature %s °C",
-            self._current_operation,
+            self._current_tado_hvac_mode,
             self.zone_name,
             self.zone_id,
             self._target_temp,
         )
-        self._tado.set_zone_overlay(
-            self.zone_id,
-            self._current_operation,
-            self._target_temp,
-            None,
-            self.zone_type,
-            "COOL" if self._ac_device else None,
+
+        # Fallback to Smart Schedule at next Schedule switch if we have fallback enabled
+        overlay_mode = (
+            CONST_OVERLAY_TADO_MODE if self._tado.fallback else CONST_OVERLAY_MANUAL
         )
-        self._overlay_mode = self._current_operation
+
+        temperature_to_send = self._target_temp
+        if self._current_tado_hvac_mode in TADO_MODES_WITH_NO_TEMP_SETTING:
+            # A temperature cannot be passed with these modes
+            temperature_to_send = None
+
+        fan_speed = None
+        if self._support_flags & SUPPORT_FAN_MODE:
+            fan_speed = self._current_tado_fan_speed
+        swing = None
+        if self._support_flags & SUPPORT_SWING_MODE:
+            swing = self._current_tado_swing_mode
+
+        self._tado.set_zone_overlay(
+            zone_id=self.zone_id,
+            overlay_mode=overlay_mode,  # What to do when the period ends
+            temperature=temperature_to_send,
+            duration=None,
+            device_type=self.zone_type,
+            mode=self._current_tado_hvac_mode,
+            fan_speed=fan_speed,  # api defaults to not sending fanSpeed if None specified
+            swing=swing,  # api defaults to not sending swing if None specified
+        )

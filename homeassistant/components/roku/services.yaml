@@ -1,2 +1,0 @@
-roku_scan:
-  description: Scans the local network for Rokus. All found devices are presented as a persistent notification.

@@ -190,16 +190,15 @@ async def async_setup(hass, config):
 
     hass.http.register_view(HassIOView(host, websession))
 
-    if "frontend" in hass.config.components:
-        await hass.components.panel_custom.async_register_panel(
-            frontend_url_path="hassio",
-            webcomponent_name="hassio-main",
-            sidebar_title="Supervisor",
-            sidebar_icon="hass:home-assistant",
-            js_url="/api/hassio/app/entrypoint.js",
-            embed_iframe=True,
-            require_admin=True,
-        )
+    await hass.components.panel_custom.async_register_panel(
+        frontend_url_path="hassio",
+        webcomponent_name="hassio-main",
+        sidebar_title="Supervisor",
+        sidebar_icon="hass:home-assistant",
+        js_url="/api/hassio/app/entrypoint.js",
+        embed_iframe=True,
+        require_admin=True,
+    )
 
     await hassio.update_hass_api(config.get("http", {}), refresh_token)
 

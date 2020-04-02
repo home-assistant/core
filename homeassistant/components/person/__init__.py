@@ -77,7 +77,11 @@ PERSON_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {vol.Optional(DOMAIN): vol.All(cv.ensure_list, cv.remove_falsy, [PERSON_SCHEMA])},
+    {
+        vol.Optional(DOMAIN, default=[]): vol.All(
+            cv.ensure_list, cv.remove_falsy, [PERSON_SCHEMA]
+        )
+    },
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -480,7 +484,7 @@ class Person(RestoreEntity):
             self._longitude = None
             self._gps_accuracy = None
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def _parse_source_state(self, state):

@@ -7,9 +7,9 @@
         "step": {
             "confirm": {
                 "description": "Vil du konfigurere TP-Link smart enheter?",
-                "title": "TP-Link Smart Home"
+                "title": ""
             }
         },
-        "title": "TP-Link Smart Home"
+        "title": ""
     }
 }

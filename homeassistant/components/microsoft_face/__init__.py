@@ -113,7 +113,7 @@ async def async_setup(hass, config):
             face.store.pop(g_id)
 
             entity = entities.pop(g_id)
-            hass.states.async_remove(entity.entity_id)
+            hass.states.async_remove(entity.entity_id, service.context)
         except HomeAssistantError as err:
             _LOGGER.error("Can't delete group '%s' with error: %s", g_id, err)
 

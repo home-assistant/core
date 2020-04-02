@@ -76,7 +76,7 @@ class LcnOutputSwitch(LcnDevice, SwitchDevice):
             return
 
         self._is_on = input_obj.get_percent() > 0
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
 
 class LcnRelaySwitch(LcnDevice, SwitchDevice):
@@ -124,4 +124,4 @@ class LcnRelaySwitch(LcnDevice, SwitchDevice):
             return
 
         self._is_on = input_obj.get_state(self.output.value)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

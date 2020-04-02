@@ -522,6 +522,62 @@ class TestComponentHistory(unittest.TestCase):
         )
         assert list(hist.keys()) == entity_ids
 
+    def test_get_significant_states_only(self):
+        """Test significant states when significant_states_only is set."""
+        self.init_recorder()
+        entity_id = "sensor.test"
+
+        def set_state(state, **kwargs):
+            """Set the state."""
+            self.hass.states.set(entity_id, state, **kwargs)
+            wait_recording_done(self.hass)
+            return self.hass.states.get(entity_id)
+
+        start = dt_util.utcnow() - timedelta(minutes=4)
+        points = []
+        for i in range(1, 4):
+            points.append(start + timedelta(minutes=i))
+
+        states = []
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=start
+        ):
+            set_state("123", attributes={"attribute": 10.64})
+
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=points[0]
+        ):
+            # Attributes are different, state not
+            states.append(set_state("123", attributes={"attribute": 21.42}))
+
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=points[1]
+        ):
+            # state is different, attributes not
+            states.append(set_state("32", attributes={"attribute": 21.42}))
+
+        with patch(
+            "homeassistant.components.recorder.dt_util.utcnow", return_value=points[2]
+        ):
+            # everything is different
+            states.append(set_state("412", attributes={"attribute": 54.23}))
+
+        hist = history.get_significant_states(
+            self.hass, start, significant_changes_only=True
+        )
+
+        assert len(hist[entity_id]) == 2
+        assert states[0] not in hist[entity_id]
+        assert states[1] in hist[entity_id]
+        assert states[2] in hist[entity_id]
+
+        hist = history.get_significant_states(
+            self.hass, start, significant_changes_only=False
+        )
+
+        assert len(hist[entity_id]) == 3
+        assert states == hist[entity_id]
+
     def check_significant_states(self, zero, four, states, config):
         """Check if significant states are retrieved."""
         filters = history.Filters()
@@ -617,7 +673,7 @@ class TestComponentHistory(unittest.TestCase):
 
 async def test_fetch_period_api(hass, hass_client):
     """Test the fetch period view for history."""
-    await hass.async_add_job(init_recorder_component, hass)
+    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "history", {})
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
@@ -629,7 +685,7 @@ async def test_fetch_period_api(hass, hass_client):
 
 async def test_fetch_period_api_with_include_order(hass, hass_client):
     """Test the fetch period view for history."""
-    await hass.async_add_job(init_recorder_component, hass)
+    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(
         hass,
         "history",
