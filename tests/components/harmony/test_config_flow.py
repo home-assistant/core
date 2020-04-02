@@ -25,8 +25,7 @@ async def test_user_form(hass):
 
     harmonyapi = _get_mock_harmonyapi(connect=True)
     with patch(
-        "homeassistant.components.harmony.config_flow.HarmonyAPI",
-        return_value=harmonyapi,
+        "homeassistant.components.harmony.util.HarmonyAPI", return_value=harmonyapi,
     ), patch(
         "homeassistant.components.harmony.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -53,8 +52,7 @@ async def test_form_import(hass):
 
     harmonyapi = _get_mock_harmonyapi(connect=True)
     with patch(
-        "homeassistant.components.harmony.config_flow.HarmonyAPI",
-        return_value=harmonyapi,
+        "homeassistant.components.harmony.util.HarmonyAPI", return_value=harmonyapi,
     ), patch(
         "homeassistant.components.harmony.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -68,9 +66,11 @@ async def test_form_import(hass):
                 "name": "friend",
                 "activity": "Watch TV",
                 "delay_secs": 0.9,
+                "unique_id": "555234534543",
             },
         )
 
+    assert result["result"].unique_id == "555234534543"
     assert result["type"] == "create_entry"
     assert result["title"] == "friend"
     assert result["data"] == {
@@ -94,8 +94,7 @@ async def test_form_ssdp(hass):
     harmonyapi = _get_mock_harmonyapi(connect=True)
 
     with patch(
-        "homeassistant.components.harmony.config_flow.HarmonyAPI",
-        return_value=harmonyapi,
+        "homeassistant.components.harmony.util.HarmonyAPI", return_value=harmonyapi,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -114,8 +113,7 @@ async def test_form_ssdp(hass):
     }
 
     with patch(
-        "homeassistant.components.harmony.config_flow.HarmonyAPI",
-        return_value=harmonyapi,
+        "homeassistant.components.harmony.util.HarmonyAPI", return_value=harmonyapi,
     ), patch(
         "homeassistant.components.harmony.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -141,8 +139,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.harmony.config_flow.HarmonyAPI",
-        side_effect=CannotConnect,
+        "homeassistant.components.harmony.util.HarmonyAPI", side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
