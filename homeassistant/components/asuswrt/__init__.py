@@ -32,8 +32,8 @@ DEFAULT_SSH_PORT = 22
 DEFAULT_INTERFACE = "eth0"
 DEFAULT_DNSMASQ = "/var/lib/misc"
 
-MAX_RETRY_COUNT = 5
-RETRY_DELAY = 120
+FIRST_RETRY_TIME = 60
+MAX_RETRY_TIME = 900
 
 SECRET_GROUP = "Password or SSH Key"
 SENSOR_TYPES = ["upload_speed", "download_speed", "download", "upload"]
@@ -63,25 +63,8 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass, config, retry_delay=FIRST_RETRY_TIME):
     """Set up the asuswrt component."""
-
-    await async_setup_retry(hass, config)
-    return True
-
-
-async def async_retry_task(hass, config, retry_count):
-    """Schedule the asuswrt component setup."""
-
-    async_call_later(
-        hass,
-        RETRY_DELAY,
-        lambda _: hass.async_create_task(async_setup_retry(hass, config, retry_count)),
-    )
-
-
-async def async_setup_retry(hass, config, retry_count=0):
-    """Set up the asuswrt component with retry."""
 
     conf = config[DOMAIN]
 
@@ -100,21 +83,26 @@ async def async_setup_retry(hass, config, retry_count=0):
 
     try:
         await api.connection.async_connect()
-    except OSError:
+    except OSError as ex:
+        _LOGGER.warning(ex)
         pass
 
     if not api.is_connected:
-        if retry_count < MAX_RETRY_COUNT:
-            _LOGGER.warning(
-                "Unable to setup integration %s. Retrying in %s seconds...",
-                DOMAIN,
-                RETRY_DELAY,
-            )
-            await async_retry_task(hass, config, retry_count + 1)
-        else:
-            _LOGGER.error("Failed to setup integration %s.", DOMAIN)
 
-        return
+        _LOGGER.warning(
+            "Error connecting %s to %s. Will retry in %s seconds...",
+            DOMAIN,
+            conf[CONF_HOST],
+            retry_delay,
+        )
+
+        async def retry_setup(now):
+            """Retry setup if a eroor happens on asuswrt API."""
+            await async_setup(hass, config, retry_delay=min(2 * retry_delay, MAX_RETRY_TIME))
+
+        async_call_later(hass, retry_delay, retry_setup)
+
+        return True
 
     hass.data[DATA_ASUSWRT] = api
 
@@ -127,4 +115,4 @@ async def async_setup_retry(hass, config, retry_count=0):
         async_load_platform(hass, "device_tracker", DOMAIN, {}, config)
     )
 
-    return
+    return True
