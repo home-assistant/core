@@ -423,7 +423,7 @@ async def test_with_no_stop(gatebox, hass):
 
 # pylint: disable=fixme
 
-# TODO: the tests bellow should be shared among all BleBox platforms
+# TODO: the tests below should be shared among all BleBox platforms
 @pytest.fixture(params=[gatecontroller_data, gatebox_data, shutterbox_data])
 def all_types(request):
     """Return a fixture using all cover types."""
