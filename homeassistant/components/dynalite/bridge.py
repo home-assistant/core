@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import CONF_ALL, CONF_HOST, ENTITY_PLATFORMS, LOGGER
+from .convert_config import convert_config
 
 if TYPE_CHECKING:  # pragma: no cover
     from dynalite_devices_lib.dynalitebase import DynaliteBaseDevice
@@ -28,7 +29,7 @@ class DynaliteBridge:
             new_device_func=self.add_devices_when_registered,
             update_device_func=self.update_device,
         )
-        self.dynalite_devices.configure(config)
+        self.dynalite_devices.configure(convert_config(config))
 
     async def async_setup(self) -> bool:
         """Set up a Dynalite bridge."""
@@ -39,7 +40,7 @@ class DynaliteBridge:
     def reload_config(self, config: Dict[str, Any]) -> None:
         """Reconfigure a bridge when config changes."""
         LOGGER.debug("Reloading bridge - host %s, config %s", self.host, config)
-        self.dynalite_devices.configure(config)
+        self.dynalite_devices.configure(convert_config(config))
 
     def update_signal(self, device: "DynaliteBaseDevice" = None) -> str:
         """Create signal to use to trigger entity update."""

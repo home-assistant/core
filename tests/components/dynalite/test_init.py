@@ -3,7 +3,7 @@
 
 from asynctest import call, patch
 
-from homeassistant.components import dynalite
+import homeassistant.components.dynalite.const as dynalite
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -17,8 +17,7 @@ async def test_empty_config(hass):
 
 
 async def test_async_setup(hass):
-    """Test a successful setup."""
-    host = "1.2.3.4"
+    """Test a successful setup with all of the different options."""
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
         return_value=True,
@@ -30,8 +29,49 @@ async def test_async_setup(hass):
                 dynalite.DOMAIN: {
                     dynalite.CONF_BRIDGES: [
                         {
-                            dynalite.CONF_HOST: host,
-                            dynalite.CONF_AREA: {"1": {dynalite.CONF_NAME: "Name"}},
+                            dynalite.CONF_HOST: "1.2.3.4",
+                            dynalite.CONF_PORT: 1234,
+                            dynalite.CONF_AUTO_DISCOVER: True,
+                            dynalite.CONF_POLL_TIMER: 5.5,
+                            dynalite.CONF_AREA: {
+                                "1": {
+                                    dynalite.CONF_NAME: "Name1",
+                                    dynalite.CONF_CHANNEL: {"4": {}},
+                                    dynalite.CONF_NO_DEFAULT: True,
+                                },
+                                "2": {dynalite.CONF_NAME: "Name2"},
+                                "3": {
+                                    dynalite.CONF_NAME: "Name3",
+                                    dynalite.CONF_TEMPLATE: dynalite.CONF_ROOM,
+                                },
+                                "4": {
+                                    dynalite.CONF_NAME: "Name4",
+                                    dynalite.CONF_TEMPLATE: dynalite.CONF_TIME_COVER,
+                                },
+                            },
+                            dynalite.CONF_DEFAULT: {dynalite.CONF_FADE: 2.3},
+                            dynalite.CONF_ACTIVE: dynalite.CONF_ACTIVE_INIT,
+                            dynalite.CONF_PRESET: {
+                                "5": {
+                                    dynalite.CONF_NAME: "pres6",
+                                    dynalite.CONF_FADE: 4.5,
+                                }
+                            },
+                            dynalite.CONF_TEMPLATE: {
+                                dynalite.CONF_ROOM: {
+                                    dynalite.CONF_ROOM_ON: 6,
+                                    dynalite.CONF_ROOM_OFF: 7,
+                                },
+                                dynalite.CONF_TIME_COVER: {
+                                    dynalite.CONF_OPEN_PRESET: 8,
+                                    dynalite.CONF_CLOSE_PRESET: 9,
+                                    dynalite.CONF_STOP_PRESET: 10,
+                                    dynalite.CONF_CHANNEL_COVER: 3,
+                                    dynalite.CONF_DURATION: 2.2,
+                                    dynalite.CONF_TILT_TIME: 3.3,
+                                    dynalite.CONF_DEVICE_CLASS: "xxx",
+                                },
+                            },
                         }
                     ]
                 }
@@ -43,7 +83,6 @@ async def test_async_setup(hass):
 
 async def test_async_setup_bad_config1(hass):
     """Test a successful with bad config on templates."""
-    host = "1.2.3.4"
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
         return_value=True,
@@ -55,10 +94,10 @@ async def test_async_setup_bad_config1(hass):
                 dynalite.DOMAIN: {
                     dynalite.CONF_BRIDGES: [
                         {
-                            dynalite.CONF_HOST: host,
+                            dynalite.CONF_HOST: "1.2.3.4",
                             dynalite.CONF_AREA: {
                                 "1": {
-                                    dynalite.CONF_TEMPLATE: dynalite.const.CONF_TIME_COVER,
+                                    dynalite.CONF_TEMPLATE: dynalite.CONF_TIME_COVER,
                                     dynalite.CONF_NAME: "Name",
                                     dynalite.CONF_ROOM_ON: 7,
                                 }
