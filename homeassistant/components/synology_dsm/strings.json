@@ -16,7 +16,7 @@
             }
         },
         "error":{
-            "login": "Login error: please check your email & password",
+            "login": "Login error: please check your username & password",
             "unknown": "Unknown error: please retry later or an other configuration"
         },
         "abort":{
