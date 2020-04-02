@@ -34,7 +34,6 @@ from .const import (
     CONF_TEMPLATE,
     CONF_TILT_TIME,
     CONF_TIME_COVER,
-    LOGGER,
 )
 
 CONF_MAP = {
@@ -71,10 +70,7 @@ CONF_MAP = {
 
 def convert_element(value: str) -> str:
     """Convert a string if it is in the map."""
-    if value in CONF_MAP:
-        LOGGER.error("XXX replaced %s with %s", value, CONF_MAP[value])
-        return CONF_MAP[value]
-    return value
+    return CONF_MAP.get(value, value)
 
 
 def convert_config(config: Dict[str, Any]) -> Dict[str, Any]:
