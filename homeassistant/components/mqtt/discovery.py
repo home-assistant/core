@@ -6,7 +6,6 @@ import re
 
 from homeassistant.components import mqtt
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -21,21 +20,6 @@ TOPIC_MATCHER = re.compile(
 )
 
 SUPPORTED_COMPONENTS = [
-    "alarm_control_panel",
-    "binary_sensor",
-    "camera",
-    "climate",
-    "cover",
-    "device_automation",
-    "fan",
-    "light",
-    "lock",
-    "sensor",
-    "switch",
-    "vacuum",
-]
-
-CONFIG_ENTRY_COMPONENTS = [
     "alarm_control_panel",
     "binary_sensor",
     "camera",
@@ -158,10 +142,6 @@ async def async_start(
             # Add component
             _LOGGER.info("Found new component: %s %s", component, discovery_id)
             hass.data[ALREADY_DISCOVERED][discovery_hash] = None
-
-            if component not in CONFIG_ENTRY_COMPONENTS:
-                await async_load_platform(hass, component, "mqtt", payload, hass_config)
-                return
 
             config_entries_key = f"{component}.mqtt"
             async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
