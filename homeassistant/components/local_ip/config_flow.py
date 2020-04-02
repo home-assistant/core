@@ -1,10 +1,8 @@
 """Config flow for local_ip."""
-import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_NAME
 
-from . import DOMAIN
+from .const import DOMAIN
 
 
 class SimpleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -20,13 +18,9 @@ class SimpleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         if user_input is not None:
-            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+            return self.async_create_entry(title=DOMAIN, data={})
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_NAME, default=DOMAIN): str}),
-            errors={},
-        )
+        return self.async_show_form(step_id="user")
 
     async def async_step_import(self, import_info):
         """Handle import from config file."""
