@@ -36,7 +36,6 @@ async def async_setup_entry(hass, config_entry):
         hass.config_entries.async_update_entry(
             config_entry,
             options={
-                "certificate": config_entry.data[CONF_CERT],
                 "continuous": config_entry.data[CONF_CONTINUOUS],
                 "delay": config_entry.data[CONF_DELAY],
             },
