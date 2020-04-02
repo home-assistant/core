@@ -575,9 +575,11 @@ class PlexMediaPlayer(MediaPlayerDevice):
         shuffle = src.get("shuffle", 0)
 
         media = None
+        command_mediatype = "video"
 
         if media_type == "MUSIC":
             media = self._get_music_media(library, src)
+            command_mediatype = "music"
         elif media_type == "EPISODE":
             media = self._get_tv_media(library, src)
         elif media_type == "PLAYLIST":
@@ -591,7 +593,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
 
         playqueue = self.plex_server.create_playqueue(media, shuffle=shuffle)
         try:
-            self.device.playMedia(playqueue)
+            self.device.playMedia(playqueue, type=command_mediatype)
         except ParseError:
             # Temporary workaround for Plexamp / plexapi issue
             pass
