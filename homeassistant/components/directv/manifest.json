@@ -2,7 +2,7 @@
   "domain": "directv",
   "name": "DirecTV",
   "documentation": "https://www.home-assistant.io/integrations/directv",
-  "requirements": ["directv==0.2.0"],
+  "requirements": ["directv==0.3.0"],
   "dependencies": [],
   "codeowners": ["@ctalkington"],
   "quality_scale": "gold",
