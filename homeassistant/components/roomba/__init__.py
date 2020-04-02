@@ -21,7 +21,7 @@ async def async_setup(hass, config):
     if not hass.config_entries.async_entries(DOMAIN):
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={}
+                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
             )
         )
 
