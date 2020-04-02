@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.homekit
-HAP-python==2.7.0
+HAP-python==2.8.0
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
