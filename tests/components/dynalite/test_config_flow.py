@@ -73,7 +73,7 @@ async def test_existing_update(hass):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         mock_dyn_dev().configure.assert_called_once()
-        assert mock_dyn_dev().configure.mock_calls[0][1][0][dynalite.CONF_PORT] == port1
+        assert mock_dyn_dev().configure.mock_calls[0][1][0]["port"] == port1
         result = await hass.config_entries.flow.async_init(
             dynalite.DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
@@ -81,7 +81,7 @@ async def test_existing_update(hass):
         )
         await hass.async_block_till_done()
         assert mock_dyn_dev().configure.call_count == 2
-        assert mock_dyn_dev().configure.mock_calls[1][1][0][dynalite.CONF_PORT] == port2
+        assert mock_dyn_dev().configure.mock_calls[1][1][0]["port"] == port2
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
 
