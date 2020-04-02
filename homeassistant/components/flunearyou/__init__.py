@@ -36,7 +36,8 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_LONGITUDE): cv.longitude,
             }
         )
-    }
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 
