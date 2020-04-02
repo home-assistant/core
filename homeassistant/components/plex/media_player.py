@@ -31,6 +31,8 @@ from .const import (
     CONF_SERVER_IDENTIFIER,
     DISPATCHERS,
     DOMAIN as PLEX_DOMAIN,
+    MEDIATYPE_MUSIC,
+    MEDIATYPE_VIDEO,
     NAME_FORMAT,
     PLEX_NEW_MP_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
@@ -575,11 +577,11 @@ class PlexMediaPlayer(MediaPlayerDevice):
         shuffle = src.get("shuffle", 0)
 
         media = None
-        command_mediatype = "video"
+        command_mediatype = MEDIATYPE_VIDEO
 
         if media_type == "MUSIC":
             media = self._get_music_media(library, src)
-            command_mediatype = "music"
+            command_mediatype = MEDIATYPE_MUSIC
         elif media_type == "EPISODE":
             media = self._get_tv_media(library, src)
         elif media_type == "PLAYLIST":
