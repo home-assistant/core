@@ -282,7 +282,7 @@ class RachioZone(RachioSwitch):
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        self._undo_dispatcher = async_dispatcher_connect(
+        self.async_on_remove(async_dispatcher_connect(self.hass, SIGNAL_RACHIO_ZONE_UPDATE, self._async_handle_update))
             self.hass, SIGNAL_RACHIO_ZONE_UPDATE, self._async_handle_update
         )
 
