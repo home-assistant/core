@@ -140,7 +140,7 @@ bomradarloop==0.1.4
 broadlink==0.13.0
 
 # homeassistant.components.brother
-brother==0.1.9
+brother==0.1.11
 
 # homeassistant.components.buienradar
 buienradar==1.0.4
