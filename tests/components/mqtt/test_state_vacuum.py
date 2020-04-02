@@ -248,6 +248,48 @@ async def test_status(hass, mqtt_mock):
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) == ["min", "medium", "high", "max"]
 
 
+async def test_status_with_template(hass, mqtt_mock):
+    """Test status updates from the vacuum."""
+    config = deepcopy(DEFAULT_CONFIG)
+    config[mqttvacuum.CONF_VALUE_TEMPLATE] = "{{ value_json['vacuum1'] | tojson }}"
+    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
+        mqttvacuum.ALL_SERVICES, SERVICE_TO_STRING
+    )
+
+    assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+
+    message = """{
+        "vacuum1": {
+          "battery_level": 54,
+          "state": "cleaning",
+          "fan_speed": "max"
+        }
+    }"""
+
+    async_fire_mqtt_message(hass, "vacuum/state", message)
+    state = hass.states.get("vacuum.mqtttest")
+    assert state.state == STATE_CLEANING
+    assert state.attributes.get(ATTR_BATTERY_LEVEL) == 54
+    assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-50"
+    assert state.attributes.get(ATTR_FAN_SPEED) == "max"
+
+    message = """{
+        "vacuum1": {
+          "battery_level": 61,
+          "state": "docked",
+          "fan_speed": "min"
+        }
+    }"""
+
+    async_fire_mqtt_message(hass, "vacuum/state", message)
+    state = hass.states.get("vacuum.mqtttest")
+    assert state.state == STATE_DOCKED
+    assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-charging-60"
+    assert state.attributes.get(ATTR_BATTERY_LEVEL) == 61
+    assert state.attributes.get(ATTR_FAN_SPEED) == "min"
+    assert state.attributes.get(ATTR_FAN_SPEED_LIST) == ["min", "medium", "high", "max"]
+
+
 async def test_no_fan_vacuum(hass, mqtt_mock):
     """Test status updates from the vacuum when fan is not supported."""
     config = deepcopy(DEFAULT_CONFIG)

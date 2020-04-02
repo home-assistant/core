@@ -251,8 +251,7 @@ class MqttStateVacuum(
             payload = msg.payload
             if template is not None:
                 payload = template.async_render_with_possible_json_value(payload)
-            else:
-                payload = json.loads(payload)
+            payload = json.loads(payload)
             if STATE in payload and payload[STATE] in POSSIBLE_STATES:
                 self._state = POSSIBLE_STATES[payload[STATE]]
                 del payload[STATE]
