@@ -493,7 +493,7 @@ def _init_tts_cache_dir(hass, cache_dir):
     if not os.path.isabs(cache_dir):
         cache_dir = hass.config.path(cache_dir)
     if not os.path.isdir(cache_dir):
-        _LOGGER.info("Create cache dir %s.", cache_dir)
+        _LOGGER.info("Create cache dir %s", cache_dir)
         os.mkdir(cache_dir)
     return cache_dir
 

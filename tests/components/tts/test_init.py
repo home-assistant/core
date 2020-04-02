@@ -1,8 +1,6 @@
 """The tests for the TTS component."""
 import ctypes
 import os
-import shutil
-import tempfile
 from unittest.mock import PropertyMock, patch
 
 import pytest
@@ -54,16 +52,15 @@ def mock_init_cache_dir():
 
 
 @pytest.fixture
-def empty_cache_dir(mock_init_cache_dir, mock_get_cache_files):
+def empty_cache_dir(tmp_path, mock_init_cache_dir, mock_get_cache_files):
     """Mock the TTS cache dir with empty dir."""
-    with tempfile.TemporaryDirectory() as temp_dir:
-        mock_init_cache_dir.side_effect = None
-        mock_init_cache_dir.return_value = temp_dir
+    mock_init_cache_dir.side_effect = None
+    mock_init_cache_dir.return_value = str(tmp_path)
 
-        # Restore original get cache files behavior, we're working with a real dir.
-        mock_get_cache_files.side_effect = _get_cache_files
+    # Restore original get cache files behavior, we're working with a real dir.
+    mock_get_cache_files.side_effect = _get_cache_files
 
-        yield temp_dir
+    return tmp_path
 
 
 @pytest.fixture(autouse=True)
@@ -124,11 +121,9 @@ async def test_setup_component_and_test_service(hass, empty_cache_dir):
     ] == "{}/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3".format(
         hass.config.api.base_url
     )
-    assert os.path.isfile(
-        os.path.join(
-            empty_cache_dir, "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3",
-        )
-    )
+    assert (
+        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
+    ).is_file()
 
 
 async def test_setup_component_and_test_service_with_config_language(
@@ -158,11 +153,9 @@ async def test_setup_component_and_test_service_with_config_language(
     ] == "{}/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3".format(
         hass.config.api.base_url
     )
-    assert os.path.isfile(
-        os.path.join(
-            empty_cache_dir, "42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3",
-        )
-    )
+    assert (
+        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3"
+    ).is_file()
 
 
 async def test_setup_component_and_test_service_with_wrong_conf_language(hass):
@@ -201,11 +194,9 @@ async def test_setup_component_and_test_service_with_service_language(
     ] == "{}/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3".format(
         hass.config.api.base_url
     )
-    assert os.path.isfile(
-        os.path.join(
-            empty_cache_dir, "42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3",
-        )
-    )
+    assert (
+        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3"
+    ).is_file()
 
 
 async def test_setup_component_test_service_with_wrong_service_language(
@@ -230,11 +221,9 @@ async def test_setup_component_test_service_with_wrong_service_language(
         blocking=True,
     )
     assert len(calls) == 0
-    assert not os.path.isfile(
-        os.path.join(
-            empty_cache_dir, "42f18378fd4393d18c8dd11d03fa9563c1e54491_lang_-_demo.mp3",
-        )
-    )
+    assert not (
+        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_lang_-_demo.mp3"
+    ).is_file()
 
 
 async def test_setup_component_and_test_service_with_service_options(
@@ -268,12 +257,10 @@ async def test_setup_component_and_test_service_with_service_options(
     ] == "{}/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{}_demo.mp3".format(
         hass.config.api.base_url, opt_hash
     )
-    assert os.path.isfile(
-        os.path.join(
-            empty_cache_dir,
-            "42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{0}_demo.mp3".format(opt_hash),
-        )
-    )
+    assert (
+        empty_cache_dir
+        / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{opt_hash}_demo.mp3"
+    ).is_file()
 
 
 async def test_setup_component_and_test_with_service_options_def(hass, empty_cache_dir):
@@ -342,12 +329,10 @@ async def test_setup_component_and_test_service_with_service_options_wrong(
     opt_hash = ctypes.c_size_t(hash(frozenset({"speed": 1}))).value
 
     assert len(calls) == 0
-    assert not os.path.isfile(
-        os.path.join(
-            empty_cache_dir,
-            "42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{0}_demo.mp3".format(opt_hash),
-        )
-    )
+    assert not (
+        empty_cache_dir
+        / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{opt_hash}_demo.mp3"
+    ).is_file()
 
 
 async def test_setup_component_and_test_service_with_base_url_set(hass):
@@ -398,21 +383,17 @@ async def test_setup_component_and_test_service_clear_cache(hass, empty_cache_di
     # To make sure the file is persisted
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert os.path.isfile(
-        os.path.join(
-            empty_cache_dir, "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3",
-        )
-    )
+    assert (
+        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
+    ).is_file()
 
     await hass.services.async_call(
         tts.DOMAIN, tts.SERVICE_CLEAR_CACHE, {}, blocking=True
     )
 
-    assert not os.path.isfile(
-        os.path.join(
-            empty_cache_dir, "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3",
-        )
-    )
+    assert not (
+        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
+    ).is_file()
 
 
 async def test_setup_component_and_test_service_with_receive_voice(
@@ -539,11 +520,9 @@ async def test_setup_component_test_without_cache(hass, empty_cache_dir):
         blocking=True,
     )
     assert len(calls) == 1
-    assert not os.path.isfile(
-        os.path.join(
-            empty_cache_dir, "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3",
-        )
-    )
+    assert not (
+        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
+    ).is_file()
 
 
 async def test_setup_component_test_with_cache_call_service_without_cache(
@@ -568,11 +547,9 @@ async def test_setup_component_test_with_cache_call_service_without_cache(
         blocking=True,
     )
     assert len(calls) == 1
-    assert not os.path.isfile(
-        os.path.join(
-            empty_cache_dir, "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3",
-        )
-    )
+    assert not (
+        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
+    ).is_file()
 
 
 async def test_setup_component_test_with_cache_dir(
@@ -582,8 +559,8 @@ async def test_setup_component_test_with_cache_dir(
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
     _, demo_data = demo_provider.get_tts_audio("bla", "en")
-    cache_file = os.path.join(
-        empty_cache_dir, "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3",
+    cache_file = (
+        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
     )
 
     with open(cache_file, "wb") as voice_file:
@@ -631,8 +608,8 @@ async def test_setup_component_load_cache_retrieve_without_mem_cache(
 ):
     """Set up component and load cache and get without mem cache."""
     _, demo_data = demo_provider.get_tts_audio("bla", "en")
-    cache_file = os.path.join(
-        empty_cache_dir, "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3",
+    cache_file = (
+        empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
     )
 
     with open(cache_file, "wb") as voice_file:
@@ -671,10 +648,6 @@ async def test_setup_component_and_web_get_url(hass, hass_client):
             hass.config.api.base_url
         )
     )
-
-    tts_cache = hass.config.path(tts.DEFAULT_CACHE_DIR)
-    if os.path.isdir(tts_cache):
-        shutil.rmtree(tts_cache)
 
 
 async def test_setup_component_and_web_get_url_bad_config(hass, hass_client):
