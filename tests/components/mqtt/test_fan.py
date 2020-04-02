@@ -517,63 +517,6 @@ async def test_attributes(hass, mqtt_mock):
     assert state.attributes.get(fan.ATTR_OSCILLATING) is False
 
 
-async def help_test_unsupported_features(hass, mqtt_mock):
-    """Test using unsupported features."""
-    assert await async_setup_component(
-        hass,
-        fan.DOMAIN,
-        {
-            fan.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "command_topic": "command-topic",
-            }
-        },
-    )
-
-    await common.async_oscillate(hass, "fan.test", True)
-    state = hass.states.get("fan.test")
-    assert state.state is STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-    assert state.attributes.get(fan.ATTR_SPEED) is None
-    assert state.attributes.get(fan.ATTR_OSCILLATING) is None
-
-    await common.async_oscillate(hass, "fan.test", False)
-    state = hass.states.get("fan.test")
-    assert state.state is STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-    assert state.attributes.get(fan.ATTR_SPEED) is None
-    assert state.attributes.get(fan.ATTR_OSCILLATING) is None
-
-    await common.async_set_speed(hass, "fan.test", fan.SPEED_LOW)
-    state = hass.states.get("fan.test")
-    assert state.state is STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-    assert state.attributes.get(fan.ATTR_SPEED) is None
-    assert state.attributes.get(fan.ATTR_OSCILLATING) is None
-
-    await common.async_set_speed(hass, "fan.test", fan.SPEED_MEDIUM)
-    state = hass.states.get("fan.test")
-    assert state.state is STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-    assert state.attributes.get(fan.ATTR_SPEED) is None
-    assert state.attributes.get(fan.ATTR_OSCILLATING) is None
-
-    await common.async_set_speed(hass, "fan.test", fan.SPEED_HIGH)
-    state = hass.states.get("fan.test")
-    assert state.state is STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-    assert state.attributes.get(fan.ATTR_SPEED) is None
-    assert state.attributes.get(fan.ATTR_OSCILLATING) is None
-
-    await common.async_set_speed(hass, "fan.test", fan.SPEED_OFF)
-    state = hass.states.get("fan.test")
-    assert state.state is STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-    assert state.attributes.get(fan.ATTR_SPEED) is None
-    assert state.attributes.get(fan.ATTR_OSCILLATING) is None
-
-
 async def test_custom_speed_list(hass, mqtt_mock):
     """Test optimistic mode without state topic."""
     assert await async_setup_component(
