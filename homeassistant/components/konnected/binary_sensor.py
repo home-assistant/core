@@ -79,8 +79,10 @@ class KonnectedBinarySensor(BinarySensorDevice):
     async def async_added_to_hass(self):
         """Store entity_id and register state change callback."""
         self._data[ATTR_ENTITY_ID] = self.entity_id
-        async_dispatcher_connect(
-            self.hass, f"konnected.{self.entity_id}.update", self.async_set_state
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, f"konnected.{self.entity_id}.update", self.async_set_state
+            )
         )
 
     @callback

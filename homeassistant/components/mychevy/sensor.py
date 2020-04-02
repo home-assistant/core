@@ -58,11 +58,17 @@ class MyChevyStatus(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            UPDATE_TOPIC, self.success
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                UPDATE_TOPIC, self.success
+            )
         )
 
-        self.hass.helpers.dispatcher.async_dispatcher_connect(ERROR_TOPIC, self.error)
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                ERROR_TOPIC, self.error
+            )
+        )
 
     @callback
     def success(self):

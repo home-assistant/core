@@ -64,7 +64,6 @@ class AquaLogicSwitch(SwitchDevice):
             "aux_6": States.AUX_6,
             "aux_7": States.AUX_7,
         }[switch_type]
-        self._unsub_disp = None
 
     @property
     def name(self):
@@ -101,11 +100,8 @@ class AquaLogicSwitch(SwitchDevice):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self._unsub_disp = self.hass.helpers.dispatcher.async_dispatcher_connect(
-            UPDATE_TOPIC, self.async_write_ha_state
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                UPDATE_TOPIC, self.async_write_ha_state
+            )
         )
-
-    async def async_will_remove_from_hass(self):
-        """When entity will be removed from hass."""
-        self._unsub_disp()
-        self._unsub_disp = None

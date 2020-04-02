@@ -112,9 +112,15 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanel):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(self.hass, SIGNAL_KEYPAD_UPDATE, self._update_callback)
-        async_dispatcher_connect(
-            self.hass, SIGNAL_PARTITION_UPDATE, self._update_callback
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_KEYPAD_UPDATE, self._update_callback
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_PARTITION_UPDATE, self._update_callback
+            )
         )
 
     @callback

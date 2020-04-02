@@ -56,6 +56,7 @@ STATE_NETATMO_MAX = "max"
 STATE_NETATMO_AWAY = PRESET_AWAY
 STATE_NETATMO_OFF = STATE_OFF
 STATE_NETATMO_MANUAL = "manual"
+STATE_NETATMO_HOME = "home"
 
 PRESET_MAP_NETATMO = {
     PRESET_FROST_GUARD: STATE_NETATMO_HG,
@@ -173,8 +174,11 @@ class NetatmoThermostat(ClimateDevice):
         self._support_flags = SUPPORT_FLAGS
         self._hvac_mode = None
         self._battery_level = None
+        self._connected = None
         self.update_without_throttle = False
-        self._module_type = self._data.room_status.get(room_id, {}).get("module_type")
+        self._module_type = self._data.room_status.get(room_id, {}).get(
+            "module_type", NA_VALVE
+        )
 
         if self._module_type == NA_THERM:
             self._operation_list.append(HVAC_MODE_OFF)
@@ -252,25 +256,20 @@ class NetatmoThermostat(ClimateDevice):
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-        mode = None
-
         if hvac_mode == HVAC_MODE_OFF:
-            mode = STATE_NETATMO_OFF
+            self.turn_off()
         elif hvac_mode == HVAC_MODE_AUTO:
-            mode = PRESET_SCHEDULE
+            if self.hvac_mode == HVAC_MODE_OFF:
+                self.turn_on()
+            self.set_preset_mode(PRESET_SCHEDULE)
         elif hvac_mode == HVAC_MODE_HEAT:
-            mode = PRESET_BOOST
-
-        self.set_preset_mode(mode)
+            self.set_preset_mode(PRESET_BOOST)
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if self.target_temperature == 0:
             self._data.homestatus.setroomThermpoint(
-                self._data.home_id,
-                self._room_id,
-                STATE_NETATMO_MANUAL,
-                DEFAULT_MIN_TEMP,
+                self._data.home_id, self._room_id, STATE_NETATMO_HOME,
             )
 
         if (
@@ -283,7 +282,7 @@ class NetatmoThermostat(ClimateDevice):
                 STATE_NETATMO_MANUAL,
                 DEFAULT_MAX_TEMP,
             )
-        elif preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX, STATE_NETATMO_OFF]:
+        elif preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX]:
             self._data.homestatus.setroomThermpoint(
                 self._data.home_id, self._room_id, PRESET_MAP_NETATMO[preset_mode]
             )
@@ -293,6 +292,7 @@ class NetatmoThermostat(ClimateDevice):
             )
         else:
             _LOGGER.error("Preset mode '%s' not available", preset_mode)
+
         self.update_without_throttle = True
         self.schedule_update_ha_state()
 
@@ -328,6 +328,35 @@ class NetatmoThermostat(ClimateDevice):
 
         return attr
 
+    def turn_off(self):
+        """Turn the entity off."""
+        if self._module_type == NA_VALVE:
+            self._data.homestatus.setroomThermpoint(
+                self._data.home_id,
+                self._room_id,
+                STATE_NETATMO_MANUAL,
+                DEFAULT_MIN_TEMP,
+            )
+        elif self.hvac_mode != HVAC_MODE_OFF:
+            self._data.homestatus.setroomThermpoint(
+                self._data.home_id, self._room_id, STATE_NETATMO_OFF
+            )
+        self.update_without_throttle = True
+        self.schedule_update_ha_state()
+
+    def turn_on(self):
+        """Turn the entity on."""
+        self._data.homestatus.setroomThermpoint(
+            self._data.home_id, self._room_id, STATE_NETATMO_HOME
+        )
+        self.update_without_throttle = True
+        self.schedule_update_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """If the device hasn't been able to connect, mark as unavailable."""
+        return bool(self._connected)
+
     def update(self):
         """Get the latest data from NetAtmo API and updates the states."""
         try:
@@ -355,12 +384,14 @@ class NetatmoThermostat(ClimateDevice):
             self._battery_level = self._data.room_status[self._room_id].get(
                 "battery_level"
             )
+            self._connected = True
         except KeyError as err:
-            _LOGGER.error(
+            _LOGGER.debug(
                 "The thermostat in room %s seems to be out of reach. (%s)",
                 self._room_name,
                 err,
             )
+            self._connected = False
         self._away = self._hvac_mode == HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]
 
 

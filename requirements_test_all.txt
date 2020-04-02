@@ -178,7 +178,7 @@ defusedxml==0.6.0
 denonavr==0.8.1
 
 # homeassistant.components.directv
-directv==0.2.0
+directv==0.3.0
 
 # homeassistant.components.updater
 distro==1.4.0
@@ -190,7 +190,7 @@ doorbirdpy==2.0.8
 dsmr_parser==0.18
 
 # homeassistant.components.dynalite
-dynalite_devices==0.1.32
+dynalite_devices==0.1.39
 
 # homeassistant.components.ee_brightbox
 eebrightbox==0.0.4
@@ -570,7 +570,7 @@ pyopenuv==1.0.9
 pyopnsense==0.2.0
 
 # homeassistant.components.opentherm_gw
-pyotgw==0.5b1
+pyotgw==0.6b1
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp

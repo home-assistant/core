@@ -152,7 +152,7 @@ class CoreState(enum.Enum):
     starting = "STARTING"
     running = "RUNNING"
     stopping = "STOPPING"
-    writing_data = "WRITING_DATA"
+    final_write = "FINAL_WRITE"
 
     def __str__(self) -> str:
         """Return the event."""
@@ -414,7 +414,7 @@ class HomeAssistant:
             # regardless of the state of the loop.
             if self.state == CoreState.not_running:  # just ignore
                 return
-            if self.state == CoreState.stopping or self.state == CoreState.writing_data:
+            if self.state == CoreState.stopping or self.state == CoreState.final_write:
                 _LOGGER.info("async_stop called twice: ignored")
                 return
             if self.state == CoreState.starting:
@@ -428,7 +428,7 @@ class HomeAssistant:
         await self.async_block_till_done()
 
         # stage 2
-        self.state = CoreState.writing_data
+        self.state = CoreState.final_write
         self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
         await self.async_block_till_done()
 

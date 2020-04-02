@@ -68,10 +68,6 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
         "tests.components.mqtt.test_init",
         "test_setup_with_tls_config_of_v1_under_python36_only_uses_v1",
     ),
-    ("tests.components.mqtt.test_light", "test_entity_device_info_remove"),
-    ("tests.components.mqtt.test_light_json", "test_entity_device_info_remove"),
-    ("tests.components.mqtt.test_light_template", "test_entity_device_info_remove"),
-    ("tests.components.mqtt.test_switch", "test_entity_device_info_remove"),
     ("tests.components.qwikswitch.test_init", "test_binary_sensor_device"),
     ("tests.components.qwikswitch.test_init", "test_sensor_device"),
     ("tests.components.rflink.test_init", "test_send_command_invalid_arguments"),
@@ -90,4 +86,43 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
     ("tests.components.yr.test_sensor", "test_custom_setup"),
     ("tests.components.yr.test_sensor", "test_forecast_setup"),
     ("tests.components.zwave.test_init", "test_power_schemes"),
+]
+
+IGNORE_UNCAUGHT_JSON_EXCEPTIONS = [
+    ("tests.components.spotify.test_config_flow", "test_full_flow"),
+    ("tests.components.smartthings.test_init", "test_config_entry_loads_platforms"),
+    (
+        "tests.components.smartthings.test_init",
+        "test_scenes_unauthorized_loads_platforms",
+    ),
+    (
+        "tests.components.smartthings.test_init",
+        "test_config_entry_loads_unconnected_cloud",
+    ),
+    ("tests.components.samsungtv.test_config_flow", "test_ssdp"),
+    ("tests.components.samsungtv.test_config_flow", "test_user_websocket"),
+    ("tests.components.samsungtv.test_config_flow", "test_user_already_configured"),
+    ("tests.components.samsungtv.test_config_flow", "test_autodetect_websocket"),
+    ("tests.components.samsungtv.test_config_flow", "test_autodetect_websocket_ssl"),
+    ("tests.components.samsungtv.test_config_flow", "test_ssdp_already_configured"),
+    ("tests.components.samsungtv.test_config_flow", "test_ssdp_noprefix"),
+    ("tests.components.samsungtv.test_config_flow", "test_user_legacy"),
+    ("tests.components.samsungtv.test_config_flow", "test_autodetect_legacy"),
+    (
+        "tests.components.samsungtv.test_media_player",
+        "test_select_source_invalid_source",
+    ),
+    (
+        "tests.components.samsungtv.test_media_player",
+        "test_play_media_channel_as_string",
+    ),
+    (
+        "tests.components.samsungtv.test_media_player",
+        "test_play_media_channel_as_non_positive",
+    ),
+    ("tests.components.samsungtv.test_media_player", "test_turn_off_websocket"),
+    ("tests.components.samsungtv.test_media_player", "test_play_media_invalid_type"),
+    ("tests.components.harmony.test_config_flow", "test_form_import"),
+    ("tests.components.harmony.test_config_flow", "test_form_ssdp"),
+    ("tests.components.harmony.test_config_flow", "test_user_form"),
 ]

@@ -447,7 +447,7 @@ deluge-client==1.7.1
 denonavr==0.8.1
 
 # homeassistant.components.directv
-directv==0.2.0
+directv==0.3.0
 
 # homeassistant.components.discogs
 discogs_client==2.2.2
@@ -474,7 +474,7 @@ dsmr_parser==0.18
 dweepy==0.3.0
 
 # homeassistant.components.dynalite
-dynalite_devices==0.1.32
+dynalite_devices==0.1.39
 
 # homeassistant.components.rainforest_eagle
 eagle200_reader==0.2.4
@@ -1465,7 +1465,7 @@ pyoppleio==1.0.5
 pyota==2.0.5
 
 # homeassistant.components.opentherm_gw
-pyotgw==0.5b1
+pyotgw==0.6b1
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
