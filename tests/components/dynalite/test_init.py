@@ -51,7 +51,7 @@ async def test_async_setup(hass):
                                 },
                             },
                             dynalite.CONF_DEFAULT: {dynalite.CONF_FADE: 2.3},
-                            dynalite.CONF_ACTIVE: dynalite.CONF_ACTIVE_INIT,
+                            dynalite.CONF_ACTIVE: dynalite.ACTIVE_INIT,
                             dynalite.CONF_PRESET: {
                                 "5": {
                                     dynalite.CONF_NAME: "pres6",

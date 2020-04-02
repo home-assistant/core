@@ -7,10 +7,10 @@ from dynalite_devices_lib import const as dyn_const
 from homeassistant.const import CONF_HOST
 
 from .const import (
+    ACTIVE_INIT,
+    ACTIVE_OFF,
+    ACTIVE_ON,
     CONF_ACTIVE,
-    CONF_ACTIVE_INIT,
-    CONF_ACTIVE_OFF,
-    CONF_ACTIVE_ON,
     CONF_AREA,
     CONF_AUTO_DISCOVER,
     CONF_CHANNEL,
@@ -38,9 +38,9 @@ from .const import (
 
 CONF_MAP = {
     CONF_ACTIVE: dyn_const.CONF_ACTIVE,
-    CONF_ACTIVE_INIT: dyn_const.CONF_ACTIVE_INIT,
-    CONF_ACTIVE_OFF: dyn_const.CONF_ACTIVE_OFF,
-    CONF_ACTIVE_ON: dyn_const.CONF_ACTIVE_ON,
+    ACTIVE_INIT: dyn_const.CONF_ACTIVE_INIT,
+    ACTIVE_OFF: dyn_const.CONF_ACTIVE_OFF,
+    ACTIVE_ON: dyn_const.CONF_ACTIVE_ON,
     CONF_AREA: dyn_const.CONF_AREA,
     CONF_AUTO_DISCOVER: dyn_const.CONF_AUTO_DISCOVER,
     CONF_CHANNEL: dyn_const.CONF_CHANNEL,

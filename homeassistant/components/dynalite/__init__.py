@@ -16,10 +16,10 @@ from homeassistant.helpers import config_validation as cv
 # Loading the config flow file will register the flow
 from .bridge import DynaliteBridge
 from .const import (
+    ACTIVE_INIT,
+    ACTIVE_OFF,
+    ACTIVE_ON,
     CONF_ACTIVE,
-    CONF_ACTIVE_INIT,
-    CONF_ACTIVE_OFF,
-    CONF_ACTIVE_ON,
     CONF_AREA,
     CONF_AUTO_DISCOVER,
     CONF_BRIDGES,
@@ -155,7 +155,7 @@ BRIDGE_SCHEMA = vol.Schema(
         vol.Optional(CONF_AREA): AREA_SCHEMA,
         vol.Optional(CONF_DEFAULT): PLATFORM_DEFAULTS_SCHEMA,
         vol.Optional(CONF_ACTIVE, default=False): vol.Any(
-            CONF_ACTIVE_ON, CONF_ACTIVE_OFF, CONF_ACTIVE_INIT, cv.boolean
+            ACTIVE_ON, ACTIVE_OFF, ACTIVE_INIT, cv.boolean
         ),
         vol.Optional(CONF_PRESET): PRESET_SCHEMA,
         vol.Optional(CONF_TEMPLATE): TEMPLATE_SCHEMA,
