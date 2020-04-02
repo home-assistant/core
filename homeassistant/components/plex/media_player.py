@@ -11,6 +11,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
+    MEDIA_TYPE_VIDEO,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -31,8 +32,6 @@ from .const import (
     CONF_SERVER_IDENTIFIER,
     DISPATCHERS,
     DOMAIN as PLEX_DOMAIN,
-    MEDIATYPE_MUSIC,
-    MEDIATYPE_VIDEO,
     NAME_FORMAT,
     PLEX_NEW_MP_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
@@ -577,11 +576,11 @@ class PlexMediaPlayer(MediaPlayerDevice):
         shuffle = src.get("shuffle", 0)
 
         media = None
-        command_mediatype = MEDIATYPE_VIDEO
+        command_media_type = MEDIA_TYPE_VIDEO
 
         if media_type == "MUSIC":
             media = self._get_music_media(library, src)
-            command_mediatype = MEDIATYPE_MUSIC
+            command_media_type = MEDIA_TYPE_MUSIC
         elif media_type == "EPISODE":
             media = self._get_tv_media(library, src)
         elif media_type == "PLAYLIST":
@@ -595,7 +594,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
 
         playqueue = self.plex_server.create_playqueue(media, shuffle=shuffle)
         try:
-            self.device.playMedia(playqueue, type=command_mediatype)
+            self.device.playMedia(playqueue, type=command_media_type)
         except ParseError:
             # Temporary workaround for Plexamp / plexapi issue
             pass
