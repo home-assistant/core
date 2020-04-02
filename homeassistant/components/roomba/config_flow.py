@@ -51,7 +51,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
 
 class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Demo configuration flow."""
+    """Roomba configuration flow."""
 
     VERSION = 1
 
