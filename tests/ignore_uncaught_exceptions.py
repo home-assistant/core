@@ -89,3 +89,42 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
     ("tests.components.yr.test_sensor", "test_forecast_setup"),
     ("tests.components.zwave.test_init", "test_power_schemes"),
 ]
+
+IGNORE_UNCAUGHT_JSON_EXCEPTIONS = [
+    ("tests.components.spotify.test_config_flow", "test_full_flow"),
+    ("tests.components.smartthings.test_init", "test_config_entry_loads_platforms"),
+    (
+        "tests.components.smartthings.test_init",
+        "test_scenes_unauthorized_loads_platforms",
+    ),
+    (
+        "tests.components.smartthings.test_init",
+        "test_config_entry_loads_unconnected_cloud",
+    ),
+    ("tests.components.samsungtv.test_config_flow", "test_ssdp"),
+    ("tests.components.samsungtv.test_config_flow", "test_user_websocket"),
+    ("tests.components.samsungtv.test_config_flow", "test_user_already_configured"),
+    ("tests.components.samsungtv.test_config_flow", "test_autodetect_websocket"),
+    ("tests.components.samsungtv.test_config_flow", "test_autodetect_websocket_ssl"),
+    ("tests.components.samsungtv.test_config_flow", "test_ssdp_already_configured"),
+    ("tests.components.samsungtv.test_config_flow", "test_ssdp_noprefix"),
+    ("tests.components.samsungtv.test_config_flow", "test_user_legacy"),
+    ("tests.components.samsungtv.test_config_flow", "test_autodetect_legacy"),
+    (
+        "tests.components.samsungtv.test_media_player",
+        "test_select_source_invalid_source",
+    ),
+    (
+        "tests.components.samsungtv.test_media_player",
+        "test_play_media_channel_as_string",
+    ),
+    (
+        "tests.components.samsungtv.test_media_player",
+        "test_play_media_channel_as_non_positive",
+    ),
+    ("tests.components.samsungtv.test_media_player", "test_turn_off_websocket"),
+    ("tests.components.samsungtv.test_media_player", "test_play_media_invalid_type"),
+    ("tests.components.harmony.test_config_flow", "test_form_import"),
+    ("tests.components.harmony.test_config_flow", "test_form_ssdp"),
+    ("tests.components.harmony.test_config_flow", "test_user_form"),
+]
