@@ -45,7 +45,8 @@ from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.logging import catch_log_exception
 
 # Loading the config flow file will register the flow
-from . import config_flow, discovery, server  # noqa: F401 pylint: disable=unused-import
+from . import config_flow  # noqa: F401 pylint: disable=unused-import
+from . import debug_info, discovery, server
 from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_TOPIC,
@@ -56,6 +57,7 @@ from .const import (
     DEFAULT_QOS,
     PROTOCOL_311,
 )
+from .debug_info import log_messages
 from .discovery import MQTT_DISCOVERY_UPDATED, clear_discovery_hash, set_discovery_hash
 from .models import Message, MessageCallbackType, PublishPayloadType
 from .subscription import async_subscribe_topics, async_unsubscribe_topics
@@ -513,6 +515,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
     websocket_api.async_register_command(hass, websocket_subscribe)
     websocket_api.async_register_command(hass, websocket_remove_device)
+    websocket_api.async_register_command(hass, websocket_mqtt_info)
 
     if conf is None:
         # If we have a config entry, setup is done by that config entry.
@@ -1058,6 +1061,7 @@ class MqttAttributes(Entity):
             attr_tpl.hass = self.hass
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def attributes_message_received(msg: Message) -> None:
             try:
                 payload = msg.payload
@@ -1122,6 +1126,7 @@ class MqttAvailability(Entity):
         """(Re)Subscribe to topics."""
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def availability_message_received(msg: Message) -> None:
             """Handle a new received MQTT availability message."""
             if msg.payload == self._avail_config[CONF_PAYLOAD_AVAILABLE]:
@@ -1207,6 +1212,7 @@ class MqttDiscoveryUpdate(Entity):
             _LOGGER.info(
                 "Got update for entity with hash: %s '%s'", discovery_hash, payload,
             )
+            debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
             if not payload:
                 # Empty payload: Remove component
                 _LOGGER.info("Removing component: %s", self.entity_id)
@@ -1219,6 +1225,9 @@ class MqttDiscoveryUpdate(Entity):
                 await self._discovery_update(payload)
 
         if discovery_hash:
+            debug_info.add_entity_discovery_data(
+                self.hass, self._discovery_data, self.entity_id
+            )
             # Set in case the entity has been removed and is re-added
             set_discovery_hash(self.hass, discovery_hash)
             self._remove_signal = async_dispatcher_connect(
@@ -1242,6 +1251,7 @@ class MqttDiscoveryUpdate(Entity):
     def _cleanup_on_remove(self) -> None:
         """Stop listening to signal and cleanup discovery data."""
         if self._discovery_data and not self._removed_from_hass:
+            debug_info.remove_entity_data(self.hass, self.entity_id)
             clear_discovery_hash(self.hass, self._discovery_data[ATTR_DISCOVERY_HASH])
             self._removed_from_hass = True
 
@@ -1301,6 +1311,18 @@ class MqttEntityDeviceInfo(Entity):
     def device_info(self):
         """Return a device description for device registry."""
         return device_info_from_config(self._device_config)
+
+
+@websocket_api.websocket_command(
+    {vol.Required("type"): "mqtt/device/debug_info", vol.Required("device_id"): str}
+)
+@websocket_api.async_response
+async def websocket_mqtt_info(hass, connection, msg):
+    """Get MQTT debug info for device."""
+    device_id = msg["device_id"]
+    mqtt_info = await debug_info.info_for_device(hass, device_id)
+
+    connection.send_result(msg["id"], mqtt_info)
 
 
 @websocket_api.websocket_command(

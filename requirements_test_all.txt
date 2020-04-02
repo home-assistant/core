@@ -131,7 +131,7 @@ av==6.1.2
 axis==25
 
 # homeassistant.components.zha
-bellows-homeassistant==0.14.0
+bellows-homeassistant==0.15.1
 
 # homeassistant.components.bom
 bomradarloop==0.1.4
@@ -140,7 +140,7 @@ bomradarloop==0.1.4
 broadlink==0.13.0
 
 # homeassistant.components.brother
-brother==0.1.9
+brother==0.1.11
 
 # homeassistant.components.buienradar
 buienradar==1.0.4
@@ -264,7 +264,7 @@ ha-ffmpeg==2.0
 hangups==0.4.9
 
 # homeassistant.components.cloud
-hass-nabucasa==0.32.2
+hass-nabucasa==0.33.0
 
 # homeassistant.components.mqtt
 hbmqtt==0.9.5
@@ -282,7 +282,7 @@ hole==0.5.1
 holidays==0.10.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200330.0
+home-assistant-frontend==20200401.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -554,6 +554,9 @@ pymonoprice==0.3
 # homeassistant.components.myq
 pymyq==2.0.1
 
+# homeassistant.components.nut
+pynut2==2.1.2
+
 # homeassistant.components.nws
 pynws==0.10.4
 
@@ -665,7 +668,7 @@ rflink==0.0.52
 ring_doorbell==0.6.0
 
 # homeassistant.components.roku
-roku==4.0.0
+roku==4.1.0
 
 # homeassistant.components.yamaha
 rxv==0.6.0
@@ -795,19 +798,19 @@ yahooweather==0.10
 zeroconf==0.24.5
 
 # homeassistant.components.zha
-zha-quirks==0.0.37
+zha-quirks==0.0.38
 
 # homeassistant.components.zha
 zigpy-cc==0.3.1
 
 # homeassistant.components.zha
-zigpy-deconz==0.7.0
+zigpy-deconz==0.8.0
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.16.0
+zigpy-homeassistant==0.18.0
 
 # homeassistant.components.zha
-zigpy-xbee-homeassistant==0.10.0
+zigpy-xbee-homeassistant==0.11.0
 
 # homeassistant.components.zha
 zigpy-zigate==0.5.1

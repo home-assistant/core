@@ -49,6 +49,7 @@ from . import (
     MqttEntityDeviceInfo,
     subscription,
 )
+from .debug_info import log_messages
 from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
@@ -268,7 +269,8 @@ class MqttCover(
         topics = {}
 
         @callback
-        def tilt_updated(msg):
+        @log_messages(self.hass, self.entity_id)
+        def tilt_message_received(msg):
             """Handle tilt updates."""
             payload = msg.payload
             if tilt_status_template is not None:
@@ -287,6 +289,7 @@ class MqttCover(
                 self.async_write_ha_state()
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def state_message_received(msg):
             """Handle new MQTT state messages."""
             payload = msg.payload
@@ -311,6 +314,7 @@ class MqttCover(
             self.async_write_ha_state()
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def position_message_received(msg):
             """Handle new MQTT state messages."""
             payload = msg.payload
@@ -354,7 +358,7 @@ class MqttCover(
             self._tilt_value = STATE_UNKNOWN
             topics["tilt_status_topic"] = {
                 "topic": self._config.get(CONF_TILT_STATUS_TOPIC),
-                "msg_callback": tilt_updated,
+                "msg_callback": tilt_message_received,
                 "qos": self._config[CONF_QOS],
             }
 

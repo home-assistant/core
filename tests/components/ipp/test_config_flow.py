@@ -2,12 +2,15 @@
 import aiohttp
 from pyipp import IPPConnectionUpgradeRequired
 
-from homeassistant import data_entry_flow
-from homeassistant.components.ipp import config_flow
-from homeassistant.components.ipp.const import CONF_BASE_PATH, CONF_UUID
+from homeassistant.components.ipp.const import CONF_BASE_PATH, CONF_UUID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SSL
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_ABORT,
+    RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
+)
 
 from . import (
     MOCK_USER_INPUT,
@@ -23,25 +26,11 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 async def test_show_user_form(hass: HomeAssistant) -> None:
     """Test that the user set up form is served."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": SOURCE_USER},
+        DOMAIN, context={"source": SOURCE_USER},
     )
 
     assert result["step_id"] == "user"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-
-
-async def test_show_zeroconf_confirm_form(hass: HomeAssistant) -> None:
-    """Test that the zeroconf confirmation form is served."""
-    flow = config_flow.IPPFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_ZEROCONF}
-    flow.discovery_info = {CONF_NAME: "EPSON123456"}
-
-    result = await flow.async_step_zeroconf_confirm()
-
-    assert result["step_id"] == "zeroconf_confirm"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["description_placeholders"] == {CONF_NAME: "EPSON123456"}
+    assert result["type"] == RESULT_TYPE_FORM
 
 
 async def test_show_zeroconf_form(
@@ -54,18 +43,13 @@ async def test_show_zeroconf_form(
         headers={"Content-Type": "application/ipp"},
     )
 
-    flow = config_flow.IPPFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_ZEROCONF}
-
     discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
-    result = await flow.async_step_zeroconf(discovery_info)
-
-    assert flow.discovery_info[CONF_HOST] == "EPSON123456.local"
-    assert flow.discovery_info[CONF_NAME] == "EPSON123456"
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info,
+    )
 
     assert result["step_id"] == "zeroconf_confirm"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == RESULT_TYPE_FORM
     assert result["description_placeholders"] == {CONF_NAME: "EPSON123456"}
 
 
@@ -79,11 +63,11 @@ async def test_connection_error(
 
     user_input = MOCK_USER_INPUT.copy()
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": SOURCE_USER}, data=user_input,
+        DOMAIN, context={"source": SOURCE_USER}, data=user_input,
     )
 
     assert result["step_id"] == "user"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {"base": "connection_error"}
 
 
@@ -95,10 +79,10 @@ async def test_zeroconf_connection_error(
 
     discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info,
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "connection_error"
 
 
@@ -110,7 +94,7 @@ async def test_zeroconf_confirm_connection_error(
 
     discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
+        DOMAIN,
         context={
             "source": SOURCE_ZEROCONF,
             CONF_HOST: "EPSON123456.local",
@@ -119,7 +103,7 @@ async def test_zeroconf_confirm_connection_error(
         data=discovery_info,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "connection_error"
 
 
@@ -133,11 +117,11 @@ async def test_user_connection_upgrade_required(
 
     user_input = MOCK_USER_INPUT.copy()
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": SOURCE_USER}, data=user_input,
+        DOMAIN, context={"source": SOURCE_USER}, data=user_input,
     )
 
     assert result["step_id"] == "user"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {"base": "connection_upgrade"}
 
 
@@ -151,10 +135,10 @@ async def test_zeroconf_connection_upgrade_required(
 
     discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info,
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "connection_upgrade"
 
 
@@ -166,10 +150,10 @@ async def test_user_device_exists_abort(
 
     user_input = MOCK_USER_INPUT.copy()
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": SOURCE_USER}, data=user_input,
+        DOMAIN, context={"source": SOURCE_USER}, data=user_input,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -181,10 +165,10 @@ async def test_zeroconf_device_exists_abort(
 
     discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info,
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -197,10 +181,10 @@ async def test_zeroconf_with_uuid_device_exists_abort(
     discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
     discovery_info["properties"]["UUID"] = "cfe92100-67c4-11d4-a45f-f8d027761251"
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info,
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -215,18 +199,18 @@ async def test_full_user_flow_implementation(
     )
 
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": SOURCE_USER},
+        DOMAIN, context={"source": SOURCE_USER},
     )
 
     assert result["step_id"] == "user"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == RESULT_TYPE_FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_HOST: "EPSON123456.local", CONF_BASE_PATH: "/ipp/print"},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "EPSON123456.local"
 
     assert result["data"]
@@ -244,25 +228,19 @@ async def test_full_zeroconf_flow_implementation(
         headers={"Content-Type": "application/ipp"},
     )
 
-    flow = config_flow.IPPFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_ZEROCONF}
-
     discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
-    result = await flow.async_step_zeroconf(discovery_info)
-
-    assert flow.discovery_info
-    assert flow.discovery_info[CONF_HOST] == "EPSON123456.local"
-    assert flow.discovery_info[CONF_NAME] == "EPSON123456"
-
-    assert result["step_id"] == "zeroconf_confirm"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-
-    result = await flow.async_step_zeroconf_confirm(
-        user_input={CONF_HOST: "EPSON123456.local"}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["step_id"] == "zeroconf_confirm"
+    assert result["type"] == RESULT_TYPE_FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "EPSON123456"
 
     assert result["data"]
@@ -281,22 +259,20 @@ async def test_full_zeroconf_tls_flow_implementation(
         headers={"Content-Type": "application/ipp"},
     )
 
-    flow = config_flow.IPPFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_ZEROCONF}
-
     discovery_info = MOCK_ZEROCONF_IPPS_SERVICE_INFO.copy()
-    result = await flow.async_step_zeroconf(discovery_info)
-
-    assert result["step_id"] == "zeroconf_confirm"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["description_placeholders"] == {CONF_NAME: "EPSON123456"}
-
-    result = await flow.async_step_zeroconf_confirm(
-        user_input={CONF_HOST: "EPSON123456.local"}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["step_id"] == "zeroconf_confirm"
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["description_placeholders"] == {CONF_NAME: "EPSON123456"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "EPSON123456"
 
     assert result["data"]

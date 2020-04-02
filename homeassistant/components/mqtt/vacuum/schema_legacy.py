@@ -32,6 +32,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.icon import icon_for_battery_level
 
+from ..debug_info import log_messages
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -280,6 +281,7 @@ class MqttVacuum(
                 tpl.hass = self.hass
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def message_received(msg):
             """Handle new MQTT message."""
             if (

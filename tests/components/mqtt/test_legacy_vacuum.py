@@ -27,6 +27,7 @@ from .test_common import (
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_attr,
+    help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
     help_test_entity_device_info_with_connection,
@@ -628,4 +629,21 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
     """Test MQTT discovery update when entity_id is updated."""
     await help_test_entity_id_update_discovery_update(
         hass, mqtt_mock, vacuum.DOMAIN, DEFAULT_CONFIG_2
+    )
+
+
+async def test_entity_debug_info_message(hass, mqtt_mock):
+    """Test MQTT debug info."""
+    config = {
+        vacuum.DOMAIN: {
+            "platform": "mqtt",
+            "name": "test",
+            "battery_level_topic": "test-topic",
+            "battery_level_template": "{{ value_json.battery_level }}",
+            "command_topic": "command-topic",
+            "availability_topic": "avty-topic",
+        }
+    }
+    await help_test_entity_debug_info_message(
+        hass, mqtt_mock, vacuum.DOMAIN, config, "test-topic"
     )

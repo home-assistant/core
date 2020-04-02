@@ -109,4 +109,4 @@ class AquaLogicSensor(Entity):
         panel = self._processor.panel
         if panel is not None:
             self._state = getattr(panel, self._type)
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()

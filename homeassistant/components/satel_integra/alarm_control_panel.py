@@ -78,7 +78,7 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
         _LOGGER.debug("Got status update, current status: %s", state)
         if state != self._state:
             self._state = state
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
         else:
             _LOGGER.debug("Ignoring alarm status message, same state")
 

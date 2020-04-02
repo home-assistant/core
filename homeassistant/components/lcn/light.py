@@ -132,7 +132,7 @@ class LcnOutputLight(LcnDevice, Light):
             self._is_dimming_to_zero = False
         if not self._is_dimming_to_zero:
             self._is_on = self.brightness > 0
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
 
 class LcnRelayLight(LcnDevice, Light):
@@ -182,4 +182,4 @@ class LcnRelayLight(LcnDevice, Light):
             return
 
         self._is_on = input_obj.get_state(self.output.value)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
