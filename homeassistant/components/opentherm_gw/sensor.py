@@ -62,6 +62,11 @@ class OpenThermSensor(Entity):
         self._unsub_updates()
 
     @property
+    def available(self):
+        """Return availability of the sensor."""
+        return self._value is not None
+
+    @property
     def entity_registry_enabled_default(self):
         """Disable sensors by default."""
         return False
