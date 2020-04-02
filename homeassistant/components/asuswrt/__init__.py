@@ -98,7 +98,9 @@ async def async_setup(hass, config, retry_delay=FIRST_RETRY_TIME):
 
         async def retry_setup(now):
             """Retry setup if a eroor happens on asuswrt API."""
-            await async_setup(hass, config, retry_delay=min(2 * retry_delay, MAX_RETRY_TIME))
+            await async_setup(
+                hass, config, retry_delay=min(2 * retry_delay, MAX_RETRY_TIME)
+            )
 
         async_call_later(hass, retry_delay, retry_setup)
 
