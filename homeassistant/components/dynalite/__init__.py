@@ -110,7 +110,7 @@ def validate_area(config: Dict[str, Any]) -> Dict[str, Any]:
     for conf in conf_set:
         if config.get(conf):
             raise vol.Invalid(
-                f"{conf} cannot should not be part of area {config[CONF_NAME]} config"
+                f"{conf} should not be part of area {config[CONF_NAME]} config"
             )
     return config
 
