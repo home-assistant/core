@@ -384,6 +384,7 @@ class NetatmoThermostat(ClimateDevice):
             self._battery_level = self._data.room_status[self._room_id].get(
                 "battery_level"
             )
+            self._connected = True
         except KeyError as err:
             _LOGGER.debug(
                 "The thermostat in room %s seems to be out of reach. (%s)",
