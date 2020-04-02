@@ -106,7 +106,7 @@ async def async_disconnect_or_timeout(hass, roomba):
 
 async def async_update_options(hass, config_entry):
     """Update options."""
-    roomba = hass.data[DOMAIN]["roomba"]
+    await hass.config_entries.async_reload(config_entry.entry_id)
     await async_disconnect_or_timeout(hass, roomba)
     await async_connect_or_timeout(hass, roomba)
 
