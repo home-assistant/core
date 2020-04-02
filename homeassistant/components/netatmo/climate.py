@@ -355,7 +355,7 @@ class NetatmoThermostat(ClimateDevice):
     @property
     def available(self) -> bool:
         """If the device hasn't been able to connect, mark as unavailable."""
-        return self._connected or self._connected is None
+        return bool(self._connected)
 
     def update(self):
         """Get the latest data from NetAtmo API and updates the states."""
