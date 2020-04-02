@@ -77,7 +77,6 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors = {"base": "cannot_connect"}
-            except InvalidAuth:
             except Exception:  # pylint: disable=broad-except
                 errors = {"base": "unknown"}
 
