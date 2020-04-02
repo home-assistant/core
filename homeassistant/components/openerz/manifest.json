@@ -7,6 +7,6 @@
     "@misialq"
   ],
   "requirements": [
-    "testfixtures==6.10.3"
+    "openerz-api==0.1.0"
   ]
 }

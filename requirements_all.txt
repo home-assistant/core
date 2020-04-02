@@ -966,6 +966,9 @@ onvif-zeep-async==0.2.0
 # homeassistant.components.opencv
 # opencv-python-headless==4.2.0.32
 
+# homeassistant.components.openerz
+openerz-api==0.1.0
+
 # homeassistant.components.openevse
 openevsewifi==0.4
 
@@ -2015,9 +2018,6 @@ tesla-powerwall==0.1.3
 
 # homeassistant.components.tesla
 teslajsonpy==0.6.0
-
-# homeassistant.components.openerz
-testfixtures==6.10.3
 
 # homeassistant.components.thermoworks_smoke
 thermoworks_smoke==0.1.8

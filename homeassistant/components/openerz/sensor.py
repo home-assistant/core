@@ -1,8 +1,8 @@
 """Support for OpenERZ API for Zurich city waste disposal system."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
-import requests
+from openerz_api.main import OpenERZConnector
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -12,12 +12,15 @@ from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(hours=12)
 
-# Validation of the user's configuration
+CONF_ZIP = "zip"
+CONF_WASTE_TYPE = "waste_type"
+CONF_NAME = "name"
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required("zip"): cv.positive_int,
-        vol.Required("waste_type", default="waste"): cv.string,
-        vol.Optional("name"): cv.string,
+        vol.Required(CONF_ZIP): cv.positive_int,
+        vol.Required(CONF_WASTE_TYPE, default="waste"): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
     }
 )
 
@@ -25,9 +28,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
     openerz_config = {
-        "zip": config["zip"],
-        "waste_type": config["waste_type"],
-        "name": config.get("name"),
+        "zip": config[CONF_ZIP],
+        "waste_type": config[CONF_WASTE_TYPE],
+        "name": config.get(CONF_NAME),
     }
     add_entities([OpenERZSensor(openerz_config)])
 
@@ -42,77 +45,9 @@ class OpenERZSensor(Entity):
         self.zip = self.openerz_config["zip"]
         self.waste_type = self.openerz_config["waste_type"]
         self.friendly_name = self.openerz_config.get("name", self.waste_type)
-        self.start_date = datetime.now()
-        self.end_date = None
-        self.last_api_response = None
+        self.api_connector = OpenERZConnector(self.zip, self.waste_type)
 
         self.update()
-
-    def update_start_date(self):
-        """Set the start day to today."""
-
-        self.start_date = datetime.now()
-
-    def find_end_date(self, day_offset=31):
-        """Find the end date for the request, given an offset expressed in days.
-
-        Args:
-        day_offset (int): difference in days between start and end date of the request
-        """
-
-        self.end_date = self.start_date + timedelta(days=day_offset)
-
-    def make_api_request(self):
-        """Construct a request and send it to the OpenERZ API."""
-
-        headers = {"accept": "application/json"}
-
-        start_date = self.start_date.strftime("%Y-%m-%d")
-        end_date = self.end_date.strftime("%Y-%m-%d")
-
-        payload = {
-            "zip": self.zip,
-            "start": start_date,
-            "end": end_date,
-            "offset": 0,
-            "limit": 0,
-            "lang": "en",
-            "sort": "date",
-        }
-        url = f"http://openerz.metaodi.ch/api/calendar/{self.waste_type}.json"
-
-        try:
-            self.last_api_response = requests.get(url, params=payload, headers=headers)
-        except requests.exceptions.RequestException as connection_error:
-            _LOGGER.error(
-                "RequestException while making request to OpenERZ: %s", connection_error
-            )
-
-    def parse_api_response(self):
-        """Parse the JSON response received from the OpenERZ API and return a date of the next pickup."""
-
-        if not self.last_api_response.ok:
-            _LOGGER.warning(
-                "Last request to OpenERZ was not successful. Status code: %d",
-                self.last_api_response.status_code,
-            )
-            return None
-
-        response_json = self.last_api_response.json()
-        if response_json["_metadata"]["total_count"] == 0:
-            _LOGGER.warning("Request to OpenERZ returned no results.")
-            return None
-        result_list = response_json.get("result")
-        first_scheduled_pickup = result_list[0]
-        if (
-            first_scheduled_pickup["zip"] == self.zip
-            and first_scheduled_pickup["type"] == self.waste_type
-        ):
-            return first_scheduled_pickup["date"]
-        _LOGGER.warning(
-            "Either zip or waste type does not match the ones specified in the configuration."
-        )
-        return None
 
     @property
     def name(self):
@@ -132,7 +67,4 @@ class OpenERZSensor(Entity):
         This is the only method that should fetch new data for Home Assistant.
         """
 
-        self.update_start_date()
-        self.find_end_date(day_offset=31)
-        self.make_api_request()
-        self._state = self.parse_api_response()
+        self._state = self.api_connector.find_next_pickup(day_offset=31)
