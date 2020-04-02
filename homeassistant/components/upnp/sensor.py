@@ -184,7 +184,7 @@ class UpnpSensor(Entity):
             return
 
         _LOGGER.debug("Removing sensor: %s", self.unique_id)
-        await self.hass.async_create_task(self.async_remove())
+        await self.async_remove()
 
     async def async_will_remove_from_hass(self) -> None:
         """When entity will be removed from hass."""
