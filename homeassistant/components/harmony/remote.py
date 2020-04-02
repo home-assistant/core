@@ -264,7 +264,7 @@ class HarmonyRemote(remote.RemoteDevice):
         self._current_activity = activity_name
         self._state = bool(activity_id != -1)
         self._available = True
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def new_config(self, _=None):
         """Call for updating the current activity."""
@@ -289,7 +289,7 @@ class HarmonyRemote(remote.RemoteDevice):
 
         if not self._available:
             # Still disconnected. Let the state engine know.
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs):
         """Start an activity from the Harmony device."""

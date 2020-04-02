@@ -67,7 +67,7 @@ class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchDevice):
         else:
             await self._ipcam.change_setting(self._setting, True)
         self._state = True
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn device off."""
@@ -80,7 +80,7 @@ class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchDevice):
         else:
             await self._ipcam.change_setting(self._setting, False)
         self._state = False
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def icon(self):

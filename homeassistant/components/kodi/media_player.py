@@ -364,14 +364,14 @@ class KodiDevice(MediaPlayerDevice):
         self._item = {}
         self._media_position_updated_at = None
         self._media_position = None
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def async_on_volume_changed(self, sender, data):
         """Handle the volume changes."""
         self._app_properties["volume"] = data["volume"]
         self._app_properties["muted"] = data["muted"]
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def async_on_quit(self, sender, data):
@@ -429,7 +429,7 @@ class KodiDevice(MediaPlayerDevice):
                 # to reconnect on the next poll.
                 pass
             # Update HA state after Kodi disconnects
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         # Create a task instead of adding a tracking job, since this task will
         # run until the websocket connection is closed.

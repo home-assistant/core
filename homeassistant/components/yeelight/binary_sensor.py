@@ -2,7 +2,6 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DATA_UPDATED, DATA_YEELIGHT
@@ -28,18 +27,20 @@ class YeelightNightlightModeSensor(BinarySensorDevice):
     def __init__(self, device):
         """Initialize nightlight mode sensor."""
         self._device = device
-
-    @callback
-    def _schedule_immediate_update(self):
-        self.async_schedule_update_ha_state()
+        self._unsub_disp = None
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
-        async_dispatcher_connect(
+        self._unsub_disp = async_dispatcher_connect(
             self.hass,
             DATA_UPDATED.format(self._device.ipaddr),
-            self._schedule_immediate_update,
+            self.async_write_ha_state,
         )
+
+    async def async_will_remove_from_hass(self):
+        """When entity will be removed from hass."""
+        self._unsub_disp()
+        self._unsub_disp = None
 
     @property
     def should_poll(self):

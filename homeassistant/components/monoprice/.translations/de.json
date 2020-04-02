@@ -1,11 +1,16 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
         "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
             "user": {
                 "data": {
+                    "port": "Serielle Schnittstelle",
                     "source_1": "Name der Quelle #1",
                     "source_2": "Name der Quelle #2",
                     "source_3": "Name der Quelle #3",
@@ -15,7 +20,8 @@
                 },
                 "title": "Stellen Sie eine Verbindung zum Ger\u00e4t her"
             }
-        }
+        },
+        "title": "Monoprice 6-Zonen-Verst\u00e4rker"
     },
     "options": {
         "step": {

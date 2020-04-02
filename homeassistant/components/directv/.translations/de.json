@@ -15,7 +15,8 @@
                     "one": "eins",
                     "other": "andere"
                 },
-                "description": "M\u00f6chten Sie {name} einrichten?"
+                "description": "M\u00f6chten Sie {name} einrichten?",
+                "title": "Stellen Sie eine Verbindung zum DirecTV-Empf\u00e4nger her"
             },
             "user": {
                 "data": {

@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar, por favor, int\u00e9ntalo de nuevo",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "alias": "Alias",
+                    "host": "Host",
+                    "name": "Nombre",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto",
+                    "resources": "Recursos",
+                    "username": "Usuario"
+                },
+                "description": "Si hay varios UPS conectados al servidor NUT, introduzca el nombre UPS a buscar en el campo 'Alias'.",
+                "title": "Conectar con el servidor NUT"
+            }
+        },
+        "title": "Herramientas de UPS de red (NUT)"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "resources": "Recursos"
+                },
+                "description": "Elegir Recursos del Sensor"
+            }
+        }
+    }
+}
