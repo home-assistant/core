@@ -232,7 +232,7 @@ class VolvoEntity(Entity):
         """Register update dispatcher."""
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, SIGNAL_STATE_UPDATED, self.async_schedule_update_ha_state
+                self.hass, SIGNAL_STATE_UPDATED, self.async_write_ha_state
             )
         )
 
