@@ -63,7 +63,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_info):
         """Set the config entry up from yaml."""
-        return self.async_create_entry(title="Roomba", data={})
+        return await self.async_step_user(import_info)
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
