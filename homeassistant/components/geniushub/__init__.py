@@ -204,7 +204,7 @@ class GeniusEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
-        async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
+        self.async_on_remove(async_dispatcher_connect(self.hass, DOMAIN, self._refresh))
 
     async def _refresh(self, payload: Optional[dict] = None) -> None:
         """Process any signals."""

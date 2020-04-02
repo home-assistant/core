@@ -140,12 +140,20 @@ class FFmpegBase(Entity):
 
         This method is a coroutine.
         """
-        async_dispatcher_connect(
-            self.hass, SIGNAL_FFMPEG_START, self._async_start_ffmpeg
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_FFMPEG_START, self._async_start_ffmpeg
+            )
         )
-        async_dispatcher_connect(self.hass, SIGNAL_FFMPEG_STOP, self._async_stop_ffmpeg)
-        async_dispatcher_connect(
-            self.hass, SIGNAL_FFMPEG_RESTART, self._async_restart_ffmpeg
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_FFMPEG_STOP, self._async_stop_ffmpeg
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_FFMPEG_RESTART, self._async_restart_ffmpeg
+            )
         )
 
         # register start/stop

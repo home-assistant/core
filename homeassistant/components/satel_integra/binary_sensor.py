@@ -75,8 +75,10 @@ class SatelIntegraBinarySensor(BinarySensorDevice):
                 self._state = 1
             else:
                 self._state = 0
-        async_dispatcher_connect(
-            self.hass, self._react_to_signal, self._devices_updated
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, self._react_to_signal, self._devices_updated
+            )
         )
 
     @property

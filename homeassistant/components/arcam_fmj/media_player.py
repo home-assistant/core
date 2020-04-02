@@ -142,14 +142,22 @@ class ArcamFmj(MediaPlayerDevice):
             if host == self._state.client.host:
                 self.async_schedule_update_ha_state(force_refresh=True)
 
-        self.hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_CLIENT_DATA, _data)
-
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_CLIENT_STARTED, _started
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                SIGNAL_CLIENT_DATA, _data
+            )
         )
 
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_CLIENT_STOPPED, _stopped
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                SIGNAL_CLIENT_STARTED, _started
+            )
+        )
+
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                SIGNAL_CLIENT_STOPPED, _stopped
+            )
         )
 
     async def async_update(self):

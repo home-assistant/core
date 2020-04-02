@@ -202,18 +202,12 @@ class AqualinkEntity(Entity):
     def __init__(self, dev: AqualinkDevice):
         """Initialize the entity."""
         self.dev = dev
-        self._unsub_disp = None
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
-        self._unsub_disp = async_dispatcher_connect(
-            self.hass, DOMAIN, self.async_write_ha_state
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)
         )
-
-    async def async_will_remove_from_hass(self):
-        """When entity will be removed from hass."""
-        self._unsub_disp()
-        self._unsub_disp = None
 
     @property
     def should_poll(self) -> bool:
