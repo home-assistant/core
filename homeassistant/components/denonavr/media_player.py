@@ -197,7 +197,9 @@ class DenonDevice(MediaPlayerDevice):
 
     async def async_added_to_hass(self):
         """Register signal handler."""
-        async_dispatcher_connect(self.hass, DOMAIN, self.signal_handler)
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, DOMAIN, self.signal_handler)
+        )
 
     def signal_handler(self, data):
         """Handle domain-specific signal by calling appropriate method."""

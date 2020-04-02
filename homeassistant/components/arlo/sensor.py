@@ -92,7 +92,11 @@ class ArloSensor(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_ARLO, self._update_callback)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_UPDATE_ARLO, self._update_callback
+            )
+        )
 
     @callback
     def _update_callback(self):

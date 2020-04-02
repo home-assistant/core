@@ -182,17 +182,11 @@ class HiveEntity(Entity):
         self.session = session
         self.attributes = {}
         self._unique_id = f"{self.node_id}-{self.device_type}"
-        self._unsub_disp = None
 
     async def async_added_to_hass(self):
         """When entity is added to Home Assistant."""
-        self._unsub_disp = async_dispatcher_connect(
-            self.hass, DOMAIN, self.async_write_ha_state
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)
         )
         if self.device_type in SERVICES:
             self.session.entity_lookup[self.entity_id] = self.node_id
-
-    async def async_will_remove_from_hass(self):
-        """When entity will be removed from hass."""
-        self._unsub_disp()
-        self._unsub_disp = None

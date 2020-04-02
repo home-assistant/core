@@ -230,8 +230,10 @@ class VolvoEntity(Entity):
 
     async def async_added_to_hass(self):
         """Register update dispatcher."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_STATE_UPDATED, self.async_schedule_update_ha_state
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_STATE_UPDATED, self.async_write_ha_state
+            )
         )
 
     @property

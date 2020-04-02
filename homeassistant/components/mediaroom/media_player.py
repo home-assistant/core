@@ -178,7 +178,11 @@ class MediaroomDevice(MediaPlayerDevice):
             self._available = True
             self.async_write_ha_state()
 
-        async_dispatcher_connect(self.hass, SIGNAL_STB_NOTIFY, async_notify_received)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_STB_NOTIFY, async_notify_received
+            )
+        )
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play media."""
