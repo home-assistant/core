@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.cover import DEVICE_CLASSES_SCHEMA
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
@@ -25,17 +25,14 @@ from .const import (
     CONF_BRIDGES,
     CONF_CHANNEL,
     CONF_CHANNEL_COVER,
-    CONF_CHANNEL_TYPE,
     CONF_CLOSE_PRESET,
     CONF_DEFAULT,
     CONF_DEVICE_CLASS,
     CONF_DURATION,
     CONF_FADE,
-    CONF_NAME,
     CONF_NO_DEFAULT,
     CONF_OPEN_PRESET,
     CONF_POLL_TIMER,
-    CONF_PORT,
     CONF_PRESET,
     CONF_ROOM_OFF,
     CONF_ROOM_ON,
@@ -64,7 +61,7 @@ CHANNEL_DATA_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_FADE): vol.Coerce(float),
-        vol.Optional(CONF_CHANNEL_TYPE, default=DEFAULT_CHANNEL_TYPE): vol.Any(
+        vol.Optional(CONF_TYPE, default=DEFAULT_CHANNEL_TYPE): vol.Any(
             "light", "switch"
         ),
     }

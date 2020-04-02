@@ -1,6 +1,8 @@
 """Constants for the Dynalite component."""
 import logging
 
+from homeassistant.const import CONF_ROOM
+
 LOGGER = logging.getLogger(__package__)
 DOMAIN = "dynalite"
 
@@ -17,19 +19,15 @@ CONF_AUTO_DISCOVER = "autodiscover"
 CONF_BRIDGES = "bridges"
 CONF_CHANNEL = "channel"
 CONF_CHANNEL_COVER = "channel_cover"
-CONF_CHANNEL_TYPE = "type"
 CONF_CLOSE_PRESET = "close"
 CONF_DEFAULT = "default"
 CONF_DEVICE_CLASS = "class"
 CONF_DURATION = "duration"
 CONF_FADE = "fade"
-CONF_NAME = "name"
 CONF_NO_DEFAULT = "nodefault"
 CONF_OPEN_PRESET = "open"
 CONF_POLL_TIMER = "polltimer"
-CONF_PORT = "port"
 CONF_PRESET = "preset"
-CONF_ROOM = "room"
 CONF_ROOM_OFF = "room_off"
 CONF_ROOM_ON = "room_on"
 CONF_STOP_PRESET = "stop"
