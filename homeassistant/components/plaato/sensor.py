@@ -159,6 +159,6 @@ class PlaatoSensor(Entity):
         """Register callbacks."""
         self.async_on_remove(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
-                f"{PLAATO_DOMAIN}_{self.unique_id}", self.async_schedule_update_ha_state
+                f"{PLAATO_DOMAIN}_{self.unique_id}", self.async_write_ha_state
             )
         )
