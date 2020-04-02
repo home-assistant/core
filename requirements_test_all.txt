@@ -493,6 +493,9 @@ pyeverlights==0.1.0
 # homeassistant.components.fido
 pyfido==2.1.1
 
+# homeassistant.components.flunearyou
+pyflunearyou==1.0.7
+
 # homeassistant.components.fritzbox
 pyfritzhome==0.4.0
 
