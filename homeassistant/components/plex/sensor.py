@@ -2,14 +2,19 @@
 import logging
 
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_call_later
 
 from .const import (
     CONF_SERVER_IDENTIFIER,
     DISPATCHERS,
     DOMAIN as PLEX_DOMAIN,
     NAME_FORMAT,
+    PLEX_UPDATE_PLATFORMS_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
     SERVERS,
 )
@@ -99,13 +104,23 @@ class PlexSensor(Entity):
     def update(self):
         """Update method for Plex sensor."""
         _LOGGER.debug("Refreshing sensor [%s]", self.unique_id)
+
+        def update_plex(_):
+            async_dispatcher_send(
+                self.hass,
+                PLEX_UPDATE_PLATFORMS_SIGNAL.format(self._server.machine_identifier),
+            )
+
         now_playing = []
         for sess in self.sessions:
             if sess.TYPE == "photo":
                 _LOGGER.debug("Photo session detected, skipping: %s", sess)
                 continue
             if not sess.usernames:
-                _LOGGER.debug("Session temporarily incomplete, skipping: %s", sess)
+                _LOGGER.debug(
+                    "Session temporarily incomplete, will try again: %s", sess
+                )
+                async_call_later(self.hass, 5, update_plex)
                 continue
             user = sess.usernames[0]
             device = sess.players[0].title
