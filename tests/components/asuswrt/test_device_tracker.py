@@ -64,7 +64,8 @@ async def test_specify_non_directory_path_for_dnsmasq(hass):
                 }
             },
         )
-        assert not result
+        assert result
+        assert hass.data[DATA_ASUSWRT] is None
 
 
 async def test_interface(hass):
@@ -109,4 +110,5 @@ async def test_no_interface(hass):
                 }
             },
         )
-        assert not result
+        assert result
+        assert hass.data[DATA_ASUSWRT] is None
