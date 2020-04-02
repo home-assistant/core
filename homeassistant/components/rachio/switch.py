@@ -167,8 +167,10 @@ class RachioStandbySwitch(RachioSwitch):
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_RACHIO_CONTROLLER_UPDATE, self._handle_any_update
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_RACHIO_CONTROLLER_UPDATE, self._handle_any_update
+            )
         )
 
 
