@@ -11,6 +11,7 @@ from pymelcloud.atw_device import (
     PROPERTY_ZONE_2_OPERATION_MODE,
     Zone,
 )
+import voluptuous as vol
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -27,11 +28,23 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.temperature import convert as convert_temperature
 
 from . import MelCloudDevice
-from .const import ATTR_STATUS, DOMAIN, TEMP_UNIT_LOOKUP
+from .const import (
+    ATTR_STATUS,
+    ATTR_VANE_HORIZONTAL,
+    ATTR_VANE_HORIZONTAL_POSITIONS,
+    ATTR_VANE_VERTICAL,
+    ATTR_VANE_VERTICAL_POSITIONS,
+    CONF_POSITION,
+    DOMAIN,
+    SERVICE_SET_VANE_HORIZONTAL,
+    SERVICE_SET_VANE_VERTICAL,
+    TEMP_UNIT_LOOKUP,
+)
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -71,6 +84,18 @@ async def async_setup_entry(
             for zone in mel_device.device.zones
         ],
         True,
+    )
+
+    platform = entity_platform.current_platform.get()
+    platform.async_register_entity_service(
+        SERVICE_SET_VANE_HORIZONTAL,
+        {vol.Required(CONF_POSITION): cv.string},
+        "async_set_vane_horizontal",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_VANE_VERTICAL,
+        {vol.Required(CONF_POSITION): cv.string},
+        "async_set_vane_vertical",
     )
 
 
@@ -115,6 +140,30 @@ class AtaDeviceClimate(MelCloudClimate):
     def name(self):
         """Return the display name of this entity."""
         return self._name
+
+    @property
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+        """Return the optional state attributes with device specific additions."""
+        attr = {}
+
+        vane_horizontal = self._device.vane_horizontal
+        if vane_horizontal:
+            attr.update(
+                {
+                    ATTR_VANE_HORIZONTAL: vane_horizontal,
+                    ATTR_VANE_HORIZONTAL_POSITIONS: self._device.vane_horizontal_positions,
+                }
+            )
+
+        vane_vertical = self._device.vane_vertical
+        if vane_horizontal:
+            attr.update(
+                {
+                    ATTR_VANE_VERTICAL: vane_vertical,
+                    ATTR_VANE_VERTICAL_POSITIONS: self._device.vane_vertical_positions,
+                }
+            )
+        return attr
 
     @property
     def temperature_unit(self) -> str:
@@ -180,6 +229,22 @@ class AtaDeviceClimate(MelCloudClimate):
     def fan_modes(self) -> Optional[List[str]]:
         """Return the list of available fan modes."""
         return self._device.fan_speeds
+
+    async def async_set_vane_horizontal(self, position: str) -> None:
+        """Set horizontal vane position."""
+        if position not in self._device.vane_horizontal_positions:
+            raise ValueError(
+                f"Invalid horizontal vane position {position}. Valid positions: [{self._device.vane_horizontal_positions}]."
+            )
+        await self._device.set({ata.PROPERTY_VANE_HORIZONTAL: position})
+
+    async def async_set_vane_vertical(self, position: str) -> None:
+        """Set vertical vane position."""
+        if position not in self._device.vane_vertical_positions:
+            raise ValueError(
+                f"Invalid vertical vane position {position}. Valid positions: [{self._device.vane_vertical_positions}]."
+            )
+        await self._device.set({ata.PROPERTY_VANE_VERTICAL: position})
 
     @property
     def supported_features(self) -> int:
