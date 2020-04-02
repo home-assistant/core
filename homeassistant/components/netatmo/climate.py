@@ -259,7 +259,7 @@ class NetatmoThermostat(ClimateDevice):
         if hvac_mode == HVAC_MODE_OFF:
             self.turn_off()
         elif hvac_mode == HVAC_MODE_AUTO:
-            if self.hvac_mode == STATE_OFF:
+            if self.hvac_mode == HVAC_MODE_OFF:
                 self.turn_on()
             self.set_preset_mode(PRESET_SCHEDULE)
         elif hvac_mode == HVAC_MODE_HEAT:
@@ -337,9 +337,9 @@ class NetatmoThermostat(ClimateDevice):
                 STATE_NETATMO_MANUAL,
                 DEFAULT_MIN_TEMP,
             )
-        elif self.hvac_mode != STATE_OFF:
+        elif self.hvac_mode != HVAC_MODE_OFF:
             self._data.homestatus.setroomThermpoint(
-                self._data.home_id, self._room_id, HVAC_MODE_OFF
+                self._data.home_id, self._room_id, STATE_NETATMO_OFF
             )
         self.update_without_throttle = True
         self.schedule_update_ha_state()
@@ -355,7 +355,7 @@ class NetatmoThermostat(ClimateDevice):
     @property
     def available(self) -> bool:
         """If the device hasn't been able to connect, mark as unavailable."""
-        return self._connected or self._connected is None
+        return self._connected or self._connected is not None
 
     def update(self):
         """Get the latest data from NetAtmo API and updates the states."""
