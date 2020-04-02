@@ -355,7 +355,7 @@ class NetatmoThermostat(ClimateDevice):
     @property
     def available(self) -> bool:
         """If the device hasn't been able to connect, mark as unavailable."""
-        return self._connected or self._connected is not None
+        return self._connected or self._connected is None
 
     def update(self):
         """Get the latest data from NetAtmo API and updates the states."""
@@ -391,7 +391,7 @@ class NetatmoThermostat(ClimateDevice):
                 self._room_name,
                 err,
             )
-            self._connected = None
+            self._connected = False
         self._away = self._hvac_mode == HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]
 
 
