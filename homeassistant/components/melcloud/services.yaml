@@ -6,7 +6,7 @@ set_vane_horizontal:
       example: "climate.ac_1"
     position:
       description: >
-        Horizontal vane position. Possible options can be found from
+        Horizontal vane position. Possible options can be found in the
         vane_horizontal_positions state attribute.
       example: "auto"
 
@@ -18,6 +18,6 @@ set_vane_vertical:
       example: "climate.ac_1"
     position:
       description: >
-        Vertical vane position. Possible options can be found from
+        Vertical vane position. Possible options can be found in the
         vane_vertical_positions state attribute.
       example: "auto"
