@@ -36,7 +36,7 @@ CONF_ROOM_ON = "room_on"
 CONF_STOP_PRESET = "stop"
 CONF_TEMPLATE = "template"
 CONF_TILT_TIME = "tilt"
-CONF_TIME_COVER = "timecover"
+CONF_TIME_COVER = "time_cover"
 CONF_TRIGGER = "trigger"
 
 DEFAULT_CHANNEL_TYPE = "light"
