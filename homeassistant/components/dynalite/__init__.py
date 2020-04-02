@@ -6,6 +6,7 @@ from typing import Any, Dict, Union
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.cover import DEVICE_CLASSES_SCHEMA
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -84,7 +85,7 @@ TEMPLATE_ROOM_SCHEMA = vol.Schema(
 TEMPLATE_TIMECOVER_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_CHANNEL_COVER): num_string,
-        vol.Optional(CONF_DEVICE_CLASS): cv.string,
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_OPEN_PRESET): num_string,
         vol.Optional(CONF_CLOSE_PRESET): num_string,
         vol.Optional(CONF_STOP_PRESET): num_string,
@@ -128,7 +129,7 @@ AREA_DATA_SCHEMA = vol.Schema(
             vol.Optional(CONF_ROOM_ON): num_string,
             vol.Optional(CONF_ROOM_OFF): num_string,
             vol.Optional(CONF_CHANNEL_COVER): num_string,
-            vol.Optional(CONF_DEVICE_CLASS): cv.string,
+            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_OPEN_PRESET): num_string,
             vol.Optional(CONF_CLOSE_PRESET): num_string,
             vol.Optional(CONF_STOP_PRESET): num_string,

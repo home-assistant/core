@@ -70,7 +70,7 @@ async def test_async_setup(hass):
                                     dynalite.CONF_CHANNEL_COVER: 3,
                                     dynalite.CONF_DURATION: 2.2,
                                     dynalite.CONF_TILT_TIME: 3.3,
-                                    dynalite.CONF_DEVICE_CLASS: "xxx",
+                                    dynalite.CONF_DEVICE_CLASS: "awning",
                                 },
                             },
                         }
