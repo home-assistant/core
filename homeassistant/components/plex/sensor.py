@@ -105,6 +105,7 @@ class PlexSensor(Entity):
         """Update method for Plex sensor."""
         _LOGGER.debug("Refreshing sensor [%s]", self.unique_id)
 
+        @callback
         def update_plex(_):
             async_dispatcher_send(
                 self.hass,
