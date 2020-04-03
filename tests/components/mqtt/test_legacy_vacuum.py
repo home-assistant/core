@@ -19,7 +19,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.const import CONF_NAME, CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 
-from .common import (
+from .test_common import (
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
     help_test_default_availability_payload,
@@ -27,11 +27,13 @@ from .common import (
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_attr,
+    help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
     help_test_entity_device_info_with_connection,
     help_test_entity_device_info_with_identifier,
-    help_test_entity_id_update,
+    help_test_entity_id_update_discovery_update,
+    help_test_entity_id_update_subscriptions,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_unique_id,
@@ -606,7 +608,7 @@ async def test_entity_device_info_remove(hass, mqtt_mock):
     )
 
 
-async def test_entity_id_update(hass, mqtt_mock):
+async def test_entity_id_update_subscriptions(hass, mqtt_mock):
     """Test MQTT subscriptions are managed when entity_id is updated."""
     config = {
         vacuum.DOMAIN: {
@@ -618,6 +620,30 @@ async def test_entity_id_update(hass, mqtt_mock):
             "availability_topic": "avty-topic",
         }
     }
-    await help_test_entity_id_update(
+    await help_test_entity_id_update_subscriptions(
         hass, mqtt_mock, vacuum.DOMAIN, config, ["test-topic", "avty-topic"]
+    )
+
+
+async def test_entity_id_update_discovery_update(hass, mqtt_mock):
+    """Test MQTT discovery update when entity_id is updated."""
+    await help_test_entity_id_update_discovery_update(
+        hass, mqtt_mock, vacuum.DOMAIN, DEFAULT_CONFIG_2
+    )
+
+
+async def test_entity_debug_info_message(hass, mqtt_mock):
+    """Test MQTT debug info."""
+    config = {
+        vacuum.DOMAIN: {
+            "platform": "mqtt",
+            "name": "test",
+            "battery_level_topic": "test-topic",
+            "battery_level_template": "{{ value_json.battery_level }}",
+            "command_topic": "command-topic",
+            "availability_topic": "avty-topic",
+        }
+    }
+    await help_test_entity_debug_info_message(
+        hass, mqtt_mock, vacuum.DOMAIN, config, "test-topic"
     )

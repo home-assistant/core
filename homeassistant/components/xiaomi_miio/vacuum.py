@@ -60,8 +60,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     extra=vol.ALLOW_EXTRA,
 )
 
-FAN_SPEEDS = {"Silent": 38, "Standard": 60, "Medium": 77, "Turbo": 90, "Gentle": 105}
-
 ATTR_CLEAN_START = "clean_start"
 ATTR_CLEAN_STOP = "clean_stop"
 ATTR_CLEANING_TIME = "cleaning_time"
@@ -246,6 +244,8 @@ class MiroboVacuum(StateVacuumDevice):
         self.clean_history = None
         self.dnd_state = None
         self.last_clean = None
+        self._fan_speeds = None
+        self._fan_speeds_reverse = None
 
     @property
     def name(self):
@@ -281,14 +281,17 @@ class MiroboVacuum(StateVacuumDevice):
         """Return the fan speed of the vacuum cleaner."""
         if self.vacuum_state is not None:
             speed = self.vacuum_state.fanspeed
-            if speed in FAN_SPEEDS.values():
-                return [key for key, value in FAN_SPEEDS.items() if value == speed][0]
+            if speed in self._fan_speeds_reverse:
+                return self._fan_speeds_reverse[speed]
+
+            _LOGGER.debug("Unable to find reverse for %s", speed)
+
             return speed
 
     @property
     def fan_speed_list(self):
         """Get the list of available fan speed steps of the vacuum cleaner."""
-        return list(sorted(FAN_SPEEDS.keys(), key=lambda s: FAN_SPEEDS[s]))
+        return list(self._fan_speeds)
 
     @property
     def device_state_attributes(self):
@@ -372,8 +375,8 @@ class MiroboVacuum(StateVacuumDevice):
 
     async def async_set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed."""
-        if fan_speed.capitalize() in FAN_SPEEDS:
-            fan_speed = FAN_SPEEDS[fan_speed.capitalize()]
+        if fan_speed in self._fan_speeds:
+            fan_speed = self._fan_speeds[fan_speed]
         else:
             try:
                 fan_speed = int(fan_speed)
@@ -452,6 +455,9 @@ class MiroboVacuum(StateVacuumDevice):
         try:
             state = self._vacuum.status()
             self.vacuum_state = state
+
+            self._fan_speeds = self._vacuum.fan_speed_presets()
+            self._fan_speeds_reverse = {v: k for k, v in self._fan_speeds.items()}
 
             self.consumable_state = self._vacuum.consumable_status()
             self.clean_history = self._vacuum.clean_history()

@@ -44,6 +44,7 @@ async def create_entity_from_device(hass, device):
         new_device_func = mock_dyn_dev.mock_calls[1][2]["new_device_func"]
         new_device_func([device])
     await hass.async_block_till_done()
+    return mock_dyn_dev.mock_calls[1][2]["update_device_func"]
 
 
 async def run_service_tests(hass, device, platform, services):

@@ -136,7 +136,7 @@ class SW16Device(Entity):
         """Propagate changes through ha."""
         _LOGGER.debug("Relay %s new state callback: %r", self._device_port, event)
         self._is_on = event
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def should_poll(self):
@@ -156,7 +156,7 @@ class SW16Device(Entity):
     @callback
     def _availability_callback(self, availability):
         """Update availability state."""
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Register update callback."""
@@ -164,8 +164,10 @@ class SW16Device(Entity):
             self.handle_event_callback, self._device_port
         )
         self._is_on = await self._client.status(self._device_port)
-        async_dispatcher_connect(
-            self.hass,
-            f"hlk_sw16_device_available_{self._device_id}",
-            self._availability_callback,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"hlk_sw16_device_available_{self._device_id}",
+                self._availability_callback,
+            )
         )

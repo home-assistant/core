@@ -8,6 +8,7 @@ from homeassistant.components import mqtt
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 
+from . import debug_info
 from .const import DEFAULT_QOS
 from .models import MessageCallbackType
 
@@ -18,6 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 class EntitySubscription:
     """Class to hold data about an active entity topic subscription."""
 
+    hass = attr.ib(type=HomeAssistantType)
     topic = attr.ib(type=str)
     message_callback = attr.ib(type=MessageCallbackType)
     unsubscribe_callback = attr.ib(type=Optional[Callable[[], None]])
@@ -31,10 +33,15 @@ class EntitySubscription:
 
         if other is not None and other.unsubscribe_callback is not None:
             other.unsubscribe_callback()
+            # Clear debug data if it exists
+            debug_info.remove_topic(self.hass, other.message_callback, other.topic)
 
         if self.topic is None:
             # We were asked to remove the subscription or not to create it
             return
+
+        # Prepare debug data
+        debug_info.add_topic(self.hass, self.message_callback, self.topic)
 
         self.unsubscribe_callback = await mqtt.async_subscribe(
             hass, self.topic, self.message_callback, self.qos, self.encoding
@@ -77,6 +84,7 @@ async def async_subscribe_topics(
             unsubscribe_callback=None,
             qos=value.get("qos", DEFAULT_QOS),
             encoding=value.get("encoding", "utf-8"),
+            hass=hass,
         )
         # Get the current subscription state
         current = current_subscriptions.pop(key, None)
@@ -87,6 +95,8 @@ async def async_subscribe_topics(
     for remaining in current_subscriptions.values():
         if remaining.unsubscribe_callback is not None:
             remaining.unsubscribe_callback()
+            # Clear debug data if it exists
+            debug_info.remove_topic(hass, remaining.message_callback, remaining.topic)
 
     return new_state
 

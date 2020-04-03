@@ -5,6 +5,7 @@ import collections
 import itertools
 import logging
 import os
+import time
 import traceback
 from typing import List, Optional
 
@@ -258,7 +259,7 @@ class ZHAGateway:
         zha_group.info("group_member_removed - endpoint: %s", endpoint)
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_MEMBER_REMOVED)
         async_dispatcher_send(
-            self._hass, f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_{zigpy_group.group_id}"
+            self._hass, f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_0x{zigpy_group.group_id:04x}"
         )
 
     def group_member_added(
@@ -270,7 +271,7 @@ class ZHAGateway:
         zha_group.info("group_member_added - endpoint: %s", endpoint)
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_MEMBER_ADDED)
         async_dispatcher_send(
-            self._hass, f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_{zigpy_group.group_id}"
+            self._hass, f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_0x{zigpy_group.group_id:04x}"
         )
 
     def group_added(self, zigpy_group: ZigpyGroupType) -> None:
@@ -286,7 +287,7 @@ class ZHAGateway:
         zha_group = self._groups.pop(zigpy_group.group_id, None)
         zha_group.info("group_removed")
         async_dispatcher_send(
-            self._hass, f"{SIGNAL_REMOVE_GROUP}_{zigpy_group.group_id}"
+            self._hass, f"{SIGNAL_REMOVE_GROUP}_0x{zigpy_group.group_id:04x}"
         )
 
     def _send_group_gateway_message(
@@ -474,12 +475,13 @@ class ZHAGateway:
         """Update the devices in the store."""
         for device in self.devices.values():
             self.zha_storage.async_update_device(device)
-        await self.zha_storage.async_save()
 
     async def async_device_initialized(self, device: zha_typing.ZigpyDeviceType):
         """Handle device joined and basic information discovered (async)."""
         zha_device = self._async_get_or_create_device(device)
-
+        # This is an active device so set a last seen if it is none
+        if zha_device.last_seen is None:
+            zha_device.async_update_last_seen(time.time())
         _LOGGER.debug(
             "device - %s:%s entering async_device_initialized - is_new_join: %s",
             device.nwk,

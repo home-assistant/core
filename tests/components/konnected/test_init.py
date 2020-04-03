@@ -43,6 +43,7 @@ async def test_config_schema(hass):
     """Test that config schema is imported properly."""
     config = {
         konnected.DOMAIN: {
+            konnected.CONF_API_HOST: "http://1.1.1.1:8888",
             konnected.CONF_ACCESS_TOKEN: "abcdefgh",
             konnected.CONF_DEVICES: [{konnected.CONF_ID: "aabbccddeeff"}],
         }
@@ -50,10 +51,12 @@ async def test_config_schema(hass):
     assert konnected.CONFIG_SCHEMA(config) == {
         "konnected": {
             "access_token": "abcdefgh",
+            "api_host": "http://1.1.1.1:8888",
             "devices": [
                 {
                     "default_options": {
                         "blink": True,
+                        "api_host": "http://1.1.1.1:8888",
                         "discovery": True,
                         "io": {
                             "1": "Disabled",
@@ -96,6 +99,7 @@ async def test_config_schema(hass):
                 {
                     "default_options": {
                         "blink": True,
+                        "api_host": "",
                         "discovery": True,
                         "io": {
                             "1": "Disabled",
@@ -124,7 +128,7 @@ async def test_config_schema(hass):
         }
     }
 
-    # check pin to zone
+    # check pin to zone and multiple output
     config = {
         konnected.DOMAIN: {
             konnected.CONF_ACCESS_TOKEN: "abcdefgh",
@@ -134,6 +138,22 @@ async def test_config_schema(hass):
                     "binary_sensors": [
                         {"pin": 2, "type": "door"},
                         {"zone": 1, "type": "door"},
+                    ],
+                    "switches": [
+                        {
+                            "zone": 3,
+                            "name": "Beep Beep",
+                            "momentary": 65,
+                            "pause": 55,
+                            "repeat": 4,
+                        },
+                        {
+                            "zone": 3,
+                            "name": "Warning",
+                            "momentary": 100,
+                            "pause": 100,
+                            "repeat": -1,
+                        },
                     ],
                 }
             ],
@@ -146,6 +166,7 @@ async def test_config_schema(hass):
                 {
                     "default_options": {
                         "blink": True,
+                        "api_host": "",
                         "discovery": True,
                         "io": {
                             "1": "Binary Sensor",
@@ -153,7 +174,7 @@ async def test_config_schema(hass):
                             "11": "Disabled",
                             "12": "Disabled",
                             "2": "Binary Sensor",
-                            "3": "Disabled",
+                            "3": "Switchable Output",
                             "4": "Disabled",
                             "5": "Disabled",
                             "6": "Disabled",
@@ -168,6 +189,24 @@ async def test_config_schema(hass):
                         "binary_sensors": [
                             {"inverse": False, "type": "door", "zone": "2"},
                             {"inverse": False, "type": "door", "zone": "1"},
+                        ],
+                        "switches": [
+                            {
+                                "zone": "3",
+                                "activation": "high",
+                                "name": "Beep Beep",
+                                "momentary": 65,
+                                "pause": 55,
+                                "repeat": 4,
+                            },
+                            {
+                                "zone": "3",
+                                "activation": "high",
+                                "name": "Warning",
+                                "momentary": 100,
+                                "pause": 100,
+                                "repeat": -1,
+                            },
                         ],
                     },
                     "id": "aabbccddeeff",

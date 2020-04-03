@@ -187,6 +187,7 @@ homeassistant/components/intesishome/* @jnimmo
 homeassistant/components/ios/* @robbiet480
 homeassistant/components/iperf3/* @rohankapoorcom
 homeassistant/components/ipma/* @dgomes @abmantis
+homeassistant/components/ipp/* @ctalkington
 homeassistant/components/iqvia/* @bachya
 homeassistant/components/irish_rail_transport/* @ttroy50
 homeassistant/components/izone/* @Swamp-Ig
@@ -231,7 +232,7 @@ homeassistant/components/min_max/* @fabaff
 homeassistant/components/minecraft_server/* @elmurato
 homeassistant/components/minio/* @tkislan
 homeassistant/components/mobile_app/* @robbiet480
-homeassistant/components/modbus/* @adamchengtkc
+homeassistant/components/modbus/* @adamchengtkc @janiversen
 homeassistant/components/monoprice/* @etsinko
 homeassistant/components/moon/* @fabaff
 homeassistant/components/mpd/* @fabaff
@@ -260,6 +261,7 @@ homeassistant/components/nsw_fuel_station/* @nickw444
 homeassistant/components/nsw_rural_fire_service_feed/* @exxamalte
 homeassistant/components/nuheat/* @bdraco
 homeassistant/components/nuki/* @pvizeli
+homeassistant/components/nut/* @bdraco
 homeassistant/components/nws/* @MatthewFlamm
 homeassistant/components/nzbget/* @chriscla
 homeassistant/components/obihai/* @dshokouhi
@@ -369,7 +371,7 @@ homeassistant/components/switchmate/* @danielhiversen
 homeassistant/components/syncthru/* @nielstron
 homeassistant/components/synology_srm/* @aerialls
 homeassistant/components/syslog/* @fabaff
-homeassistant/components/tado/* @michaelarnauts
+homeassistant/components/tado/* @michaelarnauts @bdraco
 homeassistant/components/tahoma/* @philklei
 homeassistant/components/tankerkoenig/* @guillempages
 homeassistant/components/tautulli/* @ludeeus
@@ -407,6 +409,7 @@ homeassistant/components/usgs_earthquakes_feed/* @exxamalte
 homeassistant/components/utility_meter/* @dgomes
 homeassistant/components/velbus/* @Cereal2nd @brefra
 homeassistant/components/velux/* @Julius2342
+homeassistant/components/vera/* @vangorra
 homeassistant/components/versasense/* @flamm3blemuff1n
 homeassistant/components/version/* @fabaff
 homeassistant/components/vesync/* @markperdue @webdjoe

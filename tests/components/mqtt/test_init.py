@@ -1,5 +1,6 @@
 """The tests for the MQTT component."""
 from datetime import timedelta
+import json
 import ssl
 import unittest
 from unittest import mock
@@ -32,6 +33,7 @@ from tests.common import (
     mock_device_registry,
     mock_mqtt_component,
     mock_registry,
+    mock_storage,
     threadsafe_coroutine_factory,
 )
 
@@ -53,6 +55,7 @@ def mock_MQTT():
     """Make sure connection is established."""
     with mock.patch("homeassistant.components.mqtt.MQTT") as mock_MQTT:
         mock_MQTT.return_value.async_connect.return_value = mock_coro(True)
+        mock_MQTT.return_value.async_disconnect.return_value = mock_coro(True)
         yield mock_MQTT
 
 
@@ -82,12 +85,15 @@ class TestMQTTComponent(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.mock_storage = mock_storage()
+        self.mock_storage.__enter__()
         mock_mqtt_component(self.hass)
         self.calls = []
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
         self.hass.stop()
+        self.mock_storage.__exit__(None, None, None)
 
     @callback
     def record_calls(self, *args):
@@ -297,12 +303,15 @@ class TestMQTTCallbacks(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.mock_storage = mock_storage()
+        self.mock_storage.__enter__()
         mock_mqtt_client(self.hass)
         self.calls = []
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
         self.hass.stop()
+        self.mock_storage.__exit__(None, None, None)
 
     @callback
     def record_calls(self, *args):
@@ -934,3 +943,48 @@ async def test_mqtt_ws_remove_non_mqtt_device(
     response = await client.receive_json()
     assert not response["success"]
     assert response["error"]["code"] == websocket_api.const.ERR_NOT_FOUND
+
+
+async def test_mqtt_ws_get_device_debug_info(
+    hass, device_reg, hass_ws_client, mqtt_mock
+):
+    """Test MQTT websocket device debug info."""
+    config_entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    config_entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, config_entry)
+
+    config = {
+        "device": {"identifiers": ["0AFFD2"]},
+        "platform": "mqtt",
+        "state_topic": "foobar/sensor",
+        "unique_id": "unique",
+    }
+    data = json.dumps(config)
+
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    await hass.async_block_till_done()
+
+    # Verify device entry is created
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    assert device_entry is not None
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 5, "type": "mqtt/device/debug_info", "device_id": device_entry.id}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    expected_result = {
+        "entities": [
+            {
+                "entity_id": "sensor.mqtt_sensor",
+                "topics": [{"topic": "foobar/sensor", "messages": []}],
+                "discovery_data": {
+                    "payload": config,
+                    "topic": "homeassistant/sensor/bla/config",
+                },
+            }
+        ],
+        "triggers": [],
+    }
+    assert response["result"] == expected_result
