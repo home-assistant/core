@@ -5,6 +5,5 @@
   "requirements": [
     "speak2mary==1.4.0"
   ],
-  "dependencies": [],
   "codeowners": []
 }

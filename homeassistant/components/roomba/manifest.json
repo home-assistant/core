@@ -5,7 +5,6 @@
   "requirements": [
     "roombapy==1.4.3"
   ],
-  "dependencies": [],
   "codeowners": [
     "@pschmitt"
   ]

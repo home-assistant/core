@@ -6,6 +6,5 @@
     "pillow==7.0.0",
     "pyzbar==0.1.7"
   ],
-  "dependencies": [],
   "codeowners": []
 }

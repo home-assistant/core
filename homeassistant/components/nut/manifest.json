@@ -5,7 +5,6 @@
   "requirements": [
     "pynut2==2.1.2"
   ],
-  "dependencies": [],
   "codeowners": ["@bdraco"],
   "config_flow": true
 }
