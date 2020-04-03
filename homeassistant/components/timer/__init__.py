@@ -203,9 +203,7 @@ class Timer(RestoreEntity):
 
     @property
     def force_update(self) -> bool:
-        """Return True to get last_changed attribute updated
-        when active timer restarted.
-        """
+        """Return True to fix restart issues."""
         return True
 
     @property
