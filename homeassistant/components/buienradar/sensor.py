@@ -33,6 +33,7 @@ from homeassistant.const import (
     TIME_HOURS,
     UNIT_PERCENTAGE,
 )
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
@@ -260,7 +261,14 @@ class BrSensor(Entity):
             self.type,
         )
 
-    def load_data(self, data):
+    @callback
+    def data_updated(self, data):
+        """Update data."""
+        if self._load_data(data) and self.hass:
+            self.async_write_ha_state()
+
+    @callback
+    def _load_data(self, data):
         """Load the sensor with relevant data."""
         # Find sensor
 

@@ -175,7 +175,7 @@ class DeviceTracker:
                 consider_home,
             )
             if device.track:
-                await device.async_update_ha_state()
+                device.async_write_ha_state()
             return
 
         # Guard from calling see on entity registry entities.
@@ -212,7 +212,7 @@ class DeviceTracker:
         )
 
         if device.track:
-            await device.async_update_ha_state()
+            device.async_write_ha_state()
 
         self.hass.bus.async_fire(
             EVENT_NEW_DEVICE,
@@ -259,7 +259,7 @@ class DeviceTracker:
         async def async_init_single_device(dev):
             """Init a single device_tracker entity."""
             await dev.async_added_to_hass()
-            await dev.async_update_ha_state()
+            dev.async_write_ha_state()
 
         tasks = []
         for device in self.devices.values():
