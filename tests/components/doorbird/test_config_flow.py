@@ -140,10 +140,33 @@ async def test_form_zeroconf_wrong_oui(hass):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data={
             "properties": {"macaddress": "notdoorbirdoui"},
+            "host": "192.168.1.8",
             "name": "Doorstation - abc123._axis-video._tcp.local.",
         },
     )
     assert result["type"] == "abort"
+    assert result["reason"] == "not_doorbird_device"
+
+
+async def test_form_zeroconf_link_local_ignored(hass):
+    """Test we abort when we get a link local address via zeroconf."""
+    await hass.async_add_executor_job(
+        init_recorder_component, hass
+    )  # force in memory db
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data={
+            "properties": {"macaddress": "1CCAE3DOORBIRD"},
+            "host": "169.254.103.61",
+            "name": "Doorstation - abc123._axis-video._tcp.local.",
+        },
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "link_local_address"
 
 
 async def test_form_zeroconf_correct_oui(hass):

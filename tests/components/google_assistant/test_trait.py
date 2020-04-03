@@ -1532,7 +1532,8 @@ async def test_openclose_cover_no_position(hass):
 
 
 @pytest.mark.parametrize(
-    "device_class", (cover.DEVICE_CLASS_DOOR, cover.DEVICE_CLASS_GARAGE)
+    "device_class",
+    (cover.DEVICE_CLASS_DOOR, cover.DEVICE_CLASS_GARAGE, cover.DEVICE_CLASS_GATE),
 )
 async def test_openclose_cover_secure(hass, device_class):
     """Test OpenClose trait support for cover domain."""

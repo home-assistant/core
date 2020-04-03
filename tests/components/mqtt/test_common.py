@@ -4,6 +4,7 @@ import json
 from unittest.mock import ANY
 
 from homeassistant.components import mqtt
+from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNAVAILABLE
 
@@ -440,7 +441,9 @@ async def help_test_entity_device_info_update(hass, mqtt_mock, domain, config):
     assert device.name == "Milk"
 
 
-async def help_test_entity_id_update(hass, mqtt_mock, domain, config, topics=None):
+async def help_test_entity_id_update_subscriptions(
+    hass, mqtt_mock, domain, config, topics=None
+):
     """Test MQTT subscriptions are managed when entity_id is updated."""
     # Add unique_id to config
     config = copy.deepcopy(config)
@@ -473,3 +476,276 @@ async def help_test_entity_id_update(hass, mqtt_mock, domain, config, topics=Non
     assert state is not None
     for topic in topics:
         mock_mqtt.async_subscribe.assert_any_call(topic, ANY, ANY, ANY)
+
+
+async def help_test_entity_id_update_discovery_update(
+    hass, mqtt_mock, domain, config, topic=None
+):
+    """Test MQTT discovery update after entity_id is updated."""
+    # Add unique_id to config
+    config = copy.deepcopy(config)
+    config[domain]["unique_id"] = "TOTALLY_UNIQUE"
+
+    if topic is None:
+        # Add default topic to config
+        config[domain]["availability_topic"] = "avty-topic"
+        topic = "avty-topic"
+
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, entry)
+    ent_registry = mock_registry(hass, {})
+
+    data = json.dumps(config[domain])
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, topic, "online")
+    state = hass.states.get(f"{domain}.test")
+    assert state.state != STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(hass, topic, "offline")
+    state = hass.states.get(f"{domain}.test")
+    assert state.state == STATE_UNAVAILABLE
+
+    ent_registry.async_update_entity(f"{domain}.test", new_entity_id=f"{domain}.milk")
+    await hass.async_block_till_done()
+
+    config[domain]["availability_topic"] = f"{topic}_2"
+    data = json.dumps(config[domain])
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids(domain)) == 1
+
+    async_fire_mqtt_message(hass, f"{topic}_2", "online")
+    state = hass.states.get(f"{domain}.milk")
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def help_test_entity_debug_info(hass, mqtt_mock, domain, config):
+    """Test debug_info.
+
+    This is a test helper for MQTT debug_info.
+    """
+    # Add device settings to config
+    config = copy.deepcopy(config[domain])
+    config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
+    config["unique_id"] = "veryunique"
+
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    assert device is not None
+
+    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    assert len(debug_info_data["entities"]) == 1
+    assert (
+        debug_info_data["entities"][0]["discovery_data"]["topic"]
+        == f"homeassistant/{domain}/bla/config"
+    )
+    assert debug_info_data["entities"][0]["discovery_data"]["payload"] == config
+    assert len(debug_info_data["entities"][0]["topics"]) == 1
+    assert {"topic": "test-topic", "messages": []} in debug_info_data["entities"][0][
+        "topics"
+    ]
+    assert len(debug_info_data["triggers"]) == 0
+
+
+async def help_test_entity_debug_info_max_messages(hass, mqtt_mock, domain, config):
+    """Test debug_info message overflow.
+
+    This is a test helper for MQTT debug_info.
+    """
+    # Add device settings to config
+    config = copy.deepcopy(config[domain])
+    config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
+    config["unique_id"] = "veryunique"
+
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    assert device is not None
+
+    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    assert len(debug_info_data["entities"][0]["topics"]) == 1
+    assert {"topic": "test-topic", "messages": []} in debug_info_data["entities"][0][
+        "topics"
+    ]
+
+    for i in range(0, debug_info.STORED_MESSAGES + 1):
+        async_fire_mqtt_message(hass, "test-topic", f"{i}")
+
+    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    assert len(debug_info_data["entities"][0]["topics"]) == 1
+    assert (
+        len(debug_info_data["entities"][0]["topics"][0]["messages"])
+        == debug_info.STORED_MESSAGES
+    )
+    messages = [f"{i}" for i in range(1, debug_info.STORED_MESSAGES + 1)]
+    assert {"topic": "test-topic", "messages": messages} in debug_info_data["entities"][
+        0
+    ]["topics"]
+
+
+async def help_test_entity_debug_info_message(
+    hass, mqtt_mock, domain, config, topic=None, payload=None
+):
+    """Test debug_info message overflow.
+
+    This is a test helper for MQTT debug_info.
+    """
+    # Add device settings to config
+    config = copy.deepcopy(config[domain])
+    config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
+    config["unique_id"] = "veryunique"
+
+    if topic is None:
+        # Add default topic to config
+        config["state_topic"] = "state-topic"
+        topic = "state-topic"
+
+    if payload is None:
+        payload = "ON"
+
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    assert device is not None
+
+    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    assert len(debug_info_data["entities"][0]["topics"]) >= 1
+    assert {"topic": topic, "messages": []} in debug_info_data["entities"][0]["topics"]
+
+    async_fire_mqtt_message(hass, topic, payload)
+
+    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    assert len(debug_info_data["entities"][0]["topics"]) >= 1
+    assert {"topic": topic, "messages": [payload]} in debug_info_data["entities"][0][
+        "topics"
+    ]
+
+
+async def help_test_entity_debug_info_remove(hass, mqtt_mock, domain, config):
+    """Test debug_info.
+
+    This is a test helper for MQTT debug_info.
+    """
+    # Add device settings to config
+    config = copy.deepcopy(config[domain])
+    config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
+    config["unique_id"] = "veryunique"
+
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    assert device is not None
+
+    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    assert len(debug_info_data["entities"]) == 1
+    assert (
+        debug_info_data["entities"][0]["discovery_data"]["topic"]
+        == f"homeassistant/{domain}/bla/config"
+    )
+    assert debug_info_data["entities"][0]["discovery_data"]["payload"] == config
+    assert len(debug_info_data["entities"][0]["topics"]) == 1
+    assert {"topic": "test-topic", "messages": []} in debug_info_data["entities"][0][
+        "topics"
+    ]
+    assert len(debug_info_data["triggers"]) == 0
+    assert debug_info_data["entities"][0]["entity_id"] == f"{domain}.test"
+    entity_id = debug_info_data["entities"][0]["entity_id"]
+
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", "")
+    await hass.async_block_till_done()
+
+    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    assert len(debug_info_data["entities"]) == 0
+    assert len(debug_info_data["triggers"]) == 0
+    assert entity_id not in hass.data[debug_info.DATA_MQTT_DEBUG_INFO]["entities"]
+
+
+async def help_test_entity_debug_info_update_entity_id(hass, mqtt_mock, domain, config):
+    """Test debug_info.
+
+    This is a test helper for MQTT debug_info.
+    """
+    # Add device settings to config
+    config = copy.deepcopy(config[domain])
+    config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
+    config["unique_id"] = "veryunique"
+
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, entry)
+    dev_registry = await hass.helpers.device_registry.async_get_registry()
+    ent_registry = mock_registry(hass, {})
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
+    await hass.async_block_till_done()
+
+    device = dev_registry.async_get_device({("mqtt", "helloworld")}, set())
+    assert device is not None
+
+    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    assert len(debug_info_data["entities"]) == 1
+    assert (
+        debug_info_data["entities"][0]["discovery_data"]["topic"]
+        == f"homeassistant/{domain}/bla/config"
+    )
+    assert debug_info_data["entities"][0]["discovery_data"]["payload"] == config
+    assert debug_info_data["entities"][0]["entity_id"] == f"{domain}.test"
+    assert len(debug_info_data["entities"][0]["topics"]) == 1
+    assert {"topic": "test-topic", "messages": []} in debug_info_data["entities"][0][
+        "topics"
+    ]
+    assert len(debug_info_data["triggers"]) == 0
+
+    ent_registry.async_update_entity(f"{domain}.test", new_entity_id=f"{domain}.milk")
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    assert len(debug_info_data["entities"]) == 1
+    assert (
+        debug_info_data["entities"][0]["discovery_data"]["topic"]
+        == f"homeassistant/{domain}/bla/config"
+    )
+    assert debug_info_data["entities"][0]["discovery_data"]["payload"] == config
+    assert debug_info_data["entities"][0]["entity_id"] == f"{domain}.milk"
+    assert len(debug_info_data["entities"][0]["topics"]) == 1
+    assert {"topic": "test-topic", "messages": []} in debug_info_data["entities"][0][
+        "topics"
+    ]
+    assert len(debug_info_data["triggers"]) == 0
+    assert (
+        f"{domain}.test" not in hass.data[debug_info.DATA_MQTT_DEBUG_INFO]["entities"]
+    )

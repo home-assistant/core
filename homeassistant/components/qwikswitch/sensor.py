@@ -51,7 +51,7 @@ class QSSensor(QSEntity):
         )
         if val is not None:
             self._val = val
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     @property
     def state(self):

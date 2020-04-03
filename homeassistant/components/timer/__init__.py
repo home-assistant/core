@@ -202,6 +202,11 @@ class Timer(RestoreEntity):
         return False
 
     @property
+    def force_update(self) -> bool:
+        """Return True to fix restart issues."""
+        return True
+
+    @property
     def name(self):
         """Return name of the timer."""
         return self._config.get(CONF_NAME)

@@ -153,7 +153,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
         """Update state from WebOsClient."""
         self.update_sources()
 
-        self.async_schedule_update_ha_state(False)
+        self.async_write_ha_state()
 
     def update_sources(self):
         """Update list of sources from current source, apps, inputs and configured list."""

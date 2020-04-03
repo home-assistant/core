@@ -6,7 +6,6 @@
     "eagle200_reader==0.2.4",
     "uEagle==0.0.1"
   ],
-  "dependencies": [],
   "codeowners": ["@gtdiehl",
                  "@jcalbert"]
 }

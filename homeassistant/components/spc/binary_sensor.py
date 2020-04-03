@@ -46,8 +46,12 @@ class SpcBinarySensor(BinarySensorDevice):
 
     async def async_added_to_hass(self):
         """Call for adding new entities."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_SENSOR.format(self._zone.id), self._update_callback
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_UPDATE_SENSOR.format(self._zone.id),
+                self._update_callback,
+            )
         )
 
     @callback

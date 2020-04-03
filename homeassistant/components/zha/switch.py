@@ -1,16 +1,15 @@
 """Switches on Zigbee Home Automation networks."""
 import functools
 import logging
-from typing import Any, List, Optional
+from typing import Any, List
 
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.foundation import Status
 
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
-from homeassistant.core import CALLBACK_TYPE, State, callback
+from homeassistant.core import State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.event import async_track_state_change
 
 from .core import discovery
 from .core.const import (
@@ -19,10 +18,9 @@ from .core.const import (
     DATA_ZHA_DISPATCHERS,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
-    SIGNAL_REMOVE_GROUP,
 )
 from .core.registries import ZHA_ENTITIES
-from .entity import BaseZhaEntity, ZhaEntity
+from .entity import ZhaEntity, ZhaGroupEntity
 
 _LOGGER = logging.getLogger(__name__)
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
@@ -43,7 +41,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
 
-class BaseSwitch(BaseZhaEntity, SwitchDevice):
+class BaseSwitch(SwitchDevice):
     """Common base class for zha switches."""
 
     def __init__(self, *args, **kwargs):
@@ -77,7 +75,7 @@ class BaseSwitch(BaseZhaEntity, SwitchDevice):
 
 
 @STRICT_MATCH(channel_names=CHANNEL_ON_OFF)
-class Switch(ZhaEntity, BaseSwitch):
+class Switch(BaseSwitch, ZhaEntity):
     """ZHA switch."""
 
     def __init__(self, unique_id, zha_device, channels, **kwargs):
@@ -113,50 +111,17 @@ class Switch(ZhaEntity, BaseSwitch):
 
 
 @GROUP_MATCH()
-class SwitchGroup(BaseSwitch):
+class SwitchGroup(BaseSwitch, ZhaGroupEntity):
     """Representation of a switch group."""
 
     def __init__(
         self, entity_ids: List[str], unique_id: str, group_id: int, zha_device, **kwargs
     ) -> None:
         """Initialize a switch group."""
-        super().__init__(unique_id, zha_device, **kwargs)
-        self._name: str = f"{zha_device.gateway.groups.get(group_id).name}_group_{group_id}"
-        self._group_id: int = group_id
+        super().__init__(entity_ids, unique_id, group_id, zha_device, **kwargs)
         self._available: bool = False
-        self._entity_ids: List[str] = entity_ids
         group = self.zha_device.gateway.get_group(self._group_id)
         self._on_off_channel = group.endpoint[OnOff.cluster_id]
-        self._async_unsub_state_changed: Optional[CALLBACK_TYPE] = None
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        await super().async_added_to_hass()
-        await self.async_accept_signal(
-            None,
-            f"{SIGNAL_REMOVE_GROUP}_{self._group_id}",
-            self.async_remove,
-            signal_override=True,
-        )
-
-        @callback
-        def async_state_changed_listener(
-            entity_id: str, old_state: State, new_state: State
-        ):
-            """Handle child updates."""
-            self.async_schedule_update_ha_state(True)
-
-        self._async_unsub_state_changed = async_track_state_change(
-            self.hass, self._entity_ids, async_state_changed_listener
-        )
-        await self.async_update()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Handle removal from Home Assistant."""
-        await super().async_will_remove_from_hass()
-        if self._async_unsub_state_changed is not None:
-            self._async_unsub_state_changed()
-            self._async_unsub_state_changed = None
 
     async def async_update(self) -> None:
         """Query all members and determine the light group state."""

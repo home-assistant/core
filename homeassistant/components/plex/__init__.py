@@ -46,6 +46,7 @@ from .const import (
     SERVERS,
     WEBSOCKETS,
 )
+from .errors import ShouldUpdateConfigEntry
 from .server import PlexServer
 
 MEDIA_PLAYER_SCHEMA = vol.All(
@@ -129,9 +130,20 @@ async def async_setup_entry(hass, entry):
         )
         hass.config_entries.async_update_entry(entry, options=options)
 
-    plex_server = PlexServer(hass, server_config, entry.options)
+    plex_server = PlexServer(
+        hass, server_config, entry.data[CONF_SERVER_IDENTIFIER], entry.options
+    )
     try:
         await hass.async_add_executor_job(plex_server.connect)
+    except ShouldUpdateConfigEntry:
+        new_server_data = {
+            **entry.data[PLEX_SERVER_CONFIG],
+            CONF_URL: plex_server.url_in_use,
+            CONF_SERVER: plex_server.friendly_name,
+        }
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, PLEX_SERVER_CONFIG: new_server_data}
+        )
     except requests.exceptions.ConnectionError as error:
         _LOGGER.error(
             "Plex server (%s) could not be reached: [%s]",

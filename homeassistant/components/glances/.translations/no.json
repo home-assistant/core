@@ -13,7 +13,7 @@
                     "host": "Vert",
                     "name": "Navn",
                     "password": "Passord",
-                    "port": "Port",
+                    "port": "",
                     "ssl": "Bruk SSL / TLS for \u00e5 koble til Glances-systemet",
                     "username": "Brukernavn",
                     "verify_ssl": "Bekreft sertifiseringen av systemet",

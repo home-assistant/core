@@ -30,12 +30,9 @@ from homeassistant.components.light import (
     SUPPORT_WHITE_VALUE,
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_ON, STATE_UNAVAILABLE
-from homeassistant.core import CALLBACK_TYPE, State, callback
+from homeassistant.core import State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.event import (
-    async_track_state_change,
-    async_track_time_interval,
-)
+from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.color as color_util
 
 from .core import discovery, helpers
@@ -50,12 +47,12 @@ from .core.const import (
     EFFECT_DEFAULT_VARIANT,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
-    SIGNAL_REMOVE_GROUP,
     SIGNAL_SET_LEVEL,
 )
+from .core.helpers import LogMixin
 from .core.registries import ZHA_ENTITIES
 from .core.typing import ZhaDeviceType
-from .entity import BaseZhaEntity, ZhaEntity
+from .entity import ZhaEntity, ZhaGroupEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,7 +97,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
 
-class BaseLight(BaseZhaEntity, light.Light):
+class BaseLight(LogMixin, light.Light):
     """Operations common to all light entities."""
 
     def __init__(self, *args, **kwargs):
@@ -307,7 +304,7 @@ class BaseLight(BaseZhaEntity, light.Light):
 
 
 @STRICT_MATCH(channel_names=CHANNEL_ON_OFF, aux_channels={CHANNEL_COLOR, CHANNEL_LEVEL})
-class Light(ZhaEntity, BaseLight):
+class Light(BaseLight, ZhaEntity):
     """Representation of a ZHA or ZLL light."""
 
     _REFRESH_INTERVAL = (45, 75)
@@ -471,52 +468,19 @@ class HueLight(Light):
 
 
 @GROUP_MATCH()
-class LightGroup(BaseLight):
+class LightGroup(BaseLight, ZhaGroupEntity):
     """Representation of a light group."""
 
     def __init__(
         self, entity_ids: List[str], unique_id: str, group_id: int, zha_device, **kwargs
     ) -> None:
         """Initialize a light group."""
-        super().__init__(unique_id, zha_device, **kwargs)
-        self._name = f"{zha_device.gateway.groups.get(group_id).name}_group_{group_id}"
-        self._group_id: int = group_id
-        self._entity_ids: List[str] = entity_ids
+        super().__init__(entity_ids, unique_id, group_id, zha_device, **kwargs)
         group = self.zha_device.gateway.get_group(self._group_id)
         self._on_off_channel = group.endpoint[OnOff.cluster_id]
         self._level_channel = group.endpoint[LevelControl.cluster_id]
         self._color_channel = group.endpoint[Color.cluster_id]
         self._identify_channel = group.endpoint[Identify.cluster_id]
-        self._async_unsub_state_changed: Optional[CALLBACK_TYPE] = None
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        await super().async_added_to_hass()
-        await self.async_accept_signal(
-            None,
-            f"{SIGNAL_REMOVE_GROUP}_{self._group_id}",
-            self.async_remove,
-            signal_override=True,
-        )
-
-        @callback
-        def async_state_changed_listener(
-            entity_id: str, old_state: State, new_state: State
-        ):
-            """Handle child updates."""
-            self.async_schedule_update_ha_state(True)
-
-        self._async_unsub_state_changed = async_track_state_change(
-            self.hass, self._entity_ids, async_state_changed_listener
-        )
-        await self.async_update()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Handle removal from Home Assistant."""
-        await super().async_will_remove_from_hass()
-        if self._async_unsub_state_changed is not None:
-            self._async_unsub_state_changed()
-            self._async_unsub_state_changed = None
 
     async def async_update(self) -> None:
         """Query all members and determine the light group state."""

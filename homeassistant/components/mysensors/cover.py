@@ -52,7 +52,7 @@ class MySensorsCover(mysensors.device.MySensorsEntity, CoverDevice):
                 self._values[set_req.V_DIMMER] = 100
             else:
                 self._values[set_req.V_LIGHT] = STATE_ON
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs):
         """Move the cover down."""
@@ -66,7 +66,7 @@ class MySensorsCover(mysensors.device.MySensorsEntity, CoverDevice):
                 self._values[set_req.V_DIMMER] = 0
             else:
                 self._values[set_req.V_LIGHT] = STATE_OFF
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
@@ -78,7 +78,7 @@ class MySensorsCover(mysensors.device.MySensorsEntity, CoverDevice):
         if self.gateway.optimistic:
             # Optimistically assume that cover has changed state.
             self._values[set_req.V_DIMMER] = position
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs):
         """Stop the device."""

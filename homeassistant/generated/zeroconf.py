@@ -25,6 +25,12 @@ ZEROCONF = {
     "_hap._tcp.local.": [
         "homekit_controller"
     ],
+    "_ipp._tcp.local.": [
+        "ipp"
+    ],
+    "_ipps._tcp.local.": [
+        "ipp"
+    ],
     "_printer._tcp.local.": [
         "brother"
     ],
@@ -42,6 +48,7 @@ ZEROCONF = {
 HOMEKIT = {
     "819LMB": "myq",
     "BSB002": "hue",
+    "Healty Home Coach": "netatmo",
     "LIFX": "lifx",
     "Netatmo Relay": "netatmo",
     "Presence": "netatmo",

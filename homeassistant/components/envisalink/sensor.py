@@ -74,4 +74,4 @@ class EnvisalinkSensor(EnvisalinkDevice, Entity):
     def _update_callback(self, partition):
         """Update the partition state in HA, if needed."""
         if partition is None or int(partition) == self._partition_number:
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()

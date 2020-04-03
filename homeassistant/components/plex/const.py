@@ -38,3 +38,6 @@ X_PLEX_DEVICE_NAME = "Home Assistant"
 X_PLEX_PLATFORM = "Home Assistant"
 X_PLEX_PRODUCT = "Home Assistant"
 X_PLEX_VERSION = __version__
+
+COMMAND_MEDIA_TYPE_MUSIC = "music"
+COMMAND_MEDIA_TYPE_VIDEO = "video"

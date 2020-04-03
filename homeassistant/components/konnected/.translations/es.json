@@ -95,6 +95,7 @@
                 "data": {
                     "activation": "Salida cuando est\u00e1 activada",
                     "momentary": "Duraci\u00f3n del pulso (ms) (opcional)",
+                    "more_states": "Configurar estados adicionales para esta zona",
                     "name": "Nombre (opcional)",
                     "pause": "Pausa entre pulsos (ms) (opcional)",
                     "repeat": "Tiempos de repetici\u00f3n (-1 = infinito) (opcional)"

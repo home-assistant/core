@@ -1,11 +1,15 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Die Integration ist bereits mit einem vorhandenen Sensor mit diesem Tarif konfiguriert"
+        },
         "step": {
             "user": {
                 "data": {
                     "name": "Sensorname",
                     "tariff": "Vertragstarif (1, 2 oder 3 Perioden)"
                 },
+                "description": "Dieser Sensor verwendet die offizielle API, um [st\u00fcndliche Strompreise (PVPC)] (https://www.esios.ree.es/es/pvpc) in Spanien zu erhalten. \nWeitere Informationen finden Sie in den [Integrations-Dokumentation] (https://www.home-assistant.io/integrations/pvpc_hourly_pricing/). \n\nW\u00e4hlen Sie den vertraglich vereinbarten Tarif basierend auf der Anzahl der Abrechnungsperioden pro Tag aus: \n - 1 Periode: Normal \n - 2 Perioden: Diskriminierung (Nachttarif) \n - 3 Perioden: Elektroauto (Nachttarif von 3 Perioden)",
                 "title": "Tarifauswahl"
             }
         },

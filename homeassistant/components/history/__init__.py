@@ -39,7 +39,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SIGNIFICANT_DOMAINS = ("thermostat", "climate", "water_heater")
+SIGNIFICANT_DOMAINS = ("climate", "device_tracker", "thermostat", "water_heater")
 IGNORE_DOMAINS = ("zone", "scene")
 
 
@@ -50,6 +50,7 @@ def get_significant_states(
     entity_ids=None,
     filters=None,
     include_start_time_state=True,
+    significant_changes_only=True,
 ):
     """
     Return states changes during UTC period start_time - end_time.
@@ -61,13 +62,16 @@ def get_significant_states(
     timer_start = time.perf_counter()
 
     with session_scope(hass=hass) as session:
-        query = session.query(States).filter(
-            (
-                States.domain.in_(SIGNIFICANT_DOMAINS)
-                | (States.last_changed == States.last_updated)
+        if significant_changes_only:
+            query = session.query(States).filter(
+                (
+                    States.domain.in_(SIGNIFICANT_DOMAINS)
+                    | (States.last_changed == States.last_updated)
+                )
+                & (States.last_updated > start_time)
             )
-            & (States.last_updated > start_time)
-        )
+        else:
+            query = session.query(States).filter(States.last_updated > start_time)
 
         if filters:
             query = filters.apply(query, entity_ids)
@@ -327,6 +331,9 @@ class HistoryPeriodView(HomeAssistantView):
         if entity_ids:
             entity_ids = entity_ids.lower().split(",")
         include_start_time_state = "skip_initial_state" not in request.query
+        significant_changes_only = (
+            request.query.get("significant_changes_only", "1") != "0"
+        )
 
         hass = request.app["hass"]
 
@@ -338,6 +345,7 @@ class HistoryPeriodView(HomeAssistantView):
             entity_ids,
             self.filters,
             include_start_time_state,
+            significant_changes_only,
         )
         result = list(result.values())
         if _LOGGER.isEnabledFor(logging.DEBUG):

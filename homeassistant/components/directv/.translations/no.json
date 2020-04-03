@@ -8,7 +8,7 @@
             "cannot_connect": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
             "unknown": "Uventet feil"
         },
-        "flow_title": "DirecTV: {name}",
+        "flow_title": "",
         "step": {
             "ssdp_confirm": {
                 "description": "Vil du sette opp {name} ?",
@@ -21,6 +21,6 @@
                 "title": "Koble til DirecTV-mottakeren"
             }
         },
-        "title": "DirecTV"
+        "title": ""
     }
 }

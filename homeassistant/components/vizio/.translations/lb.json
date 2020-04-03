@@ -37,7 +37,8 @@
                 "data": {
                     "apps_to_include_or_exclude": "Apps fir mat abegr\u00e4ifen oder auszeschl\u00e9issen",
                     "include_or_exclude": "Apps mat abez\u00e9ien oder auschl\u00e9issen?"
-                }
+                },
+                "title": "Apps fir Smart TV konfigur\u00e9ieren"
             },
             "user": {
                 "data": {
@@ -53,7 +54,8 @@
                 "data": {
                     "apps_to_include_or_exclude": "Apps fir mat abegr\u00e4ifen oder auszeschl\u00e9issen",
                     "include_or_exclude": "Apps mat abez\u00e9ien oder auschl\u00e9issen?"
-                }
+                },
+                "title": "Apps fir Smart TV konfigur\u00e9ieren"
             }
         },
         "title": "Vizio SmartCast"

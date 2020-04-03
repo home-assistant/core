@@ -21,13 +21,13 @@
                     "host": "Vert",
                     "name": "Navn",
                     "password": "Passord",
-                    "port": "Port",
+                    "port": "",
                     "username": "Brukernavn"
                 },
                 "title": "Oppsett av Transmission-klient"
             }
         },
-        "title": "Transmission"
+        "title": ""
     },
     "options": {
         "step": {

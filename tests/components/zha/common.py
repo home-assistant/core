@@ -159,9 +159,7 @@ async def find_entity_id(domain, zha_device, hass):
 
 def async_find_group_entity_id(hass, domain, group):
     """Find the group entity id under test."""
-    entity_id = (
-        f"{domain}.{group.name.lower().replace(' ','_')}_group_0x{group.group_id:04x}"
-    )
+    entity_id = f"{domain}.{group.name.lower().replace(' ','_')}_zha_group_0x{group.group_id:04x}"
 
     entity_ids = hass.states.async_entity_ids(domain)
 

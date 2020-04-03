@@ -398,7 +398,8 @@ class ZHADevice(LogMixin):
     @callback
     def async_update_last_seen(self, last_seen):
         """Set last seen on the zigpy device."""
-        self._zigpy_device.last_seen = last_seen
+        if self._zigpy_device.last_seen is None and last_seen is not None:
+            self._zigpy_device.last_seen = last_seen
 
     @callback
     def async_get_info(self):

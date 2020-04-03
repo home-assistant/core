@@ -5,7 +5,6 @@
   "requirements": [
     "pymyq==2.0.1"
   ],
-  "dependencies": [],
   "codeowners": ["@bdraco"],
   "config_flow": true,
   "homekit": {

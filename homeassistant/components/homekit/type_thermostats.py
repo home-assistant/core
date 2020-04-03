@@ -4,11 +4,14 @@ import logging
 from pyhap.const import CATEGORY_THERMOSTAT
 
 from homeassistant.components.climate.const import (
+    ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
+    ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_MAX_TEMP,
+    ATTR_MIN_HUMIDITY,
     ATTR_MIN_TEMP,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -17,6 +20,7 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
     DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_HUMIDITY,
     DEFAULT_MIN_TEMP,
     DOMAIN as DOMAIN_CLIMATE,
     HVAC_MODE_AUTO,
@@ -25,8 +29,10 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
+    SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE as SERVICE_SET_HVAC_MODE_THERMOSTAT,
     SERVICE_SET_TEMPERATURE as SERVICE_SET_TEMPERATURE_THERMOSTAT,
+    SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.components.water_heater import (
@@ -39,6 +45,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
 )
 
 from . import TYPES
@@ -46,9 +53,11 @@ from .accessories import HomeAccessory, debounce
 from .const import (
     CHAR_COOLING_THRESHOLD_TEMPERATURE,
     CHAR_CURRENT_HEATING_COOLING,
+    CHAR_CURRENT_HUMIDITY,
     CHAR_CURRENT_TEMPERATURE,
     CHAR_HEATING_THRESHOLD_TEMPERATURE,
     CHAR_TARGET_HEATING_COOLING,
+    CHAR_TARGET_HUMIDITY,
     CHAR_TARGET_TEMPERATURE,
     CHAR_TEMP_DISPLAY_UNITS,
     DEFAULT_MAX_TEMP_WATER_HEATER,
@@ -99,6 +108,10 @@ class Thermostat(HomeAccessory):
         self._flag_heatingthresh = False
         min_temp, max_temp = self.get_temperature_range()
 
+        min_humidity = self.hass.states.get(self.entity_id).attributes.get(
+            ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY
+        )
+
         # Add additional characteristics if auto mode is supported
         self.chars = []
         state = self.hass.states.get(self.entity_id)
@@ -108,6 +121,9 @@ class Thermostat(HomeAccessory):
             self.chars.extend(
                 (CHAR_COOLING_THRESHOLD_TEMPERATURE, CHAR_HEATING_THRESHOLD_TEMPERATURE)
             )
+
+        if features & SUPPORT_TARGET_HUMIDITY:
+            self.chars.extend((CHAR_TARGET_HUMIDITY, CHAR_CURRENT_HUMIDITY))
 
         serv_thermostat = self.add_preload_service(SERV_THERMOSTAT, self.chars)
 
@@ -193,6 +209,23 @@ class Thermostat(HomeAccessory):
                 properties={PROP_MIN_VALUE: min_temp, PROP_MAX_VALUE: max_temp},
                 setter_callback=self.set_heating_threshold,
             )
+        self.char_target_humidity = None
+        self.char_current_humidity = None
+        if CHAR_TARGET_HUMIDITY in self.chars:
+            self.char_target_humidity = serv_thermostat.configure_char(
+                CHAR_TARGET_HUMIDITY,
+                value=50,
+                # We do not set a max humidity because
+                # homekit currently has a bug that will show the lower bound
+                # shifted upwards.  For example if you have a max humidity
+                # of 80% homekit will give you the options 20%-100% instead
+                # of 0-80%
+                properties={PROP_MIN_VALUE: min_humidity},
+                setter_callback=self.set_target_humidity,
+            )
+            self.char_current_humidity = serv_thermostat.configure_char(
+                CHAR_CURRENT_HUMIDITY, value=50,
+            )
 
     def get_temperature_range(self):
         """Return min and max temperature range."""
@@ -222,6 +255,15 @@ class Thermostat(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_HVAC_MODE: hass_value}
         self.call_service(
             DOMAIN_CLIMATE, SERVICE_SET_HVAC_MODE_THERMOSTAT, params, hass_value
+        )
+
+    @debounce
+    def set_target_humidity(self, value):
+        """Set target humidity to value if call came from HomeKit."""
+        _LOGGER.debug("%s: Set target humidity to %d", self.entity_id, value)
+        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_HUMIDITY: value}
+        self.call_service(
+            DOMAIN_CLIMATE, SERVICE_SET_HUMIDITY, params, f"{value}{UNIT_PERCENTAGE}",
         )
 
     @debounce
@@ -288,6 +330,12 @@ class Thermostat(HomeAccessory):
             current_temp = temperature_to_homekit(current_temp, self._unit)
             self.char_current_temp.set_value(current_temp)
 
+        # Update current humidity
+        if CHAR_CURRENT_HUMIDITY in self.chars:
+            current_humdity = new_state.attributes.get(ATTR_CURRENT_HUMIDITY)
+            if isinstance(current_humdity, (int, float)):
+                self.char_current_humidity.set_value(current_humdity)
+
         # Update target temperature
         target_temp = new_state.attributes.get(ATTR_TEMPERATURE)
         if isinstance(target_temp, (int, float)):
@@ -295,6 +343,12 @@ class Thermostat(HomeAccessory):
             if not self._flag_temperature:
                 self.char_target_temp.set_value(target_temp)
         self._flag_temperature = False
+
+        # Update target humidity
+        if CHAR_TARGET_HUMIDITY in self.chars:
+            target_humdity = new_state.attributes.get(ATTR_HUMIDITY)
+            if isinstance(target_humdity, (int, float)):
+                self.char_target_humidity.set_value(target_humdity)
 
         # Update cooling threshold temperature if characteristic exists
         if self.char_cooling_thresh_temp:

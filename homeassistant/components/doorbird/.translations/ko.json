@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\uc774 DoorBird \ub294 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+            "already_configured": "\uc774 DoorBird \ub294 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "link_local_address": "\ub85c\uceec \uc8fc\uc18c \uc5f0\uacb0\uc740 \uc9c0\uc6d0\ub418\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4",
+            "not_doorbird_device": "\uc774 \uae30\uae30\ub294 DoorBird \uac00 \uc544\ub2d9\ub2c8\ub2e4"
         },
         "error": {
             "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4. \ub2e4\uc2dc \uc2dc\ub3c4\ud574\uc8fc\uc138\uc694.",

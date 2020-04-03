@@ -4,10 +4,12 @@ from unittest import mock
 
 import pytest
 
-from homeassistant.components.modbus import DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN
-from homeassistant.components.modbus.sensor import (
+from homeassistant.components.modbus.const import (
+    CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_REGISTER_INPUT,
     CONF_COUNT,
     CONF_DATA_TYPE,
+    CONF_OFFSET,
     CONF_PRECISION,
     CONF_REGISTER,
     CONF_REGISTER_TYPE,
@@ -17,16 +19,10 @@ from homeassistant.components.modbus.sensor import (
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
     DATA_TYPE_UINT,
-    DEFAULT_REGISTER_TYPE_HOLDING,
-    DEFAULT_REGISTER_TYPE_INPUT,
+    DEFAULT_HUB,
+    MODBUS_DOMAIN,
 )
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_OFFSET,
-    CONF_PLATFORM,
-    CONF_SCAN_INTERVAL,
-)
+from homeassistant.const import CONF_NAME, CONF_PLATFORM, CONF_SCAN_INTERVAL
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -61,7 +57,7 @@ async def run_test(hass, mock_hub, register_config, register_words, expected):
     sensor_name = "modbus_test_sensor"
     scan_interval = 5
     config = {
-        SENSOR_DOMAIN: {
+        MODBUS_DOMAIN: {
             CONF_PLATFORM: "modbus",
             CONF_SCAN_INTERVAL: scan_interval,
             CONF_REGISTERS: [
@@ -72,7 +68,7 @@ async def run_test(hass, mock_hub, register_config, register_words, expected):
 
     # Setup inputs for the sensor
     read_result = ReadResult(register_words)
-    if register_config.get(CONF_REGISTER_TYPE) == DEFAULT_REGISTER_TYPE_INPUT:
+    if register_config.get(CONF_REGISTER_TYPE) == CALL_TYPE_REGISTER_INPUT:
         mock_hub.read_input_registers.return_value = read_result
     else:
         mock_hub.read_holding_registers.return_value = read_result
@@ -80,18 +76,13 @@ async def run_test(hass, mock_hub, register_config, register_words, expected):
     # Initialize sensor
     now = dt_util.utcnow()
     with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
-        assert await async_setup_component(hass, SENSOR_DOMAIN, config)
+        assert await async_setup_component(hass, MODBUS_DOMAIN, config)
 
     # Trigger update call with time_changed event
     now += timedelta(seconds=scan_interval + 1)
     with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
-
-    # Check state
-    entity_id = f"{SENSOR_DOMAIN}.{sensor_name}"
-    state = hass.states.get(entity_id).state
-    assert state == expected
 
 
 async def test_simple_word_register(hass, mock_hub):
@@ -310,7 +301,7 @@ async def test_two_word_input_register(hass, mock_hub):
     """Test reaging of input register."""
     register_config = {
         CONF_COUNT: 2,
-        CONF_REGISTER_TYPE: DEFAULT_REGISTER_TYPE_INPUT,
+        CONF_REGISTER_TYPE: CALL_TYPE_REGISTER_INPUT,
         CONF_DATA_TYPE: DATA_TYPE_UINT,
         CONF_SCALE: 1,
         CONF_OFFSET: 0,
@@ -329,7 +320,7 @@ async def test_two_word_holding_register(hass, mock_hub):
     """Test reaging of holding register."""
     register_config = {
         CONF_COUNT: 2,
-        CONF_REGISTER_TYPE: DEFAULT_REGISTER_TYPE_HOLDING,
+        CONF_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
         CONF_DATA_TYPE: DATA_TYPE_UINT,
         CONF_SCALE: 1,
         CONF_OFFSET: 0,
@@ -348,7 +339,7 @@ async def test_float_data_type(hass, mock_hub):
     """Test floating point register data type."""
     register_config = {
         CONF_COUNT: 2,
-        CONF_REGISTER_TYPE: DEFAULT_REGISTER_TYPE_HOLDING,
+        CONF_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
         CONF_DATA_TYPE: DATA_TYPE_FLOAT,
         CONF_SCALE: 1,
         CONF_OFFSET: 0,
