@@ -84,6 +84,16 @@ class LightState(NamedTuple):
     hs: Tuple[int, int]
     emeter_params: dict
 
+    def to_param(self):
+        """Return a version that we can send to the bulb."""
+        return {
+            "on_off": 1 if self.state else 0,
+            "brightness": brightness_to_percentage(self.brightness),
+            "color_temp": mired_to_kelvin(self.color_temp),
+            "hue": self.hs[0],
+            "saturation": self.hs[1],
+        }
+
 
 class LightFeatures(NamedTuple):
     """Light features."""
@@ -377,21 +387,16 @@ class TPLinkSmartBulb(Light):
         self, old_light_state: LightState, new_light_state: LightState
     ) -> None:
         """Set the light state."""
-        # Calling the API with the new state information.
-        if new_light_state.state != old_light_state.state:
-            if new_light_state.state:
-                self.smartbulb.state = SmartBulb.BULB_STATE_ON
-            else:
-                self.smartbulb.state = SmartBulb.BULB_STATE_OFF
-                return
+        old_state_param = old_light_state.to_param()
+        new_state_param = new_light_state.to_param()
 
-        if new_light_state.color_temp != old_light_state.color_temp:
-            self.smartbulb.color_temp = mired_to_kelvin(new_light_state.color_temp)
+        diff = {
+            key: value
+            for key, value in new_state_param.items()
+            if new_state_param[key] != old_state_param[key]
+        }
 
-        brightness_pct = brightness_to_percentage(new_light_state.brightness)
-        if new_light_state.hs != old_light_state.hs and len(new_light_state.hs) > 1:
-            hue, sat = new_light_state.hs
-            hsv = (int(hue), int(sat), brightness_pct)
-            self.smartbulb.hsv = hsv
-        elif new_light_state.brightness != old_light_state.brightness:
-            self.smartbulb.brightness = brightness_pct
+        if not diff:
+            return
+
+        self.smartbulb.set_light_state(diff)
