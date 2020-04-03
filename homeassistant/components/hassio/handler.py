@@ -123,7 +123,7 @@ class HassIO:
         return self.send_command(f"/discovery/{uuid}", method="get")
 
     @_api_bool
-    async def update_hass_api(self, http_config, refresh_token):
+    async def update_hass_api(self, http_config, refresh_token, safe_mode):
         """Update Home Assistant API data on Hass.io."""
         port = http_config.get(CONF_SERVER_PORT) or SERVER_PORT
         options = {
@@ -135,7 +135,10 @@ class HassIO:
 
         if CONF_SERVER_HOST in http_config:
             options["watchdog"] = False
-            _LOGGER.warning("Don't use 'server_host' options with Hass.io")
+            if not safe_mode:
+                _LOGGER.warning(
+                    "HTTP option 'server_host' is not compatible with Home Assistant."
+                )
 
         return await self.send_command("/homeassistant/options", payload=options)
 
