@@ -42,7 +42,8 @@ from tests.common import (
 )
 from tests.components.alarm_control_panel import common
 
-CODE = "HELLO_CODE"
+CODE_NUMBER = "1234"
+CODE_TEXT = "HELLO_CODE"
 
 DEFAULT_CONFIG = {
     alarm_control_panel.DOMAIN: {
@@ -339,6 +340,34 @@ async def test_update_state_via_state_topic_template(hass, mqtt_mock):
 
     state = hass.states.get("alarm_control_panel.test")
     assert state.state == STATE_ALARM_ARMED_AWAY
+
+
+async def test_attributes_code_number(hass, mqtt_mock):
+    """Test attributes which are not supported by the vacuum."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config[alarm_control_panel.DOMAIN]["code"] = CODE_NUMBER
+
+    assert await async_setup_component(hass, alarm_control_panel.DOMAIN, config)
+
+    state = hass.states.get("alarm_control_panel.test")
+    assert (
+        state.attributes.get(alarm_control_panel.ATTR_CODE_FORMAT)
+        == alarm_control_panel.FORMAT_NUMBER
+    )
+
+
+async def test_attributes_code_text(hass, mqtt_mock):
+    """Test attributes which are not supported by the vacuum."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config[alarm_control_panel.DOMAIN]["code"] = CODE_TEXT
+
+    assert await async_setup_component(hass, alarm_control_panel.DOMAIN, config)
+
+    state = hass.states.get("alarm_control_panel.test")
+    assert (
+        state.attributes.get(alarm_control_panel.ATTR_CODE_FORMAT)
+        == alarm_control_panel.FORMAT_TEXT
+    )
 
 
 async def test_availability_without_topic(hass, mqtt_mock):
