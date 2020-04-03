@@ -444,7 +444,7 @@ class EntityPlatform:
         await entity.async_internal_added_to_hass()
         await entity.async_added_to_hass()
 
-        await entity.async_update_ha_state()
+        entity.async_write_ha_state()
 
     async def async_reset(self) -> None:
         """Remove all entities and reset data.

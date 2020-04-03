@@ -13,6 +13,7 @@ import tests.mock.zwave as mock_zwave
 async def test_maybe_schedule_update(hass, mock_openzwave):
     """Test maybe schedule update."""
     base_entity = node_entity.ZWaveBaseEntity()
+    base_entity.entity_id = "zwave.bla"
     base_entity.hass = hass
 
     with patch.object(hass.loop, "call_later") as mock_call_later:
@@ -21,12 +22,12 @@ async def test_maybe_schedule_update(hass, mock_openzwave):
 
         base_entity._schedule_update()
         assert len(mock_call_later.mock_calls) == 1
+        assert base_entity._update_scheduled is True
 
         do_update = mock_call_later.mock_calls[0][1][1]
 
-        with patch.object(hass, "async_add_job") as mock_add_job:
-            do_update()
-            assert mock_add_job.called
+        do_update()
+        assert base_entity._update_scheduled is False
 
         base_entity._schedule_update()
         assert len(mock_call_later.mock_calls) == 2
