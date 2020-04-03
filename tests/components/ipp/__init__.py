@@ -65,7 +65,6 @@ async def init_integration(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, skip_setup: bool = False,
 ) -> MockConfigEntry:
     """Set up the IPP integration in Home Assistant."""
-
     fixture = "ipp/get-printer-attributes.bin"
     aioclient_mock.post(
         "http://192.168.1.31:631/ipp/print",
