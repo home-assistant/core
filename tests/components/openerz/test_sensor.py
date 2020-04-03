@@ -26,6 +26,8 @@ async def test_sensor_init(hass):
         entity_id = "sensor.test_name"
         test_openerz = hass.data[SENSOR_DOMAIN].get_entity(entity_id)
 
+        await hass.async_block_till_done()
+
         assert test_openerz.zip == 1234
         assert test_openerz.waste_type == "glass"
         assert test_openerz.friendly_name == "test_name"
@@ -44,6 +46,8 @@ async def test_sensor_init_missing_type(hass):
 
         entity_id = "sensor.test_name"
         test_openerz = hass.data[SENSOR_DOMAIN].get_entity(entity_id)
+
+        await hass.async_block_till_done()
 
         assert test_openerz.zip == 1234
         assert test_openerz.waste_type == "waste"
@@ -64,6 +68,8 @@ async def test_sensor_state(hass):
 
         entity_id = "sensor.test_name"
         test_openerz_state = hass.states.get(entity_id).state
+
+        await hass.async_block_till_done()
 
         assert test_openerz_state == "2020-12-12"
         pickup_instance.find_next_pickup.assert_called_once()
