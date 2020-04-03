@@ -150,6 +150,10 @@ async def _async_setup_platform(
     hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info
 ):
     """Set up the cast platform."""
+    _LOGGER.info(
+        f"pychromcast version: {pychromecast.__version__}, zeroconf version: {pychromecast.discovery.zeroconf.__version__}"
+    )
+
     # Import CEC IGNORE attributes
     pychromecast.IGNORE_CEC += config.get(CONF_IGNORE_CEC, [])
     hass.data.setdefault(ADDED_CAST_DEVICES_KEY, set())
