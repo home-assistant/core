@@ -38,7 +38,7 @@ Adafruit-SHT31==1.0.2
 HAP-python==2.8.0
 
 # homeassistant.components.mastodon
-Mastodon.py==1.5.0
+Mastodon.py==1.5.1
 
 # homeassistant.components.orangepi_gpio
 OPi.GPIO==0.4.0
