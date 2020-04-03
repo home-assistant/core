@@ -45,9 +45,11 @@ from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.logging import catch_log_exception
 
 # Loading the config flow file will register the flow
-from . import config_flow, discovery, server  # noqa: F401 pylint: disable=unused-import
+from . import config_flow  # noqa: F401 pylint: disable=unused-import
+from . import debug_info, discovery, server
 from .const import (
     ATTR_DISCOVERY_HASH,
+    ATTR_DISCOVERY_TOPIC,
     CONF_BROKER,
     CONF_DISCOVERY,
     CONF_STATE_TOPIC,
@@ -55,7 +57,8 @@ from .const import (
     DEFAULT_QOS,
     PROTOCOL_311,
 )
-from .discovery import MQTT_DISCOVERY_UPDATED, clear_discovery_hash
+from .debug_info import log_messages
+from .discovery import MQTT_DISCOVERY_UPDATED, clear_discovery_hash, set_discovery_hash
 from .models import Message, MessageCallbackType, PublishPayloadType
 from .subscription import async_subscribe_topics, async_unsubscribe_topics
 
@@ -435,8 +438,9 @@ async def async_subscribe(
         topic,
         catch_log_exception(
             wrapped_msg_callback,
-            lambda msg: "Exception in {} when handling msg on '{}': '{}'".format(
-                msg_callback.__name__, msg.topic, msg.payload
+            lambda msg: (
+                f"Exception in {msg_callback.__name__} when handling msg on "
+                f"'{msg.topic}': '{msg.payload}'"
             ),
         ),
         qos,
@@ -510,6 +514,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     hass.data[DATA_MQTT_HASS_CONFIG] = config
 
     websocket_api.async_register_command(hass, websocket_subscribe)
+    websocket_api.async_register_command(hass, websocket_remove_device)
+    websocket_api.async_register_command(hass, websocket_mqtt_info)
 
     if conf is None:
         # If we have a config entry, setup is done by that config entry.
@@ -565,7 +571,7 @@ async def async_setup_entry(hass, entry):
 
     # If user didn't have configuration.yaml config, generate defaults
     if conf is None:
-        conf = CONFIG_SCHEMA({DOMAIN: entry.data})[DOMAIN]
+        conf = CONFIG_SCHEMA({DOMAIN: dict(entry.data)})[DOMAIN]
     elif any(key in conf for key in entry.data):
         _LOGGER.warning(
             "Data in your configuration entry is going to override your "
@@ -1011,7 +1017,7 @@ def _raise_on_error(result_code: int) -> None:
 
     if result_code != 0:
         raise HomeAssistantError(
-            "Error talking to MQTT: {}".format(mqtt.error_string(result_code))
+            f"Error talking to MQTT: {mqtt.error_string(result_code)}"
         )
 
 
@@ -1055,6 +1061,7 @@ class MqttAttributes(Entity):
             attr_tpl.hass = self.hass
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def attributes_message_received(msg: Message) -> None:
             try:
                 payload = msg.payload
@@ -1119,6 +1126,7 @@ class MqttAvailability(Entity):
         """(Re)Subscribe to topics."""
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def availability_message_received(msg: Message) -> None:
             """Handle a new received MQTT availability message."""
             if msg.payload == self._avail_config[CONF_PAYLOAD_AVAILABLE]:
@@ -1153,45 +1161,136 @@ class MqttAvailability(Entity):
         return availability_topic is None or self._available
 
 
+async def cleanup_device_registry(hass, device_id):
+    """Remove device registry entry if there are no remaining entities or triggers."""
+    # Local import to avoid circular dependencies
+    from . import device_trigger
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    if (
+        device_id
+        and not hass.helpers.entity_registry.async_entries_for_device(
+            entity_registry, device_id
+        )
+        and not await device_trigger.async_get_triggers(hass, device_id)
+    ):
+        device_registry.async_remove_device(device_id)
+
+
 class MqttDiscoveryUpdate(Entity):
     """Mixin used to handle updated discovery message."""
 
-    def __init__(self, discovery_hash, discovery_update=None) -> None:
+    def __init__(self, discovery_data, discovery_update=None) -> None:
         """Initialize the discovery update mixin."""
-        self._discovery_hash = discovery_hash
+        self._discovery_data = discovery_data
         self._discovery_update = discovery_update
         self._remove_signal = None
+        self._removed_from_hass = False
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to discovery updates."""
         await super().async_added_to_hass()
+        self._removed_from_hass = False
+        discovery_hash = (
+            self._discovery_data[ATTR_DISCOVERY_HASH] if self._discovery_data else None
+        )
+
+        async def _async_remove_state_and_registry_entry(self) -> None:
+            """Remove entity's state and entity registry entry.
+
+            Remove entity from entity registry if it is registered, this also removes the state.
+            If the entity is not in the entity registry, just remove the state.
+            """
+            entity_registry = (
+                await self.hass.helpers.entity_registry.async_get_registry()
+            )
+            if entity_registry.async_is_registered(self.entity_id):
+                entity_entry = entity_registry.async_get(self.entity_id)
+                entity_registry.async_remove(self.entity_id)
+                await cleanup_device_registry(self.hass, entity_entry.device_id)
+            else:
+                await self.async_remove()
 
         @callback
-        def discovery_callback(payload):
+        async def discovery_callback(payload):
             """Handle discovery update."""
             _LOGGER.info(
-                "Got update for entity with hash: %s '%s'",
-                self._discovery_hash,
-                payload,
+                "Got update for entity with hash: %s '%s'", discovery_hash, payload,
             )
+            debug_info.update_entity_discovery_data(self.hass, payload, self.entity_id)
             if not payload:
                 # Empty payload: Remove component
                 _LOGGER.info("Removing component: %s", self.entity_id)
-                self.hass.async_create_task(self.async_remove())
-                clear_discovery_hash(self.hass, self._discovery_hash)
-                self._remove_signal()
+                self._cleanup_discovery_on_remove()
+                await _async_remove_state_and_registry_entry(self)
             elif self._discovery_update:
                 # Non-empty payload: Notify component
                 _LOGGER.info("Updating component: %s", self.entity_id)
-                payload.pop(ATTR_DISCOVERY_HASH)
-                self.hass.async_create_task(self._discovery_update(payload))
+                await self._discovery_update(payload)
 
-        if self._discovery_hash:
+        if discovery_hash:
+            debug_info.add_entity_discovery_data(
+                self.hass, self._discovery_data, self.entity_id
+            )
+            # Set in case the entity has been removed and is re-added
+            set_discovery_hash(self.hass, discovery_hash)
             self._remove_signal = async_dispatcher_connect(
                 self.hass,
-                MQTT_DISCOVERY_UPDATED.format(self._discovery_hash),
+                MQTT_DISCOVERY_UPDATED.format(discovery_hash),
                 discovery_callback,
             )
+
+    async def async_removed_from_registry(self) -> None:
+        """Clear retained discovery topic in broker."""
+        if not self._removed_from_hass:
+            discovery_topic = self._discovery_data[ATTR_DISCOVERY_TOPIC]
+            publish(
+                self.hass, discovery_topic, "", retain=True,
+            )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Stop listening to signal and cleanup discovery data.."""
+        self._cleanup_discovery_on_remove()
+
+    def _cleanup_discovery_on_remove(self) -> None:
+        """Stop listening to signal and cleanup discovery data."""
+        if self._discovery_data and not self._removed_from_hass:
+            debug_info.remove_entity_data(self.hass, self.entity_id)
+            clear_discovery_hash(self.hass, self._discovery_data[ATTR_DISCOVERY_HASH])
+            self._removed_from_hass = True
+
+        if self._remove_signal:
+            self._remove_signal()
+            self._remove_signal = None
+
+
+def device_info_from_config(config):
+    """Return a device description for device registry."""
+    if not config:
+        return None
+
+    info = {
+        "identifiers": {(DOMAIN, id_) for id_ in config[CONF_IDENTIFIERS]},
+        "connections": {tuple(x) for x in config[CONF_CONNECTIONS]},
+    }
+
+    if CONF_MANUFACTURER in config:
+        info["manufacturer"] = config[CONF_MANUFACTURER]
+
+    if CONF_MODEL in config:
+        info["model"] = config[CONF_MODEL]
+
+    if CONF_NAME in config:
+        info["name"] = config[CONF_NAME]
+
+    if CONF_SW_VERSION in config:
+        info["sw_version"] = config[CONF_SW_VERSION]
+
+    if CONF_VIA_DEVICE in config:
+        info["via_device"] = (DOMAIN, config[CONF_VIA_DEVICE])
+
+    return info
 
 
 class MqttEntityDeviceInfo(Entity):
@@ -1216,32 +1315,48 @@ class MqttEntityDeviceInfo(Entity):
     @property
     def device_info(self):
         """Return a device description for device registry."""
-        if not self._device_config:
-            return None
+        return device_info_from_config(self._device_config)
 
-        info = {
-            "identifiers": {
-                (DOMAIN, id_) for id_ in self._device_config[CONF_IDENTIFIERS]
-            },
-            "connections": {tuple(x) for x in self._device_config[CONF_CONNECTIONS]},
-        }
 
-        if CONF_MANUFACTURER in self._device_config:
-            info["manufacturer"] = self._device_config[CONF_MANUFACTURER]
+@websocket_api.websocket_command(
+    {vol.Required("type"): "mqtt/device/debug_info", vol.Required("device_id"): str}
+)
+@websocket_api.async_response
+async def websocket_mqtt_info(hass, connection, msg):
+    """Get MQTT debug info for device."""
+    device_id = msg["device_id"]
+    mqtt_info = await debug_info.info_for_device(hass, device_id)
 
-        if CONF_MODEL in self._device_config:
-            info["model"] = self._device_config[CONF_MODEL]
+    connection.send_result(msg["id"], mqtt_info)
 
-        if CONF_NAME in self._device_config:
-            info["name"] = self._device_config[CONF_NAME]
 
-        if CONF_SW_VERSION in self._device_config:
-            info["sw_version"] = self._device_config[CONF_SW_VERSION]
+@websocket_api.websocket_command(
+    {vol.Required("type"): "mqtt/device/remove", vol.Required("device_id"): str}
+)
+@websocket_api.async_response
+async def websocket_remove_device(hass, connection, msg):
+    """Delete device."""
+    device_id = msg["device_id"]
+    dev_registry = await hass.helpers.device_registry.async_get_registry()
 
-        if CONF_VIA_DEVICE in self._device_config:
-            info["via_device"] = (DOMAIN, self._device_config[CONF_VIA_DEVICE])
+    device = dev_registry.async_get(device_id)
+    if not device:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Device not found"
+        )
+        return
 
-        return info
+    for config_entry in device.config_entries:
+        config_entry = hass.config_entries.async_get_entry(config_entry)
+        # Only delete the device if it belongs to an MQTT device entry
+        if config_entry.domain == DOMAIN:
+            dev_registry.async_remove_device(device_id)
+            connection.send_message(websocket_api.result_message(msg["id"]))
+            return
+
+    connection.send_error(
+        msg["id"], websocket_api.const.ERR_NOT_FOUND, "Non MQTT device"
+    )
 
 
 @websocket_api.async_response

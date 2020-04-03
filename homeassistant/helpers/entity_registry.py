@@ -11,7 +11,7 @@ import asyncio
 from collections import OrderedDict
 from itertools import chain
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, cast
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List, Optional, cast
 
 import attr
 
@@ -392,11 +392,14 @@ class EntityRegistry:
                     unique_id=entity["unique_id"],
                     platform=entity["platform"],
                     name=entity.get("name"),
+                    icon=entity.get("icon"),
                     disabled_by=entity.get("disabled_by"),
                     capabilities=entity.get("capabilities") or {},
                     supported_features=entity.get("supported_features", 0),
                     device_class=entity.get("device_class"),
                     unit_of_measurement=entity.get("unit_of_measurement"),
+                    original_name=entity.get("original_name"),
+                    original_icon=entity.get("original_icon"),
                 )
 
         self.entities = entities
@@ -419,11 +422,14 @@ class EntityRegistry:
                 "unique_id": entry.unique_id,
                 "platform": entry.platform,
                 "name": entry.name,
+                "icon": entry.icon,
                 "disabled_by": entry.disabled_by,
                 "capabilities": entry.capabilities,
                 "supported_features": entry.supported_features,
                 "device_class": entry.device_class,
                 "unit_of_measurement": entry.unit_of_measurement,
+                "original_name": entry.original_name,
+                "original_icon": entry.original_icon,
             }
             for entry in self.entities.values()
         ]
@@ -512,7 +518,7 @@ def async_setup_entity_restore(
         if state is None or not state.attributes.get(ATTR_RESTORED):
             return
 
-        hass.states.async_remove(event.data["entity_id"])
+        hass.states.async_remove(event.data["entity_id"], context=event.context)
 
     hass.bus.async_listen(EVENT_ENTITY_REGISTRY_UPDATED, cleanup_restored_states)
 
@@ -554,3 +560,21 @@ def async_setup_entity_restore(
             states.async_set(entry.entity_id, STATE_UNAVAILABLE, attrs)
 
     hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _write_unavailable_states)
+
+
+async def async_migrate_entries(
+    hass: HomeAssistantType,
+    config_entry_id: str,
+    entry_callback: Callable[[RegistryEntry], Optional[dict]],
+) -> None:
+    """Migrator of unique IDs."""
+    ent_reg = await async_get_registry(hass)
+
+    for entry in ent_reg.entities.values():
+        if entry.config_entry_id != config_entry_id:
+            continue
+
+        updates = entry_callback(entry)
+
+        if updates is not None:
+            ent_reg.async_update_entity(entry.entity_id, **updates)  # type: ignore

@@ -77,13 +77,28 @@ class DeconzDevice(DeconzBase, Entity):
                 self.hass, self.gateway.signal_reachable, self.async_update_callback
             )
         )
+        self.listeners.append(
+            async_dispatcher_connect(
+                self.hass, self.gateway.signal_remove_entity, self.async_remove_self
+            )
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
         self._device.remove_callback(self.async_update_callback)
-        del self.gateway.deconz_ids[self.entity_id]
-        for unsub_dispatcher in self.listeners:
-            unsub_dispatcher()
+        if self.entity_id in self.gateway.deconz_ids:
+            del self.gateway.deconz_ids[self.entity_id]
+            for unsub_dispatcher in self.listeners:
+                unsub_dispatcher()
+
+    async def async_remove_self(self, deconz_ids: list) -> None:
+        """Schedule removal of this entity.
+
+        Called by signal_remove_entity scheduled by async_added_to_hass.
+        """
+        if self._device.deconz_id not in deconz_ids:
+            return
+        await self.async_remove()
 
     @callback
     def async_update_callback(self, force_update=False, ignore_update=False):
@@ -91,7 +106,7 @@ class DeconzDevice(DeconzBase, Entity):
         if ignore_update:
             return
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def available(self):

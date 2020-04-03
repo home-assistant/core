@@ -53,6 +53,8 @@
         "step": {
             "plex_mp_settings": {
                 "data": {
+                    "ignore_new_shared_users": "Ignore new managed/shared users",
+                    "monitored_users": "Monitored users",
                     "show_all_controls": "Show all controls",
                     "use_episode_art": "Use episode art"
                 },

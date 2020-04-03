@@ -214,6 +214,30 @@ async def test_clip_climate_device(hass):
     clip_thermostat = hass.states.get("climate.clip_thermostat")
     assert clip_thermostat.state == "heat"
 
+    hass.config_entries.async_update_entry(
+        gateway.config_entry, options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: False}
+    )
+    await hass.async_block_till_done()
+
+    assert "climate.thermostat" in gateway.deconz_ids
+    assert "sensor.thermostat" not in gateway.deconz_ids
+    assert "sensor.thermostat_battery_level" in gateway.deconz_ids
+    assert "climate.presence_sensor" not in gateway.deconz_ids
+    assert "climate.clip_thermostat" not in gateway.deconz_ids
+    assert len(hass.states.async_all()) == 3
+
+    hass.config_entries.async_update_entry(
+        gateway.config_entry, options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: True}
+    )
+    await hass.async_block_till_done()
+
+    assert "climate.thermostat" in gateway.deconz_ids
+    assert "sensor.thermostat" not in gateway.deconz_ids
+    assert "sensor.thermostat_battery_level" in gateway.deconz_ids
+    assert "climate.presence_sensor" not in gateway.deconz_ids
+    assert "climate.clip_thermostat" in gateway.deconz_ids
+    assert len(hass.states.async_all()) == 4
+
 
 async def test_verify_state_update(hass):
     """Test that state update properly."""

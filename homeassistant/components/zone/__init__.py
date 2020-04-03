@@ -1,6 +1,6 @@
 """Support for the definition of zones."""
 import logging
-from typing import Dict, List, Optional, cast
+from typing import Any, Dict, Optional, cast
 
 import voluptuous as vol
 
@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_RADIUS,
     EVENT_CORE_CONFIG_UPDATE,
     SERVICE_RELOAD,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
 from homeassistant.helpers import (
@@ -65,8 +66,20 @@ UPDATE_FIELDS = {
 }
 
 
+def empty_value(value: Any) -> Any:
+    """Test if the user has the default config value from adding "zone:"."""
+    if isinstance(value, dict) and len(value) == 0:
+        return []
+
+    raise vol.Invalid("Not a default value")
+
+
 CONFIG_SCHEMA = vol.Schema(
-    {vol.Optional(DOMAIN): vol.All(cv.ensure_list, [vol.Schema(CREATE_FIELDS)])},
+    {
+        vol.Optional(DOMAIN, default=[]): vol.Any(
+            vol.All(cv.ensure_list, [vol.Schema(CREATE_FIELDS)]), empty_value,
+        )
+    },
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -93,7 +106,7 @@ def async_active_zone(
     closest = None
 
     for zone in zones:
-        if zone.attributes.get(ATTR_PASSIVE):
+        if zone.state == STATE_UNAVAILABLE or zone.attributes.get(ATTR_PASSIVE):
             continue
 
         zone_dist = distance(
@@ -126,6 +139,9 @@ def in_zone(zone: State, latitude: float, longitude: float, radius: float = 0) -
 
     Async friendly.
     """
+    if zone.state == STATE_UNAVAILABLE:
+        return False
+
     zone_dist = distance(
         latitude,
         longitude,
@@ -159,32 +175,12 @@ class ZoneStorageCollection(collection.StorageCollection):
         return {**data, **update_data}
 
 
-class IDLessCollection(collection.ObservableCollection):
-    """A collection without IDs."""
-
-    counter = 0
-
-    async def async_load(self, data: List[dict]) -> None:
-        """Load the collection. Overrides existing data."""
-        for item_id in list(self.data):
-            await self.notify_change(collection.CHANGE_REMOVED, item_id, None)
-
-        self.data.clear()
-
-        for item in data:
-            self.counter += 1
-            item_id = f"fakeid-{self.counter}"
-
-            self.data[item_id] = item
-            await self.notify_change(collection.CHANGE_ADDED, item_id, item)
-
-
 async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
     """Set up configured zones as well as Home Assistant zone if necessary."""
     component = entity_component.EntityComponent(_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
 
-    yaml_collection = IDLessCollection(
+    yaml_collection = collection.IDLessCollection(
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
     collection.attach_entity_component_collection(
@@ -200,7 +196,7 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
         component, storage_collection, lambda conf: Zone(conf, True)
     )
 
-    if DOMAIN in config:
+    if config[DOMAIN]:
         await yaml_collection.async_load(config[DOMAIN])
 
     await storage_collection.async_load()
@@ -209,9 +205,7 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
-    async def _collection_changed(
-        change_type: str, item_id: str, config: Optional[Dict]
-    ) -> None:
+    async def _collection_changed(change_type: str, item_id: str, config: Dict) -> None:
         """Handle a collection change: clean up entity registry on removals."""
         if change_type != collection.CHANGE_REMOVED:
             return
@@ -228,7 +222,7 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
         conf = await component.async_prepare_reload(skip_reset=True)
         if conf is None:
             return
-        await yaml_collection.async_load(conf.get(DOMAIN, []))
+        await yaml_collection.async_load(conf[DOMAIN])
 
     service.async_register_admin_service(
         hass,
@@ -243,7 +237,7 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
 
     home_zone = Zone(_home_conf(hass), True,)
     home_zone.entity_id = ENTITY_ID_HOME
-    await component.async_add_entities([home_zone])  # type: ignore
+    await component.async_add_entities([home_zone])
 
     async def core_config_updated(_: Event) -> None:
         """Handle core config updated."""

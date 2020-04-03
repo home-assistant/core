@@ -37,7 +37,7 @@ async def test_setup_defined_hosts_known_auth(hass):
                                 hue.CONF_ALLOW_HUE_GROUPS: False,
                                 hue.CONF_ALLOW_UNREACHABLE: True,
                             },
-                            {hue.CONF_HOST: "1.1.1.1", "filename": "bla"},
+                            {hue.CONF_HOST: "1.1.1.1"},
                         ]
                     }
                 },
@@ -59,7 +59,6 @@ async def test_setup_defined_hosts_known_auth(hass):
             hue.CONF_HOST: "1.1.1.1",
             hue.CONF_ALLOW_HUE_GROUPS: True,
             hue.CONF_ALLOW_UNREACHABLE: False,
-            "filename": "bla",
         },
     }
 
@@ -194,17 +193,15 @@ async def test_security_vuln_check(hass):
     entry = MockConfigEntry(domain=hue.DOMAIN, data={"host": "0.0.0.0"})
     entry.add_to_hass(hass)
 
+    config = Mock(bridgeid="", mac="", modelid="BSB002", swversion="1935144020")
+    config.name = "Hue"
+
     with patch.object(
         hue,
         "HueBridge",
         Mock(
             return_value=Mock(
-                async_setup=CoroutineMock(return_value=True),
-                api=Mock(
-                    config=Mock(
-                        bridgeid="", mac="", modelid="BSB002", swversion="1935144020"
-                    )
-                ),
+                async_setup=CoroutineMock(return_value=True), api=Mock(config=config)
             )
         ),
     ):

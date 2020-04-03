@@ -43,6 +43,7 @@ async def test_config_schema(hass):
     """Test that config schema is imported properly."""
     config = {
         konnected.DOMAIN: {
+            konnected.CONF_API_HOST: "http://1.1.1.1:8888",
             konnected.CONF_ACCESS_TOKEN: "abcdefgh",
             konnected.CONF_DEVICES: [{konnected.CONF_ID: "aabbccddeeff"}],
         }
@@ -50,10 +51,12 @@ async def test_config_schema(hass):
     assert konnected.CONFIG_SCHEMA(config) == {
         "konnected": {
             "access_token": "abcdefgh",
+            "api_host": "http://1.1.1.1:8888",
             "devices": [
                 {
                     "default_options": {
                         "blink": True,
+                        "api_host": "http://1.1.1.1:8888",
                         "discovery": True,
                         "io": {
                             "1": "Disabled",
@@ -96,6 +99,7 @@ async def test_config_schema(hass):
                 {
                     "default_options": {
                         "blink": True,
+                        "api_host": "",
                         "discovery": True,
                         "io": {
                             "1": "Disabled",
@@ -124,7 +128,7 @@ async def test_config_schema(hass):
         }
     }
 
-    # check pin to zone
+    # check pin to zone and multiple output
     config = {
         konnected.DOMAIN: {
             konnected.CONF_ACCESS_TOKEN: "abcdefgh",
@@ -134,6 +138,22 @@ async def test_config_schema(hass):
                     "binary_sensors": [
                         {"pin": 2, "type": "door"},
                         {"zone": 1, "type": "door"},
+                    ],
+                    "switches": [
+                        {
+                            "zone": 3,
+                            "name": "Beep Beep",
+                            "momentary": 65,
+                            "pause": 55,
+                            "repeat": 4,
+                        },
+                        {
+                            "zone": 3,
+                            "name": "Warning",
+                            "momentary": 100,
+                            "pause": 100,
+                            "repeat": -1,
+                        },
                     ],
                 }
             ],
@@ -146,6 +166,7 @@ async def test_config_schema(hass):
                 {
                     "default_options": {
                         "blink": True,
+                        "api_host": "",
                         "discovery": True,
                         "io": {
                             "1": "Binary Sensor",
@@ -153,7 +174,7 @@ async def test_config_schema(hass):
                             "11": "Disabled",
                             "12": "Disabled",
                             "2": "Binary Sensor",
-                            "3": "Disabled",
+                            "3": "Switchable Output",
                             "4": "Disabled",
                             "5": "Disabled",
                             "6": "Disabled",
@@ -168,6 +189,24 @@ async def test_config_schema(hass):
                         "binary_sensors": [
                             {"inverse": False, "type": "door", "zone": "2"},
                             {"inverse": False, "type": "door", "zone": "1"},
+                        ],
+                        "switches": [
+                            {
+                                "zone": "3",
+                                "activation": "high",
+                                "name": "Beep Beep",
+                                "momentary": 65,
+                                "pause": 55,
+                                "repeat": 4,
+                            },
+                            {
+                                "zone": "3",
+                                "activation": "high",
+                                "name": "Warning",
+                                "momentary": 100,
+                                "pause": 100,
+                                "repeat": -1,
+                            },
                         ],
                     },
                     "id": "aabbccddeeff",
@@ -248,6 +287,74 @@ async def test_setup_defined_hosts_no_known_auth(hass):
 
     # Flow started for discovered bridge
     assert len(hass.config_entries.flow.async_progress()) == 1
+
+
+async def test_setup_multiple(hass):
+    """Test we initiate config entry for multiple panels."""
+    assert (
+        await async_setup_component(
+            hass,
+            konnected.DOMAIN,
+            {
+                konnected.DOMAIN: {
+                    konnected.CONF_ACCESS_TOKEN: "arandomstringvalue",
+                    konnected.CONF_API_HOST: "http://192.168.86.32:8123",
+                    konnected.CONF_DEVICES: [
+                        {
+                            konnected.CONF_ID: "aabbccddeeff",
+                            "binary_sensors": [
+                                {
+                                    "zone": 4,
+                                    "type": "motion",
+                                    "name": "Hallway Motion",
+                                },
+                                {
+                                    "zone": 5,
+                                    "type": "window",
+                                    "name": "Master Bedroom Window",
+                                },
+                                {
+                                    "zone": 6,
+                                    "type": "window",
+                                    "name": "Downstairs Windows",
+                                },
+                            ],
+                            "switches": [{"zone": "out", "name": "siren"}],
+                        },
+                        {
+                            konnected.CONF_ID: "445566778899",
+                            "binary_sensors": [
+                                {"zone": 1, "type": "motion", "name": "Front"},
+                                {"zone": 2, "type": "window", "name": "Back"},
+                            ],
+                            "switches": [
+                                {
+                                    "zone": "out",
+                                    "name": "Buzzer",
+                                    "momentary": 65,
+                                    "pause": 55,
+                                    "repeat": 4,
+                                },
+                            ],
+                        },
+                    ],
+                }
+            },
+        )
+        is True
+    )
+
+    # Flow started for discovered bridge
+    assert len(hass.config_entries.flow.async_progress()) == 2
+
+    # Globals saved
+    assert (
+        hass.data[konnected.DOMAIN][konnected.CONF_ACCESS_TOKEN] == "arandomstringvalue"
+    )
+    assert (
+        hass.data[konnected.DOMAIN][konnected.CONF_API_HOST]
+        == "http://192.168.86.32:8123"
+    )
 
 
 async def test_config_passed_to_config_entry(hass):
@@ -512,6 +619,10 @@ async def test_state_updates(hass, aiohttp_client, mock_panel):
         data=device_config,
         options=device_options,
     )
+    entry.add_to_hass(hass)
+
+    # Add empty data field to ensure we process it correctly (possible if entry is ignored)
+    entry = MockConfigEntry(domain="konnected", title="Konnected Alarm Panel", data={},)
     entry.add_to_hass(hass)
 
     assert (

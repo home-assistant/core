@@ -28,6 +28,7 @@ from tests.common import (
     get_test_home_assistant,
     mock_coro,
     mock_registry,
+    mock_storage,
 )
 from tests.mock.zwave import MockEntityValues, MockNetwork, MockNode, MockValue
 
@@ -827,6 +828,8 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
+        self.mock_storage = mock_storage()
+        self.mock_storage.__enter__()
         self.hass.start()
         self.registry = mock_registry(self.hass)
 
@@ -862,6 +865,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
         self.hass.stop()
+        self.mock_storage.__exit__(None, None, None)
 
     @patch.object(zwave, "import_module")
     @patch.object(zwave, "discovery")
@@ -1194,6 +1198,8 @@ class TestZWaveServices(unittest.TestCase):
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
+        self.mock_storage = mock_storage()
+        self.mock_storage.__enter__()
         self.hass.start()
 
         # Initialize zwave
@@ -1209,6 +1215,7 @@ class TestZWaveServices(unittest.TestCase):
         self.hass.services.call("zwave", "stop_network", {})
         self.hass.block_till_done()
         self.hass.stop()
+        self.mock_storage.__exit__(None, None, None)
 
     def test_add_node(self):
         """Test zwave add_node service."""
@@ -1796,6 +1803,31 @@ class TestZWaveServices(unittest.TestCase):
         self.hass.block_till_done()
 
         assert self.zwave_network.nodes[14].values[12].data == 2
+
+    def test_set_node_value_with_long_id_and_text_value(self):
+        """Test zwave set_node_value service."""
+        value = MockValue(
+            index=87512398541236578,
+            command_class=const.COMMAND_CLASS_SWITCH_COLOR,
+            data="#ff0000",
+        )
+        node = MockNode(node_id=14, command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
+        node.values = {87512398541236578: value}
+        node.get_values.return_value = node.values
+        self.zwave_network.nodes = {14: node}
+
+        self.hass.services.call(
+            "zwave",
+            "set_node_value",
+            {
+                const.ATTR_NODE_ID: 14,
+                const.ATTR_VALUE_ID: "87512398541236578",
+                const.ATTR_CONFIG_VALUE: "#00ff00",
+            },
+        )
+        self.hass.block_till_done()
+
+        assert self.zwave_network.nodes[14].values[87512398541236578].data == "#00ff00"
 
     def test_refresh_node_value(self):
         """Test zwave refresh_node_value service."""

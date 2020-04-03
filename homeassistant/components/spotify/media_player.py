@@ -7,6 +7,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from aiohttp import ClientError
 from spotipy import Spotify, SpotifyException
+from yarl import URL
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
@@ -294,6 +295,10 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     def play_media(self, media_type: str, media_id: str, **kwargs) -> None:
         """Play media."""
         kwargs = {}
+
+        # Spotify can't handle URI's with query strings or anchors
+        # Yet, they do generate those types of URI in their official clients.
+        media_id = str(URL(media_id).with_query(None).with_fragment(None))
 
         if media_type == MEDIA_TYPE_MUSIC:
             kwargs["uris"] = [media_id]

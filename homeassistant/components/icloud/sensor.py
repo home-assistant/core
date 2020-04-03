@@ -3,14 +3,15 @@ import logging
 from typing import Dict
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_USERNAME, DEVICE_CLASS_BATTERY
+from homeassistant.const import DEVICE_CLASS_BATTERY, UNIT_PERCENTAGE
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .account import IcloudDevice
-from .const import DOMAIN, SERVICE_UPDATE
+from .account import IcloudAccount, IcloudDevice
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,23 +19,44 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
-    """Set up iCloud devices sensors based on a config entry."""
-    username = entry.data[CONF_USERNAME]
+    """Set up device tracker for iCloud component."""
+    account = hass.data[DOMAIN][entry.unique_id]
+    tracked = set()
 
-    entities = []
-    for device in hass.data[DOMAIN][username].devices.values():
-        if device.battery_level is not None:
-            _LOGGER.debug("Adding battery sensor for %s", device.name)
-            entities.append(IcloudDeviceBatterySensor(device))
+    @callback
+    def update_account():
+        """Update the values of the account."""
+        add_entities(account, async_add_entities, tracked)
 
-    async_add_entities(entities, True)
+    account.listeners.append(
+        async_dispatcher_connect(hass, account.signal_device_new, update_account)
+    )
+
+    update_account()
+
+
+@callback
+def add_entities(account, async_add_entities, tracked):
+    """Add new tracker entities from the account."""
+    new_tracked = []
+
+    for dev_id, device in account.devices.items():
+        if dev_id in tracked or device.battery_level is None:
+            continue
+
+        new_tracked.append(IcloudDeviceBatterySensor(account, device))
+        tracked.add(dev_id)
+
+    if new_tracked:
+        async_add_entities(new_tracked, True)
 
 
 class IcloudDeviceBatterySensor(Entity):
     """Representation of a iCloud device battery sensor."""
 
-    def __init__(self, device: IcloudDevice):
+    def __init__(self, account: IcloudAccount, device: IcloudDevice):
         """Initialize the battery sensor."""
+        self._account = account
         self._device = device
         self._unsub_dispatcher = None
 
@@ -61,7 +83,7 @@ class IcloudDeviceBatterySensor(Entity):
     @property
     def unit_of_measurement(self) -> str:
         """Battery state measured in percentage."""
-        return "%"
+        return UNIT_PERCENTAGE
 
     @property
     def icon(self) -> str:
@@ -94,7 +116,7 @@ class IcloudDeviceBatterySensor(Entity):
     async def async_added_to_hass(self):
         """Register state update callback."""
         self._unsub_dispatcher = async_dispatcher_connect(
-            self.hass, SERVICE_UPDATE, self.async_write_ha_state
+            self.hass, self._account.signal_device_update, self.async_write_ha_state
         )
 
     async def async_will_remove_from_hass(self):

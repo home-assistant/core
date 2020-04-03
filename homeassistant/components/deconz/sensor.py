@@ -9,7 +9,12 @@ from pydeconz.sensor import (
     Thermostat,
 )
 
-from homeassistant.const import ATTR_TEMPERATURE, ATTR_VOLTAGE, DEVICE_CLASS_BATTERY
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    ATTR_VOLTAGE,
+    DEVICE_CLASS_BATTERY,
+    UNIT_PERCENTAGE,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -104,7 +109,7 @@ class DeconzSensor(DeconzDevice):
 
         keys = {"on", "reachable", "state"}
         if force_update or self._device.changed_keys.intersection(keys):
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     @property
     def state(self):
@@ -169,7 +174,7 @@ class DeconzBattery(DeconzDevice):
 
         keys = {"battery", "reachable"}
         if force_update or self._device.changed_keys.intersection(keys):
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     @property
     def unique_id(self):
@@ -194,7 +199,7 @@ class DeconzBattery(DeconzDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
-        return "%"
+        return UNIT_PERCENTAGE
 
     @property
     def device_state_attributes(self):

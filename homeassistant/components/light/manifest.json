@@ -3,7 +3,7 @@
   "name": "Light",
   "documentation": "https://www.home-assistant.io/integrations/light",
   "requirements": [],
-  "dependencies": ["group"],
+  "dependencies": [],
   "codeowners": [],
   "quality_scale": "internal"
 }

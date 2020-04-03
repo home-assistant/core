@@ -21,6 +21,7 @@ from homeassistant.const import (
     EVENT_CALL_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
@@ -151,10 +152,14 @@ def test_stage_shutdown():
     """Simulate a shutdown, test calling stuff."""
     hass = get_test_home_assistant()
     test_stop = []
+    test_final_write = []
     test_close = []
     test_all = []
 
     hass.bus.listen(EVENT_HOMEASSISTANT_STOP, lambda event: test_stop.append(event))
+    hass.bus.listen(
+        EVENT_HOMEASSISTANT_FINAL_WRITE, lambda event: test_final_write.append(event)
+    )
     hass.bus.listen(EVENT_HOMEASSISTANT_CLOSE, lambda event: test_close.append(event))
     hass.bus.listen("*", lambda event: test_all.append(event))
 
@@ -162,7 +167,8 @@ def test_stage_shutdown():
 
     assert len(test_stop) == 1
     assert len(test_close) == 1
-    assert len(test_all) == 1
+    assert len(test_final_write) == 1
+    assert len(test_all) == 2
 
 
 class TestHomeAssistant(unittest.TestCase):
@@ -904,6 +910,7 @@ class TestConfig(unittest.TestCase):
             "whitelist_external_dirs": set(),
             "version": __version__,
             "config_source": "default",
+            "safe_mode": False,
         }
 
         assert expected == self.config.as_dict()
@@ -1205,3 +1212,34 @@ async def test_async_functions_with_callback(hass):
 
     await hass.services.async_call("test_domain", "test_service", blocking=True)
     assert len(runs) == 3
+
+
+def test_valid_entity_id():
+    """Test valid entity ID."""
+    for invalid in [
+        "_light.kitchen",
+        ".kitchen",
+        ".light.kitchen",
+        "light_.kitchen",
+        "light._kitchen",
+        "light.",
+        "light.kitchen__ceiling",
+        "light.kitchen_yo_",
+        "light.kitchen.",
+        "Light.kitchen",
+        "light.Kitchen",
+        "lightkitchen",
+    ]:
+        assert not ha.valid_entity_id(invalid), invalid
+
+    for valid in [
+        "1.a",
+        "1light.kitchen",
+        "a.1",
+        "a.a",
+        "input_boolean.hello_world_0123",
+        "light.1kitchen",
+        "light.kitchen",
+        "light.something_yoo",
+    ]:
+        assert ha.valid_entity_id(valid), valid

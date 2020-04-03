@@ -58,7 +58,7 @@ def main():
     if download_dir.is_dir():
         rmtree(str(download_dir))
 
-    download_dir.mkdir()
+    download_dir.mkdir(parents=True)
 
     subprocess.run("script/translations_upload_merge.py")
 

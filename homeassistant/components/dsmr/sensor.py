@@ -9,7 +9,12 @@ import serial
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+    TIME_HOURS,
+)
 from homeassistant.core import CoreState
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -91,7 +96,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     # Protocol version specific obis
     if dsmr_version in ("4", "5"):
         gas_obis = obis_ref.HOURLY_GAS_METER_READING
-    elif dsmr_version in ("5B"):
+    elif dsmr_version in ("5B",):
         gas_obis = obis_ref.BELGIUM_HOURLY_GAS_METER_READING
     else:
         gas_obis = obis_ref.GAS_METER_READING
@@ -238,7 +243,7 @@ class DSMREntity(Entity):
         """Convert 2/1 to normal/low depending on DSMR version."""
         # DSMR V5B: Note: In Belgium values are swapped:
         # Rate code 2 is used for low rate and rate code 1 is used for normal rate.
-        if dsmr_version in ("5B"):
+        if dsmr_version in ("5B",):
             if value == "0001":
                 value = "0002"
             elif value == "0002":
@@ -303,4 +308,4 @@ class DerivativeDSMREntity(DSMREntity):
         """Return the unit of measurement of this entity, per hour, if any."""
         unit = self.get_dsmr_object_attr("unit")
         if unit:
-            return unit + "/h"
+            return f"{unit}/{TIME_HOURS}"

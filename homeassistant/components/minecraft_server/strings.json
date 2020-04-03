@@ -7,8 +7,7 @@
                 "description": "Set up your Minecraft Server instance to allow monitoring.",
                 "data": {
                     "name": "Name",
-                    "host": "Host",
-                    "port": "Port"
+                    "host": "Host"
                 }
             }
         },

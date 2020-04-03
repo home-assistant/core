@@ -30,7 +30,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
@@ -44,25 +43,17 @@ DOMAIN = "group"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 CONF_ENTITIES = "entities"
-CONF_VIEW = "view"
-CONF_CONTROL = "control"
 CONF_ALL = "all"
 
 ATTR_ADD_ENTITIES = "add_entities"
 ATTR_AUTO = "auto"
-ATTR_CONTROL = "control"
 ATTR_ENTITIES = "entities"
 ATTR_OBJECT_ID = "object_id"
 ATTR_ORDER = "order"
-ATTR_VIEW = "view"
-ATTR_VISIBLE = "visible"
 ATTR_ALL = "all"
 
-SERVICE_SET_VISIBILITY = "set_visibility"
 SERVICE_SET = "set"
 SERVICE_REMOVE = "remove"
-
-CONTROL_TYPES = vol.In(["hidden", None])
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,18 +67,14 @@ def _conf_preprocess(value):
 
 
 GROUP_SCHEMA = vol.All(
-    cv.deprecated(CONF_CONTROL, invalidation_version="0.107.0"),
-    cv.deprecated(CONF_VIEW, invalidation_version="0.107.0"),
     vol.Schema(
         {
             vol.Optional(CONF_ENTITIES): vol.Any(cv.entity_ids, None),
-            CONF_VIEW: cv.boolean,
             CONF_NAME: cv.string,
             CONF_ICON: cv.icon,
-            CONF_CONTROL: CONTROL_TYPES,
             CONF_ALL: cv.boolean,
         }
-    ),
+    )
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -244,7 +231,7 @@ async def async_setup(hass, config):
     async def groups_service_handler(service):
         """Handle dynamic group service functions."""
         object_id = service.data[ATTR_OBJECT_ID]
-        entity_id = ENTITY_ID_FORMAT.format(object_id)
+        entity_id = f"{DOMAIN}.{object_id}"
         group = component.get_entity(entity_id)
 
         # new group
@@ -257,7 +244,7 @@ async def async_setup(hass, config):
 
             extra_arg = {
                 attr: service.data[attr]
-                for attr in (ATTR_VISIBLE, ATTR_ICON, ATTR_VIEW, ATTR_CONTROL)
+                for attr in (ATTR_ICON,)
                 if service.data.get(attr) is not None
             }
 
@@ -293,20 +280,8 @@ async def async_setup(hass, config):
                 group.name = service.data[ATTR_NAME]
                 need_update = True
 
-            if ATTR_VISIBLE in service.data:
-                group.visible = service.data[ATTR_VISIBLE]
-                need_update = True
-
             if ATTR_ICON in service.data:
                 group.icon = service.data[ATTR_ICON]
-                need_update = True
-
-            if ATTR_CONTROL in service.data:
-                group.control = service.data[ATTR_CONTROL]
-                need_update = True
-
-            if ATTR_VIEW in service.data:
-                group.view = service.data[ATTR_VIEW]
                 need_update = True
 
             if ATTR_ALL in service.data:
@@ -327,22 +302,16 @@ async def async_setup(hass, config):
         SERVICE_SET,
         locked_service_handler,
         schema=vol.All(
-            cv.deprecated(ATTR_CONTROL, invalidation_version="0.107.0"),
-            cv.deprecated(ATTR_VIEW, invalidation_version="0.107.0"),
-            cv.deprecated(ATTR_VISIBLE, invalidation_version="0.107.0"),
             vol.Schema(
                 {
                     vol.Required(ATTR_OBJECT_ID): cv.slug,
                     vol.Optional(ATTR_NAME): cv.string,
-                    vol.Optional(ATTR_VIEW): cv.boolean,
                     vol.Optional(ATTR_ICON): cv.string,
-                    vol.Optional(ATTR_CONTROL): CONTROL_TYPES,
-                    vol.Optional(ATTR_VISIBLE): cv.boolean,
                     vol.Optional(ATTR_ALL): cv.boolean,
                     vol.Exclusive(ATTR_ENTITIES, "entities"): cv.entity_ids,
                     vol.Exclusive(ATTR_ADD_ENTITIES, "entities"): cv.entity_ids,
                 }
-            ),
+            )
         ),
     )
 
@@ -351,32 +320,6 @@ async def async_setup(hass, config):
         SERVICE_REMOVE,
         groups_service_handler,
         schema=vol.Schema({vol.Required(ATTR_OBJECT_ID): cv.slug}),
-    )
-
-    async def visibility_service_handler(service):
-        """Change visibility of a group."""
-        visible = service.data.get(ATTR_VISIBLE)
-
-        _LOGGER.warning(
-            "The group.set_visibility service has been deprecated and will"
-            "be removed in Home Assistant 0.107.0."
-        )
-
-        tasks = []
-        for group in await component.async_extract_from_service(
-            service, expand_group=False
-        ):
-            group.visible = visible
-            tasks.append(group.async_update_ha_state())
-
-        if tasks:
-            await asyncio.wait(tasks)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SET_VISIBILITY,
-        visibility_service_handler,
-        schema=make_entity_service_schema({vol.Required(ATTR_VISIBLE): cv.boolean}),
     )
 
     return True
@@ -388,21 +331,12 @@ async def _async_process_config(hass, config, component):
         name = conf.get(CONF_NAME, object_id)
         entity_ids = conf.get(CONF_ENTITIES) or []
         icon = conf.get(CONF_ICON)
-        view = conf.get(CONF_VIEW)
-        control = conf.get(CONF_CONTROL)
         mode = conf.get(CONF_ALL)
 
         # Don't create tasks and await them all. The order is important as
         # groups get a number based on creation order.
         await Group.async_create_group(
-            hass,
-            name,
-            entity_ids,
-            icon=icon,
-            view=view,
-            control=control,
-            object_id=object_id,
-            mode=mode,
+            hass, name, entity_ids, icon=icon, object_id=object_id, mode=mode
         )
 
 
@@ -414,10 +348,7 @@ class Group(Entity):
         hass,
         name,
         order=None,
-        visible=True,
         icon=None,
-        view=False,
-        control=None,
         user_defined=True,
         entity_ids=None,
         mode=None,
@@ -430,15 +361,12 @@ class Group(Entity):
         self._name = name
         self._state = STATE_UNKNOWN
         self._icon = icon
-        self.view = view
         if entity_ids:
             self.tracking = tuple(ent_id.lower() for ent_id in entity_ids)
         else:
             self.tracking = tuple()
         self.group_on = None
         self.group_off = None
-        self.visible = visible
-        self.control = control
         self.user_defined = user_defined
         self.mode = any
         if mode:
@@ -453,26 +381,14 @@ class Group(Entity):
         name,
         entity_ids=None,
         user_defined=True,
-        visible=True,
         icon=None,
-        view=False,
-        control=None,
         object_id=None,
         mode=None,
     ):
         """Initialize a group."""
         return asyncio.run_coroutine_threadsafe(
             Group.async_create_group(
-                hass,
-                name,
-                entity_ids,
-                user_defined,
-                visible,
-                icon,
-                view,
-                control,
-                object_id,
-                mode,
+                hass, name, entity_ids, user_defined, icon, object_id, mode
             ),
             hass.loop,
         ).result()
@@ -483,10 +399,7 @@ class Group(Entity):
         name,
         entity_ids=None,
         user_defined=True,
-        visible=True,
         icon=None,
-        view=False,
-        control=None,
         object_id=None,
         mode=None,
     ):
@@ -498,10 +411,7 @@ class Group(Entity):
             hass,
             name,
             order=len(hass.states.async_entity_ids(DOMAIN)),
-            visible=visible,
             icon=icon,
-            view=view,
-            control=control,
             user_defined=user_defined,
             entity_ids=entity_ids,
             mode=mode,
@@ -552,22 +462,11 @@ class Group(Entity):
         self._icon = value
 
     @property
-    def hidden(self):
-        """If group should be hidden or not."""
-        if self.visible and not self.view:
-            return False
-        return True
-
-    @property
     def state_attributes(self):
         """Return the state attributes for the group."""
         data = {ATTR_ENTITY_ID: self.tracking, ATTR_ORDER: self._order}
         if not self.user_defined:
             data[ATTR_AUTO] = True
-        if self.view:
-            data[ATTR_VIEW] = True
-        if self.control:
-            data[ATTR_CONTROL] = self.control
         return data
 
     @property

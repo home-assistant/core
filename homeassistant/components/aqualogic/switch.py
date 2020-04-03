@@ -6,7 +6,6 @@ import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import CONF_MONITORED_CONDITIONS
-from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN, UPDATE_TOPIC
@@ -51,7 +50,6 @@ class AquaLogicSwitch(SwitchDevice):
 
     def __init__(self, processor, switch_type):
         """Initialize switch."""
-
         self._processor = processor
         self._type = switch_type
         self._state_name = {
@@ -70,7 +68,7 @@ class AquaLogicSwitch(SwitchDevice):
     @property
     def name(self):
         """Return the name of the switch."""
-        return "AquaLogic {}".format(SWITCH_TYPES[self._type])
+        return f"AquaLogic {SWITCH_TYPES[self._type]}"
 
     @property
     def should_poll(self):
@@ -102,11 +100,8 @@ class AquaLogicSwitch(SwitchDevice):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            UPDATE_TOPIC, self.async_update_callback
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                UPDATE_TOPIC, self.async_write_ha_state
+            )
         )
-
-    @callback
-    def async_update_callback(self):
-        """Update callback."""
-        self.async_schedule_update_ha_state()

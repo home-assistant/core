@@ -1,14 +1,28 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "unknown": "Onbekende fout opgetreden"
+        },
         "step": {
+            "confirm": {
+                "title": "Konnected Apparaat Klaar"
+            },
             "user": {
                 "data": {
-                    "host": "IP-adres van Konnected apparaat"
-                }
+                    "host": "IP-adres van Konnected apparaat",
+                    "port": "Konnected apparaat poort"
+                },
+                "description": "Voer de host-informatie in voor uw Konnected-paneel.",
+                "title": "Ontdek Konnected Device"
             }
-        }
+        },
+        "title": "Konnected.io"
     },
     "options": {
+        "abort": {
+            "not_konn_panel": "Geen herkend Konnected.io apparaat"
+        },
         "error": {
             "one": "Leeg",
             "other": "Leeg"
@@ -16,8 +30,11 @@
         "step": {
             "options_binary": {
                 "data": {
-                    "name": "Naam (optioneel)"
-                }
+                    "inverse": "Keer de open / dicht status om",
+                    "name": "Naam (optioneel)",
+                    "type": "Type binaire sensor"
+                },
+                "title": "Binaire sensor configureren"
             },
             "options_digital": {
                 "data": {
@@ -48,8 +65,10 @@
             "options_switch": {
                 "data": {
                     "name": "Naam (optioneel)"
-                }
+                },
+                "title": "Schakelbare uitgang configureren"
             }
-        }
+        },
+        "title": "Konnected Alarm Paneel Opties"
     }
 }

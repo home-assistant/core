@@ -28,6 +28,7 @@ from .const import (
     CONF_ACTIVATION,
     CONF_API_HOST,
     CONF_BLINK,
+    CONF_DEFAULT_OPTIONS,
     CONF_DHT_SENSORS,
     CONF_DISCOVERY,
     CONF_DS18B20_SENSORS,
@@ -38,7 +39,6 @@ from .const import (
     CONF_REPEAT,
     DOMAIN,
     ENDPOINT_ROOT,
-    SIGNAL_SENSOR_UPDATE,
     STATE_LOW,
     ZONE_TO_PIN,
 )
@@ -64,7 +64,9 @@ class AlarmPanel:
         self.hass = hass
         self.config_entry = config_entry
         self.config = config_entry.data
-        self.options = config_entry.options
+        self.options = config_entry.options or config_entry.data.get(
+            CONF_DEFAULT_OPTIONS, {}
+        )
         self.host = self.config.get(CONF_HOST)
         self.port = self.config.get(CONF_PORT)
         self.client = None
@@ -287,14 +289,14 @@ class AlarmPanel:
             if sensor_config.get(CONF_INVERSE):
                 state = not state
 
-            async_dispatcher_send(
-                self.hass, SIGNAL_SENSOR_UPDATE.format(entity_id), state
-            )
+            async_dispatcher_send(self.hass, f"konnected.{entity_id}.update", state)
 
     @callback
     def async_desired_settings_payload(self):
         """Return a dict representing the desired device configuration."""
-        desired_api_host = (
+        # keeping self.hass.data check for backwards compatibility
+        # newly configured integrations store this in the config entry
+        desired_api_host = self.options.get(CONF_API_HOST) or (
             self.hass.data[DOMAIN].get(CONF_API_HOST) or self.hass.config.api.base_url
         )
         desired_api_endpoint = desired_api_host + ENDPOINT_ROOT

@@ -426,7 +426,7 @@ class BluesoundPlayer(MediaPlayerDevice):
                     # communication is moved to a separate library
                     await self.force_update_sync_status()
 
-                self.async_schedule_update_ha_state()
+                self.async_write_ha_state()
             elif response.status == 595:
                 _LOGGER.info("Status 595 returned, treating as timeout")
                 raise BluesoundPlayer._TimeoutException()
@@ -439,7 +439,7 @@ class BluesoundPlayer(MediaPlayerDevice):
             self._is_online = False
             self._last_status_update = None
             self._status = None
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
             _LOGGER.info("Client connection error, marking %s as offline", self._name)
             raise
 
@@ -500,7 +500,7 @@ class BluesoundPlayer(MediaPlayerDevice):
                     "image": item.get("@image", ""),
                     "is_raw_url": True,
                     "url2": item.get("@url", ""),
-                    "url": "Preset?id={}".format(item.get("@id", "")),
+                    "url": f"Preset?id={item.get('@id', '')}",
                 }
             )
 
@@ -777,7 +777,7 @@ class BluesoundPlayer(MediaPlayerDevice):
     def supported_features(self):
         """Flag of media commands that are supported."""
         if self._status is None:
-            return None
+            return 0
 
         if self.is_grouped and not self.is_master:
             return SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE
@@ -934,9 +934,7 @@ class BluesoundPlayer(MediaPlayerDevice):
             return
 
         selected_source = items[0]
-        url = "Play?url={}&preset_id&image={}".format(
-            selected_source["url"], selected_source["image"]
-        )
+        url = f"Play?url={selected_source['url']}&preset_id&image={selected_source['image']}"
 
         if "is_raw_url" in selected_source and selected_source["is_raw_url"]:
             url = selected_source["url"]
@@ -1002,7 +1000,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         if self.is_grouped and not self.is_master:
             return
 
-        return await self.send_bluesound_command("Play?seek={}".format(float(position)))
+        return await self.send_bluesound_command(f"Play?seek={float(position)}")
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """
@@ -1023,16 +1021,16 @@ class BluesoundPlayer(MediaPlayerDevice):
     async def async_volume_up(self):
         """Volume up the media player."""
         current_vol = self.volume_level
-        if not current_vol or current_vol < 0:
+        if not current_vol or current_vol >= 1:
             return
-        return self.async_set_volume_level(((current_vol * 100) + 1) / 100)
+        return await self.async_set_volume_level(current_vol + 0.01)
 
     async def async_volume_down(self):
         """Volume down the media player."""
         current_vol = self.volume_level
-        if not current_vol or current_vol < 0:
+        if not current_vol or current_vol <= 0:
             return
-        return self.async_set_volume_level(((current_vol * 100) - 1) / 100)
+        return await self.async_set_volume_level(current_vol - 0.01)
 
     async def async_set_volume_level(self, volume):
         """Send volume_up command to media player."""

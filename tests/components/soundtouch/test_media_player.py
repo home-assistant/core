@@ -19,7 +19,11 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.components.soundtouch import media_player as soundtouch
 from homeassistant.components.soundtouch.const import DOMAIN
-from homeassistant.components.soundtouch.media_player import DATA_SOUNDTOUCH
+from homeassistant.components.soundtouch.media_player import (
+    ATTR_SOUNDTOUCH_GROUP,
+    ATTR_SOUNDTOUCH_ZONE,
+    DATA_SOUNDTOUCH,
+)
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.setup import async_setup_component
@@ -29,6 +33,8 @@ from homeassistant.setup import async_setup_component
 
 DEVICE_1_IP = "192.168.0.1"
 DEVICE_2_IP = "192.168.0.2"
+DEVICE_1_ID = 1
+DEVICE_2_ID = 2
 
 
 def get_config(host=DEVICE_1_IP, port=8090, name="soundtouch"):
@@ -56,20 +62,22 @@ def one_device_fixture():
 def two_zones_fixture():
     """Mock one master and one slave."""
     device_1 = MockDevice(
+        DEVICE_1_ID,
         MockZoneStatus(
             is_master=True,
-            master_id=1,
+            master_id=DEVICE_1_ID,
             master_ip=DEVICE_1_IP,
             slaves=[MockZoneSlave(DEVICE_2_IP)],
-        )
+        ),
     )
     device_2 = MockDevice(
+        DEVICE_2_ID,
         MockZoneStatus(
             is_master=False,
-            master_id=1,
+            master_id=DEVICE_1_ID,
             master_ip=DEVICE_1_IP,
             slaves=[MockZoneSlave(DEVICE_2_IP)],
-        )
+        ),
     )
     devices = {DEVICE_1_IP: device_1, DEVICE_2_IP: device_2}
     device_patch = patch(
@@ -108,9 +116,9 @@ async def setup_soundtouch(hass, config):
 class MockDevice(STD):
     """Mock device."""
 
-    def __init__(self, zone_status=None):
+    def __init__(self, id=None, zone_status=None):
         """Init the class."""
-        self._config = MockConfig()
+        self._config = MockConfig(id)
         self._zone_status = zone_status or MockZoneStatus()
 
     def zone_status(self, refresh=True):
@@ -121,9 +129,10 @@ class MockDevice(STD):
 class MockConfig(Config):
     """Mock config."""
 
-    def __init__(self):
+    def __init__(self, id=None):
         """Init class."""
         self._name = "name"
+        self._id = id or DEVICE_1_ID
 
 
 class MockZoneStatus(ZoneStatus):
@@ -154,9 +163,9 @@ def _mocked_presets(*args, **kwargs):
 class MockPreset(Preset):
     """Mock preset."""
 
-    def __init__(self, id):
+    def __init__(self, id_):
         """Init the class."""
-        self._id = id
+        self._id = id_
         self._name = "preset"
 
 
@@ -318,8 +327,8 @@ async def test_playing_media(mocked_status, mocked_volume, hass, one_device):
     await setup_soundtouch(hass, DEVICE_1_CONFIG)
 
     assert one_device.call_count == 1
-    assert mocked_status.call_count == 1
-    assert mocked_volume.call_count == 1
+    assert mocked_status.call_count == 2
+    assert mocked_volume.call_count == 2
 
     entity_1_state = hass.states.get("media_player.soundtouch_1")
     assert entity_1_state.state == STATE_PLAYING
@@ -336,8 +345,8 @@ async def test_playing_unknown_media(mocked_status, mocked_volume, hass, one_dev
     await setup_soundtouch(hass, DEVICE_1_CONFIG)
 
     assert one_device.call_count == 1
-    assert mocked_status.call_count == 1
-    assert mocked_volume.call_count == 1
+    assert mocked_status.call_count == 2
+    assert mocked_volume.call_count == 2
 
     entity_1_state = hass.states.get("media_player.soundtouch_1")
     assert entity_1_state.state == STATE_PLAYING
@@ -349,8 +358,8 @@ async def test_playing_radio(mocked_status, mocked_volume, hass, one_device):
     await setup_soundtouch(hass, DEVICE_1_CONFIG)
 
     assert one_device.call_count == 1
-    assert mocked_status.call_count == 1
-    assert mocked_volume.call_count == 1
+    assert mocked_status.call_count == 2
+    assert mocked_volume.call_count == 2
 
     entity_1_state = hass.states.get("media_player.soundtouch_1")
     assert entity_1_state.state == STATE_PLAYING
@@ -363,8 +372,8 @@ async def test_get_volume_level(mocked_status, mocked_volume, hass, one_device):
     await setup_soundtouch(hass, DEVICE_1_CONFIG)
 
     assert one_device.call_count == 1
-    assert mocked_status.call_count == 1
-    assert mocked_volume.call_count == 1
+    assert mocked_status.call_count == 2
+    assert mocked_volume.call_count == 2
 
     entity_1_state = hass.states.get("media_player.soundtouch_1")
     assert entity_1_state.attributes["volume_level"] == 0.12
@@ -376,8 +385,8 @@ async def test_get_state_off(mocked_status, mocked_volume, hass, one_device):
     await setup_soundtouch(hass, DEVICE_1_CONFIG)
 
     assert one_device.call_count == 1
-    assert mocked_status.call_count == 1
-    assert mocked_volume.call_count == 1
+    assert mocked_status.call_count == 2
+    assert mocked_volume.call_count == 2
 
     entity_1_state = hass.states.get("media_player.soundtouch_1")
     assert entity_1_state.state == STATE_OFF
@@ -389,8 +398,8 @@ async def test_get_state_pause(mocked_status, mocked_volume, hass, one_device):
     await setup_soundtouch(hass, DEVICE_1_CONFIG)
 
     assert one_device.call_count == 1
-    assert mocked_status.call_count == 1
-    assert mocked_volume.call_count == 1
+    assert mocked_status.call_count == 2
+    assert mocked_volume.call_count == 2
 
     entity_1_state = hass.states.get("media_player.soundtouch_1")
     assert entity_1_state.state == STATE_PAUSED
@@ -402,8 +411,8 @@ async def test_is_muted(mocked_status, mocked_volume, hass, one_device):
     await setup_soundtouch(hass, DEVICE_1_CONFIG)
 
     assert one_device.call_count == 1
-    assert mocked_status.call_count == 1
-    assert mocked_volume.call_count == 1
+    assert mocked_status.call_count == 2
+    assert mocked_volume.call_count == 2
 
     entity_1_state = hass.states.get("media_player.soundtouch_1")
     assert entity_1_state.attributes["is_volume_muted"]
@@ -414,8 +423,8 @@ async def test_media_commands(mocked_status, mocked_volume, hass, one_device):
     await setup_soundtouch(hass, DEVICE_1_CONFIG)
 
     assert one_device.call_count == 1
-    assert mocked_status.call_count == 1
-    assert mocked_volume.call_count == 1
+    assert mocked_status.call_count == 2
+    assert mocked_volume.call_count == 2
 
     entity_1_state = hass.states.get("media_player.soundtouch_1")
     assert entity_1_state.attributes["supported_features"] == 18365
@@ -429,13 +438,13 @@ async def test_should_turn_off(
     await setup_soundtouch(hass, DEVICE_1_CONFIG)
 
     assert one_device.call_count == 1
-    assert mocked_status.call_count == 1
-    assert mocked_volume.call_count == 1
+    assert mocked_status.call_count == 2
+    assert mocked_volume.call_count == 2
 
     await hass.services.async_call(
         "media_player", "turn_off", {"entity_id": "media_player.soundtouch_1"}, True,
     )
-    assert mocked_status.call_count == 2
+    assert mocked_status.call_count == 3
     assert mocked_power_off.call_count == 1
 
 
@@ -448,13 +457,13 @@ async def test_should_turn_on(
     await setup_soundtouch(hass, DEVICE_1_CONFIG)
 
     assert one_device.call_count == 1
-    assert mocked_status.call_count == 1
-    assert mocked_volume.call_count == 1
+    assert mocked_status.call_count == 2
+    assert mocked_volume.call_count == 2
 
     await hass.services.async_call(
         "media_player", "turn_on", {"entity_id": "media_player.soundtouch_1"}, True,
     )
-    assert mocked_status.call_count == 2
+    assert mocked_status.call_count == 3
     assert mocked_power_on.call_count == 1
 
 
@@ -466,13 +475,13 @@ async def test_volume_up(
     await setup_soundtouch(hass, DEVICE_1_CONFIG)
 
     assert one_device.call_count == 1
-    assert mocked_status.call_count == 1
-    assert mocked_volume.call_count == 1
+    assert mocked_status.call_count == 2
+    assert mocked_volume.call_count == 2
 
     await hass.services.async_call(
         "media_player", "volume_up", {"entity_id": "media_player.soundtouch_1"}, True,
     )
-    assert mocked_volume.call_count == 2
+    assert mocked_volume.call_count == 3
     assert mocked_volume_up.call_count == 1
 
 
@@ -484,13 +493,13 @@ async def test_volume_down(
     await setup_soundtouch(hass, DEVICE_1_CONFIG)
 
     assert one_device.call_count == 1
-    assert mocked_status.call_count == 1
-    assert mocked_volume.call_count == 1
+    assert mocked_status.call_count == 2
+    assert mocked_volume.call_count == 2
 
     await hass.services.async_call(
         "media_player", "volume_down", {"entity_id": "media_player.soundtouch_1"}, True,
     )
-    assert mocked_volume.call_count == 2
+    assert mocked_volume.call_count == 3
     assert mocked_volume_down.call_count == 1
 
 
@@ -502,8 +511,8 @@ async def test_set_volume_level(
     await setup_soundtouch(hass, DEVICE_1_CONFIG)
 
     assert one_device.call_count == 1
-    assert mocked_status.call_count == 1
-    assert mocked_volume.call_count == 1
+    assert mocked_status.call_count == 2
+    assert mocked_volume.call_count == 2
 
     await hass.services.async_call(
         "media_player",
@@ -511,7 +520,7 @@ async def test_set_volume_level(
         {"entity_id": "media_player.soundtouch_1", "volume_level": 0.17},
         True,
     )
-    assert mocked_volume.call_count == 2
+    assert mocked_volume.call_count == 3
     mocked_set_volume.assert_called_with(17)
 
 
@@ -521,8 +530,8 @@ async def test_mute(mocked_mute, mocked_status, mocked_volume, hass, one_device)
     await setup_soundtouch(hass, DEVICE_1_CONFIG)
 
     assert one_device.call_count == 1
-    assert mocked_status.call_count == 1
-    assert mocked_volume.call_count == 1
+    assert mocked_status.call_count == 2
+    assert mocked_volume.call_count == 2
 
     await hass.services.async_call(
         "media_player",
@@ -530,7 +539,7 @@ async def test_mute(mocked_mute, mocked_status, mocked_volume, hass, one_device)
         {"entity_id": "media_player.soundtouch_1", "is_volume_muted": True},
         True,
     )
-    assert mocked_volume.call_count == 2
+    assert mocked_volume.call_count == 3
     assert mocked_mute.call_count == 1
 
 
@@ -540,13 +549,13 @@ async def test_play(mocked_play, mocked_status, mocked_volume, hass, one_device)
     await setup_soundtouch(hass, DEVICE_1_CONFIG)
 
     assert one_device.call_count == 1
-    assert mocked_status.call_count == 1
-    assert mocked_volume.call_count == 1
+    assert mocked_status.call_count == 2
+    assert mocked_volume.call_count == 2
 
     await hass.services.async_call(
         "media_player", "media_play", {"entity_id": "media_player.soundtouch_1"}, True,
     )
-    assert mocked_status.call_count == 2
+    assert mocked_status.call_count == 3
     assert mocked_play.call_count == 1
 
 
@@ -556,13 +565,13 @@ async def test_pause(mocked_pause, mocked_status, mocked_volume, hass, one_devic
     await setup_soundtouch(hass, DEVICE_1_CONFIG)
 
     assert one_device.call_count == 1
-    assert mocked_status.call_count == 1
-    assert mocked_volume.call_count == 1
+    assert mocked_status.call_count == 2
+    assert mocked_volume.call_count == 2
 
     await hass.services.async_call(
         "media_player", "media_pause", {"entity_id": "media_player.soundtouch_1"}, True,
     )
-    assert mocked_status.call_count == 2
+    assert mocked_status.call_count == 3
     assert mocked_pause.call_count == 1
 
 
@@ -574,8 +583,8 @@ async def test_play_pause(
     await setup_soundtouch(hass, DEVICE_1_CONFIG)
 
     assert one_device.call_count == 1
-    assert mocked_status.call_count == 1
-    assert mocked_volume.call_count == 1
+    assert mocked_status.call_count == 2
+    assert mocked_volume.call_count == 2
 
     await hass.services.async_call(
         "media_player",
@@ -583,7 +592,7 @@ async def test_play_pause(
         {"entity_id": "media_player.soundtouch_1"},
         True,
     )
-    assert mocked_status.call_count == 2
+    assert mocked_status.call_count == 3
     assert mocked_play_pause.call_count == 1
 
 
@@ -601,8 +610,8 @@ async def test_next_previous_track(
     await setup_soundtouch(hass, DEVICE_1_CONFIG)
 
     assert one_device.call_count == 1
-    assert mocked_status.call_count == 1
-    assert mocked_volume.call_count == 1
+    assert mocked_status.call_count == 2
+    assert mocked_volume.call_count == 2
 
     await hass.services.async_call(
         "media_player",
@@ -610,7 +619,7 @@ async def test_next_previous_track(
         {"entity_id": "media_player.soundtouch_1"},
         True,
     )
-    assert mocked_status.call_count == 2
+    assert mocked_status.call_count == 3
     assert mocked_next_track.call_count == 1
 
     await hass.services.async_call(
@@ -619,7 +628,7 @@ async def test_next_previous_track(
         {"entity_id": "media_player.soundtouch_1"},
         True,
     )
-    assert mocked_status.call_count == 3
+    assert mocked_status.call_count == 4
     assert mocked_previous_track.call_count == 1
 
 
@@ -632,8 +641,8 @@ async def test_play_media(
     await setup_soundtouch(hass, DEVICE_1_CONFIG)
 
     assert one_device.call_count == 1
-    assert mocked_status.call_count == 1
-    assert mocked_volume.call_count == 1
+    assert mocked_status.call_count == 2
+    assert mocked_volume.call_count == 2
 
     await hass.services.async_call(
         "media_player",
@@ -670,8 +679,8 @@ async def test_play_media_url(
     await setup_soundtouch(hass, DEVICE_1_CONFIG)
 
     assert one_device.call_count == 1
-    assert mocked_status.call_count == 1
-    assert mocked_volume.call_count == 1
+    assert mocked_status.call_count == 2
+    assert mocked_volume.call_count == 2
 
     await hass.services.async_call(
         "media_player",
@@ -695,8 +704,8 @@ async def test_play_everywhere(
     await setup_soundtouch(hass, [DEVICE_1_CONFIG, DEVICE_2_CONFIG])
 
     assert mocked_device.call_count == 2
-    assert mocked_status.call_count == 2
-    assert mocked_volume.call_count == 2
+    assert mocked_status.call_count == 4
+    assert mocked_volume.call_count == 4
 
     # one master, one slave => create zone
     await hass.services.async_call(
@@ -740,8 +749,8 @@ async def test_create_zone(
     await setup_soundtouch(hass, [DEVICE_1_CONFIG, DEVICE_2_CONFIG])
 
     assert mocked_device.call_count == 2
-    assert mocked_status.call_count == 2
-    assert mocked_volume.call_count == 2
+    assert mocked_status.call_count == 4
+    assert mocked_volume.call_count == 4
 
     # one master, one slave => create zone
     await hass.services.async_call(
@@ -783,8 +792,8 @@ async def test_remove_zone_slave(
     await setup_soundtouch(hass, [DEVICE_1_CONFIG, DEVICE_2_CONFIG])
 
     assert mocked_device.call_count == 2
-    assert mocked_status.call_count == 2
-    assert mocked_volume.call_count == 2
+    assert mocked_status.call_count == 4
+    assert mocked_volume.call_count == 4
 
     # remove one slave
     await hass.services.async_call(
@@ -826,8 +835,8 @@ async def test_add_zone_slave(
     await setup_soundtouch(hass, [DEVICE_1_CONFIG, DEVICE_2_CONFIG])
 
     assert mocked_device.call_count == 2
-    assert mocked_status.call_count == 2
-    assert mocked_volume.call_count == 2
+    assert mocked_status.call_count == 4
+    assert mocked_volume.call_count == 4
 
     # add one slave
     await hass.services.async_call(
@@ -858,3 +867,43 @@ async def test_add_zone_slave(
         True,
     )
     assert mocked_add_zone_slave.call_count == 1
+
+
+@patch("libsoundtouch.device.SoundTouchDevice.create_zone")
+async def test_zone_attributes(
+    mocked_create_zone, mocked_status, mocked_volume, hass, two_zones,
+):
+    """Test play everywhere."""
+    mocked_device = two_zones
+    await setup_soundtouch(hass, [DEVICE_1_CONFIG, DEVICE_2_CONFIG])
+
+    assert mocked_device.call_count == 2
+    assert mocked_status.call_count == 4
+    assert mocked_volume.call_count == 4
+
+    entity_1_state = hass.states.get("media_player.soundtouch_1")
+    assert entity_1_state.attributes[ATTR_SOUNDTOUCH_ZONE]["is_master"]
+    assert (
+        entity_1_state.attributes[ATTR_SOUNDTOUCH_ZONE]["master"]
+        == "media_player.soundtouch_1"
+    )
+    assert entity_1_state.attributes[ATTR_SOUNDTOUCH_ZONE]["slaves"] == [
+        "media_player.soundtouch_2"
+    ]
+    assert entity_1_state.attributes[ATTR_SOUNDTOUCH_GROUP] == [
+        "media_player.soundtouch_1",
+        "media_player.soundtouch_2",
+    ]
+    entity_2_state = hass.states.get("media_player.soundtouch_2")
+    assert not entity_2_state.attributes[ATTR_SOUNDTOUCH_ZONE]["is_master"]
+    assert (
+        entity_2_state.attributes[ATTR_SOUNDTOUCH_ZONE]["master"]
+        == "media_player.soundtouch_1"
+    )
+    assert entity_2_state.attributes[ATTR_SOUNDTOUCH_ZONE]["slaves"] == [
+        "media_player.soundtouch_2"
+    ]
+    assert entity_2_state.attributes[ATTR_SOUNDTOUCH_GROUP] == [
+        "media_player.soundtouch_1",
+        "media_player.soundtouch_2",
+    ]

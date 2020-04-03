@@ -14,6 +14,8 @@ import threading
 from unittest.mock import MagicMock, Mock, patch
 import uuid
 
+from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa
+
 from homeassistant import auth, config_entries, core as ha, loader
 from homeassistant.auth import (
     auth_store,
@@ -37,7 +39,6 @@ from homeassistant.const import (
     EVENT_PLATFORM_DISCOVERED,
     EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED,
-    SERVER_PORT,
     STATE_OFF,
     STATE_ON,
 )
@@ -59,7 +60,6 @@ import homeassistant.util.dt as date_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.yaml.loader as yaml_loader
 
-_TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
 CLIENT_ID = "https://example.com/app"
@@ -217,18 +217,6 @@ async def async_test_home_assistant(loop):
     return hass
 
 
-def get_test_instance_port():
-    """Return unused port for running test instance.
-
-    The socket that holds the default port does not get released when we stop
-    HA in a different test case. Until I have figured out what is going on,
-    let's run each test on a different port.
-    """
-    global _TEST_INSTANCE_PORT
-    _TEST_INSTANCE_PORT += 1
-    return _TEST_INSTANCE_PORT
-
-
 def async_mock_service(hass, domain, service, schema=None):
     """Set up a fake service & return a calls log list to this service."""
     calls = []
@@ -323,11 +311,15 @@ async def async_mock_mqtt_component(hass, config=None):
     if config is None:
         config = {mqtt.CONF_BROKER: "mock-broker"}
 
+    async def _async_fire_mqtt_message(topic, payload, qos, retain):
+        async_fire_mqtt_message(hass, topic, payload, qos, retain)
+
     with patch("paho.mqtt.client.Client") as mock_client:
         mock_client().connect.return_value = 0
         mock_client().subscribe.return_value = (0, 0)
         mock_client().unsubscribe.return_value = (0, 0)
         mock_client().publish.return_value = (0, 0)
+        mock_client().publish.side_effect = _async_fire_mqtt_message
 
         result = await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: config})
         assert result
@@ -988,6 +980,10 @@ def mock_storage(data=None):
         # To ensure that the data can be serialized
         data[store.key] = json.loads(json.dumps(data_to_write, cls=store._encoder))
 
+    async def mock_remove(store):
+        """Remove data."""
+        data.pop(store.key, None)
+
     with patch(
         "homeassistant.helpers.storage.Store._async_load",
         side_effect=mock_async_load,
@@ -995,6 +991,10 @@ def mock_storage(data=None):
     ), patch(
         "homeassistant.helpers.storage.Store._write_data",
         side_effect=mock_write_data,
+        autospec=True,
+    ), patch(
+        "homeassistant.helpers.storage.Store.async_remove",
+        side_effect=mock_remove,
         autospec=True,
     ):
         yield data
@@ -1005,7 +1005,7 @@ async def flush_store(store):
     if store._data is None:
         return
 
-    store._async_cleanup_stop_listener()
+    store._async_cleanup_final_write_listener()
     store._async_cleanup_delay_listener()
     await store._async_handle_write_data()
 
@@ -1018,7 +1018,7 @@ async def get_system_health_info(hass, domain):
 def mock_integration(hass, module):
     """Mock an integration."""
     integration = loader.Integration(
-        hass, f"homeassistant.components.{module.DOMAIN}", None, module.mock_manifest(),
+        hass, f"homeassistant.components.{module.DOMAIN}", None, module.mock_manifest()
     )
 
     _LOGGER.info("Adding mock integration: %s", module.DOMAIN)

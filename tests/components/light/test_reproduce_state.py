@@ -166,4 +166,4 @@ async def test_deprecation_warning(hass, caplog):
         [State("light.entity_off", "on", {"brightness_pct": 80})], blocking=True
     )
     assert len(turn_on_calls) == 1
-    assert DEPRECATION_WARNING in caplog.text
+    assert DEPRECATION_WARNING % ["brightness_pct"] in caplog.text

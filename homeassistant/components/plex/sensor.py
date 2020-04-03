@@ -109,18 +109,16 @@ class PlexSensor(Entity):
             now_playing_user = f"{user} - {device}"
             now_playing_title = ""
 
-            if sess.TYPE == "episode":
+            if sess.TYPE in ["clip", "episode"]:
                 # example:
-                # "Supernatural (2005) - S01 · E13 - Route 666"
+                # "Supernatural (2005) - s01e13 - Route 666"
                 season_title = sess.grandparentTitle
                 if sess.show().year is not None:
-                    season_title += " ({0})".format(sess.show().year)
-                season_episode = "S{0}".format(sess.parentIndex)
-                if sess.index is not None:
-                    season_episode += f" · E{sess.index}"
+                    season_title += f" ({sess.show().year!s})"
+                season_episode = sess.seasonEpisode
                 episode_title = sess.title
-                now_playing_title = "{0} - {1} - {2}".format(
-                    season_title, season_episode, episode_title
+                now_playing_title = (
+                    f"{season_title} - {season_episode} - {episode_title}"
                 )
             elif sess.TYPE == "track":
                 # example:
@@ -128,9 +126,7 @@ class PlexSensor(Entity):
                 track_artist = sess.grandparentTitle
                 track_album = sess.parentTitle
                 track_title = sess.title
-                now_playing_title = "{0} - {1} - {2}".format(
-                    track_artist, track_album, track_title
-                )
+                now_playing_title = f"{track_artist} - {track_album} - {track_title}"
             else:
                 # example:
                 # "picture_of_last_summer_camp (2015)"

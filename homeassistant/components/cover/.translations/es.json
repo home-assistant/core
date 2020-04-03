@@ -1,5 +1,13 @@
 {
     "device_automation": {
+        "action_type": {
+            "close": "Cerrar {entity_name}",
+            "close_tilt": "Cerrar inclinaci\u00f3n de {entity_name}",
+            "open": "Abrir {entity_name}",
+            "open_tilt": "Abrir inclinaci\u00f3n de {entity_name}",
+            "set_position": "Ajustar la posici\u00f3n de {entity_name}",
+            "set_tilt_position": "Ajustar la posici\u00f3n de inclinaci\u00f3n de {entity_name}"
+        },
         "condition_type": {
             "is_closed": "{entity_name} est\u00e1 cerrado",
             "is_closing": "{entity_name} se est\u00e1 cerrando",

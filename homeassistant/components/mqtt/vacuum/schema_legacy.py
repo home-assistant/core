@@ -32,6 +32,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.icon import icon_for_battery_level
 
+from ..debug_info import log_messages
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -162,13 +163,12 @@ PLATFORM_SCHEMA_LEGACY = (
 
 
 async def async_setup_entity_legacy(
-    config, async_add_entities, config_entry, discovery_hash
+    config, async_add_entities, config_entry, discovery_data
 ):
     """Set up a MQTT Vacuum Legacy."""
-    async_add_entities([MqttVacuum(config, config_entry, discovery_hash)])
+    async_add_entities([MqttVacuum(config, config_entry, discovery_data)])
 
 
-# pylint: disable=too-many-ancestors
 class MqttVacuum(
     MqttAttributes,
     MqttAvailability,
@@ -267,9 +267,12 @@ class MqttVacuum(
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
-        await subscription.async_unsubscribe_topics(self.hass, self._sub_state)
+        self._sub_state = await subscription.async_unsubscribe_topics(
+            self.hass, self._sub_state
+        )
         await MqttAttributes.async_will_remove_from_hass(self)
         await MqttAvailability.async_will_remove_from_hass(self)
+        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -278,6 +281,7 @@ class MqttVacuum(
                 tpl.hass = self.hass
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def message_received(msg):
             """Handle new MQTT message."""
             if (

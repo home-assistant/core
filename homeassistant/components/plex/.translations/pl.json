@@ -53,6 +53,8 @@
         "step": {
             "plex_mp_settings": {
                 "data": {
+                    "ignore_new_shared_users": "Ignoruj nowych zarz\u0105dzanych/wsp\u00f3\u0142dzielonych u\u017cytkownik\u00f3w",
+                    "monitored_users": "Monitorowani u\u017cytkownicy",
                     "show_all_controls": "Poka\u017c wszystkie elementy steruj\u0105ce",
                     "use_episode_art": "U\u017cyj grafiki odcinka"
                 },

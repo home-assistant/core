@@ -3,6 +3,7 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import ATTR_NAME
+from homeassistant.core import callback
 
 from . import (
     SENSOR_TYPES,
@@ -76,7 +77,8 @@ class AmbientWeatherBinarySensor(AmbientWeatherEntity, BinarySensorDevice):
 
         return self._state == 1
 
-    async def async_update(self):
+    @callback
+    def update_from_latest_data(self):
         """Fetch new state data for the entity."""
         self._state = self._ambient.stations[self._mac_address][ATTR_LAST_DATA].get(
             self._sensor_type

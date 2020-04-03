@@ -11,13 +11,13 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
+    MEDIA_TYPE_VIDEO,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
@@ -218,6 +218,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
             if session_device:
                 self._make = session_device.device or ""
                 self._player_state = session_device.state
+                self._device_platform = self._device_platform or session_device.platform
                 self._device_product = self._device_product or session_device.product
                 self._device_title = self._device_title or session_device.title
                 self._device_version = self._device_version or session_device.version
@@ -243,7 +244,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
             self._media_content_id = self.session.ratingKey
             self._media_content_rating = getattr(self.session, "contentRating", None)
 
-        name_parts = [self._device_product, self._device_title]
+        name_parts = [self._device_product, self._device_title or self._device_platform]
         if (self._device_product in COMMON_PLAYERS) and self.make:
             # Add more context in name for likely duplicates
             name_parts.append(self.make)
@@ -274,7 +275,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
         thumb_url = self.session.thumbUrl
         if (
             self.media_content_type is MEDIA_TYPE_TVSHOW
-            and not self.plex_server.use_episode_art
+            and not self.plex_server.option_use_episode_art
         ):
             thumb_url = self.session.url(self.session.grandparentThumb)
 
@@ -333,6 +334,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
 
     def force_idle(self):
         """Force client to idle."""
+        self._player_state = STATE_IDLE
         self._state = STATE_IDLE
         self.session = None
         self._clear_media_details()
@@ -480,46 +482,6 @@ class PlexMediaPlayer(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        # force show all controls
-        if self.plex_server.show_all_controls:
-            return (
-                SUPPORT_PAUSE
-                | SUPPORT_PREVIOUS_TRACK
-                | SUPPORT_NEXT_TRACK
-                | SUPPORT_STOP
-                | SUPPORT_VOLUME_SET
-                | SUPPORT_PLAY
-                | SUPPORT_PLAY_MEDIA
-                | SUPPORT_TURN_OFF
-                | SUPPORT_VOLUME_MUTE
-            )
-
-        # no mute support
-        if self.make.lower() == "shield android tv":
-            _LOGGER.debug(
-                "Shield Android TV client detected, disabling mute controls: %s",
-                self.name,
-            )
-            return (
-                SUPPORT_PAUSE
-                | SUPPORT_PREVIOUS_TRACK
-                | SUPPORT_NEXT_TRACK
-                | SUPPORT_STOP
-                | SUPPORT_VOLUME_SET
-                | SUPPORT_PLAY
-                | SUPPORT_PLAY_MEDIA
-                | SUPPORT_TURN_OFF
-            )
-
-        # Only supports play,pause,stop (and off which really is stop)
-        if self.make.lower().startswith("tivo"):
-            _LOGGER.debug(
-                "Tivo client detected, only enabling pause, play, "
-                "stop, and off controls: %s",
-                self.name,
-            )
-            return SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP | SUPPORT_TURN_OFF
-
         if self.device and "playback" in self._device_protocol_capabilities:
             return (
                 SUPPORT_PAUSE
@@ -529,7 +491,6 @@ class PlexMediaPlayer(MediaPlayerDevice):
                 | SUPPORT_VOLUME_SET
                 | SUPPORT_PLAY
                 | SUPPORT_PLAY_MEDIA
-                | SUPPORT_TURN_OFF
                 | SUPPORT_VOLUME_MUTE
             )
 
@@ -593,11 +554,6 @@ class PlexMediaPlayer(MediaPlayerDevice):
             self.device.stop(self._active_media_plexapi_type)
             self.plex_server.update_platforms()
 
-    def turn_off(self):
-        """Turn the client off."""
-        # Fake it since we can't turn the client off
-        self.media_stop()
-
     def media_next_track(self):
         """Send next track command."""
         if self.device and "playback" in self._device_protocol_capabilities:
@@ -620,9 +576,11 @@ class PlexMediaPlayer(MediaPlayerDevice):
         shuffle = src.get("shuffle", 0)
 
         media = None
+        command_media_type = MEDIA_TYPE_VIDEO
 
         if media_type == "MUSIC":
             media = self._get_music_media(library, src)
+            command_media_type = MEDIA_TYPE_MUSIC
         elif media_type == "EPISODE":
             media = self._get_tv_media(library, src)
         elif media_type == "PLAYLIST":
@@ -636,7 +594,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
 
         playqueue = self.plex_server.create_playqueue(media, shuffle=shuffle)
         try:
-            self.device.playMedia(playqueue)
+            self.device.playMedia(playqueue, type=command_media_type)
         except ParseError:
             # Temporary workaround for Plexamp / plexapi issue
             pass
@@ -738,8 +696,8 @@ class PlexMediaPlayer(MediaPlayerDevice):
 
         return {
             "identifiers": {(PLEX_DOMAIN, self.machine_identifier)},
-            "manufacturer": "Plex",
-            "model": self._device_product or self._device_platform or self.make,
+            "manufacturer": self._device_platform or "Plex",
+            "model": self._device_product or self.make,
             "name": self.name,
             "sw_version": self._device_version,
             "via_device": (PLEX_DOMAIN, self.plex_server.machine_identifier),

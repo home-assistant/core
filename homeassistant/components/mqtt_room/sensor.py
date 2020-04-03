@@ -73,7 +73,7 @@ class MQTTRoomSensor(Entity):
         """Initialize the sensor."""
         self._state = STATE_NOT_HOME
         self._name = name
-        self._state_topic = "{}{}".format(state_topic, "/+")
+        self._state_topic = f"{state_topic}/+"
         self._device_id = slugify(device_id).upper()
         self._timeout = timeout
         self._consider_home = (
@@ -92,7 +92,7 @@ class MQTTRoomSensor(Entity):
             self._distance = distance
             self._updated = dt.utcnow()
 
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         @callback
         def message_received(msg):

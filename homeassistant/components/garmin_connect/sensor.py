@@ -34,7 +34,7 @@ async def async_setup_entry(
     ) as err:
         _LOGGER.error("Error occurred during Garmin Connect Client update: %s", err)
     except Exception:  # pylint: disable=broad-except
-        _LOGGER.error("Unknown error occurred during Garmin Connect Client update.")
+        _LOGGER.exception("Unknown error occurred during Garmin Connect Client update.")
 
     entities = []
     for (
@@ -172,6 +172,12 @@ class GarminConnectSensor(Entity):
 
         if "Duration" in self._type or "Seconds" in self._type:
             self._state = data[self._type] // 60
+        elif "Mass" in self._type or self._type == "weight":
+            self._state = round((data[self._type] / 1000), 2)
+        elif (
+            self._type == "bodyFat" or self._type == "bodyWater" or self._type == "bmi"
+        ):
+            self._state = round(data[self._type], 2)
         else:
             self._state = data[self._type]
 

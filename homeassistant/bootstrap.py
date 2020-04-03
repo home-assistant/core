@@ -1,5 +1,6 @@
 """Provide methods to bootstrap a Home Assistant instance."""
 import asyncio
+import contextlib
 import logging
 import logging.handlers
 import os
@@ -7,17 +8,20 @@ import sys
 from time import monotonic
 from typing import Any, Dict, Optional, Set
 
+from async_timeout import timeout
 import voluptuous as vol
 
 from homeassistant import config as conf_util, config_entries, core, loader
 from homeassistant.components import http
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_HOMEASSISTANT_STOP,
     REQUIRED_NEXT_PYTHON_DATE,
     REQUIRED_NEXT_PYTHON_VER,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.setup import DATA_SETUP, async_setup_component
 from homeassistant.util.logging import AsyncHandler
 from homeassistant.util.package import async_get_user_site, is_virtual_env
 from homeassistant.util.yaml import clear_secret_cache
@@ -71,6 +75,7 @@ async def async_setup_hass(
     _LOGGER.info("Config directory: %s", config_dir)
 
     config_dict = None
+    basic_setup_success = False
 
     if not safe_mode:
         await hass.async_add_executor_job(conf_util.process_ha_config_upgrade, hass)
@@ -79,19 +84,45 @@ async def async_setup_hass(
             config_dict = await conf_util.async_hass_config_yaml(hass)
         except HomeAssistantError as err:
             _LOGGER.error(
-                "Failed to parse configuration.yaml: %s. Falling back to safe mode",
-                err,
+                "Failed to parse configuration.yaml: %s. Activating safe mode", err,
             )
         else:
             if not is_virtual_env():
                 await async_mount_local_lib_path(config_dir)
 
-            await async_from_config_dict(config_dict, hass)
+            basic_setup_success = (
+                await async_from_config_dict(config_dict, hass) is not None
+            )
         finally:
             clear_secret_cache()
 
-    if safe_mode or config_dict is None:
+    if config_dict is None:
+        safe_mode = True
+
+    elif not basic_setup_success:
+        _LOGGER.warning("Unable to set up core integrations. Activating safe mode")
+        safe_mode = True
+
+    elif (
+        "frontend" in hass.data.get(DATA_SETUP, {})
+        and "frontend" not in hass.config.components
+    ):
+        _LOGGER.warning("Detected that frontend did not load. Activating safe mode")
+        # Ask integrations to shut down. It's messy but we can't
+        # do a clean stop without knowing what is broken
+        hass.async_track_tasks()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP, {})
+        with contextlib.suppress(asyncio.TimeoutError):
+            async with timeout(10):
+                await hass.async_block_till_done()
+
+        safe_mode = True
+        hass = core.HomeAssistant()
+        hass.config.config_dir = config_dir
+
+    if safe_mode:
         _LOGGER.info("Starting in safe mode")
+        hass.config.safe_mode = True
 
         http_conf = (await http.async_get_last_config(hass)) or {}
 
@@ -103,7 +134,7 @@ async def async_setup_hass(
 
 
 async def async_from_config_dict(
-    config: Dict[str, Any], hass: core.HomeAssistant
+    config: ConfigType, hass: core.HomeAssistant
 ) -> Optional[core.HomeAssistant]:
     """Try to configure Home Assistant from a configuration dictionary.
 
@@ -111,6 +142,25 @@ async def async_from_config_dict(
     This method is a coroutine.
     """
     start = monotonic()
+
+    hass.config_entries = config_entries.ConfigEntries(hass, config)
+    await hass.config_entries.async_initialize()
+
+    # Set up core.
+    _LOGGER.debug("Setting up %s", CORE_INTEGRATIONS)
+
+    if not all(
+        await asyncio.gather(
+            *(
+                async_setup_component(hass, domain, config)
+                for domain in CORE_INTEGRATIONS
+            )
+        )
+    ):
+        _LOGGER.error("Home Assistant core failed to initialize. ")
+        return None
+
+    _LOGGER.debug("Home Assistant core initialized")
 
     core_config = config.get(core.DOMAIN, {})
 
@@ -125,9 +175,6 @@ async def async_from_config_dict(
             "Further initialization aborted"
         )
         return None
-
-    hass.config_entries = config_entries.ConfigEntries(hass, config)
-    await hass.config_entries.async_initialize()
 
     await _async_set_up_integrations(hass, config)
 
@@ -264,7 +311,7 @@ def _get_domains(hass: core.HomeAssistant, config: Dict[str, Any]) -> Set[str]:
     domains = set(key.split(" ")[0] for key in config.keys() if key != core.DOMAIN)
 
     # Add config entry domains
-    if "safe_mode" not in config:
+    if not hass.config.safe_mode:
         domains.update(hass.config_entries.async_domains())
 
     # Make sure the Hass.io component is loaded
@@ -278,15 +325,30 @@ async def _async_set_up_integrations(
     hass: core.HomeAssistant, config: Dict[str, Any]
 ) -> None:
     """Set up all the integrations."""
+
+    async def async_setup_multi_components(domains: Set[str]) -> None:
+        """Set up multiple domains. Log on failure."""
+        futures = {
+            domain: hass.async_create_task(async_setup_component(hass, domain, config))
+            for domain in domains
+        }
+        await asyncio.wait(futures.values())
+        errors = [domain for domain in domains if futures[domain].exception()]
+        for domain in errors:
+            exception = futures[domain].exception()
+            _LOGGER.error(
+                "Error setting up integration %s - received exception",
+                domain,
+                exc_info=(type(exception), exception, exception.__traceback__),
+            )
+
     domains = _get_domains(hass, config)
 
     # Start up debuggers. Start these first in case they want to wait.
     debuggers = domains & DEBUGGER_INTEGRATIONS
     if debuggers:
         _LOGGER.debug("Starting up debuggers %s", debuggers)
-        await asyncio.gather(
-            *(async_setup_component(hass, domain, config) for domain in debuggers)
-        )
+        await async_setup_multi_components(debuggers)
         domains -= DEBUGGER_INTEGRATIONS
 
     # Resolve all dependencies of all components so we can find the logging
@@ -295,25 +357,6 @@ async def _async_set_up_integrations(
         *(loader.async_component_dependencies(hass, domain) for domain in domains),
         return_exceptions=True,
     )
-
-    # Set up core.
-    _LOGGER.debug("Setting up %s", CORE_INTEGRATIONS)
-
-    if not all(
-        await asyncio.gather(
-            *(
-                async_setup_component(hass, domain, config)
-                for domain in CORE_INTEGRATIONS
-            )
-        )
-    ):
-        _LOGGER.error(
-            "Home Assistant core failed to initialize. "
-            "Further initialization aborted"
-        )
-        return
-
-    _LOGGER.debug("Home Assistant core initialized")
 
     # Finish resolving domains
     for dep_domains in await resolved_domains_task:
@@ -330,9 +373,7 @@ async def _async_set_up_integrations(
     if logging_domains:
         _LOGGER.info("Setting up %s", logging_domains)
 
-        await asyncio.gather(
-            *(async_setup_component(hass, domain, config) for domain in logging_domains)
-        )
+        await async_setup_multi_components(logging_domains)
 
     # Kick off loading the registries. They don't need to be awaited.
     asyncio.gather(
@@ -342,9 +383,7 @@ async def _async_set_up_integrations(
     )
 
     if stage_1_domains:
-        await asyncio.gather(
-            *(async_setup_component(hass, domain, config) for domain in stage_1_domains)
-        )
+        await async_setup_multi_components(stage_1_domains)
 
     # Load all integrations
     after_dependencies: Dict[str, Set[str]] = {}
@@ -373,9 +412,7 @@ async def _async_set_up_integrations(
 
         _LOGGER.debug("Setting up %s", domains_to_load)
 
-        await asyncio.gather(
-            *(async_setup_component(hass, domain, config) for domain in domains_to_load)
-        )
+        await async_setup_multi_components(domains_to_load)
 
         last_load = domains_to_load
         stage_2_domains -= domains_to_load
@@ -385,9 +422,7 @@ async def _async_set_up_integrations(
     if stage_2_domains:
         _LOGGER.debug("Final set up: %s", stage_2_domains)
 
-        await asyncio.gather(
-            *(async_setup_component(hass, domain, config) for domain in stage_2_domains)
-        )
+        await async_setup_multi_components(stage_2_domains)
 
     # Wrap up startup
     await hass.async_block_till_done()

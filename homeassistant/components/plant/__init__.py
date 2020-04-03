@@ -16,6 +16,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -131,14 +132,17 @@ class Plant(Entity):
     """
 
     READINGS = {
-        READING_BATTERY: {ATTR_UNIT_OF_MEASUREMENT: "%", "min": CONF_MIN_BATTERY_LEVEL},
+        READING_BATTERY: {
+            ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
+            "min": CONF_MIN_BATTERY_LEVEL,
+        },
         READING_TEMPERATURE: {
             ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             "min": CONF_MIN_TEMPERATURE,
             "max": CONF_MAX_TEMPERATURE,
         },
         READING_MOISTURE: {
-            ATTR_UNIT_OF_MEASUREMENT: "%",
+            ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
             "min": CONF_MIN_MOISTURE,
             "max": CONF_MAX_MOISTURE,
         },
@@ -251,7 +255,7 @@ class Plant(Entity):
             self._state = STATE_OK
             self._problems = PROBLEM_NONE
         _LOGGER.debug("New data processed")
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def _check_min(self, sensor_name, value, params):
         """If configured, check the value against the defined minimum value."""
@@ -318,7 +322,7 @@ class Plant(Entity):
                 except ValueError:
                     pass
         _LOGGER.debug("Initializing from database completed")
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def should_poll(self):

@@ -126,8 +126,8 @@ SET_CONFIG_PARAMETER_SCHEMA = vol.Schema(
 SET_NODE_VALUE_SCHEMA = vol.Schema(
     {
         vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
-        vol.Required(const.ATTR_VALUE_ID): vol.Coerce(int),
-        vol.Required(const.ATTR_CONFIG_VALUE): vol.Coerce(int),
+        vol.Required(const.ATTR_VALUE_ID): vol.Any(vol.Coerce(int), cv.string),
+        vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(vol.Coerce(int), cv.string),
     }
 )
 
@@ -1234,7 +1234,7 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
                 ent_reg.async_update_entity(self.entity_id, new_entity_id=new_entity_id)
                 return
         # else for the above two ifs, update if not using update_entity
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Add device to dict."""

@@ -1,6 +1,5 @@
 """Alexa capabilities."""
 import logging
-import math
 
 from homeassistant.components import (
     cover,
@@ -8,6 +7,7 @@ from homeassistant.components import (
     image_processing,
     input_number,
     light,
+    timer,
     vacuum,
 )
 from homeassistant.components.alarm_control_panel import ATTR_CODE_FORMAT, FORMAT_NUMBER
@@ -26,6 +26,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_IDLE,
     STATE_LOCKED,
     STATE_OFF,
     STATE_ON,
@@ -168,6 +169,11 @@ class AlexaCapability:
         """Return the supportedOperations object."""
         return []
 
+    @staticmethod
+    def camera_stream_configurations():
+        """Applicable only to CameraStreamController."""
+        return None
+
     def serialize_discovery(self):
         """Serialize according to the Discovery API."""
         result = {"type": "AlexaInterface", "interface": self.name(), "version": "3"}
@@ -221,13 +227,16 @@ class AlexaCapability:
         if inputs:
             result["inputs"] = inputs
 
+        camera_stream_configurations = self.camera_stream_configurations()
+        if camera_stream_configurations:
+            result["cameraStreamConfigurations"] = camera_stream_configurations
+
         return result
 
     def serialize_properties(self):
         """Return properties serialized for an API response."""
         for prop in self.properties_supported():
             prop_name = prop["name"]
-            # pylint: disable=assignment-from-no-return
             prop_value = self.get_property(prop_name)
             if prop_value is not None:
                 result = {
@@ -365,6 +374,10 @@ class AlexaPowerController(AlexaCapability):
 
         if self.entity.domain == climate.DOMAIN:
             is_on = self.entity.state != climate.HVAC_MODE_OFF
+        elif self.entity.domain == vacuum.DOMAIN:
+            is_on = self.entity.state == vacuum.STATE_CLEANING
+        elif self.entity.domain == timer.DOMAIN:
+            is_on = self.entity.state != STATE_IDLE
 
         else:
             is_on = self.entity.state != STATE_OFF
@@ -670,11 +683,8 @@ class AlexaSpeaker(AlexaCapability):
             current_level = self.entity.attributes.get(
                 media_player.ATTR_MEDIA_VOLUME_LEVEL
             )
-            try:
-                current = math.floor(int(current_level * 100))
-            except ZeroDivisionError:
-                current = 0
-            return current
+            if current_level is not None:
+                return round(float(current_level) * 100)
 
         if name == "muted":
             return bool(
@@ -1853,3 +1863,40 @@ class AlexaTimeHoldController(AlexaCapability):
         When false, Alexa does not send the Resume directive.
         """
         return {"allowRemoteResume": self._allow_remote_resume}
+
+
+class AlexaCameraStreamController(AlexaCapability):
+    """Implements Alexa.CameraStreamController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-camerastreamcontroller.html
+    """
+
+    supported_locales = {
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "fr-FR",
+        "it-IT",
+        "ja-JP",
+    }
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.CameraStreamController"
+
+    def camera_stream_configurations(self):
+        """Return cameraStreamConfigurations object."""
+        camera_stream_configurations = [
+            {
+                "protocols": ["HLS"],
+                "resolutions": [{"width": 1280, "height": 720}],
+                "authorizationTypes": ["NONE"],
+                "videoCodecs": ["H264"],
+                "audioCodecs": ["AAC"],
+            }
+        ]
+        return camera_stream_configurations

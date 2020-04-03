@@ -12,6 +12,7 @@ import functools
 import logging
 import os
 import pathlib
+import re
 import threading
 from time import monotonic
 from types import MappingProxyType
@@ -46,6 +47,7 @@ from homeassistant.const import (
     EVENT_CALL_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_REGISTERED,
@@ -63,7 +65,7 @@ from homeassistant.exceptions import (
     ServiceNotFound,
     Unauthorized,
 )
-from homeassistant.util import location, slugify
+from homeassistant.util import location
 from homeassistant.util.async_ import fire_coroutine_threadsafe, run_callback_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
@@ -92,7 +94,7 @@ SOURCE_DISCOVERED = "discovered"
 SOURCE_STORAGE = "storage"
 SOURCE_YAML = "yaml"
 
-# How long to wait till things that run on startup have to finish.
+# How long to wait until things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
 
 _LOGGER = logging.getLogger(__name__)
@@ -103,12 +105,15 @@ def split_entity_id(entity_id: str) -> List[str]:
     return entity_id.split(".", 1)
 
 
+VALID_ENTITY_ID = re.compile(r"^(?!.+__)(?!_)[\da-z_]+(?<!_)\.(?!_)[\da-z_]+(?<!_)$")
+
+
 def valid_entity_id(entity_id: str) -> bool:
     """Test if an entity ID is a valid format.
 
     Format: <domain>.<entity> where both are slugs.
     """
-    return "." in entity_id and slugify(entity_id) == entity_id.replace(".", "_", 1)
+    return VALID_ENTITY_ID.match(entity_id) is not None
 
 
 def valid_state(state: str) -> bool:
@@ -147,6 +152,7 @@ class CoreState(enum.Enum):
     starting = "STARTING"
     running = "RUNNING"
     stopping = "STOPPING"
+    final_write = "FINAL_WRITE"
 
     def __str__(self) -> str:
         """Return the event."""
@@ -245,7 +251,7 @@ class HomeAssistant:
         try:
             # Only block for EVENT_HOMEASSISTANT_START listener
             self.async_stop_track_tasks()
-            with timeout(TIMEOUT_EVENT_START):
+            async with timeout(TIMEOUT_EVENT_START):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
@@ -370,13 +376,13 @@ class HomeAssistant:
             self.async_add_job(target, *args)
 
     def block_till_done(self) -> None:
-        """Block till all pending work is done."""
+        """Block until all pending work is done."""
         asyncio.run_coroutine_threadsafe(
             self.async_block_till_done(), self.loop
         ).result()
 
     async def async_block_till_done(self) -> None:
-        """Block till all pending work is done."""
+        """Block until all pending work is done."""
         # To flush out any call_soon_threadsafe
         await asyncio.sleep(0)
 
@@ -408,7 +414,7 @@ class HomeAssistant:
             # regardless of the state of the loop.
             if self.state == CoreState.not_running:  # just ignore
                 return
-            if self.state == CoreState.stopping:
+            if self.state == CoreState.stopping or self.state == CoreState.final_write:
                 _LOGGER.info("async_stop called twice: ignored")
                 return
             if self.state == CoreState.starting:
@@ -422,6 +428,11 @@ class HomeAssistant:
         await self.async_block_till_done()
 
         # stage 2
+        self.state = CoreState.final_write
+        self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+        await self.async_block_till_done()
+
+        # stage 3
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
         await self.async_block_till_done()
@@ -897,7 +908,7 @@ class StateMachine:
         ).result()
 
     @callback
-    def async_remove(self, entity_id: str) -> bool:
+    def async_remove(self, entity_id: str, context: Optional[Context] = None) -> bool:
         """Remove the state of an entity.
 
         Returns boolean to indicate if an entity was removed.
@@ -913,6 +924,8 @@ class StateMachine:
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
             {"entity_id": entity_id, "old_state": old_state, "new_state": None},
+            EventOrigin.local,
+            context=context,
         )
         return True
 
@@ -1146,25 +1159,15 @@ class ServiceRegistry:
         service_data: Optional[Dict] = None,
         blocking: bool = False,
         context: Optional[Context] = None,
+        limit: Optional[float] = SERVICE_CALL_LIMIT,
     ) -> Optional[bool]:
         """
         Call a service.
 
-        Specify blocking=True to wait till service is executed.
-        Waits a maximum of SERVICE_CALL_LIMIT.
-
-        If blocking = True, will return boolean if service executed
-        successfully within SERVICE_CALL_LIMIT.
-
-        This method will fire an event to call the service.
-        This event will be picked up by this ServiceRegistry and any
-        other ServiceRegistry that is listening on the EventBus.
-
-        Because the service is sent as an event you are not allowed to use
-        the keys ATTR_DOMAIN and ATTR_SERVICE in your service_data.
+        See description of async_call for details.
         """
         return asyncio.run_coroutine_threadsafe(
-            self.async_call(domain, service, service_data, blocking, context),
+            self.async_call(domain, service, service_data, blocking, context, limit),
             self._hass.loop,
         ).result()
 
@@ -1175,19 +1178,18 @@ class ServiceRegistry:
         service_data: Optional[Dict] = None,
         blocking: bool = False,
         context: Optional[Context] = None,
+        limit: Optional[float] = SERVICE_CALL_LIMIT,
     ) -> Optional[bool]:
         """
         Call a service.
 
-        Specify blocking=True to wait till service is executed.
-        Waits a maximum of SERVICE_CALL_LIMIT.
+        Specify blocking=True to wait until service is executed.
+        Waits a maximum of limit, which may be None for no timeout.
 
         If blocking = True, will return boolean if service executed
-        successfully within SERVICE_CALL_LIMIT.
+        successfully within limit.
 
-        This method will fire an event to call the service.
-        This event will be picked up by this ServiceRegistry and any
-        other ServiceRegistry that is listening on the EventBus.
+        This method will fire an event to indicate the service has been called.
 
         Because the service is sent as an event you are not allowed to use
         the keys ATTR_DOMAIN and ATTR_SERVICE in your service_data.
@@ -1226,7 +1228,7 @@ class ServiceRegistry:
             return None
 
         try:
-            with timeout(SERVICE_CALL_LIMIT):
+            async with timeout(limit):
                 await asyncio.shield(self._execute_service(handler, service_call))
             return True
         except asyncio.TimeoutError:
@@ -1287,6 +1289,9 @@ class Config:
 
         # List of allowed external dirs to access
         self.whitelist_external_dirs: Set[str] = set()
+
+        # If Home Assistant is running in safe mode
+        self.safe_mode: bool = False
 
     def distance(self, lat: float, lon: float) -> Optional[float]:
         """Calculate distance from Home Assistant.
@@ -1350,6 +1355,7 @@ class Config:
             "whitelist_external_dirs": self.whitelist_external_dirs,
             "version": __version__,
             "config_source": self.config_source,
+            "safe_mode": self.safe_mode,
         }
 
     def set_time_zone(self, time_zone_str: str) -> None:
