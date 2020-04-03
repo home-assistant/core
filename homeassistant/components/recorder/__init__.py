@@ -162,7 +162,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             db_settings = json.load(json_file)
         db_url = db_settings["dbUrl"]
         if db_url == "sqlite:///:memory:":
-            keep_days = 1
+            keep_days = 2
             purge_interval = 1
             commit_interval = 60
             db_max_retries = 10
@@ -170,8 +170,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         else:
             keep_days = 10
             if "dbKeepDays" in db_settings:
-                keep_days = db_settings["dbKeepDays"]
-            _LOGGER.error("dbKeepDays " + str(keep_days))
+                keep_days = int(db_settings["dbKeepDays"])
             purge_interval = 1
             commit_interval = 60
             db_max_retries = 10

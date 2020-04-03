@@ -21,14 +21,14 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 IMG_PATH = "/data/data/pl.sviete.dom/files/home/AIS/www/img/"
-LOG_SETTINGS_INFO_FILE = (
+G_LOG_SETTINGS_INFO_FILE = (
     "/data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_log_settings_info"
 )
-DB_SETTINGS_INFO_FILE = (
+G_DB_SETTINGS_INFO_FILE = (
     "/data/data/pl.sviete.dom/files/home/AIS/.dom/.ais_db_settings_info"
 )
-LOG_SETTINGS_INFO = None
-DB_SETTINGS_INFO = None
+G_LOG_SETTINGS_INFO = None
+G_DB_SETTINGS_INFO = None
 G_LOG_PROCESS = None
 
 
@@ -264,32 +264,32 @@ async def _async_get_db_log_settings_info(hass, call):
     if "on_system_start" in call.data:
         on_system_start = True
     # on page load
-    global LOG_SETTINGS_INFO
-    global DB_SETTINGS_INFO
+    global G_LOG_SETTINGS_INFO
+    global G_DB_SETTINGS_INFO
     log_settings = {}
     db_settings = {}
-    if LOG_SETTINGS_INFO is None:
+    if G_LOG_SETTINGS_INFO is None:
         # get the info from file
         try:
-            with open(LOG_SETTINGS_INFO_FILE) as json_file:
+            with open(G_LOG_SETTINGS_INFO_FILE) as json_file:
                 log_settings = json.load(json_file)
-            LOG_SETTINGS_INFO = log_settings
+            G_LOG_SETTINGS_INFO = log_settings
         except Exception as e:
             _LOGGER.info("Error get log settings info " + str(e))
     else:
-        log_settings = LOG_SETTINGS_INFO
+        log_settings = G_LOG_SETTINGS_INFO
 
-    if DB_SETTINGS_INFO is None:
+    if G_DB_SETTINGS_INFO is None:
         try:
-            with open(DB_SETTINGS_INFO_FILE) as json_file:
+            with open(G_DB_SETTINGS_INFO_FILE) as json_file:
                 db_settings = json.load(json_file)
-            DB_SETTINGS_INFO = db_settings
-            if "dbKeepDays" not in DB_SETTINGS_INFO:
-                DB_SETTINGS_INFO["dbKeepDays"] = 10
+            G_DB_SETTINGS_INFO = db_settings
+            if "dbKeepDays" not in G_DB_SETTINGS_INFO:
+                G_DB_SETTINGS_INFO["dbKeepDays"] = 10
         except Exception as e:
             _LOGGER.info("Error get db settings info " + str(e))
     else:
-        db_settings = DB_SETTINGS_INFO
+        db_settings = G_DB_SETTINGS_INFO
 
     # fill the drives list
     hass.async_add_job(hass.services.async_call("ais_usb", "ls_flash_drives"))
@@ -316,13 +316,13 @@ async def _async_get_db_log_settings_info(hass, call):
     hass.states.async_set("sensor.ais_db_connection_info", db_conn_step, db_settings)
 
     # enable logs on system start (if set)
-    if on_system_start and LOG_SETTINGS_INFO is not None:
+    if on_system_start and G_LOG_SETTINGS_INFO is not None:
         # try to reconnect the logging to file on start
         # change log settings
         # Log errors to a file if we have write access to file or config dir
         file_log_path = os.path.abspath(
             "/data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/"
-            + LOG_SETTINGS_INFO["logDrive"]
+            + G_LOG_SETTINGS_INFO["logDrive"]
             + "/ais.log"
         )
 
@@ -339,14 +339,14 @@ async def _async_get_db_log_settings_info(hass, call):
             _LOGGER.info("start log process pid: " + str(G_LOG_PROCESS.pid))
             info = (
                 "Logi systemowe zapisywane do pliku log na "
-                + LOG_SETTINGS_INFO["logDrive"]
+                + G_LOG_SETTINGS_INFO["logDrive"]
             )
             hass.states.async_set(
                 "sensor.ais_logs_settings_info",
                 str(G_LOG_PROCESS.pid),
                 {
-                    "logDrive": LOG_SETTINGS_INFO["logDrive"],
-                    "logLevel": LOG_SETTINGS_INFO["logLevel"],
+                    "logDrive": G_LOG_SETTINGS_INFO["logDrive"],
+                    "logLevel": G_LOG_SETTINGS_INFO["logLevel"],
                     "logError": "",
                 },
             )
@@ -355,7 +355,7 @@ async def _async_get_db_log_settings_info(hass, call):
                 hass.services.async_call(
                     "logger",
                     "set_default_level",
-                    {"level": LOG_SETTINGS_INFO["logLevel"]},
+                    {"level": G_LOG_SETTINGS_INFO["logLevel"]},
                 )
             )
         else:
@@ -365,8 +365,8 @@ async def _async_get_db_log_settings_info(hass, call):
                 "sensor.ais_logs_settings_info",
                 "0",
                 {
-                    "logDrive": LOG_SETTINGS_INFO["logDrive"],
-                    "logLevel": LOG_SETTINGS_INFO["logLevel"],
+                    "logDrive": G_LOG_SETTINGS_INFO["logDrive"],
+                    "logLevel": G_LOG_SETTINGS_INFO["logLevel"],
                     "logError": log_error,
                 },
             )
@@ -374,23 +374,23 @@ async def _async_get_db_log_settings_info(hass, call):
 
 async def _async_save_logs_settings_info(log_drive, log_level):
     """save log path info in a file."""
-    global LOG_SETTINGS_INFO
+    global G_LOG_SETTINGS_INFO
     try:
         logs_settings = {"logDrive": log_drive, "logLevel": log_level}
-        with open(LOG_SETTINGS_INFO_FILE, "w") as outfile:
+        with open(G_LOG_SETTINGS_INFO_FILE, "w") as outfile:
             json.dump(logs_settings, outfile)
-        LOG_SETTINGS_INFO = logs_settings
+        G_LOG_SETTINGS_INFO = logs_settings
     except Exception as e:
         _LOGGER.error("Error save_log_settings_info " + str(e))
 
 
 async def _async_save_db_settings_info(db_settings):
     """save db url info in a file."""
-    global DB_SETTINGS_INFO
+    global G_DB_SETTINGS_INFO
     try:
-        with open(DB_SETTINGS_INFO_FILE, "w") as outfile:
+        with open(G_DB_SETTINGS_INFO_FILE, "w") as outfile:
             json.dump(db_settings, outfile)
-        DB_SETTINGS_INFO = db_settings
+        G_DB_SETTINGS_INFO = db_settings
     except Exception as e:
         _LOGGER.error("Error save_db_file_url_info " + str(e))
 
