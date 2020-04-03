@@ -12,7 +12,7 @@
                     "latitude": "Latitude",
                     "longitude": "Longitude"
                 },
-                "description": "Monitor user-based and CDC flu reports.",
+                "description": "Monitor user-based and CDC repots for a pair of coordinates.",
                 "title": "Configure Flu Near You"
             }
         },
