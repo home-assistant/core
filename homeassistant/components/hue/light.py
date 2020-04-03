@@ -118,12 +118,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
     # We add a listener after fetching the data, so manually trigger listener
-    light_coordinator.async_add_listener(update_lights)
+    bridge.reset_jobs.append(light_coordinator.async_add_listener(update_lights))
     update_lights()
-
-    bridge.reset_jobs.append(
-        lambda: light_coordinator.async_remove_listener(update_lights)
-    )
 
     api_version = tuple(int(v) for v in bridge.api.config.apiversion.split("."))
 
@@ -155,12 +151,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         partial(create_light, HueLight, group_coordinator, bridge, True),
     )
 
-    group_coordinator.async_add_listener(update_groups)
+    bridge.reset_jobs.append(group_coordinator.async_add_listener(update_groups))
     await group_coordinator.async_refresh()
-
-    bridge.reset_jobs.append(
-        lambda: group_coordinator.async_remove_listener(update_groups)
-    )
 
 
 async def async_safe_fetch(bridge, fetch_method):
@@ -339,11 +331,9 @@ class HueLight(Light):
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""
-        self.coordinator.async_add_listener(self.async_write_ha_state)
-
-    async def async_will_remove_from_hass(self):
-        """When entity will be removed from hass."""
-        self.coordinator.async_remove_listener(self.async_write_ha_state)
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
     async def async_turn_on(self, **kwargs):
         """Turn the specified or all lights on."""

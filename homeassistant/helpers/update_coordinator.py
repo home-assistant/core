@@ -62,7 +62,7 @@ class DataUpdateCoordinator:
         self._debounced_refresh = request_refresh_debouncer
 
     @callback
-    def async_add_listener(self, update_callback: CALLBACK_TYPE) -> None:
+    def async_add_listener(self, update_callback: CALLBACK_TYPE) -> Callable[[], None]:
         """Listen for data updates."""
         schedule_refresh = not self._listeners
 
@@ -71,6 +71,13 @@ class DataUpdateCoordinator:
         # This is the first listener, set up interval.
         if schedule_refresh:
             self._schedule_refresh()
+
+        @callback
+        def remove_listener() -> None:
+            """Remove update listener."""
+            self.async_remove_listener(update_callback)
+
+        return remove_listener
 
     @callback
     def async_remove_listener(self, update_callback: CALLBACK_TYPE) -> None:
