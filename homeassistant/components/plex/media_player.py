@@ -11,7 +11,6 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
-    MEDIA_TYPE_VIDEO,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -28,6 +27,8 @@ from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    COMMAND_MEDIA_TYPE_MUSIC,
+    COMMAND_MEDIA_TYPE_VIDEO,
     COMMON_PLAYERS,
     CONF_SERVER_IDENTIFIER,
     DISPATCHERS,
@@ -576,11 +577,11 @@ class PlexMediaPlayer(MediaPlayerDevice):
         shuffle = src.get("shuffle", 0)
 
         media = None
-        command_media_type = MEDIA_TYPE_VIDEO
+        command_media_type = COMMAND_MEDIA_TYPE_VIDEO
 
         if media_type == "MUSIC":
             media = self._get_music_media(library, src)
-            command_media_type = MEDIA_TYPE_MUSIC
+            command_media_type = COMMAND_MEDIA_TYPE_MUSIC
         elif media_type == "EPISODE":
             media = self._get_tv_media(library, src)
         elif media_type == "PLAYLIST":
