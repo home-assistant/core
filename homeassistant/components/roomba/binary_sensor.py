@@ -3,6 +3,7 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
+from . import roomba_reported_state
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -11,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the iRobot Roomba vacuum cleaner."""
     roomba = hass.data[DOMAIN]["roomba"]
-    status = roomba.master_state.get("state", {}).get("reported", {}).get("bin", {})
+    status = roomba_reported_state(roomba).get("bin", {})
     if "full" in status:
         roomba_vac = RoombaBinStatus(roomba)
         async_add_entities([roomba_vac], True)
@@ -25,9 +26,7 @@ class RoombaBinStatus(BinarySensorDevice):
     def __init__(self, roomba):
         """Initialize the sensor object."""
         self.vacuum = roomba
-        self.vacuum_state = self.vacuum.master_state.get("state", {}).get(
-            "reported", {}
-        )
+        self.vacuum_state = roomba_reported_state(roomba)
         self._mac = self.vacuum_state.get("mac")
         self._name = self.vacuum_state.get("name")
         self._identifier = f"roomba_{self._mac}"
@@ -68,9 +67,6 @@ class RoombaBinStatus(BinarySensorDevice):
             _LOGGER.debug("Roomba %s has no data yet. Skip update", self.name)
             return
         self._bin_status = (
-            self.vacuum.master_state.get("state", {})
-            .get("reported", {})
-            .get("bin", {})
-            .get("full", False)
+            roomba_reported_state(self.vacuum).get("bin", {}).get("full", False)
         )
         _LOGGER.debug("Update Full Bin status from the vacuum: %s", self._bin_status)
