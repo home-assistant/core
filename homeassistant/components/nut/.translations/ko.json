@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4. \ub2e4\uc2dc \uc2dc\ub3c4\ud574\uc8fc\uc138\uc694.",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "alias": "\ubcc4\uba85",
+                    "host": "\ud638\uc2a4\ud2b8",
+                    "name": "\uc774\ub984",
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "port": "\ud3ec\ud2b8",
+                    "resources": "\ub9ac\uc18c\uc2a4",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                },
+                "description": "NUT \uc11c\ubc84\uc5d0 UPS \uac00 \uc5ec\ub7ec \uac1c \uc5f0\uacb0\ub418\uc5b4 \uc788\ub294 \uacbd\uc6b0 '\ubcc4\uba85' \uc785\ub825\ub780\uc5d0 \uc870\ud68c\ud560 UPS \uc774\ub984\uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694.",
+                "title": "NUT \uc11c\ubc84\uc5d0 \uc5f0\uacb0\ud558\uae30"
+            }
+        },
+        "title": "\ub124\ud2b8\uc6cc\ud06c UPS \ub3c4\uad6c (NUT)"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "resources": "\ub9ac\uc18c\uc2a4"
+                },
+                "description": "\uc13c\uc11c \ub9ac\uc18c\uc2a4 \uc120\ud0dd"
+            }
+        }
+    }
+}

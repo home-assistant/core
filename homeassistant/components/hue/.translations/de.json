@@ -27,5 +27,22 @@
             }
         },
         "title": "Philips Hue"
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Erste Taste",
+            "button_2": "Zweite Taste",
+            "button_3": "Dritte Taste",
+            "button_4": "Vierte Taste",
+            "dim_down": "Dimmer runter",
+            "dim_up": "Dimmer hoch",
+            "turn_off": "Ausschalten",
+            "turn_on": "Einschalten"
+        },
+        "trigger_type": {
+            "remote_button_long_release": "\"{subtype}\" Taste nach langem Dr\u00fccken losgelassen",
+            "remote_button_short_press": "\"{subtype}\" Taste gedr\u00fcckt",
+            "remote_button_short_release": "\"{subtype}\" Taste losgelassen"
+        }
     }
 }
