@@ -2,7 +2,11 @@
 import asyncio
 import logging
 
-from homeassistant.components.remote import ATTR_ACTIVITY, ATTR_DELAY_SECS
+from homeassistant.components.remote import (
+    ATTR_ACTIVITY,
+    ATTR_DELAY_SECS,
+    DEFAULT_DELAY_SECS,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
@@ -33,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     address = entry.data[CONF_HOST]
     name = entry.data[CONF_NAME]
     activity = entry.options.get(ATTR_ACTIVITY)
-    delay_secs = entry.options.get(ATTR_DELAY_SECS)
+    delay_secs = entry.options.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
 
     harmony_conf_file = hass.config.path(f"harmony_{entry.unique_id}.conf")
     try:
