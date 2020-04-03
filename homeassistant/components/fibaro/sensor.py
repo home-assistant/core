@@ -41,6 +41,14 @@ SENSOR_TYPES = {
 _LOGGER = logging.getLogger(__name__)
 
 
+# Ais dom
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Fibaro switches."""
+    async_add_entities(
+        [FibaroSensor(device) for device in hass.data[FIBARO_DEVICES]["sensor"]], True
+    )
+
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Fibaro controller devices."""
     if discovery_info is None:

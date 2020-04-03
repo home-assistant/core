@@ -71,9 +71,6 @@ class DriveFlowHandler(config_entries.ConfigFlow):
                 )
                 login = fibaro_client.login.get()
                 info = fibaro_client.info.get()
-                _LOGGER.warning("Fibaro login: " + str(login))
-                _LOGGER.warning("Fibaro info: " + str(info))
-                _LOGGER.warning("Fibaro serialNumber: " + info.serialNumber)
                 return self.async_create_entry(title="Fibaro Hub", data=user_input)
             except Exception as e:
                 errors = {CONF_URL: "auth_error"}

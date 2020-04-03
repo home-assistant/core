@@ -13,6 +13,14 @@ from . import FIBARO_DEVICES, FibaroDevice
 _LOGGER = logging.getLogger(__name__)
 
 
+# Ais dom
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Fibaro covers."""
+    async_add_entities(
+        [FibaroCover(device) for device in hass.data[FIBARO_DEVICES]["cover"]], True
+    )
+
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Fibaro covers."""
     if discovery_info is None:

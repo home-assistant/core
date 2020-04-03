@@ -92,6 +92,14 @@ HA_OPMODES_HVAC = {
     HVAC_MODE_FAN_ONLY: 6,
 }
 
+# Ais dom
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Perform the setup for Fibaro controller devices."""
+    async_add_entities(
+        [FibaroThermostat(device) for device in hass.data[FIBARO_DEVICES]["climate"]],
+        True,
+    )
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Perform the setup for Fibaro controller devices."""
