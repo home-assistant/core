@@ -1,9 +1,7 @@
 """Support for interface with a Sony Bravia TV."""
-import ipaddress
 import logging
 
 from bravia_tv import BraviaRC
-from getmac import get_mac_address
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
@@ -22,6 +20,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util.json import load_json, save_json
 
 BRAVIA_CONFIG_FILE = "bravia.conf"
@@ -94,15 +93,6 @@ def setup_bravia(config, pin, hass, add_entities):
         request_configuration(config, hass, add_entities)
         return
 
-    try:
-        if ipaddress.ip_address(host).version == 6:
-            mode = "ip6"
-        else:
-            mode = "ip"
-    except ValueError:
-        mode = "hostname"
-    mac = get_mac_address(**{mode: host})
-
     # If we came here and configuring this host, mark as done
     if host in _CONFIGURING:
         request_id = _CONFIGURING.pop(host)
@@ -110,14 +100,17 @@ def setup_bravia(config, pin, hass, add_entities):
         configurator.request_done(request_id)
         _LOGGER.info("Discovery configuration done")
 
+    braviarc = BraviaRC(host)
+    braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
+    system_info = braviarc.get_system_info()
+    mac = format_mac(system_info["macAddr"])
+    unique_id = system_info["cid"].lower()
+
     # Save config
     save_json(
         hass.config.path(BRAVIA_CONFIG_FILE),
         {host: {"pin": pin, "host": host, "mac": mac}},
     )
-    braviarc = BraviaRC(host, mac)
-    braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
-    unique_id = braviarc.get_system_info()["cid"].lower()
 
     add_entities([BraviaTVDevice(braviarc, name, pin, unique_id)])
 
