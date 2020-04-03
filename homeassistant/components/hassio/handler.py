@@ -140,7 +140,7 @@ class HassIO:
         ):
             options["watchdog"] = False
             _LOGGER.warning(
-                "HTTP option 'server_host' is not compatible with Home Assistant."
+                "Found incompatible HTTP option 'server_host'. Watchdog feature disabled"
             )
 
         return await self.send_command("/homeassistant/options", payload=options)
