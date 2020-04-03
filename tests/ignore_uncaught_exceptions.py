@@ -8,7 +8,6 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
     ("tests.components.default_config.test_init", "test_setup"),
     ("tests.components.demo.test_init", "test_setting_up_demo"),
     ("tests.components.discovery.test_init", "test_discover_config_flow"),
-    ("tests.components.dsmr.test_sensor", "test_connection_errors_retry"),
     ("tests.components.dyson.test_air_quality", "test_purecool_aiq_attributes"),
     ("tests.components.dyson.test_air_quality", "test_purecool_aiq_update_state"),
     (
