@@ -27,6 +27,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from .common import tick_debounce_timeout
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN
 from .mock_classes import MockPlexAccount, MockPlexServer
 
@@ -110,12 +111,14 @@ async def test_setup_with_config_entry(hass):
     )
 
     async_dispatcher_send(hass, const.PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+    tick_debounce_timeout(hass)
     await hass.async_block_till_done()
 
     sensor = hass.states.get("sensor.plex_plex_server_1")
     assert sensor.state == str(len(mock_plex_server.accounts))
 
     async_dispatcher_send(hass, const.PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+    tick_debounce_timeout(hass)
     await hass.async_block_till_done()
 
     with patch.object(
@@ -124,6 +127,7 @@ async def test_setup_with_config_entry(hass):
         async_dispatcher_send(
             hass, const.PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id)
         )
+        tick_debounce_timeout(hass)
         await hass.async_block_till_done()
 
     with patch.object(
@@ -132,6 +136,7 @@ async def test_setup_with_config_entry(hass):
         async_dispatcher_send(
             hass, const.PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id)
         )
+        tick_debounce_timeout(hass)
         await hass.async_block_till_done()
 
 
@@ -295,6 +300,7 @@ async def test_setup_with_photo_session(hass):
     server_id = mock_plex_server.machineIdentifier
 
     async_dispatcher_send(hass, const.PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+    tick_debounce_timeout(hass)
     await hass.async_block_till_done()
 
     media_player = hass.states.get("media_player.plex_product_title")

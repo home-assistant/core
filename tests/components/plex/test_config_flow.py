@@ -23,6 +23,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, CONF_URL
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
+from .common import tick_debounce_timeout
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN
 from .mock_classes import MockPlexAccount, MockPlexServer
 
@@ -417,6 +418,7 @@ async def test_option_flow_new_users_available(hass, caplog):
     server_id = mock_plex_server.machineIdentifier
 
     async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+    tick_debounce_timeout(hass)
     await hass.async_block_till_done()
 
     monitored_users = hass.data[DOMAIN][SERVERS][server_id].option_monitored_users

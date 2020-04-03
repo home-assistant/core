@@ -13,6 +13,7 @@ from homeassistant.components.plex.const import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
+from .common import tick_debounce_timeout
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS
 from .mock_classes import MockPlexServer
 
@@ -45,6 +46,7 @@ async def test_new_users_available(hass):
     server_id = mock_plex_server.machineIdentifier
 
     async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+    tick_debounce_timeout(hass)
     await hass.async_block_till_done()
 
     monitored_users = hass.data[DOMAIN][SERVERS][server_id].option_monitored_users
@@ -84,6 +86,7 @@ async def test_new_ignored_users_available(hass, caplog):
     server_id = mock_plex_server.machineIdentifier
 
     async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+    tick_debounce_timeout(hass)
     await hass.async_block_till_done()
 
     monitored_users = hass.data[DOMAIN][SERVERS][server_id].option_monitored_users
@@ -119,6 +122,7 @@ async def test_mark_sessions_idle(hass):
     server_id = mock_plex_server.machineIdentifier
 
     async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+    tick_debounce_timeout(hass)
     await hass.async_block_till_done()
 
     sensor = hass.states.get("sensor.plex_plex_server_1")
@@ -128,6 +132,7 @@ async def test_mark_sessions_idle(hass):
     mock_plex_server.clear_sessions()
 
     async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+    tick_debounce_timeout(hass)
     await hass.async_block_till_done()
 
     sensor = hass.states.get("sensor.plex_plex_server_1")
