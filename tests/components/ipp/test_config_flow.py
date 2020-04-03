@@ -95,11 +95,7 @@ async def test_zeroconf_confirm_connection_error(
     discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={
-            "source": SOURCE_ZEROCONF,
-            CONF_HOST: "EPSON123456.local",
-            CONF_NAME: "EPSON123456",
-        },
+        context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
@@ -207,7 +203,7 @@ async def test_full_user_flow_implementation(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_HOST: "EPSON123456.local", CONF_BASE_PATH: "/ipp/print"},
+        user_input={CONF_HOST: "192.168.1.31", CONF_BASE_PATH: "/ipp/print"},
     )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
