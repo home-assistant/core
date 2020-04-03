@@ -151,22 +151,20 @@ class Light(HomeAccessory):
             brightness = new_state.attributes.get(ATTR_BRIGHTNESS)
             if isinstance(brightness, int):
                 brightness = round(brightness / 255 * 100, 0)
+                # The homeassistant component might report its brightness as 0 but is
+                # not off. But 0 is a special value in homekit. When you turn on a
+                # homekit accessory it will try to restore the last brightness state
+                # which will be the last value saved by char_brightness.set_value.
+                # But if it is set to 0, HomeKit will update the brightness to 100 as
+                # it thinks 0 is off.
+                #
+                # Therefore, if the the brightness is 0 and the device is still on,
+                # the brightness is mapped to 1 otherwise the update is ignored in
+                # order to avoid this incorrect behavior.
+                if brightness == 0 and state == STATE_ON:
+                    brightness = 1
                 if self.char_brightness.value != brightness:
-                    # The homeassistant component might report its brightness as 0 but is
-                    # not off. But 0 is a special value in homekit. When you turn on a
-                    # homekit accessory it will try to restore the last brightness state
-                    # which will be the last value saved by char_brightness.set_value.
-                    # But if it is set to 0, HomeKit will update the brightness to 100 as
-                    # it thinks 0 is off.
-                    #
-                    # Therefore, if the the brightness is 0 and the device is still on,
-                    # the brightness is mapped to 1 otherwise the update is ignored in
-                    # order to avoid this incorrect behavior.
-                    if brightness == 0:
-                        if state == STATE_ON:
-                            self.char_brightness.set_value(1)
-                    else:
-                        self.char_brightness.set_value(brightness)
+                    self.char_brightness.set_value(brightness)
 
         # Handle color temperature
         if CHAR_COLOR_TEMPERATURE in self.chars:

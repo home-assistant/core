@@ -223,6 +223,18 @@ async def test_light_brightness(hass, hk_driver, cls, events, driver):
         == f"Set state to 0, brightness at 0{UNIT_PERCENTAGE}"
     )
 
+    # 0 is a special case for homekit, see "Handle Brightness"
+    # in update_state
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_BRIGHTNESS: 0})
+    await hass.async_block_till_done()
+    assert acc.char_brightness.value == 1
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_BRIGHTNESS: 255})
+    await hass.async_block_till_done()
+    assert acc.char_brightness.value == 100
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_BRIGHTNESS: 0})
+    await hass.async_block_till_done()
+    assert acc.char_brightness.value == 1
+
 
 async def test_light_color_temperature(hass, hk_driver, cls, events, driver):
     """Test light with color temperature."""
