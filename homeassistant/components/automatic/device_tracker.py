@@ -164,7 +164,7 @@ class AutomaticAuthCallbackView(HomeAssistantView):
         """Finish OAuth callback request."""
         hass = request.app["hass"]
         params = request.query
-        response = web.HTTPFound("/states")
+        response = web.HTTPFound("/lovelace")
 
         if "state" not in params or "code" not in params:
             if "error" in params:
