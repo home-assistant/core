@@ -1,5 +1,5 @@
 """Tests for the lastfm sensor."""
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from pylast import LastFMNetwork, Track
 import pytest
