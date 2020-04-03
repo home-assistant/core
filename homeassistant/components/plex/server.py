@@ -12,7 +12,6 @@ import requests.exceptions
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
-from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_call_later
 
@@ -46,21 +45,23 @@ plexapi.X_PLEX_VERSION = X_PLEX_VERSION
 def debounce(func):
     """Decorate function to debounce callbacks from Plex websocket."""
 
-    @callback
-    def call_later_listener(self, _):
+    unsub = None
+
+    async def call_later_listener(self, _):
         """Handle call_later callback."""
-        self.debounce = None
-        self.hass.async_add_executor_job(func, self)
+        nonlocal unsub
+        unsub = None
+        await self.hass.async_add_executor_job(func, self)
 
     @wraps(func)
     def wrapper(self):
         """Schedule async callback."""
-        if self.debounce:
-            self.debounce()
-        remove_listener = async_call_later(
+        nonlocal unsub
+        if unsub:
+            unsub()  # pylint: disable=not-callable
+        unsub = async_call_later(
             self.hass, DEBOUNCE_TIMEOUT, partial(call_later_listener, self),
         )
-        self.debounce = remove_listener
 
     return wrapper
 
@@ -84,7 +85,6 @@ class PlexServer:
         self._accounts = []
         self._owner_username = None
         self._version = None
-        self.debounce = None
 
         # Header conditionally added as it is not available in config entry v1
         if CONF_CLIENT_IDENTIFIER in server_config:
