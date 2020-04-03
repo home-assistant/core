@@ -68,7 +68,7 @@ async def init_integration(
 
     fixture = "ipp/get-printer-attributes.bin"
     aioclient_mock.post(
-        "http://EPSON123456.local:631/ipp/print",
+        "http://192.168.1.31:631/ipp/print",
         content=load_fixture_binary(fixture),
         headers={"Content-Type": "application/ipp"},
     )
@@ -77,7 +77,7 @@ async def init_integration(
         domain=DOMAIN,
         unique_id="cfe92100-67c4-11d4-a45f-f8d027761251",
         data={
-            CONF_HOST: "EPSON123456.local",
+            CONF_HOST: "192.168.1.31",
             CONF_PORT: 631,
             CONF_SSL: False,
             CONF_VERIFY_SSL: True,
