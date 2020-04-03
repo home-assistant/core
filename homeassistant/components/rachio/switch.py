@@ -293,11 +293,6 @@ class RachioZone(RachioSwitch):
             )
         )
 
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe from updates."""
-        if self._undo_dispatcher:
-            self._undo_dispatcher()
-
 
 class RachioSchedule(RachioSwitch):
     """Representation of one fixed schedule on the Rachio Iro."""
@@ -385,8 +380,3 @@ class RachioSchedule(RachioSwitch):
                 self.hass, SIGNAL_RACHIO_SCHEDULE_UPDATE, self._async_handle_update
             )
         )
-
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe from updates."""
-        if self._undo_dispatcher:
-            self._undo_dispatcher()
