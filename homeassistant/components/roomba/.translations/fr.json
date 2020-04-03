@@ -16,15 +16,13 @@
     },
     "error": {
       "unknown" : "Erreur imprévu",    
-      "cannot_connect": "Impossible de se connecter",
-      "invalid_auth": "Authentification invalide"
+      "cannot_connect": "Impossible de se connecter"
     }
   },
   "options": {
     "step": {
       "init": {
         "data": {
-          "certificate": "Certificat",
           "continuous": "Continue",
           "delay": "Delais"
         }
