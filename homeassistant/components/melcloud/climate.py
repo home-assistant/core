@@ -156,7 +156,7 @@ class AtaDeviceClimate(MelCloudClimate):
             )
 
         vane_vertical = self._device.vane_vertical
-        if vane_horizontal:
+        if vane_vertical:
             attr.update(
                 {
                     ATTR_VANE_VERTICAL: vane_vertical,
