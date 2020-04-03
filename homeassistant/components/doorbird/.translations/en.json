@@ -21,7 +21,8 @@
                 "title": "Connect to the DoorBird"
             }
         },
-        "title": "DoorBird"
+        "title": "DoorBird",
+        "flow_title" : "DoorBird {name} ({host})"
     },
     "options": {
         "step": {
