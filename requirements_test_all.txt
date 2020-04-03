@@ -329,7 +329,7 @@ libsoundtouch==0.7.2
 logi_circle==0.2.2
 
 # homeassistant.components.luftdaten
-luftdaten==0.6.3
+luftdaten==0.6.4
 
 # homeassistant.components.mythicbeastsdns
 mbddns==0.1.2
