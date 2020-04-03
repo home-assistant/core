@@ -76,10 +76,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             mac = host_config["mac"]
             name = config.get(CONF_NAME)
             braviarc = BraviaRC(host, mac)
+            if not braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME):
+                raise PlatformNotReady
             try:
-                braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
                 unique_id = braviarc.get_system_info()["cid"].lower()
-            except Exception:  # pylint: disable=broad-except
+            except TypeError:
                 raise PlatformNotReady
 
             add_entities([BraviaTVDevice(braviarc, name, pin, unique_id)])
@@ -105,11 +106,13 @@ def setup_bravia(config, pin, hass, add_entities):
         _LOGGER.info("Discovery configuration done")
 
     braviarc = BraviaRC(host)
+    if not braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME):
+        _LOGGER.error("Cannot connect to %s", host)
+        return
     try:
-        braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
         system_info = braviarc.get_system_info()
-    except Exception as exception_instance:  # pylint: disable=broad-except
-        _LOGGER.error(exception_instance)
+    except TypeError:
+        _LOGGER.error("Cannot retrieve system info from %s", host)
         return
     mac = format_mac(system_info["macAddr"])
     unique_id = system_info["cid"].lower()
