@@ -9,7 +9,6 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -90,13 +89,7 @@ async def async_setup_entry(hass, config_entry):
         config_entry.data.get(CONF_LATITUDE, hass.config.latitude),
         config_entry.data.get(CONF_LONGITUDE, hass.config.longitude),
     )
-
-    try:
-        await fny.async_update()
-    except FluNearYouError as err:
-        LOGGER.error("Error while setting up integration: %s", err)
-        raise ConfigEntryNotReady
-
+    await fny.async_update()
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = fny
 
     hass.async_create_task(
