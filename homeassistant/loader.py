@@ -15,6 +15,7 @@ from types import ModuleType
 from typing import (
     TYPE_CHECKING,
     Any,
+    Awaitable,
     Callable,
     Dict,
     List,
@@ -284,13 +285,26 @@ class Integration:
         return f"<Integration {self.domain}: {self.pkg_path}>"
 
 
-async def async_get_integration(hass: "HomeAssistant", domain: str) -> Integration:
-    """Get an integration."""
-    cache = hass.data.get(DATA_INTEGRATIONS)
+async def async_get_integration_with_cache(
+    hass: "HomeAssistant",
+    domain: str,
+    cache_key: str,
+    loader: Callable[
+        ["HomeAssistant", str, Dict[str, Any], asyncio.Event, Optional[Dict[str, Any]]],
+        Awaitable[Integration],
+    ],
+    loader_args: Optional[Dict[str, Any]] = None,
+) -> Integration:
+    """Load an integration using a cache.
+
+    Return the cached resource if available, otherwise call the passed in
+    loader to load the integration.
+    """
+    cache = hass.data.get(cache_key)
     if cache is None:
         if not _async_mount_config_dir(hass):
             raise IntegrationNotFound(domain)
-        cache = hass.data[DATA_INTEGRATIONS] = {}
+        cache = hass.data[cache_key] = {}
 
     int_or_evt: Union[Integration, asyncio.Event, None] = cache.get(domain, _UNDEF)
 
@@ -309,6 +323,20 @@ async def async_get_integration(hass: "HomeAssistant", domain: str) -> Integrati
 
     event = cache[domain] = asyncio.Event()
 
+    return await loader(hass, domain, cache, event, loader_args)
+
+
+async def _async_get_integration(
+    hass: "HomeAssistant",
+    domain: str,
+    cache: Dict[str, Any],
+    event: asyncio.Event,
+    args: Optional[Dict[str, Any]],
+) -> Integration:
+    """Get an integration.
+
+    Update the passed in cache and resolve the load event.
+    """
     # Instead of using resolve_from_root we use the cache of custom
     # components to find the integration.
     integration = (await async_get_custom_components(hass)).get(domain)
@@ -342,6 +370,13 @@ async def async_get_integration(hass: "HomeAssistant", domain: str) -> Integrati
         raise IntegrationNotFound(domain)
 
     return integration
+
+
+async def async_get_integration(hass: "HomeAssistant", domain: str) -> Integration:
+    """Get an integration."""
+    return await async_get_integration_with_cache(
+        hass, domain, DATA_INTEGRATIONS, _async_get_integration
+    )
 
 
 class LoaderError(Exception):

@@ -3,15 +3,20 @@ import asyncio
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Set
+from typing import Any, Dict, Iterable, List, Optional, Set, cast
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import Integration, async_get_integration
+from homeassistant.loader import (
+    Integration,
+    async_get_integration,
+    async_get_integration_with_cache,
+)
 import homeassistant.util.package as pkg_util
 
 DATA_PIP_LOCK = "pip_lock"
 DATA_PKG_CACHE = "pkg_cache"
+DATA_INTEGRATIONS_WITH_REQS = "integrations_with_reqs"
 CONSTRAINT_FILE = "package_constraints.txt"
 PROGRESS_FILE = ".pip_progress"
 _LOGGER = logging.getLogger(__name__)
@@ -19,6 +24,7 @@ DISCOVERY_INTEGRATIONS: Dict[str, Iterable[str]] = {
     "ssdp": ("ssdp",),
     "zeroconf": ("zeroconf", "homekit"),
 }
+_UNDEF = object()
 
 
 class RequirementsNotFound(HomeAssistantError):
@@ -31,6 +37,59 @@ class RequirementsNotFound(HomeAssistantError):
         self.requirements = requirements
 
 
+async def _async_get_integration_with_requirements(
+    hass: "HomeAssistant",
+    domain: str,
+    cache: Dict[str, Any],
+    event: asyncio.Event,
+    args: Optional[Dict[str, Any]],
+) -> Integration:
+    """Get an integration with all requirements installed, including the dependencies.
+
+    Update the passed in cache and resolve the load event.
+    """
+    done: Optional[Set] = cast(Set, args.get("done")) if args else None
+    if done is None:
+        done = {domain}
+    else:
+        done.add(domain)
+
+    integration = await async_get_integration(hass, domain)
+
+    if not hass.config.skip_pip:
+        if integration.requirements:
+            await async_process_requirements(
+                hass, integration.domain, integration.requirements
+            )
+
+        deps_to_check = [
+            dep
+            for dep in integration.dependencies + integration.after_dependencies
+            if dep not in done
+        ]
+
+        for check_domain, to_check in DISCOVERY_INTEGRATIONS.items():
+            if (
+                check_domain not in done
+                and check_domain not in deps_to_check
+                and any(check in integration.manifest for check in to_check)
+            ):
+                deps_to_check.append(check_domain)
+
+        if deps_to_check:
+            await asyncio.gather(
+                *[
+                    async_get_integration_with_requirements(hass, dep, done)
+                    for dep in deps_to_check
+                ]
+            )
+
+    cache[domain] = integration
+    event.set()
+
+    return integration
+
+
 async def async_get_integration_with_requirements(
     hass: HomeAssistant, domain: str, done: Optional[Set[str]] = None
 ) -> Integration:
@@ -40,44 +99,13 @@ async def async_get_integration_with_requirements(
     is invalid, RequirementNotFound if there was some type of
     failure to install requirements.
     """
-    if done is None:
-        done = {domain}
-    else:
-        done.add(domain)
-
-    integration = await async_get_integration(hass, domain)
-
-    if hass.config.skip_pip:
-        return integration
-
-    if integration.requirements:
-        await async_process_requirements(
-            hass, integration.domain, integration.requirements
-        )
-
-    deps_to_check = [
-        dep
-        for dep in integration.dependencies + integration.after_dependencies
-        if dep not in done
-    ]
-
-    for check_domain, to_check in DISCOVERY_INTEGRATIONS.items():
-        if (
-            check_domain not in done
-            and check_domain not in deps_to_check
-            and any(check in integration.manifest for check in to_check)
-        ):
-            deps_to_check.append(check_domain)
-
-    if deps_to_check:
-        await asyncio.gather(
-            *[
-                async_get_integration_with_requirements(hass, dep, done)
-                for dep in deps_to_check
-            ]
-        )
-
-    return integration
+    return await async_get_integration_with_cache(
+        hass,
+        domain,
+        DATA_INTEGRATIONS_WITH_REQS,
+        _async_get_integration_with_requirements,
+        {"done": done},
+    )
 
 
 async def async_process_requirements(
