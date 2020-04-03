@@ -19,6 +19,8 @@ ATTR_PLAY_COUNT = "play_count"
 ATTR_TOP_PLAYED = "top_played"
 ATTRIBUTION = "Data provided by Last.fm"
 
+STATE_NOT_SCROBBLING = "Not Scrobbling"
+
 CONF_USERS = "users"
 
 ICON = "mdi:lastfm"
@@ -99,7 +101,7 @@ class LastfmSensor(Entity):
 
         now_playing = self._user.get_now_playing()
         if now_playing is None:
-            self._state = "Not Scrobbling"
+            self._state = STATE_NOT_SCROBBLING
             return
 
         self._state = f"{now_playing.artist} - {now_playing.title}"

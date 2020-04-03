@@ -3,7 +3,9 @@ from unittest.mock import patch
 
 from pylast import LastFMNetwork, Track
 
-from homeassistant.components.lastfm.sensor import LastfmSensor
+from homeassistant.components import sensor
+from homeassistant.components.lastfm.sensor import STATE_NOT_SCROBBLING, LastfmSensor
+from homeassistant.setup import async_setup_component
 
 
 class MockUser:
@@ -34,21 +36,52 @@ class MockUser:
         return self._now_playing_result
 
 
-@patch("pylast.LastFMNetwork.get_user")
-def test_update_not_playing(mock_lastfm_api_get_user):
+async def test_update_not_playing(hass):
     """Test update when no playing song."""
-    mock_lastfm_api_get_user.return_value = MockUser(None)
-    sensor = LastfmSensor("my-user", LastFMNetwork())
-    sensor.update()
 
-    assert sensor._state == "Not Scrobbling"
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {"sensor": {"platform": "lastfm", "api_key": "secret-key", "users": ["test"],}},
+    )
+
+    entity_id = "sensor.lastfm_test"
+
+    state = hass.states.get(entity_id)
+
+    assert state == STATE_NOT_SCROBBLING
+
+    with patch(
+        ("pylast.LastFMNetwork.get_user"), return_value=MockUser(None),
+    ):
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+
+    assert state == STATE_NOT_SCROBBLING
 
 
-@patch("pylast.LastFMNetwork.get_user")
-def test_update_playing(mock_lastfm_api_get_user):
+async def test_update_playing(hass):
     """Test update when song playing."""
-    mock_lastfm_api_get_user.return_value = MockUser(Track("artist", "title", None))
-    sensor = LastfmSensor("my-user", LastFMNetwork())
-    sensor.update()
 
-    assert sensor._state == "artist - title"
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {"sensor": {"platform": "lastfm", "api_key": "secret-key", "users": ["test"],}},
+    )
+
+    entity_id = "sensor.lastfm_test"
+
+    state = hass.states.get(entity_id)
+
+    assert state == STATE_NOT_SCROBBLING
+
+    with patch(
+        ("pylast.LastFMNetwork.get_user"),
+        return_value=MockUser(Track("artist", "title", None)),
+    ):
+        await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+
+    assert state == "artist - title"
