@@ -18,9 +18,6 @@
     }
   },
   "options": {
-    "abort": {
-      "file_based_config": "Configuration for this Vera controller is handled in configuration.yml. Please make changes there."
-    },
     "step": {
       "init": {
         "title": "Vera controller options",

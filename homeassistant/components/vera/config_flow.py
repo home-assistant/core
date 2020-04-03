@@ -112,7 +112,7 @@ class VeraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_finish(self, config: dict):
         """Validate and create config entry."""
-        base_url = config[CONF_CONTROLLER] = config.get(CONF_CONTROLLER).rstrip("/")
+        base_url = config[CONF_CONTROLLER] = config[CONF_CONTROLLER].rstrip("/")
         controller = pv.VeraController(base_url)
 
         # Verify the controller is online and get the serial number.

@@ -81,7 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             ),
         )
 
-    base_url = config_entry.data.get(CONF_CONTROLLER)
+    base_url = config_entry.data[CONF_CONTROLLER]
     light_ids = config_entry.options.get(CONF_LIGHTS, [])
     exclude_ids = config_entry.options.get(CONF_EXCLUDE, [])
 

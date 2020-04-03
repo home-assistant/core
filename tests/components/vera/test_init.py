@@ -3,16 +3,13 @@ from asynctest import MagicMock
 import pyvera as pv
 from requests.exceptions import RequestException
 
-from homeassistant.components.vera import (
-    CONF_CONTROLLER,
-    DOMAIN,
-    async_setup_entry,
-    async_unload_entry,
-)
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.vera import CONF_CONTROLLER, DOMAIN
+from homeassistant.config_entries import ENTRY_STATE_NOT_LOADED
 from homeassistant.core import HomeAssistant
 
 from .common import ComponentFactory, new_simple_controller_config
+
+from tests.common import MockConfigEntry
 
 
 async def test_init(
@@ -86,7 +83,8 @@ async def test_unload(
     assert entries
 
     for config_entry in entries:
-        await async_unload_entry(hass, config_entry)
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+        assert config_entry.state == ENTRY_STATE_NOT_LOADED
 
 
 async def test_async_setup_entry_error(
@@ -102,7 +100,13 @@ async def test_async_setup_entry_error(
         hass=hass,
         controller_config=new_simple_controller_config(setup_callback=setup_callback),
     )
-    entry = MagicMock(spec=ConfigEntry)  # type: ConfigEntry
-    entry.data = {CONF_CONTROLLER: "http://127.0.0.1"}
 
-    assert not await async_setup_entry(hass, entry)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_CONTROLLER: "http://127.0.0.1"},
+        options={},
+        unique_id="12345",
+    )
+    entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(entry.entry_id)

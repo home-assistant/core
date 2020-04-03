@@ -5,31 +5,38 @@ from typing import Callable, Dict, NamedTuple, Tuple
 from mock import MagicMock
 import pyvera as pv
 
-from homeassistant import config_entries
 from homeassistant.components.vera.const import CONF_CONTROLLER, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry
+
 SetupCallback = Callable[[pv.VeraController, dict], None]
 
-ControllerData = NamedTuple(
-    "ControllerData", (("controller", pv.VeraController), ("update_callback", Callable))
-)
 
-ComponentData = NamedTuple("ComponentData", (("controller_data", ControllerData),),)
+class ControllerData(NamedTuple):
+    """Test data about a specific vera controller."""
 
-ControllerConfig = NamedTuple(
-    "ControllerConfig",
-    (
-        ("config", Dict),
-        ("options", Dict),
-        ("config_from_file", bool),
-        ("serial_number", str),
-        ("devices", Tuple[pv.VeraDevice, ...]),
-        ("scenes", Tuple[pv.VeraScene, ...]),
-        ("setup_callback", SetupCallback),
-    ),
-)
+    controller: pv.VeraController
+    update_callback: Callable
+
+
+class ComponentData(NamedTuple):
+    """Test data about the vera component."""
+
+    controller_data: ControllerData
+
+
+class ControllerConfig(NamedTuple):
+    """Test config for mocking a vera controller."""
+
+    config: Dict
+    options: Dict
+    config_from_file: bool
+    serial_number: str
+    devices: Tuple[pv.VeraDevice, ...]
+    scenes: Tuple[pv.VeraScene, ...]
+    setup_callback: SetupCallback
 
 
 def new_simple_controller_config(
@@ -103,11 +110,12 @@ class ComponentFactory:
 
         # Setup component through config flow.
         if not controller_config.config_from_file:
-            await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_USER},
-                data=component_config,
+            entry = MockConfigEntry(
+                domain=DOMAIN, data=component_config, options={}, unique_id="12345"
             )
+            entry.add_to_hass(hass)
+
+            await hass.config_entries.async_setup(entry.entry_id)
             await hass.async_block_till_done()
 
         update_callback = (
