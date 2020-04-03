@@ -47,11 +47,12 @@ RM_TYPES = [
     "rm2_pro_plus_bl",
     "rm_mini_shate",
 ]
+RM4_TYPES = ["rm4_mini", "rm4_pro"]
 SP1_TYPES = ["sp1"]
 SP2_TYPES = ["sp2", "honeywell_sp2", "sp3", "spmini2", "spminiplus"]
 MP1_TYPES = ["mp1"]
 
-SWITCH_TYPES = RM_TYPES + SP1_TYPES + SP2_TYPES + MP1_TYPES
+SWITCH_TYPES = RM_TYPES + RM4_TYPES + SP1_TYPES + SP2_TYPES + MP1_TYPES
 
 SWITCH_SCHEMA = vol.Schema(
     {
@@ -103,8 +104,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             return f"{switch_friendly_name} slot {slot}"
         return slots[f"slot_{slot}"]
 
-    if switch_type in RM_TYPES:
-        broadlink_device = broadlink.rm((ip_addr, 80), mac_addr, None)
+    if switch_type in RM_TYPES or switch_type in RM4_TYPES:
+        if switch_type in RM_TYPES:
+            broadlink_device = broadlink.rm((ip_addr, 80), mac_addr, None)
+        else:
+            broadlink_device = broadlink.rm4((ip_addr, 80), mac_addr, None)
+
         hass.add_job(async_setup_service, hass, ip_addr, broadlink_device)
 
         switches = []
