@@ -1,9 +1,7 @@
 """Support for interfacing with Monoprice 6 zone home audio controller."""
 import logging
 
-from pymonoprice import get_monoprice
-from serial import SerialException
-
+from homeassistant import core
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
@@ -30,7 +28,10 @@ SUPPORT_MONOPRICE = (
 )
 
 
-def _get_sources(sources_config):
+@core.callback
+def _get_sources_from_dict(data):
+    sources_config = data[CONF_SOURCES]
+
     source_id_name = {int(index): name for index, name in sources_config.items()}
 
     source_name_id = {v: k for k, v in source_id_name.items()}
@@ -40,28 +41,33 @@ def _get_sources(sources_config):
     return [source_id_name, source_name_id, source_names]
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+@core.callback
+def _get_sources(config_entry):
+    if CONF_SOURCES in config_entry.options:
+        data = config_entry.options
+    else:
+        data = config_entry.data
+    return _get_sources_from_dict(data)
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Monoprice 6-zone amplifier platform."""
-    port = config_entry.data.get(CONF_PORT)
+    port = config_entry.data[CONF_PORT]
 
-    try:
-        monoprice = await hass.async_add_executor_job(get_monoprice, port)
-    except SerialException:
-        _LOGGER.error("Error connecting to Monoprice controller")
-        return
+    monoprice = hass.data[DOMAIN][config_entry.entry_id]
 
-    sources = _get_sources(config_entry.data.get(CONF_SOURCES))
+    sources = _get_sources(config_entry)
 
-    devices = []
+    entities = []
     for i in range(1, 4):
         for j in range(1, 7):
             zone_id = (i * 10) + j
             _LOGGER.info("Adding zone %d for port %s", zone_id, port)
-            devices.append(
+            entities.append(
                 MonopriceZone(monoprice, sources, config_entry.entry_id, zone_id)
             )
 
-    async_add_devices(devices, True)
+    async_add_entities(entities, True)
 
     platform = entity_platform.current_platform.get()
 

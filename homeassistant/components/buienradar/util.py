@@ -67,15 +67,12 @@ class BrData:
 
     async def update_devices(self):
         """Update all devices/sensors."""
-        if self.devices:
-            tasks = []
-            # Update all devices
-            for dev in self.devices:
-                if dev.load_data(self.data):
-                    tasks.append(dev.async_update_ha_state())
+        if not self.devices:
+            return
 
-            if tasks:
-                await asyncio.wait(tasks)
+        # Update all devices
+        for dev in self.devices:
+            dev.data_updated(self.data)
 
     async def schedule_update(self, minute=1):
         """Schedule an update after minute minutes."""

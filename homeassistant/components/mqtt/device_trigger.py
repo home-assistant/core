@@ -26,6 +26,7 @@ from . import (
     CONF_QOS,
     DOMAIN,
     cleanup_device_registry,
+    debug_info,
 )
 from .discovery import MQTT_DISCOVERY_UPDATED, clear_discovery_hash
 
@@ -183,6 +184,7 @@ async def async_setup_trigger(hass, config, config_entry, discovery_data):
         if not payload:
             # Empty payload: Remove trigger
             _LOGGER.info("Removing trigger: %s", discovery_hash)
+            debug_info.remove_trigger_discovery_data(hass, discovery_hash)
             if discovery_id in hass.data[DEVICE_TRIGGERS]:
                 device_trigger = hass.data[DEVICE_TRIGGERS][discovery_id]
                 device_trigger.detach_trigger()
@@ -192,6 +194,7 @@ async def async_setup_trigger(hass, config, config_entry, discovery_data):
         else:
             # Non-empty payload: Update trigger
             _LOGGER.info("Updating trigger: %s", discovery_hash)
+            debug_info.update_trigger_discovery_data(hass, discovery_hash, payload)
             config = TRIGGER_DISCOVERY_SCHEMA(payload)
             await _update_device(hass, config_entry, config)
             device_trigger = hass.data[DEVICE_TRIGGERS][discovery_id]
@@ -230,6 +233,9 @@ async def async_setup_trigger(hass, config, config_entry, discovery_data):
         await hass.data[DEVICE_TRIGGERS][discovery_id].update_trigger(
             config, discovery_hash, remove_signal
         )
+    debug_info.add_trigger_discovery_data(
+        hass, discovery_hash, discovery_data, device.id
+    )
 
 
 async def async_device_removed(hass: HomeAssistant, device_id: str):
@@ -241,6 +247,7 @@ async def async_device_removed(hass: HomeAssistant, device_id: str):
             discovery_hash = device_trigger.discovery_data[ATTR_DISCOVERY_HASH]
             discovery_topic = device_trigger.discovery_data[ATTR_DISCOVERY_TOPIC]
 
+            debug_info.remove_trigger_discovery_data(hass, discovery_hash)
             device_trigger.detach_trigger()
             clear_discovery_hash(hass, discovery_hash)
             device_trigger.remove_signal()

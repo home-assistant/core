@@ -24,6 +24,7 @@ from homeassistant.components.remote import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -33,8 +34,14 @@ from .const import (
     HARMONY_OPTIONS_UPDATE,
     SERVICE_CHANGE_CHANNEL,
     SERVICE_SYNC,
+    UNIQUE_ID,
 )
-from .util import find_unique_id_for_remote
+from .util import (
+    find_best_name_for_remote,
+    find_matching_config_entries_for_host,
+    find_unique_id_for_remote,
+    get_harmony_client_if_available,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +58,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
 
 HARMONY_SYNC_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 
@@ -69,9 +77,25 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         # Now handled by ssdp in the config flow
         return
 
+    if find_matching_config_entries_for_host(hass, config[CONF_HOST]):
+        return
+
+    # We do the validation to verify we can connect
+    # so we can raise PlatformNotReady to force
+    # a retry so we can avoid a scenario where the config
+    # entry cannot be created via import because hub
+    # is not yet ready.
+    harmony = await get_harmony_client_if_available(config[CONF_HOST])
+    if not harmony:
+        raise PlatformNotReady
+
+    validated_config = config.copy()
+    validated_config[UNIQUE_ID] = find_unique_id_for_remote(harmony)
+    validated_config[CONF_NAME] = find_best_name_for_remote(config, harmony)
+
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=validated_config
         )
     )
 
@@ -130,7 +154,7 @@ def register_services(hass):
 class HarmonyRemote(remote.RemoteDevice):
     """Remote representation used to control a Harmony device."""
 
-    def __init__(self, name, host, activity, out_path, delay_secs):
+    def __init__(self, name, unique_id, host, activity, out_path, delay_secs):
         """Initialize HarmonyRemote class."""
         self._name = name
         self.host = host
@@ -141,6 +165,7 @@ class HarmonyRemote(remote.RemoteDevice):
         self._config_path = out_path
         self.delay_secs = delay_secs
         self._available = False
+        self._unique_id = unique_id
         self._undo_dispatch_subscription = None
 
     @property
@@ -217,7 +242,7 @@ class HarmonyRemote(remote.RemoteDevice):
     @property
     def unique_id(self):
         """Return the unique id."""
-        return find_unique_id_for_remote(self._client)
+        return self._unique_id
 
     @property
     def name(self):
@@ -264,7 +289,7 @@ class HarmonyRemote(remote.RemoteDevice):
         self._current_activity = activity_name
         self._state = bool(activity_id != -1)
         self._available = True
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def new_config(self, _=None):
         """Call for updating the current activity."""
@@ -289,7 +314,7 @@ class HarmonyRemote(remote.RemoteDevice):
 
         if not self._available:
             # Still disconnected. Let the state engine know.
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs):
         """Start an activity from the Harmony device."""

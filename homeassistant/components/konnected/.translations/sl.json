@@ -11,8 +11,12 @@
         },
         "step": {
             "confirm": {
-                "description": "Model: {model}\nGostitelj: {host}\nVrata: {port}\n\nV nastavitvah lahko nastavite vedenje I / O in plo\u0161\u010de Konnected alarma. ",
+                "description": "Model: {model}\nID: {id}\nGostitelj: {host}\nVrata: {port}\n\nV nastavitvah lahko nastavite vedenje I/O in plo\u0161\u010de Konnected alarma. ",
                 "title": "Konnected naprava pripravljena"
+            },
+            "import_confirm": {
+                "description": "Konnected alarm panel z ID {id} je bil odkrit v konfiguraciji. YAML. To tok vam bo omogo\u010dil, da ga uvozite v va\u0161o konfiguracijo.",
+                "title": "Uvoz Konnected Naprave"
             },
             "user": {
                 "data": {

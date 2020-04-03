@@ -22,6 +22,7 @@ KEY_ID = "id"
 KEY_NAME = "name"
 KEY_MODEL = "model"
 KEY_ON = "on"
+KEY_DURATION = "totalDuration"
 KEY_STATUS = "status"
 KEY_SUBTYPE = "subType"
 KEY_SUMMARY = "summary"
@@ -33,6 +34,14 @@ KEY_USERNAME = "username"
 KEY_ZONE_ID = "zoneId"
 KEY_ZONE_NUMBER = "zoneNumber"
 KEY_ZONES = "zones"
+KEY_SCHEDULES = "scheduleRules"
+KEY_FLEX_SCHEDULES = "flexScheduleRules"
+KEY_SCHEDULE_ID = "scheduleId"
+KEY_CUSTOM_SHADE = "customShade"
+KEY_CUSTOM_CROP = "customCrop"
+
+ATTR_ZONE_TYPE = "type"
+ATTR_ZONE_SHADE = "shade"
 
 # Yes we really do get all these exceptions (hopefully rachiopy switches to requests)
 RACHIO_API_EXCEPTIONS = (
@@ -41,3 +50,11 @@ RACHIO_API_EXCEPTIONS = (
     OSError,
     AssertionError,
 )
+
+STATUS_ONLINE = "ONLINE"
+STATUS_OFFLINE = "OFFLINE"
+
+SIGNAL_RACHIO_UPDATE = DOMAIN + "_update"
+SIGNAL_RACHIO_CONTROLLER_UPDATE = SIGNAL_RACHIO_UPDATE + "_controller"
+SIGNAL_RACHIO_ZONE_UPDATE = SIGNAL_RACHIO_UPDATE + "_zone"
+SIGNAL_RACHIO_SCHEDULE_UPDATE = SIGNAL_RACHIO_UPDATE + "_schedule"

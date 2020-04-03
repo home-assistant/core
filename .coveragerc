@@ -75,6 +75,7 @@ omit =
     homeassistant/components/bluetooth_tracker/*
     homeassistant/components/bme280/sensor.py
     homeassistant/components/bme680/sensor.py
+    homeassistant/components/bmp280/sensor.py
     homeassistant/components/bmw_connected_drive/*
     homeassistant/components/bom/camera.py
     homeassistant/components/bom/sensor.py
@@ -218,6 +219,7 @@ omit =
     homeassistant/components/flic/binary_sensor.py
     homeassistant/components/flock/notify.py
     homeassistant/components/flume/*
+    homeassistant/components/flunearyou/__init__.py
     homeassistant/components/flunearyou/sensor.py
     homeassistant/components/flux_led/light.py
     homeassistant/components/folder/sensor.py
@@ -424,6 +426,7 @@ omit =
     homeassistant/components/minecraft_server/__init__.py
     homeassistant/components/minecraft_server/binary_sensor.py
     homeassistant/components/minecraft_server/const.py
+    homeassistant/components/minecraft_server/helpers.py
     homeassistant/components/minecraft_server/sensor.py
     homeassistant/components/minio/*
     homeassistant/components/mitemp_bt/sensor.py
@@ -440,7 +443,6 @@ omit =
     homeassistant/components/mychevy/*
     homeassistant/components/mycroft/*
     homeassistant/components/mycroft/notify.py
-    homeassistant/components/myq/cover.py
     homeassistant/components/mysensors/*
     homeassistant/components/mystrom/binary_sensor.py
     homeassistant/components/mystrom/light.py
@@ -466,6 +468,7 @@ omit =
     homeassistant/components/netgear_lte/*
     homeassistant/components/netio/switch.py
     homeassistant/components/neurio_energy/sensor.py
+    homeassistant/components/nextcloud/*
     homeassistant/components/nfandroidtv/notify.py
     homeassistant/components/niko_home_control/light.py
     homeassistant/components/nilu/air_quality.py
@@ -606,6 +609,7 @@ omit =
     homeassistant/components/saj/sensor.py
     homeassistant/components/salt/device_tracker.py
     homeassistant/components/satel_integra/*
+    homeassistant/components/schluter/*
     homeassistant/components/scrape/sensor.py
     homeassistant/components/scsgate/*
     homeassistant/components/scsgate/cover.py

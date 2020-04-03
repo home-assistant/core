@@ -6,7 +6,8 @@
         },
         "error": {
             "faulty_credentials": "B\u0142\u0119dne dane uwierzytelniaj\u0105ce",
-            "service_unavailable": "Brak dost\u0119pnych us\u0142ug"
+            "service_unavailable": "Brak dost\u0119pnych us\u0142ug",
+            "unknown_client_mac": "Brak klienta z tym adresem MAC"
         },
         "step": {
             "user": {
@@ -23,8 +24,19 @@
         },
         "title": "Kontroler UniFi"
     },
+    "error": {
+        "unknown_client_mac": "Brak klienta w UniFi z tym adresem MAC"
+    },
     "options": {
         "step": {
+            "client_control": {
+                "data": {
+                    "block_client": "Klienci z kontrol\u0105 dost\u0119pu do sieci",
+                    "new_client": "Dodaj nowego klienta do kontroli dost\u0119pu do sieci"
+                },
+                "description": "Konfigurowanie kontroli klienta\n\nUtw\u00f3rz prze\u0142\u0105czniki dla numer\u00f3w seryjnych, dla kt\u00f3rych chcesz kontrolowa\u0107 dost\u0119p do sieci.",
+                "title": "UniFi opcje 2/3"
+            },
             "device_tracker": {
                 "data": {
                     "detection_time": "Czas w sekundach od momentu, kiedy ostatnio widziano, a\u017c do momentu, kiedy uznano go za nieobecny.",

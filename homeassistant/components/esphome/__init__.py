@@ -510,7 +510,7 @@ class EsphomeEntity(Entity):
 
     async def _on_state_update(self) -> None:
         """Update the entity state when state or static info changed."""
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def _on_device_update(self) -> None:
         """Update the entity state when device info has changed."""
@@ -519,7 +519,7 @@ class EsphomeEntity(Entity):
             # Only update the HA state when the full state arrives
             # through the next entity state packet.
             return
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister callbacks."""

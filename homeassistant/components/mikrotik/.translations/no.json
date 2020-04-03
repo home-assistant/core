@@ -14,14 +14,14 @@
                     "host": "Vert",
                     "name": "Navn",
                     "password": "Passord",
-                    "port": "Port",
+                    "port": "",
                     "username": "Brukernavn",
                     "verify_ssl": "Bruk ssl"
                 },
                 "title": "Konfigurere Mikrotik-ruter"
             }
         },
-        "title": "Mikrotik"
+        "title": ""
     },
     "options": {
         "step": {

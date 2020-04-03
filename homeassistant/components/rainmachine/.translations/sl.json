@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Ta regulator RainMachine je \u017ee konfiguriran."
+        },
         "error": {
             "identifier_exists": "Ra\u010dun \u017ee registriran",
             "invalid_credentials": "Neveljavne poverilnice"

@@ -2,11 +2,9 @@
 import logging
 from urllib.parse import urlparse
 
-import aioharmony.exceptions as harmony_exceptions
-from aioharmony.harmonyapi import HarmonyAPI
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, exceptions
 from homeassistant.components import ssdp
 from homeassistant.components.remote import (
     ATTR_ACTIVITY,
@@ -17,7 +15,11 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 
 from .const import DOMAIN, UNIQUE_ID
-from .util import find_unique_id_for_remote
+from .util import (
+    find_best_name_for_remote,
+    find_unique_id_for_remote,
+    get_harmony_client_if_available,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,35 +28,19 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(data):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    harmony = HarmonyAPI(ip_address=data[CONF_HOST])
-
-    _LOGGER.debug("harmony:%s", harmony)
-
-    try:
-        if not await harmony.connect():
-            await harmony.close()
-            raise CannotConnect
-    except harmony_exceptions.TimeOut:
+    harmony = await get_harmony_client_if_available(data[CONF_HOST])
+    if not harmony:
         raise CannotConnect
 
-    unique_id = find_unique_id_for_remote(harmony)
-    await harmony.close()
-
-    # As a last resort we get the name from the harmony client
-    # in the event a name was not provided.  harmony.name is
-    # usually the ip address but it can be an empty string.
-    if CONF_NAME not in data or data[CONF_NAME] is None or data[CONF_NAME] == "":
-        data[CONF_NAME] = harmony.name
-
     return {
-        CONF_NAME: data[CONF_NAME],
+        CONF_NAME: find_best_name_for_remote(data, harmony),
         CONF_HOST: data[CONF_HOST],
-        UNIQUE_ID: unique_id,
+        UNIQUE_ID: find_unique_id_for_remote(harmony),
     }
 
 
@@ -74,7 +60,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
 
             try:
-                info = await validate_input(self.hass, user_input)
+                validated = await validate_input(user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
@@ -82,7 +68,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             if "base" not in errors:
-                return await self._async_create_entry_from_valid_input(info, user_input)
+                await self.async_set_unique_id(validated[UNIQUE_ID])
+                self._abort_if_unique_id_configured()
+                return await self._async_create_entry_from_valid_input(
+                    validated, user_input
+                )
 
         # Return form
         return self.async_show_form(
@@ -104,8 +94,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_NAME: friendly_name,
         }
 
-        if self._host_already_configured(self.harmony_config):
-            return self.async_abort(reason="already_configured")
+        harmony = await get_harmony_client_if_available(parsed_url.hostname)
+
+        if harmony:
+            unique_id = find_unique_id_for_remote(harmony)
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured(
+                updates={CONF_HOST: self.harmony_config[CONF_HOST]}
+            )
+            self.harmony_config[UNIQUE_ID] = unique_id
 
         return await self.async_step_link()
 
@@ -114,16 +111,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            try:
-                info = await validate_input(self.hass, self.harmony_config)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-
-            if "base" not in errors:
-                return await self._async_create_entry_from_valid_input(info, user_input)
+            # Everything was validated in async_step_ssdp
+            # all we do now is create.
+            return await self._async_create_entry_from_valid_input(
+                self.harmony_config, {}
+            )
 
         return self.async_show_form(
             step_id="link",
@@ -134,9 +126,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_import(self, user_input):
+    async def async_step_import(self, validated_input):
         """Handle import."""
-        return await self.async_step_user(user_input)
+        await self.async_set_unique_id(validated_input[UNIQUE_ID])
+        self._abort_if_unique_id_configured()
+        # Everything was validated in remote async_setup_platform
+        # all we do now is create.
+        return await self._async_create_entry_from_valid_input(
+            validated_input, validated_input
+        )
 
     @staticmethod
     @callback
@@ -146,8 +144,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_create_entry_from_valid_input(self, validated, user_input):
         """Single path to create the config entry from validated input."""
-        await self.async_set_unique_id(validated[UNIQUE_ID])
-        self._abort_if_unique_id_configured()
+
         data = {CONF_NAME: validated[CONF_NAME], CONF_HOST: validated[CONF_HOST]}
         # Options from yaml are preserved, we will pull them out when
         # we setup the config entry

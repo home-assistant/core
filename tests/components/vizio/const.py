@@ -64,17 +64,25 @@ class MockCompletePairingResponse(object):
         self.auth_token = auth_token
 
 
+CURRENT_EQ = "Music"
+EQ_LIST = ["Music", "Movie"]
+
 CURRENT_INPUT = "HDMI"
 INPUT_LIST = ["HDMI", "USB", "Bluetooth", "AUX"]
 
 CURRENT_APP = "Hulu"
+CURRENT_APP_CONFIG = {CONF_APP_ID: "3", CONF_NAME_SPACE: 4, CONF_MESSAGE: None}
 APP_LIST = ["Hulu", "Netflix"]
 INPUT_LIST_WITH_APPS = INPUT_LIST + ["CAST"]
-CUSTOM_APP_NAME = "APP3"
 CUSTOM_CONFIG = {CONF_APP_ID: "test", CONF_MESSAGE: None, CONF_NAME_SPACE: 10}
 ADDITIONAL_APP_CONFIG = {
-    "name": CUSTOM_APP_NAME,
+    "name": CURRENT_APP,
     CONF_CONFIG: CUSTOM_CONFIG,
+}
+UNKNOWN_APP_CONFIG = {
+    "APP_ID": "UNKNOWN",
+    "NAME_SPACE": 10,
+    "MESSAGE": None,
 }
 
 ENTITY_ID = f"{MP_DOMAIN}.{slugify(NAME)}"

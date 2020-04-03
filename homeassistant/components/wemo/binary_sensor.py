@@ -55,7 +55,7 @@ class WemoBinarySensor(BinarySensorDevice):
             return
 
         await self._async_locked_update(force_update)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Wemo sensor added to Home Assistant."""

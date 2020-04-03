@@ -1,16 +1,13 @@
 """Philips Hue sensors platform tests."""
 import asyncio
-from collections import deque
 import logging
 from unittest.mock import Mock
 
 import aiohue
-from aiohue.sensors import Sensors
-import pytest
 
-from homeassistant import config_entries
-from homeassistant.components import hue
-from homeassistant.components.hue import sensor_base as hue_sensor_base
+from homeassistant.components.hue.hue_event import CONF_HUE_EVENT
+
+from .conftest import create_mock_bridge, setup_bridge_for_sensors as setup_bridge
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -241,6 +238,33 @@ UNSUPPORTED_SENSOR = {
     "uniqueid": "arbitrary",
     "recycle": True,
 }
+HUE_TAP_REMOTE_1 = {
+    "state": {"buttonevent": 17, "lastupdated": "2019-06-22T14:43:50"},
+    "swupdate": {"state": "notupdatable", "lastinstall": None},
+    "config": {"on": True},
+    "name": "Hue Tap",
+    "type": "ZGPSwitch",
+    "modelid": "ZGPSWITCH",
+    "manufacturername": "Philips",
+    "productname": "Hue tap switch",
+    "diversityid": "d8cde5d5-0eef-4b95-b0f0-71ddd2952af4",
+    "uniqueid": "00:00:00:00:00:44:23:08-f2",
+    "capabilities": {"certified": True, "primary": True, "inputs": []},
+}
+HUE_DIMMER_REMOTE_1 = {
+    "state": {"buttonevent": 4002, "lastupdated": "2019-12-28T21:58:02"},
+    "swupdate": {"state": "noupdates", "lastinstall": "2019-10-13T13:16:15"},
+    "config": {"on": True, "battery": 100, "reachable": True, "pending": []},
+    "name": "Hue dimmer switch 1",
+    "type": "ZLLSwitch",
+    "modelid": "RWL021",
+    "manufacturername": "Philips",
+    "productname": "Hue dimmer switch",
+    "diversityid": "73bbabea-3420-499a-9856-46bf437e119b",
+    "swversion": "6.1.1.28573",
+    "uniqueid": "00:17:88:01:10:3e:3a:dc-02-fc00",
+    "capabilities": {"certified": True, "primary": True, "inputs": []},
+}
 SENSOR_RESPONSE = {
     "1": PRESENCE_SENSOR_1_PRESENT,
     "2": LIGHT_LEVEL_SENSOR_1,
@@ -248,72 +272,9 @@ SENSOR_RESPONSE = {
     "4": PRESENCE_SENSOR_2_NOT_PRESENT,
     "5": LIGHT_LEVEL_SENSOR_2,
     "6": TEMPERATURE_SENSOR_2,
+    "7": HUE_TAP_REMOTE_1,
+    "8": HUE_DIMMER_REMOTE_1,
 }
-
-
-def create_mock_bridge(hass):
-    """Create a mock Hue bridge."""
-    bridge = Mock(
-        hass=hass,
-        available=True,
-        authorized=True,
-        allow_unreachable=False,
-        allow_groups=False,
-        api=Mock(),
-        reset_jobs=[],
-        spec=hue.HueBridge,
-    )
-    bridge.sensor_manager = hue_sensor_base.SensorManager(bridge)
-    bridge.mock_requests = []
-    # We're using a deque so we can schedule multiple responses
-    # and also means that `popleft()` will blow up if we get more updates
-    # than expected.
-    bridge.mock_sensor_responses = deque()
-
-    async def mock_request(method, path, **kwargs):
-        kwargs["method"] = method
-        kwargs["path"] = path
-        bridge.mock_requests.append(kwargs)
-
-        if path == "sensors":
-            return bridge.mock_sensor_responses.popleft()
-        return None
-
-    async def async_request_call(task):
-        await task()
-
-    bridge.async_request_call = async_request_call
-    bridge.api.config.apiversion = "9.9.9"
-    bridge.api.sensors = Sensors({}, mock_request)
-    return bridge
-
-
-@pytest.fixture
-def mock_bridge(hass):
-    """Mock a Hue bridge."""
-    return create_mock_bridge(hass)
-
-
-async def setup_bridge(hass, mock_bridge, hostname=None):
-    """Load the Hue platform with the provided bridge."""
-    if hostname is None:
-        hostname = "mock-host"
-    hass.config.components.add(hue.DOMAIN)
-    config_entry = config_entries.ConfigEntry(
-        1,
-        hue.DOMAIN,
-        "Mock Title",
-        {"host": hostname},
-        "test",
-        config_entries.CONN_CLASS_LOCAL_POLL,
-        system_options={},
-    )
-    mock_bridge.config_entry = config_entry
-    hass.data[hue.DOMAIN] = {config_entry.entry_id: mock_bridge}
-    await hass.config_entries.async_forward_entry_setup(config_entry, "binary_sensor")
-    await hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
-    # and make sure it completes before going further
-    await hass.async_block_till_done()
 
 
 async def test_no_sensors(hass, mock_bridge):
@@ -341,8 +302,8 @@ async def test_sensors_with_multiple_bridges(hass, mock_bridge):
 
     assert len(mock_bridge.mock_requests) == 1
     assert len(mock_bridge_2.mock_requests) == 1
-    # 3 "physical" sensors with 3 virtual sensors each
-    assert len(hass.states.async_all()) == 9
+    # 3 "physical" sensors with 3 virtual sensors each + 1 battery sensor
+    assert len(hass.states.async_all()) == 10
 
 
 async def test_sensors(hass, mock_bridge):
@@ -351,7 +312,7 @@ async def test_sensors(hass, mock_bridge):
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 1
     # 2 "physical" sensors with 3 virtual sensors each
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 7
 
     presence_sensor_1 = hass.states.get("binary_sensor.living_room_sensor_motion")
     light_level_sensor_1 = hass.states.get("sensor.living_room_sensor_light_level")
@@ -377,6 +338,11 @@ async def test_sensors(hass, mock_bridge):
     assert temperature_sensor_2.state == "18.75"
     assert temperature_sensor_2.name == "Kitchen sensor temperature"
 
+    battery_remote_1 = hass.states.get("sensor.hue_dimmer_switch_1_battery_level")
+    assert battery_remote_1 is not None
+    assert battery_remote_1.state == "100"
+    assert battery_remote_1.name == "Hue dimmer switch 1 battery level"
+
 
 async def test_unsupported_sensors(hass, mock_bridge):
     """Test that unsupported sensors don't get added and don't fail."""
@@ -385,8 +351,8 @@ async def test_unsupported_sensors(hass, mock_bridge):
     mock_bridge.mock_sensor_responses.append(response_with_unsupported)
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 1
-    # 2 "physical" sensors with 3 virtual sensors each
-    assert len(hass.states.async_all()) == 6
+    # 2 "physical" sensors with 3 virtual sensors each + 1 battery sensor
+    assert len(hass.states.async_all()) == 7
 
 
 async def test_new_sensor_discovered(hass, mock_bridge):
@@ -395,14 +361,14 @@ async def test_new_sensor_discovered(hass, mock_bridge):
 
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 1
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 7
 
     new_sensor_response = dict(SENSOR_RESPONSE)
     new_sensor_response.update(
         {
-            "7": PRESENCE_SENSOR_3_PRESENT,
-            "8": LIGHT_LEVEL_SENSOR_3,
-            "9": TEMPERATURE_SENSOR_3,
+            "9": PRESENCE_SENSOR_3_PRESENT,
+            "10": LIGHT_LEVEL_SENSOR_3,
+            "11": TEMPERATURE_SENSOR_3,
         }
     )
 
@@ -413,7 +379,7 @@ async def test_new_sensor_discovered(hass, mock_bridge):
     await hass.async_block_till_done()
 
     assert len(mock_bridge.mock_requests) == 2
-    assert len(hass.states.async_all()) == 9
+    assert len(hass.states.async_all()) == 10
 
     presence = hass.states.get("binary_sensor.bedroom_sensor_motion")
     assert presence is not None
@@ -429,7 +395,7 @@ async def test_sensor_removed(hass, mock_bridge):
 
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 1
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 7
 
     mock_bridge.mock_sensor_responses.clear()
     keys = ("1", "2", "3")
@@ -466,3 +432,121 @@ async def test_update_unauthorized(hass, mock_bridge):
     assert len(mock_bridge.mock_requests) == 0
     assert len(hass.states.async_all()) == 0
     assert len(mock_bridge.handle_unauthorized_error.mock_calls) == 1
+
+
+async def test_hue_events(hass, mock_bridge):
+    """Test that hue remotes fire events when pressed."""
+    mock_bridge.mock_sensor_responses.append(SENSOR_RESPONSE)
+
+    mock_listener = Mock()
+    unsub = hass.bus.async_listen(CONF_HUE_EVENT, mock_listener)
+
+    await setup_bridge(hass, mock_bridge)
+    assert len(mock_bridge.mock_requests) == 1
+    assert len(hass.states.async_all()) == 7
+    assert len(mock_listener.mock_calls) == 0
+
+    new_sensor_response = dict(SENSOR_RESPONSE)
+    new_sensor_response["7"]["state"] = {
+        "buttonevent": 18,
+        "lastupdated": "2019-12-28T22:58:02",
+    }
+    mock_bridge.mock_sensor_responses.append(new_sensor_response)
+
+    # Force updates to run again
+    await mock_bridge.sensor_manager.coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert len(mock_bridge.mock_requests) == 2
+    assert len(hass.states.async_all()) == 7
+    assert len(mock_listener.mock_calls) == 1
+    assert mock_listener.mock_calls[0][1][0].data == {
+        "id": "hue_tap",
+        "unique_id": "00:00:00:00:00:44:23:08-f2",
+        "event": 18,
+        "last_updated": "2019-12-28T22:58:02",
+    }
+
+    new_sensor_response = dict(new_sensor_response)
+    new_sensor_response["8"]["state"] = {
+        "buttonevent": 3002,
+        "lastupdated": "2019-12-28T22:58:01",
+    }
+    mock_bridge.mock_sensor_responses.append(new_sensor_response)
+
+    # Force updates to run again
+    await mock_bridge.sensor_manager.coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert len(mock_bridge.mock_requests) == 3
+    assert len(hass.states.async_all()) == 7
+    assert len(mock_listener.mock_calls) == 2
+    assert mock_listener.mock_calls[1][1][0].data == {
+        "id": "hue_dimmer_switch_1",
+        "unique_id": "00:17:88:01:10:3e:3a:dc-02-fc00",
+        "event": 3002,
+        "last_updated": "2019-12-28T22:58:01",
+    }
+
+    # Add a new remote. In discovery the new event is registered **but not fired**
+    new_sensor_response = dict(new_sensor_response)
+    new_sensor_response["21"] = {
+        "state": {
+            "rotaryevent": 2,
+            "expectedrotation": 208,
+            "expectedeventduration": 400,
+            "lastupdated": "2020-01-31T15:56:19",
+        },
+        "swupdate": {"state": "noupdates", "lastinstall": "2019-11-26T03:35:21"},
+        "config": {"on": True, "battery": 100, "reachable": True, "pending": []},
+        "name": "Lutron Aurora 1",
+        "type": "ZLLRelativeRotary",
+        "modelid": "Z3-1BRL",
+        "manufacturername": "Lutron",
+        "productname": "Lutron Aurora",
+        "diversityid": "2c3a75ff-55c4-4e4d-8c44-82d330b8eb9b",
+        "swversion": "3.4",
+        "uniqueid": "ff:ff:00:0f:e7:fd:bc:b7-01-fc00-0014",
+        "capabilities": {
+            "certified": True,
+            "primary": True,
+            "inputs": [
+                {
+                    "repeatintervals": [400],
+                    "events": [
+                        {"rotaryevent": 1, "eventtype": "start"},
+                        {"rotaryevent": 2, "eventtype": "repeat"},
+                    ],
+                }
+            ],
+        },
+    }
+    mock_bridge.mock_sensor_responses.append(new_sensor_response)
+
+    # Force updates to run again
+    await mock_bridge.sensor_manager.coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert len(mock_bridge.mock_requests) == 4
+    assert len(hass.states.async_all()) == 8
+    assert len(mock_listener.mock_calls) == 2
+
+    # A new press fires the event
+    new_sensor_response["21"]["state"]["lastupdated"] = "2020-01-31T15:57:19"
+    mock_bridge.mock_sensor_responses.append(new_sensor_response)
+
+    # Force updates to run again
+    await mock_bridge.sensor_manager.coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert len(mock_bridge.mock_requests) == 5
+    assert len(hass.states.async_all()) == 8
+    assert len(mock_listener.mock_calls) == 3
+    assert mock_listener.mock_calls[2][1][0].data == {
+        "id": "lutron_aurora_1",
+        "unique_id": "ff:ff:00:0f:e7:fd:bc:b7-01-fc00-0014",
+        "event": 2,
+        "last_updated": "2020-01-31T15:57:19",
+    }
+
+    unsub()

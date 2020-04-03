@@ -4,6 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/gios",
   "dependencies": [],
   "codeowners": ["@bieniu"],
-  "requirements": ["gios==0.0.3"],
+  "requirements": ["gios==0.1.1"],
   "config_flow": true
 }

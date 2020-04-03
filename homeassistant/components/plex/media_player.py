@@ -27,6 +27,8 @@ from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    COMMAND_MEDIA_TYPE_MUSIC,
+    COMMAND_MEDIA_TYPE_VIDEO,
     COMMON_PLAYERS,
     CONF_SERVER_IDENTIFIER,
     DISPATCHERS,
@@ -575,9 +577,11 @@ class PlexMediaPlayer(MediaPlayerDevice):
         shuffle = src.get("shuffle", 0)
 
         media = None
+        command_media_type = COMMAND_MEDIA_TYPE_VIDEO
 
         if media_type == "MUSIC":
             media = self._get_music_media(library, src)
+            command_media_type = COMMAND_MEDIA_TYPE_MUSIC
         elif media_type == "EPISODE":
             media = self._get_tv_media(library, src)
         elif media_type == "PLAYLIST":
@@ -591,7 +595,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
 
         playqueue = self.plex_server.create_playqueue(media, shuffle=shuffle)
         try:
-            self.device.playMedia(playqueue)
+            self.device.playMedia(playqueue, type=command_media_type)
         except ParseError:
             # Temporary workaround for Plexamp / plexapi issue
             pass

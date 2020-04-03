@@ -63,6 +63,7 @@ HM_DEVICE_TYPES = {
         "IPDimmer",
         "ColorEffectLight",
         "IPKeySwitchLevel",
+        "ColdWarmDimmer",
     ],
     DISCOVER_SENSORS: [
         "SwitchPowermeter",

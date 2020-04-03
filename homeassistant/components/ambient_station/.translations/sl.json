@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Ta klju\u010d za aplikacijo je \u017ee v uporabi."
+        },
         "error": {
             "identifier_exists": "Aplikacijski klju\u010d in / ali klju\u010d API je \u017ee registriran",
             "invalid_key": "Neveljaven klju\u010d API in / ali klju\u010d aplikacije",

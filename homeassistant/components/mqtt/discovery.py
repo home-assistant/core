@@ -6,12 +6,11 @@ import re
 
 from homeassistant.components import mqtt
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .abbreviations import ABBREVIATIONS, DEVICE_ABBREVIATIONS
-from .const import ATTR_DISCOVERY_HASH, ATTR_DISCOVERY_TOPIC
+from .const import ATTR_DISCOVERY_HASH, ATTR_DISCOVERY_PAYLOAD, ATTR_DISCOVERY_TOPIC
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,21 +20,6 @@ TOPIC_MATCHER = re.compile(
 )
 
 SUPPORTED_COMPONENTS = [
-    "alarm_control_panel",
-    "binary_sensor",
-    "camera",
-    "climate",
-    "cover",
-    "device_automation",
-    "fan",
-    "light",
-    "lock",
-    "sensor",
-    "switch",
-    "vacuum",
-]
-
-CONFIG_ENTRY_COMPONENTS = [
     "alarm_control_panel",
     "binary_sensor",
     "camera",
@@ -62,6 +46,11 @@ TOPIC_BASE = "~"
 def clear_discovery_hash(hass, discovery_hash):
     """Clear entry in ALREADY_DISCOVERED list."""
     del hass.data[ALREADY_DISCOVERED][discovery_hash]
+
+
+def set_discovery_hash(hass, discovery_hash):
+    """Clear entry in ALREADY_DISCOVERED list."""
+    hass.data[ALREADY_DISCOVERED][discovery_hash] = {}
 
 
 class MQTTConfig(dict):
@@ -130,6 +119,7 @@ async def async_start(
             setattr(payload, "__configuration_source__", f"MQTT (topic: '{topic}')")
             discovery_data = {
                 ATTR_DISCOVERY_HASH: discovery_hash,
+                ATTR_DISCOVERY_PAYLOAD: payload,
                 ATTR_DISCOVERY_TOPIC: topic,
             }
             setattr(payload, "discovery_data", discovery_data)
@@ -152,10 +142,6 @@ async def async_start(
             # Add component
             _LOGGER.info("Found new component: %s %s", component, discovery_id)
             hass.data[ALREADY_DISCOVERED][discovery_hash] = None
-
-            if component not in CONFIG_ENTRY_COMPONENTS:
-                await async_load_platform(hass, component, "mqtt", payload, hass_config)
-                return
 
             config_entries_key = f"{component}.mqtt"
             async with hass.data[DATA_CONFIG_ENTRY_LOCK]:

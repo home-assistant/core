@@ -100,6 +100,36 @@ def mirobo_is_got_error_fixture():
         yield mock_vacuum
 
 
+old_fanspeeds = {
+    "Silent": 38,
+    "Standard": 60,
+    "Medium": 77,
+    "Turbo": 90,
+}
+new_fanspeeds = {
+    "Silent": 101,
+    "Standard": 102,
+    "Medium": 103,
+    "Turbo": 104,
+    "Gentle": 105,
+}
+
+
+@pytest.fixture(name="mock_mirobo_fanspeeds", params=[old_fanspeeds, new_fanspeeds])
+def mirobo_old_speeds_fixture(request):
+    """Fixture for testing both types of fanspeeds."""
+    mock_vacuum = mock.MagicMock()
+    mock_vacuum.status().battery = 32
+    mock_vacuum.fan_speed_presets.return_value = request.param
+    mock_vacuum.status().fanspeed = list(request.param.values())[0]
+
+    with mock.patch(
+        "homeassistant.components.xiaomi_miio.vacuum.Vacuum"
+    ) as mock_vaccum_cls:
+        mock_vaccum_cls.return_value = mock_vacuum
+        yield mock_vacuum
+
+
 @pytest.fixture(name="mock_mirobo_is_on")
 def mirobo_is_on_fixture():
     """Mock mock_mirobo."""
@@ -204,14 +234,6 @@ async def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
     assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-80"
     assert state.attributes.get(ATTR_CLEANING_TIME) == 155
     assert state.attributes.get(ATTR_CLEANED_AREA) == 123
-    assert state.attributes.get(ATTR_FAN_SPEED) == "Silent"
-    assert state.attributes.get(ATTR_FAN_SPEED_LIST) == [
-        "Silent",
-        "Standard",
-        "Medium",
-        "Turbo",
-        "Gentle",
-    ]
     assert state.attributes.get(ATTR_MAIN_BRUSH_LEFT) == 12
     assert state.attributes.get(ATTR_SIDE_BRUSH_LEFT) == 12
     assert state.attributes.get(ATTR_FILTER_LEFT) == 12
@@ -256,40 +278,6 @@ async def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
     mock_mirobo_is_got_error.assert_has_calls([mock.call.spot()], any_order=True)
     mock_mirobo_is_got_error.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_got_error.reset_mock()
-
-    # Set speed service:
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_FAN_SPEED,
-        {"entity_id": entity_id, "fan_speed": 60},
-        blocking=True,
-    )
-    mock_mirobo_is_got_error.assert_has_calls(
-        [mock.call.set_fan_speed(60)], any_order=True
-    )
-    mock_mirobo_is_got_error.assert_has_calls(STATUS_CALLS, any_order=True)
-    mock_mirobo_is_got_error.reset_mock()
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_FAN_SPEED,
-        {"entity_id": entity_id, "fan_speed": "Medium"},
-        blocking=True,
-    )
-    mock_mirobo_is_got_error.assert_has_calls(
-        [mock.call.set_fan_speed(77)], any_order=True
-    )
-    mock_mirobo_is_got_error.assert_has_calls(STATUS_CALLS, any_order=True)
-    mock_mirobo_is_got_error.reset_mock()
-
-    assert "ERROR" not in caplog.text
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_FAN_SPEED,
-        {"entity_id": entity_id, "fan_speed": "invent"},
-        blocking=True,
-    )
-    assert "ERROR" in caplog.text
 
     await hass.services.async_call(
         DOMAIN,
@@ -346,14 +334,6 @@ async def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-30"
     assert state.attributes.get(ATTR_CLEANING_TIME) == 175
     assert state.attributes.get(ATTR_CLEANED_AREA) == 133
-    assert state.attributes.get(ATTR_FAN_SPEED) == 99
-    assert state.attributes.get(ATTR_FAN_SPEED_LIST) == [
-        "Silent",
-        "Standard",
-        "Medium",
-        "Turbo",
-        "Gentle",
-    ]
     assert state.attributes.get(ATTR_MAIN_BRUSH_LEFT) == 11
     assert state.attributes.get(ATTR_SIDE_BRUSH_LEFT) == 11
     assert state.attributes.get(ATTR_FILTER_LEFT) == 11
@@ -409,3 +389,67 @@ async def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     )
     mock_mirobo_is_on.assert_has_calls(STATUS_CALLS, any_order=True)
     mock_mirobo_is_on.reset_mock()
+
+
+async def test_xiaomi_vacuum_fanspeeds(hass, caplog, mock_mirobo_fanspeeds):
+    """Test Xiaomi vacuum fanspeeds."""
+    entity_name = "test_vacuum_cleaner_2"
+    entity_id = f"{DOMAIN}.{entity_name}"
+
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_PLATFORM: PLATFORM,
+                CONF_HOST: "192.168.1.100",
+                CONF_NAME: entity_name,
+                CONF_TOKEN: "12345678901234567890123456789012",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert "Initializing with host 192.168.1.100 (token 12345" in caplog.text
+
+    state = hass.states.get(entity_id)
+    assert state.attributes.get(ATTR_FAN_SPEED) == "Silent"
+    fanspeeds = state.attributes.get(ATTR_FAN_SPEED_LIST)
+    for speed in ["Silent", "Standard", "Medium", "Turbo"]:
+        assert speed in fanspeeds
+
+    # Set speed service:
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_FAN_SPEED,
+        {"entity_id": entity_id, "fan_speed": 60},
+        blocking=True,
+    )
+    mock_mirobo_fanspeeds.assert_has_calls(
+        [mock.call.set_fan_speed(60)], any_order=True
+    )
+    mock_mirobo_fanspeeds.assert_has_calls(STATUS_CALLS, any_order=True)
+    mock_mirobo_fanspeeds.reset_mock()
+
+    fan_speed_dict = mock_mirobo_fanspeeds.fan_speed_presets()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_FAN_SPEED,
+        {"entity_id": entity_id, "fan_speed": "Medium"},
+        blocking=True,
+    )
+    mock_mirobo_fanspeeds.assert_has_calls(
+        [mock.call.set_fan_speed(fan_speed_dict["Medium"])], any_order=True
+    )
+    mock_mirobo_fanspeeds.assert_has_calls(STATUS_CALLS, any_order=True)
+    mock_mirobo_fanspeeds.reset_mock()
+
+    assert "ERROR" not in caplog.text
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_FAN_SPEED,
+        {"entity_id": entity_id, "fan_speed": "invent"},
+        blocking=True,
+    )
+    assert "ERROR" in caplog.text
