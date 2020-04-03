@@ -22,7 +22,7 @@ async def test_password_or_pub_key_required(hass):
             hass, DOMAIN, {DOMAIN: {CONF_HOST: "fake_host", CONF_USERNAME: "fake_user"}}
         )
         assert result
-        assert hass.data[DATA_ASUSWRT] is None
+        assert hass.data.get(DATA_ASUSWRT, None) is None
 
 
 async def test_get_scanner_with_password_no_pubkey(hass):
@@ -66,7 +66,7 @@ async def test_specify_non_directory_path_for_dnsmasq(hass):
             },
         )
         assert result
-        assert hass.data[DATA_ASUSWRT] is None
+        assert hass.data.get(DATA_ASUSWRT, None) is None
 
 
 async def test_interface(hass):
@@ -112,4 +112,4 @@ async def test_no_interface(hass):
             },
         )
         assert result
-        assert hass.data[DATA_ASUSWRT] is None
+        assert hass.data.get(DATA_ASUSWRT, None) is None
