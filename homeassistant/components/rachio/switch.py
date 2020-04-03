@@ -196,7 +196,6 @@ class RachioZone(RachioSwitch):
         self._current_schedule = current_schedule
         super().__init__(controller, poll=False)
         self._state = self.zone_id == self._current_schedule.get(KEY_ZONE_ID)
-        self._undo_dispatcher = None
 
     def __str__(self):
         """Display the zone as a string."""
@@ -307,7 +306,6 @@ class RachioSchedule(RachioSwitch):
         self._current_schedule = current_schedule
         super().__init__(controller, poll=False)
         self._state = self._schedule_id == self._current_schedule.get(KEY_SCHEDULE_ID)
-        self._undo_dispatcher = None
 
     @property
     def name(self) -> str:
