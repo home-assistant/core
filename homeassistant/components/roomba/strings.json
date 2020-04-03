@@ -16,15 +16,13 @@
     },
     "error": {
       "unknown" : "Unexpected error",
-      "cannot_connect": "Failed to connect, please try again",
-      "invalid_auth": "Invalid authentication"
+      "cannot_connect": "Failed to connect, please try again"
     }
   },
   "options": {
     "step": {
       "init": {
         "data": {
-          "certificate": "Certificate",
           "continuous": "Continuous",
           "delay": "Delay"
         }
