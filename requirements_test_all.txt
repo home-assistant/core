@@ -493,6 +493,9 @@ pyeverlights==0.1.0
 # homeassistant.components.fido
 pyfido==2.1.1
 
+# homeassistant.components.flunearyou
+pyflunearyou==1.0.7
+
 # homeassistant.components.fritzbox
 pyfritzhome==0.4.0
 
@@ -519,7 +522,7 @@ pyicloud==0.9.6.1
 pyipma==2.0.5
 
 # homeassistant.components.ipp
-pyipp==0.8.2
+pyipp==0.8.3
 
 # homeassistant.components.iqvia
 pyiqvia==0.2.1
@@ -617,7 +620,7 @@ python-forecastio==1.4.0
 python-izone==1.1.2
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.4.8
+python-miio==0.5.0.1
 
 # homeassistant.components.nest
 python-nest==4.1.0

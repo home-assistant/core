@@ -1281,7 +1281,7 @@ pyflic-homeassistant==0.4.dev0
 pyflume==0.3.0
 
 # homeassistant.components.flunearyou
-pyflunearyou==1.0.3
+pyflunearyou==1.0.7
 
 # homeassistant.components.futurenow
 pyfnip==0.2
@@ -1336,7 +1336,7 @@ pyintesishome==1.7.1
 pyipma==2.0.5
 
 # homeassistant.components.ipp
-pyipp==0.8.2
+pyipp==0.8.3
 
 # homeassistant.components.iqvia
 pyiqvia==0.2.1
@@ -1638,7 +1638,7 @@ python-juicenet==0.1.6
 # python-lirc==1.2.3
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.4.8
+python-miio==0.5.0.1
 
 # homeassistant.components.mpd
 python-mpd2==1.0.0
