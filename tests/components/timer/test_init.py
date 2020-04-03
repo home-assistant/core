@@ -33,8 +33,8 @@ from homeassistant.const import (
     ATTR_ID,
     ATTR_NAME,
     CONF_ENTITY_ID,
-    SERVICE_RELOAD,
     EVENT_STATE_CHANGED,
+    SERVICE_RELOAD,
 )
 from homeassistant.core import Context, CoreState
 from homeassistant.exceptions import Unauthorized
