@@ -57,11 +57,6 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
         "test_configuring_devices_from_multiple_sources",
     ),
     ("tests.components.unifi_direct.test_device_tracker", "test_get_scanner"),
-    ("tests.components.upnp.test_init", "test_async_setup_entry_default"),
-    ("tests.components.upnp.test_init", "test_async_setup_entry_port_mapping"),
-    ("tests.components.yr.test_sensor", "test_default_setup"),
-    ("tests.components.yr.test_sensor", "test_custom_setup"),
-    ("tests.components.yr.test_sensor", "test_forecast_setup"),
     ("tests.components.zwave.test_init", "test_power_schemes"),
 ]
 
