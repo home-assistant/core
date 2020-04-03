@@ -3,6 +3,5 @@
   "name": "OpenEVSE",
   "documentation": "https://www.home-assistant.io/integrations/openevse",
   "requirements": ["openevsewifi==0.4"],
-  "dependencies": [],
   "codeowners": []
 }

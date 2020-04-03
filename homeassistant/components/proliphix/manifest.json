@@ -3,6 +3,5 @@
   "name": "Proliphix",
   "documentation": "https://www.home-assistant.io/integrations/proliphix",
   "requirements": ["proliphix==0.4.1"],
-  "dependencies": [],
   "codeowners": []
 }

@@ -12,6 +12,5 @@
     "zigpy-xbee-homeassistant==0.11.0",
     "zigpy-zigate==0.5.1"
   ],
-  "dependencies": [],
   "codeowners": ["@dmulcahey", "@adminiuga"]
 }

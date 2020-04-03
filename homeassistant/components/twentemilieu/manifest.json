@@ -4,6 +4,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/twentemilieu",
   "requirements": ["twentemilieu==0.2.0"],
-  "dependencies": [],
   "codeowners": ["@frenck"]
 }

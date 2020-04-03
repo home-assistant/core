@@ -6,7 +6,6 @@
   "requirements": [
     "aiounifi==15"
   ],
-  "dependencies": [],
   "codeowners": [
     "@kane610"
   ],

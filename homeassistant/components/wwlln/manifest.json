@@ -4,6 +4,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/wwlln",
   "requirements": ["aiowwlln==2.0.2"],
-  "dependencies": [],
   "codeowners": ["@bachya"]
 }

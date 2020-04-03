@@ -3,6 +3,5 @@
   "name": "MH-Z19 CO2 Sensor",
   "documentation": "https://www.home-assistant.io/integrations/mhz19",
   "requirements": ["pmsensor==0.4"],
-  "dependencies": [],
   "codeowners": []
 }

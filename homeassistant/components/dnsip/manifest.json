@@ -3,6 +3,5 @@
   "name": "DNS IP",
   "documentation": "https://www.home-assistant.io/integrations/dnsip",
   "requirements": ["aiodns==2.0.0"],
-  "dependencies": [],
   "codeowners": []
 }
