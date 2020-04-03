@@ -3,6 +3,5 @@
   "name": "Broadlink",
   "documentation": "https://www.home-assistant.io/integrations/broadlink",
   "requirements": ["broadlink==0.13.0"],
-  "dependencies": [],
   "codeowners": ["@danielhiversen", "@felipediel"]
 }

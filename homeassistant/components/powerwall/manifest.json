@@ -9,7 +9,6 @@
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
-  "dependencies": [],
   "codeowners": [
     "@bdraco"
   ]

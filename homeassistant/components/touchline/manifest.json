@@ -3,6 +3,5 @@
   "name": "Roth Touchline",
   "documentation": "https://www.home-assistant.io/integrations/touchline",
   "requirements": ["pytouchline==0.7"],
-  "dependencies": [],
   "codeowners": []
 }

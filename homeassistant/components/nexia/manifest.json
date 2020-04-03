@@ -4,7 +4,6 @@
   "requirements": [
     "nexia==0.7.3"
   ],
-  "dependencies": [],
   "codeowners": [
     "@ryannazaretian", "@bdraco"
   ],

@@ -3,6 +3,5 @@
   "name": "Mastodon",
   "documentation": "https://www.home-assistant.io/integrations/mastodon",
   "requirements": ["Mastodon.py==1.5.1"],
-  "dependencies": [],
   "codeowners": ["@fabaff"]
 }

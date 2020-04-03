@@ -5,7 +5,6 @@
   "requirements": [
     "pysml==0.0.2"
   ],
-  "dependencies": [],
   "codeowners": [
     "@mtdcr"
   ]

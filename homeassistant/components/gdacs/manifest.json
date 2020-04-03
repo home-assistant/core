@@ -6,7 +6,6 @@
   "requirements": [
     "aio_georss_gdacs==0.3"
   ],
-  "dependencies": [],
   "codeowners": [
     "@exxamalte"
   ],

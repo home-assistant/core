@@ -3,6 +3,5 @@
   "name": "Harman Kardon AVR",
   "documentation": "https://www.home-assistant.io/integrations/harman_kardon_avr",
   "requirements": ["hkavr==0.0.5"],
-  "dependencies": [],
   "codeowners": []
 }

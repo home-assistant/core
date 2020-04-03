@@ -2,7 +2,6 @@
   "domain": "brother",
   "name": "Brother Printer",
   "documentation": "https://www.home-assistant.io/integrations/brother",
-  "dependencies": [],
   "codeowners": ["@bieniu"],
   "requirements": ["brother==0.1.11"],
   "zeroconf": ["_printer._tcp.local."],
