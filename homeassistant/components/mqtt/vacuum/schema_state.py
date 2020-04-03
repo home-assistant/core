@@ -282,9 +282,10 @@ class MqttStateVacuum(
 
     @property
     def fan_speed_list(self):
-        """Return fan speed list of the vacuum."""
-        if self.supported_features & SUPPORT_FAN_SPEED == 0:
-            return None
+        """Return fan speed list of the vacuum.
+
+        No need to check SUPPORT_FAN_SPEED, this won't be called if fan_speed is None.
+        """
         return self._fan_speed_list
 
     @property

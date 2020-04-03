@@ -14,6 +14,7 @@ from homeassistant.components.vacuum import (
     ATTR_BATTERY_ICON,
     ATTR_BATTERY_LEVEL,
     ATTR_FAN_SPEED,
+    ATTR_FAN_SPEED_LIST,
     ATTR_STATUS,
 )
 from homeassistant.const import CONF_NAME, CONF_PLATFORM, STATE_OFF, STATE_ON
@@ -223,10 +224,20 @@ async def test_attributes_without_supported_features(hass, mqtt_mock):
 
     assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
 
+    message = """{
+        "battery_level": 54,
+        "cleaning": true,
+        "docked": false,
+        "charging": false,
+        "fan_speed": "max"
+    }"""
+    async_fire_mqtt_message(hass, "vacuum/state", message)
     state = hass.states.get("vacuum.mqtttest")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_ON
     assert state.attributes.get(ATTR_BATTERY_LEVEL) is None
     assert state.attributes.get(ATTR_BATTERY_ICON) is None
+    assert state.attributes.get(ATTR_FAN_SPEED) is None
+    assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
 
 
 async def test_status(hass, mqtt_mock):
@@ -351,6 +362,36 @@ async def test_status_fan_speed(hass, mqtt_mock):
     async_fire_mqtt_message(hass, "vacuum/state", message)
     state = hass.states.get("vacuum.mqtttest")
     assert state.attributes.get(ATTR_FAN_SPEED) == "max"
+
+
+async def test_status_fan_speed_list(hass, mqtt_mock):
+    """Test status updates from the vacuum."""
+    config = deepcopy(DEFAULT_CONFIG)
+    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
+        ALL_SERVICES, SERVICE_TO_STRING
+    )
+
+    assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+
+    state = hass.states.get("vacuum.mqtttest")
+    assert state.attributes.get(ATTR_FAN_SPEED_LIST) == ["min", "medium", "high", "max"]
+
+
+async def test_status_no_fan_speed_list(hass, mqtt_mock):
+    """Test status updates from the vacuum.
+
+    If the vacuum doesn't support fan speed, fan speed list should be None.
+    """
+    config = deepcopy(DEFAULT_CONFIG)
+    services = ALL_SERVICES - mqttvacuum.SUPPORT_FAN_SPEED
+    config[mqttvacuum.CONF_SUPPORTED_FEATURES] = services_to_strings(
+        services, SERVICE_TO_STRING
+    )
+
+    assert await async_setup_component(hass, vacuum.DOMAIN, {vacuum.DOMAIN: config})
+
+    state = hass.states.get("vacuum.mqtttest")
+    assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
 
 
 async def test_status_error(hass, mqtt_mock):
