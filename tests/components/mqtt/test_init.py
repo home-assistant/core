@@ -365,6 +365,56 @@ class TestMQTTCallbacks(unittest.TestCase):
         self.hass.block_till_done()
         assert len(self.calls) == 1
 
+    def test_subscribe_deprecated(self):
+        """Test the subscription of a topic using deprecated callback signature."""
+        calls = []
+
+        @callback
+        def record_calls(topic, payload, qos):
+            """Record calls."""
+            calls.append((topic, payload, qos))
+
+        unsub = mqtt.subscribe(self.hass, "test-topic", record_calls)
+
+        fire_mqtt_message(self.hass, "test-topic", "test-payload")
+
+        self.hass.block_till_done()
+        assert len(calls) == 1
+        assert calls[0][0] == "test-topic"
+        assert calls[0][1] == "test-payload"
+
+        unsub()
+
+        fire_mqtt_message(self.hass, "test-topic", "test-payload")
+
+        self.hass.block_till_done()
+        assert len(calls) == 1
+
+    def test_subscribe_deprecated_async(self):
+        """Test the subscription of a topic using deprecated callback signature."""
+        calls = []
+
+        @callback
+        async def record_calls(topic, payload, qos):
+            """Record calls."""
+            calls.append((topic, payload, qos))
+
+        unsub = mqtt.subscribe(self.hass, "test-topic", record_calls)
+
+        fire_mqtt_message(self.hass, "test-topic", "test-payload")
+
+        self.hass.block_till_done()
+        assert len(calls) == 1
+        assert calls[0][0] == "test-topic"
+        assert calls[0][1] == "test-payload"
+
+        unsub()
+
+        fire_mqtt_message(self.hass, "test-topic", "test-payload")
+
+        self.hass.block_till_done()
+        assert len(calls) == 1
+
     def test_subscribe_topic_not_match(self):
         """Test if subscribed topic is not a match."""
         mqtt.subscribe(self.hass, "test-topic", self.record_calls)
