@@ -207,7 +207,7 @@ async def test_full_user_flow_implementation(
     )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "EPSON123456.local"
+    assert result["title"] == "192.168.1.31"
 
     assert result["data"]
     assert result["data"][CONF_HOST] == "192.168.1.31"
