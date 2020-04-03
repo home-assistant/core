@@ -172,6 +172,7 @@ class NetatmoSensor(Entity):
 
         self._name = f"{MANUFACTURER} {self.module_name} {SENSOR_TYPES[sensor_type][0]}"
         self.type = sensor_type
+        self._connected = None
         self._state = None
         self._device_class = SENSOR_TYPES[self.type][3]
         self._icon = SENSOR_TYPES[self.type][2]
@@ -220,24 +221,33 @@ class NetatmoSensor(Entity):
         """Return the unique ID for this sensor."""
         return self._unique_id
 
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return bool(self._state)
+
     def update(self):
         """Get the latest data from Netatmo API and updates the states."""
         self.netatmo_data.update()
         if self.netatmo_data.data is None:
             if self._state is None:
                 return
-            _LOGGER.warning("No data from update")
+            if self._connected is not False:
+                _LOGGER.warning("No data from update")
             self._state = None
+            self._connected = False
             return
 
         data = self.netatmo_data.data.get(self._module_id)
 
         if data is None:
-            _LOGGER.debug(
-                "No data found for %s (%s)", self.module_name, self._module_id
-            )
-            _LOGGER.debug("data: %s", self.netatmo_data.data)
+            if self._connected is True:
+                _LOGGER.debug(
+                    "No data found for %s (%s)", self.module_name, self._module_id
+                )
+                _LOGGER.debug("data: %s", self.netatmo_data.data)
             self._state = None
+            self._connected = False
             return
 
         try:
@@ -390,9 +400,13 @@ class NetatmoSensor(Entity):
                     self._state = "Poor"
                 elif data["health_idx"] == 4:
                     self._state = "Unhealthy"
+
+            self._connected = True
         except KeyError:
-            _LOGGER.info("No %s data found for %s", self.type, self.module_name)
+            if self._connected is not False:
+                _LOGGER.info("No %s data found for %s", self.type, self.module_name)
             self._state = None
+            self._connected = False
             return
 
 
