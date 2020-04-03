@@ -73,7 +73,6 @@ FLOWS = [
     "monoprice",
     "mqtt",
     "myq",
-    "mystrom_button",
     "neato",
     "nest",
     "netatmo",
