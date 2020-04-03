@@ -406,7 +406,7 @@ async def test_timer_restarted_event(hass):
     assert results[-1].event_type == EVENT_TIMER_RESTARTED
     assert len(results) == 4
 
-    
+
 async def test_state_changed_when_timer_restarted(hass):
     """Ensure timer's state changes when it restarted."""
     hass.state = CoreState.starting
@@ -447,7 +447,7 @@ async def test_state_changed_when_timer_restarted(hass):
     assert results[-1].event_type == EVENT_STATE_CHANGED
     assert len(results) == 2
 
-    
+
 async def test_load_from_storage(hass, storage_setup):
     """Test set up from storage."""
     assert await storage_setup()
