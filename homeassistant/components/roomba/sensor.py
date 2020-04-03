@@ -4,6 +4,7 @@ import logging
 from homeassistant.const import DEVICE_CLASS_BATTERY
 from homeassistant.helpers.entity import Entity
 
+from . import roomba_reported_state
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,9 +23,7 @@ class RoombaBattery(Entity):
     def __init__(self, roomba):
         """Initialize the sensor object."""
         self.vacuum = roomba
-        self.vacuum_state = self.vacuum.master_state.get("state", {}).get(
-            "reported", {}
-        )
+        self.vacuum_state = roomba_reported_state(roomba)
         self._mac = self.vacuum_state.get("mac")
         self._name = self.vacuum_state.get("name")
         self._identifier = f"roomba_{self._mac}"
@@ -69,9 +68,7 @@ class RoombaBattery(Entity):
         if not self.vacuum.master_state:
             _LOGGER.debug("Roomba %s has no data yet. Skip update", self.name)
             return
-        self._battery_level = (
-            self.vacuum.master_state.get("state", {}).get("reported", {}).get("batPct")
-        )
+        self._battery_level = roomba_reported_state(self.vacuum).get("batPct")
         _LOGGER.debug(
             "Update battery level status from the vacuum: %s", self._battery_level
         )
