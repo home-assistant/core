@@ -60,17 +60,11 @@ async def test_update_not_playing(hass):
             },
         )
 
-    entity_id = "sensor.lastfm_test"
+    entity_id = "sensor.test"
 
     state = hass.states.get(entity_id)
 
-    assert state == STATE_NOT_SCROBBLING
-
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-
-    assert state == STATE_NOT_SCROBBLING
+    assert state.state == STATE_NOT_SCROBBLING
 
 
 async def test_update_playing(hass):
@@ -92,14 +86,8 @@ async def test_update_playing(hass):
             },
         )
 
-    entity_id = "sensor.lastfm_test"
+    entity_id = "sensor.test"
 
     state = hass.states.get(entity_id)
 
-    assert state == STATE_NOT_SCROBBLING
-
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-
-    assert state == "artist - title"
+    assert state.state == "artist - title"
