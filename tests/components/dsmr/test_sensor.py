@@ -352,7 +352,6 @@ async def test_reconnect(hass, monkeypatch, mock_connection_factory):
     async def wait_closed():
         await closed.wait()
         closed2.set()
-        closed.clear()
 
     protocol.wait_closed = wait_closed
 
@@ -365,9 +364,10 @@ async def test_reconnect(hass, monkeypatch, mock_connection_factory):
     # wait for lock set to resolve
     await closed2.wait()
     closed2.clear()
-    assert not closed.is_set()
+    closed.clear()
 
-    closed.set()
     await hass.async_block_till_done()
 
     assert connection_factory.call_count >= 2, "connecting not retried"
+    # setting it so teardown can be successful
+    closed.set()
