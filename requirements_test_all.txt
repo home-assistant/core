@@ -32,7 +32,7 @@ abodepy==0.18.1
 adb-shell==0.1.1
 
 # homeassistant.components.adguard
-adguardhome==0.4.1
+adguardhome==0.4.2
 
 # homeassistant.components.geonetnz_quakes
 aio_geojson_geonetnz_quakes==0.12
