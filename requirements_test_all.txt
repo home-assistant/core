@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.homekit
-HAP-python==2.7.0
+HAP-python==2.8.0
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
@@ -178,7 +178,7 @@ defusedxml==0.6.0
 denonavr==0.8.1
 
 # homeassistant.components.directv
-directv==0.2.0
+directv==0.3.0
 
 # homeassistant.components.updater
 distro==1.4.0
@@ -190,7 +190,7 @@ doorbirdpy==2.0.8
 dsmr_parser==0.18
 
 # homeassistant.components.dynalite
-dynalite_devices==0.1.32
+dynalite_devices==0.1.39
 
 # homeassistant.components.ee_brightbox
 eebrightbox==0.0.4
@@ -243,7 +243,7 @@ georss_qld_bushfire_alert_client==0.3
 getmac==0.8.1
 
 # homeassistant.components.gios
-gios==0.0.5
+gios==0.1.1
 
 # homeassistant.components.glances
 glances_api==0.2.0
@@ -329,7 +329,7 @@ libsoundtouch==0.7.2
 logi_circle==0.2.2
 
 # homeassistant.components.luftdaten
-luftdaten==0.6.3
+luftdaten==0.6.4
 
 # homeassistant.components.mythicbeastsdns
 mbddns==0.1.2
@@ -493,6 +493,9 @@ pyeverlights==0.1.0
 # homeassistant.components.fido
 pyfido==2.1.1
 
+# homeassistant.components.flunearyou
+pyflunearyou==1.0.7
+
 # homeassistant.components.fritzbox
 pyfritzhome==0.4.0
 
@@ -519,7 +522,7 @@ pyicloud==0.9.6.1
 pyipma==2.0.5
 
 # homeassistant.components.ipp
-pyipp==0.8.1
+pyipp==0.8.3
 
 # homeassistant.components.iqvia
 pyiqvia==0.2.1
@@ -570,7 +573,7 @@ pyopenuv==1.0.9
 pyopnsense==0.2.0
 
 # homeassistant.components.opentherm_gw
-pyotgw==0.5b1
+pyotgw==0.6b1
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
@@ -617,7 +620,7 @@ python-forecastio==1.4.0
 python-izone==1.1.2
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.4.8
+python-miio==0.5.0.1
 
 # homeassistant.components.nest
 python-nest==4.1.0
@@ -647,7 +650,7 @@ pyvera==0.3.7
 pyvesync==1.1.0
 
 # homeassistant.components.vizio
-pyvizio==0.1.44
+pyvizio==0.1.45
 
 # homeassistant.components.html5
 pywebpush==1.9.2
@@ -795,7 +798,7 @@ ya_ma==0.3.8
 yahooweather==0.10
 
 # homeassistant.components.zeroconf
-zeroconf==0.24.5
+zeroconf==0.25.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.38

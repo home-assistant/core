@@ -93,9 +93,13 @@ class InsteonEntity(Entity):
         self._insteon_device_state.register_updates(self.async_entity_update)
         self.hass.data[DOMAIN][INSTEON_ENTITIES].add(self.entity_id)
         load_signal = f"{self.entity_id}_{SIGNAL_LOAD_ALDB}"
-        async_dispatcher_connect(self.hass, load_signal, self._load_aldb)
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, load_signal, self._load_aldb)
+        )
         print_signal = f"{self.entity_id}_{SIGNAL_PRINT_ALDB}"
-        async_dispatcher_connect(self.hass, print_signal, self._print_aldb)
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, print_signal, self._print_aldb)
+        )
 
     def _load_aldb(self, reload=False):
         """Load the device All-Link Database."""

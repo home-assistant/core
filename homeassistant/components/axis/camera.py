@@ -57,7 +57,7 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
 
     async def async_added_to_hass(self):
         """Subscribe camera events."""
-        self.unsub_dispatcher.append(
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, self.device.event_new_address, self._new_address
             )

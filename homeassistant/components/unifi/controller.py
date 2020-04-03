@@ -24,6 +24,7 @@ from .const import (
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
+    CONF_POE_CLIENTS,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
@@ -32,6 +33,7 @@ from .const import (
     CONTROLLER_ID,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_DETECTION_TIME,
+    DEFAULT_POE_CLIENTS,
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
@@ -97,6 +99,11 @@ class UniFiController:
     def option_block_clients(self):
         """Config entry option with list of clients to control network access."""
         return self.config_entry.options.get(CONF_BLOCK_CLIENT, [])
+
+    @property
+    def option_poe_clients(self):
+        """Config entry option to control poe clients."""
+        return self.config_entry.options.get(CONF_POE_CLIENTS, DEFAULT_POE_CLIENTS)
 
     @property
     def option_track_clients(self):

@@ -11,6 +11,7 @@ from homeassistant.components.unifi.const import (
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
+    CONF_POE_CLIENTS,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
@@ -287,6 +288,7 @@ async def test_option_flow(hass):
         user_input={
             CONF_BLOCK_CLIENT: clients_to_block,
             CONF_NEW_CLIENT: "00:00:00:00:00:01",
+            CONF_POE_CLIENTS: False,
         },
     )
 
@@ -327,5 +329,6 @@ async def test_option_flow(hass):
         CONF_DETECTION_TIME: 100,
         CONF_SSID_FILTER: ["SSID 1"],
         CONF_BLOCK_CLIENT: ["00:00:00:00:00:01"],
+        CONF_POE_CLIENTS: False,
         CONF_ALLOW_BANDWIDTH_SENSORS: True,
     }

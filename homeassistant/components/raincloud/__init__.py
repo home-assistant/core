@@ -152,8 +152,10 @@ class RainCloudEntity(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_RAINCLOUD, self._update_callback
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_UPDATE_RAINCLOUD, self._update_callback
+            )
         )
 
     def _update_callback(self):

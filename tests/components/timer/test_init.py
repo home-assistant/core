@@ -33,6 +33,7 @@ from homeassistant.const import (
     ATTR_ID,
     ATTR_NAME,
     CONF_ENTITY_ID,
+    EVENT_STATE_CHANGED,
     SERVICE_RELOAD,
 )
 from homeassistant.core import Context, CoreState
@@ -404,6 +405,47 @@ async def test_timer_restarted_event(hass):
 
     assert results[-1].event_type == EVENT_TIMER_RESTARTED
     assert len(results) == 4
+
+
+async def test_state_changed_when_timer_restarted(hass):
+    """Ensure timer's state changes when it restarted."""
+    hass.state = CoreState.starting
+
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}})
+
+    state = hass.states.get("timer.test1")
+    assert state
+    assert state.state == STATUS_IDLE
+
+    results = []
+
+    def fake_event_listener(event):
+        """Fake event listener for trigger."""
+        results.append(event)
+
+    hass.bus.async_listen(EVENT_STATE_CHANGED, fake_event_listener)
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("timer.test1")
+    assert state
+    assert state.state == STATUS_ACTIVE
+
+    assert results[-1].event_type == EVENT_STATE_CHANGED
+    assert len(results) == 1
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("timer.test1")
+    assert state
+    assert state.state == STATUS_ACTIVE
+
+    assert results[-1].event_type == EVENT_STATE_CHANGED
+    assert len(results) == 2
 
 
 async def test_load_from_storage(hass, storage_setup):

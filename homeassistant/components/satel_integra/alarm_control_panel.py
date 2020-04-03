@@ -67,8 +67,10 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
         """Update alarm status and register callbacks for future updates."""
         _LOGGER.debug("Starts listening for panel messages")
         self._update_alarm_status()
-        async_dispatcher_connect(
-            self.hass, SIGNAL_PANEL_MESSAGE, self._update_alarm_status
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_PANEL_MESSAGE, self._update_alarm_status
+            )
         )
 
     @callback

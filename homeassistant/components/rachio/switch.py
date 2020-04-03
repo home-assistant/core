@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
@@ -68,13 +69,13 @@ def _create_entities(hass, config_entry):
         entities.append(RachioStandbySwitch(controller))
         zones = controller.list_zones()
         schedules = controller.list_schedules()
+        flex_schedules = controller.list_flex_schedules()
         current_schedule = controller.current_schedule
         for zone in zones:
-            _LOGGER.debug("Rachio setting up zone: %s", zone)
             entities.append(RachioZone(person, controller, zone, current_schedule))
-        for sched in schedules:
-            _LOGGER.debug("Added schedule: %s", sched)
+        for sched in schedules + flex_schedules:
             entities.append(RachioSchedule(person, controller, sched, current_schedule))
+    _LOGGER.debug("Added %s", entities)
     return entities
 
 
@@ -104,17 +105,18 @@ class RachioSwitch(RachioDevice, SwitchDevice):
     def _poll_update(self, data=None) -> bool:
         """Poll the API."""
 
-    def _handle_any_update(self, *args, **kwargs) -> None:
+    @callback
+    def _async_handle_any_update(self, *args, **kwargs) -> None:
         """Determine whether an update event applies to this device."""
         if args[0][KEY_DEVICE_ID] != self._controller.controller_id:
             # For another device
             return
 
         # For this device
-        self._handle_update(args, kwargs)
+        self._async_handle_update(args, kwargs)
 
     @abstractmethod
-    def _handle_update(self, *args, **kwargs) -> None:
+    def _async_handle_update(self, *args, **kwargs) -> None:
         """Handle incoming webhook data."""
 
 
@@ -148,14 +150,15 @@ class RachioStandbySwitch(RachioSwitch):
 
         return not data[KEY_ON]
 
-    def _handle_update(self, *args, **kwargs) -> None:
+    @callback
+    def _async_handle_update(self, *args, **kwargs) -> None:
         """Update the state using webhook data."""
         if args[0][0][KEY_SUBTYPE] == SUBTYPE_SLEEP_MODE_ON:
             self._state = True
         elif args[0][0][KEY_SUBTYPE] == SUBTYPE_SLEEP_MODE_OFF:
             self._state = False
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def turn_on(self, **kwargs) -> None:
         """Put the controller in standby mode."""
@@ -167,8 +170,12 @@ class RachioStandbySwitch(RachioSwitch):
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_RACHIO_CONTROLLER_UPDATE, self._handle_any_update
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_RACHIO_CONTROLLER_UPDATE,
+                self._async_handle_any_update,
+            )
         )
 
 
@@ -178,7 +185,6 @@ class RachioZone(RachioSwitch):
     def __init__(self, person, controller, data, current_schedule):
         """Initialize a new Rachio Zone."""
         self._id = data[KEY_ID]
-        _LOGGER.debug("zone_data: %s", data)
         self._zone_name = data[KEY_NAME]
         self._zone_number = data[KEY_ZONE_NUMBER]
         self._zone_enabled = data[KEY_ENABLED]
@@ -190,7 +196,6 @@ class RachioZone(RachioSwitch):
         self._current_schedule = current_schedule
         super().__init__(controller, poll=False)
         self._state = self.zone_id == self._current_schedule.get(KEY_ZONE_ID)
-        self._undo_dispatcher = None
 
     def __str__(self):
         """Display the zone as a string."""
@@ -227,7 +232,7 @@ class RachioZone(RachioSwitch):
         return self._entity_picture
 
     @property
-    def state_attributes(self) -> dict:
+    def device_state_attributes(self) -> dict:
         """Return the optional state attributes."""
         props = {ATTR_ZONE_NUMBER: self._zone_number, ATTR_ZONE_SUMMARY: self._summary}
         if self._shade_type:
@@ -264,7 +269,8 @@ class RachioZone(RachioSwitch):
         self._current_schedule = self._controller.current_schedule
         return self.zone_id == self._current_schedule.get(KEY_ZONE_ID)
 
-    def _handle_update(self, *args, **kwargs) -> None:
+    @callback
+    def _async_handle_update(self, *args, **kwargs) -> None:
         """Handle incoming webhook zone data."""
         if args[0][KEY_ZONE_ID] != self.zone_id:
             return
@@ -276,18 +282,15 @@ class RachioZone(RachioSwitch):
         elif args[0][KEY_SUBTYPE] in [SUBTYPE_ZONE_STOPPED, SUBTYPE_ZONE_COMPLETED]:
             self._state = False
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        self._undo_dispatcher = async_dispatcher_connect(
-            self.hass, SIGNAL_RACHIO_ZONE_UPDATE, self._handle_update
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_RACHIO_ZONE_UPDATE, self._async_handle_update
+            )
         )
-
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe from updates."""
-        if self._undo_dispatcher:
-            self._undo_dispatcher()
 
 
 class RachioSchedule(RachioSwitch):
@@ -295,20 +298,14 @@ class RachioSchedule(RachioSwitch):
 
     def __init__(self, person, controller, data, current_schedule):
         """Initialize a new Rachio Schedule."""
-        self._id = data[KEY_ID]
+        self._schedule_id = data[KEY_ID]
         self._schedule_name = data[KEY_NAME]
         self._duration = data[KEY_DURATION]
         self._schedule_enabled = data[KEY_ENABLED]
         self._summary = data[KEY_SUMMARY]
         self._current_schedule = current_schedule
         super().__init__(controller, poll=False)
-        self._state = self.schedule_id == self._current_schedule.get(KEY_SCHEDULE_ID)
-        self._undo_dispatcher = None
-
-    @property
-    def schedule_id(self) -> str:
-        """How the Rachio API refers to the schedule."""
-        return self._id
+        self._state = self._schedule_id == self._current_schedule.get(KEY_SCHEDULE_ID)
 
     @property
     def name(self) -> str:
@@ -318,7 +315,7 @@ class RachioSchedule(RachioSwitch):
     @property
     def unique_id(self) -> str:
         """Return a unique id by combining controller id and schedule."""
-        return f"{self._controller.controller_id}-schedule-{self.schedule_id}"
+        return f"{self._controller.controller_id}-schedule-{self._schedule_id}"
 
     @property
     def icon(self) -> str:
@@ -331,7 +328,7 @@ class RachioSchedule(RachioSwitch):
         return {
             ATTR_SCHEDULE_SUMMARY: self._summary,
             ATTR_SCHEDULE_ENABLED: self.schedule_is_enabled,
-            ATTR_SCHEDULE_DURATION: self._duration / 60,
+            ATTR_SCHEDULE_DURATION: f"{round(self._duration / 60)} minutes",
         }
 
     @property
@@ -342,7 +339,7 @@ class RachioSchedule(RachioSwitch):
     def turn_on(self, **kwargs) -> None:
         """Start this schedule."""
 
-        self._controller.rachio.schedulerule.start(self.schedule_id)
+        self._controller.rachio.schedulerule.start(self._schedule_id)
         _LOGGER.debug(
             "Schedule %s started on %s", self.name, self._controller.name,
         )
@@ -354,13 +351,14 @@ class RachioSchedule(RachioSwitch):
     def _poll_update(self, data=None) -> bool:
         """Poll the API to check whether the schedule is running."""
         self._current_schedule = self._controller.current_schedule
-        return self.schedule_id == self._current_schedule.get(KEY_SCHEDULE_ID)
+        return self._schedule_id == self._current_schedule.get(KEY_SCHEDULE_ID)
 
-    def _handle_update(self, *args, **kwargs) -> None:
+    @callback
+    def _async_handle_update(self, *args, **kwargs) -> None:
         """Handle incoming webhook schedule data."""
         # Schedule ID not passed when running individual zones, so we catch that error
         try:
-            if args[0][KEY_SCHEDULE_ID] == self.schedule_id:
+            if args[0][KEY_SCHEDULE_ID] == self._schedule_id:
                 if args[0][KEY_SUBTYPE] in [SUBTYPE_SCHEDULE_STARTED]:
                     self._state = True
                 elif args[0][KEY_SUBTYPE] in [
@@ -371,15 +369,12 @@ class RachioSchedule(RachioSwitch):
         except KeyError:
             pass
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        self._undo_dispatcher = async_dispatcher_connect(
-            self.hass, SIGNAL_RACHIO_SCHEDULE_UPDATE, self._handle_update
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_RACHIO_SCHEDULE_UPDATE, self._async_handle_update
+            )
         )
-
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe from updates."""
-        if self._undo_dispatcher:
-            self._undo_dispatcher()
