@@ -1,11 +1,11 @@
 """Tests for the lastfm sensor."""
 from unittest.mock import patch
 
-from pylast import LastFMNetwork, Track
+from pylast import Track
 import pytest
 
 from homeassistant.components import sensor
-from homeassistant.components.lastfm.sensor import STATE_NOT_SCROBBLING, LastfmSensor
+from homeassistant.components.lastfm.sensor import STATE_NOT_SCROBBLING
 from homeassistant.setup import async_setup_component
 
 
@@ -39,6 +39,7 @@ class MockUser:
 
 @pytest.fixture(name="get_user")
 def lastfm_get_user_fixture():
+    """The fixture for mocking the get_user function."""
     with patch("pylast.LastFMNetwork.get_user") as get_user:
         yield get_user
 
@@ -51,7 +52,7 @@ async def test_update_not_playing(hass, get_user):
     assert await async_setup_component(
         hass,
         sensor.DOMAIN,
-        {"sensor": {"platform": "lastfm", "api_key": "secret-key", "users": ["test"],}},
+        {"sensor": {"platform": "lastfm", "api_key": "secret-key", "users": ["test"]}},
     )
 
     entity_id = "sensor.test"
@@ -69,7 +70,7 @@ async def test_update_playing(hass, get_user):
     assert await async_setup_component(
         hass,
         sensor.DOMAIN,
-        {"sensor": {"platform": "lastfm", "api_key": "secret-key", "users": ["test"],}},
+        {"sensor": {"platform": "lastfm", "api_key": "secret-key", "users": ["test"]}},
     )
 
     entity_id = "sensor.test"
