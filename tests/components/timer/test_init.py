@@ -34,7 +34,7 @@ from homeassistant.const import (
     ATTR_NAME,
     CONF_ENTITY_ID,
     SERVICE_RELOAD,
-    EVENT_STATE_CHANGED
+    EVENT_STATE_CHANGED,
 )
 from homeassistant.core import Context, CoreState
 from homeassistant.exceptions import Unauthorized
