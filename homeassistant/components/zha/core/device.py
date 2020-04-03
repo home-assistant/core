@@ -31,6 +31,7 @@ from .const import (
     ATTR_COMMAND_TYPE,
     ATTR_DEVICE_TYPE,
     ATTR_ENDPOINT_ID,
+    ATTR_ENDPOINTS,
     ATTR_IEEE,
     ATTR_LAST_SEEN,
     ATTR_LQI,
@@ -38,11 +39,13 @@ from .const import (
     ATTR_MANUFACTURER_CODE,
     ATTR_MODEL,
     ATTR_NAME,
+    ATTR_NODE_DESCRIPTOR,
     ATTR_NWK,
     ATTR_POWER_SOURCE,
     ATTR_QUIRK_APPLIED,
     ATTR_QUIRK_CLASS,
     ATTR_RSSI,
+    ATTR_SIGNATURE,
     ATTR_VALUE,
     CLUSTER_COMMAND_SERVER,
     CLUSTER_COMMANDS_CLIENT,
@@ -366,6 +369,7 @@ class ZHADevice(LogMixin):
             ATTR_LAST_SEEN: update_time,
             ATTR_AVAILABLE: self.available,
             ATTR_DEVICE_TYPE: self.device_type,
+            ATTR_SIGNATURE: self.async_get_zigbee_signature(),
         }
 
     async def async_configure(self):
@@ -616,6 +620,14 @@ class ZHADevice(LogMixin):
             else:
                 fmt = log_msg[1] + " completed: %s"
             zdo.debug(fmt, *(log_msg[2] + (outcome,)))
+
+    @callback
+    def async_get_zigbee_signature(self):
+        """Get zigbee signature for this device."""
+        return {
+            ATTR_NODE_DESCRIPTOR: str(self._zigpy_device.node_desc),
+            ATTR_ENDPOINTS: self._channels.async_get_zigbee_signature(),
+        }
 
     def log(self, level, msg, *args):
         """Log a message."""

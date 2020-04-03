@@ -153,6 +153,14 @@ class Channels:
             },
         )
 
+    @callback
+    def async_get_zigbee_signature(self):
+        """Get the zigbee signatures for the pools in channels."""
+        return {
+            signature[0]: signature[1]
+            for signature in [pool.async_get_zigbee_signature() for pool in self.pools]
+        }
+
 
 class ChannelPool:
     """All channels of an endpoint."""
@@ -339,4 +347,25 @@ class ChannelPool:
                 const.ATTR_ENDPOINT_ID: self.id,
                 **event_data,
             }
+        )
+
+    @callback
+    def async_get_zigbee_signature(self):
+        """Get the zigbee signature for the endpoint this pool represents."""
+        return (
+            self.endpoint.endpoint_id,
+            {
+                const.ATTR_PROFILE_ID: self.endpoint.profile_id,
+                const.ATTR_DEVICE_TYPE: f"0x{self.endpoint.device_type:04x}"
+                if self.endpoint.device_type is not None
+                else "",
+                const.ATTR_IN_CLUSTERS: [
+                    f"0x{cluster_id:04x}"
+                    for cluster_id in self.endpoint.in_clusters.keys()
+                ],
+                const.ATTR_OUT_CLUSTERS: [
+                    f"0x{cluster_id:04x}"
+                    for cluster_id in self.endpoint.out_clusters.keys()
+                ],
+            },
         )
