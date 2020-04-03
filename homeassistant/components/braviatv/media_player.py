@@ -19,6 +19,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util.json import load_json, save_json
@@ -75,8 +76,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             mac = host_config["mac"]
             name = config.get(CONF_NAME)
             braviarc = BraviaRC(host, mac)
-            braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
-            unique_id = braviarc.get_system_info()["cid"].lower()
+            try:
+                braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
+                unique_id = braviarc.get_system_info()["cid"].lower()
+            except Exception:  # pylint: disable=broad-except
+                raise PlatformNotReady
 
             add_entities([BraviaTVDevice(braviarc, name, pin, unique_id)])
             return
@@ -101,8 +105,12 @@ def setup_bravia(config, pin, hass, add_entities):
         _LOGGER.info("Discovery configuration done")
 
     braviarc = BraviaRC(host)
-    braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
-    system_info = braviarc.get_system_info()
+    try:
+        braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
+        system_info = braviarc.get_system_info()
+    except Exception as exception_instance:  # pylint: disable=broad-except
+        _LOGGER.error(exception_instance)
+        return
     mac = format_mac(system_info["macAddr"])
     unique_id = system_info["cid"].lower()
 
