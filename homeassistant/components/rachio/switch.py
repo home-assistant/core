@@ -105,6 +105,7 @@ class RachioSwitch(RachioDevice, SwitchDevice):
     def _poll_update(self, data=None) -> bool:
         """Poll the API."""
 
+    @callback
     def _async_handle_any_update(self, *args, **kwargs) -> None:
         """Determine whether an update event applies to this device."""
         if args[0][KEY_DEVICE_ID] != self._controller.controller_id:
@@ -114,7 +115,7 @@ class RachioSwitch(RachioDevice, SwitchDevice):
         # For this device
         self._async_handle_update(args, kwargs)
 
-    @callback
+    @abstractmethod
     def _async_handle_update(self, *args, **kwargs) -> None:
         """Handle incoming webhook data."""
 
@@ -169,8 +170,12 @@ class RachioStandbySwitch(RachioSwitch):
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_RACHIO_CONTROLLER_UPDATE, self._async_handle_any_update
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_RACHIO_CONTROLLER_UPDATE,
+                self._async_handle_any_update,
+            )
         )
 
 
@@ -228,7 +233,7 @@ class RachioZone(RachioSwitch):
         return self._entity_picture
 
     @property
-    def state_attributes(self) -> dict:
+    def device_state_attributes(self) -> dict:
         """Return the optional state attributes."""
         props = {ATTR_ZONE_NUMBER: self._zone_number, ATTR_ZONE_SUMMARY: self._summary}
         if self._shade_type:
@@ -282,8 +287,10 @@ class RachioZone(RachioSwitch):
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        self.async_on_remove(async_dispatcher_connect(self.hass, SIGNAL_RACHIO_ZONE_UPDATE, self._async_handle_update))
-            self.hass, SIGNAL_RACHIO_ZONE_UPDATE, self._async_handle_update
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_RACHIO_ZONE_UPDATE, self._async_handle_update
+            )
         )
 
     async def async_will_remove_from_hass(self):
@@ -373,8 +380,10 @@ class RachioSchedule(RachioSwitch):
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        self.async_on_remove(async_dispatcher_connect(self.hass, SIGNAL_RACHIO_SCHEDULE_UPDATE, self._async_handle_update))
-            self.hass, SIGNAL_RACHIO_SCHEDULE_UPDATE, self._async_handle_update
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_RACHIO_SCHEDULE_UPDATE, self._async_handle_update
+            )
         )
 
     async def async_will_remove_from_hass(self):
