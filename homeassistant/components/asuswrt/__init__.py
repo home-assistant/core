@@ -84,12 +84,9 @@ async def async_setup(hass, config, retry_delay=FIRST_RETRY_TIME):
     try:
         await api.connection.async_connect()
     except OSError as ex:
-        _LOGGER.warning(ex)
-
-    if not api.is_connected:
-
         _LOGGER.warning(
-            "Error connecting %s to %s. Will retry in %s seconds...",
+            "Error [%s] connecting %s to %s. Will retry in %s seconds...",
+            str(ex),
             DOMAIN,
             conf[CONF_HOST],
             retry_delay,
@@ -104,6 +101,10 @@ async def async_setup(hass, config, retry_delay=FIRST_RETRY_TIME):
         async_call_later(hass, retry_delay, retry_setup)
 
         return True
+
+    if not api.is_connected:
+        _LOGGER.error("Error connecting %s to %s.", DOMAIN, conf[CONF_HOST])
+        return False
 
     hass.data[DATA_ASUSWRT] = api
 
