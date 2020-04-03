@@ -3,6 +3,5 @@
   "name": "Simplepush",
   "documentation": "https://www.home-assistant.io/integrations/simplepush",
   "requirements": ["simplepush==1.1.4"],
-  "dependencies": [],
   "codeowners": []
 }

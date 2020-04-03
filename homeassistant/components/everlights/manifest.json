@@ -3,6 +3,5 @@
   "name": "EverLights",
   "documentation": "https://www.home-assistant.io/integrations/everlights",
   "requirements": ["pyeverlights==0.1.0"],
-  "dependencies": [],
   "codeowners": []
 }

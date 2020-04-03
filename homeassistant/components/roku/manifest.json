@@ -3,7 +3,6 @@
   "name": "Roku",
   "documentation": "https://www.home-assistant.io/integrations/roku",
   "requirements": ["roku==4.1.0"],
-  "dependencies": [],
   "ssdp": [
     {
       "st": "roku:ecp",

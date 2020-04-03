@@ -3,6 +3,5 @@
   "name": "Apache Kafka",
   "documentation": "https://www.home-assistant.io/integrations/apache_kafka",
   "requirements": ["aiokafka==0.5.1"],
-  "dependencies": [],
   "codeowners": ["@bachya"]
 }

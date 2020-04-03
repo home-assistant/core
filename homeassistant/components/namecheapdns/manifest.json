@@ -3,6 +3,5 @@
   "name": "Namecheap FreeDNS",
   "documentation": "https://www.home-assistant.io/integrations/namecheapdns",
   "requirements": ["defusedxml==0.6.0"],
-  "dependencies": [],
   "codeowners": []
 }

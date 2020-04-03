@@ -2,7 +2,5 @@
   "domain": "hitron_coda",
   "name": "Rogers Hitron CODA",
   "documentation": "https://www.home-assistant.io/integrations/hitron_coda",
-  "requirements": [],
-  "dependencies": [],
   "codeowners": []
 }

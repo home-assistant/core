@@ -3,7 +3,6 @@
   "name": "Safe Mode",
   "config_flow": false,
   "documentation": "https://www.home-assistant.io/integrations/safe_mode",
-  "requirements": [],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},

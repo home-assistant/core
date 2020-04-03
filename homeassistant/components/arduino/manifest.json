@@ -3,6 +3,5 @@
   "name": "Arduino",
   "documentation": "https://www.home-assistant.io/integrations/arduino",
   "requirements": ["PyMata==2.20"],
-  "dependencies": [],
   "codeowners": ["@fabaff"]
 }

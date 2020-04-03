@@ -3,6 +3,5 @@
   "name": "StatsD",
   "documentation": "https://www.home-assistant.io/integrations/statsd",
   "requirements": ["statsd==3.2.1"],
-  "dependencies": [],
   "codeowners": []
 }
