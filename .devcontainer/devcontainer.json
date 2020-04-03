@@ -12,6 +12,9 @@
     "redhat.vscode-yaml",
     "esbenp.prettier-vscode"
   ],
+  "mounts": [
+    "source=/media/psf/Home/Documents/GitHub/dev-config,target=/home,type=bind,consistency=cache"
+  ],
   "settings": {
     "python.pythonPath": "/usr/local/bin/python",
     "python.linting.pylintEnabled": true,
