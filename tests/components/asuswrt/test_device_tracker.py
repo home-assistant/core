@@ -21,7 +21,8 @@ async def test_password_or_pub_key_required(hass):
         result = await async_setup_component(
             hass, DOMAIN, {DOMAIN: {CONF_HOST: "fake_host", CONF_USERNAME: "fake_user"}}
         )
-        assert not result
+        assert result
+        assert hass.data[DATA_ASUSWRT] is None
 
 
 async def test_get_scanner_with_password_no_pubkey(hass):
