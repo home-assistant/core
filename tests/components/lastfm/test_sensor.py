@@ -1,7 +1,8 @@
 """Tests for the lastfm sensor."""
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 from pylast import LastFMNetwork, Track
+import pytest
 
 from homeassistant.components import sensor
 from homeassistant.components.lastfm.sensor import STATE_NOT_SCROBBLING, LastfmSensor
@@ -36,29 +37,22 @@ class MockUser:
         return self._now_playing_result
 
 
-class MockLastFMNetwork:
-    def __init__(self, mock_user):
-        self._mock_user = mock_user
-
-    def get_user(self, user):
-        return self._mock_user
+@pytest.fixture(name="get_user")
+def lastfm_get_user_fixture():
+    with patch("pylast.LastFMNetwork.get_user") as get_user:
+        yield get_user
 
 
-async def test_update_not_playing(hass):
+async def test_update_not_playing(hass, get_user):
     """Test update when no playing song."""
 
-    with patch("pylast.LastFMNetwork", return_value=MockLastFMNetwork(MockUser(None))):
-        assert await async_setup_component(
-            hass,
-            sensor.DOMAIN,
-            {
-                "sensor": {
-                    "platform": "lastfm",
-                    "api_key": "secret-key",
-                    "users": ["test"],
-                }
-            },
-        )
+    get_user.return_value = MockUser(None)
+
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {"sensor": {"platform": "lastfm", "api_key": "secret-key", "users": ["test"],}},
+    )
 
     entity_id = "sensor.test"
 
@@ -67,24 +61,16 @@ async def test_update_not_playing(hass):
     assert state.state == STATE_NOT_SCROBBLING
 
 
-async def test_update_playing(hass):
+async def test_update_playing(hass, get_user):
     """Test update when song playing."""
 
-    with patch(
-        "pylast.LastFMNetwork",
-        return_value=MockLastFMNetwork(MockUser(Track("artist", "title", None))),
-    ):
-        assert await async_setup_component(
-            hass,
-            sensor.DOMAIN,
-            {
-                "sensor": {
-                    "platform": "lastfm",
-                    "api_key": "secret-key",
-                    "users": ["test"],
-                }
-            },
-        )
+    get_user.return_value = MockUser(Track("artist", "title", None))
+
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {"sensor": {"platform": "lastfm", "api_key": "secret-key", "users": ["test"],}},
+    )
 
     entity_id = "sensor.test"
 
