@@ -17,6 +17,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -114,7 +118,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         # Make all device entities aware of new telegram
         for device in devices:
             device.telegram = telegram
-            hass.async_create_task(device.async_update_ha_state())
+            async_dispatcher_send(hass, device.update_signal)
 
     # Creates an asyncio.Protocol factory for reading DSMR telegrams from
     # serial and calls update_entities_telegram to update entities on arrival
@@ -187,6 +191,7 @@ class DSMREntity(Entity):
         self._obis = obis
         self._config = config
         self.telegram = {}
+        self._unsub_dispatcher = None
 
     def get_dsmr_object_attr(self, attribute):
         """Read attribute from last received telegram for this DSMR object."""
@@ -256,6 +261,23 @@ class DSMREntity(Entity):
             return "low"
 
         return None
+
+    @property
+    def update_signal(self):
+        """Return the signal this device uses to schedule an update."""
+        return f"dsmr-device-{self.name}"
+
+    async def async_added_to_hass(self) -> None:
+        """Added to hass so need to register to dispatch."""
+        self._unsub_dispatcher = async_dispatcher_connect(
+            self.hass, self.update_signal, self.async_schedule_update_ha_state,
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Unregister signal dispatch listeners when being removed."""
+        if self._unsub_dispatcher:
+            self._unsub_dispatcher()
+        self._unsub_dispatcher = None
 
 
 class DerivativeDSMREntity(DSMREntity):
