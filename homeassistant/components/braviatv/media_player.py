@@ -218,8 +218,8 @@ class BraviaTVDevice(MediaPlayerDevice):
                     self._channel_name = playing_info.get("title")
                     self._program_media_type = playing_info.get("programMediaType")
                     self._channel_number = playing_info.get("dispNum")
-                    self._source = playing_info.get("source")
                     self._content_uri = playing_info.get("uri")
+                    self._source = self._get_source()
                     self._duration = playing_info.get("durationSec")
                     self._start_date_time = playing_info.get("startDateTime")
             else:
@@ -228,6 +228,12 @@ class BraviaTVDevice(MediaPlayerDevice):
         except Exception as exception_instance:  # pylint: disable=broad-except
             _LOGGER.error(exception_instance)
             self._state = STATE_OFF
+
+    def _get_source(self):
+        """Return the name of the source."""
+        for key, value in self._content_mapping.items():
+            if value == self._content_uri:
+                return key
 
     def _reset_playing_info(self):
         self._program_name = None
