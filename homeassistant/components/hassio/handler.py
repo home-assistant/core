@@ -10,6 +10,7 @@ from homeassistant.components.http import (
     CONF_SERVER_HOST,
     CONF_SERVER_PORT,
     CONF_SSL_CERTIFICATE,
+    DEFAULT_SERVER_HOST,
 )
 from homeassistant.const import SERVER_PORT
 
@@ -123,7 +124,7 @@ class HassIO:
         return self.send_command(f"/discovery/{uuid}", method="get")
 
     @_api_bool
-    async def update_hass_api(self, http_config, refresh_token, safe_mode):
+    async def update_hass_api(self, http_config, refresh_token):
         """Update Home Assistant API data on Hass.io."""
         port = http_config.get(CONF_SERVER_PORT) or SERVER_PORT
         options = {
@@ -133,12 +134,14 @@ class HassIO:
             "refresh_token": refresh_token.token,
         }
 
-        if CONF_SERVER_HOST in http_config:
+        if (
+            http_config.get(CONF_SERVER_HOST, DEFAULT_SERVER_HOST)
+            != DEFAULT_SERVER_HOST
+        ):
             options["watchdog"] = False
-            if not safe_mode:
-                _LOGGER.warning(
-                    "HTTP option 'server_host' is not compatible with Home Assistant."
-                )
+            _LOGGER.warning(
+                "HTTP option 'server_host' is not compatible with Home Assistant."
+            )
 
         return await self.send_command("/homeassistant/options", payload=options)
 
