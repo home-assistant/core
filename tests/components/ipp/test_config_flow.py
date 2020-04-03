@@ -57,9 +57,7 @@ async def test_connection_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we show user form on IPP connection error."""
-    aioclient_mock.post(
-        "http://192.168.1.31:631/ipp/print", exc=aiohttp.ClientError
-    )
+    aioclient_mock.post("http://192.168.1.31:631/ipp/print", exc=aiohttp.ClientError)
 
     user_input = MOCK_USER_INPUT.copy()
     result = await hass.config_entries.flow.async_init(
@@ -94,9 +92,7 @@ async def test_zeroconf_confirm_connection_error(
 
     discovery_info = MOCK_ZEROCONF_IPP_SERVICE_INFO.copy()
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=discovery_info,
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
