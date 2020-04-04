@@ -11,7 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 async def test_sensor(hass, create_registrations, webhook_client):
     """Test that sensors can be registered and updated."""
     webhook_id = create_registrations[1]["webhook_id"]
-    webhook_url = "/api/webhook/{}".format(webhook_id)
+    webhook_url = f"/api/webhook/{webhook_id}"
 
     reg_resp = await webhook_client.post(
         webhook_url,
@@ -74,7 +74,7 @@ async def test_sensor(hass, create_registrations, webhook_client):
 async def test_sensor_must_register(hass, create_registrations, webhook_client):
     """Test that sensors must be registered before updating."""
     webhook_id = create_registrations[1]["webhook_id"]
-    webhook_url = "/api/webhook/{}".format(webhook_id)
+    webhook_url = f"/api/webhook/{webhook_id}"
     resp = await webhook_client.post(
         webhook_url,
         json={
@@ -93,7 +93,7 @@ async def test_sensor_must_register(hass, create_registrations, webhook_client):
 async def test_sensor_id_no_dupes(hass, create_registrations, webhook_client):
     """Test that sensors must have a unique ID."""
     webhook_id = create_registrations[1]["webhook_id"]
-    webhook_url = "/api/webhook/{}".format(webhook_id)
+    webhook_url = f"/api/webhook/{webhook_id}"
 
     payload = {
         "type": "register_sensor",

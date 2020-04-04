@@ -48,7 +48,7 @@ async def webhook_id(hass, locative_client):
 
 async def test_missing_data(locative_client, webhook_id):
     """Test missing data."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
 
     data = {
         "latitude": 1.0,
@@ -108,7 +108,7 @@ async def test_missing_data(locative_client, webhook_id):
 
 async def test_enter_and_exit(hass, locative_client, webhook_id):
     """Test when there is a known zone."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
 
     data = {
         "latitude": 40.7855,
@@ -177,7 +177,7 @@ async def test_enter_and_exit(hass, locative_client, webhook_id):
 
 async def test_exit_after_enter(hass, locative_client, webhook_id):
     """Test when an exit message comes after an enter message."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
 
     data = {
         "latitude": 40.7855,
@@ -219,7 +219,7 @@ async def test_exit_after_enter(hass, locative_client, webhook_id):
 
 async def test_exit_first(hass, locative_client, webhook_id):
     """Test when an exit message is sent first on a new device."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
 
     data = {
         "latitude": 40.7855,
@@ -240,7 +240,7 @@ async def test_exit_first(hass, locative_client, webhook_id):
 
 async def test_two_devices(hass, locative_client, webhook_id):
     """Test updating two different devices."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
 
     data_device_1 = {
         "latitude": 40.7855,
@@ -283,7 +283,7 @@ async def test_two_devices(hass, locative_client, webhook_id):
 )
 async def test_load_unload_entry(hass, locative_client, webhook_id):
     """Test that the appropriate dispatch signals are added and removed."""
-    url = "/api/webhook/{}".format(webhook_id)
+    url = f"/api/webhook/{webhook_id}"
 
     data = {
         "latitude": 40.7855,

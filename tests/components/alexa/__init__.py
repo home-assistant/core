@@ -205,4 +205,4 @@ class ReportedProperties:
                 assert prop["value"] == value
                 return prop
 
-        assert False, "property %s:%s not in %r" % (namespace, name, self.properties)
+        assert False, f"property {namespace}:{name} not in {self.properties!r}"
