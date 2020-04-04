@@ -104,7 +104,7 @@ class GraphiteFeeder(threading.Thread):
         sock.settimeout(10)
         sock.connect((self._host, self._port))
         sock.sendall(data.encode("ascii"))
-        sock.send("\n".encode("ascii"))
+        sock.send(b"\n")
         sock.close()
 
     def _report_attributes(self, entity_id, new_state):
