@@ -228,7 +228,7 @@ class Config:
 
         self.entities = conf.get(CONF_ENTITIES, {})
 
-        self._entities_with_hidden_attr_in_config = dict()
+        self._entities_with_hidden_attr_in_config = {}
         for entity_id in self.entities:
             hidden_value = self.entities[entity_id].get(CONF_ENTITY_HIDDEN, None)
             if hidden_value is not None:

@@ -108,7 +108,7 @@ class BanLogParser:
         """Initialize the parser."""
         self.log_file = log_file
         self.data = list()
-        self.ip_regex = dict()
+        self.ip_regex = {}
 
     def read_log(self, jail):
         """Read the fail2ban log and find entries for jail."""
