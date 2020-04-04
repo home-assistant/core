@@ -124,9 +124,7 @@ def get_last_state_changes(hass, number_of_states, entity_id):
     start_time = dt_util.utcnow()
 
     with session_scope(hass=hass) as session:
-        query = session.query(States).filter(
-            (States.last_changed == States.last_updated)
-        )
+        query = session.query(States).filter(States.last_changed == States.last_updated)
 
         if entity_id is not None:
             query = query.filter_by(entity_id=entity_id.lower())
