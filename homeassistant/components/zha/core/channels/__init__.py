@@ -251,11 +251,11 @@ class ChannelPool:
                 else "",
                 const.ATTR_IN_CLUSTERS: [
                     f"0x{cluster_id:04x}"
-                    for cluster_id in sorted(self.endpoint.in_clusters.keys())
+                    for cluster_id in sorted(self.endpoint.in_clusters)
                 ],
                 const.ATTR_OUT_CLUSTERS: [
                     f"0x{cluster_id:04x}"
-                    for cluster_id in sorted(self.endpoint.out_clusters.keys())
+                    for cluster_id in sorted(self.endpoint.out_clusters)
                 ],
             },
         )
