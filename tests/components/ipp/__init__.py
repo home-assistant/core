@@ -22,13 +22,13 @@ IPP_ZEROCONF_SERVICE_TYPE = "_ipp._tcp.local."
 IPPS_ZEROCONF_SERVICE_TYPE = "_ipps._tcp.local."
 
 ZEROCONF_NAME = "EPSON123456"
-ZEROCONF_HOST = "1.2.3.4"
+ZEROCONF_HOST = "192.168.1.31"
 ZEROCONF_HOSTNAME = "EPSON123456.local."
 ZEROCONF_PORT = 631
 
 
 MOCK_USER_INPUT = {
-    CONF_HOST: "EPSON123456.local",
+    CONF_HOST: "192.168.1.31",
     CONF_PORT: 361,
     CONF_SSL: False,
     CONF_VERIFY_SSL: False,
@@ -37,7 +37,7 @@ MOCK_USER_INPUT = {
 
 MOCK_ZEROCONF_IPP_SERVICE_INFO = {
     CONF_TYPE: IPP_ZEROCONF_SERVICE_TYPE,
-    CONF_NAME: ZEROCONF_NAME,
+    CONF_NAME: f"{ZEROCONF_NAME}.{IPP_ZEROCONF_SERVICE_TYPE}",
     CONF_HOST: ZEROCONF_HOST,
     ATTR_HOSTNAME: ZEROCONF_HOSTNAME,
     CONF_PORT: ZEROCONF_PORT,
@@ -46,7 +46,7 @@ MOCK_ZEROCONF_IPP_SERVICE_INFO = {
 
 MOCK_ZEROCONF_IPPS_SERVICE_INFO = {
     CONF_TYPE: IPPS_ZEROCONF_SERVICE_TYPE,
-    CONF_NAME: ZEROCONF_NAME,
+    CONF_NAME: f"{ZEROCONF_NAME}.{IPPS_ZEROCONF_SERVICE_TYPE}",
     CONF_HOST: ZEROCONF_HOST,
     ATTR_HOSTNAME: ZEROCONF_HOSTNAME,
     CONF_PORT: ZEROCONF_PORT,
@@ -65,10 +65,9 @@ async def init_integration(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, skip_setup: bool = False,
 ) -> MockConfigEntry:
     """Set up the IPP integration in Home Assistant."""
-
     fixture = "ipp/get-printer-attributes.bin"
     aioclient_mock.post(
-        "http://EPSON123456.local:631/ipp/print",
+        "http://192.168.1.31:631/ipp/print",
         content=load_fixture_binary(fixture),
         headers={"Content-Type": "application/ipp"},
     )
@@ -77,7 +76,7 @@ async def init_integration(
         domain=DOMAIN,
         unique_id="cfe92100-67c4-11d4-a45f-f8d027761251",
         data={
-            CONF_HOST: "EPSON123456.local",
+            CONF_HOST: "192.168.1.31",
             CONF_PORT: 631,
             CONF_SSL: False,
             CONF_VERIFY_SSL: True,
