@@ -279,6 +279,22 @@ class HueLight(Light):
         return self.light.state.get("ct")
 
     @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        if self.is_group:
+            return super().min_mireds
+
+        return self.light.controlcapabilities["ct"]["min"]
+
+    @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        if self.is_group:
+            return super().min_mireds
+
+        return self.light.controlcapabilities["ct"]["max"]
+
+    @property
     def is_on(self):
         """Return true if device is on."""
         if self.is_group:
