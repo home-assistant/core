@@ -69,7 +69,7 @@ class LannouncerNotificationService(BaseNotificationService):
             # Send message
             _LOGGER.debug("Sending message: %s", cmd)
             sock.sendall(cmd.encode())
-            sock.sendall("&@DONE@\n".encode())
+            sock.sendall(b"&@DONE@\n")
 
             # Check response
             buffer = sock.recv(1024)
