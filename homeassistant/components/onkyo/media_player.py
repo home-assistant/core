@@ -57,6 +57,8 @@ DEFAULT_SOURCES = {
     "fm": "Radio",
 }
 
+DEFAULT_PLAYABLE_SOURCES = ("fm", "am", "tuner")
+
 SUPPORT_ONKYO = (
     SUPPORT_VOLUME_SET
     | SUPPORT_VOLUME_STEP
@@ -277,7 +279,17 @@ class OnkyoAVR(MediaPlayerDevice):
 
     async def async_mute_volume(self, mute):
         """Engage AVR mute."""
-        self._update_avr("mute", mute)
+        self._update_avr("audio-muting", "on" if mute else "off")
+
+    async def async_play_media(self, media_type, media_id, **kwargs):
+        """Play radio station by preset number."""
+        source = self._reverse_mapping[self._source]
+        if media_type.lower() == "radio" and source in DEFAULT_PLAYABLE_SOURCES:
+            self._update_avr("preset", media_id)
+
+    async def async_select_output(self, output):
+        """Set hdmi-out."""
+        self._update_avr("hdmi-output-selector", output)
 
     def _update_avr(self, propname, value):
         """Update a property in the AVR."""
