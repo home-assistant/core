@@ -140,7 +140,10 @@ class UpnpSensor(Entity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return self._coordinator.last_update_success
+        device_value_key = self._sensor_type["device_value_key"]
+        return self._coordinator.last_update_success and \
+               device_value_key in self._coordinator.data and \
+               not isinstance(self._coordinator.data[device_value_key], Exception)
 
     @property
     def name(self) -> str:
