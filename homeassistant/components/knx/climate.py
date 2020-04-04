@@ -139,7 +139,7 @@ def async_add_entities_config(hass, config, async_add_entities):
     """Set up climate for KNX platform configured within platform."""
     climate_mode = XknxClimateMode(
         hass.data[DATA_KNX].xknx,
-        name=config[CONF_NAME] + " Mode",
+        name=f"{config[CONF_NAME]} Mode",
         group_address_operation_mode=config.get(CONF_OPERATION_MODE_ADDRESS),
         group_address_operation_mode_state=config.get(
             CONF_OPERATION_MODE_STATE_ADDRESS
