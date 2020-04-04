@@ -271,6 +271,14 @@ class ZHADevice(LogMixin):
         """Return True if sensor is available."""
         return self._available
 
+    @property
+    def zigbee_signature(self) -> Dict[str, Any]:
+        """Get zigbee signature for this device."""
+        return {
+            ATTR_NODE_DESCRIPTOR: str(self._zigpy_device.node_desc),
+            ATTR_ENDPOINTS: self._channels.zigbee_signature,
+        }
+
     def set_available(self, available):
         """Set availability from restore and prevent signals."""
         self._available = available
@@ -370,7 +378,7 @@ class ZHADevice(LogMixin):
             ATTR_LAST_SEEN: update_time,
             ATTR_AVAILABLE: self.available,
             ATTR_DEVICE_TYPE: self.device_type,
-            ATTR_SIGNATURE: self.async_get_zigbee_signature(),
+            ATTR_SIGNATURE: self.zigbee_signature,
         }
 
     async def async_configure(self):
@@ -621,14 +629,6 @@ class ZHADevice(LogMixin):
             else:
                 fmt = log_msg[1] + " completed: %s"
             zdo.debug(fmt, *(log_msg[2] + (outcome,)))
-
-    @callback
-    def async_get_zigbee_signature(self) -> Dict[str, Any]:
-        """Get zigbee signature for this device."""
-        return {
-            ATTR_NODE_DESCRIPTOR: str(self._zigpy_device.node_desc),
-            ATTR_ENDPOINTS: self._channels.async_get_zigbee_signature(),
-        }
 
     def log(self, level, msg, *args):
         """Log a message."""
