@@ -292,7 +292,7 @@ class AbodeEntity(Entity):
 
     async def async_added_to_hass(self):
         """Subscribe to Abode connection status updates."""
-        self.hass.async_add_job(
+        self.hass.async_add_executor_job(
             self._data.abode.events.add_connection_status_callback,
             self.unique_id,
             self._update_connection_status,
@@ -302,7 +302,7 @@ class AbodeEntity(Entity):
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe from Abode connection status updates."""
-        self.hass.async_add_job(
+        self.hass.async_add_executor_job(
             self._data.abode.events.remove_connection_status_callback, self.unique_id,
         )
 
@@ -323,7 +323,7 @@ class AbodeDevice(AbodeEntity):
     async def async_added_to_hass(self):
         """Subscribe to device events."""
         await super().async_added_to_hass()
-        self.hass.async_add_job(
+        self.hass.async_add_executor_job(
             self._data.abode.events.add_device_callback,
             self._device.device_id,
             self._update_callback,
@@ -332,7 +332,7 @@ class AbodeDevice(AbodeEntity):
     async def async_will_remove_from_hass(self):
         """Unsubscribe from device events."""
         await super().async_will_remove_from_hass()
-        self.hass.async_add_job(
+        self.hass.async_add_executor_job(
             self._data.abode.events.remove_all_device_callbacks, self._device.device_id
         )
 
