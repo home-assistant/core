@@ -61,7 +61,7 @@ class ZWaveLogView(HomeAssistantView):
     def _get_log(self, hass, lines):
         """Retrieve the logfile content."""
         logfilepath = hass.config.path(OZW_LOG_FILENAME)
-        with open(logfilepath, "r") as logfile:
+        with open(logfilepath) as logfile:
             data = (line.rstrip() for line in logfile)
             if lines == 0:
                 loglines = list(data)
