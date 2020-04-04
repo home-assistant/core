@@ -14,26 +14,6 @@ MOCK_CONFIG = {
 }
 
 
-async def test_sensor_init(hass):
-    """Test whether all values initialized properly."""
-    with patch(
-        "homeassistant.components.openerz.sensor.OpenERZConnector"
-    ) as patched_connector:
-        pickup_instance = MagicMock()
-        pickup_instance.find_next_pickup.return_value = "2020-12-12"
-        patched_connector.return_value = pickup_instance
-
-        await async_setup_component(hass, SENSOR_DOMAIN, MOCK_CONFIG)
-
-        entity_id = "sensor.test_name"
-        test_openerz_name = hass.data[SENSOR_DOMAIN].get_entity(entity_id).name
-
-        await hass.async_block_till_done()
-
-        assert test_openerz_name == "test_name"
-        pickup_instance.find_next_pickup.assert_called_once()
-
-
 async def test_sensor_state(hass):
     """Test whether default waste type set properly."""
     with patch(
@@ -44,11 +24,12 @@ async def test_sensor_state(hass):
         patched_connector.return_value = pickup_instance
 
         await async_setup_component(hass, SENSOR_DOMAIN, MOCK_CONFIG)
+        await hass.async_block_till_done()
 
         entity_id = "sensor.test_name"
         test_openerz_state = hass.states.get(entity_id).state
-
-        await hass.async_block_till_done()
+        test_openerz_name = hass.data[SENSOR_DOMAIN].get_entity(entity_id).name
 
         assert test_openerz_state == "2020-12-12"
+        assert test_openerz_name == "test_name"
         pickup_instance.find_next_pickup.assert_called_once()
