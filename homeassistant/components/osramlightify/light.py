@@ -1,7 +1,6 @@
 """Support for Osram Lightify."""
 import logging
 import random
-import socket
 
 from lightify import Lightify
 import voluptuous as vol
@@ -74,7 +73,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config[CONF_HOST]
     try:
         bridge = Lightify(host, log_level=logging.NOTSET)
-    except socket.error as err:
+    except OSError as err:
         msg = "Error connecting to bridge: {} due to: {}".format(host, str(err))
         _LOGGER.exception(msg)
         return

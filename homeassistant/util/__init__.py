@@ -101,7 +101,7 @@ def get_local_ip() -> str:
         sock.connect(("8.8.8.8", 80))
 
         return sock.getsockname()[0]  # type: ignore
-    except socket.error:
+    except OSError:
         try:
             return socket.gethostbyname(socket.gethostname())
         except socket.gaierror:
