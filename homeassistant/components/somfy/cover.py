@@ -8,7 +8,7 @@ from homeassistant.components.cover import (
     CoverDevice,
 )
 
-from . import API, DEVICES, DOMAIN, SomfyEntity
+from . import API, CONF_OPTIMISTIC, DEVICES, DOMAIN, SomfyEntity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
