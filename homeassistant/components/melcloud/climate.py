@@ -258,7 +258,7 @@ class AtaDeviceClimate(MelCloudClimate):
 
     @property
     def swing_modes(self) -> Optional[str]:
-        """Return the list of available swing modes."""
+        """Return a list of available vertical vane positions and modes."""
         return self._device.vane_vertical_positions
 
     @property
