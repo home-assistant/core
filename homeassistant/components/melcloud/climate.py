@@ -62,7 +62,7 @@ ATA_HVAC_MODE_LOOKUP = {
 ATA_HVAC_MODE_REVERSE_LOOKUP = {v: k for k, v in ATA_HVAC_MODE_LOOKUP.items()}
 
 
-HVAC_HVANE_LOOKUP = {
+ATA_HVAC_HVANE_LOOKUP = {
     ata.H_VANE_POSITION_AUTO: HorSwingModes.Auto,
     ata.H_VANE_POSITION_1: HorSwingModes.Left,
     ata.H_VANE_POSITION_2: HorSwingModes.MiddleLeft,
@@ -72,10 +72,10 @@ HVAC_HVANE_LOOKUP = {
     ata.H_VANE_POSITION_SPLIT: HorSwingModes.Split,
     ata.H_VANE_POSITION_SWING: HorSwingModes.Swing,
 }
-HVAC_HVANE_REVERSE_LOOKUP = {v: k for k, v in HVAC_HVANE_LOOKUP.items()}
+ATA_HVAC_HVANE_REVERSE_LOOKUP = {v: k for k, v in ATA_HVAC_HVANE_LOOKUP.items()}
 
 
-HVAC_VVANE_LOOKUP = {
+ATA_HVAC_VVANE_LOOKUP = {
     ata.V_VANE_POSITION_AUTO: VertSwingModes.Auto,
     ata.V_VANE_POSITION_1: VertSwingModes.Top,
     ata.V_VANE_POSITION_2: VertSwingModes.MiddleTop,
@@ -84,7 +84,7 @@ HVAC_VVANE_LOOKUP = {
     ata.V_VANE_POSITION_5: VertSwingModes.Bottom,
     ata.V_VANE_POSITION_SWING: VertSwingModes.Swing,
 }
-HVAC_VVANE_REVERSE_LOOKUP = {v: k for k, v in HVAC_VVANE_LOOKUP.items()}
+ATA_HVAC_VVANE_REVERSE_LOOKUP = {v: k for k, v in ATA_HVAC_VVANE_LOOKUP.items()}
 
 
 ATW_ZONE_HVAC_MODE_LOOKUP = {
@@ -178,13 +178,13 @@ class AtaDeviceClimate(MelCloudClimate):
         vane_horizontal = self._device.vane_horizontal
         if vane_horizontal:
             attr.update(
-                {ATTR_VANE_HORIZONTAL: HVAC_HVANE_LOOKUP.get(vane_horizontal, None)}
+                {ATTR_VANE_HORIZONTAL: ATA_HVAC_HVANE_LOOKUP.get(vane_horizontal, None)}
             )
 
         vane_vertical = self._device.vane_vertical
         if vane_vertical:
             attr.update(
-                {ATTR_VANE_VERTICAL: HVAC_VVANE_LOOKUP.get(vane_vertical, None)}
+                {ATTR_VANE_VERTICAL: ATA_HVAC_VVANE_LOOKUP.get(vane_vertical, None)}
             )
         return attr
 
@@ -255,10 +255,10 @@ class AtaDeviceClimate(MelCloudClimate):
 
     async def async_set_vane_horizontal(self, position: str) -> None:
         """Set horizontal vane position."""
-        operation_mode = HVAC_HVANE_REVERSE_LOOKUP.get(position, "")
+        operation_mode = ATA_HVAC_HVANE_REVERSE_LOOKUP.get(position, "")
         if operation_mode not in self._device.vane_horizontal_positions:
             valid_pos = [
-                HVAC_HVANE_LOOKUP.get(mode)
+                ATA_HVAC_HVANE_LOOKUP.get(mode)
                 for mode in self._device.vane_horizontal_positions
             ]
             raise ValueError(
@@ -268,10 +268,10 @@ class AtaDeviceClimate(MelCloudClimate):
 
     async def async_set_vane_vertical(self, position: str) -> None:
         """Set vertical vane position."""
-        operation_mode = HVAC_VVANE_REVERSE_LOOKUP.get(position, "")
+        operation_mode = ATA_HVAC_VVANE_REVERSE_LOOKUP.get(position, "")
         if operation_mode not in self._device.vane_vertical_positions:
             valid_pos = [
-                HVAC_VVANE_LOOKUP.get(mode)
+                ATA_HVAC_VVANE_LOOKUP.get(mode)
                 for mode in self._device.vane_vertical_positions
             ]
             raise ValueError(
@@ -286,11 +286,11 @@ class AtaDeviceClimate(MelCloudClimate):
         if self._set_hor_swing and self._support_hor_swing:
             mode = self._device.vane_horizontal
             if mode is not None:
-                swing = HVAC_HVANE_LOOKUP.get(mode)
+                swing = ATA_HVAC_HVANE_LOOKUP.get(mode)
         elif self._support_ver_swing:
             mode = self._device.vane_vertical
             if mode is not None:
-                swing = HVAC_VVANE_LOOKUP.get(mode)
+                swing = ATA_HVAC_VVANE_LOOKUP.get(mode)
 
         if swing is None:
             return "Auto"
@@ -300,9 +300,9 @@ class AtaDeviceClimate(MelCloudClimate):
     async def async_set_swing_mode(self, swing_mode) -> None:
         """Set new target swing mode."""
         is_hor_swing = False
-        operation_mode = HVAC_VVANE_REVERSE_LOOKUP.get(swing_mode)
+        operation_mode = ATA_HVAC_VVANE_REVERSE_LOOKUP.get(swing_mode)
         if operation_mode is None:
-            operation_mode = HVAC_HVANE_REVERSE_LOOKUP.get(swing_mode)
+            operation_mode = ATA_HVAC_HVANE_REVERSE_LOOKUP.get(swing_mode)
             if operation_mode is None:
                 raise ValueError(f"Invalid swing_mode [{swing_mode}].")
 
@@ -326,10 +326,10 @@ class AtaDeviceClimate(MelCloudClimate):
     def swing_modes(self) -> Optional[List[str]]:
         """Return the list of available swing modes."""
         list_modes = [
-            HVAC_VVANE_LOOKUP.get(mode) for mode in self._device.vane_vertical_positions
+            ATA_HVAC_VVANE_LOOKUP.get(mode) for mode in self._device.vane_vertical_positions
         ]
         for mode in self._device.vane_horizontal_positions:
-            list_modes.append(HVAC_HVANE_LOOKUP.get(mode))
+            list_modes.append(ATA_HVAC_HVANE_LOOKUP.get(mode))
 
         return list_modes
 
