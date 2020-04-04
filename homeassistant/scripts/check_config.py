@@ -186,7 +186,7 @@ def check(config_dir, secrets=False):
             continue
         # The * in the key is removed to find the mock_function (side_effect)
         # This allows us to use one side_effect to patch multiple locations
-        mock_function = locals()["mock_" + key.replace("*", "")]
+        mock_function = locals()[f"mock_{key.replace('*', '')}"]
         PATCHES[key] = patch(val[0], side_effect=mock_function)
 
     # Start all patches

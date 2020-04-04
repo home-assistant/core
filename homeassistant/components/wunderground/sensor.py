@@ -329,7 +329,7 @@ class WUAlertsSensorConfig(WUSensorConfig):
             for alert in ALERTS_ATTRS:
                 if data[alert]:
                     if multiple_alerts:
-                        dkey = alert.capitalize() + "_" + data["type"]
+                        dkey = f"{alert.capitalize()}_{data['type']}"
                     else:
                         dkey = alert.capitalize()
                     attrs[dkey] = data[alert]

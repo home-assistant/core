@@ -52,7 +52,7 @@ def main():
 
         add_msg(
             f"CONFIG_SCHEMA {schema_type}",
-            module_name + " " + color("cyan", str(schema)[:60]),
+            f"{module_name} {color('cyan', str(schema)[:60])}",
         )
 
     for key in sorted(msg):

@@ -257,11 +257,12 @@ class DenonDevice(MediaPlayerDevice):
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        self.telnet_command("MV" + str(round(volume * self._volume_max)).zfill(2))
+        self.telnet_command(f"MV{str(round(volume * self._volume_max)).zfill(2)}")
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
-        self.telnet_command("MU" + ("ON" if mute else "OFF"))
+        mute_status = "ON" if mute else "OFF"
+        self.telnet_command(f"MU{mute_status})")
 
     def media_play(self):
         """Play media player."""
@@ -289,4 +290,4 @@ class DenonDevice(MediaPlayerDevice):
 
     def select_source(self, source):
         """Select input source."""
-        self.telnet_command("SI" + self._source_list.get(source))
+        self.telnet_command(f"SI{self._source_list.get(source)}")
