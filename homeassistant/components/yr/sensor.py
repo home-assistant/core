@@ -139,7 +139,7 @@ class YrSensor(Entity):
             return None
         return (
             "https://api.met.no/weatherapi/weathericon/1.1/"
-            "?symbol={0};content_type=image/png".format(self._state)
+            f"?symbol={self._state};content_type=image/png"
         )
 
     @property

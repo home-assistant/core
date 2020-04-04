@@ -142,7 +142,7 @@ class RainCloudEntity(Entity):
         """Initialize the RainCloud entity."""
         self.data = data
         self._sensor_type = sensor_type
-        self._name = "{0} {1}".format(self.data.name, KEY_MAP.get(self._sensor_type))
+        self._name = "{} {}".format(self.data.name, KEY_MAP.get(self._sensor_type))
         self._state = None
 
     @property

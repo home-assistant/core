@@ -20,7 +20,7 @@ from .const import DOMAIN
 def configured_instances(hass):
     """Return a set of configured OpenUV instances."""
     return set(
-        "{0}, {1}".format(
+        "{}, {}".format(
             entry.data.get(CONF_LATITUDE, hass.config.latitude),
             entry.data.get(CONF_LONGITUDE, hass.config.longitude),
         )

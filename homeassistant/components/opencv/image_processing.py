@@ -132,7 +132,7 @@ class OpenCVImageProcessor(ImageProcessingEntity):
         if name:
             self._name = name
         else:
-            self._name = "OpenCV {0}".format(split_entity_id(camera_entity)[1])
+            self._name = "OpenCV {}".format(split_entity_id(camera_entity)[1])
         self._classifiers = classifiers
         self._matches = {}
         self._total_matches = 0
