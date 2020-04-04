@@ -271,14 +271,14 @@ def test_logarithm(hass):
     for value, base, expected in tests:
         assert (
             template.Template(
-                "{{ %s | log(%s) | round(1) }}" % (value, base), hass
+                f"{{{{ {value} | log({base}) | round(1) }}}}", hass
             ).async_render()
             == expected
         )
 
         assert (
             template.Template(
-                "{{ log(%s, %s) | round(1) }}" % (value, base), hass
+                f"{{{{ log({value}, {base}) | round(1) }}}}", hass
             ).async_render()
             == expected
         )
@@ -439,13 +439,13 @@ def test_arc_tan2(hass):
     for y, x, expected in tests:
         assert (
             template.Template(
-                "{{ (%s, %s) | atan2 | round(3) }}" % (y, x), hass
+                f"{{{{ ({y}, {x}) | atan2 | round(3) }}}}", hass
             ).async_render()
             == expected
         )
         assert (
             template.Template(
-                "{{ atan2(%s, %s) | round(3) }}" % (y, x), hass
+                f"{{{{ atan2({y}, {x}) | round(3) }}}}", hass
             ).async_render()
             == expected
         )
@@ -468,7 +468,7 @@ def test_strptime(hass):
         if expected is None:
             expected = datetime.strptime(inp, fmt)
 
-        temp = "{{ strptime('%s', '%s') }}" % (inp, fmt)
+        temp = f"{{{{ strptime('{inp}', '{fmt}') }}}}"
 
         assert template.Template(temp, hass).async_render() == str(expected)
 
@@ -492,9 +492,7 @@ def test_timestamp_custom(hass):
         else:
             fil = "timestamp_custom"
 
-        assert (
-            template.Template("{{ %s | %s }}" % (inp, fil), hass).async_render() == out
-        )
+        assert template.Template(f"{{{{ {inp} | {fil} }}}}", hass).async_render() == out
 
 
 def test_timestamp_local(hass):

@@ -18,16 +18,16 @@ from tests.common import (
 USER = "greg"
 DEVICE = "phone"
 
-LOCATION_TOPIC = "owntracks/{}/{}".format(USER, DEVICE)
-EVENT_TOPIC = "owntracks/{}/{}/event".format(USER, DEVICE)
-WAYPOINTS_TOPIC = "owntracks/{}/{}/waypoints".format(USER, DEVICE)
-WAYPOINT_TOPIC = "owntracks/{}/{}/waypoint".format(USER, DEVICE)
+LOCATION_TOPIC = f"owntracks/{USER}/{DEVICE}"
+EVENT_TOPIC = f"owntracks/{USER}/{DEVICE}/event"
+WAYPOINTS_TOPIC = f"owntracks/{USER}/{DEVICE}/waypoints"
+WAYPOINT_TOPIC = f"owntracks/{USER}/{DEVICE}/waypoint"
 USER_BLACKLIST = "ram"
-WAYPOINTS_TOPIC_BLOCKED = "owntracks/{}/{}/waypoints".format(USER_BLACKLIST, DEVICE)
-LWT_TOPIC = "owntracks/{}/{}/lwt".format(USER, DEVICE)
-BAD_TOPIC = "owntracks/{}/{}/unsupported".format(USER, DEVICE)
+WAYPOINTS_TOPIC_BLOCKED = f"owntracks/{USER_BLACKLIST}/{DEVICE}/waypoints"
+LWT_TOPIC = f"owntracks/{USER}/{DEVICE}/lwt"
+BAD_TOPIC = f"owntracks/{USER}/{DEVICE}/unsupported"
 
-DEVICE_TRACKER_STATE = "device_tracker.{}_{}".format(USER, DEVICE)
+DEVICE_TRACKER_STATE = f"device_tracker.{USER}_{DEVICE}"
 
 IBEACON_DEVICE = "keys"
 MOBILE_BEACON_FMT = "device_tracker.beacon_{}"
@@ -1510,7 +1510,7 @@ async def test_customized_mqtt_topic(hass, setup_comp):
     """Test subscribing to a custom mqtt topic."""
     await setup_owntracks(hass, {CONF_MQTT_TOPIC: "mytracks/#"})
 
-    topic = "mytracks/{}/{}".format(USER, DEVICE)
+    topic = f"mytracks/{USER}/{DEVICE}"
 
     await send_message(hass, topic, LOCATION_MESSAGE)
     assert_location_latitude(hass, LOCATION_MESSAGE["lat"])

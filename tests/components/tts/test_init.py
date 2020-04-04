@@ -297,9 +297,7 @@ async def test_setup_component_and_test_with_service_options_def(hass, empty_cac
         assert os.path.isfile(
             os.path.join(
                 empty_cache_dir,
-                "42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{0}_demo.mp3".format(
-                    opt_hash
-                ),
+                f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{opt_hash}_demo.mp3",
             )
         )
 
