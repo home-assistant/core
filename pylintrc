@@ -35,7 +35,6 @@ disable=
   cyclic-import,
   duplicate-code,
   global-statement,
-  import-outside-toplevel,
   inconsistent-return-statements,
   locally-disabled,
   not-context-manager,

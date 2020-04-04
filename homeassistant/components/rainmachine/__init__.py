@@ -426,7 +426,7 @@ class RainMachineEntity(Entity):
             "identifiers": {(DOMAIN, self.rainmachine.controller.mac)},
             "name": self.rainmachine.controller.name,
             "manufacturer": "RainMachine",
-            "model": "Version {0} (API: {1})".format(
+            "model": "Version {} (API: {})".format(
                 self.rainmachine.controller.hardware_version,
                 self.rainmachine.controller.api_version,
             ),

@@ -110,7 +110,7 @@ class YiCamera(Camera):
 
             await ftp.quit()
             self._is_on = True
-            return "ftp://{0}:{1}@{2}:{3}{4}/{5}/{6}".format(
+            return "ftp://{}:{}@{}:{}{}/{}/{}".format(
                 self.user,
                 self.passwd,
                 self.host,

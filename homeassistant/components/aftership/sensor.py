@@ -191,7 +191,9 @@ class AfterShipSensor(Entity):
                     "name": name,
                     "tracking_number": track["tracking_number"],
                     "slug": track["slug"],
-                    "link": "%s%s/%s" % (BASE, track["slug"], track["tracking_number"]),
+                    "link": "{}{}/{}".format(
+                        BASE, track["slug"], track["tracking_number"]
+                    ),
                     "last_update": track["updated_at"],
                     "expected_delivery": track["expected_delivery"],
                     "status": track["tag"],

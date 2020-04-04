@@ -215,6 +215,7 @@ def async_enable_logging(
 
     if not log_no_color:
         try:
+            # pylint: disable=import-outside-toplevel
             from colorlog import ColoredFormatter
 
             # basicConfig must be called after importing colorlog in order to

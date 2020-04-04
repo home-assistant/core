@@ -29,7 +29,7 @@ class _BaseFlowManagerView(HomeAssistantView):
         if result["type"] != data_entry_flow.RESULT_TYPE_FORM:
             return result
 
-        import voluptuous_serialize
+        import voluptuous_serialize  # pylint: disable=import-outside-toplevel
 
         data = result.copy()
 
