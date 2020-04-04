@@ -168,7 +168,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         if name:
             self._name = name
         else:
-            self._name = "TensorFlow {0}".format(split_entity_id(camera_entity)[1])
+            self._name = "TensorFlow {}".format(split_entity_id(camera_entity)[1])
         self._session = session
         self._graph = detection_graph
         self._category_index = category_index
@@ -270,7 +270,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
 
             # Draw detected objects
             for instance in values:
-                label = "{0} {1:.1f}%".format(category, instance["score"])
+                label = "{} {:.1f}%".format(category, instance["score"])
                 draw_box(
                     draw, instance["box"], img_width, img_height, label, (255, 255, 0)
                 )
