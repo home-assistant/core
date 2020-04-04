@@ -214,11 +214,11 @@ class AugustData(AugustSubscriberMixin):
             await self._api.async_get_doorbells(self._august_gateway.access_token) or []
         )
 
-        self._doorbells_by_id = dict((device.device_id, device) for device in doorbells)
-        self._locks_by_id = dict((device.device_id, device) for device in locks)
-        self._house_ids = set(
+        self._doorbells_by_id = {device.device_id: device for device in doorbells}
+        self._locks_by_id = {device.device_id: device for device in locks}
+        self._house_ids = {
             device.house_id for device in itertools.chain(locks, doorbells)
-        )
+        }
 
         await self._async_refresh_device_detail_by_ids(
             [device.device_id for device in itertools.chain(locks, doorbells)]

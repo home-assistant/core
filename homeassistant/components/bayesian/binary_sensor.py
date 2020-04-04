@@ -303,11 +303,11 @@ class BayesianBinarySensor(BinarySensorDevice):
         return {
             ATTR_OBSERVATIONS: list(self.current_observations.values()),
             ATTR_OCCURRED_OBSERVATION_ENTITIES: list(
-                set(
+                {
                     obs.get("entity_id")
                     for obs in self.current_observations.values()
                     if obs is not None
-                )
+                }
             ),
             ATTR_PROBABILITY: round(self.probability, 2),
             ATTR_PROBABILITY_THRESHOLD: self._probability_threshold,
