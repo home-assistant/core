@@ -1,4 +1,5 @@
 """Config flow to configure Z-Wave."""
+# pylint: disable=import-outside-toplevel
 from collections import OrderedDict
 import logging
 
