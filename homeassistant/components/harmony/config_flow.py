@@ -128,8 +128,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, validated_input):
         """Handle import."""
-        await self.async_set_unique_id(validated_input[UNIQUE_ID])
+        await self.async_set_unique_id(
+            validated_input[UNIQUE_ID], raise_on_progress=False
+        )
         self._abort_if_unique_id_configured()
+
         # Everything was validated in remote async_setup_platform
         # all we do now is create.
         return await self._async_create_entry_from_valid_input(
@@ -149,14 +152,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Options from yaml are preserved, we will pull them out when
         # we setup the config entry
         data.update(_options_from_user_input(user_input))
-        return self.async_create_entry(title=validated[CONF_NAME], data=data)
 
-    def _host_already_configured(self, user_input):
-        """See if we already have a harmony matching user input configured."""
-        existing_hosts = {
-            entry.data[CONF_HOST] for entry in self._async_current_entries()
-        }
-        return user_input[CONF_HOST] in existing_hosts
+        return self.async_create_entry(title=validated[CONF_NAME], data=data)
 
 
 def _options_from_user_input(user_input):
