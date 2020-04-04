@@ -176,7 +176,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # We have an owfs mounted
     else:
         for family_file_path in glob(os.path.join(base_dir, "*", "family")):
-            with open(family_file_path, "r") as family_file:
+            with open(family_file_path) as family_file:
                 family = family_file.read()
             if "EF" in family:
                 continue
@@ -218,7 +218,7 @@ class OneWire(Entity):
 
     def _read_value_raw(self):
         """Read the value as it is returned by the sensor."""
-        with open(self._device_file, "r") as ds_device_file:
+        with open(self._device_file) as ds_device_file:
             lines = ds_device_file.readlines()
         return lines
 
