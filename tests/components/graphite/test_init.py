@@ -172,9 +172,9 @@ class TestGraphite(unittest.TestCase):
         assert sock.connect.call_count == 1
         assert sock.connect.call_args == mock.call(("foo", 123))
         assert sock.sendall.call_count == 1
-        assert sock.sendall.call_args == mock.call("foo".encode("ascii"))
+        assert sock.sendall.call_args == mock.call(b"foo")
         assert sock.send.call_count == 1
-        assert sock.send.call_args == mock.call("\n".encode("ascii"))
+        assert sock.send.call_args == mock.call(b"\n")
         assert sock.close.call_count == 1
         assert sock.close.call_args == mock.call()
 
