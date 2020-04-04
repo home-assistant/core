@@ -261,7 +261,8 @@ class DenonDevice(MediaPlayerDevice):
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
-        self.telnet_command(f"MU{'ON' if mute else 'OFF'})")
+        mute_status = "ON" if mute else "OFF"
+        self.telnet_command(f"MU{mute_status})")
 
     def media_play(self):
         """Play media player."""
