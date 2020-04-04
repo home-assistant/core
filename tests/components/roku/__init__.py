@@ -24,7 +24,7 @@ class MockDeviceInfo(object):
 
     def __repr__(self):
         """Return the object representation of DeviceInfo."""
-        return "<DeviceInfo: %s-%s, SW v%s, Ser# %s (%s)>" % (
+        return "<DeviceInfo: {}-{}, SW v{}, Ser# {} ({})>".format(
             self.model_name,
             self.model_num,
             self.software_version,

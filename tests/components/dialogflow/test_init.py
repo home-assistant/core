@@ -165,7 +165,7 @@ async def test_intent_action_incomplete_v1(fixture):
     data["result"]["actionIncomplete"] = True
 
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
     assert 200 == response.status
     assert "" == await response.text()
@@ -178,7 +178,7 @@ async def test_intent_action_incomplete_v2(fixture):
     data["queryResult"]["allRequiredParamsPresent"] = False
 
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
     assert 200 == response.status
     assert "" == await response.text()
@@ -220,7 +220,7 @@ async def test_intent_slot_filling_v1(fixture):
     data["result"]["metadata"].update(webhookForSlotFillingUsed="true")
 
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
     assert 200 == response.status
     assert "" == await response.text()
@@ -231,7 +231,7 @@ async def test_intent_request_with_parameters_v1(fixture):
     mock_client, webhook_id = fixture
     data = Data.v1
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
     assert 200 == response.status
     text = (await response.json()).get("speech")
@@ -243,7 +243,7 @@ async def test_intent_request_with_parameters_v2(fixture):
     mock_client, webhook_id = fixture
     data = Data.v2
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
     assert 200 == response.status
     text = (await response.json()).get("fulfillmentText")
@@ -256,7 +256,7 @@ async def test_intent_request_with_parameters_but_empty_v1(fixture):
     data = Data.v1
     data["result"].update(parameters={"ZodiacSign": ""})
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
     assert 200 == response.status
     text = (await response.json()).get("speech")
@@ -269,7 +269,7 @@ async def test_intent_request_with_parameters_but_empty_v2(fixture):
     data = Data.v2
     data["queryResult"].update(parameters={"ZodiacSign": ""})
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
     assert 200 == response.status
     text = (await response.json()).get("fulfillmentText")
@@ -288,7 +288,7 @@ async def test_intent_request_without_slots_v1(hass, fixture):
     )
 
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
     assert 200 == response.status
     text = (await response.json()).get("speech")
@@ -299,7 +299,7 @@ async def test_intent_request_without_slots_v1(hass, fixture):
     hass.states.async_set("device_tracker.anne_therese", "home")
 
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
     assert 200 == response.status
     text = (await response.json()).get("speech")
@@ -318,7 +318,7 @@ async def test_intent_request_without_slots_v2(hass, fixture):
     )
 
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
     assert 200 == response.status
     text = (await response.json()).get("fulfillmentText")
@@ -329,7 +329,7 @@ async def test_intent_request_without_slots_v2(hass, fixture):
     hass.states.async_set("device_tracker.anne_therese", "home")
 
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
     assert 200 == response.status
     text = (await response.json()).get("fulfillmentText")
@@ -347,7 +347,7 @@ async def test_intent_request_calling_service_v1(fixture, calls):
     data["result"]["action"] = "CallServiceIntent"
     call_count = len(calls)
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
     assert 200 == response.status
     assert call_count + 1 == len(calls)
@@ -369,7 +369,7 @@ async def test_intent_request_calling_service_v2(fixture, calls):
     data["queryResult"]["action"] = "CallServiceIntent"
     call_count = len(calls)
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
     assert 200 == response.status
     assert call_count + 1 == len(calls)
@@ -387,7 +387,7 @@ async def test_intent_with_no_action_v1(fixture):
     del data["result"]["action"]
     assert "action" not in data["result"]
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
     assert 200 == response.status
     text = (await response.json()).get("speech")
@@ -401,7 +401,7 @@ async def test_intent_with_no_action_v2(fixture):
     del data["queryResult"]["action"]
     assert "action" not in data["queryResult"]
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
     assert 200 == response.status
     text = (await response.json()).get("fulfillmentText")
@@ -414,7 +414,7 @@ async def test_intent_with_unknown_action_v1(fixture):
     data = Data.v1
     data["result"]["action"] = "unknown"
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
     assert 200 == response.status
     text = (await response.json()).get("speech")
@@ -427,7 +427,7 @@ async def test_intent_with_unknown_action_v2(fixture):
     data = Data.v2
     data["queryResult"]["action"] = "unknown"
     response = await mock_client.post(
-        "/api/webhook/{}".format(webhook_id), data=json.dumps(data)
+        f"/api/webhook/{webhook_id}", data=json.dumps(data)
     )
     assert 200 == response.status
     text = (await response.json()).get("fulfillmentText")
