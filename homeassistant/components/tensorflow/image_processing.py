@@ -258,7 +258,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
                 1,
                 1,
             ]:
-                label = "{} Detection Area".format(category.capitalize())
+                label = f"{category.capitalize()} Detection Area"
                 draw_box(
                     draw,
                     self._category_areas[category],

@@ -404,7 +404,7 @@ class OsramLightifyGroup(Luminary):
         #       It should be something like "<gateway host>-<group.idx()>"
         #       For now keeping it as is for backward compatibility with existing
         #       users.
-        return "{}".format(self._luminary.lights())
+        return f"{self._luminary.lights()}"
 
     def _get_supported_features(self):
         """Get list of supported features."""
