@@ -325,8 +325,9 @@ async def test_connection_errors_retry(hass, monkeypatch, mock_connection_factor
     config = {"platform": "dsmr", "reconnect_interval": 0}
 
     # override the mock to have it fail the first time
-    first_fail_connection_factory = Mock(
-        wraps=connection_factory, side_effect=chain([TimeoutError], repeat(DEFAULT))
+    first_fail_connection_factory = asynctest.CoroutineMock(
+        return_value=(transport, protocol),
+        side_effect=chain([TimeoutError], repeat(DEFAULT)),
     )
 
     monkeypatch.setattr(
