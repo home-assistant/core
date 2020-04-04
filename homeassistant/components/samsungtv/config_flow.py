@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant import config_entries, core
 from homeassistant.components.ssdp import (
     ATTR_SSDP_LOCATION,
     ATTR_UPNP_MANUFACTURER,
@@ -174,3 +174,17 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"model": self._title}
 
         return await self.async_step_confirm()
+
+    @staticmethod
+    @core.callback
+    def async_get_options_flow(config_entry):
+        """Define the config flow to handle options."""
+        return SamsungTVOptionsFlowHandler(config_entry)
+
+
+class SamsungTVOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a SamsungTV options flow."""
+
+    def __init__(self, config_entry):
+        """Initialize."""
+        self.config_entry = config_entry
