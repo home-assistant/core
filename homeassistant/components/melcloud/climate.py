@@ -326,7 +326,8 @@ class AtaDeviceClimate(MelCloudClimate):
     def swing_modes(self) -> Optional[List[str]]:
         """Return the list of available swing modes."""
         list_modes = [
-            ATA_HVAC_VVANE_LOOKUP.get(mode) for mode in self._device.vane_vertical_positions
+            ATA_HVAC_VVANE_LOOKUP.get(mode)
+            for mode in self._device.vane_vertical_positions
         ]
         for mode in self._device.vane_horizontal_positions:
             list_modes.append(ATA_HVAC_HVANE_LOOKUP.get(mode))
