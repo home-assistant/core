@@ -154,9 +154,3 @@ class ComponentFactory:
         )
 
         return ControllerData(controller=controller, update_callback=update_callback)
-        #
-        # return ComponentData(
-        #     controller_data=ControllerData(
-        #         controller=controller, update_callback=update_callback
-        #     )
-        # )
