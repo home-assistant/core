@@ -167,7 +167,7 @@ def daemonize() -> None:
         sys.exit(0)
 
     # redirect standard file descriptors to devnull
-    infd = open(os.devnull, "r")
+    infd = open(os.devnull)
     outfd = open(os.devnull, "a+")
     sys.stdout.flush()
     sys.stderr.flush()
@@ -180,7 +180,7 @@ def check_pid(pid_file: str) -> None:
     """Check that Home Assistant is not already running."""
     # Check pid file
     try:
-        with open(pid_file, "r") as file:
+        with open(pid_file) as file:
             pid = int(file.readline())
     except OSError:
         # PID File does not exist
