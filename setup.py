@@ -10,20 +10,20 @@ PROJECT_NAME = "Home Assistant"
 PROJECT_PACKAGE_NAME = "homeassistant"
 PROJECT_LICENSE = "Apache License 2.0"
 PROJECT_AUTHOR = "The Home Assistant Authors"
-PROJECT_COPYRIGHT = " 2013-{}, {}".format(dt.now().year, PROJECT_AUTHOR)
+PROJECT_COPYRIGHT = f" 2013-{dt.now().year}, {PROJECT_AUTHOR}"
 PROJECT_URL = "https://www.home-assistant.io/"
 PROJECT_EMAIL = "hello@home-assistant.io"
 
 PROJECT_GITHUB_USERNAME = "home-assistant"
 PROJECT_GITHUB_REPOSITORY = "core"
 
-PYPI_URL = "https://pypi.python.org/pypi/{}".format(PROJECT_PACKAGE_NAME)
-GITHUB_PATH = "{}/{}".format(PROJECT_GITHUB_USERNAME, PROJECT_GITHUB_REPOSITORY)
-GITHUB_URL = "https://github.com/{}".format(GITHUB_PATH)
+PYPI_URL = f"https://pypi.python.org/pypi/{PROJECT_PACKAGE_NAME}"
+GITHUB_PATH = f"{PROJECT_GITHUB_USERNAME}/{PROJECT_GITHUB_REPOSITORY}"
+GITHUB_URL = f"https://github.com/{GITHUB_PATH}"
 
-DOWNLOAD_URL = "{}/archive/{}.zip".format(GITHUB_URL, hass_const.__version__)
+DOWNLOAD_URL = f"{GITHUB_URL}/archive/{hass_const.__version__}.zip"
 PROJECT_URLS = {
-    "Bug Reports": "{}/issues".format(GITHUB_URL),
+    "Bug Reports": f"{GITHUB_URL}/issues",
     "Dev Docs": "https://developers.home-assistant.io/",
     "Discord": "https://discordapp.com/invite/c5DvZ4e",
     "Forum": "https://community.home-assistant.io/",
@@ -68,7 +68,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=REQUIRES,
-    python_requires=">={}".format(MIN_PY_VERSION),
+    python_requires=f">={MIN_PY_VERSION}",
     test_suite="tests",
     entry_points={"console_scripts": ["hass = homeassistant.__main__:main"]},
 )

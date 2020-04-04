@@ -83,4 +83,4 @@ def generate(integrations: Dict[str, Integration], config: Config):
     """Generate config flow file."""
     config_flow_path = config.root / "homeassistant/generated/config_flows.py"
     with open(str(config_flow_path), "w") as fp:
-        fp.write(config.cache["config_flow"] + "\n")
+        fp.write(f"{config.cache['config_flow']}\n")

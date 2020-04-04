@@ -76,4 +76,4 @@ def generate(integrations: Dict[str, Integration], config: Config):
     """Generate CODEOWNERS."""
     codeowners_path = config.root / "CODEOWNERS"
     with open(str(codeowners_path), "w") as fp:
-        fp.write(config.cache["codeowners"] + "\n")
+        fp.write(f"{config.cache['codeowners']}\n")
