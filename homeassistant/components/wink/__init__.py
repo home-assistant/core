@@ -762,7 +762,7 @@ class WinkDevice(Entity):
     def unique_id(self):
         """Return the unique id of the Wink device."""
         if hasattr(self.wink, "capability") and self.wink.capability() is not None:
-            return "{}_{}".format(self.wink.object_id(), self.wink.capability())
+            return f"{self.wink.object_id()}_{self.wink.capability()}"
         return self.wink.object_id()
 
     @property

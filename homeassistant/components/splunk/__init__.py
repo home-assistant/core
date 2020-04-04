@@ -80,8 +80,8 @@ def setup(hass, config):
     else:
         uri_scheme = "http://"
 
-    event_collector = "{}{}:{}/services/collector/event".format(uri_scheme, host, port)
-    headers = {AUTHORIZATION: "Splunk {}".format(token)}
+    event_collector = f"{uri_scheme}{host}:{port}/services/collector/event"
+    headers = {AUTHORIZATION: f"Splunk {token}"}
 
     def splunk_event_listener(event):
         """Listen for new messages on the bus and sends them to Splunk."""
