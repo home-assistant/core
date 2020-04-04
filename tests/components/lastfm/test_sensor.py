@@ -21,7 +21,7 @@ class MockUser:
         return 1
 
     def get_image(self):
-        """Get mock play count."""
+        """Get mock image."""
         pass
 
     def get_recent_tracks(self, limit):
