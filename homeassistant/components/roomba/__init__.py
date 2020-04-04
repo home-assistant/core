@@ -31,7 +31,6 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set the config entry up."""
     # Set up roomba platforms with config entry
-    _LOGGER.debug(config_entry.entry_id)
     if config_entry.data is None:
         return False
 
@@ -89,7 +88,7 @@ async def async_connect_or_timeout(hass, roomba):
     except asyncio.TimeoutError:
         # api looping if user or password incorrect and roomba exist
         await async_disconnect_or_timeout(hass, roomba)
-        _LOGGER.exception("Timeout expired")
+        _LOGGER.error("Timeout expired")
         raise CannotConnect
 
     return True
