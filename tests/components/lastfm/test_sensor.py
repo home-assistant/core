@@ -47,7 +47,7 @@ def lastfm_get_user_fixture():
 @pytest.fixture(name="lastfm_network")
 def lastfm_network_fixture():
     """Create fixture for _Network."""
-    with patch("pylast._Network") as lastfm_network:
+    with patch("pylast.LastFMNetwork") as lastfm_network:
         yield lastfm_network
 
 
