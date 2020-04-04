@@ -39,7 +39,7 @@ def run(args):
         print(f"Active keyring  : {keyr.__module__}")
         config_name = os.path.join(platform.config_root(), "keyringrc.cfg")
         print(f"Config location : {config_name}")
-        print("Data location   : {}\n".format(platform.data_root()))
+        print(f"Data location   : {platform.data_root()}\n")
     elif args.name is None:
         parser.print_help()
         return 1
