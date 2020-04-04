@@ -82,7 +82,7 @@ async def async_setup(hass, config):
 
     conf = config[DOMAIN]
 
-    identifier = "{0}, {1}".format(
+    identifier = "{}, {}".format(
         conf.get(CONF_LATITUDE, hass.config.latitude),
         conf.get(CONF_LONGITUDE, hass.config.longitude),
     )
