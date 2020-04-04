@@ -7,7 +7,6 @@ import json
 import logging
 from operator import attrgetter
 import os
-import socket
 import ssl
 import sys
 import time
@@ -996,7 +995,7 @@ class MQTT:
                     self.connected = True
                     _LOGGER.info("Successfully reconnected to the MQTT server")
                     break
-            except socket.error:
+            except OSError:
                 pass
 
             wait_time = min(2 ** tries, MAX_RECONNECT_WAIT)

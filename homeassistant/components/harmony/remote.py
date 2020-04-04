@@ -444,7 +444,7 @@ class HarmonyRemote(remote.RemoteDevice):
         try:
             with open(self._config_path, "w+", encoding="utf-8") as file_out:
                 json.dump(self._client.json_config, file_out, sort_keys=True, indent=4)
-        except IOError as exc:
+        except OSError as exc:
             _LOGGER.error(
                 "%s: Unable to write HUB configuration to %s: %s",
                 self.name,

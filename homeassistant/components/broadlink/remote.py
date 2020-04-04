@@ -7,7 +7,6 @@ from datetime import timedelta
 from ipaddress import ip_address
 from itertools import product
 import logging
-import socket
 
 import broadlink
 import voluptuous as vol
@@ -103,7 +102,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         connected, loaded = await asyncio.gather(
             hass.async_add_executor_job(api.auth), remote.async_load_storage_files()
         )
-    except socket.error:
+    except OSError:
         pass
     if not connected:
         hass.data[DOMAIN][COMPONENT].remove(unique_id)
@@ -327,7 +326,7 @@ class BroadlinkRemote(RemoteDevice):
                 continue
             try:
                 await self.hass.async_add_executor_job(function, *args)
-            except socket.error:
+            except OSError:
                 continue
             return
         raise ConnectionError
@@ -336,7 +335,7 @@ class BroadlinkRemote(RemoteDevice):
         """Connect to the remote."""
         try:
             auth = await self.hass.async_add_executor_job(self._api.auth)
-        except socket.error:
+        except OSError:
             auth = False
         if auth and not self._available:
             _LOGGER.warning("Connected to the remote")
