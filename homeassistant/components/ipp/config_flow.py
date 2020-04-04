@@ -85,7 +85,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self.discovery_info.update(
             {
-                CONF_HOST: host,
+                CONF_HOST: discovery_info[CONF_HOST],
                 CONF_PORT: port,
                 CONF_SSL: tls,
                 CONF_VERIFY_SSL: False,
