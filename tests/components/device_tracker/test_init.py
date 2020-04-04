@@ -548,7 +548,7 @@ async def test_async_added_to_hass(hass):
 
     for key, val in attr.items():
         atr = state.attributes.get(key)
-        assert atr == val, "{}={} expected: {}".format(key, atr, val)
+        assert atr == val, f"{key}={atr} expected: {val}"
 
 
 async def test_bad_platform(hass):
