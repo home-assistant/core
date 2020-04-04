@@ -20,21 +20,25 @@ TEMP_UNIT_LOOKUP = {
 }
 TEMP_UNIT_REVERSE_LOOKUP = {v: k for k, v in TEMP_UNIT_LOOKUP.items()}
 
+
 class HorSwingModes:
-    Auto = 'HorizontalAuto' 
+    """Horizontal swing modes names."""
+    Auto = 'HorizontalAuto'
     Left = 'HorizontalLeft'
-    MiddleLeft = 'HorizontalMiddleLeft' 
+    MiddleLeft = 'HorizontalMiddleLeft'
     Middle = 'HorizontalMiddle'
-    MiddleRight = 'HorizontalMiddleRight' 
+    MiddleRight = 'HorizontalMiddleRight'
     Right = 'HorizontalRight'
     Split = 'HorizontalSplit'
     Swing = 'HorizontalSwing'
 
+
 class VertSwingModes:
-    Auto = 'VerticalAuto' 
+    """Vertical swing modes names."""
+    Auto = 'VerticalAuto'
     Top = 'VerticalTop'
-    MiddleTop = 'VerticalMiddleTop' 
+    MiddleTop = 'VerticalMiddleTop'
     Middle = 'VerticalMiddle'
-    MiddleBottom = 'VerticalMiddleBottom' 
+    MiddleBottom = 'VerticalMiddleBottom'
     Bottom = 'VerticalBottom'
     Swing = 'VerticalSwing'
