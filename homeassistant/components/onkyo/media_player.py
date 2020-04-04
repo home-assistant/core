@@ -1,4 +1,4 @@
-"""Support for Anthem Network Receivers and Processors."""
+"""Support for Onkyo Network Receivers and Processors."""
 import logging
 
 import pyeiscp
@@ -111,10 +111,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     zones = config.get(CONF_ZONES)
     sources = config.get(CONF_SOURCES)
 
-    _LOGGER.info("Provisioning Anthem AVR device at %s:%d", host, port)
+    _LOGGER.info("Provisioning Onkyo AVR device at %s:%d", host, port)
 
     @callback
-    def async_anthemav_update_callback(message):
+    def async_onkyo_update_callback(message):
         """Receive notification from transport that new data exists."""
         _LOGGER.debug("Received update callback from AVR: %s", message)
         zone, _, _ = message
@@ -123,7 +123,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             hass.async_create_task(active_zones[zone].async_update_ha_state())
 
     avr = await pyeiscp.Connection.create(
-        host=host, port=port, update_callback=async_anthemav_update_callback
+        host=host, port=port, update_callback=async_onkyo_update_callback
     )
 
     active_zones = {}
@@ -141,7 +141,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 class OnkyoAVR(MediaPlayerDevice):
-    """Entity reading values from Anthem AVR protocol."""
+    """Entity reading values from Onkyo AVR protocol."""
 
     def __init__(self, avr, name, sources, zone, max_volume, receiver_max_volume):
         """Initialize entity with transport."""
