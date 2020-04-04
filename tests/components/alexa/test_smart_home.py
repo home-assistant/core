@@ -167,7 +167,7 @@ def assert_endpoint_capabilities(endpoint, *interfaces):
     them.
     """
     capabilities = endpoint["capabilities"]
-    supported = set(feature["interface"] for feature in capabilities)
+    supported = {feature["interface"] for feature in capabilities}
 
     assert supported == set(interfaces)
     return capabilities
