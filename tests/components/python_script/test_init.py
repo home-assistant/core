@@ -162,7 +162,7 @@ async def test_accessing_forbidden_methods(hass, caplog):
         caplog.records.clear()
         hass.async_add_job(execute, hass, "test.py", source, {})
         await hass.async_block_till_done()
-        assert "Not allowed to access {}".format(name) in caplog.text
+        assert f"Not allowed to access {name}" in caplog.text
 
 
 async def test_iterating(hass):

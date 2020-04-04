@@ -66,7 +66,7 @@ class TestComponentHistory(unittest.TestCase):
             for i in range(5):
                 state = ha.State(
                     "test.point_in_time_{}".format(i % 5),
-                    "State {}".format(i),
+                    f"State {i}",
                     {"attribute_test": i},
                 )
 
@@ -83,7 +83,7 @@ class TestComponentHistory(unittest.TestCase):
             for i in range(5):
                 state = ha.State(
                     "test.point_in_time_{}".format(i % 5),
-                    "State {}".format(i),
+                    f"State {i}",
                     {"attribute_test": i},
                 )
 
@@ -677,9 +677,7 @@ async def test_fetch_period_api(hass, hass_client):
     await async_setup_component(hass, "history", {})
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
-    response = await client.get(
-        "/api/history/period/{}".format(dt_util.utcnow().isoformat())
-    )
+    response = await client.get(f"/api/history/period/{dt_util.utcnow().isoformat()}")
     assert response.status == 200
 
 
@@ -699,7 +697,7 @@ async def test_fetch_period_api_with_include_order(hass, hass_client):
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get(
-        "/api/history/period/{}".format(dt_util.utcnow().isoformat()),
+        f"/api/history/period/{dt_util.utcnow().isoformat()}",
         params={"filter_entity_id": "non.existing,something.else"},
     )
     assert response.status == 200

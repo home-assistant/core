@@ -57,7 +57,7 @@ class TestCommandLine(unittest.TestCase):
                         "notify": {
                             "name": "test",
                             "platform": "command_line",
-                            "command": "echo $(cat) > {}".format(filename),
+                            "command": f"echo $(cat) > {filename}",
                         }
                     },
                 )
@@ -69,7 +69,7 @@ class TestCommandLine(unittest.TestCase):
 
             with open(filename) as fil:
                 # the echo command adds a line break
-                assert fil.read() == "{}\n".format(message)
+                assert fil.read() == f"{message}\n"
 
     @patch("homeassistant.components.command_line.notify._LOGGER.error")
     def test_error_for_none_zero_exit_code(self, mock_error):
