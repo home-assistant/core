@@ -11,7 +11,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, CONF_SOURCE
 from homeassistant.core import callback
 
-from .const import CONF_CONTROLLER, DOMAIN
+from .const import CONF_CONTROLLER, DOMAIN  # pylint: disable=unused-import
 
 LIST_REGEX = re.compile("[^0-9]+")
 _LOGGER = logging.getLogger(__name__)
@@ -87,9 +87,6 @@ class VeraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input: dict = None):
         """Handle user initiated flow."""
-        if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason="already_configured")
-
         if user_input is not None:
             return await self.async_step_finish(
                 {

@@ -24,12 +24,19 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import convert, slugify
 from homeassistant.util.dt import utc_from_timestamp
 
-from .common import ControllerData, get_configured_platforms
+from .common import (
+    ControllerData,
+    async_maybe_set_legacy_entity_unique_id,
+    get_configured_platforms,
+    get_controller_data,
+    set_controller_data,
+)
 from .config_flow import fix_device_id_list, new_options
 from .const import (
     ATTR_CURRENT_ENERGY_KWH,
     ATTR_CURRENT_POWER_W,
     CONF_CONTROLLER,
+    CONF_LEGACY_UNIQUE_ID,
     DOMAIN,
     VERA_ID_FORMAT,
 )
@@ -59,6 +66,10 @@ async def async_setup(hass: HomeAssistant, base_config: dict) -> bool:
     if not config:
         return True
 
+    # Mark old config entries as using older entity unique_id
+    for config_entry in hass.config_entries.async_entries(DOMAIN):
+        await async_maybe_set_legacy_entity_unique_id(hass, config_entry, True)
+
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config,
@@ -70,6 +81,8 @@ async def async_setup(hass: HomeAssistant, base_config: dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Do setup of vera."""
+    await async_maybe_set_legacy_entity_unique_id(hass, config_entry, False)
+
     # Use options entered during initial config flow or provided from configuration.yml
     if config_entry.data.get(CONF_LIGHTS) or config_entry.data.get(CONF_EXCLUDE):
         hass.config_entries.async_update_entry(
@@ -127,10 +140,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         vera_scenes.append(scene)
 
     controller_data = ControllerData(
-        controller=controller, devices=vera_devices, scenes=vera_scenes
+        controller=controller,
+        devices=vera_devices,
+        scenes=vera_scenes,
+        config_entry=config_entry,
     )
 
-    hass.data[DOMAIN] = controller_data
+    set_controller_data(hass, config_entry.unique_id, controller_data)
 
     # Forward the config data to the necessary platforms.
     for platform in get_configured_platforms(controller_data):
@@ -143,7 +159,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Withings config entry."""
-    controller_data = hass.data[DOMAIN]
+    controller_data = get_controller_data(hass, config_entry.unique_id)
 
     tasks = [
         hass.config_entries.async_forward_entry_unload(config_entry, platform)
@@ -183,16 +199,21 @@ def map_vera_device(vera_device, remap):
 class VeraDevice(Entity):
     """Representation of a Vera device entity."""
 
-    def __init__(self, vera_device, controller):
+    def __init__(self, vera_device, controller_data: ControllerData):
         """Initialize the device."""
         self.vera_device = vera_device
-        self.controller = controller
+        self.controller = controller_data.controller
 
         self._name = self.vera_device.name
         # Append device id to prevent name clashes in HA.
         self.vera_id = VERA_ID_FORMAT.format(
-            slugify(vera_device.name), vera_device.device_id
+            slugify(vera_device.name), vera_device.vera_device_id
         )
+
+        if controller_data.config_entry.data.get(CONF_LEGACY_UNIQUE_ID):
+            self._unique_id = str(self.vera_device.vera_device_id)
+        else:
+            self._unique_id = f"vera_{controller_data.config_entry.unique_id}_{self.vera_device.vera_device_id}"
 
         self.controller.register(vera_device, self._update_callback)
 
@@ -250,4 +271,4 @@ class VeraDevice(Entity):
 
         The Vera assigns a unique and immutable ID number to each device.
         """
-        return str(self.vera_device.vera_device_id)
+        return self._unique_id

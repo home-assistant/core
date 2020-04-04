@@ -6,11 +6,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.vera import CONF_CONTROLLER, DOMAIN
 from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, CONF_SOURCE
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
 from tests.async_mock import MagicMock
 from tests.common import MockConfigEntry
@@ -52,18 +48,6 @@ async def test_async_step_user_success(hass: HomeAssistant) -> None:
     assert entries
 
 
-async def test_async_step_user_already_configured(hass: HomeAssistant) -> None:
-    """Test user step with entry already configured."""
-    entry = MockConfigEntry(domain=DOMAIN, data={}, options={}, unique_id="12345")
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
-
-
 async def test_async_step_import_success(hass: HomeAssistant) -> None:
     """Test import step success."""
     with patch("pyvera.VeraController") as vera_controller_class_mock:
@@ -85,26 +69,6 @@ async def test_async_step_import_success(hass: HomeAssistant) -> None:
             CONF_SOURCE: config_entries.SOURCE_IMPORT,
         }
         assert result["result"].unique_id == controller.serial_number
-
-
-async def test_async_step_import_alredy_setup(hass: HomeAssistant) -> None:
-    """Test import step with entry already setup."""
-    entry = MockConfigEntry(domain=DOMAIN, data={}, options={}, unique_id="12345")
-    entry.add_to_hass(hass)
-
-    with patch("pyvera.VeraController") as vera_controller_class_mock:
-        controller = MagicMock()
-        controller.refresh_data = MagicMock()
-        controller.serial_number = "12345"
-        vera_controller_class_mock.return_value = controller
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_CONTROLLER: "http://localhost:445"},
-        )
-        assert result["type"] == RESULT_TYPE_ABORT
-        assert result["reason"] == "already_configured"
 
 
 async def test_async_step_finish_error(hass: HomeAssistant) -> None:

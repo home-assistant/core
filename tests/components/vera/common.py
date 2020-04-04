@@ -5,11 +5,14 @@ from typing import Callable, Dict, NamedTuple, Tuple
 from mock import MagicMock
 import pyvera as pv
 
-from homeassistant.components.vera.const import CONF_CONTROLLER, DOMAIN
+from homeassistant import config_entries
+from homeassistant.components.vera.const import (
+    CONF_CONTROLLER,
+    CONF_LEGACY_UNIQUE_ID,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 SetupCallback = Callable[[pv.VeraController, dict], None]
 
@@ -24,7 +27,7 @@ class ControllerData(NamedTuple):
 class ComponentData(NamedTuple):
     """Test data about the vera component."""
 
-    controller_data: ControllerData
+    controller_data: Tuple[ControllerData]
 
 
 class ControllerConfig(NamedTuple):
@@ -37,6 +40,7 @@ class ControllerConfig(NamedTuple):
     devices: Tuple[pv.VeraDevice, ...]
     scenes: Tuple[pv.VeraScene, ...]
     setup_callback: SetupCallback
+    legacy_entity_unique_id: bool
 
 
 def new_simple_controller_config(
@@ -47,6 +51,7 @@ def new_simple_controller_config(
     devices: Tuple[pv.VeraDevice, ...] = (),
     scenes: Tuple[pv.VeraScene, ...] = (),
     setup_callback: SetupCallback = None,
+    legacy_entity_unique_id=False,
 ) -> ControllerConfig:
     """Create simple contorller config."""
     return ControllerConfig(
@@ -57,6 +62,7 @@ def new_simple_controller_config(
         devices=devices,
         scenes=scenes,
         setup_callback=setup_callback,
+        legacy_entity_unique_id=legacy_entity_unique_id,
     )
 
 
@@ -68,13 +74,37 @@ class ComponentFactory:
         self.vera_controller_class_mock = vera_controller_class_mock
 
     async def configure_component(
-        self, hass: HomeAssistant, controller_config: ControllerConfig
+        self,
+        hass: HomeAssistant,
+        controller_config: ControllerConfig = None,
+        controller_configs: Tuple[ControllerConfig] = (),
     ) -> ComponentData:
+        """Configure the component with multiple specific mock data."""
+        configs = list(controller_configs)
+
+        if controller_config:
+            configs.append(controller_config)
+
+        return ComponentData(
+            controller_data=tuple(
+                [
+                    await self._configure_component(hass, controller_config)
+                    for controller_config in configs
+                ]
+            )
+        )
+
+    async def _configure_component(
+        self, hass: HomeAssistant, controller_config: ControllerConfig
+    ) -> ControllerData:
         """Configure the component with specific mock data."""
         component_config = {
             **(controller_config.config or {}),
             **(controller_config.options or {}),
         }
+
+        if controller_config.legacy_entity_unique_id:
+            component_config[CONF_LEGACY_UNIQUE_ID] = True
 
         controller = MagicMock(spec=pv.VeraController)  # type: pv.VeraController
         controller.base_url = component_config.get(CONF_CONTROLLER)
@@ -110,12 +140,11 @@ class ComponentFactory:
 
         # Setup component through config flow.
         if not controller_config.config_from_file:
-            entry = MockConfigEntry(
-                domain=DOMAIN, data=component_config, options={}, unique_id="12345"
+            await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
+                data=component_config,
             )
-            entry.add_to_hass(hass)
-
-            await hass.config_entries.async_setup(entry.entry_id)
             await hass.async_block_till_done()
 
         update_callback = (
@@ -124,8 +153,10 @@ class ComponentFactory:
             else None
         )
 
-        return ComponentData(
-            controller_data=ControllerData(
-                controller=controller, update_callback=update_callback
-            )
-        )
+        return ControllerData(controller=controller, update_callback=update_callback)
+        #
+        # return ComponentData(
+        #     controller_data=ControllerData(
+        #         controller=controller, update_callback=update_callback
+        #     )
+        # )

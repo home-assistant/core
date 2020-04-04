@@ -24,7 +24,7 @@ async def test_init(
     """Test function."""
     vera_device1 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
     vera_device1.device_id = 1
-    vera_device1.vera_device_id = 1
+    vera_device1.vera_device_id = vera_device1.device_id
     vera_device1.name = "first_dev"
     vera_device1.is_tripped = False
     entity1_id = "binary_sensor.first_dev_1"
@@ -41,8 +41,8 @@ async def test_init(
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
     entry1 = entity_registry.async_get(entity1_id)
-
     assert entry1
+    assert entry1.unique_id == "vera_first_serial_1"
 
 
 async def test_init_from_file(
@@ -51,7 +51,7 @@ async def test_init_from_file(
     """Test function."""
     vera_device1 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
     vera_device1.device_id = 1
-    vera_device1.vera_device_id = 1
+    vera_device1.vera_device_id = vera_device1.device_id
     vera_device1.name = "first_dev"
     vera_device1.is_tripped = False
     entity1_id = "binary_sensor.first_dev_1"
@@ -69,6 +69,65 @@ async def test_init_from_file(
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
     entry1 = entity_registry.async_get(entity1_id)
     assert entry1
+    assert entry1.unique_id == "vera_first_serial_1"
+
+
+async def test_multiple_controllers_with_legacy_one(
+    hass: HomeAssistant, vera_component_factory: ComponentFactory
+) -> None:
+    """Test multiple controllers with one legacy controller."""
+    vera_device1 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
+    vera_device1.device_id = 1
+    vera_device1.vera_device_id = vera_device1.device_id
+    vera_device1.name = "first_dev"
+    vera_device1.is_tripped = False
+    entity1_id = "binary_sensor.first_dev_1"
+
+    vera_device2 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
+    vera_device2.device_id = 2
+    vera_device2.vera_device_id = vera_device2.device_id
+    vera_device2.name = "second_dev"
+    vera_device2.is_tripped = False
+    entity2_id = "binary_sensor.second_dev_2"
+
+    # Add existing config from previous setup.
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_CONTROLLER: "http://127.0.0.1"},
+        options={},
+        unique_id="12345",
+    )
+    entry.add_to_hass(hass)
+
+    await vera_component_factory.configure_component(
+        hass=hass,
+        controller_config=new_simple_controller_config(
+            config={CONF_CONTROLLER: "http://127.0.0.1:111"},
+            config_from_file=True,
+            serial_number="first_serial",
+            devices=(vera_device1,),
+        ),
+    )
+
+    await vera_component_factory.configure_component(
+        hass=hass,
+        controller_config=new_simple_controller_config(
+            config={CONF_CONTROLLER: "http://127.0.0.1:222"},
+            config_from_file=False,
+            serial_number="second_serial",
+            devices=(vera_device2,),
+        ),
+    )
+
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+
+    entry1 = entity_registry.async_get(entity1_id)
+    assert entry1
+    assert entry1.unique_id == "1"
+
+    entry2 = entity_registry.async_get(entity2_id)
+    assert entry2
+    assert entry2.unique_id == "vera_second_serial_2"
 
 
 async def test_unload(
@@ -77,7 +136,7 @@ async def test_unload(
     """Test function."""
     vera_device1 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
     vera_device1.device_id = 1
-    vera_device1.vera_device_id = 1
+    vera_device1.vera_device_id = vera_device1.device_id
     vera_device1.name = "first_dev"
     vera_device1.is_tripped = False
 

@@ -14,6 +14,7 @@ async def test_cover(
     """Test function."""
     vera_device = MagicMock(spec=pv.VeraCurtain)  # type: pv.VeraCurtain
     vera_device.device_id = 1
+    vera_device.vera_device_id = vera_device.device_id
     vera_device.name = "dev1"
     vera_device.category = pv.CATEGORY_CURTAIN
     vera_device.is_closed = False
@@ -24,7 +25,7 @@ async def test_cover(
         hass=hass,
         controller_config=new_simple_controller_config(devices=(vera_device,)),
     )
-    update_callback = component_data.controller_data.update_callback
+    update_callback = component_data.controller_data[0].update_callback
 
     assert hass.states.get(entity_id).state == "closed"
     assert hass.states.get(entity_id).attributes["current_position"] == 0
