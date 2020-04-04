@@ -26,13 +26,13 @@ RtmAPI==0.7.2
 YesssSMS==0.4.1
 
 # homeassistant.components.abode
-abodepy==0.18.1
+abodepy==0.19.0
 
 # homeassistant.components.androidtv
 adb-shell==0.1.1
 
 # homeassistant.components.adguard
-adguardhome==0.4.1
+adguardhome==0.4.2
 
 # homeassistant.components.geonetnz_quakes
 aio_geojson_geonetnz_quakes==0.12
@@ -235,7 +235,6 @@ georss_ign_sismologia_client==0.2
 # homeassistant.components.qld_bushfire
 georss_qld_bushfire_alert_client==0.3
 
-# homeassistant.components.braviatv
 # homeassistant.components.huawei_lte
 # homeassistant.components.kef
 # homeassistant.components.minecraft_server
@@ -282,7 +281,7 @@ hole==0.5.1
 holidays==0.10.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200401.0
+home-assistant-frontend==20200403.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -540,7 +539,7 @@ pylitejet==0.1
 pymailgunner==1.4
 
 # homeassistant.components.melcloud
-pymelcloud==2.4.0
+pymelcloud==2.4.1
 
 # homeassistant.components.somfy
 pymfy==0.7.1

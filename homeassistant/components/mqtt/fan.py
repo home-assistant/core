@@ -401,9 +401,6 @@ class MqttFan(
 
         This method is a coroutine.
         """
-        if self._topic[CONF_SPEED_COMMAND_TOPIC] is None:
-            return
-
         if speed == SPEED_LOW:
             mqtt_payload = self._payload["SPEED_LOW"]
         elif speed == SPEED_MEDIUM:
@@ -432,9 +429,6 @@ class MqttFan(
 
         This method is a coroutine.
         """
-        if self._topic[CONF_OSCILLATION_COMMAND_TOPIC] is None:
-            return
-
         if oscillating is False:
             payload = self._payload["OSCILLATE_OFF_PAYLOAD"]
         else:

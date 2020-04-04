@@ -7,6 +7,5 @@
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
-  "dependencies": [],
   "codeowners": ["@dcramer"]
 }

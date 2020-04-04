@@ -4,7 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/cast",
   "requirements": ["pychromecast==4.2.0"],
-  "dependencies": [],
   "after_dependencies": ["cloud"],
   "zeroconf": ["_googlecast._tcp.local."],
   "codeowners": []

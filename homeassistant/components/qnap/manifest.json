@@ -3,6 +3,5 @@
   "name": "QNAP",
   "documentation": "https://www.home-assistant.io/integrations/qnap",
   "requirements": ["qnapstats==0.3.0"],
-  "dependencies": [],
   "codeowners": ["@colinodell"]
 }

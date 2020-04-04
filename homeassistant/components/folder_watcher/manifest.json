@@ -3,7 +3,6 @@
   "name": "Folder Watcher",
   "documentation": "https://www.home-assistant.io/integrations/folder_watcher",
   "requirements": ["watchdog==0.8.3"],
-  "dependencies": [],
   "codeowners": [],
   "quality_scale": "internal"
 }
