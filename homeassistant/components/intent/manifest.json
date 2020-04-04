@@ -3,8 +3,6 @@
   "name": "Intent",
   "config_flow": false,
   "documentation": "https://www.home-assistant.io/integrations/intent",
-  "ssdp": [],
-  "homekit": {},
   "dependencies": ["http"],
   "codeowners": ["@home-assistant/core"]
 }

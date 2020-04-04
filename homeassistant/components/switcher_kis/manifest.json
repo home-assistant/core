@@ -3,6 +3,5 @@
   "name": "Switcher",
   "documentation": "https://www.home-assistant.io/integrations/switcher_kis/",
   "codeowners": ["@tomerfi"],
-  "requirements": ["aioswitcher==2019.4.26"],
-  "dependencies": []
+  "requirements": ["aioswitcher==2019.4.26"]
 }
