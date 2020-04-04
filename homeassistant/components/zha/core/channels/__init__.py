@@ -1,7 +1,7 @@
 """Channels module for Zigbee Home Automation."""
 import asyncio
 import logging
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -154,7 +154,7 @@ class Channels:
         )
 
     @callback
-    def async_get_zigbee_signature(self):
+    def async_get_zigbee_signature(self) -> Dict[int, Dict[str, Any]]:
         """Get the zigbee signatures for the pools in channels."""
         return {
             signature[0]: signature[1]
@@ -350,7 +350,7 @@ class ChannelPool:
         )
 
     @callback
-    def async_get_zigbee_signature(self):
+    def async_get_zigbee_signature(self) -> Tuple[int, Dict[str, Any]]:
         """Get the zigbee signature for the endpoint this pool represents."""
         return (
             self.endpoint.endpoint_id,

@@ -5,6 +5,7 @@ from enum import Enum
 import logging
 import random
 import time
+from typing import Any, Dict
 
 from zigpy import types
 import zigpy.exceptions
@@ -622,7 +623,7 @@ class ZHADevice(LogMixin):
             zdo.debug(fmt, *(log_msg[2] + (outcome,)))
 
     @callback
-    def async_get_zigbee_signature(self):
+    def async_get_zigbee_signature(self) -> Dict[str, Any]:
         """Get zigbee signature for this device."""
         return {
             ATTR_NODE_DESCRIPTOR: str(self._zigpy_device.node_desc),
