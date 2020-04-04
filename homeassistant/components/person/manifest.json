@@ -2,8 +2,6 @@
   "domain": "person",
   "name": "Person",
   "documentation": "https://www.home-assistant.io/integrations/person",
-  "requirements": [],
-  "dependencies": [],
   "after_dependencies": ["device_tracker"],
   "codeowners": [],
   "quality_scale": "internal"

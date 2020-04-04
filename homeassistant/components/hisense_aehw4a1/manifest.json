@@ -4,6 +4,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hisense_aehw4a1",
   "requirements": ["pyaehw4a1==0.3.4"],
-  "dependencies": [],
   "codeowners": ["@bannhead"]
 }

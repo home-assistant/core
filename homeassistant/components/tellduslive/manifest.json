@@ -4,7 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tellduslive",
   "requirements": ["tellduslive==0.10.10"],
-  "dependencies": [],
   "codeowners": ["@fredrike"],
   "quality_scale": "gold"
 }

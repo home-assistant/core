@@ -814,6 +814,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> Optional[str]:
 
     This method is a coroutine.
     """
+    # pylint: disable=import-outside-toplevel
     import homeassistant.helpers.check_config as check_config
 
     res = await check_config.async_check_ha_config_file(hass)
@@ -831,6 +832,7 @@ def async_notify_setup_error(
 
     This method must be run in the event loop.
     """
+    # pylint: disable=import-outside-toplevel
     from homeassistant.components import persistent_notification
 
     errors = hass.data.get(DATA_PERSISTENT_ERRORS)

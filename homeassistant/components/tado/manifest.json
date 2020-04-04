@@ -5,7 +5,6 @@
   "requirements": [
     "python-tado==0.6.0"
   ],
-  "dependencies": [],
   "codeowners": [
     "@michaelarnauts", "@bdraco"
   ]

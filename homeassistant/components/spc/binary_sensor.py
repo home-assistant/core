@@ -1,7 +1,7 @@
 """Support for Vanderbilt (formerly Siemens) SPC alarm systems."""
 import logging
 
-from pyspcwebgw.const import ZoneInput
+from pyspcwebgw.const import ZoneInput, ZoneType
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.core import callback
@@ -13,8 +13,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _get_device_class(zone_type):
-    from pyspcwebgw.const import ZoneType
-
     return {
         ZoneType.ALARM: "motion",
         ZoneType.ENTRY_EXIT: "opening",

@@ -386,11 +386,12 @@ class NetatmoThermostat(ClimateDevice):
             )
             self._connected = True
         except KeyError as err:
-            _LOGGER.debug(
-                "The thermostat in room %s seems to be out of reach. (%s)",
-                self._room_name,
-                err,
-            )
+            if self._connected is not False:
+                _LOGGER.debug(
+                    "The thermostat in room %s seems to be out of reach. (%s)",
+                    self._room_name,
+                    err,
+                )
             self._connected = False
         self._away = self._hvac_mode == HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]
 

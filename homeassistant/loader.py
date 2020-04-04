@@ -70,7 +70,7 @@ async def _async_get_custom_components(
         return {}
 
     try:
-        import custom_components
+        import custom_components  # pylint: disable=import-outside-toplevel
     except ImportError:
         return {}
 
@@ -127,6 +127,7 @@ async def async_get_custom_components(
 
 async def async_get_config_flows(hass: "HomeAssistant") -> Set[str]:
     """Return cached list of config flows."""
+    # pylint: disable=import-outside-toplevel
     from homeassistant.generated.config_flows import FLOWS
 
     flows: Set[str] = set()
@@ -317,7 +318,7 @@ async def async_get_integration(hass: "HomeAssistant", domain: str) -> Integrati
         event.set()
         return integration
 
-    from homeassistant import components
+    from homeassistant import components  # pylint: disable=import-outside-toplevel
 
     integration = await hass.async_add_executor_job(
         Integration.resolve_from_root, hass, components, domain

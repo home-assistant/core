@@ -614,11 +614,11 @@ class SonosEntity(MediaPlayerDevice):
         except (TypeError, KeyError, AttributeError):
             pass
 
-        # Radios without tagging can have the radio URI as title. Non-playing
-        # radios will not have a current title. In these cases we try to use
-        # the radio name instead.
+        # Radios without tagging can have part of the radio URI as title.
+        # Non-playing radios will not have a current title. In these cases we
+        # try to use the radio name instead.
         try:
-            if self.soco.is_radio_uri(self._media_title) or self.state != STATE_PLAYING:
+            if self._media_title in self._uri or self.state != STATE_PLAYING:
                 self._media_title = variables["enqueued_transport_uri_meta_data"].title
         except (TypeError, KeyError, AttributeError):
             pass
