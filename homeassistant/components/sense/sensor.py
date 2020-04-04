@@ -2,7 +2,12 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.const import DEVICE_CLASS_POWER, ENERGY_KILO_WATT_HOUR, POWER_WATT
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    DEVICE_CLASS_POWER,
+    ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -11,6 +16,7 @@ from homeassistant.util import Throttle
 from .const import (
     ACTIVE_NAME,
     ACTIVE_TYPE,
+    ATTRIBUTION,
     CONSUMPTION_ID,
     CONSUMPTION_NAME,
     DOMAIN,
@@ -161,6 +167,11 @@ class SenseActiveSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return POWER_WATT
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
     def icon(self):
