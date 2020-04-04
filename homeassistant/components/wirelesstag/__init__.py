@@ -3,7 +3,7 @@ import logging
 
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
-from wirelesstagpy import NotificationConfig as NC
+from wirelesstagpy import NotificationConfig as NC, WirelessTags, WirelessTagsException
 
 from homeassistant import util
 from homeassistant.const import (
@@ -190,8 +190,6 @@ def setup(hass, config):
     password = conf.get(CONF_PASSWORD)
 
     try:
-        from wirelesstagpy import WirelessTags, WirelessTagsException
-
         wirelesstags = WirelessTags(username=username, password=password)
 
         platform = WirelessTagPlatform(hass, wirelesstags)
