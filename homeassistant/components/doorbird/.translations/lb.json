@@ -10,6 +10,7 @@
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
             "unknown": "Onerwaarte Feeler"
         },
+        "flow_title": "DoorBird {name{ ({host})",
         "step": {
             "user": {
                 "data": {

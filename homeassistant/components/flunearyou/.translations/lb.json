@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "D\u00ebs Koordinate si scho registr\u00e9iert"
+        },
+        "error": {
+            "general_error": "Onbekannten Feeler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Breedegrad",
+                    "longitude": "L\u00e4ngegrad"
+                },
+                "title": "Flu Near You konfigur\u00e9ieren"
+            }
+        },
+        "title": "Flu Near You"
+    }
+}
