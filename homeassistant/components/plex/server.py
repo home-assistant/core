@@ -58,6 +58,7 @@ def debounce(func):
         """Schedule async callback."""
         nonlocal unsub
         if unsub:
+            _LOGGER.debug("Throttling update of %s", self._plex_server.friendlyName)
             unsub()  # pylint: disable=not-callable
         unsub = async_call_later(
             self.hass, DEBOUNCE_TIMEOUT, partial(call_later_listener, self),
