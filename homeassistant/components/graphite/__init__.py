@@ -51,7 +51,7 @@ def setup(hass, config):
         sock.connect((host, port))
         sock.shutdown(2)
         _LOGGER.debug("Connection to Graphite possible")
-    except socket.error:
+    except OSError:
         _LOGGER.error("Not able to connect to Graphite")
         return False
 
@@ -128,7 +128,7 @@ class GraphiteFeeder(threading.Thread):
             self._send_to_graphite("\n".join(lines))
         except socket.gaierror:
             _LOGGER.error("Unable to connect to host %s", self._host)
-        except socket.error:
+        except OSError:
             _LOGGER.exception("Failed to send data to graphite")
 
     def run(self):

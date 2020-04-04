@@ -123,7 +123,7 @@ USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
                 else:
                     # most likely the timeout, so check for interrupt
                     continue
-            except socket.error as ex:
+            except OSError as ex:
                 if self._interrupted:
                     clean_socket_close(ssdp_socket)
                     return

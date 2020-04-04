@@ -80,5 +80,5 @@ class LannouncerNotificationService(BaseNotificationService):
             sock.close()
         except socket.gaierror:
             _LOGGER.error("Unable to connect to host %s", self._host)
-        except socket.error:
+        except OSError:
             _LOGGER.exception("Failed to send data to Lannnouncer")
