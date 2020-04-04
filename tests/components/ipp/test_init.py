@@ -17,9 +17,7 @@ async def test_config_entry_not_ready(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the IPP configuration entry not ready."""
-    aioclient_mock.post(
-        "http://EPSON123456.local:631/ipp/print", exc=aiohttp.ClientError
-    )
+    aioclient_mock.post("http://192.168.1.31:631/ipp/print", exc=aiohttp.ClientError)
 
     entry = await init_integration(hass, aioclient_mock)
     assert entry.state == ENTRY_STATE_SETUP_RETRY
