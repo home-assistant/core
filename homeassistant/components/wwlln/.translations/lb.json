@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "D\u00ebse Standuert ass scho registr\u00e9iert"
+            "already_configured": "D\u00ebse Standuert ass scho registr\u00e9iert",
+            "window_too_small": "Eng ze kleng F\u00ebnster f\u00e9iert dozou dass Home Assistant Evenementer verpasst."
         },
         "error": {
             "identifier_exists": "Standuert ass scho registr\u00e9iert"
