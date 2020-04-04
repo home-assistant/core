@@ -249,7 +249,7 @@ class AtaDeviceClimate(MelCloudClimate):
 
     @property
     def swing_mode(self) -> Optional[str]:
-        """Return the swing mode."""
+        """Return vertical vane position or mode."""
         return self._device.vane_vertical
 
     async def async_set_swing_mode(self, swing_mode) -> None:
