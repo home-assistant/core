@@ -8,7 +8,7 @@ from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
-from . import CannotConnect, InvalidAuth, async_connect_or_timeout
+from . import CannotConnect, async_connect_or_timeout
 from .const import (
     CONF_CERT,
     CONF_CONTINUOUS,
@@ -46,7 +46,6 @@ async def validate_input(hass: core.HomeAssistant, data):
         continuous=data[CONF_CONTINUOUS],
         delay=data[CONF_DELAY],
     )
-
     await async_connect_or_timeout(hass, roomba)
 
 
@@ -55,6 +54,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
+
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
@@ -69,11 +69,9 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
 
-        if DOMAIN not in self.hass.data:
-            self.hass.data[DOMAIN] = {}
-
         if user_input is not None:
             try:
+                self.hass.data.setdefault(DOMAIN, {})
                 await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors = {"base": "cannot_connect"}
@@ -82,7 +80,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if "base" not in errors:
                 return self.async_create_entry(
-                    title=validated_input["title"], data=user_input
+                    title=self.hass.data[DOMAIN]["name"], data=user_input
                 )
 
         # If there was no user input, do not show the errors.
@@ -110,10 +108,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(
-                        CONF_CERT,
-                        default=self.config_entry.options.get(CONF_CERT, DEFAULT_CERT),
-                    ): str,
                     vol.Optional(
                         CONF_CONTINUOUS,
                         default=self.config_entry.options.get(
