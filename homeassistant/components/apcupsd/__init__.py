@@ -39,7 +39,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Use config values to set up a function enabling status retrieval."""
-    global DATA
+    global DATA  # pylint: disable=global-statement
     conf = config[DOMAIN]
     host = conf.get(CONF_HOST)
     port = conf.get(CONF_PORT)

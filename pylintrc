@@ -34,7 +34,6 @@ disable=
   abstract-method,
   cyclic-import,
   duplicate-code,
-  global-statement,
   inconsistent-return-statements,
   locally-disabled,
   not-context-manager,
