@@ -16,6 +16,8 @@ SENSE_DISCOVERED_DEVICES_DATA = "sense_discovered_devices"
 ACTIVE_NAME = "Energy"
 ACTIVE_TYPE = "active"
 
+ATTRIBUTION = "Data provided by Sense.com"
+
 CONSUMPTION_NAME = "Usage"
 CONSUMPTION_ID = "usage"
 PRODUCTION_NAME = "Production"
