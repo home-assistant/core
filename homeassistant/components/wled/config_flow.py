@@ -45,7 +45,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update(
             {
-                CONF_HOST: host,
+                CONF_HOST: user_input["host"],
                 CONF_NAME: name,
                 CONF_MAC: user_input["properties"].get(CONF_MAC),
                 "title_placeholders": {"name": name},
