@@ -43,21 +43,22 @@ async def async_setup_entry(hass, config_entry):
             },
         )
 
-    if "roomba" not in hass.data[DOMAIN]:
-        roomba = Roomba(
-            address=config_entry.data[CONF_HOST],
-            blid=config_entry.data[CONF_USERNAME],
-            password=config_entry.data[CONF_PASSWORD],
-            cert_name=config_entry.data[CONF_CERT],
-            continuous=config_entry.options[CONF_CONTINUOUS],
-            delay=config_entry.options[CONF_DELAY],
-        )
+    roomba = Roomba(
+        address=config_entry.data[CONF_HOST],
+        blid=config_entry.data[CONF_USERNAME],
+        password=config_entry.data[CONF_PASSWORD],
+        cert_name=config_entry.data[CONF_CERT],
+        continuous=config_entry.options[CONF_CONTINUOUS],
+        delay=config_entry.options[CONF_DELAY],
+    )
 
-        try:
-            if not await async_connect_or_timeout(hass, roomba):
-                return False
-        except CannotConnect:
-            raise exceptions.ConfigEntryNotReady
+    try:
+        if not await async_connect_or_timeout(hass, roomba):
+            return False
+    except CannotConnect:
+        raise exceptions.ConfigEntryNotReady
+
+    hass.data[DOMAIN][config_entry.entry_id] = roomba
 
     for component in COMPONENTS:
         hass.async_create_task(
@@ -72,15 +73,12 @@ async def async_setup_entry(hass, config_entry):
 async def async_connect_or_timeout(hass, roomba):
     """Connect to vacuum."""
     try:
-        hass.data[DOMAIN]["name"] = name = None
+        name = None
         with async_timeout.timeout(10):
             await hass.async_add_job(roomba.connect)
-            _LOGGER.debug("Initialize to connect to vacuum")
             while not roomba.roomba_connected or name is None:
                 # Waiting for connection and check datas ready
                 name = roomba_reported_state(roomba).get("name", None)
-                hass.data[DOMAIN]["roomba"] = roomba
-                hass.data[DOMAIN]["name"] = name
                 await asyncio.sleep(1)
     except RoombaConnectionError:
         _LOGGER.error("Error to connect to vacuum")
@@ -91,14 +89,13 @@ async def async_connect_or_timeout(hass, roomba):
         _LOGGER.error("Timeout expired")
         raise CannotConnect
 
-    return True
+    return {"roomba": roomba, "name": name}
 
 
 async def async_disconnect_or_timeout(hass, roomba):
     """Disconnect to vacuum."""
     with async_timeout.timeout(3):
         await hass.async_add_job(roomba.disconnect)
-        hass.data[DOMAIN].pop("roomba", None)
     await asyncio.sleep(1)
     return True
 
@@ -110,14 +107,21 @@ async def async_update_options(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    _LOGGER.debug("Unload Entries")
-    await asyncio.gather(
-        *[
-            hass.config_entries.async_forward_entry_unload(config_entry, component)
-            for component in COMPONENTS
-        ]
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(config_entry, component)
+                for component in COMPONENTS
+            ]
+        )
     )
-    return await async_disconnect_or_timeout(hass, roomba=hass.data[DOMAIN]["roomba"])
+    if unload_ok:
+        await async_disconnect_or_timeout(
+            hass, roomba=hass.data[DOMAIN][config_entry.entry_id]
+        )
+        hass.data[DOMAIN].pop(config_entry.entry_id)
+
+    return unload_ok
 
 
 def roomba_reported_state(roomba):

@@ -12,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the iRobot Roomba vacuum cleaner."""
-    roomba = hass.data[DOMAIN]["roomba"]
+    roomba = hass.data[DOMAIN][config_entry.entry_id]
     roomba_vac = RoombaBattery(roomba)
     async_add_entities([roomba_vac], True)
 
