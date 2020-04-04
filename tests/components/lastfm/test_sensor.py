@@ -39,12 +39,19 @@ class MockUser:
 
 @pytest.fixture(name="get_user")
 def lastfm_get_user_fixture():
-    """Create fixture for get_user."""
+    """The fixture for mocking the get_user function."""
     with patch("pylast.LastFMNetwork.get_user") as get_user:
         yield get_user
 
 
-async def test_update_not_playing(hass, get_user):
+@pytest.fixture(name="lastfm_network")
+def lastfm_network_fixture():
+    """The fixture for mocking the get_user function."""
+    with patch("pylast._Network") as lastfm_network:
+        yield lastfm_network
+
+
+async def test_update_not_playing(hass, get_user, lastfm_network):
     """Test update when no playing song."""
 
     get_user.return_value = MockUser(None)
@@ -62,7 +69,7 @@ async def test_update_not_playing(hass, get_user):
     assert state.state == STATE_NOT_SCROBBLING
 
 
-async def test_update_playing(hass, get_user):
+async def test_update_playing(hass, get_user, lastfm_network):
     """Test update when song playing."""
 
     get_user.return_value = MockUser(Track("artist", "title", None))
