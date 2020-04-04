@@ -25,40 +25,29 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
-    openerz_config = {
-        "zip": config[CONF_ZIP],
-        "waste_type": config[CONF_WASTE_TYPE],
-        "name": config.get(CONF_NAME),
-    }
-    add_entities([OpenERZSensor(openerz_config)])
+    api_connector = OpenERZConnector(config[CONF_ZIP], config[CONF_WASTE_TYPE])
+    add_entities([OpenERZSensor(api_connector, config.get(CONF_NAME))], True)
 
 
 class OpenERZSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, openerz_config):
+    def __init__(self, api_connector, name):
         """Initialize the sensor."""
         self._state = None
-        self.openerz_config = openerz_config
-        self.zip = self.openerz_config["zip"]
-        self.waste_type = self.openerz_config["waste_type"]
-        self.friendly_name = self.openerz_config.get("name", self.waste_type)
-        self.api_connector = OpenERZConnector(self.zip, self.waste_type)
-
-        self.update()
+        self._name = name
+        self.api_connector = api_connector
 
     @property
     def name(self):
         """Return the name of the sensor."""
-
-        return self.friendly_name
+        return self._name
 
     @property
     def state(self):
         """Return the state of the sensor."""
-
         return self._state
 
     def update(self):
@@ -66,5 +55,4 @@ class OpenERZSensor(Entity):
 
         This is the only method that should fetch new data for Home Assistant.
         """
-
         self._state = self.api_connector.find_next_pickup(day_offset=31)
