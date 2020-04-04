@@ -10,7 +10,7 @@ from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up ecobee binary (occupancy) sensors."""
     data = hass.data[DOMAIN]
-    dev = list()
+    dev = []
     for index in range(len(data.ecobee.thermostats)):
         for sensor in data.ecobee.get_remote_sensors(index):
             for item in sensor["capability"]:

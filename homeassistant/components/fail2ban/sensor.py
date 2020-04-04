@@ -107,12 +107,12 @@ class BanLogParser:
     def __init__(self, log_file):
         """Initialize the parser."""
         self.log_file = log_file
-        self.data = list()
+        self.data = []
         self.ip_regex = {}
 
     def read_log(self, jail):
         """Read the fail2ban log and find entries for jail."""
-        self.data = list()
+        self.data = []
         try:
             with open(self.log_file, encoding="utf-8") as file_data:
                 self.data = self.ip_regex[jail].findall(file_data.read())
