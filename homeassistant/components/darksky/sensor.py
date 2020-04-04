@@ -771,7 +771,8 @@ def convert_to_camel(data):
     This is not pythonic, but needed for certain situations.
     """
     components = data.split("_")
-    return components[0] + "".join(x.title() for x in components[1:])
+    capital_components = "".join(x.title() for x in components[1:])
+    return f"{components[0]}{capital_components}"
 
 
 class DarkSkyData:

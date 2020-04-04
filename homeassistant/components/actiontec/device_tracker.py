@@ -95,9 +95,9 @@ class ActiontecDeviceScanner(DeviceScanner):
         try:
             telnet = telnetlib.Telnet(self.host)
             telnet.read_until(b"Username: ")
-            telnet.write((self.username + "\n").encode("ascii"))
+            telnet.write((f"{self.username}\n").encode("ascii"))
             telnet.read_until(b"Password: ")
-            telnet.write((self.password + "\n").encode("ascii"))
+            telnet.write((f"{self.password}\n").encode("ascii"))
             prompt = telnet.read_until(b"Wireless Broadband Router> ").split(b"\n")[-1]
             telnet.write(b"firewall mac_cache_dump\n")
             telnet.write(b"\n")

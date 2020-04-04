@@ -28,7 +28,7 @@ class EcobeeBinarySensor(BinarySensorDevice):
     def __init__(self, data, sensor_name, sensor_index):
         """Initialize the Ecobee sensor."""
         self.data = data
-        self._name = sensor_name + " Occupancy"
+        self._name = f"{sensor_name} Occupancy"
         self.sensor_name = sensor_name
         self.index = sensor_index
         self._state = None

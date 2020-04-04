@@ -96,7 +96,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 )
             else:
                 wstr = (
-                    variable + " is no a longer supported "
+                    f"{variable} is no a longer supported "
                     "monitored_conditions. See "
                     "https://www.home-assistant.io/integrations/"
                     "binary_sensor.nest/ for valid options."
