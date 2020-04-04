@@ -27,9 +27,8 @@ async def test_sensor_state(hass):
         await hass.async_block_till_done()
 
         entity_id = "sensor.test_name"
-        test_openerz_state = hass.states.get(entity_id).state
-        test_openerz_name = hass.data[SENSOR_DOMAIN].get_entity(entity_id).name
+        test_openerz_state = hass.states.get(entity_id)
 
-        assert test_openerz_state == "2020-12-12"
-        assert test_openerz_name == "test_name"
+        assert test_openerz_state.state == "2020-12-12"
+        assert test_openerz_state.name == "test_name"
         pickup_instance.find_next_pickup.assert_called_once()
