@@ -34,7 +34,7 @@ SCSGATE_SCHEMA = vol.Schema(
 def setup(hass, config):
     """Set up the SCSGate component."""
     device = config[DOMAIN][CONF_DEVICE]
-    global SCSGATE
+    global SCSGATE  # pylint: disable=global-statement
 
     try:
         SCSGATE = SCSGate(device=device, logger=_LOGGER)
