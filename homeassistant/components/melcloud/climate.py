@@ -305,22 +305,22 @@ class AtaDeviceClimate(MelCloudClimate):
             operation_mode = HVAC_HVANE_REVERSE_LOOKUP.get(swing_mode)
             if operation_mode is None:
                 raise ValueError(f"Invalid swing_mode [{swing_mode}].")
-            else:
-                is_hor_swing = True
-                curr_mode = self._device.vane_horizontal
-                valid_swing_modes = self._device.vane_horizontal_positions
-                props = {ata.PROPERTY_VANE_HORIZONTAL: operation_mode}
+
+            is_hor_swing = True
+            curr_mode = self._device.vane_horizontal
+            valid_swing_modes = self._device.vane_horizontal_positions
+            props = {ata.PROPERTY_VANE_HORIZONTAL: operation_mode}
         else:
             curr_mode = self._device.vane_vertical
             valid_swing_modes = self._device.vane_vertical_positions
             props = {ata.PROPERTY_VANE_VERTICAL: operation_mode}
 
-        if operation_mode in valid_swing_modes:
-            self._set_hor_swing = is_hor_swing
-            if curr_mode != operation_mode:
-                await self._device.set(props)
-        else:
+        if operation_mode not in valid_swing_modes:
             raise ValueError(f"Invalid swing_mode [{swing_mode}].")
+
+        self._set_hor_swing = is_hor_swing
+        if curr_mode != operation_mode:
+            await self._device.set(props)
 
     @property
     def swing_modes(self) -> Optional[List[str]]:
