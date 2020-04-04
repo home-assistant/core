@@ -2,7 +2,6 @@
 
 DOMAIN = "plugwise"
 
-
 # Default directives
 DEFAULT_NAME = "Smile"
 DEFAULT_USERNAME = "smile"
