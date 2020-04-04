@@ -38,6 +38,7 @@
                     "apps_to_include_or_exclude": "Apps fir mat abegr\u00e4ifen oder auszeschl\u00e9issen",
                     "include_or_exclude": "Apps mat abez\u00e9ien oder auschl\u00e9issen?"
                 },
+                "description": "Falls du ee Smart TV hues kanns du d'Quelle L\u00ebscht optionell filteren andeems du d'Apps auswiels d\u00e9i soll mat abegraff oder ausgeschloss ginn. D\u00ebse Schratt kann iwwerspronge ginn fir TV's d\u00e9i keng Apps support\u00e9ieren.",
                 "title": "Apps fir Smart TV konfigur\u00e9ieren"
             },
             "user": {
@@ -55,6 +56,7 @@
                     "apps_to_include_or_exclude": "Apps fir mat abegr\u00e4ifen oder auszeschl\u00e9issen",
                     "include_or_exclude": "Apps mat abez\u00e9ien oder auschl\u00e9issen?"
                 },
+                "description": "Falls du ee Smart TV hues kanns du d'Quelle L\u00ebscht optionell filteren andeems du d'Apps auswiels d\u00e9i soll mat abegraff oder ausgeschloss ginn. D\u00ebse Schratt kann iwwerspronge ginn fir TV's d\u00e9i keng Apps support\u00e9ieren.",
                 "title": "Apps fir Smart TV konfigur\u00e9ieren"
             }
         },
@@ -69,6 +71,7 @@
                     "timeout": "Z\u00e4itiwwerscheidung bei der Ufro vun der API (sekonnen)",
                     "volume_step": "Lautst\u00e4erkt Schr\u00ebtt Gr\u00e9isst"
                 },
+                "description": "Falls du ee Smart TV hues kanns du d'Quelle L\u00ebscht optionell filteren andeems du d'Apps auswiels d\u00e9i soll mat abegraff oder ausgeschloss ginn.",
                 "title": "Vizo Smartcast Optiounen aktualis\u00e9ieren"
             }
         },

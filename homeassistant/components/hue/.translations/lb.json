@@ -27,5 +27,22 @@
             }
         },
         "title": "Philips Hue"
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "\u00c9ischte Kn\u00e4ppchen",
+            "button_2": "Zweete Kn\u00e4ppchen",
+            "button_3": "Dr\u00ebtte Kn\u00e4ppchen",
+            "button_4": "V\u00e9ierte Kn\u00e4ppchen",
+            "dim_down": "Verd\u00e4ischteren",
+            "dim_up": "Erhellen",
+            "turn_off": "Ausschalten",
+            "turn_on": "Uschalten"
+        },
+        "trigger_type": {
+            "remote_button_long_release": "\"{subtype}\" Kn\u00e4ppche no laangem unhalen lassgelooss",
+            "remote_button_short_press": "\"{subtype}\" Kn\u00e4ppche gedr\u00e9ckt",
+            "remote_button_short_release": "\"{subtype}\" Kn\u00e4ppche lassgelooss"
+        }
     }
 }
