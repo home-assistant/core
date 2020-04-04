@@ -60,10 +60,7 @@ def register_new_device_callback(hass, config, insteon_modem):
         schema = {CONF_ADDRESS: address.hex}
         if button != "":
             schema[EVENT_CONF_BUTTON] = button
-        if val:
-            event = EVENT_BUTTON_ON
-        else:
-            event = EVENT_BUTTON_OFF
+        event = EVENT_BUTTON_ON if val else EVENT_BUTTON_OFF
         _LOGGER.debug(
             "Firing event %s with address %s and button %s", event, address.hex, button
         )
