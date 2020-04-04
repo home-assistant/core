@@ -126,7 +126,7 @@ class SharpAquosTVDevice(MediaPlayerDevice):
 
     def __init__(self, name, remote, power_on_enabled=False):
         """Initialize the aquos device."""
-        global SUPPORT_SHARPTV
+        global SUPPORT_SHARPTV  # pylint: disable=global-statement
         self._power_on_enabled = power_on_enabled
         if self._power_on_enabled:
             SUPPORT_SHARPTV = SUPPORT_SHARPTV | SUPPORT_TURN_ON

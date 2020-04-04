@@ -46,7 +46,7 @@ def setup(hass, config):
     Will automatically load sensor components to support
     devices discovered on the account.
     """
-    global DATA
+    global DATA  # pylint: disable=global-statement
 
     username = config[DOMAIN][CONF_USERNAME]
     password = config[DOMAIN][CONF_PASSWORD]
