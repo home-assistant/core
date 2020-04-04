@@ -64,7 +64,7 @@ class OpenUvFlowHandler(config_entries.ConfigFlow):
         if not user_input:
             return await self._show_form()
 
-        identifier = "{0}, {1}".format(
+        identifier = "{}, {}".format(
             user_input.get(CONF_LATITUDE, self.hass.config.latitude),
             user_input.get(CONF_LONGITUDE, self.hass.config.longitude),
         )
