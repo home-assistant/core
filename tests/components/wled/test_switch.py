@@ -139,7 +139,7 @@ async def test_switch_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
 ) -> None:
     """Test error handling of the WLED switches."""
-    aioclient_mock.post("http://example.local:80/json/state", text="", status=400)
+    aioclient_mock.post("http://192.168.1.123:80/json/state", text="", status=400)
     await init_integration(hass, aioclient_mock)
 
     with patch("homeassistant.components.wled.WLEDDataUpdateCoordinator.async_refresh"):
@@ -160,7 +160,7 @@ async def test_switch_connection_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test error handling of the WLED switches."""
-    aioclient_mock.post("http://example.local:80/json/state", exc=aiohttp.ClientError)
+    aioclient_mock.post("http://192.168.1.123:80/json/state", exc=aiohttp.ClientError)
     await init_integration(hass, aioclient_mock)
 
     with patch("homeassistant.components.wled.WLEDDataUpdateCoordinator.async_refresh"):
