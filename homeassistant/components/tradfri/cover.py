@@ -5,6 +5,12 @@ from homeassistant.components.cover import ATTR_POSITION, CoverDevice
 from .base_class import TradfriBaseDevice
 from .const import CONF_GATEWAY_ID, KEY_API, KEY_GATEWAY
 
+ATTRIBUTE_ALIAS = {
+    "battery_level": None,
+    "firmware_version": None,
+    "model_number": "model",
+}
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Load Tradfri covers based on a config entry."""
@@ -28,6 +34,22 @@ class TradfriCover(TradfriBaseDevice, CoverDevice):
         self._unique_id = f"{gateway_id}-{device.id}"
 
         self._refresh(device)
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        filtered_attributes = {}
+        for attribute, alias in ATTRIBUTE_ALIAS.items():
+            value = None
+            try:
+                value = getattr(self._device_info, attribute)
+            except AttributeError:
+                """In case attributes get removed from pytradfri."""
+            if value is None:
+                continue
+            attr = alias or attribute
+            filtered_attributes[attr] = value
+        return filtered_attributes
 
     @property
     def current_cover_position(self):
@@ -66,3 +88,4 @@ class TradfriCover(TradfriBaseDevice, CoverDevice):
         # Caching of BlindControl and cover object
         self._device_control = device.blind_control
         self._device_data = device.blind_control.blinds[0]
+        self._device_info = device.device_info
