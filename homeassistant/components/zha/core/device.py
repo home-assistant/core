@@ -608,7 +608,7 @@ class ZHADevice(LogMixin):
                     cluster_binding.id,
                     group_id,
                 )
-                zdo.debug("processing " + op_msg, *op_params)
+                zdo.debug(f"processing {op_msg}", *op_params)
                 tasks.append(
                     (
                         zdo.request(

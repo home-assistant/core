@@ -52,7 +52,7 @@ def generate_and_validate(integrations: Dict[str, Integration]):
             "homeassistant/components/{}/* {}".format(domain, " ".join(codeowners))
         )
 
-    parts.append("\n" + INDIVIDUAL_FILES.strip())
+    parts.append(f"\n{INDIVIDUAL_FILES.strip()}")
 
     return "\n".join(parts)
 

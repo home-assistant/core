@@ -246,7 +246,7 @@ class ModbusRegisterSensor(RestoreEntity):
         if isinstance(val, int):
             self._value = str(val)
             if self._precision > 0:
-                self._value += "." + "0" * self._precision
+                self._value += f".{'0' * self._precision}"
         else:
             self._value = f"{val:.{self._precision}f}"
 
