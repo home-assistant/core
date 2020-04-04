@@ -364,7 +364,7 @@ class Group(Entity):
         if entity_ids:
             self.tracking = tuple(ent_id.lower() for ent_id in entity_ids)
         else:
-            self.tracking = tuple()
+            self.tracking = ()
         self.group_on = None
         self.group_off = None
         self.user_defined = user_defined
