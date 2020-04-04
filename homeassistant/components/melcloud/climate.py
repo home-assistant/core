@@ -40,10 +40,10 @@ from .const import (
     ATTR_VANE_VERTICAL,
     CONF_POSITION,
     DOMAIN,
-    HorSwingModes,
     SERVICE_SET_VANE_HORIZONTAL,
     SERVICE_SET_VANE_VERTICAL,
     TEMP_UNIT_LOOKUP,
+    HorSwingModes,
     VertSwingModes,
 )
 
