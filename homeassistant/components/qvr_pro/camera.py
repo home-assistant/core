@@ -94,7 +94,7 @@ class QVRProCamera(Camera):
             return self._client.get_snapshot(self.guid)
 
         except QVRResponseError as ex:
-            _LOGGER.error(ex)
+            _LOGGER.error("Error getting image: %s", ex)
             self._client.connect()
 
         return self._client.get_snapshot(self.guid)
