@@ -161,7 +161,7 @@ class RememberTheMilkConfiguration:
             return
         try:
             _LOGGER.debug("Loading configuration from file: %s", self._config_file_path)
-            with open(self._config_file_path, "r") as config_file:
+            with open(self._config_file_path) as config_file:
                 self._config = json.load(config_file)
         except ValueError:
             _LOGGER.error(

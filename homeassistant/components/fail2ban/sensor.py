@@ -114,7 +114,7 @@ class BanLogParser:
         """Read the fail2ban log and find entries for jail."""
         self.data = list()
         try:
-            with open(self.log_file, "r", encoding="utf-8") as file_data:
+            with open(self.log_file, encoding="utf-8") as file_data:
                 self.data = self.ip_regex[jail].findall(file_data.read())
 
         except (IndexError, FileNotFoundError, IsADirectoryError, UnboundLocalError):

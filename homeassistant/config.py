@@ -339,7 +339,7 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
     version_path = hass.config.path(VERSION_FILE)
 
     try:
-        with open(version_path, "rt") as inp:
+        with open(version_path) as inp:
             conf_version = inp.readline().strip()
     except FileNotFoundError:
         # Last version to not have this file
@@ -364,7 +364,7 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
         # 0.92 moved google/tts.py to google_translate/tts.py
         config_path = hass.config.path(YAML_CONFIG_FILE)
 
-        with open(config_path, "rt", encoding="utf-8") as config_file:
+        with open(config_path, encoding="utf-8") as config_file:
             config_raw = config_file.read()
 
         if TTS_PRE_92 in config_raw:
