@@ -8,7 +8,11 @@ from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
-from . import CannotConnect, async_connect_or_timeout
+from . import (
+    CannotConnect,
+    async_connect_or_timeout as act,
+    async_disconnect_or_timeout as adt,
+)
 from .const import (
     CONF_CERT,
     CONF_CONTINUOUS,
@@ -46,7 +50,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         continuous=data[CONF_CONTINUOUS],
         delay=data[CONF_DELAY],
     )
-    await async_connect_or_timeout(hass, roomba)
+    return await act(hass, roomba)
 
 
 class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -71,17 +75,15 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                self.hass.data.setdefault(DOMAIN, {})
-                await validate_input(self.hass, user_input)
+                info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors = {"base": "cannot_connect"}
             except Exception:  # pylint: disable=broad-except
                 errors = {"base": "unknown"}
 
             if "base" not in errors:
-                return self.async_create_entry(
-                    title=self.hass.data[DOMAIN]["name"], data=user_input
-                )
+                await adt(self.hass, info["roomba"])
+                return self.async_create_entry(title=info["name"], data=user_input)
 
         # If there was no user input, do not show the errors.
         if user_input is None:
