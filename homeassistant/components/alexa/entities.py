@@ -268,8 +268,7 @@ class AlexaEntity:
             if not interface.properties_proactively_reported():
                 continue
 
-            for prop in interface.serialize_properties():
-                yield prop
+            yield from interface.serialize_properties()
 
     def serialize_discovery(self):
         """Serialize the entity for discovery."""
@@ -283,10 +282,12 @@ class AlexaEntity:
         }
 
         locale = self.config.locale
-        capabilities = []
-        for i in self.interfaces():
-            if locale in i.supported_locales:
-                capabilities.append(i.serialize_discovery())
+        capabilities = [
+            i.serialize_discovery()
+            for i in self.interfaces()
+            if locale in i.supported_locales
+        ]
+
         result["capabilities"] = capabilities
 
         return result
