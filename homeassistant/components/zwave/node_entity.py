@@ -1,4 +1,5 @@
 """Entity class that represents Z-Wave node."""
+# pylint: disable=import-outside-toplevel
 from itertools import count
 import logging
 
