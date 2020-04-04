@@ -184,7 +184,7 @@ class MikrotikData:
             # get new hub firmware version if updated
             self.firmware = self.get_info(ATTR_FIRMWARE)
 
-        except (CannotConnect, socket.timeout, socket.error):
+        except (CannotConnect, socket.timeout, OSError):
             self.available = False
             return
 
@@ -249,7 +249,7 @@ class MikrotikData:
                 response = list(self.api(cmd=cmd))
         except (
             librouteros.exceptions.ConnectionClosed,
-            socket.error,
+            OSError,
             socket.timeout,
         ) as api_error:
             _LOGGER.error("Mikrotik %s connection error %s", self._host, api_error)
@@ -407,7 +407,7 @@ def get_api(hass, entry):
         return api
     except (
         librouteros.exceptions.LibRouterosError,
-        socket.error,
+        OSError,
         socket.timeout,
     ) as api_error:
         _LOGGER.error("Mikrotik %s error: %s", entry[CONF_HOST], api_error)

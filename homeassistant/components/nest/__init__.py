@@ -1,7 +1,6 @@
 """Support for Nest devices."""
 from datetime import datetime, timedelta
 import logging
-import socket
 import threading
 
 from nest import Nest
@@ -294,7 +293,7 @@ class NestDevice:
             if self.local_structure is None:
                 self.local_structure = structure_names
 
-        except (AuthorizationError, APIError, socket.error) as err:
+        except (AuthorizationError, APIError, OSError) as err:
             _LOGGER.error("Connection error while access Nest web service: %s", err)
             return False
         return True
@@ -312,7 +311,7 @@ class NestDevice:
                     continue
                 yield structure
 
-        except (AuthorizationError, APIError, socket.error) as err:
+        except (AuthorizationError, APIError, OSError) as err:
             _LOGGER.error("Connection error while access Nest web service: %s", err)
 
     def thermostats(self):
@@ -354,7 +353,7 @@ class NestDevice:
                         continue
                     yield (structure, device)
 
-        except (AuthorizationError, APIError, socket.error) as err:
+        except (AuthorizationError, APIError, OSError) as err:
             _LOGGER.error("Connection error while access Nest web service: %s", err)
 
 
