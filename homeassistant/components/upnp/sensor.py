@@ -2,10 +2,7 @@
 from datetime import timedelta
 from typing import Mapping
 
-from homeassistant.const import (
-    DATA_BYTES,
-    DATA_RATE_KIBIBYTES_PER_SECOND,
-)
+from homeassistant.const import DATA_BYTES, DATA_RATE_KIBIBYTES_PER_SECOND
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
