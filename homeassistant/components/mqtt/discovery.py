@@ -166,7 +166,7 @@ async def async_start(
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
 
     await mqtt.async_subscribe(
-        hass, discovery_topic + "/#", async_device_message_received, 0
+        hass, f"{discovery_topic}/#", async_device_message_received, 0
     )
 
     return True

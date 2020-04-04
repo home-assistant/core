@@ -187,7 +187,7 @@ class DenonDevice(MediaPlayerDevice):
                 "NSE8",
             ]
             for line in self.telnet_request(telnet, "NSE", all_lines=True):
-                self._mediainfo += line[len(answer_codes.pop(0)) :] + "\n"
+                self._mediainfo += f"{line[len(answer_codes.pop(0)) :]}\n"
         else:
             self._mediainfo = self.source
 
@@ -257,7 +257,7 @@ class DenonDevice(MediaPlayerDevice):
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        self.telnet_command(f"MV{str(round(volume * self._volume_max)).zfill(2)}")
+        self.telnet_command(f"MV{round(volume * self._volume_max):02}")
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""

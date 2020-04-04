@@ -27,7 +27,7 @@ CONF_TITLE = "title"
 CONF_TRACKING_NUMBER = "tracking_number"
 
 DEFAULT_NAME = "aftership"
-UPDATE_TOPIC = DOMAIN + "_update"
+UPDATE_TOPIC = f"{DOMAIN}_update"
 
 ICON = "mdi:package-variant-closed"
 
