@@ -32,7 +32,7 @@ def discover_sensors(topic, payload):
             unit = TEMP_CELSIUS
         return ArwnSensor(name, "temp", unit)
     if domain == "moisture":
-        name = parts[2] + " Moisture"
+        name = f"{parts[2]} Moisture"
         return ArwnSensor(name, "moisture", unit, "mdi:water-percent")
     if domain == "rain":
         if len(parts) >= 3 and parts[2] == "today":
