@@ -135,4 +135,4 @@ def generate(integrations: Dict[str, Integration], config: Config):
     """Generate zeroconf file."""
     zeroconf_path = config.root / "homeassistant/generated/zeroconf.py"
     with open(str(zeroconf_path), "w") as fp:
-        fp.write(config.cache["zeroconf"] + "\n")
+        fp.write(f"{config.cache['zeroconf']}\n")
