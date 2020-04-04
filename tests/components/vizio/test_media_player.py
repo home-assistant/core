@@ -1,7 +1,8 @@
 """Tests for Vizio config flow."""
+from contextlib import asynccontextmanager
 from datetime import timedelta
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from unittest.mock import call
 
 from asynctest import patch
@@ -44,14 +45,7 @@ from homeassistant.components.vizio.const import (
     DOMAIN,
     VIZIO_SCHEMA,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_EXCLUDE,
-    CONF_INCLUDE,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
@@ -156,11 +150,9 @@ async def _test_setup(
             )
 
 
+@asynccontextmanager
 async def _test_setup_with_apps(
-    hass: HomeAssistantType,
-    device_config: Dict[str, Any],
-    app: Optional[str],
-    app_config: Dict[str, Any],
+    hass: HomeAssistantType, device_config: Dict[str, Any], app_config: Dict[str, Any]
 ) -> None:
     """Test Vizio Device with apps entity setup."""
     config_entry = MockConfigEntry(
@@ -188,51 +180,22 @@ async def _test_setup_with_apps(
         assert attr["friendly_name"] == NAME
         assert attr["device_class"] == DEVICE_CLASS_TV
         assert hass.states.get(ENTITY_ID).state == STATE_ON
-
-        if device_config.get(CONF_APPS, {}).get(CONF_INCLUDE) or device_config.get(
-            CONF_APPS, {}
-        ).get(CONF_EXCLUDE):
-            list_to_test = list(INPUT_LIST_WITH_APPS + [CURRENT_APP])
-        elif device_config.get(CONF_APPS, {}).get(CONF_ADDITIONAL_CONFIGS):
-            list_to_test = list(
-                INPUT_LIST_WITH_APPS
-                + APP_LIST
-                + [
-                    app["name"]
-                    for app in device_config[CONF_APPS][CONF_ADDITIONAL_CONFIGS]
-                    if app["name"] not in APP_LIST
-                ]
-            )
-        else:
-            list_to_test = list(INPUT_LIST_WITH_APPS + APP_LIST)
-
-        if CONF_ADDITIONAL_CONFIGS in device_config.get(CONF_APPS, {}):
-            assert attr["source_list"].count(CURRENT_APP) == 1
-
-        for app_to_remove in INPUT_APPS:
-            if app_to_remove in list_to_test:
-                list_to_test.remove(app_to_remove)
-
-        assert attr["source_list"] == list_to_test
-
-        if app:
-            assert app in attr["source_list"] or app == UNKNOWN_APP
-            assert attr["source"] == app
-            assert attr["app_name"] == app
-            if app == UNKNOWN_APP:
-                assert attr["app_id"] == app_config
-            else:
-                assert "app_id" not in attr
-        else:
-            assert attr["source"] == "CAST"
-            assert "app_id" not in attr
-            assert "app_name" not in attr
-
         assert (
             attr["volume_level"]
             == float(int(MAX_VOLUME[VIZIO_DEVICE_CLASS_TV] / 2))
             / MAX_VOLUME[VIZIO_DEVICE_CLASS_TV]
         )
+
+        yield
+
+
+def _assert_source_list(list_to_test: List[str], attr: Dict[str, Any]) -> None:
+    """Assert source list matches list_to_test after removing INPUT_APPS from list."""
+    for app_to_remove in INPUT_APPS:
+        if app_to_remove in list_to_test:
+            list_to_test.remove(app_to_remove)
+
+    assert attr["source_list"] == list_to_test
 
 
 async def _test_setup_failure(hass: HomeAssistantType, config: str) -> None:
@@ -464,9 +427,16 @@ async def test_setup_with_apps(
     caplog: pytest.fixture,
 ) -> None:
     """Test device setup with apps."""
-    await _test_setup_with_apps(
-        hass, MOCK_USER_VALID_TV_CONFIG, CURRENT_APP, CURRENT_APP_CONFIG
-    )
+    async with _test_setup_with_apps(
+        hass, MOCK_USER_VALID_TV_CONFIG, CURRENT_APP_CONFIG
+    ):
+        attr = hass.states.get(ENTITY_ID).attributes
+        _assert_source_list(list(INPUT_LIST_WITH_APPS + APP_LIST), attr)
+        assert CURRENT_APP in attr["source_list"]
+        assert attr["source"] == CURRENT_APP
+        assert attr["app_name"] == CURRENT_APP
+        assert "app_id" not in attr
+
     await _test_service(
         hass,
         "launch_app",
@@ -483,9 +453,15 @@ async def test_setup_with_apps_include(
     caplog: pytest.fixture,
 ) -> None:
     """Test device setup with apps and apps["include"] in config."""
-    await _test_setup_with_apps(
-        hass, MOCK_TV_WITH_INCLUDE_CONFIG, CURRENT_APP, CURRENT_APP_CONFIG
-    )
+    async with _test_setup_with_apps(
+        hass, MOCK_TV_WITH_INCLUDE_CONFIG, CURRENT_APP_CONFIG
+    ):
+        attr = hass.states.get(ENTITY_ID).attributes
+        _assert_source_list(list(INPUT_LIST_WITH_APPS + [CURRENT_APP]), attr)
+        assert CURRENT_APP in attr["source_list"]
+        assert attr["source"] == CURRENT_APP
+        assert attr["app_name"] == CURRENT_APP
+        assert "app_id" not in attr
 
 
 async def test_setup_with_apps_exclude(
@@ -495,9 +471,15 @@ async def test_setup_with_apps_exclude(
     caplog: pytest.fixture,
 ) -> None:
     """Test device setup with apps and apps["exclude"] in config."""
-    await _test_setup_with_apps(
-        hass, MOCK_TV_WITH_EXCLUDE_CONFIG, CURRENT_APP, CURRENT_APP_CONFIG
-    )
+    async with _test_setup_with_apps(
+        hass, MOCK_TV_WITH_EXCLUDE_CONFIG, CURRENT_APP_CONFIG
+    ):
+        attr = hass.states.get(ENTITY_ID).attributes
+        _assert_source_list(list(INPUT_LIST_WITH_APPS + [CURRENT_APP]), attr)
+        assert CURRENT_APP in attr["source_list"]
+        assert attr["source"] == CURRENT_APP
+        assert attr["app_name"] == CURRENT_APP
+        assert "app_id" not in attr
 
 
 async def test_setup_with_apps_additional_apps_config(
@@ -507,12 +489,29 @@ async def test_setup_with_apps_additional_apps_config(
     caplog: pytest.fixture,
 ) -> None:
     """Test device setup with apps and apps["additional_configs"] in config."""
-    await _test_setup_with_apps(
-        hass,
-        MOCK_TV_WITH_ADDITIONAL_APPS_CONFIG,
-        ADDITIONAL_APP_CONFIG["name"],
-        ADDITIONAL_APP_CONFIG["config"],
-    )
+    async with _test_setup_with_apps(
+        hass, MOCK_TV_WITH_ADDITIONAL_APPS_CONFIG, ADDITIONAL_APP_CONFIG["config"],
+    ):
+        attr = hass.states.get(ENTITY_ID).attributes
+        assert attr["source_list"].count(CURRENT_APP) == 1
+        _assert_source_list(
+            list(
+                INPUT_LIST_WITH_APPS
+                + APP_LIST
+                + [
+                    app["name"]
+                    for app in MOCK_TV_WITH_ADDITIONAL_APPS_CONFIG[CONF_APPS][
+                        CONF_ADDITIONAL_CONFIGS
+                    ]
+                    if app["name"] not in APP_LIST
+                ]
+            ),
+            attr,
+        )
+        assert ADDITIONAL_APP_CONFIG["name"] in attr["source_list"]
+        assert attr["source"] == ADDITIONAL_APP_CONFIG["name"]
+        assert attr["app_name"] == ADDITIONAL_APP_CONFIG["name"]
+        assert "app_id" not in attr
 
     await _test_service(
         hass,
@@ -561,9 +560,14 @@ async def test_setup_with_unknown_app_config(
     caplog: pytest.fixture,
 ) -> None:
     """Test device setup with apps where app config returned is unknown."""
-    await _test_setup_with_apps(
-        hass, MOCK_USER_VALID_TV_CONFIG, UNKNOWN_APP, UNKNOWN_APP_CONFIG
-    )
+    async with _test_setup_with_apps(
+        hass, MOCK_USER_VALID_TV_CONFIG, UNKNOWN_APP_CONFIG
+    ):
+        attr = hass.states.get(ENTITY_ID).attributes
+        _assert_source_list(list(INPUT_LIST_WITH_APPS + APP_LIST), attr)
+        assert attr["source"] == UNKNOWN_APP
+        assert attr["app_name"] == UNKNOWN_APP
+        assert attr["app_id"] == UNKNOWN_APP_CONFIG
 
 
 async def test_setup_with_no_running_app(
@@ -573,6 +577,11 @@ async def test_setup_with_no_running_app(
     caplog: pytest.fixture,
 ) -> None:
     """Test device setup with apps where no app is running."""
-    await _test_setup_with_apps(
-        hass, MOCK_USER_VALID_TV_CONFIG, None, vars(AppConfig())
-    )
+    async with _test_setup_with_apps(
+        hass, MOCK_USER_VALID_TV_CONFIG, vars(AppConfig())
+    ):
+        attr = hass.states.get(ENTITY_ID).attributes
+        _assert_source_list(list(INPUT_LIST_WITH_APPS + APP_LIST), attr)
+        assert attr["source"] == "CAST"
+        assert "app_id" not in attr
+        assert "app_name" not in attr
