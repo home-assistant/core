@@ -13,6 +13,7 @@ from homeassistant.const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE, __versio
 
 def set_loop() -> None:
     """Attempt to use different loop."""
+    # pylint: disable=import-outside-toplevel
     from asyncio.events import BaseDefaultEventLoopPolicy
 
     if sys.platform == "win32":
@@ -44,6 +45,7 @@ def validate_python() -> None:
 
 def ensure_config_path(config_dir: str) -> None:
     """Validate the configuration directory."""
+    # pylint: disable=import-outside-toplevel
     import homeassistant.config as config_util
 
     lib_dir = os.path.join(config_dir, "deps")
@@ -77,6 +79,7 @@ def ensure_config_path(config_dir: str) -> None:
 
 def get_arguments() -> argparse.Namespace:
     """Get parsed passed in arguments."""
+    # pylint: disable=import-outside-toplevel
     import homeassistant.config as config_util
 
     parser = argparse.ArgumentParser(
@@ -214,6 +217,7 @@ def closefds_osx(min_fd: int, max_fd: int) -> None:
     are guarded. But we can set the close-on-exec flag on everything we want to
     get rid of.
     """
+    # pylint: disable=import-outside-toplevel
     from fcntl import fcntl, F_GETFD, F_SETFD, FD_CLOEXEC
 
     for _fd in range(min_fd, max_fd):
@@ -237,6 +241,7 @@ def cmdline() -> List[str]:
 
 async def setup_and_run_hass(config_dir: str, args: argparse.Namespace) -> int:
     """Set up Home Assistant and run."""
+    # pylint: disable=import-outside-toplevel
     from homeassistant import bootstrap
 
     hass = await bootstrap.async_setup_hass(
@@ -253,7 +258,7 @@ async def setup_and_run_hass(config_dir: str, args: argparse.Namespace) -> int:
         return 1
 
     if args.open_ui and hass.config.api is not None:
-        import webbrowser
+        import webbrowser  # pylint: disable=import-outside-toplevel
 
         hass.add_job(webbrowser.open, hass.config.api.base_url)
 
@@ -324,6 +329,7 @@ def main() -> int:
     args = get_arguments()
 
     if args.script is not None:
+        # pylint: disable=import-outside-toplevel
         from homeassistant import scripts
 
         return scripts.run(args.script)
