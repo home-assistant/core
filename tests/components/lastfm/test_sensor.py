@@ -37,24 +37,17 @@ class MockUser:
         return self._now_playing_result
 
 
-@pytest.fixture(name="get_user")
-def lastfm_get_user_fixture():
-    """Create fixture for get_user."""
-    with patch("pylast.LastFMNetwork.get_user") as get_user:
-        yield get_user
-
-
 @pytest.fixture(name="lastfm_network")
 def lastfm_network_fixture():
-    """Create fixture for _Network."""
+    """Create fixture for LastFMNetwork."""
     with patch("pylast.LastFMNetwork") as lastfm_network:
         yield lastfm_network
 
 
-async def test_update_not_playing(hass, get_user, lastfm_network):
+async def test_update_not_playing(hass, lastfm_network):
     """Test update when no playing song."""
 
-    get_user.return_value = MockUser(None)
+    lastfm_network.return_value.get_user.return_value = MockUser(None)
 
     assert await async_setup_component(
         hass,
@@ -69,10 +62,12 @@ async def test_update_not_playing(hass, get_user, lastfm_network):
     assert state.state == STATE_NOT_SCROBBLING
 
 
-async def test_update_playing(hass, get_user, lastfm_network):
+async def test_update_playing(hass, lastfm_network):
     """Test update when song playing."""
 
-    get_user.return_value = MockUser(Track("artist", "title", None))
+    lastfm_network.return_value.get_user.return_value = MockUser(
+        Track("artist", "title", None)
+    )
 
     assert await async_setup_component(
         hass,
