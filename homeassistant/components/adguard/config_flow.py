@@ -32,7 +32,6 @@ class AdGuardHomeFlowHandler(ConfigFlow):
 
     def __init__(self):
         """Initialize AgGuard Home flow."""
-        pass
 
     async def _show_setup_form(self, errors=None):
         """Show the setup form to the user."""

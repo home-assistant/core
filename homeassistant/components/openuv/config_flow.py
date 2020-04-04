@@ -37,7 +37,6 @@ class OpenUvFlowHandler(config_entries.ConfigFlow):
 
     def __init__(self):
         """Initialize the config flow."""
-        pass
 
     async def _show_form(self, errors=None):
         """Show the form to the user."""

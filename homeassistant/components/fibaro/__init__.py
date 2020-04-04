@@ -464,7 +464,6 @@ class FibaroDevice(Entity):
 
     def update(self):
         """Call to update state."""
-        pass
 
     @property
     def device_state_attributes(self):

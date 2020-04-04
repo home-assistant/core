@@ -375,7 +375,6 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
                     config_file.write(config_raw)
             except OSError:
                 _LOGGER.exception("Migrating to google_translate tts failed")
-                pass
 
     if version_obj < LooseVersion("0.94") and is_docker_env():
         # In 0.94 we no longer install packages inside the deps folder when

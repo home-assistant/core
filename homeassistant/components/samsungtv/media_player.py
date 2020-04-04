@@ -56,7 +56,6 @@ async def async_setup_platform(
     hass, config, add_entities, discovery_info=None
 ):  # pragma: no cover
     """Set up the Samsung TV platform."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

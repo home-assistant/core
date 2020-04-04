@@ -61,8 +61,6 @@ ALLOWED_DT_UTIL = set(
 class ScriptError(HomeAssistantError):
     """When a script error occurs."""
 
-    pass
-
 
 def setup(hass, config):
     """Initialize the Python script component."""
@@ -205,7 +203,6 @@ class StubPrinter:
 
     def __init__(self, _getattr_):
         """Initialize our printer."""
-        pass
 
     def _call_print(self, *objects, **kwargs):
         """Print text."""

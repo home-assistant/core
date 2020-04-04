@@ -57,7 +57,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     Can only be called when a user accidentally mentions smhi in the
     config. In that case it will be ignored.
     """
-    pass
 
 
 async def async_setup_entry(

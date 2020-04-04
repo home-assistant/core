@@ -56,8 +56,6 @@ def set_discovery_hash(hass, discovery_hash):
 class MQTTConfig(dict):
     """Dummy class to allow adding attributes."""
 
-    pass
-
 
 async def async_start(
     hass: HomeAssistantType, discovery_topic, hass_config, config_entry=None

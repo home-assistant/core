@@ -68,7 +68,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     Can only be called when a user accidentally mentions hue platform in their
     config. But even in that case it would have been ignored.
     """
-    pass
 
 
 def create_light(item_class, coordinator, bridge, is_group, api, item_id):

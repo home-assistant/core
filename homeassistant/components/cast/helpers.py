@@ -173,7 +173,6 @@ class CastStatusListener:
     @staticmethod
     def added_to_multizone(group_uuid):
         """Handle the cast added to a group."""
-        pass
 
     def removed_from_multizone(self, group_uuid):
         """Handle the cast removed from a group."""
@@ -182,7 +181,6 @@ class CastStatusListener:
 
     def multizone_new_cast_status(self, group_uuid, cast_status):
         """Handle reception of a new CastStatus for a group."""
-        pass
 
     def multizone_new_media_status(self, group_uuid, media_status):
         """Handle reception of a new MediaStatus for a group."""
@@ -224,7 +222,6 @@ class DynamicGroupCastStatusListener:
 
     def new_cast_status(self, cast_status):
         """Handle reception of a new CastStatus."""
-        pass
 
     def new_media_status(self, media_status):
         """Handle reception of a new MediaStatus."""

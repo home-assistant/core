@@ -112,7 +112,6 @@ class BaseZhaEntity(RestoreEntity, LogMixin, entity.Entity):
     @callback
     def async_set_state(self, attr_id: int, attr_name: str, value: Any) -> None:
         """Set the entity state."""
-        pass
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
@@ -136,7 +135,6 @@ class BaseZhaEntity(RestoreEntity, LogMixin, entity.Entity):
     @callback
     def async_restore_last_state(self, last_state) -> None:
         """Restore previous state."""
-        pass
 
     async def async_accept_signal(
         self, channel: ChannelType, signal: str, func: CALLABLE_T, signal_override=False
@@ -282,4 +280,3 @@ class ZhaGroupEntity(BaseZhaEntity):
 
     async def async_update(self) -> None:
         """Update the state of the group entity."""
-        pass
