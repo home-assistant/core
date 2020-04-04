@@ -333,7 +333,7 @@ class KodiDevice(MediaPlayerDevice):
         self._turn_on_action = turn_on_action
         self._turn_off_action = turn_off_action
         self._enable_websocket = websocket
-        self._players = list()
+        self._players = []
         self._properties = {}
         self._item = {}
         self._app_properties = {}

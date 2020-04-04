@@ -679,7 +679,7 @@ class YeelightGenericLight(Light):
 
             red, green, blue = color_util.color_hs_to_RGB(*self._hs)
 
-            transitions = list()
+            transitions = []
             transitions.append(
                 RGBTransition(255, 0, 0, brightness=10, duration=duration)
             )
