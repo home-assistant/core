@@ -355,7 +355,7 @@ class InfluxThread(threading.Thread):
             except (
                 exceptions.InfluxDBClientError,
                 exceptions.InfluxDBServerError,
-                IOError,
+                OSError,
             ) as err:
                 if retry < self.max_tries:
                     time.sleep(RETRY_DELAY)
