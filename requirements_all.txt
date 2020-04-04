@@ -317,7 +317,7 @@ beautifulsoup4==4.8.2
 beewi_smartclim==0.0.7
 
 # homeassistant.components.zha
-bellows-homeassistant==0.15.1
+bellows-homeassistant==0.15.2
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.7.1
@@ -2191,7 +2191,7 @@ zigpy-cc==0.3.1
 zigpy-deconz==0.8.0
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.18.0
+zigpy-homeassistant==0.18.1
 
 # homeassistant.components.zha
 zigpy-xbee-homeassistant==0.11.0
