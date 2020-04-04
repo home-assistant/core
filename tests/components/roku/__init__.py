@@ -12,7 +12,7 @@ UPNP_FRIENDLY_NAME = "My Roku 3"
 UPNP_SERIAL = "1GU48T017973"
 
 
-class MockDeviceInfo(object):
+class MockDeviceInfo:
     """Mock DeviceInfo for Roku."""
 
     model_name = NAME
