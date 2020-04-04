@@ -210,7 +210,7 @@ class KNXClimate(ClimateDevice):
 
         async def after_update_callback(device):
             """Call after device was updated."""
-            await self.async_update_ha_state()
+            self.async_write_ha_state()
 
         self.device.register_device_updated_cb(after_update_callback)
         self.device.mode.register_device_updated_cb(after_update_callback)
@@ -266,7 +266,7 @@ class KNXClimate(ClimateDevice):
         if temperature is None:
             return
         await self.device.set_target_temperature(temperature)
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def hvac_mode(self) -> Optional[str]:
@@ -304,7 +304,7 @@ class KNXClimate(ClimateDevice):
         elif self.device.mode.supports_operation_mode:
             knx_operation_mode = HVACOperationMode(OPERATION_MODES_INV.get(hvac_mode))
             await self.device.mode.set_operation_mode(knx_operation_mode)
-            await self.async_update_ha_state()
+            self.async_write_ha_state()
 
     @property
     def preset_mode(self) -> Optional[str]:
@@ -334,4 +334,4 @@ class KNXClimate(ClimateDevice):
         if self.device.mode.supports_operation_mode:
             knx_operation_mode = HVACOperationMode(PRESET_MODES_INV.get(preset_mode))
             await self.device.mode.set_operation_mode(knx_operation_mode)
-            await self.async_update_ha_state()
+            self.async_write_ha_state()

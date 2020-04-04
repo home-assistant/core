@@ -24,6 +24,18 @@ async def test_password_or_pub_key_required(hass):
         assert not result
 
 
+async def test_network_unreachable(hass):
+    """Test creating an AsusWRT scanner without a pass or pubkey."""
+    with patch("homeassistant.components.asuswrt.AsusWrt") as AsusWrt:
+        AsusWrt().connection.async_connect = mock_coro_func(exception=OSError)
+        AsusWrt().is_connected = False
+        result = await async_setup_component(
+            hass, DOMAIN, {DOMAIN: {CONF_HOST: "fake_host", CONF_USERNAME: "fake_user"}}
+        )
+        assert result
+        assert hass.data.get(DATA_ASUSWRT, None) is None
+
+
 async def test_get_scanner_with_password_no_pubkey(hass):
     """Test creating an AsusWRT scanner with a password and no pubkey."""
     with patch("homeassistant.components.asuswrt.AsusWrt") as AsusWrt:

@@ -409,6 +409,7 @@ homeassistant/components/usgs_earthquakes_feed/* @exxamalte
 homeassistant/components/utility_meter/* @dgomes
 homeassistant/components/velbus/* @Cereal2nd @brefra
 homeassistant/components/velux/* @Julius2342
+homeassistant/components/vera/* @vangorra
 homeassistant/components/versasense/* @flamm3blemuff1n
 homeassistant/components/version/* @fabaff
 homeassistant/components/vesync/* @markperdue @webdjoe

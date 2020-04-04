@@ -6,7 +6,6 @@
   "requirements": [
     "teslajsonpy==0.6.0"
   ],
-  "dependencies": [],
   "codeowners": [
     "@zabuldon",
     "@alandtse"

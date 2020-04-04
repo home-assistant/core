@@ -1247,7 +1247,11 @@ class OpenCloseTrait(_Trait):
     """
 
     # Cover device classes that require 2FA
-    COVER_2FA = (cover.DEVICE_CLASS_DOOR, cover.DEVICE_CLASS_GARAGE)
+    COVER_2FA = (
+        cover.DEVICE_CLASS_DOOR,
+        cover.DEVICE_CLASS_GARAGE,
+        cover.DEVICE_CLASS_GATE,
+    )
 
     name = TRAIT_OPENCLOSE
     commands = [COMMAND_OPENCLOSE]

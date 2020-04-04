@@ -219,6 +219,7 @@ omit =
     homeassistant/components/flic/binary_sensor.py
     homeassistant/components/flock/notify.py
     homeassistant/components/flume/*
+    homeassistant/components/flunearyou/__init__.py
     homeassistant/components/flunearyou/sensor.py
     homeassistant/components/flux_led/light.py
     homeassistant/components/folder/sensor.py

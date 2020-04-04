@@ -96,11 +96,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     dev = []
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
         dev.append(YrSensor(name, sensor_type))
-    async_add_entities(dev)
 
     weather = YrData(hass, coordinates, forecast, dev)
-    async_track_utc_time_change(hass, weather.updating_devices, minute=31, second=0)
+    async_track_utc_time_change(
+        hass, weather.updating_devices, minute=randrange(60), second=0
+    )
     await weather.fetching_data()
+    async_add_entities(dev)
 
 
 class YrSensor(Entity):
@@ -234,7 +236,6 @@ class YrData:
         ordered_entries.sort(key=lambda item: item[0])
 
         # Update all devices
-        tasks = []
         if ordered_entries:
             for dev in self.devices:
                 new_state = None
@@ -274,7 +275,5 @@ class YrData:
                 # pylint: disable=protected-access
                 if new_state != dev._state:
                     dev._state = new_state
-                    tasks.append(dev.async_update_ha_state())
-
-        if tasks:
-            await asyncio.wait(tasks)
+                    if dev.hass:
+                        dev.async_write_ha_state()

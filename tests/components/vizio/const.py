@@ -64,6 +64,9 @@ class MockCompletePairingResponse(object):
         self.auth_token = auth_token
 
 
+CURRENT_EQ = "Music"
+EQ_LIST = ["Music", "Movie"]
+
 CURRENT_INPUT = "HDMI"
 INPUT_LIST = ["HDMI", "USB", "Bluetooth", "AUX"]
 

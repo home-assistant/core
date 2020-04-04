@@ -71,6 +71,16 @@ class Integration:
         """Integration domain."""
         return self.path.name
 
+    @property
+    def requirements(self) -> List[str]:
+        """List of requirements."""
+        return self.manifest.get("requirements", [])
+
+    @property
+    def dependencies(self) -> List[str]:
+        """List of dependencies."""
+        return self.manifest.get("dependencies", [])
+
     def add_error(self, *args, **kwargs):
         """Add an error."""
         self.errors.append(Error(*args, **kwargs))

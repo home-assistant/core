@@ -87,7 +87,7 @@ class ZWaveBaseEntity(Entity):
         @callback
         def do_update():
             """Really update."""
-            self.hass.async_add_job(self.async_update_ha_state)
+            self.async_write_ha_state()
             self._update_scheduled = False
 
         self._update_scheduled = True

@@ -3,6 +3,5 @@
   "name": "OhmConnect",
   "documentation": "https://www.home-assistant.io/integrations/ohmconnect",
   "requirements": ["defusedxml==0.6.0"],
-  "dependencies": [],
   "codeowners": ["@robbiet480"]
 }

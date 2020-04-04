@@ -11,8 +11,10 @@
                 "data": {
                     "api_key": "API Schl\u00ebssel",
                     "latitude": "Breedegrad",
-                    "longitude": "L\u00e4ngegrad"
+                    "longitude": "L\u00e4ngegrad",
+                    "show_on_map": "Iwwerwaachte Geografie op der Kaart uweisen"
                 },
+                "description": "Loft Qualit\u00e9it an enger geografescher Lag iwwerwaachen.",
                 "title": "AirVisual konfigur\u00e9ieren"
             }
         },
@@ -21,6 +23,9 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "show_on_map": "Iwwerwaachte Geografie op der Kaart uweisen"
+                },
                 "description": "Verschidden Optioune fir d'AirVisual Integratioun d\u00e9fin\u00e9ieren.",
                 "title": "Airvisual ariichten"
             }

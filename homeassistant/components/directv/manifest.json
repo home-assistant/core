@@ -3,7 +3,6 @@
   "name": "DirecTV",
   "documentation": "https://www.home-assistant.io/integrations/directv",
   "requirements": ["directv==0.3.0"],
-  "dependencies": [],
   "codeowners": ["@ctalkington"],
   "quality_scale": "gold",
   "config_flow": true,

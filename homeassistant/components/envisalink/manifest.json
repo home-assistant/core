@@ -3,6 +3,5 @@
   "name": "Envisalink",
   "documentation": "https://www.home-assistant.io/integrations/envisalink",
   "requirements": ["pyenvisalink==4.0"],
-  "dependencies": [],
   "codeowners": []
 }

@@ -32,7 +32,8 @@
             "client_control": {
                 "data": {
                     "block_client": "Clientes con acceso controlado a la red",
-                    "new_client": "A\u00f1adir nuevo cliente para el control de acceso a la red"
+                    "new_client": "A\u00f1adir nuevo cliente para el control de acceso a la red",
+                    "poe_clients": "Permitir control PoE de clientes"
                 },
                 "description": "Configurar controles de cliente\n\nCrea conmutadores para los n\u00fameros de serie para los que deseas controlar el acceso a la red.",
                 "title": "Opciones UniFi 2/3"
