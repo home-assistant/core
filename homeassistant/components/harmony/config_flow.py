@@ -98,18 +98,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if harmony:
             unique_id = find_unique_id_for_remote(harmony)
-            if self._uniqueid_already_configured(unique_id):
-                # Race Condition:
-                # We check to see if the unique id is configured
-                # before we call async_set_unique_id
-                # to update the host in the event that ssdp happened
-                # before the yaml imported in order to prevent
-                # aborting the import because the unique id
-                # is already set
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured(
-                    updates={CONF_HOST: self.harmony_config[CONF_HOST]}
-                )
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured(
+                updates={CONF_HOST: self.harmony_config[CONF_HOST]}
+            )
             self.harmony_config[UNIQUE_ID] = unique_id
 
         return await self.async_step_link()
@@ -119,12 +111,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            # Race Condition:
-            # We have to check again that that harmony
-            # was not imported from yaml between the time
-            # they hit configure and when we found it via ssdp
-            await self.async_set_unique_id(self.harmony_config[UNIQUE_ID])
-            self._abort_if_unique_id_configured()
             # Everything was validated in async_step_ssdp
             # all we do now is create.
             return await self._async_create_entry_from_valid_input(
@@ -166,20 +152,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         data.update(_options_from_user_input(user_input))
 
         return self.async_create_entry(title=validated[CONF_NAME], data=data)
-
-    def _uniqueid_already_configured(self, unique_id):
-        """
-        See if we already have a harmony with this unique_id configured.
-
-        This function avoids setting the unique id to do
-        the checking which can cause a race condition where
-        the yaml will not get imported because ssdp discovers
-        the hub first.
-        """
-        existing_unique_ids = {
-            entry.unique_id for entry in self._async_current_entries()
-        }
-        return unique_id in existing_unique_ids
 
 
 def _options_from_user_input(user_input):
