@@ -20,8 +20,8 @@ from .const import (
     DEFAULT_CERT,
     DEFAULT_CONTINUOUS,
     DEFAULT_DELAY,
-    DOMAIN,
 )
+from .const import DOMAIN  # pylint:disable=unused-import
 
 DATA_SCHEMA = vol.Schema(
     {
