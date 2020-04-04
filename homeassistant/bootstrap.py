@@ -309,7 +309,7 @@ async def async_mount_local_lib_path(config_dir: str) -> str:
 def _get_domains(hass: core.HomeAssistant, config: Dict[str, Any]) -> Set[str]:
     """Get domains of components to set up."""
     # Filter out the repeating and common config section [homeassistant]
-    domains = set(key.split(" ")[0] for key in config.keys() if key != core.DOMAIN)
+    domains = {key.split(" ")[0] for key in config.keys() if key != core.DOMAIN}
 
     # Add config entry domains
     if not hass.config.safe_mode:

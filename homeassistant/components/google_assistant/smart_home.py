@@ -262,7 +262,7 @@ async def async_devices_reachable(hass, data: RequestData, payload):
 
     https://developers.google.com/actions/smarthome/create#actiondevicesdisconnect
     """
-    google_ids = set(dev["id"] for dev in (data.devices or []))
+    google_ids = {dev["id"] for dev in (data.devices or [])}
 
     return {
         "devices": [

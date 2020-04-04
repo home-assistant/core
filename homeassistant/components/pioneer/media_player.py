@@ -87,7 +87,7 @@ class PioneerDevice(MediaPlayerDevice):
         self._muted = False
         self._selected_source = ""
         self._source_name_to_number = sources
-        self._source_number_to_name = dict((v, k) for k, v in sources.items())
+        self._source_number_to_name = {v: k for k, v in sources.items()}
 
     @classmethod
     def telnet_request(cls, telnet, command, expected_prefix):
