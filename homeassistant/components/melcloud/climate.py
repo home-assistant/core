@@ -37,14 +37,14 @@ from . import MelCloudDevice
 from .const import (
     ATTR_STATUS,
     ATTR_VANE_HORIZONTAL,
-    ATTR_VANE_HORIZONTAL_POSITIONS,
     ATTR_VANE_VERTICAL,
-    ATTR_VANE_VERTICAL_POSITIONS,
     CONF_POSITION,
     DOMAIN,
+    HorSwingModes,
     SERVICE_SET_VANE_HORIZONTAL,
     SERVICE_SET_VANE_VERTICAL,
     TEMP_UNIT_LOOKUP,
+    VertSwingModes,
 )
 
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -60,6 +60,31 @@ ATA_HVAC_MODE_LOOKUP = {
     ata.OPERATION_MODE_HEAT_COOL: HVAC_MODE_HEAT_COOL,
 }
 ATA_HVAC_MODE_REVERSE_LOOKUP = {v: k for k, v in ATA_HVAC_MODE_LOOKUP.items()}
+
+
+HVAC_HVANE_LOOKUP = {
+    ata.H_VANE_POSITION_AUTO: HorSwingModes.Auto,
+    ata.H_VANE_POSITION_1: HorSwingModes.Left,
+    ata.H_VANE_POSITION_2: HorSwingModes.MiddleLeft,
+    ata.H_VANE_POSITION_3: HorSwingModes.Middle,
+    ata.H_VANE_POSITION_4: HorSwingModes.MiddleRight,
+    ata.H_VANE_POSITION_5: HorSwingModes.Right,
+    ata.H_VANE_POSITION_SPLIT: HorSwingModes.Split,
+    ata.H_VANE_POSITION_SWING: HorSwingModes.Swing,
+}
+HVAC_HVANE_REVERSE_LOOKUP = {v: k for k, v in HVAC_HVANE_LOOKUP.items()}
+
+
+HVAC_VVANE_LOOKUP = {
+    ata.V_VANE_POSITION_AUTO: VertSwingModes.Auto,
+    ata.V_VANE_POSITION_1: VertSwingModes.Top,
+    ata.V_VANE_POSITION_2: VertSwingModes.MiddleTop,
+    ata.V_VANE_POSITION_3: VertSwingModes.Middle,
+    ata.V_VANE_POSITION_4: VertSwingModes.MiddleBottom,
+    ata.V_VANE_POSITION_5: VertSwingModes.Bottom,
+    ata.V_VANE_POSITION_SWING: VertSwingModes.Swing,
+}
+HVAC_VVANE_REVERSE_LOOKUP = {v: k for k, v in HVAC_VVANE_LOOKUP.items()}
 
 
 ATW_ZONE_HVAC_MODE_LOOKUP = {
@@ -131,6 +156,9 @@ class AtaDeviceClimate(MelCloudClimate):
         """Initialize the climate."""
         super().__init__(device)
         self._device = ata_device
+        self._support_ver_swing = len(self._device.vane_vertical_positions) > 0
+        self._support_hor_swing = len(self._device.vane_horizontal_positions) > 0
+        self._set_hor_swing = self._support_hor_swing and not self._support_ver_swing
 
     @property
     def unique_id(self) -> Optional[str]:
@@ -151,8 +179,7 @@ class AtaDeviceClimate(MelCloudClimate):
         if vane_horizontal:
             attr.update(
                 {
-                    ATTR_VANE_HORIZONTAL: vane_horizontal,
-                    ATTR_VANE_HORIZONTAL_POSITIONS: self._device.vane_horizontal_positions,
+                    ATTR_VANE_HORIZONTAL: HVAC_HVANE_LOOKUP.get(vane_horizontal, None),
                 }
             )
 
@@ -160,8 +187,7 @@ class AtaDeviceClimate(MelCloudClimate):
         if vane_vertical:
             attr.update(
                 {
-                    ATTR_VANE_VERTICAL: vane_vertical,
-                    ATTR_VANE_VERTICAL_POSITIONS: self._device.vane_vertical_positions,
+                    ATTR_VANE_VERTICAL: HVAC_VVANE_LOOKUP.get(vane_vertical, None),
                 }
             )
         return attr
@@ -233,38 +259,84 @@ class AtaDeviceClimate(MelCloudClimate):
 
     async def async_set_vane_horizontal(self, position: str) -> None:
         """Set horizontal vane position."""
-        if position not in self._device.vane_horizontal_positions:
+        operation_mode = HVAC_HVANE_REVERSE_LOOKUP.get(position, "")
+        if operation_mode not in self._device.vane_horizontal_positions:
+            valid_pos = [HVAC_HVANE_LOOKUP.get(mode) for mode in self._device.vane_horizontal_positions]
             raise ValueError(
-                f"Invalid horizontal vane position {position}. Valid positions: [{self._device.vane_horizontal_positions}]."
+                f"Invalid horizontal vane position [{position}]. Valid positions: {valid_pos}."
             )
-        await self._device.set({ata.PROPERTY_VANE_HORIZONTAL: position})
+        await self._device.set({ata.PROPERTY_VANE_HORIZONTAL: operation_mode})
 
     async def async_set_vane_vertical(self, position: str) -> None:
         """Set vertical vane position."""
-        if position not in self._device.vane_vertical_positions:
+        operation_mode = HVAC_VVANE_REVERSE_LOOKUP.get(position, "")
+        if operation_mode not in self._device.vane_vertical_positions:
+            valid_pos = [HVAC_VVANE_LOOKUP.get(mode) for mode in self._device.vane_vertical_positions]
             raise ValueError(
-                f"Invalid vertical vane position {position}. Valid positions: [{self._device.vane_vertical_positions}]."
+                f"Invalid vertical vane position [{position}]. Valid positions: {valid_pos}."
             )
-        await self._device.set({ata.PROPERTY_VANE_VERTICAL: position})
+        await self._device.set({ata.PROPERTY_VANE_VERTICAL: operation_mode})
 
     @property
     def swing_mode(self) -> Optional[str]:
-        """Return vertical vane position or mode."""
-        return self._device.vane_vertical
+        """Return the swing mode setting."""
+        swing = None
+        if self._set_hor_swing and self._support_hor_swing:
+            mode = self._device.vane_horizontal
+            if mode is not None:
+                swing = HVAC_HVANE_LOOKUP.get(mode)
+        elif self._support_ver_swing:
+            mode = self._device.vane_vertical
+            if mode is not None:
+                swing = HVAC_VVANE_LOOKUP.get(mode)
+
+        if swing is None:
+            return 'Auto'
+
+        return swing
 
     async def async_set_swing_mode(self, swing_mode) -> None:
-        """Set vertical vane position or mode."""
-        await self.async_set_vane_vertical(swing_mode)
+        """Set new target swing mode."""
+        is_hor_swing = False
+        operation_mode = HVAC_VVANE_REVERSE_LOOKUP.get(swing_mode)
+        if operation_mode is None:
+            operation_mode = HVAC_HVANE_REVERSE_LOOKUP.get(swing_mode)
+            if operation_mode is None:
+                raise ValueError(f"Invalid swing_mode [{swing_mode}].")
+            else:
+                is_hor_swing = True
+                curr_mode = self._device.vane_horizontal
+                valid_swing_modes = self._device.vane_horizontal_positions
+                props = {ata.PROPERTY_VANE_HORIZONTAL: operation_mode}
+        else:
+            curr_mode = self._device.vane_vertical
+            valid_swing_modes = self._device.vane_vertical_positions
+            props = {ata.PROPERTY_VANE_VERTICAL: operation_mode}
+
+        if operation_mode in valid_swing_modes:
+            self._set_hor_swing = is_hor_swing
+            if curr_mode != operation_mode:
+                await self._device.set(props)
+        else:
+            raise ValueError(f"Invalid swing_mode [{swing_mode}].")
 
     @property
-    def swing_modes(self) -> Optional[str]:
-        """Return a list of available vertical vane positions and modes."""
-        return self._device.vane_vertical_positions
+    def swing_modes(self) -> Optional[List[str]]:
+        """Return the list of available swing modes."""
+        list_modes = [HVAC_VVANE_LOOKUP.get(mode) for mode in self._device.vane_vertical_positions]
+        for mode in self._device.vane_horizontal_positions:
+            list_modes.append(HVAC_HVANE_LOOKUP.get(mode))
+
+        return list_modes
 
     @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
-        return SUPPORT_FAN_MODE | SUPPORT_TARGET_TEMPERATURE | SUPPORT_SWING_MODE
+        supp_feature = SUPPORT_FAN_MODE | SUPPORT_TARGET_TEMPERATURE
+        if self._support_ver_swing or self._support_hor_swing:
+            supp_feature |= SUPPORT_SWING_MODE
+
+        return supp_feature
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
