@@ -165,7 +165,7 @@ class DHTClient:
         self.adafruit_dht = adafruit_dht
         self.sensor = sensor
         self.pin = pin
-        self.data = dict()
+        self.data = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

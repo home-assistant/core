@@ -171,7 +171,7 @@ def _check_deprecated_turn_off(hass, turn_off_action):
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Kodi platform."""
     if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = dict()
+        hass.data[DOMAIN] = {}
 
     unique_id = None
     # Is this a manual configuration?

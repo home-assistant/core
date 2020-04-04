@@ -157,7 +157,7 @@ class RememberTheMilkConfiguration:
         """Create new instance of configuration."""
         self._config_file_path = hass.config.path(CONFIG_FILE_NAME)
         if not os.path.isfile(self._config_file_path):
-            self._config = dict()
+            self._config = {}
             return
         try:
             _LOGGER.debug("Loading configuration from file: %s", self._config_file_path)
@@ -168,7 +168,7 @@ class RememberTheMilkConfiguration:
                 "Failed to load configuration file, creating a new one: %s",
                 self._config_file_path,
             )
-            self._config = dict()
+            self._config = {}
 
     def save_config(self):
         """Write the configuration to a file."""
@@ -198,9 +198,9 @@ class RememberTheMilkConfiguration:
     def _initialize_profile(self, profile_name):
         """Initialize the data structures for a profile."""
         if profile_name not in self._config:
-            self._config[profile_name] = dict()
+            self._config[profile_name] = {}
         if CONF_ID_MAP not in self._config[profile_name]:
-            self._config[profile_name][CONF_ID_MAP] = dict()
+            self._config[profile_name][CONF_ID_MAP] = {}
 
     def get_rtm_id(self, profile_name, hass_id):
         """Get the RTM ids for a Home Assistant task ID.
