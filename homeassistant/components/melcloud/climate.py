@@ -178,13 +178,13 @@ class AtaDeviceClimate(MelCloudClimate):
         vane_horizontal = self._device.vane_horizontal
         if vane_horizontal:
             attr.update(
-                {ATTR_VANE_HORIZONTAL: HVAC_HVANE_LOOKUP.get(vane_horizontal, None), }
+                {ATTR_VANE_HORIZONTAL: HVAC_HVANE_LOOKUP.get(vane_horizontal, None)}
             )
 
         vane_vertical = self._device.vane_vertical
         if vane_vertical:
             attr.update(
-                {ATTR_VANE_VERTICAL: HVAC_VVANE_LOOKUP.get(vane_vertical, None), }
+                {ATTR_VANE_VERTICAL: HVAC_VVANE_LOOKUP.get(vane_vertical, None)}
             )
         return attr
 
