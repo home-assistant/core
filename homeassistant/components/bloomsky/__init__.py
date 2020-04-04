@@ -31,7 +31,7 @@ def setup(hass, config):
     """Set up the BloomSky component."""
     api_key = config[DOMAIN][CONF_API_KEY]
 
-    global BLOOMSKY
+    global BLOOMSKY  # pylint: disable=global-statement
     try:
         BLOOMSKY = BloomSky(api_key, hass.config.units.is_metric)
     except RuntimeError:
