@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class TcpSensor(Entity):
     """Implementation of a TCP socket based sensor."""
 
-    required = tuple()
+    required = ()
 
     def __init__(self, hass, config):
         """Set all the config values if they exist and get initial state."""
