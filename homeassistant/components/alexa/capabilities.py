@@ -734,12 +734,11 @@ class AlexaPlaybackController(AlexaCapability):
             media_player.SUPPORT_STOP: "Stop",
         }
 
-        supported_operations = []
-        for operation in operations:
-            if operation & supported_features:
-                supported_operations.append(operations[operation])
-
-        return supported_operations
+        return [
+            value
+            for operation, value in operations.items()
+            if operation & supported_features
+        ]
 
 
 class AlexaInputController(AlexaCapability):
@@ -759,9 +758,7 @@ class AlexaInputController(AlexaCapability):
         source_list = self.entity.attributes.get(
             media_player.ATTR_INPUT_SOURCE_LIST, []
         )
-        input_list = AlexaInputController.get_valid_inputs(source_list)
-
-        return input_list
+        return AlexaInputController.get_valid_inputs(source_list)
 
     @staticmethod
     def get_valid_inputs(source_list):
@@ -1829,10 +1826,11 @@ class AlexaEqualizerController(AlexaCapability):
         configurations = None
         sound_mode_list = self.entity.attributes.get(media_player.ATTR_SOUND_MODE_LIST)
         if sound_mode_list:
-            supported_sound_modes = []
-            for sound_mode in sound_mode_list:
-                if sound_mode.upper() in ("MOVIE", "MUSIC", "NIGHT", "SPORT", "TV"):
-                    supported_sound_modes.append({"name": sound_mode.upper()})
+            supported_sound_modes = [
+                {"name": sound_mode.upper()}
+                for sound_mode in sound_mode_list
+                if sound_mode.upper() in ("MOVIE", "MUSIC", "NIGHT", "SPORT", "TV")
+            ]
 
             configurations = {"modes": {"supported": supported_sound_modes}}
 
@@ -1890,7 +1888,7 @@ class AlexaCameraStreamController(AlexaCapability):
 
     def camera_stream_configurations(self):
         """Return cameraStreamConfigurations object."""
-        camera_stream_configurations = [
+        return [
             {
                 "protocols": ["HLS"],
                 "resolutions": [{"width": 1280, "height": 720}],
@@ -1899,4 +1897,3 @@ class AlexaCameraStreamController(AlexaCapability):
                 "audioCodecs": ["AAC"],
             }
         ]
-        return camera_stream_configurations

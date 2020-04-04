@@ -296,14 +296,13 @@ class AlexaPresetResource(AlexaCapabilityResource):
             configuration["unitOfMeasure"] = self._unit_of_measure
 
         if self._presets:
-            preset_resources = []
-            for preset in self._presets:
-                preset_resources.append(
-                    {
-                        "rangeValue": preset["value"],
-                        "presetResources": self.serialize_labels(preset["labels"]),
-                    }
-                )
+            preset_resources = [
+                {
+                    "rangeValue": preset["value"],
+                    "presetResources": self.serialize_labels(preset["labels"]),
+                }
+                for preset in self._presets
+            ]
             configuration["presets"] = preset_resources
 
         return configuration
