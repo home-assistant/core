@@ -2047,7 +2047,7 @@ transmissionrpc==0.11
 tuyaha==0.0.5
 
 # homeassistant.components.twentemilieu
-twentemilieu==0.2.0
+twentemilieu==0.3.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
