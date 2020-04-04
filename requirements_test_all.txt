@@ -746,7 +746,7 @@ toonapilib==3.2.4
 transmissionrpc==0.11
 
 # homeassistant.components.twentemilieu
-twentemilieu==0.2.0
+twentemilieu==0.3.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
