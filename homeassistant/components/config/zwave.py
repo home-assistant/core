@@ -226,7 +226,7 @@ class ZWaveProtectionView(HomeAssistantView):
                 return self.json(protection_options)
             protections = node.get_protections()
             protection_options = {
-                "value_id": "{0:d}".format(list(protections)[0]),
+                "value_id": "{:d}".format(list(protections)[0]),
                 "selected": node.get_protection_item(list(protections)[0]),
                 "options": node.get_protection_items(list(protections)[0]),
             }

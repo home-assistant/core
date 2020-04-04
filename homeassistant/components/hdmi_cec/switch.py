@@ -28,7 +28,9 @@ class CecSwitchDevice(CecDevice, SwitchDevice):
     def __init__(self, device, logical) -> None:
         """Initialize the HDMI device."""
         CecDevice.__init__(self, device, logical)
-        self.entity_id = "%s.%s_%s" % (DOMAIN, "hdmi", hex(self._logical_address)[2:])
+        self.entity_id = "{}.{}_{}".format(
+            DOMAIN, "hdmi", hex(self._logical_address)[2:]
+        )
 
     def turn_on(self, **kwargs) -> None:
         """Turn device on."""

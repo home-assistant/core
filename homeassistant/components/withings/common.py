@@ -108,7 +108,7 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
             partial(
                 requests.request,
                 method,
-                "%s/%s" % (self.URL, path),
+                f"{self.URL}/{path}",
                 params=params,
                 headers={
                     "Authorization": "Bearer %s"
