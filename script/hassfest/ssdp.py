@@ -79,4 +79,4 @@ def generate(integrations: Dict[str, Integration], config: Config):
     """Generate ssdp file."""
     ssdp_path = config.root / "homeassistant/generated/ssdp.py"
     with open(str(ssdp_path), "w") as fp:
-        fp.write(config.cache["ssdp"] + "\n")
+        fp.write(f"{config.cache['ssdp']}\n")
