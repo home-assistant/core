@@ -208,7 +208,7 @@ class NeatoConnectedVacuum(StateVacuumDevice):
                     and "name" in self._state["cleaning"]["boundary"]
                 ):
                     self._status_state += (
-                        " " + self._state["cleaning"]["boundary"]["name"]
+                        f" {self._state['cleaning']['boundary']['name']}"
                     )
             else:
                 self._status_state = robot_alert

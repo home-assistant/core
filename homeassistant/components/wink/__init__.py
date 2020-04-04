@@ -749,7 +749,7 @@ class WinkDevice(Entity):
                 self.schedule_update_ha_state()
         except (ValueError, KeyError, AttributeError):
             _LOGGER.error(
-                "Error in pubnub JSON for %s polling API for current state", self.name,
+                "Error in pubnub JSON for %s polling API for current state", self.name
             )
             self.schedule_update_ha_state(True)
 
@@ -912,7 +912,7 @@ class WinkNimbusDialDevice(WinkDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return self.parent.name() + " dial " + str(self.wink.index() + 1)
+        return f"{self.parent.name()} dial {self.wink.index() + 1}"
 
     @property
     def device_state_attributes(self):
