@@ -6,7 +6,6 @@ from homeassistant.const import (
     DATA_BYTES,
     DATA_RATE_KIBIBYTES_PER_SECOND,
 )
-from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -141,9 +140,11 @@ class UpnpSensor(Entity):
     def available(self) -> bool:
         """Return if entity is available."""
         device_value_key = self._sensor_type["device_value_key"]
-        return self._coordinator.last_update_success and \
-               device_value_key in self._coordinator.data and \
-               not isinstance(self._coordinator.data[device_value_key], Exception)
+        return (
+            self._coordinator.last_update_success
+            and device_value_key in self._coordinator.data
+            and not isinstance(self._coordinator.data[device_value_key], Exception)
+        )
 
     @property
     def name(self) -> str:
