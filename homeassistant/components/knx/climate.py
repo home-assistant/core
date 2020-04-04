@@ -66,7 +66,7 @@ OPERATION_MODES = {
     "Dry": HVAC_MODE_DRY,
 }
 
-OPERATION_MODES_INV = dict((reversed(item) for item in OPERATION_MODES.items()))
+OPERATION_MODES_INV = dict(reversed(item) for item in OPERATION_MODES.items())
 
 PRESET_MODES = {
     # Map DPT 201.100 HVAC operating modes to HA presets
@@ -76,7 +76,7 @@ PRESET_MODES = {
     "Comfort": PRESET_COMFORT,
 }
 
-PRESET_MODES_INV = dict((reversed(item) for item in PRESET_MODES.items()))
+PRESET_MODES_INV = dict(reversed(item) for item in PRESET_MODES.items())
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
