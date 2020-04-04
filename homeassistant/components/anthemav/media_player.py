@@ -186,4 +186,5 @@ class AnthemAVR(MediaPlayerDevice):
     def dump_avrdata(self):
         """Return state of avr object for debugging forensics."""
         attrs = vars(self)
-        return "dump_avrdata: " + ", ".join("%s: %s" % item for item in attrs.items())
+        items_string = ", ".join(f"{item}: {item}" for item in attrs.items())
+        return f"dump_avrdata: {items_string}"

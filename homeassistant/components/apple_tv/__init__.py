@@ -130,7 +130,7 @@ async def scan_apple_tvs(hass):
         devices = ["No device(s) found"]
 
     hass.components.persistent_notification.async_create(
-        "The following devices were found:<br /><br />" + "<br /><br />".join(devices),
+        f"The following devices were found:<br /><br />{'<br /><br />'.join(devices)}",
         title=NOTIFICATION_SCAN_TITLE,
         notification_id=NOTIFICATION_SCAN_ID,
     )

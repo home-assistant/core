@@ -210,7 +210,7 @@ class OneWire(Entity):
 
     def __init__(self, name, device_file, sensor_type):
         """Initialize the sensor."""
-        self._name = name + " " + sensor_type.capitalize()
+        self._name = f"{name} {sensor_type.capitalize()}"
         self._device_file = device_file
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._state = None
