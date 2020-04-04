@@ -39,14 +39,14 @@ class MockUser:
 
 @pytest.fixture(name="get_user")
 def lastfm_get_user_fixture():
-    """The fixture for mocking the get_user function."""
+    """Create fixture for get_user."""
     with patch("pylast.LastFMNetwork.get_user") as get_user:
         yield get_user
 
 
 @pytest.fixture(name="lastfm_network")
 def lastfm_network_fixture():
-    """The fixture for mocking the get_user function."""
+    """Create fixture for _Network."""
     with patch("pylast._Network") as lastfm_network:
         yield lastfm_network
 
