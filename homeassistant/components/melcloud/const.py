@@ -23,6 +23,7 @@ TEMP_UNIT_REVERSE_LOOKUP = {v: k for k, v in TEMP_UNIT_LOOKUP.items()}
 
 class HorSwingModes:
     """Horizontal swing modes names."""
+
     Auto = 'HorizontalAuto'
     Left = 'HorizontalLeft'
     MiddleLeft = 'HorizontalMiddleLeft'
@@ -35,6 +36,7 @@ class HorSwingModes:
 
 class VertSwingModes:
     """Vertical swing modes names."""
+
     Auto = 'VerticalAuto'
     Top = 'VerticalTop'
     MiddleTop = 'VerticalMiddleTop'
