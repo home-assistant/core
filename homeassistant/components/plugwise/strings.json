@@ -1,0 +1,23 @@
+{
+  "config": {
+    "title": "Plugwise Smile beta",
+    "step": {
+      "user": {
+        "title": "Connect to the device",
+        "description": "Which device and naming",
+        "data": {
+          "host": "Smile IP address",
+          "password": "Smile ID"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "invalid_auth": "Invalid authentication, check the 8 characters of your Smile ID",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  }
+}
