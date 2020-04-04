@@ -1,0 +1,13 @@
+{
+    "config": {
+        "flow_title": "Impressora: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3 o adre\u00e7a IP",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

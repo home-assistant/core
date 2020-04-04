@@ -19,6 +19,11 @@ from .test_common import (
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_attr,
+    help_test_entity_debug_info,
+    help_test_entity_debug_info_max_messages,
+    help_test_entity_debug_info_message,
+    help_test_entity_debug_info_remove,
+    help_test_entity_debug_info_update_entity_id,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
     help_test_entity_device_info_with_connection,
@@ -437,3 +442,36 @@ async def test_entity_device_info_with_hub(hass, mqtt_mock):
     device = registry.async_get_device({("mqtt", "helloworld")}, set())
     assert device is not None
     assert device.via_device_id == hub.id
+
+
+async def test_entity_debug_info(hass, mqtt_mock):
+    """Test MQTT sensor debug info."""
+    await help_test_entity_debug_info(hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG)
+
+
+async def test_entity_debug_info_max_messages(hass, mqtt_mock):
+    """Test MQTT sensor debug info."""
+    await help_test_entity_debug_info_max_messages(
+        hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_entity_debug_info_message(hass, mqtt_mock):
+    """Test MQTT debug info."""
+    await help_test_entity_debug_info_message(
+        hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_entity_debug_info_remove(hass, mqtt_mock):
+    """Test MQTT sensor debug info."""
+    await help_test_entity_debug_info_remove(
+        hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_entity_debug_info_update_entity_id(hass, mqtt_mock):
+    """Test MQTT sensor debug info."""
+    await help_test_entity_debug_info_update_entity_id(
+        hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
+    )

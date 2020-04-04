@@ -63,6 +63,9 @@ SUPPORTED_COMMANDS = {
     ),
 }
 
+VIZIO_SOUND_MODE = "eq"
+VIZIO_AUDIO_SETTINGS = "audio"
+
 # Since Vizio component relies on device class, this dict will ensure that changes to
 # the values of DEVICE_CLASS_SPEAKER or DEVICE_CLASS_TV don't require changes to pyvizio.
 VIZIO_DEVICE_CLASSES = {

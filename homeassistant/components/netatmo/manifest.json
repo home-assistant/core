@@ -17,6 +17,7 @@
   "config_flow": true,
   "homekit": {
     "models": [
+      "Healty Home Coach",
       "Netatmo Relay",
       "Presence",
       "Welcome"

@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.homekit
-HAP-python==2.7.0
+HAP-python==2.8.0
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
@@ -26,13 +26,13 @@ RtmAPI==0.7.2
 YesssSMS==0.4.1
 
 # homeassistant.components.abode
-abodepy==0.18.1
+abodepy==0.19.0
 
 # homeassistant.components.androidtv
 adb-shell==0.1.1
 
 # homeassistant.components.adguard
-adguardhome==0.4.1
+adguardhome==0.4.2
 
 # homeassistant.components.geonetnz_quakes
 aio_geojson_geonetnz_quakes==0.12
@@ -131,7 +131,7 @@ av==6.1.2
 axis==25
 
 # homeassistant.components.zha
-bellows-homeassistant==0.14.0
+bellows-homeassistant==0.15.1
 
 # homeassistant.components.bom
 bomradarloop==0.1.4
@@ -140,7 +140,7 @@ bomradarloop==0.1.4
 broadlink==0.13.0
 
 # homeassistant.components.brother
-brother==0.1.9
+brother==0.1.11
 
 # homeassistant.components.buienradar
 buienradar==1.0.4
@@ -178,7 +178,7 @@ defusedxml==0.6.0
 denonavr==0.8.1
 
 # homeassistant.components.directv
-directpy==0.7
+directv==0.3.0
 
 # homeassistant.components.updater
 distro==1.4.0
@@ -190,7 +190,7 @@ doorbirdpy==2.0.8
 dsmr_parser==0.18
 
 # homeassistant.components.dynalite
-dynalite_devices==0.1.32
+dynalite_devices==0.1.39
 
 # homeassistant.components.ee_brightbox
 eebrightbox==0.0.4
@@ -235,7 +235,6 @@ georss_ign_sismologia_client==0.2
 # homeassistant.components.qld_bushfire
 georss_qld_bushfire_alert_client==0.3
 
-# homeassistant.components.braviatv
 # homeassistant.components.huawei_lte
 # homeassistant.components.kef
 # homeassistant.components.minecraft_server
@@ -243,7 +242,7 @@ georss_qld_bushfire_alert_client==0.3
 getmac==0.8.1
 
 # homeassistant.components.gios
-gios==0.0.5
+gios==0.1.1
 
 # homeassistant.components.glances
 glances_api==0.2.0
@@ -264,7 +263,7 @@ ha-ffmpeg==2.0
 hangups==0.4.9
 
 # homeassistant.components.cloud
-hass-nabucasa==0.32.2
+hass-nabucasa==0.33.0
 
 # homeassistant.components.mqtt
 hbmqtt==0.9.5
@@ -282,7 +281,7 @@ hole==0.5.1
 holidays==0.10.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200330.0
+home-assistant-frontend==20200403.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -329,7 +328,7 @@ libsoundtouch==0.7.2
 logi_circle==0.2.2
 
 # homeassistant.components.luftdaten
-luftdaten==0.6.3
+luftdaten==0.6.4
 
 # homeassistant.components.mythicbeastsdns
 mbddns==0.1.2
@@ -493,6 +492,9 @@ pyeverlights==0.1.0
 # homeassistant.components.fido
 pyfido==2.1.1
 
+# homeassistant.components.flunearyou
+pyflunearyou==1.0.7
+
 # homeassistant.components.fritzbox
 pyfritzhome==0.4.0
 
@@ -519,7 +521,7 @@ pyicloud==0.9.6.1
 pyipma==2.0.5
 
 # homeassistant.components.ipp
-pyipp==0.8.1
+pyipp==0.8.3
 
 # homeassistant.components.iqvia
 pyiqvia==0.2.1
@@ -557,6 +559,9 @@ pymonoprice==0.3
 # homeassistant.components.myq
 pymyq==2.0.1
 
+# homeassistant.components.nut
+pynut2==2.1.2
+
 # homeassistant.components.nws
 pynws==0.10.4
 
@@ -570,7 +575,7 @@ pyopenuv==1.0.9
 pyopnsense==0.2.0
 
 # homeassistant.components.opentherm_gw
-pyotgw==0.5b1
+pyotgw==0.6b1
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
@@ -617,13 +622,13 @@ python-forecastio==1.4.0
 python-izone==1.1.2
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.4.8
+python-miio==0.5.0.1
 
 # homeassistant.components.nest
 python-nest==4.1.0
 
 # homeassistant.components.tado
-python-tado==0.5.0
+python-tado==0.6.0
 
 # homeassistant.components.twitch
 python-twitch-client==0.6.0
@@ -647,7 +652,7 @@ pyvera==0.3.7
 pyvesync==1.1.0
 
 # homeassistant.components.vizio
-pyvizio==0.1.44
+pyvizio==0.1.45
 
 # homeassistant.components.html5
 pywebpush==1.9.2
@@ -668,7 +673,7 @@ rflink==0.0.52
 ring_doorbell==0.6.0
 
 # homeassistant.components.roku
-roku==4.0.0
+roku==4.1.0
 
 # homeassistant.components.yamaha
 rxv==0.6.0
@@ -795,22 +800,22 @@ ya_ma==0.3.8
 yahooweather==0.10
 
 # homeassistant.components.zeroconf
-zeroconf==0.24.5
+zeroconf==0.25.0
 
 # homeassistant.components.zha
-zha-quirks==0.0.37
+zha-quirks==0.0.38
 
 # homeassistant.components.zha
 zigpy-cc==0.3.1
 
 # homeassistant.components.zha
-zigpy-deconz==0.7.0
+zigpy-deconz==0.8.0
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.16.0
+zigpy-homeassistant==0.18.0
 
 # homeassistant.components.zha
-zigpy-xbee-homeassistant==0.10.0
+zigpy-xbee-homeassistant==0.11.0
 
 # homeassistant.components.zha
 zigpy-zigate==0.5.1

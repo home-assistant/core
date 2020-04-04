@@ -6,6 +6,5 @@
     "defusedxml==0.6.0",
     "ihcsdk==2.6.0"
   ],
-  "dependencies": [],
   "codeowners": []
 }

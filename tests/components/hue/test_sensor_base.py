@@ -1,17 +1,13 @@
 """Philips Hue sensors platform tests."""
 import asyncio
-from collections import deque
 import logging
 from unittest.mock import Mock
 
 import aiohue
-from aiohue.sensors import Sensors
-import pytest
 
-from homeassistant import config_entries
-from homeassistant.components import hue
-from homeassistant.components.hue import sensor_base as hue_sensor_base
 from homeassistant.components.hue.hue_event import CONF_HUE_EVENT
+
+from .conftest import create_mock_bridge, setup_bridge_for_sensors as setup_bridge
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -279,71 +275,6 @@ SENSOR_RESPONSE = {
     "7": HUE_TAP_REMOTE_1,
     "8": HUE_DIMMER_REMOTE_1,
 }
-
-
-def create_mock_bridge(hass):
-    """Create a mock Hue bridge."""
-    bridge = Mock(
-        hass=hass,
-        available=True,
-        authorized=True,
-        allow_unreachable=False,
-        allow_groups=False,
-        api=Mock(),
-        reset_jobs=[],
-        spec=hue.HueBridge,
-    )
-    bridge.sensor_manager = hue_sensor_base.SensorManager(bridge)
-    bridge.mock_requests = []
-    # We're using a deque so we can schedule multiple responses
-    # and also means that `popleft()` will blow up if we get more updates
-    # than expected.
-    bridge.mock_sensor_responses = deque()
-
-    async def mock_request(method, path, **kwargs):
-        kwargs["method"] = method
-        kwargs["path"] = path
-        bridge.mock_requests.append(kwargs)
-
-        if path == "sensors":
-            return bridge.mock_sensor_responses.popleft()
-        return None
-
-    async def async_request_call(task):
-        await task()
-
-    bridge.async_request_call = async_request_call
-    bridge.api.config.apiversion = "9.9.9"
-    bridge.api.sensors = Sensors({}, mock_request)
-    return bridge
-
-
-@pytest.fixture
-def mock_bridge(hass):
-    """Mock a Hue bridge."""
-    return create_mock_bridge(hass)
-
-
-async def setup_bridge(hass, mock_bridge, hostname=None):
-    """Load the Hue platform with the provided bridge."""
-    if hostname is None:
-        hostname = "mock-host"
-    hass.config.components.add(hue.DOMAIN)
-    config_entry = config_entries.ConfigEntry(
-        1,
-        hue.DOMAIN,
-        "Mock Title",
-        {"host": hostname},
-        "test",
-        config_entries.CONN_CLASS_LOCAL_POLL,
-        system_options={},
-    )
-    mock_bridge.config_entry = config_entry
-    hass.data[hue.DOMAIN] = {config_entry.entry_id: mock_bridge}
-    await hass.config_entries.async_forward_entry_setup(config_entry, "binary_sensor")
-    await hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
-    # and make sure it completes before going further
-    await hass.async_block_till_done()
 
 
 async def test_no_sensors(hass, mock_bridge):

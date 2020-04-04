@@ -2,8 +2,6 @@
   "domain": "binary_sensor",
   "name": "Binary Sensor",
   "documentation": "https://www.home-assistant.io/integrations/binary_sensor",
-  "requirements": [],
-  "dependencies": [],
   "codeowners": [],
   "quality_scale": "internal"
 }

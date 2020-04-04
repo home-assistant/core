@@ -31,6 +31,7 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CONF_ACTIVATION,
+    CONF_API_HOST,
     CONF_BLINK,
     CONF_DEFAULT_OPTIONS,
     CONF_DISCOVERY,
@@ -60,6 +61,8 @@ CONF_IO_SWI = "Switchable Output"
 CONF_MORE_STATES = "more_states"
 CONF_YES = "Yes"
 CONF_NO = "No"
+
+CONF_OVERRIDE_API_HOST = "override_api_host"
 
 KONN_MANUFACTURER = "konnected.io"
 KONN_PANEL_MODEL_NAMES = {
@@ -138,6 +141,7 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Optional(CONF_SENSORS): vol.All(cv.ensure_list, [SENSOR_SCHEMA]),
         vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
         vol.Optional(CONF_BLINK, default=True): cv.boolean,
+        vol.Optional(CONF_API_HOST, default=""): vol.Any("", cv.url),
         vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
     },
     extra=vol.REMOVE_EXTRA,
@@ -785,8 +789,19 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Allow the user to configure the LED behavior."""
         errors = {}
         if user_input is not None:
-            self.new_opt[CONF_BLINK] = user_input[CONF_BLINK]
-            return self.async_create_entry(title="", data=self.new_opt)
+            # config schema only does basic schema val so check url here
+            try:
+                if user_input[CONF_OVERRIDE_API_HOST]:
+                    cv.url(user_input.get(CONF_API_HOST, ""))
+                else:
+                    user_input[CONF_API_HOST] = ""
+            except vol.Invalid:
+                errors["base"] = "bad_host"
+            else:
+                # no need to store the override - can infer
+                del user_input[CONF_OVERRIDE_API_HOST]
+                self.new_opt.update(user_input)
+                return self.async_create_entry(title="", data=self.new_opt)
 
         return self.async_show_form(
             step_id="options_misc",
@@ -795,6 +810,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Required(
                         CONF_BLINK, default=self.current_opt.get(CONF_BLINK, True)
                     ): bool,
+                    vol.Required(
+                        CONF_OVERRIDE_API_HOST,
+                        default=bool(self.current_opt.get(CONF_API_HOST)),
+                    ): bool,
+                    vol.Optional(
+                        CONF_API_HOST, default=self.current_opt.get(CONF_API_HOST, "")
+                    ): str,
                 }
             ),
             errors=errors,

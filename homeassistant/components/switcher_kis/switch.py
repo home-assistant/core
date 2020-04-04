@@ -109,8 +109,10 @@ class SwitcherControl(SwitchDevice):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_SWITCHER_DEVICE_UPDATE, self.async_update_data
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_SWITCHER_DEVICE_UPDATE, self.async_update_data
+            )
         )
 
     async def async_update_data(self, device_data: "SwitcherV2Device") -> None:
@@ -121,7 +123,7 @@ class SwitcherControl(SwitchDevice):
             else:
                 self._device_data = device_data
                 self._state = self._device_data.state
-                self.async_schedule_update_ha_state()
+                self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Dict) -> None:
         """Turn the entity on."""
@@ -149,4 +151,4 @@ class SwitcherControl(SwitchDevice):
         if response and response.successful:
             self._self_initiated = True
             self._state = SWITCHER_STATE_ON if send_on else SWITCHER_STATE_OFF
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()

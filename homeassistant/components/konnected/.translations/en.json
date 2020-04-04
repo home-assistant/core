@@ -33,6 +33,9 @@
         "abort": {
             "not_konn_panel": "Not a recognized Konnected.io device"
         },
+        "error": {
+            "bad_host": "Invalid Override API host url"
+        },
         "step": {
             "options_binary": {
                 "data": {
@@ -82,7 +85,9 @@
             },
             "options_misc": {
                 "data": {
-                    "blink": "Blink panel LED on when sending state change"
+                    "api_host": "Override API host URL (optional)",
+                    "blink": "Blink panel LED on when sending state change",
+                    "override_api_host": "Override default Home Assistant API host panel URL"
                 },
                 "description": "Please select the desired behavior for your panel",
                 "title": "Configure Misc"

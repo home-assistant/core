@@ -1,5 +1,7 @@
 """Config flow to configure Axis devices."""
 
+from ipaddress import ip_address
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -11,6 +13,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
+from homeassistant.util.network import is_link_local
 
 from .const import CONF_MODEL, DOMAIN
 from .device import get_device
@@ -129,7 +132,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if serial_number[:6] not in AXIS_OUI:
             return self.async_abort(reason="not_axis_device")
 
-        if discovery_info[CONF_HOST].startswith("169.254"):
+        if is_link_local(ip_address(discovery_info[CONF_HOST])):
             return self.async_abort(reason="link_local_address")
 
         await self.async_set_unique_id(serial_number)

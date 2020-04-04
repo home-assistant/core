@@ -467,8 +467,10 @@ class LeafEntity(Entity):
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.log_registration()
-        async_dispatcher_connect(
-            self.car.hass, SIGNAL_UPDATE_LEAF, self._update_callback
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.car.hass, SIGNAL_UPDATE_LEAF, self._update_callback
+            )
         )
 
     @callback

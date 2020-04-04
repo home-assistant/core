@@ -43,6 +43,7 @@ async def test_config_schema(hass):
     """Test that config schema is imported properly."""
     config = {
         konnected.DOMAIN: {
+            konnected.CONF_API_HOST: "http://1.1.1.1:8888",
             konnected.CONF_ACCESS_TOKEN: "abcdefgh",
             konnected.CONF_DEVICES: [{konnected.CONF_ID: "aabbccddeeff"}],
         }
@@ -50,10 +51,12 @@ async def test_config_schema(hass):
     assert konnected.CONFIG_SCHEMA(config) == {
         "konnected": {
             "access_token": "abcdefgh",
+            "api_host": "http://1.1.1.1:8888",
             "devices": [
                 {
                     "default_options": {
                         "blink": True,
+                        "api_host": "http://1.1.1.1:8888",
                         "discovery": True,
                         "io": {
                             "1": "Disabled",
@@ -96,6 +99,7 @@ async def test_config_schema(hass):
                 {
                     "default_options": {
                         "blink": True,
+                        "api_host": "",
                         "discovery": True,
                         "io": {
                             "1": "Disabled",
@@ -162,6 +166,7 @@ async def test_config_schema(hass):
                 {
                     "default_options": {
                         "blink": True,
+                        "api_host": "",
                         "discovery": True,
                         "io": {
                             "1": "Binary Sensor",

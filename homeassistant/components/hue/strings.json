@@ -27,5 +27,22 @@
       "already_in_progress": "Config flow for bridge is already in progress.",
       "not_hue_bridge": "Not a Hue bridge"
     }
+  },
+  "device_automation": {
+    "trigger_subtype": {
+      "button_1": "First button",
+      "button_2": "Second button",
+      "button_3": "Third button",
+      "button_4": "Fourth button",
+      "dim_down": "Dim down",
+      "dim_up": "Dim up",
+      "turn_off": "Turn off",
+      "turn_on": "Turn on"
+    },
+    "trigger_type": {
+      "remote_button_long_release": "\"{subtype}\" button released after long press",
+      "remote_button_short_press": "\"{subtype}\" button pressed",
+      "remote_button_short_release": "\"{subtype}\" button released"
+    }
   }
 }

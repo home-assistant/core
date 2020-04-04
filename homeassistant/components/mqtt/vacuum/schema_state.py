@@ -36,15 +36,11 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     StateVacuumDevice,
 )
-from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES,
-    CONF_DEVICE,
-    CONF_NAME,
-    CONF_VALUE_TEMPLATE,
-)
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_DEVICE, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
+from ..debug_info import log_messages
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -103,7 +99,6 @@ CONF_PAYLOAD_CLEAN_SPOT = "payload_clean_spot"
 CONF_PAYLOAD_LOCATE = "payload_locate"
 CONF_PAYLOAD_START = "payload_start"
 CONF_PAYLOAD_PAUSE = "payload_pause"
-CONF_STATE_TEMPLATE = "state_template"
 CONF_SET_FAN_SPEED_TOPIC = "set_fan_speed_topic"
 CONF_FAN_SPEED_LIST = "fan_speed_list"
 CONF_SEND_COMMAND_TOPIC = "send_command_topic"
@@ -140,7 +135,6 @@ PLATFORM_SCHEMA_STATE = (
             vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): cv.string,
             vol.Optional(CONF_SEND_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(CONF_SET_FAN_SPEED_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_STATE_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(
                 CONF_SUPPORTED_FEATURES, default=DEFAULT_SERVICE_STRINGS
@@ -240,19 +234,13 @@ class MqttStateVacuum(
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
-        template = self._config.get(CONF_VALUE_TEMPLATE)
-        if template is not None:
-            template.hass = self.hass
         topics = {}
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def state_message_received(msg):
             """Handle state MQTT message."""
-            payload = msg.payload
-            if template is not None:
-                payload = template.async_render_with_possible_json_value(payload)
-            else:
-                payload = json.loads(payload)
+            payload = json.loads(msg.payload)
             if STATE in payload and payload[STATE] in POSSIBLE_STATES:
                 self._state = POSSIBLE_STATES[payload[STATE]]
                 del payload[STATE]
@@ -294,9 +282,10 @@ class MqttStateVacuum(
 
     @property
     def fan_speed_list(self):
-        """Return fan speed list of the vacuum."""
-        if self.supported_features & SUPPORT_FAN_SPEED == 0:
-            return None
+        """Return fan speed list of the vacuum.
+
+        No need to check SUPPORT_FAN_SPEED, this won't be called if fan_speed is None.
+        """
         return self._fan_speed_list
 
     @property

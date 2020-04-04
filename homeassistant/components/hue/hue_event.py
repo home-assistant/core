@@ -28,24 +28,19 @@ class HueEvent(GenericHueDevice):
     def __init__(self, sensor, name, bridge, primary_sensor=None):
         """Register callback that will be used for signals."""
         super().__init__(sensor, name, bridge, primary_sensor)
+        self.device_registry_id = None
 
         self.event_id = slugify(self.sensor.name)
         # Use the 'lastupdated' string to detect new remote presses
         self._last_updated = self.sensor.lastupdated
 
         # Register callback in coordinator and add job to remove it on bridge reset.
-        self.bridge.sensor_manager.coordinator.async_add_listener(
-            self.async_update_callback
+        self.bridge.reset_jobs.append(
+            self.bridge.sensor_manager.coordinator.async_add_listener(
+                self.async_update_callback
+            )
         )
-        self.bridge.reset_jobs.append(self.async_will_remove_from_hass)
         _LOGGER.debug("Hue event created: %s", self.event_id)
-
-    @callback
-    def async_will_remove_from_hass(self):
-        """Remove listener on bridge reset."""
-        self.bridge.sensor_manager.coordinator.async_remove_listener(
-            self.async_update_callback
-        )
 
     @callback
     def async_update_callback(self):
@@ -79,9 +74,10 @@ class HueEvent(GenericHueDevice):
         entry = device_registry.async_get_or_create(
             config_entry_id=self.bridge.config_entry.entry_id, **self.device_info
         )
+        self.device_registry_id = entry.id
         _LOGGER.debug(
             "Event registry with entry_id: %s and device_id: %s",
-            entry.id,
+            self.device_registry_id,
             self.device_id,
         )
 

@@ -5,6 +5,5 @@
   "requirements": [
     "pillow==7.0.0"
   ],
-  "dependencies": [],
   "codeowners": []
 }

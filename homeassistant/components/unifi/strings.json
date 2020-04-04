@@ -43,7 +43,8 @@
             "client_control": {
                 "data": {
                     "block_client": "Network access controlled clients",
-                    "new_client": "Add new client for network access control"
+                    "new_client": "Add new client for network access control",
+                    "poe_clients": "Allow POE control of clients"
                 },
                 "description": "Configure client controls\n\nCreate switches for serial numbers you want to control network access for.",
                 "title": "UniFi options 2/3"

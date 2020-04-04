@@ -21,6 +21,7 @@ from .test_common import (
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_attr,
+    help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
     help_test_entity_device_info_with_connection,
@@ -41,7 +42,8 @@ from tests.common import (
 )
 from tests.components.alarm_control_panel import common
 
-CODE = "HELLO_CODE"
+CODE_NUMBER = "1234"
+CODE_TEXT = "HELLO_CODE"
 
 DEFAULT_CONFIG = {
     alarm_control_panel.DOMAIN: {
@@ -340,6 +342,34 @@ async def test_update_state_via_state_topic_template(hass, mqtt_mock):
     assert state.state == STATE_ALARM_ARMED_AWAY
 
 
+async def test_attributes_code_number(hass, mqtt_mock):
+    """Test attributes which are not supported by the vacuum."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config[alarm_control_panel.DOMAIN]["code"] = CODE_NUMBER
+
+    assert await async_setup_component(hass, alarm_control_panel.DOMAIN, config)
+
+    state = hass.states.get("alarm_control_panel.test")
+    assert (
+        state.attributes.get(alarm_control_panel.ATTR_CODE_FORMAT)
+        == alarm_control_panel.FORMAT_NUMBER
+    )
+
+
+async def test_attributes_code_text(hass, mqtt_mock):
+    """Test attributes which are not supported by the vacuum."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config[alarm_control_panel.DOMAIN]["code"] = CODE_TEXT
+
+    assert await async_setup_component(hass, alarm_control_panel.DOMAIN, config)
+
+    state = hass.states.get("alarm_control_panel.test")
+    assert (
+        state.attributes.get(alarm_control_panel.ATTR_CODE_FORMAT)
+        == alarm_control_panel.FORMAT_TEXT
+    )
+
+
 async def test_availability_without_topic(hass, mqtt_mock):
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
@@ -492,5 +522,12 @@ async def test_entity_id_update_subscriptions(hass, mqtt_mock):
 async def test_entity_id_update_discovery_update(hass, mqtt_mock):
     """Test MQTT discovery update when entity_id is updated."""
     await help_test_entity_id_update_discovery_update(
+        hass, mqtt_mock, alarm_control_panel.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_entity_debug_info_message(hass, mqtt_mock):
+    """Test MQTT debug info."""
+    await help_test_entity_debug_info_message(
         hass, mqtt_mock, alarm_control_panel.DOMAIN, DEFAULT_CONFIG
     )

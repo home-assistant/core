@@ -286,7 +286,7 @@ class XiaomiDevice(Entity):
         """Set state to UNAVAILABLE."""
         self._remove_unavailability_tracker = None
         self._is_available = False
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def _async_track_unavailable(self):
@@ -308,7 +308,7 @@ class XiaomiDevice(Entity):
         is_data = self.parse_data(data, raw_data)
         is_voltage = self.parse_voltage(data)
         if is_data or is_voltage or was_unavailable:
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     def parse_voltage(self, data):
         """Parse battery level data sent by gateway."""
