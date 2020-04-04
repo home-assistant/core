@@ -88,7 +88,7 @@ class RachioWebhookView(HomeAssistantView):
         data = await request.json()
 
         try:
-            auth = data.get(KEY_EXTERNAL_ID, str()).split(":")[1]
+            auth = data.get(KEY_EXTERNAL_ID, "").split(":")[1]
             assert auth == hass.data[DOMAIN][self._entry_id].rachio.webhook_auth
         except (AssertionError, IndexError):
             return web.Response(status=web.HTTPForbidden.status_code)
