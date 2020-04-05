@@ -4,7 +4,6 @@ import logging
 from apcaccess.status import ALL_UNITS
 import voluptuous as vol
 
-from . import DOMAIN
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_RESOURCES,
@@ -16,6 +15,8 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
