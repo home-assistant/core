@@ -13,7 +13,6 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-BLOOMSKY = None
 BLOOMSKY_TYPE = ["camera", "binary_sensor", "sensor"]
 
 DOMAIN = "bloomsky"
@@ -31,11 +30,13 @@ def setup(hass, config):
     """Set up the BloomSky component."""
     api_key = config[DOMAIN][CONF_API_KEY]
 
-    global BLOOMSKY  # pylint: disable=global-statement
+    bloomsky = None
     try:
-        BLOOMSKY = BloomSky(api_key, hass.config.units.is_metric)
+        bloomsky = BloomSky(api_key, hass.config.units.is_metric)
     except RuntimeError:
         return False
+
+    hass.data[DOMAIN] = bloomsky
 
     for component in BLOOMSKY_TYPE:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
