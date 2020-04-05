@@ -3,11 +3,7 @@
   "name": "Home Connect",
   "documentation": "https://www.home-assistant.io/integrations/homeconnect",
   "dependencies": ["http"],
-  "codeowners": [
-    "@DavidMStraub"
-  ],
-  "requirements": [
-    "homeconnect==0.4.2"
-  ],
+  "codeowners": ["@DavidMStraub"],
+  "requirements": ["homeconnect==0.5"],
   "config_flow": true
 }
