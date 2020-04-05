@@ -64,6 +64,10 @@ stages:
         . venv/bin/activate
         pre-commit run check-json --all-files
       displayName: 'Run check-json'
+    - script: |
+        . venv/bin/activate
+        pre-commit run yamllint --all-files
+      displayName: 'Run yamllint'
   - job: 'Validate'
     pool:
       vmImage: 'ubuntu-latest'
