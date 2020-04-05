@@ -82,7 +82,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors = {"base": "unknown"}
 
             if "base" not in errors:
-                await adt(self.hass, info["roomba"])
+                await async_disconnect_or_timeout(self.hass, info["roomba"])
                 return self.async_create_entry(title=info["name"], data=user_input)
 
         # If there was no user input, do not show the errors.
