@@ -252,7 +252,6 @@ class AlexaEntity:
 
         Raises _UnsupportedInterface.
         """
-        pass
 
     def interfaces(self):
         """Return a list of supported interfaces.

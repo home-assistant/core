@@ -250,11 +250,9 @@ class TeslaDevice(Entity):
 
     async def async_added_to_hass(self):
         """Register state update callback."""
-        pass
 
     async def async_will_remove_from_hass(self):
         """Prepare for unload."""
-        pass
 
     async def async_update(self):
         """Update the state of the device."""

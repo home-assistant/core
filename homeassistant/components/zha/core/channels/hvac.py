@@ -17,8 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 class Dehumidification(ZigbeeChannel):
     """Dehumidification channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(hvac.Fan.cluster_id)
 class FanChannel(ZigbeeChannel):
@@ -67,18 +65,12 @@ class FanChannel(ZigbeeChannel):
 class Pump(ZigbeeChannel):
     """Pump channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(hvac.Thermostat.cluster_id)
 class Thermostat(ZigbeeChannel):
     """Thermostat channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(hvac.UserInterface.cluster_id)
 class UserInterface(ZigbeeChannel):
     """User interface (thermostat) channel."""
-
-    pass

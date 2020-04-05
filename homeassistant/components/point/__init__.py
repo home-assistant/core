@@ -271,7 +271,6 @@ class MinutPointEntity(Entity):
 
     async def _update_callback(self):
         """Update the value of the sensor."""
-        pass
 
     @property
     def available(self):

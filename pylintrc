@@ -24,7 +24,6 @@ good-names=id,i,j,k,ex,Run,_,fp
 # too-few-* - same as too-many-*
 # abstract-method - with intro of async there are always methods missing
 # inconsistent-return-statements - doesn't handle raise
-# unnecessary-pass - readability for functions which only contain pass
 # import-outside-toplevel - TODO
 # too-many-ancestors - it's too strict.
 # wrong-import-order - isort guards this
@@ -49,7 +48,6 @@ disable=
   too-many-return-statements,
   too-many-statements,
   too-many-boolean-expressions,
-  unnecessary-pass,
   unused-argument,
   wrong-import-order
 enable=
