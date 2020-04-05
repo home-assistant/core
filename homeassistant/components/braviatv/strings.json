@@ -1,0 +1,41 @@
+{
+  "config": {
+    "title": "Sony Bravia TV",
+    "step": {
+      "user": {
+        "title": "Sony Bravia TV",
+        "description": "Set up Sony Bravia TV integration. If you have problems with configuration go to: https://www.home-assistant.io/integrations/braviatv \n\nIf your TV was already configured with Home Assistant go to 'Settings -> Network -> Remote device settings -> Unregister remote device' and unregister Home Assistant.",
+        "data": {
+          "host": "TV hostname or IP address"
+        }
+      },
+      "authorize": {
+        "title": "Authorize Sony Bravia TV",
+        "description": "Enter the PIN code shown on the Sony Bravia TV. \nIf the PIN code is not shown, enter 0000.",
+        "data": {
+          "pin": "PIN code"
+        }
+      }
+    },
+    "error": {
+      "invalid_host": "Invalid hostname or IP address.",
+      "host_unreachable": "Host is unreachable, please try again.",
+      "cannot_connect": "Failed to connect, invalid host or PIN code.",
+      "unsupported_model": "Your TV model is not supported.",
+      "unexpected_error": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "This TV is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "title": "Options for Sony Bravia TV",
+        "data": {
+          "ignored_sources": "List of ignored sources"
+        }
+      }
+    }
+  }
+}
