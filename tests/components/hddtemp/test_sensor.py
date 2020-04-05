@@ -112,7 +112,7 @@ class TestHDDTempSensor(unittest.TestCase):
         )
         assert (
             state.attributes.get("friendly_name")
-            == "HD Temperature " + reference["device"]
+            == f"HD Temperature {reference['device']}"
         )
 
     @patch("telnetlib.Telnet", new=TelnetMock)
@@ -125,7 +125,7 @@ class TestHDDTempSensor(unittest.TestCase):
 
         reference = self.reference[state.attributes.get("device")]
 
-        assert state.attributes.get("friendly_name") == "FooBar " + reference["device"]
+        assert state.attributes.get("friendly_name") == f"FooBar {reference['device']}"
 
     @patch("telnetlib.Telnet", new=TelnetMock)
     def test_hddtemp_one_disk(self):
@@ -145,7 +145,7 @@ class TestHDDTempSensor(unittest.TestCase):
         )
         assert (
             state.attributes.get("friendly_name")
-            == "HD Temperature " + reference["device"]
+            == f"HD Temperature {reference['device']}"
         )
 
     @patch("telnetlib.Telnet", new=TelnetMock)
@@ -181,7 +181,7 @@ class TestHDDTempSensor(unittest.TestCase):
             )
             assert (
                 state.attributes.get("friendly_name")
-                == "HD Temperature " + reference["device"]
+                == f"HD Temperature {reference['device']}"
             )
 
     @patch("telnetlib.Telnet", new=TelnetMock)
