@@ -370,6 +370,7 @@ homeassistant/components/switchbot/* @danielhiversen
 homeassistant/components/switcher_kis/* @tomerfi
 homeassistant/components/switchmate/* @danielhiversen
 homeassistant/components/syncthru/* @nielstron
+homeassistant/components/synology_dsm/* @ProtoThis @Quentame
 homeassistant/components/synology_srm/* @aerialls
 homeassistant/components/syslog/* @fabaff
 homeassistant/components/tado/* @michaelarnauts @bdraco
