@@ -67,7 +67,7 @@ class HomeConnectSensor(HomeConnectEntity):
                 if "value" not in status[self._key]:
                     self._state = None
                 else:
-                    seconds = self.sign * float(status[self._key]["value"])
+                    seconds = self._sign * float(status[self._key]["value"])
                     self._state = dt_util.utcnow() - timedelta(seconds=seconds)
             else:
                 self._state = status[self._key].get("value", None)
