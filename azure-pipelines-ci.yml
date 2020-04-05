@@ -46,6 +46,10 @@ stages:
           pre-commit install-hooks
     - script: |
         . venv/bin/activate
+        pre-commit run check-executables-have-shebangs --all-files
+      displayName: 'Run executables check'
+    - script: |
+        . venv/bin/activate
         pre-commit run codespell --all-files
       displayName: 'Run codespell'
     - script: |
