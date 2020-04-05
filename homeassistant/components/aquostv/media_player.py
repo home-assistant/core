@@ -126,10 +126,10 @@ class SharpAquosTVDevice(MediaPlayerDevice):
 
     def __init__(self, name, remote, power_on_enabled=False):
         """Initialize the aquos device."""
-        global SUPPORT_SHARPTV  # pylint: disable=global-statement
+        self._supported_features = SUPPORT_SHARPTV
         self._power_on_enabled = power_on_enabled
         if self._power_on_enabled:
-            SUPPORT_SHARPTV = SUPPORT_SHARPTV | SUPPORT_TURN_ON
+            self._supported_features |= SUPPORT_TURN_ON
         # Save a reference to the imported class
         self._name = name
         # Assume that the TV is not muted
@@ -199,7 +199,7 @@ class SharpAquosTVDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return SUPPORT_SHARPTV
+        return self._supported_features
 
     @_retry
     def turn_off(self):
