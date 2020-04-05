@@ -14,8 +14,6 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_STATE = "state"
-
 CONF_SCS_ID = "scs_id"
 
 DOMAIN = "scsgate"
