@@ -2,10 +2,6 @@
   "domain": "tado",
   "name": "Tado",
   "documentation": "https://www.home-assistant.io/integrations/tado",
-  "requirements": [
-    "python-tado==0.6.0"
-  ],
-  "codeowners": [
-    "@michaelarnauts", "@bdraco"
-  ]
+  "requirements": ["python-tado==0.6.0"],
+  "codeowners": ["@michaelarnauts", "@bdraco"]
 }

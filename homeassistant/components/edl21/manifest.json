@@ -2,10 +2,6 @@
   "domain": "edl21",
   "name": "EDL21",
   "documentation": "https://www.home-assistant.io/integrations/edl21",
-  "requirements": [
-    "pysml==0.0.2"
-  ],
-  "codeowners": [
-    "@mtdcr"
-  ]
+  "requirements": ["pysml==0.0.2"],
+  "codeowners": ["@mtdcr"]
 }
