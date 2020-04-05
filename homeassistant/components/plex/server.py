@@ -61,7 +61,7 @@ def debounce(func):
             _LOGGER.debug("Throttling update of %s", self.friendly_name)
             unsub()  # pylint: disable=not-callable
         unsub = async_call_later(
-            self.hass, DEBOUNCE_TIMEOUT, partial(call_later_listener, self),
+            self.hass, DEBOUNCE_TIMEOUT, partial(call_later_listener, self)
         )
 
     return wrapper
@@ -196,7 +196,7 @@ class PlexServer:
         new_clients = set()
 
         monitored_users = self.accounts
-        known_accounts = set(self.option_monitored_users)
+        known_accounts = {self.option_monitored_users}
         if known_accounts:
             monitored_users = {
                 user
@@ -291,7 +291,7 @@ class PlexServer:
     @property
     def accounts(self):
         """Return accounts associated with the Plex server."""
-        return set(self._accounts)
+        return {self._accounts}
 
     @property
     def owner(self):

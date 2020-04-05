@@ -316,7 +316,7 @@ def _get_bom_stations():
         url = f"http://www.bom.gov.au/{state}/observations/{state}all.shtml"
         for zone_id, wmo_id in re.findall(pattern, requests.get(url).text):
             zones[wmo_id] = zone_id
-    return {f"{zones[k]}.{k}": latlon[k] for k in set(latlon) & set(zones)}
+    return {f"{zones[k]}.{k}": latlon[k] for k in {latlon} & {zones}}
 
 
 def bom_stations(cache_dir):

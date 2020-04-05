@@ -135,7 +135,7 @@ async def async_setup(hass, config):
 
     # Add cmd's to in /&listen packets will fire events
     # By default only buttons of type [TOGGLE,SCENE EXE,LEVEL]
-    cmd_buttons = set(CMD_BUTTONS)
+    cmd_buttons = {CMD_BUTTONS}
     for btn in config[DOMAIN][CONF_BUTTON_EVENTS]:
         cmd_buttons.add(btn)
 

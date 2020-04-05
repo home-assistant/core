@@ -66,7 +66,7 @@ class _BaseOnboardingView(HomeAssistantView):
         self._data["done"].append(self.step)
         await self._store.async_save(self._data)
 
-        if set(self._data["done"]) == set(STEPS):
+        if {self._data["done"]} == {STEPS}:
             hass.data[DOMAIN] = True
 
 

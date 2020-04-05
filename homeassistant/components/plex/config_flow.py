@@ -259,7 +259,7 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
         available_accounts[plex_server.owner] += " [Owner]"
 
         default_accounts = plex_server.accounts
-        known_accounts = set(plex_server.option_monitored_users)
+        known_accounts = {plex_server.option_monitored_users}
         if known_accounts:
             default_accounts = {
                 user
@@ -279,8 +279,7 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_USE_EPISODE_ART,
-                        default=plex_server.option_use_episode_art,
+                        CONF_USE_EPISODE_ART, default=plex_server.option_use_episode_art
                     ): bool,
                     vol.Optional(
                         CONF_MONITORED_USERS, default=default_accounts

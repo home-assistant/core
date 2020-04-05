@@ -428,7 +428,7 @@ class SimpliSafe:
         self._system_notifications[system.system_id] = latest_notifications
 
         # Process any notifications that are new:
-        to_add = set(latest_notifications) - set(old_notifications)
+        to_add = {latest_notifications} - {old_notifications}
 
         if not to_add:
             return

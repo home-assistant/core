@@ -36,7 +36,7 @@ def extract_entities(
             template_entity_ids = template.extract_entities()
 
             if template_entity_ids != MATCH_ALL:
-                entity_ids |= set(template_entity_ids)
+                entity_ids |= {template_entity_ids}
             else:
                 invalid_templates.append(template_name.replace("_template", ""))
 

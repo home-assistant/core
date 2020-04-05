@@ -60,7 +60,7 @@ async def async_setup(hass, config):
             data["done"].append(STEP_USER)
             await store.async_save(data)
 
-    if set(data["done"]) == set(STEPS):
+    if {data["done"]} == {STEPS}:
         return True
 
     hass.data[DOMAIN] = data

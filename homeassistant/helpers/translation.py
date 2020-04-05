@@ -116,7 +116,7 @@ async def async_get_component_resources(
     components = hass.config.components | await async_get_config_flows(hass)
 
     # Calculate the missing components
-    missing_components = components - set(translation_cache)
+    missing_components = components - {translation_cache}
     missing_files = {}
     for component in missing_components:
         path = await component_translation_file(hass, component, language)

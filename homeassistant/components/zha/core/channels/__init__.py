@@ -355,8 +355,8 @@ class ChannelPool:
     @callback
     def unclaimed_channels(self) -> List[zha_typing.ChannelType]:
         """Return a list of available (unclaimed) channels."""
-        claimed = set(self.claimed_channels)
-        available = set(self.all_channels)
+        claimed = {self.claimed_channels}
+        available = {self.all_channels}
         return [self.all_channels[chan_id] for chan_id in (available - claimed)]
 
     @callback

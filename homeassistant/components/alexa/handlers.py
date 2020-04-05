@@ -816,7 +816,7 @@ async def async_api_set_thermostat_mode(hass, config, directive, context):
     else:
         operation_list = entity.attributes.get(climate.ATTR_HVAC_MODES)
         ha_modes = {k: v for k, v in API_THERMOSTAT_MODES.items() if v == mode}
-        ha_mode = next(iter(set(ha_modes).intersection(operation_list)), None)
+        ha_mode = next(iter({ha_modes}.intersection(operation_list)), None)
         if ha_mode not in operation_list:
             msg = f"The requested thermostat mode {mode} is not supported"
             raise AlexaUnsupportedThermostatModeError(msg)

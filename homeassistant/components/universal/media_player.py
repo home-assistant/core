@@ -152,7 +152,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
                 depend.append(entity)
 
         self.hass.helpers.event.async_track_state_change(
-            list(set(depend)), async_on_dependency_update
+            list({depend}), async_on_dependency_update
         )
 
     def _entity_lkp(self, entity_id, state_attr=None):

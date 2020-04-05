@@ -329,7 +329,7 @@ class HoneywellUSThermostat(ClimateDevice):
 
     def set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
-        if {HVAC_MODE_COOL, HVAC_MODE_HEAT} & set(self._hvac_mode_map):
+        if {HVAC_MODE_COOL, HVAC_MODE_HEAT} & {self._hvac_mode_map}:
             self._set_temperature(**kwargs)
 
         try:

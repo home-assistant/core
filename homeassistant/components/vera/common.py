@@ -26,4 +26,4 @@ def get_configured_platforms(controller_data: ControllerData) -> Set[str]:
     if controller_data.scenes:
         platforms.append(SCENE_DOMAIN)
 
-    return set(platforms)
+    return {platforms}

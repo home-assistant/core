@@ -74,7 +74,7 @@ class EssentBase:
     def update(self):
         """Retrieve the latest meter data from Essent."""
         essent = PyEssent(self._username, self._password)
-        eans = set(essent.get_EANs())
+        eans = {essent.get_EANs()}
         for possible_meter in eans:
             meter_data = essent.read_meter(possible_meter, only_last_meter_reading=True)
             if meter_data:

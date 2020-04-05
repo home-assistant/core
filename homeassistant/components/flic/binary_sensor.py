@@ -150,7 +150,7 @@ class FlicButton(BinarySensorDevice):
         channel.on_button_up_or_down = self._on_up_down
 
         # If all types of clicks should be ignored, skip registering callbacks
-        if set(self._ignored_click_types) == set(CLICK_TYPES):
+        if {self._ignored_click_types} == {CLICK_TYPES}:
             return channel
 
         if CLICK_TYPE_DOUBLE in self._ignored_click_types:

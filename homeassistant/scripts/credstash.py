@@ -42,7 +42,7 @@ def run(args):
 
     if args.action == "list":
         secrets = [i["name"] for i in credstash.listSecrets(table=table)]
-        deduped_secrets = sorted(set(secrets))
+        deduped_secrets = sorted({secrets})
 
         print("Saved secrets:")
         for secret in deduped_secrets:

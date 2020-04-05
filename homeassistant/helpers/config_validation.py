@@ -125,7 +125,7 @@ def has_at_most_one_key(*keys: str) -> Callable[[Dict], Dict]:
         if not isinstance(obj, dict):
             raise vol.Invalid("expected dictionary")
 
-        if len(set(keys) & set(obj)) > 1:
+        if len({keys} & {obj}) > 1:
             raise vol.Invalid("must contain at most one of {}.".format(", ".join(keys)))
         return obj
 

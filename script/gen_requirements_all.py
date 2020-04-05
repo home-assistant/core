@@ -127,7 +127,7 @@ def gather_recursive_requirements(domain, seen=None):
     seen.add(domain)
     integration = Integration(Path(f"homeassistant/components/{domain}"))
     integration.load_manifest()
-    reqs = set(integration.requirements)
+    reqs = {integration.requirements}
     for dep_domain in integration.dependencies:
         reqs.update(gather_recursive_requirements(dep_domain, seen))
     return reqs
@@ -169,10 +169,7 @@ def gather_requirements_from_manifests(errors, reqs):
             continue
 
         process_requirements(
-            errors,
-            integration.requirements,
-            f"homeassistant.components.{domain}",
-            reqs,
+            errors, integration.requirements, f"homeassistant.components.{domain}", reqs
         )
 
 

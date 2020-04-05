@@ -74,10 +74,10 @@ def setup(hass, config):
 
     include = conf[CONF_INCLUDE]
     exclude = conf[CONF_EXCLUDE]
-    whitelist_e = set(include[CONF_ENTITIES])
-    whitelist_d = set(include[CONF_DOMAINS])
-    blacklist_e = set(exclude[CONF_ENTITIES])
-    blacklist_d = set(exclude[CONF_DOMAINS])
+    whitelist_e = {include[CONF_ENTITIES]}
+    whitelist_d = {include[CONF_DOMAINS]}
+    blacklist_e = {exclude[CONF_ENTITIES]}
+    blacklist_d = {exclude[CONF_DOMAINS]}
 
     client_args = {
         "org": conf[CONF_ORG],

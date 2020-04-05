@@ -155,7 +155,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
                 unordered_services.add(service)
 
         if self._include:
-            unordered_services &= set(self._include)
+            unordered_services &= {self._include}
 
         return sorted(unordered_services)
 

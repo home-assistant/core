@@ -141,7 +141,7 @@ class AirSensor(Entity):
             if site["pollutants_status"] != "no_species_data":
                 sites_status.append(site["pollutants_status"])
         if sites_status:
-            self._state = max(set(sites_status), key=sites_status.count)
+            self._state = max({sites_status}, key=sites_status.count)
         else:
             self._state = None
 
@@ -191,9 +191,7 @@ def parse_site(entry_sites_data):
         site_data["pollutants"] = parsed_species_data
 
         if quality_list:
-            site_data["pollutants_status"] = max(
-                set(quality_list), key=quality_list.count
-            )
+            site_data["pollutants_status"] = max({quality_list}, key=quality_list.count)
             site_data["number_of_pollutants"] = len(quality_list)
         else:
             site_data["pollutants_status"] = "no_species_data"

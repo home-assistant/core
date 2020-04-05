@@ -211,10 +211,7 @@ def _check_for_insteon_type(
     domains = SUPPORTED_DOMAINS if not single_domain else [single_domain]
     for domain in domains:
         if any(
-            [
-                device_type.startswith(t)
-                for t in set(NODE_FILTERS[domain]["insteon_type"])
-            ]
+            [device_type.startswith(t) for t in {NODE_FILTERS[domain]["insteon_type"]}]
         ):
 
             # Hacky special-case just for FanLinc, which has a light module
@@ -242,7 +239,7 @@ def _check_for_uom_id(
         # Node doesn't have a uom (Scenes for example)
         return False
 
-    node_uom = set(map(str.lower, node.uom))
+    node_uom = {map(str.lower, node.uom)}
 
     if uom_list:
         if node_uom.intersection(uom_list):
@@ -271,16 +268,16 @@ def _check_for_states_in_uom(
         # Node doesn't have a uom (Scenes for example)
         return False
 
-    node_uom = set(map(str.lower, node.uom))
+    node_uom = {map(str.lower, node.uom)}
 
     if states_list:
-        if node_uom == set(states_list):
+        if node_uom == {states_list}:
             hass.data[ISY994_NODES][single_domain].append(node)
             return True
     else:
         domains = SUPPORTED_DOMAINS if not single_domain else [single_domain]
         for domain in domains:
-            if node_uom == set(NODE_FILTERS[domain]["states"]):
+            if node_uom == {NODE_FILTERS[domain]["states"]}:
                 hass.data[ISY994_NODES][domain].append(node)
                 return True
 

@@ -69,7 +69,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ALARM_CONTROL_PANELS): cv.schema_with_slug_keys(
             ALARM_CONTROL_PANEL_SCHEMA
-        ),
+        )
     }
 )
 
@@ -92,7 +92,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         if state_template is not None:
             temp_ids = state_template.extract_entities()
             if str(temp_ids) != MATCH_ALL:
-                template_entity_ids |= set(temp_ids)
+                template_entity_ids |= {temp_ids}
         else:
             _LOGGER.warning("No value template - will use optimistic state")
 

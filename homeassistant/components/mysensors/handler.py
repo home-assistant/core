@@ -83,7 +83,7 @@ def _handle_child_update(hass, hass_config, validated):
                 new_dev_ids.append(dev_id)
         if new_dev_ids:
             discover_mysensors_platform(hass, hass_config, platform, new_dev_ids)
-    for signal in set(signals):
+    for signal in {signals}:
         # Only one signal per device is needed.
         # A device can have multiple platforms, ie multiple schemas.
         async_dispatcher_send(hass, signal)

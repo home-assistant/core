@@ -416,7 +416,7 @@ class SonosEntity(MediaPlayerDevice):
     @soco_coordinator
     def state(self):
         """Return the state of the entity."""
-        if self._status in ("PAUSED_PLAYBACK", "STOPPED",):
+        if self._status in ("PAUSED_PLAYBACK", "STOPPED"):
             # Sonos can consider itself "paused" but without having media loaded
             # (happens if playing Spotify and via Spotify app you pick another device to play on)
             if self._media_title is None:
@@ -1053,7 +1053,7 @@ class SonosEntity(MediaPlayerDevice):
                 entity.snapshot(with_group)
 
         # Find all affected players
-        entities = set(entities)
+        entities = {entities}
         if with_group:
             for entity in list(entities):
                 entities.update(entity._sonos_group)
@@ -1139,7 +1139,7 @@ class SonosEntity(MediaPlayerDevice):
                     return False
 
                 # Test that slaves match
-                if set(group[1:]) != set(current_group[1:]):
+                if {group[1:]} != {current_group[1:]}:
                     return False
 
             return True

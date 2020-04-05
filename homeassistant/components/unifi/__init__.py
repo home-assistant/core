@@ -89,7 +89,7 @@ class UnifiWirelessClients:
         """Get data related to a specific controller."""
         controller_id = get_controller_id_from_config_entry(config_entry)
         data = self.data.get(controller_id, {"wireless_devices": []})
-        return set(data["wireless_devices"])
+        return {data["wireless_devices"]}
 
     @callback
     def update_data(self, data, config_entry):

@@ -80,7 +80,7 @@ def ensure_unique_string(
     If preferred string exists will append _2, _3, ..
     """
     test_string = preferred_string
-    current_strings_set = set(current_strings)
+    current_strings_set = {current_strings}
 
     tries = 1
 

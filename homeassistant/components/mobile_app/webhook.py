@@ -97,7 +97,7 @@ _LOGGER = logging.getLogger(__name__)
 
 WEBHOOK_COMMANDS = Registry()
 
-COMBINED_CLASSES = set(BINARY_SENSOR_CLASSES + SENSOR_CLASSES)
+COMBINED_CLASSES = {BINARY_SENSOR_CLASSES + SENSOR_CLASSES}
 SENSOR_TYPES = [ATTR_SENSOR_TYPE_BINARY_SENSOR, ATTR_SENSOR_TYPE_SENSOR]
 
 WEBHOOK_PAYLOAD_SCHEMA = vol.Schema(
@@ -308,7 +308,7 @@ async def webhook_update_registration(hass, config_entry, data):
     hass.config_entries.async_update_entry(config_entry, data=new_registration)
 
     return webhook_response(
-        safe_registration(new_registration), registration=new_registration,
+        safe_registration(new_registration), registration=new_registration
     )
 
 
@@ -385,7 +385,7 @@ async def webhook_register_sensor(hass, config_entry, data):
     async_dispatcher_send(hass, register_signal, data)
 
     return webhook_response(
-        {"success": True}, registration=config_entry.data, status=HTTP_CREATED,
+        {"success": True}, registration=config_entry.data, status=HTTP_CREATED
     )
 
 

@@ -95,7 +95,7 @@ async def async_setup_entry(hass, config_entry):
         dev_dict = await async_process_devices(hass, manager)
         switch_devs = dev_dict.get(VS_SWITCHES, [])
 
-        switch_set = set(switch_devs)
+        switch_set = {switch_devs}
         new_switches = list(switch_set.difference(switches))
         if new_switches and switches:
             switches.extend(new_switches)

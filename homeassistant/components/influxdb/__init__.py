@@ -145,10 +145,10 @@ def setup(hass, config):
 
     include = conf.get(CONF_INCLUDE, {})
     exclude = conf.get(CONF_EXCLUDE, {})
-    whitelist_e = set(include.get(CONF_ENTITIES, []))
-    whitelist_d = set(include.get(CONF_DOMAINS, []))
-    blacklist_e = set(exclude.get(CONF_ENTITIES, []))
-    blacklist_d = set(exclude.get(CONF_DOMAINS, []))
+    whitelist_e = {include.get(CONF_ENTITIES, [])}
+    whitelist_d = {include.get(CONF_DOMAINS, [])}
+    blacklist_e = {exclude.get(CONF_ENTITIES, [])}
+    blacklist_d = {exclude.get(CONF_DOMAINS, [])}
     tags = conf.get(CONF_TAGS)
     tags_attributes = conf.get(CONF_TAGS_ATTRIBUTES)
     default_measurement = conf.get(CONF_DEFAULT_MEASUREMENT)

@@ -288,7 +288,7 @@ class TransmissionData:
         ]
 
         tmp_completed_torrents = list(
-            set(actual_completed_torrents).difference(self.completed_torrents)
+            {actual_completed_torrents}.difference(self.completed_torrents)
         )
 
         for var in tmp_completed_torrents:
@@ -304,7 +304,7 @@ class TransmissionData:
         ]
 
         tmp_started_torrents = list(
-            set(actual_started_torrents).difference(self.started_torrents)
+            {actual_started_torrents}.difference(self.started_torrents)
         )
 
         for var in tmp_started_torrents:

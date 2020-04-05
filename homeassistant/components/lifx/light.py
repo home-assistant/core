@@ -722,7 +722,7 @@ class LIFXStrip(LIFXColor):
 
             zones = list(range(0, num_zones))
         else:
-            zones = [x for x in set(zones) if x < num_zones]
+            zones = [x for x in {zones} if x < num_zones]
 
         # Zone brightness is not reported when powered off
         if not self.is_on and hsbk[2] is None:

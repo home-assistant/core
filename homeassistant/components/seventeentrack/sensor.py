@@ -299,7 +299,7 @@ class SeventeenTrackData:
 
             new_packages = {p.tracking_number: p for p in packages}
 
-            to_add = set(new_packages) - set(self.packages)
+            to_add = {new_packages} - {self.packages}
 
             _LOGGER.debug("Will add new tracking numbers: %s", to_add)
             if to_add:

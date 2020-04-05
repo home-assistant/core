@@ -153,7 +153,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     network_id = config.get(CONF_NETWORK)
-    stations_list = set(config.get(CONF_STATIONS_LIST, []))
+    stations_list = {config.get(CONF_STATIONS_LIST, [])}
     radius = config.get(CONF_RADIUS, 0)
     name = config[CONF_NAME]
     if not hass.config.units.is_metric:

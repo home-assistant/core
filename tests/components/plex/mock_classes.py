@@ -119,7 +119,7 @@ class MockPlexServer:
     @property
     def accounts(self):
         """Mock the accounts property."""
-        return set(MOCK_USERS)
+        return {MOCK_USERS}
 
     @property
     def version(self):

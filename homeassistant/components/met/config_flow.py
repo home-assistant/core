@@ -20,7 +20,7 @@ def configured_instances(hass):
         entries.append(
             f"{entry.data.get(CONF_LATITUDE)}-{entry.data.get(CONF_LONGITUDE)}"
         )
-    return set(entries)
+    return {entries}
 
 
 class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

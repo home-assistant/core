@@ -128,7 +128,7 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
             for plate, confidence in plates.items()
             if confidence >= self.confidence
         }
-        new_plates = set(plates) - set(self.plates)
+        new_plates = {plates} - {self.plates}
 
         # Send events
         for i_plate in new_plates:

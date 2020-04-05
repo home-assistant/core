@@ -122,10 +122,10 @@ async def async_refresh_devices_service(hass, data):
     if CONF_BRIDGE_ID in data:
         gateway = hass.data[DOMAIN][normalize_bridge_id(data[CONF_BRIDGE_ID])]
 
-    groups = set(gateway.api.groups.keys())
-    lights = set(gateway.api.lights.keys())
-    scenes = set(gateway.api.scenes.keys())
-    sensors = set(gateway.api.sensors.keys())
+    groups = {gateway.api.groups.keys()}
+    lights = {gateway.api.lights.keys()}
+    scenes = {gateway.api.scenes.keys()}
+    sensors = {gateway.api.sensors.keys()}
 
     await gateway.api.refresh_state(ignore_update=True)
 
