@@ -116,24 +116,21 @@ async def test_setup_with_config_entry(hass, caplog):
 
     await trigger_plex_update(hass, server_id)
 
-    with patch.object(
-        mock_plex_server, "clients", side_effect=plexapi.exceptions.BadRequest
-    ) as patched_clients_bad_request:
-        await trigger_plex_update(hass, server_id)
+    for test_exception in (
+        plexapi.exceptions.BadRequest,
+        requests.exceptions.RequestException,
+    ):
+        with patch.object(
+            mock_plex_server, "clients", side_effect=test_exception
+        ) as patched_clients_bad_request:
+            await trigger_plex_update(hass, server_id)
 
-    assert patched_clients_bad_request.called
-    assert "Error requesting Plex client data from server" in caplog.text
-
-    with patch.object(
-        mock_plex_server, "clients", side_effect=requests.exceptions.RequestException
-    ) as patched_clients_requests_exception:
-        await trigger_plex_update(hass, server_id)
-
-    assert patched_clients_requests_exception.called
-    assert (
-        f"Could not connect to Plex server: {mock_plex_server.friendlyName}"
-        in caplog.text
-    )
+        assert patched_clients_bad_request.called
+        assert (
+            f"Could not connect to Plex server: {mock_plex_server.friendlyName}"
+            in caplog.text
+        )
+        caplog.clear()
 
 
 async def test_set_config_entry_unique_id(hass):
