@@ -27,6 +27,7 @@ from homeassistant.components.climate.const import (
     DOMAIN as DOMAIN_CLIMATE,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
+    HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
@@ -150,15 +151,25 @@ class Thermostat(HomeAccessory):
                 HVAC_MODE_OFF,
             )
 
-        # determine available modes for this entity, prefer AUTO over HEAT_COOL and COOL over FAN_ONLY
+        # Determine available modes for this entity,
+        # Prefer HEAT_COOL over AUTO and COOL over FAN_ONLY, DRY
+        #
+        # HEAT_COOL is preferred over auto because HomeKit Accessory Protocol describes
+        # heating or cooling comes on to maintain a target temp which is closest to
+        # the Home Assistant spec
+        #
+        # HVAC_MODE_HEAT_COOL: The device supports heating/cooling to a range
         self.hc_homekit_to_hass = {
             c: s
             for s, c in HC_HASS_TO_HOMEKIT.items()
             if (
                 s in hc_modes
                 and not (
-                    (s == HVAC_MODE_HEAT_COOL and HVAC_MODE_AUTO in hc_modes)
-                    or (s == HVAC_MODE_FAN_ONLY and HVAC_MODE_COOL in hc_modes)
+                    (s == HVAC_MODE_AUTO and HVAC_MODE_HEAT_COOL in hc_modes)
+                    or (
+                        s in (HVAC_MODE_DRY, HVAC_MODE_FAN_ONLY)
+                        and HVAC_MODE_COOL in hc_modes
+                    )
                 )
             )
         }
