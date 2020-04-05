@@ -14,13 +14,9 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_STATE = "state"
-
 CONF_SCS_ID = "scs_id"
 
 DOMAIN = "scsgate"
-
-SCSGATE = None
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA
@@ -34,11 +30,11 @@ SCSGATE_SCHEMA = vol.Schema(
 def setup(hass, config):
     """Set up the SCSGate component."""
     device = config[DOMAIN][CONF_DEVICE]
-    global SCSGATE  # pylint: disable=global-statement
+    scsgate = None
 
     try:
-        SCSGATE = SCSGate(device=device, logger=_LOGGER)
-        SCSGATE.start()
+        scsgate = SCSGate(device=device, logger=_LOGGER)
+        scsgate.start()
     except Exception as exception:  # pylint: disable=broad-except
         _LOGGER.error("Cannot setup SCSGate component: %s", exception)
         return False
@@ -46,9 +42,10 @@ def setup(hass, config):
     def stop_monitor(event):
         """Stop the SCSGate."""
         _LOGGER.info("Stopping SCSGate monitor thread")
-        SCSGATE.stop()
+        scsgate.stop()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_monitor)
+    hass.data[DOMAIN] = scsgate
 
     return True
 
