@@ -4,5 +4,5 @@
   "documentation": "https://www.home-assistant.io/integrations/onkyo",
   "requirements": ["pyeiscp==0.0.1"],
   "dependencies": [],
-  "codeowners": ["winterscar"]
+  "codeowners": ["@winterscar"]
 }
