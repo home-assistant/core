@@ -609,37 +609,8 @@ class SimpliSafeEntity(Entity):
         return self._serial
 
     @callback
-    def _async_should_ignore_websocket_event(self, event):
-        """Return whether this entity should ignore a particular websocket event.
-
-        Note that we can't check for a final condition – whether the event belongs to
-        a particular entity, like a lock – because some events (like arming the system
-        from a keypad _or_ from the website) should impact the same entity.
-        """
-        # This is an event for a system other than the one this entity belongs to:
-        if event.system_id != self._system.system_id:
-            return True
-
-        # This isn't an event that this entity cares about:
-        if event.event_type not in self.websocket_events_to_listen_for:
-            return True
-
-        # This event is targeted at a specific entity whose serial number is different
-        # from this one's:
-        if (
-            event.event_type in WEBSOCKET_EVENTS_REQUIRING_SERIAL
-            and event.sensor_serial != self._serial
-        ):
-            return True
-
-        return False
-
-    @callback
     def _async_internal_update_from_websocket_event(self, event):
         """Perform internal websocket handling prior to handing off."""
-        if self._async_should_ignore_websocket_event(event):
-            return
-
         if event.event_type == EVENT_CONNECTION_LOST:
             self._online = False
         elif event.event_type == EVENT_CONNECTION_RESTORED:
@@ -687,6 +658,22 @@ class SimpliSafeEntity(Entity):
         @callback
         def websocket_update(event):
             """Update the entity with new websocket data."""
+            # Ignore this event if it belongs to a system other than this one:
+            if event.system_id != self._system.system_id:
+                return
+
+            # Ignore this event if this entity hasn't expressed interest in its type:
+            if event.event_type not in self.websocket_events_to_listen_for:
+                return
+
+            # Ignore this event if it belongs to a entity with a different serial:
+            # from this one's:
+            if (
+                event.event_type in WEBSOCKET_EVENTS_REQUIRING_SERIAL
+                and event.sensor_serial != self._serial
+            ):
+                return
+
             self._async_internal_update_from_websocket_event(event)
             self.async_write_ha_state()
 
