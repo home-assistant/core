@@ -4,10 +4,11 @@ import logging
 from scsgate.tasks import ToggleStatusTask
 import voluptuous as vol
 
-from . import CONF_SCS_ID, DOMAIN, SCSGATE_SCHEMA
 from homeassistant.components.light import PLATFORM_SCHEMA, Light
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_STATE, CONF_DEVICES, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+
+from . import CONF_SCS_ID, DOMAIN, SCSGATE_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 

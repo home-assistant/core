@@ -8,10 +8,11 @@ from scsgate.tasks import (
 )
 import voluptuous as vol
 
-from . import CONF_SCS_ID, DOMAIN, SCSGATE_SCHEMA
 from homeassistant.components.cover import PLATFORM_SCHEMA, CoverDevice
 from homeassistant.const import CONF_DEVICES, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+
+from . import CONF_SCS_ID, DOMAIN, SCSGATE_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 

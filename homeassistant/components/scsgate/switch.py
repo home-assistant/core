@@ -5,10 +5,11 @@ from scsgate.messages import ScenarioTriggeredMessage, StateMessage
 from scsgate.tasks import ToggleStatusTask
 import voluptuous as vol
 
-from . import CONF_SCS_ID, DOMAIN, SCSGATE_SCHEMA
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_STATE, CONF_DEVICES, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+
+from . import CONF_SCS_ID, DOMAIN, SCSGATE_SCHEMA
 
 ATTR_SCENARIO_ID = "scenario_id"
 
