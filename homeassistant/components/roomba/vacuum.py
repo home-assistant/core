@@ -16,6 +16,7 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
+from . import roomba_reported_state
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,11 +75,11 @@ class RoombaVacuum(VacuumDevice):
         self._state_attrs = {}
         self._status = None
         self.vacuum = roomba
-        self.vacuum_state = self.vacuum.master_state.get("state", {}).get(
-            "reported", {}
-        )
+        self.vacuum_state = roomba_reported_state(roomba)
         self._mac = self.vacuum_state.get("mac")
         self._name = self.vacuum_state.get("name")
+        self._version = self.vacuum_state.get("softwareVer")
+        self._sku = self.vacuum_state.get("sku")
 
     @property
     def unique_id(self):
@@ -91,14 +92,10 @@ class RoombaVacuum(VacuumDevice):
         return {
             "identifiers": {(DOMAIN, self.unique_id)},
             "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
-            "manufacturer": "iRobots",
+            "manufacturer": "iRobot",
             "name": str(self._name),
-            "sw_version": self.vacuum.master_state.get("state", {})
-            .get("reported", {})
-            .get("softwareVer"),
-            "model": self.vacuum.master_state.get("state", {})
-            .get("reported", {})
-            .get("sku"),
+            "sw_version": self._version,
+            "model": self._sku,
         }
 
     @property
