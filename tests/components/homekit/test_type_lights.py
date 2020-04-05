@@ -235,6 +235,17 @@ async def test_light_brightness(hass, hk_driver, cls, events, driver):
     await hass.async_block_till_done()
     assert acc.char_brightness.value == 1
 
+    # Ensure floats are handled
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_BRIGHTNESS: 55.66})
+    await hass.async_block_till_done()
+    assert acc.char_brightness.value == 22
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_BRIGHTNESS: 108.4})
+    await hass.async_block_till_done()
+    assert acc.char_brightness.value == 43
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_BRIGHTNESS: 0.0})
+    await hass.async_block_till_done()
+    assert acc.char_brightness.value == 1
+
 
 async def test_light_color_temperature(hass, hk_driver, cls, events, driver):
     """Test light with color temperature."""
@@ -417,6 +428,11 @@ async def test_light_set_brightness_and_color(hass, hk_driver, cls, events, driv
     await hass.async_block_till_done()
     assert acc.char_brightness.value == 40
 
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_HS_COLOR: (4.5, 9.2)})
+    await hass.async_block_till_done()
+    assert acc.char_hue.value == 4
+    assert acc.char_saturation.value == 9
+
     # Set from HomeKit
     call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
 
@@ -488,6 +504,10 @@ async def test_light_set_brightness_and_color_temp(
     hass.states.async_set(entity_id, STATE_ON, {ATTR_BRIGHTNESS: 102})
     await hass.async_block_till_done()
     assert acc.char_brightness.value == 40
+
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_COLOR_TEMP: (224.14)})
+    await hass.async_block_till_done()
+    assert acc.char_color_temperature.value == 224
 
     # Set from HomeKit
     call_turn_on = async_mock_service(hass, DOMAIN, "turn_on")
