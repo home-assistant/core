@@ -122,7 +122,7 @@ class NUTSensor(Entity):
         self._firmware = firmware
         self._model = model
         self._device_name = name
-        self._name = "{} {}".format(name, SENSOR_TYPES[sensor_type][0])
+        self._name = f"{name} {SENSOR_TYPES[sensor_type][0]}"
         self._unit = SENSOR_TYPES[sensor_type][1]
         self._state = None
         self._unique_id = unique_id

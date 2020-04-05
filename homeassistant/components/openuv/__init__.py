@@ -82,9 +82,9 @@ async def async_setup(hass, config):
 
     conf = config[DOMAIN]
 
-    identifier = "{}, {}".format(
-        conf.get(CONF_LATITUDE, hass.config.latitude),
-        conf.get(CONF_LONGITUDE, hass.config.longitude),
+    identifier = (
+        f"{conf.get(CONF_LATITUDE, hass.config.latitude)}, "
+        f"{conf.get(CONF_LONGITUDE, hass.config.longitude)}"
     )
     if identifier in configured_instances(hass):
         return True
