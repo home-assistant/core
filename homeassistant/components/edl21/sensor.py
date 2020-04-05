@@ -16,6 +16,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.typing import Optional
 from homeassistant.util.dt import utcnow
 
@@ -130,7 +131,30 @@ class EDL21:
                     self._OBIS_BLACKLIST.add(obis)
 
         if new_entities:
-            self._async_add_entities(new_entities, update_before_add=True)
+            self._hass.loop.create_task(self.add_entities(new_entities))
+
+    async def add_entities(self, new_entities) -> None:
+        """Migrate old unique IDs, then add entities to hass."""
+        registry = await async_get_registry(self._hass)
+
+        for entity in new_entities:
+            old_entity_id = registry.async_get_entity_id(
+                "sensor", DOMAIN, entity.old_unique_id
+            )
+            if old_entity_id is not None:
+                _LOGGER.debug(
+                    "Migrating unique_id from [%s] to [%s]",
+                    entity.old_unique_id,
+                    entity.unique_id,
+                )
+                if registry.async_get_entity_id("sensor", DOMAIN, entity.unique_id):
+                    registry.async_remove(old_entity_id)
+                else:
+                    registry.async_update_entity(
+                        old_entity_id, new_unique_id=entity.unique_id
+                    )
+
+        self._async_add_entities(new_entities, update_before_add=True)
 
 
 class EDL21Entity(Entity):
@@ -192,6 +216,11 @@ class EDL21Entity(Entity):
     def unique_id(self) -> str:
         """Return a unique ID."""
         return self._unique_id
+
+    @property
+    def old_unique_id(self) -> str:
+        """Return a less unique ID as used in the first version of edl21."""
+        return self._obis
 
     @property
     def name(self) -> Optional[str]:
