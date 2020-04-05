@@ -136,7 +136,7 @@ DEFAULT_CONFIG = {
 }
 
 
-class JsonValidator(object):
+class JsonValidator:
     """Helper to compare JSON."""
 
     def __init__(self, jsondata):
