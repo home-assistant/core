@@ -11,7 +11,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from . import DOMAIN, MIN_TIME_BETWEEN_UPDATES
+from .const import DOMAIN
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
