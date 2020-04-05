@@ -120,7 +120,7 @@ def validate(integrations: Dict[str, Integration], config: Config):
     zeroconf_path = config.root / "homeassistant/generated/zeroconf.py"
     config.cache["zeroconf"] = content = generate_and_validate(integrations)
 
-    with open(str(zeroconf_path), "r") as fp:
+    with open(str(zeroconf_path)) as fp:
         current = fp.read().strip()
         if current != content:
             config.add_error(
