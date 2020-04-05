@@ -86,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not options.get(CONF_MANUAL_RUN_MINS) and config.get(CONF_MANUAL_RUN_MINS):
         options_copy = options.copy()
         options_copy[CONF_MANUAL_RUN_MINS] = config[CONF_MANUAL_RUN_MINS]
-        hass.config_entries.async_update_entry(options=options_copy)
+        hass.config_entries.async_update_entry(entry, options=options_copy)
 
     # Configure API
     api_key = config[CONF_API_KEY]
