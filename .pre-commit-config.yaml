@@ -45,6 +45,7 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v2.4.0
     hooks:
+      - id: check-executables-have-shebangs
       - id: check-json
       - id: no-commit-to-branch
         args:
