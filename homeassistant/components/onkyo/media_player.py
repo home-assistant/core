@@ -231,7 +231,7 @@ class OnkyoAVR(MediaPlayerDevice):
         elif command == "hdmi-output-selector":
             self._attributes["video_out"] = ",".join(value)
         elif command == "preset":
-            if self._source.lower() == "radio":
+            if not (self._source is None) and self._source.lower() == "radio":
                 self._attributes[ATTR_PRESET] = value
             elif ATTR_PRESET in self._attributes:
                 del self._attributes[ATTR_PRESET]
