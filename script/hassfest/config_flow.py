@@ -68,7 +68,7 @@ def validate(integrations: Dict[str, Integration], config: Config):
     config_flow_path = config.root / "homeassistant/generated/config_flows.py"
     config.cache["config_flow"] = content = generate_and_validate(integrations)
 
-    with open(str(config_flow_path), "r") as fp:
+    with open(str(config_flow_path)) as fp:
         if fp.read().strip() != content:
             config.add_error(
                 "config_flow",
