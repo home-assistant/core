@@ -4,7 +4,7 @@ from homeassistant.components.cover import ATTR_POSITION, CoverDevice
 from homeassistant.const import ATTR_BATTERY_LEVEL
 
 from .base_class import TradfriBaseDevice
-from .const import CONF_GATEWAY_ID, KEY_API, KEY_GATEWAY
+from .const import ATTR_MODEL, CONF_GATEWAY_ID, KEY_API, KEY_GATEWAY
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -35,7 +35,7 @@ class TradfriCover(TradfriBaseDevice, CoverDevice):
         """Return the state attributes."""
         attr = {}
         attr[ATTR_BATTERY_LEVEL] = self._device_info.battery_level
-        attr["model"] = self._device_info.model_number
+        attr[ATTR_MODEL] = self._device_info.model_number
         return attr
 
     @property
