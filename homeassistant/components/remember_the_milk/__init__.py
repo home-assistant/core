@@ -138,10 +138,10 @@ def _register_new_account(
         f"{DOMAIN} - {account_name}",
         callback=register_account_callback,
         description=(
-            f"You need to log in to Remember The Milk to"
-            f"connect your account. \n\n"
-            f'Step 1: Click on the link "Remember The Milk login"\n\n'
-            f'Step 2: Click on "login completed"'
+            "You need to log in to Remember The Milk to"
+            "connect your account. \n\n"
+            "Step 1: Click on the link 'Remember The Milk login'\n\n"
+            "Step 2: Click on 'login completed'"
         ),
         link_name="Remember The Milk login",
         link_url=url,

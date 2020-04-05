@@ -155,8 +155,8 @@ def request_configuration(config, hass, add_entities):
         name,
         bravia_configuration_callback,
         description=(
-            f"Enter the Pin shown on your Sony Bravia TV."
-            f"If no Pin is shown, enter 0000 to let TV show you a Pin."
+            "Enter the Pin shown on your Sony Bravia TV."
+            "If no Pin is shown, enter 0000 to let TV show you a Pin."
         ),
         description_image="/static/images/smart-tv.png",
         submit_caption="Confirm",

@@ -31,8 +31,8 @@ ATTR_MATCHES = "matches"
 ATTR_TOTAL_MATCHES = "total_matches"
 
 CASCADE_URL = (
-    f"https://raw.githubusercontent.com/opencv/opencv/master/data/"
-    f"lbpcascades/lbpcascade_frontalface.xml"
+    "https://raw.githubusercontent.com/opencv/opencv/master/data/"
+    "lbpcascades/lbpcascade_frontalface.xml"
 )
 
 CONF_CLASSIFIER = "classifier"
