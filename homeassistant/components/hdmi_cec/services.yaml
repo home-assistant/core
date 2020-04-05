@@ -1,4 +1,5 @@
-power_on: { description: Power on all devices which supports it. }
+power_on:
+  description: Power on all devices which supports it.
 select_device:
   description: Select HDMI device.
   fields:

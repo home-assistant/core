@@ -55,6 +55,10 @@ repos:
     rev: v1.21.0
     hooks:
       - id: yamllint
+  - repo: https://github.com/prettier/prettier
+    rev: 2.0.2
+    hooks:
+      - id: prettier
   - repo: local
     hooks:
       # Run mypy through our wrapper script in order to get the possible

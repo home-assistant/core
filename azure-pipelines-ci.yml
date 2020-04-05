@@ -72,6 +72,10 @@ stages:
         . venv/bin/activate
         pre-commit run pyupgrade --all-files
       displayName: 'Run pyupgrade'
+    - script: |
+        . venv/bin/activate
+        pre-commit run prettier --all-files
+      displayName: 'Run prettier'
   - job: 'Validate'
     pool:
       vmImage: 'ubuntu-latest'
