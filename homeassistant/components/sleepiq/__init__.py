@@ -46,7 +46,7 @@ def setup(hass, config):
     Will automatically load sensor components to support
     devices discovered on the account.
     """
-    global DATA  # pylint: disable=global-statement
+    data = None
 
     username = config[DOMAIN][CONF_USERNAME]
     password = config[DOMAIN][CONF_PASSWORD]
@@ -61,6 +61,7 @@ def setup(hass, config):
         _LOGGER.error(message)
         return False
 
+    hass.data[DOMAIN] = data
     discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
     discovery.load_platform(hass, "binary_sensor", DOMAIN, {}, config)
 

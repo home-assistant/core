@@ -9,7 +9,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if discovery_info is None:
         return
 
-    data = sleepiq.DATA
+    data = hass.data[sleepiq.DOMAIN]
     data.update()
 
     dev = []
