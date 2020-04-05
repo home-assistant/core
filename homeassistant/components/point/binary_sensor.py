@@ -95,7 +95,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorDevice):
             self._is_on = True
         else:
             self._is_on = None
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def _webhook_event(self, data, webhook):
@@ -111,7 +111,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorDevice):
             self._is_on = True
         if _type == self._events[1]:
             self._is_on = None
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def is_on(self):

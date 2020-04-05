@@ -10,7 +10,6 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
     CONF_REGION,
-    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import callback
@@ -191,11 +190,7 @@ async def async_setup(hass, config):
     client = CloudClient(hass, prefs, websession, alexa_conf, google_conf)
     cloud = hass.data[DOMAIN] = Cloud(client, **kwargs)
 
-    async def _startup(event):
-        """Startup event."""
-        await cloud.start()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _startup)
+    await cloud.start()
 
     async def _shutdown(event):
         """Shutdown event."""
@@ -230,17 +225,11 @@ async def async_setup(hass, config):
             return
         loaded = True
 
-        hass.async_create_task(
-            hass.helpers.discovery.async_load_platform(
-                "binary_sensor", DOMAIN, {}, config
-            )
+        await hass.helpers.discovery.async_load_platform(
+            "binary_sensor", DOMAIN, {}, config
         )
-        hass.async_create_task(
-            hass.helpers.discovery.async_load_platform("stt", DOMAIN, {}, config)
-        )
-        hass.async_create_task(
-            hass.helpers.discovery.async_load_platform("tts", DOMAIN, {}, config)
-        )
+        await hass.helpers.discovery.async_load_platform("stt", DOMAIN, {}, config)
+        await hass.helpers.discovery.async_load_platform("tts", DOMAIN, {}, config)
 
     cloud.iot.register_on_connect(_on_connect)
 

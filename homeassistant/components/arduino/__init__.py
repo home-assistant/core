@@ -28,7 +28,7 @@ def setup(hass, config):
 
     port = config[DOMAIN][CONF_PORT]
 
-    global BOARD
+    global BOARD  # pylint: disable=global-statement
     try:
         BOARD = ArduinoBoard(port)
     except (serial.serialutil.SerialException, FileNotFoundError):

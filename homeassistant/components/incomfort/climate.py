@@ -90,4 +90,3 @@ class InComfortClimate(IncomfortChild, ClimateDevice):
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-        pass

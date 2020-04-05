@@ -84,7 +84,7 @@ class SerialSensor(Entity):
 
             _LOGGER.debug("Received: %s", line)
             self._state = line
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def stop_serial_read(self):
         """Close resources."""

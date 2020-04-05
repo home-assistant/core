@@ -214,7 +214,7 @@ class Life360Scanner:
             err_msg = member["issues"]["title"]
             if err_msg:
                 if member["issues"]["dialog"]:
-                    err_msg += ": " + member["issues"]["dialog"]
+                    err_msg += f": {member['issues']['dialog']}"
             else:
                 err_msg = "Location information missing"
             self._err(dev_id, err_msg)

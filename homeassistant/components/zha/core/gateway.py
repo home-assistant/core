@@ -5,6 +5,7 @@ import collections
 import itertools
 import logging
 import os
+import time
 import traceback
 from typing import List, Optional
 
@@ -52,6 +53,7 @@ from .const import (
     DEFAULT_DATABASE_NAME,
     DOMAIN,
     SIGNAL_ADD_ENTITIES,
+    SIGNAL_GROUP_MEMBERSHIP_CHANGE,
     SIGNAL_REMOVE,
     SIGNAL_REMOVE_GROUP,
     UNKNOWN_MANUFACTURER,
@@ -256,6 +258,9 @@ class ZHAGateway:
         zha_group = self._async_get_or_create_group(zigpy_group)
         zha_group.info("group_member_removed - endpoint: %s", endpoint)
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_MEMBER_REMOVED)
+        async_dispatcher_send(
+            self._hass, f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_0x{zigpy_group.group_id:04x}"
+        )
 
     def group_member_added(
         self, zigpy_group: ZigpyGroupType, endpoint: ZigpyEndpointType
@@ -265,6 +270,9 @@ class ZHAGateway:
         zha_group = self._async_get_or_create_group(zigpy_group)
         zha_group.info("group_member_added - endpoint: %s", endpoint)
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_MEMBER_ADDED)
+        async_dispatcher_send(
+            self._hass, f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_0x{zigpy_group.group_id:04x}"
+        )
 
     def group_added(self, zigpy_group: ZigpyGroupType) -> None:
         """Handle zigpy group added event."""
@@ -279,7 +287,7 @@ class ZHAGateway:
         zha_group = self._groups.pop(zigpy_group.group_id, None)
         zha_group.info("group_removed")
         async_dispatcher_send(
-            self._hass, f"{SIGNAL_REMOVE_GROUP}_{zigpy_group.group_id}"
+            self._hass, f"{SIGNAL_REMOVE_GROUP}_0x{zigpy_group.group_id:04x}"
         )
 
     def _send_group_gateway_message(
@@ -445,8 +453,6 @@ class ZHAGateway:
         if zha_group is None:
             zha_group = ZHAGroup(self._hass, self, zigpy_group)
             self._groups[zigpy_group.group_id] = zha_group
-        group_entry = self.zha_storage.async_get_or_create_group(zha_group)
-        zha_group.entity_domain = group_entry.entity_domain
         return zha_group
 
     @callback
@@ -469,14 +475,13 @@ class ZHAGateway:
         """Update the devices in the store."""
         for device in self.devices.values():
             self.zha_storage.async_update_device(device)
-        for group in self.groups.values():
-            self.zha_storage.async_update_group(group)
-        await self.zha_storage.async_save()
 
     async def async_device_initialized(self, device: zha_typing.ZigpyDeviceType):
         """Handle device joined and basic information discovered (async)."""
         zha_device = self._async_get_or_create_device(device)
-
+        # This is an active device so set a last seen if it is none
+        if zha_device.last_seen is None:
+            zha_device.async_update_last_seen(time.time())
         _LOGGER.debug(
             "device - %s:%s entering async_device_initialized - is_new_join: %s",
             device.nwk,
@@ -559,9 +564,7 @@ class ZHAGateway:
             zha_group.group_id,
         )
         discovery.GROUP_PROBE.discover_group_entities(zha_group)
-        if zha_group.entity_domain is not None:
-            self.zha_storage.async_update_group(zha_group)
-            async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES)
+
         return zha_group
 
     async def async_remove_zigpy_group(self, group_id: int) -> None:
@@ -577,7 +580,6 @@ class ZHAGateway:
             if tasks:
                 await asyncio.gather(*tasks)
         self.application_controller.groups.pop(group_id)
-        self.zha_storage.async_delete_group(group)
 
     async def shutdown(self):
         """Stop ZHA Controller Application."""

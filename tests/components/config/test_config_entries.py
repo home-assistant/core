@@ -97,9 +97,7 @@ async def test_remove_entry(hass, client):
     """Test removing an entry via the API."""
     entry = MockConfigEntry(domain="demo", state=core_ce.ENTRY_STATE_LOADED)
     entry.add_to_hass(hass)
-    resp = await client.delete(
-        "/api/config/config_entries/entry/{}".format(entry.entry_id)
-    )
+    resp = await client.delete(f"/api/config/config_entries/entry/{entry.entry_id}")
     assert resp.status == 200
     data = await resp.json()
     assert data == {"require_restart": True}
@@ -111,9 +109,7 @@ async def test_remove_entry_unauth(hass, client, hass_admin_user):
     hass_admin_user.groups = []
     entry = MockConfigEntry(domain="demo", state=core_ce.ENTRY_STATE_LOADED)
     entry.add_to_hass(hass)
-    resp = await client.delete(
-        "/api/config/config_entries/entry/{}".format(entry.entry_id)
-    )
+    resp = await client.delete(f"/api/config/config_entries/entry/{entry.entry_id}")
     assert resp.status == 401
     assert len(hass.config_entries.async_entries()) == 1
 
@@ -124,7 +120,7 @@ async def test_available_flows(hass, client):
         resp = await client.get("/api/config/config_entries/flow_handlers")
         assert resp.status == 200
         data = await resp.json()
-        assert set(data) == set(["hello", "world"])
+        assert set(data) == {"hello", "world"}
 
 
 ############################
@@ -294,7 +290,7 @@ async def test_two_step_flow(hass, client):
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
         resp = await client.post(
-            "/api/config/config_entries/flow/{}".format(flow_id),
+            f"/api/config/config_entries/flow/{flow_id}",
             json={"user_title": "user-title"},
         )
         assert resp.status == 200
@@ -352,8 +348,7 @@ async def test_continue_flow_unauth(hass, client, hass_admin_user):
     hass_admin_user.groups = []
 
     resp = await client.post(
-        "/api/config/config_entries/flow/{}".format(flow_id),
-        json={"user_title": "user-title"},
+        f"/api/config/config_entries/flow/{flow_id}", json={"user_title": "user-title"},
     )
     assert resp.status == 401
 
@@ -559,7 +554,7 @@ async def test_two_step_options_flow(hass, client):
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
         resp = await client.post(
-            "/api/config/config_entries/options/flow/{}".format(flow_id),
+            f"/api/config/config_entries/options/flow/{flow_id}",
             json={"enabled": True},
         )
         assert resp.status == 200

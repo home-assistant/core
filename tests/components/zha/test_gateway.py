@@ -1,5 +1,6 @@
 """Test ZHA Gateway."""
 import logging
+import time
 
 import pytest
 import zigpy.profiles.zha as zha
@@ -134,7 +135,6 @@ async def test_gateway_group_methods(hass, device_light_1, device_light_2, coord
     await hass.async_block_till_done()
 
     assert zha_group is not None
-    assert zha_group.entity_domain == LIGHT_DOMAIN
     assert len(zha_group.members) == 2
     for member in zha_group.members:
         assert member.ieee in member_ieee_addresses
@@ -162,10 +162,46 @@ async def test_gateway_group_methods(hass, device_light_1, device_light_2, coord
     await hass.async_block_till_done()
 
     assert zha_group is not None
-    assert zha_group.entity_domain is None
     assert len(zha_group.members) == 1
     for member in zha_group.members:
         assert member.ieee in [device_light_1.ieee]
 
     # the group entity should not have been cleaned up
     assert entity_id not in hass.states.async_entity_ids(LIGHT_DOMAIN)
+
+
+async def test_updating_device_store(hass, zigpy_dev_basic, zha_dev_basic):
+    """Test saving data after a delay."""
+    zha_gateway = get_zha_gateway(hass)
+    assert zha_gateway is not None
+    await async_enable_traffic(hass, [zha_dev_basic])
+
+    assert zha_dev_basic.last_seen is not None
+    entry = zha_gateway.zha_storage.async_get_or_create_device(zha_dev_basic)
+    assert entry.last_seen == zha_dev_basic.last_seen
+
+    assert zha_dev_basic.last_seen is not None
+    last_seen = zha_dev_basic.last_seen
+
+    # test that we can't set None as last seen any more
+    zha_dev_basic.async_update_last_seen(None)
+    assert last_seen == zha_dev_basic.last_seen
+
+    # test that we won't put None in storage
+    zigpy_dev_basic.last_seen = None
+    assert zha_dev_basic.last_seen is None
+    await zha_gateway.async_update_device_storage()
+    await hass.async_block_till_done()
+    entry = zha_gateway.zha_storage.async_get_or_create_device(zha_dev_basic)
+    assert entry.last_seen == last_seen
+
+    # test that we can still set a good last_seen
+    last_seen = time.time()
+    zha_dev_basic.async_update_last_seen(last_seen)
+    assert last_seen == zha_dev_basic.last_seen
+
+    # test that we still put good values in storage
+    await zha_gateway.async_update_device_storage()
+    await hass.async_block_till_done()
+    entry = zha_gateway.zha_storage.async_get_or_create_device(zha_dev_basic)
+    assert entry.last_seen == last_seen

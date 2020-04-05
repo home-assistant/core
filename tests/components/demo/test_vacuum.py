@@ -39,12 +39,12 @@ from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant, mock_service
 from tests.components.vacuum import common
 
-ENTITY_VACUUM_BASIC = "{}.{}".format(DOMAIN, DEMO_VACUUM_BASIC).lower()
-ENTITY_VACUUM_COMPLETE = "{}.{}".format(DOMAIN, DEMO_VACUUM_COMPLETE).lower()
-ENTITY_VACUUM_MINIMAL = "{}.{}".format(DOMAIN, DEMO_VACUUM_MINIMAL).lower()
-ENTITY_VACUUM_MOST = "{}.{}".format(DOMAIN, DEMO_VACUUM_MOST).lower()
-ENTITY_VACUUM_NONE = "{}.{}".format(DOMAIN, DEMO_VACUUM_NONE).lower()
-ENTITY_VACUUM_STATE = "{}.{}".format(DOMAIN, DEMO_VACUUM_STATE).lower()
+ENTITY_VACUUM_BASIC = f"{DOMAIN}.{DEMO_VACUUM_BASIC}".lower()
+ENTITY_VACUUM_COMPLETE = f"{DOMAIN}.{DEMO_VACUUM_COMPLETE}".lower()
+ENTITY_VACUUM_MINIMAL = f"{DOMAIN}.{DEMO_VACUUM_MINIMAL}".lower()
+ENTITY_VACUUM_MOST = f"{DOMAIN}.{DEMO_VACUUM_MOST}".lower()
+ENTITY_VACUUM_NONE = f"{DOMAIN}.{DEMO_VACUUM_NONE}".lower()
+ENTITY_VACUUM_STATE = f"{DOMAIN}.{DEMO_VACUUM_STATE}".lower()
 
 
 class TestVacuumDemo(unittest.TestCase):

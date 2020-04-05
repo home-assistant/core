@@ -1,5 +1,4 @@
 # Describes the format for available group services
-
 reload:
   description: Reload group configuration.
 
@@ -23,7 +22,7 @@ set:
       example: domain.entity_id1, domain.entity_id2
     all:
       description: Enable this option if the group should only turn on when all entities are on.
-      example: True
+      example: true
 
 remove:
   description: Remove a user group.

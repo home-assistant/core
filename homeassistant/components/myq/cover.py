@@ -27,6 +27,8 @@ from homeassistant.helpers.event import async_call_later
 
 from .const import (
     DOMAIN,
+    KNOWN_MODELS,
+    MANUFACTURER,
     MYQ_COORDINATOR,
     MYQ_DEVICE_STATE,
     MYQ_DEVICE_STATE_ONLINE,
@@ -181,9 +183,12 @@ class MyQDevice(CoverDevice):
         device_info = {
             "identifiers": {(DOMAIN, self._device.device_id)},
             "name": self._device.name,
-            "manufacturer": "The Chamberlain Group Inc.",
+            "manufacturer": MANUFACTURER,
             "sw_version": self._device.firmware_version,
         }
+        model = KNOWN_MODELS.get(self._device.device_id[2:4])
+        if model:
+            device_info["model"] = model
         if self._device.parent_device_id:
             device_info["via_device"] = (DOMAIN, self._device.parent_device_id)
         return device_info

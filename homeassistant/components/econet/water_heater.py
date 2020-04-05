@@ -132,11 +132,7 @@ class EcoNetWaterHeater(WaterHeaterDevice):
             self.ha_state_to_econet[value] = key
         for mode in self.supported_modes:
             if mode not in ECONET_STATE_TO_HA:
-                error = (
-                    "Invalid operation mode mapping. "
-                    + mode
-                    + " doesn't map. Please report this."
-                )
+                error = f"Invalid operation mode mapping. {mode} doesn't map. Please report this."
                 _LOGGER.error(error)
 
     @property

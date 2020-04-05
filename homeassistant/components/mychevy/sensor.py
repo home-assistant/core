@@ -58,11 +58,17 @@ class MyChevyStatus(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            UPDATE_TOPIC, self.success
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                UPDATE_TOPIC, self.success
+            )
         )
 
-        self.hass.helpers.dispatcher.async_dispatcher_connect(ERROR_TOPIC, self.error)
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                ERROR_TOPIC, self.error
+            )
+        )
 
     @callback
     def success(self):
@@ -70,7 +76,7 @@ class MyChevyStatus(Entity):
         if self._state != MYCHEVY_SUCCESS:
             _LOGGER.debug("Successfully connected to mychevy website")
             self._state = MYCHEVY_SUCCESS
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     def error(self):
@@ -80,7 +86,7 @@ class MyChevyStatus(Entity):
             "This probably means the mychevy to OnStar link is down"
         )
         self._state = MYCHEVY_ERROR
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def icon(self):
@@ -156,7 +162,7 @@ class EVSensor(Entity):
             self._state = getattr(self._car, self._attr, None)
             for attr in self._extra_attrs:
                 self._state_attributes[attr] = getattr(self._car, attr)
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     @property
     def state(self):

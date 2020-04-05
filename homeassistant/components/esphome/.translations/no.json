@@ -24,12 +24,12 @@
             "user": {
                 "data": {
                     "host": "Vert",
-                    "port": "Port"
+                    "port": ""
                 },
                 "description": "Vennligst skriv inn tilkoblingsinnstillinger for din [ESPHome](https://esphomelib.com/) node.",
-                "title": "ESPHome"
+                "title": ""
             }
         },
-        "title": "ESPHome"
+        "title": ""
     }
 }

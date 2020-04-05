@@ -2,18 +2,23 @@
 from abc import abstractmethod
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorDevice,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import (
+from .const import (
+    DOMAIN as DOMAIN_RACHIO,
+    KEY_DEVICE_ID,
+    KEY_STATUS,
+    KEY_SUBTYPE,
     SIGNAL_RACHIO_CONTROLLER_UPDATE,
     STATUS_OFFLINE,
     STATUS_ONLINE,
-    SUBTYPE_OFFLINE,
-    SUBTYPE_ONLINE,
-    RachioDeviceInfoProvider,
 )
-from .const import DOMAIN as DOMAIN_RACHIO, KEY_DEVICE_ID, KEY_STATUS, KEY_SUBTYPE
+from .entity import RachioDevice
+from .webhooks import SUBTYPE_OFFLINE, SUBTYPE_ONLINE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,22 +37,17 @@ def _create_entities(hass, config_entry):
     return entities
 
 
-class RachioControllerBinarySensor(RachioDeviceInfoProvider, BinarySensorDevice):
+class RachioControllerBinarySensor(RachioDevice, BinarySensorDevice):
     """Represent a binary sensor that reflects a Rachio state."""
 
     def __init__(self, controller, poll=True):
         """Set up a new Rachio controller binary sensor."""
         super().__init__(controller)
-
+        self._undo_dispatcher = None
         if poll:
             self._state = self._poll_update()
         else:
             self._state = None
-
-    @property
-    def should_poll(self) -> bool:
-        """Declare that this entity pushes its state to HA."""
-        return False
 
     @property
     def is_on(self) -> bool:
@@ -66,18 +66,21 @@ class RachioControllerBinarySensor(RachioDeviceInfoProvider, BinarySensorDevice)
     @abstractmethod
     def _poll_update(self, data=None) -> bool:
         """Request the state from the API."""
-        pass
 
     @abstractmethod
     def _handle_update(self, *args, **kwargs) -> None:
         """Handle an update to the state of this sensor."""
-        pass
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        async_dispatcher_connect(
+        self._undo_dispatcher = async_dispatcher_connect(
             self.hass, SIGNAL_RACHIO_CONTROLLER_UPDATE, self._handle_any_update
         )
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe from updates."""
+        if self._undo_dispatcher:
+            self._undo_dispatcher()
 
 
 class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
@@ -101,7 +104,7 @@ class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
     @property
     def device_class(self) -> str:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return "connectivity"
+        return DEVICE_CLASS_CONNECTIVITY
 
     @property
     def icon(self) -> str:

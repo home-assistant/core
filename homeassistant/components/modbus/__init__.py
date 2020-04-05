@@ -1,13 +1,19 @@
 """Support for Modbus."""
+import asyncio
 import logging
-import threading
 
-from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient, ModbusUdpClient
+from pymodbus.client.asynchronous import schedulers
+from pymodbus.client.asynchronous.serial import AsyncModbusSerialClient as ClientSerial
+from pymodbus.client.asynchronous.tcp import AsyncModbusTCPClient as ClientTCP
+from pymodbus.client.asynchronous.udp import AsyncModbusUDPClient as ClientUDP
+from pymodbus.exceptions import ModbusException
+from pymodbus.pdu import ExceptionResponse
 from pymodbus.transaction import ModbusRtuFramer
 import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_STATE,
+    CONF_DELAY,
     CONF_HOST,
     CONF_METHOD,
     CONF_NAME,
@@ -19,24 +25,22 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
+from .const import (
+    ATTR_ADDRESS,
+    ATTR_HUB,
+    ATTR_UNIT,
+    ATTR_VALUE,
+    CONF_BAUDRATE,
+    CONF_BYTESIZE,
+    CONF_PARITY,
+    CONF_STOPBITS,
+    DEFAULT_HUB,
+    MODBUS_DOMAIN,
+    SERVICE_WRITE_COIL,
+    SERVICE_WRITE_REGISTER,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_ADDRESS = "address"
-ATTR_HUB = "hub"
-ATTR_UNIT = "unit"
-ATTR_VALUE = "value"
-
-CONF_BAUDRATE = "baudrate"
-CONF_BYTESIZE = "bytesize"
-CONF_HUB = "hub"
-CONF_PARITY = "parity"
-CONF_STOPBITS = "stopbits"
-
-DEFAULT_HUB = "default"
-DOMAIN = "modbus"
-
-SERVICE_WRITE_COIL = "write_coil"
-SERVICE_WRITE_REGISTER = "write_register"
 
 BASE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string})
 
@@ -59,11 +63,12 @@ ETHERNET_SCHEMA = BASE_SCHEMA.extend(
         vol.Required(CONF_PORT): cv.port,
         vol.Required(CONF_TYPE): vol.Any("tcp", "udp", "rtuovertcp"),
         vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
+        vol.Optional(CONF_DELAY, default=0): cv.positive_int,
     }
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA)])},
+    {MODBUS_DOMAIN: vol.All(cv.ensure_list, [vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA)])},
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -88,97 +93,65 @@ SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
 )
 
 
-def setup_client(client_config):
-    """Set up pymodbus client."""
-    client_type = client_config[CONF_TYPE]
-
-    if client_type == "serial":
-        return ModbusSerialClient(
-            method=client_config[CONF_METHOD],
-            port=client_config[CONF_PORT],
-            baudrate=client_config[CONF_BAUDRATE],
-            stopbits=client_config[CONF_STOPBITS],
-            bytesize=client_config[CONF_BYTESIZE],
-            parity=client_config[CONF_PARITY],
-            timeout=client_config[CONF_TIMEOUT],
-        )
-    if client_type == "rtuovertcp":
-        return ModbusTcpClient(
-            host=client_config[CONF_HOST],
-            port=client_config[CONF_PORT],
-            framer=ModbusRtuFramer,
-            timeout=client_config[CONF_TIMEOUT],
-        )
-    if client_type == "tcp":
-        return ModbusTcpClient(
-            host=client_config[CONF_HOST],
-            port=client_config[CONF_PORT],
-            timeout=client_config[CONF_TIMEOUT],
-        )
-    if client_type == "udp":
-        return ModbusUdpClient(
-            host=client_config[CONF_HOST],
-            port=client_config[CONF_PORT],
-            timeout=client_config[CONF_TIMEOUT],
-        )
-    assert False
-
-
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up Modbus component."""
-    hass.data[DOMAIN] = hub_collect = {}
+    hass.data[MODBUS_DOMAIN] = hub_collect = {}
 
-    for client_config in config[DOMAIN]:
-        client = setup_client(client_config)
-        name = client_config[CONF_NAME]
-        hub_collect[name] = ModbusHub(client, name)
-        _LOGGER.debug("Setting up hub: %s", client_config)
+    _LOGGER.debug("registering hubs")
+    for client_config in config[MODBUS_DOMAIN]:
+        hub_collect[client_config[CONF_NAME]] = ModbusHub(client_config, hass.loop)
 
     def stop_modbus(event):
         """Stop Modbus service."""
         for client in hub_collect.values():
-            client.close()
+            del client
 
     def start_modbus(event):
         """Start Modbus service."""
         for client in hub_collect.values():
-            client.connect()
+            _LOGGER.debug("setup hub %s", client.name)
+            client.setup()
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
 
         # Register services for modbus
-        hass.services.register(
-            DOMAIN,
+        hass.services.async_register(
+            MODBUS_DOMAIN,
             SERVICE_WRITE_REGISTER,
             write_register,
             schema=SERVICE_WRITE_REGISTER_SCHEMA,
         )
-        hass.services.register(
-            DOMAIN, SERVICE_WRITE_COIL, write_coil, schema=SERVICE_WRITE_COIL_SCHEMA
+        hass.services.async_register(
+            MODBUS_DOMAIN,
+            SERVICE_WRITE_COIL,
+            write_coil,
+            schema=SERVICE_WRITE_COIL_SCHEMA,
         )
 
-    def write_register(service):
+    async def write_register(service):
         """Write Modbus registers."""
         unit = int(float(service.data[ATTR_UNIT]))
         address = int(float(service.data[ATTR_ADDRESS]))
         value = service.data[ATTR_VALUE]
         client_name = service.data[ATTR_HUB]
         if isinstance(value, list):
-            hub_collect[client_name].write_registers(
+            await hub_collect[client_name].write_registers(
                 unit, address, [int(float(i)) for i in value]
             )
         else:
-            hub_collect[client_name].write_register(unit, address, int(float(value)))
+            await hub_collect[client_name].write_register(
+                unit, address, int(float(value))
+            )
 
-    def write_coil(service):
+    async def write_coil(service):
         """Write Modbus coil."""
         unit = service.data[ATTR_UNIT]
         address = service.data[ATTR_ADDRESS]
         state = service.data[ATTR_STATE]
         client_name = service.data[ATTR_HUB]
-        hub_collect[client_name].write_coil(unit, address, state)
+        await hub_collect[client_name].write_coil(unit, address, state)
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_modbus)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_modbus)
 
     return True
 
@@ -186,65 +159,153 @@ def setup(hass, config):
 class ModbusHub:
     """Thread safe wrapper class for pymodbus."""
 
-    def __init__(self, modbus_client, name):
+    def __init__(self, client_config, main_loop):
         """Initialize the Modbus hub."""
-        self._client = modbus_client
-        self._lock = threading.Lock()
-        self._name = name
+        _LOGGER.debug("Preparing setup: %s", client_config)
+
+        # generic configuration
+        self._loop = main_loop
+        self._client = None
+        self._lock = asyncio.Lock()
+        self._config_name = client_config[CONF_NAME]
+        self._config_type = client_config[CONF_TYPE]
+        self._config_port = client_config[CONF_PORT]
+        self._config_timeout = client_config[CONF_TIMEOUT]
+        self._config_delay = client_config[CONF_DELAY]
+
+        if self._config_type == "serial":
+            # serial configuration
+            self._config_method = client_config[CONF_METHOD]
+            self._config_baudrate = client_config[CONF_BAUDRATE]
+            self._config_stopbits = client_config[CONF_STOPBITS]
+            self._config_bytesize = client_config[CONF_BYTESIZE]
+            self._config_parity = client_config[CONF_PARITY]
+        else:
+            # network configuration
+            self._config_host = client_config[CONF_HOST]
 
     @property
     def name(self):
         """Return the name of this hub."""
-        return self._name
+        return self._config_name
 
-    def close(self):
-        """Disconnect client."""
-        with self._lock:
-            self._client.close()
+    async def _connect_delay(self):
+        if self._config_delay > 0:
+            await asyncio.sleep(self._config_delay)
+            self._config_delay = 0
 
-    def connect(self):
-        """Connect client."""
-        with self._lock:
-            self._client.connect()
+    def setup(self):
+        """Set up pymodbus client."""
+        # pylint: disable = E0633
+        # Client* do deliver loop, client as result but
+        # pylint does not accept that fact
 
-    def read_coils(self, unit, address, count):
+        _LOGGER.debug("doing setup")
+        if self._config_type == "serial":
+            _, self._client = ClientSerial(
+                schedulers.ASYNC_IO,
+                method=self._config_method,
+                port=self._config_port,
+                baudrate=self._config_baudrate,
+                stopbits=self._config_stopbits,
+                bytesize=self._config_bytesize,
+                parity=self._config_parity,
+                timeout=self._config_timeout,
+                loop=self._loop,
+            )
+        elif self._config_type == "rtuovertcp":
+            _, self._client = ClientTCP(
+                schedulers.ASYNC_IO,
+                host=self._config_host,
+                port=self._config_port,
+                framer=ModbusRtuFramer,
+                timeout=self._config_timeout,
+                loop=self._loop,
+            )
+        elif self._config_type == "tcp":
+            _, self._client = ClientTCP(
+                schedulers.ASYNC_IO,
+                host=self._config_host,
+                port=self._config_port,
+                timeout=self._config_timeout,
+                loop=self._loop,
+            )
+        elif self._config_type == "udp":
+            _, self._client = ClientUDP(
+                schedulers.ASYNC_IO,
+                host=self._config_host,
+                port=self._config_port,
+                timeout=self._config_timeout,
+                loop=self._loop,
+            )
+        else:
+            assert False
+
+    async def _read(self, unit, address, count, func):
+        """Read generic with error handling."""
+        await self._connect_delay()
+        async with self._lock:
+            kwargs = {"unit": unit} if unit else {}
+            result = await func(address, count, **kwargs)
+            if isinstance(result, (ModbusException, ExceptionResponse)):
+                _LOGGER.error("Hub %s Exception (%s)", self._config_name, result)
+            return result
+
+    async def _write(self, unit, address, value, func):
+        """Read generic with error handling."""
+        await self._connect_delay()
+        async with self._lock:
+            kwargs = {"unit": unit} if unit else {}
+            await func(address, value, **kwargs)
+
+    async def read_coils(self, unit, address, count):
         """Read coils."""
-        with self._lock:
-            kwargs = {"unit": unit} if unit else {}
-            return self._client.read_coils(address, count, **kwargs)
+        if self._client.protocol is None:
+            return None
+        return await self._read(unit, address, count, self._client.protocol.read_coils)
 
-    def read_discrete_inputs(self, unit, address, count):
+    async def read_discrete_inputs(self, unit, address, count):
         """Read discrete inputs."""
-        with self._lock:
-            kwargs = {"unit": unit} if unit else {}
-            return self._client.read_discrete_inputs(address, count, **kwargs)
+        if self._client.protocol is None:
+            return None
+        return await self._read(
+            unit, address, count, self._client.protocol.read_discrete_inputs
+        )
 
-    def read_input_registers(self, unit, address, count):
+    async def read_input_registers(self, unit, address, count):
         """Read input registers."""
-        with self._lock:
-            kwargs = {"unit": unit} if unit else {}
-            return self._client.read_input_registers(address, count, **kwargs)
+        if self._client.protocol is None:
+            return None
+        return await self._read(
+            unit, address, count, self._client.protocol.read_input_registers
+        )
 
-    def read_holding_registers(self, unit, address, count):
+    async def read_holding_registers(self, unit, address, count):
         """Read holding registers."""
-        with self._lock:
-            kwargs = {"unit": unit} if unit else {}
-            return self._client.read_holding_registers(address, count, **kwargs)
+        if self._client.protocol is None:
+            return None
+        return await self._read(
+            unit, address, count, self._client.protocol.read_holding_registers
+        )
 
-    def write_coil(self, unit, address, value):
+    async def write_coil(self, unit, address, value):
         """Write coil."""
-        with self._lock:
-            kwargs = {"unit": unit} if unit else {}
-            self._client.write_coil(address, value, **kwargs)
+        if self._client.protocol is None:
+            return None
+        return await self._write(unit, address, value, self._client.protocol.write_coil)
 
-    def write_register(self, unit, address, value):
+    async def write_register(self, unit, address, value):
         """Write register."""
-        with self._lock:
-            kwargs = {"unit": unit} if unit else {}
-            self._client.write_register(address, value, **kwargs)
+        if self._client.protocol is None:
+            return None
+        return await self._write(
+            unit, address, value, self._client.protocol.write_register
+        )
 
-    def write_registers(self, unit, address, values):
+    async def write_registers(self, unit, address, values):
         """Write registers."""
-        with self._lock:
-            kwargs = {"unit": unit} if unit else {}
-            self._client.write_registers(address, values, **kwargs)
+        if self._client.protocol is None:
+            return None
+        return await self._write(
+            unit, address, values, self._client.protocol.write_registers
+        )

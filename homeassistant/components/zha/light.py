@@ -30,12 +30,9 @@ from homeassistant.components.light import (
     SUPPORT_WHITE_VALUE,
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_ON, STATE_UNAVAILABLE
-from homeassistant.core import CALLBACK_TYPE, State, callback
+from homeassistant.core import State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.event import (
-    async_track_state_change,
-    async_track_time_interval,
-)
+from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.color as color_util
 
 from .core import discovery, helpers
@@ -50,12 +47,12 @@ from .core.const import (
     EFFECT_DEFAULT_VARIANT,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
-    SIGNAL_REMOVE_GROUP,
     SIGNAL_SET_LEVEL,
 )
+from .core.helpers import LogMixin
 from .core.registries import ZHA_ENTITIES
 from .core.typing import ZhaDeviceType
-from .entity import BaseZhaEntity, ZhaEntity
+from .entity import ZhaEntity, ZhaGroupEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,13 +97,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
 
-class BaseLight(BaseZhaEntity, light.Light):
+class BaseLight(LogMixin, light.Light):
     """Operations common to all light entities."""
 
     def __init__(self, *args, **kwargs):
         """Initialize the light."""
         super().__init__(*args, **kwargs)
-        self._is_on: bool = False
         self._available: bool = False
         self._brightness: Optional[int] = None
         self._off_brightness: Optional[int] = None
@@ -308,7 +304,7 @@ class BaseLight(BaseZhaEntity, light.Light):
 
 
 @STRICT_MATCH(channel_names=CHANNEL_ON_OFF, aux_channels={CHANNEL_COLOR, CHANNEL_LEVEL})
-class Light(ZhaEntity, BaseLight):
+class Light(BaseLight, ZhaEntity):
     """Representation of a ZHA or ZLL light."""
 
     _REFRESH_INTERVAL = (45, 75)
@@ -321,6 +317,7 @@ class Light(ZhaEntity, BaseLight):
         self._color_channel = self.cluster_channels.get(CHANNEL_COLOR)
         self._identify_channel = self.zha_device.channels.identify_ch
         self._cancel_refresh_handle = None
+        effect_list = []
 
         if self._level_channel:
             self._supported_features |= light.SUPPORT_BRIGHTNESS
@@ -338,10 +335,13 @@ class Light(ZhaEntity, BaseLight):
 
             if color_capabilities & CAPABILITIES_COLOR_LOOP:
                 self._supported_features |= light.SUPPORT_EFFECT
-                self._effect_list.append(light.EFFECT_COLORLOOP)
+                effect_list.append(light.EFFECT_COLORLOOP)
 
         if self._identify_channel:
             self._supported_features |= light.SUPPORT_FLASH
+
+        if effect_list:
+            self._effect_list = effect_list
 
     @callback
     def async_set_state(self, attr_id, attr_name, value):
@@ -468,52 +468,19 @@ class HueLight(Light):
 
 
 @GROUP_MATCH()
-class LightGroup(BaseLight):
+class LightGroup(BaseLight, ZhaGroupEntity):
     """Representation of a light group."""
 
     def __init__(
         self, entity_ids: List[str], unique_id: str, group_id: int, zha_device, **kwargs
     ) -> None:
         """Initialize a light group."""
-        super().__init__(unique_id, zha_device, **kwargs)
-        self._name = f"{zha_device.gateway.groups.get(group_id).name}_group_{group_id}"
-        self._group_id: int = group_id
-        self._entity_ids: List[str] = entity_ids
+        super().__init__(entity_ids, unique_id, group_id, zha_device, **kwargs)
         group = self.zha_device.gateway.get_group(self._group_id)
         self._on_off_channel = group.endpoint[OnOff.cluster_id]
         self._level_channel = group.endpoint[LevelControl.cluster_id]
         self._color_channel = group.endpoint[Color.cluster_id]
         self._identify_channel = group.endpoint[Identify.cluster_id]
-        self._async_unsub_state_changed: Optional[CALLBACK_TYPE] = None
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        await super().async_added_to_hass()
-        await self.async_accept_signal(
-            None,
-            f"{SIGNAL_REMOVE_GROUP}_{self._group_id}",
-            self.async_remove,
-            signal_override=True,
-        )
-
-        @callback
-        def async_state_changed_listener(
-            entity_id: str, old_state: State, new_state: State
-        ):
-            """Handle child updates."""
-            self.async_schedule_update_ha_state(True)
-
-        self._async_unsub_state_changed = async_track_state_change(
-            self.hass, self._entity_ids, async_state_changed_listener
-        )
-        await self.async_update()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Handle removal from Home Assistant."""
-        await super().async_will_remove_from_hass()
-        if self._async_unsub_state_changed is not None:
-            self._async_unsub_state_changed()
-            self._async_unsub_state_changed = None
 
     async def async_update(self) -> None:
         """Query all members and determine the light group state."""
@@ -521,7 +488,7 @@ class LightGroup(BaseLight):
         states: List[State] = list(filter(None, all_states))
         on_states = [state for state in states if state.state == STATE_ON]
 
-        self._is_on = len(on_states) > 0
+        self._state = len(on_states) > 0
         self._available = any(state.state != STATE_UNAVAILABLE for state in states)
 
         self._brightness = helpers.reduce_attribute(on_states, ATTR_BRIGHTNESS)

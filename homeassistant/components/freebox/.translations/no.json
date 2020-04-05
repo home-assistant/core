@@ -16,11 +16,11 @@
             "user": {
                 "data": {
                     "host": "Vert",
-                    "port": "Port"
+                    "port": ""
                 },
-                "title": "Freebox"
+                "title": ""
             }
         },
-        "title": "Freebox"
+        "title": ""
     }
 }

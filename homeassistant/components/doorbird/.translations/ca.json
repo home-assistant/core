@@ -8,6 +8,7 @@
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "unknown": "Error inesperat"
         },
+        "flow_title": "DoorBird {name} ({host})",
         "step": {
             "user": {
                 "data": {

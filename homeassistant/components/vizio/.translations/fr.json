@@ -21,7 +21,8 @@
             "pair_tv": {
                 "data": {
                     "pin": "PIN"
-                }
+                },
+                "title": "Processus de couplage complet"
             },
             "pairing_complete": {
                 "description": "Votre appareil Vizio SmartCast est maintenant connect\u00e9 \u00e0 Home Assistant.",

@@ -102,7 +102,9 @@ class RepetierSensor(Entity):
 
     async def async_added_to_hass(self):
         """Connect update callbacks."""
-        async_dispatcher_connect(self.hass, UPDATE_SIGNAL, self.update_callback)
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, UPDATE_SIGNAL, self.update_callback)
+        )
 
     def _get_data(self):
         """Return new data from the api cache."""

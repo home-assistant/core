@@ -20,5 +20,14 @@
             }
         },
         "title": "DoorBird"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "events": "Liste d'\u00e9v\u00e9nements s\u00e9par\u00e9s par des virgules."
+                }
+            }
+        }
     }
 }

@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Aquesta impressora ja est\u00e0 configurada."
+        },
+        "flow_title": "Impressora: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3 o adre\u00e7a IP",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

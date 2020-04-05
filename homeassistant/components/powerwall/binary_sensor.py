@@ -12,13 +12,15 @@ from .const import (
     ATTR_NOMINAL_SYSTEM_POWER,
     ATTR_REGION,
     DOMAIN,
+    POWERWALL_API_DEVICE_TYPE,
     POWERWALL_API_GRID_STATUS,
+    POWERWALL_API_SITE_INFO,
     POWERWALL_API_SITEMASTER,
+    POWERWALL_API_STATUS,
     POWERWALL_CONNECTED_KEY,
     POWERWALL_COORDINATOR,
     POWERWALL_GRID_ONLINE,
     POWERWALL_RUNNING_KEY,
-    POWERWALL_SITE_INFO,
     SITE_INFO_GRID_CODE,
     SITE_INFO_NOMINAL_SYSTEM_POWER_KW,
     SITE_INFO_REGION,
@@ -33,7 +35,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     powerwall_data = hass.data[DOMAIN][config_entry.entry_id]
 
     coordinator = powerwall_data[POWERWALL_COORDINATOR]
-    site_info = powerwall_data[POWERWALL_SITE_INFO]
+    site_info = powerwall_data[POWERWALL_API_SITE_INFO]
+    device_type = powerwall_data[POWERWALL_API_DEVICE_TYPE]
+    status = powerwall_data[POWERWALL_API_STATUS]
 
     entities = []
     for sensor_class in (
@@ -41,7 +45,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         PowerWallGridStatusSensor,
         PowerWallConnectedSensor,
     ):
-        entities.append(sensor_class(coordinator, site_info))
+        entities.append(sensor_class(coordinator, site_info, status, device_type))
 
     async_add_entities(entities, True)
 

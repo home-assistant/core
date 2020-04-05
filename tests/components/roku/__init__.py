@@ -12,7 +12,7 @@ UPNP_FRIENDLY_NAME = "My Roku 3"
 UPNP_SERIAL = "1GU48T017973"
 
 
-class MockDeviceInfo(object):
+class MockDeviceInfo:
     """Mock DeviceInfo for Roku."""
 
     model_name = NAME
@@ -24,7 +24,7 @@ class MockDeviceInfo(object):
 
     def __repr__(self):
         """Return the object representation of DeviceInfo."""
-        return "<DeviceInfo: %s-%s, SW v%s, Ser# %s (%s)>" % (
+        return "<DeviceInfo: {}-{}, SW v{}, Ser# {} ({})>".format(
             self.model_name,
             self.model_num,
             self.software_version,

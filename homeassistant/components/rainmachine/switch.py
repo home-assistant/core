@@ -142,7 +142,7 @@ class RainMachineSwitch(RainMachineEntity, SwitchDevice):
     @property
     def unique_id(self) -> str:
         """Return a unique, Home Assistant friendly identifier for this entity."""
-        return "{0}_{1}_{2}".format(
+        return "{}_{}_{}".format(
             self.rainmachine.device_mac.replace(":", ""),
             self._switch_type,
             self._rainmachine_entity_id,
@@ -219,7 +219,7 @@ class RainMachineProgram(RainMachineSwitch):
 
         try:
             next_run = datetime.strptime(
-                "{0} {1}".format(
+                "{} {}".format(
                     self._switch_data["nextRun"], self._switch_data["startTime"]
                 ),
                 "%Y-%m-%d %H:%M",

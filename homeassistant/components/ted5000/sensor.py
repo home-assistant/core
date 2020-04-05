@@ -90,7 +90,7 @@ class Ted5000Gateway:
     def __init__(self, url):
         """Initialize the data object."""
         self.url = url
-        self.data = dict()
+        self.data = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

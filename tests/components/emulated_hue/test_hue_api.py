@@ -50,7 +50,7 @@ from tests.common import (
 HTTP_SERVER_PORT = get_test_instance_port()
 BRIDGE_SERVER_PORT = get_test_instance_port()
 
-BRIDGE_URL_BASE = "http://127.0.0.1:{}".format(BRIDGE_SERVER_PORT) + "{}"
+BRIDGE_URL_BASE = f"http://127.0.0.1:{BRIDGE_SERVER_PORT}" + "{}"
 JSON_HEADERS = {CONTENT_TYPE: const.CONTENT_TYPE_JSON}
 
 
@@ -181,7 +181,7 @@ async def test_discover_lights(hue_client):
 
     result_json = await result.json()
 
-    devices = set(val["uniqueid"] for val in result_json.values())
+    devices = {val["uniqueid"] for val in result_json.values()}
 
     # Make sure the lights we added to the config are there
     assert "00:2f:d2:31:ce:c5:55:cc-ee" in devices  # light.ceiling_lights
@@ -773,7 +773,7 @@ async def perform_put_test_on_ceiling_lights(
 
 async def perform_get_light_state(client, entity_id, expected_status):
     """Test the getting of a light state."""
-    result = await client.get("/api/username/lights/{}".format(entity_id))
+    result = await client.get(f"/api/username/lights/{entity_id}")
 
     assert result.status == expected_status
 
@@ -808,7 +808,7 @@ async def perform_put_light_state(
         data[HUE_API_STATE_SAT] = saturation
 
     result = await client.put(
-        "/api/username/lights/{}/state".format(entity_id),
+        f"/api/username/lights/{entity_id}/state",
         headers=req_headers,
         data=json.dumps(data).encode(),
     )

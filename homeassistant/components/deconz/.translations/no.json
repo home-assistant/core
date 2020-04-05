@@ -24,7 +24,7 @@
             "init": {
                 "data": {
                     "host": "Vert",
-                    "port": "Port"
+                    "port": ""
                 },
                 "title": "Definer deCONZ-gatewayen"
             },

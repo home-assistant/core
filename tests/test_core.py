@@ -21,6 +21,7 @@ from homeassistant.const import (
     EVENT_CALL_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
@@ -151,10 +152,14 @@ def test_stage_shutdown():
     """Simulate a shutdown, test calling stuff."""
     hass = get_test_home_assistant()
     test_stop = []
+    test_final_write = []
     test_close = []
     test_all = []
 
     hass.bus.listen(EVENT_HOMEASSISTANT_STOP, lambda event: test_stop.append(event))
+    hass.bus.listen(
+        EVENT_HOMEASSISTANT_FINAL_WRITE, lambda event: test_final_write.append(event)
+    )
     hass.bus.listen(EVENT_HOMEASSISTANT_CLOSE, lambda event: test_close.append(event))
     hass.bus.listen("*", lambda event: test_all.append(event))
 
@@ -162,7 +167,8 @@ def test_stage_shutdown():
 
     assert len(test_stop) == 1
     assert len(test_close) == 1
-    assert len(test_all) == 1
+    assert len(test_final_write) == 1
+    assert len(test_all) == 2
 
 
 class TestHomeAssistant(unittest.TestCase):
@@ -914,7 +920,7 @@ class TestConfig(unittest.TestCase):
         with TemporaryDirectory() as tmp_dir:
             # The created dir is in /tmp. This is a symlink on OS X
             # causing this test to fail unless we resolve path first.
-            self.config.whitelist_external_dirs = set((os.path.realpath(tmp_dir),))
+            self.config.whitelist_external_dirs = {os.path.realpath(tmp_dir)}
 
             test_file = os.path.join(tmp_dir, "test.jpg")
             with open(test_file, "w") as tmp_file:
@@ -924,7 +930,7 @@ class TestConfig(unittest.TestCase):
             for path in valid:
                 assert self.config.is_allowed_path(path)
 
-            self.config.whitelist_external_dirs = set(("/home", "/var"))
+            self.config.whitelist_external_dirs = {"/home", "/var"}
 
             unvalid = [
                 "/hass/config/secure",
@@ -1206,6 +1212,42 @@ async def test_async_functions_with_callback(hass):
 
     await hass.services.async_call("test_domain", "test_service", blocking=True)
     assert len(runs) == 3
+
+
+@pytest.mark.parametrize("cancel_call", [True, False])
+async def test_cancel_service_task(hass, cancel_call):
+    """Test cancellation."""
+    service_called = asyncio.Event()
+    service_cancelled = False
+
+    async def service_handler(call):
+        nonlocal service_cancelled
+        service_called.set()
+        try:
+            await asyncio.sleep(10)
+        except asyncio.CancelledError:
+            service_cancelled = True
+            raise
+
+    hass.services.async_register("test_domain", "test_service", service_handler)
+    call_task = hass.async_create_task(
+        hass.services.async_call("test_domain", "test_service", blocking=True)
+    )
+
+    tasks_1 = asyncio.all_tasks()
+    await asyncio.wait_for(service_called.wait(), timeout=1)
+    tasks_2 = asyncio.all_tasks() - tasks_1
+    assert len(tasks_2) == 1
+    service_task = tasks_2.pop()
+
+    if cancel_call:
+        call_task.cancel()
+    else:
+        service_task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await call_task
+
+    assert service_cancelled
 
 
 def test_valid_entity_id():
