@@ -294,10 +294,10 @@ async def test_thermostat(hass, hk_driver, cls, events):
     await hass.async_block_till_done()
     assert call_set_hvac_mode
     assert call_set_hvac_mode[1].data[ATTR_ENTITY_ID] == entity_id
-    assert call_set_hvac_mode[1].data[ATTR_HVAC_MODE] == HVAC_MODE_AUTO
+    assert call_set_hvac_mode[1].data[ATTR_HVAC_MODE] == HVAC_MODE_HEAT_COOL
     assert acc.char_target_heat_cool.value == 3
     assert len(events) == 3
-    assert events[-1].data[ATTR_VALUE] == HVAC_MODE_AUTO
+    assert events[-1].data[ATTR_VALUE] == HVAC_MODE_HEAT_COOL
 
 
 async def test_thermostat_auto(hass, hk_driver, cls, events):
@@ -660,6 +660,9 @@ async def test_thermostat_hvac_modes(hass, hk_driver, cls):
     acc = cls.thermostat(hass, hk_driver, "Climate", entity_id, 2, None)
     await hass.async_add_job(acc.run)
     await hass.async_block_till_done()
+    hap = acc.char_target_heat_cool.to_HAP()
+    assert hap["valid-values"] == [0, 1]
+    assert acc.char_target_heat_cool.value == 0
 
     with pytest.raises(ValueError):
         await hass.async_add_job(acc.char_target_heat_cool.set_value, 3)
@@ -674,6 +677,124 @@ async def test_thermostat_hvac_modes(hass, hk_driver, cls):
         await hass.async_add_job(acc.char_target_heat_cool.set_value, 2)
     await hass.async_block_till_done()
     assert acc.char_target_heat_cool.value == 1
+
+
+async def test_thermostat_hvac_modes_with_auto_heat_cool(hass, hk_driver, cls):
+    """Test we get heat cool over auto."""
+    entity_id = "climate.test"
+
+    hass.states.async_set(
+        entity_id,
+        HVAC_MODE_HEAT_COOL,
+        {
+            ATTR_HVAC_MODES: [
+                HVAC_MODE_HEAT_COOL,
+                HVAC_MODE_AUTO,
+                HVAC_MODE_HEAT,
+                HVAC_MODE_OFF,
+            ]
+        },
+    )
+    call_set_hvac_mode = async_mock_service(hass, DOMAIN_CLIMATE, "set_hvac_mode")
+    await hass.async_block_till_done()
+
+    acc = cls.thermostat(hass, hk_driver, "Climate", entity_id, 2, None)
+    await hass.async_add_job(acc.run)
+    await hass.async_block_till_done()
+    hap = acc.char_target_heat_cool.to_HAP()
+    assert hap["valid-values"] == [0, 1, 3]
+    assert acc.char_target_heat_cool.value == 3
+
+    await hass.async_add_job(acc.char_target_heat_cool.set_value, 3)
+    await hass.async_block_till_done()
+    assert acc.char_target_heat_cool.value == 3
+
+    await hass.async_add_job(acc.char_target_heat_cool.set_value, 1)
+    await hass.async_block_till_done()
+    assert acc.char_target_heat_cool.value == 1
+
+    with pytest.raises(ValueError):
+        await hass.async_add_job(acc.char_target_heat_cool.set_value, 2)
+    await hass.async_block_till_done()
+    assert acc.char_target_heat_cool.value == 1
+
+    await hass.async_add_job(acc.char_target_heat_cool.client_update_value, 3)
+    await hass.async_block_till_done()
+    assert call_set_hvac_mode
+    assert call_set_hvac_mode[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_hvac_mode[0].data[ATTR_HVAC_MODE] == HVAC_MODE_HEAT_COOL
+    assert acc.char_target_heat_cool.value == 3
+
+
+async def test_thermostat_hvac_modes_with_auto_no_heat_cool(hass, hk_driver, cls):
+    """Test we get auto when there is no heat cool."""
+    entity_id = "climate.test"
+
+    hass.states.async_set(
+        entity_id,
+        HVAC_MODE_HEAT_COOL,
+        {ATTR_HVAC_MODES: [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]},
+    )
+    call_set_hvac_mode = async_mock_service(hass, DOMAIN_CLIMATE, "set_hvac_mode")
+    await hass.async_block_till_done()
+
+    acc = cls.thermostat(hass, hk_driver, "Climate", entity_id, 2, None)
+    await hass.async_add_job(acc.run)
+    await hass.async_block_till_done()
+    hap = acc.char_target_heat_cool.to_HAP()
+    assert hap["valid-values"] == [0, 1, 3]
+    assert acc.char_target_heat_cool.value == 3
+
+    await hass.async_add_job(acc.char_target_heat_cool.set_value, 3)
+    await hass.async_block_till_done()
+    assert acc.char_target_heat_cool.value == 3
+
+    await hass.async_add_job(acc.char_target_heat_cool.set_value, 1)
+    await hass.async_block_till_done()
+    assert acc.char_target_heat_cool.value == 1
+
+    with pytest.raises(ValueError):
+        await hass.async_add_job(acc.char_target_heat_cool.set_value, 2)
+    await hass.async_block_till_done()
+    assert acc.char_target_heat_cool.value == 1
+
+    await hass.async_add_job(acc.char_target_heat_cool.client_update_value, 3)
+    await hass.async_block_till_done()
+    assert call_set_hvac_mode
+    assert call_set_hvac_mode[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_hvac_mode[0].data[ATTR_HVAC_MODE] == HVAC_MODE_AUTO
+    assert acc.char_target_heat_cool.value == 3
+
+
+async def test_thermostat_hvac_modes_with_auto_only(hass, hk_driver, cls):
+    """Test if unsupported HVAC modes are deactivated in HomeKit."""
+    entity_id = "climate.test"
+
+    hass.states.async_set(
+        entity_id, HVAC_MODE_AUTO, {ATTR_HVAC_MODES: [HVAC_MODE_AUTO, HVAC_MODE_OFF]}
+    )
+
+    await hass.async_block_till_done()
+    acc = cls.thermostat(hass, hk_driver, "Climate", entity_id, 2, None)
+    await hass.async_add_job(acc.run)
+    await hass.async_block_till_done()
+    hap = acc.char_target_heat_cool.to_HAP()
+    assert hap["valid-values"] == [0, 3]
+    assert acc.char_target_heat_cool.value == 3
+
+    await hass.async_add_job(acc.char_target_heat_cool.set_value, 3)
+    await hass.async_block_till_done()
+    assert acc.char_target_heat_cool.value == 3
+
+    with pytest.raises(ValueError):
+        await hass.async_add_job(acc.char_target_heat_cool.set_value, 1)
+    await hass.async_block_till_done()
+    assert acc.char_target_heat_cool.value == 3
+
+    with pytest.raises(ValueError):
+        await hass.async_add_job(acc.char_target_heat_cool.set_value, 2)
+    await hass.async_block_till_done()
+    assert acc.char_target_heat_cool.value == 3
 
 
 async def test_water_heater(hass, hk_driver, cls, events):
