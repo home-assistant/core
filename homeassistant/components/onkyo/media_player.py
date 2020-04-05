@@ -25,6 +25,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,7 +42,7 @@ CONF_ZONES = "zones"
 DEFAULT_NAME = "Onkyo Receiver"
 SUPPORTED_MAX_VOLUME = 100
 DEFAULT_RECEIVER_MAX_VOLUME = 80
-ZONES = ["zone1", "zone2", "zone3", "zone4"]
+ZONES = ["zone2", "zone3", "zone4"]
 
 DEFAULT_SOURCES = {
     "tv": "TV",
@@ -142,7 +143,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             if service.service == SERVICE_SELECT_HDMI_OUTPUT:
                 device.select_output(service.data.get(ATTR_HDMI_OUTPUT))
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN,
         SERVICE_SELECT_HDMI_OUTPUT,
         service_handle,
@@ -160,9 +161,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             active_zones[zone].process_update(message)
             hass.async_create_task(active_zones[zone].async_update_ha_state())
 
-    avr = await pyeiscp.Connection.create(
-        host=host, port=port, update_callback=async_onkyo_update_callback
-    )
+    try:
+        avr = await pyeiscp.Connection.create(
+            host=host, port=port, update_callback=async_onkyo_update_callback
+        )
+    except:
+        raise PlatformNotReady
 
     active_zones = {}
 
