@@ -25,8 +25,6 @@ SIDES = [LEFT, RIGHT]
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA = None
-
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(DOMAIN): vol.Schema(
@@ -52,8 +50,8 @@ def setup(hass, config):
     password = config[DOMAIN][CONF_PASSWORD]
     client = Sleepyq(username, password)
     try:
-        DATA = SleepIQData(client)
-        DATA.update()
+        data = SleepIQData(client)
+        data.update()
     except ValueError:
         message = """
             SleepIQ failed to login, double check your username and password"
