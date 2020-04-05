@@ -30,6 +30,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
+    STATE_STANDBY,
 )
 from homeassistant.core import CoreState
 from homeassistant.helpers import entity_registry
@@ -72,6 +73,14 @@ async def test_media_player_set_state(hass, hk_driver, events):
     assert acc.chars[FEATURE_TOGGLE_MUTE].value is True
 
     hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    assert acc.chars[FEATURE_ON_OFF].value is False
+
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert acc.chars[FEATURE_ON_OFF].value is True
+
+    hass.states.async_set(entity_id, STATE_STANDBY)
     await hass.async_block_till_done()
     assert acc.chars[FEATURE_ON_OFF].value is False
 
