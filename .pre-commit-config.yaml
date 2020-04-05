@@ -42,6 +42,10 @@ repos:
     rev: v4.3.21
     hooks:
       - id: isort
+  - repo: https://github.com/prettier/prettier
+    rev: 2.0.2
+    hooks:
+      - id: prettier
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v2.4.0
     hooks:
