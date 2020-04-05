@@ -1,4 +1,5 @@
 """Support for SleepIQ from SleepNumber."""
+from datetime import timedelta
 import logging
 
 from sleepyq import Sleepyq
@@ -11,6 +12,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 from . import DOMAIN, MIN_TIME_BETWEEN_UPDATES
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
 
