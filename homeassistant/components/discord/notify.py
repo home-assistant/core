@@ -70,12 +70,13 @@ class DiscordNotificationService(BaseNotificationService):
 
         # pylint: disable=unused-variable
         @discord_bot.event
+
         async def on_ready():
             """Send the messages when the bot is ready."""
             try:
                 for channelid in kwargs[ATTR_TARGET]:
                     channelid = int(channelid)
-                    channel = discord_bot.get_channel(channelid)
+                    channel = discord_bot.get_channel(channelid) or discord_bot.get_user(channelid)
 
                     if channel is None:
                         _LOGGER.warning("Channel not found for id: %s", channelid)
