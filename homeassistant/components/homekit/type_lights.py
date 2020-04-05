@@ -149,7 +149,7 @@ class Light(HomeAccessory):
         # Handle Brightness
         if CHAR_BRIGHTNESS in self.chars:
             brightness = new_state.attributes.get(ATTR_BRIGHTNESS)
-            if isinstance(brightness, int):
+            if isinstance(brightness, (int, float)):
                 brightness = round(brightness / 255 * 100, 0)
                 # The homeassistant component might report its brightness as 0 but is
                 # not off. But 0 is a special value in homekit. When you turn on a
@@ -169,22 +169,18 @@ class Light(HomeAccessory):
         # Handle color temperature
         if CHAR_COLOR_TEMPERATURE in self.chars:
             color_temperature = new_state.attributes.get(ATTR_COLOR_TEMP)
-            if (
-                isinstance(color_temperature, int)
-                and self.char_color_temperature.value != color_temperature
-            ):
-                self.char_color_temperature.set_value(color_temperature)
+            if isinstance(color_temperature, (int, float)):
+                color_temperature = round(color_temperature, 0)
+                if self.char_color_temperature.value != color_temperature:
+                    self.char_color_temperature.set_value(color_temperature)
 
         # Handle Color
         if CHAR_SATURATION in self.chars and CHAR_HUE in self.chars:
             hue, saturation = new_state.attributes.get(ATTR_HS_COLOR, (None, None))
-            if (
-                isinstance(hue, (int, float))
-                and isinstance(saturation, (int, float))
-                and (
-                    hue != self.char_hue.value
-                    or saturation != self.char_saturation.value
-                )
-            ):
-                self.char_hue.set_value(hue)
-                self.char_saturation.set_value(saturation)
+            if isinstance(hue, (int, float)) and isinstance(saturation, (int, float)):
+                hue = round(hue, 0)
+                saturation = round(saturation, 0)
+                if hue != self.char_hue.value:
+                    self.char_hue.set_value(hue)
+                if saturation != self.char_saturation.value:
+                    self.char_saturation.set_value(saturation)
