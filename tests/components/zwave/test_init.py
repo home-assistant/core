@@ -704,7 +704,7 @@ async def test_power_schemes(hass, mock_openzwave):
         genre=const.GENRE_USER,
         type=const.TYPE_BOOL,
     )
-    hass.async_add_job(mock_receivers[0], node, switch)
+    await hass.async_add_job(mock_receivers[0], node, switch)
 
     await hass.async_block_till_done()
 
@@ -726,8 +726,9 @@ async def test_power_schemes(hass, mock_openzwave):
             index=const.INDEX_SENSOR_MULTILEVEL_POWER,
             instance=13,
             command_class=const.COMMAND_CLASS_SENSOR_MULTILEVEL,
+            genre=const.GENRE_USER,  # to avoid exception
         )
-        hass.async_add_job(mock_receivers[0], node, power)
+        await hass.async_add_job(mock_receivers[0], node, power)
         await hass.async_block_till_done()
 
     assert (
