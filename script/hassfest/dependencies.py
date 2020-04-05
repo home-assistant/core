@@ -156,8 +156,8 @@ def calc_allowed_references(integration: Integration) -> Set[str]:
     """Return a set of allowed references."""
     allowed_references = (
         ALLOWED_USED_COMPONENTS
-        | {integration.manifest.get("dependencies", [])}
-        | {integration.manifest.get("after_dependencies", [])}
+        | set(integration.manifest.get("dependencies", []))
+        | set(integration.manifest.get("after_dependencies", []))
     )
 
     # Discovery requirements are ok if referenced in manifest
