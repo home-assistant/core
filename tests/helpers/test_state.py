@@ -54,13 +54,13 @@ def test_async_track_states(hass):
 def test_call_to_component(hass):
     """Test calls to components state reproduction functions."""
     with patch(
-        ("homeassistant.components.media_player.reproduce_state.async_reproduce_states")
+        "homeassistant.components.media_player.reproduce_state.async_reproduce_states"
     ) as media_player_fun:
         media_player_fun.return_value = asyncio.Future()
         media_player_fun.return_value.set_result(None)
 
         with patch(
-            ("homeassistant.components.climate.reproduce_state.async_reproduce_states")
+            "homeassistant.components.climate.reproduce_state.async_reproduce_states"
         ) as climate_fun:
             climate_fun.return_value = asyncio.Future()
             climate_fun.return_value.set_result(None)
