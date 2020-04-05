@@ -965,6 +965,9 @@ onvif-zeep-async==0.2.0
 # homeassistant.components.opencv
 # opencv-python-headless==4.2.0.32
 
+# homeassistant.components.openerz
+openerz-api==0.1.0
+
 # homeassistant.components.openevse
 openevsewifi==0.4
 
