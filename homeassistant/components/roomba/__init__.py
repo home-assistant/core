@@ -11,6 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 from .const import (
     COMPONENTS,
+    CONF_BLID,
     CONF_CERT,
     CONF_CONTINUOUS,
     CONF_DELAY,
@@ -19,7 +20,6 @@ from .const import (
     DEFAULT_CONTINUOUS,
     DEFAULT_DELAY,
     DOMAIN,
-    MAC_ADDRESS,
     ROOMBA_SESSION,
 )
 
@@ -78,7 +78,7 @@ async def async_setup_entry(hass, config_entry):
 
     roomba = Roomba(
         address=config_entry.data[CONF_HOST],
-        blid=config_entry.data[CONF_USERNAME],
+        blid=config_entry.data[CONF_BLID],
         password=config_entry.data[CONF_PASSWORD],
         cert_name=config_entry.data[CONF_CERT],
         continuous=config_entry.options[CONF_CONTINUOUS],
@@ -92,6 +92,7 @@ async def async_setup_entry(hass, config_entry):
         raise exceptions.ConfigEntryNotReady
 
     hass.data[DOMAIN][config_entry.entry_id] = roomba
+    hass.data[DOMAIN][CONF_BLID] = config_entry.data[CONF_BLID]
 
     for component in COMPONENTS:
         hass.async_create_task(
@@ -114,7 +115,6 @@ async def async_connect_or_timeout(hass, roomba):
             while not roomba.roomba_connected or name is None:
                 # Waiting for connection and check datas ready
                 name = roomba_reported_state(roomba).get("name", None)
-                mac = roomba_reported_state(roomba).get("mac", None)
                 await asyncio.sleep(1)
     except RoombaConnectionError:
         _LOGGER.error("Error to connect to vacuum")
@@ -125,7 +125,7 @@ async def async_connect_or_timeout(hass, roomba):
         _LOGGER.error("Timeout expired")
         raise CannotConnect
 
-    return {ROOMBA_SESSION: roomba, CONF_NAME: name, MAC_ADDRESS: mac}
+    return {ROOMBA_SESSION: roomba, CONF_NAME: name}
 
 
 async def async_disconnect_or_timeout(hass, roomba):

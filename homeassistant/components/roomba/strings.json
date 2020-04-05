@@ -6,7 +6,7 @@
         "title": "Connect to the device",
         "data": {
           "host": "Hostname or IP Address",
-          "username": "Username",
+          "blid": "Username",
           "password": "Password",
           "certificate": "Certificate",
           "continuous": "Continuous",
@@ -15,7 +15,7 @@
       }
     },
     "error": {
-      "unknown" : "Unexpected error",
+      "unknown": "Unexpected error",
       "cannot_connect": "Failed to connect, please try again"
     }
   },

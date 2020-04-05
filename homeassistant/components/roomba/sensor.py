@@ -5,7 +5,7 @@ from homeassistant.const import DEVICE_CLASS_BATTERY
 from homeassistant.helpers.entity import Entity
 
 from . import roomba_reported_state
-from .const import DOMAIN
+from .const import CONF_BLID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -13,20 +13,21 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the iRobot Roomba vacuum cleaner."""
     roomba = hass.data[DOMAIN][config_entry.entry_id]
-    roomba_vac = RoombaBattery(roomba)
+    blid = hass.data[DOMAIN][CONF_BLID]
+    roomba_vac = RoombaBattery(roomba, blid)
     async_add_entities([roomba_vac], True)
 
 
 class RoombaBattery(Entity):
     """Class to hold Roomba Sensor basic info."""
 
-    def __init__(self, roomba):
+    def __init__(self, roomba, blid):
         """Initialize the sensor object."""
         self.vacuum = roomba
         self.vacuum_state = roomba_reported_state(roomba)
-        self._mac = self.vacuum_state.get("mac")
+        self._blid = blid
         self._name = self.vacuum_state.get("name")
-        self._identifier = f"roomba_{self._mac}"
+        self._identifier = f"roomba_{self._blid}"
         self._battery_level = None
 
     @property
@@ -37,7 +38,7 @@ class RoombaBattery(Entity):
     @property
     def unique_id(self):
         """Return the ID of this sensor."""
-        return f"battery_{self._mac}"
+        return f"battery_{self._blid}"
 
     @property
     def device_class(self):

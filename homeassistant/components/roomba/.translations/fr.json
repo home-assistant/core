@@ -6,7 +6,7 @@
         "title": "Connexion au périphérique",
         "data": {
           "host": "Nom ou Addresse IP",
-          "username": "Utilisateur",
+          "blid": "Utilisateur",
           "password": "Mot de passe",
           "certificate": "Certificat",
           "continuous": "Continue",

@@ -10,6 +10,7 @@ from homeassistant.core import callback
 
 from . import CannotConnect, async_connect_or_timeout, async_disconnect_or_timeout
 from .const import (
+    CONF_BLID,
     CONF_CERT,
     CONF_CONTINUOUS,
     CONF_DELAY,
@@ -17,7 +18,6 @@ from .const import (
     DEFAULT_CERT,
     DEFAULT_CONTINUOUS,
     DEFAULT_DELAY,
-    MAC_ADDRESS,
     ROOMBA_SESSION,
 )
 from .const import DOMAIN  # pylint:disable=unused-import
@@ -25,7 +25,7 @@ from .const import DOMAIN  # pylint:disable=unused-import
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_BLID): str,
         vol.Required(CONF_PASSWORD): str,
         vol.Optional(CONF_CERT, default=DEFAULT_CERT): str,
         vol.Optional(CONF_CONTINUOUS, default=DEFAULT_CONTINUOUS): bool,
@@ -43,7 +43,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     """
     roomba = Roomba(
         address=data[CONF_HOST],
-        blid=data[CONF_USERNAME],
+        blid=data[CONF_BLID],
         password=data[CONF_PASSWORD],
         cert_name=data[CONF_CERT],
         continuous=data[CONF_CONTINUOUS],
@@ -56,7 +56,6 @@ async def validate_input(hass: core.HomeAssistant, data):
         ROOMBA_SESSION: info[ROOMBA_SESSION],
         CONF_NAME: info[CONF_NAME],
         CONF_HOST: data[CONF_HOST],
-        MAC_ADDRESS: info[MAC_ADDRESS],
     }
 
 
@@ -74,6 +73,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_info):
         """Set the config entry up from yaml."""
+        import_info[CONF_BLID] = import_info.pop(CONF_USERNAME)
         return await self.async_step_user(import_info)
 
     async def async_step_user(self, user_input=None):
@@ -90,7 +90,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if "base" not in errors:
                 await async_disconnect_or_timeout(self.hass, info[ROOMBA_SESSION])
-                await self.async_set_unique_id(info[MAC_ADDRESS])
+                await self.async_set_unique_id(user_input[CONF_BLID])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info[CONF_NAME], data=user_input)
 

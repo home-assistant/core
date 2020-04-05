@@ -14,10 +14,9 @@ from homeassistant.components.vacuum import (
     SUPPORT_TURN_ON,
     VacuumDevice,
 )
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from . import roomba_reported_state
-from .const import DOMAIN
+from .const import CONF_BLID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,14 +57,15 @@ SUPPORT_ROOMBA_CARPET_BOOST = SUPPORT_ROOMBA | SUPPORT_FAN_SPEED
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the iRobot Roomba vacuum cleaner."""
     roomba = hass.data[DOMAIN][config_entry.entry_id]
-    roomba_vac = RoombaVacuum(roomba)
+    blid = hass.data[DOMAIN][CONF_BLID]
+    roomba_vac = RoombaVacuum(roomba, blid)
     async_add_entities([roomba_vac], True)
 
 
 class RoombaVacuum(VacuumDevice):
     """Representation of a Roomba Vacuum cleaner robot."""
 
-    def __init__(self, roomba):
+    def __init__(self, roomba, blid):
         """Initialize the Roomba handler."""
         self._available = False
         self._battery_level = None
@@ -76,7 +76,7 @@ class RoombaVacuum(VacuumDevice):
         self._status = None
         self.vacuum = roomba
         self.vacuum_state = roomba_reported_state(roomba)
-        self._mac = self.vacuum_state.get("mac")
+        self._blid = blid
         self._name = self.vacuum_state.get("name")
         self._version = self.vacuum_state.get("softwareVer")
         self._sku = self.vacuum_state.get("sku")
@@ -84,14 +84,13 @@ class RoombaVacuum(VacuumDevice):
     @property
     def unique_id(self):
         """Return the uniqueid of the vacuum cleaner."""
-        return f"roomba_{self._mac}"
+        return f"roomba_{self._blid}"
 
     @property
     def device_info(self):
         """Return the device info of the vacuum cleaner."""
         return {
             "identifiers": {(DOMAIN, self.unique_id)},
-            "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
             "manufacturer": "iRobot",
             "name": str(self._name),
             "sw_version": self._version,
