@@ -274,6 +274,7 @@ homeassistant/components/ohmconnect/* @robbiet480
 homeassistant/components/ombi/* @larssont
 homeassistant/components/onboarding/* @home-assistant/core
 homeassistant/components/onewire/* @garbled1
+homeassistant/components/onkyo/* @winterscar
 homeassistant/components/openerz/* @misialq
 homeassistant/components/opentherm_gw/* @mvn23
 homeassistant/components/openuv/* @bachya
