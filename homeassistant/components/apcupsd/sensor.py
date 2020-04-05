@@ -4,7 +4,7 @@ import logging
 from apcaccess.status import ALL_UNITS
 import voluptuous as vol
 
-from homeassistant.components import apcupsd
+from . import DOMAIN
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_RESOURCES,
@@ -114,6 +114,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the APCUPSd sensors."""
+    apcups_data = hass.data[DOMAIN]
     entities = []
 
     for resource in config[CONF_RESOURCES]:
@@ -126,13 +127,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 "mdi:information-outline",
             ]
 
-        if sensor_type.upper() not in apcupsd.DATA.status:
+        if sensor_type.upper() not in apcups_data.status:
             _LOGGER.warning(
                 "Sensor type: %s does not appear in the APCUPSd status output",
                 sensor_type,
             )
 
-        entities.append(APCUPSdSensor(apcupsd.DATA, sensor_type))
+        entities.append(APCUPSdSensor(apcups_data, sensor_type))
 
     add_entities(entities, True)
 

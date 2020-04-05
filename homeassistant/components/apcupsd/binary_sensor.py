@@ -14,7 +14,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up an APCUPSd Online Status binary sensor."""
-    add_entities([OnlineStatus(config, apcupsd.DATA)], True)
+    apcups_data = hass.data[apcupsd.DOMAIN]
+
+    add_entities([OnlineStatus(config, apcups_data)], True)
 
 
 class OnlineStatus(BinarySensorDevice):
