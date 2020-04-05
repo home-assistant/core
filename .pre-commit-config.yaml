@@ -46,6 +46,10 @@ repos:
           - --branch=dev
           - --branch=master
           - --branch=rc
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.21.0
+    hooks:
+      - id: yamllint
   - repo: local
     hooks:
       # Run mypy through our wrapper script in order to get the possible

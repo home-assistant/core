@@ -262,7 +262,7 @@ def requirements_pre_commit_output():
     for repo in (x for x in pre_commit_conf["repos"] if x.get("rev")):
         for hook in repo["hooks"]:
             if hook["id"] not in IGNORE_PRE_COMMIT_HOOK_ID:
-                reqs.append(f"{hook['id']}=={repo['rev']}")
+                reqs.append(f"{hook['id']}=={repo['rev'].lstrip('v')}")
                 reqs.extend(x for x in hook.get("additional_dependencies", ()))
     output = [
         f"# Automatically generated "
