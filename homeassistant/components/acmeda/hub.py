@@ -100,6 +100,11 @@ class PulseHub:
                 self.config_entry, "cover"
             ),
         )
+        results = await asyncio.gather(
+            self.hass.config_entries.async_forward_entry_unload(
+                self.config_entry, "sensor"
+            ),
+        )
         # None and True are OK
         return False not in results
 
