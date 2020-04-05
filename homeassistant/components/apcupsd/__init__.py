@@ -11,8 +11,6 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_TYPE = "type"
-
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 3551
 DOMAIN = "apcupsd"
