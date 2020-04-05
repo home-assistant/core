@@ -4,11 +4,13 @@ import logging
 
 from aiohttp import web
 
-from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import URL_API
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
+    CONF_CLOUDHOOK_URL,
+    CONF_WEBHOOK_ID,
     DOMAIN,
     KEY_EXTERNAL_ID,
     KEY_TYPE,
@@ -68,28 +70,17 @@ SIGNAL_MAP = {
 _LOGGER = logging.getLogger(__name__)
 
 
-class RachioWebhookView(HomeAssistantView):
-    """Provide a page for the server to call."""
+@callback
+def async_register_webhook(hass, webhook_id, entry_id):
+    """Register a webhook."""
 
-    requires_auth = False  # Handled separately
-
-    def __init__(self, entry_id, webhook_url):
-        """Initialize the instance of the view."""
-        self._entry_id = entry_id
-        self.url = webhook_url
-        self.name = webhook_url[1:].replace("/", ":")
-        _LOGGER.debug(
-            "Initialize webhook at url: %s, with name %s", self.url, self.name
-        )
-
-    async def post(self, request) -> web.Response:
+    async def _async_handle_rachio_webhook(hass, webhook_id, request):
         """Handle webhook calls from the server."""
-        hass = request.app["hass"]
         data = await request.json()
 
         try:
             auth = data.get(KEY_EXTERNAL_ID, "").split(":")[1]
-            assert auth == hass.data[DOMAIN][self._entry_id].rachio.webhook_auth
+            assert auth == hass.data[DOMAIN][entry_id].rachio.webhook_auth
         except (AssertionError, IndexError):
             return web.Response(status=web.HTTPForbidden.status_code)
 
@@ -98,3 +89,39 @@ class RachioWebhookView(HomeAssistantView):
             async_dispatcher_send(hass, SIGNAL_MAP[update_type], data)
 
         return web.Response(status=web.HTTPNoContent.status_code)
+
+    hass.components.webhook.async_register(
+        DOMAIN, "Rachio", webhook_id, _async_handle_rachio_webhook
+    )
+
+
+async def async_get_or_create_registered_webhook_id_and_url(hass, entry):
+    """Generate webhook ID."""
+    config = entry.data.copy()
+
+    updated_config = False
+    webhook_url = None
+
+    webhook_id = config.get(CONF_WEBHOOK_ID)
+    if not webhook_id:
+        webhook_id = hass.components.webhook.async_generate_id()
+        config[CONF_WEBHOOK_ID] = webhook_id
+        updated_config = True
+
+    if hass.components.cloud.async_active_subscription():
+        cloudhook_url = config.get(CONF_CLOUDHOOK_URL)
+        if not cloudhook_url:
+            cloudhook_url = await hass.components.cloud.async_create_cloudhook(
+                webhook_id
+            )
+            config[CONF_CLOUDHOOK_URL] = cloudhook_url
+            updated_config = True
+        webhook_url = cloudhook_url
+
+    if not webhook_url:
+        webhook_url = hass.components.webhook.async_generate_url(webhook_id)
+
+    if updated_config:
+        hass.config_entries.async_update_entry(entry, data=config)
+
+    return webhook_id, webhook_url
