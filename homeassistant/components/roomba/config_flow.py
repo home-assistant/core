@@ -50,7 +50,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         continuous=data[CONF_CONTINUOUS],
         delay=data[CONF_DELAY],
     )
-    return await act(hass, roomba)
+    return await async_connect_or_timeout(hass, roomba)
 
 
 class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
