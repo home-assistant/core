@@ -1,6 +1,4 @@
 """Config flow to configure the Synology DSM integration."""
-import logging
-
 from synology_dsm import SynologyDSM
 from synology_dsm.api.core.utilization import SynoCoreUtilization
 from synology_dsm.api.dsm.information import SynoDSMInformation
@@ -28,8 +26,6 @@ from .const import (
     DEFAULT_SSL,
 )
 from .const import DOMAIN  # pylint: disable=unused-import
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
