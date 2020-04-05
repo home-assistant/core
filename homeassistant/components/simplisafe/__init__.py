@@ -636,10 +636,7 @@ class SimpliSafeEntity(Entity):
 
     @callback
     def _async_internal_update_from_websocket_event(self, event):
-        """Perform some internal websocket handling.
-
-        Should not be called directly.
-        """
+        """Perform internal websocket handling prior to handing off."""
         if self._async_should_ignore_websocket_event(event):
             return
 
