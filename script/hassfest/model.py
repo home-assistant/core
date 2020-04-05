@@ -17,7 +17,7 @@ class Error:
 
     def __str__(self) -> str:
         """Represent error as string."""
-        return "[{}] {}".format(self.plugin.upper(), self.error)
+        return f"[{self.plugin.upper()}] {self.error}"
 
 
 @attr.s
