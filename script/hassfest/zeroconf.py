@@ -79,8 +79,8 @@ def generate_and_validate(integrations: Dict[str, Integration]):
             if model in homekit_dict:
                 integration.add_error(
                     "zeroconf",
-                    "Integrations {} and {} have overlapping HomeKit "
-                    "models".format(domain, homekit_dict[model]),
+                    f"Integrations {domain} and {homekit_dict[model]} "
+                    "have overlapping HomeKit models",
                 )
                 break
 
@@ -100,8 +100,8 @@ def generate_and_validate(integrations: Dict[str, Integration]):
             if key.startswith(key_2) or key_2.startswith(key):
                 integration.add_error(
                     "zeroconf",
-                    "Integrations {} and {} have overlapping HomeKit "
-                    "models".format(homekit_dict[key], homekit_dict[key_2]),
+                    f"Integrations {homekit_dict[key]} and {homekit_dict[key_2]} "
+                    "have overlapping HomeKit models",
                 )
                 warned.add(key)
                 warned.add(key_2)

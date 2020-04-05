@@ -36,9 +36,8 @@ def validate_python() -> None:
     """Validate that the right Python version is running."""
     if sys.version_info[:3] < REQUIRED_PYTHON_VER:
         print(
-            "Home Assistant requires at least Python {}.{}.{}".format(
-                *REQUIRED_PYTHON_VER
-            )
+            "Home Assistant requires at least Python "
+            f"{REQUIRED_PYTHON_VER[0]}.{REQUIRED_PYTHON_VER[1]}.{REQUIRED_PYTHON_VER[2]}"
         )
         sys.exit(1)
 

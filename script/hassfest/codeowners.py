@@ -48,9 +48,7 @@ def generate_and_validate(integrations: Dict[str, Integration]):
                     "codeowners", "Code owners need to be valid GitHub handles."
                 )
 
-        parts.append(
-            "homeassistant/components/{}/* {}".format(domain, " ".join(codeowners))
-        )
+        parts.append(f"homeassistant/components/{domain}/* {' '.join(codeowners)}")
 
     parts.append(f"\n{INDIVIDUAL_FILES.strip()}")
 
