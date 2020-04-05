@@ -19,7 +19,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Acmeda Rollers from a config entry."""
     hub = hass.data[DOMAIN][config_entry.data["host"]]
     cur_covers = {}
-    # cur_groups = {}
 
     # Acmeda updates all covers via a single API call.
     #
@@ -47,10 +46,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     # throttle decorator will prevent the call.
 
     progress = None
-    cover_progress = set()
-    group_progress = set()
+    progress_set = set()
 
-    async def request_update(is_group, object_id):
+    async def request_update(object_id):
         """Request an update.
 
         We will only make 1 request to the server for updating at a time. If a
@@ -67,7 +65,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """
         nonlocal progress
 
-        progress_set = group_progress if is_group else cover_progress
         progress_set.add(object_id)
 
         if progress is not None:
@@ -76,14 +73,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         progress = asyncio.ensure_future(update_hub())
         result = await progress
         progress = None
-        cover_progress.clear()
-        group_progress.clear()
+        progress_set.clear()
         return result
 
     async def update_hub():
         """Update the values of the hub.
 
-        Will update covers and, if enabled, groups from the hub.
+        Will update covers from the hub.
         """
         tasks = []
         tasks.append(
@@ -93,24 +89,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 hub,
                 async_add_entities,
                 request_update,
-                False,
                 cur_covers,
-                cover_progress,
+                progress_set,
             )
         )
-
-        # tasks.append(
-        #    async_update_items(
-        #        hass,
-        #        config_entry,
-        #        hub,
-        #        async_add_entities,
-        #        request_update,
-        #        True,
-        #        cur_groups,
-        #        group_progress,
-        #    )
-        # )
 
         await asyncio.wait(tasks)
 
@@ -123,7 +105,6 @@ async def async_update_items(
     hub,
     async_add_entities,
     request_hub_update,
-    is_group,
     current,
     progress_waiting,
 ):
@@ -131,12 +112,8 @@ async def async_update_items(
     if not hub.authorized:
         return
 
-    if is_group:
-        api_type = "group"
-        api = hub.api.rooms
-    else:
-        api_type = "roller"
-        api = hub.api.rollers
+    api_type = "roller"
+    api = hub.api.rollers
 
     try:
         start = monotonic()
@@ -171,7 +148,7 @@ async def async_update_items(
 
     for item_id, item in api.items():
         if item_id not in current:
-            current[item_id] = AcmedaCover(hass, item, hub, is_group)
+            current[item_id] = AcmedaCover(hass, item, hub)
 
             new_items.append(current[item_id])
         elif item_id not in progress_waiting:
@@ -186,12 +163,9 @@ async def async_update_items(
 class AcmedaCover(AcmedaBase, CoverDevice):
     """Representation of a Acmeda cover device."""
 
-    def __init__(
-        self, hass, roller: aiopulse.Roller, hub: aiopulse.Hub, is_group=False
-    ):
+    def __init__(self, hass, roller: aiopulse.Roller, hub: aiopulse.Hub):
         """Initialize the roller."""
         super().__init__(hass, roller, hub)
-        self.is_group = is_group
         self.roller.set_callback(self.notify_update)
 
     @property
