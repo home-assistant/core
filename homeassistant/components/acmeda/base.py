@@ -39,8 +39,5 @@ class AcmedaBase:
             "identifiers": {(DOMAIN, self.device_id)},
             "name": self.roller.name,
             "manufacturer": "Rollease Acmeda",
-            # "model": self.roller.productname or self.roller.modelid,
-            # Not yet exposed as properties in aiopulse
-            # "sw_version": self.roller.raw["swversion"],
             "via_device": (DOMAIN, self.hub.api.id),
         }
