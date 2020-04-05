@@ -68,6 +68,10 @@ stages:
         . venv/bin/activate
         pre-commit run yamllint --all-files
       displayName: 'Run yamllint'
+    - script: |
+        . venv/bin/activate
+        pre-commit run pyupgrade --all-files
+      displayName: 'Run pyupgrade'
   - job: 'Validate'
     pool:
       vmImage: 'ubuntu-latest'

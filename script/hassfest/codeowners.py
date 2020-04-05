@@ -62,7 +62,7 @@ def validate(integrations: Dict[str, Integration], config: Config):
     codeowners_path = config.root / "CODEOWNERS"
     config.cache["codeowners"] = content = generate_and_validate(integrations)
 
-    with open(str(codeowners_path), "r") as fp:
+    with open(str(codeowners_path)) as fp:
         if fp.read().strip() != content:
             config.add_error(
                 "codeowners",

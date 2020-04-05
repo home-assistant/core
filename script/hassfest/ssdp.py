@@ -65,7 +65,7 @@ def validate(integrations: Dict[str, Integration], config: Config):
     ssdp_path = config.root / "homeassistant/generated/ssdp.py"
     config.cache["ssdp"] = content = generate_and_validate(integrations)
 
-    with open(str(ssdp_path), "r") as fp:
+    with open(str(ssdp_path)) as fp:
         if fp.read().strip() != content:
             config.add_error(
                 "ssdp",
