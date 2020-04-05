@@ -35,7 +35,7 @@ class TradfriCover(TradfriBaseDevice, CoverDevice):
         attr = {}
         attr["battery_level"] = self._device_info.battery_level
         attr["firmware_version"] = self._device_info.firmware_version
-        attr["modelmodel_number"] = self._device_info.model_number
+        attr["model"] = self._device_info.model_number
         return attr
 
     @property
