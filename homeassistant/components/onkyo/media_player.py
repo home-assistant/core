@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 """Support for Onkyo Network Receivers and Processors."""
 import logging
 
@@ -6,14 +7,14 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -159,13 +160,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         zone, _, _ = message
         if zone in active_zones.keys():
             active_zones[zone].process_update(message)
-            hass.async_create_task(active_zones[zone].async_update_ha_state())
+            active_zones[zone].async_write_ha_state()
 
     try:
         avr = await pyeiscp.Connection.create(
             host=host, port=port, update_callback=async_onkyo_update_callback
         )
-    except:
+    except Exception:
         raise PlatformNotReady
 
     active_zones = {}
