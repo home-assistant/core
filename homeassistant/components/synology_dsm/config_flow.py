@@ -126,19 +126,20 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(information.serial)
         self._abort_if_unique_id_configured()
 
-        return self.async_create_entry(
-            title=host,
-            data={
-                CONF_NAME: name,
-                CONF_HOST: host,
-                CONF_PORT: port,
-                CONF_SSL: use_ssl,
-                CONF_USERNAME: username,
-                CONF_PASSWORD: password,
-                CONF_DISKS: user_input.get(CONF_DISKS, []),
-                CONF_VOLUMES: user_input.get(CONF_VOLUMES, []),
-            },
-        )
+        config_data = {
+            CONF_NAME: name,
+            CONF_HOST: host,
+            CONF_PORT: port,
+            CONF_SSL: use_ssl,
+            CONF_USERNAME: username,
+            CONF_PASSWORD: password,
+        }
+        if user_input.get(CONF_DISKS):
+            config_data.update({CONF_DISKS: user_input[CONF_DISKS]})
+        if user_input.get(CONF_VOLUMES):
+            config_data.update({CONF_VOLUMES: user_input[CONF_VOLUMES]})
+
+        return self.async_create_entry(title=host, data=config_data,)
 
     async def async_step_import(self, user_input=None):
         """Import a config entry."""

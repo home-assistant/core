@@ -107,8 +107,8 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
     assert result["data"][CONF_SSL] == SSL
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_DISKS] == []
-    assert result["data"][CONF_VOLUMES] == []
+    assert result["data"].get(CONF_DISKS) is None
+    assert result["data"].get(CONF_VOLUMES) is None
 
     service.return_value.information = Mock(serial=SERIAL_2)
     # test without port + False SSL
@@ -132,8 +132,8 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
     assert not result["data"][CONF_SSL]
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_DISKS] == []
-    assert result["data"][CONF_VOLUMES] == []
+    assert result["data"].get(CONF_DISKS) is None
+    assert result["data"].get(CONF_VOLUMES) is None
 
 
 async def test_import(hass: HomeAssistantType, service: MagicMock):
@@ -153,8 +153,8 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
     assert result["data"][CONF_SSL] == DEFAULT_SSL
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_DISKS] == []
-    assert result["data"][CONF_VOLUMES] == []
+    assert result["data"].get(CONF_DISKS) is None
+    assert result["data"].get(CONF_VOLUMES) is None
 
     service.return_value.information = Mock(serial=SERIAL_2)
     # import with all
@@ -168,6 +168,8 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
             CONF_SSL: SSL,
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
+            CONF_DISKS: ["sda", "sdb", "sdc"],
+            CONF_VOLUMES: ["volume_1"],
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -179,8 +181,8 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
     assert result["data"][CONF_SSL] == SSL
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_DISKS] == []
-    assert result["data"][CONF_VOLUMES] == []
+    assert result["data"][CONF_DISKS] == ["sda", "sdb", "sdc"]
+    assert result["data"][CONF_VOLUMES] == ["volume_1"]
 
 
 async def test_abort_if_already_setup(hass: HomeAssistantType, service: MagicMock):
