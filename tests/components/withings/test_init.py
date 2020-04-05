@@ -199,7 +199,7 @@ async def test_upgrade_token(
 
     with requests_mock.mock() as rqmck:
         rqmck.get(
-            re.compile(AbstractWithingsApi.URL + "/v2/user?.*action=getdevice(&.*|$)"),
+            re.compile(f"{AbstractWithingsApi.URL}/v2/user?.*action=getdevice(&.*|$)"),
             status_code=200,
             json=WITHINGS_GET_DEVICE_RESPONSE_EMPTY,
         )
@@ -255,7 +255,7 @@ async def test_auth_failure(
 
     with requests_mock.mock() as rqmck:
         rqmck.get(
-            re.compile(AbstractWithingsApi.URL + "/v2/user?.*action=getdevice(&.*|$)"),
+            re.compile(f"{AbstractWithingsApi.URL}/v2/user?.*action=getdevice(&.*|$)"),
             status_code=200,
             json={"status": 401, "body": {}},
         )
