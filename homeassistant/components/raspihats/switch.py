@@ -105,7 +105,7 @@ class I2CHatSwitch(ToggleEntity):
 
     def _log_message(self, message):
         """Create log message."""
-        string = self._name + " "
+        string = f"{self._name} "
         string += f"{self._board}I2CHat@{hex(self._address)} "
         string += f"channel:{str(self._channel)}{message}"
         return string
