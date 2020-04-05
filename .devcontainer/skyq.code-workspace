@@ -4,7 +4,10 @@
       "path": "/workspaces/home-assistant"
     },
     {
-      "path": "/root/.homeassistant"
+      "path": "/home/dev-config"
+    },
+    {
+      "path": "/home/SkyQ"
     }
   ],
   "settings": {}
