@@ -38,13 +38,9 @@ NOT_AUTHENTICATED_ERROR = re.compile(
 class NotAuthenticatedError(HomeAssistantError):
     """Raise when not authenticated with the service."""
 
-    pass
-
 
 class ServiceError(HomeAssistantError):
     """Raise when the service has an error."""
-
-    pass
 
 
 class ThrottleData:

@@ -177,8 +177,6 @@ class Mailbox:
 class StreamError(Exception):
     """Media streaming exception."""
 
-    pass
-
 
 class MailboxView(HomeAssistantView):
     """Base mailbox view."""

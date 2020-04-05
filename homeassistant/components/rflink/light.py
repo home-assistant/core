@@ -162,8 +162,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class RflinkLight(SwitchableRflinkDevice, Light):
     """Representation of a Rflink light."""
 
-    pass
-
 
 class DimmableRflinkLight(SwitchableRflinkDevice, Light):
     """Rflink light device that support dimming."""

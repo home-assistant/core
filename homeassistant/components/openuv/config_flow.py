@@ -35,10 +35,6 @@ class OpenUvFlowHandler(config_entries.ConfigFlow):
     VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    def __init__(self):
-        """Initialize the config flow."""
-        pass
-
     async def _show_form(self, errors=None):
         """Show the form to the user."""
         data_schema = vol.Schema(

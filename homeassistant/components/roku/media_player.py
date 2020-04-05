@@ -68,7 +68,6 @@ class RokuDevice(MediaPlayerDevice):
             self._available = True
         except (RequestsConnectionError, RequestsReadTimeout, RokuException):
             self._available = False
-            pass
 
     def get_source_list(self):
         """Get the list of applications to be used as sources."""

@@ -49,8 +49,6 @@ class DoorLockChannel(ZigbeeChannel):
 class Shade(ZigbeeChannel):
     """Shade channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(closures.WindowCovering.cluster_id)
 class WindowCovering(ZigbeeChannel):
