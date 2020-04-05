@@ -666,8 +666,8 @@ class SimpliSafeEntity(Entity):
             if event.event_type not in self.websocket_events_to_listen_for:
                 return
 
-            # Ignore this event if it belongs to a entity with a different serial:
-            # from this one's:
+            # Ignore this event if it belongs to a entity with a different serial
+            # number from this one's:
             if (
                 event.event_type in WEBSOCKET_EVENTS_REQUIRING_SERIAL
                 and event.sensor_serial != self._serial
