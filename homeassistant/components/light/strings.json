@@ -5,7 +5,9 @@
       "brightness_increase": "Increase {entity_name} brightness",
       "toggle": "Toggle {entity_name}",
       "turn_on": "Turn on {entity_name}",
-      "turn_off": "Turn off {entity_name}"
+      "turn_off": "Turn off {entity_name}",
+      "flash_short": "Short flash {entity_name}",
+      "flash_long": "Long flash {entity_name}"
     },
     "condition_type": {
       "is_on": "{entity_name} is on",

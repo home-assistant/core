@@ -4,6 +4,12 @@ from typing import List
 import voluptuous as vol
 
 from homeassistant.components.device_automation import toggle_entity
+from homeassistant.components.light import (
+    ATTR_FLASH,
+    FLASH_LONG,
+    FLASH_SHORT,
+    SUPPORT_FLASH,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -19,6 +25,8 @@ from . import ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS_STEP_PCT, DOMAIN, SUPPORT_BRI
 
 TYPE_BRIGHTNESS_INCREASE = "brightness_increase"
 TYPE_BRIGHTNESS_DECREASE = "brightness_decrease"
+TYPE_FLASH_SHORT = "flash_short"
+TYPE_FLASH_LONG = "flash_long"
 
 ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
@@ -26,7 +34,12 @@ ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
         vol.Required(CONF_DOMAIN): DOMAIN,
         vol.Required(CONF_TYPE): vol.In(
             toggle_entity.DEVICE_ACTION_TYPES
-            + [TYPE_BRIGHTNESS_INCREASE, TYPE_BRIGHTNESS_DECREASE]
+            + [
+                TYPE_BRIGHTNESS_INCREASE,
+                TYPE_BRIGHTNESS_DECREASE,
+                TYPE_FLASH_SHORT,
+                TYPE_FLASH_LONG,
+            ]
         ),
         vol.Optional(ATTR_BRIGHTNESS_PCT): vol.All(
             vol.Coerce(int), vol.Range(min=0, max=100)
@@ -59,6 +72,10 @@ async def async_call_action_from_config(
         data[ATTR_BRIGHTNESS_STEP_PCT] = -10
     elif ATTR_BRIGHTNESS_PCT in config:
         data[ATTR_BRIGHTNESS_PCT] = config[ATTR_BRIGHTNESS_PCT]
+    elif config[CONF_TYPE] == TYPE_FLASH_SHORT:
+        data[ATTR_FLASH] = FLASH_SHORT
+    elif config[CONF_TYPE] == TYPE_FLASH_LONG:
+        data[ATTR_FLASH] = FLASH_LONG
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, data, blocking=True, context=context
@@ -93,6 +110,24 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
                     },
                     {
                         CONF_TYPE: TYPE_BRIGHTNESS_DECREASE,
+                        "device_id": device_id,
+                        "entity_id": entry.entity_id,
+                        "domain": DOMAIN,
+                    },
+                )
+            )
+
+        if supported_features & SUPPORT_FLASH:
+            actions.extend(
+                (
+                    {
+                        CONF_TYPE: TYPE_FLASH_SHORT,
+                        "device_id": device_id,
+                        "entity_id": entry.entity_id,
+                        "domain": DOMAIN,
+                    },
+                    {
+                        CONF_TYPE: TYPE_FLASH_LONG,
                         "device_id": device_id,
                         "entity_id": entry.entity_id,
                         "domain": DOMAIN,
