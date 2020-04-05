@@ -1,5 +1,6 @@
 """Support for SleepIQ sensors."""
-from homeassistant.components import sleepiq
+from . import SleepIQSensor
+from .const import DOMAIN, SENSOR_TYPES, SIDES, SLEEP_NUMBER
 
 ICON = "mdi:hotel"
 
@@ -9,27 +10,27 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if discovery_info is None:
         return
 
-    data = sleepiq.DATA
+    data = hass.data[DOMAIN]
     data.update()
 
     dev = []
     for bed_id, bed in data.beds.items():
-        for side in sleepiq.SIDES:
+        for side in SIDES:
             if getattr(bed, side) is not None:
                 dev.append(SleepNumberSensor(data, bed_id, side))
     add_entities(dev)
 
 
-class SleepNumberSensor(sleepiq.SleepIQSensor):
+class SleepNumberSensor(SleepIQSensor):
     """Implementation of a SleepIQ sensor."""
 
     def __init__(self, sleepiq_data, bed_id, side):
         """Initialize the sensor."""
-        sleepiq.SleepIQSensor.__init__(self, sleepiq_data, bed_id, side)
+        SleepIQSensor.__init__(self, sleepiq_data, bed_id, side)
 
         self._state = None
-        self.type = sleepiq.SLEEP_NUMBER
-        self._name = sleepiq.SENSOR_TYPES[self.type]
+        self.type = SLEEP_NUMBER
+        self._name = SENSOR_TYPES[self.type]
 
         self.update()
 
@@ -45,5 +46,5 @@ class SleepNumberSensor(sleepiq.SleepIQSensor):
 
     def update(self):
         """Get the latest data from SleepIQ and updates the states."""
-        sleepiq.SleepIQSensor.update(self)
+        SleepIQSensor.update(self)
         self._state = self.side.sleep_number
