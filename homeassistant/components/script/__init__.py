@@ -243,7 +243,7 @@ class ScriptEntity(ToggleEntity):
         self.icon = icon
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self.script = Script(
-            hass, sequence, name, self.async_update_ha_state, logger=_LOGGER
+            hass, sequence, name, self.async_write_ha_state, logger=_LOGGER
         )
 
     @property

@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Dieses Nexia Home ist bereits konfiguriert"
+        },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",

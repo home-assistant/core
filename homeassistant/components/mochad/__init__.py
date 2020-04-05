@@ -42,7 +42,7 @@ def setup(hass, config):
     host = conf.get(CONF_HOST)
     port = conf.get(CONF_PORT)
 
-    global CONTROLLER
+    global CONTROLLER  # pylint: disable=global-statement
     try:
         CONTROLLER = MochadCtrl(host, port)
     except exceptions.ConfigurationError:

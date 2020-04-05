@@ -8,7 +8,8 @@ Entity to be updated with new values.
 import asyncio
 import datetime
 from decimal import Decimal
-from unittest.mock import Mock
+from itertools import chain, repeat
+from unittest.mock import DEFAULT, Mock
 
 import asynctest
 import pytest
@@ -323,9 +324,10 @@ async def test_connection_errors_retry(hass, monkeypatch, mock_connection_factor
 
     config = {"platform": "dsmr", "reconnect_interval": 0}
 
-    # override the mock to have it fail the first time
-    first_fail_connection_factory = Mock(
-        wraps=connection_factory, side_effect=[TimeoutError]
+    # override the mock to have it fail the first time and succeed after
+    first_fail_connection_factory = asynctest.CoroutineMock(
+        return_value=(transport, protocol),
+        side_effect=chain([TimeoutError], repeat(DEFAULT)),
     )
 
     monkeypatch.setattr(
@@ -336,7 +338,7 @@ async def test_connection_errors_retry(hass, monkeypatch, mock_connection_factor
 
     # wait for sleep to resolve
     await hass.async_block_till_done()
-    assert first_fail_connection_factory.call_count == 2, "connecting not retried"
+    assert first_fail_connection_factory.call_count >= 2, "connecting not retried"
 
 
 async def test_reconnect(hass, monkeypatch, mock_connection_factory):
@@ -352,7 +354,6 @@ async def test_reconnect(hass, monkeypatch, mock_connection_factory):
     async def wait_closed():
         await closed.wait()
         closed2.set()
-        closed.clear()
 
     protocol.wait_closed = wait_closed
 
@@ -365,9 +366,10 @@ async def test_reconnect(hass, monkeypatch, mock_connection_factory):
     # wait for lock set to resolve
     await closed2.wait()
     closed2.clear()
-    assert not closed.is_set()
+    closed.clear()
 
-    closed.set()
     await hass.async_block_till_done()
 
     assert connection_factory.call_count >= 2, "connecting not retried"
+    # setting it so teardown can be successful
+    closed.set()

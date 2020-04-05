@@ -71,8 +71,9 @@ async def test_climate_zones(hass):
         "target_temp_low": 17.2,
         "target_temp_step": 1.0,
         "temperature": None,
-        "zone_status": "",
+        "zone_status": "Idle",
     }
+
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(

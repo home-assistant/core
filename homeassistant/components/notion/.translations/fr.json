@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Ce nom d'utilisateur est d\u00e9j\u00e0 utilis\u00e9."
+        },
         "error": {
             "identifier_exists": "Nom d'utilisateur d\u00e9j\u00e0 enregistr\u00e9",
             "invalid_credentials": "Nom d'utilisateur ou mot de passe invalide",

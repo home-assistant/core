@@ -13,12 +13,12 @@
                 "data": {
                     "host": "Vert",
                     "name": "Navn",
-                    "port": "Port"
+                    "port": ""
                 },
                 "description": "Konfigurer Minecraft Server-forekomsten slik at den kan overv\u00e5kes.",
                 "title": "Link din Minecraft Server"
             }
         },
-        "title": "Minecraft Server"
+        "title": ""
     }
 }

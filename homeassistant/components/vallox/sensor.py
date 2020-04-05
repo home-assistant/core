@@ -149,8 +149,10 @@ class ValloxSensor(Entity):
 
     async def async_added_to_hass(self):
         """Call to update."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_VALLOX_STATE_UPDATE, self._update_callback
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_VALLOX_STATE_UPDATE, self._update_callback
+            )
         )
 
     @callback

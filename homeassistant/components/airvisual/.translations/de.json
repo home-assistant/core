@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dieser API-Schl\u00fcssel wird bereits verwendet."
+            "already_configured": "Diese Koordinaten wurden bereits registriert."
         },
         "error": {
             "invalid_api_key": "Ung\u00fcltiger API-Schl\u00fcssel"

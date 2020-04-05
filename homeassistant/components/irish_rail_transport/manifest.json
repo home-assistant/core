@@ -3,6 +3,5 @@
   "name": "Irish Rail Transport",
   "documentation": "https://www.home-assistant.io/integrations/irish_rail_transport",
   "requirements": ["pyirishrail==0.0.2"],
-  "dependencies": [],
   "codeowners": ["@ttroy50"]
 }

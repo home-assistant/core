@@ -233,7 +233,7 @@ class YamahaDevice(MediaPlayerDevice):
         zone_name = self._zone_names.get(self._zone, self._zone)
         if zone_name != "Main_Zone":
             # Zone will be one of Main_Zone, Zone_2, Zone_3
-            name += " " + zone_name.replace("_", " ")
+            name += f" {zone_name.replace('_', ' ')}"
         return name
 
     @property

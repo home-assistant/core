@@ -11,9 +11,9 @@ from .const import CONF_LISTEN_PORT, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 @callback
 def configured_servers(hass):
     """Return a set of the configured servers."""
-    return set(
+    return {
         entry.data[CONF_NAME] for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+    }
 
 
 @config_entries.HANDLERS.register(DOMAIN)

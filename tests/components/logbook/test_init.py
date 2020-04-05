@@ -1274,7 +1274,7 @@ async def test_logbook_view(hass, hass_client):
     await async_setup_component(hass, "logbook", {})
     await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
-    response = await client.get("/api/logbook/{}".format(dt_util.utcnow().isoformat()))
+    response = await client.get(f"/api/logbook/{dt_util.utcnow().isoformat()}")
     assert response.status == 200
 
 
@@ -1301,7 +1301,7 @@ async def test_logbook_view_period_entity(hass, hass_client):
     start_date = datetime(start.year, start.month, start.day)
 
     # Test today entries without filters
-    response = await client.get("/api/logbook/{}".format(start_date.isoformat()))
+    response = await client.get(f"/api/logbook/{start_date.isoformat()}")
     assert response.status == 200
     json = await response.json()
     assert len(json) == 2
@@ -1309,9 +1309,7 @@ async def test_logbook_view_period_entity(hass, hass_client):
     assert json[1]["entity_id"] == entity_id_second
 
     # Test today entries with filter by period
-    response = await client.get(
-        "/api/logbook/{}?period=1".format(start_date.isoformat())
-    )
+    response = await client.get(f"/api/logbook/{start_date.isoformat()}?period=1")
     assert response.status == 200
     json = await response.json()
     assert len(json) == 2
@@ -1320,7 +1318,7 @@ async def test_logbook_view_period_entity(hass, hass_client):
 
     # Test today entries with filter by entity_id
     response = await client.get(
-        "/api/logbook/{}?entity=switch.test".format(start_date.isoformat())
+        f"/api/logbook/{start_date.isoformat()}?entity=switch.test"
     )
     assert response.status == 200
     json = await response.json()
@@ -1329,7 +1327,7 @@ async def test_logbook_view_period_entity(hass, hass_client):
 
     # Test entries for 3 days with filter by entity_id
     response = await client.get(
-        "/api/logbook/{}?period=3&entity=switch.test".format(start_date.isoformat())
+        f"/api/logbook/{start_date.isoformat()}?period=3&entity=switch.test"
     )
     assert response.status == 200
     json = await response.json()
@@ -1341,14 +1339,14 @@ async def test_logbook_view_period_entity(hass, hass_client):
     start_date = datetime(start.year, start.month, start.day)
 
     # Test tomorrow entries without filters
-    response = await client.get("/api/logbook/{}".format(start_date.isoformat()))
+    response = await client.get(f"/api/logbook/{start_date.isoformat()}")
     assert response.status == 200
     json = await response.json()
     assert len(json) == 0
 
     # Test tomorrow entries with filter by entity_id
     response = await client.get(
-        "/api/logbook/{}?entity=switch.test".format(start_date.isoformat())
+        f"/api/logbook/{start_date.isoformat()}?entity=switch.test"
     )
     assert response.status == 200
     json = await response.json()
@@ -1356,7 +1354,7 @@ async def test_logbook_view_period_entity(hass, hass_client):
 
     # Test entries from tomorrow to 3 days ago with filter by entity_id
     response = await client.get(
-        "/api/logbook/{}?period=3&entity=switch.test".format(start_date.isoformat())
+        f"/api/logbook/{start_date.isoformat()}?period=3&entity=switch.test"
     )
     assert response.status == 200
     json = await response.json()

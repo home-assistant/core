@@ -12,8 +12,8 @@ coverage:
       default:
         url: "secret:TgWDUM4Jw0w7wMJxuxNF/yhSOHglIo1fGwInJnRLEVPy2P2aLimkoK1mtKCowH5TFw+baUXVXT3eAqefbdvIuM8BjRR4aRji95C6CYyD0QHy4N8i7nn1SQkWDPpS8IthYTg07rUDF7s5guurkKv2RrgoCdnnqjAMSzHoExMOF7xUmblMdhBTWJgBpWEhASJy85w/xxjlsE1xoTkzeJu9Q67pTXtRcn+5kb5/vIzPSYg="
 comment:
-  require_changes: yes
+  require_changes: true
   layout: reach
   branches:
-   - master
-   - !dev
+    - master
+    - !dev

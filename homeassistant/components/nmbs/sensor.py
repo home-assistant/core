@@ -47,12 +47,12 @@ def get_time_until(departure_time=None):
         return 0
 
     delta = dt_util.utc_from_timestamp(int(departure_time)) - dt_util.now()
-    return round((delta.total_seconds() / 60))
+    return round(delta.total_seconds() / 60)
 
 
 def get_delay_in_minutes(delay=0):
     """Get the delay in minutes from a delay in seconds."""
-    return round((int(delay) / 60))
+    return round(int(delay) / 60)
 
 
 def get_ride_duration(departure_time, arrival_time, delay=0):
@@ -60,7 +60,7 @@ def get_ride_duration(departure_time, arrival_time, delay=0):
     duration = dt_util.utc_from_timestamp(
         int(arrival_time)
     ) - dt_util.utc_from_timestamp(int(departure_time))
-    duration_time = int(round((duration.total_seconds() / 60)))
+    duration_time = int(round(duration.total_seconds() / 60))
     return duration_time + get_delay_in_minutes(delay)
 
 

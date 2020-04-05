@@ -120,7 +120,7 @@ class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
     @property
     def unique_id(self) -> str:
         """Return a unique, Home Assistant friendly identifier for this entity."""
-        return "{0}_{1}".format(
+        return "{}_{}".format(
             self.rainmachine.device_mac.replace(":", ""), self._sensor_type
         )
 

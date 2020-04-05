@@ -5,7 +5,9 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.climate.const import (
+    ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
+    ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
@@ -15,13 +17,17 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_LOW,
     ATTR_TARGET_TEMP_STEP,
     CURRENT_HVAC_COOL,
+    CURRENT_HVAC_DRY,
+    CURRENT_HVAC_FAN,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_HUMIDITY,
     DEFAULT_MIN_TEMP,
     DOMAIN as DOMAIN_CLIMATE,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
+    HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
@@ -99,10 +105,12 @@ async def test_thermostat(hass, hk_driver, cls, events):
     assert acc.char_display_units.value == 0
     assert acc.char_cooling_thresh_temp is None
     assert acc.char_heating_thresh_temp is None
+    assert acc.char_target_humidity is None
+    assert acc.char_current_humidity is None
 
     assert acc.char_target_temp.properties[PROP_MAX_VALUE] == DEFAULT_MAX_TEMP
     assert acc.char_target_temp.properties[PROP_MIN_VALUE] == DEFAULT_MIN_TEMP
-    assert acc.char_target_temp.properties[PROP_MIN_STEP] == 0.5
+    assert acc.char_target_temp.properties[PROP_MIN_STEP] == 0.1
 
     hass.states.async_set(
         entity_id,
@@ -228,6 +236,38 @@ async def test_thermostat(hass, hk_driver, cls, events):
     assert acc.char_current_temp.value == 22.0
     assert acc.char_display_units.value == 0
 
+    hass.states.async_set(
+        entity_id,
+        HVAC_MODE_FAN_ONLY,
+        {
+            ATTR_TEMPERATURE: 22.0,
+            ATTR_CURRENT_TEMPERATURE: 22.0,
+            ATTR_HVAC_ACTION: CURRENT_HVAC_FAN,
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_target_temp.value == 22.0
+    assert acc.char_current_heat_cool.value == 2
+    assert acc.char_target_heat_cool.value == 2
+    assert acc.char_current_temp.value == 22.0
+    assert acc.char_display_units.value == 0
+
+    hass.states.async_set(
+        entity_id,
+        HVAC_MODE_DRY,
+        {
+            ATTR_TEMPERATURE: 22.0,
+            ATTR_CURRENT_TEMPERATURE: 22.0,
+            ATTR_HVAC_ACTION: CURRENT_HVAC_DRY,
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_target_temp.value == 22.0
+    assert acc.char_current_heat_cool.value == 2
+    assert acc.char_target_heat_cool.value == 2
+    assert acc.char_current_temp.value == 22.0
+    assert acc.char_display_units.value == 0
+
     # Set from HomeKit
     call_set_temperature = async_mock_service(hass, DOMAIN_CLIMATE, "set_temperature")
     call_set_hvac_mode = async_mock_service(hass, DOMAIN_CLIMATE, "set_hvac_mode")
@@ -276,10 +316,10 @@ async def test_thermostat_auto(hass, hk_driver, cls, events):
 
     assert acc.char_cooling_thresh_temp.properties[PROP_MAX_VALUE] == DEFAULT_MAX_TEMP
     assert acc.char_cooling_thresh_temp.properties[PROP_MIN_VALUE] == DEFAULT_MIN_TEMP
-    assert acc.char_cooling_thresh_temp.properties[PROP_MIN_STEP] == 0.5
+    assert acc.char_cooling_thresh_temp.properties[PROP_MIN_STEP] == 0.1
     assert acc.char_heating_thresh_temp.properties[PROP_MAX_VALUE] == DEFAULT_MAX_TEMP
     assert acc.char_heating_thresh_temp.properties[PROP_MIN_VALUE] == DEFAULT_MIN_TEMP
-    assert acc.char_heating_thresh_temp.properties[PROP_MIN_STEP] == 0.5
+    assert acc.char_heating_thresh_temp.properties[PROP_MIN_STEP] == 0.1
 
     hass.states.async_set(
         entity_id,
@@ -355,6 +395,49 @@ async def test_thermostat_auto(hass, hk_driver, cls, events):
     assert acc.char_cooling_thresh_temp.value == 25.0
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] == "cooling threshold 25.0°C"
+
+
+async def test_thermostat_humidity(hass, hk_driver, cls, events):
+    """Test if accessory and HA are updated accordingly with humidity."""
+    entity_id = "climate.test"
+
+    # support_auto = True
+    hass.states.async_set(entity_id, HVAC_MODE_OFF, {ATTR_SUPPORTED_FEATURES: 4})
+    await hass.async_block_till_done()
+    acc = cls.thermostat(hass, hk_driver, "Climate", entity_id, 2, None)
+    await hass.async_add_job(acc.run)
+    await hass.async_block_till_done()
+
+    assert acc.char_target_humidity.value == 50
+    assert acc.char_current_humidity.value == 50
+
+    assert acc.char_target_humidity.properties[PROP_MIN_VALUE] == DEFAULT_MIN_HUMIDITY
+
+    hass.states.async_set(
+        entity_id, HVAC_MODE_HEAT_COOL, {ATTR_HUMIDITY: 65, ATTR_CURRENT_HUMIDITY: 40},
+    )
+    await hass.async_block_till_done()
+    assert acc.char_current_humidity.value == 40
+    assert acc.char_target_humidity.value == 65
+
+    hass.states.async_set(
+        entity_id, HVAC_MODE_COOL, {ATTR_HUMIDITY: 35, ATTR_CURRENT_HUMIDITY: 70},
+    )
+    await hass.async_block_till_done()
+    assert acc.char_current_humidity.value == 70
+    assert acc.char_target_humidity.value == 35
+
+    # Set from HomeKit
+    call_set_humidity = async_mock_service(hass, DOMAIN_CLIMATE, "set_humidity")
+
+    await hass.async_add_job(acc.char_target_humidity.client_update_value, 35)
+    await hass.async_block_till_done()
+    assert call_set_humidity[0]
+    assert call_set_humidity[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_humidity[0].data[ATTR_HUMIDITY] == 35
+    assert acc.char_target_humidity.value == 35
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] == "35%"
 
 
 async def test_thermostat_power_state(hass, hk_driver, cls, events):
@@ -517,7 +600,7 @@ async def test_thermostat_temperature_step_whole(hass, hk_driver, cls):
     await hass.async_add_job(acc.run)
     await hass.async_block_till_done()
 
-    assert acc.char_target_temp.properties[PROP_MIN_STEP] == 1.0
+    assert acc.char_target_temp.properties[PROP_MIN_STEP] == 0.1
 
 
 async def test_thermostat_restore(hass, hk_driver, cls, events):
@@ -618,7 +701,7 @@ async def test_water_heater(hass, hk_driver, cls, events):
     assert (
         acc.char_target_temp.properties[PROP_MIN_VALUE] == DEFAULT_MIN_TEMP_WATER_HEATER
     )
-    assert acc.char_target_temp.properties[PROP_MIN_STEP] == 0.5
+    assert acc.char_target_temp.properties[PROP_MIN_STEP] == 0.1
 
     hass.states.async_set(
         entity_id,

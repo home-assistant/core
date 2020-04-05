@@ -64,7 +64,7 @@ class OpenhomeDevice(MediaPlayerDevice):
         self._volume_level = None
         self._volume_muted = None
         self._supported_features = SUPPORT_OPENHOME
-        self._source_names = list()
+        self._source_names = []
         self._source_index = {}
         self._source = {}
         self._name = None
@@ -79,7 +79,7 @@ class OpenhomeDevice(MediaPlayerDevice):
         self._name = self._device.Room().decode("utf-8")
         self._supported_features = SUPPORT_OPENHOME
         source_index = {}
-        source_names = list()
+        source_names = []
 
         if self._device.VolumeEnabled():
             self._supported_features |= (

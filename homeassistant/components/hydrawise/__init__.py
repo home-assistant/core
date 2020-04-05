@@ -127,8 +127,10 @@ class HydrawiseEntity(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_HYDRAWISE, self._update_callback
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_UPDATE_HYDRAWISE, self._update_callback
+            )
         )
 
     @callback

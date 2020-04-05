@@ -9,7 +9,7 @@
                     "name": "Nombre del sensor",
                     "tariff": "Tarifa contratada (1, 2 o 3 per\u00edodos)"
                 },
-                "description": "Este sensor utiliza la API oficial para obtener [precios por hora de la electricidad (PVPC)](https://www.esios.ree.es/es/pvpc) en Espa\u00f1a.\nPara obtener una explicaci\u00f3n m\u00e1s precisa, visite [integration docs](https://www.home-assistant.io/integrations/pvpc_hourly_pricing/).\n\nSeleccione la tarifa contratada en funci\u00f3n del n\u00famero de per\u00edodos de facturaci\u00f3n por d\u00eda:\n- 1 per\u00edodo: normal\n- 2 per\u00edodos: discriminaci\u00f3n (tarifa nocturna)\n- 3 per\u00edodos: coche el\u00e9ctrico (tarifa nocturna de 3 per\u00edodos)",
+                "description": "Este sensor utiliza la API oficial para obtener [el precio horario de la electricidad (PVPC)](https://www.esios.ree.es/es/pvpc) en Espa\u00f1a.\nPara obtener una explicaci\u00f3n m\u00e1s precisa, visita los [documentos de la integraci\u00f3n](https://www.home-assistant.io/integrations/pvpc_hourly_pricing/).\n\nSelecciona la tarifa contratada en funci\u00f3n del n\u00famero de per\u00edodos de facturaci\u00f3n por d\u00eda:\n- 1 per\u00edodo: normal\n- 2 per\u00edodos: discriminaci\u00f3n (tarifa nocturna)\n- 3 per\u00edodos: coche el\u00e9ctrico (tarifa nocturna de 3 per\u00edodos)",
                 "title": "Selecci\u00f3n de tarifa"
             }
         },

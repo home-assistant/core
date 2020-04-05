@@ -16,17 +16,28 @@ async def _mock_powerwall_with_fixtures(hass):
     meters = await _async_load_json_fixture(hass, "meters.json")
     sitemaster = await _async_load_json_fixture(hass, "sitemaster.json")
     site_info = await _async_load_json_fixture(hass, "site_info.json")
+    status = await _async_load_json_fixture(hass, "status.json")
+    device_type = await _async_load_json_fixture(hass, "device_type.json")
+
     return _mock_powerwall_return_value(
         site_info=site_info,
         charge=47.31993232,
         sitemaster=sitemaster,
         meters=meters,
         grid_status="SystemGridConnected",
+        status=status,
+        device_type=device_type,
     )
 
 
 def _mock_powerwall_return_value(
-    site_info=None, charge=None, sitemaster=None, meters=None, grid_status=None
+    site_info=None,
+    charge=None,
+    sitemaster=None,
+    meters=None,
+    grid_status=None,
+    status=None,
+    device_type=None,
 ):
     powerwall_mock = MagicMock()
     type(powerwall_mock).site_info = PropertyMock(return_value=site_info)
@@ -34,6 +45,8 @@ def _mock_powerwall_return_value(
     type(powerwall_mock).sitemaster = PropertyMock(return_value=sitemaster)
     type(powerwall_mock).meters = PropertyMock(return_value=meters)
     type(powerwall_mock).grid_status = PropertyMock(return_value=grid_status)
+    type(powerwall_mock).status = PropertyMock(return_value=status)
+    type(powerwall_mock).device_type = PropertyMock(return_value=device_type)
 
     return powerwall_mock
 

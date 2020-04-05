@@ -1,35 +1,35 @@
 {
-    "config": {
-        "title": "Transmission",
-        "step": {
-            "user": {
-                "title": "Setup Transmission Client",
-                "data": {
-                    "name": "Name",
-                    "host": "Host",
-                    "username": "Username",
-                    "password": "Password",
-                    "port": "Port"
-                }
-            }
-        },
-        "error": {
-            "name_exists": "Name already exists",
-            "wrong_credentials": "Wrong username or password",
-            "cannot_connect": "Unable to Connect to host"
-        },
-        "abort": {
-            "already_configured": "Host is already configured."
+  "config": {
+    "title": "Transmission",
+    "step": {
+      "user": {
+        "title": "Setup Transmission Client",
+        "data": {
+          "name": "Name",
+          "host": "Host",
+          "username": "Username",
+          "password": "Password",
+          "port": "Port"
         }
+      }
     },
-    "options": {
-        "step": {
-            "init": {
-                "title": "Configure options for Transmission",
-                "data": {
-                    "scan_interval": "Update frequency"
-                }
-            }
-        }
+    "error": {
+      "name_exists": "Name already exists",
+      "wrong_credentials": "Wrong username or password",
+      "cannot_connect": "Unable to Connect to host"
+    },
+    "abort": {
+      "already_configured": "Host is already configured."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure options for Transmission",
+        "data": {
+          "scan_interval": "Update frequency"
+        }
+      }
+    }
+  }
 }

@@ -77,7 +77,7 @@ class FileSensor(Entity):
     def update(self):
         """Get the latest entry from a file and updates the state."""
         try:
-            with open(self._file_path, "r", encoding="utf-8") as file_data:
+            with open(self._file_path, encoding="utf-8") as file_data:
                 for line in file_data:
                     data = line
                 data = data.strip()

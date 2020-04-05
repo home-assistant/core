@@ -87,7 +87,6 @@
       "not_opened": "{entity_name} closed",
       "turned_on": "{entity_name} turned on",
       "turned_off": "{entity_name} turned off"
-
     }
   }
 }
