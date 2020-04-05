@@ -1,6 +1,7 @@
 """Support for IKEA Tradfri covers."""
 
 from homeassistant.components.cover import ATTR_POSITION, CoverDevice
+from homeassistant.const import ATTR_BATTERY_LEVEL
 
 from .base_class import TradfriBaseDevice
 from .const import CONF_GATEWAY_ID, KEY_API, KEY_GATEWAY
@@ -33,7 +34,7 @@ class TradfriCover(TradfriBaseDevice, CoverDevice):
     def device_state_attributes(self):
         """Return the state attributes."""
         attr = {}
-        attr["battery_level"] = self._device_info.battery_level
+        attr[ATTR_BATTERY_LEVEL] = self._device_info.battery_level
         attr["model"] = self._device_info.model_number
         return attr
 
