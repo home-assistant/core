@@ -159,6 +159,7 @@ class PlexServer:
             for account in self._plex_server.systemAccounts()
             if account.name
         ]
+        _LOGGER.debug("Linked accounts: %s", self.accounts)
 
         owner_account = [
             account.name
@@ -167,6 +168,7 @@ class PlexServer:
         ]
         if owner_account:
             self._owner_username = owner_account[0]
+            _LOGGER.debug("Server owner found: '%s'", self._owner_username)
 
         self._version = self._plex_server.version
 
@@ -209,11 +211,11 @@ class PlexServer:
         try:
             devices = self._plex_server.clients()
             sessions = self._plex_server.sessions()
-        except plexapi.exceptions.BadRequest:
-            _LOGGER.exception("Error requesting Plex client data from server")
-            return
-        except requests.exceptions.RequestException as ex:
-            _LOGGER.warning(
+        except (
+            plexapi.exceptions.BadRequest,
+            requests.exceptions.RequestException,
+        ) as ex:
+            _LOGGER.error(
                 "Could not connect to Plex server: %s (%s)", self.friendly_name, ex
             )
             return
@@ -234,7 +236,9 @@ class PlexServer:
             for player in session.players:
                 if session_username and session_username not in monitored_users:
                     ignored_clients.add(player.machineIdentifier)
-                    _LOGGER.debug("Ignoring Plex client owned by %s", session_username)
+                    _LOGGER.debug(
+                        "Ignoring Plex client owned by '%s'", session_username
+                    )
                     continue
                 self._known_idle.discard(player.machineIdentifier)
                 available_clients.setdefault(
