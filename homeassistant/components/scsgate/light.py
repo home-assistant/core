@@ -4,7 +4,7 @@ import logging
 from scsgate.tasks import ToggleStatusTask
 import voluptuous as vol
 
-from . import DOMAIN, SCSGATE_SCHEMA
+from . import CONF_SCS_ID, DOMAIN, SCSGATE_SCHEMA
 from homeassistant.components.light import PLATFORM_SCHEMA, Light
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_STATE, CONF_DEVICES, CONF_NAME
 import homeassistant.helpers.config_validation as cv
@@ -25,11 +25,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if devices:
         for _, entity_info in devices.items():
-            if entity_info[scsgate.CONF_SCS_ID] in scsgate.devices:
+            if entity_info[CONF_SCS_ID] in scsgate.devices:
                 continue
 
             name = entity_info[CONF_NAME]
-            scs_id = entity_info[scsgate.CONF_SCS_ID]
+            scs_id = entity_info[CONF_SCS_ID]
 
             logger.info("Adding %s scsgate.light", name)
 
