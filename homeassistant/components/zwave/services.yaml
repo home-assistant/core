@@ -31,14 +31,14 @@ heal_network:
   fields:
     return_routes:
       description: Whether or not to update the return routes from the nodes to the controller. Defaults to False.
-      example: True
+      example: true
 
 heal_node:
   description: Start a Z-Wave node heal. Refer to OZW_Log.txt for progress.
   fields:
     return_routes:
       description: Whether or not to update the return routes from the node to the controller. Defaults to False.
-      example: True
+      example: true
 
 remove_node:
   description: Remove a node from the Z-Wave network. Refer to OZW_Log.txt for progress.
@@ -100,7 +100,6 @@ set_poll_intensity:
       description: The intensity to poll, 0 = disabled, 1 = Every time through list, 2 = Every second time through list...
       example: 2
 
-
 print_config_parameter:
   description: Prints a Z-Wave node config parameter value to log.
   fields:
@@ -120,7 +119,7 @@ refresh_entity:
   fields:
     entity_id:
       description: Name of the entity to refresh.
-      example: 'light.leviton_vrmx11lz_multilevel_scene_switch_level_40'
+      example: "light.leviton_vrmx11lz_multilevel_scene_switch_level_40"
 
 refresh_node:
   description: Refresh zwave node.
@@ -153,7 +152,7 @@ test_node:
   description: This will send test messages to a node in the Z-Wave network. This could bring back dead nodes.
   fields:
     node_id:
-      description:  ID of the node to send test messages to.
+      description: ID of the node to send test messages to.
       example: 10
     messages:
       description: Optional. Amount of test messages to send.
@@ -167,10 +166,10 @@ rename_node:
       example: 10
     update_ids:
       description: (optional) Rename the entity IDs for entities of this node.
-      example: True
+      example: true
     name:
       description: New Name
-      example: 'kitchen'
+      example: "kitchen"
 
 rename_value:
   description: Set the name of a node value. This will affect the ID of the value entity. Value IDs can be queried from /api/zwave/values/{node_id}
@@ -183,10 +182,10 @@ rename_value:
       example: 72037594255792737
     update_ids:
       description: (optional) Update the entity ID for this value's entity.
-      example: True
+      example: true
     name:
       description: New Name
-      example: 'Luminosity'
+      example: "Luminosity"
 
 reset_node_meters:
   description: Resets the meter counters of a node.
