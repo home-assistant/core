@@ -179,9 +179,7 @@ class FlowManager(abc.ABC):
             RESULT_TYPE_ABORT,
             RESULT_TYPE_EXTERNAL_STEP_DONE,
         ):
-            raise ValueError(
-                "Handler returned incorrect type: {}".format(result["type"])
-            )
+            raise ValueError(f"Handler returned incorrect type: {result['type']}")
 
         if result["type"] in (
             RESULT_TYPE_FORM,

@@ -233,9 +233,7 @@ def line_info(obj, **kwargs):
     """Display line config source."""
     if hasattr(obj, "__config_file__"):
         return color(
-            "cyan",
-            "[source {}:{}]".format(obj.__config_file__, obj.__line__ or "?"),
-            **kwargs,
+            "cyan", f"[source {obj.__config_file__}:{obj.__line__ or '?'}]", **kwargs
         )
     return "?"
 
