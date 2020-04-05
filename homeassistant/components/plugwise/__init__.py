@@ -60,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, api.gateway_id)},
         manufacturer="Plugwise",
-        name="{} - {} Gateway".format(entry.title, api.smile_name),
+        name=f"{entry.title} - {api.smile_name} Gateway",
         model=api.smile_name,
         sw_version=api.smile_version[0],
     )
