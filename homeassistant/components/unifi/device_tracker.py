@@ -269,9 +269,8 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         for variable in CLIENT_STATIC_ATTRIBUTES + CLIENT_CONNECTED_ATTRIBUTES:
             if variable in self.client.raw:
                 if self.is_disconnected and variable in CLIENT_CONNECTED_ATTRIBUTES:
-                    attributes[variable] = None
-                else:
-                    attributes[variable] = self.client.raw[variable]
+                    continue
+                attributes[variable] = self.client.raw[variable]
 
         return attributes
 
