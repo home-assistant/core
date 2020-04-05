@@ -3,10 +3,11 @@ import logging
 
 import voluptuous as vol
 
-from . import DOMAIN
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
+
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
