@@ -683,7 +683,6 @@ class SimpliSafeEntity(Entity):
     @callback
     def async_update_from_rest_api(self):
         """Update the entity with the provided REST API data."""
-        pass
 
     @callback
     def _async_internal_update_from_websocket_event(self, event):
@@ -707,7 +706,6 @@ class SimpliSafeEntity(Entity):
     @callback
     def async_update_from_websocket_event(self, event):
         """Update the entity with the provided websocket API data."""
-        pass
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect dispatcher listener when removed."""

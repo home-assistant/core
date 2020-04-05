@@ -21,16 +21,12 @@ _LOGGER = logging.getLogger(__name__)
 class ApplianceEventAlerts(ZigbeeChannel):
     """Appliance Event Alerts channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
     homeautomation.ApplianceIdentification.cluster_id
 )
 class ApplianceIdentification(ZigbeeChannel):
     """Appliance Identification channel."""
-
-    pass
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
@@ -39,14 +35,10 @@ class ApplianceIdentification(ZigbeeChannel):
 class ApplianceStatistics(ZigbeeChannel):
     """Appliance Statistics channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(homeautomation.Diagnostic.cluster_id)
 class Diagnostic(ZigbeeChannel):
     """Diagnostic channel."""
-
-    pass
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
@@ -127,5 +119,3 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
 )
 class MeterIdentification(ZigbeeChannel):
     """Metering Identification channel."""
-
-    pass

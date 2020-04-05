@@ -14,14 +14,10 @@ _LOGGER = logging.getLogger(__name__)
 class Ballast(ZigbeeChannel):
     """Ballast channel."""
 
-    pass
-
 
 @registries.CLIENT_CHANNELS_REGISTRY.register(lighting.Color.cluster_id)
 class ColorClientChannel(ClientChannel):
     """Color client channel."""
-
-    pass
 
 
 @registries.BINDABLE_CLUSTERS.register(lighting.Color.cluster_id)
