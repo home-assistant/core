@@ -84,7 +84,7 @@ class RoombaVacuum(VacuumDevice):
     @property
     def unique_id(self):
         """Return the uniqueid of the vacuum cleaner."""
-        return "roomba_{}".format(self._mac)
+        return f"roomba_{self._mac}"
 
     @property
     def device_info(self):
