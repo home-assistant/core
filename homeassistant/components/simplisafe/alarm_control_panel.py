@@ -195,7 +195,6 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
     @callback
     def async_update_from_rest_api(self):
         """Update the entity with the provided REST API data."""
-        _LOGGER.error("REST API")
         if self._system.version == 3:
             self._attrs.update(
                 {
@@ -235,7 +234,6 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
     @callback
     def async_update_from_websocket_event(self, event):
         """Update the entity with the provided websocket API event data."""
-        _LOGGER.error("Websocket")
         if event.event_type in (
             EVENT_ALARM_CANCELED,
             EVENT_DISARMED_BY_MASTER_PIN,
