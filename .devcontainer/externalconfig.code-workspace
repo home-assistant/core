@@ -1,11 +1,14 @@
 {
-	"folders": [
-		{
-			"path": "/workspaces/home-assistant"
-		},
-		{
-			"path": "/home"
-		}
-	],
-	"settings": {}
+  "folders": [
+    {
+      "path": "/workspaces/home-assistant"
+    },
+    {
+      "path": "/home/dev-config"
+    },
+    {
+      "path": "/home/Home_Assistant_SkyQ_MediaPlayer"
+    }
+  ],
+  "settings": {}
 }
