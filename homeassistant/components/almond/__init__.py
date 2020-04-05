@@ -291,10 +291,8 @@ class AlmondAgent(conversation.AbstractConversationAgent):
                 buffer += f"\n Picture: {message['url']}"
             elif message["type"] == "rdl":
                 buffer += (
-                    "\n Link: "
-                    + message["rdl"]["displayTitle"]
-                    + " "
-                    + message["rdl"]["webCallback"]
+                    f"\n Link: {message['rdl']['displayTitle']} "
+                    f"{message['rdl']['webCallback']}"
                 )
             elif message["type"] == "choice":
                 if first_choice:

@@ -13,7 +13,7 @@ def explore_module(package):
     module = importlib.import_module(package)
     if not hasattr(module, "__path__"):
         return []
-    for _, name, _ in pkgutil.iter_modules(module.__path__, package + "."):
+    for _, name, _ in pkgutil.iter_modules(module.__path__, f"{package}."):
         yield name
 
 

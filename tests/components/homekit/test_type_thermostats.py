@@ -17,6 +17,8 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_LOW,
     ATTR_TARGET_TEMP_STEP,
     CURRENT_HVAC_COOL,
+    CURRENT_HVAC_DRY,
+    CURRENT_HVAC_FAN,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     DEFAULT_MAX_TEMP,
@@ -25,6 +27,7 @@ from homeassistant.components.climate.const import (
     DOMAIN as DOMAIN_CLIMATE,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
+    HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
@@ -230,6 +233,38 @@ async def test_thermostat(hass, hk_driver, cls, events):
     assert acc.char_target_temp.value == 22.0
     assert acc.char_current_heat_cool.value == 0
     assert acc.char_target_heat_cool.value == 3
+    assert acc.char_current_temp.value == 22.0
+    assert acc.char_display_units.value == 0
+
+    hass.states.async_set(
+        entity_id,
+        HVAC_MODE_FAN_ONLY,
+        {
+            ATTR_TEMPERATURE: 22.0,
+            ATTR_CURRENT_TEMPERATURE: 22.0,
+            ATTR_HVAC_ACTION: CURRENT_HVAC_FAN,
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_target_temp.value == 22.0
+    assert acc.char_current_heat_cool.value == 2
+    assert acc.char_target_heat_cool.value == 2
+    assert acc.char_current_temp.value == 22.0
+    assert acc.char_display_units.value == 0
+
+    hass.states.async_set(
+        entity_id,
+        HVAC_MODE_DRY,
+        {
+            ATTR_TEMPERATURE: 22.0,
+            ATTR_CURRENT_TEMPERATURE: 22.0,
+            ATTR_HVAC_ACTION: CURRENT_HVAC_DRY,
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_target_temp.value == 22.0
+    assert acc.char_current_heat_cool.value == 2
+    assert acc.char_target_heat_cool.value == 2
     assert acc.char_current_temp.value == 22.0
     assert acc.char_display_units.value == 0
 

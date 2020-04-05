@@ -102,7 +102,7 @@ def explore_module(package, explore_children):
     if not hasattr(module, "__path__"):
         return found
 
-    for _, name, _ in pkgutil.iter_modules(module.__path__, package + "."):
+    for _, name, _ in pkgutil.iter_modules(module.__path__, f"{package}."):
         found.append(name)
 
         if explore_children:

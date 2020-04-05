@@ -16,6 +16,8 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     CURRENT_HVAC_COOL,
+    CURRENT_HVAC_DRY,
+    CURRENT_HVAC_FAN,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
@@ -91,6 +93,8 @@ HC_HASS_TO_HOMEKIT_ACTION = {
     CURRENT_HVAC_IDLE: 0,
     CURRENT_HVAC_HEAT: 1,
     CURRENT_HVAC_COOL: 2,
+    CURRENT_HVAC_DRY: 2,
+    CURRENT_HVAC_FAN: 2,
 }
 
 
@@ -382,6 +386,7 @@ class Thermostat(HomeAccessory):
         # Set current operation mode for supported thermostats
         hvac_action = new_state.attributes.get(ATTR_HVAC_ACTION)
         if hvac_action:
+
             self.char_current_heat_cool.set_value(
                 HC_HASS_TO_HOMEKIT_ACTION[hvac_action]
             )

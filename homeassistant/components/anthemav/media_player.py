@@ -142,9 +142,8 @@ class AnthemAVR(MediaPlayerDevice):
     def app_name(self):
         """Return details about current video and audio stream."""
         return (
-            self._lookup("video_input_resolution_text", "")
-            + " "
-            + self._lookup("audio_input_name", "")
+            f"{self._lookup('video_input_resolution_text', '')} "
+            f"{self._lookup('audio_input_name', '')}"
         )
 
     @property
