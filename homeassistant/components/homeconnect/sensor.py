@@ -3,7 +3,12 @@
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/integrations/sensor.homeconnect/
 """
+
+from datetime import timedelta
 import logging
+
+from homeassistant.const import DEVICE_CLASS_TIMESTAMP
+import homeassistant.util.dt as dt_util
 
 from .api import HomeConnectEntity
 from .const import DOMAIN
@@ -32,12 +37,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class HomeConnectSensor(HomeConnectEntity):
     """Sensor class for Home Connect."""
 
-    def __init__(self, device, name, key, unit):
+    def __init__(self, device, name, key, unit, icon, device_class, sign=1):
         """Initialize the entity."""
         super().__init__(device, name)
         self._state = None
         self._key = key
         self._unit = unit
+        self._icon = icon
+        self._device_class = device_class
+        self._sign = sign
 
     @property
     def state(self):
@@ -55,7 +63,14 @@ class HomeConnectSensor(HomeConnectEntity):
         if self._key not in status:
             self._state = None
         else:
-            self._state = status[self._key].get("value", None)
+            if self.device_class == DEVICE_CLASS_TIMESTAMP:
+                if "value" not in status[self._key]:
+                    self._state = None
+                else:
+                    seconds = self.sign * float(status[self._key]["value"])
+                    self._state = dt_util.utcnow() - timedelta(seconds=seconds)
+            else:
+                self._state = status[self._key].get("value", None)
         _LOGGER.debug("Updated, new state: %s", self._state)
 
     @property
@@ -66,7 +81,9 @@ class HomeConnectSensor(HomeConnectEntity):
     @property
     def icon(self):
         """Return the icon."""
-        if self._unit == "s":
-            return "mdi:progress-clock"
-        if self._unit == "%s":
-            return "mdi:timelapse"
+        return self._icon
+
+    @property
+    def device_class(self):
+        """Return the device class."""
+        return self._device_class
