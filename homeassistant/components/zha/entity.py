@@ -119,7 +119,7 @@ class BaseZhaEntity(RestoreEntity, LogMixin, entity.Entity):
         self.remove_future = asyncio.Future()
         await self.async_accept_signal(
             None,
-            f"{SIGNAL_REMOVE}_{str(self.zha_device.ieee)}",
+            f"{SIGNAL_REMOVE}_{self.zha_device.ieee}",
             self.async_remove,
             signal_override=True,
         )

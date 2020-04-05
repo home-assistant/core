@@ -343,9 +343,7 @@ class ZwaveLock(ZWaveDeviceEntity, LockDevice):
             )
             return
         if str(alarm_type) in ALARM_TYPE_STD:
-            self._lock_status = (
-                f"{LOCK_ALARM_TYPE.get(str(alarm_type))}{str(alarm_level)}"
-            )
+            self._lock_status = f"{LOCK_ALARM_TYPE.get(str(alarm_type))}{alarm_level}"
             return
         if alarm_type == 161:
             self._lock_status = (
