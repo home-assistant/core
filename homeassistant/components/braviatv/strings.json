@@ -4,14 +4,14 @@
     "step": {
       "user": {
         "title": "Sony Bravia TV",
-        "description": "Set up Sony Bravia TV integration. If you have problems with configuration go to: https://www.home-assistant.io/integrations/braviatv \n\nIf your TV was already configured with Home Assistant go to 'Settings -> Network -> Remote device settings -> Unregister remote device' and unregister Home Assistant.",
+        "description": "Set up Sony Bravia TV integration. If you have problems with configuration go to: https://www.home-assistant.io/integrations/braviatv",
         "data": {
           "host": "TV hostname or IP address"
         }
       },
       "authorize": {
         "title": "Authorize Sony Bravia TV",
-        "description": "Enter the PIN code shown on the Sony Bravia TV. \nIf the PIN code is not shown, enter 0000.",
+        "description": "Enter the PIN code shown on the Sony Bravia TV. \nIf the PIN code is not shown, you have to unregister Home Assistant on your TV, go to: Settings -> Network -> Remote device settings -> Unregister remote device.",
         "data": {
           "pin": "PIN code"
         }
