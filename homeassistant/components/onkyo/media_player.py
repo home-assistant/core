@@ -125,13 +125,13 @@ SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up our socket to the AVR."""
 
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    name = config.get(CONF_NAME) or "Onkyo Reciever"
-    max_volume = config.get(CONF_MAX_VOLUME)
-    receiver_max_volume = config.get(CONF_RECEIVER_MAX_VOLUME)
-    zones = config.get(CONF_ZONES)
-    sources = config.get(CONF_SOURCES)
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
+    name = config[CONF_NAME] or "Onkyo Reciever"
+    max_volume = config[CONF_MAX_VOLUME]
+    receiver_max_volume = config[CONF_RECEIVER_MAX_VOLUME]
+    zones = config[CONF_ZONES]
+    sources = config[CONF_SOURCES]
 
     def service_handle(service):
         """Handle for services."""
