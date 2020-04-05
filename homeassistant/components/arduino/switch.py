@@ -3,10 +3,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import arduino
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
+
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,8 +31,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Arduino platform."""
+    board = hass.data[DOMAIN]
+
     # Verify that Arduino board is present
-    if arduino.BOARD is None:
+    if board is None:
         _LOGGER.error("A connection has not been made to the Arduino board")
         return False
 
@@ -39,14 +42,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     switches = []
     for pinnum, pin in pins.items():
-        switches.append(ArduinoSwitch(pinnum, pin))
+        switches.append(ArduinoSwitch(pinnum, pin, board))
     add_entities(switches)
 
 
 class ArduinoSwitch(SwitchDevice):
     """Representation of an Arduino switch."""
 
-    def __init__(self, pin, options):
+    def __init__(self, pin, options, board):
         """Initialize the Pin."""
         self._pin = pin
         self._name = options.get(CONF_NAME)
@@ -56,13 +59,13 @@ class ArduinoSwitch(SwitchDevice):
         self._state = options.get(CONF_INITIAL)
 
         if options.get(CONF_NEGATE):
-            self.turn_on_handler = arduino.BOARD.set_digital_out_low
-            self.turn_off_handler = arduino.BOARD.set_digital_out_high
+            self.turn_on_handler = board.set_digital_out_low
+            self.turn_off_handler = board.set_digital_out_high
         else:
-            self.turn_on_handler = arduino.BOARD.set_digital_out_high
-            self.turn_off_handler = arduino.BOARD.set_digital_out_low
+            self.turn_on_handler = board.set_digital_out_high
+            self.turn_off_handler = board.set_digital_out_low
 
-        arduino.BOARD.set_mode(self._pin, self.direction, self.pin_type)
+        board.set_mode(self._pin, self.direction, self.pin_type)
         (self.turn_on_handler if self._state else self.turn_off_handler)(pin)
 
     @property
