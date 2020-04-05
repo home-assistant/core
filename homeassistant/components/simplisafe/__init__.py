@@ -671,13 +671,13 @@ class SimpliSafeEntity(Entity):
         """Register callbacks."""
 
         @callback
-        def update_from_rest_api():
+        def rest_api_update():
             """Update the entity with new REST API data."""
             self.async_update_from_rest_api()
             self.async_write_ha_state()
 
         @callback
-        def update_from_websocket(event):
+        def websocket_update(event):
             """Update the entity with new websocket data."""
             self._async_internal_update_from_websocket_event(event)
             self.async_write_ha_state()
@@ -686,7 +686,7 @@ class SimpliSafeEntity(Entity):
             async_dispatcher_connect(
                 self.hass,
                 TOPIC_UPDATE_REST_API.format(self._system.system_id),
-                update_from_rest_api,
+                rest_api_update,
             )
         )
 
@@ -694,7 +694,7 @@ class SimpliSafeEntity(Entity):
             async_dispatcher_connect(
                 self.hass,
                 TOPIC_UPDATE_WEBSOCKET.format(self._system.system_id),
-                update_from_websocket,
+                websocket_update,
             )
         )
 
