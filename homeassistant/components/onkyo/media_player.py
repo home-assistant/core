@@ -16,6 +16,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY_MEDIA,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
@@ -97,7 +98,28 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+ATTR_HDMI_OUTPUT = "hdmi_output"
 ATTR_PRESET = "preset"
+
+ACCEPTED_VALUES = [
+    "no",
+    "analog",
+    "yes",
+    "out",
+    "out-sub",
+    "sub",
+    "hdbaset",
+    "both",
+    "up",
+]
+ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required(ATTR_HDMI_OUTPUT): vol.In(ACCEPTED_VALUES),
+    }
+)
+
+SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -111,7 +133,23 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     zones = config.get(CONF_ZONES)
     sources = config.get(CONF_SOURCES)
 
-    _LOGGER.info("Provisioning Onkyo AVR device at %s:%d", host, port)
+    def service_handle(service):
+        """Handle for services."""
+        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        devices = [d for d in active_zones.values() if d.entity_id in entity_ids]
+
+        for device in devices:
+            if service.service == SERVICE_SELECT_HDMI_OUTPUT:
+                device.select_output(service.data.get(ATTR_HDMI_OUTPUT))
+
+    hass.services.register(
+        DOMAIN,
+        SERVICE_SELECT_HDMI_OUTPUT,
+        service_handle,
+        schema=ONKYO_SELECT_OUTPUT_SCHEMA,
+    )
+
+    _LOGGER.debug("Provisioning Onkyo AVR device at %s:%d", host, port)
 
     @callback
     def async_onkyo_update_callback(message):
@@ -162,7 +200,7 @@ class OnkyoAVR(MediaPlayerDevice):
         self._attributes = {}
 
     def process_update(self, update):
-        """Stores relevant updates so they can be queried later."""
+        """Store relevant updates so they can be queried later."""
         _, command, value = update
         if command in ["system-power", "power"]:
             if value == "on":
@@ -198,7 +236,8 @@ class OnkyoAVR(MediaPlayerDevice):
         """Get the reciever to send all the info we care about.
 
         Usually run only on connect, as we can otherwise rely on the
-        reciever to keep us informed of changes."""
+        reciever to keep us informed of changes.
+        """
         self._query_avr("power")
         self._query_avr("volume")
         self._query_avr("audio-muting")
@@ -263,12 +302,12 @@ class OnkyoAVR(MediaPlayerDevice):
         self._update_avr("power", "off")
 
     async def async_volume_up(self):
-        """Increment volume by 1"""
+        """Increment volume by 1."""
         if self._volume < self._max_volume:
             self._update_avr("volume", "level-up")
 
     async def async_volume_down(self):
-        """Decrement volume by 1"""
+        """Decrement volume by 1."""
         self._update_avr("volume", "level-down")
 
     async def async_set_volume_level(self, volume):
@@ -296,5 +335,5 @@ class OnkyoAVR(MediaPlayerDevice):
         self.avr.send(f"{self._zone}.{propname}={value}")
 
     def _query_avr(self, propname):
-        """Cause the AVR to send an update about _propname_"""
+        """Cause the AVR to send an update about propname."""
         self.avr.send(f"{self._zone}.{propname}=query")
