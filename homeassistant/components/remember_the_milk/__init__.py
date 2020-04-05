@@ -137,10 +137,12 @@ def _register_new_account(
     request_id = configurator.async_request_config(
         f"{DOMAIN} - {account_name}",
         callback=register_account_callback,
-        description="You need to log in to Remember The Milk to"
-        + "connect your account. \n\n"
-        + 'Step 1: Click on the link "Remember The Milk login"\n\n'
-        + 'Step 2: Click on "login completed"',
+        description=(
+            "You need to log in to Remember The Milk to"
+            "connect your account. \n\n"
+            "Step 1: Click on the link 'Remember The Milk login'\n\n"
+            "Step 2: Click on 'login completed'"
+        ),
         link_name="Remember The Milk login",
         link_url=url,
         submit_caption="login completed",

@@ -225,7 +225,7 @@ class PioneerDevice(MediaPlayerDevice):
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         # 60dB max
-        self.telnet_command(str(round(volume * MAX_VOLUME)).zfill(3) + "VL")
+        self.telnet_command(f"{round(volume * MAX_VOLUME):03}VL")
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
@@ -237,4 +237,4 @@ class PioneerDevice(MediaPlayerDevice):
 
     def select_source(self, source):
         """Select input source."""
-        self.telnet_command(self._source_name_to_number.get(source) + "FN")
+        self.telnet_command(f"{self._source_name_to_number.get(source)}FN")
