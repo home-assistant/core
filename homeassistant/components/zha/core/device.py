@@ -625,9 +625,9 @@ class ZHADevice(LogMixin):
         res = await asyncio.gather(*(t[0] for t in tasks), return_exceptions=True)
         for outcome, log_msg in zip(res, tasks):
             if isinstance(outcome, Exception):
-                fmt = log_msg[1] + " failed: %s"
+                fmt = f"{log_msg[1]} failed: %s"
             else:
-                fmt = log_msg[1] + " completed: %s"
+                fmt = f"{log_msg[1]} completed: %s"
             zdo.debug(fmt, *(log_msg[2] + (outcome,)))
 
     def log(self, level, msg, *args):

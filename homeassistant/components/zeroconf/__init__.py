@@ -134,8 +134,8 @@ def handle_homekit(hass, info) -> bool:
     for test_model in HOMEKIT:
         if (
             model != test_model
-            and not model.startswith(test_model + " ")
-            and not model.startswith(test_model + "-")
+            and not model.startswith(f"{test_model} ")
+            and not model.startswith(f"{test_model}-")
         ):
             continue
 
