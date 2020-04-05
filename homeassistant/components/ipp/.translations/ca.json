@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Aquesta impressora ja est\u00e0 configurada."
+        },
         "flow_title": "Impressora: {name}",
         "step": {
             "user": {
