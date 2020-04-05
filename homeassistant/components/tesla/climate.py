@@ -93,14 +93,14 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperatures."""
-        _LOGGER.debug("Setting temperature for: %s", self._name)
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature:
+            _LOGGER.debug("%s: Setting temperature to %s", self._name, temperature)
             await self.tesla_device.set_temperature(temperature)
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
-        _LOGGER.debug("Setting mode for: %s", self._name)
+        _LOGGER.debug("%s: Setting hvac mode to %s", self._name, hvac_mode)
         if hvac_mode == HVAC_MODE_OFF:
             await self.tesla_device.set_status(False)
         elif hvac_mode == HVAC_MODE_HEAT_COOL:
