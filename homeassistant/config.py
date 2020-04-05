@@ -116,10 +116,9 @@ def _no_duplicate_auth_provider(
         key = (config[CONF_TYPE], config.get(CONF_ID))
         if key in config_keys:
             raise vol.Invalid(
-                "Duplicate auth provider {} found. Please add unique IDs if "
-                "you want to have the same auth provider twice".format(
-                    config[CONF_TYPE]
-                )
+                f"Duplicate auth provider {config[CONF_TYPE]} found. "
+                "Please add unique IDs "
+                "if you want to have the same auth provider twice"
             )
         config_keys.add(key)
     return configs
@@ -140,8 +139,9 @@ def _no_duplicate_auth_mfa_module(
         key = config.get(CONF_ID, config[CONF_TYPE])
         if key in config_keys:
             raise vol.Invalid(
-                "Duplicate mfa module {} found. Please add unique IDs if "
-                "you want to have the same mfa module twice".format(config[CONF_TYPE])
+                f"Duplicate mfa module {config[CONF_TYPE]} found. "
+                "Please add unique IDs "
+                "if you want to have the same mfa module twice"
             )
         config_keys.add(key)
     return configs
@@ -319,8 +319,9 @@ def load_yaml_config_file(config_path: str) -> Dict[Any, Any]:
     conf_dict = load_yaml(config_path)
 
     if not isinstance(conf_dict, dict):
-        msg = "The configuration file {} does not contain a dictionary".format(
-            os.path.basename(config_path)
+        msg = (
+            f"The configuration file {os.path.basename(config_path)} "
+            "does not contain a dictionary"
         )
         _LOGGER.error(msg)
         raise HomeAssistantError(msg)
@@ -415,16 +416,13 @@ def _format_config_error(
     message = f"Invalid config for [{domain}]: "
     if isinstance(ex, vol.Invalid):
         if "extra keys not allowed" in ex.error_message:
+            path = "->".join(str(m) for m in ex.path)
             message += (
-                "[{option}] is an invalid option for [{domain}]. "
-                "Check: {domain}->{path}.".format(
-                    option=ex.path[-1],
-                    domain=domain,
-                    path="->".join(str(m) for m in ex.path),
-                )
+                f"[{ex.path[-1]}] is an invalid option for [{domain}]. "
+                f"Check: {domain}->{path}."
             )
         else:
-            message += "{}.".format(humanize_error(config, ex))
+            message += f"{humanize_error(config, ex)}."
     else:
         message += str(ex)
 
@@ -433,9 +431,9 @@ def _format_config_error(
     except AttributeError:
         domain_config = config
 
-    message += " (See {}, line {}). ".format(
-        getattr(domain_config, "__config_file__", "?"),
-        getattr(domain_config, "__line__", "?"),
+    message += (
+        f" (See {getattr(domain_config, '__config_file__', '?')}, "
+        f"line {getattr(domain_config, '__line__', '?')}). "
     )
 
     if domain != CONF_CORE and link:
@@ -551,9 +549,9 @@ def _log_pkg_error(package: str, component: str, config: Dict, message: str) -> 
     message = f"Package {package} setup failed. Integration {component} {message}"
 
     pack_config = config[CONF_CORE][CONF_PACKAGES].get(package, config)
-    message += " (See {}:{}). ".format(
-        getattr(pack_config, "__config_file__", "?"),
-        getattr(pack_config, "__line__", "?"),
+    message += (
+        f" (See {getattr(pack_config, '__config_file__', '?')}:"
+        f"{getattr(pack_config, '__line__', '?')}). "
     )
 
     _LOGGER.error(message)
