@@ -128,7 +128,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     host = config[CONF_HOST]
     port = config[CONF_PORT]
-    name = config[CONF_NAME] or "Onkyo Reciever"
+    name = config[CONF_NAME] or "Onkyo Receiver"
     max_volume = config[CONF_MAX_VOLUME]
     receiver_max_volume = config[CONF_RECEIVER_MAX_VOLUME]
     zones = config[CONF_ZONES]
@@ -189,7 +189,7 @@ class OnkyoAVR(MediaPlayerDevice):
         """Initialize entity with transport."""
         super().__init__()
         self.avr = avr
-        self._name = name
+        self._name = f"{name} {zone if zone != 'main' else ''}"
         self._zone = zone
         self._volume = 0
         self._supports_volume = False
@@ -237,10 +237,10 @@ class OnkyoAVR(MediaPlayerDevice):
                 del self._attributes[ATTR_PRESET]
 
     def backfill_state(self):
-        """Get the reciever to send all the info we care about.
+        """Get the receiver to send all the info we care about.
 
         Usually run only on connect, as we can otherwise rely on the
-        reciever to keep us informed of changes.
+        receiver to keep us informed of changes.
         """
         self._query_avr("power")
         self._query_avr("volume")
