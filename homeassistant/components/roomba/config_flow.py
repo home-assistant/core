@@ -8,18 +8,17 @@ from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
-from . import (
-    CannotConnect,
-    async_connect_or_timeout as act,
-    async_disconnect_or_timeout as adt,
-)
+from . import CannotConnect, async_connect_or_timeout, async_disconnect_or_timeout
 from .const import (
     CONF_CERT,
     CONF_CONTINUOUS,
     CONF_DELAY,
+    CONF_NAME,
     DEFAULT_CERT,
     DEFAULT_CONTINUOUS,
     DEFAULT_DELAY,
+    MAC_ADDRESS,
+    ROOMBA_SESSION,
 )
 from .const import DOMAIN  # pylint:disable=unused-import
 
@@ -50,7 +49,15 @@ async def validate_input(hass: core.HomeAssistant, data):
         continuous=data[CONF_CONTINUOUS],
         delay=data[CONF_DELAY],
     )
-    return await async_connect_or_timeout(hass, roomba)
+
+    info = await async_connect_or_timeout(hass, roomba)
+
+    return {
+        ROOMBA_SESSION: info[ROOMBA_SESSION],
+        CONF_NAME: info[CONF_NAME],
+        CONF_HOST: data[CONF_HOST],
+        MAC_ADDRESS: info[MAC_ADDRESS],
+    }
 
 
 class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -82,8 +89,10 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors = {"base": "unknown"}
 
             if "base" not in errors:
-                await async_disconnect_or_timeout(self.hass, info["roomba"])
-                return self.async_create_entry(title=info["name"], data=user_input)
+                await async_disconnect_or_timeout(self.hass, info[ROOMBA_SESSION])
+                await self.async_set_unique_id(info[MAC_ADDRESS])
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(title=info[CONF_NAME], data=user_input)
 
         # If there was no user input, do not show the errors.
         if user_input is None:

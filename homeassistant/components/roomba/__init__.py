@@ -4,13 +4,42 @@ import logging
 
 import async_timeout
 from roomba import Roomba, RoombaConnectionError
+import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
-from .const import COMPONENTS, CONF_CERT, CONF_CONTINUOUS, CONF_DELAY, DOMAIN
+from .const import (
+    COMPONENTS,
+    CONF_CERT,
+    CONF_CONTINUOUS,
+    CONF_DELAY,
+    CONF_NAME,
+    DEFAULT_CERT,
+    DEFAULT_CONTINUOUS,
+    DEFAULT_DELAY,
+    DOMAIN,
+    MAC_ADDRESS,
+    ROOMBA_SESSION,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_HOST): str,
+                vol.Required(CONF_USERNAME): str,
+                vol.Required(CONF_PASSWORD): str,
+                vol.Optional(CONF_CERT, default=DEFAULT_CERT): str,
+                vol.Optional(CONF_CONTINUOUS, default=DEFAULT_CONTINUOUS): bool,
+                vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): int,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass, config):
@@ -23,9 +52,13 @@ async def async_setup(hass, config):
     if not hass.config_entries.async_entries(DOMAIN):
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
+                DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
+                data=config[DOMAIN],
             )
         )
+
+    return True
 
 
 async def async_setup_entry(hass, config_entry):
@@ -65,7 +98,8 @@ async def async_setup_entry(hass, config_entry):
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
 
-    config_entry.add_update_listener(async_update_options)
+    if not config_entry.update_listeners:
+        config_entry.add_update_listener(async_update_options)
 
     return True
 
@@ -75,10 +109,12 @@ async def async_connect_or_timeout(hass, roomba):
     try:
         name = None
         with async_timeout.timeout(10):
+            _LOGGER.debug("Initialize connection to vacuum")
             await hass.async_add_job(roomba.connect)
             while not roomba.roomba_connected or name is None:
                 # Waiting for connection and check datas ready
                 name = roomba_reported_state(roomba).get("name", None)
+                mac = roomba_reported_state(roomba).get("mac", None)
                 await asyncio.sleep(1)
     except RoombaConnectionError:
         _LOGGER.error("Error to connect to vacuum")
@@ -89,11 +125,12 @@ async def async_connect_or_timeout(hass, roomba):
         _LOGGER.error("Timeout expired")
         raise CannotConnect
 
-    return {"roomba": roomba, "name": name}
+    return {ROOMBA_SESSION: roomba, CONF_NAME: name, MAC_ADDRESS: mac}
 
 
 async def async_disconnect_or_timeout(hass, roomba):
     """Disconnect to vacuum."""
+    _LOGGER.debug("Disconnect vacuum")
     with async_timeout.timeout(3):
         await hass.async_add_job(roomba.disconnect)
     await asyncio.sleep(1)
