@@ -92,7 +92,7 @@ def calculate_offset(event, offset):
         time = search.group(1)
         if ":" not in time:
             if time[0] == "+" or time[0] == "-":
-                time = "{}0:{}".format(time[0], time[1:])
+                time = f"{time[0]}0:{time[1:]}"
             else:
                 time = f"0:{time}"
 

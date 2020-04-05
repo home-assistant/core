@@ -67,9 +67,7 @@ class CecPlayerDevice(CecDevice, MediaPlayerDevice):
     def __init__(self, device, logical) -> None:
         """Initialize the HDMI device."""
         CecDevice.__init__(self, device, logical)
-        self.entity_id = "{}.{}_{}".format(
-            DOMAIN, "hdmi", hex(self._logical_address)[2:]
-        )
+        self.entity_id = f"{DOMAIN}.hdmi_{hex(self._logical_address)[2:]}"
 
     def send_keypress(self, key):
         """Send keypress to CEC adapter."""

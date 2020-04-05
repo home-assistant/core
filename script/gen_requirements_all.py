@@ -169,10 +169,7 @@ def gather_requirements_from_manifests(errors, reqs):
             continue
 
         process_requirements(
-            errors,
-            integration.requirements,
-            f"homeassistant.components.{domain}",
-            reqs,
+            errors, integration.requirements, f"homeassistant.components.{domain}", reqs
         )
 
 
@@ -185,7 +182,7 @@ def gather_requirements_from_modules(errors, reqs):
         try:
             module = importlib.import_module(package)
         except ImportError as err:
-            print("{}.py: {}".format(package.replace(".", "/"), err))
+            print(f"{package.replace('.', '/')}.py: {err}")
             errors.append(package)
             continue
 

@@ -93,9 +93,7 @@ class ZHADevice(LogMixin):
         self._zigpy_device = zigpy_device
         self._zha_gateway = zha_gateway
         self._available = False
-        self._available_signal = "{}_{}_{}".format(
-            self.name, self.ieee, SIGNAL_AVAILABLE
-        )
+        self._available_signal = f"{self.name}_{self.ieee}_{SIGNAL_AVAILABLE}"
         self._checkins_missed_count = 0
         self.unsubs = []
         self.unsubs.append(
@@ -104,10 +102,11 @@ class ZHADevice(LogMixin):
             )
         )
         self.quirk_applied = isinstance(self._zigpy_device, zigpy.quirks.CustomDevice)
-        self.quirk_class = "{}.{}".format(
-            self._zigpy_device.__class__.__module__,
-            self._zigpy_device.__class__.__name__,
+        self.quirk_class = (
+            f"{self._zigpy_device.__class__.__module__}."
+            f"{self._zigpy_device.__class__.__name__}"
         )
+
         if self.is_mains_powered:
             self._consider_unavailable_time = _CONSIDER_UNAVAILABLE_MAINS
         else:
@@ -352,9 +351,7 @@ class ZHADevice(LogMixin):
         if self._available != available and available:
             # Update the state the first time the device comes online
             async_dispatcher_send(self.hass, self._available_signal, False)
-        async_dispatcher_send(
-            self.hass, "{}_{}".format(self._available_signal, "entity"), available
-        )
+        async_dispatcher_send(self.hass, f"{self._available_signal}_entity", available)
         self._available = available
 
     @property
