@@ -1,26 +1,26 @@
 {
-    "config": {
+  "config": {
+    "title": "Freebox",
+    "step": {
+      "user": {
         "title": "Freebox",
-        "step": {
-            "user": {
-                "title": "Freebox",
-                "data": {
-                    "host": "Host",
-                    "port": "Port"
-                }
-            },
-            "link": {
-                "title": "Link Freebox router",
-                "description": "Click \"Submit\", then touch the right arrow on the router to register Freebox with Home Assistant.\n\n![Location of button on the router](/static/images/config_freebox.png)"
-            }
-        },
-        "error":{
-            "register_failed": "Failed to register, please try again",
-            "connection_failed": "Failed to connect, please try again",
-            "unknown": "Unknown error: please retry later"
-        },
-        "abort":{
-            "already_configured": "Host already configured"
+        "data": {
+          "host": "Host",
+          "port": "Port"
         }
+      },
+      "link": {
+        "title": "Link Freebox router",
+        "description": "Click \"Submit\", then touch the right arrow on the router to register Freebox with Home Assistant.\n\n![Location of button on the router](/static/images/config_freebox.png)"
+      }
+    },
+    "error": {
+      "register_failed": "Failed to register, please try again",
+      "connection_failed": "Failed to connect, please try again",
+      "unknown": "Unknown error: please retry later"
+    },
+    "abort": {
+      "already_configured": "Host already configured"
     }
+  }
 }

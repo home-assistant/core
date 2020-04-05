@@ -1,42 +1,42 @@
 {
-    "config": {
-        "title": "StarLine",
-        "step": {
-            "auth_app": {
-                "title": "Application credentials",
-                "description": "Application ID and secret code from <a href=\"https://my.starline.ru/developer\" target=\"_blank\">StarLine developer account</a>",
-                "data": {
-                    "app_id": "App ID",
-                    "app_secret": "Secret"
-                }
-            },
-            "auth_user": {
-                "title": "User credentials",
-                "description": "StarLine account email and password",
-                "data": {
-                    "username": "Username",
-                    "password": "Password"
-                }
-            },
-            "auth_mfa": {
-                "title": "Two-factor authorization",
-                "description": "Enter the code sent to phone {phone_number}",
-                "data": {
-                    "mfa_code": "SMS code"
-                }
-            },
-            "auth_captcha": {
-                "title": "Captcha",
-                "description": "{captcha_img}",
-                "data": {
-                    "captcha_code": "Code from image"
-                }
-            }
-        },
-        "error": {
-            "error_auth_app": "Incorrect application id or secret",
-            "error_auth_user": "Incorrect username or password",
-            "error_auth_mfa": "Incorrect code"
+  "config": {
+    "title": "StarLine",
+    "step": {
+      "auth_app": {
+        "title": "Application credentials",
+        "description": "Application ID and secret code from <a href=\"https://my.starline.ru/developer\" target=\"_blank\">StarLine developer account</a>",
+        "data": {
+          "app_id": "App ID",
+          "app_secret": "Secret"
         }
+      },
+      "auth_user": {
+        "title": "User credentials",
+        "description": "StarLine account email and password",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      },
+      "auth_mfa": {
+        "title": "Two-factor authorization",
+        "description": "Enter the code sent to phone {phone_number}",
+        "data": {
+          "mfa_code": "SMS code"
+        }
+      },
+      "auth_captcha": {
+        "title": "Captcha",
+        "description": "{captcha_img}",
+        "data": {
+          "captcha_code": "Code from image"
+        }
+      }
+    },
+    "error": {
+      "error_auth_app": "Incorrect application id or secret",
+      "error_auth_user": "Incorrect username or password",
+      "error_auth_mfa": "Incorrect code"
     }
+  }
 }
