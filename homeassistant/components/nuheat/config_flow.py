@@ -34,7 +34,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     except requests.exceptions.Timeout:
         raise CannotConnect
     except requests.exceptions.HTTPError as ex:
-        if ex.request.status_code > 400 and ex.request.status_code < 500:
+        if ex.response.status_code > 400 and ex.response.status_code < 500:
             raise InvalidAuth
         raise CannotConnect
     #
