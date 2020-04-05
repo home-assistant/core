@@ -46,7 +46,6 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
     ("tests.components.rflink.test_init", "test_send_command_invalid_arguments"),
     ("tests.components.samsungtv.test_media_player", "test_update_connection_failure"),
     ("tests.components.unifi_direct.test_device_tracker", "test_get_scanner"),
-    ("tests.components.zwave.test_init", "test_power_schemes"),
 ]
 
 IGNORE_UNCAUGHT_JSON_EXCEPTIONS = [
