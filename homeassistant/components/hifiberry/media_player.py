@@ -269,3 +269,4 @@ class HifiBerry(MediaPlayerDevice):
         else:
             self.set_volume_level(self._muted_volume)
         self._muted = mute
+        
