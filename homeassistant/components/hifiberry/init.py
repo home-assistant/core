@@ -1,0 +1,1 @@
+"""The HifiBerry component."""
