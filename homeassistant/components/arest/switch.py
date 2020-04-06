@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the aREST switches."""
-    resource = config.get(CONF_RESOURCE)
+    resource = config[CONF_RESOURCE]
 
     try:
         response = requests.get(resource, timeout=10)
@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return False
 
     dev = []
-    pins = config.get(CONF_PINS)
+    pins = config[CONF_PINS]
     for pinnum, pin in pins.items():
         dev.append(
             ArestSwitchPin(
@@ -62,11 +62,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 config.get(CONF_NAME, response.json()[CONF_NAME]),
                 pin.get(CONF_NAME),
                 pinnum,
-                pin.get(CONF_INVERT),
+                pin[CONF_INVERT],
             )
         )
 
-    functions = config.get(CONF_FUNCTIONS)
+    functions = config[CONF_FUNCTIONS]
     for funcname, func in functions.items():
         dev.append(
             ArestSwitchFunction(

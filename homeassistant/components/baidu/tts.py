@@ -63,21 +63,21 @@ class BaiduTTSProvider(Provider):
     def __init__(self, hass, conf):
         """Init Baidu TTS service."""
         self.hass = hass
-        self._lang = conf.get(CONF_LANG)
+        self._lang = conf[CONF_LANG]
         self._codec = "mp3"
         self.name = "BaiduTTS"
 
         self._app_data = {
-            "appid": conf.get(CONF_APP_ID),
-            "apikey": conf.get(CONF_API_KEY),
-            "secretkey": conf.get(CONF_SECRET_KEY),
+            "appid": conf[CONF_APP_ID],
+            "apikey": conf[CONF_API_KEY],
+            "secretkey": conf[CONF_SECRET_KEY],
         }
 
         self._speech_conf_data = {
-            _OPTIONS[CONF_PERSON]: conf.get(CONF_PERSON),
-            _OPTIONS[CONF_PITCH]: conf.get(CONF_PITCH),
-            _OPTIONS[CONF_SPEED]: conf.get(CONF_SPEED),
-            _OPTIONS[CONF_VOLUME]: conf.get(CONF_VOLUME),
+            _OPTIONS[CONF_PERSON]: conf[CONF_PERSON],
+            _OPTIONS[CONF_PITCH]: conf[CONF_PITCH],
+            _OPTIONS[CONF_SPEED]: conf[CONF_SPEED],
+            _OPTIONS[CONF_VOLUME]: conf[CONF_VOLUME],
         }
 
     @property
