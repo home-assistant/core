@@ -4,7 +4,8 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.components import ssdp
 from homeassistant.components.synology_dsm.const import (
     CONF_VOLUMES,
     DEFAULT_NAME,
@@ -232,3 +233,35 @@ async def test_connection_failed(hass: HomeAssistantType, service_failed: MagicM
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "unknown"}
+
+
+async def test_form_ssdp(hass: HomeAssistantType, service: MagicMock):
+    """Test we can setup from ssdp."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data={
+            ssdp.ATTR_SSDP_LOCATION: "http://192.168.1.5:5000",
+            ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
+        },
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+    )
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "192.168.1.5"
+    assert result2["data"] == {
+        "host": "192.168.1.5",
+        "name": "mydsm",
+        "port": 5001,
+        "password": "password",
+        "ssl": True,
+        "username": "Home_Assistant",
+    }
