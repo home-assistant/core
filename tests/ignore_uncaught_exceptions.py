@@ -44,13 +44,4 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
 ]
 
 IGNORE_UNCAUGHT_JSON_EXCEPTIONS = [
-    ("tests.components.smartthings.test_init", "test_config_entry_loads_platforms"),
-    (
-        "tests.components.smartthings.test_init",
-        "test_scenes_unauthorized_loads_platforms",
-    ),
-    (
-        "tests.components.smartthings.test_init",
-        "test_config_entry_loads_unconnected_cloud",
-    ),
 ]

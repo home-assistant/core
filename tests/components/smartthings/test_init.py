@@ -157,8 +157,8 @@ async def test_scenes_unauthorized_loads_platforms(
         request_info=request_info, history=None, status=403
     )
     mock_token = Mock()
-    mock_token.access_token.return_value = str(uuid4())
-    mock_token.refresh_token.return_value = str(uuid4())
+    mock_token.access_token = str(uuid4())
+    mock_token.refresh_token = str(uuid4())
     smartthings_mock.generate_tokens.return_value = mock_token
     subscriptions = [
         subscription_factory(capability) for capability in device.capabilities
@@ -189,8 +189,8 @@ async def test_config_entry_loads_platforms(
     smartthings_mock.devices.return_value = [device]
     smartthings_mock.scenes.return_value = [scene]
     mock_token = Mock()
-    mock_token.access_token.return_value = str(uuid4())
-    mock_token.refresh_token.return_value = str(uuid4())
+    mock_token.access_token = str(uuid4())
+    mock_token.refresh_token = str(uuid4())
     smartthings_mock.generate_tokens.return_value = mock_token
     subscriptions = [
         subscription_factory(capability) for capability in device.capabilities
@@ -223,8 +223,8 @@ async def test_config_entry_loads_unconnected_cloud(
     smartthings_mock.devices.return_value = [device]
     smartthings_mock.scenes.return_value = [scene]
     mock_token = Mock()
-    mock_token.access_token.return_value = str(uuid4())
-    mock_token.refresh_token.return_value = str(uuid4())
+    mock_token.access_token = str(uuid4())
+    mock_token.refresh_token = str(uuid4())
     smartthings_mock.generate_tokens.return_value = mock_token
     subscriptions = [
         subscription_factory(capability) for capability in device.capabilities
