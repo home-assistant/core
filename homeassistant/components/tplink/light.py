@@ -89,7 +89,7 @@ class LightState(NamedTuple):
         return {
             "on_off": 1 if self.state else 0,
             "brightness": brightness_to_percentage(self.brightness),
-            "color_temp": mired_to_kelvin(self.color_temp),
+            "color_temp": mired_to_kelvin(self.color_temp) if self.color_temp else None,
             "hue": self.hs[0],
             "saturation": self.hs[1],
         }
@@ -393,7 +393,7 @@ class TPLinkSmartBulb(Light):
         diff = {
             key: value
             for key, value in new_state_param.items()
-            if new_state_param[key] != old_state_param[key]
+            if new_state_param.get(key) != old_state_param.get(key)
         }
 
         if not diff:
