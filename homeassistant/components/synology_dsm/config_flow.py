@@ -84,7 +84,10 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema = _user_schema_with_defaults(user_input)
 
         return self.async_show_form(
-            step_id=step_id, data_schema=data_schema, errors=errors or {},
+            step_id=step_id,
+            data_schema=data_schema,
+            errors=errors or {},
+            description_placeholders=self.discovered_conf or {},
         )
 
     async def async_step_user(self, user_input=None):
