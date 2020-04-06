@@ -261,10 +261,10 @@ async def test_form_ssdp(hass: HomeAssistantType, service: MagicMock):
     assert result2["type"] == "create_entry"
     assert result2["title"] == "192.168.1.5"
     assert result2["data"] == {
-        "host": "192.168.1.5",
-        "name": "mydsm",
-        "port": 5001,
-        "password": "password",
-        "ssl": True,
-        "username": "Home_Assistant",
+        CONF_HOST: "192.168.1.5",
+        CONF_NAME: "mydsm",
+        CONF_PORT: 5001,
+        CONF_PASSWORD: "password",
+        CONF_SSL: True,
+        CONF_USERNAME: "Home_Assistant",
     }
