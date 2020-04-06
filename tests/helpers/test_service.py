@@ -11,7 +11,7 @@ import voluptuous as vol
 # To prevent circular import when running just this file
 from homeassistant import core as ha, exceptions
 from homeassistant.auth.permissions import PolicyPermissions
-import homeassistant.components  # noqa: F401
+import homeassistant.components  # noqa: F401, pylint: disable=unused-import
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
@@ -144,10 +144,10 @@ class TestServiceHelpers(unittest.TestCase):
         service.call_from_config(self.hass, config)
         self.hass.block_till_done()
 
-        assert "goodbye" == self.calls[0].data["hello"]
-        assert "complex" == self.calls[0].data["data"]["value"]
-        assert "simple" == self.calls[0].data["data"]["simple"]
-        assert "list" == self.calls[0].data["list"][0]
+        assert self.calls[0].data["hello"] == "goodbye"
+        assert self.calls[0].data["data"]["value"] == "complex"
+        assert self.calls[0].data["data"]["simple"] == "simple"
+        assert self.calls[0].data["list"][0] == "list"
 
     def test_passing_variables_to_templates(self):
         """Test passing variables to templates."""
@@ -167,7 +167,7 @@ class TestServiceHelpers(unittest.TestCase):
         )
         self.hass.block_till_done()
 
-        assert "goodbye" == self.calls[0].data["hello"]
+        assert self.calls[0].data["hello"] == "goodbye"
 
     def test_bad_template(self):
         """Test passing bad template."""
@@ -223,13 +223,13 @@ class TestServiceHelpers(unittest.TestCase):
     def test_fail_silently_if_no_service(self, mock_log):
         """Test failing if service is missing."""
         service.call_from_config(self.hass, None)
-        assert 1 == mock_log.call_count
+        assert mock_log.call_count == 1
 
         service.call_from_config(self.hass, {})
-        assert 2 == mock_log.call_count
+        assert mock_log.call_count == 2
 
         service.call_from_config(self.hass, {"service": "invalid"})
-        assert 3 == mock_log.call_count
+        assert mock_log.call_count == 3
 
 
 async def test_extract_entity_ids(hass):

@@ -129,8 +129,8 @@ async def test_reproduce_turn_on(hass):
     assert len(calls) > 0
     last_call = calls[-1]
     assert last_call.domain == "light"
-    assert SERVICE_TURN_ON == last_call.service
-    assert "light.test" == last_call.data.get("entity_id")
+    assert last_call.service == SERVICE_TURN_ON
+    assert last_call.data.get("entity_id") == "light.test"
 
 
 async def test_reproduce_turn_off(hass):
@@ -146,8 +146,8 @@ async def test_reproduce_turn_off(hass):
     assert len(calls) > 0
     last_call = calls[-1]
     assert last_call.domain == "light"
-    assert SERVICE_TURN_OFF == last_call.service
-    assert "light.test" == last_call.data.get("entity_id")
+    assert last_call.service == SERVICE_TURN_OFF
+    assert last_call.data.get("entity_id") == "light.test"
 
 
 async def test_reproduce_complex_data(hass):
@@ -167,8 +167,8 @@ async def test_reproduce_complex_data(hass):
     assert len(calls) > 0
     last_call = calls[-1]
     assert last_call.domain == "light"
-    assert SERVICE_TURN_ON == last_call.service
-    assert complex_data == last_call.data.get("rgb_color")
+    assert last_call.service == SERVICE_TURN_ON
+    assert last_call.data.get("rgb_color") == complex_data
 
 
 async def test_reproduce_bad_state(hass):

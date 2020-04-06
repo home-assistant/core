@@ -91,4 +91,4 @@ class TestCommandLine(unittest.TestCase):
         assert self.hass.services.call(
             "notify", "test", {"message": "error"}, blocking=True
         )
-        assert 1 == mock_error.call_count
+        assert mock_error.call_count == 1
