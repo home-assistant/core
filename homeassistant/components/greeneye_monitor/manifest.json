@@ -3,6 +3,5 @@
   "name": "GreenEye Monitor (GEM)",
   "documentation": "https://www.home-assistant.io/integrations/greeneye_monitor",
   "requirements": ["greeneye_monitor==2.0"],
-  "dependencies": [],
   "codeowners": ["@jkeljo"]
 }

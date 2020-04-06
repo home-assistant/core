@@ -2,11 +2,6 @@
   "domain": "rainforest_eagle",
   "name": "Rainforest Eagle-200",
   "documentation": "https://www.home-assistant.io/integrations/rainforest_eagle",
-  "requirements": [
-    "eagle200_reader==0.2.4",
-    "uEagle==0.0.1"
-  ],
-  "dependencies": [],
-  "codeowners": ["@gtdiehl",
-                 "@jcalbert"]
+  "requirements": ["eagle200_reader==0.2.4", "uEagle==0.0.1"],
+  "codeowners": ["@gtdiehl", "@jcalbert"]
 }

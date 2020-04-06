@@ -61,7 +61,6 @@ class ArloCam(Camera):
         self._ffmpeg_arguments = device_info.get(CONF_FFMPEG_ARGUMENTS)
         self._last_refresh = None
         self.attrs = {}
-        self._unsub_disp = None
 
     def camera_image(self):
         """Return a still image response from the camera."""
@@ -69,14 +68,11 @@ class ArloCam(Camera):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self._unsub_disp = async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_ARLO, self.async_write_ha_state
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_UPDATE_ARLO, self.async_write_ha_state
+            )
         )
-
-    async def async_will_remove_from_hass(self):
-        """When entity will be removed from hass."""
-        self._unsub_disp()
-        self._unsub_disp = None
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""

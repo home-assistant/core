@@ -102,10 +102,12 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorDevice):
         tag_id = self.tag_id
         event_type = self.device_class
         mac = self.tag_manager_mac
-        async_dispatcher_connect(
-            self.hass,
-            SIGNAL_BINARY_EVENT_UPDATE.format(tag_id, event_type, mac),
-            self._on_binary_event_callback,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_BINARY_EVENT_UPDATE.format(tag_id, event_type, mac),
+                self._on_binary_event_callback,
+            )
         )
 
     @property

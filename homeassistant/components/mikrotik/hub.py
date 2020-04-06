@@ -216,7 +216,7 @@ class MikrotikHub:
                 response = list(self.api(cmd=cmd))
         except (
             librouteros.exceptions.ConnectionClosed,
-            socket.error,
+            OSError,
             socket.timeout,
         ) as api_error:
             _LOGGER.error("Mikrotik %s connection error %s", self.host, api_error)
@@ -261,7 +261,7 @@ class MikrotikHub:
                 _LOGGER.debug("Using arp-ping to check devices")
                 arp_devices = self.get_list_from_interface(ARP)
 
-        except (CannotConnect, socket.timeout, socket.error):
+        except (CannotConnect, socket.timeout, OSError):
             self.available = False
             return
 
@@ -327,7 +327,7 @@ def get_api(hass, entry):
         return api
     except (
         librouteros.exceptions.LibRouterosError,
-        socket.error,
+        OSError,
         socket.timeout,
     ) as api_error:
         _LOGGER.error("Mikrotik %s error: %s", entry[CONF_HOST], api_error)

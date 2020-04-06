@@ -109,8 +109,10 @@ class SwitcherControl(SwitchDevice):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_SWITCHER_DEVICE_UPDATE, self.async_update_data
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_SWITCHER_DEVICE_UPDATE, self.async_update_data
+            )
         )
 
     async def async_update_data(self, device_data: "SwitcherV2Device") -> None:

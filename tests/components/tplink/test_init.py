@@ -73,7 +73,7 @@ async def test_configuring_device_types(hass, name, cls, platform, count):
         "homeassistant.components.tplink.common.SmartDevice._query_helper"
     ):
         discovery_data = {
-            "123.123.123.{}".format(c): cls("123.123.123.123") for c in range(count)
+            f"123.123.123.{c}": cls("123.123.123.123") for c in range(count)
         }
         discover.return_value = discovery_data
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
@@ -242,7 +242,7 @@ async def test_unload(hass, platform):
     with patch(
         "homeassistant.components.tplink.common.SmartDevice._query_helper"
     ), patch(
-        "homeassistant.components.tplink.{}.async_setup_entry".format(platform),
+        f"homeassistant.components.tplink.{platform}.async_setup_entry",
         return_value=mock_coro(True),
     ) as light_setup:
         config = {

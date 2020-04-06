@@ -3,7 +3,6 @@
   "name": "Xiaomi Gateway (Aqara)",
   "documentation": "https://www.home-assistant.io/integrations/xiaomi_aqara",
   "requirements": ["PyXiaomiGateway==0.12.4"],
-  "dependencies": [],
   "after_dependencies": ["discovery"],
   "codeowners": ["@danielhiversen", "@syssi"]
 }

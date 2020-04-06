@@ -121,7 +121,6 @@ class BaseFan(FanEntity):
     @callback
     def async_set_state(self, attr_id, attr_name, value):
         """Handle state update from channel."""
-        pass
 
 
 @STRICT_MATCH(channel_names=CHANNEL_FAN)

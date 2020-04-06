@@ -42,7 +42,9 @@ class HomeworksLight(HomeworksDevice, Light):
         """Call when entity is added to hass."""
         signal = f"homeworks_entity_{self._addr}"
         _LOGGER.debug("connecting %s", signal)
-        async_dispatcher_connect(self.hass, signal, self._update_callback)
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, signal, self._update_callback)
+        )
         self._controller.request_dimmer_level(self._addr)
 
     @property

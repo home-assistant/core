@@ -234,10 +234,12 @@ class ComfoConnectSensor(Entity):
         _LOGGER.debug(
             "Registering for sensor %s (%d)", self._sensor_type, self._sensor_id
         )
-        async_dispatcher_connect(
-            self.hass,
-            SIGNAL_COMFOCONNECT_UPDATE_RECEIVED.format(self._sensor_id),
-            self._handle_update,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_COMFOCONNECT_UPDATE_RECEIVED.format(self._sensor_id),
+                self._handle_update,
+            )
         )
         await self.hass.async_add_executor_job(
             self._ccb.comfoconnect.register_sensor, self._sensor_id

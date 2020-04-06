@@ -27,20 +27,16 @@ class YeelightNightlightModeSensor(BinarySensorDevice):
     def __init__(self, device):
         """Initialize nightlight mode sensor."""
         self._device = device
-        self._unsub_disp = None
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
-        self._unsub_disp = async_dispatcher_connect(
-            self.hass,
-            DATA_UPDATED.format(self._device.ipaddr),
-            self.async_write_ha_state,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                DATA_UPDATED.format(self._device.ipaddr),
+                self.async_write_ha_state,
+            )
         )
-
-    async def async_will_remove_from_hass(self):
-        """When entity will be removed from hass."""
-        self._unsub_disp()
-        self._unsub_disp = None
 
     @property
     def should_poll(self):

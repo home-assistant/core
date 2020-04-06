@@ -4,10 +4,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, Awaitable, Dict, List, Optional, Set, cast
 
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_FINAL_WRITE,
-    EVENT_HOMEASSISTANT_START,
-)
+from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import (
     CoreState,
     HomeAssistant,
@@ -126,11 +123,11 @@ class RestoreStateData:
         now = dt_util.utcnow()
         all_states = self.hass.states.async_all()
         # Entities currently backed by an entity object
-        current_entity_ids = set(
+        current_entity_ids = {
             state.entity_id
             for state in all_states
             if not state.attributes.get(entity_registry.ATTR_RESTORED)
-        )
+        }
 
         # Start with the currently registered states
         stored_states = [
@@ -187,9 +184,7 @@ class RestoreStateData:
         async_track_time_interval(self.hass, _async_dump_states, STATE_DUMP_INTERVAL)
 
         # Dump states when stopping hass
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_FINAL_WRITE, _async_dump_states
-        )
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_dump_states)
 
     @callback
     def async_restore_entity_added(self, entity_id: str) -> None:

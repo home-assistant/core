@@ -8,13 +8,13 @@ send_message:
       example: The garage door has been open for 10 minutes.
     title:
       description: Optional title for your notification. Will be composed as '%title\n%message'
-      example: 'Your Garage Door Friend'
+      example: "Your Garage Door Friend"
     target:
       description: An array of pre-authorized chat_ids to send the notification to. If not present, first allowed chat_id is the default.
-      example: '[12345, 67890] or 12345'
+      example: "[12345, 67890] or 12345"
     parse_mode:
       description: "Parser for the message text: `html` or `markdown`."
-      example: 'html'
+      example: "html"
     disable_notification:
       description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
       example: true
@@ -23,7 +23,7 @@ send_message:
       example: true
     timeout:
       description: Timeout for send message. Will help with timeout errors (poor internet connection, etc)
-      example: '1000'
+      example: "1000"
     keyboard:
       description: List of rows of commands, comma-separated, to make a custom keyboard. Empty list clears a previously set keyboard.
       example: '["/command1, /command2", "/command3"]'
@@ -36,13 +36,13 @@ send_photo:
   fields:
     url:
       description: Remote path to an image.
-      example: 'http://example.org/path/to/the/image.png'
+      example: "http://example.org/path/to/the/image.png"
     file:
       description: Local path to an image.
-      example: '/path/to/the/image.png'
+      example: "/path/to/the/image.png"
     caption:
       description: The title of the image.
-      example: 'My image'
+      example: "My image"
     username:
       description: Username for a URL which require HTTP basic authentication.
       example: myuser
@@ -51,7 +51,7 @@ send_photo:
       example: myuser_pwd
     target:
       description: An array of pre-authorized chat_ids to send the document to. If not present, first allowed chat_id is the default.
-      example: '[12345, 67890] or 12345'
+      example: "[12345, 67890] or 12345"
     disable_notification:
       description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
       example: true
@@ -60,7 +60,7 @@ send_photo:
       example: false
     timeout:
       description: Timeout for send photo. Will help with timeout errors (poor internet connection, etc)
-      example: '1000'
+      example: "1000"
     keyboard:
       description: List of rows of commands, comma-separated, to make a custom keyboard.
       example: '["/command1, /command2", "/command3"]'
@@ -73,10 +73,10 @@ send_sticker:
   fields:
     url:
       description: Remote path to an webp sticker.
-      example: 'http://example.org/path/to/the/sticker.webp'
+      example: "http://example.org/path/to/the/sticker.webp"
     file:
       description: Local path to an webp sticker.
-      example: '/path/to/the/sticker.webp'
+      example: "/path/to/the/sticker.webp"
     username:
       description: Username for a URL which require HTTP basic authentication.
       example: myuser
@@ -85,7 +85,7 @@ send_sticker:
       example: myuser_pwd
     target:
       description: An array of pre-authorized chat_ids to send the document to. If not present, first allowed chat_id is the default.
-      example: '[12345, 67890] or 12345'
+      example: "[12345, 67890] or 12345"
     disable_notification:
       description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
       example: true
@@ -94,7 +94,7 @@ send_sticker:
       example: false
     timeout:
       description: Timeout for send sticker. Will help with timeout errors (poor internet connection, etc)
-      example: '1000'
+      example: "1000"
     keyboard:
       description: List of rows of commands, comma-separated, to make a custom keyboard.
       example: '["/command1, /command2", "/command3"]'
@@ -107,13 +107,13 @@ send_video:
   fields:
     url:
       description: Remote path to a video.
-      example: 'http://example.org/path/to/the/video.mp4'
+      example: "http://example.org/path/to/the/video.mp4"
     file:
       description: Local path to an image.
-      example: '/path/to/the/video.mp4'
+      example: "/path/to/the/video.mp4"
     caption:
       description: The title of the video.
-      example: 'My video'
+      example: "My video"
     username:
       description: Username for a URL which require HTTP basic authentication.
       example: myuser
@@ -122,7 +122,7 @@ send_video:
       example: myuser_pwd
     target:
       description: An array of pre-authorized chat_ids to send the document to. If not present, first allowed chat_id is the default.
-      example: '[12345, 67890] or 12345'
+      example: "[12345, 67890] or 12345"
     disable_notification:
       description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
       example: true
@@ -131,7 +131,7 @@ send_video:
       example: false
     timeout:
       description: Timeout for send video. Will help with timeout errors (poor internet connection, etc)
-      example: '1000'
+      example: "1000"
     keyboard:
       description: List of rows of commands, comma-separated, to make a custom keyboard.
       example: '["/command1, /command2", "/command3"]'
@@ -144,10 +144,10 @@ send_document:
   fields:
     url:
       description: Remote path to a document.
-      example: 'http://example.org/path/to/the/document.odf'
+      example: "http://example.org/path/to/the/document.odf"
     file:
       description: Local path to a document.
-      example: '/tmp/whatever.odf'
+      example: "/tmp/whatever.odf"
     caption:
       description: The title of the document.
       example: Document Title xy
@@ -159,7 +159,7 @@ send_document:
       example: myuser_pwd
     target:
       description: An array of pre-authorized chat_ids to send the document to. If not present, first allowed chat_id is the default.
-      example: '[12345, 67890] or 12345'
+      example: "[12345, 67890] or 12345"
     disable_notification:
       description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
       example: true
@@ -168,7 +168,7 @@ send_document:
       example: false
     timeout:
       description: Timeout for send document. Will help with timeout errors (poor internet connection, etc)
-      example: '1000'
+      example: "1000"
     keyboard:
       description: List of rows of commands, comma-separated, to make a custom keyboard.
       example: '["/command1, /command2", "/command3"]'
@@ -187,13 +187,13 @@ send_location:
       example: 38.123
     target:
       description: An array of pre-authorized chat_ids to send the location to. If not present, first allowed chat_id is the default.
-      example: '[12345, 67890] or 12345'
+      example: "[12345, 67890] or 12345"
     disable_notification:
       description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
       example: true
     timeout:
       description: Timeout for send photo. Will help with timeout errors (poor internet connection, etc)
-      example: '1000'
+      example: "1000"
     keyboard:
       description: List of rows of commands, comma-separated, to make a custom keyboard.
       example: '["/command1, /command2", "/command3"]'
@@ -206,7 +206,7 @@ edit_message:
   fields:
     message_id:
       description: id of the message to edit.
-      example: '{{ trigger.event.data.message.message_id }}'
+      example: "{{ trigger.event.data.message.message_id }}"
     chat_id:
       description: The chat_id where to edit the message.
       example: 12345
@@ -215,10 +215,10 @@ edit_message:
       example: The garage door has been open for 10 minutes.
     title:
       description: Optional title for your notification. Will be composed as '%title\n%message'
-      example: 'Your Garage Door Friend'
+      example: "Your Garage Door Friend"
     parse_mode:
       description: "Parser for the message text: `html` or `markdown`."
-      example: 'html'
+      example: "html"
     disable_web_page_preview:
       description: Disables link previews for links in the message.
       example: true
@@ -231,7 +231,7 @@ edit_caption:
   fields:
     message_id:
       description: id of the message to edit.
-      example: '{{ trigger.event.data.message.message_id }}'
+      example: "{{ trigger.event.data.message.message_id }}"
     chat_id:
       description: The chat_id where to edit the caption.
       example: 12345
@@ -247,7 +247,7 @@ edit_replymarkup:
   fields:
     message_id:
       description: id of the message to edit.
-      example: '{{ trigger.event.data.message.message_id }}'
+      example: "{{ trigger.event.data.message.message_id }}"
     chat_id:
       description: The chat_id where to edit the reply_markup.
       example: 12345
@@ -263,17 +263,17 @@ answer_callback_query:
       example: "OK, I'm listening"
     callback_query_id:
       description: Unique id of the callback response.
-      example: '{{ trigger.event.data.id }}'
+      example: "{{ trigger.event.data.id }}"
     show_alert:
       description: Show a permanent notification.
       example: true
 
 delete_message:
-  description: Delete a previously sent message.  
+  description: Delete a previously sent message.
   fields:
     message_id:
       description: id of the message to delete.
-      example: '{{ trigger.event.data.message.message_id }}'  
+      example: "{{ trigger.event.data.message.message_id }}"
     chat_id:
       description: The chat_id where to delete the message.
       example: 12345

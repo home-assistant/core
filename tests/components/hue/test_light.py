@@ -49,6 +49,17 @@ GROUP_RESPONSE = {
         "state": {"any_on": True, "all_on": False},
     },
 }
+LIGHT_1_CAPABILITIES = {
+    "certified": True,
+    "control": {
+        "mindimlevel": 5000,
+        "maxlumen": 600,
+        "colorgamuttype": "A",
+        "colorgamut": [[0.704, 0.296], [0.2151, 0.7106], [0.138, 0.08]],
+        "ct": {"min": 153, "max": 500},
+    },
+    "streaming": {"renderer": True, "proxy": False},
+}
 LIGHT_1_ON = {
     "state": {
         "on": True,
@@ -62,12 +73,7 @@ LIGHT_1_ON = {
         "colormode": "xy",
         "reachable": True,
     },
-    "capabilities": {
-        "control": {
-            "colorgamuttype": "A",
-            "colorgamut": [[0.704, 0.296], [0.2151, 0.7106], [0.138, 0.08]],
-        }
-    },
+    "capabilities": LIGHT_1_CAPABILITIES,
     "type": "Extended color light",
     "name": "Hue Lamp 1",
     "modelid": "LCT001",
@@ -88,18 +94,24 @@ LIGHT_1_OFF = {
         "colormode": "xy",
         "reachable": True,
     },
-    "capabilities": {
-        "control": {
-            "colorgamuttype": "A",
-            "colorgamut": [[0.704, 0.296], [0.2151, 0.7106], [0.138, 0.08]],
-        }
-    },
+    "capabilities": LIGHT_1_CAPABILITIES,
     "type": "Extended color light",
     "name": "Hue Lamp 1",
     "modelid": "LCT001",
     "swversion": "66009461",
     "manufacturername": "Philips",
     "uniqueid": "456",
+}
+LIGHT_2_CAPABILITIES = {
+    "certified": True,
+    "control": {
+        "mindimlevel": 5000,
+        "maxlumen": 600,
+        "colorgamuttype": "A",
+        "colorgamut": [[0.704, 0.296], [0.2151, 0.7106], [0.138, 0.08]],
+        "ct": {"min": 153, "max": 500},
+    },
+    "streaming": {"renderer": True, "proxy": False},
 }
 LIGHT_2_OFF = {
     "state": {
@@ -114,12 +126,7 @@ LIGHT_2_OFF = {
         "colormode": "hs",
         "reachable": True,
     },
-    "capabilities": {
-        "control": {
-            "colorgamuttype": "A",
-            "colorgamut": [[0.704, 0.296], [0.2151, 0.7106], [0.138, 0.08]],
-        }
-    },
+    "capabilities": LIGHT_2_CAPABILITIES,
     "type": "Extended color light",
     "name": "Hue Lamp 2",
     "modelid": "LCT001",
@@ -140,12 +147,7 @@ LIGHT_2_ON = {
         "colormode": "hs",
         "reachable": True,
     },
-    "capabilities": {
-        "control": {
-            "colorgamuttype": "A",
-            "colorgamut": [[0.704, 0.296], [0.2151, 0.7106], [0.138, 0.08]],
-        }
-    },
+    "capabilities": LIGHT_2_CAPABILITIES,
     "type": "Extended color light",
     "name": "Hue Lamp 2 new",
     "modelid": "LCT001",
@@ -353,12 +355,7 @@ async def test_new_light_discovered(hass, mock_bridge):
             "colormode": "hs",
             "reachable": True,
         },
-        "capabilities": {
-            "control": {
-                "colorgamuttype": "A",
-                "colorgamut": [[0.704, 0.296], [0.2151, 0.7106], [0.138, 0.08]],
-            }
-        },
+        "capabilities": LIGHT_1_CAPABILITIES,
         "type": "Extended color light",
         "name": "Hue Lamp 3",
         "modelid": "LCT001",
@@ -518,12 +515,7 @@ async def test_other_light_update(hass, mock_bridge):
             "colormode": "hs",
             "reachable": True,
         },
-        "capabilities": {
-            "control": {
-                "colorgamuttype": "A",
-                "colorgamut": [[0.704, 0.296], [0.2151, 0.7106], [0.138, 0.08]],
-            }
-        },
+        "capabilities": LIGHT_2_CAPABILITIES,
         "type": "Extended color light",
         "name": "Hue Lamp 2 new",
         "modelid": "LCT001",

@@ -163,7 +163,7 @@ class Itunes:
 
         if found_playlists:
             playlist = found_playlists[0]
-            path = "/playlists/" + playlist["id"] + "/play"
+            path = f"/playlists/{playlist['id']}/play"
             return self._request("PUT", path)
 
     def artwork_url(self):
@@ -324,7 +324,7 @@ class ItunesDevice(MediaPlayerDevice):
             self.player_state in (STATE_PLAYING, STATE_IDLE, STATE_PAUSED)
             and self.current_title is not None
         ):
-            return self.client.artwork_url() + "?id=" + self.content_id
+            return f"{self.client.artwork_url()}?id={self.content_id}"
 
         return (
             "https://cloud.githubusercontent.com/assets/260/9829355"

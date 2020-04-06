@@ -109,7 +109,7 @@ def _add_entities(hass, entity_ids):
     """Add entities."""
     attributes = {"test_attr": 5, "test_attr_10": "nice"}
     for idx, entity_id in enumerate(entity_ids):
-        hass.states.set(entity_id, "state{}".format(idx), attributes)
+        hass.states.set(entity_id, f"state{idx}", attributes)
     wait_recording_done(hass)
 
     with session_scope(hass=hass) as session:

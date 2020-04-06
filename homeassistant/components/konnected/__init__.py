@@ -335,11 +335,9 @@ class KonnectedView(HomeAssistantView):
             payload = await request.json()
         except json.decoder.JSONDecodeError:
             _LOGGER.error(
-                (
-                    "Your Konnected device software may be out of "
-                    "date. Visit https://help.konnected.io for "
-                    "updating instructions."
-                )
+                "Your Konnected device software may be out of "
+                "date. Visit https://help.konnected.io for "
+                "updating instructions."
             )
 
         device = data[CONF_DEVICES].get(device_id)
@@ -389,11 +387,9 @@ class KonnectedView(HomeAssistantView):
                 request.query.get(CONF_ZONE) or PIN_TO_ZONE[request.query[CONF_PIN]]
             )
             zone = next(
-                (
-                    switch
-                    for switch in device[CONF_SWITCHES]
-                    if switch[CONF_ZONE] == zone_num
-                )
+                switch
+                for switch in device[CONF_SWITCHES]
+                if switch[CONF_ZONE] == zone_num
             )
 
         except StopIteration:

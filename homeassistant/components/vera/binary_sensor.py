@@ -1,21 +1,34 @@
 """Support for Vera binary sensors."""
 import logging
+from typing import Callable, List
 
-from homeassistant.components.binary_sensor import ENTITY_ID_FORMAT, BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    DOMAIN as PLATFORM_DOMAIN,
+    ENTITY_ID_FORMAT,
+    BinarySensorDevice,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
 
-from . import VERA_CONTROLLER, VERA_DEVICES, VeraDevice
+from . import VeraDevice
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Perform the setup for Vera controller devices."""
-    add_entities(
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity], bool], None],
+) -> None:
+    """Set up the sensor config entry."""
+    controller_data = hass.data[DOMAIN]
+    async_add_entities(
         [
-            VeraBinarySensor(device, hass.data[VERA_CONTROLLER])
-            for device in hass.data[VERA_DEVICES]["binary_sensor"]
-        ],
-        True,
+            VeraBinarySensor(device, controller_data.controller)
+            for device in controller_data.devices.get(PLATFORM_DOMAIN)
+        ]
     )
 
 

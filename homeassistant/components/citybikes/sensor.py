@@ -125,8 +125,6 @@ STATIONS_RESPONSE_SCHEMA = vol.Schema(
 class CityBikesRequestError(Exception):
     """Error to indicate a CityBikes API request has failed."""
 
-    pass
-
 
 async def async_citybikes_request(hass, uri, schema):
     """Perform a request to CityBikes API endpoint, and parse the response."""

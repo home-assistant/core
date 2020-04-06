@@ -23,10 +23,10 @@ from homeassistant.const import (
     CONF_URL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from .common import trigger_plex_update
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN
 from .mock_classes import MockPlexAccount, MockPlexServer
 
@@ -74,7 +74,7 @@ async def test_setup_with_config(hass):
     )
 
 
-async def test_setup_with_config_entry(hass):
+async def test_setup_with_config_entry(hass, caplog):
     """Test setup component with config."""
 
     mock_plex_server = MockPlexServer()
@@ -109,30 +109,28 @@ async def test_setup_with_config_entry(hass):
         hass.data[const.DOMAIN][const.PLATFORMS_COMPLETED][server_id] == const.PLATFORMS
     )
 
-    async_dispatcher_send(hass, const.PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
-    await hass.async_block_till_done()
+    await trigger_plex_update(hass, server_id)
 
     sensor = hass.states.get("sensor.plex_plex_server_1")
     assert sensor.state == str(len(mock_plex_server.accounts))
 
-    async_dispatcher_send(hass, const.PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
-    await hass.async_block_till_done()
+    await trigger_plex_update(hass, server_id)
 
-    with patch.object(
-        mock_plex_server, "clients", side_effect=plexapi.exceptions.BadRequest
+    for test_exception in (
+        plexapi.exceptions.BadRequest,
+        requests.exceptions.RequestException,
     ):
-        async_dispatcher_send(
-            hass, const.PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id)
-        )
-        await hass.async_block_till_done()
+        with patch.object(
+            mock_plex_server, "clients", side_effect=test_exception
+        ) as patched_clients_bad_request:
+            await trigger_plex_update(hass, server_id)
 
-    with patch.object(
-        mock_plex_server, "clients", side_effect=requests.exceptions.RequestException
-    ):
-        async_dispatcher_send(
-            hass, const.PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id)
+        assert patched_clients_bad_request.called
+        assert (
+            f"Could not connect to Plex server: {mock_plex_server.friendlyName}"
+            in caplog.text
         )
-        await hass.async_block_till_done()
+        caplog.clear()
 
 
 async def test_set_config_entry_unique_id(hass):
@@ -294,8 +292,7 @@ async def test_setup_with_photo_session(hass):
 
     server_id = mock_plex_server.machineIdentifier
 
-    async_dispatcher_send(hass, const.PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
-    await hass.async_block_till_done()
+    await trigger_plex_update(hass, server_id)
 
     media_player = hass.states.get("media_player.plex_product_title")
     assert media_player.state == "idle"

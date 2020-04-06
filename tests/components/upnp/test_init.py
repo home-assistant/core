@@ -19,6 +19,7 @@ class MockDevice(Device):
         device = MagicMock()
         device.manufacturer = "mock-manuf"
         device.name = "mock-name"
+        device.model_name = "mock-model-name"
         super().__init__(device)
         self._udn = udn
         self.added_port_mappings = []

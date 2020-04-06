@@ -27,7 +27,7 @@ CONF_TITLE = "title"
 CONF_TRACKING_NUMBER = "tracking_number"
 
 DEFAULT_NAME = "aftership"
-UPDATE_TOPIC = DOMAIN + "_update"
+UPDATE_TOPIC = f"{DOMAIN}_update"
 
 ICON = "mdi:package-variant-closed"
 
@@ -145,14 +145,16 @@ class AfterShipSensor(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            UPDATE_TOPIC, self._force_update
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                UPDATE_TOPIC, self._force_update
+            )
         )
 
     async def _force_update(self):
         """Force update of data."""
         await self.async_update(no_throttle=True)
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self, **kwargs):
@@ -189,7 +191,7 @@ class AfterShipSensor(Entity):
                     "name": name,
                     "tracking_number": track["tracking_number"],
                     "slug": track["slug"],
-                    "link": "%s%s/%s" % (BASE, track["slug"], track["tracking_number"]),
+                    "link": f"{BASE}{track['slug']}/{track['tracking_number']}",
                     "last_update": track["updated_at"],
                     "expected_delivery": track["expected_delivery"],
                     "status": track["tag"],

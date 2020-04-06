@@ -421,11 +421,9 @@ class IndexView(web_urldispatcher.AbstractResource):
 
     def freeze(self) -> None:
         """Freeze the resource."""
-        pass
 
     def raw_match(self, path: str) -> bool:
         """Perform a raw match against path."""
-        pass
 
     def get_template(self):
         """Get template."""

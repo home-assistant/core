@@ -3,6 +3,5 @@
   "name": "ebusd",
   "documentation": "https://www.home-assistant.io/integrations/ebusd",
   "requirements": ["ebusdpy==0.0.16"],
-  "dependencies": [],
   "codeowners": []
 }

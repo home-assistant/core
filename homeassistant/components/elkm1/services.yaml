@@ -3,7 +3,7 @@ alarm_arm_home_instant:
   fields:
     entity_id:
       description: Name of alarm control panel to arm.
-      example: 'alarm_control_panel.main'
+      example: "alarm_control_panel.main"
     code:
       description: An code to arm the alarm control panel.
       example: 1234
@@ -13,7 +13,7 @@ alarm_arm_night_instant:
   fields:
     entity_id:
       description: Name of alarm control panel to arm.
-      example: 'alarm_control_panel.main'
+      example: "alarm_control_panel.main"
     code:
       description: An code to arm the alarm control panel.
       example: 1234
@@ -23,7 +23,7 @@ alarm_arm_vacation:
   fields:
     entity_id:
       description: Name of alarm control panel to arm.
-      example: 'alarm_control_panel.main'
+      example: "alarm_control_panel.main"
     code:
       description: An code to arm the alarm control panel.
       example: 1234
@@ -33,7 +33,7 @@ alarm_display_message:
   fields:
     entity_id:
       description: Name of alarm control panel to display messages on.
-      example: 'alarm_control_panel.main'
+      example: "alarm_control_panel.main"
     clear:
       description: 0=clear message, 1=clear message with * key, 2=Display until timeout; default 2
       example: 1

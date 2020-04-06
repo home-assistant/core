@@ -920,7 +920,7 @@ class TestConfig(unittest.TestCase):
         with TemporaryDirectory() as tmp_dir:
             # The created dir is in /tmp. This is a symlink on OS X
             # causing this test to fail unless we resolve path first.
-            self.config.whitelist_external_dirs = set((os.path.realpath(tmp_dir),))
+            self.config.whitelist_external_dirs = {os.path.realpath(tmp_dir)}
 
             test_file = os.path.join(tmp_dir, "test.jpg")
             with open(test_file, "w") as tmp_file:
@@ -930,7 +930,7 @@ class TestConfig(unittest.TestCase):
             for path in valid:
                 assert self.config.is_allowed_path(path)
 
-            self.config.whitelist_external_dirs = set(("/home", "/var"))
+            self.config.whitelist_external_dirs = {"/home", "/var"}
 
             unvalid = [
                 "/hass/config/secure",
@@ -1212,6 +1212,42 @@ async def test_async_functions_with_callback(hass):
 
     await hass.services.async_call("test_domain", "test_service", blocking=True)
     assert len(runs) == 3
+
+
+@pytest.mark.parametrize("cancel_call", [True, False])
+async def test_cancel_service_task(hass, cancel_call):
+    """Test cancellation."""
+    service_called = asyncio.Event()
+    service_cancelled = False
+
+    async def service_handler(call):
+        nonlocal service_cancelled
+        service_called.set()
+        try:
+            await asyncio.sleep(10)
+        except asyncio.CancelledError:
+            service_cancelled = True
+            raise
+
+    hass.services.async_register("test_domain", "test_service", service_handler)
+    call_task = hass.async_create_task(
+        hass.services.async_call("test_domain", "test_service", blocking=True)
+    )
+
+    tasks_1 = asyncio.all_tasks()
+    await asyncio.wait_for(service_called.wait(), timeout=1)
+    tasks_2 = asyncio.all_tasks() - tasks_1
+    assert len(tasks_2) == 1
+    service_task = tasks_2.pop()
+
+    if cancel_call:
+        call_task.cancel()
+    else:
+        service_task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await call_task
+
+    assert service_cancelled
 
 
 def test_valid_entity_id():

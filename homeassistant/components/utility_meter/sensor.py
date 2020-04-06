@@ -217,7 +217,7 @@ class UtilityMeterSensor(RestoreEntity):
         self._last_reset = dt_util.now()
         self._last_period = str(self._state)
         self._state = 0
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_calibrate(self, value):
         """Calibrate the Utility Meter with a given value."""
@@ -253,7 +253,7 @@ class UtilityMeterSensor(RestoreEntity):
             self._unit_of_measurement = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             self._last_period = state.attributes.get(ATTR_LAST_PERIOD)
             self._last_reset = state.attributes.get(ATTR_LAST_RESET)
-            await self.async_update_ha_state()
+            self.async_write_ha_state()
             if state.attributes.get(ATTR_STATUS) == PAUSED:
                 # Fake cancellation function to init the meter paused
                 self._collecting = lambda: None

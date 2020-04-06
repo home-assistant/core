@@ -71,15 +71,15 @@ PLATFORM_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the connection to the Zigbee device."""
-    global DEVICE
-    global GPIO_DIGITAL_OUTPUT_LOW
-    global GPIO_DIGITAL_OUTPUT_HIGH
-    global ADC_PERCENTAGE
-    global DIGITAL_PINS
-    global ANALOG_PINS
-    global CONVERT_ADC
-    global ZIGBEE_EXCEPTION
-    global ZIGBEE_TX_FAILURE
+    global DEVICE  # pylint: disable=global-statement
+    global GPIO_DIGITAL_OUTPUT_LOW  # pylint: disable=global-statement
+    global GPIO_DIGITAL_OUTPUT_HIGH  # pylint: disable=global-statement
+    global ADC_PERCENTAGE  # pylint: disable=global-statement
+    global DIGITAL_PINS  # pylint: disable=global-statement
+    global ANALOG_PINS  # pylint: disable=global-statement
+    global CONVERT_ADC  # pylint: disable=global-statement
+    global ZIGBEE_EXCEPTION  # pylint: disable=global-statement
+    global ZIGBEE_TX_FAILURE  # pylint: disable=global-statement
 
     GPIO_DIGITAL_OUTPUT_LOW = xb_const.GPIO_DIGITAL_OUTPUT_LOW
     GPIO_DIGITAL_OUTPUT_HIGH = xb_const.GPIO_DIGITAL_OUTPUT_HIGH

@@ -1,4 +1,5 @@
 """Shared class to maintain Plex server instances."""
+from functools import partial, wraps
 import logging
 import ssl
 from urllib.parse import urlparse
@@ -12,6 +13,7 @@ import requests.exceptions
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.event import async_call_later
 
 from .const import (
     CONF_CLIENT_IDENTIFIER,
@@ -19,6 +21,7 @@ from .const import (
     CONF_MONITORED_USERS,
     CONF_SERVER,
     CONF_USE_EPISODE_ART,
+    DEBOUNCE_TIMEOUT,
     DEFAULT_VERIFY_SSL,
     PLEX_NEW_MP_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
@@ -39,12 +42,37 @@ plexapi.X_PLEX_PRODUCT = X_PLEX_PRODUCT
 plexapi.X_PLEX_VERSION = X_PLEX_VERSION
 
 
+def debounce(func):
+    """Decorate function to debounce callbacks from Plex websocket."""
+
+    unsub = None
+
+    async def call_later_listener(self, _):
+        """Handle call_later callback."""
+        nonlocal unsub
+        unsub = None
+        await self.hass.async_add_executor_job(func, self)
+
+    @wraps(func)
+    def wrapper(self):
+        """Schedule async callback."""
+        nonlocal unsub
+        if unsub:
+            _LOGGER.debug("Throttling update of %s", self.friendly_name)
+            unsub()  # pylint: disable=not-callable
+        unsub = async_call_later(
+            self.hass, DEBOUNCE_TIMEOUT, partial(call_later_listener, self),
+        )
+
+    return wrapper
+
+
 class PlexServer:
     """Manages a single Plex server connection."""
 
     def __init__(self, hass, server_config, known_server_id=None, options=None):
         """Initialize a Plex server instance."""
-        self._hass = hass
+        self.hass = hass
         self._plex_server = None
         self._known_clients = set()
         self._known_idle = set()
@@ -131,6 +159,7 @@ class PlexServer:
             for account in self._plex_server.systemAccounts()
             if account.name
         ]
+        _LOGGER.debug("Linked accounts: %s", self.accounts)
 
         owner_account = [
             account.name
@@ -139,6 +168,7 @@ class PlexServer:
         ]
         if owner_account:
             self._owner_username = owner_account[0]
+            _LOGGER.debug("Server owner found: '%s'", self._owner_username)
 
         self._version = self._plex_server.version
 
@@ -150,12 +180,13 @@ class PlexServer:
         unique_id = f"{self.machine_identifier}:{machine_identifier}"
         _LOGGER.debug("Refreshing %s", unique_id)
         dispatcher_send(
-            self._hass,
+            self.hass,
             PLEX_UPDATE_MEDIA_PLAYER_SIGNAL.format(unique_id),
             device,
             session,
         )
 
+    @debounce
     def update_platforms(self):
         """Update the platform entities."""
         _LOGGER.debug("Updating devices")
@@ -180,11 +211,11 @@ class PlexServer:
         try:
             devices = self._plex_server.clients()
             sessions = self._plex_server.sessions()
-        except plexapi.exceptions.BadRequest:
-            _LOGGER.exception("Error requesting Plex client data from server")
-            return
-        except requests.exceptions.RequestException as ex:
-            _LOGGER.warning(
+        except (
+            plexapi.exceptions.BadRequest,
+            requests.exceptions.RequestException,
+        ) as ex:
+            _LOGGER.error(
                 "Could not connect to Plex server: %s (%s)", self.friendly_name, ex
             )
             return
@@ -205,7 +236,9 @@ class PlexServer:
             for player in session.players:
                 if session_username and session_username not in monitored_users:
                     ignored_clients.add(player.machineIdentifier)
-                    _LOGGER.debug("Ignoring Plex client owned by %s", session_username)
+                    _LOGGER.debug(
+                        "Ignoring Plex client owned by '%s'", session_username
+                    )
                     continue
                 self._known_idle.discard(player.machineIdentifier)
                 available_clients.setdefault(
@@ -239,13 +272,13 @@ class PlexServer:
 
         if new_entity_configs:
             dispatcher_send(
-                self._hass,
+                self.hass,
                 PLEX_NEW_MP_SIGNAL.format(self.machine_identifier),
                 new_entity_configs,
             )
 
         dispatcher_send(
-            self._hass,
+            self.hass,
             PLEX_UPDATE_SENSOR_SIGNAL.format(self.machine_identifier),
             sessions,
         )

@@ -1,13 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Aquest dispositiu DoorBird ja est\u00e0 configurat"
+            "already_configured": "Aquest dispositiu DoorBird ja est\u00e0 configurat",
+            "link_local_address": "L'enlla\u00e7 amb adreces locals no est\u00e0 perm\u00e8s",
+            "not_doorbird_device": "Aquest dispositiu no \u00e9s DoorBird"
         },
         "error": {
             "cannot_connect": "No s'ha pogut connectar, torna-ho a provar",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "unknown": "Error inesperat"
         },
+        "flow_title": "DoorBird {name} ({host})",
         "step": {
             "user": {
                 "data": {
