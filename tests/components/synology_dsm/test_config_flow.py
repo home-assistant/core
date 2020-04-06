@@ -8,7 +8,6 @@ from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components import ssdp
 from homeassistant.components.synology_dsm.const import (
     CONF_VOLUMES,
-    DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_PORT_SSL,
     DEFAULT_SSL,
@@ -92,7 +91,6 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
         DOMAIN,
         context={"source": SOURCE_USER},
         data={
-            CONF_NAME: NAME,
             CONF_HOST: HOST,
             CONF_PORT: PORT,
             CONF_SSL: SSL,
@@ -103,7 +101,6 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["result"].unique_id == SERIAL
     assert result["title"] == HOST
-    assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == PORT
     assert result["data"][CONF_SSL] == SSL
@@ -128,7 +125,6 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["result"].unique_id == SERIAL_2
     assert result["title"] == HOST
-    assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == DEFAULT_PORT
     assert not result["data"][CONF_SSL]
@@ -149,7 +145,6 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["result"].unique_id == SERIAL
     assert result["title"] == HOST
-    assert result["data"][CONF_NAME] == DEFAULT_NAME
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == DEFAULT_PORT_SSL
     assert result["data"][CONF_SSL] == DEFAULT_SSL
@@ -164,7 +159,6 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data={
-            CONF_NAME: NAME,
             CONF_HOST: HOST_2,
             CONF_PORT: PORT,
             CONF_SSL: SSL,
@@ -177,7 +171,6 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["result"].unique_id == SERIAL_2
     assert result["title"] == HOST_2
-    assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST_2
     assert result["data"][CONF_PORT] == PORT
     assert result["data"][CONF_SSL] == SSL
@@ -262,7 +255,6 @@ async def test_form_ssdp(hass: HomeAssistantType, service: MagicMock):
     assert result2["title"] == "192.168.1.5"
     assert result2["data"] == {
         CONF_HOST: "192.168.1.5",
-        CONF_NAME: "mydsm",
         CONF_PORT: 5001,
         CONF_PASSWORD: "password",
         CONF_SSL: True,

@@ -21,7 +21,6 @@ from homeassistant.const import (
 from .const import (
     CONF_VOLUMES,
     DEFAULT_DSM_VERSION,
-    DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_PORT_SSL,
     DEFAULT_SSL,
@@ -37,7 +36,6 @@ def _discovery_schema_with_defaults(discovery_info=None):
 
 def _user_schema_with_defaults(user_input=None):
     user_schema = {
-        vol.Optional(CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)): str,
         vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
     }
     user_schema.update(_ordered_shared_schema(user_input))
@@ -100,7 +98,6 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self.discovered_conf:
             user_input.update(self.discovered_conf)
 
-        name = user_input.get(CONF_NAME, DEFAULT_NAME)
         host = user_input[CONF_HOST]
         port = user_input.get(CONF_PORT)
         username = user_input[CONF_USERNAME]
@@ -135,7 +132,6 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         config_data = {
-            CONF_NAME: name,
             CONF_HOST: host,
             CONF_PORT: port,
             CONF_SSL: use_ssl,
