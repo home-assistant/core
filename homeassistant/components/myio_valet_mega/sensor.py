@@ -1,4 +1,5 @@
 """Support for myIO sensors."""
+from datetime import timedelta
 import logging
 
 from homeassistant.const import CONF_NAME, TEMP_CELSIUS
@@ -6,6 +7,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
+SCAN_INTERVAL = timedelta(seconds=3)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -62,6 +64,11 @@ class MyIOSensor(Entity):
             self._state = self._sensors[str(self._number)]["hum"] / 10
         else:
             self._state = self._sensors[str(self._number)]["imp"]
+
+    @property
+    def scan_interval(self):
+        """Return the unique id."""
+        return SCAN_INTERVAL
 
     @property
     def unique_id(self):
