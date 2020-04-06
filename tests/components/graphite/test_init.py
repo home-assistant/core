@@ -212,6 +212,6 @@ class TestGraphite(unittest.TestCase):
                 mock_queue.get.side_effect = fake_get
                 self.gf.run()
                 # Twice for two events, once for the stop
-                assert 3 == mock_queue.task_done.call_count
+                assert mock_queue.task_done.call_count == 3
                 assert mock_r.call_count == 1
                 assert mock_r.call_args == mock.call("entity", event.data["new_state"])

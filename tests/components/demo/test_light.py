@@ -23,26 +23,26 @@ async def test_state_attributes(hass):
     state = hass.states.get(ENTITY_LIGHT)
     assert light.is_on(hass, ENTITY_LIGHT)
     assert (0.4, 0.4) == state.attributes.get(light.ATTR_XY_COLOR)
-    assert 25 == state.attributes.get(light.ATTR_BRIGHTNESS)
+    assert state.attributes.get(light.ATTR_BRIGHTNESS) == 25
     assert (255, 234, 164) == state.attributes.get(light.ATTR_RGB_COLOR)
-    assert "rainbow" == state.attributes.get(light.ATTR_EFFECT)
+    assert state.attributes.get(light.ATTR_EFFECT) == "rainbow"
     await common.async_turn_on(
         hass, ENTITY_LIGHT, rgb_color=(251, 253, 255), white_value=254
     )
     state = hass.states.get(ENTITY_LIGHT)
-    assert 254 == state.attributes.get(light.ATTR_WHITE_VALUE)
+    assert state.attributes.get(light.ATTR_WHITE_VALUE) == 254
     assert (250, 252, 255) == state.attributes.get(light.ATTR_RGB_COLOR)
     assert (0.319, 0.326) == state.attributes.get(light.ATTR_XY_COLOR)
     await common.async_turn_on(hass, ENTITY_LIGHT, color_temp=400, effect="none")
     state = hass.states.get(ENTITY_LIGHT)
-    assert 400 == state.attributes.get(light.ATTR_COLOR_TEMP)
-    assert 153 == state.attributes.get(light.ATTR_MIN_MIREDS)
-    assert 500 == state.attributes.get(light.ATTR_MAX_MIREDS)
-    assert "none" == state.attributes.get(light.ATTR_EFFECT)
+    assert state.attributes.get(light.ATTR_COLOR_TEMP) == 400
+    assert state.attributes.get(light.ATTR_MIN_MIREDS) == 153
+    assert state.attributes.get(light.ATTR_MAX_MIREDS) == 500
+    assert state.attributes.get(light.ATTR_EFFECT) == "none"
     await common.async_turn_on(hass, ENTITY_LIGHT, kelvin=3000, brightness_pct=50)
     state = hass.states.get(ENTITY_LIGHT)
-    assert 333 == state.attributes.get(light.ATTR_COLOR_TEMP)
-    assert 127 == state.attributes.get(light.ATTR_BRIGHTNESS)
+    assert state.attributes.get(light.ATTR_COLOR_TEMP) == 333
+    assert state.attributes.get(light.ATTR_BRIGHTNESS) == 127
 
 
 async def test_turn_off(hass):

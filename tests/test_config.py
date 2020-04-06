@@ -111,8 +111,8 @@ async def test_ensure_config_exists_uses_existing_config(hass):
     create_file(YAML_PATH)
     await config_util.async_ensure_config_exists(hass)
 
-    with open(YAML_PATH) as f:
-        content = f.read()
+    with open(YAML_PATH) as fp:
+        content = fp.read()
 
     # File created with create_file are empty
     assert content == ""
@@ -127,8 +127,8 @@ def test_load_yaml_config_converts_empty_files_to_dict():
 
 def test_load_yaml_config_raises_error_if_not_dict():
     """Test error raised when YAML file is not a dict."""
-    with open(YAML_PATH, "w") as f:
-        f.write("5")
+    with open(YAML_PATH, "w") as fp:
+        fp.write("5")
 
     with pytest.raises(HomeAssistantError):
         config_util.load_yaml_config_file(YAML_PATH)
@@ -136,8 +136,8 @@ def test_load_yaml_config_raises_error_if_not_dict():
 
 def test_load_yaml_config_raises_error_if_malformed_yaml():
     """Test error raised if invalid YAML."""
-    with open(YAML_PATH, "w") as f:
-        f.write(":")
+    with open(YAML_PATH, "w") as fp:
+        fp.write(":")
 
     with pytest.raises(HomeAssistantError):
         config_util.load_yaml_config_file(YAML_PATH)
@@ -145,8 +145,8 @@ def test_load_yaml_config_raises_error_if_malformed_yaml():
 
 def test_load_yaml_config_raises_error_if_unsafe_yaml():
     """Test error raised if unsafe YAML."""
-    with open(YAML_PATH, "w") as f:
-        f.write("hello: !!python/object/apply:os.system")
+    with open(YAML_PATH, "w") as fp:
+        fp.write("hello: !!python/object/apply:os.system")
 
     with pytest.raises(HomeAssistantError):
         config_util.load_yaml_config_file(YAML_PATH)
@@ -154,9 +154,9 @@ def test_load_yaml_config_raises_error_if_unsafe_yaml():
 
 def test_load_yaml_config_preserves_key_order():
     """Test removal of library."""
-    with open(YAML_PATH, "w") as f:
-        f.write("hello: 2\n")
-        f.write("world: 1\n")
+    with open(YAML_PATH, "w") as fp:
+        fp.write("hello: 2\n")
+        fp.write("world: 1\n")
 
     assert [("hello", 2), ("world", 1)] == list(
         config_util.load_yaml_config_file(YAML_PATH).items()
