@@ -11,7 +11,7 @@
       },
       "authorize": {
         "title": "Authorize Sony Bravia TV",
-        "description": "Enter the PIN code shown on the Sony Bravia TV. \nIf the PIN code is not shown, you have to unregister Home Assistant on your TV, go to: Settings -> Network -> Remote device settings -> Unregister remote device.",
+        "description": "Enter the PIN code shown on the Sony Bravia TV. \n\nIf the PIN code is not shown, you have to unregister Home Assistant on your TV, go to: Settings -> Network -> Remote device settings -> Unregister remote device.",
         "data": {
           "pin": "PIN code"
         }
