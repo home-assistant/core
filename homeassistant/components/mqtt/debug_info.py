@@ -21,7 +21,7 @@ def log_messages(hass: HomeAssistantType, entity_id: str) -> MessageCallbackType
     def _log_message(msg):
         """Log message."""
         debug_info = hass.data[DATA_MQTT_DEBUG_INFO]
-        messages = debug_info["entities"][entity_id]["topics"][msg.topic]
+        messages = debug_info["entities"][entity_id]["topics"][msg.subscribed_topic]
         messages.append(msg.payload)
 
     def _decorator(msg_callback: MessageCallbackType):
