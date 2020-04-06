@@ -95,7 +95,6 @@ class AirVisualSensor(Entity):
     def __init__(self, airvisual, kind, name, icon, unit, locale, geography_id):
         """Initialize."""
         self._airvisual = airvisual
-        self._async_unsub_dispatcher_connects = []
         self._geography_id = geography_id
         self._icon = icon
         self._kind = kind
@@ -159,9 +158,7 @@ class AirVisualSensor(Entity):
             """Update the state."""
             self.async_schedule_update_ha_state(True)
 
-        self._async_unsub_dispatcher_connects.append(
-            async_dispatcher_connect(self.hass, TOPIC_UPDATE, update)
-        )
+        self.async_on_remove(async_dispatcher_connect(self.hass, TOPIC_UPDATE, update))
 
     async def async_update(self):
         """Update the sensor."""
@@ -206,9 +203,3 @@ class AirVisualSensor(Entity):
                 self._attrs["long"] = self._airvisual.geography_data[CONF_LONGITUDE]
                 self._attrs.pop(ATTR_LATITUDE, None)
                 self._attrs.pop(ATTR_LONGITUDE, None)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect dispatcher listener when removed."""
-        for cancel in self._async_unsub_dispatcher_connects:
-            cancel()
-        self._async_unsub_dispatcher_connects = []
