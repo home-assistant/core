@@ -41,7 +41,6 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
     ("tests.components.qwikswitch.test_init", "test_binary_sensor_device"),
     ("tests.components.qwikswitch.test_init", "test_sensor_device"),
     ("tests.components.rflink.test_init", "test_send_command_invalid_arguments"),
-    ("tests.components.unifi_direct.test_device_tracker", "test_get_scanner"),
 ]
 
 IGNORE_UNCAUGHT_JSON_EXCEPTIONS = [
