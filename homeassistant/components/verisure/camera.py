@@ -6,13 +6,14 @@ import os
 from homeassistant.components.camera import Camera
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
-from . import CONF_SMARTCAM, HUB as hub
+from . import CONF_SMARTCAM, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Verisure Camera."""
+    hub = hass.data[DOMAIN]
     if not int(hub.config.get(CONF_SMARTCAM, 1)):
         return False
     directory_path = hass.config.config_dir
@@ -23,7 +24,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     smartcams = []
     smartcams.extend(
         [
-            VerisureSmartcam(hass, device_label, directory_path)
+            VerisureSmartcam(hass, hub, device_label, directory_path)
             for device_label in hub.get("$.customerImageCameras[*].deviceLabel")
         ]
     )
@@ -33,10 +34,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class VerisureSmartcam(Camera):
     """Representation of a Verisure camera."""
 
-    def __init__(self, hass, device_label, directory_path):
+    def __init__(self, hass, hub, device_label, directory_path):
         """Initialize Verisure File Camera component."""
         super().__init__()
 
+        self._hub = hub
         self._device_label = device_label
         self._directory_path = directory_path
         self._image = None
@@ -55,8 +57,8 @@ class VerisureSmartcam(Camera):
 
     def check_imagelist(self):
         """Check the contents of the image list."""
-        hub.update_smartcam_imageseries()
-        image_ids = hub.get_image_info(
+        self._hub.update_smartcam_imageseries()
+        image_ids = self._hub.get_image_info(
             "$.imageSeries[?(@.deviceLabel=='%s')].image[0].imageId", self._device_label
         )
         if not image_ids:
@@ -69,7 +71,9 @@ class VerisureSmartcam(Camera):
         new_image_path = os.path.join(
             self._directory_path, "{}{}".format(new_image_id, ".jpg")
         )
-        hub.session.download_image(self._device_label, new_image_id, new_image_path)
+        self._hub.session.download_image(
+            self._device_label, new_image_id, new_image_path
+        )
         _LOGGER.debug("Old image_id=%s", self._image_id)
         self.delete_image(self)
 
@@ -91,6 +95,6 @@ class VerisureSmartcam(Camera):
     @property
     def name(self):
         """Return the name of this camera."""
-        return hub.get_first(
+        return self._hub.get_first(
             "$.customerImageCameras[?(@.deviceLabel=='%s')].area", self._device_label
         )

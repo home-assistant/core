@@ -6,41 +6,43 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice,
 )
 
-from . import CONF_DOOR_WINDOW, HUB as hub
+from . import CONF_DOOR_WINDOW, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Verisure binary sensors."""
+    hub = hass.data[DOMAIN]
     sensors = []
     hub.update_overview()
 
     if int(hub.config.get(CONF_DOOR_WINDOW, 1)):
         sensors.extend(
             [
-                VerisureDoorWindowSensor(device_label)
+                VerisureDoorWindowSensor(hub, device_label)
                 for device_label in hub.get(
                     "$.doorWindow.doorWindowDevice[*].deviceLabel"
                 )
             ]
         )
 
-    sensors.extend([VerisureEthernetStatus()])
+    sensors.extend([VerisureEthernetStatus(hub)])
     add_entities(sensors)
 
 
 class VerisureDoorWindowSensor(BinarySensorDevice):
     """Representation of a Verisure door window sensor."""
 
-    def __init__(self, device_label):
+    def __init__(self, hub, device_label):
         """Initialize the Verisure door window sensor."""
+        self._hub = hub
         self._device_label = device_label
 
     @property
     def name(self):
         """Return the name of the binary sensor."""
-        return hub.get_first(
+        return self._hub.get_first(
             "$.doorWindow.doorWindowDevice[?(@.deviceLabel=='%s')].area",
             self._device_label,
         )
@@ -49,7 +51,7 @@ class VerisureDoorWindowSensor(BinarySensorDevice):
     def is_on(self):
         """Return the state of the sensor."""
         return (
-            hub.get_first(
+            self._hub.get_first(
                 "$.doorWindow.doorWindowDevice[?(@.deviceLabel=='%s')].state",
                 self._device_label,
             )
@@ -60,7 +62,7 @@ class VerisureDoorWindowSensor(BinarySensorDevice):
     def available(self):
         """Return True if entity is available."""
         return (
-            hub.get_first(
+            self._hub.get_first(
                 "$.doorWindow.doorWindowDevice[?(@.deviceLabel=='%s')]",
                 self._device_label,
             )
@@ -70,11 +72,15 @@ class VerisureDoorWindowSensor(BinarySensorDevice):
     # pylint: disable=no-self-use
     def update(self):
         """Update the state of the sensor."""
-        hub.update_overview()
+        self._hub.update_overview()
 
 
 class VerisureEthernetStatus(BinarySensorDevice):
     """Representation of a Verisure VBOX internet status."""
+
+    def __init__(self, hub):
+        """Initialize the Verisure ethernet status sensor."""
+        self._hub = hub
 
     @property
     def name(self):
@@ -84,17 +90,17 @@ class VerisureEthernetStatus(BinarySensorDevice):
     @property
     def is_on(self):
         """Return the state of the sensor."""
-        return hub.get_first("$.ethernetConnectedNow")
+        return self._hub.get_first("$.ethernetConnectedNow")
 
     @property
     def available(self):
         """Return True if entity is available."""
-        return hub.get_first("$.ethernetConnectedNow") is not None
+        return self._hub.get_first("$.ethernetConnectedNow") is not None
 
     # pylint: disable=no-self-use
     def update(self):
         """Update the state of the sensor."""
-        hub.update_overview()
+        self._hub.update_overview()
 
     @property
     def device_class(self):

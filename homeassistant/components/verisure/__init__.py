@@ -42,8 +42,6 @@ SERVICE_CAPTURE_SMARTCAM = "capture_smartcam"
 SERVICE_DISABLE_AUTOLOCK = "disable_autolock"
 SERVICE_ENABLE_AUTOLOCK = "enable_autolock"
 
-HUB = None
-
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -75,15 +73,15 @@ DEVICE_SERIAL_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_SERIAL): cv.string})
 
 def setup(hass, config):
     """Set up the Verisure component."""
-    global HUB  # pylint: disable=global-statement
-    HUB = VerisureHub(config[DOMAIN])
-    HUB.update_overview = Throttle(config[DOMAIN][CONF_SCAN_INTERVAL])(
-        HUB.update_overview
+    hub = VerisureHub(config[DOMAIN])
+    hub.update_overview = Throttle(config[DOMAIN][CONF_SCAN_INTERVAL])(
+        hub.update_overview
     )
-    if not HUB.login():
+    if not hub.login():
         return False
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lambda event: HUB.logout())
-    HUB.update_overview()
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lambda event: hub.logout())
+    hub.update_overview()
+    hass.data[DOMAIN] = hub
 
     for component in (
         "sensor",
@@ -99,7 +97,7 @@ def setup(hass, config):
         """Capture a new picture from a smartcam."""
         device_id = service.data[ATTR_DEVICE_SERIAL]
         try:
-            await hass.async_add_executor_job(HUB.smartcam_capture, device_id)
+            await hass.async_add_executor_job(hub.smartcam_capture, device_id)
             _LOGGER.debug("Capturing new image from %s", ATTR_DEVICE_SERIAL)
         except verisure.Error as ex:
             _LOGGER.error("Could not capture image, %s", ex)
@@ -112,7 +110,7 @@ def setup(hass, config):
         """Disable autolock on a doorlock."""
         device_id = service.data[ATTR_DEVICE_SERIAL]
         try:
-            await hass.async_add_executor_job(HUB.disable_autolock, device_id)
+            await hass.async_add_executor_job(hub.disable_autolock, device_id)
             _LOGGER.debug("Disabling autolock on%s", ATTR_DEVICE_SERIAL)
         except verisure.Error as ex:
             _LOGGER.error("Could not disable autolock, %s", ex)
@@ -125,7 +123,7 @@ def setup(hass, config):
         """Enable autolock on a doorlock."""
         device_id = service.data[ATTR_DEVICE_SERIAL]
         try:
-            await hass.async_add_executor_job(HUB.enable_autolock, device_id)
+            await hass.async_add_executor_job(hub.enable_autolock, device_id)
             _LOGGER.debug("Enabling autolock on %s", ATTR_DEVICE_SERIAL)
         except verisure.Error as ex:
             _LOGGER.error("Could not enable autolock, %s", ex)

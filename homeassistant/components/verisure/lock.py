@@ -5,19 +5,20 @@ from time import monotonic, sleep
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import ATTR_CODE, STATE_LOCKED, STATE_UNLOCKED
 
-from . import CONF_CODE_DIGITS, CONF_DEFAULT_LOCK_CODE, CONF_LOCKS, HUB as hub
+from . import CONF_CODE_DIGITS, CONF_DEFAULT_LOCK_CODE, CONF_LOCKS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Verisure lock platform."""
+    hub = hass.data[DOMAIN]
     locks = []
     if int(hub.config.get(CONF_LOCKS, 1)):
         hub.update_overview()
         locks.extend(
             [
-                VerisureDoorlock(device_label)
+                VerisureDoorlock(hub, device_label)
                 for device_label in hub.get("$.doorLockStatusList[*].deviceLabel")
             ]
         )
@@ -28,8 +29,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class VerisureDoorlock(LockDevice):
     """Representation of a Verisure doorlock."""
 
-    def __init__(self, device_label):
+    def __init__(self, hub, device_label):
         """Initialize the Verisure lock."""
+        self._hub = hub
         self._device_label = device_label
         self._state = None
         self._digits = hub.config.get(CONF_CODE_DIGITS)
@@ -40,7 +42,7 @@ class VerisureDoorlock(LockDevice):
     @property
     def name(self):
         """Return the name of the lock."""
-        return hub.get_first(
+        return self._hub.get_first(
             "$.doorLockStatusList[?(@.deviceLabel=='%s')].area", self._device_label
         )
 
@@ -53,7 +55,7 @@ class VerisureDoorlock(LockDevice):
     def available(self):
         """Return True if entity is available."""
         return (
-            hub.get_first(
+            self._hub.get_first(
                 "$.doorLockStatusList[?(@.deviceLabel=='%s')]", self._device_label
             )
             is not None
@@ -73,8 +75,8 @@ class VerisureDoorlock(LockDevice):
         """Update lock status."""
         if monotonic() - self._change_timestamp < 10:
             return
-        hub.update_overview()
-        status = hub.get_first(
+        self._hub.update_overview()
+        status = self._hub.get_first(
             "$.doorLockStatusList[?(@.deviceLabel=='%s')].lockedState",
             self._device_label,
         )
@@ -84,7 +86,7 @@ class VerisureDoorlock(LockDevice):
             self._state = STATE_LOCKED
         elif status != "PENDING":
             _LOGGER.error("Unknown lock state %s", status)
-        self._changed_by = hub.get_first(
+        self._changed_by = self._hub.get_first(
             "$.doorLockStatusList[?(@.deviceLabel=='%s')].userString",
             self._device_label,
         )
@@ -121,14 +123,14 @@ class VerisureDoorlock(LockDevice):
     def set_lock_state(self, code, state):
         """Send set lock state command."""
         lock_state = "lock" if state == STATE_LOCKED else "unlock"
-        transaction_id = hub.session.set_lock_state(
+        transaction_id = self._hub.session.set_lock_state(
             code, self._device_label, lock_state
         )["doorLockStateChangeTransactionId"]
         _LOGGER.debug("Verisure doorlock %s", state)
         transaction = {}
         while "result" not in transaction:
             sleep(0.5)
-            transaction = hub.session.get_lock_state_transaction(transaction_id)
+            transaction = self._hub.session.get_lock_state_transaction(transaction_id)
         if transaction["result"] == "OK":
             self._state = state
             self._change_timestamp = monotonic()

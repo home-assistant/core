@@ -4,20 +4,21 @@ import logging
 from homeassistant.const import TEMP_CELSIUS, UNIT_PERCENTAGE
 from homeassistant.helpers.entity import Entity
 
-from . import CONF_HYDROMETERS, CONF_MOUSE, CONF_THERMOMETERS, HUB as hub
+from . import CONF_HYDROMETERS, CONF_MOUSE, CONF_THERMOMETERS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Verisure platform."""
+    hub = hass.data[DOMAIN]
     sensors = []
     hub.update_overview()
 
     if int(hub.config.get(CONF_THERMOMETERS, 1)):
         sensors.extend(
             [
-                VerisureThermometer(device_label)
+                VerisureThermometer(hub, device_label)
                 for device_label in hub.get(
                     "$.climateValues[?(@.temperature)].deviceLabel"
                 )
@@ -27,7 +28,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if int(hub.config.get(CONF_HYDROMETERS, 1)):
         sensors.extend(
             [
-                VerisureHygrometer(device_label)
+                VerisureHygrometer(hub, device_label)
                 for device_label in hub.get(
                     "$.climateValues[?(@.humidity)].deviceLabel"
                 )
@@ -37,7 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if int(hub.config.get(CONF_MOUSE, 1)):
         sensors.extend(
             [
-                VerisureMouseDetection(device_label)
+                VerisureMouseDetection(hub, device_label)
                 for device_label in hub.get(
                     "$.eventCounts[?(@.deviceType=='MOUSE1')].deviceLabel"
                 )
@@ -50,15 +51,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class VerisureThermometer(Entity):
     """Representation of a Verisure thermometer."""
 
-    def __init__(self, device_label):
+    def __init__(self, hub, device_label):
         """Initialize the sensor."""
+        self._hub = hub
         self._device_label = device_label
 
     @property
     def name(self):
         """Return the name of the device."""
         return (
-            hub.get_first(
+            self._hub.get_first(
                 "$.climateValues[?(@.deviceLabel=='%s')].deviceArea", self._device_label
             )
             + " temperature"
@@ -67,7 +69,7 @@ class VerisureThermometer(Entity):
     @property
     def state(self):
         """Return the state of the device."""
-        return hub.get_first(
+        return self._hub.get_first(
             "$.climateValues[?(@.deviceLabel=='%s')].temperature", self._device_label
         )
 
@@ -75,7 +77,7 @@ class VerisureThermometer(Entity):
     def available(self):
         """Return True if entity is available."""
         return (
-            hub.get_first(
+            self._hub.get_first(
                 "$.climateValues[?(@.deviceLabel=='%s')].temperature",
                 self._device_label,
             )
@@ -90,21 +92,22 @@ class VerisureThermometer(Entity):
     # pylint: disable=no-self-use
     def update(self):
         """Update the sensor."""
-        hub.update_overview()
+        self._hub.update_overview()
 
 
 class VerisureHygrometer(Entity):
     """Representation of a Verisure hygrometer."""
 
-    def __init__(self, device_label):
+    def __init__(self, hub, device_label):
         """Initialize the sensor."""
+        self._hub = hub
         self._device_label = device_label
 
     @property
     def name(self):
         """Return the name of the device."""
         return (
-            hub.get_first(
+            self._hub.get_first(
                 "$.climateValues[?(@.deviceLabel=='%s')].deviceArea", self._device_label
             )
             + " humidity"
@@ -113,7 +116,7 @@ class VerisureHygrometer(Entity):
     @property
     def state(self):
         """Return the state of the device."""
-        return hub.get_first(
+        return self._hub.get_first(
             "$.climateValues[?(@.deviceLabel=='%s')].humidity", self._device_label
         )
 
@@ -121,7 +124,7 @@ class VerisureHygrometer(Entity):
     def available(self):
         """Return True if entity is available."""
         return (
-            hub.get_first(
+            self._hub.get_first(
                 "$.climateValues[?(@.deviceLabel=='%s')].humidity", self._device_label
             )
             is not None
@@ -135,21 +138,22 @@ class VerisureHygrometer(Entity):
     # pylint: disable=no-self-use
     def update(self):
         """Update the sensor."""
-        hub.update_overview()
+        self._hub.update_overview()
 
 
 class VerisureMouseDetection(Entity):
     """Representation of a Verisure mouse detector."""
 
-    def __init__(self, device_label):
+    def __init__(self, hub, device_label):
         """Initialize the sensor."""
+        self._hub = hub
         self._device_label = device_label
 
     @property
     def name(self):
         """Return the name of the device."""
         return (
-            hub.get_first(
+            self._hub.get_first(
                 "$.eventCounts[?(@.deviceLabel=='%s')].area", self._device_label
             )
             + " mouse"
@@ -158,7 +162,7 @@ class VerisureMouseDetection(Entity):
     @property
     def state(self):
         """Return the state of the device."""
-        return hub.get_first(
+        return self._hub.get_first(
             "$.eventCounts[?(@.deviceLabel=='%s')].detections", self._device_label
         )
 
@@ -166,7 +170,9 @@ class VerisureMouseDetection(Entity):
     def available(self):
         """Return True if entity is available."""
         return (
-            hub.get_first("$.eventCounts[?(@.deviceLabel=='%s')]", self._device_label)
+            self._hub.get_first(
+                "$.eventCounts[?(@.deviceLabel=='%s')]", self._device_label
+            )
             is not None
         )
 
@@ -178,4 +184,4 @@ class VerisureMouseDetection(Entity):
     # pylint: disable=no-self-use
     def update(self):
         """Update the sensor."""
-        hub.update_overview()
+        self._hub.update_overview()
