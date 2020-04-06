@@ -152,7 +152,7 @@ async def async_setup(hass, config):
         result = await hass.data[DOMAIN][API].login()
     except (goslideapi.ClientConnectionError, goslideapi.ClientTimeoutError) as err:
         _LOGGER.error(
-            "Error connecting to Slide Cloud: %s, going to retry in %s seconds",
+            "Error connecting to Slide Cloud: %s, going to retry in %s second(s)",
             err,
             DEFAULT_RETRY,
         )
