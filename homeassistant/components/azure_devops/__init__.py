@@ -114,6 +114,6 @@ class AzureDevOpsDeviceEntity(AzureDevOpsEntity):
                     self.hass.data[DOMAIN][DATA_PROJECT],
                 )
             },
-            "name": "Azure DevOps",
-            "manufacturer": "Microsoft",
+            "name": self.hass.data[DOMAIN][DATA_PROJECT],
+            "manufacturer": self.hass.data[DOMAIN][DATA_ORG],
         }

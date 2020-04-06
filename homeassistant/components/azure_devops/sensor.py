@@ -68,7 +68,7 @@ class AzureDevOpsSensor(AzureDevOpsDeviceEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this sensor."""
-        return "_".join([DOMAIN, self.organization, self.project, "sensor", self.key])
+        return "_".join([DOMAIN, self.organization, self.key])
 
     @property
     def state(self) -> str:
@@ -96,7 +96,7 @@ class AzureDevOpsLatestBuildSensor(AzureDevOpsSensor):
             client,
             organization,
             project,
-            f"{build.id}_latest_build",
+            f"{build.project.id}_{build.definition.id}_latest_build",
             f"{project} {build.definition.name} Latest Build",
             "mdi:pipe",
         )
