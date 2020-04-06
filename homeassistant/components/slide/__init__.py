@@ -1,4 +1,4 @@
-"""Component for the Go Slide API."""
+"""Component for the Slide API."""
 
 from datetime import timedelta
 import logging
@@ -19,7 +19,15 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 
-from .const import API, COMPONENT, DEFAULT_RETRY, DOMAIN, SLIDES
+from .const import (
+    API,
+    COMPONENT,
+    CONF_INVERT_POSITION,
+    DEFAULT_OFFSET,
+    DEFAULT_RETRY,
+    DOMAIN,
+    SLIDES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +42,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.time_period,
+                vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
             }
         )
     },
@@ -43,6 +52,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Slide platform."""
+    # pylint: disable=unused-argument
 
     async def update_slides(now=None):
         """Update slide information."""
@@ -60,7 +70,7 @@ async def async_setup(hass, config):
         for slide in result:
             if "device_id" not in slide:
                 _LOGGER.error(
-                    "Found invalid Slide entry, device_id is missing. Entry=%s", slide,
+                    "Found invalid Slide entry, device_id is missing. Entry=%s", slide
                 )
                 continue
 
@@ -73,6 +83,7 @@ async def async_setup(hass, config):
             oldpos = slidenew.get("pos")
             slidenew["pos"] = None
             slidenew["online"] = False
+            slidenew["invert"] = config[DOMAIN][CONF_INVERT_POSITION]
 
             if "device_info" not in slide:
                 _LOGGER.error(
@@ -91,15 +102,21 @@ async def async_setup(hass, config):
 
                 if oldpos is None or oldpos == slidenew["pos"]:
                     slidenew["state"] = (
-                        STATE_CLOSED if slidenew["pos"] > 0.95 else STATE_OPEN
+                        STATE_CLOSED
+                        if slidenew["pos"] > (1 - DEFAULT_OFFSET)
+                        else STATE_OPEN
                     )
                 elif oldpos < slidenew["pos"]:
                     slidenew["state"] = (
-                        STATE_CLOSED if slidenew["pos"] >= 0.95 else STATE_CLOSING
+                        STATE_CLOSED
+                        if slidenew["pos"] >= (1 - DEFAULT_OFFSET)
+                        else STATE_CLOSING
                     )
                 else:
                     slidenew["state"] = (
-                        STATE_OPEN if slidenew["pos"] <= 0.05 else STATE_OPENING
+                        STATE_OPEN
+                        if slidenew["pos"] <= DEFAULT_OFFSET
+                        else STATE_OPENING
                     )
             elif "code" in slide["device_info"]:
                 _LOGGER.warning(
