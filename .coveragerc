@@ -80,6 +80,8 @@ omit =
     homeassistant/components/bom/camera.py
     homeassistant/components/bom/sensor.py
     homeassistant/components/bom/weather.py
+    homeassistant/components/braviatv/__init__.py
+    homeassistant/components/braviatv/const.py
     homeassistant/components/braviatv/media_player.py
     homeassistant/components/broadlink/remote.py
     homeassistant/components/broadlink/sensor.py
