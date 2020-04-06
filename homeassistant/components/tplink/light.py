@@ -86,10 +86,15 @@ class LightState(NamedTuple):
 
     def to_param(self):
         """Return a version that we can send to the bulb."""
+        if self.color_temp is not None:
+            color_temp = mired_to_kelvin(self.color_temp)
+        else:
+            color_temp = None
+
         return {
             "on_off": 1 if self.state else 0,
             "brightness": brightness_to_percentage(self.brightness),
-            "color_temp": mired_to_kelvin(self.color_temp) if self.color_temp else None,
+            "color_temp": color_temp,
             "hue": self.hs[0],
             "saturation": self.hs[1],
         }
@@ -151,18 +156,17 @@ class TPLinkSmartBulb(Light):
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
-        brightness = (
-            int(kwargs[ATTR_BRIGHTNESS])
-            if ATTR_BRIGHTNESS in kwargs
-            else self._light_state.brightness
-            if self._light_state.brightness is not None
-            else 255
-        )
-        color_tmp = (
-            int(kwargs[ATTR_COLOR_TEMP])
-            if ATTR_COLOR_TEMP in kwargs
-            else self._light_state.color_temp
-        )
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = int(kwargs[ATTR_BRIGHTNESS])
+        elif self._light_state.brightness is not None:
+            brightness = self._light_state.brightness
+        else:
+            brightness = 255
+
+        if ATTR_COLOR_TEMP in kwargs:
+            color_tmp = int(kwargs[ATTR_COLOR_TEMP])
+        else:
+            color_tmp = self._light_state.color_temp
 
         if ATTR_HS_COLOR in kwargs:
             # TP-Link requires integers.
