@@ -4,15 +4,16 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
 from . import roomba_reported_state
-from .const import CONF_BLID, DOMAIN
+from .const import BLID, DOMAIN, ROOMBA_SESSION
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the iRobot Roomba vacuum cleaner."""
-    roomba = hass.data[DOMAIN][config_entry.entry_id]
-    blid = hass.data[DOMAIN][CONF_BLID]
+    domain_data = hass.data[DOMAIN][config_entry.entry_id]
+    roomba = domain_data[ROOMBA_SESSION]
+    blid = domain_data[BLID]
     status = roomba_reported_state(roomba).get("bin", {})
     if "full" in status:
         roomba_vac = RoombaBinStatus(roomba, blid)

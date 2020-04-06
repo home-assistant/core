@@ -10,6 +10,7 @@ from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 from .const import (
+    BLID,
     COMPONENTS,
     CONF_BLID,
     CONF_CERT,
@@ -91,8 +92,10 @@ async def async_setup_entry(hass, config_entry):
     except CannotConnect:
         raise exceptions.ConfigEntryNotReady
 
-    hass.data[DOMAIN][config_entry.entry_id] = roomba
-    hass.data[DOMAIN][CONF_BLID] = config_entry.data[CONF_BLID]
+    hass.data[DOMAIN][config_entry.entry_id] = {
+        ROOMBA_SESSION: roomba,
+        BLID: config_entry.data[CONF_BLID],
+    }
 
     for component in COMPONENTS:
         hass.async_create_task(
@@ -153,9 +156,8 @@ async def async_unload_entry(hass, config_entry):
         )
     )
     if unload_ok:
-        await async_disconnect_or_timeout(
-            hass, roomba=hass.data[DOMAIN][config_entry.entry_id]
-        )
+        domain_data = hass.data[DOMAIN][config_entry.entry_id]
+        await async_disconnect_or_timeout(hass, roomba=domain_data[ROOMBA_SESSION])
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
