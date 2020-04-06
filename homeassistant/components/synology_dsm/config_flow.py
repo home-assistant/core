@@ -117,7 +117,7 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             serial = await self.hass.async_add_executor_job(
-                self._login_and_fetch_syno_info, api
+                _login_and_fetch_syno_info, api
             )
         except InvalidAuth:
             errors["base"] = "login"
@@ -144,26 +144,6 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             config_data[CONF_VOLUMES] = user_input[CONF_VOLUMES]
 
         return self.async_create_entry(title=host, data=config_data)
-
-    def _login_and_fetch_syno_info(self, api):
-        """Login to the NAS and fetch basic data."""
-        if not api.login():
-            raise InvalidAuth
-
-        # These do i/o
-        information = api.information
-        utilisation = api.utilisation
-        storage = api.storage
-
-        if (
-            information.serial is None
-            or utilisation.cpu_user_load is None
-            or storage.disks_ids is None
-            or storage.volumes_ids is None
-        ):
-            raise InvalidData
-
-        return information.serial
 
     async def async_step_ssdp(self, discovery_info):
         """Handle a discovered synology_dsm."""
@@ -197,6 +177,27 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             entry.data[CONF_HOST] for entry in self._async_current_entries()
         }
         return hostname in existing_hosts
+
+
+def _login_and_fetch_syno_info(api):
+    """Login to the NAS and fetch basic data."""
+    if not api.login():
+        raise InvalidAuth
+
+    # These do i/o
+    information = api.information
+    utilisation = api.utilisation
+    storage = api.storage
+
+    if (
+        information.serial is None
+        or utilisation.cpu_user_load is None
+        or storage.disks_ids is None
+        or storage.volumes_ids is None
+    ):
+        raise InvalidData
+
+    return information.serial
 
 
 class InvalidData(exceptions.HomeAssistantError):
