@@ -32,9 +32,6 @@ def mock_hub(hass):
     return hub
 
 
-common_register_config = {CONF_NAME: "test-config", CONF_REGISTER: 1234}
-
-
 class ReadResult:
     """Storage class for register read results."""
 
