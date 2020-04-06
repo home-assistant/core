@@ -1,0 +1,8 @@
+{
+  "domain": "hifiberry",
+  "name": "Hifiberry",
+  "documentation": "https://www.home-assistant.io/integrations/HifiBerry",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}
