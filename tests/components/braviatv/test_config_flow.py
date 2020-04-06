@@ -1,0 +1,224 @@
+"""Define tests for the Bravia TV config flow."""
+from asynctest import patch
+
+from homeassistant import data_entry_flow
+from homeassistant.components.braviatv.const import DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.const import CONF_HOST, CONF_PIN
+
+from tests.common import MockConfigEntry
+
+BRAVIA_SYSTEM_INFO = {
+    "product": "TV",
+    "region": "XEU",
+    "language": "pol",
+    "model": "TV-Model",
+    "serial": "serial_number",
+    "macAddr": "AA:BB:CC:DD:EE:FF",
+    "name": "BRAVIA",
+    "generation": "5.2.0",
+    "area": "POL",
+    "cid": "very_unique_string",
+}
+
+
+async def test_show_form(hass):
+    """Test that the form is served with no input."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == SOURCE_USER
+
+
+async def test_import(hass):
+    """Test that the import works."""
+    with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
+        "bravia_tv.BraviaRC.is_connected", return_value=True
+    ), patch("bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_HOST: "bravia-host", CONF_PIN: "1234"},
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["result"].unique_id == "very_unique_string"
+        assert result["title"] == "TV-Model"
+        assert result["data"] == {
+            CONF_HOST: "bravia-host",
+            CONF_PIN: "1234",
+        }
+
+
+async def test_import_cannot_connect(hass):
+    """Test that errors are shown when cannot connect to host during import."""
+    with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
+        "bravia_tv.BraviaRC.is_connected", return_value=False
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_HOST: "10.10.10.12", CONF_PIN: "1234"},
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "cannot_connect"
+
+
+async def test_import_model_unsupported(hass):
+    """Test that errors are shown when TV is not supported during import."""
+    with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
+        "bravia_tv.BraviaRC.is_connected", return_value=True
+    ), patch("bravia_tv.BraviaRC.get_system_info", side_effect=KeyError):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_HOST: "10.10.10.12", CONF_PIN: "1234"},
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "unsupported_model"
+
+
+async def test_import_duplicate_error(hass):
+    """Test that errors are shown when duplicates are added during import."""
+    with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
+        "bravia_tv.BraviaRC.is_connected", return_value=True
+    ), patch(
+        "bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO
+    ), patch(
+        "socket.socket.connect", return_value=None
+    ):
+        MockConfigEntry(
+            domain=DOMAIN,
+            unique_id="very_unique_string",
+            data={CONF_HOST: "bravia-host", CONF_PIN: "1234"},
+        ).add_to_hass(hass)
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_HOST: "bravia-host", CONF_PIN: "1234"},
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"
+
+
+async def test_invalid_host(hass):
+    """Test that errors are shown when host is invalid."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_HOST: "invalid/host", CONF_PIN: "1234"},
+    )
+
+    assert result["errors"] == {CONF_HOST: "invalid_host"}
+
+
+async def test_host_unreachable(hass):
+    """Test that errors are shown when host is unreachable."""
+    with patch("socket.socket.connect", side_effect=OSError):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_HOST: "10.10.10.12", CONF_PIN: "1234"},
+        )
+
+        assert result["errors"] == {CONF_HOST: "host_unreachable"}
+
+
+async def test_authorize_cannot_connect(hass):
+    """Test that errors are shown when cannot connect to host."""
+    with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
+        "socket.socket.connect", return_value=None
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_HOST: "10.10.10.12", CONF_PIN: "1234"},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_PIN: "1234"}
+        )
+
+        assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_authorize_model_unsupported(hass):
+    """Test that errors are shown when TV is not supported."""
+    with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
+        "bravia_tv.BraviaRC.is_connected", return_value=True
+    ), patch("bravia_tv.BraviaRC.get_system_info", side_effect=KeyError), patch(
+        "socket.socket.connect", return_value=None
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_HOST: "10.10.10.12", CONF_PIN: "1234"},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_PIN: "1234"}
+        )
+
+        assert result["errors"] == {"base": "unsupported_model"}
+
+
+async def test_duplicate_error(hass):
+    """Test that errors are shown when duplicates are added."""
+    with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
+        "bravia_tv.BraviaRC.is_connected", return_value=True
+    ), patch(
+        "bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO
+    ), patch(
+        "socket.socket.connect", return_value=None
+    ):
+        MockConfigEntry(
+            domain=DOMAIN,
+            unique_id="very_unique_string",
+            data={CONF_HOST: "bravia-host", CONF_PIN: "1234"},
+        ).add_to_hass(hass)
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_HOST: "bravia-host", CONF_PIN: "1234"},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_PIN: "1234"}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"
+
+
+async def test_create_entry(hass):
+    """Test that the user step works."""
+    with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
+        "bravia_tv.BraviaRC.is_connected", return_value=True
+    ), patch(
+        "bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO
+    ), patch(
+        "socket.socket.connect", return_value=None
+    ):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "authorize"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_PIN: "1234"}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["result"].unique_id == "very_unique_string"
+        assert result["title"] == "TV-Model"
+        assert result["data"] == {
+            CONF_HOST: "bravia-host",
+            CONF_PIN: "1234",
+        }

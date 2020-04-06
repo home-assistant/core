@@ -109,8 +109,6 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors[CONF_HOST] = "invalid_host"
             except HostUnreachable:
                 errors[CONF_HOST] = "host_unreachable"
-            except Exception:  # pylint: disable=broad-except
-                errors["base"] = "unexpected_error"
 
         return self.async_show_form(
             step_id="user",
@@ -148,8 +146,6 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except (KeyError, TypeError):
                 errors["base"] = "unsupported_model"
-            except Exception:  # pylint: disable=broad-except
-                errors["base"] = "unexpected_error"
 
         # Connecting with th PIN "0000" to start the pairing process on the TV.
         await self.hass.async_add_executor_job(
