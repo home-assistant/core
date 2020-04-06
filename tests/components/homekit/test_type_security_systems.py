@@ -27,7 +27,7 @@ async def test_switch_set_state(hass, hk_driver, events):
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, config)
-    await hass.async_add_job(acc.run)
+    await acc.run_handler()
 
     assert acc.aid == 2
     assert acc.category == 11  # AlarmSystem
@@ -71,7 +71,7 @@ async def test_switch_set_state(hass, hk_driver, events):
     call_arm_night = async_mock_service(hass, DOMAIN, "alarm_arm_night")
     call_disarm = async_mock_service(hass, DOMAIN, "alarm_disarm")
 
-    await hass.async_add_job(acc.char_target_state.client_update_value, 0)
+    await hass.async_add_executor_job(acc.char_target_state.client_update_value, 0)
     await hass.async_block_till_done()
     assert call_arm_home
     assert call_arm_home[0].data[ATTR_ENTITY_ID] == entity_id
@@ -80,7 +80,7 @@ async def test_switch_set_state(hass, hk_driver, events):
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_job(acc.char_target_state.client_update_value, 1)
+    await hass.async_add_executor_job(acc.char_target_state.client_update_value, 1)
     await hass.async_block_till_done()
     assert call_arm_away
     assert call_arm_away[0].data[ATTR_ENTITY_ID] == entity_id
@@ -89,7 +89,7 @@ async def test_switch_set_state(hass, hk_driver, events):
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_job(acc.char_target_state.client_update_value, 2)
+    await hass.async_add_executor_job(acc.char_target_state.client_update_value, 2)
     await hass.async_block_till_done()
     assert call_arm_night
     assert call_arm_night[0].data[ATTR_ENTITY_ID] == entity_id
@@ -98,7 +98,7 @@ async def test_switch_set_state(hass, hk_driver, events):
     assert len(events) == 3
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_job(acc.char_target_state.client_update_value, 3)
+    await hass.async_add_executor_job(acc.char_target_state.client_update_value, 3)
     await hass.async_block_till_done()
     assert call_disarm
     assert call_disarm[0].data[ATTR_ENTITY_ID] == entity_id
@@ -120,7 +120,7 @@ async def test_no_alarm_code(hass, hk_driver, config, events):
     # Set from HomeKit
     call_arm_home = async_mock_service(hass, DOMAIN, "alarm_arm_home")
 
-    await hass.async_add_job(acc.char_target_state.client_update_value, 0)
+    await hass.async_add_executor_job(acc.char_target_state.client_update_value, 0)
     await hass.async_block_till_done()
     assert call_arm_home
     assert call_arm_home[0].data[ATTR_ENTITY_ID] == entity_id

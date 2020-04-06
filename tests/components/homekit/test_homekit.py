@@ -129,7 +129,7 @@ async def test_homekit_setup(hass, hk_driver):
         f"{PATH_HOMEKIT}.accessories.HomeDriver", return_value=hk_driver
     ) as mock_driver, patch("homeassistant.util.get_local_ip") as mock_ip:
         mock_ip.return_value = IP_ADDRESS
-        await hass.async_add_job(homekit.setup)
+        await hass.async_add_executor_job(homekit.setup)
 
     path = hass.config.path(HOMEKIT_FILE)
     assert isinstance(homekit.bridge, HomeBridge)
@@ -153,7 +153,7 @@ async def test_homekit_setup_ip_address(hass, hk_driver):
     with patch(
         f"{PATH_HOMEKIT}.accessories.HomeDriver", return_value=hk_driver
     ) as mock_driver:
-        await hass.async_add_job(homekit.setup)
+        await hass.async_add_executor_job(homekit.setup)
     mock_driver.assert_called_with(
         hass,
         address="172.0.0.0",
@@ -172,7 +172,7 @@ async def test_homekit_setup_advertise_ip(hass, hk_driver):
     with patch(
         f"{PATH_HOMEKIT}.accessories.HomeDriver", return_value=hk_driver
     ) as mock_driver:
-        await hass.async_add_job(homekit.setup)
+        await hass.async_add_executor_job(homekit.setup)
     mock_driver.assert_called_with(
         hass,
         address="0.0.0.0",
@@ -187,7 +187,7 @@ async def test_homekit_setup_safe_mode(hass, hk_driver):
     homekit = HomeKit(hass, BRIDGE_NAME, DEFAULT_PORT, None, {}, {}, True)
 
     with patch(f"{PATH_HOMEKIT}.accessories.HomeDriver", return_value=hk_driver):
-        await hass.async_add_job(homekit.setup)
+        await hass.async_add_executor_job(homekit.setup)
     assert homekit.driver.safe_mode is True
 
 
@@ -263,7 +263,7 @@ async def test_homekit_start(hass, hk_driver, debounce_patcher):
     ) as hk_driver_add_acc, patch(
         "pyhap.accessory_driver.AccessoryDriver.start"
     ) as hk_driver_start:
-        await hass.async_add_job(homekit.start)
+        await hass.async_add_executor_job(homekit.start)
 
     mock_add_acc.assert_called_with(state)
     mock_setup_msg.assert_called_with(hass, pin)
@@ -273,7 +273,7 @@ async def test_homekit_start(hass, hk_driver, debounce_patcher):
 
     # Test start() if already started
     hk_driver_start.reset_mock()
-    await hass.async_add_job(homekit.start)
+    await hass.async_add_executor_job(homekit.start)
     assert not hk_driver_start.called
 
 
@@ -283,16 +283,16 @@ async def test_homekit_stop(hass):
     homekit.driver = Mock()
 
     assert homekit.status == STATUS_READY
-    await hass.async_add_job(homekit.stop)
+    await hass.async_add_executor_job(homekit.stop)
     homekit.status = STATUS_WAIT
-    await hass.async_add_job(homekit.stop)
+    await hass.async_add_executor_job(homekit.stop)
     homekit.status = STATUS_STOPPED
-    await hass.async_add_job(homekit.stop)
+    await hass.async_add_executor_job(homekit.stop)
     assert homekit.driver.stop.called is False
 
     # Test if driver is started
     homekit.status = STATUS_RUNNING
-    await hass.async_add_job(homekit.stop)
+    await hass.async_add_executor_job(homekit.stop)
     assert homekit.driver.stop.called is True
 
 
@@ -337,5 +337,5 @@ async def test_homekit_too_many_accessories(hass, hk_driver):
     with patch("pyhap.accessory_driver.AccessoryDriver.start"), patch(
         "pyhap.accessory_driver.AccessoryDriver.add_accessory"
     ), patch("homeassistant.components.homekit._LOGGER.warning") as mock_warn:
-        await hass.async_add_job(homekit.start)
+        await hass.async_add_executor_job(homekit.start)
         assert mock_warn.called is True
