@@ -410,24 +410,26 @@ class MqttVacuum(
 
     @property
     def fan_speed_list(self):
-        """Return the status of the vacuum."""
-        if self.supported_features & SUPPORT_FAN_SPEED == 0:
-            return []
+        """Return the status of the vacuum.
+
+        No need to check SUPPORT_FAN_SPEED, this won't be called if fan_speed is None.
+        """
         return self._fan_speed_list
 
     @property
     def battery_level(self):
         """Return the status of the vacuum."""
         if self.supported_features & SUPPORT_BATTERY == 0:
-            return
+            return None
 
         return max(0, min(100, self._battery_level))
 
     @property
     def battery_icon(self):
-        """Return the battery icon for the vacuum cleaner."""
-        if self.supported_features & SUPPORT_BATTERY == 0:
-            return
+        """Return the battery icon for the vacuum cleaner.
+
+        No need to check SUPPORT_BATTERY, this won't be called if battery_level is None.
+        """
 
         return icon_for_battery_level(
             battery_level=self.battery_level, charging=self._charging

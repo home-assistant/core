@@ -64,7 +64,7 @@ async def async_setup(hass, config):
         value2 = call.data.get(ATTR_VALUE2)
         value3 = call.data.get(ATTR_VALUE3)
 
-        target_keys = dict()
+        target_keys = {}
         for target in targets:
             if target not in api_keys:
                 _LOGGER.error("No IFTTT api key for %s", target)

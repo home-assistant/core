@@ -3,7 +3,7 @@ import logging
 
 from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
-from gios import ApiError, Gios, NoStationError
+from gios import ApiError, Gios, InvalidSensorsData, NoStationError
 
 from homeassistant.core import Config, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -63,7 +63,12 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             with timeout(30):
                 await self.gios.update()
-        except (ApiError, NoStationError, ClientConnectorError) as error:
+        except (
+            ApiError,
+            NoStationError,
+            ClientConnectorError,
+            InvalidSensorsData,
+        ) as error:
             raise UpdateFailed(error)
         if not self.gios.data:
             raise UpdateFailed("Invalid sensors data")

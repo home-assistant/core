@@ -1,7 +1,10 @@
 {
     "device_automation": {
         "action_type": {
+            "close": "{entity_name} zoumaachen",
+            "close_tilt": "{entity_name} Kipp zoumaachen",
             "open": "{entity_name} opmaachen",
+            "open_tilt": "{entity_name} op Kipp stelle",
             "set_position": "{entity_name} positioun programm\u00e9ieren",
             "set_tilt_position": "{entity_name} kipp positioun programm\u00e9ieren"
         },

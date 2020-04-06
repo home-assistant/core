@@ -56,7 +56,7 @@ class DiscordNotificationService(BaseNotificationService):
         data = kwargs.get(ATTR_DATA) or {}
 
         if ATTR_IMAGES in data:
-            images = list()
+            images = []
 
             for image in data.get(ATTR_IMAGES):
                 image_exists = await self.hass.async_add_executor_job(
@@ -84,7 +84,7 @@ class DiscordNotificationService(BaseNotificationService):
                     # Must create new instances of File for each channel.
                     files = None
                     if images:
-                        files = list()
+                        files = []
                         for image in images:
                             files.append(discord.File(image))
 

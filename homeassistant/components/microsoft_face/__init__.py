@@ -96,7 +96,7 @@ async def async_setup(hass, config):
             face.store[g_id] = {}
 
             entities[g_id] = MicrosoftFaceGroupEntity(hass, face, g_id, name)
-            await entities[g_id].async_update_ha_state()
+            entities[g_id].async_write_ha_state()
         except HomeAssistantError as err:
             _LOGGER.error("Can't create group '%s' with error: %s", g_id, err)
 
@@ -145,7 +145,7 @@ async def async_setup(hass, config):
             )
 
             face.store[g_id][name] = user_data["personId"]
-            await entities[g_id].async_update_ha_state()
+            entities[g_id].async_write_ha_state()
         except HomeAssistantError as err:
             _LOGGER.error("Can't create person '%s' with error: %s", name, err)
 
@@ -163,7 +163,7 @@ async def async_setup(hass, config):
             await face.call_api("delete", f"persongroups/{g_id}/persons/{p_id}")
 
             face.store[g_id].pop(name)
-            await entities[g_id].async_update_ha_state()
+            entities[g_id].async_write_ha_state()
         except HomeAssistantError as err:
             _LOGGER.error("Can't delete person '%s' with error: %s", p_id, err)
 

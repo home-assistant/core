@@ -52,7 +52,7 @@ def mock_init_cache_dir():
 
 
 @pytest.fixture
-def empty_cache_dir(tmp_path, mock_init_cache_dir, mock_get_cache_files):
+def empty_cache_dir(tmp_path, mock_init_cache_dir, mock_get_cache_files, request):
     """Mock the TTS cache dir with empty dir."""
     mock_init_cache_dir.side_effect = None
     mock_init_cache_dir.return_value = str(tmp_path)
@@ -60,7 +60,18 @@ def empty_cache_dir(tmp_path, mock_init_cache_dir, mock_get_cache_files):
     # Restore original get cache files behavior, we're working with a real dir.
     mock_get_cache_files.side_effect = _get_cache_files
 
-    return tmp_path
+    yield tmp_path
+
+    if request.node.rep_call.passed:
+        return
+
+    # Print contents of dir if failed
+    print("Content of dir for", request.node.nodeid)
+    for fil in tmp_path.iterdir():
+        print(fil.relative_to(tmp_path))
+
+    # To show the log.
+    assert False
 
 
 @pytest.fixture(autouse=True)
@@ -297,9 +308,7 @@ async def test_setup_component_and_test_with_service_options_def(hass, empty_cac
         assert os.path.isfile(
             os.path.join(
                 empty_cache_dir,
-                "42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{0}_demo.mp3".format(
-                    opt_hash
-                ),
+                f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{opt_hash}_demo.mp3",
             )
         )
 

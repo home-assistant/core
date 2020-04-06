@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "DoorBird ya est\u00e1 configurado",
+            "link_local_address": "No se admiten direcciones locales",
             "not_doorbird_device": "Este dispositivo no es un DoorBird"
         },
         "error": {
@@ -9,6 +10,7 @@
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "unknown": "Error inesperado"
         },
+        "flow_title": "DoorBird {name} ({host})",
         "step": {
             "user": {
                 "data": {

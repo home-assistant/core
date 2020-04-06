@@ -35,11 +35,9 @@ async def test_flow_works(hass, simple_mock_home):
     assert result["errors"] == {"base": "press_the_button"}
 
     flow = next(
-        (
-            flow
-            for flow in hass.config_entries.flow.async_progress()
-            if flow["flow_id"] == result["flow_id"]
-        )
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["flow_id"] == result["flow_id"]
     )
     assert flow["context"]["unique_id"] == "ABC123"
 

@@ -2,9 +2,6 @@
   "domain": "marytts",
   "name": "MaryTTS",
   "documentation": "https://www.home-assistant.io/integrations/marytts",
-  "requirements": [
-    "speak2mary==1.4.0"
-  ],
-  "dependencies": [],
+  "requirements": ["speak2mary==1.4.0"],
   "codeowners": []
 }

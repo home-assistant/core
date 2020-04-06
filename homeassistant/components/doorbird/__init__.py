@@ -4,6 +4,7 @@ import logging
 import urllib
 from urllib.error import HTTPError
 
+from aiohttp import web
 from doorbirdpy import DoorBird
 import voluptuous as vol
 
@@ -58,7 +59,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the DoorBird component."""
-
     hass.data.setdefault(DOMAIN, {})
 
     # Provide an endpoint for the doorstations to call to trigger events
@@ -341,8 +341,6 @@ class DoorBirdRequestView(HomeAssistantView):
 
     async def get(self, request, event):
         """Respond to requests from the device."""
-        from aiohttp import web
-
         hass = request.app["hass"]
 
         token = request.query.get("token")

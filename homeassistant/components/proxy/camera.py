@@ -98,7 +98,7 @@ def _resize_image(image, opts):
         new_width = old_width
 
     scale = new_width / float(old_width)
-    new_height = int((float(old_height) * float(scale)))
+    new_height = int(float(old_height) * float(scale))
 
     img = img.resize((new_width, new_height), Image.ANTIALIAS)
     imgbuf = io.BytesIO()

@@ -62,9 +62,7 @@ class TestImageProcessing:
         setup_component(self.hass, ip.DOMAIN, config)
 
         state = self.hass.states.get("camera.demo_camera")
-        self.url = "{0}{1}".format(
-            self.hass.config.api.base_url, state.attributes.get(ATTR_ENTITY_PICTURE)
-        )
+        self.url = f"{self.hass.config.api.base_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
 
     def teardown_method(self):
         """Stop everything that was started."""
@@ -120,9 +118,7 @@ class TestImageProcessingAlpr:
             setup_component(self.hass, ip.DOMAIN, config)
 
         state = self.hass.states.get("camera.demo_camera")
-        self.url = "{0}{1}".format(
-            self.hass.config.api.base_url, state.attributes.get(ATTR_ENTITY_PICTURE)
-        )
+        self.url = f"{self.hass.config.api.base_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
 
         self.alpr_events = []
 
@@ -227,9 +223,7 @@ class TestImageProcessingFace:
             setup_component(self.hass, ip.DOMAIN, config)
 
         state = self.hass.states.get("camera.demo_camera")
-        self.url = "{0}{1}".format(
-            self.hass.config.api.base_url, state.attributes.get(ATTR_ENTITY_PICTURE)
-        )
+        self.url = f"{self.hass.config.api.base_url}{state.attributes.get(ATTR_ENTITY_PICTURE)}"
 
         self.face_events = []
 

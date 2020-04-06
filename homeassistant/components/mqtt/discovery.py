@@ -6,7 +6,6 @@ import re
 
 from homeassistant.components import mqtt
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -21,21 +20,6 @@ TOPIC_MATCHER = re.compile(
 )
 
 SUPPORTED_COMPONENTS = [
-    "alarm_control_panel",
-    "binary_sensor",
-    "camera",
-    "climate",
-    "cover",
-    "device_automation",
-    "fan",
-    "light",
-    "lock",
-    "sensor",
-    "switch",
-    "vacuum",
-]
-
-CONFIG_ENTRY_COMPONENTS = [
     "alarm_control_panel",
     "binary_sensor",
     "camera",
@@ -71,8 +55,6 @@ def set_discovery_hash(hass, discovery_hash):
 
 class MQTTConfig(dict):
     """Dummy class to allow adding attributes."""
-
-    pass
 
 
 async def async_start(
@@ -159,15 +141,12 @@ async def async_start(
             _LOGGER.info("Found new component: %s %s", component, discovery_id)
             hass.data[ALREADY_DISCOVERED][discovery_hash] = None
 
-            if component not in CONFIG_ENTRY_COMPONENTS:
-                await async_load_platform(hass, component, "mqtt", payload, hass_config)
-                return
-
             config_entries_key = f"{component}.mqtt"
             async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
                 if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
                     if component == "device_automation":
                         # Local import to avoid circular dependencies
+                        # pylint: disable=import-outside-toplevel
                         from . import device_automation
 
                         await device_automation.async_setup_entry(hass, config_entry)
@@ -185,7 +164,7 @@ async def async_start(
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
 
     await mqtt.async_subscribe(
-        hass, discovery_topic + "/#", async_device_message_received, 0
+        hass, f"{discovery_topic}/#", async_device_message_received, 0
     )
 
     return True

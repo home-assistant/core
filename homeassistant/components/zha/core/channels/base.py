@@ -205,7 +205,6 @@ class ZigbeeChannel(LogMixin):
     @callback
     def cluster_command(self, tsn, command_id, args):
         """Handle commands received to this cluster."""
-        pass
 
     @callback
     def attribute_updated(self, attrid, value):
@@ -220,7 +219,6 @@ class ZigbeeChannel(LogMixin):
     @callback
     def zdo_command(self, *args, **kwargs):
         """Handle ZDO commands on this cluster."""
-        pass
 
     @callback
     def zha_send_event(self, command: str, args: Union[int, dict]) -> None:
@@ -236,7 +234,6 @@ class ZigbeeChannel(LogMixin):
 
     async def async_update(self):
         """Retrieve latest state from cluster."""
-        pass
 
     async def get_attribute_value(self, attribute, from_cache=True):
         """Get the value for an attribute."""
@@ -322,12 +319,10 @@ class ZDOChannel(LogMixin):
     @callback
     def device_announce(self, zigpy_device):
         """Device announce handler."""
-        pass
 
     @callback
     def permit_duration(self, duration):
         """Permit handler."""
-        pass
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""

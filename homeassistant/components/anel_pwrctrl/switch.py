@@ -1,7 +1,6 @@
 """Support for ANEL PwrCtrl switches."""
 from datetime import timedelta
 import logging
-import socket
 
 from anel_pwrctrl import DeviceMaster
 import voluptuous as vol
@@ -45,7 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             write_port=port_recv,
         )
         master.query(ip_addr=host)
-    except socket.error as ex:
+    except OSError as ex:
         _LOGGER.error("Unable to discover PwrCtrl device: %s", str(ex))
         return False
 

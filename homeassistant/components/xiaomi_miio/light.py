@@ -718,7 +718,7 @@ class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
         """Initialize the light device."""
         name = f"{name} Ambient Light"
         if unique_id is not None:
-            unique_id = "{}-{}".format(unique_id, "ambient")
+            unique_id = f"{unique_id}-ambient"
         super().__init__(name, light, model, unique_id)
 
     async def async_turn_on(self, **kwargs):

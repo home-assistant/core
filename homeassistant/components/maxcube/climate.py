@@ -122,7 +122,7 @@ class MaxCubeClimate(ClimateDevice):
         with self._cubehandle.mutex:
             try:
                 cube.set_target_temperature(device, target_temperature)
-            except (socket.timeout, socket.error):
+            except (socket.timeout, OSError):
                 _LOGGER.error("Setting target temperature failed")
                 return False
 
@@ -145,7 +145,7 @@ class MaxCubeClimate(ClimateDevice):
         with self._cubehandle.mutex:
             try:
                 self._cubehandle.cube.set_mode(device, mode)
-            except (socket.timeout, socket.error):
+            except (socket.timeout, OSError):
                 _LOGGER.error("Setting operation mode failed")
                 return False
 

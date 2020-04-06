@@ -53,7 +53,7 @@ class TestShellCommand(unittest.TestCase):
             assert setup_component(
                 self.hass,
                 shell_command.DOMAIN,
-                {shell_command.DOMAIN: {"test_service": "date > {}".format(path)}},
+                {shell_command.DOMAIN: {"test_service": f"date > {path}"}},
             )
 
             self.hass.services.call("shell_command", "test_service", blocking=True)
@@ -137,7 +137,7 @@ class TestShellCommand(unittest.TestCase):
             assert setup_component(
                 self.hass,
                 shell_command.DOMAIN,
-                {shell_command.DOMAIN: {"test_service": "touch {}".format(path)}},
+                {shell_command.DOMAIN: {"test_service": f"touch {path}"}},
             )
 
             self.hass.services.call("shell_command", "test_service", blocking=True)
@@ -154,7 +154,7 @@ class TestShellCommand(unittest.TestCase):
         assert setup_component(
             self.hass,
             shell_command.DOMAIN,
-            {shell_command.DOMAIN: {"test_service": "echo {}".format(test_phrase)}},
+            {shell_command.DOMAIN: {"test_service": f"echo {test_phrase}"}},
         )
 
         self.hass.services.call("shell_command", "test_service", blocking=True)
@@ -170,7 +170,7 @@ class TestShellCommand(unittest.TestCase):
         assert setup_component(
             self.hass,
             shell_command.DOMAIN,
-            {shell_command.DOMAIN: {"test_service": ">&2 echo {}".format(test_phrase)}},
+            {shell_command.DOMAIN: {"test_service": f">&2 echo {test_phrase}"}},
         )
 
         self.hass.services.call("shell_command", "test_service", blocking=True)

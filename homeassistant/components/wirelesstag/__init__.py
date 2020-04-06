@@ -3,7 +3,7 @@ import logging
 
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
-from wirelesstagpy import NotificationConfig as NC
+from wirelesstagpy import NotificationConfig as NC, WirelessTags, WirelessTagsException
 
 from homeassistant import util
 from homeassistant.const import (
@@ -130,7 +130,7 @@ class WirelessTagPlatform:
     def local_base_url(self):
         """Define base url of hass in local network."""
         if self._local_base_url is None:
-            self._local_base_url = "http://{}".format(util.get_local_ip())
+            self._local_base_url = f"http://{util.get_local_ip()}"
 
             port = self.hass.config.api.port
             if port is not None:
@@ -190,8 +190,6 @@ def setup(hass, config):
     password = conf.get(CONF_PASSWORD)
 
     try:
-        from wirelesstagpy import WirelessTags, WirelessTagsException
-
         wirelesstags = WirelessTags(username=username, password=password)
 
         platform = WirelessTagPlatform(hass, wirelesstags)
@@ -200,7 +198,7 @@ def setup(hass, config):
     except (ConnectTimeout, HTTPError, WirelessTagsException) as ex:
         _LOGGER.error("Unable to connect to wirelesstag.net service: %s", str(ex))
         hass.components.persistent_notification.create(
-            "Error: {}<br />Please restart hass after fixing this.".format(ex),
+            f"Error: {ex}<br />Please restart hass after fixing this.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )

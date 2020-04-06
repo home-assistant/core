@@ -21,11 +21,13 @@ from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
+    ATTR_SOUND_MODE,
     DEVICE_CLASS_SPEAKER,
     DEVICE_CLASS_TV,
     DOMAIN as MP_DOMAIN,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -58,9 +60,11 @@ from .const import (
     APP_LIST,
     CURRENT_APP,
     CURRENT_APP_CONFIG,
+    CURRENT_EQ,
     CURRENT_INPUT,
     CUSTOM_CONFIG,
     ENTITY_ID,
+    EQ_LIST,
     INPUT_LIST,
     INPUT_LIST_WITH_APPS,
     MOCK_SPEAKER_APPS_FAILURE,
@@ -99,6 +103,11 @@ async def _test_setup(
             data=vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_CONFIG),
             unique_id=UNIQUE_ID,
         )
+        dict_to_return = {
+            "volume": int(MAX_VOLUME[vizio_device_class] / 2),
+            "mute": "Off",
+            "eq": CURRENT_EQ,
+        }
     else:
         vizio_device_class = VIZIO_DEVICE_CLASS_TV
         config_entry = MockConfigEntry(
@@ -106,10 +115,17 @@ async def _test_setup(
             data=vol.Schema(VIZIO_SCHEMA)(MOCK_USER_VALID_TV_CONFIG),
             unique_id=UNIQUE_ID,
         )
+        dict_to_return = {
+            "volume": int(MAX_VOLUME[vizio_device_class] / 2),
+            "mute": "Off",
+        }
 
     with patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_all_audio_settings",
-        return_value={"volume": int(MAX_VOLUME[vizio_device_class] / 2), "mute": "Off"},
+        "homeassistant.components.vizio.media_player.VizioAsync.get_all_settings",
+        return_value=dict_to_return,
+    ), patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.get_setting_options",
+        return_value=EQ_LIST,
     ), patch(
         "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
         return_value=vizio_power_state,
@@ -130,6 +146,9 @@ async def _test_setup(
             assert attr["source"] == CURRENT_INPUT
             if ha_device_class == DEVICE_CLASS_SPEAKER:
                 assert not service_call.called
+                assert "sound_mode" in attr
+            else:
+                assert "sound_mode" not in attr
             assert (
                 attr["volume_level"]
                 == float(int(MAX_VOLUME[vizio_device_class] / 2))
@@ -149,7 +168,7 @@ async def _test_setup_with_apps(
     )
 
     with patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_all_audio_settings",
+        "homeassistant.components.vizio.media_player.VizioAsync.get_all_settings",
         return_value={
             "volume": int(MAX_VOLUME[VIZIO_DEVICE_CLASS_TV] / 2),
             "mute": "Off",
@@ -351,6 +370,9 @@ async def test_services(
     )
     await _test_service(hass, "ch_up", SERVICE_MEDIA_NEXT_TRACK, None)
     await _test_service(hass, "ch_down", SERVICE_MEDIA_PREVIOUS_TRACK, None)
+    await _test_service(
+        hass, "set_setting", SERVICE_SELECT_SOUND_MODE, {ATTR_SOUND_MODE: "Music"}
+    )
 
 
 async def test_options_update(

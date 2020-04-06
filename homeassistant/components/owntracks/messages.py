@@ -314,7 +314,7 @@ async def async_handle_waypoint(hass, name_base, waypoint):
     )
     zone.hass = hass
     zone.entity_id = entity_id
-    await zone.async_update_ha_state()
+    zone.async_write_ha_state()
 
 
 @HANDLERS.register("waypoint")

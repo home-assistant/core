@@ -498,7 +498,7 @@ class RflinkCommand(RflinkDevice):
         await self._async_send_command(cmd, self._signal_repetitions)
 
         # Update state of entity
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     def cancel_queued_send_commands(self):
         """Cancel queued signal repetition commands.

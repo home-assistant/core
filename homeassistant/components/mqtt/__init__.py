@@ -7,7 +7,6 @@ import json
 import logging
 from operator import attrgetter
 import os
-import socket
 import ssl
 import sys
 import time
@@ -996,7 +995,7 @@ class MQTT:
                     self.connected = True
                     _LOGGER.info("Successfully reconnected to the MQTT server")
                     break
-            except socket.error:
+            except OSError:
                 pass
 
             wait_time = min(2 ** tries, MAX_RECONNECT_WAIT)
@@ -1164,6 +1163,7 @@ class MqttAvailability(Entity):
 async def cleanup_device_registry(hass, device_id):
     """Remove device registry entry if there are no remaining entities or triggers."""
     # Local import to avoid circular dependencies
+    # pylint: disable=import-outside-toplevel
     from . import device_trigger
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
