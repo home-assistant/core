@@ -248,7 +248,7 @@ async def test_form_ssdp(hass: HomeAssistantType, service: MagicMock):
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "link"
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(

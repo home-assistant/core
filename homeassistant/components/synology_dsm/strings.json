@@ -14,6 +14,17 @@
           "username": "Username",
           "password": "Password"
         }
+      },
+      "link": {
+        "title": "Synology DSM",
+        "description": "Do you want to setup {name} ({host})?",
+        "data": {
+          "port": "Port",
+          "ssl": "Use SSL/TLS to connect to your NAS",
+          "api_version": "DSM version",
+          "username": "Username",
+          "password": "Password"
+        }
       }
     },
     "error": {
