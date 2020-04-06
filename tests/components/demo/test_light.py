@@ -24,15 +24,15 @@ async def test_state_attributes(hass):
     assert light.is_on(hass, ENTITY_LIGHT)
     assert (0.4, 0.4) == state.attributes.get(light.ATTR_XY_COLOR)
     assert state.attributes.get(light.ATTR_BRIGHTNESS) == 25
-    assert (255, 234, 164) == state.attributes.get(light.ATTR_RGB_COLOR)
+    assert state.attributes.get(light.ATTR_RGB_COLOR) == (255, 234, 164)
     assert state.attributes.get(light.ATTR_EFFECT) == "rainbow"
     await common.async_turn_on(
         hass, ENTITY_LIGHT, rgb_color=(251, 253, 255), white_value=254
     )
     state = hass.states.get(ENTITY_LIGHT)
     assert state.attributes.get(light.ATTR_WHITE_VALUE) == 254
-    assert (250, 252, 255) == state.attributes.get(light.ATTR_RGB_COLOR)
-    assert (0.319, 0.326) == state.attributes.get(light.ATTR_XY_COLOR)
+    assert state.attributes.get(light.ATTR_RGB_COLOR) == (250, 252, 255)
+    assert state.attributes.get(light.ATTR_XY_COLOR) == (0.319, 0.326)
     await common.async_turn_on(hass, ENTITY_LIGHT, color_temp=400, effect="none")
     state = hass.states.get(ENTITY_LIGHT)
     assert state.attributes.get(light.ATTR_COLOR_TEMP) == 400
