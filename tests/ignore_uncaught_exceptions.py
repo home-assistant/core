@@ -57,7 +57,4 @@ IGNORE_UNCAUGHT_JSON_EXCEPTIONS = [
         "tests.components.smartthings.test_init",
         "test_config_entry_loads_unconnected_cloud",
     ),
-    ("tests.components.harmony.test_config_flow", "test_form_import"),
-    ("tests.components.harmony.test_config_flow", "test_form_ssdp"),
-    ("tests.components.harmony.test_config_flow", "test_user_form"),
 ]
