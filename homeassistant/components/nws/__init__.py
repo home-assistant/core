@@ -7,12 +7,7 @@ import aiohttp
 from pynws import SimpleNWS
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_SCAN_INTERVAL,
-)
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -33,7 +28,6 @@ _INDIVIDUAL_SCHEMA = vol.Schema(
         vol.Inclusive(
             CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
         ): cv.longitude,
-        vol.Optional(CONF_SCAN_INTERVAL): vol.All(cv.positive_int, vol.Range(min=5)),
         vol.Optional(CONF_STATION): cv.string,
     }
 )
@@ -43,6 +37,8 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = ["weather"]
+
+DEFAULT_SCAN_INTERVAL = datetime.timedelta(minutes=10)
 
 
 def base_unique_id(latitude, longitude):
@@ -65,7 +61,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
         latitude = entry.get(CONF_LATITUDE, hass.config.latitude)
         longitude = entry.get(CONF_LONGITUDE, hass.config.longitude)
         api_key = entry[CONF_API_KEY]
-        scan_interval = entry.get(CONF_SCAN_INTERVAL, 10)
 
         client_session = async_get_clientsession(hass)
 
@@ -78,12 +73,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
             continue
 
         nws_data = NwsData(hass, latitude, longitude, api_key, client_session)
-
         hass.data[DOMAIN][base_unique_id(latitude, longitude)] = nws_data
-
-        scan_time = datetime.timedelta(minutes=scan_interval)
-
-        async_track_time_interval(hass, nws_data.async_update, scan_time)
+        async_track_time_interval(hass, nws_data.async_update, DEFAULT_SCAN_INTERVAL)
 
         for component in PLATFORMS:
             hass.async_create_task(
