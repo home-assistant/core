@@ -541,7 +541,6 @@ class SimpliSafeEntity(Entity):
 
     def __init__(self, simplisafe, system, name, *, serial=None):
         """Initialize."""
-        self._async_unsub_dispatcher_connects = []
         self._name = name
         self._online = True
         self._simplisafe = simplisafe
@@ -647,7 +646,7 @@ class SimpliSafeEntity(Entity):
             self.async_update_from_rest_api()
             self.async_write_ha_state()
 
-        self._async_unsub_dispatcher_connects.append(
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 TOPIC_UPDATE_REST_API.format(self._system.system_id),
@@ -677,7 +676,7 @@ class SimpliSafeEntity(Entity):
             self._async_internal_update_from_websocket_event(event)
             self.async_write_ha_state()
 
-        self._async_unsub_dispatcher_connects.append(
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 TOPIC_UPDATE_WEBSOCKET.format(self._system.system_id),
@@ -696,9 +695,3 @@ class SimpliSafeEntity(Entity):
     def async_update_from_websocket_event(self, event):
         """Update the entity with the provided websocket event."""
         raise NotImplementedError()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect dispatcher listener when removed."""
-        for dispatcher_callback in self._async_unsub_dispatcher_connects:
-            dispatcher_callback()
-        self._async_unsub_dispatcher_connects = []
