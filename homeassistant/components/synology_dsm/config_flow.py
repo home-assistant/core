@@ -77,8 +77,6 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if self.discovered_conf:
             user_input.update(self.discovered_conf)
-            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-            self.context["title_placeholders"] = self.discovered_conf
             step_id = "link"
             data_schema = _discovery_schema_with_defaults(user_input)
         else:
@@ -182,6 +180,8 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_NAME: friendly_name,
             CONF_HOST: parsed_url.hostname,
         }
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context["title_placeholders"] = self.discovered_conf
         return await self.async_step_user()
 
     async def async_step_import(self, user_input=None):
