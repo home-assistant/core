@@ -114,20 +114,16 @@ class NWSWeather(WeatherEntity):
         self.observation = None
         self._forecast = None
 
-        self._unsub_listener = None
-
     async def async_added_to_hass(self) -> None:
         """Set up a listener and load data."""
-        self._unsub_listener = async_dispatcher_connect(
-            self.hass,
-            signal_unique_id(self.latitude, self.longitude),
-            self._update_callback,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                signal_unique_id(self.latitude, self.longitude),
+                self._update_callback,
+            )
         )
         self._update_callback()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Unsubscribe listener."""
-        self._unsub_listener()
 
     @callback
     def _update_callback(self) -> None:
