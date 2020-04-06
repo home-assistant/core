@@ -3,9 +3,6 @@ import logging
 from urllib.parse import urlparse
 
 from synology_dsm import SynologyDSM
-from synology_dsm.api.core.utilization import SynoCoreUtilization
-from synology_dsm.api.dsm.information import SynoDSMInformation
-from synology_dsm.api.storage.storage import SynoStorage
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -121,8 +118,8 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            serial = self.hass.async_add_executor_job(
-                self._login_and_fetch_syno_info(api)
+            serial = await self.hass.async_add_executor_job(
+                self._login_and_fetch_syno_info, api
             )
         except InvalidAuth:
             errors["base"] = "login"
@@ -156,9 +153,10 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not api.login():
             raise InvalidAuth
 
-        information: SynoDSMInformation = api.information()
-        utilisation: SynoCoreUtilization = api.utilisation()
-        storage: SynoStorage = api.storage()
+        # These do i/o
+        information = api.information
+        utilisation = api.utilisation
+        storage = api.storage
 
         if (
             information.serial is None

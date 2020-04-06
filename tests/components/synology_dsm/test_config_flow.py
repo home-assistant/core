@@ -49,9 +49,10 @@ def mock_controller_service():
         "homeassistant.components.synology_dsm.config_flow.SynologyDSM"
     ) as service_mock:
         service_mock.return_value.login = Mock(return_value=True)
-        service_mock.return_value.information = Mock(serial=SERIAL)
-        service_mock.return_value.utilisation = Mock(cpu_user_load=1)
-        service_mock.return_value.storage = Mock(disks_ids=[], volumes_ids=[])
+        service_mock.return_value.information.serial = SERIAL
+        service_mock.return_value.utilisation.cpu_user_load = 1
+        service_mock.return_value.storage.disks_ids = []
+        service_mock.return_value.storage.volumes_ids = []
         yield service_mock
 
 
@@ -71,10 +72,10 @@ def mock_controller_service_failed():
     with patch(
         "homeassistant.components.synology_dsm.config_flow.SynologyDSM"
     ) as service_mock:
-        service_mock.return_value.login = Mock(return_value=True)
-        service_mock.return_value.information = Mock(serial=None)
-        service_mock.return_value.utilisation = Mock(cpu_user_load=None)
-        service_mock.return_value.storage = Mock(disks_ids=None, volumes_ids=None)
+        service_mock.return_value.information.serial = None
+        service_mock.return_value.utilisation.cpu_user_load = None
+        service_mock.return_value.storage.disks_ids = None
+        service_mock.return_value.storage.volumes_ids = None
         yield service_mock
 
 
@@ -111,7 +112,7 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
     assert result["data"].get(CONF_DISKS) is None
     assert result["data"].get(CONF_VOLUMES) is None
 
-    service.return_value.information = Mock(serial=SERIAL_2)
+    service.return_value.information.serial = SERIAL_2
     # test without port + False SSL
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -157,7 +158,7 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
     assert result["data"].get(CONF_DISKS) is None
     assert result["data"].get(CONF_VOLUMES) is None
 
-    service.return_value.information = Mock(serial=SERIAL_2)
+    service.return_value.information.serial = SERIAL_2
     # import with all
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -221,10 +222,12 @@ async def test_login_failed(hass: HomeAssistantType, service_login_failed: Magic
         data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {CONF_USERNAME: "login"}
+    assert result["errors"] == {"base": "login"}
 
 
-async def test_connection_failed(hass: HomeAssistantType, service_failed: MagicMock):
+async def test_missing_data_after_login(
+    hass: HomeAssistantType, service_failed: MagicMock
+):
     """Test when we have errors during connection."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -232,7 +235,7 @@ async def test_connection_failed(hass: HomeAssistantType, service_failed: MagicM
         data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "unknown"}
+    assert result["errors"] == {"base": "missing_data"}
 
 
 async def test_form_ssdp(hass: HomeAssistantType, service: MagicMock):
