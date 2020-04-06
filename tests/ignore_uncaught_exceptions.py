@@ -5,7 +5,6 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
     ("tests.components.cast.test_media_player", "test_entry_setup_list_config"),
     ("tests.components.cast.test_media_player", "test_entry_setup_platform_not_ready"),
     ("tests.components.demo.test_init", "test_setting_up_demo"),
-    ("tests.components.discovery.test_init", "test_discover_config_flow"),
     ("tests.components.dyson.test_air_quality", "test_purecool_aiq_attributes"),
     ("tests.components.dyson.test_air_quality", "test_purecool_aiq_update_state"),
     (

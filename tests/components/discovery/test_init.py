@@ -1,6 +1,7 @@
 """The tests for the discovery component."""
 from unittest.mock import MagicMock, patch
 
+from asynctest import CoroutineMock
 import pytest
 
 from homeassistant import config_entries
@@ -148,9 +149,10 @@ async def test_discover_config_flow(hass):
         """Fake discovery."""
         return [("mock-service", discovery_info)]
 
+    m_init = CoroutineMock()
     with patch.dict(
         discovery.CONFIG_ENTRY_HANDLERS, {"mock-service": "mock-component"}
-    ), patch("homeassistant.data_entry_flow.FlowManager.async_init") as m_init:
+    ), patch("homeassistant.data_entry_flow.FlowManager.async_init", m_init):
         await mock_discovery(hass, discover)
 
     assert len(m_init.mock_calls) == 1
