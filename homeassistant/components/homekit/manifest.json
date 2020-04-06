@@ -2,7 +2,6 @@
   "domain": "homekit",
   "name": "HomeKit",
   "documentation": "https://www.home-assistant.io/integrations/homekit",
-  "requirements": ["HAP-python==2.8.0"],
-  "dependencies": [],
+  "requirements": ["HAP-python==2.8.1"],
   "codeowners": []
 }
