@@ -148,7 +148,7 @@ class NMBSLiveBoard(Entity):
         liveboard = self._api_client.get_liveboard(self._station)
 
         if liveboard is None or not liveboard["departures"]:
-            return self._state
+            return
 
         next_departure = liveboard["departures"]["departure"][0]
 
