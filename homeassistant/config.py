@@ -842,11 +842,7 @@ def async_notify_setup_error(
     message = "The following integrations and platforms could not be set up:\n\n"
 
     for name, link in errors.items():
-        if link:
-            part = f"[{name}]({link})"
-        else:
-            part = name
-
+        part = f"[{name}]({link})" if link else name
         message += f" - {part}\n"
 
     message += "\nPlease check your config."
