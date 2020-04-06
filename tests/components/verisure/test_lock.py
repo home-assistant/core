@@ -49,10 +49,8 @@ LOCKS = ["door_lock"]
 @contextmanager
 def mock_hub(config, get_response=LOCKS[0]):
     """Extensively mock out a verisure hub."""
-    hub_prefix = "homeassistant.components.verisure.lock.hub"
-    # Since there is no conf to disable ethernet status, mock hub for
-    # binary sensor too
-    hub_binary_sensor = "homeassistant.components.verisure.binary_sensor.hub"
+    hub_prefix = "homeassistant.components.verisure.verisure.VerisureHub"
+
     verisure_prefix = "verisure.Session"
     with patch(verisure_prefix) as session, patch(hub_prefix) as hub:
         session.login.return_value = True
@@ -65,8 +63,7 @@ def mock_hub(config, get_response=LOCKS[0]):
         }
         hub.session.get_lock_state_transaction.return_value = {"result": "OK"}
 
-        with patch(hub_binary_sensor, hub):
-            yield hub
+        yield hub
 
 
 async def setup_verisure_locks(hass, config):
