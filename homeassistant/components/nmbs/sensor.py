@@ -265,7 +265,7 @@ class NMBSSensor(Entity):
         )
 
         if connections is None or not connections["connection"]:
-            return self._state
+            return
 
         if int(connections["connection"][0]["departure"]["left"]) > 0:
             next_connection = connections["connection"][1]
