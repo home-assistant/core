@@ -26,10 +26,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Arduino platform."""
     board = hass.data[DOMAIN]
 
-    if board is None:
-        _LOGGER.error("A connection has not been made to the Arduino board")
-        return False
-
     pins = config.get(CONF_PINS)
 
     sensors = []

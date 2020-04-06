@@ -26,7 +26,6 @@ def setup(hass, config):
 
     port = config[DOMAIN][CONF_PORT]
 
-    board = None
     try:
         board = ArduinoBoard(port)
     except (serial.serialutil.SerialException, FileNotFoundError):
