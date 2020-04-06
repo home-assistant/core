@@ -47,6 +47,8 @@ def _user_schema_with_defaults(user_input=None):
 
 def _ordered_shared_schema(schema_input=None):
     return {
+        vol.Required(CONF_USERNAME, default=schema_input.get(CONF_USERNAME, "")): str,
+        vol.Required(CONF_PASSWORD, default=schema_input.get(CONF_PASSWORD, "")): str,
         vol.Optional(CONF_PORT, default=schema_input.get(CONF_PORT, "")): str,
         vol.Optional(CONF_SSL, default=schema_input.get(CONF_SSL, DEFAULT_SSL)): bool,
         vol.Optional(
@@ -55,8 +57,6 @@ def _ordered_shared_schema(schema_input=None):
         ): vol.All(
             vol.Coerce(int), vol.In([5, 6]),  # DSM versions supported by the library
         ),
-        vol.Required(CONF_USERNAME, default=schema_input.get(CONF_USERNAME, "")): str,
-        vol.Required(CONF_PASSWORD, default=schema_input.get(CONF_PASSWORD, "")): str,
     }
 
 
