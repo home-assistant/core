@@ -22,9 +22,7 @@ class AzureDevOpsFlowHandler(ConfigFlow):
     """Handle a Azure DevOps config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
-
-    _hassio_discovery = None
+    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize Azure DevOps flow."""
@@ -41,15 +39,6 @@ class AzureDevOpsFlowHandler(ConfigFlow):
                     vol.Required(CONF_PAT): str,
                 }
             ),
-            errors=errors or {},
-        )
-
-    async def _show_hassio_form(self, errors=None):
-        """Show the Hass.io confirmation form to the user."""
-        return self.async_show_form(
-            step_id="hassio_confirm",
-            description_placeholders={"addon": self._hassio_discovery["addon"]},
-            data_schema=vol.Schema({}),
             errors=errors or {},
         )
 
