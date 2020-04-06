@@ -188,7 +188,7 @@ class RainMachineProgram(RainMachineSwitch):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self._dispatcher_handlers.append(
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, PROGRAM_UPDATE_TOPIC, self._update_state
             )
@@ -248,12 +248,12 @@ class RainMachineZone(RainMachineSwitch):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self._dispatcher_handlers.append(
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, PROGRAM_UPDATE_TOPIC, self._update_state
             )
         )
-        self._dispatcher_handlers.append(
+        self.async_on_remove(
             async_dispatcher_connect(self.hass, ZONE_UPDATE_TOPIC, self._update_state)
         )
 

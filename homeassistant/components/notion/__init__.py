@@ -211,7 +211,6 @@ class NotionEntity(Entity):
         self, notion, task_id, sensor_id, bridge_id, system_id, name, device_class
     ):
         """Initialize the entity."""
-        self._async_unsub_dispatcher_connect = None
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._bridge_id = bridge_id
         self._device_class = device_class
@@ -309,17 +308,11 @@ class NotionEntity(Entity):
             self.update_from_latest_data()
             self.async_write_ha_state()
 
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_DATA_UPDATE, update
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, TOPIC_DATA_UPDATE, update)
         )
 
         self.update_from_latest_data()
-
-    async def async_will_remove_from_hass(self):
-        """Disconnect dispatcher listener when removed."""
-        if self._async_unsub_dispatcher_connect:
-            self._async_unsub_dispatcher_connect()
-            self._async_unsub_dispatcher_connect = None
 
     @callback
     def update_from_latest_data(self):
