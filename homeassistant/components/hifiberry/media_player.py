@@ -60,7 +60,6 @@ SUPPORT_HIFIBERRY = (
     | SUPPORT_VOLUME_STEP
 )
 
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
@@ -68,7 +67,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
 )
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the HifiBerry platform."""
@@ -95,7 +93,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     hass.data[DATA_HIFIBERRY][ip_addr] = device
     add_devices([device])
-
 
 class HifiBerry(MediaPlayerDevice):
     """HifiBerry Player Object."""
@@ -134,7 +131,6 @@ class HifiBerry(MediaPlayerDevice):
             return
         self._state = resp.copy()
 
-
     def post_hifiberry_msg(self, method, params=None):
         """Send message."""
         url = f"http://{self.host}:{self.port}/{method}"
@@ -151,8 +147,6 @@ class HifiBerry(MediaPlayerDevice):
             return False
         return data
         self.update()
-
-
 
     @property
     def media_content_type(self):
@@ -258,7 +252,7 @@ class HifiBerry(MediaPlayerDevice):
             volume = 0
         elif volume > 1:
             volume = 1
-        self.post_hifiberry_msg("api/volume", params={"percent": str(int((volume)*100))})
+        self.post_hifiberry_msg("api/volume", params={"percent": str(int((volume) * 100))})
 
     def mute_volume(self, mute):
         """Mute. Emulated with set_volume_level."""
@@ -268,4 +262,3 @@ class HifiBerry(MediaPlayerDevice):
         else:
             self.set_volume_level(self._muted_volume)
         self._muted = mute
-        
