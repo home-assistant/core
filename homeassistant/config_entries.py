@@ -917,8 +917,7 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
         if entry.domain not in HANDLERS:
             raise data_entry_flow.UnknownHandler
 
-        flow = cast(OptionsFlow, HANDLERS[entry.domain].async_get_options_flow(entry))
-        return flow
+        return cast(OptionsFlow, HANDLERS[entry.domain].async_get_options_flow(entry))
 
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: Dict[str, Any]
