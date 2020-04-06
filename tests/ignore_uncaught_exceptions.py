@@ -44,7 +44,6 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
 ]
 
 IGNORE_UNCAUGHT_JSON_EXCEPTIONS = [
-    ("tests.components.spotify.test_config_flow", "test_full_flow"),
     ("tests.components.smartthings.test_init", "test_config_entry_loads_platforms"),
     (
         "tests.components.smartthings.test_init",
