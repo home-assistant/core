@@ -121,6 +121,7 @@ async def test_setup_component_and_test_service(hass, empty_cache_dir):
     ] == "{}/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3".format(
         hass.config.api.base_url
     )
+    await hass.async_block_till_done()
     assert (
         empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
     ).is_file()
@@ -153,6 +154,7 @@ async def test_setup_component_and_test_service_with_config_language(
     ] == "{}/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3".format(
         hass.config.api.base_url
     )
+    await hass.async_block_till_done()
     assert (
         empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3"
     ).is_file()
@@ -194,6 +196,7 @@ async def test_setup_component_and_test_service_with_service_language(
     ] == "{}/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3".format(
         hass.config.api.base_url
     )
+    await hass.async_block_till_done()
     assert (
         empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_de_-_demo.mp3"
     ).is_file()
@@ -221,6 +224,7 @@ async def test_setup_component_test_service_with_wrong_service_language(
         blocking=True,
     )
     assert len(calls) == 0
+    await hass.async_block_till_done()
     assert not (
         empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_lang_-_demo.mp3"
     ).is_file()
@@ -257,6 +261,7 @@ async def test_setup_component_and_test_service_with_service_options(
     ] == "{}/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{}_demo.mp3".format(
         hass.config.api.base_url, opt_hash
     )
+    await hass.async_block_till_done()
     assert (
         empty_cache_dir
         / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{opt_hash}_demo.mp3"
@@ -329,6 +334,7 @@ async def test_setup_component_and_test_service_with_service_options_wrong(
     opt_hash = ctypes.c_size_t(hash(frozenset({"speed": 1}))).value
 
     assert len(calls) == 0
+    await hass.async_block_till_done()
     assert not (
         empty_cache_dir
         / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de_{opt_hash}_demo.mp3"
@@ -383,6 +389,7 @@ async def test_setup_component_and_test_service_clear_cache(hass, empty_cache_di
     # To make sure the file is persisted
     await hass.async_block_till_done()
     assert len(calls) == 1
+    await hass.async_block_till_done()
     assert (
         empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
     ).is_file()
@@ -391,6 +398,7 @@ async def test_setup_component_and_test_service_clear_cache(hass, empty_cache_di
         tts.DOMAIN, tts.SERVICE_CLEAR_CACHE, {}, blocking=True
     )
 
+    await hass.async_block_till_done()
     assert not (
         empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
     ).is_file()
@@ -520,6 +528,7 @@ async def test_setup_component_test_without_cache(hass, empty_cache_dir):
         blocking=True,
     )
     assert len(calls) == 1
+    await hass.async_block_till_done()
     assert not (
         empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
     ).is_file()
@@ -547,6 +556,7 @@ async def test_setup_component_test_with_cache_call_service_without_cache(
         blocking=True,
     )
     assert len(calls) == 1
+    await hass.async_block_till_done()
     assert not (
         empty_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
     ).is_file()
