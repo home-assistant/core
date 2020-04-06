@@ -24,7 +24,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     alarms = []
     if int(hub.config.get(CONF_ALARM, 1)):
         hub.update_overview()
-        alarms.append(VerisureAlarm())
+        alarms.append(VerisureAlarm(hub))
     add_entities(alarms)
 
 
