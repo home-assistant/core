@@ -12,7 +12,7 @@ import requests.exceptions
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.event import async_call_later
 
 from .const import (
@@ -51,10 +51,10 @@ def debounce(func):
         """Handle call_later callback."""
         nonlocal unsub
         unsub = None
-        await self.hass.async_add_executor_job(func, self)
+        await func(self)
 
     @wraps(func)
-    def wrapper(self):
+    async def wrapper(self):
         """Schedule async callback."""
         nonlocal unsub
         if unsub:
@@ -186,8 +186,12 @@ class PlexServer:
             session,
         )
 
+    def _fetch_platform_data(self):
+        """Fetch all data from the Plex server in a single method."""
+        return (self._plex_server.clients(), self._plex_server.sessions())
+
     @debounce
-    def update_platforms(self):
+    async def async_update_platforms(self):
         """Update the platform entities."""
         _LOGGER.debug("Updating devices")
 
@@ -209,8 +213,9 @@ class PlexServer:
                 monitored_users.add(new_user)
 
         try:
-            devices = self._plex_server.clients()
-            sessions = self._plex_server.sessions()
+            devices, sessions = await self.hass.async_add_executor_job(
+                self._fetch_platform_data
+            )
         except (
             plexapi.exceptions.BadRequest,
             requests.exceptions.RequestException,
@@ -271,13 +276,13 @@ class PlexServer:
             self._known_idle.add(client_id)
 
         if new_entity_configs:
-            dispatcher_send(
+            async_dispatcher_send(
                 self.hass,
                 PLEX_NEW_MP_SIGNAL.format(self.machine_identifier),
                 new_entity_configs,
             )
 
-        dispatcher_send(
+        async_dispatcher_send(
             self.hass,
             PLEX_UPDATE_SENSOR_SIGNAL.format(self.machine_identifier),
             sessions,
