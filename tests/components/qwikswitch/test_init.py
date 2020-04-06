@@ -21,14 +21,11 @@ class AiohttpClientMockResponseList(list):
 
     def decode(self, _):
         """Return next item from list."""
-        try:
-            res = list.pop(self, 0)
-            _LOGGER.debug("MockResponseList popped %s: %s", res, self)
-            if isinstance(res, Exception):
-                raise res
-            return res
-        except IndexError:
-            raise AssertionError("MockResponseList empty")
+        res = list.pop(self, 0)
+        _LOGGER.debug("MockResponseList popped %s: %s", res, self)
+        if isinstance(res, Exception):
+            raise res
+        return res
 
     async def wait_till_empty(self, hass):
         """Wait until empty."""
@@ -80,6 +77,7 @@ async def test_binary_sensor_device(hass, aioclient_mock):  # noqa: F811
     assert state_obj.state == "on"
 
     LISTEN.append('{"id":"@a00001","cmd":"","data":"4e0e1701","rssi":"61%"}')
+    LISTEN.append(ClientError())  # Will cause a sleep
     hass.data[QWIKSWITCH]._sleep_task.cancel()
     await LISTEN.wait_till_empty(hass)
     state_obj = hass.states.get("binary_sensor.s1")
@@ -109,6 +107,7 @@ async def test_sensor_device(hass, aioclient_mock):  # noqa: F811
     LISTEN.append(
         '{"id":"@a00001","name":"ss1","type":"rel",' '"val":"4733800001a00000"}'
     )
+    LISTEN.append(ClientError())  # Will cause a sleep
 
     await hass.async_block_till_done()
     state_obj = hass.states.get("sensor.ss1")

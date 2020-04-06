@@ -39,8 +39,6 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
     ("tests.components.ios.test_init", "test_creating_entry_sets_up_sensor"),
     ("tests.components.ios.test_init", "test_not_configuring_ios_not_creates_entry"),
     ("tests.components.local_file.test_camera", "test_file_not_readable"),
-    ("tests.components.qwikswitch.test_init", "test_binary_sensor_device"),
-    ("tests.components.qwikswitch.test_init", "test_sensor_device"),
     ("tests.components.rflink.test_init", "test_send_command_invalid_arguments"),
     ("tests.components.unifi_direct.test_device_tracker", "test_get_scanner"),
 ]
