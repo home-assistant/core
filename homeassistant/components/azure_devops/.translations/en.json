@@ -1,0 +1,22 @@
+{
+  "config": {
+    "abort": {
+      "existing_instance_updated": "Updated existing configuration."
+    },
+    "error": {
+      "connection_error": "Failed to connect."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "organization": "Organization",
+          "project": "Project",
+          "personal_access_token": "Personal Access Token (PAT)"
+        },
+        "description": "Set up an Azure DevOps instance to access your project.",
+        "title": "Setup Azure DevOps"
+      }
+    },
+    "title": "Azure DevOps"
+  }
+}

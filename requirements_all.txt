@@ -294,6 +294,9 @@ avri-api==0.1.7
 # homeassistant.components.axis
 axis==33
 
+# homeassistant.components.azure_devops
+azure-devops==6.0.0b2
+
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.1.0
 
