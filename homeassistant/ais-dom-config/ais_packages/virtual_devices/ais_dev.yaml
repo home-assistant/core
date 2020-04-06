@@ -2,12 +2,12 @@ sensor:
   - platform: ais_device_search_mqtt
     name: network_devices_info_value
     state_topic: "+/stat/#"
-  - platform: command_line
-    command: "find /data/data/pl.sviete.dom/files | wc -l"
-    name: AIS all files
-    scan_interval: 3600
-    command_timeout: 5
-    unit_of_measurement: "num"
+#  - platform: command_line
+#    command: "find /data/data/pl.sviete.dom/files | wc -l"
+#    name: AIS all files
+#    scan_interval: 3600
+#    command_timeout: 5
+#    unit_of_measurement: "num"
 
 input_boolean:
   ais_quiet_mode:
