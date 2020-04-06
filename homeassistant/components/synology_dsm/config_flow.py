@@ -81,8 +81,6 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         errors = {}
 
-        _LOGGER.debug("incoming user_input: %s", user_input)
-
         if user_input is None:
             return await self._show_setup_form(user_input, None)
 
