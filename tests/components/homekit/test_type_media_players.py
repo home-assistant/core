@@ -57,7 +57,7 @@ async def test_media_player_set_state(hass, hk_driver, events):
     )
     await hass.async_block_till_done()
     acc = MediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, config)
-    await hass.async_add_job(acc.run)
+    await acc.run_handler()
 
     assert acc.aid == 2
     assert acc.category == 8  # Switch
@@ -105,49 +105,63 @@ async def test_media_player_set_state(hass, hk_driver, events):
     call_media_stop = async_mock_service(hass, DOMAIN, "media_stop")
     call_toggle_mute = async_mock_service(hass, DOMAIN, "volume_mute")
 
-    await hass.async_add_job(acc.chars[FEATURE_ON_OFF].client_update_value, True)
+    await hass.async_add_executor_job(
+        acc.chars[FEATURE_ON_OFF].client_update_value, True
+    )
     await hass.async_block_till_done()
     assert call_turn_on
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_job(acc.chars[FEATURE_ON_OFF].client_update_value, False)
+    await hass.async_add_executor_job(
+        acc.chars[FEATURE_ON_OFF].client_update_value, False
+    )
     await hass.async_block_till_done()
     assert call_turn_off
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_job(acc.chars[FEATURE_PLAY_PAUSE].client_update_value, True)
+    await hass.async_add_executor_job(
+        acc.chars[FEATURE_PLAY_PAUSE].client_update_value, True
+    )
     await hass.async_block_till_done()
     assert call_media_play
     assert call_media_play[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 3
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_job(acc.chars[FEATURE_PLAY_PAUSE].client_update_value, False)
+    await hass.async_add_executor_job(
+        acc.chars[FEATURE_PLAY_PAUSE].client_update_value, False
+    )
     await hass.async_block_till_done()
     assert call_media_pause
     assert call_media_pause[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 4
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_job(acc.chars[FEATURE_PLAY_STOP].client_update_value, True)
+    await hass.async_add_executor_job(
+        acc.chars[FEATURE_PLAY_STOP].client_update_value, True
+    )
     await hass.async_block_till_done()
     assert call_media_play
     assert call_media_play[1].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 5
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_job(acc.chars[FEATURE_PLAY_STOP].client_update_value, False)
+    await hass.async_add_executor_job(
+        acc.chars[FEATURE_PLAY_STOP].client_update_value, False
+    )
     await hass.async_block_till_done()
     assert call_media_stop
     assert call_media_stop[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 6
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_job(acc.chars[FEATURE_TOGGLE_MUTE].client_update_value, True)
+    await hass.async_add_executor_job(
+        acc.chars[FEATURE_TOGGLE_MUTE].client_update_value, True
+    )
     await hass.async_block_till_done()
     assert call_toggle_mute
     assert call_toggle_mute[0].data[ATTR_ENTITY_ID] == entity_id
@@ -155,7 +169,9 @@ async def test_media_player_set_state(hass, hk_driver, events):
     assert len(events) == 7
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_job(acc.chars[FEATURE_TOGGLE_MUTE].client_update_value, False)
+    await hass.async_add_executor_job(
+        acc.chars[FEATURE_TOGGLE_MUTE].client_update_value, False
+    )
     await hass.async_block_till_done()
     assert call_toggle_mute
     assert call_toggle_mute[1].data[ATTR_ENTITY_ID] == entity_id
@@ -182,7 +198,7 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
     )
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
-    await hass.async_add_job(acc.run)
+    await acc.run_handler()
 
     assert acc.aid == 2
     assert acc.category == 31  # Television
@@ -226,21 +242,21 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
     call_volume_down = async_mock_service(hass, DOMAIN, "volume_down")
     call_volume_set = async_mock_service(hass, DOMAIN, "volume_set")
 
-    await hass.async_add_job(acc.char_active.client_update_value, 1)
+    await hass.async_add_executor_job(acc.char_active.client_update_value, 1)
     await hass.async_block_till_done()
     assert call_turn_on
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_job(acc.char_active.client_update_value, 0)
+    await hass.async_add_executor_job(acc.char_active.client_update_value, 0)
     await hass.async_block_till_done()
     assert call_turn_off
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_job(acc.char_remote_key.client_update_value, 11)
+    await hass.async_add_executor_job(acc.char_remote_key.client_update_value, 11)
     await hass.async_block_till_done()
     assert call_media_play_pause
     assert call_media_play_pause[0].data[ATTR_ENTITY_ID] == entity_id
@@ -249,28 +265,28 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
 
     hass.states.async_set(entity_id, STATE_PLAYING)
     await hass.async_block_till_done()
-    await hass.async_add_job(acc.char_remote_key.client_update_value, 11)
+    await hass.async_add_executor_job(acc.char_remote_key.client_update_value, 11)
     await hass.async_block_till_done()
     assert call_media_pause
     assert call_media_pause[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 4
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_job(acc.char_remote_key.client_update_value, 10)
+    await hass.async_add_executor_job(acc.char_remote_key.client_update_value, 10)
     await hass.async_block_till_done()
     assert len(events) == 4
     assert events[-1].data[ATTR_VALUE] is None
 
     hass.states.async_set(entity_id, STATE_PAUSED)
     await hass.async_block_till_done()
-    await hass.async_add_job(acc.char_remote_key.client_update_value, 11)
+    await hass.async_add_executor_job(acc.char_remote_key.client_update_value, 11)
     await hass.async_block_till_done()
     assert call_media_play
     assert call_media_play[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 5
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_job(acc.char_mute.client_update_value, True)
+    await hass.async_add_executor_job(acc.char_mute.client_update_value, True)
     await hass.async_block_till_done()
     assert call_toggle_mute
     assert call_toggle_mute[0].data[ATTR_ENTITY_ID] == entity_id
@@ -278,7 +294,7 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
     assert len(events) == 6
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_job(acc.char_mute.client_update_value, False)
+    await hass.async_add_executor_job(acc.char_mute.client_update_value, False)
     await hass.async_block_till_done()
     assert call_toggle_mute
     assert call_toggle_mute[1].data[ATTR_ENTITY_ID] == entity_id
@@ -286,7 +302,7 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
     assert len(events) == 7
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_job(acc.char_input_source.client_update_value, 1)
+    await hass.async_add_executor_job(acc.char_input_source.client_update_value, 1)
     await hass.async_block_till_done()
     assert call_select_source
     assert call_select_source[0].data[ATTR_ENTITY_ID] == entity_id
@@ -294,21 +310,21 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
     assert len(events) == 8
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_job(acc.char_volume_selector.client_update_value, 0)
+    await hass.async_add_executor_job(acc.char_volume_selector.client_update_value, 0)
     await hass.async_block_till_done()
     assert call_volume_up
     assert call_volume_up[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 9
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_job(acc.char_volume_selector.client_update_value, 1)
+    await hass.async_add_executor_job(acc.char_volume_selector.client_update_value, 1)
     await hass.async_block_till_done()
     assert call_volume_down
     assert call_volume_down[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 10
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_job(acc.char_volume.client_update_value, 20)
+    await hass.async_add_executor_job(acc.char_volume.client_update_value, 20)
     await hass.async_block_till_done()
     assert call_volume_set[0]
     assert call_volume_set[0].data[ATTR_ENTITY_ID] == entity_id
@@ -329,7 +345,7 @@ async def test_media_player_television_basic(hass, hk_driver, events, caplog):
     )
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
-    await hass.async_add_job(acc.run)
+    await acc.run_handler()
 
     assert acc.chars_tv == []
     assert acc.chars_speaker == []
