@@ -26,7 +26,7 @@ class IsInBedBinarySensor(SleepIQSensor, BinarySensorDevice):
 
     def __init__(self, sleepiq_data, bed_id, side):
         """Initialize the sensor."""
-        super().__init__(self, sleepiq_data, bed_id, side)
+        super().__init__(sleepiq_data, bed_id, side)
         self._state = None
         self._name = SENSOR_TYPES[IS_IN_BED]
         self.update()
@@ -43,5 +43,5 @@ class IsInBedBinarySensor(SleepIQSensor, BinarySensorDevice):
 
     def update(self):
         """Get the latest data from SleepIQ and updates the states."""
-        super().update(self)
+        super().update()
         self._state = self.side.is_in_bed
