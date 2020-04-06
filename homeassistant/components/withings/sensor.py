@@ -320,8 +320,9 @@ class WithingsHealthSensor(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique, Home Assistant friendly identifier for this entity."""
-        return "withings_{}_{}_{}".format(
-            self._slug, self._user_id, slugify(self._attribute.measurement)
+        return (
+            f"withings_{self._slug}_{self._user_id}_"
+            f"{slugify(self._attribute.measurement)}"
         )
 
     @property

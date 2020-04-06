@@ -78,7 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except requests.exceptions.Timeout:
         raise ConfigEntryNotReady
     except requests.exceptions.HTTPError as ex:
-        if ex.request.status_code > 400 and ex.request.status_code < 500:
+        if ex.response.status_code > 400 and ex.response.status_code < 500:
             _LOGGER.error("Failed to login to nuheat: %s", ex)
             return False
         raise ConfigEntryNotReady

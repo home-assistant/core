@@ -228,7 +228,7 @@ async def test_light_without_brightness_can_be_turned_off(hass_hue, hue_client):
 
     # Verify that SERVICE_TURN_OFF has been called
     await hass_hue.async_block_till_done()
-    assert 1 == len(turn_off_calls)
+    assert len(turn_off_calls) == 1
     call = turn_off_calls[-1]
 
     assert light.DOMAIN == call.domain
@@ -536,16 +536,16 @@ async def test_put_light_state_media_player(hass_hue, hue_client):
 
 async def test_close_cover(hass_hue, hue_client):
     """Test opening cover ."""
-    COVER_ID = "cover.living_room_window"
+    cover_id = "cover.living_room_window"
     # Turn the office light off first
     await hass_hue.services.async_call(
         cover.DOMAIN,
         const.SERVICE_CLOSE_COVER,
-        {const.ATTR_ENTITY_ID: COVER_ID},
+        {const.ATTR_ENTITY_ID: cover_id},
         blocking=True,
     )
 
-    cover_test = hass_hue.states.get(COVER_ID)
+    cover_test = hass_hue.states.get(cover_id)
     assert cover_test.state == "closing"
 
     for _ in range(7):
@@ -553,12 +553,12 @@ async def test_close_cover(hass_hue, hue_client):
         async_fire_time_changed(hass_hue, future)
         await hass_hue.async_block_till_done()
 
-    cover_test = hass_hue.states.get(COVER_ID)
+    cover_test = hass_hue.states.get(cover_id)
     assert cover_test.state == "closed"
 
     # Go through the API to turn it on
     cover_result = await perform_put_light_state(
-        hass_hue, hue_client, COVER_ID, True, 100
+        hass_hue, hue_client, cover_id, True, 100
     )
 
     assert cover_result.status == 200
@@ -574,22 +574,22 @@ async def test_close_cover(hass_hue, hue_client):
     assert len(cover_result_json) == 2
 
     # Check to make sure the state changed
-    cover_test_2 = hass_hue.states.get(COVER_ID)
+    cover_test_2 = hass_hue.states.get(cover_id)
     assert cover_test_2.state == "open"
 
 
 async def test_set_position_cover(hass_hue, hue_client):
     """Test setting position cover ."""
-    COVER_ID = "cover.living_room_window"
+    cover_id = "cover.living_room_window"
     # Turn the office light off first
     await hass_hue.services.async_call(
         cover.DOMAIN,
         const.SERVICE_CLOSE_COVER,
-        {const.ATTR_ENTITY_ID: COVER_ID},
+        {const.ATTR_ENTITY_ID: cover_id},
         blocking=True,
     )
 
-    cover_test = hass_hue.states.get(COVER_ID)
+    cover_test = hass_hue.states.get(cover_id)
     assert cover_test.state == "closing"
 
     for _ in range(7):
@@ -597,7 +597,7 @@ async def test_set_position_cover(hass_hue, hue_client):
         async_fire_time_changed(hass_hue, future)
         await hass_hue.async_block_till_done()
 
-    cover_test = hass_hue.states.get(COVER_ID)
+    cover_test = hass_hue.states.get(cover_id)
     assert cover_test.state == "closed"
 
     level = 20
@@ -605,7 +605,7 @@ async def test_set_position_cover(hass_hue, hue_client):
 
     # Go through the API to open
     cover_result = await perform_put_light_state(
-        hass_hue, hue_client, COVER_ID, False, brightness
+        hass_hue, hue_client, cover_id, False, brightness
     )
 
     assert cover_result.status == 200
@@ -628,7 +628,7 @@ async def test_set_position_cover(hass_hue, hue_client):
         await hass_hue.async_block_till_done()
 
     # Check to make sure the state changed
-    cover_test_2 = hass_hue.states.get(COVER_ID)
+    cover_test_2 = hass_hue.states.get(cover_id)
     assert cover_test_2.state == "open"
     assert cover_test_2.attributes.get("current_position") == level
 

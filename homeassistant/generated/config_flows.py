@@ -110,6 +110,7 @@ FLOWS = [
     "sonos",
     "spotify",
     "starline",
+    "synology_dsm",
     "tellduslive",
     "tesla",
     "toon",

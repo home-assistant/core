@@ -48,11 +48,9 @@ class TelnetMock:
         """Return sample values."""
         if self.host == "alice.local":
             raise ConnectionRefusedError
-        elif self.host == "bob.local":
+        if self.host == "bob.local":
             raise socket.gaierror
-        else:
-            return self.sample_data
-        return None
+        return self.sample_data
 
 
 class TestHDDTempSensor(unittest.TestCase):

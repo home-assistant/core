@@ -532,6 +532,9 @@ pyiqvia==0.2.1
 # homeassistant.components.kira
 pykira==0.1.1
 
+# homeassistant.components.lastfm
+pylast==3.2.1
+
 # homeassistant.components.linky
 pylinky==0.4.0
 
@@ -626,6 +629,9 @@ python-miio==0.5.0.1
 
 # homeassistant.components.nest
 python-nest==4.1.0
+
+# homeassistant.components.synology_dsm
+python-synology==0.5.0
 
 # homeassistant.components.tado
 python-tado==0.6.0

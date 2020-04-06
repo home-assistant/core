@@ -119,7 +119,7 @@ class BaseZhaEntity(RestoreEntity, LogMixin, entity.Entity):
         self.remove_future = asyncio.Future()
         await self.async_accept_signal(
             None,
-            "{}_{}".format(SIGNAL_REMOVE, str(self.zha_device.ieee)),
+            f"{SIGNAL_REMOVE}_{self.zha_device.ieee}",
             self.async_remove,
             signal_override=True,
         )
@@ -182,7 +182,7 @@ class ZhaEntity(BaseZhaEntity):
         await self.async_check_recently_seen()
         await self.async_accept_signal(
             None,
-            "{}_{}".format(self.zha_device.available_signal, "entity"),
+            f"{self.zha_device.available_signal}_entity",
             self.async_set_available,
             signal_override=True,
         )

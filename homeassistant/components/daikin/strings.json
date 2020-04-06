@@ -1,19 +1,19 @@
 {
-    "config": {
-        "title": "Daikin AC",
-        "step": {
-            "user": {
-                "title": "Configure Daikin AC",
-                "description": "Enter IP address of your Daikin AC.",
-                "data": {
-                    "host": "Host"
-                }
-            }
-        },
-        "abort": {
-            "device_timeout": "Timeout connecting to the device.",
-            "device_fail": "Unexpected error creating device.",
-            "already_configured": "Device is already configured"
+  "config": {
+    "title": "Daikin AC",
+    "step": {
+      "user": {
+        "title": "Configure Daikin AC",
+        "description": "Enter IP address of your Daikin AC.",
+        "data": {
+          "host": "Host"
         }
+      }
+    },
+    "abort": {
+      "device_timeout": "Timeout connecting to the device.",
+      "device_fail": "Unexpected error creating device.",
+      "already_configured": "Device is already configured"
     }
+  }
 }

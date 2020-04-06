@@ -494,7 +494,6 @@ class PlexMediaPlayer(MediaPlayerDevice):
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.setVolume(int(volume * 100), self._active_media_plexapi_type)
             self._volume_level = volume  # store since we can't retrieve
-            self.plex_server.update_platforms()
 
     @property
     def volume_level(self):
@@ -533,31 +532,26 @@ class PlexMediaPlayer(MediaPlayerDevice):
         """Send play command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.play(self._active_media_plexapi_type)
-            self.plex_server.update_platforms()
 
     def media_pause(self):
         """Send pause command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.pause(self._active_media_plexapi_type)
-            self.plex_server.update_platforms()
 
     def media_stop(self):
         """Send stop command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.stop(self._active_media_plexapi_type)
-            self.plex_server.update_platforms()
 
     def media_next_track(self):
         """Send next track command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.skipNext(self._active_media_plexapi_type)
-            self.plex_server.update_platforms()
 
     def media_previous_track(self):
         """Send previous track command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.skipPrevious(self._active_media_plexapi_type)
-            self.plex_server.update_platforms()
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
@@ -593,8 +587,6 @@ class PlexMediaPlayer(MediaPlayerDevice):
             pass
         except requests.exceptions.ConnectTimeout:
             _LOGGER.error("Timed out playing on %s", self.name)
-
-        self.plex_server.update_platforms()
 
     def _get_music_media(self, library_name, src):
         """Find music media and return a Plex media object."""

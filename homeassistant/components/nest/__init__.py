@@ -200,7 +200,7 @@ async def async_setup_entry(hass, entry):
 
                     now = datetime.utcnow()
                     trip_id = service.data.get(
-                        ATTR_TRIP_ID, "trip_{}".format(int(now.timestamp()))
+                        ATTR_TRIP_ID, f"trip_{int(now.timestamp())}"
                     )
                     eta_begin = now + service.data[ATTR_ETA]
                     eta_window = service.data.get(ATTR_ETA_WINDOW, timedelta(minutes=1))
@@ -368,15 +368,11 @@ class NestSensorDevice(Entity):
         if device is not None:
             # device specific
             self.device = device
-            self._name = "{} {}".format(
-                self.device.name_long, self.variable.replace("_", " ")
-            )
+            self._name = f"{self.device.name_long} {self.variable.replace('_', ' ')}"
         else:
             # structure only
             self.device = structure
-            self._name = "{} {}".format(
-                self.structure.name, self.variable.replace("_", " ")
-            )
+            self._name = f"{self.structure.name} {self.variable.replace('_', ' ')}"
 
         self._state = None
         self._unit = None

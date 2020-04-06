@@ -217,9 +217,9 @@ class WUHourlyForecastSensorConfig(WUSensorConfig):
         :param field: field name to use as value
         """
         super().__init__(
-            friendly_name=lambda wu: "{} {}".format(
-                wu.data["hourly_forecast"][period]["FCTTIME"]["weekday_name_abbrev"],
-                wu.data["hourly_forecast"][period]["FCTTIME"]["civil"],
+            friendly_name=lambda wu: (
+                f"{wu.data['hourly_forecast'][period]['FCTTIME']['weekday_name_abbrev']} "
+                f"{wu.data['hourly_forecast'][period]['FCTTIME']['civil']}"
             ),
             feature="hourly",
             value=lambda wu: wu.data["hourly_forecast"][period][field],
@@ -477,8 +477,9 @@ SENSOR_TYPES = {
         "Wind Summary", "wind_string", "mdi:weather-windy"
     ),
     "temp_high_record_c": WUAlmanacSensorConfig(
-        lambda wu: "High Temperature Record ({})".format(
-            wu.data["almanac"]["temp_high"]["recordyear"]
+        lambda wu: (
+            f"High Temperature Record "
+            f"({wu.data['almanac']['temp_high']['recordyear']})"
         ),
         "temp_high",
         "record",
@@ -487,8 +488,9 @@ SENSOR_TYPES = {
         "mdi:thermometer",
     ),
     "temp_high_record_f": WUAlmanacSensorConfig(
-        lambda wu: "High Temperature Record ({})".format(
-            wu.data["almanac"]["temp_high"]["recordyear"]
+        lambda wu: (
+            f"High Temperature Record "
+            f"({wu.data['almanac']['temp_high']['recordyear']})"
         ),
         "temp_high",
         "record",
@@ -497,8 +499,9 @@ SENSOR_TYPES = {
         "mdi:thermometer",
     ),
     "temp_low_record_c": WUAlmanacSensorConfig(
-        lambda wu: "Low Temperature Record ({})".format(
-            wu.data["almanac"]["temp_low"]["recordyear"]
+        lambda wu: (
+            f"Low Temperature Record "
+            f"({wu.data['almanac']['temp_low']['recordyear']})"
         ),
         "temp_low",
         "record",
@@ -507,8 +510,9 @@ SENSOR_TYPES = {
         "mdi:thermometer",
     ),
     "temp_low_record_f": WUAlmanacSensorConfig(
-        lambda wu: "Low Temperature Record ({})".format(
-            wu.data["almanac"]["temp_low"]["recordyear"]
+        lambda wu: (
+            f"Low Temperature Record "
+            f"({wu.data['almanac']['temp_low']['recordyear']})"
         ),
         "temp_low",
         "record",

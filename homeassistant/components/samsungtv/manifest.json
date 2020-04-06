@@ -11,8 +11,6 @@
       "st": "urn:samsung.com:device:RemoteControlReceiver:1"
     }
   ],
-  "codeowners": [
-    "@escoand"
-  ],
+  "codeowners": ["@escoand"],
   "config_flow": true
 }

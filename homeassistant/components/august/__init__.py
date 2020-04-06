@@ -90,8 +90,11 @@ async def async_request_validation(hass, config_entry, august_gateway):
     hass.data[DOMAIN][entry_id][TWO_FA_REVALIDATE] = configurator.async_request_config(
         f"{DEFAULT_NAME} ({username})",
         async_august_configuration_validation_callback,
-        description="August must be re-verified. Please check your {} ({}) and enter the verification "
-        "code below".format(login_method, username),
+        description=(
+            "August must be re-verified. "
+            f"Please check your {login_method} ({username}) "
+            "and enter the verification code below"
+        ),
         submit_caption="Verify",
         fields=[
             {"id": VERIFICATION_CODE_KEY, "name": "Verification code", "type": "string"}
@@ -265,7 +268,7 @@ class AugustData(AugustSubscriberMixin):
                     self._api.async_get_doorbell_detail,
                 )
             _LOGGER.debug(
-                "async_signal_device_id_update (from detail updates): %s", device_id,
+                "async_signal_device_id_update (from detail updates): %s", device_id
             )
             self.async_signal_device_id_update(device_id)
 

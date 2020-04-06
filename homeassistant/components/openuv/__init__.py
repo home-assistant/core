@@ -233,7 +233,6 @@ class OpenUvEntity(Entity):
 
     def __init__(self, openuv):
         """Initialize."""
-        self._async_unsub_dispatcher_connect = None
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._available = True
         self._name = None
@@ -263,17 +262,9 @@ class OpenUvEntity(Entity):
             self.update_from_latest_data()
             self.async_write_ha_state()
 
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_UPDATE, update
-        )
+        self.async_on_remove(async_dispatcher_connect(self.hass, TOPIC_UPDATE, update))
 
         self.update_from_latest_data()
-
-    async def async_will_remove_from_hass(self):
-        """Disconnect dispatcher listener when removed."""
-        if self._async_unsub_dispatcher_connect:
-            self._async_unsub_dispatcher_connect()
-            self._async_unsub_dispatcher_connect = None
 
     def update_from_latest_data(self):
         """Update the sensor using the latest data."""

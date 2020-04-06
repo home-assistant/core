@@ -3,10 +3,6 @@
   "name": "Open ERZ",
   "documentation": "https://www.home-assistant.io/integrations/openerz",
   "dependencies": [],
-  "codeowners": [
-    "@misialq"
-  ],
-  "requirements": [
-    "openerz-api==0.1.0"
-  ]
+  "codeowners": ["@misialq"],
+  "requirements": ["openerz-api==0.1.0"]
 }

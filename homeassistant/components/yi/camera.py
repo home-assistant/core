@@ -110,14 +110,9 @@ class YiCamera(Camera):
 
             await ftp.quit()
             self._is_on = True
-            return "ftp://{}:{}@{}:{}{}/{}/{}".format(
-                self.user,
-                self.passwd,
-                self.host,
-                self.port,
-                self.path,
-                latest_dir,
-                videos[-1],
+            return (
+                f"ftp://{self.user}:{self.passwd}@{self.host}:"
+                f"{self.port}{self.path}/{latest_dir}/{videos[-1]}"
             )
         except (ConnectionRefusedError, StatusCodeError) as err:
             _LOGGER.error("Error while fetching video: %s", err)

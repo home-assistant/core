@@ -388,7 +388,7 @@ def wrap_msg_callback(msg_callback: MessageCallbackType) -> MessageCallbackType:
 
         @wraps(msg_callback)
         async def async_wrapper(msg: Any) -> None:
-            """Catch and log exception."""
+            """Call with deprecated signature."""
             await msg_callback(msg.topic, msg.payload, msg.qos)
 
         wrapper_func = async_wrapper
@@ -396,7 +396,7 @@ def wrap_msg_callback(msg_callback: MessageCallbackType) -> MessageCallbackType:
 
         @wraps(msg_callback)
         def wrapper(msg: Any) -> None:
-            """Catch and log exception."""
+            """Call with deprecated signature."""
             msg_callback(msg.topic, msg.payload, msg.qos)
 
         wrapper_func = wrapper
@@ -808,7 +808,10 @@ class MQTT:
 
         if will_message is not None:
             self._mqttc.will_set(  # pylint: disable=no-value-for-parameter
-                *attr.astuple(will_message)
+                *attr.astuple(
+                    will_message,
+                    filter=lambda attr, value: attr.name != "subscribed_topic",
+                )
             )
 
     async def async_publish(
@@ -940,7 +943,10 @@ class MQTT:
         if self.birth_message:
             self.hass.add_job(
                 self.async_publish(  # pylint: disable=no-value-for-parameter
-                    *attr.astuple(self.birth_message)
+                    *attr.astuple(
+                        self.birth_message,
+                        filter=lambda attr, value: attr.name != "subscribed_topic",
+                    )
                 )
             )
 
@@ -976,7 +982,8 @@ class MQTT:
                     continue
 
             self.hass.async_run_job(
-                subscription.callback, Message(msg.topic, payload, msg.qos, msg.retain)
+                subscription.callback,
+                Message(msg.topic, payload, msg.qos, msg.retain, subscription.topic),
             )
 
     def _mqtt_on_disconnect(self, _mqttc, _userdata, result_code: int) -> None:

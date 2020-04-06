@@ -68,7 +68,12 @@ enum34==1000000000.0.0
 pycrypto==1000000000.0.0
 """
 
-IGNORE_PRE_COMMIT_HOOK_ID = ("check-json", "no-commit-to-branch")
+IGNORE_PRE_COMMIT_HOOK_ID = (
+    "check-executables-have-shebangs",
+    "check-json",
+    "no-commit-to-branch",
+    "prettier",
+)
 
 
 def has_tests(module: str):
@@ -182,7 +187,7 @@ def gather_requirements_from_modules(errors, reqs):
         try:
             module = importlib.import_module(package)
         except ImportError as err:
-            print("{}.py: {}".format(package.replace(".", "/"), err))
+            print(f"{package.replace('.', '/')}.py: {err}")
             errors.append(package)
             continue
 

@@ -26,7 +26,7 @@ async def test_outlet_set_state(hass, hk_driver, events):
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = Outlet(hass, hk_driver, "Outlet", entity_id, 2, None)
-    await hass.async_add_job(acc.run)
+    await acc.run_handler()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -47,14 +47,14 @@ async def test_outlet_set_state(hass, hk_driver, events):
     call_turn_on = async_mock_service(hass, "switch", "turn_on")
     call_turn_off = async_mock_service(hass, "switch", "turn_off")
 
-    await hass.async_add_job(acc.char_on.client_update_value, True)
+    await hass.async_add_executor_job(acc.char_on.client_update_value, True)
     await hass.async_block_till_done()
     assert call_turn_on
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_job(acc.char_on.client_update_value, False)
+    await hass.async_add_executor_job(acc.char_on.client_update_value, False)
     await hass.async_block_till_done()
     assert call_turn_off
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
@@ -79,7 +79,7 @@ async def test_switch_set_state(hass, hk_driver, entity_id, attrs, events):
     hass.states.async_set(entity_id, None, attrs)
     await hass.async_block_till_done()
     acc = Switch(hass, hk_driver, "Switch", entity_id, 2, None)
-    await hass.async_add_job(acc.run)
+    await acc.run_handler()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -100,14 +100,14 @@ async def test_switch_set_state(hass, hk_driver, entity_id, attrs, events):
     call_turn_on = async_mock_service(hass, domain, "turn_on")
     call_turn_off = async_mock_service(hass, domain, "turn_off")
 
-    await hass.async_add_job(acc.char_on.client_update_value, True)
+    await hass.async_add_executor_job(acc.char_on.client_update_value, True)
     await hass.async_block_till_done()
     assert call_turn_on
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_job(acc.char_on.client_update_value, False)
+    await hass.async_add_executor_job(acc.char_on.client_update_value, False)
     await hass.async_block_till_done()
     assert call_turn_off
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
@@ -123,25 +123,25 @@ async def test_valve_set_state(hass, hk_driver, events):
     await hass.async_block_till_done()
 
     acc = Valve(hass, hk_driver, "Valve", entity_id, 2, {CONF_TYPE: TYPE_FAUCET})
-    await hass.async_add_job(acc.run)
+    await acc.run_handler()
     await hass.async_block_till_done()
     assert acc.category == 29  # Faucet
     assert acc.char_valve_type.value == 3  # Water faucet
 
     acc = Valve(hass, hk_driver, "Valve", entity_id, 2, {CONF_TYPE: TYPE_SHOWER})
-    await hass.async_add_job(acc.run)
+    await acc.run_handler()
     await hass.async_block_till_done()
     assert acc.category == 30  # Shower
     assert acc.char_valve_type.value == 2  # Shower head
 
     acc = Valve(hass, hk_driver, "Valve", entity_id, 2, {CONF_TYPE: TYPE_SPRINKLER})
-    await hass.async_add_job(acc.run)
+    await acc.run_handler()
     await hass.async_block_till_done()
     assert acc.category == 28  # Sprinkler
     assert acc.char_valve_type.value == 1  # Irrigation
 
     acc = Valve(hass, hk_driver, "Valve", entity_id, 2, {CONF_TYPE: TYPE_VALVE})
-    await hass.async_add_job(acc.run)
+    await acc.run_handler()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -165,7 +165,7 @@ async def test_valve_set_state(hass, hk_driver, events):
     call_turn_on = async_mock_service(hass, "switch", "turn_on")
     call_turn_off = async_mock_service(hass, "switch", "turn_off")
 
-    await hass.async_add_job(acc.char_active.client_update_value, True)
+    await hass.async_add_executor_job(acc.char_active.client_update_value, True)
     await hass.async_block_till_done()
     assert acc.char_in_use.value is True
     assert call_turn_on
@@ -173,7 +173,7 @@ async def test_valve_set_state(hass, hk_driver, events):
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_job(acc.char_active.client_update_value, False)
+    await hass.async_add_executor_job(acc.char_active.client_update_value, False)
     await hass.async_block_till_done()
     assert acc.char_in_use.value is False
     assert call_turn_off
@@ -197,7 +197,7 @@ async def test_reset_switch(hass, hk_driver, entity_id, attrs, events):
     hass.states.async_set(entity_id, None, attrs)
     await hass.async_block_till_done()
     acc = Switch(hass, hk_driver, "Switch", entity_id, 2, None)
-    await hass.async_add_job(acc.run)
+    await acc.run_handler()
     await hass.async_block_till_done()
 
     assert acc.activate_only is True
@@ -206,7 +206,7 @@ async def test_reset_switch(hass, hk_driver, entity_id, attrs, events):
     call_turn_on = async_mock_service(hass, domain, "turn_on")
     call_turn_off = async_mock_service(hass, domain, "turn_off")
 
-    await hass.async_add_job(acc.char_on.client_update_value, True)
+    await hass.async_add_executor_job(acc.char_on.client_update_value, True)
     await hass.async_block_till_done()
     assert acc.char_on.value is True
     assert call_turn_on
@@ -221,7 +221,7 @@ async def test_reset_switch(hass, hk_driver, entity_id, attrs, events):
     assert len(events) == 1
     assert not call_turn_off
 
-    await hass.async_add_job(acc.char_on.client_update_value, False)
+    await hass.async_add_executor_job(acc.char_on.client_update_value, False)
     await hass.async_block_till_done()
     assert acc.char_on.value is False
     assert len(events) == 1
@@ -234,7 +234,7 @@ async def test_reset_switch_reload(hass, hk_driver, events):
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = Switch(hass, hk_driver, "Switch", entity_id, 2, None)
-    await hass.async_add_job(acc.run)
+    await acc.run_handler()
     await hass.async_block_till_done()
 
     assert acc.activate_only is True

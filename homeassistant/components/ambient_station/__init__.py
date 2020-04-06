@@ -437,7 +437,6 @@ class AmbientWeatherEntity(Entity):
         """Initialize the sensor."""
         self._ambient = ambient
         self._device_class = device_class
-        self._async_unsub_dispatcher_connect = None
         self._mac_address = mac_address
         self._sensor_name = sensor_name
         self._sensor_type = sensor_type
@@ -503,17 +502,13 @@ class AmbientWeatherEntity(Entity):
             self.update_from_latest_data()
             self.async_write_ha_state()
 
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, f"ambient_station_data_update_{self._mac_address}", update
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, f"ambient_station_data_update_{self._mac_address}", update
+            )
         )
 
         self.update_from_latest_data()
-
-    async def async_will_remove_from_hass(self):
-        """Disconnect dispatcher listener when removed."""
-        if self._async_unsub_dispatcher_connect:
-            self._async_unsub_dispatcher_connect()
-            self._async_unsub_dispatcher_connect = None
 
     @callback
     def update_from_latest_data(self):

@@ -1,20 +1,20 @@
 {
-    "config": {
-        "title": "VeSync",
-        "step": {
-            "user": {
-                "title": "Enter Username and Password",
-                "data": {
-                    "username": "Email Address",
-                    "password": "Password"
-                }
-            }
-        },
-        "error": {
-            "invalid_login": "Invalid username or password"
-        },
-        "abort": {
-            "already_setup": "Only one Vesync instance is allowed"
+  "config": {
+    "title": "VeSync",
+    "step": {
+      "user": {
+        "title": "Enter Username and Password",
+        "data": {
+          "username": "Email Address",
+          "password": "Password"
         }
+      }
+    },
+    "error": {
+      "invalid_login": "Invalid username or password"
+    },
+    "abort": {
+      "already_setup": "Only one Vesync instance is allowed"
     }
+  }
 }
