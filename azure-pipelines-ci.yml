@@ -76,10 +76,12 @@ stages:
         . venv/bin/activate
         pre-commit run pyupgrade --all-files --show-diff-on-failure
       displayName: 'Run pyupgrade'
-    - script: |
-        . venv/bin/activate
-        pre-commit run prettier --all-files --show-diff-on-failure
-      displayName: 'Run prettier'
+    # Prettier seems to hang on Azure, unknown why yet.
+    # Temporarily disable the check to no block PRs
+    # - script: |
+    #     . venv/bin/activate
+    #     pre-commit run prettier --all-files --show-diff-on-failure
+    #   displayName: 'Run prettier'
   - job: 'Validate'
     pool:
       vmImage: 'ubuntu-latest'
