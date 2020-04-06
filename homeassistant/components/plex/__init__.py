@@ -175,7 +175,7 @@ async def async_setup_entry(hass, entry):
     unsub = async_dispatcher_connect(
         hass,
         PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id),
-        plex_server.update_platforms,
+        plex_server.async_update_platforms,
     )
     hass.data[PLEX_DOMAIN][DISPATCHERS].setdefault(server_id, [])
     hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
