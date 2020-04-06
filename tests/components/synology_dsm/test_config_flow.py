@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import data_entry_flow, setup
 from homeassistant.components import ssdp
 from homeassistant.components.synology_dsm.const import (
     CONF_VOLUMES,
@@ -13,7 +13,7 @@ from homeassistant.components.synology_dsm.const import (
     DEFAULT_SSL,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     CONF_DISKS,
     CONF_HOST,
@@ -47,7 +47,6 @@ def mock_controller_service():
     with patch(
         "homeassistant.components.synology_dsm.config_flow.SynologyDSM"
     ) as service_mock:
-        service_mock.return_value.login = Mock(return_value=True)
         service_mock.return_value.information.serial = SERIAL
         service_mock.return_value.utilisation.cpu_user_load = 1
         service_mock.return_value.storage.disks_ids = []
@@ -237,7 +236,7 @@ async def test_form_ssdp(hass: HomeAssistantType, service: MagicMock):
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
+        context={"source": SOURCE_SSDP},
         data={
             ssdp.ATTR_SSDP_LOCATION: "http://192.168.1.5:5000",
             ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
