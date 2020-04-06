@@ -164,28 +164,26 @@ class TPLinkSmartBulb(Light):
             else self._light_state.color_temp
         )
 
+        if ATTR_HS_COLOR in kwargs:
+            # TP-Link requires integers.
+            hue_sat = tuple(int(val) for val in kwargs[ATTR_HS_COLOR])
+
+            # TP-Link cannot have both color temp and hue_sat
+            color_tmp = 0
+        else:
+            hue_sat = self._light_state.hs
+
         await self.async_set_light_state_retry(
             self._light_state,
-            LightState(
-                state=True,
-                brightness=brightness,
-                color_temp=color_tmp,
-                hs=tuple(kwargs.get(ATTR_HS_COLOR, self._light_state.hs or ())),
-                emeter_params=self._light_state.emeter_params,
+            self._light_state._replace(
+                state=True, brightness=brightness, color_temp=color_tmp, hs=hue_sat,
             ),
         )
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
         await self.async_set_light_state_retry(
-            self._light_state,
-            LightState(
-                state=False,
-                brightness=self._light_state.brightness,
-                color_temp=self._light_state.color_temp,
-                hs=self._light_state.hs,
-                emeter_params=self._light_state.emeter_params,
-            ),
+            self._light_state, self._light_state._replace(state=False),
         )
 
     @property
