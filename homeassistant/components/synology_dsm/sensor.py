@@ -15,6 +15,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from . import SynoApi
 from .const import (
+    BASE_NAME,
     CONF_VOLUMES,
     DOMAIN,
     STORAGE_DISK_SENSORS,
@@ -74,7 +75,7 @@ class SynoNasSensor(Entity):
         """Initialize the sensor."""
         self._api = api
         self.sensor_type = sensor_type
-        self._name = f"{self._api.information.name} {sensor_info[0]}"
+        self._name = f"{BASE_NAME} {sensor_info[0]}"
         self._unit = sensor_info[1]
         self._icon = sensor_info[2]
         self.monitored_device = monitored_device
