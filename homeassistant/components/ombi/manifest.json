@@ -2,7 +2,6 @@
   "domain": "ombi",
   "name": "Ombi",
   "documentation": "https://www.home-assistant.io/integrations/ombi/",
-  "dependencies": [],
   "codeowners": ["@larssont"],
   "requirements": ["pyombi==0.1.10"]
 }

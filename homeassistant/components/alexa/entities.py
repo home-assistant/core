@@ -1,11 +1,14 @@
 """Alexa entity adapters."""
+import logging
 from typing import List
+from urllib.parse import urlparse
 
 from homeassistant.components import (
     alarm_control_panel,
     alert,
     automation,
     binary_sensor,
+    camera,
     cover,
     fan,
     group,
@@ -33,11 +36,13 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import network
 from homeassistant.util.decorator import Registry
 
 from .capabilities import (
     Alexa,
     AlexaBrightnessController,
+    AlexaCameraStreamController,
     AlexaChannelController,
     AlexaColorController,
     AlexaColorTemperatureController,
@@ -67,6 +72,8 @@ from .capabilities import (
     AlexaToggleController,
 )
 from .const import CONF_DESCRIPTION, CONF_DISPLAY_CATEGORIES
+
+_LOGGER = logging.getLogger(__name__)
 
 ENTITY_ADAPTERS = Registry()
 
@@ -245,7 +252,6 @@ class AlexaEntity:
 
         Raises _UnsupportedInterface.
         """
-        pass
 
     def interfaces(self):
         """Return a list of supported interfaces.
@@ -261,8 +267,7 @@ class AlexaEntity:
             if not interface.properties_proactively_reported():
                 continue
 
-            for prop in interface.serialize_properties():
-                yield prop
+            yield from interface.serialize_properties()
 
     def serialize_discovery(self):
         """Serialize the entity for discovery."""
@@ -276,10 +281,12 @@ class AlexaEntity:
         }
 
         locale = self.config.locale
-        capabilities = []
-        for i in self.interfaces():
-            if locale in i.supported_locales:
-                capabilities.append(i.serialize_discovery())
+        capabilities = [
+            i.serialize_discovery()
+            for i in self.interfaces()
+            if locale in i.supported_locales
+        ]
+
         result["capabilities"] = capabilities
 
         return result
@@ -763,3 +770,41 @@ class VacuumCapabilities(AlexaEntity):
 
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.hass)
+
+
+@ENTITY_ADAPTERS.register(camera.DOMAIN)
+class CameraCapabilities(AlexaEntity):
+    """Class to represent Camera capabilities."""
+
+    def default_display_categories(self):
+        """Return the display categories for this entity."""
+        return [DisplayCategory.CAMERA]
+
+    def interfaces(self):
+        """Yield the supported interfaces."""
+        if self._check_requirements():
+            supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            if supported & camera.SUPPORT_STREAM:
+                yield AlexaCameraStreamController(self.entity)
+
+        yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.hass)
+
+    def _check_requirements(self):
+        """Check the hass URL for HTTPS scheme and port 443."""
+        if "stream" not in self.hass.config.components:
+            _LOGGER.error(
+                "%s requires stream component for AlexaCameraStreamController",
+                self.entity_id,
+            )
+            return False
+
+        url = urlparse(network.async_get_external_url(self.hass))
+        if url.scheme != "https" or (url.port is not None and url.port != 443):
+            _LOGGER.error(
+                "%s requires HTTPS support on port 443 for AlexaCameraStreamController",
+                self.entity_id,
+            )
+            return False
+
+        return True

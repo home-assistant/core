@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il ricevitore DirecTV \u00e8 gi\u00e0 configurato",
+            "unknown": "Errore imprevisto"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi, si prega di riprovare",
+            "unknown": "Errore imprevisto"
+        },
+        "flow_title": "DirecTV: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "data": {
+                    "one": "uno",
+                    "other": "altri"
+                },
+                "description": "Vuoi impostare {name} ?",
+                "title": "Connettersi al ricevitore DirecTV"
+            },
+            "user": {
+                "data": {
+                    "host": "Host o indirizzo IP"
+                },
+                "title": "Collegamento al ricevitore DirecTV"
+            }
+        },
+        "title": "DirecTV"
+    }
+}

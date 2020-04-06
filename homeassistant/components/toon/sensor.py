@@ -283,22 +283,14 @@ class ToonSensor(ToonEntity):
 class ToonElectricityMeterDeviceSensor(ToonSensor, ToonElectricityMeterDeviceEntity):
     """Defines a Electricity Meter sensor."""
 
-    pass
-
 
 class ToonGasMeterDeviceSensor(ToonSensor, ToonGasMeterDeviceEntity):
     """Defines a Gas Meter sensor."""
-
-    pass
 
 
 class ToonSolarDeviceSensor(ToonSensor, ToonSolarDeviceEntity):
     """Defines a Solar sensor."""
 
-    pass
-
 
 class ToonBoilerDeviceSensor(ToonSensor, ToonBoilerDeviceEntity):
     """Defines a Boiler sensor."""
-
-    pass

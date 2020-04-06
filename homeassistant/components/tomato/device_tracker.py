@@ -113,10 +113,7 @@ class TomatoDeviceScanner(DeviceScanner):
             if response.status_code == 401:
                 # Authentication error
                 _LOGGER.exception(
-                    (
-                        "Failed to authenticate, "
-                        "please check your username and password"
-                    )
+                    "Failed to authenticate, please check your username and password"
                 )
                 return False
 

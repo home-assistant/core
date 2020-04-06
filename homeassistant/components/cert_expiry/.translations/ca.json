@@ -1,11 +1,14 @@
 {
     "config": {
         "abort": {
-            "host_port_exists": "Aquesta combinaci\u00f3 d'amfitri\u00f3 i port ja est\u00e0 configurada"
+            "already_configured": "Aquesta combinaci\u00f3 d'amfitri\u00f3 i port ja est\u00e0 configurada",
+            "host_port_exists": "Aquesta combinaci\u00f3 d'amfitri\u00f3 i port ja est\u00e0 configurada",
+            "import_failed": "La importaci\u00f3 des de configuraci\u00f3 ha fallat"
         },
         "error": {
             "certificate_error": "El certificat no ha pogut ser validat",
             "certificate_fetch_failed": "No s'ha pogut obtenir el certificat des d'aquesta combinaci\u00f3 d'amfitri\u00f3 i port",
+            "connection_refused": "La connexi\u00f3 s'ha rebutjat en connectar-se a l'amfitri\u00f3",
             "connection_timeout": "S'ha acabat el temps d'espera durant la connexi\u00f3 amb l'amfitri\u00f3.",
             "host_port_exists": "Aquesta combinaci\u00f3 d'amfitri\u00f3 i port ja est\u00e0 configurada",
             "resolve_failed": "No s'ha pogut resoldre l'amfitri\u00f3",

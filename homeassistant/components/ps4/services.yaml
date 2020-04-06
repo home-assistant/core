@@ -3,7 +3,7 @@ send_command:
   fields:
     entity_id:
       description: Name(s) of entities to send command.
-      example: 'media_player.playstation_4'
+      example: "media_player.playstation_4"
     command:
       description: Button to press.
-      example: 'ps'
+      example: "ps"

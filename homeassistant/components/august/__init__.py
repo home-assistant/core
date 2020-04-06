@@ -90,8 +90,11 @@ async def async_request_validation(hass, config_entry, august_gateway):
     hass.data[DOMAIN][entry_id][TWO_FA_REVALIDATE] = configurator.async_request_config(
         f"{DEFAULT_NAME} ({username})",
         async_august_configuration_validation_callback,
-        description="August must be re-verified. Please check your {} ({}) and enter the verification "
-        "code below".format(login_method, username),
+        description=(
+            "August must be re-verified. "
+            f"Please check your {login_method} ({username}) "
+            "and enter the verification code below"
+        ),
         submit_caption="Verify",
         fields=[
             {"id": VERIFICATION_CODE_KEY, "name": "Verification code", "type": "string"}
@@ -214,11 +217,11 @@ class AugustData(AugustSubscriberMixin):
             await self._api.async_get_doorbells(self._august_gateway.access_token) or []
         )
 
-        self._doorbells_by_id = dict((device.device_id, device) for device in doorbells)
-        self._locks_by_id = dict((device.device_id, device) for device in locks)
-        self._house_ids = set(
+        self._doorbells_by_id = {device.device_id: device for device in doorbells}
+        self._locks_by_id = {device.device_id: device for device in locks}
+        self._house_ids = {
             device.house_id for device in itertools.chain(locks, doorbells)
-        )
+        }
 
         await self._async_refresh_device_detail_by_ids(
             [device.device_id for device in itertools.chain(locks, doorbells)]
@@ -265,7 +268,7 @@ class AugustData(AugustSubscriberMixin):
                     self._api.async_get_doorbell_detail,
                 )
             _LOGGER.debug(
-                "async_signal_device_id_update (from detail updates): %s", device_id,
+                "async_signal_device_id_update (from detail updates): %s", device_id
             )
             self.async_signal_device_id_update(device_id)
 

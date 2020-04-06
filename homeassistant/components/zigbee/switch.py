@@ -21,5 +21,3 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class ZigBeeSwitch(ZigBeeDigitalOut, SwitchDevice):
     """Representation of a Zigbee Digital Out device."""
-
-    pass

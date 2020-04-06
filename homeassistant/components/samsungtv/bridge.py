@@ -206,6 +206,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 CONF_TIMEOUT: 31,
             }
 
+            result = None
             try:
                 LOGGER.debug("Try config: %s", config)
                 with SamsungTVWS(
@@ -223,9 +224,13 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 return RESULT_SUCCESS
             except WebSocketException:
                 LOGGER.debug("Working but unsupported config: %s", config)
-                return RESULT_NOT_SUPPORTED
+                result = RESULT_NOT_SUPPORTED
             except (OSError, ConnectionFailure) as err:
                 LOGGER.debug("Failing config: %s, error: %s", config, err)
+        # pylint: disable=useless-else-on-loop
+        else:
+            if result:
+                return result
 
         return RESULT_NOT_SUCCESSFUL
 

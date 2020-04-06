@@ -22,5 +22,3 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class ZigBeeLight(ZigBeeDigitalOut, Light):
     """Use ZigBeeDigitalOut as light."""
-
-    pass

@@ -109,7 +109,7 @@ class TibberSensorElPrice(TibberSensor):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "Electricity price {}".format(self._name)
+        return f"Electricity price {self._name}"
 
     @property
     def icon(self):
@@ -169,7 +169,7 @@ class TibberSensorRT(TibberSensor):
                 continue
             self._device_state_attributes[key] = value
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def available(self):
@@ -179,7 +179,7 @@ class TibberSensorRT(TibberSensor):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "Real time consumption {}".format(self._name)
+        return f"Real time consumption {self._name}"
 
     @property
     def should_poll(self):

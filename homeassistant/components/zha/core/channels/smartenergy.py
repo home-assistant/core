@@ -17,56 +17,40 @@ _LOGGER = logging.getLogger(__name__)
 class Calendar(ZigbeeChannel):
     """Calendar channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.DeviceManagement.cluster_id)
 class DeviceManagement(ZigbeeChannel):
     """Device Management channel."""
-
-    pass
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Drlc.cluster_id)
 class Drlc(ZigbeeChannel):
     """Demand Response and Load Control channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.EnergyManagement.cluster_id)
 class EnergyManagement(ZigbeeChannel):
     """Energy Management channel."""
-
-    pass
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Events.cluster_id)
 class Events(ZigbeeChannel):
     """Event channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.KeyEstablishment.cluster_id)
 class KeyEstablishment(ZigbeeChannel):
     """Key Establishment channel."""
-
-    pass
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.MduPairing.cluster_id)
 class MduPairing(ZigbeeChannel):
     """Pairing channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Messaging.cluster_id)
 class Messaging(ZigbeeChannel):
     """Messaging channel."""
-
-    pass
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Metering.cluster_id)
@@ -163,18 +147,12 @@ class Metering(ZigbeeChannel):
 class Prepayment(ZigbeeChannel):
     """Prepayment channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Price.cluster_id)
 class Price(ZigbeeChannel):
     """Price channel."""
 
-    pass
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Tunneling.cluster_id)
 class Tunneling(ZigbeeChannel):
     """Tunneling channel."""
-
-    pass

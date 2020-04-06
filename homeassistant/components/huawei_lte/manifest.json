@@ -15,6 +15,5 @@
       "manufacturer": "Huawei"
     }
   ],
-  "dependencies": [],
   "codeowners": ["@scop"]
 }

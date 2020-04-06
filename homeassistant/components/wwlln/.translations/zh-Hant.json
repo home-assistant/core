@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\u6b64\u4f4d\u7f6e\u5df2\u8a3b\u518a\u3002",
+            "window_too_small": "\u904e\u5c0f\u7684\u8996\u7a97\u5c07\u5c0e\u81f4 Home Assistant \u932f\u904e\u4e8b\u4ef6\u3002"
+        },
         "error": {
             "identifier_exists": "\u5ea7\u6a19\u5df2\u8a3b\u518a"
         },

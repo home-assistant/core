@@ -10,6 +10,7 @@ from unittest.mock import Mock
 import asynctest
 from asynctest import CoroutineMock, patch
 import pytest
+import voluptuous as vol
 from voluptuous import Invalid, MultipleInvalid
 import yaml
 
@@ -110,8 +111,8 @@ async def test_ensure_config_exists_uses_existing_config(hass):
     create_file(YAML_PATH)
     await config_util.async_ensure_config_exists(hass)
 
-    with open(YAML_PATH) as f:
-        content = f.read()
+    with open(YAML_PATH) as fp:
+        content = fp.read()
 
     # File created with create_file are empty
     assert content == ""
@@ -126,8 +127,8 @@ def test_load_yaml_config_converts_empty_files_to_dict():
 
 def test_load_yaml_config_raises_error_if_not_dict():
     """Test error raised when YAML file is not a dict."""
-    with open(YAML_PATH, "w") as f:
-        f.write("5")
+    with open(YAML_PATH, "w") as fp:
+        fp.write("5")
 
     with pytest.raises(HomeAssistantError):
         config_util.load_yaml_config_file(YAML_PATH)
@@ -135,8 +136,8 @@ def test_load_yaml_config_raises_error_if_not_dict():
 
 def test_load_yaml_config_raises_error_if_malformed_yaml():
     """Test error raised if invalid YAML."""
-    with open(YAML_PATH, "w") as f:
-        f.write(":")
+    with open(YAML_PATH, "w") as fp:
+        fp.write(":")
 
     with pytest.raises(HomeAssistantError):
         config_util.load_yaml_config_file(YAML_PATH)
@@ -144,8 +145,8 @@ def test_load_yaml_config_raises_error_if_malformed_yaml():
 
 def test_load_yaml_config_raises_error_if_unsafe_yaml():
     """Test error raised if unsafe YAML."""
-    with open(YAML_PATH, "w") as f:
-        f.write("hello: !!python/object/apply:os.system")
+    with open(YAML_PATH, "w") as fp:
+        fp.write("hello: !!python/object/apply:os.system")
 
     with pytest.raises(HomeAssistantError):
         config_util.load_yaml_config_file(YAML_PATH)
@@ -153,9 +154,9 @@ def test_load_yaml_config_raises_error_if_unsafe_yaml():
 
 def test_load_yaml_config_preserves_key_order():
     """Test removal of library."""
-    with open(YAML_PATH, "w") as f:
-        f.write("hello: 2\n")
-        f.write("world: 1\n")
+    with open(YAML_PATH, "w") as fp:
+        fp.write("hello: 2\n")
+        fp.write("world: 1\n")
 
     assert [("hello", 2), ("world", 1)] == list(
         config_util.load_yaml_config_file(YAML_PATH).items()
@@ -721,7 +722,7 @@ async def test_merge_id_schema(hass):
     for domain, expected_type in types.items():
         integration = await async_get_integration(hass, domain)
         module = integration.get_component()
-        typ, _ = config_util._identify_config_schema(module)
+        typ = config_util._identify_config_schema(module)
         assert typ == expected_type, f"{domain} expected {expected_type}, got {typ}"
 
 
@@ -989,3 +990,35 @@ async def test_component_config_exceptions(hass, caplog):
             "Unknown error validating config for test_platform platform for test_domain component with PLATFORM_SCHEMA"
             in caplog.text
         )
+
+
+@pytest.mark.parametrize(
+    "domain, schema, expected",
+    [
+        ("zone", vol.Schema({vol.Optional("zone", default=list): [int]}), "list"),
+        ("zone", vol.Schema({vol.Optional("zone", default=[]): [int]}), "list"),
+        (
+            "zone",
+            vol.Schema({vol.Optional("zone", default={}): {vol.Optional("hello"): 1}}),
+            "dict",
+        ),
+        (
+            "zone",
+            vol.Schema(
+                {vol.Optional("zone", default=dict): {vol.Optional("hello"): 1}}
+            ),
+            "dict",
+        ),
+        ("zone", vol.Schema({vol.Optional("zone"): int}), None),
+        ("zone", vol.Schema({"zone": int}), None),
+        ("not_existing", vol.Schema({vol.Optional("zone", default=dict): dict}), None,),
+        ("non_existing", vol.Schema({"zone": int}), None),
+        ("zone", vol.Schema({}), None),
+    ],
+)
+def test_identify_config_schema(domain, schema, expected):
+    """Test identify config schema."""
+    assert (
+        config_util._identify_config_schema(Mock(DOMAIN=domain, CONFIG_SCHEMA=schema))
+        == expected
+    )

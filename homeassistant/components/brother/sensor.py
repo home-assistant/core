@@ -147,3 +147,7 @@ class BrotherPrinterSensor(Entity):
     async def async_will_remove_from_hass(self):
         """Disconnect from update signal."""
         self.coordinator.async_remove_listener(self.async_write_ha_state)
+
+    async def async_update(self):
+        """Update Brother entity."""
+        await self.coordinator.async_request_refresh()

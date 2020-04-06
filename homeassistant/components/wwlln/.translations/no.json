@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Denne plasseringen er allerede registrert.",
+            "window_too_small": "Et for lite vindu vil f\u00f8re til at Home Assistant g\u00e5r glipp av hendelser."
+        },
         "error": {
             "identifier_exists": "Lokasjon allerede registrert"
         },

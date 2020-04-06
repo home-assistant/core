@@ -1,7 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This location is already registered."
+            "already_configured": "This location is already registered.",
+            "window_too_small": "A too-small window will cause Home Assistant to miss events."
+        },
+        "error": {
+            "identifier_exists": "Location already registered"
         },
         "step": {
             "user": {

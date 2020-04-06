@@ -24,10 +24,11 @@ async def test_sensors(hass):
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
     reg_device = device_registry.async_get_device(
-        identifiers={("powerwall", "Wom Energy_60Hz_240V_s_IEEE1547a_2014_25_13.5")},
+        identifiers={("powerwall", "Wom Energy_60Hz_240V_s_IEEE1547a_2014_13.5")},
         connections=set(),
     )
-    assert reg_device.model == "PowerWall 2"
+    assert reg_device.model == "PowerWall 2 (hec)"
+    assert reg_device.sw_version == "1.45.1"
     assert reg_device.manufacturer == "Tesla"
     assert reg_device.name == "MySite"
 

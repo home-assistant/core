@@ -10,6 +10,7 @@
         "step": {
             "user": {
                 "data": {
+                    "code": "Code (for Home Assistant)",
                     "password": "Password",
                     "username": "Email Address"
                 },

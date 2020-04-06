@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Ta lokalizacja jest ju\u017c zarejestrowana.",
+            "window_too_small": "Zbyt ma\u0142e okno spowoduje, \u017ce Home Assistant przegapi wydarzenia."
+        },
         "error": {
             "identifier_exists": "Lokalizacja jest ju\u017c zarejestrowana."
         },

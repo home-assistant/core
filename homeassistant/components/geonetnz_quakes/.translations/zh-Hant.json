@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\u4f4d\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3002"
+        },
         "error": {
             "identifier_exists": "\u5ea7\u6a19\u5df2\u8a3b\u518a"
         },

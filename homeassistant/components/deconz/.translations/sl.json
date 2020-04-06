@@ -108,7 +108,8 @@
                     "allow_clip_sensor": "Dovoli deCONZ CLIP senzorje",
                     "allow_deconz_groups": "Dovolite deCONZ skupine lu\u010di"
                 },
-                "description": "Konfiguracija vidnosti tipov naprav deCONZ"
+                "description": "Konfiguracija vidnosti tipov naprav deCONZ",
+                "title": "mo\u017enosti deCONZ"
             }
         }
     }

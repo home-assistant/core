@@ -235,7 +235,6 @@ class HomeBridge(Bridge):
 
     def setup_message(self):
         """Prevent print of pyhap setup message to terminal."""
-        pass
 
 
 class HomeDriver(AccessoryDriver):

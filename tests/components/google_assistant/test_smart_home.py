@@ -442,6 +442,9 @@ async def test_execute(hass):
         "source": "cloud",
     }
 
+    service_events = sorted(
+        service_events, key=lambda ev: ev.data["service_data"]["entity_id"]
+    )
     assert len(service_events) == 4
     assert service_events[0].data == {
         "domain": "light",

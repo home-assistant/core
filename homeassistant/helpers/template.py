@@ -505,6 +505,7 @@ def expand(hass: HomeAssistantType, *args: Any) -> Iterable[State]:
             # ignore other types
             continue
 
+        # pylint: disable=import-outside-toplevel
         from homeassistant.components import group
 
         if split_entity_id(entity_id)[0] == group.DOMAIN:

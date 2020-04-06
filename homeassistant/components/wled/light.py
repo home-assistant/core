@@ -1,6 +1,8 @@
 """Support for LED lights."""
 import logging
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+
+import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -18,6 +20,7 @@ from homeassistant.components.light import (
     Light,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.color as color_util
@@ -30,9 +33,11 @@ from .const import (
     ATTR_PALETTE,
     ATTR_PLAYLIST,
     ATTR_PRESET,
+    ATTR_REVERSE,
     ATTR_SEGMENT_ID,
     ATTR_SPEED,
     DOMAIN,
+    SERVICE_EFFECT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,6 +52,23 @@ async def async_setup_entry(
 ) -> None:
     """Set up WLED light based on a config entry."""
     coordinator: WLEDDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_EFFECT,
+        {
+            vol.Optional(ATTR_EFFECT): vol.Any(cv.positive_int, cv.string),
+            vol.Optional(ATTR_INTENSITY): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=255)
+            ),
+            vol.Optional(ATTR_REVERSE): cv.boolean,
+            vol.Optional(ATTR_SPEED): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=255)
+            ),
+        },
+        "async_effect",
+    )
 
     lights = [
         WLEDLight(entry.entry_id, coordinator, light.segment_id)
@@ -94,16 +116,14 @@ class WLEDLight(Light, WLEDDeviceEntity):
         if preset == -1:
             preset = None
 
+        segment = self.coordinator.data.state.segments[self._segment]
         return {
-            ATTR_INTENSITY: self.coordinator.data.state.segments[
-                self._segment
-            ].intensity,
-            ATTR_PALETTE: self.coordinator.data.state.segments[
-                self._segment
-            ].palette.name,
+            ATTR_INTENSITY: segment.intensity,
+            ATTR_PALETTE: segment.palette.name,
             ATTR_PLAYLIST: playlist,
             ATTR_PRESET: preset,
-            ATTR_SPEED: self.coordinator.data.state.segments[self._segment].speed,
+            ATTR_REVERSE: segment.reverse,
+            ATTR_SPEED: segment.speed,
         }
 
     @property
@@ -212,5 +232,30 @@ class WLEDLight(Light, WLEDDeviceEntity):
                 data[ATTR_COLOR_PRIMARY] += (kwargs[ATTR_WHITE_VALUE],)
             else:
                 data[ATTR_COLOR_PRIMARY] += (self.white_value,)
+
+        await self.coordinator.wled.light(**data)
+
+    @wled_exception_handler
+    async def async_effect(
+        self,
+        effect: Optional[Union[int, str]] = None,
+        intensity: Optional[int] = None,
+        reverse: Optional[bool] = None,
+        speed: Optional[int] = None,
+    ) -> None:
+        """Set the effect of a WLED light."""
+        data = {ATTR_SEGMENT_ID: self._segment}
+
+        if effect is not None:
+            data[ATTR_EFFECT] = effect
+
+        if intensity is not None:
+            data[ATTR_INTENSITY] = intensity
+
+        if reverse is not None:
+            data[ATTR_REVERSE] = reverse
+
+        if speed is not None:
+            data[ATTR_SPEED] = speed
 
         await self.coordinator.wled.light(**data)

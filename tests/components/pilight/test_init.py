@@ -37,11 +37,10 @@ class PilightDaemonSim:
 
     def __init__(self, host, port):
         """Init pilight client, ignore parameters."""
-        pass
 
     def send_code(self, call):  # pylint: disable=no-self-use
         """Handle pilight.send service callback."""
-        _LOGGER.error("PilightDaemonSim payload: " + str(call))
+        _LOGGER.error("PilightDaemonSim payload: %s", call)
 
     def start(self):
         """Handle homeassistant.start callback.
@@ -61,7 +60,7 @@ class PilightDaemonSim:
     def set_callback(self, function):
         """Handle pilight.pilight_received event callback."""
         self.callback = function
-        _LOGGER.error("PilightDaemonSim callback: " + str(function))
+        _LOGGER.error("PilightDaemonSim callback: %s", function)
 
 
 @pytest.mark.skip("Flaky")
@@ -91,7 +90,7 @@ class TestPilight(unittest.TestCase):
                 mock_client.assert_called_once_with(
                     host=pilight.DEFAULT_HOST, port=pilight.DEFAULT_PORT
                 )
-                assert 1 == mock_error.call_count
+                assert mock_error.call_count == 1
 
     @patch("homeassistant.components.pilight._LOGGER.error")
     def test_connection_timeout_error(self, mock_error):
@@ -106,7 +105,7 @@ class TestPilight(unittest.TestCase):
                 mock_client.assert_called_once_with(
                     host=pilight.DEFAULT_HOST, port=pilight.DEFAULT_PORT
                 )
-                assert 1 == mock_error.call_count
+                assert mock_error.call_count == 1
 
     @patch("pilight.pilight.Client", PilightDaemonSim)
     @patch("homeassistant.core._LOGGER.error")

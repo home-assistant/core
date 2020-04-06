@@ -315,7 +315,7 @@ async def test_race_condition(hass, monkeypatch):
     await hass.async_block_till_done()
 
     # test  state of new sensor
-    new_sensor = hass.states.get(domain + ".test3")
+    new_sensor = hass.states.get(f"{domain}.test3")
     assert new_sensor
     assert new_sensor.state == "off"
 
@@ -325,7 +325,7 @@ async def test_race_condition(hass, monkeypatch):
     assert tmp_entity not in hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_COMMAND]["test3"]
 
     # test  state of new sensor
-    new_sensor = hass.states.get(domain + ".test3")
+    new_sensor = hass.states.get(f"{domain}.test3")
     assert new_sensor
     assert new_sensor.state == "on"
 

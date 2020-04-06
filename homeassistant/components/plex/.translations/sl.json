@@ -4,7 +4,7 @@
             "all_configured": "Vsi povezani stre\u017eniki so \u017ee konfigurirani",
             "already_configured": "Ta stre\u017enik Plex je \u017ee konfiguriran",
             "already_in_progress": "Plex se konfigurira",
-            "discovery_no_file": "Podatkovne konfiguracijske datoteke ni bilo mogo\u010de najti",
+            "discovery_no_file": "Podedovane konfiguracijske datoteke ni bilo",
             "invalid_import": "Uvo\u017eena konfiguracija ni veljavna",
             "non-interactive": "Neinteraktivni uvoz",
             "token_request_timeout": "Potekla \u010dasovna omejitev za pridobitev \u017eetona",
@@ -53,6 +53,8 @@
         "step": {
             "plex_mp_settings": {
                 "data": {
+                    "ignore_new_shared_users": "Ignorirajte nove upravljane/deljene uporabnike",
+                    "monitored_users": "Nadzorovani uporabniki",
                     "show_all_controls": "Poka\u017ei vse kontrole",
                     "use_episode_art": "Uporabi naslovno sliko epizode"
                 },

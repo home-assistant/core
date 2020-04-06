@@ -40,6 +40,8 @@ async def async_setup_entry(hass, config_entry):
     controller_id = get_controller_id_from_config_entry(config_entry)
     hass.data[DOMAIN][controller_id] = controller
 
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.shutdown)
+
     if controller.mac is None:
         return True
 
@@ -52,8 +54,6 @@ async def async_setup_entry(hass, config_entry):
         name="UniFi Controller",
         # sw_version=config.raw['swversion'],
     )
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.shutdown)
 
     return True
 

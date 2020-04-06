@@ -1,4 +1,9 @@
 repos:
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v2.1.0
+    hooks:
+      - id: pyupgrade
+        args: [--py37-plus]
   - repo: https://github.com/psf/black
     rev: 19.10b0
     hooks:
@@ -40,12 +45,21 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v2.4.0
     hooks:
+      - id: check-executables-have-shebangs
       - id: check-json
       - id: no-commit-to-branch
         args:
           - --branch=dev
           - --branch=master
           - --branch=rc
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.21.0
+    hooks:
+      - id: yamllint
+  - repo: https://github.com/prettier/prettier
+    rev: 2.0.2
+    hooks:
+      - id: prettier
   - repo: local
     hooks:
       # Run mypy through our wrapper script in order to get the possible
@@ -61,15 +75,15 @@ repos:
         files: ^homeassistant/.+\.py$
       - id: gen_requirements_all
         name: gen_requirements_all
-        entry: python3 -m script.gen_requirements_all
+        entry: script/run-in-env.sh python3 -m script.gen_requirements_all
         pass_filenames: false
-        language: system
+        language: script
         types: [json]
         files: ^homeassistant/.+/manifest\.json$
       - id: hassfest
         name: hassfest
-        entry: python3 -m script.hassfest
+        entry: script/run-in-env.sh python3 -m script.hassfest
         pass_filenames: false
-        language: system
+        language: script
         types: [json]
         files: ^homeassistant/.+/manifest\.json$

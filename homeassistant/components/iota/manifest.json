@@ -3,6 +3,5 @@
   "name": "IOTA",
   "documentation": "https://www.home-assistant.io/integrations/iota",
   "requirements": ["pyota==2.0.5"],
-  "dependencies": [],
   "codeowners": []
 }

@@ -28,6 +28,7 @@ from typing import (
     Optional,
     Set,
     TypeVar,
+    Union,
 )
 import uuid
 
@@ -47,6 +48,7 @@ from homeassistant.const import (
     EVENT_CALL_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_REGISTERED,
@@ -151,6 +153,7 @@ class CoreState(enum.Enum):
     starting = "STARTING"
     running = "RUNNING"
     stopping = "STOPPING"
+    final_write = "FINAL_WRITE"
 
     def __str__(self) -> str:
         """Return the event."""
@@ -228,6 +231,7 @@ class HomeAssistant:
 
         await self.async_start()
         if attach_signals:
+            # pylint: disable=import-outside-toplevel
             from homeassistant.helpers.signal import async_register_signal_handling
 
             async_register_signal_handling(self)
@@ -412,7 +416,7 @@ class HomeAssistant:
             # regardless of the state of the loop.
             if self.state == CoreState.not_running:  # just ignore
                 return
-            if self.state == CoreState.stopping:
+            if self.state == CoreState.stopping or self.state == CoreState.final_write:
                 _LOGGER.info("async_stop called twice: ignored")
                 return
             if self.state == CoreState.starting:
@@ -426,6 +430,11 @@ class HomeAssistant:
         await self.async_block_till_done()
 
         # stage 2
+        self.state = CoreState.final_write
+        self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+        await self.async_block_till_done()
+
+        # stage 3
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
         await self.async_block_till_done()
@@ -901,7 +910,7 @@ class StateMachine:
         ).result()
 
     @callback
-    def async_remove(self, entity_id: str) -> bool:
+    def async_remove(self, entity_id: str, context: Optional[Context] = None) -> bool:
         """Remove the state of an entity.
 
         Returns boolean to indicate if an entity was removed.
@@ -917,6 +926,8 @@ class StateMachine:
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
             {"entity_id": entity_id, "old_state": old_state, "new_state": None},
+            EventOrigin.local,
+            context=context,
         )
         return True
 
@@ -1214,29 +1225,57 @@ class ServiceRegistry:
             context=context,
         )
 
+        coro = self._execute_service(handler, service_call)
         if not blocking:
-            self._hass.async_create_task(self._safe_execute(handler, service_call))
+            self._run_service_in_background(coro, service_call)
             return None
 
+        task = self._hass.async_create_task(coro)
         try:
-            async with timeout(limit):
-                await asyncio.shield(self._execute_service(handler, service_call))
-            return True
-        except asyncio.TimeoutError:
-            return False
+            await asyncio.wait({task}, timeout=limit)
+        except asyncio.CancelledError:
+            # Task calling us was cancelled, so cancel service call task, and wait for
+            # it to be cancelled, within reason, before leaving.
+            _LOGGER.debug("Service call was cancelled: %s", service_call)
+            task.cancel()
+            await asyncio.wait({task}, timeout=SERVICE_CALL_LIMIT)
+            raise
 
-    async def _safe_execute(self, handler: Service, service_call: ServiceCall) -> None:
-        """Execute a service and catch exceptions."""
-        try:
-            await self._execute_service(handler, service_call)
-        except Unauthorized:
-            _LOGGER.warning(
-                "Unauthorized service called %s/%s",
-                service_call.domain,
-                service_call.service,
-            )
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Error executing service %s", service_call)
+        if task.cancelled():
+            # Service call task was cancelled some other way, such as during shutdown.
+            _LOGGER.debug("Service was cancelled: %s", service_call)
+            raise asyncio.CancelledError
+        if task.done():
+            # Propagate any exceptions that might have happened during service call.
+            task.result()
+            # Service call completed successfully!
+            return True
+        # Service call task did not complete before timeout expired.
+        # Let it keep running in background.
+        self._run_service_in_background(task, service_call)
+        _LOGGER.debug("Service did not complete before timeout: %s", service_call)
+        return False
+
+    def _run_service_in_background(
+        self, coro_or_task: Union[Coroutine, asyncio.Task], service_call: ServiceCall
+    ) -> None:
+        """Run service call in background, catching and logging any exceptions."""
+
+        async def catch_exceptions() -> None:
+            try:
+                await coro_or_task
+            except Unauthorized:
+                _LOGGER.warning(
+                    "Unauthorized service called %s/%s",
+                    service_call.domain,
+                    service_call.service,
+                )
+            except asyncio.CancelledError:
+                _LOGGER.debug("Service was cancelled: %s", service_call)
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Error executing service: %s", service_call)
+
+        self._hass.async_create_task(catch_exceptions())
 
     async def _execute_service(
         self, handler: Service, service_call: ServiceCall

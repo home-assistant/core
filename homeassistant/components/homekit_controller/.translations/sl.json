@@ -6,7 +6,7 @@
             "already_in_progress": "Konfiguracijski tok za to napravo je \u017ee v teku.",
             "already_paired": "Ta dodatna oprema je \u017ee povezana z drugo napravo. Ponastavite dodatno opremo in poskusite znova.",
             "ignored_model": "Podpora za HomeKit za ta model je blokirana, saj je na voljo ve\u010d funkcij popolne nativne integracije.",
-            "invalid_config_entry": "Ta naprava se prikazuje kot pripravljena za povezavo, vendar je konflikt v nastavitvah  Home Assistant, ki ga je treba najprej odstraniti.",
+            "invalid_config_entry": "Ta naprava je prikazana kot pripravljena za seznanjanje, vendar je v programu Home Assistant zanj \u017ee vpisan konfliktni vnos konfiguracije, ki ga je treba najprej odstraniti.",
             "no_devices": "Ni bilo mogo\u010de najti neuparjenih naprav"
         },
         "error": {
@@ -14,7 +14,7 @@
             "busy_error": "Naprava je zavrnila seznanjanje, saj se \u017ee povezuje z drugim krmilnikom.",
             "max_peers_error": "Naprava je zavrnila seznanjanje, saj nima prostega pomnilnika za seznanjanje.",
             "max_tries_error": "Napravaje zavrnila seznanjanje, saj je prejela ve\u010d kot 100 neuspe\u0161nih poskusov overjanja.",
-            "pairing_failed": "Pri poskusu seznanjanja s to napravo je pri\u0161lo do napake. To je lahko za\u010dasna napaka ali pa naprava trenutno ni podprta.",
+            "pairing_failed": "Med poskusom seznanitev s to napravo je pri\u0161lo do napake. To je lahko za\u010dasna napaka ali pa va\u0161a naprava trenutno ni podprta.",
             "unable_to_pair": "Ni mogo\u010de seznaniti. Poskusite znova.",
             "unknown_error": "Naprava je sporo\u010dila neznano napako. Seznanjanje ni uspelo."
         },

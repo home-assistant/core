@@ -7,7 +7,6 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_IP_ADDRESS
 
-from . import call_site_info
 from .const import DOMAIN  # pylint:disable=unused-import
 from .const import POWERWALL_SITE_NAME
 
@@ -31,6 +30,11 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     # Return info that you want to store in the config entry.
     return {"title": site_info[POWERWALL_SITE_NAME]}
+
+
+def call_site_info(power_wall):
+    """Wrap site_info to be a callable."""
+    return power_wall.site_info
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

@@ -1,24 +1,24 @@
 {
-    "config": {
-        "title": "Certificate Expiry",
-        "step": {
-            "user": {
-                "title": "Define the certificate to test",
-                "data": {
-                    "name": "The name of the certificate",
-                    "host": "The hostname of the certificate",
-                    "port": "The port of the certificate"
-                }
-            }
-        },
-        "error": {
-            "resolve_failed": "This host can not be resolved",
-            "connection_timeout": "Timeout when connecting to this host",
-            "connection_refused": "Connection refused when connecting to host"
-        },
-        "abort": {
-            "already_configured": "This host and port combination is already configured",
-            "import_failed": "Import from config failed"
+  "config": {
+    "title": "Certificate Expiry",
+    "step": {
+      "user": {
+        "title": "Define the certificate to test",
+        "data": {
+          "name": "The name of the certificate",
+          "host": "The hostname of the certificate",
+          "port": "The port of the certificate"
         }
+      }
+    },
+    "error": {
+      "resolve_failed": "This host can not be resolved",
+      "connection_timeout": "Timeout when connecting to this host",
+      "connection_refused": "Connection refused when connecting to host"
+    },
+    "abort": {
+      "already_configured": "This host and port combination is already configured",
+      "import_failed": "Import from config failed"
     }
+  }
 }

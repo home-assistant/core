@@ -68,7 +68,6 @@ class RokuDevice(MediaPlayerDevice):
             self._available = True
         except (RequestsConnectionError, RequestsReadTimeout, RokuException):
             self._available = False
-            pass
 
     def get_source_list(self):
         """Get the list of applications to be used as sources."""
@@ -153,8 +152,8 @@ class RokuDevice(MediaPlayerDevice):
         if self.current_app.id is None:
             return None
 
-        return "http://{0}:{1}/query/icon/{2}".format(
-            self.ip_address, DEFAULT_PORT, self.current_app.id
+        return (
+            f"http://{self.ip_address}:{DEFAULT_PORT}/query/icon/{self.current_app.id}"
         )
 
     @property

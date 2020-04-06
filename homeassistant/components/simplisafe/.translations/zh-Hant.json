@@ -18,5 +18,15 @@
             }
         },
         "title": "SimpliSafe"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "\u9a57\u8b49\u78bc\uff08Home Assistant UI \u4f7f\u7528\uff09"
+                },
+                "title": "\u8a2d\u5b9a SimpliSafe"
+            }
+        }
     }
 }

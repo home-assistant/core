@@ -4,13 +4,18 @@ import logging
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_BYTES, DEVICE_CLASS_TIMESTAMP
+from homeassistant.const import (
+    DATA_BYTES,
+    DEVICE_CLASS_SIGNAL_STRENGTH,
+    DEVICE_CLASS_TIMESTAMP,
+    UNIT_PERCENTAGE,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import utcnow
 
 from . import WLEDDataUpdateCoordinator, WLEDDeviceEntity
-from .const import ATTR_LED_COUNT, ATTR_MAX_POWER, CURRENT_MA, DOMAIN
+from .const import ATTR_LED_COUNT, ATTR_MAX_POWER, CURRENT_MA, DOMAIN, SIGNAL_DBM
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +32,10 @@ async def async_setup_entry(
         WLEDEstimatedCurrentSensor(entry.entry_id, coordinator),
         WLEDUptimeSensor(entry.entry_id, coordinator),
         WLEDFreeHeapSensor(entry.entry_id, coordinator),
+        WLEDWifiBSSIDSensor(entry.entry_id, coordinator),
+        WLEDWifiChannelSensor(entry.entry_id, coordinator),
+        WLEDWifiRSSISensor(entry.entry_id, coordinator),
+        WLEDWifiSignalSensor(entry.entry_id, coordinator),
     ]
 
     async_add_entities(sensors, True)
@@ -142,3 +151,90 @@ class WLEDFreeHeapSensor(WLEDSensor):
     def state(self) -> Union[None, str, int, float]:
         """Return the state of the sensor."""
         return self.coordinator.data.info.free_heap
+
+
+class WLEDWifiSignalSensor(WLEDSensor):
+    """Defines a WLED Wi-Fi signal sensor."""
+
+    def __init__(self, entry_id: str, coordinator: WLEDDataUpdateCoordinator) -> None:
+        """Initialize WLED Wi-Fi signal sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            enabled_default=False,
+            entry_id=entry_id,
+            icon="mdi:wifi",
+            key="wifi_signal",
+            name=f"{coordinator.data.info.name} Wi-Fi Signal",
+            unit_of_measurement=UNIT_PERCENTAGE,
+        )
+
+    @property
+    def state(self) -> Union[None, str, int, float]:
+        """Return the state of the sensor."""
+        return self.coordinator.data.info.wifi.signal
+
+
+class WLEDWifiRSSISensor(WLEDSensor):
+    """Defines a WLED Wi-Fi RSSI sensor."""
+
+    def __init__(self, entry_id: str, coordinator: WLEDDataUpdateCoordinator) -> None:
+        """Initialize WLED Wi-Fi RSSI sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            enabled_default=False,
+            entry_id=entry_id,
+            icon="mdi:wifi",
+            key="wifi_rssi",
+            name=f"{coordinator.data.info.name} Wi-Fi RSSI",
+            unit_of_measurement=SIGNAL_DBM,
+        )
+
+    @property
+    def state(self) -> Union[None, str, int, float]:
+        """Return the state of the sensor."""
+        return self.coordinator.data.info.wifi.rssi
+
+    @property
+    def device_class(self) -> Optional[str]:
+        """Return the class of this sensor."""
+        return DEVICE_CLASS_SIGNAL_STRENGTH
+
+
+class WLEDWifiChannelSensor(WLEDSensor):
+    """Defines a WLED Wi-Fi Channel sensor."""
+
+    def __init__(self, entry_id: str, coordinator: WLEDDataUpdateCoordinator) -> None:
+        """Initialize WLED Wi-Fi Channel sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            enabled_default=False,
+            entry_id=entry_id,
+            icon="mdi:wifi",
+            key="wifi_channel",
+            name=f"{coordinator.data.info.name} Wi-Fi Channel",
+        )
+
+    @property
+    def state(self) -> Union[None, str, int, float]:
+        """Return the state of the sensor."""
+        return self.coordinator.data.info.wifi.channel
+
+
+class WLEDWifiBSSIDSensor(WLEDSensor):
+    """Defines a WLED Wi-Fi BSSID sensor."""
+
+    def __init__(self, entry_id: str, coordinator: WLEDDataUpdateCoordinator) -> None:
+        """Initialize WLED Wi-Fi BSSID sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            enabled_default=False,
+            entry_id=entry_id,
+            icon="mdi:wifi",
+            key="wifi_bssid",
+            name=f"{coordinator.data.info.name} Wi-Fi BSSID",
+        )
+
+    @property
+    def state(self) -> Union[None, str, int, float]:
+        """Return the state of the sensor."""
+        return self.coordinator.data.info.wifi.bssid
