@@ -57,7 +57,7 @@ repos:
     hooks:
       - id: yamllint
   - repo: https://github.com/prettier/prettier
-    rev: 2.0.2
+    rev: 2.0.4
     hooks:
       - id: prettier
   - repo: local
