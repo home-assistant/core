@@ -46,6 +46,7 @@ repos:
     rev: v2.4.0
     hooks:
       - id: check-executables-have-shebangs
+        stages: [manual]
       - id: check-json
       - id: no-commit-to-branch
         args:
@@ -57,9 +58,10 @@ repos:
     hooks:
       - id: yamllint
   - repo: https://github.com/prettier/prettier
-    rev: 2.0.2
+    rev: 2.0.4
     hooks:
       - id: prettier
+        stages: [manual]
   - repo: local
     hooks:
       # Run mypy through our wrapper script in order to get the possible
