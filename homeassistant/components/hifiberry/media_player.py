@@ -31,16 +31,10 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
-
-# from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-# from homeassistant.util import Throttle
-
-_CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_HOST = "hifiberry"
 DEFAULT_NAME = "HifiBerry"
 DEFAULT_PORT = 81
 
@@ -62,11 +56,12 @@ SUPPORT_HIFIBERRY = (
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
 )
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the HifiBerry platform."""
@@ -93,6 +88,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     hass.data[DATA_HIFIBERRY][ip_addr] = device
     add_devices([device])
+
 
 class HifiBerry(MediaPlayerDevice):
     """HifiBerry Player Object."""
@@ -146,7 +142,6 @@ class HifiBerry(MediaPlayerDevice):
             )
             return False
         return data
-        self.update()
 
     @property
     def media_content_type(self):
@@ -182,11 +177,12 @@ class HifiBerry(MediaPlayerDevice):
     def media_image_url(self):
         """Image url of current playing media."""
         url = self._state.get("artUrl", None)
-        """Use remote artwork if local not available."""
-        if "artwork" not in url:
-            mediaurl = self._state.get("externalArtUrl", None)
+        # Utilise external artwork if no local is available.
+        if url is not None:
+            if "artwork" in url:
+                mediaurl = f"http://{self.host}:{self.port}/{url}"
         else:
-            mediaurl = f"http://{self.host}:{self.port}/{url}"
+            mediaurl = self._state.get("externalArtUrl", None)
         if mediaurl is None:
             return
         return mediaurl
@@ -203,9 +199,9 @@ class HifiBerry(MediaPlayerDevice):
     @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
+        # Pseudo-mute based on minimum volume.
         volume = self.volume_level
         return 0 <= volume < 0.001
-        # return self._muted
 
     @property
     def name(self):
@@ -252,7 +248,9 @@ class HifiBerry(MediaPlayerDevice):
             volume = 0
         elif volume > 1:
             volume = 1
-        self.post_hifiberry_msg("api/volume", params={"percent": str(int((volume) * 100))})
+        self.post_hifiberry_msg(
+            "api/volume", params={"percent": str(int((volume) * 100))}
+        )
 
     def mute_volume(self, mute):
         """Mute. Emulated with set_volume_level."""
