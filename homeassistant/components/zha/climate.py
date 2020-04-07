@@ -9,7 +9,7 @@ import enum
 import functools
 import logging
 import time
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -265,9 +265,9 @@ class Thermostat(ZhaEntity, ClimateDevice):
         return None
 
     @property
-    def hvac_modes(self) -> List[str]:
+    def hvac_modes(self) -> Tuple[str, ...]:
         """Return the list of available HVAC operation modes."""
-        modes = SEQ_OF_OPERATION.get(self._thrm.ctrl_seqe_of_oper, (HVAC_MODE_OFF))
+        modes = SEQ_OF_OPERATION.get(self._thrm.ctrl_seqe_of_oper, (HVAC_MODE_OFF,))
         if self.fan is not None:
             return (*modes, HVAC_MODE_FAN_ONLY)
         return modes
