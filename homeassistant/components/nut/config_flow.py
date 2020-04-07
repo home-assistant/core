@@ -34,7 +34,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-def _resource_schema(available_resources, selected_resources=[]):
+def _resource_schema(available_resources, selected_resources):
     """Resource selection schema."""
 
     known_available_resources = {
@@ -157,7 +157,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
                 return self.async_show_form(
                     step_id="resources",
-                    data_schema=_resource_schema(self.available_resources),
+                    data_schema=_resource_schema(self.available_resources, []),
                     errors=errors,
                 )
 
@@ -186,7 +186,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.available_resources.update(info["available_resources"])
         return self.async_show_form(
-            step_id="resources", data_schema=_resource_schema(self.available_resources)
+            step_id="resources",
+            data_schema=_resource_schema(self.available_resources, []),
         )
 
     async def async_step_resources(self, user_input=None):
