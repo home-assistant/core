@@ -2,7 +2,13 @@
 import logging
 from typing import Any, Dict, Optional
 
-from pyipp import IPP, IPPConnectionError, IPPConnectionUpgradeRequired, IPPParseError
+from pyipp import (
+    IPP,
+    IPPConnectionError,
+    IPPConnectionUpgradeRequired,
+    IPPParseError,
+    IPPResponseError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
@@ -63,7 +69,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except IPPConnectionUpgradeRequired:
             return self._show_setup_form({"base": "connection_upgrade"})
-        except IPPConnectionError:
+        except (IPPConnectionError, IPPResponseError):
             return self._show_setup_form({"base": "connection_error"})
         except IPPParseError:
             _LOGGER.exception("IPP Parse Error")
@@ -104,7 +110,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, self.discovery_info)
         except IPPConnectionUpgradeRequired:
             return self.async_abort(reason="connection_upgrade")
-        except IPPConnectionError:
+        except (IPPConnectionError, IPPResponseError):
             return self.async_abort(reason="connection_error")
         except IPPParseError:
             _LOGGER.exception("IPP Parse Error")
