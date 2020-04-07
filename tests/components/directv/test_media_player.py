@@ -25,7 +25,6 @@ from homeassistant.components.media_player.const import (
     DOMAIN as MP_DOMAIN,
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_TVSHOW,
-    SERVICE_PLAY_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -36,14 +35,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_ON,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_STOP,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_PAUSED,
     STATE_PLAYING,
     STATE_UNAVAILABLE,
@@ -52,6 +43,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
 from tests.components.directv import setup_integration
+from tests.components.media_player import common
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 ATTR_UNIQUE_ID = "unique_id"
@@ -66,81 +58,6 @@ UNAVAILABLE_ENTITY_ID = f"{MP_DOMAIN}.unavailable_client"
 def mock_now() -> datetime:
     """Fixture for dtutil.now."""
     return dt_util.utcnow()
-
-
-async def async_turn_on(
-    hass: HomeAssistantType, entity_id: Optional[str] = None
-) -> None:
-    """Turn on specified media player or all."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(MP_DOMAIN, SERVICE_TURN_ON, data)
-
-
-async def async_turn_off(
-    hass: HomeAssistantType, entity_id: Optional[str] = None
-) -> None:
-    """Turn off specified media player or all."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(MP_DOMAIN, SERVICE_TURN_OFF, data)
-
-
-async def async_media_pause(
-    hass: HomeAssistantType, entity_id: Optional[str] = None
-) -> None:
-    """Send the media player the command for pause."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PAUSE, data)
-
-
-async def async_media_play(
-    hass: HomeAssistantType, entity_id: Optional[str] = None
-) -> None:
-    """Send the media player the command for play/pause."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, data)
-
-
-async def async_media_stop(
-    hass: HomeAssistantType, entity_id: Optional[str] = None
-) -> None:
-    """Send the media player the command for stop."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_STOP, data)
-
-
-async def async_media_next_track(
-    hass: HomeAssistantType, entity_id: Optional[str] = None
-) -> None:
-    """Send the media player the command for next track."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_NEXT_TRACK, data)
-
-
-async def async_media_previous_track(
-    hass: HomeAssistantType, entity_id: Optional[str] = None
-) -> None:
-    """Send the media player the command for prev track."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, data)
-
-
-async def async_play_media(
-    hass: HomeAssistantType,
-    media_type: str,
-    media_id: str,
-    entity_id: Optional[str] = None,
-    enqueue: Optional[str] = None,
-) -> None:
-    """Send the media player the command for playing media."""
-    data = {ATTR_MEDIA_CONTENT_TYPE: media_type, ATTR_MEDIA_CONTENT_ID: media_id}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    if enqueue:
-        data[ATTR_MEDIA_ENQUEUE] = enqueue
-
-    await hass.services.async_call(MP_DOMAIN, SERVICE_PLAY_MEDIA, data)
 
 
 async def test_setup(
@@ -270,9 +187,8 @@ async def test_attributes_paused(
     with patch(
         "homeassistant.util.dt.utcnow", return_value=mock_now + timedelta(minutes=5)
     ):
-        await async_media_pause(hass, CLIENT_ENTITY_ID)
-        await hass.async_block_till_done()
-
+        await common.async_media_pause(hass, CLIENT_ENTITY_ID)
+        
     state = hass.states.get(CLIENT_ENTITY_ID)
     assert state.state == STATE_PAUSED
     assert state.attributes.get(ATTR_MEDIA_POSITION_UPDATED_AT) == last_updated
@@ -287,41 +203,33 @@ async def test_main_services(
     await setup_integration(hass, aioclient_mock)
 
     with patch("directv.DIRECTV.remote") as remote_mock:
-        await async_turn_off(hass, MAIN_ENTITY_ID)
-        await hass.async_block_till_done()
+        await common.async_turn_off(hass, MAIN_ENTITY_ID)
         remote_mock.assert_called_once_with("poweroff", "0")
 
     with patch("directv.DIRECTV.remote") as remote_mock:
-        await async_turn_on(hass, MAIN_ENTITY_ID)
-        await hass.async_block_till_done()
+        await common.async_turn_on(hass, MAIN_ENTITY_ID)
         remote_mock.assert_called_once_with("poweron", "0")
 
     with patch("directv.DIRECTV.remote") as remote_mock:
-        await async_media_pause(hass, MAIN_ENTITY_ID)
-        await hass.async_block_till_done()
+        await common.async_media_pause(hass, MAIN_ENTITY_ID)
         remote_mock.assert_called_once_with("pause", "0")
 
     with patch("directv.DIRECTV.remote") as remote_mock:
-        await async_media_play(hass, MAIN_ENTITY_ID)
-        await hass.async_block_till_done()
+        await remote.async_media_play(hass, MAIN_ENTITY_ID)
         remote_mock.assert_called_once_with("play", "0")
 
     with patch("directv.DIRECTV.remote") as remote_mock:
-        await async_media_next_track(hass, MAIN_ENTITY_ID)
-        await hass.async_block_till_done()
+        await common.async_media_next_track(hass, MAIN_ENTITY_ID)
         remote_mock.assert_called_once_with("ffwd", "0")
 
     with patch("directv.DIRECTV.remote") as remote_mock:
-        await async_media_previous_track(hass, MAIN_ENTITY_ID)
-        await hass.async_block_till_done()
+        await common.async_media_previous_track(hass, MAIN_ENTITY_ID)
         remote_mock.assert_called_once_with("rew", "0")
 
     with patch("directv.DIRECTV.remote") as remote_mock:
-        await async_media_stop(hass, MAIN_ENTITY_ID)
-        await hass.async_block_till_done()
+        await common.async_media_stop(hass, MAIN_ENTITY_ID)
         remote_mock.assert_called_once_with("stop", "0")
 
     with patch("directv.DIRECTV.tune") as tune_mock:
-        await async_play_media(hass, "channel", 312, MAIN_ENTITY_ID)
-        await hass.async_block_till_done()
+        await common.async_play_media(hass, "channel", 312, MAIN_ENTITY_ID)
         tune_mock.assert_called_once_with("312", "0")
