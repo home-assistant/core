@@ -181,7 +181,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _host_port_alias_already_configured(self, user_input):
         """See if we already have a nut entry matching user input configured."""
         existing_host_port_aliases = {
-            _format_host_port_alias(user_input)
+            _format_host_port_alias(entry.data)
             for entry in self._async_current_entries()
         }
         return _format_host_port_alias(user_input) in existing_host_port_aliases
