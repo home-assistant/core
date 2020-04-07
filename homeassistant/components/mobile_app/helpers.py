@@ -7,6 +7,7 @@ from aiohttp.web import Response, json_response
 from nacl.encoding import Base64Encoder
 from nacl.secret import SecretBox
 
+from homeassistant.const import HTTP_BAD_REQUEST
 from homeassistant.core import Context
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.typing import HomeAssistantType
@@ -98,7 +99,7 @@ def empty_okay_response(headers: Dict = None, status: int = 200) -> Response:
 
 
 def error_response(
-    code: str, message: str, status: int = 400, headers: dict = None
+    code: str, message: str, status: int = HTTP_BAD_REQUEST, headers: dict = None
 ) -> Response:
     """Return an error Response."""
     return json_response(
