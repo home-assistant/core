@@ -245,10 +245,11 @@ class OnkyoAVR(MediaPlayerDevice):
         """
         self._query_avr("power")
         self._query_avr("volume")
-        self._query_avr("audio-muting")
         self._query_avr("input-selector")
-        self._query_avr("hdmi-output-selector")
         self._query_avr("preset")
+        if self._zone == "main":
+            self._query_avr("hdmi-output-selector")
+            self._query_avr("audio-muting")
 
     @property
     def supported_features(self):
@@ -300,11 +301,11 @@ class OnkyoAVR(MediaPlayerDevice):
 
     async def async_turn_off(self):
         """Turn AVR power off."""
-        self._update_avr("power", "on")
+        self._update_avr("power", "off")
 
     async def async_turn_on(self):
         """Turn AVR power on."""
-        self._update_avr("power", "off")
+        self._update_avr("power", "on")
 
     async def async_volume_up(self):
         """Increment volume by 1."""
