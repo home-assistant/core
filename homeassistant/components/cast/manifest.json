@@ -6,5 +6,5 @@
   "requirements": ["pychromecast==4.2.0"],
   "after_dependencies": ["cloud"],
   "zeroconf": ["_googlecast._tcp.local."],
-  "codeowners": []
+  "codeowners": ["@emontnemery"]
 }

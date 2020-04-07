@@ -22,13 +22,18 @@ from tests.common import MockConfigEntry, mock_coro
 def cast_mock():
     """Mock pychromecast."""
     pycast_mock = MagicMock()
+    dial_mock = MagicMock(name="XXX")
+    dial_mock.get_device_status.return_value.uuid = "fake_uuid"
+    dial_mock.get_device_status.return_value.manufacturer = "fake_manufacturer"
+    dial_mock.get_device_status.return_value.model_name = "fake_model_name"
+    dial_mock.get_device_status.return_value.friendly_name = "fake_friendly_name"
 
     with patch(
         "homeassistant.components.cast.media_player.pychromecast", pycast_mock
     ), patch(
         "homeassistant.components.cast.discovery.pychromecast", pycast_mock
     ), patch(
-        "homeassistant.components.cast.helpers.dial", MagicMock()
+        "homeassistant.components.cast.helpers.dial", dial_mock
     ), patch(
         "homeassistant.components.cast.media_player.MultizoneManager", MagicMock()
     ):
@@ -127,7 +132,7 @@ async def test_start_discovery_called_once(hass):
     """Test pychromecast.start_discovery called exactly once."""
     with patch(
         "homeassistant.components.cast.discovery.pychromecast.start_discovery",
-        return_value=(None, None),
+        return_value=(None, Mock()),
     ) as start_discovery:
         await async_setup_cast(hass)
 

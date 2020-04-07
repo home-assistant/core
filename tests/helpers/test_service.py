@@ -1,5 +1,4 @@
 """Test service helpers."""
-import asyncio
 from collections import OrderedDict
 from copy import deepcopy
 import unittest
@@ -286,13 +285,12 @@ async def test_extract_entity_ids_from_area(hass, area_mock):
     )
 
 
-@asyncio.coroutine
-def test_async_get_all_descriptions(hass):
+async def test_async_get_all_descriptions(hass):
     """Test async_get_all_descriptions."""
     group = hass.components.group
     group_config = {group.DOMAIN: {}}
-    yield from async_setup_component(hass, group.DOMAIN, group_config)
-    descriptions = yield from service.async_get_all_descriptions(hass)
+    await async_setup_component(hass, group.DOMAIN, group_config)
+    descriptions = await service.async_get_all_descriptions(hass)
 
     assert len(descriptions) == 1
 
@@ -301,8 +299,8 @@ def test_async_get_all_descriptions(hass):
 
     logger = hass.components.logger
     logger_config = {logger.DOMAIN: {}}
-    yield from async_setup_component(hass, logger.DOMAIN, logger_config)
-    descriptions = yield from service.async_get_all_descriptions(hass)
+    await async_setup_component(hass, logger.DOMAIN, logger_config)
+    descriptions = await service.async_get_all_descriptions(hass)
 
     assert len(descriptions) == 2
 

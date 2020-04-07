@@ -3,7 +3,7 @@ import voluptuous as vol
 
 from homeassistant.components.light import Light
 
-from . import PLATFORM_SCHEMA, ZigBeeDigitalOut, ZigBeeDigitalOutConfig
+from . import DOMAIN, PLATFORM_SCHEMA, ZigBeeDigitalOut, ZigBeeDigitalOutConfig
 
 CONF_ON_STATE = "on_state"
 
@@ -17,7 +17,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create and add an entity based on the configuration."""
-    add_entities([ZigBeeLight(hass, ZigBeeDigitalOutConfig(config))])
+    zigbee_device = hass.data[DOMAIN]
+    add_entities([ZigBeeLight(ZigBeeDigitalOutConfig(config), zigbee_device)])
 
 
 class ZigBeeLight(ZigBeeDigitalOut, Light):

@@ -356,7 +356,7 @@ nessclient==0.9.15
 netdisco==2.6.0
 
 # homeassistant.components.nexia
-nexia==0.7.3
+nexia==0.8.0
 
 # homeassistant.components.nsw_fuel_station
 nsw-fuel-api-client==1.0.10
@@ -524,7 +524,7 @@ pyicloud==0.9.6.1
 pyipma==2.0.5
 
 # homeassistant.components.ipp
-pyipp==0.8.3
+pyipp==0.9.0
 
 # homeassistant.components.iqvia
 pyiqvia==0.2.1
