@@ -38,6 +38,7 @@ ATTR_CURRENT_POWER_W = "current_power_w"
 ATTR_DAILY_ENERGY_KWH = "daily_energy_kwh"
 ATTR_MONTHLY_ENERGY_KWH = "monthly_energy_kwh"
 
+LIGHT_STATE_DFT_ON = "dft_on_state"
 LIGHT_STATE_ON_OFF = "on_off"
 LIGHT_STATE_BRIGHTNESS = "brightness"
 LIGHT_STATE_COLOR_TEMP = "color_temp"
@@ -324,6 +325,9 @@ class TPLinkSmartBulb(Light):
         light_features = self._light_features
 
         state = bool(light_state_params[LIGHT_STATE_ON_OFF])
+
+        if not state and LIGHT_STATE_DFT_ON in light_state_params:
+            light_state_params = light_state_params[LIGHT_STATE_DFT_ON]
 
         if light_features.supported_features & SUPPORT_BRIGHTNESS:
             brightness = brightness_from_percentage(
