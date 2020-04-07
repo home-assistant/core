@@ -65,6 +65,9 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._show_setup_form({"base": "connection_upgrade"})
         except IPPConnectionError:
             return self._show_setup_form({"base": "connection_error"})
+        except IPPParseError:
+            _LOGGER.exception("IPP Parse Error")
+            return self.async_abort(reason="parse_error")
         user_input[CONF_UUID] = info[CONF_UUID]
 
         await self.async_set_unique_id(user_input[CONF_UUID])
@@ -102,6 +105,9 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="connection_upgrade")
         except IPPConnectionError:
             return self.async_abort(reason="connection_error")
+        except IPPParseError:
+            _LOGGER.exception("IPP Parse Error")
+            return self.async_abort(reason="parse_error")
 
         self.discovery_info[CONF_UUID] = info[CONF_UUID]
 
