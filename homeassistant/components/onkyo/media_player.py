@@ -204,7 +204,6 @@ class OnkyoAVR(MediaPlayerDevice):
     def process_update(self, update):
         """Store relevant updates so they can be queried later."""
         _, command, value = update
-        _LOGGER.info("zone: %s | command: %s | value: %s" % update)
         if command in ["system-power", "power"]:
             if value == "on":
                 self._powerstate = STATE_ON
