@@ -1,10 +1,8 @@
 {
   "config": {
-    "abort": {
-      "existing_instance_updated": "Updated existing configuration."
-    },
     "error": {
-      "connection_error": "Failed to connect."
+      "connection_error": "Could not connect to Azure DevOps. Check your credentials and try again.",
+      "project_error": "Could not find project on Azure DevOps."
     },
     "step": {
       "user": {
