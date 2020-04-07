@@ -33,19 +33,7 @@ DEFAULT_DEVICE = "/dev/ttyUSB0"
 DEFAULT_BAUD = 9600
 DEFAULT_ADC_MAX_VOLTS = 1.2
 
-# Copied from xbee_helper during setup()
-GPIO_DIGITAL_OUTPUT_LOW = None
-GPIO_DIGITAL_OUTPUT_HIGH = None
-ADC_PERCENTAGE = None
-DIGITAL_PINS = None
-ANALOG_PINS = None
-CONVERT_ADC = None
-ZIGBEE_EXCEPTION = None
-ZIGBEE_TX_FAILURE = None
-
 ATTR_FRAME = "frame"
-
-DEVICE = None
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -71,24 +59,6 @@ PLATFORM_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the connection to the Zigbee device."""
-    global DEVICE  # pylint: disable=global-statement
-    global GPIO_DIGITAL_OUTPUT_LOW  # pylint: disable=global-statement
-    global GPIO_DIGITAL_OUTPUT_HIGH  # pylint: disable=global-statement
-    global ADC_PERCENTAGE  # pylint: disable=global-statement
-    global DIGITAL_PINS  # pylint: disable=global-statement
-    global ANALOG_PINS  # pylint: disable=global-statement
-    global CONVERT_ADC  # pylint: disable=global-statement
-    global ZIGBEE_EXCEPTION  # pylint: disable=global-statement
-    global ZIGBEE_TX_FAILURE  # pylint: disable=global-statement
-
-    GPIO_DIGITAL_OUTPUT_LOW = xb_const.GPIO_DIGITAL_OUTPUT_LOW
-    GPIO_DIGITAL_OUTPUT_HIGH = xb_const.GPIO_DIGITAL_OUTPUT_HIGH
-    ADC_PERCENTAGE = xb_const.ADC_PERCENTAGE
-    DIGITAL_PINS = xb_const.DIGITAL_PINS
-    ANALOG_PINS = xb_const.ANALOG_PINS
-    CONVERT_ADC = convert_adc
-    ZIGBEE_EXCEPTION = ZigBeeException
-    ZIGBEE_TX_FAILURE = ZigBeeTxFailure
 
     usb_device = config[DOMAIN].get(CONF_DEVICE, DEFAULT_DEVICE)
     baud = int(config[DOMAIN].get(CONF_BAUD, DEFAULT_BAUD))
@@ -97,8 +67,11 @@ def setup(hass, config):
     except SerialException as exc:
         _LOGGER.exception("Unable to open serial port for Zigbee: %s", exc)
         return False
-    DEVICE = ZigBee(ser)
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, close_serial_port)
+    zigbee_device = ZigBee(ser)
+
+    def close_serial_port(*args):
+        """Close the serial port we're using to communicate with the Zigbee."""
+        zigbee_device.zb.serial.close()
 
     def _frame_received(frame):
         """Run when a Zigbee frame is received.
@@ -108,14 +81,11 @@ def setup(hass, config):
         """
         dispatcher_send(hass, SIGNAL_ZIGBEE_FRAME_RECEIVED, frame)
 
-    DEVICE.add_frame_rx_handler(_frame_received)
+    hass.data[DOMAIN] = zigbee_device
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, close_serial_port)
+    zigbee_device.add_frame_rx_handler(_frame_received)
 
     return True
-
-
-def close_serial_port(*args):
-    """Close the serial port we're using to communicate with the Zigbee."""
-    DEVICE.zb.serial.close()
 
 
 def frame_is_relevant(entity, frame):
@@ -229,13 +199,13 @@ class ZigBeeDigitalOutConfig(ZigBeePinConfig):
         """
         if self._config.get("on_state", "").lower() == "low":
             bool2state = {
-                True: GPIO_DIGITAL_OUTPUT_LOW,
-                False: GPIO_DIGITAL_OUTPUT_HIGH,
+                True: xb_const.GPIO_DIGITAL_OUTPUT_LOW,
+                False: xb_const.GPIO_DIGITAL_OUTPUT_HIGH,
             }
         else:
             bool2state = {
-                True: GPIO_DIGITAL_OUTPUT_HIGH,
-                False: GPIO_DIGITAL_OUTPUT_LOW,
+                True: xb_const.GPIO_DIGITAL_OUTPUT_HIGH,
+                False: xb_const.GPIO_DIGITAL_OUTPUT_LOW,
             }
         state2bool = {v: k for k, v in bool2state.items()}
         return bool2state, state2bool
@@ -269,9 +239,10 @@ class ZigBeeAnalogInConfig(ZigBeePinConfig):
 class ZigBeeDigitalIn(Entity):
     """Representation of a GPIO pin configured as a digital input."""
 
-    def __init__(self, hass, config):
+    def __init__(self, config, device):
         """Initialize the device."""
         self._config = config
+        self._device = device
         self._state = False
 
     async def async_added_to_hass(self):
@@ -286,7 +257,7 @@ class ZigBeeDigitalIn(Entity):
             if not frame_is_relevant(self, frame):
                 return
             sample = next(iter(frame["samples"]))
-            pin_name = DIGITAL_PINS[self._config.pin]
+            pin_name = xb_const.DIGITAL_PINS[self._config.pin]
             if pin_name not in sample:
                 # Doesn't contain information about our pin
                 return
@@ -322,18 +293,18 @@ class ZigBeeDigitalIn(Entity):
     def update(self):
         """Ask the Zigbee device what state its input pin is in."""
         try:
-            sample = DEVICE.get_sample(self._config.address)
-        except ZIGBEE_TX_FAILURE:
+            sample = self._device.get_sample(self._config.address)
+        except ZigBeeTxFailure:
             _LOGGER.warning(
                 "Transmission failure when attempting to get sample from "
                 "Zigbee device at address: %s",
                 hexlify(self._config.address),
             )
             return
-        except ZIGBEE_EXCEPTION as exc:
+        except ZigBeeException as exc:
             _LOGGER.exception("Unable to get sample from Zigbee device: %s", exc)
             return
-        pin_name = DIGITAL_PINS[self._config.pin]
+        pin_name = xb_const.DIGITAL_PINS[self._config.pin]
         if pin_name not in sample:
             _LOGGER.warning(
                 "Pin %s (%s) was not in the sample provided by Zigbee device %s.",
@@ -351,17 +322,17 @@ class ZigBeeDigitalOut(ZigBeeDigitalIn):
     def _set_state(self, state):
         """Initialize the Zigbee digital out device."""
         try:
-            DEVICE.set_gpio_pin(
+            self._device.set_gpio_pin(
                 self._config.pin, self._config.bool2state[state], self._config.address
             )
-        except ZIGBEE_TX_FAILURE:
+        except ZigBeeTxFailure:
             _LOGGER.warning(
                 "Transmission failure when attempting to set output pin on "
                 "Zigbee device at address: %s",
                 hexlify(self._config.address),
             )
             return
-        except ZIGBEE_EXCEPTION as exc:
+        except ZigBeeException as exc:
             _LOGGER.exception("Unable to set digital pin on Zigbee device: %s", exc)
             return
         self._state = state
@@ -379,15 +350,17 @@ class ZigBeeDigitalOut(ZigBeeDigitalIn):
     def update(self):
         """Ask the Zigbee device what its output is set to."""
         try:
-            pin_state = DEVICE.get_gpio_pin(self._config.pin, self._config.address)
-        except ZIGBEE_TX_FAILURE:
+            pin_state = self._device.get_gpio_pin(
+                self._config.pin, self._config.address
+            )
+        except ZigBeeTxFailure:
             _LOGGER.warning(
                 "Transmission failure when attempting to get output pin status"
                 " from Zigbee device at address: %s",
                 hexlify(self._config.address),
             )
             return
-        except ZIGBEE_EXCEPTION as exc:
+        except ZigBeeException as exc:
             _LOGGER.exception(
                 "Unable to get output pin status from Zigbee device: %s", exc
             )
@@ -398,9 +371,10 @@ class ZigBeeDigitalOut(ZigBeeDigitalIn):
 class ZigBeeAnalogIn(Entity):
     """Representation of a GPIO pin configured as an analog input."""
 
-    def __init__(self, hass, config):
+    def __init__(self, config, device):
         """Initialize the ZigBee analog in device."""
         self._config = config
+        self._device = device
         self._value = None
 
     async def async_added_to_hass(self):
@@ -415,12 +389,12 @@ class ZigBeeAnalogIn(Entity):
             if not frame_is_relevant(self, frame):
                 return
             sample = frame["samples"].pop()
-            pin_name = ANALOG_PINS[self._config.pin]
+            pin_name = xb_const.ANALOG_PINS[self._config.pin]
             if pin_name not in sample:
                 # Doesn't contain information about our pin
                 return
-            self._value = CONVERT_ADC(
-                sample[pin_name], ADC_PERCENTAGE, self._config.max_voltage
+            self._value = convert_adc(
+                sample[pin_name], xb_const.ADC_PERCENTAGE, self._config.max_voltage
             )
             self.schedule_update_ha_state()
 
@@ -454,17 +428,17 @@ class ZigBeeAnalogIn(Entity):
     def update(self):
         """Get the latest reading from the ADC."""
         try:
-            self._value = DEVICE.read_analog_pin(
+            self._value = self._device.read_analog_pin(
                 self._config.pin,
                 self._config.max_voltage,
                 self._config.address,
-                ADC_PERCENTAGE,
+                xb_const.ADC_PERCENTAGE,
             )
-        except ZIGBEE_TX_FAILURE:
+        except ZigBeeTxFailure:
             _LOGGER.warning(
                 "Transmission failure when attempting to get sample from "
                 "Zigbee device at address: %s",
                 hexlify(self._config.address),
             )
-        except ZIGBEE_EXCEPTION as exc:
+        except ZigBeeException as exc:
             _LOGGER.exception("Unable to get sample from Zigbee device: %s", exc)
