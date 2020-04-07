@@ -44,7 +44,7 @@ read_result = None
 
 
 async def run_test(
-    hass, useMockHub, register_config, entity_domain, register_words, expected
+    hass, use_mock_hub, register_config, entity_domain, register_words, expected
 ):
     """Run test for given config and check that sensor outputs expected result."""
 
@@ -69,9 +69,9 @@ async def run_test(
     # Setup inputs for the sensor
     read_result = ReadResult(register_words)
     if register_config.get(CONF_REGISTER_TYPE) == CALL_TYPE_REGISTER_INPUT:
-        useMockHub.read_input_registers = simulate_read_registers
+        use_mock_hub.read_input_registers = simulate_read_registers
     else:
-        useMockHub.read_holding_registers = simulate_read_registers
+        use_mock_hub.read_holding_registers = simulate_read_registers
 
     # Initialize sensor
     now = dt_util.utcnow()
