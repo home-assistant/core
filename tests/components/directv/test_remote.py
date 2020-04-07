@@ -1,10 +1,7 @@
 """The tests for the DirecTV remote platform."""
-from typing import Any, List
-
 from asynctest import patch
 
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers.typing import HomeAssistantType
 
 from tests.components.directv import setup_integration
