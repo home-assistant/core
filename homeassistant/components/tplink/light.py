@@ -113,8 +113,8 @@ class LightState(NamedTuple):
             LIGHT_STATE_ON_OFF: 1 if self.state else 0,
             LIGHT_STATE_BRIGHTNESS: brightness_to_percentage(self.brightness),
             LIGHT_STATE_COLOR_TEMP: color_temp,
-            LIGHT_STATE_HUE: self.hs[0],
-            LIGHT_STATE_SATURATION: self.hs[1],
+            LIGHT_STATE_HUE: self.hs[0] if self.hs else 0,
+            LIGHT_STATE_SATURATION: self.hs[1] if self.hs else 0,
         }
 
 
