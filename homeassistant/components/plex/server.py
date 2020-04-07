@@ -15,6 +15,7 @@ from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
+import homeassistant.util.dt as dt_util
 
 from .const import (
     CONF_CLIENT_IDENTIFIER,
@@ -22,8 +23,11 @@ from .const import (
     CONF_MONITORED_USERS,
     CONF_SERVER,
     CONF_USE_EPISODE_ART,
+    DEBOUNCE_LAST_FIRED,
     DEBOUNCE_TIMEOUT,
+    DEBOUNCE_UNSUB,
     DEFAULT_VERIFY_SSL,
+    DOMAIN as PLEX_DOMAIN,
     PLEX_NEW_MP_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
@@ -46,24 +50,34 @@ plexapi.X_PLEX_VERSION = X_PLEX_VERSION
 def debounce(func):
     """Decorate function to debounce callbacks from Plex websocket."""
 
-    unsub = None
-
     async def call_later_listener(self, _):
         """Handle call_later callback."""
-        nonlocal unsub
-        unsub = None
         await func(self)
+        self.hass.data[PLEX_DOMAIN][DEBOUNCE_LAST_FIRED][
+            self.machine_identifier
+        ] = dt_util.utcnow()
+        self.hass.data[PLEX_DOMAIN][DEBOUNCE_UNSUB][self.machine_identifier] = None
 
     @wraps(func)
     async def wrapper(self):
         """Schedule async callback."""
-        nonlocal unsub
+        now = dt_util.utcnow()
+
+        last_fired = self.hass.data[PLEX_DOMAIN][DEBOUNCE_LAST_FIRED][
+            self.machine_identifier
+        ]
+        unsub = self.hass.data[PLEX_DOMAIN][DEBOUNCE_UNSUB][self.machine_identifier]
         if unsub:
-            _LOGGER.debug("Throttling update of %s", self.friendly_name)
             unsub()  # pylint: disable=not-callable
-        unsub = async_call_later(
-            self.hass, DEBOUNCE_TIMEOUT, partial(call_later_listener, self),
-        )
+
+        if last_fired and (now - last_fired).total_seconds() < DEBOUNCE_TIMEOUT:
+            _LOGGER.debug("Throttling update of %s", self.friendly_name)
+            unsub = async_call_later(
+                self.hass, DEBOUNCE_TIMEOUT, partial(call_later_listener, self),
+            )
+            self.hass.data[PLEX_DOMAIN][DEBOUNCE_UNSUB][self.machine_identifier] = unsub
+        else:
+            await call_later_listener(self, None)
 
     return wrapper
 

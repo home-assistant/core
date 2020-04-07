@@ -33,6 +33,8 @@ from .const import (
     CONF_SERVER_IDENTIFIER,
     CONF_SHOW_ALL_CONTROLS,
     CONF_USE_EPISODE_ART,
+    DEBOUNCE_LAST_FIRED,
+    DEBOUNCE_UNSUB,
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
@@ -84,7 +86,14 @@ async def async_setup(hass, config):
     """Set up the Plex component."""
     hass.data.setdefault(
         PLEX_DOMAIN,
-        {SERVERS: {}, DISPATCHERS: {}, WEBSOCKETS: {}, PLATFORMS_COMPLETED: {}},
+        {
+            SERVERS: {},
+            DISPATCHERS: {},
+            WEBSOCKETS: {},
+            PLATFORMS_COMPLETED: {},
+            DEBOUNCE_LAST_FIRED: {},
+            DEBOUNCE_UNSUB: {},
+        },
     )
 
     plex_config = config.get(PLEX_DOMAIN, {})
@@ -179,6 +188,8 @@ async def async_setup_entry(hass, entry):
     )
     hass.data[PLEX_DOMAIN][DISPATCHERS].setdefault(server_id, [])
     hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
+    hass.data[PLEX_DOMAIN][DEBOUNCE_LAST_FIRED][server_id] = None
+    hass.data[PLEX_DOMAIN][DEBOUNCE_UNSUB][server_id] = None
 
     def update_plex():
         async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))

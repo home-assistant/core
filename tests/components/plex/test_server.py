@@ -154,18 +154,44 @@ async def test_debouncer(hass, caplog):
 
     server_id = mock_plex_server.machineIdentifier
 
-    # First two updates are skipped
-    async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
-    await hass.async_block_till_done()
-    async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
-    await hass.async_block_till_done()
-    async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
-    await hass.async_block_till_done()
+    print(hass.data[DOMAIN][SERVERS][server_id])
 
-    next_update = dt_util.utcnow() + timedelta(seconds=DEBOUNCE_TIMEOUT)
-    async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.plex.server.PlexServer._fetch_platform_data",
+        return_value=([], []),
+    ) as mock_update:
+        # Called immediately
+        async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+        await hass.async_block_till_done()
+        assert mock_update.call_count == 1
+
+        # Throttled
+        async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+        await hass.async_block_till_done()
+        assert mock_update.call_count == 1
+
+        # Throttled
+        async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+        await hass.async_block_till_done()
+        assert mock_update.call_count == 1
+
+        # Called from scheduler
+        next_update = dt_util.utcnow() + timedelta(seconds=DEBOUNCE_TIMEOUT)
+        async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
+        assert mock_update.call_count == 2
+
+        # Throttled
+        async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+        await hass.async_block_till_done()
+        assert mock_update.call_count == 2
+
+        # Called from scheduler
+        next_update = dt_util.utcnow() + timedelta(seconds=DEBOUNCE_TIMEOUT)
+        async_fire_time_changed(hass, next_update)
+        await hass.async_block_till_done()
+        assert mock_update.call_count == 3
 
     assert (
-        caplog.text.count(f"Throttling update of {mock_plex_server.friendlyName}") == 2
+        caplog.text.count(f"Throttling update of {mock_plex_server.friendlyName}") == 3
     )
