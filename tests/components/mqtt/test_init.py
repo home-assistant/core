@@ -1235,3 +1235,40 @@ async def test_debug_info_non_mqtt(hass, device_reg, entity_reg):
     debug_info_data = await debug_info.info_for_device(hass, device_entry.id)
     assert len(debug_info_data["entities"]) == 0
     assert len(debug_info_data["triggers"]) == 0
+
+
+async def test_debug_info_wildcard(hass, mqtt_mock):
+    """Test debug info."""
+    config = {
+        "device": {"identifiers": ["helloworld"]},
+        "platform": "mqtt",
+        "name": "test",
+        "state_topic": "sensor/#",
+        "unique_id": "veryunique",
+    }
+
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    assert device is not None
+
+    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    assert len(debug_info_data["entities"][0]["topics"]) >= 1
+    assert {"topic": "sensor/#", "messages": []} in debug_info_data["entities"][0][
+        "topics"
+    ]
+
+    async_fire_mqtt_message(hass, "sensor/abc", "123")
+
+    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    assert len(debug_info_data["entities"][0]["topics"]) >= 1
+    assert {"topic": "sensor/#", "messages": ["123"]} in debug_info_data["entities"][0][
+        "topics"
+    ]

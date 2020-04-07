@@ -30,7 +30,6 @@ def setup(hass, config):
     """Set up the BloomSky component."""
     api_key = config[DOMAIN][CONF_API_KEY]
 
-    bloomsky = None
     try:
         bloomsky = BloomSky(api_key, hass.config.units.is_metric)
     except RuntimeError:
