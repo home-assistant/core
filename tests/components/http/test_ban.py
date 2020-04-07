@@ -1,11 +1,12 @@
 """The tests for the Home Assistant HTTP component."""
 # pylint: disable=protected-access
 from ipaddress import ip_address
-from unittest.mock import Mock, mock_open, patch
+from unittest.mock import Mock, mock_open
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPUnauthorized
 from aiohttp.web_middlewares import middleware
+from asynctest import patch
 
 import homeassistant.components.http as http
 from homeassistant.components.http import KEY_AUTHENTICATED
@@ -21,8 +22,6 @@ from homeassistant.setup import async_setup_component
 
 from . import mock_real_ip
 
-from tests.common import mock_coro
-
 BANNED_IPS = ["200.201.202.203", "100.64.0.2"]
 
 
@@ -34,7 +33,7 @@ async def test_access_from_banned_ip(hass, aiohttp_client):
 
     with patch(
         "homeassistant.components.http.ban.async_load_ip_bans_config",
-        return_value=mock_coro([IpBan(banned_ip) for banned_ip in BANNED_IPS]),
+        return_value=[IpBan(banned_ip) for banned_ip in BANNED_IPS],
     ):
         client = await aiohttp_client(app)
 
@@ -77,26 +76,26 @@ async def test_ip_bans_file_creation(hass, aiohttp_client):
 
     with patch(
         "homeassistant.components.http.ban.async_load_ip_bans_config",
-        return_value=mock_coro([IpBan(banned_ip) for banned_ip in BANNED_IPS]),
+        return_value=[IpBan(banned_ip) for banned_ip in BANNED_IPS],
     ):
         client = await aiohttp_client(app)
 
-    m = mock_open()
+    m_open = mock_open()
 
-    with patch("homeassistant.components.http.ban.open", m, create=True):
+    with patch("homeassistant.components.http.ban.open", m_open, create=True):
         resp = await client.get("/")
         assert resp.status == 401
         assert len(app[KEY_BANNED_IPS]) == len(BANNED_IPS)
-        assert m.call_count == 0
+        assert m_open.call_count == 0
 
         resp = await client.get("/")
         assert resp.status == 401
         assert len(app[KEY_BANNED_IPS]) == len(BANNED_IPS) + 1
-        m.assert_called_once_with(hass.config.path(IP_BANS_FILE), "a")
+        m_open.assert_called_once_with(hass.config.path(IP_BANS_FILE), "a")
 
         resp = await client.get("/")
         assert resp.status == 403
-        assert m.call_count == 1
+        assert m_open.call_count == 1
 
 
 async def test_failed_login_attempts_counter(hass, aiohttp_client):
