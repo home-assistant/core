@@ -12,7 +12,6 @@ from homeassistant.const import (
     CONF_API_VERSION,
     CONF_DISKS,
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
@@ -23,11 +22,10 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import CONF_VOLUMES, DEFAULT_DSM_VERSION, DEFAULT_NAME, DEFAULT_SSL, DOMAIN
+from .const import CONF_VOLUMES, DEFAULT_DSM_VERSION, DEFAULT_SSL, DOMAIN
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT): cv.port,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,

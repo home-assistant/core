@@ -8,7 +8,7 @@ from homeassistant.const import (
 DOMAIN = "synology_dsm"
 
 CONF_VOLUMES = "volumes"
-DEFAULT_NAME = "Synology DSM"
+BASE_NAME = "Synology"
 DEFAULT_SSL = True
 DEFAULT_PORT = 5000
 DEFAULT_PORT_SSL = 5001
