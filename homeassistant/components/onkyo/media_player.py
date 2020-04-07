@@ -207,6 +207,7 @@ class OnkyoAVR(MediaPlayerDevice):
     def process_update(self, update):
         """Store relevant updates so they can be queried later."""
         _, command, value = update
+        _LOGGER.info("zone: %s | command: %s | value: %s" % update)
         if command in ["system-power", "power"]:
             if value == "on":
                 self._powerstate = STATE_ON
@@ -214,7 +215,7 @@ class OnkyoAVR(MediaPlayerDevice):
                 self._powerstate = STATE_OFF
         elif command in ["volume", "master-volume"]:
             self._supports_volume = True
-            self._volume = value / self._receiver_max_volume * (self._max_volume / 100)
+            self._volume = min(value / self._max_volume, 1)
         elif command == "audio-muting":
             self._muted = bool(value == "on")
         elif command == "input-selector":
@@ -297,7 +298,7 @@ class OnkyoAVR(MediaPlayerDevice):
         """Change AVR to the designated source (by name)."""
         if source in self._source_list:
             source = self._reverse_mapping[source]
-        self._update_avr("input_name", source)
+        self._update_avr("input-selector", source)
 
     async def async_turn_off(self):
         """Turn AVR power off."""
@@ -318,9 +319,7 @@ class OnkyoAVR(MediaPlayerDevice):
 
     async def async_set_volume_level(self, volume):
         """Set AVR volume (0 to 1)."""
-        self._update_avr(
-            "volume", int(volume * (self._max_volume / 100) * self._receiver_max_volume)
-        )
+        self._update_avr("volume", int(volume * self._max_volume))
 
     async def async_mute_volume(self, mute):
         """Engage AVR mute."""
