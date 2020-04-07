@@ -47,13 +47,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.exception("Unknown Zigbee sensor type: %s", typ)
         return
 
-    add_entities([sensor_class(hass, config_class(config), zigbee_device)], True)
+    add_entities([sensor_class(config_class(config), zigbee_device)], True)
 
 
 class ZigBeeTemperatureSensor(Entity):
     """Representation of XBee Pro temperature sensor."""
 
-    def __init__(self, hass, config, device):
+    def __init__(self, config, device):
         """Initialize the sensor."""
         self._config = config
         self._device = device

@@ -239,10 +239,10 @@ class ZigBeeAnalogInConfig(ZigBeePinConfig):
 class ZigBeeDigitalIn(Entity):
     """Representation of a GPIO pin configured as a digital input."""
 
-    def __init__(self, hass, config):
+    def __init__(self, config, device):
         """Initialize the device."""
         self._config = config
-        self._device = hass.data[DOMAIN]
+        self._device = device
         self._state = False
 
     async def async_added_to_hass(self):
@@ -371,7 +371,7 @@ class ZigBeeDigitalOut(ZigBeeDigitalIn):
 class ZigBeeAnalogIn(Entity):
     """Representation of a GPIO pin configured as an analog input."""
 
-    def __init__(self, hass, config, device):
+    def __init__(self, config, device):
         """Initialize the ZigBee analog in device."""
         self._config = config
         self._device = device
