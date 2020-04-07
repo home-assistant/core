@@ -41,7 +41,6 @@ CONF_ZONES = "zones"
 
 DEFAULT_NAME = "Onkyo Receiver"
 SUPPORTED_MAX_VOLUME = 90
-DEFAULT_RECEIVER_MAX_VOLUME = 90
 ZONES = ["zone2", "zone3", "zone4"]
 
 DEFAULT_SOURCES = {
@@ -89,9 +88,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_MAX_VOLUME, default=SUPPORTED_MAX_VOLUME): vol.All(
             vol.Coerce(int), vol.Range(min=1, max=100)
         ),
-        vol.Optional(
-            CONF_RECEIVER_MAX_VOLUME, default=DEFAULT_RECEIVER_MAX_VOLUME
-        ): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
         vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES): {cv.string: cv.string},
         vol.Optional(CONF_ZONES, default=[]): vol.All(cv.ensure_list, [vol.In(ZONES)]),
     }
