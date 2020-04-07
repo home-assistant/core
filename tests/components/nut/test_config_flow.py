@@ -181,7 +181,7 @@ async def test_form_import(hass):
 
 
 async def test_form_import_dupe(hass):
-    """Test we get the form with import source."""
+    """Test we get abort on duplicate import."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG)
