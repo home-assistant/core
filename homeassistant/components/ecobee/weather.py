@@ -179,7 +179,7 @@ class EcobeeWeather(WeatherEntity):
         """Get the latest weather data."""
         await self.data.update()
         thermostat = self.data.ecobee.get_thermostat(self._index)
-        self.weather = thermostat.get("weather", None)
+        self.weather = thermostat.get("weather")
 
 
 def _process_forecast(json):

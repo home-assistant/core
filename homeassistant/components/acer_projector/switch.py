@@ -152,7 +152,7 @@ class AcerSwitch(SwitchDevice):
             self._available = False
 
         for key in self._attributes:
-            msg = CMD_DICT.get(key, None)
+            msg = CMD_DICT.get(key)
             if msg:
                 awns = self._write_read_format(msg)
                 self._attributes[key] = awns

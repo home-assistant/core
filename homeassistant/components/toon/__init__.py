@@ -96,7 +96,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigType) -> bool:
 
     def update(call):
         """Service call to manually update the data."""
-        called_display = call.data.get(CONF_DISPLAY, None)
+        called_display = call.data.get(CONF_DISPLAY)
         for toon_data in hass.data[DATA_TOON].values():
             if (
                 called_display and called_display == toon_data.display_name

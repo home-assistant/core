@@ -102,8 +102,7 @@ class TorqueReceiveDataView(HomeAssistantView):
         for pid in names:
             if pid not in self.sensors:
                 self.sensors[pid] = TorqueSensor(
-                    ENTITY_NAME_FORMAT.format(self.vehicle, names[pid]),
-                    units.get(pid, None),
+                    ENTITY_NAME_FORMAT.format(self.vehicle, names[pid]), units.get(pid)
                 )
                 hass.async_add_job(self.add_entities, [self.sensors[pid]])
 
