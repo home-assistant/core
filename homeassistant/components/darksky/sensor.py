@@ -492,7 +492,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         units = "us"
 
     forecast_data = DarkSkyData(
-        api_key=config.get(CONF_API_KEY, None),
+        api_key=config.get(CONF_API_KEY),
         latitude=latitude,
         longitude=longitude,
         units=units,

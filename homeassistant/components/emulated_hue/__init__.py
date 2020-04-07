@@ -230,7 +230,7 @@ class Config:
 
         self._entities_with_hidden_attr_in_config = {}
         for entity_id in self.entities:
-            hidden_value = self.entities[entity_id].get(CONF_ENTITY_HIDDEN, None)
+            hidden_value = self.entities[entity_id].get(CONF_ENTITY_HIDDEN)
             if hidden_value is not None:
                 self._entities_with_hidden_attr_in_config[entity_id] = hidden_value
 
