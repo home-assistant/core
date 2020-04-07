@@ -1,6 +1,5 @@
 """The tests for the DirecTV Media player platform."""
 from datetime import datetime, timedelta
-from typing import Optional
 
 from asynctest import patch
 from pytest import fixture
@@ -17,7 +16,6 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_DURATION,
-    ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_SERIES_TITLE,
