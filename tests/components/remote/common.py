@@ -93,7 +93,9 @@ def send_command(
     delay_secs=None,
 ):
     """Send a command to a device."""
-    hass.add_job(async_send_command, hass, command, entity_id, device, num_repeats, delay_secs)
+    hass.add_job(
+        async_send_command, hass, command, entity_id, device, num_repeats, delay_secs
+    )
 
 
 async def async_learn_command(
@@ -134,4 +136,6 @@ def learn_command(
     timeout=None,
 ):
     """Learn a command from a device."""
-    hass.add_job(async_learn_command, hass, entity_id, device, command, alternative, timeout)
+    hass.add_job(
+        async_learn_command, hass, entity_id, device, command, alternative, timeout
+    )
