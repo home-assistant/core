@@ -1,26 +1,37 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Host already configured"
-        },
-        "error": {
-            "login": "Login error: please check your username & password",
-            "unknown": "Unknown error: please retry later or an other configuration"
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "api_version": "DSM version",
-                    "host": "Host",
-                    "name": "Name",
-                    "password": "Password",
-                    "port": "Port",
-                    "ssl": "Use SSL/TLS to connect to your NAS",
-                    "username": "Username"
-                },
-                "title": "Synology DSM"
-            }
-        },
-        "title": "Synology DSM"
+  "config": {
+    "title": "Synology DSM",
+    "flow_title": "Synology DSM {name} ({host})",
+    "step": {
+      "user": {
+        "title": "Synology DSM",
+        "data": {
+          "host": "Host",
+          "port": "Port (Optional)",
+          "ssl": "Use SSL/TLS to connect to your NAS",
+          "api_version": "DSM version",
+          "username": "Username",
+          "password": "Password"
+        }
+      },
+      "link": {
+        "title": "Synology DSM",
+        "description": "Do you want to setup {name} ({host})?",
+        "data": {
+          "ssl": "Use SSL/TLS to connect to your NAS",
+          "api_version": "DSM version",
+          "username": "Username",
+          "password": "Password",
+          "port": "Port (Optional)"
+        }
+      }
+    },
+    "error": {
+      "login": "Login error: please check your username & password",
+      "unknown": "Unknown error: please retry later or an other configuration"
+    },
+    "abort": {
+      "already_configured": "Host already configured"
     }
+  }
 }

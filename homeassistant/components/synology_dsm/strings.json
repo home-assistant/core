@@ -1,17 +1,28 @@
 {
   "config": {
     "title": "Synology DSM",
+    "flow_title": "Synology DSM {name} ({host})",
     "step": {
       "user": {
         "title": "Synology DSM",
         "data": {
-          "name": "Name",
           "host": "Host",
-          "port": "Port",
+          "port": "Port (Optional)",
           "ssl": "Use SSL/TLS to connect to your NAS",
           "api_version": "DSM version",
           "username": "Username",
           "password": "Password"
+        }
+      },
+      "link": {
+        "title": "Synology DSM",
+        "description": "Do you want to setup {name} ({host})?",
+        "data": {
+          "ssl": "Use SSL/TLS to connect to your NAS",
+          "api_version": "DSM version",
+          "username": "Username",
+          "password": "Password",
+          "port": "Port (Optional)"
         }
       }
     },
