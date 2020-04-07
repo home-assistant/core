@@ -166,6 +166,7 @@ class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize Bravia TV options flow."""
         self.host = config_entry.data[CONF_HOST]
         self.pin = config_entry.data[CONF_PIN]
+        self.braviarc = None
         self.ignored_sources = config_entry.options.get(CONF_IGNORED_SOURCES)
         self.source_list = []
 

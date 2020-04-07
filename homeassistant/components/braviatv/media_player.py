@@ -96,7 +96,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     except TypeError:
         _LOGGER.error("Cannot retrieve system info from TV")
         return
-    braviarc._mac = system_info["macAddr"].lower()
+    braviarc._mac = system_info["macAddr"].lower()  # pylint: disable=protected-access
 
     unique_id = system_info[ATTR_CID].lower()
     device_info = {
