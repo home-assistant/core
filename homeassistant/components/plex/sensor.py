@@ -2,7 +2,10 @@
 import logging
 
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
 
@@ -66,7 +69,7 @@ class PlexSensor(Entity):
 
         @callback
         def update_plex(_):
-            dispatcher_send(
+            async_dispatcher_send(
                 self.hass,
                 PLEX_UPDATE_PLATFORMS_SIGNAL.format(self._server.machine_identifier),
             )
