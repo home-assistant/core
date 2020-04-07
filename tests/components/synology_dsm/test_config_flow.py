@@ -250,7 +250,7 @@ async def test_form_ssdp(hass: HomeAssistantType, service: MagicMock):
         result["flow_id"], {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
     )
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "192.168.1.5"
     assert result2["data"] == {
         CONF_HOST: "192.168.1.5",
