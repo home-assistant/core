@@ -228,11 +228,10 @@ class NuHeatThermostat(ClimateDevice):
             target_schedule_mode,
         )
 
-        if target_temperature < self._thermostat.min_temperature:
-            target_temperature = self._thermostat.min_temperature
-
-        if target_temperature > self._thermostat.max_temperature:
-            target_temperature = self._thermostat.max_temperature
+        target_temperature = max(
+            min(self._thermostat.max_temperature, target_temperature),
+            self._thermostat.min_temperature,
+        )
 
         request = {
             NUHEAT_KEY_SET_POINT_TEMP: target_temperature,
