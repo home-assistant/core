@@ -101,6 +101,30 @@ async def test_setup(hass: HomeAssistantType, fritz: Mock):
     assert state.state == HVAC_MODE_HEAT
 
 
+async def test_target_temperature_on(hass: HomeAssistantType, fritz: Mock):
+    """Test turn device on."""
+    device = FritzDeviceClimateMock()
+    fritz().get_devices.return_value = [device]
+    device.target_temperature = 127.0
+
+    await setup_fritzbox(hass, MOCK_CONFIG)
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes[ATTR_TEMPERATURE] == 30
+
+
+async def test_target_temperature_off(hass: HomeAssistantType, fritz: Mock):
+    """Test turn device on."""
+    device = FritzDeviceClimateMock()
+    fritz().get_devices.return_value = [device]
+    device.target_temperature = 126.5
+
+    await setup_fritzbox(hass, MOCK_CONFIG)
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes[ATTR_TEMPERATURE] == 0
+
+
 async def test_update(hass: HomeAssistantType, fritz: Mock):
     """Test update with error."""
     device = FritzDeviceClimateMock()
