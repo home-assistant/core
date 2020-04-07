@@ -19,17 +19,23 @@ from homeassistant.helpers.event import async_track_state_change
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_MIN_VALUE = "min_value"
+ATTR_MIN_ENTITY_ID = "min_entity_id"
 ATTR_MAX_VALUE = "max_value"
+ATTR_MAX_ENTITY_ID = "max_entity_id"
 ATTR_COUNT_SENSORS = "count_sensors"
 ATTR_MEAN = "mean"
 ATTR_LAST = "last"
+ATTR_LAST_ENTITY_ID = "last_entity_id"
 
 ATTR_TO_PROPERTY = [
     ATTR_COUNT_SENSORS,
     ATTR_MAX_VALUE,
+    ATTR_MAX_ENTITY_ID,
     ATTR_MEAN,
     ATTR_MIN_VALUE,
+    ATTR_MIN_ENTITY_ID,
     ATTR_LAST,
+    ATTR_LAST_ENTITY_ID,
 ]
 
 CONF_ENTITY_IDS = "entity_ids"
@@ -72,28 +78,30 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 def calc_min(sensor_values):
     """Calculate min value, honoring unknown states."""
     val = None
-    for sval in sensor_values:
+    entity = None
+    for entity_id, sval in sensor_values:
         if sval != STATE_UNKNOWN:
             if val is None or val > sval:
-                val = sval
-    return val
+                entity, val = entity_id, sval
+    return entity, val
 
 
 def calc_max(sensor_values):
     """Calculate max value, honoring unknown states."""
     val = None
-    for sval in sensor_values:
+    entity = None
+    for entity_id, sval in sensor_values:
         if sval != STATE_UNKNOWN:
             if val is None or val < sval:
-                val = sval
-    return val
+                entity, val = entity_id, sval
+    return entity, val
 
 
 def calc_mean(sensor_values, round_digits):
     """Calculate mean value, honoring unknown states."""
     val = 0
     count = 0
-    for sval in sensor_values:
+    for _, sval in sensor_values:
         if sval != STATE_UNKNOWN:
             val += sval
             count += 1
@@ -119,6 +127,7 @@ class MinMaxSensor(Entity):
         self._unit_of_measurement = None
         self._unit_of_measurement_mismatch = False
         self.min_value = self.max_value = self.mean = self.last = None
+        self.min_entity_id = self.max_entity_id = self.last_entity_id = None
         self.count_sensors = len(self._entity_ids)
         self.states = {}
 
@@ -149,6 +158,7 @@ class MinMaxSensor(Entity):
             try:
                 self.states[entity] = float(new_state.state)
                 self.last = float(new_state.state)
+                self.last_entity_id = entity
             except ValueError:
                 _LOGGER.warning(
                     "Unable to store state. Only numerical states are supported"
@@ -201,7 +211,9 @@ class MinMaxSensor(Entity):
 
     async def async_update(self):
         """Get the latest data and updates the states."""
-        sensor_values = [self.states[k] for k in self._entity_ids if k in self.states]
-        self.min_value = calc_min(sensor_values)
-        self.max_value = calc_max(sensor_values)
+        sensor_values = [
+            (k, self.states[k]) for k in self._entity_ids if k in self.states
+        ]
+        self.min_entity_id, self.min_value = calc_min(sensor_values)
+        self.max_entity_id, self.max_value = calc_max(sensor_values)
         self.mean = calc_mean(sensor_values, self._round_digits)

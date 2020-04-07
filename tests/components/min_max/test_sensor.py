@@ -54,7 +54,9 @@ class TestMinMaxSensor(unittest.TestCase):
         state = self.hass.states.get("sensor.test_min")
 
         assert str(float(self.min)) == state.state
+        assert entity_ids[2] == state.attributes.get("min_entity_id")
         assert self.max == state.attributes.get("max_value")
+        assert entity_ids[1] == state.attributes.get("max_entity_id")
         assert self.mean == state.attributes.get("mean")
 
     def test_max_sensor(self):
@@ -79,7 +81,9 @@ class TestMinMaxSensor(unittest.TestCase):
         state = self.hass.states.get("sensor.test_max")
 
         assert str(float(self.max)) == state.state
+        assert entity_ids[2] == state.attributes.get("min_entity_id")
         assert self.min == state.attributes.get("min_value")
+        assert entity_ids[1] == state.attributes.get("max_entity_id")
         assert self.mean == state.attributes.get("mean")
 
     def test_mean_sensor(self):
@@ -105,7 +109,9 @@ class TestMinMaxSensor(unittest.TestCase):
 
         assert str(float(self.mean)) == state.state
         assert self.min == state.attributes.get("min_value")
+        assert entity_ids[2] == state.attributes.get("min_entity_id")
         assert self.max == state.attributes.get("max_value")
+        assert entity_ids[1] == state.attributes.get("max_entity_id")
 
     def test_mean_1_digit_sensor(self):
         """Test the mean with 1-digit precision sensor."""
@@ -131,7 +137,9 @@ class TestMinMaxSensor(unittest.TestCase):
 
         assert str(float(self.mean_1_digit)) == state.state
         assert self.min == state.attributes.get("min_value")
+        assert entity_ids[2] == state.attributes.get("min_entity_id")
         assert self.max == state.attributes.get("max_value")
+        assert entity_ids[1] == state.attributes.get("max_entity_id")
 
     def test_mean_4_digit_sensor(self):
         """Test the mean with 1-digit precision sensor."""
@@ -157,7 +165,9 @@ class TestMinMaxSensor(unittest.TestCase):
 
         assert str(float(self.mean_4_digits)) == state.state
         assert self.min == state.attributes.get("min_value")
+        assert entity_ids[2] == state.attributes.get("min_entity_id")
         assert self.max == state.attributes.get("max_value")
+        assert entity_ids[1] == state.attributes.get("max_entity_id")
 
     def test_not_enough_sensor_value(self):
         """Test that there is nothing done if not enough values available."""
@@ -179,24 +189,40 @@ class TestMinMaxSensor(unittest.TestCase):
 
         state = self.hass.states.get("sensor.test_max")
         assert STATE_UNKNOWN == state.state
+        assert state.attributes.get("min_entity_id") is None
+        assert state.attributes.get("min_value") is None
+        assert state.attributes.get("max_entity_id") is None
+        assert state.attributes.get("max_value") is None
 
         self.hass.states.set(entity_ids[1], self.values[1])
         self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test_max")
         assert STATE_UNKNOWN != state.state
+        assert entity_ids[1] == state.attributes.get("min_entity_id")
+        assert self.values[1] == state.attributes.get("min_value")
+        assert entity_ids[1] == state.attributes.get("max_entity_id")
+        assert self.values[1] == state.attributes.get("max_value")
 
         self.hass.states.set(entity_ids[2], STATE_UNKNOWN)
         self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test_max")
         assert STATE_UNKNOWN != state.state
+        assert entity_ids[1] == state.attributes.get("min_entity_id")
+        assert self.values[1] == state.attributes.get("min_value")
+        assert entity_ids[1] == state.attributes.get("max_entity_id")
+        assert self.values[1] == state.attributes.get("max_value")
 
         self.hass.states.set(entity_ids[1], STATE_UNAVAILABLE)
         self.hass.block_till_done()
 
         state = self.hass.states.get("sensor.test_max")
         assert STATE_UNKNOWN == state.state
+        assert state.attributes.get("min_entity_id") is None
+        assert state.attributes.get("min_value") is None
+        assert state.attributes.get("max_entity_id") is None
+        assert state.attributes.get("max_value") is None
 
     def test_different_unit_of_measurement(self):
         """Test for different unit of measurement."""
@@ -264,6 +290,7 @@ class TestMinMaxSensor(unittest.TestCase):
             self.hass.block_till_done()
             state = self.hass.states.get("sensor.test_last")
             assert str(float(value)) == state.state
+            assert entity_id == state.attributes.get("last_entity_id")
 
         assert self.min == state.attributes.get("min_value")
         assert self.max == state.attributes.get("max_value")
