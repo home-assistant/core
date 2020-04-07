@@ -21,6 +21,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
+import homeassistant.util.dt as dt_util
 
 DOMAIN = "aprs"
 
@@ -179,5 +180,6 @@ class AprsListenerThread(threading.Thread):
             for attr in [ATTR_ALTITUDE, ATTR_COMMENT, ATTR_COURSE, ATTR_SPEED]:
                 if attr in msg:
                     attrs[attr] = msg[attr]
+                    attrs["last_beacon"] = dt_util.utcnow()
 
             self.see(dev_id=dev_id, gps=(lat, lon), attributes=attrs)
