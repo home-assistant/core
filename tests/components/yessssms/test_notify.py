@@ -245,7 +245,7 @@ class TestNotifyYesssSMS(unittest.TestCase):
             # pylint: disable=protected-access
             self.yessssms.yesss._kontomanager,
             status_code=200,
-            text="test..." + login + "</a>",
+            text=f"test...{login}</a>",
         )
         mock.register_uri(
             "POST",
@@ -312,7 +312,7 @@ class TestNotifyYesssSMS(unittest.TestCase):
             # pylint: disable=protected-access
             self.yessssms.yesss._kontomanager,
             status_code=200,
-            text="test..." + login + "</a>",
+            text=f"test...{login}</a>",
         )
         mock.register_uri(
             "POST",
