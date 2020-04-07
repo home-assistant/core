@@ -52,7 +52,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Slide platform."""
-    # pylint: disable=unused-argument
 
     async def update_slides(now=None):
         """Update slide information."""
