@@ -32,12 +32,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Plugwise Smiles from a config entry."""
     websession = async_get_clientsession(hass, verify_ssl=False)
     api = Smile(
-        host=entry.data["host"],
-        password=entry.data["password"],
-        websession=websession,
+        host=entry.data["host"], password=entry.data["password"], websession=websession,
     )
 
-    await api.connect()
+    try:
+        await api.connect()
+    except asyncio.TimeoutError:
+        _LOGGER.error("Timeout while connecting to Smile")
 
     if api.smile_type == "power":
         update_interval = timedelta(seconds=10)
