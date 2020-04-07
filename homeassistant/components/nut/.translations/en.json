@@ -36,10 +36,9 @@
   "options": {
     "step": {
       "init": {
-        "description": "Choose Sensor Resources and update interval.",
+        "description": "Choose Sensor Resources.",
         "data": {
-          "resources": "Resources",
-          "update_interval": "Update Interval"
+          "resources": "Resources"
         }
       }
     }
