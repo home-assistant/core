@@ -3,6 +3,7 @@ import logging
 
 from azure.devops.connection import Connection
 from msrest.authentication import BasicAuthentication
+from msrest.exceptions import ClientRequestError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -46,20 +47,26 @@ class AzureDevOpsFlowHandler(ConfigFlow):
         if user_input is None:
             return await self._show_setup_form(user_input)
 
+        errors = {}
+
         connection = Connection(
             base_url=f"https://dev.azure.com/{user_input.get(CONF_ORG)}",
             creds=BasicAuthentication("", user_input.get(CONF_PAT)),
         )
-        client = connection.clients.get_core_client()
+        try:
+            core_client = connection.clients.get_core_client()
 
-        project = client.get_project(user_input.get(CONF_PROJECT))
+            project = core_client.get_project(user_input.get(CONF_PROJECT))
 
-        if not project:
-            _LOGGER.error(
-                "Could not get project %s from Azure DevOps.",
-                user_input.get(CONF_PROJECT),
-            )
-            return False
+            if not project:
+                errors[
+                    "base"
+                ] = f"Could not get project '{user_input.get(CONF_PROJECT)}' from Azure DevOps."
+                return await self._show_setup_form(errors)
+        except ClientRequestError as exception:
+            _LOGGER.warning(exception)
+            errors["base"] = f"Could not connect to Azure DevOps."
+            return await self._show_setup_form(errors)
 
         return self.async_create_entry(
             title=f"{user_input.get(CONF_ORG)}/{user_input.get(CONF_PROJECT)}",

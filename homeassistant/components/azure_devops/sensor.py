@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 
 from azure.devops.v5_1.build import Build
+from msrest.exceptions import ClientRequestError
 
 from homeassistant.components.azure_devops import AzureDevOpsDeviceEntity
 from homeassistant.components.azure_devops.const import (
@@ -14,6 +15,7 @@ from homeassistant.components.azure_devops.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,15 +34,18 @@ async def async_setup_entry(
     project = hass.data[instance_key][DATA_PROJECT]
     sensors = []
 
-    build_client = connection.clients.get_build_client()
-
-    builds = build_client.get_builds(
-        project, query_order="queueTimeDescending", max_builds_per_definition=1,
-    ).value
-    for build in builds:
-        sensors.append(
-            AzureDevOpsLatestBuildSensor(build_client, organization, project, build)
-        )
+    try:
+        build_client = connection.clients.get_build_client()
+        builds = build_client.get_builds(
+            project, query_order="queueTimeDescending", max_builds_per_definition=1,
+        ).value
+        for build in builds:
+            sensors.append(
+                AzureDevOpsLatestBuildSensor(build_client, organization, project, build)
+            )
+    except ClientRequestError as exception:
+        _LOGGER.warning(exception)
+        raise PlatformNotReady from exception
 
     async_add_entities(sensors, True)
 

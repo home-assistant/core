@@ -4,6 +4,7 @@ from typing import Any, Dict
 
 from azure.devops.connection import Connection
 from msrest.authentication import BasicAuthentication
+from msrest.exceptions import ClientRequestError
 
 from homeassistant.components.azure_devops.const import (
     CONF_ORG,
@@ -16,6 +17,7 @@ from homeassistant.components.azure_devops.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
@@ -34,13 +36,20 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         creds=BasicAuthentication("", entry.data[CONF_PAT]),
     )
 
+    try:
+        core_client = connection.clients.get_core_client()
+        core_client.get_project(entry.data[CONF_PROJECT])
+    except ClientRequestError as exception:
+        _LOGGER.warning(exception)
+        raise ConfigEntryNotReady from exception
+
     instance_key = f"{DOMAIN}_{entry.data[CONF_ORG]}_{entry.data[CONF_PROJECT]}"
     hass.data.setdefault(instance_key, {})[DATA_AZURE_DEVOPS_CONNECTION] = connection
     hass.data.setdefault(instance_key, {})[DATA_ORG] = entry.data[CONF_ORG]
     hass.data.setdefault(instance_key, {})[DATA_PROJECT] = entry.data[CONF_PROJECT]
     hass.data.setdefault(instance_key, {})[DATA_PAT] = entry.data[CONF_PAT]
 
-    # Setup sensors
+    # Setup components
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "sensor")
     )
