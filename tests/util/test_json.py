@@ -38,7 +38,7 @@ def teardown():
 
 
 def _path_for(leaf_name):
-    return os.path.join(TMP_DIR, leaf_name + ".json")
+    return os.path.join(TMP_DIR, f"{leaf_name}.json")
 
 
 def test_save_and_load():

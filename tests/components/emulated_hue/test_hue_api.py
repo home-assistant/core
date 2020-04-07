@@ -289,7 +289,7 @@ async def test_reachable_for_state(hass_hue, hue_client, state, is_reachable):
 
 async def test_discover_full_state(hue_client):
     """Test the discovery of full state."""
-    result = await hue_client.get("/api/" + HUE_API_USERNAME)
+    result = await hue_client.get(f"/api/{HUE_API_USERNAME}")
 
     assert result.status == 200
     assert "application/json" in result.headers["content-type"]
