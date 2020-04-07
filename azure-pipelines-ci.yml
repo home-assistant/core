@@ -24,7 +24,6 @@ resources:
 variables:
   - name: PythonMain
     value: '37'
-  - group: codecov
 
 stages:
 
