@@ -49,7 +49,7 @@ async def async_turn_off(hass, activity=None, entity_id=ENTITY_MATCH_ALL):
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
 
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data)
+    await hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data, blocking=True)
 
 
 @bind_hass
@@ -80,7 +80,7 @@ async def async_send_command(
     if delay_secs:
         data[ATTR_DELAY_SECS] = delay_secs
 
-    await hass.services.async_call(DOMAIN, SERVICE_SEND_COMMAND, data)
+    await hass.services.async_call(DOMAIN, SERVICE_SEND_COMMAND, data, blocking=True)
 
 
 @bind_hass
@@ -123,7 +123,7 @@ async def async_learn_command(
     if timeout:
         data[ATTR_TIMEOUT] = timeout
 
-    await hass.services.async_call(DOMAIN, SERVICE_LEARN_COMMAND, data)
+    await hass.services.async_call(DOMAIN, SERVICE_LEARN_COMMAND, data, blocking=True)
 
 
 @bind_hass
