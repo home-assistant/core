@@ -49,7 +49,7 @@ LOCKS = ["door_lock"]
 @contextmanager
 def mock_hub(config, get_response=LOCKS[0]):
     """Extensively mock out a verisure hub."""
-    hub_prefix = "homeassistant.components.verisure.verisure.VerisureHub"
+    hub_prefix = "homeassistant.components.verisure.VerisureHub"
 
     verisure_prefix = "verisure.Session"
     with patch(verisure_prefix) as session, patch(hub_prefix) as hub:
