@@ -35,7 +35,7 @@ Adafruit-SHT31==1.0.2
 # Adafruit_BBIO==1.1.1
 
 # homeassistant.components.homekit
-HAP-python==2.8.0
+HAP-python==2.8.1
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
@@ -140,7 +140,7 @@ aio_geojson_nsw_rfs_incidents==0.3
 aio_georss_gdacs==0.3
 
 # homeassistant.components.ambient_station
-aioambient==1.1.0
+aioambient==1.1.1
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.2.3
@@ -673,7 +673,7 @@ habitipy==0.2.0
 hangups==0.4.9
 
 # homeassistant.components.cloud
-hass-nabucasa==0.33.0
+hass-nabucasa==0.34.0
 
 # homeassistant.components.mqtt
 hbmqtt==0.9.5
@@ -703,7 +703,7 @@ hole==0.5.1
 holidays==0.10.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200403.0
+home-assistant-frontend==20200406.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -921,7 +921,7 @@ netdisco==2.6.0
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==0.7.3
+nexia==0.8.0
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.1.0
@@ -1013,6 +1013,9 @@ pencompy==0.0.3
 # homeassistant.components.pandora
 # homeassistant.components.unifi_direct
 pexpect==4.6.0
+
+# homeassistant.components.pi4ioe5v9xxxx
+pi4ioe5v9xxxx==0.0.2
 
 # homeassistant.components.rpi_pfio
 pifacecommon==4.2.2
@@ -1142,7 +1145,7 @@ pyRFXtrx==0.25
 pyTibber==0.13.6
 
 # homeassistant.components.dlink
-pyW215==0.6.0
+pyW215==0.7.0
 
 # homeassistant.components.w800rf32
 pyW800rf32==0.1
@@ -1338,7 +1341,7 @@ pyintesishome==1.7.1
 pyipma==2.0.5
 
 # homeassistant.components.ipp
-pyipp==0.8.3
+pyipp==0.9.0
 
 # homeassistant.components.iqvia
 pyiqvia==0.2.1
@@ -1872,7 +1875,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.0.5
+simplisafe-python==9.0.6
 
 # homeassistant.components.sisyphus
 sisyphus-control==2.2.1

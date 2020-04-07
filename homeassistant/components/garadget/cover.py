@@ -229,7 +229,7 @@ class GaradgetCover(CoverDevice):
         try:
             status = self._get_variable("doorStatus")
             _LOGGER.debug("Current Status: %s", status["status"])
-            self._state = STATES_MAP.get(status["status"], None)
+            self._state = STATES_MAP.get(status["status"])
             self.time_in_state = status["time"]
             self.signal = status["signal"]
             self.sensor = status["sensor"]

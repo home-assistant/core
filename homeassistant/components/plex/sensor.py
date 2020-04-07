@@ -2,7 +2,10 @@
 import logging
 
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
 
@@ -54,10 +57,11 @@ class PlexSensor(Entity):
         _LOGGER.debug("Refreshing sensor [%s]", self.unique_id)
 
         self.sessions = sessions
+        update_failed = False
 
         @callback
         def update_plex(_):
-            dispatcher_send(
+            async_dispatcher_send(
                 self.hass,
                 PLEX_UPDATE_PLATFORMS_SIGNAL.format(self._server.machine_identifier),
             )
@@ -71,8 +75,8 @@ class PlexSensor(Entity):
                 _LOGGER.debug(
                     "Session temporarily incomplete, will try again: %s", sess
                 )
-                async_call_later(self.hass, 5, update_plex)
-                return
+                update_failed = True
+                continue
             user = sess.usernames[0]
             device = sess.players[0].title
             now_playing_user = f"{user} - {device}"
@@ -110,6 +114,9 @@ class PlexSensor(Entity):
         self._now_playing = now_playing
 
         self.async_write_ha_state()
+
+        if update_failed:
+            async_call_later(self.hass, 5, update_plex)
 
     @property
     def name(self):

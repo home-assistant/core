@@ -1086,7 +1086,7 @@ class AlexaPowerLevelController(AlexaCapability):
         if self.entity.domain == fan.DOMAIN:
             speed = self.entity.attributes.get(fan.ATTR_SPEED)
 
-            return PERCENTAGE_FAN_MAP.get(speed, None)
+            return PERCENTAGE_FAN_MAP.get(speed)
 
         return None
 
