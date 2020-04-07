@@ -30,11 +30,11 @@ from .const import DOMAIN  # pylint: disable=unused-import
 _LOGGER = logging.getLogger(__name__)
 
 
-def _discovery_schema_with_defaults(discovery_info=None):
+def _discovery_schema_with_defaults(discovery_info):
     return vol.Schema(_ordered_shared_schema(discovery_info))
 
 
-def _user_schema_with_defaults(user_input=None):
+def _user_schema_with_defaults(user_input):
     user_schema = {
         vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
     }
@@ -43,7 +43,7 @@ def _user_schema_with_defaults(user_input=None):
     return vol.Schema(user_schema)
 
 
-def _ordered_shared_schema(schema_input=None):
+def _ordered_shared_schema(schema_input):
     return {
         vol.Required(CONF_USERNAME, default=schema_input.get(CONF_USERNAME, "")): str,
         vol.Required(CONF_PASSWORD, default=schema_input.get(CONF_PASSWORD, "")): str,
