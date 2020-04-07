@@ -24,19 +24,23 @@ from homeassistant.const import (
 from homeassistant.loader import bind_hass
 
 
-@bind_hass
-def turn_on(hass, activity=None, entity_id=ENTITY_MATCH_ALL):
+async def async_turn_on(hass, activity=None, entity_id=ENTITY_MATCH_ALL):
     """Turn all or specified remote on."""
     data = {
         key: value
         for key, value in [(ATTR_ACTIVITY, activity), (ATTR_ENTITY_ID, entity_id)]
         if value is not None
     }
-    hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
+    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data, blocking=True)
 
 
 @bind_hass
-def turn_off(hass, activity=None, entity_id=ENTITY_MATCH_ALL):
+def turn_on(hass, activity=None, entity_id=ENTITY_MATCH_ALL):
+    """Turn all or specified remote on."""
+    hass.add_job(async_turn_on, hass, activity, entity_id)
+
+
+async def async_turn_off(hass, activity=None, entity_id=ENTITY_MATCH_ALL):
     """Turn all or specified remote off."""
     data = {}
     if activity:
@@ -45,11 +49,16 @@ def turn_off(hass, activity=None, entity_id=ENTITY_MATCH_ALL):
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
 
-    hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
+    await hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
 @bind_hass
-def send_command(
+def turn_off(hass, activity=None, entity_id=ENTITY_MATCH_ALL):
+    """Turn all or specified remote off."""
+    hass.add_job(async_turn_off, hass, activity, entity_id)
+
+
+async def async_send_command(
     hass,
     command,
     entity_id=ENTITY_MATCH_ALL,
@@ -71,11 +80,23 @@ def send_command(
     if delay_secs:
         data[ATTR_DELAY_SECS] = delay_secs
 
-    hass.services.call(DOMAIN, SERVICE_SEND_COMMAND, data)
+    await hass.services.async_call(DOMAIN, SERVICE_SEND_COMMAND, data)
 
 
 @bind_hass
-def learn_command(
+def send_command(
+    hass,
+    command,
+    entity_id=ENTITY_MATCH_ALL,
+    device=None,
+    num_repeats=None,
+    delay_secs=None,
+):
+    """Send a command to a device."""
+    hass.add_job(async_send_command, hass, command, entity_id, device, num_repeats, delay_secs)
+
+
+async def async_learn_command(
     hass,
     entity_id=ENTITY_MATCH_ALL,
     device=None,
@@ -100,4 +121,17 @@ def learn_command(
     if timeout:
         data[ATTR_TIMEOUT] = timeout
 
-    hass.services.call(DOMAIN, SERVICE_LEARN_COMMAND, data)
+    await hass.services.async_call(DOMAIN, SERVICE_LEARN_COMMAND, data)
+
+
+@bind_hass
+def learn_command(
+    hass,
+    entity_id=ENTITY_MATCH_ALL,
+    device=None,
+    command=None,
+    alternative=None,
+    timeout=None,
+):
+    """Learn a command from a device."""
+    hass.add_job(async_learn_command, hass, entity_id, device, command, alternative, timeout)
