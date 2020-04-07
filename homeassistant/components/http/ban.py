@@ -3,6 +3,7 @@ from collections import defaultdict
 from datetime import datetime
 from ipaddress import ip_address
 import logging
+import os
 from typing import List, Optional
 
 from aiohttp.web import middleware
@@ -61,9 +62,19 @@ async def ban_middleware(request, handler):
 
     # Verify if IP is not banned
     ip_address_ = request[KEY_REAL_IP]
-    is_banned = any(
-        ip_ban.ip_address == ip_address_ for ip_ban in request.app[KEY_BANNED_IPS]
-    )
+
+    # Supervisor IP should never be banned
+    if "SUPERVISOR" in os.environ:
+        supervisor_ip = os.environ["SUPERVISOR"].split(":")[0]
+    else:
+        supervisor_ip = None
+
+    if supervisor_ip is not None and supervisor_ip == str(ip_address_):
+        is_banned = False
+    else:
+        is_banned = any(
+            ip_ban.ip_address == ip_address_ for ip_ban in request.app[KEY_BANNED_IPS]
+        )
 
     if is_banned:
         raise HTTPForbidden()
