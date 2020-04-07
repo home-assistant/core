@@ -97,7 +97,6 @@ async def async_setup(hass, config):
     """Set up Modbus component."""
     hass.data[MODBUS_DOMAIN] = hub_collect = {}
 
-    _LOGGER.debug("registering hubs")
     for client_config in config[MODBUS_DOMAIN]:
         hub_collect[client_config[CONF_NAME]] = ModbusHub(client_config, hass.loop)
 
@@ -109,7 +108,6 @@ async def async_setup(hass, config):
     def start_modbus(event):
         """Start Modbus service."""
         for client in hub_collect.values():
-            _LOGGER.debug("setup hub %s", client.name)
             client.setup()
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
@@ -161,7 +159,6 @@ class ModbusHub:
 
     def __init__(self, client_config, main_loop):
         """Initialize the Modbus hub."""
-        _LOGGER.debug("Preparing setup: %s", client_config)
 
         # generic configuration
         self._loop = main_loop
@@ -200,7 +197,6 @@ class ModbusHub:
         # Client* do deliver loop, client as result but
         # pylint does not accept that fact
 
-        _LOGGER.debug("doing setup")
         if self._config_type == "serial":
             _, self._client = ClientSerial(
                 schedulers.ASYNC_IO,
