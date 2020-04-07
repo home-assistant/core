@@ -10,7 +10,6 @@ from hass_nabucasa import Cloud, auth, thingtalk
 from hass_nabucasa.const import STATE_DISCONNECTED
 import voluptuous as vol
 
-from homeassistant.const import HTTP_OK
 from homeassistant.components import websocket_api
 from homeassistant.components.alexa import (
     entities as alexa_entities,
@@ -20,6 +19,7 @@ from homeassistant.components.google_assistant import helpers as google_helpers
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.websocket_api import const as ws_const
+from homeassistant.const import HTTP_OK
 from homeassistant.core import callback
 
 from .const import (

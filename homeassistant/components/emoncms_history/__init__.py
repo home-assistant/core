@@ -10,9 +10,9 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_URL,
     CONF_WHITELIST,
+    HTTP_OK,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    HTTP_OK,
 )
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv

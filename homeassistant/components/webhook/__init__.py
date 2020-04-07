@@ -5,9 +5,9 @@ import secrets
 from aiohttp.web import Request, Response
 import voluptuous as vol
 
-from homeassistant.const import HTTP_OK
 from homeassistant.components import websocket_api
 from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.const import HTTP_OK
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 

@@ -3,9 +3,9 @@ import json
 from typing import Any, Dict, Optional
 from urllib.parse import parse_qsl
 
-from homeassistant.const import HTTP_OK
-
 from multidict import CIMultiDict, MultiDict
+
+from homeassistant.const import HTTP_OK
 
 
 class MockRequest:

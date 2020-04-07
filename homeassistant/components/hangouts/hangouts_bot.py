@@ -7,8 +7,8 @@ import aiohttp
 import hangups
 from hangups import ChatMessageEvent, ChatMessageSegment, Client, get_auth, hangouts_pb2
 
-from homeassistant.core import callback
 from homeassistant.const import HTTP_OK
+from homeassistant.core import callback
 from homeassistant.helpers import dispatcher, intent
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 

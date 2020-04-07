@@ -6,6 +6,7 @@ from typing import Optional
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
 from .const import (
+    HTTP_OK,
     KEY_DEVICES,
     KEY_ENABLED,
     KEY_EXTERNAL_ID,
@@ -19,7 +20,6 @@ from .const import (
     KEY_STATUS,
     KEY_USERNAME,
     KEY_ZONES,
-    HTTP_OK,
 )
 from .webhooks import LISTEN_EVENT_TYPES, WEBHOOK_CONST_ID
 

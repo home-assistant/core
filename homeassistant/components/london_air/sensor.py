@@ -5,8 +5,8 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.const import HTTP_OK
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import HTTP_OK
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle

@@ -12,10 +12,10 @@ from aiohttp.web_exceptions import (
 import voluptuous as vol
 
 from homeassistant.auth.models import User
-from homeassistant.const import HTTP_OK
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.const import KEY_HASS_USER, KEY_REAL_IP
 from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.const import HTTP_OK
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv

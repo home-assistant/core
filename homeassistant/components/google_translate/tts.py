@@ -10,8 +10,8 @@ from gtts_token import gtts_token
 import voluptuous as vol
 import yarl
 
-from homeassistant.const import HTTP_OK
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
+from homeassistant.const import HTTP_OK
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)

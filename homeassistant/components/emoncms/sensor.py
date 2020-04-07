@@ -13,9 +13,9 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
     CONF_VALUE_TEMPLATE,
+    HTTP_OK,
     POWER_WATT,
     STATE_UNKNOWN,
-    HTTP_OK,
 )
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv

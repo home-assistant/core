@@ -126,13 +126,13 @@ from homeassistant.auth.models import (
     Credentials,
     User,
 )
-from homeassistant.const import HTTP_OK
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_REAL_IP
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.const import HTTP_OK
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util

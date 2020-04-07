@@ -12,7 +12,7 @@ from homeassistant.components.http import (
     CONF_SSL_CERTIFICATE,
     DEFAULT_SERVER_HOST,
 )
-from homeassistant.const import SERVER_PORT, HTTP_OK
+from homeassistant.const import HTTP_OK, SERVER_PORT
 
 from .const import X_HASSIO
 
