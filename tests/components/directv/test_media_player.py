@@ -32,11 +32,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
 )
-from homeassistant.const import (
-    STATE_PAUSED,
-    STATE_PLAYING,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import STATE_PAUSED, STATE_PLAYING, STATE_UNAVAILABLE
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
