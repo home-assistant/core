@@ -4,16 +4,16 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from homeassistant import data_entry_flow
+from homeassistant import data_entry_flow, setup
+from homeassistant.components import ssdp
 from homeassistant.components.synology_dsm.const import (
     CONF_VOLUMES,
-    DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_PORT_SSL,
     DEFAULT_SSL,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     CONF_DISKS,
     CONF_HOST,
@@ -47,10 +47,10 @@ def mock_controller_service():
     with patch(
         "homeassistant.components.synology_dsm.config_flow.SynologyDSM"
     ) as service_mock:
-        service_mock.return_value.login = Mock(return_value=True)
-        service_mock.return_value.information = Mock(serial=SERIAL)
-        service_mock.return_value.utilisation = Mock(cpu_user_load=1)
-        service_mock.return_value.storage = Mock(disks_ids=[], volumes_ids=[])
+        service_mock.return_value.information.serial = SERIAL
+        service_mock.return_value.utilisation.cpu_user_load = 1
+        service_mock.return_value.storage.disks_ids = []
+        service_mock.return_value.storage.volumes_ids = []
         yield service_mock
 
 
@@ -70,10 +70,10 @@ def mock_controller_service_failed():
     with patch(
         "homeassistant.components.synology_dsm.config_flow.SynologyDSM"
     ) as service_mock:
-        service_mock.return_value.login = Mock(return_value=True)
-        service_mock.return_value.information = Mock(serial=None)
-        service_mock.return_value.utilisation = Mock(cpu_user_load=None)
-        service_mock.return_value.storage = Mock(disks_ids=None, volumes_ids=None)
+        service_mock.return_value.information.serial = None
+        service_mock.return_value.utilisation.cpu_user_load = None
+        service_mock.return_value.storage.disks_ids = None
+        service_mock.return_value.storage.volumes_ids = None
         yield service_mock
 
 
@@ -90,7 +90,6 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
         DOMAIN,
         context={"source": SOURCE_USER},
         data={
-            CONF_NAME: NAME,
             CONF_HOST: HOST,
             CONF_PORT: PORT,
             CONF_SSL: SSL,
@@ -101,7 +100,6 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["result"].unique_id == SERIAL
     assert result["title"] == HOST
-    assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == PORT
     assert result["data"][CONF_SSL] == SSL
@@ -110,7 +108,7 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
     assert result["data"].get(CONF_DISKS) is None
     assert result["data"].get(CONF_VOLUMES) is None
 
-    service.return_value.information = Mock(serial=SERIAL_2)
+    service.return_value.information.serial = SERIAL_2
     # test without port + False SSL
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -126,7 +124,6 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["result"].unique_id == SERIAL_2
     assert result["title"] == HOST
-    assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == DEFAULT_PORT
     assert not result["data"][CONF_SSL]
@@ -147,7 +144,6 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["result"].unique_id == SERIAL
     assert result["title"] == HOST
-    assert result["data"][CONF_NAME] == DEFAULT_NAME
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == DEFAULT_PORT_SSL
     assert result["data"][CONF_SSL] == DEFAULT_SSL
@@ -156,13 +152,12 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
     assert result["data"].get(CONF_DISKS) is None
     assert result["data"].get(CONF_VOLUMES) is None
 
-    service.return_value.information = Mock(serial=SERIAL_2)
+    service.return_value.information.serial = SERIAL_2
     # import with all
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data={
-            CONF_NAME: NAME,
             CONF_HOST: HOST_2,
             CONF_PORT: PORT,
             CONF_SSL: SSL,
@@ -175,7 +170,6 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["result"].unique_id == SERIAL_2
     assert result["title"] == HOST_2
-    assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST_2
     assert result["data"][CONF_PORT] == PORT
     assert result["data"][CONF_SSL] == SSL
@@ -223,7 +217,9 @@ async def test_login_failed(hass: HomeAssistantType, service_login_failed: Magic
     assert result["errors"] == {CONF_USERNAME: "login"}
 
 
-async def test_connection_failed(hass: HomeAssistantType, service_failed: MagicMock):
+async def test_missing_data_after_login(
+    hass: HomeAssistantType, service_failed: MagicMock
+):
     """Test when we have errors during connection."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -231,4 +227,35 @@ async def test_connection_failed(hass: HomeAssistantType, service_failed: MagicM
         data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "unknown"}
+    assert result["errors"] == {"base": "missing_data"}
+
+
+async def test_form_ssdp(hass: HomeAssistantType, service: MagicMock):
+    """Test we can setup from ssdp."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data={
+            ssdp.ATTR_SSDP_LOCATION: "http://192.168.1.5:5000",
+            ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
+        },
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "link"
+    assert result["errors"] == {}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+    )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["title"] == "192.168.1.5"
+    assert result2["data"] == {
+        CONF_HOST: "192.168.1.5",
+        CONF_PORT: DEFAULT_PORT_SSL,
+        CONF_PASSWORD: PASSWORD,
+        CONF_SSL: DEFAULT_SSL,
+        CONF_USERNAME: USERNAME,
+    }
