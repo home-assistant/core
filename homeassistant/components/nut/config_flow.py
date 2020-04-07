@@ -113,13 +113,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if self._host_port_alias_already_configured(user_input):
                 return self.async_abort(reason="already_configured")
-            try:
-                await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            _, errors = await self._async_validate_or_error(user_input)
 
             if not errors:
                 title = _format_host_port_alias(user_input)
@@ -133,13 +127,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the user input."""
         errors = {}
         if user_input is not None:
-            try:
-                info = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            info, errors = await self._async_validate_or_error(user_input)
 
             if not errors:
                 self.nut_config.update(user_input)
@@ -170,14 +158,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.nut_config.update(user_input)
         if self._host_port_alias_already_configured(self.nut_config):
             return self.async_abort(reason="already_configured")
-        errors = {}
-        try:
-            info = await validate_input(self.hass, self.nut_config)
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
+
+        info, errors = await self._async_validate_or_error(self.nut_config)
 
         if errors:
             return self.async_show_form(
@@ -203,6 +185,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             for entry in self._async_current_entries()
         }
         return _format_host_port_alias(user_input) in existing_host_port_aliases
+
+    async def _async_validate_or_error(self, config):
+        errors = {}
+        info = {}
+        try:
+            info = await validate_input(self.hass, config)
+        except CannotConnect:
+            errors["base"] = "cannot_connect"
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        return info, errors
 
     @staticmethod
     @callback
