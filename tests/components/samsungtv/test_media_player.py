@@ -143,6 +143,7 @@ def remotews_fixture():
         remote.__enter__ = mock.Mock()
         remote.__exit__ = mock.Mock()
         remote_class.return_value = remote
+        remote_class().__enter__().token = "FAKE_TOKEN"
         socket1.gethostbyname.return_value = "FAKE_IP_ADDRESS"
         socket2.gethostbyname.return_value = "FAKE_IP_ADDRESS"
         yield remote
@@ -648,9 +649,7 @@ async def test_play_media(hass, remote):
 
 async def test_play_media_invalid_type(hass, remote):
     """Test for play_media with invalid media type."""
-    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote, patch(
-        "homeassistant.components.samsungtv.config_flow.socket"
-    ):
+    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         url = "https://example.com"
         await setup_samsungtv(hass, MOCK_CONFIG)
         remote.reset_mock()
@@ -672,9 +671,7 @@ async def test_play_media_invalid_type(hass, remote):
 
 async def test_play_media_channel_as_string(hass, remote):
     """Test for play_media with invalid channel as string."""
-    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote, patch(
-        "homeassistant.components.samsungtv.config_flow.socket"
-    ):
+    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         url = "https://example.com"
         await setup_samsungtv(hass, MOCK_CONFIG)
         remote.reset_mock()
@@ -696,9 +693,7 @@ async def test_play_media_channel_as_string(hass, remote):
 
 async def test_play_media_channel_as_non_positive(hass, remote):
     """Test for play_media with invalid channel as non positive integer."""
-    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote, patch(
-        "homeassistant.components.samsungtv.config_flow.socket"
-    ):
+    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         await setup_samsungtv(hass, MOCK_CONFIG)
         remote.reset_mock()
         assert await hass.services.async_call(
@@ -735,9 +730,7 @@ async def test_select_source(hass, remote):
 
 async def test_select_source_invalid_source(hass, remote):
     """Test for select_source with invalid source."""
-    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote, patch(
-        "homeassistant.components.samsungtv.config_flow.socket"
-    ):
+    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         await setup_samsungtv(hass, MOCK_CONFIG)
         remote.reset_mock()
         assert await hass.services.async_call(

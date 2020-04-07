@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.homekit
-HAP-python==2.8.0
+HAP-python==2.8.1
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
@@ -47,7 +47,7 @@ aio_geojson_nsw_rfs_incidents==0.3
 aio_georss_gdacs==0.3
 
 # homeassistant.components.ambient_station
-aioambient==1.1.0
+aioambient==1.1.1
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.2.3
@@ -281,7 +281,7 @@ hole==0.5.1
 holidays==0.10.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200403.0
+home-assistant-frontend==20200406.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -700,7 +700,7 @@ sentry-sdk==0.13.5
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.0.5
+simplisafe-python==9.0.6
 
 # homeassistant.components.sleepiq
 sleepyq==0.7

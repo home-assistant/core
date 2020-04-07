@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'amfitri\u00f3 ja est\u00e0 configurat"
+        },
+        "error": {
+            "login": "Error d\u2019inici de sessi\u00f3: comprova el nom d'usuari i la contrasenya"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_version": "Versi\u00f3 DSM",
+                    "host": "Amfitri\u00f3",
+                    "name": "Nom",
+                    "password": "Contrasenya",
+                    "port": "Port",
+                    "ssl": "Utilitza SSL/TLS per connectar-te al servidor NAS",
+                    "username": "Nom d'usuari"
+                },
+                "title": "Synology DSM"
+            }
+        },
+        "title": "Synology DSM"
+    }
+}

@@ -179,8 +179,8 @@ async def test_service_calls_with_entity_id(hass):
     # Checking that values were not (!) restored
     state = hass.states.get(ZONE_1_ID)
 
-    assert 1.0 == state.attributes[ATTR_MEDIA_VOLUME_LEVEL]
-    assert "three" == state.attributes[ATTR_INPUT_SOURCE]
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 1.0
+    assert state.attributes[ATTR_INPUT_SOURCE] == "three"
 
     # Restoring media player to its previous state
     await _call_monoprice_service(hass, SERVICE_RESTORE, {"entity_id": ZONE_1_ID})
@@ -188,8 +188,8 @@ async def test_service_calls_with_entity_id(hass):
 
     state = hass.states.get(ZONE_1_ID)
 
-    assert 0.0 == state.attributes[ATTR_MEDIA_VOLUME_LEVEL]
-    assert "one" == state.attributes[ATTR_INPUT_SOURCE]
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.0
+    assert state.attributes[ATTR_INPUT_SOURCE] == "one"
 
 
 async def test_service_calls_with_all_entities(hass):
@@ -221,8 +221,8 @@ async def test_service_calls_with_all_entities(hass):
 
     state = hass.states.get(ZONE_1_ID)
 
-    assert 0.0 == state.attributes[ATTR_MEDIA_VOLUME_LEVEL]
-    assert "one" == state.attributes[ATTR_INPUT_SOURCE]
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.0
+    assert state.attributes[ATTR_INPUT_SOURCE] == "one"
 
 
 async def test_service_calls_without_relevant_entities(hass):
@@ -254,8 +254,8 @@ async def test_service_calls_without_relevant_entities(hass):
 
     state = hass.states.get(ZONE_1_ID)
 
-    assert 1.0 == state.attributes[ATTR_MEDIA_VOLUME_LEVEL]
-    assert "three" == state.attributes[ATTR_INPUT_SOURCE]
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 1.0
+    assert state.attributes[ATTR_INPUT_SOURCE] == "three"
 
 
 async def test_restore_without_snapshort(hass):
@@ -290,8 +290,8 @@ async def test_update(hass):
 
     state = hass.states.get(ZONE_1_ID)
 
-    assert 1.0 == state.attributes[ATTR_MEDIA_VOLUME_LEVEL]
-    assert "three" == state.attributes[ATTR_INPUT_SOURCE]
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 1.0
+    assert state.attributes[ATTR_INPUT_SOURCE] == "three"
 
 
 async def test_supported_features(hass):
@@ -316,7 +316,7 @@ async def test_source_list(hass):
 
     state = hass.states.get(ZONE_1_ID)
     # Note, the list is sorted!
-    assert ["one", "three"] == state.attributes[ATTR_INPUT_SOURCE_LIST]
+    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == ["one", "three"]
 
 
 async def test_source_list_with_options(hass):
@@ -325,7 +325,7 @@ async def test_source_list_with_options(hass):
 
     state = hass.states.get(ZONE_1_ID)
     # Note, the list is sorted!
-    assert ["two", "four"] == state.attributes[ATTR_INPUT_SOURCE_LIST]
+    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == ["two", "four"]
 
 
 async def test_select_source(hass):
@@ -338,7 +338,7 @@ async def test_select_source(hass):
         SERVICE_SELECT_SOURCE,
         {"entity_id": ZONE_1_ID, ATTR_INPUT_SOURCE: "three"},
     )
-    assert 3 == monoprice.zones[11].source
+    assert monoprice.zones[11].source == 3
 
     # Trying to set unknown source
     await _call_media_player_service(
@@ -346,7 +346,7 @@ async def test_select_source(hass):
         SERVICE_SELECT_SOURCE,
         {"entity_id": ZONE_1_ID, ATTR_INPUT_SOURCE: "no name"},
     )
-    assert 3 == monoprice.zones[11].source
+    assert monoprice.zones[11].source == 3
 
 
 async def test_unknown_source(hass):
@@ -403,27 +403,27 @@ async def test_volume_up_down(hass):
     await _call_media_player_service(
         hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 0.0}
     )
-    assert 0 == monoprice.zones[11].volume
+    assert monoprice.zones[11].volume == 0
 
     await _call_media_player_service(
         hass, SERVICE_VOLUME_DOWN, {"entity_id": ZONE_1_ID}
     )
     # should not go below zero
-    assert 0 == monoprice.zones[11].volume
+    assert monoprice.zones[11].volume == 0
 
     await _call_media_player_service(hass, SERVICE_VOLUME_UP, {"entity_id": ZONE_1_ID})
-    assert 1 == monoprice.zones[11].volume
+    assert monoprice.zones[11].volume == 1
 
     await _call_media_player_service(
         hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 1.0}
     )
-    assert 38 == monoprice.zones[11].volume
+    assert monoprice.zones[11].volume == 38
 
     await _call_media_player_service(hass, SERVICE_VOLUME_UP, {"entity_id": ZONE_1_ID})
     # should not go above 38
-    assert 38 == monoprice.zones[11].volume
+    assert monoprice.zones[11].volume == 38
 
     await _call_media_player_service(
         hass, SERVICE_VOLUME_DOWN, {"entity_id": ZONE_1_ID}
     )
-    assert 37 == monoprice.zones[11].volume
+    assert monoprice.zones[11].volume == 37
