@@ -252,6 +252,11 @@ class SenseTrendsSensor(Entity):
         return self._unit_of_measurement
 
     @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {ATTR_ATTRIBUTION: ATTRIBUTION}
+
+    @property
     def icon(self):
         """Icon to use in the frontend, if any."""
         return ICON
@@ -319,6 +324,11 @@ class SenseEnergyDevice(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
         return POWER_WATT
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
     def device_class(self):
