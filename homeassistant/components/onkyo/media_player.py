@@ -7,7 +7,6 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
-    SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
@@ -69,7 +68,6 @@ SUPPORT_ONKYO = (
     | SUPPORT_TURN_ON
     | SUPPORT_TURN_OFF
     | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PLAY
     | SUPPORT_PLAY_MEDIA
 )
 
@@ -80,7 +78,6 @@ SUPPORT_ONKYO_WO_VOLUME = (
     | SUPPORT_TURN_ON
     | SUPPORT_TURN_OFF
     | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PLAY
     | SUPPORT_PLAY_MEDIA
 )
 
@@ -246,11 +243,11 @@ class OnkyoAVR(MediaPlayerDevice):
         """
         self._query_avr("power")
         self._query_avr("volume")
-        self._query_avr("input-selector")
         self._query_avr("preset")
         if self._zone == "main":
             self._query_avr("hdmi-output-selector")
             self._query_avr("audio-muting")
+            self._query_avr("input-selector")
 
     @property
     def supported_features(self):
