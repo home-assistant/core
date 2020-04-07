@@ -86,7 +86,7 @@ class DdWrtDeviceScanner(DeviceScanner):
             if not data:
                 return None
 
-            dhcp_leases = data.get("dhcp_leases", None)
+            dhcp_leases = data.get("dhcp_leases")
 
             if not dhcp_leases:
                 return None
@@ -124,9 +124,9 @@ class DdWrtDeviceScanner(DeviceScanner):
         self.last_results = []
 
         if self.wireless_only:
-            active_clients = data.get("active_wireless", None)
+            active_clients = data.get("active_wireless")
         else:
-            active_clients = data.get("arp_table", None)
+            active_clients = data.get("arp_table")
         if not active_clients:
             return False
 
