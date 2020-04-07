@@ -52,15 +52,12 @@ async def test_main_services(
 
     with patch("directv.DIRECTV.remote") as remote_mock:
         await common.async_turn_off(hass, MAIN_ENTITY_ID)
-        await hass.async_block_till_done()
         remote_mock.assert_called_once_with("poweroff", "0")
 
     with patch("directv.DIRECTV.remote") as remote_mock:
         await common.async_turn_on(hass, MAIN_ENTITY_ID)
-        await hass.async_block_till_done()
         remote_mock.assert_called_once_with("poweron", "0")
 
     with patch("directv.DIRECTV.remote") as remote_mock:
         await common.async_send_command(hass, ["dash"], MAIN_ENTITY_ID)
-        await hass.async_block_till_done()
         remote_mock.assert_called_once_with("dash", "0")
