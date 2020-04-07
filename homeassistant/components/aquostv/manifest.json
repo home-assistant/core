@@ -3,6 +3,5 @@
   "name": "Sharp Aquos TV",
   "documentation": "https://www.home-assistant.io/integrations/aquostv",
   "requirements": ["sharp_aquos_rc==0.3.2"],
-  "dependencies": [],
   "codeowners": []
 }

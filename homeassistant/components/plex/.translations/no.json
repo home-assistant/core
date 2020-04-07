@@ -20,7 +20,7 @@
             "manual_setup": {
                 "data": {
                     "host": "Vert",
-                    "port": "Port",
+                    "port": "",
                     "ssl": "Bruk SSL",
                     "token": "Token (hvis n\u00f8dvendig)",
                     "verify_ssl": "Verifisere SSL-sertifikat"
@@ -29,7 +29,7 @@
             },
             "select_server": {
                 "data": {
-                    "server": "Server"
+                    "server": ""
                 },
                 "description": "Flere servere tilgjengelig, velg en:",
                 "title": "Velg Plex-server"
@@ -47,7 +47,7 @@
                 "title": "Koble til Plex-server"
             }
         },
-        "title": "Plex"
+        "title": ""
     },
     "options": {
         "step": {

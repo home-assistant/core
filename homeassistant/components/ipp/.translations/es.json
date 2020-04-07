@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Esta impresora ya est\u00e1 configurada.",
+            "connection_error": "No se pudo conectar con la impresora.",
+            "connection_upgrade": "No se pudo conectar con la impresora debido a que se requiere una actualizaci\u00f3n de la conexi\u00f3n."
+        },
+        "error": {
+            "connection_error": "No se pudo conectar con la impresora.",
+            "connection_upgrade": "No se pudo conectar con la impresora. Int\u00e9ntalo de nuevo con la opci\u00f3n SSL/TLS marcada."
+        },
+        "flow_title": "Impresora: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "base_path": "Ruta relativa a la impresora",
+                    "host": "Host o direcci\u00f3n IP",
+                    "port": "Puerto",
+                    "ssl": "La impresora admite la comunicaci\u00f3n a trav\u00e9s de SSL/TLS",
+                    "verify_ssl": "La impresora usa un certificado SSL adecuado"
+                },
+                "description": "Configura tu impresora a trav\u00e9s del Protocolo de Impresi\u00f3n de Internet (IPP) para integrarla con Home Assistant.",
+                "title": "Vincula tu impresora"
+            },
+            "zeroconf_confirm": {
+                "description": "\u00bfQuieres a\u00f1adir la impresora llamada `{name}` a Home Assistant?",
+                "title": "Impresora encontrada"
+            }
+        },
+        "title": "Protocolo de Impresi\u00f3n de Internet (IPP)"
+    }
+}

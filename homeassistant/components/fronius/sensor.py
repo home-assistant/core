@@ -186,7 +186,6 @@ class FroniusAdapter:
 
     async def _update(self):
         """Return values of interest."""
-        pass
 
     async def register(self, sensor):
         """Register child sensor for update subscriptions."""

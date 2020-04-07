@@ -537,7 +537,7 @@ def get_entity_state(config, entity):
 
         if data[STATE_ON]:
             data[STATE_BRIGHTNESS] = entity.attributes.get(ATTR_BRIGHTNESS, 0)
-            hue_sat = entity.attributes.get(ATTR_HS_COLOR, None)
+            hue_sat = entity.attributes.get(ATTR_HS_COLOR)
             if hue_sat is not None:
                 hue = hue_sat[0]
                 sat = hue_sat[1]
@@ -677,7 +677,11 @@ def entity_to_json(config, entity):
         retval["type"] = "Color temperature light"
         retval["modelid"] = "HASS312"
         retval["state"].update(
-            {HUE_API_STATE_COLORMODE: "ct", HUE_API_STATE_CT: state[STATE_COLOR_TEMP]}
+            {
+                HUE_API_STATE_COLORMODE: "ct",
+                HUE_API_STATE_CT: state[STATE_COLOR_TEMP],
+                HUE_API_STATE_BRI: state[STATE_BRIGHTNESS],
+            }
         )
     elif entity_features & (
         SUPPORT_BRIGHTNESS

@@ -64,8 +64,10 @@ class EVBinarySensor(BinarySensorDevice):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            UPDATE_TOPIC, self.async_update_callback
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                UPDATE_TOPIC, self.async_update_callback
+            )
         )
 
     @callback
@@ -73,7 +75,7 @@ class EVBinarySensor(BinarySensorDevice):
         """Update state."""
         if self._car is not None:
             self._is_on = getattr(self._car, self._attr, None)
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     @property
     def should_poll(self):

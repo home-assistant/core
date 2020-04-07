@@ -15,7 +15,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_STEP_PCT, DOMAIN, SUPPORT_BRIGHTNESS
+from . import ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS_STEP_PCT, DOMAIN, SUPPORT_BRIGHTNESS
 
 TYPE_BRIGHTNESS_INCREASE = "brightness_increase"
 TYPE_BRIGHTNESS_DECREASE = "brightness_decrease"
@@ -28,7 +28,7 @@ ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
             toggle_entity.DEVICE_ACTION_TYPES
             + [TYPE_BRIGHTNESS_INCREASE, TYPE_BRIGHTNESS_DECREASE]
         ),
-        vol.Optional(ATTR_BRIGHTNESS): vol.All(
+        vol.Optional(ATTR_BRIGHTNESS_PCT): vol.All(
             vol.Coerce(int), vol.Range(min=0, max=100)
         ),
     }
@@ -57,8 +57,8 @@ async def async_call_action_from_config(
         data[ATTR_BRIGHTNESS_STEP_PCT] = 10
     elif config[CONF_TYPE] == TYPE_BRIGHTNESS_DECREASE:
         data[ATTR_BRIGHTNESS_STEP_PCT] = -10
-    elif ATTR_BRIGHTNESS in config:
-        data[ATTR_BRIGHTNESS] = config[ATTR_BRIGHTNESS]
+    elif ATTR_BRIGHTNESS_PCT in config:
+        data[ATTR_BRIGHTNESS_PCT] = config[ATTR_BRIGHTNESS_PCT]
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, data, blocking=True, context=context
@@ -125,7 +125,7 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: dict) -> di
     return {
         "extra_fields": vol.Schema(
             {
-                vol.Optional(ATTR_BRIGHTNESS): vol.All(
+                vol.Optional(ATTR_BRIGHTNESS_PCT): vol.All(
                     vol.Coerce(int), vol.Range(min=0, max=100)
                 )
             }

@@ -18,13 +18,11 @@ def mock_responses(mock, single=False):
     else:
         suffix = ""
     mock.put(base_url + "login", text=load_fixture("sleepiq-login.json"))
-    mock.get(
-        base_url + "bed?_k=0987", text=load_fixture("sleepiq-bed{}.json".format(suffix))
-    )
+    mock.get(base_url + "bed?_k=0987", text=load_fixture(f"sleepiq-bed{suffix}.json"))
     mock.get(base_url + "sleeper?_k=0987", text=load_fixture("sleepiq-sleeper.json"))
     mock.get(
         base_url + "bed/familyStatus?_k=0987",
-        text=load_fixture("sleepiq-familystatus{}.json".format(suffix)),
+        text=load_fixture(f"sleepiq-familystatus{suffix}.json"),
     )
 
 

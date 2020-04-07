@@ -1,0 +1,22 @@
+{
+  "locations": [
+    {
+      "clientAddr": "0",
+      "locationName": "Host"
+    },
+    {
+      "clientAddr": "2CA17D1CD30X",
+      "locationName": "Client"
+    },
+    {
+      "clientAddr": "9XXXXXXXXXX9",
+      "locationName": "Unavailable Client"
+    }
+  ],
+  "status": {
+    "code": 200,
+    "commandResult": 0,
+    "msg": "OK.",
+    "query": "/info/getLocations?callback=jsonp"
+  }
+}

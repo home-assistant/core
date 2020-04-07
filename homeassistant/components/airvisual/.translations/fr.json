@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cette cl\u00e9 API est d\u00e9j\u00e0 utilis\u00e9e."
+        },
+        "error": {
+            "invalid_api_key": "Cl\u00e9 API invalide"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Cl\u00e9 API",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "show_on_map": "Afficher la g\u00e9ographie surveill\u00e9e sur la carte"
+                },
+                "description": "Surveiller la qualit\u00e9 de l\u2019air dans un emplacement g\u00e9ographique.",
+                "title": "Configurer AirVisual"
+            }
+        },
+        "title": "AirVisual"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "description": "D\u00e9finissez diverses options pour l'int\u00e9gration d'AirVisual.",
+                "title": "Configurer AirVisual"
+            }
+        }
+    }
+}

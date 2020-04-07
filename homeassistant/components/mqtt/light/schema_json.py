@@ -54,6 +54,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.color as color_util
 
+from ..debug_info import log_messages
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import CONF_BRIGHTNESS_SCALE
 
@@ -234,6 +235,7 @@ class MqttLightJson(
         last_state = await self.async_get_last_state()
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def state_received(msg):
             """Handle new MQTT messages."""
             values = json.loads(msg.payload)
@@ -284,7 +286,7 @@ class MqttLightJson(
                     )
                 except KeyError:
                     pass
-                except ValueError:
+                except (TypeError, ValueError):
                     _LOGGER.warning("Invalid brightness value received")
 
             if self._color_temp is not None:
@@ -300,8 +302,6 @@ class MqttLightJson(
                     self._effect = values["effect"]
                 except KeyError:
                     pass
-                except ValueError:
-                    _LOGGER.warning("Invalid effect value received")
 
             if self._white_value is not None:
                 try:

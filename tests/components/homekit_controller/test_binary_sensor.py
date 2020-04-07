@@ -3,6 +3,7 @@ from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_OCCUPANCY,
     DEVICE_CLASS_OPENING,
@@ -15,6 +16,7 @@ MOTION_DETECTED = ("motion", "motion-detected")
 CONTACT_STATE = ("contact", "contact-state")
 SMOKE_DETECTED = ("smoke", "smoke-detected")
 OCCUPANCY_DETECTED = ("occupancy", "occupancy-detected")
+LEAK_DETECTED = ("leak", "leak-detected")
 
 
 def create_motion_sensor_service(accessory):
@@ -107,3 +109,26 @@ async def test_occupancy_sensor_read_state(hass, utcnow):
     assert state.state == "on"
 
     assert state.attributes["device_class"] == DEVICE_CLASS_OCCUPANCY
+
+
+def create_leak_sensor_service(accessory):
+    """Define leak characteristics."""
+    service = accessory.add_service(ServicesTypes.LEAK_SENSOR)
+
+    cur_state = service.add_char(CharacteristicsTypes.LEAK_DETECTED)
+    cur_state.value = 0
+
+
+async def test_leak_sensor_read_state(hass, utcnow):
+    """Test that we can read the state of a HomeKit leak sensor accessory."""
+    helper = await setup_test_component(hass, create_leak_sensor_service)
+
+    helper.characteristics[LEAK_DETECTED].value = 0
+    state = await helper.poll_and_get_state()
+    assert state.state == "off"
+
+    helper.characteristics[LEAK_DETECTED].value = 1
+    state = await helper.poll_and_get_state()
+    assert state.state == "on"
+
+    assert state.attributes["device_class"] == DEVICE_CLASS_MOISTURE

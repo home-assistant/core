@@ -11,7 +11,7 @@
         "flow_title": "Samsung TV: {model}",
         "step": {
             "confirm": {
-                "description": "M\u00f6chtest du Samsung TV {model} einrichten? Wenn du noch nie eine Verbindung zum Home Assistant hergestellt hast, solltest du ein Popup-Fenster auf deinem Fernseher sehen, das nach einer Authentifizierung fragt. Manuelle Konfigurationen f\u00fcr dieses Fernsehger\u00e4t werden \u00fcberschrieben.",
+                "description": "M\u00f6chtest du Samsung TV {model} einrichten? Wenn du noch nie eine Verbindung zum Home Assistant hergestellt hast, solltest du ein Popup-Fenster auf deinem Fernseher sehen, das nach einer Autorisierung fragt. Manuelle Konfigurationen f\u00fcr dieses Fernsehger\u00e4t werden \u00fcberschrieben.",
                 "title": "Samsung TV"
             },
             "user": {

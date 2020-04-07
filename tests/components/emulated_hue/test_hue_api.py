@@ -50,7 +50,7 @@ from tests.common import (
 HTTP_SERVER_PORT = get_test_instance_port()
 BRIDGE_SERVER_PORT = get_test_instance_port()
 
-BRIDGE_URL_BASE = "http://127.0.0.1:{}".format(BRIDGE_SERVER_PORT) + "{}"
+BRIDGE_URL_BASE = f"http://127.0.0.1:{BRIDGE_SERVER_PORT}" + "{}"
 JSON_HEADERS = {CONTENT_TYPE: const.CONTENT_TYPE_JSON}
 
 
@@ -130,50 +130,8 @@ def hass_hue(loop, hass):
         )
     )
 
-    # Kitchen light is explicitly excluded from being exposed
-    kitchen_light_entity = hass.states.get("light.kitchen_lights")
-    attrs = dict(kitchen_light_entity.attributes)
-    attrs[emulated_hue.ATTR_EMULATED_HUE] = False
-    hass.states.async_set(
-        kitchen_light_entity.entity_id, kitchen_light_entity.state, attributes=attrs
-    )
-
     # create a lamp without brightness support
     hass.states.async_set("light.no_brightness", "on", {})
-
-    # Ceiling Fan is explicitly excluded from being exposed
-    ceiling_fan_entity = hass.states.get("fan.ceiling_fan")
-    attrs = dict(ceiling_fan_entity.attributes)
-    attrs[emulated_hue.ATTR_EMULATED_HUE_HIDDEN] = True
-    hass.states.async_set(
-        ceiling_fan_entity.entity_id, ceiling_fan_entity.state, attributes=attrs
-    )
-
-    # Expose the script
-    script_entity = hass.states.get("script.set_kitchen_light")
-    attrs = dict(script_entity.attributes)
-    attrs[emulated_hue.ATTR_EMULATED_HUE] = True
-    hass.states.async_set(
-        script_entity.entity_id, script_entity.state, attributes=attrs
-    )
-
-    # Expose cover
-    cover_entity = hass.states.get("cover.living_room_window")
-    attrs = dict(cover_entity.attributes)
-    attrs[emulated_hue.ATTR_EMULATED_HUE_HIDDEN] = False
-    hass.states.async_set(cover_entity.entity_id, cover_entity.state, attributes=attrs)
-
-    # Expose Hvac
-    hvac_entity = hass.states.get("climate.hvac")
-    attrs = dict(hvac_entity.attributes)
-    attrs[emulated_hue.ATTR_EMULATED_HUE_HIDDEN] = False
-    hass.states.async_set(hvac_entity.entity_id, hvac_entity.state, attributes=attrs)
-
-    # Expose HeatPump
-    hp_entity = hass.states.get("climate.heatpump")
-    attrs = dict(hp_entity.attributes)
-    attrs[emulated_hue.ATTR_EMULATED_HUE_HIDDEN] = False
-    hass.states.async_set(hp_entity.entity_id, hp_entity.state, attributes=attrs)
 
     return hass
 
@@ -188,7 +146,18 @@ def hue_client(loop, hass_hue, aiohttp_client):
             emulated_hue.CONF_TYPE: emulated_hue.TYPE_ALEXA,
             emulated_hue.CONF_ENTITIES: {
                 "light.bed_light": {emulated_hue.CONF_ENTITY_HIDDEN: True},
+                # Kitchen light is explicitly excluded from being exposed
+                "light.kitchen_lights": {emulated_hue.CONF_ENTITY_HIDDEN: True},
+                # Ceiling Fan is explicitly excluded from being exposed
+                "fan.ceiling_fan": {emulated_hue.CONF_ENTITY_HIDDEN: True},
+                # Expose the script
+                "script.set_kitchen_light": {emulated_hue.CONF_ENTITY_HIDDEN: False},
+                # Expose cover
                 "cover.living_room_window": {emulated_hue.CONF_ENTITY_HIDDEN: False},
+                # Expose Hvac
+                "climate.hvac": {emulated_hue.CONF_ENTITY_HIDDEN: False},
+                # Expose HeatPump
+                "climate.heatpump": {emulated_hue.CONF_ENTITY_HIDDEN: False},
             },
         },
     )
@@ -212,7 +181,7 @@ async def test_discover_lights(hue_client):
 
     result_json = await result.json()
 
-    devices = set(val["uniqueid"] for val in result_json.values())
+    devices = {val["uniqueid"] for val in result_json.values()}
 
     # Make sure the lights we added to the config are there
     assert "00:2f:d2:31:ce:c5:55:cc-ee" in devices  # light.ceiling_lights
@@ -259,7 +228,7 @@ async def test_light_without_brightness_can_be_turned_off(hass_hue, hue_client):
 
     # Verify that SERVICE_TURN_OFF has been called
     await hass_hue.async_block_till_done()
-    assert 1 == len(turn_off_calls)
+    assert len(turn_off_calls) == 1
     call = turn_off_calls[-1]
 
     assert light.DOMAIN == call.domain
@@ -567,16 +536,16 @@ async def test_put_light_state_media_player(hass_hue, hue_client):
 
 async def test_close_cover(hass_hue, hue_client):
     """Test opening cover ."""
-    COVER_ID = "cover.living_room_window"
+    cover_id = "cover.living_room_window"
     # Turn the office light off first
     await hass_hue.services.async_call(
         cover.DOMAIN,
         const.SERVICE_CLOSE_COVER,
-        {const.ATTR_ENTITY_ID: COVER_ID},
+        {const.ATTR_ENTITY_ID: cover_id},
         blocking=True,
     )
 
-    cover_test = hass_hue.states.get(COVER_ID)
+    cover_test = hass_hue.states.get(cover_id)
     assert cover_test.state == "closing"
 
     for _ in range(7):
@@ -584,12 +553,12 @@ async def test_close_cover(hass_hue, hue_client):
         async_fire_time_changed(hass_hue, future)
         await hass_hue.async_block_till_done()
 
-    cover_test = hass_hue.states.get(COVER_ID)
+    cover_test = hass_hue.states.get(cover_id)
     assert cover_test.state == "closed"
 
     # Go through the API to turn it on
     cover_result = await perform_put_light_state(
-        hass_hue, hue_client, COVER_ID, True, 100
+        hass_hue, hue_client, cover_id, True, 100
     )
 
     assert cover_result.status == 200
@@ -605,22 +574,22 @@ async def test_close_cover(hass_hue, hue_client):
     assert len(cover_result_json) == 2
 
     # Check to make sure the state changed
-    cover_test_2 = hass_hue.states.get(COVER_ID)
+    cover_test_2 = hass_hue.states.get(cover_id)
     assert cover_test_2.state == "open"
 
 
 async def test_set_position_cover(hass_hue, hue_client):
     """Test setting position cover ."""
-    COVER_ID = "cover.living_room_window"
+    cover_id = "cover.living_room_window"
     # Turn the office light off first
     await hass_hue.services.async_call(
         cover.DOMAIN,
         const.SERVICE_CLOSE_COVER,
-        {const.ATTR_ENTITY_ID: COVER_ID},
+        {const.ATTR_ENTITY_ID: cover_id},
         blocking=True,
     )
 
-    cover_test = hass_hue.states.get(COVER_ID)
+    cover_test = hass_hue.states.get(cover_id)
     assert cover_test.state == "closing"
 
     for _ in range(7):
@@ -628,7 +597,7 @@ async def test_set_position_cover(hass_hue, hue_client):
         async_fire_time_changed(hass_hue, future)
         await hass_hue.async_block_till_done()
 
-    cover_test = hass_hue.states.get(COVER_ID)
+    cover_test = hass_hue.states.get(cover_id)
     assert cover_test.state == "closed"
 
     level = 20
@@ -636,7 +605,7 @@ async def test_set_position_cover(hass_hue, hue_client):
 
     # Go through the API to open
     cover_result = await perform_put_light_state(
-        hass_hue, hue_client, COVER_ID, False, brightness
+        hass_hue, hue_client, cover_id, False, brightness
     )
 
     assert cover_result.status == 200
@@ -659,7 +628,7 @@ async def test_set_position_cover(hass_hue, hue_client):
         await hass_hue.async_block_till_done()
 
     # Check to make sure the state changed
-    cover_test_2 = hass_hue.states.get(COVER_ID)
+    cover_test_2 = hass_hue.states.get(cover_id)
     assert cover_test_2.state == "open"
     assert cover_test_2.attributes.get("current_position") == level
 
@@ -804,7 +773,7 @@ async def perform_put_test_on_ceiling_lights(
 
 async def perform_get_light_state(client, entity_id, expected_status):
     """Test the getting of a light state."""
-    result = await client.get("/api/username/lights/{}".format(entity_id))
+    result = await client.get(f"/api/username/lights/{entity_id}")
 
     assert result.status == expected_status
 
@@ -839,7 +808,7 @@ async def perform_put_light_state(
         data[HUE_API_STATE_SAT] = saturation
 
     result = await client.put(
-        "/api/username/lights/{}/state".format(entity_id),
+        f"/api/username/lights/{entity_id}/state",
         headers=req_headers,
         data=json.dumps(data).encode(),
     )

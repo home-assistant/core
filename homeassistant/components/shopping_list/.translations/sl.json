@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Nakupovalni seznam je \u017ee konfiguriran."
+        },
+        "step": {
+            "user": {
+                "description": "Ali \u017eelite konfigurirati nakupovalni seznam?",
+                "title": "Nakupovalni seznam"
+            }
+        },
+        "title": "Nakupovalni seznam"
+    }
+}

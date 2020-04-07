@@ -41,6 +41,9 @@ RESOURCE_UPDATE_FIELDS = {
     vol.Optional(CONF_URL): cv.string,
 }
 
+SERVICE_RELOAD_RESOURCES = "reload_resources"
+RESOURCE_RELOAD_SERVICE_SCHEMA = vol.Schema({})
+
 CONF_TITLE = "title"
 CONF_REQUIRE_ADMIN = "require_admin"
 CONF_SHOW_IN_SIDEBAR = "show_in_sidebar"
@@ -76,6 +79,8 @@ def url_slug(value: Any) -> str:
     """Validate value is a valid url slug."""
     if value is None:
         raise vol.Invalid("Slug should not be None")
+    if "-" not in value:
+        raise vol.Invalid("Url path needs to contain a hyphen (-)")
     str_value = str(value)
     slg = slugify(str_value, separator="-")
     if str_value == slg:

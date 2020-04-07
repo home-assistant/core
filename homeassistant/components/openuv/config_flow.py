@@ -19,13 +19,13 @@ from .const import DOMAIN
 @callback
 def configured_instances(hass):
     """Return a set of configured OpenUV instances."""
-    return set(
-        "{0}, {1}".format(
+    return {
+        "{}, {}".format(
             entry.data.get(CONF_LATITUDE, hass.config.latitude),
             entry.data.get(CONF_LONGITUDE, hass.config.longitude),
         )
         for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+    }
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -34,10 +34,6 @@ class OpenUvFlowHandler(config_entries.ConfigFlow):
 
     VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
-
-    def __init__(self):
-        """Initialize the config flow."""
-        pass
 
     async def _show_form(self, errors=None):
         """Show the form to the user."""
@@ -64,7 +60,7 @@ class OpenUvFlowHandler(config_entries.ConfigFlow):
         if not user_input:
             return await self._show_form()
 
-        identifier = "{0}, {1}".format(
+        identifier = "{}, {}".format(
             user_input.get(CONF_LATITUDE, self.hass.config.latitude),
             user_input.get(CONF_LONGITUDE, self.hass.config.longitude),
         )

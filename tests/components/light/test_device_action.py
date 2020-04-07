@@ -126,7 +126,7 @@ async def test_get_action_capabilities_brightness(hass, device_reg, entity_reg):
     expected_capabilities = {
         "extra_fields": [
             {
-                "name": "brightness",
+                "name": "brightness_pct",
                 "optional": True,
                 "type": "integer",
                 "valueMax": 100,
@@ -218,7 +218,7 @@ async def test_action(hass, calls):
                         "device_id": "",
                         "entity_id": ent1.entity_id,
                         "type": "turn_on",
-                        "brightness": 75,
+                        "brightness_pct": 75,
                     },
                 },
             ]
@@ -273,11 +273,11 @@ async def test_action(hass, calls):
 
     assert len(turn_on_calls) == 3
     assert turn_on_calls[2].data["entity_id"] == ent1.entity_id
-    assert turn_on_calls[2].data["brightness"] == 75
+    assert turn_on_calls[2].data["brightness_pct"] == 75
 
     hass.bus.async_fire("test_on")
     await hass.async_block_till_done()
 
     assert len(turn_on_calls) == 4
     assert turn_on_calls[3].data["entity_id"] == ent1.entity_id
-    assert "brightness" not in turn_on_calls[3].data
+    assert "brightness_pct" not in turn_on_calls[3].data

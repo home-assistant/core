@@ -492,7 +492,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         units = "us"
 
     forecast_data = DarkSkyData(
-        api_key=config.get(CONF_API_KEY, None),
+        api_key=config.get(CONF_API_KEY),
         latitude=latitude,
         longitude=longitude,
         units=units,
@@ -771,7 +771,8 @@ def convert_to_camel(data):
     This is not pythonic, but needed for certain situations.
     """
     components = data.split("_")
-    return components[0] + "".join(x.title() for x in components[1:])
+    capital_components = "".join(x.title() for x in components[1:])
+    return f"{components[0]}{capital_components}"
 
 
 class DarkSkyData:

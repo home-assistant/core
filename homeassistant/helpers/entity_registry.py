@@ -146,7 +146,7 @@ class EntityRegistry:
         Conflicts checked against registered and currently existing entities.
         """
         return ensure_unique_string(
-            "{}.{}".format(domain, slugify(suggested_object_id)),
+            f"{domain}.{slugify(suggested_object_id)}",
             chain(
                 self.entities.keys(),
                 self.hass.states.async_entity_ids(domain),
@@ -518,7 +518,7 @@ def async_setup_entity_restore(
         if state is None or not state.attributes.get(ATTR_RESTORED):
             return
 
-        hass.states.async_remove(event.data["entity_id"])
+        hass.states.async_remove(event.data["entity_id"], context=event.context)
 
     hass.bus.async_listen(EVENT_ENTITY_REGISTRY_UPDATED, cleanup_restored_states)
 

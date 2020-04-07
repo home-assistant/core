@@ -184,7 +184,7 @@ class MikrotikData:
             # get new hub firmware version if updated
             self.firmware = self.get_info(ATTR_FIRMWARE)
 
-        except (CannotConnect, socket.timeout, socket.error):
+        except (CannotConnect, socket.timeout, OSError):
             self.available = False
             return
 
@@ -249,7 +249,7 @@ class MikrotikData:
                 response = list(self.api(cmd=cmd))
         except (
             librouteros.exceptions.ConnectionClosed,
-            socket.error,
+            OSError,
             socket.timeout,
         ) as api_error:
             _LOGGER.error("Mikrotik %s connection error %s", self._host, api_error)
@@ -332,16 +332,17 @@ class MikrotikHub:
     async def async_add_options(self):
         """Populate default options for Mikrotik."""
         if not self.config_entry.options:
+            data = dict(self.config_entry.data)
             options = {
-                CONF_ARP_PING: self.config_entry.data.pop(CONF_ARP_PING, False),
-                CONF_FORCE_DHCP: self.config_entry.data.pop(CONF_FORCE_DHCP, False),
-                CONF_DETECTION_TIME: self.config_entry.data.pop(
+                CONF_ARP_PING: data.pop(CONF_ARP_PING, False),
+                CONF_FORCE_DHCP: data.pop(CONF_FORCE_DHCP, False),
+                CONF_DETECTION_TIME: data.pop(
                     CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME
                 ),
             }
 
             self.hass.config_entries.async_update_entry(
-                self.config_entry, options=options
+                self.config_entry, data=data, options=options
             )
 
     async def request_update(self):
@@ -406,7 +407,7 @@ def get_api(hass, entry):
         return api
     except (
         librouteros.exceptions.LibRouterosError,
-        socket.error,
+        OSError,
         socket.timeout,
     ) as api_error:
         _LOGGER.error("Mikrotik %s error: %s", entry[CONF_HOST], api_error)

@@ -8,6 +8,5 @@
     "protobuf==3.6.1",
     "pillow==7.0.0"
   ],
-  "dependencies": [],
   "codeowners": []
 }

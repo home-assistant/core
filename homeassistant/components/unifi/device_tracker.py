@@ -16,24 +16,26 @@ from .unifi_client import UniFiClient
 
 LOGGER = logging.getLogger(__name__)
 
-DEVICE_ATTRIBUTES = [
+CLIENT_CONNECTED_ATTRIBUTES = [
     "_is_guest_by_uap",
     "ap_mac",
     "authorized",
     "essid",
-    "hostname",
     "ip",
     "is_11r",
     "is_guest",
-    "mac",
-    "name",
     "noted",
-    "oui",
     "qos_policy_applied",
     "radio",
     "radio_proto",
-    "site_id",
     "vlan",
+]
+
+CLIENT_STATIC_ATTRIBUTES = [
+    "hostname",
+    "mac",
+    "name",
+    "oui",
 ]
 
 
@@ -45,6 +47,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     option_track_clients = controller.option_track_clients
     option_track_devices = controller.option_track_devices
     option_track_wired_clients = controller.option_track_wired_clients
+    option_ssid_filter = controller.option_ssid_filter
 
     registry = await hass.helpers.entity_registry.async_get_registry()
 
@@ -86,6 +89,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         nonlocal option_track_clients
         nonlocal option_track_devices
         nonlocal option_track_wired_clients
+        nonlocal option_ssid_filter
 
         update = False
         remove = set()
@@ -115,6 +119,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 for mac, entity in tracked.items():
                     if isinstance(entity, UniFiClientTracker) and entity.is_wired:
                         remove.add(mac)
+
+        if option_ssid_filter != controller.option_ssid_filter:
+            option_ssid_filter = controller.option_ssid_filter
+            update = True
+
+            for mac, entity in tracked.items():
+                if (
+                    isinstance(entity, UniFiClientTracker)
+                    and not entity.is_wired
+                    and entity.client.essid not in option_ssid_filter
+                ):
+                    remove.add(mac)
 
         option_track_clients = controller.option_track_clients
         option_track_devices = controller.option_track_devices
@@ -157,10 +173,18 @@ def add_entities(controller, async_add_entities, tracked):
             if item_id in tracked:
                 continue
 
-            if tracker_class is UniFiClientTracker and (
-                not controller.option_track_wired_clients and items[item_id].is_wired
-            ):
-                continue
+            if tracker_class is UniFiClientTracker:
+                client = items[item_id]
+
+                if not controller.option_track_wired_clients and client.is_wired:
+                    continue
+
+                if (
+                    controller.option_ssid_filter
+                    and not client.is_wired
+                    and client.essid not in controller.option_ssid_filter
+                ):
+                    continue
 
             tracked[item_id] = tracker_class(items[item_id], controller)
             new_tracked.append(tracked[item_id])
@@ -195,7 +219,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             """Scheduled callback for update."""
             self.is_disconnected = True
             self.cancel_scheduled_update = None
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if (
             not self.is_wired
@@ -262,11 +286,13 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         """Return the client state attributes."""
         attributes = {}
 
-        for variable in DEVICE_ATTRIBUTES:
-            if variable in self.client.raw:
-                attributes[variable] = self.client.raw[variable]
-
         attributes["is_wired"] = self.is_wired
+
+        for variable in CLIENT_STATIC_ATTRIBUTES + CLIENT_CONNECTED_ATTRIBUTES:
+            if variable in self.client.raw:
+                if self.is_disconnected and variable in CLIENT_CONNECTED_ATTRIBUTES:
+                    continue
+                attributes[variable] = self.client.raw[variable]
 
         return attributes
 
@@ -301,7 +327,7 @@ class UniFiDeviceTracker(ScannerEntity):
         """Update the sensor's state."""
         LOGGER.debug("Updating UniFi tracked device %s", self.entity_id)
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def is_connected(self):

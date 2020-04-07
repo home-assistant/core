@@ -99,8 +99,10 @@ class AquaLogicSensor(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            UPDATE_TOPIC, self.async_update_callback
+        self.async_on_remove(
+            self.hass.helpers.dispatcher.async_dispatcher_connect(
+                UPDATE_TOPIC, self.async_update_callback
+            )
         )
 
     @callback
@@ -109,4 +111,4 @@ class AquaLogicSensor(Entity):
         panel = self._processor.panel
         if panel is not None:
             self._state = getattr(panel, self._type)
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()

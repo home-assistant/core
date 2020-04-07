@@ -58,16 +58,18 @@ class WirelessTagSensor(WirelessTagBaseSensor):
         # sensor.wirelesstag_bedroom_temperature
         # and not as sensor.bedroom for temperature and
         # sensor.bedroom_2 for humidity
-        self._entity_id = "{}.{}_{}_{}".format(
-            "sensor", WIRELESSTAG_DOMAIN, self.underscored_name, self._sensor_type
+        self._entity_id = (
+            f"sensor.{WIRELESSTAG_DOMAIN}_{self.underscored_name}_{self._sensor_type}"
         )
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass,
-            SIGNAL_TAG_UPDATE.format(self.tag_id, self.tag_manager_mac),
-            self._update_tag_info_callback,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_TAG_UPDATE.format(self.tag_id, self.tag_manager_mac),
+                self._update_tag_info_callback,
+            )
         )
 
     @property
@@ -111,4 +113,4 @@ class WirelessTagSensor(WirelessTagBaseSensor):
         _LOGGER.debug("Entity to update state: %s event data: %s", self, event.data)
         new_value = self._sensor.value_from_update_event(event.data)
         self._state = self.decorate_value(new_value)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

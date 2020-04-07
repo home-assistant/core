@@ -82,4 +82,3 @@ class VelbusClimate(VelbusEntity, ClimateDevice):
 
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
-        pass

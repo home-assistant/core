@@ -45,6 +45,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.color as color_util
 
+from ..debug_info import log_messages
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
@@ -215,6 +216,7 @@ class MqttTemplate(
         last_state = await self.async_get_last_state()
 
         @callback
+        @log_messages(self.hass, self.entity_id)
         def state_received(msg):
             """Handle new MQTT messages."""
             state = self._templates[
@@ -433,6 +435,9 @@ class MqttTemplate(
 
         if ATTR_EFFECT in kwargs:
             values["effect"] = kwargs.get(ATTR_EFFECT)
+
+            if self._optimistic:
+                self._effect = kwargs[ATTR_EFFECT]
 
         if ATTR_FLASH in kwargs:
             values["flash"] = kwargs.get(ATTR_FLASH)

@@ -6,7 +6,7 @@
             "no_flows": "Withings morate prvo konfigurirati, preden ga boste lahko uporabili za overitev. Prosimo, preberite dokumentacijo."
         },
         "create_entry": {
-            "default": "Uspe\u0161no overjen z Withings za izbrani profil."
+            "default": "Uspe\u0161no overjen z Withings."
         },
         "step": {
             "pick_implementation": {

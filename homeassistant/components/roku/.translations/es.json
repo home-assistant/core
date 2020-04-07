@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo Roku ya est\u00e1 configurado",
+            "unknown": "Error inesperado"
+        },
+        "error": {
+            "cannot_connect": "No se ha podido conectar, por favor, int\u00e9ntalo de nuevo.",
+            "unknown": "Error inesperado"
+        },
+        "flow_title": "Roku: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "description": "\u00bfQuieres configurar {name}?",
+                "title": "Roku"
+            },
+            "user": {
+                "data": {
+                    "host": "Host o direcci\u00f3n IP"
+                },
+                "description": "Introduce tu informaci\u00f3n de Roku.",
+                "title": "Roku"
+            }
+        },
+        "title": "Roku"
+    }
+}

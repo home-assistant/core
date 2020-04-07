@@ -169,6 +169,11 @@ class AlexaCapability:
         """Return the supportedOperations object."""
         return []
 
+    @staticmethod
+    def camera_stream_configurations():
+        """Applicable only to CameraStreamController."""
+        return None
+
     def serialize_discovery(self):
         """Serialize according to the Discovery API."""
         result = {"type": "AlexaInterface", "interface": self.name(), "version": "3"}
@@ -221,6 +226,10 @@ class AlexaCapability:
         inputs = self.inputs()
         if inputs:
             result["inputs"] = inputs
+
+        camera_stream_configurations = self.camera_stream_configurations()
+        if camera_stream_configurations:
+            result["cameraStreamConfigurations"] = camera_stream_configurations
 
         return result
 
@@ -725,12 +734,11 @@ class AlexaPlaybackController(AlexaCapability):
             media_player.SUPPORT_STOP: "Stop",
         }
 
-        supported_operations = []
-        for operation in operations:
-            if operation & supported_features:
-                supported_operations.append(operations[operation])
-
-        return supported_operations
+        return [
+            value
+            for operation, value in operations.items()
+            if operation & supported_features
+        ]
 
 
 class AlexaInputController(AlexaCapability):
@@ -750,9 +758,7 @@ class AlexaInputController(AlexaCapability):
         source_list = self.entity.attributes.get(
             media_player.ATTR_INPUT_SOURCE_LIST, []
         )
-        input_list = AlexaInputController.get_valid_inputs(source_list)
-
-        return input_list
+        return AlexaInputController.get_valid_inputs(source_list)
 
     @staticmethod
     def get_valid_inputs(source_list):
@@ -1080,7 +1086,7 @@ class AlexaPowerLevelController(AlexaCapability):
         if self.entity.domain == fan.DOMAIN:
             speed = self.entity.attributes.get(fan.ATTR_SPEED)
 
-            return PERCENTAGE_FAN_MAP.get(speed, None)
+            return PERCENTAGE_FAN_MAP.get(speed)
 
         return None
 
@@ -1820,10 +1826,11 @@ class AlexaEqualizerController(AlexaCapability):
         configurations = None
         sound_mode_list = self.entity.attributes.get(media_player.ATTR_SOUND_MODE_LIST)
         if sound_mode_list:
-            supported_sound_modes = []
-            for sound_mode in sound_mode_list:
-                if sound_mode.upper() in ("MOVIE", "MUSIC", "NIGHT", "SPORT", "TV"):
-                    supported_sound_modes.append({"name": sound_mode.upper()})
+            supported_sound_modes = [
+                {"name": sound_mode.upper()}
+                for sound_mode in sound_mode_list
+                if sound_mode.upper() in ("MOVIE", "MUSIC", "NIGHT", "SPORT", "TV")
+            ]
 
             configurations = {"modes": {"supported": supported_sound_modes}}
 
@@ -1854,3 +1861,39 @@ class AlexaTimeHoldController(AlexaCapability):
         When false, Alexa does not send the Resume directive.
         """
         return {"allowRemoteResume": self._allow_remote_resume}
+
+
+class AlexaCameraStreamController(AlexaCapability):
+    """Implements Alexa.CameraStreamController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-camerastreamcontroller.html
+    """
+
+    supported_locales = {
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "fr-FR",
+        "it-IT",
+        "ja-JP",
+    }
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.CameraStreamController"
+
+    def camera_stream_configurations(self):
+        """Return cameraStreamConfigurations object."""
+        return [
+            {
+                "protocols": ["HLS"],
+                "resolutions": [{"width": 1280, "height": 720}],
+                "authorizationTypes": ["NONE"],
+                "videoCodecs": ["H264"],
+                "audioCodecs": ["AAC"],
+            }
+        ]

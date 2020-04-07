@@ -30,8 +30,16 @@
                 "title": "Emparejamiento Completado"
             },
             "pairing_complete_import": {
-                "description": "Su dispositivo Vizio SmartCast ahora est\u00e1 conectado a Home Assistant.\n\nTu Token de Acceso es '**{access_token}**'.",
+                "description": "Su dispositivo Vizio SmartCast TV ahora est\u00e1 conectado a Home Assistant.\n\nEl Token de Acceso es '**{access_token}**'.",
                 "title": "Emparejamiento Completado"
+            },
+            "tv_apps": {
+                "data": {
+                    "apps_to_include_or_exclude": "Aplicaciones para incluir o excluir",
+                    "include_or_exclude": "\u00bfIncluir o excluir aplicaciones?"
+                },
+                "description": "Si tiene un Smart TV, opcionalmente puede filtrar su lista de origen eligiendo qu\u00e9 aplicaciones incluir o excluir en su lista de origen. Puede omitir este paso para televisores que no admiten aplicaciones.",
+                "title": "Configurar aplicaciones para Smart TV"
             },
             "user": {
                 "data": {
@@ -42,6 +50,14 @@
                 },
                 "description": "Todos los campos son obligatorios excepto el Token de Acceso. Si decides no proporcionar un Token de Acceso y tu Tipo de Dispositivo es \"tv\", se te llevar\u00e1 por un proceso de emparejamiento con tu dispositivo para que se pueda recuperar un Token de Acceso.\n\nPara pasar por el proceso de emparejamiento, antes de pulsar en Enviar, aseg\u00farese de que tu TV est\u00e9 encendida y conectada a la red. Tambi\u00e9n es necesario poder ver la pantalla.",
                 "title": "Configurar el cliente de Vizio SmartCast"
+            },
+            "user_tv": {
+                "data": {
+                    "apps_to_include_or_exclude": "Aplicaciones para incluir o excluir",
+                    "include_or_exclude": "\u00bfIncluir o excluir aplicaciones?"
+                },
+                "description": "Si tienes un Smart TV, puedes opcionalmente filtrar tu lista de fuentes eligiendo qu\u00e9 aplicaciones incluir o excluir en tu lista de fuentes. Puedes omitir este paso para televisores que no admiten aplicaciones.",
+                "title": "Configurar aplicaciones para Smart TV"
             }
         },
         "title": "Vizio SmartCast"
@@ -50,9 +66,12 @@
         "step": {
             "init": {
                 "data": {
+                    "apps_to_include_or_exclude": "Aplicaciones para incluir o excluir",
+                    "include_or_exclude": "\u00bfIncluir o excluir aplicaciones?",
                     "timeout": "Tiempo de espera de solicitud de API (segundos)",
                     "volume_step": "Tama\u00f1o del paso de volumen"
                 },
+                "description": "Si tienes un Smart TV, opcionalmente puedes filtrar su lista de fuentes eligiendo qu\u00e9 aplicaciones incluir o excluir en su lista de fuentes.",
                 "title": "Actualizar las opciones de SmartCast de Vizo"
             }
         },

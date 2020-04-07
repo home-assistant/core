@@ -1,11 +1,14 @@
 {
     "config": {
         "abort": {
-            "host_port_exists": "Questa combinazione di host e porta \u00e8 gi\u00e0 configurata"
+            "already_configured": "Questa combinazione di host e porta \u00e8 gi\u00e0 configurata",
+            "host_port_exists": "Questa combinazione di host e porta \u00e8 gi\u00e0 configurata",
+            "import_failed": "Importazione dalla configurazione non riuscita"
         },
         "error": {
             "certificate_error": "Il certificato non pu\u00f2 essere convalidato",
             "certificate_fetch_failed": "Non \u00e8 possibile recuperare il certificato da questa combinazione di host e porta",
+            "connection_refused": "Connessione rifiutata durante la connessione all'host",
             "connection_timeout": "Tempo scaduto collegandosi a questo host",
             "host_port_exists": "Questa combinazione di host e porta \u00e8 gi\u00e0 configurata",
             "resolve_failed": "Questo host non pu\u00f2 essere risolto",

@@ -6,12 +6,11 @@ import re
 
 from homeassistant.components import mqtt
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .abbreviations import ABBREVIATIONS, DEVICE_ABBREVIATIONS
-from .const import ATTR_DISCOVERY_HASH, ATTR_DISCOVERY_TOPIC, CONF_STATE_TOPIC
+from .const import ATTR_DISCOVERY_HASH, ATTR_DISCOVERY_PAYLOAD, ATTR_DISCOVERY_TOPIC
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,30 +34,6 @@ SUPPORTED_COMPONENTS = [
     "vacuum",
 ]
 
-CONFIG_ENTRY_COMPONENTS = [
-    "alarm_control_panel",
-    "binary_sensor",
-    "camera",
-    "climate",
-    "cover",
-    "device_automation",
-    "fan",
-    "light",
-    "lock",
-    "sensor",
-    "switch",
-    "vacuum",
-]
-
-DEPRECATED_PLATFORM_TO_SCHEMA = {
-    "light": {"mqtt_json": "json", "mqtt_template": "template"}
-}
-
-# These components require state_topic to be set.
-# If not specified, infer state_topic from discovery topic.
-IMPLICIT_STATE_TOPIC_COMPONENTS = ["alarm_control_panel", "binary_sensor", "sensor"]
-
-
 ALREADY_DISCOVERED = "mqtt_discovered_components"
 DATA_CONFIG_ENTRY_LOCK = "mqtt_config_entry_lock"
 CONFIG_ENTRY_IS_SETUP = "mqtt_config_entry_is_setup"
@@ -73,10 +48,13 @@ def clear_discovery_hash(hass, discovery_hash):
     del hass.data[ALREADY_DISCOVERED][discovery_hash]
 
 
+def set_discovery_hash(hass, discovery_hash):
+    """Clear entry in ALREADY_DISCOVERED list."""
+    hass.data[ALREADY_DISCOVERED][discovery_hash] = {}
+
+
 class MQTTConfig(dict):
     """Dummy class to allow adding attributes."""
-
-    pass
 
 
 async def async_start(
@@ -139,42 +117,12 @@ async def async_start(
             setattr(payload, "__configuration_source__", f"MQTT (topic: '{topic}')")
             discovery_data = {
                 ATTR_DISCOVERY_HASH: discovery_hash,
+                ATTR_DISCOVERY_PAYLOAD: payload,
                 ATTR_DISCOVERY_TOPIC: topic,
             }
             setattr(payload, "discovery_data", discovery_data)
 
-            if CONF_PLATFORM in payload and "schema" not in payload:
-                platform = payload[CONF_PLATFORM]
-                if (
-                    component in DEPRECATED_PLATFORM_TO_SCHEMA
-                    and platform in DEPRECATED_PLATFORM_TO_SCHEMA[component]
-                ):
-                    schema = DEPRECATED_PLATFORM_TO_SCHEMA[component][platform]
-                    payload["schema"] = schema
-                    _LOGGER.warning(
-                        '"platform": "%s" is deprecated, ' 'replace with "schema":"%s"',
-                        platform,
-                        schema,
-                    )
             payload[CONF_PLATFORM] = "mqtt"
-
-            if (
-                CONF_STATE_TOPIC not in payload
-                and component in IMPLICIT_STATE_TOPIC_COMPONENTS
-            ):
-                # state_topic not specified, infer from discovery topic
-                fmt_node_id = f"{node_id}/" if node_id else ""
-                payload[
-                    CONF_STATE_TOPIC
-                ] = f"{discovery_topic}/{component}/{fmt_node_id}{object_id}/state"
-                _LOGGER.warning(
-                    'implicit %s is deprecated, add "%s":"%s" to '
-                    "%s discovery message",
-                    CONF_STATE_TOPIC,
-                    CONF_STATE_TOPIC,
-                    payload[CONF_STATE_TOPIC],
-                    topic,
-                )
 
         if ALREADY_DISCOVERED not in hass.data:
             hass.data[ALREADY_DISCOVERED] = {}
@@ -193,15 +141,12 @@ async def async_start(
             _LOGGER.info("Found new component: %s %s", component, discovery_id)
             hass.data[ALREADY_DISCOVERED][discovery_hash] = None
 
-            if component not in CONFIG_ENTRY_COMPONENTS:
-                await async_load_platform(hass, component, "mqtt", payload, hass_config)
-                return
-
             config_entries_key = f"{component}.mqtt"
             async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
                 if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
                     if component == "device_automation":
                         # Local import to avoid circular dependencies
+                        # pylint: disable=import-outside-toplevel
                         from . import device_automation
 
                         await device_automation.async_setup_entry(hass, config_entry)
@@ -219,7 +164,7 @@ async def async_start(
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
 
     await mqtt.async_subscribe(
-        hass, discovery_topic + "/#", async_device_message_received, 0
+        hass, f"{discovery_topic}/#", async_device_message_received, 0
     )
 
     return True

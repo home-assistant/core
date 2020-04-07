@@ -35,23 +35,11 @@ ATTR_DAILY_ENERGY_KWH = "daily_energy_kwh"
 ATTR_MONTHLY_ENERGY_KWH = "monthly_energy_kwh"
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the platform.
-
-    Deprecated.
-    """
-    _LOGGER.warning(
-        "Loading as a platform is no longer supported, "
-        "convert to use the tplink component."
-    )
-
-
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
     """Set up switches."""
     await async_add_entities_retry(
         hass, async_add_entities, hass.data[TPLINK_DOMAIN][CONF_LIGHT], add_entity
     )
-
     return True
 
 
@@ -75,30 +63,26 @@ def brightness_from_percentage(percent):
     return (percent * 255.0) / 100.0
 
 
-LightState = NamedTuple(
-    "LightState",
-    (
-        ("state", bool),
-        ("brightness", int),
-        ("color_temp", float),
-        ("hs", Tuple[int, int]),
-        ("emeter_params", dict),
-    ),
-)
+class LightState(NamedTuple):
+    """Light state."""
+
+    state: bool
+    brightness: int
+    color_temp: float
+    hs: Tuple[int, int]
+    emeter_params: dict
 
 
-LightFeatures = NamedTuple(
-    "LightFeatures",
-    (
-        ("sysinfo", Dict[str, Any]),
-        ("mac", str),
-        ("alias", str),
-        ("model", str),
-        ("supported_features", int),
-        ("min_mireds", float),
-        ("max_mireds", float),
-    ),
-)
+class LightFeatures(NamedTuple):
+    """Light features."""
+
+    sysinfo: Dict[str, Any]
+    mac: str
+    alias: str
+    model: str
+    supported_features: int
+    min_mireds: float
+    max_mireds: float
 
 
 class TPLinkSmartBulb(Light):

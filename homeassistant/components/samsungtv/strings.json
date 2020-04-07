@@ -7,8 +7,8 @@
         "title": "Samsung TV",
         "description": "Enter your Samsung TV information. If you never connected Home Assistant before you should see a popup on your TV asking for authorization.",
         "data": {
-            "host": "Host or IP address",
-            "name": "Name"
+          "host": "Host or IP address",
+          "name": "Name"
         }
       },
       "confirm": {
