@@ -39,5 +39,4 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
     ("tests.components.rflink.test_init", "test_send_command_invalid_arguments"),
 ]
 
-IGNORE_UNCAUGHT_JSON_EXCEPTIONS = [
-]
+IGNORE_UNCAUGHT_JSON_EXCEPTIONS = []
