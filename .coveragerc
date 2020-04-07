@@ -902,6 +902,7 @@ omit =
     homeassistant/components/zerproc/const.py
     homeassistant/components/zestimate/sensor.py
     homeassistant/components/zha/api.py
+    homeassistant/components/zha/climate.py
     homeassistant/components/zha/core/channels/*
     homeassistant/components/zha/core/const.py
     homeassistant/components/zha/core/device.py

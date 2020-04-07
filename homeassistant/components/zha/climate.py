@@ -72,6 +72,13 @@ STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 RUNNING_MODE = {0x00: HVAC_MODE_OFF, 0x03: HVAC_MODE_COOL, 0x04: HVAC_MODE_HEAT}
 
 
+class ThermostatFanMode(enum.IntEnum):
+    """Fan channel enum for thermostat Fans."""
+
+    ON = 0x04
+    OFF = 0x05
+
+
 class RunningState(enum.IntFlag):
     """ZCL Running state enum."""
 
@@ -215,7 +222,11 @@ class Thermostat(ZhaEntity, ClimateDevice):
     @property
     def fan_mode(self) -> Optional[str]:
         """Return current FAN mode."""
-        return None
+        if self._thrm.running_state & (
+            RunningState.FAN | RunningState.FAN_STAGE_2 | RunningState.FAN_STAGE_3
+        ):
+            return FAN_ON
+        return FAN_OFF
 
     @property
     def fan_modes(self) -> Optional[List[str]]:
