@@ -126,6 +126,7 @@ from homeassistant.auth.models import (
     Credentials,
     User,
 )
+from homeassistant.const import HTTP_OK
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_REAL_IP
 from homeassistant.components.http.auth import async_sign_path
@@ -271,15 +272,15 @@ class TokenView(HomeAssistantView):
         token = data.get("token")
 
         if token is None:
-            return web.Response(status=200)
+            return web.Response(status=HTTP_OK)
 
         refresh_token = await hass.auth.async_get_refresh_token_by_token(token)
 
         if refresh_token is None:
-            return web.Response(status=200)
+            return web.Response(status=HTTP_OK)
 
         await hass.auth.async_remove_refresh_token(refresh_token)
-        return web.Response(status=200)
+        return web.Response(status=HTTP_OK)
 
     async def _async_handle_auth_code(self, hass, data, remote_addr):
         """Handle authorization code request."""

@@ -12,6 +12,7 @@ from aiohttp.web_exceptions import (
 import voluptuous as vol
 
 from homeassistant.auth.models import User
+from homeassistant.const import HTTP_OK
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.const import KEY_HASS_USER, KEY_REAL_IP
 from homeassistant.components.http.data_validator import RequestDataValidator
@@ -93,7 +94,7 @@ class HassIOAuth(HassIOBaseAuth):
         self._check_access(request)
 
         await self._check_login(data[ATTR_USERNAME], data[ATTR_PASSWORD])
-        return web.Response(status=200)
+        return web.Response(status=HTTP_OK)
 
     async def _check_login(self, username, password):
         """Check User credentials."""
@@ -117,7 +118,7 @@ class HassIOPasswordReset(HassIOBaseAuth):
         self._check_access(request)
 
         await self._change_password(data[ATTR_USERNAME], data[ATTR_PASSWORD])
-        return web.Response(status=200)
+        return web.Response(status=HTTP_OK)
 
     async def _change_password(self, username, password):
         """Check User credentials."""

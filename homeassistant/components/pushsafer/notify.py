@@ -7,6 +7,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 import voluptuous as vol
 
+from homeassistant.const import HTTP_OK
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
@@ -118,7 +119,7 @@ class PushsaferNotificationService(BaseNotificationService):
         for target in targets:
             payload["d"] = target
             response = requests.post(_RESOURCE, data=payload, timeout=CONF_TIMEOUT)
-            if response.status_code != 200:
+            if response.status_code != HTTP_OK:
                 _LOGGER.error("Pushsafer failed with: %s", response.text)
             else:
                 _LOGGER.debug("Push send: %s", response.json())

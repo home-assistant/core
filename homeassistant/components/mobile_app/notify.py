@@ -4,6 +4,7 @@ import logging
 
 import async_timeout
 
+from homeassistant.const import HTTP_OK
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
@@ -134,7 +135,7 @@ class MobileAppNotificationService(BaseNotificationService):
                     response = await self._session.post(push_url, json=data)
                     result = await response.json()
 
-                if response.status in [200, 201, 202]:
+                if response.status in [HTTP_OK, 201, 202]:
                     log_rate_limits(self.hass, entry_data[ATTR_DEVICE_NAME], result)
                     continue
 

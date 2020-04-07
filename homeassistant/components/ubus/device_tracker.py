@@ -214,7 +214,7 @@ def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
         return
 
-    if res.status_code == 200:
+    if res.status_code == HTTP_OK:
         response = res.json()
         if "error" in response:
             if (

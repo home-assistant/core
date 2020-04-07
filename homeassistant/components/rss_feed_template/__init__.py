@@ -4,6 +4,7 @@ from html import escape
 from aiohttp import web
 import voluptuous as vol
 
+from homeassistant.const import HTTP_OK
 from homeassistant.components.http import HomeAssistantView
 import homeassistant.helpers.config_validation as cv
 
@@ -98,4 +99,6 @@ class RssView(HomeAssistantView):
 
         response += "</rss>\n"
 
-        return web.Response(body=response, content_type=CONTENT_TYPE_XML, status=200)
+        return web.Response(
+            body=response, content_type=CONTENT_TYPE_XML, status=HTTP_OK
+        )

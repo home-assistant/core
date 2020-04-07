@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_WHITELIST,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    HTTP_OK,
 )
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
@@ -58,7 +59,7 @@ def setup(hass, config):
             _LOGGER.error("Error saving data '%s' to '%s'", payload, fullurl)
 
         else:
-            if req.status_code != 200:
+            if req.status_code != HTTP_OK:
                 _LOGGER.error(
                     "Error saving data %s to %s (http status code = %d)",
                     payload,

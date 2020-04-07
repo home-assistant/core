@@ -71,6 +71,7 @@ import voluptuous as vol
 import voluptuous_serialize
 
 from homeassistant import data_entry_flow
+from homeassistant.const import HTTP_OK
 from homeassistant.components.http import KEY_REAL_IP
 from homeassistant.components.http.ban import (
     log_invalid_auth,
@@ -238,7 +239,7 @@ class LoginFlowResourceView(HomeAssistantView):
             return self.json_message("User input malformed", 400)
 
         if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
-            # @log_invalid_auth does not work here since it returns HTTP 200
+            # @log_invalid_auth does not work here since it returns HTTP HTTP_OK
             # need manually log failed login attempts
             if result.get("errors") is not None and result["errors"].get("base") in [
                 "invalid_auth",

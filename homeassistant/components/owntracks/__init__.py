@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import mqtt
-from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.const import CONF_WEBHOOK_ID, HTTP_OK
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_when_setup
@@ -176,7 +176,7 @@ async def handle_webhook(hass, webhook_id, request):
                 "No topic or user found in message. If on Android,"
                 " set a username in Connection -> Identification"
             )
-            # Keep it as a 200 response so the incorrect packet is discarded
+            # Keep it as a HTTP_OK response so the incorrect packet is discarded
             return json_response([])
 
     hass.helpers.dispatcher.async_dispatcher_send(DOMAIN, hass, context, message)

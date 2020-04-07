@@ -8,6 +8,7 @@ import hangups
 from hangups import ChatMessageEvent, ChatMessageSegment, Client, get_auth, hangouts_pb2
 
 from homeassistant.core import callback
+from homeassistant.const import HTTP_OK
 from homeassistant.helpers import dispatcher, intent
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -273,7 +274,7 @@ class HangoutsBot:
                 try:
                     websession = async_get_clientsession(self.hass)
                     async with websession.get(uri, timeout=5) as response:
-                        if response.status != 200:
+                        if response.status != HTTP_OK:
                             _LOGGER.error(
                                 "Fetch image failed, %s, %s", response.status, response
                             )

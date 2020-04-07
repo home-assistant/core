@@ -8,6 +8,7 @@ from nacl.encoding import Base64Encoder
 from nacl.secret import SecretBox
 
 from homeassistant.core import Context
+from homeassistant.const import HTTP_OK
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -90,8 +91,8 @@ def registration_context(registration: Dict) -> Context:
     return Context(user_id=registration[CONF_USER_ID])
 
 
-def empty_okay_response(headers: Dict = None, status: int = 200) -> Response:
-    """Return a Response with empty JSON object and a 200."""
+def empty_okay_response(headers: Dict = None, status: int = HTTP_OK) -> Response:
+    """Return a Response with empty JSON object and a HTTP_OK."""
     return Response(
         text="{}", status=status, content_type="application/json", headers=headers
     )
@@ -144,7 +145,7 @@ def savable_state(hass: HomeAssistantType) -> Dict:
 
 
 def webhook_response(
-    data, *, registration: Dict, status: int = 200, headers: Dict = None
+    data, *, registration: Dict, status: int = HTTP_OK, headers: Dict = None
 ) -> Response:
     """Return a encrypted response if registration supports it."""
     data = json.dumps(data, cls=JSONEncoder)

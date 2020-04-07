@@ -10,6 +10,7 @@ from hass_nabucasa import Cloud, auth, thingtalk
 from hass_nabucasa.const import STATE_DISCONNECTED
 import voluptuous as vol
 
+from homeassistant.const import HTTP_OK
 from homeassistant.components import websocket_api
 from homeassistant.components.alexa import (
     entities as alexa_entities,
@@ -321,7 +322,7 @@ async def websocket_subscription(hass, connection, msg):
     with async_timeout.timeout(REQUEST_TIMEOUT):
         response = await cloud.fetch_subscription_info()
 
-    if response.status != 200:
+    if response.status != HTTP_OK:
         connection.send_message(
             websocket_api.error_message(
                 msg["id"], "request_failed", "Failed to request subscription"

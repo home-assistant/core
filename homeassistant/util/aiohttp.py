@@ -3,6 +3,8 @@ import json
 from typing import Any, Dict, Optional
 from urllib.parse import parse_qsl
 
+from homeassistant.const import HTTP_OK
+
 from multidict import CIMultiDict, MultiDict
 
 
@@ -13,7 +15,7 @@ class MockRequest:
         self,
         content: bytes,
         method: str = "GET",
-        status: int = 200,
+        status: int = HTTP_OK,
         headers: Optional[Dict[str, str]] = None,
         query_string: Optional[str] = None,
         url: str = "",

@@ -10,6 +10,7 @@ from gtts_token import gtts_token
 import voluptuous as vol
 import yarl
 
+from homeassistant.const import HTTP_OK
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -142,7 +143,7 @@ class GoogleProvider(Provider):
                         GOOGLE_SPEECH_URL, params=url_param, headers=self.headers
                     )
 
-                    if request.status != 200:
+                    if request.status != HTTP_OK:
                         _LOGGER.error(
                             "Error %d on load URL %s", request.status, request.url
                         )

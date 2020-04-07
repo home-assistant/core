@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_RESOURCE,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
+    HTTP_OK,
 )
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
@@ -149,7 +150,7 @@ class ArestSensor(Entity):
 
         if self._pin is not None:
             request = requests.get(f"{self._resource}/mode/{self._pin}/i", timeout=10)
-            if request.status_code != 200:
+            if request.status_code != HTTP_OK:
                 _LOGGER.error("Can't set mode of %s", self._resource)
 
     @property

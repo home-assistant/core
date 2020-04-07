@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     POWER_WATT,
     STATE_UNKNOWN,
+    HTTP_OK,
 )
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
@@ -245,7 +246,7 @@ class EmonCmsData:
             _LOGGER.error(exception)
             return
         else:
-            if req.status_code == 200:
+            if req.status_code == HTTP_OK:
                 self.data = req.json()
             else:
                 _LOGGER.error(

@@ -19,6 +19,7 @@ from .const import (
     KEY_STATUS,
     KEY_USERNAME,
     KEY_ZONES,
+    HTTP_OK,
 )
 from .webhooks import LISTEN_EVENT_TYPES, WEBHOOK_CONST_ID
 
@@ -40,12 +41,12 @@ class RachioPerson:
     def setup(self, hass):
         """Rachio device setup."""
         response = self.rachio.person.getInfo()
-        assert int(response[0][KEY_STATUS]) == 200, "API key error"
+        assert int(response[0][KEY_STATUS]) == HTTP_OK, "API key error"
         self._id = response[1][KEY_ID]
 
         # Use user ID to get user data
         data = self.rachio.person.get(self._id)
-        assert int(data[0][KEY_STATUS]) == 200, "User ID error"
+        assert int(data[0][KEY_STATUS]) == HTTP_OK, "User ID error"
         self.username = data[1][KEY_USERNAME]
         devices = data[1][KEY_DEVICES]
         for controller in devices:

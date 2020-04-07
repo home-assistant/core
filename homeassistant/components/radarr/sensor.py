@@ -23,6 +23,7 @@ from homeassistant.const import (
     DATA_TERABYTES,
     DATA_YOTTABYTES,
     DATA_ZETTABYTES,
+    HTTP_OK,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -193,7 +194,7 @@ class RadarrSensor(Entity):
             self._state = None
             return
 
-        if res.status_code == 200:
+        if res.status_code == HTTP_OK:
             if self.type in ["upcoming", "movies", "commands"]:
                 self.data = res.json()
                 self._state = len(self.data)
