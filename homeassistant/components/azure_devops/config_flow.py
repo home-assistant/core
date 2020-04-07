@@ -26,7 +26,6 @@ class AzureDevOpsFlowHandler(ConfigFlow):
 
     def __init__(self):
         """Initialize Azure DevOps flow."""
-        pass
 
     async def _show_setup_form(self, errors=None):
         """Show the setup form to the user."""

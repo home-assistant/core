@@ -56,6 +56,7 @@ class AzureDevOpsSensor(AzureDevOpsDeviceEntity):
     ) -> None:
         """Initialize Azure DevOps sensor."""
         self._state = None
+        self._attributes = None
         self._unit_of_measurement = unit_of_measurement
         self.measurement = measurement
         self.client = client
