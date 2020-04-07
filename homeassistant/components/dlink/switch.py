@@ -142,7 +142,7 @@ class SmartPlugData:
             last_try_s = (dt_util.now() - self._last_tried).total_seconds() / 60
             retry_seconds = min(self._n_tried * 2, 10) - last_try_s
             if self._n_tried > 0 and retry_seconds > 0:
-                _LOGGER.warning("Waiting %s s to retry", retry_seconds)
+                _LOGGER.warning("Waiting %ss to retry", round(retry_seconds, 1))
                 return
 
         _state = "unknown"
