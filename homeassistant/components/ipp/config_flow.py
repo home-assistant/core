@@ -2,7 +2,7 @@
 import logging
 from typing import Any, Dict, Optional
 
-from pyipp import IPP, IPPConnectionError, IPPConnectionUpgradeRequired
+from pyipp import IPP, IPPConnectionError, IPPConnectionUpgradeRequired, IPPParseError
 import voluptuous as vol
 
 from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
@@ -68,6 +68,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
         except IPPParseError:
             _LOGGER.exception("IPP Parse Error")
             return self.async_abort(reason="parse_error")
+
         user_input[CONF_UUID] = info[CONF_UUID]
 
         await self.async_set_unique_id(user_input[CONF_UUID])
