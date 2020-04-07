@@ -36,7 +36,6 @@ DEFAULT_PORT = 60128
 
 CONF_SOURCES = "sources"
 CONF_MAX_VOLUME = "max_volume"
-CONF_RECEIVER_MAX_VOLUME = "receiver_max_volume"
 CONF_ZONES = "zones"
 
 DEFAULT_NAME = "Onkyo Receiver"
@@ -124,7 +123,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     port = config[CONF_PORT]
     name = config[CONF_NAME] or "Onkyo Receiver"
     max_volume = config[CONF_MAX_VOLUME]
-    receiver_max_volume = config[CONF_RECEIVER_MAX_VOLUME]
     zones = config[CONF_ZONES]
     sources = config[CONF_SOURCES]
 
@@ -165,9 +163,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     active_zones = {}
 
     for zone in ["main"] + zones:
-        active_zones[zone] = OnkyoAVR(
-            avr, name, sources, zone, max_volume, receiver_max_volume
-        )
+        active_zones[zone] = OnkyoAVR(avr, name, sources, zone, max_volume)
 
     for zone in active_zones.values():
         zone.backfill_state()
@@ -179,7 +175,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class OnkyoAVR(MediaPlayerDevice):
     """Entity reading values from Onkyo AVR protocol."""
 
-    def __init__(self, avr, name, sources, zone, max_volume, receiver_max_volume):
+    def __init__(self, avr, name, sources, zone, max_volume):
         """Initialize entity with transport."""
         super().__init__()
         self.avr = avr
@@ -189,7 +185,6 @@ class OnkyoAVR(MediaPlayerDevice):
         self._supports_volume = False
         self._muted = False
         self._max_volume = max_volume
-        self._receiver_max_volume = receiver_max_volume
         self._powerstate = STATE_ON
         self._source = None
         self._source_list = list(sources.values())
