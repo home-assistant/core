@@ -6,7 +6,6 @@
       "user": {
         "title": "Synology DSM",
         "data": {
-          "name": "Name",
           "host": "Host",
           "port": "Port (Optional)",
           "ssl": "Use SSL/TLS to connect to your NAS",
