@@ -12,6 +12,7 @@ import requests.exceptions
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 
@@ -175,7 +176,8 @@ class PlexServer:
         if config_entry_update_needed:
             raise ShouldUpdateConfigEntry
 
-    def refresh_entity(self, machine_identifier, device, session):
+    @callback
+    def async_refresh_entity(self, machine_identifier, device, session):
         """Forward refresh dispatch to media_player."""
         unique_id = f"{self.machine_identifier}:{machine_identifier}"
         _LOGGER.debug("Refreshing %s", unique_id)
@@ -262,7 +264,7 @@ class PlexServer:
             if client_id in new_clients:
                 new_entity_configs.append(client_data)
             else:
-                self.refresh_entity(
+                self.async_refresh_entity(
                     client_id, client_data["device"], client_data.get("session")
                 )
 
@@ -272,7 +274,7 @@ class PlexServer:
             self._known_clients - self._known_idle - ignored_clients
         ).difference(available_clients)
         for client_id in idle_clients:
-            self.refresh_entity(client_id, None, None)
+            self.async_refresh_entity(client_id, None, None)
             self._known_idle.add(client_id)
 
         if new_entity_configs:
