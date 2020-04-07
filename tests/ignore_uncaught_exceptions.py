@@ -36,7 +36,6 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
     ("tests.components.local_file.test_camera", "test_file_not_readable"),
     ("tests.components.qwikswitch.test_init", "test_binary_sensor_device"),
     ("tests.components.qwikswitch.test_init", "test_sensor_device"),
-    ("tests.components.rflink.test_init", "test_send_command_invalid_arguments"),
 ]
 
 IGNORE_UNCAUGHT_JSON_EXCEPTIONS = []
