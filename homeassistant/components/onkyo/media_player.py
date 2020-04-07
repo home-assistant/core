@@ -23,6 +23,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
@@ -185,7 +186,7 @@ class OnkyoAVR(MediaPlayerDevice):
         self._supports_volume = False
         self._muted = False
         self._max_volume = max_volume
-        self._powerstate = STATE_ON
+        self._powerstate = STATE_UNKNOWN
         self._source = None
         self._source_list = list(sources.values())
         self._source_mapping = sources
