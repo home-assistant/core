@@ -32,9 +32,6 @@ def mock_hub(hass):
     return hub
 
 
-common_register_config = {CONF_NAME: "test-config", CONF_REGISTER: 1234}
-
-
 class ReadResult:
     """Storage class for register read results."""
 
@@ -46,17 +43,15 @@ class ReadResult:
 read_result = None
 
 
-async def simulate_read_registers(unit, address, count):
-    """Simulate modbus register read."""
-    del unit, address, count  # not used in simulation, but in real connection
-    global read_result
-    return read_result
-
-
 async def run_test(
-    hass, mock_hub, register_config, entity_domain, register_words, expected
+    hass, use_mock_hub, register_config, entity_domain, register_words, expected
 ):
     """Run test for given config and check that sensor outputs expected result."""
+
+    async def simulate_read_registers(unit, address, count):
+        """Simulate modbus register read."""
+        del unit, address, count  # not used in simulation, but in real connection
+        return read_result
 
     # Full sensor configuration
     sensor_name = "modbus_test_sensor"
@@ -72,12 +67,11 @@ async def run_test(
     }
 
     # Setup inputs for the sensor
-    global read_result
     read_result = ReadResult(register_words)
     if register_config.get(CONF_REGISTER_TYPE) == CALL_TYPE_REGISTER_INPUT:
-        mock_hub.read_input_registers = simulate_read_registers
+        use_mock_hub.read_input_registers = simulate_read_registers
     else:
-        mock_hub.read_holding_registers = simulate_read_registers
+        use_mock_hub.read_holding_registers = simulate_read_registers
 
     # Initialize sensor
     now = dt_util.utcnow()
