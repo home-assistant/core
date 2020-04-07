@@ -1,6 +1,7 @@
 """Support for NuHeat thermostats."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
+import time
 
 from nuheat.config import SCHEDULE_HOLD, SCHEDULE_RUN, SCHEDULE_TEMPORARY_HOLD
 from nuheat.util import (
@@ -24,7 +25,16 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers import event as event_helper
 from homeassistant.util import Throttle
 
-from .const import DOMAIN, MANUFACTURER, NUHEAT_API_STATE_SHIFT_DELAY
+from .const import (
+    DOMAIN,
+    MANUFACTURER,
+    NUHEAT_API_STATE_SHIFT_DELAY,
+    NUHEAT_DATETIME_FORMAT,
+    NUHEAT_KEY_HOLD_SET_POINT_DATE_TIME,
+    NUHEAT_KEY_SCHEDULE_MODE,
+    NUHEAT_KEY_SET_POINT_TEMP,
+    TEMP_HOLD_TIME_SEC,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -218,9 +228,22 @@ class NuHeatThermostat(ClimateDevice):
             target_schedule_mode,
         )
 
-        self._thermostat.set_target_temperature(
-            target_temperature, target_schedule_mode
+        target_temperature = max(
+            min(self._thermostat.max_temperature, target_temperature),
+            self._thermostat.min_temperature,
         )
+
+        request = {
+            NUHEAT_KEY_SET_POINT_TEMP: target_temperature,
+            NUHEAT_KEY_SCHEDULE_MODE: target_schedule_mode,
+        }
+
+        if target_schedule_mode == SCHEDULE_TEMPORARY_HOLD:
+            request[NUHEAT_KEY_HOLD_SET_POINT_DATE_TIME] = datetime.fromtimestamp(
+                time.time() + TEMP_HOLD_TIME_SEC
+            ).strftime(NUHEAT_DATETIME_FORMAT)
+
+        self._thermostat.set_data(request)
         self._schedule_mode = target_schedule_mode
         self._target_temperature = target_temperature
         self._schedule_update()
