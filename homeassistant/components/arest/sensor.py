@@ -51,9 +51,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the aREST sensor."""
-    resource = config.get(CONF_RESOURCE)
-    var_conf = config.get(CONF_MONITORED_VARIABLES)
-    pins = config.get(CONF_PINS)
+    resource = config[CONF_RESOURCE]
+    var_conf = config[CONF_MONITORED_VARIABLES]
+    pins = config[CONF_PINS]
 
     try:
         response = requests.get(resource, timeout=10).json()
