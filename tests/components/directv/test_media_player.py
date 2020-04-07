@@ -188,7 +188,7 @@ async def test_attributes_paused(
         "homeassistant.util.dt.utcnow", return_value=mock_now + timedelta(minutes=5)
     ):
         await common.async_media_pause(hass, CLIENT_ENTITY_ID)
-        
+
     state = hass.states.get(CLIENT_ENTITY_ID)
     assert state.state == STATE_PAUSED
     assert state.attributes.get(ATTR_MEDIA_POSITION_UPDATED_AT) == last_updated
