@@ -70,6 +70,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     pin = None
     bravia_config = load_json(hass.config.path(BRAVIA_CONFIG_FILE))
+    if not bravia_config:
+        _LOGGER.error(
+            "Configuration import failed, there is no bravia.conf file in the configuration folder"
+        )
+        return
     while bravia_config:
         # Import a configured TV
         host_ip, host_config = bravia_config.popitem()
