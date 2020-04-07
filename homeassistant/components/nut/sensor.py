@@ -31,9 +31,14 @@ from .const import (
     PYNUT_FIRMWARE,
     PYNUT_MANUFACTURER,
     PYNUT_MODEL,
+    PYNUT_NAME,
     PYNUT_STATUS,
     PYNUT_UNIQUE_ID,
+    SENSOR_DEVICE_CLASS,
+    SENSOR_ICON,
+    SENSOR_NAME,
     SENSOR_TYPES,
+    SENSOR_UNIT,
     STATE_TYPES,
 )
 
@@ -69,7 +74,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the NUT sensors."""
 
-    config = config_entry.data
     pynut_data = hass.data[DOMAIN][config_entry.entry_id]
     data = pynut_data[PYNUT_DATA]
     status = pynut_data[PYNUT_STATUS]
@@ -77,10 +81,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     manufacturer = pynut_data[PYNUT_MANUFACTURER]
     model = pynut_data[PYNUT_MODEL]
     firmware = pynut_data[PYNUT_FIRMWARE]
+    name = pynut_data[PYNUT_NAME]
 
     entities = []
 
-    name = config[CONF_NAME]
     if CONF_RESOURCES in config_entry.options:
         resources = config_entry.options[CONF_RESOURCES]
     else:
@@ -96,7 +100,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         ):
             entities.append(
                 NUTSensor(
-                    name, data, sensor_type, unique_id, manufacturer, model, firmware
+                    name.title(),
+                    data,
+                    sensor_type,
+                    unique_id,
+                    manufacturer,
+                    model,
+                    firmware,
                 )
             )
         else:
@@ -122,8 +132,8 @@ class NUTSensor(Entity):
         self._firmware = firmware
         self._model = model
         self._device_name = name
-        self._name = f"{name} {SENSOR_TYPES[sensor_type][0]}"
-        self._unit = SENSOR_TYPES[sensor_type][1]
+        self._name = f"{name} {SENSOR_TYPES[sensor_type][SENSOR_NAME]}"
+        self._unit = SENSOR_TYPES[sensor_type][SENSOR_UNIT]
         self._state = None
         self._unique_id = unique_id
         self._display_state = None
@@ -161,7 +171,16 @@ class NUTSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return SENSOR_TYPES[self._type][2]
+        if SENSOR_TYPES[self._type][SENSOR_DEVICE_CLASS]:
+            # The UI will assign an icon
+            # if it has a class
+            return None
+        return SENSOR_TYPES[self._type][SENSOR_ICON]
+
+    @property
+    def device_class(self):
+        """Device class of the sensor."""
+        return SENSOR_TYPES[self._type][SENSOR_DEVICE_CLASS]
 
     @property
     def state(self):
