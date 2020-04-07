@@ -18,7 +18,6 @@ from homeassistant.components.light import (
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.util import Throttle
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
     color_temperature_mired_to_kelvin as mired_to_kelvin,
@@ -30,7 +29,6 @@ from .common import async_add_entities_retry
 
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=5)
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=2)
 CURRENT_POWER_UPDATE_INTERVAL = timedelta(seconds=60)
 HISTORICAL_POWER_UPDATE_INTERVAL = timedelta(minutes=60)
 
@@ -242,7 +240,6 @@ class TPLinkSmartBulb(Light):
         """Return True if device is on."""
         return self._light_state.state
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the TP-Link Bulb's state."""
         # State is currently being set, ignore.
