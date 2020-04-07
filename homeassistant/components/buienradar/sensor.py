@@ -256,7 +256,7 @@ class BrSensor(Entity):
         """Generate a unique id using coordinates and sensor type."""
         # The combination of the location, name and sensor type is unique
         return "{:2.6f}{:2.6f}{}".format(
-            coordinates[CONF_LATITUDE], coordinates[CONF_LONGITUDE], self.type,
+            coordinates[CONF_LATITUDE], coordinates[CONF_LONGITUDE], self.type
         )
 
     @callback
@@ -307,17 +307,17 @@ class BrSensor(Entity):
                     return False
 
                 if condition:
-                    new_state = condition.get(CONDITION, None)
+                    new_state = condition.get(CONDITION)
                     if self.type.startswith(SYMBOL):
-                        new_state = condition.get(EXACTNL, None)
+                        new_state = condition.get(EXACTNL)
                     if self.type.startswith("conditioncode"):
-                        new_state = condition.get(CONDCODE, None)
+                        new_state = condition.get(CONDCODE)
                     if self.type.startswith("conditiondetailed"):
-                        new_state = condition.get(DETAILED, None)
+                        new_state = condition.get(DETAILED)
                     if self.type.startswith("conditionexact"):
-                        new_state = condition.get(EXACT, None)
+                        new_state = condition.get(EXACT)
 
-                    img = condition.get(IMAGE, None)
+                    img = condition.get(IMAGE)
 
                     if new_state != self._state or img != self._entity_picture:
                         self._state = new_state
@@ -346,20 +346,20 @@ class BrSensor(Entity):
 
         if self.type == SYMBOL or self.type.startswith(CONDITION):
             # update weather symbol & status text
-            condition = data.get(CONDITION, None)
+            condition = data.get(CONDITION)
             if condition:
                 if self.type == SYMBOL:
-                    new_state = condition.get(EXACTNL, None)
+                    new_state = condition.get(EXACTNL)
                 if self.type == CONDITION:
-                    new_state = condition.get(CONDITION, None)
+                    new_state = condition.get(CONDITION)
                 if self.type == "conditioncode":
-                    new_state = condition.get(CONDCODE, None)
+                    new_state = condition.get(CONDCODE)
                 if self.type == "conditiondetailed":
-                    new_state = condition.get(DETAILED, None)
+                    new_state = condition.get(DETAILED)
                 if self.type == "conditionexact":
-                    new_state = condition.get(EXACT, None)
+                    new_state = condition.get(EXACT)
 
-                img = condition.get(IMAGE, None)
+                img = condition.get(IMAGE)
 
                 if new_state != self._state or img != self._entity_picture:
                     self._state = new_state

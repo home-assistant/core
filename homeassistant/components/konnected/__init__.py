@@ -245,7 +245,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
         # hass.async_add_job to avoid a deadlock.
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=device,
+                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=device
             )
         )
     return True
@@ -314,7 +314,7 @@ class KonnectedView(HomeAssistantView):
         hass = request.app["hass"]
         data = hass.data[DOMAIN]
 
-        auth = request.headers.get(AUTHORIZATION, None)
+        auth = request.headers.get(AUTHORIZATION)
         tokens = []
         if hass.data[DOMAIN].get(CONF_ACCESS_TOKEN):
             tokens.extend([hass.data[DOMAIN][CONF_ACCESS_TOKEN]])
@@ -417,7 +417,7 @@ class KonnectedView(HomeAssistantView):
         zone_entity_id = zone.get(ATTR_ENTITY_ID)
         if zone_entity_id:
             resp["state"] = self.binary_value(
-                hass.states.get(zone_entity_id).state, zone[CONF_ACTIVATION],
+                hass.states.get(zone_entity_id).state, zone[CONF_ACTIVATION]
             )
             return self.json(resp)
 

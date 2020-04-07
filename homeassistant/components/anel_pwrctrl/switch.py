@@ -30,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up PwrCtrl devices/switches."""
-    host = config.get(CONF_HOST, None)
+    host = config.get(CONF_HOST)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     port_recv = config.get(CONF_PORT_RECV)

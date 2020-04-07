@@ -73,9 +73,7 @@ from .util import temperature_to_homekit, temperature_to_states
 
 _LOGGER = logging.getLogger(__name__)
 
-HC_HOMEKIT_VALID_MODES_WATER_HEATER = {
-    "Heat": 1,
-}
+HC_HOMEKIT_VALID_MODES_WATER_HEATER = {"Heat": 1}
 UNIT_HASS_TO_HOMEKIT = {TEMP_CELSIUS: 0, TEMP_FAHRENHEIT: 1}
 
 UNIT_HOMEKIT_TO_HASS = {c: s for s, c in UNIT_HASS_TO_HOMEKIT.items()}
@@ -138,7 +136,7 @@ class Thermostat(HomeAccessory):
         )
 
         # Target mode characteristics
-        hc_modes = state.attributes.get(ATTR_HVAC_MODES, None)
+        hc_modes = state.attributes.get(ATTR_HVAC_MODES)
         if hc_modes is None:
             _LOGGER.error(
                 "%s: HVAC modes not yet available. Please disable auto start for homekit.",
@@ -239,7 +237,7 @@ class Thermostat(HomeAccessory):
                 setter_callback=self.set_target_humidity,
             )
             self.char_current_humidity = serv_thermostat.configure_char(
-                CHAR_CURRENT_HUMIDITY, value=50,
+                CHAR_CURRENT_HUMIDITY, value=50
             )
 
     def get_temperature_range(self):
@@ -278,7 +276,7 @@ class Thermostat(HomeAccessory):
         _LOGGER.debug("%s: Set target humidity to %d", self.entity_id, value)
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_HUMIDITY: value}
         self.call_service(
-            DOMAIN_CLIMATE, SERVICE_SET_HUMIDITY, params, f"{value}{UNIT_PERCENTAGE}",
+            DOMAIN_CLIMATE, SERVICE_SET_HUMIDITY, params, f"{value}{UNIT_PERCENTAGE}"
         )
 
     @debounce
