@@ -180,6 +180,20 @@ async def test_form_import(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_import_dupe(hass):
+    """Test we get the form with import source."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "import"}, data=VALID_CONFIG
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
+
 async def test_form_cannot_connect(hass):
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
