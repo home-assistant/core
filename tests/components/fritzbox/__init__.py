@@ -1,4 +1,4 @@
-"""Tests for the FritzBox! integration."""
+"""Tests for the AVM Fritz!Box integration."""
 from unittest.mock import Mock
 
 
@@ -16,6 +16,33 @@ class FritzDeviceBinarySensorMock(Mock):
     name = "fake_name"
     present = True
     productname = "fake_productname"
+
+
+class FritzDeviceClimateMock(Mock):
+    """Mock of a AVM Fritz!Box climate device."""
+
+    actual_temperature = 18.0
+    ain = "fake_ain"
+    alert_state = "fake_state"
+    battery_level = 23
+    battery_low = True
+    comfort_temperature = 22.0
+    device_lock = "fake_locked_device"
+    eco_temperature = 16.0
+    fw_version = "1.2.3"
+    has_alarm = False
+    has_switch = False
+    has_temperature_sensor = False
+    has_thermostat = True
+    holiday_active = "fake_holiday"
+    lock = "fake_locked"
+    manufacturer = "fake_manufacturer"
+    name = "fake_name"
+    present = True
+    productname = "fake_productname"
+    summer_active = "fake_summer"
+    target_temperature = 19.5
+    window_open = "fake_window"
 
 
 class FritzDeviceSensorMock(Mock):

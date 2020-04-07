@@ -1,4 +1,4 @@
-"""Tests for samsungtv component."""
+"""Tests for AVM Fritz!Box binary sensor component."""
 from datetime import timedelta
 
 from asynctest import mock
@@ -49,7 +49,7 @@ def fritz_fixture():
 
 
 async def setup_fritzbox(hass: HomeAssistantType, config: dict):
-    """Set up mock Samsung TV."""
+    """Set up mock AVM Fritz!Box."""
     assert await async_setup_component(hass, FB_DOMAIN, config) is True
     await hass.async_block_till_done()
 
@@ -75,9 +75,15 @@ async def test_update(hass: HomeAssistantType, fritz: Mock):
 
     await setup_fritzbox(hass, MOCK_CONFIG)
 
-    next_update = dt_util.utcnow() + timedelta(seconds=20)
-    async_fire_time_changed(hass, next_update)
     assert device.update.call_count == 1
+    assert fritz().login.call_count == 1
+
+    next_update = dt_util.utcnow() + timedelta(seconds=200)
+    async_fire_time_changed(hass, next_update)
+    await hass.async_block_till_done()
+
+    assert device.update.call_count == 2
+    assert fritz().login.call_count == 1
 
 
 async def test_update_error(hass: HomeAssistantType, fritz: Mock):
@@ -88,7 +94,12 @@ async def test_update_error(hass: HomeAssistantType, fritz: Mock):
 
     await setup_fritzbox(hass, MOCK_CONFIG)
 
+    assert device.update.call_count == 1
     assert fritz().login.call_count == 1
-    next_update = dt_util.utcnow() + timedelta(seconds=20)
+
+    next_update = dt_util.utcnow() + timedelta(seconds=200)
     async_fire_time_changed(hass, next_update)
+    await hass.async_block_till_done()
+
+    assert device.update.call_count == 2
     assert fritz().login.call_count == 2

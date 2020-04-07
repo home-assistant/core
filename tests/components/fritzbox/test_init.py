@@ -1,4 +1,4 @@
-"""Tests for the AVM Fritz!Box Integration."""
+"""Tests for the AVM Fritz!Box integration."""
 from unittest.mock import Mock, call, patch
 
 import pytest
@@ -56,7 +56,7 @@ async def test_setup(hass: HomeAssistantType, fritz: Mock):
 async def test_setup_duplicate_config(hass: HomeAssistantType, fritz: Mock, caplog):
     """Test duplicate config of integration."""
     DUPLICATE = {FB_DOMAIN: [MOCK_CONFIG[FB_DOMAIN][0], MOCK_CONFIG[FB_DOMAIN][0]]}
-    assert await async_setup_component(hass, FB_DOMAIN, DUPLICATE) is False
+    assert not await async_setup_component(hass, FB_DOMAIN, DUPLICATE)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids()) == 0
     assert len(hass.states.async_all()) == 0
