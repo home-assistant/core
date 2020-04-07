@@ -56,7 +56,7 @@ class AzureDevOpsFlowHandler(ConfigFlow):
 
         if not project:
             _LOGGER.error(
-                "Could not get project %s with Azure DevOps.",
+                "Could not get project %s from Azure DevOps.",
                 user_input.get(CONF_PROJECT),
             )
             return False

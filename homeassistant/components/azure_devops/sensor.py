@@ -2,8 +2,12 @@
 from datetime import timedelta
 import logging
 
+from azure.devops.v5_1.build import Build
+
 from homeassistant.components.azure_devops import AzureDevOpsDeviceEntity
 from homeassistant.components.azure_devops.const import (
+    CONF_ORG,
+    CONF_PROJECT,
     DATA_AZURE_DEVOPS_CONNECTION,
     DATA_ORG,
     DATA_PROJECT,
@@ -22,15 +26,16 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up Azure DevOps sensor based on a config entry."""
-    connection = hass.data[DOMAIN][DATA_AZURE_DEVOPS_CONNECTION]
-    organization = hass.data[DOMAIN][DATA_ORG]
-    project = hass.data[DOMAIN][DATA_PROJECT]
+    instance_key = f"{DOMAIN}_{entry.data[CONF_ORG]}_{entry.data[CONF_PROJECT]}"
+    connection = hass.data[instance_key][DATA_AZURE_DEVOPS_CONNECTION]
+    organization = hass.data[instance_key][DATA_ORG]
+    project = hass.data[instance_key][DATA_PROJECT]
     sensors = []
 
     build_client = connection.clients.get_build_client()
 
     builds = build_client.get_builds(
-        project, query_order="queueTimeDescending", max_builds_per_definition=1
+        project, query_order="queueTimeDescending", max_builds_per_definition=1,
     ).value
     for build in builds:
         sensors.append(
@@ -90,7 +95,7 @@ class AzureDevOpsSensor(AzureDevOpsDeviceEntity):
 class AzureDevOpsLatestBuildSensor(AzureDevOpsSensor):
     """Defines a Azure DevOps card count sensor."""
 
-    def __init__(self, client, organization: str, project: str, build):
+    def __init__(self, client, organization: str, project: str, build: Build):
         """Initialize Azure DevOps sensor."""
         self.build = build
         super().__init__(
@@ -98,13 +103,13 @@ class AzureDevOpsLatestBuildSensor(AzureDevOpsSensor):
             organization,
             project,
             f"{build.project.id}_{build.definition.id}_latest_build",
-            f"{project} {build.definition.name} Latest Build",
+            f"{build.project.name} {build.definition.name} Latest Build",
             "mdi:pipe",
         )
 
     async def _azure_devops_update(self) -> bool:
         """Update Azure DevOps entity."""
-        build = self.client.get_build(self.project, self.build.id)
+        build = self.client.get_build(self.build.project.id, self.build.id)
         self._state = build.build_number
         self._attributes = {
             "definition_id": build.definition.id,

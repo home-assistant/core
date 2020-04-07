@@ -34,10 +34,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         creds=BasicAuthentication("", entry.data[CONF_PAT]),
     )
 
-    hass.data.setdefault(DOMAIN, {})[DATA_AZURE_DEVOPS_CONNECTION] = connection
-    hass.data.setdefault(DOMAIN, {})[DATA_ORG] = entry.data[CONF_ORG]
-    hass.data.setdefault(DOMAIN, {})[DATA_PROJECT] = entry.data[CONF_PROJECT]
-    hass.data.setdefault(DOMAIN, {})[DATA_PAT] = entry.data[CONF_PAT]
+    instance_key = f"{DOMAIN}_{entry.data[CONF_ORG]}_{entry.data[CONF_PROJECT]}"
+    hass.data.setdefault(instance_key, {})[DATA_AZURE_DEVOPS_CONNECTION] = connection
+    hass.data.setdefault(instance_key, {})[DATA_ORG] = entry.data[CONF_ORG]
+    hass.data.setdefault(instance_key, {})[DATA_PROJECT] = entry.data[CONF_PROJECT]
+    hass.data.setdefault(instance_key, {})[DATA_PAT] = entry.data[CONF_PAT]
 
     # Setup sensors
     hass.async_create_task(
@@ -107,13 +108,7 @@ class AzureDevOpsDeviceEntity(AzureDevOpsEntity):
     def device_info(self) -> Dict[str, Any]:
         """Return device information about this Azure DevOps instance."""
         return {
-            "identifiers": {
-                (
-                    DOMAIN,
-                    self.hass.data[DOMAIN][DATA_ORG],
-                    self.hass.data[DOMAIN][DATA_PROJECT],
-                )
-            },
-            "name": self.hass.data[DOMAIN][DATA_PROJECT],
-            "manufacturer": self.hass.data[DOMAIN][DATA_ORG],
+            "identifiers": {(DOMAIN, self.organization, self.project,)},
+            "manufacturer": self.organization,
+            "name": self.project,
         }
