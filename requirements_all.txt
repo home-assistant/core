@@ -1140,7 +1140,7 @@ pyRFXtrx==0.25
 pyTibber==0.13.6
 
 # homeassistant.components.dlink
-pyW215==0.6.0
+pyW215==0.7.0
 
 # homeassistant.components.w800rf32
 pyW800rf32==0.1
