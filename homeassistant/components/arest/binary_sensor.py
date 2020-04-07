@@ -30,8 +30,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the aREST binary sensor."""
-    resource = config.get(CONF_RESOURCE)
-    pin = config.get(CONF_PIN)
+    resource = config[CONF_RESOURCE]
+    pin = config[CONF_PIN]
     device_class = config.get(CONF_DEVICE_CLASS)
 
     try:

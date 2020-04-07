@@ -79,11 +79,11 @@ SOURCES = {
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sharp Aquos TV platform."""
 
-    name = config.get(CONF_NAME)
-    port = config.get(CONF_PORT)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    power_on_enabled = config.get("power_on_enabled")
+    name = config[CONF_NAME]
+    port = config[CONF_PORT]
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
+    power_on_enabled = config["power_on_enabled"]
 
     if discovery_info:
         _LOGGER.debug("%s", discovery_info)
@@ -96,7 +96,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities([SharpAquosTVDevice(name, remote, power_on_enabled)])
         return True
 
-    host = config.get(CONF_HOST)
+    host = config[CONF_HOST]
     remote = sharp_aquos_rc.TV(host, port, username, password, 15, 1)
 
     add_entities([SharpAquosTVDevice(name, remote, power_on_enabled)])
