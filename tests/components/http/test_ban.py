@@ -1,12 +1,14 @@
 """The tests for the Home Assistant HTTP component."""
 # pylint: disable=protected-access
 from ipaddress import ip_address
+import os
 from unittest.mock import Mock, mock_open
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPUnauthorized
 from aiohttp.web_middlewares import middleware
 from asynctest import patch
+import pytest
 
 import homeassistant.components.http as http
 from homeassistant.components.http import KEY_AUTHENTICATED
@@ -22,7 +24,9 @@ from homeassistant.setup import async_setup_component
 
 from . import mock_real_ip
 
+SUPERVISOR_IP = "1.2.3.4"
 BANNED_IPS = ["200.201.202.203", "100.64.0.2"]
+BANNED_IPS_WITH_SUPERVISOR = BANNED_IPS + [SUPERVISOR_IP]
 
 
 async def test_access_from_banned_ip(hass, aiohttp_client):
@@ -41,6 +45,27 @@ async def test_access_from_banned_ip(hass, aiohttp_client):
         set_real_ip(remote_addr)
         resp = await client.get("/")
         assert resp.status == 403
+
+
+@pytest.mark.parametrize(
+    "remote_addr, status", list(zip(BANNED_IPS_WITH_SUPERVISOR, [403, 403, 404])),
+)
+async def test_access_from_supervisor_ip(remote_addr, status, hass, aiohttp_client):
+    """Test accessing to server from supervisor IP."""
+    app = web.Application()
+    setup_bans(hass, app, 5)
+    set_real_ip = mock_real_ip(app)
+
+    with patch(
+        "homeassistant.components.http.ban.async_load_ip_bans_config",
+        return_value=[IpBan(banned_ip) for banned_ip in BANNED_IPS_WITH_SUPERVISOR],
+    ):
+        client = await aiohttp_client(app)
+
+    with patch.dict(os.environ, {"SUPERVISOR": SUPERVISOR_IP}):
+        set_real_ip(remote_addr)
+        resp = await client.get("/")
+        assert resp.status == status
 
 
 async def test_ban_middleware_not_loaded_by_config(hass):
