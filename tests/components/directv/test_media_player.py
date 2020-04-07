@@ -213,7 +213,7 @@ async def test_main_services(
         remote_mock.assert_called_once_with("pause", "0")
 
     with patch("directv.DIRECTV.remote") as remote_mock:
-        await remote.async_media_play(hass, MAIN_ENTITY_ID)
+        await common.async_media_play(hass, MAIN_ENTITY_ID)
         remote_mock.assert_called_once_with("play", "0")
 
     with patch("directv.DIRECTV.remote") as remote_mock:
