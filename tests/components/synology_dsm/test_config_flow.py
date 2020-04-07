@@ -214,7 +214,7 @@ async def test_login_failed(hass: HomeAssistantType, service_login_failed: Magic
         data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "login"}
+    assert result["errors"] == {CONF_USERNAME: "login"}
 
 
 async def test_missing_data_after_login(

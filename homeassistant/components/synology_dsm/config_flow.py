@@ -120,11 +120,11 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 _login_and_fetch_syno_info, api
             )
         except InvalidAuth:
-            errors["base"] = "login"
+            errors[CONF_USERNAME] = "login"
         except InvalidData:
             errors["base"] = "missing_data"
 
-        if "base" in errors:
+        if errors:
             return await self._show_setup_form(user_input, errors)
 
         # Check if already configured
