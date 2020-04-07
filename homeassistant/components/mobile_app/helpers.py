@@ -8,7 +8,6 @@ from nacl.encoding import Base64Encoder
 from nacl.secret import SecretBox
 
 from homeassistant.core import Context
-from homeassistant.const import HTTP_OK
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -92,7 +91,7 @@ def registration_context(registration: Dict) -> Context:
 
 
 def empty_okay_response(headers: Dict = None, status: int = HTTP_OK) -> Response:
-    """Return a Response with empty JSON object and a HTTP_OK."""
+    """Return a Response with empty JSON object and a 200."""
     return Response(
         text="{}", status=status, content_type="application/json", headers=headers
     )

@@ -28,7 +28,6 @@ from homeassistant.components.notify import (
 from homeassistant.const import (
     HTTP_BAD_REQUEST,
     HTTP_INTERNAL_SERVER_ERROR,
-    HTTP_OK,
     HTTP_UNAUTHORIZED,
     URL_ROOT,
 )
@@ -281,7 +280,7 @@ class HTML5PushRegistrationView(HomeAssistantView):
                 break
 
         if not found:
-            # If not found, unregistering was already done. Return HTTP_OK
+            # If not found, unregistering was already done. Return 200
             return self.json_message("Registration not found.")
 
         reg = self.registrations.pop(found)

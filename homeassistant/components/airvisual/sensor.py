@@ -13,7 +13,6 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_SHOW_ON_MAP,
     CONF_STATE,
-    HTTP_OK,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -53,12 +52,7 @@ POLLUTANT_LEVEL_MAPPING = [
         "minimum": 101,
         "maximum": 150,
     },
-    {
-        "label": "Unhealthy",
-        "icon": "mdi:emoticon-sad",
-        "minimum": 151,
-        "maximum": HTTP_OK,
-    },
+    {"label": "Unhealthy", "icon": "mdi:emoticon-sad", "minimum": 151, "maximum": 200},
     {
         "label": "Very Unhealthy",
         "icon": "mdi:emoticon-dead",
