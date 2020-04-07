@@ -3,10 +3,9 @@
 import logging
 from typing import Optional
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, HTTP_OK
 
 from .const import (
-    HTTP_OK,
     KEY_DEVICES,
     KEY_ENABLED,
     KEY_EXTERNAL_ID,
