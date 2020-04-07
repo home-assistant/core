@@ -9,7 +9,6 @@ DOMAIN = "synology_dsm"
 
 CONF_VOLUMES = "volumes"
 BASE_NAME = "Synology"
-DEFAULT_NAME = "Synology DSM"
 DEFAULT_SSL = True
 DEFAULT_PORT = 5000
 DEFAULT_PORT_SSL = 5001
