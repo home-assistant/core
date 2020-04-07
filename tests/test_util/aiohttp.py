@@ -12,7 +12,7 @@ from yarl import URL
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 
-retype = type(re.compile(""))
+RETYPE = type(re.compile(""))
 
 
 def mock_stream(data):
@@ -57,7 +57,7 @@ class AiohttpClientMocker:
         if content is None:
             content = b""
 
-        if not isinstance(url, retype):
+        if not isinstance(url, RETYPE):
             url = URL(url)
         if params:
             url = url.with_query(params)
@@ -172,7 +172,7 @@ class AiohttpClientMockResponse:
             return False
 
         # regular expression matching
-        if isinstance(self._url, retype):
+        if isinstance(self._url, RETYPE):
             return self._url.search(str(url)) is not None
 
         if (
@@ -231,7 +231,7 @@ class AiohttpClientMockResponse:
         """Return mock response as a json."""
         return _json.loads(self.response.decode(encoding))
 
-    async def release(self):
+    def release(self):
         """Mock release."""
 
     def raise_for_status(self):
