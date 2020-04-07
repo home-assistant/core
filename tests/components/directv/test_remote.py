@@ -51,11 +51,11 @@ async def test_main_services(
     await setup_integration(hass, aioclient_mock)
 
     with patch("directv.DIRECTV.remote") as remote_mock:
-        await common.async_turn_off(hass, MAIN_ENTITY_ID)
+        await common.async_turn_off(hass, entity_id=MAIN_ENTITY_ID)
         remote_mock.assert_called_once_with("poweroff", "0")
 
     with patch("directv.DIRECTV.remote") as remote_mock:
-        await common.async_turn_on(hass, MAIN_ENTITY_ID)
+        await common.async_turn_on(hass, entity_id=MAIN_ENTITY_ID)
         remote_mock.assert_called_once_with("poweron", "0")
 
     with patch("directv.DIRECTV.remote") as remote_mock:
