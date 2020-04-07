@@ -10,6 +10,7 @@ def _get_mock_harmonyapi(connect=None, close=None):
     harmonyapi_mock = MagicMock()
     type(harmonyapi_mock).connect = CoroutineMock(return_value=connect)
     type(harmonyapi_mock).close = CoroutineMock(return_value=close)
+    harmonyapi_mock.hub_config.info.get.return_value = "uniqueid1"
 
     return harmonyapi_mock
 
