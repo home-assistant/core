@@ -157,6 +157,31 @@ async def test_error_fetching_new_version_invalid_response(hass, aioclient_mock)
         await updater.get_newest_version(hass, MOCK_HUUID, False)
 
 
+async def test_fallback_to_get_if_post_fails(hass, aioclient_mock):
+    """Test we handle response error while fetching new version."""
+    aioclient_mock.post(updater.UPDATER_URL, status=500)
+    aioclient_mock.get(updater.UPDATER_URL, json=MOCK_RESPONSE)
+    with patch(
+        "homeassistant.helpers.system_info.async_get_system_info",
+        Mock(return_value=mock_coro({"fake": "bla"})),
+    ):
+        assert await updater.get_newest_version(hass, MOCK_HUUID, False) == (
+            "0.15",
+            "https://home-assistant.io",
+        )
+
+
+async def test_both_post_and_get_fallback_fail(hass, aioclient_mock):
+    """Test we handle post and get fail while fetching new version."""
+    aioclient_mock.post(updater.UPDATER_URL, status=500)
+    aioclient_mock.get(updater.UPDATER_URL, status=500)
+    with patch(
+        "homeassistant.helpers.system_info.async_get_system_info",
+        Mock(return_value=mock_coro({"fake": "bla"})),
+    ), pytest.raises(UpdateFailed):
+        await updater.get_newest_version(hass, MOCK_HUUID, False)
+
+
 async def test_new_version_shows_entity_after_hour_hassio(
     hass, mock_get_uuid, mock_get_newest_version
 ):

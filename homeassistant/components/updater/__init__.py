@@ -155,16 +155,41 @@ async def get_newest_version(hass, huuid, include_components):
 
     session = async_get_clientsession(hass)
 
-    with async_timeout.timeout(15):
-        req = await session.post(UPDATER_URL, json=info_object)
-
     _LOGGER.info(
         (
-            "Submitted analytics to Home Assistant servers. "
+            "Submitting analytics to Home Assistant servers. "
             "Information submitted includes %s"
         ),
         info_object,
     )
+
+    with async_timeout.timeout(15) as post_cm:
+        req = await session.post(UPDATER_URL, json=info_object)
+
+    get_fallback = False
+    if post_cm.expired:
+        _LOGGER.error(
+            "Timed out while attempt to post update information. "
+            "Retrying with a get request. "
+        )
+        get_fallback = True
+    elif req.status != 200:
+        _LOGGER.error(
+            "Unexpected status: %s while posting update information.", req.status
+        )
+        get_fallback = True
+
+    if get_fallback:
+        with async_timeout.timeout(15) as get_cm:
+            req = await session.get(UPDATER_URL)
+        if get_cm.expired:
+            raise update_coordinator.UpdateFailed(
+                "Timed out fetching Home Assistant Update information."
+            )
+        elif req.status != 200:
+            raise update_coordinator.UpdateFailed(
+                "Unexpected status: %s while fetching update information.", req.status
+            )
 
     try:
         res = await req.json()
