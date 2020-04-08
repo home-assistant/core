@@ -32,9 +32,9 @@ ATTR_PATH = "path"
 ATTR_STARGAZERS = "stargazers"
 ATTR_FORKS = "forks"
 ATTR_CLONES = "clones"
-ATTR_CLONES_UNIQUES = "clones_uniques"
+ATTR_CLONES_UNIQUE = "clones_unique"
 ATTR_VIEWS = "views"
-ATTR_VIEWS_UNIQUES = "views_uniques"
+ATTR_VIEWS_UNIQUE = "views_unique"
 
 DEFAULT_NAME = "GitHub"
 
@@ -93,9 +93,9 @@ class GitHubSensor(Entity):
         self._stargazers = None
         self._forks = None
         self._clones = None
-        self._clones_uniques = None
+        self._clones_unique = None
         self._views = None
-        self._views_uniques = None
+        self._views_unique = None
         self._github_data = github_data
 
     @property
@@ -134,9 +134,9 @@ class GitHubSensor(Entity):
             ATTR_STARGAZERS: self._stargazers,
             ATTR_FORKS: self._forks,
             ATTR_CLONES: self._clones,
-            ATTR_CLONES_UNIQUES: self._clones_uniques,
+            ATTR_CLONES_UNIQUE: self._clones_unique,
             ATTR_VIEWS: self._views,
-            ATTR_VIEWS_UNIQUES: self._views_uniques,
+            ATTR_VIEWS_UNIQUE: self._views_unique,
         }
         if self._latest_release_tag is not None:
             attrs[ATTR_LATEST_RELEASE_TAG] = self._latest_release_tag
@@ -171,9 +171,9 @@ class GitHubSensor(Entity):
         self._stargazers = self._github_data.stargazers
         self._forks = self._github_data.forks
         self._clones = self._github_data.clones
-        self._clones_uniques = self._github_data.clones_uniques
+        self._clones_unique = self._github_data.clones_unique
         self._views = self._github_data.views
-        self._views_uniques = self._github_data.views_uniques
+        self._views_unique = self._github_data.views_unique
 
 
 class GitHubData:
@@ -212,9 +212,9 @@ class GitHubData:
         self.stargazers = None
         self.forks = None
         self.clones = None
-        self.clones_uniques = None
+        self.clones_unique = None
         self.views = None
-        self.views_uniques = None
+        self.views_unique = None
 
     def update(self):
         """Update GitHub Sensor."""
@@ -247,12 +247,12 @@ class GitHubData:
             clones = repo.get_clones_traffic()
             if clones is not None:
                 self.clones = clones.get("count")
-                self.clones_uniques = clones.get("uniques")
+                self.clones_unique = clones.get("uniques")
 
             views = repo.get_views_traffic()
             if views is not None:
                 self.views = views.get("count")
-                self.views_uniques = views.get("uniques")
+                self.views_unique = views.get("uniques")
 
             self.available = True
         except self._github.GithubException as err:
