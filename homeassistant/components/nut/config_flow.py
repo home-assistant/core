@@ -54,9 +54,7 @@ def _resource_schema(available_resources, selected_resources):
 
 def _ups_schema(ups_list):
     """UPS selection schema."""
-    ups_map = {ups: name for ups, name in ups_list.items()}
-
-    return vol.Schema({vol.Required(CONF_ALIAS): vol.In(ups_map)})
+    return vol.Schema({vol.Required(CONF_ALIAS): vol.In(ups_list)})
 
 
 async def validate_input(hass: core.HomeAssistant, data):
