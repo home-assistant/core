@@ -10,7 +10,7 @@ import jwt
 
 # Typing imports
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
@@ -28,7 +28,6 @@ from .const import (
     GOOGLE_ASSISTANT_API_ENDPOINT,
     HOMEGRAPH_SCOPE,
     HOMEGRAPH_TOKEN_URL,
-    HTTP_INTERNAL_SERVER_ERROR,
     REPORT_STATE_BASE_URL,
     REQUEST_SYNC_BASE_URL,
     SOURCE_CLOUD,
