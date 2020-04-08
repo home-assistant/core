@@ -135,7 +135,7 @@ async def test_error_fetching_new_version_bad_json(hass, aioclient_mock):
 
     with patch(
         "homeassistant.helpers.system_info.async_get_system_info",
-        Mock(return_value={"fake": "bla"}),
+        return_value={"fake": "bla"},
     ), pytest.raises(UpdateFailed):
         await updater.get_newest_version(hass, MOCK_HUUID, False)
 
