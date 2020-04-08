@@ -45,10 +45,14 @@ OPi.GPIO==0.4.0
 
 # homeassistant.components.plugwise
 <<<<<<< HEAD
+<<<<<<< HEAD
 Plugwise_Smile==0.2.1
 =======
 Plugwise_Smile==0.1.2
 >>>>>>> Update plugwise async, config_flow and multi entity
+=======
+Plugwise_Smile==0.1.5
+>>>>>>> Bump module version
 
 # homeassistant.components.essent
 PyEssent==0.13
