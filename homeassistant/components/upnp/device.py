@@ -91,6 +91,11 @@ class Device:
         """Get the model name."""
         return self._igd_device.model_name
 
+    @property
+    def device_type(self) -> str:
+        """Get the device type."""
+        return self._igd_device.device_type
+
     def __str__(self) -> str:
         """Get string representation."""
         return "IGD Device: %s/%s" % (self.name, self.udn)

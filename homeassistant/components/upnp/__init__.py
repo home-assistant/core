@@ -89,7 +89,7 @@ def _substitute_hass_ports(ports: Mapping, hass_port: int = None) -> Mapping:
 
 
 async def async_discover_and_construct(
-    hass: HomeAssistantType, udn: str = None
+    hass: HomeAssistantType, udn: str = None, st: str = None
 ) -> Device:
     """Discovery devices and construct a Device for one."""
     discovery_infos = await Device.async_discover(hass)
@@ -99,7 +99,11 @@ async def async_discover_and_construct(
 
     if udn:
         # get the discovery info with specified UDN
+        _LOGGER.debug("Discovery_infos: %s", discovery_infos)
         filtered = [di for di in discovery_infos if di["udn"] == udn]
+        if st:
+            _LOGGER.debug("Filtering on ST: %s", st)
+            filtered = [di for di in discovery_infos if di["st"] == st]
         if not filtered:
             _LOGGER.warning(
                 'Wanted UPnP/IGD device with UDN "%s" not found, ' "aborting", udn
@@ -149,15 +153,17 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     conf = domain_data["config"]
 
     # discover and construct
-    device = await async_discover_and_construct(hass, config_entry.data.get("udn"))
+    udn = config_entry.data.get("udn")
+    st = config_entry.data.get("st")
+    device = await async_discover_and_construct(hass, udn, st)
     if not device:
         _LOGGER.info("Unable to create UPnP/IGD, aborting")
         raise ConfigEntryNotReady
 
-    # 'register'/save UDN
+    # 'register'/save UDN + ST
     hass.data[DOMAIN]["devices"][device.udn] = device
     hass.config_entries.async_update_entry(
-        entry=config_entry, data={**config_entry.data, "udn": device.udn}
+        entry=config_entry, data={**config_entry.data, "udn": device.udn, "st": device.device_type}
     )
 
     # create device registry entry
