@@ -17,7 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS
 from .mock_classes import MockPlexServer
 
-from tests.common import MockConfigEntry, async_test_home_assistant
+from tests.common import MockConfigEntry, async_test_home_assistant, mock_storage
 
 
 async def test_new_users_available(hass):
@@ -105,10 +105,13 @@ class TestClockedPlex(ClockedTestCase):
     async def setUp(self):
         """Initialize this test class."""
         self.hass = await async_test_home_assistant(self.loop)
+        self.mock_storage = mock_storage()
+        self.mock_storage.__enter__()
 
     async def tearDown(self):
         """Clean up the HomeAssistant instance."""
         await self.hass.async_stop()
+        self.mock_storage.__exit__(None, None, None)
 
     async def test_mark_sessions_idle(self):
         """Test marking media_players as idle when sessions end."""
