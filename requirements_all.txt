@@ -211,7 +211,7 @@ aiopylgtv==0.3.3
 aioswitcher==1.1.0
 
 # homeassistant.components.unifi
-aiounifi==15
+aiounifi==16
 
 # homeassistant.components.wwlln
 aiowwlln==2.0.2

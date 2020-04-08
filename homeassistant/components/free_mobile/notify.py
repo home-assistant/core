@@ -5,7 +5,12 @@ from freesms import FreeClient
 import voluptuous as vol
 
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME, HTTP_FORBIDDEN
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_USERNAME,
+    HTTP_FORBIDDEN,
+    HTTP_INTERNAL_SERVER_ERROR,
+)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,5 +42,5 @@ class FreeSMSNotificationService(BaseNotificationService):
             _LOGGER.error("Too much SMS send in a few time")
         elif resp.status_code == HTTP_FORBIDDEN:
             _LOGGER.error("Wrong Username/Password")
-        elif resp.status_code == 500:
+        elif resp.status_code == HTTP_INTERNAL_SERVER_ERROR:
             _LOGGER.error("Server error, try later")
