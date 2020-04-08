@@ -38,8 +38,8 @@ def _resource_schema(available_resources, selected_resources):
     """Resource selection schema."""
 
     known_available_resources = {
-        sensor_id: SENSOR_TYPES[sensor_id][0]
-        for sensor_id in SENSOR_TYPES
+        sensor_id: sensor[0]
+        for sensor_id, sensor in SENSOR_TYPES.items()
         if sensor_id in available_resources
     }
 
