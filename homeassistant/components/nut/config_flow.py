@@ -131,23 +131,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 self.nut_config.update(user_input)
-                self.available_resources.update(info["available_resources"])
-                self.ups_list = info["ups_list"]
+                if len(info["ups_list"]) > 1:
+                    self.ups_list = info["ups_list"]
+                    return await self.async_step_ups()
 
-                if len(self.ups_list) > 1:
-                    # If there is more than one ups
-                    # they need to pick which one so
-                    # we can check which resources are available
-                    return self.async_show_form(
-                        step_id="ups",
-                        data_schema=_ups_schema(self.ups_list),
-                        errors=errors,
-                    )
-                return self.async_show_form(
-                    step_id="resources",
-                    data_schema=_resource_schema(self.available_resources, []),
-                    errors=errors,
-                )
+                self.available_resources.update(info["available_resources"])
+                return await self.async_step_resources()
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -155,25 +144,29 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ups(self, user_input=None):
         """Handle the picking the ups."""
-        self.nut_config.update(user_input)
-        if self._host_port_alias_already_configured(self.nut_config):
-            return self.async_abort(reason="already_configured")
+        errors = {}
 
-        info, errors = await self._async_validate_or_error(self.nut_config)
+        if user_input is not None:
+            self.nut_config.update(user_input)
+            if self._host_port_alias_already_configured(self.nut_config):
+                return self.async_abort(reason="already_configured")
+            info, errors = await self._async_validate_or_error(self.nut_config)
+            if not errors:
+                self.available_resources.update(info["available_resources"])
+                return await self.async_step_resources()
 
-        if errors:
-            return self.async_show_form(
-                step_id="ups", data_schema=_ups_schema(self.ups_list), errors=errors,
-            )
-
-        self.available_resources.update(info["available_resources"])
         return self.async_show_form(
-            step_id="resources",
-            data_schema=_resource_schema(self.available_resources, []),
+            step_id="ups", data_schema=_ups_schema(self.ups_list), errors=errors,
         )
 
     async def async_step_resources(self, user_input=None):
         """Handle the picking the resources."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="resources",
+                data_schema=_resource_schema(self.available_resources, []),
+            )
+
         self.nut_config.update(user_input)
         title = _format_host_port_alias(self.nut_config)
         return self.async_create_entry(title=title, data=self.nut_config)
