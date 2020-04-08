@@ -268,8 +268,6 @@ asmog==0.0.6
 asterisk_mbox==0.5.0
 
 # homeassistant.components.dlna_dmr
-async-upnp-client==0.14.12
-
 # homeassistant.components.upnp
 async-upnp-client==0.14.13
 
