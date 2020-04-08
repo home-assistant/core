@@ -177,7 +177,7 @@ async def test_both_post_and_get_fallback_fail(hass, aioclient_mock):
     aioclient_mock.get(updater.UPDATER_URL, status=500)
     with patch(
         "homeassistant.helpers.system_info.async_get_system_info",
-        Mock(return_value={"fake": "bla"}),
+        return_value={"fake": "bla"},
     ), pytest.raises(UpdateFailed):
         await updater.get_newest_version(hass, MOCK_HUUID, False)
 
