@@ -7,9 +7,7 @@
         },
         "condition_type": {
             "is_off": "{entity_name} \uc774(\uac00) \uaebc\uc838 \uc788\uc73c\uba74",
-            "is_on": "{entity_name} \uc774(\uac00) \ucf1c\uc838 \uc788\uc73c\uba74",
-            "turn_off": "{entity_name} \uc774(\uac00) \uaebc\uc838 \uc788\uc73c\uba74",
-            "turn_on": "{entity_name} \uc774(\uac00) \ucf1c\uc838 \uc788\uc73c\uba74"
+            "is_on": "{entity_name} \uc774(\uac00) \ucf1c\uc838 \uc788\uc73c\uba74"
         },
         "trigger_type": {
             "turned_off": "{entity_name} \uc774(\uac00) \uaebc\uc9c8 \ub54c",

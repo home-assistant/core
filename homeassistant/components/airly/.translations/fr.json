@@ -5,7 +5,6 @@
         },
         "error": {
             "auth": "La cl\u00e9 API n'est pas correcte.",
-            "name_exists": "Le nom existe d\u00e9j\u00e0.",
             "wrong_location": "Aucune station de mesure Airly dans cette zone."
         },
         "step": {

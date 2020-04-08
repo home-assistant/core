@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Gostitelj je \u017ee konfiguriran.",
-            "one_instance_allowed": "Potrebna je samo ena instanca."
+            "already_configured": "Gostitelj je \u017ee konfiguriran."
         },
         "error": {
             "cannot_connect": "Ni mogo\u010de vzpostaviti povezave z gostiteljem",
@@ -10,12 +9,6 @@
             "wrong_credentials": "Napa\u010dno uporabni\u0161ko ime ali geslo"
         },
         "step": {
-            "options": {
-                "data": {
-                    "scan_interval": "Pogostost posodabljanja"
-                },
-                "title": "Nastavite mo\u017enosti"
-            },
             "user": {
                 "data": {
                     "host": "Gostitelj",
@@ -35,7 +28,6 @@
                 "data": {
                     "scan_interval": "Pogostost posodabljanja"
                 },
-                "description": "Nastavite mo\u017enosti za Transmission",
                 "title": "Nastavite mo\u017enosti za Transmission"
             }
         }

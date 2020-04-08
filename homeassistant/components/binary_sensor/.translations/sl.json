@@ -46,7 +46,6 @@
         },
         "trigger_type": {
             "bat_low": "{entity_name} ima prazno baterijo",
-            "closed": "{entity_name} zaprto",
             "cold": "{entity_name} je postal hladen",
             "connected": "{entity_name} povezan",
             "gas": "{entity_name} za\u010del zaznavati plin",
@@ -54,7 +53,6 @@
             "light": "{entity_name} za\u010del zaznavati svetlobo",
             "locked": "{entity_name} zaklenjen",
             "moist": "{entity_name} postal vla\u017een",
-            "moist\u00a7": "{entity_name} postal vla\u017een",
             "motion": "{entity_name} za\u010del zaznavati gibanje",
             "moving": "{entity_name} se je za\u010del premikati",
             "no_gas": "{entity_name} prenehal zaznavati plin",

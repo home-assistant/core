@@ -91,6 +91,7 @@
                 "data": {
                     "activation": "Sortida quan estigui ON",
                     "momentary": "Durada del pols (ms) (opcional)",
+                    "more_states": "Configura estats addicionals per a aquesta zona",
                     "name": "Nom (opcional)",
                     "pause": "Pausa entre polsos (ms) (opcional)",
                     "repeat": "Repeticions (-1 = infinit) (opcional)"

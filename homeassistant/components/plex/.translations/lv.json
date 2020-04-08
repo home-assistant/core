@@ -7,14 +7,6 @@
             "not_found": "Plex serveris nav atrasts"
         },
         "step": {
-            "manual_setup": {
-                "data": {
-                    "port": "Ports",
-                    "ssl": "Izmantot SSL",
-                    "verify_ssl": "P\u0101rbaud\u012bt SSL sertifik\u0101tu"
-                },
-                "title": "Plex serveris"
-            },
             "select_server": {
                 "data": {
                     "server": "Serveris"
