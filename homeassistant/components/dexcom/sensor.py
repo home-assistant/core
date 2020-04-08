@@ -37,7 +37,7 @@ class DexcomGlucoseValueSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Return the unit_of_measurement of the device."""
+        """Return the unit of measurement of the device."""
         return "mg/dL"
 
     @property
@@ -48,7 +48,7 @@ class DexcomGlucoseValueSensor(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._coordinator.last_update_success
+        return bool(self._coordinator.data)
 
     @property
     def should_poll(self):
@@ -57,7 +57,7 @@ class DexcomGlucoseValueSensor(Entity):
 
     @property
     def unique_id(self):
-        """Device Uniqueid."""
+        """Device unique id."""
         return self._unique_id
 
     async def async_update(self):
@@ -109,7 +109,7 @@ class DexcomGlucoseTrendSensor(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._coordinator.last_update_success
+        return bool(self._coordinator.data)
 
     @property
     def should_poll(self):
@@ -118,7 +118,7 @@ class DexcomGlucoseTrendSensor(Entity):
 
     @property
     def unique_id(self):
-        """Device Uniqueid."""
+        """Device unique id."""
         return self._unique_id
 
     async def async_update(self):
