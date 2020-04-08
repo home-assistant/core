@@ -175,7 +175,7 @@ async def get_newest_version(hass, huuid, include_components):
         get_fallback = True
     elif req.status != 200:
         _LOGGER.error(
-            "Unexpected status: %s while posting update information.", req.status
+            "Unexpected status: %s while posting update information", req.status
         )
         get_fallback = True
 
