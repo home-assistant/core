@@ -149,7 +149,7 @@ class NWSWeather(WeatherEntity):
     @property
     def name(self):
         """Return the name of the station."""
-        return f"{self.station}_{self.mode}"
+        return f"{self.station} {self.mode.title()}"
 
     @property
     def temperature(self):
