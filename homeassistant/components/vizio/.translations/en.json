@@ -1,21 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_in_progress": "Config flow for vizio component already in progress.",
             "already_setup": "This entry has already been setup.",
-            "already_setup_with_diff_host_and_name": "This entry appears to have already been setup with a different host and name based on its serial number. Please remove any old entries from your configuration.yaml and from the Integrations menu before reattempting to add this device.",
-            "host_exists": "Vizio component with host already configured.",
-            "name_exists": "Vizio component with name already configured.",
-            "updated_entry": "This entry has already been setup but the name, apps, and/or options defined in the configuration do not match the previously imported configuration, so the configuration entry has been updated accordingly.",
-            "updated_options": "This entry has already been setup but the options defined in the config do not match the previously imported options values so the config entry has been updated accordingly.",
-            "updated_volume_step": "This entry has already been setup but the volume step size in the config does not match the config entry so the config entry has been updated accordingly."
+            "updated_entry": "This entry has already been setup but the name, apps, and/or options defined in the configuration do not match the previously imported configuration, so the configuration entry has been updated accordingly."
         },
         "error": {
             "cant_connect": "Could not connect to the device. [Review the docs](https://www.home-assistant.io/integrations/vizio/) and re-verify that:\n- The device is powered on\n- The device is connected to the network\n- The values you filled in are accurate\nbefore attempting to resubmit.",
             "complete_pairing failed": "Unable to complete pairing. Ensure the PIN you provided is correct and the TV is still powered and connected to the network before resubmitting.",
             "host_exists": "Vizio device with specified host already configured.",
-            "name_exists": "Vizio device with specified name already configured.",
-            "tv_needs_token": "When Device Type is `tv` then a valid Access Token is needed."
+            "name_exists": "Vizio device with specified name already configured."
         },
         "step": {
             "pair_tv": {
@@ -33,14 +26,6 @@
                 "description": "Your Vizio SmartCast TV is now connected to Home Assistant.\n\nYour Access Token is '**{access_token}**'.",
                 "title": "Pairing Complete"
             },
-            "tv_apps": {
-                "data": {
-                    "apps_to_include_or_exclude": "Apps to Include or Exclude",
-                    "include_or_exclude": "Include or Exclude Apps?"
-                },
-                "description": "If you have a Smart TV, you can optionally filter your source list by choosing which apps to include or exclude in your source list. You can skip this step for TVs that don't support apps.",
-                "title": "Configure Apps for Smart TV"
-            },
             "user": {
                 "data": {
                     "access_token": "Access Token",
@@ -50,14 +35,6 @@
                 },
                 "description": "An Access Token is only needed for TVs. If you are configuring a TV and do not have an Access Token yet, leave it blank to go through a pairing process.",
                 "title": "Setup Vizio SmartCast Device"
-            },
-            "user_tv": {
-                "data": {
-                    "apps_to_include_or_exclude": "Apps to Include or Exclude",
-                    "include_or_exclude": "Include or Exclude Apps?"
-                },
-                "description": "If you have a Smart TV, you can optionally filter your source list by choosing which apps to include or exclude in your source list. You can skip this step for TVs that don't support apps.",
-                "title": "Configure Apps for Smart TV"
             }
         },
         "title": "Vizio SmartCast"
@@ -68,7 +45,6 @@
                 "data": {
                     "apps_to_include_or_exclude": "Apps to Include or Exclude",
                     "include_or_exclude": "Include or Exclude Apps?",
-                    "timeout": "API Request Timeout (seconds)",
                     "volume_step": "Volume Step Size"
                 },
                 "description": "If you have a Smart TV, you can optionally filter your source list by choosing which apps to include or exclude in your source list.",

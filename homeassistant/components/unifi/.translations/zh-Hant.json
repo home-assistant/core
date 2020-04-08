@@ -32,7 +32,8 @@
             "client_control": {
                 "data": {
                     "block_client": "\u7db2\u8def\u5b58\u53d6\u63a7\u5236\u5ba2\u6236\u7aef",
-                    "new_client": "\u65b0\u589e\u9396\u8981\u63a7\u5236\u7db2\u8def\u5b58\u53d6\u7684\u5ba2\u6236\u7aef"
+                    "new_client": "\u65b0\u589e\u9396\u8981\u63a7\u5236\u7db2\u8def\u5b58\u53d6\u7684\u5ba2\u6236\u7aef",
+                    "poe_clients": "\u5141\u8a31 POE \u63a7\u5236\u5ba2\u6236\u7aef"
                 },
                 "description": "\u8a2d\u5b9a\u5ba2\u6236\u7aef\u63a7\u5236\n\n\u65b0\u589e\u9396\u8981\u63a7\u5236\u7db2\u8def\u5b58\u53d6\u7684\u958b\u95dc\u5e8f\u865f\u3002",
                 "title": "UniFi \u9078\u9805 2/3"

@@ -3,9 +3,6 @@
         "abort": {
             "already_configured": "Plasseringen er allerede konfigurert."
         },
-        "error": {
-            "identifier_exists": "Beliggenhet allerede er registrert"
-        },
         "step": {
             "user": {
                 "data": {

@@ -2,17 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Esta combinaci\u00f3n de host y puerto ya est\u00e1 configurada",
-            "host_port_exists": "Esta combinaci\u00f3n de host y puerto ya est\u00e1 configurada",
             "import_failed": "No se pudo importar desde la configuraci\u00f3n"
         },
         "error": {
-            "certificate_error": "El certificado no pudo ser validado",
-            "certificate_fetch_failed": "No se puede obtener el certificado de esta combinaci\u00f3n de host y puerto",
             "connection_refused": "Conexi\u00f3n rechazada al conectarse al host",
             "connection_timeout": "Tiempo de espera agotado al conectar a este host",
-            "host_port_exists": "Esta combinaci\u00f3n de host y puerto ya est\u00e1 configurada",
-            "resolve_failed": "Este host no se puede resolver",
-            "wrong_host": "El certificado no coincide con el nombre de host"
+            "resolve_failed": "Este host no se puede resolver"
         },
         "step": {
             "user": {

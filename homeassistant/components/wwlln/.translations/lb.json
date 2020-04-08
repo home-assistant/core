@@ -3,9 +3,6 @@
         "abort": {
             "already_configured": "D\u00ebse Standuert ass scho registr\u00e9iert"
         },
-        "error": {
-            "identifier_exists": "Standuert ass scho registr\u00e9iert"
-        },
         "step": {
             "user": {
                 "data": {

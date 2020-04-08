@@ -10,10 +10,8 @@
             "init": {
                 "data": {
                     "device": "Sti eller webadresse",
-                    "floor_temperature": "Gulvklima-temperatur",
                     "id": "Id",
-                    "name": "Navn",
-                    "precision": "Klimatemperatur-pr\u00e6cision"
+                    "name": "Navn"
                 },
                 "title": "OpenTherm Gateway"
             }

@@ -1,15 +1,8 @@
 {
     "config": {
-        "abort": {
-            "host_port_exists": "Denna v\u00e4rd- och portkombination \u00e4r redan konfigurerad"
-        },
         "error": {
-            "certificate_error": "Certifikatet kunde inte valideras",
-            "certificate_fetch_failed": "Kan inte h\u00e4mta certifikat fr\u00e5n denna v\u00e4rd- och portkombination",
             "connection_timeout": "Timeout vid anslutning till den h\u00e4r v\u00e4rden",
-            "host_port_exists": "Denna v\u00e4rd- och portkombination \u00e4r redan konfigurerad",
-            "resolve_failed": "Denna v\u00e4rd kan inte resolveras",
-            "wrong_host": "Certifikatet matchar inte v\u00e4rdnamnet"
+            "resolve_failed": "Denna v\u00e4rd kan inte resolveras"
         },
         "step": {
             "user": {
