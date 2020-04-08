@@ -1000,7 +1000,11 @@ paho-mqtt==1.5.0
 panacotta==0.1
 
 # homeassistant.components.panasonic_viera
+<<<<<<< HEAD
 panasonic_viera==0.3.5
+=======
+panasonic_viera==0.3.4
+>>>>>>> Updating the panasonic_viera component
 
 # homeassistant.components.pcal9535a
 pcal9535a==0.7
