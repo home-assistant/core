@@ -2,6 +2,7 @@
 import asyncio
 from unittest import mock
 
+from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.setup import async_setup_component
 
 
@@ -117,7 +118,7 @@ async def test_limit_refetch(aioclient_mock, hass, hass_client):
     with mock.patch("async_timeout.timeout", side_effect=asyncio.TimeoutError()):
         resp = await client.get("/api/camera_proxy/camera.config_test")
         assert aioclient_mock.call_count == 0
-        assert resp.status == 500
+        assert resp.status == HTTP_INTERNAL_SERVER_ERROR
 
     hass.states.async_set("sensor.temp", "10")
 
