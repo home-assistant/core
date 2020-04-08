@@ -6,7 +6,7 @@
         "title": "Connect to the device",
         "data": {
           "host": "Hostname or IP Address",
-          "blid": "Username",
+          "blid": "BLID",
           "password": "Password",
           "certificate": "Certificate",
           "continuous": "Continuous",
