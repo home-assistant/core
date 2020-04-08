@@ -164,18 +164,20 @@ class BraviaTVOptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry):
         """Initialize Bravia TV options flow."""
-        self.host = config_entry.data[CONF_HOST]
-        self.pin = config_entry.data[CONF_PIN]
         self.braviarc = None
+        self.config_entry = config_entry
+        self.pin = config_entry.data[CONF_PIN]
         self.ignored_sources = config_entry.options.get(CONF_IGNORED_SOURCES)
         self.source_list = []
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
-        self.braviarc = BraviaRC(self.host)
-        await self.hass.async_add_executor_job(
-            self.braviarc.connect, self.pin, CLIENTID_PREFIX, NICKNAME,
-        )
+        self.braviarc = self.hass.data[DOMAIN][self.config_entry.entry_id]
+        if not self.braviarc.is_connected():
+            await self.hass.async_add_executor_job(
+                self.braviarc.connect, self.pin, CLIENTID_PREFIX, NICKNAME,
+            )
+
         content_mapping = await self.hass.async_add_executor_job(
             self.braviarc.load_source_list
         )
