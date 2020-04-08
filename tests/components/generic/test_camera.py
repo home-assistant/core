@@ -2,6 +2,7 @@
 import asyncio
 from unittest import mock
 
+from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 
 
@@ -93,7 +94,7 @@ async def test_limit_refetch(aioclient_mock, hass, hass_client):
     aioclient_mock.get("http://example.com/5a", text="hello world")
     aioclient_mock.get("http://example.com/10a", text="hello world")
     aioclient_mock.get("http://example.com/15a", text="hello planet")
-    aioclient_mock.get("http://example.com/20a", status=404)
+    aioclient_mock.get("http://example.com/20a", status=HTTP_NOT_FOUND)
 
     await async_setup_component(
         hass,

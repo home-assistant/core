@@ -79,6 +79,7 @@ from homeassistant.components.http.ban import (
 )
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.const import HTTP_NOT_FOUND
 
 from . import indieauth
 
@@ -185,7 +186,7 @@ class LoginFlowIndexView(HomeAssistantView):
                 },
             )
         except data_entry_flow.UnknownHandler:
-            return self.json_message("Invalid handler specified", 404)
+            return self.json_message("Invalid handler specified", HTTP_NOT_FOUND)
         except data_entry_flow.UnknownStep:
             return self.json_message("Handler does not support init", 400)
 
@@ -212,7 +213,7 @@ class LoginFlowResourceView(HomeAssistantView):
 
     async def get(self, request):
         """Do not allow getting status of a flow in progress."""
-        return self.json_message("Invalid flow specified", 404)
+        return self.json_message("Invalid flow specified", HTTP_NOT_FOUND)
 
     @RequestDataValidator(vol.Schema({"client_id": str}, extra=vol.ALLOW_EXTRA))
     @log_invalid_auth
@@ -233,7 +234,7 @@ class LoginFlowResourceView(HomeAssistantView):
 
             result = await self._flow_mgr.async_configure(flow_id, data)
         except data_entry_flow.UnknownFlow:
-            return self.json_message("Invalid flow specified", 404)
+            return self.json_message("Invalid flow specified", HTTP_NOT_FOUND)
         except vol.Invalid:
             return self.json_message("User input malformed", 400)
 
@@ -257,6 +258,6 @@ class LoginFlowResourceView(HomeAssistantView):
         try:
             self._flow_mgr.async_abort(flow_id)
         except data_entry_flow.UnknownFlow:
-            return self.json_message("Invalid flow specified", 404)
+            return self.json_message("Invalid flow specified", HTTP_NOT_FOUND)
 
         return self.json_message("Flow aborted")
