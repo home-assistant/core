@@ -17,7 +17,7 @@
             },
             "user": {
                 "data": {
-                    "app_power": "App power",
+                    "app_power": "Turn on via App",
                     "broadcast_address": "Broadcast address (optional)",
                     "host": "IP address",
                     "mac": "MAC address (optional)",

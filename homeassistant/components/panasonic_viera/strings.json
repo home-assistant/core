@@ -11,7 +11,7 @@
           "name": "Name (optional)",
           "mac": "MAC address (optional)",
           "broadcast_address": "Broadcast address (optional)",
-          "app_power": "App power"
+          "app_power": "Turn on via App"
         }
       },
       "pairing": {
