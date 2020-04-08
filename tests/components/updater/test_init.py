@@ -163,7 +163,7 @@ async def test_fallback_to_get_if_post_fails(hass, aioclient_mock):
     aioclient_mock.get(updater.UPDATER_URL, json=MOCK_RESPONSE)
     with patch(
         "homeassistant.helpers.system_info.async_get_system_info",
-        Mock(return_value={"fake": "bla"}),
+        return_value={"fake": "bla"},
     ):
         assert await updater.get_newest_version(hass, MOCK_HUUID, False) == (
             "0.15",
