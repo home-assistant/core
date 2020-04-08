@@ -18,6 +18,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.const import (
+    HTTP_INTERNAL_SERVER_ERROR,
     HTTP_OK,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
@@ -878,7 +879,7 @@ class MediaPlayerImageView(HomeAssistantView):
         data, content_type = await player.async_get_media_image()
 
         if data is None:
-            return web.Response(status=500)
+            return web.Response(status=HTTP_INTERNAL_SERVER_ERROR)
 
         headers = {CACHE_CONTROL: "max-age=3600"}
         return web.Response(body=data, content_type=content_type, headers=headers)
