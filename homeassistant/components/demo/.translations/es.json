@@ -4,6 +4,12 @@
     },
     "options": {
         "step": {
+            "init": {
+                "data": {
+                    "one": "Vacio",
+                    "other": "Vacio"
+                }
+            },
             "options_1": {
                 "data": {
                     "bool": "Booleano opcional",

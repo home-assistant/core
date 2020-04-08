@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Account gi\u00e0 configurato"
+            "already_configured": "Account gi\u00e0 configurato",
+            "no_device": "Nessuno dei tuoi dispositivi ha attivato \"Trova il mio iPhone\""
         },
         "error": {
             "login": "Errore di accesso: si prega di controllare la tua e-mail e la password",
@@ -19,7 +20,8 @@
             "user": {
                 "data": {
                     "password": "Password",
-                    "username": "E-mail"
+                    "username": "E-mail",
+                    "with_family": "Con la famiglia"
                 },
                 "description": "Inserisci le tue credenziali",
                 "title": "Credenziali iCloud"

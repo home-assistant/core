@@ -130,7 +130,7 @@ async def async_setup_entry(hass, config_entry):
         await zha_data[DATA_ZHA_GATEWAY].async_update_device_storage()
 
     hass.bus.async_listen_once(ha_const.EVENT_HOMEASSISTANT_STOP, async_zha_shutdown)
-    asyncio.create_task(async_load_entities(hass, config_entry))
+    asyncio.create_task(async_load_entities(hass))
     return True
 
 
@@ -150,11 +150,9 @@ async def async_unload_entry(hass, config_entry):
     return True
 
 
-async def async_load_entities(
-    hass: HomeAssistantType, config_entry: config_entries.ConfigEntry
-) -> None:
+async def async_load_entities(hass: HomeAssistantType) -> None:
     """Load entities after integration was setup."""
-    await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].async_prepare_entities()
+    await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].async_initialize_devices_and_entities()
     to_setup = hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED]
     results = await asyncio.gather(*to_setup, return_exceptions=True)
     for res in results:

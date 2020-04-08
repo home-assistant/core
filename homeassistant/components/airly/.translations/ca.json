@@ -5,7 +5,6 @@
         },
         "error": {
             "auth": "La clau API no \u00e9s correcta.",
-            "name_exists": "El nom ja existeix.",
             "wrong_location": "No hi ha estacions de mesura Airly en aquesta zona."
         },
         "step": {

@@ -30,8 +30,8 @@ class DataUpdateCoordinator:
         logger: logging.Logger,
         *,
         name: str,
-        update_method: Callable[[], Awaitable],
         update_interval: timedelta,
+        update_method: Optional[Callable[[], Awaitable]] = None,
         request_refresh_debouncer: Optional[Debouncer] = None,
     ):
         """Initialize global data updater."""
@@ -88,8 +88,14 @@ class DataUpdateCoordinator:
             self._unsub_refresh()
             self._unsub_refresh = None
 
+        # We _floor_ utcnow to create a schedule on a rounded second,
+        # minimizing the time between the point and the real activation.
+        # That way we obtain a constant update frequency,
+        # as long as the update process takes less than a second
         self._unsub_refresh = async_track_point_in_utc_time(
-            self.hass, self._handle_refresh_interval, utcnow() + self.update_interval
+            self.hass,
+            self._handle_refresh_interval,
+            utcnow().replace(microsecond=0) + self.update_interval,
         )
 
     async def _handle_refresh_interval(self, _now: datetime) -> None:
@@ -104,8 +110,14 @@ class DataUpdateCoordinator:
         """
         await self._debounced_refresh.async_call()
 
+    async def _async_update_data(self) -> Optional[Any]:
+        """Fetch the latest data from the source."""
+        if self.update_method is None:
+            raise NotImplementedError("Update method not implemented")
+        return await self.update_method()
+
     async def async_refresh(self) -> None:
-        """Update data."""
+        """Refresh data."""
         if self._unsub_refresh:
             self._unsub_refresh()
             self._unsub_refresh = None
@@ -114,7 +126,7 @@ class DataUpdateCoordinator:
 
         try:
             start = monotonic()
-            self.data = await self.update_method()
+            self.data = await self._async_update_data()
 
         except asyncio.TimeoutError:
             if self.last_update_success:
@@ -130,6 +142,9 @@ class DataUpdateCoordinator:
             if self.last_update_success:
                 self.logger.error("Error fetching %s data: %s", self.name, err)
                 self.last_update_success = False
+
+        except NotImplementedError as err:
+            raise err
 
         except Exception as err:  # pylint: disable=broad-except
             self.last_update_success = False

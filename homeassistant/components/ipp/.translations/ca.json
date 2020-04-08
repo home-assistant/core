@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Aquesta impressora ja est\u00e0 configurada.",
+            "connection_error": "No s'ha pogut connectar amb la impressora.",
+            "connection_upgrade": "No s'ha pogut connectar amb la impressora, es necessita actualitzar la connexi\u00f3."
+        },
+        "error": {
+            "connection_error": "No s'ha pogut connectar amb la impressora."
+        },
+        "flow_title": "Impressora: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "base_path": "Ruta relativa a la impressora",
+                    "host": "Amfitri\u00f3 o adre\u00e7a IP",
+                    "port": "Port",
+                    "ssl": "La impressora \u00e9s compatible amb comunicaci\u00f3 SSL/TLS",
+                    "verify_ssl": "La impressora utilitza un certificat SSL adequat"
+                },
+                "description": "Configura la impressora amb el protocol d'impressi\u00f3 per Internet (IPP) per integrar-la amb Home Assistant.",
+                "title": "Enlla\u00e7 d'impressora"
+            },
+            "zeroconf_confirm": {
+                "description": "Vols afegir la impressora {name} a Home Assistant?",
+                "title": "Impressora descoberta"
+            }
+        },
+        "title": "Protocol d'impressi\u00f3 per Internet (IPP)"
+    }
+}

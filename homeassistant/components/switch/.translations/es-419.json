@@ -6,9 +6,7 @@
         },
         "condition_type": {
             "is_off": "{entity_name} est\u00e1 apagado",
-            "is_on": "{entity_name} est\u00e1 encendido",
-            "turn_off": "{entity_name} apagado",
-            "turn_on": "{entity_name} encendido"
+            "is_on": "{entity_name} est\u00e1 encendido"
         },
         "trigger_type": {
             "turned_off": "{entity_name} apagado",

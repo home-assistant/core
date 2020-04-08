@@ -1,6 +1,7 @@
 """Tests for Plex setup."""
 import copy
 from datetime import timedelta
+import ssl
 
 from asynctest import patch
 import plexapi
@@ -19,14 +20,15 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_TOKEN,
+    CONF_URL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from .common import trigger_plex_update
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN
-from .mock_classes import MockPlexServer
+from .mock_classes import MockPlexAccount, MockPlexServer
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -72,7 +74,7 @@ async def test_setup_with_config(hass):
     )
 
 
-async def test_setup_with_config_entry(hass):
+async def test_setup_with_config_entry(hass, caplog):
     """Test setup component with config."""
 
     mock_plex_server = MockPlexServer()
@@ -107,30 +109,28 @@ async def test_setup_with_config_entry(hass):
         hass.data[const.DOMAIN][const.PLATFORMS_COMPLETED][server_id] == const.PLATFORMS
     )
 
-    async_dispatcher_send(hass, const.PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
-    await hass.async_block_till_done()
+    await trigger_plex_update(hass, server_id)
 
     sensor = hass.states.get("sensor.plex_plex_server_1")
     assert sensor.state == str(len(mock_plex_server.accounts))
 
-    async_dispatcher_send(hass, const.PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
-    await hass.async_block_till_done()
+    await trigger_plex_update(hass, server_id)
 
-    with patch.object(
-        mock_plex_server, "clients", side_effect=plexapi.exceptions.BadRequest
+    for test_exception in (
+        plexapi.exceptions.BadRequest,
+        requests.exceptions.RequestException,
     ):
-        async_dispatcher_send(
-            hass, const.PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id)
-        )
-        await hass.async_block_till_done()
+        with patch.object(
+            mock_plex_server, "clients", side_effect=test_exception
+        ) as patched_clients_bad_request:
+            await trigger_plex_update(hass, server_id)
 
-    with patch.object(
-        mock_plex_server, "clients", side_effect=requests.exceptions.RequestException
-    ):
-        async_dispatcher_send(
-            hass, const.PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id)
+        assert patched_clients_bad_request.called
+        assert (
+            f"Could not connect to Plex server: {mock_plex_server.friendlyName}"
+            in caplog.text
         )
-        await hass.async_block_till_done()
+        caplog.clear()
 
 
 async def test_set_config_entry_unique_id(hass):
@@ -292,11 +292,52 @@ async def test_setup_with_photo_session(hass):
 
     server_id = mock_plex_server.machineIdentifier
 
-    async_dispatcher_send(hass, const.PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
-    await hass.async_block_till_done()
+    await trigger_plex_update(hass, server_id)
 
     media_player = hass.states.get("media_player.plex_product_title")
     assert media_player.state == "idle"
 
     sensor = hass.states.get("sensor.plex_plex_server_1")
     assert sensor.state == str(len(mock_plex_server.accounts))
+
+
+async def test_setup_when_certificate_changed(hass):
+    """Test setup component when the Plex certificate has changed."""
+
+    old_domain = "1-2-3-4.1234567890abcdef1234567890abcdef.plex.direct"
+    old_url = f"https://{old_domain}:32400"
+
+    OLD_HOSTNAME_DATA = copy.deepcopy(DEFAULT_DATA)
+    OLD_HOSTNAME_DATA[const.PLEX_SERVER_CONFIG][CONF_URL] = old_url
+
+    class WrongCertHostnameException(requests.exceptions.SSLError):
+        """Mock the exception showing a mismatched hostname."""
+
+        def __init__(self):
+            self.__context__ = ssl.SSLCertVerificationError(
+                f"hostname '{old_domain}' doesn't match"
+            )
+
+    old_entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        data=OLD_HOSTNAME_DATA,
+        options=DEFAULT_OPTIONS,
+        unique_id=DEFAULT_DATA["server_id"],
+    )
+
+    new_entry = MockConfigEntry(domain=const.DOMAIN, data=DEFAULT_DATA)
+
+    with patch(
+        "plexapi.server.PlexServer", side_effect=WrongCertHostnameException
+    ), patch("plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount()):
+        old_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(old_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(const.DOMAIN)) == 1
+    assert old_entry.state == ENTRY_STATE_LOADED
+
+    assert (
+        old_entry.data[const.PLEX_SERVER_CONFIG][CONF_URL]
+        == new_entry.data[const.PLEX_SERVER_CONFIG][CONF_URL]
+    )

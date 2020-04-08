@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "identifier_exists": "Lokacija je ve\u0107 registrirana"
-        },
         "step": {
             "user": {
                 "data": {

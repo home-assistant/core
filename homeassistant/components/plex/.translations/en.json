@@ -4,7 +4,6 @@
             "all_configured": "All linked servers already configured",
             "already_configured": "This Plex server is already configured",
             "already_in_progress": "Plex is being configured",
-            "discovery_no_file": "No legacy configuration file found",
             "invalid_import": "Imported configuration is invalid",
             "non-interactive": "Non-interactive import",
             "token_request_timeout": "Timed out obtaining token",
@@ -13,20 +12,9 @@
         "error": {
             "faulty_credentials": "Authorization failed",
             "no_servers": "No servers linked to account",
-            "no_token": "Provide a token or select manual setup",
             "not_found": "Plex server not found"
         },
         "step": {
-            "manual_setup": {
-                "data": {
-                    "host": "Host",
-                    "port": "Port",
-                    "ssl": "Use SSL",
-                    "token": "Token (if required)",
-                    "verify_ssl": "Verify SSL certificate"
-                },
-                "title": "Plex server"
-            },
             "select_server": {
                 "data": {
                     "server": "Server"
@@ -36,14 +24,6 @@
             },
             "start_website_auth": {
                 "description": "Continue to authorize at plex.tv.",
-                "title": "Connect Plex server"
-            },
-            "user": {
-                "data": {
-                    "manual_setup": "Manual setup",
-                    "token": "Plex token"
-                },
-                "description": "Continue to authorize at plex.tv or manually configure a server.",
                 "title": "Connect Plex server"
             }
         },
@@ -55,7 +35,6 @@
                 "data": {
                     "ignore_new_shared_users": "Ignore new managed/shared users",
                     "monitored_users": "Monitored users",
-                    "show_all_controls": "Show all controls",
                     "use_episode_art": "Use episode art"
                 },
                 "description": "Options for Plex Media Players"

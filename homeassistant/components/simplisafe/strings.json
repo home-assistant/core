@@ -6,8 +6,7 @@
         "title": "Fill in your information",
         "data": {
           "username": "Email Address",
-          "password": "Password",
-          "code": "Code (for Home Assistant)"
+          "password": "Password"
         }
       }
     },
@@ -17,6 +16,16 @@
     },
     "abort": {
       "already_configured": "This SimpliSafe account is already in use."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure SimpliSafe",
+        "data": {
+          "code": "Code (used in Home Assistant UI)"
+        }
+      }
     }
   }
 }

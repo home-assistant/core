@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Host jest ju\u017c skonfigurowany.",
-            "one_instance_allowed": "Wymagana jest tylko jedna instancja."
+            "already_configured": "Host jest ju\u017c skonfigurowany."
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z hostem",
@@ -10,12 +9,6 @@
             "wrong_credentials": "Nieprawid\u0142owa nazwa u\u017cytkownika lub has\u0142o"
         },
         "step": {
-            "options": {
-                "data": {
-                    "scan_interval": "Cz\u0119stotliwo\u015b\u0107 aktualizacji"
-                },
-                "title": "Opcje"
-            },
             "user": {
                 "data": {
                     "host": "Host",
@@ -35,7 +28,6 @@
                 "data": {
                     "scan_interval": "Cz\u0119stotliwo\u015b\u0107 aktualizacji"
                 },
-                "description": "Konfiguracja opcji dla Transmission",
                 "title": "Konfiguracja opcji dla Transmission"
             }
         }

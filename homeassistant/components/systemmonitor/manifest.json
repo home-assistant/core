@@ -2,7 +2,7 @@
   "domain": "systemmonitor",
   "name": "System Monitor",
   "documentation": "https://www.home-assistant.io/integrations/systemmonitor",
-  "requirements": ["psutil==5.6.7"],
+  "requirements": ["psutil==5.7.0"],
   "dependencies": [],
   "codeowners": []
 }

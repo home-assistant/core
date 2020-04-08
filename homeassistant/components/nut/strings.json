@@ -1,0 +1,38 @@
+{
+  "config": {
+    "title": "Network UPS Tools (NUT)",
+    "step": {
+      "user": {
+        "title": "Connect to the NUT server",
+        "description": "If there are multiple UPSs attached to the NUT server, enter the name UPS to query in the 'Alias' field.",
+        "data": {
+          "name": "Name",
+          "host": "Host",
+          "port": "Port",
+          "alias": "Alias",
+          "username": "Username",
+          "password": "Password",
+          "resources": "Resources"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Choose Sensor Resources",
+        "data": {
+          "resources": "Resources"
+        }
+      }
+    }
+  }
+
+}

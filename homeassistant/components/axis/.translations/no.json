@@ -4,8 +4,7 @@
             "already_configured": "Enheten er allerede konfigurert",
             "bad_config_file": "D\u00e5rlige data fra konfigurasjonsfilen",
             "link_local_address": "Linking av lokale adresser st\u00f8ttes ikke",
-            "not_axis_device": "Oppdaget enhet ikke en Axis enhet",
-            "updated_configuration": "Oppdatert enhetskonfigurasjonen med ny vertsadresse"
+            "not_axis_device": "Oppdaget enhet ikke en Axis enhet"
         },
         "error": {
             "already_configured": "Enheten er allerede konfigurert",
@@ -19,7 +18,7 @@
                 "data": {
                     "host": "Vert",
                     "password": "Passord",
-                    "port": "Port",
+                    "port": "",
                     "username": "Brukernavn"
                 },
                 "title": "Sett opp Axis enhet"

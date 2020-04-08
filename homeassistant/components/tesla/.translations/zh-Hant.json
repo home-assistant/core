@@ -22,6 +22,7 @@
         "step": {
             "init": {
                 "data": {
+                    "enable_wake_on_start": "\u65bc\u555f\u52d5\u6642\u5f37\u5236\u559a\u9192\u6c7d\u8eca",
                     "scan_interval": "\u6383\u63cf\u9593\u9694\u79d2\u6578"
                 }
             }

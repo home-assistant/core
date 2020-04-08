@@ -15,14 +15,13 @@ from homeassistant.components.plex.const import (
     CONF_USE_EPISODE_ART,
     DOMAIN,
     PLEX_SERVER_CONFIG,
-    PLEX_UPDATE_PLATFORMS_SIGNAL,
     SERVERS,
 )
 from homeassistant.config_entries import ENTRY_STATE_LOADED
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, CONF_URL
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
+from .common import trigger_plex_update
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN
 from .mock_classes import MockPlexAccount, MockPlexServer
 
@@ -416,8 +415,7 @@ async def test_option_flow_new_users_available(hass, caplog):
 
     server_id = mock_plex_server.machineIdentifier
 
-    async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
-    await hass.async_block_till_done()
+    await trigger_plex_update(hass, server_id)
 
     monitored_users = hass.data[DOMAIN][SERVERS][server_id].option_monitored_users
 

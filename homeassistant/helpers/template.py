@@ -192,7 +192,7 @@ class Template:
             raise TemplateError(err)
 
     def extract_entities(
-        self, variables: Dict[str, Any] = None
+        self, variables: Optional[Dict[str, Any]] = None
     ) -> Union[str, List[str]]:
         """Extract all entities for state_changed listener."""
         return extract_entities(self.template, variables)

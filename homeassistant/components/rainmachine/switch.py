@@ -6,6 +6,7 @@ from regenmaschine.errors import RequestError
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import ATTR_ID
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import RainMachineEntity
@@ -205,7 +206,8 @@ class RainMachineProgram(RainMachineSwitch):
             self.rainmachine.controller.programs.start(self._rainmachine_entity_id)
         )
 
-    async def async_update(self) -> None:
+    @callback
+    def update_from_latest_data(self) -> None:
         """Update info for the program."""
         [self._switch_data] = [
             p
@@ -269,7 +271,8 @@ class RainMachineZone(RainMachineSwitch):
             )
         )
 
-    async def async_update(self) -> None:
+    @callback
+    def update_from_latest_data(self) -> None:
         """Update info for the zone."""
         [self._switch_data] = [
             z

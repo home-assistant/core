@@ -131,6 +131,24 @@ async def async_devices_query(hass, data, payload):
     return {"devices": devices}
 
 
+async def _entity_execute(entity, data, executions):
+    """Execute all commands for an entity.
+
+    Returns a dict if a special result needs to be set.
+    """
+    for execution in executions:
+        try:
+            await entity.execute(data, execution)
+        except SmartHomeError as err:
+            return {
+                "ids": [entity.entity_id],
+                "status": "ERROR",
+                **err.to_response(),
+            }
+
+    return None
+
+
 @HANDLERS.register("action.devices.EXECUTE")
 async def handle_devices_execute(hass, data, payload):
     """Handle action.devices.EXECUTE request.
@@ -138,6 +156,7 @@ async def handle_devices_execute(hass, data, payload):
     https://developers.google.com/assistant/smarthome/develop/process-intents#EXECUTE
     """
     entities = {}
+    executions = {}
     results = {}
 
     for command in payload["commands"]:
@@ -159,27 +178,33 @@ async def handle_devices_execute(hass, data, payload):
             if entity_id in results:
                 continue
 
-            if entity_id not in entities:
-                state = hass.states.get(entity_id)
+            if entity_id in entities:
+                executions[entity_id].append(execution)
+                continue
 
-                if state is None:
-                    results[entity_id] = {
-                        "ids": [entity_id],
-                        "status": "ERROR",
-                        "errorCode": ERR_DEVICE_OFFLINE,
-                    }
-                    continue
+            state = hass.states.get(entity_id)
 
-                entities[entity_id] = GoogleEntity(hass, data.config, state)
-
-            try:
-                await entities[entity_id].execute(data, execution)
-            except SmartHomeError as err:
+            if state is None:
                 results[entity_id] = {
                     "ids": [entity_id],
                     "status": "ERROR",
-                    **err.to_response(),
+                    "errorCode": ERR_DEVICE_OFFLINE,
                 }
+                continue
+
+            entities[entity_id] = GoogleEntity(hass, data.config, state)
+            executions[entity_id] = [execution]
+
+    execute_results = await asyncio.gather(
+        *[
+            _entity_execute(entities[entity_id], data, executions[entity_id])
+            for entity_id in executions
+        ]
+    )
+
+    for entity_id, result in zip(executions, execute_results):
+        if result is not None:
+            results[entity_id] = result
 
     final_results = list(results.values())
 

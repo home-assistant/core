@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tesla",
   "requirements": [
-    "teslajsonpy==0.5.1"
+    "teslajsonpy==0.6.0"
   ],
   "dependencies": [],
   "codeowners": [

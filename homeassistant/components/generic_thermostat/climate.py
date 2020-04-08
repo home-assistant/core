@@ -30,6 +30,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN, callback
@@ -197,7 +198,10 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
         def _async_startup(event):
             """Init on startup."""
             sensor_state = self.hass.states.get(self.sensor_entity_id)
-            if sensor_state and sensor_state.state != STATE_UNKNOWN:
+            if sensor_state and sensor_state.state not in (
+                STATE_UNAVAILABLE,
+                STATE_UNKNOWN,
+            ):
                 self._async_update_temp(sensor_state)
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_startup)
@@ -352,7 +356,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
 
     async def _async_sensor_changed(self, entity_id, old_state, new_state):
         """Handle temperature changes."""
-        if new_state is None:
+        if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return
 
         self._async_update_temp(new_state)

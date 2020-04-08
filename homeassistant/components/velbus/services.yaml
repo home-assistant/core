@@ -1,2 +1,18 @@
 sync_clock:
   description: Sync the velbus modules clock to the Home Assistant clock, this is the same as the 'sync clock' from VelbusLink
+
+set_memo_text:
+  description: >
+    Set the memo text to the display of modules like VMBGPO, VMBGPOD
+    Be sure the page(s) of the module is configured to display the memo text.
+  fields:
+    address:
+      description: >
+        The module address in decimal format.
+        The decimal addresses are displayed in front of the modules listed at the integration page.
+      example: '11'
+    memo_text:
+      description: >
+        The actual text to be displayed.
+        Text is limited to 64 characters.
+      example: 'Do not forget trash'

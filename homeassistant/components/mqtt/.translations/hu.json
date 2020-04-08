@@ -22,10 +22,22 @@
                 "data": {
                     "discovery": "Felfedez\u00e9s enged\u00e9lyez\u00e9se"
                 },
-                "description": "Szeretn\u00e9d, hogy a Home Assistant csatlakozzon a hass.io addon {addon} \u00e1ltal biztos\u00edtott MQTT br\u00f3kerhez?",
+                "description": "Be szeretn\u00e9d konfigru\u00e1lni, hogy a Home Assistant a(z) {addon} Hass.io add-on \u00e1ltal biztos\u00edtott MQTT br\u00f3kerhez csatlakozzon?",
                 "title": "MQTT Broker a Hass.io b\u0151v\u00edtm\u00e9nyen kereszt\u00fcl"
             }
         },
         "title": "MQTT"
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Els\u0151 gomb",
+            "button_2": "M\u00e1sodik gomb",
+            "button_3": "Harmadik gomb",
+            "button_4": "Negyedik gomb",
+            "button_5": "\u00d6t\u00f6dik gomb",
+            "button_6": "Hatodik gomb",
+            "turn_off": "Kikapcsol\u00e1s",
+            "turn_on": "Bekapcsol\u00e1s"
+        }
     }
 }

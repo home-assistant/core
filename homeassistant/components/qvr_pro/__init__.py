@@ -4,10 +4,11 @@ import logging
 
 from pyqvrpro import Client
 from pyqvrpro.client import AuthenticationError, InsufficientPermissionsError
+from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
@@ -29,6 +30,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_HOST): cv.string,
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_PORT): cv.port,
                 vol.Optional(CONF_EXCLUDE_CHANNELS, default=[]): vol.All(
                     cv.ensure_list_csv, [cv.positive_int]
                 ),
@@ -49,10 +51,11 @@ def setup(hass, config):
     user = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
     host = conf[CONF_HOST]
+    port = conf.get(CONF_PORT)
     excluded_channels = conf[CONF_EXCLUDE_CHANNELS]
 
     try:
-        qvrpro = Client(user, password, host)
+        qvrpro = Client(user, password, host, port=port)
 
         channel_resp = qvrpro.get_channel_list()
 
@@ -61,6 +64,9 @@ def setup(hass, config):
         return False
     except AuthenticationError:
         _LOGGER.error("Authentication failed")
+        return False
+    except RequestsConnectionError:
+        _LOGGER.error("Error connecting to QVR server")
         return False
 
     channels = []
