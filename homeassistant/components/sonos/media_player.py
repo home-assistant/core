@@ -4,12 +4,12 @@ import datetime
 import functools as ft
 import logging
 import socket
-import urllib
 
 import async_timeout
 import pysonos
 from pysonos import alarms
 from pysonos.exceptions import SoCoException, SoCoUPnPException
+import pysonos.music_library
 import pysonos.snapshot
 import voluptuous as vol
 
@@ -338,19 +338,6 @@ def _timespan_secs(timespan):
     return sum(60 ** x[0] * int(x[1]) for x in enumerate(reversed(timespan.split(":"))))
 
 
-def _is_radio_uri(uri):
-    """Return whether the URI is a stream (not a playlist)."""
-    radio_schemes = (
-        "x-rincon-mp3radio:",
-        "x-sonosapi-stream:",
-        "x-sonosapi-radio:",
-        "x-sonosapi-hls:",
-        "hls-radio:",
-        "x-rincon-stream:",
-    )
-    return uri.startswith(radio_schemes)
-
-
 class SonosEntity(MediaPlayerDevice):
     """Representation of a Sonos entity."""
 
@@ -503,6 +490,11 @@ class SonosEntity(MediaPlayerDevice):
         """Return True if entity is available."""
         return self._seen_timer is not None
 
+    def _clear_media_position(self):
+        """Clear the media_position."""
+        self._media_position = None
+        self._media_position_updated_at = None
+
     def _set_favorites(self):
         """Set available favorites."""
         self._favorites = []
@@ -514,17 +506,6 @@ class SonosEntity(MediaPlayerDevice):
             except SoCoException as ex:
                 # Skip unknown types
                 _LOGGER.error("Unhandled favorite '%s': %s", fav.title, ex)
-
-    def _radio_artwork(self, url):
-        """Return the private URL with artwork for a radio stream."""
-        if url in UNAVAILABLE_VALUES:
-            return None
-
-        if url.find("tts_proxy") > 0:
-            # If the content is a tts don't try to fetch an image from it.
-            return None
-
-        return f"http://{self.soco.ip_address}:1400/getaa?s=1&u={urllib.parse.quote(url, safe='')}"
 
     def _attach_player(self):
         """Get basic information and add event subscriptions."""
@@ -576,6 +557,12 @@ class SonosEntity(MediaPlayerDevice):
 
         self._shuffle = self.soco.shuffle
         self._uri = None
+        self._media_duration = None
+        self._media_image_url = None
+        self._media_artist = None
+        self._media_album_name = None
+        self._media_title = None
+        self._source_name = None
 
         update_position = new_status != self._status
         self._status = new_status
@@ -586,13 +573,20 @@ class SonosEntity(MediaPlayerDevice):
             self.update_media_linein(SOURCE_LINEIN)
         else:
             track_info = self.soco.get_current_track_info()
-            self._uri = track_info["uri"]
-
-            if _is_radio_uri(track_info["uri"]):
-                variables = event and event.variables
-                self.update_media_radio(variables, track_info)
+            if not track_info["uri"]:
+                self._clear_media_position()
             else:
-                self.update_media_music(update_position, track_info)
+                self._uri = track_info["uri"]
+                self._media_artist = track_info.get("artist")
+                self._media_album_name = track_info.get("album")
+                self._media_title = track_info.get("title")
+
+                if self.soco.is_radio_uri(track_info["uri"]):
+                    variables = event and event.variables
+                    self.update_media_radio(variables, track_info)
+                else:
+                    variables = event and event.variables
+                    self.update_media_music(update_position, track_info)
 
         self.schedule_update_ha_state()
 
@@ -604,74 +598,33 @@ class SonosEntity(MediaPlayerDevice):
 
     def update_media_linein(self, source):
         """Update state when playing from line-in/tv."""
-        self._media_duration = None
-        self._media_position = None
-        self._media_position_updated_at = None
+        self._clear_media_position()
 
-        self._media_image_url = None
-
-        self._media_artist = None
-        self._media_album_name = None
         self._media_title = source
-
         self._source_name = source
 
     def update_media_radio(self, variables, track_info):
         """Update state when streaming radio."""
-        self._media_duration = None
-        self._media_position = None
-        self._media_position_updated_at = None
+        self._clear_media_position()
 
-        media_info = self.soco.avTransport.GetMediaInfo([("InstanceID", 0)])
-        self._media_image_url = self._radio_artwork(media_info["CurrentURI"])
+        try:
+            library = pysonos.music_library.MusicLibrary(self.soco)
+            album_art_uri = variables["current_track_meta_data"].album_art_uri
+            self._media_image_url = library.build_album_art_full_uri(album_art_uri)
+        except (TypeError, KeyError, AttributeError):
+            pass
 
-        self._media_artist = track_info.get("artist")
-        self._media_album_name = None
-        self._media_title = track_info.get("title")
-
-        if self._media_artist and self._media_title:
-            # artist and album name are in the data, concatenate
-            # that do display as artist.
-            # "Information" field in the sonos pc app
-            self._media_artist = "{artist} - {title}".format(
-                artist=self._media_artist, title=self._media_title
-            )
-        elif variables:
-            # "On Now" field in the sonos pc app
-            current_track_metadata = variables.get("current_track_meta_data")
-            if current_track_metadata:
-                self._media_artist = current_track_metadata.radio_show.split(",")[0]
-
-        # For radio streams we set the radio station name as the title.
-        current_uri_metadata = media_info["CurrentURIMetaData"]
-        if current_uri_metadata not in UNAVAILABLE_VALUES:
-            # currently soco does not have an API for this
-            current_uri_metadata = pysonos.xml.XML.fromstring(
-                pysonos.utils.really_utf8(current_uri_metadata)
-            )
-
-            md_title = current_uri_metadata.findtext(
-                ".//{http://purl.org/dc/elements/1.1/}title"
-            )
-
-            if md_title not in UNAVAILABLE_VALUES:
-                self._media_title = md_title
-
-        if self._media_artist and self._media_title:
-            # some radio stations put their name into the artist
-            # name, e.g.:
-            #   media_title = "Station"
-            #   media_artist = "Station - Artist - Title"
-            # detect this case and trim from the front of
-            # media_artist for cosmetics
-            trim = f"{self._media_title} - "
-            chars = min(len(self._media_artist), len(trim))
-
-            if self._media_artist[:chars].upper() == trim[:chars].upper():
-                self._media_artist = self._media_artist[chars:]
+        # Radios without tagging can have part of the radio URI as title.
+        # Non-playing radios will not have a current title. In these cases we
+        # try to use the radio name instead.
+        try:
+            if self._media_title in self._uri or self.state != STATE_PLAYING:
+                self._media_title = variables["enqueued_transport_uri_meta_data"].title
+        except (TypeError, KeyError, AttributeError):
+            pass
 
         # Check if currently playing radio station is in favorites
-        self._source_name = None
+        media_info = self.soco.avTransport.GetMediaInfo([("InstanceID", 0)])
         for fav in self._favorites:
             if fav.reference.get_uri() == media_info["CurrentURI"]:
                 self._source_name = fav.title
@@ -685,36 +638,28 @@ class SonosEntity(MediaPlayerDevice):
         )
         rel_time = _timespan_secs(position_info.get("RelTime"))
 
-        # player no longer reports position?
-        update_media_position |= rel_time is None and self._media_position is not None
-
         # player started reporting position?
         update_media_position |= rel_time is not None and self._media_position is None
 
         # position jumped?
-        if (
-            self.state == STATE_PLAYING
-            and rel_time is not None
-            and self._media_position is not None
-        ):
-            time_diff = utcnow() - self._media_position_updated_at
-            time_diff = time_diff.total_seconds()
+        if rel_time is not None and self._media_position is not None:
+            if self.state == STATE_PLAYING:
+                time_diff = utcnow() - self._media_position_updated_at
+                time_diff = time_diff.total_seconds()
+            else:
+                time_diff = 0
 
             calculated_position = self._media_position + time_diff
 
             update_media_position |= abs(calculated_position - rel_time) > 1.5
 
-        if update_media_position:
+        if rel_time is None:
+            self._clear_media_position()
+        elif update_media_position:
             self._media_position = rel_time
             self._media_position_updated_at = utcnow()
 
         self._media_image_url = track_info.get("album_art")
-
-        self._media_artist = track_info.get("artist")
-        self._media_album_name = track_info.get("album")
-        self._media_title = track_info.get("title")
-
-        self._source_name = None
 
     def update_volume(self, event=None):
         """Update information about currently volume settings."""
@@ -834,6 +779,7 @@ class SonosEntity(MediaPlayerDevice):
         return self._shuffle
 
     @property
+    @soco_coordinator
     def media_content_id(self):
         """Content id of current playing media."""
         return self._uri
@@ -936,7 +882,7 @@ class SonosEntity(MediaPlayerDevice):
             if len(fav) == 1:
                 src = fav.pop()
                 uri = src.reference.get_uri()
-                if _is_radio_uri(uri):
+                if self.soco.is_radio_uri(uri):
                     self.soco.play_uri(uri, title=source)
                 else:
                     self.soco.clear_queue()

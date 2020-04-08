@@ -2,8 +2,7 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "Z\u00e4it Iwwerschreidung beim gener\u00e9ieren vun der Autorisatiouns URL.",
-            "missing_configuration": "Withings Integratioun ass nach net konfigur\u00e9iert. Follegt w.e.g der Dokumentatioun.",
-            "no_flows": "Dir musst Withingss konfigur\u00e9ieren, ier Dir d\u00ebs Authentifiz\u00e9ierung k\u00ebnnt benotzen. Liest w.e.g. d'Instruktioune."
+            "missing_configuration": "Withings Integratioun ass nach net konfigur\u00e9iert. Follegt w.e.g der Dokumentatioun."
         },
         "create_entry": {
             "default": "Erfollegr\u00e4ich mam ausgewielte Profile mat Withings authentifiz\u00e9iert."
@@ -17,13 +16,6 @@
                     "profile": "Profil"
                 },
                 "description": "W\u00e9ie Profil hutt dir op der Withings Webs\u00e4it ausgewielt? Et ass wichteg dass Profiller passen, soss ginn Donn\u00e9e\u00eb falsch gekennzeechent.",
-                "title": "Benotzer Profil."
-            },
-            "user": {
-                "data": {
-                    "profile": "Profil"
-                },
-                "description": "Wielt ee Benotzer Profile aus dee mam Withings Profile soll verbonne ginn. Stellt s\u00e9cher dass dir op der Withings S\u00e4it deeselwechte Benotzer auswielt, soss ginn d'Donn\u00e9e net richteg ugewisen.",
                 "title": "Benotzer Profil."
             }
         },

@@ -1,15 +1,13 @@
 {
     "config": {
         "abort": {
-            "host_port_exists": "D\u00ebsen Host an Port sinn scho konfigur\u00e9iert"
+            "already_configured": "D\u00ebs Kombinatioun vun Host an Port sinn scho konfigur\u00e9iert",
+            "import_failed": "Import vun der Konfiguratioun feelgeschloen"
         },
         "error": {
-            "certificate_error": "Zertifikat konnt net valid\u00e9iert ginn",
-            "certificate_fetch_failed": "Kann keen Zertifikat vun d\u00ebsen Host a Port recuper\u00e9ieren",
+            "connection_refused": "Verbindung refus\u00e9iert beim verbannen mam Host",
             "connection_timeout": "Z\u00e4it Iwwerschreidung beim verbannen.",
-            "host_port_exists": "D\u00ebsen Host an Port sinn scho konfigur\u00e9iert",
-            "resolve_failed": "D\u00ebsen Host kann net opgel\u00e9ist ginn",
-            "wrong_host": "Zertifikat entspr\u00e9cht net den Numm vum Apparat"
+            "resolve_failed": "D\u00ebsen Host kann net opgel\u00e9ist ginn"
         },
         "step": {
             "user": {

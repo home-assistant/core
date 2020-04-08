@@ -46,7 +46,6 @@
         },
         "trigger_type": {
             "bat_low": "{entity_name} batterie faible",
-            "closed": "{entity_name} ferm\u00e9",
             "cold": "{entity_name} est devenu froid",
             "connected": "{entity_name} connect\u00e9",
             "gas": "{entity_name} a commenc\u00e9 \u00e0 d\u00e9tecter du gaz",
@@ -54,7 +53,6 @@
             "light": "{entity_name} a commenc\u00e9 \u00e0 d\u00e9tecter la lumi\u00e8re",
             "locked": "{entity_name} verrouill\u00e9",
             "moist": "{entity_name} est devenu humide",
-            "moist\u00a7": "{entity_name} est devenu humide",
             "motion": "{entity_name} a commenc\u00e9 \u00e0 d\u00e9tecter du mouvement",
             "moving": "{entity_name} a commenc\u00e9 \u00e0 se d\u00e9placer",
             "no_gas": "{entity_name} a arr\u00eat\u00e9 de d\u00e9tecter le gaz",

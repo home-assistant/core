@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import camera, mqtt
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.components.camera import Camera
 from homeassistant.const import CONF_DEVICE, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
@@ -13,7 +13,10 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import (
     ATTR_DISCOVERY_HASH,
+    CONF_QOS,
     CONF_UNIQUE_ID,
+    MqttAttributes,
+    MqttAvailability,
     MqttDiscoveryUpdate,
     MqttEntityDeviceInfo,
     subscription,
@@ -25,13 +28,17 @@ _LOGGER = logging.getLogger(__name__)
 CONF_TOPIC = "topic"
 DEFAULT_NAME = "MQTT Camera"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_TOPIC): mqtt.valid_subscribe_topic,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-    }
+PLATFORM_SCHEMA = (
+    mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
+        {
+            vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Required(CONF_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+        }
+    )
+    .extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
+    .extend(mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
 )
 
 
@@ -69,7 +76,9 @@ async def _async_setup_entity(
     async_add_entities([MqttCamera(config, config_entry, discovery_data)])
 
 
-class MqttCamera(MqttDiscoveryUpdate, MqttEntityDeviceInfo, Camera):
+class MqttCamera(
+    MqttAttributes, MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, Camera
+):
     """representation of a MQTT camera."""
 
     def __init__(self, config, config_entry, discovery_data):
@@ -78,12 +87,13 @@ class MqttCamera(MqttDiscoveryUpdate, MqttEntityDeviceInfo, Camera):
         self._unique_id = config.get(CONF_UNIQUE_ID)
         self._sub_state = None
 
-        self._qos = 0
         self._last_image = None
 
         device_config = config.get(CONF_DEVICE)
 
         Camera.__init__(self)
+        MqttAttributes.__init__(self, config)
+        MqttAvailability.__init__(self, config)
         MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
         MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
 
@@ -96,6 +106,8 @@ class MqttCamera(MqttDiscoveryUpdate, MqttEntityDeviceInfo, Camera):
         """Handle updated discovery message."""
         config = PLATFORM_SCHEMA(discovery_payload)
         self._config = config
+        await self.attributes_discovery_update(config)
+        await self.availability_discovery_update(config)
         await self.device_info_discovery_update(config)
         await self._subscribe_topics()
         self.async_write_ha_state()
@@ -115,7 +127,7 @@ class MqttCamera(MqttDiscoveryUpdate, MqttEntityDeviceInfo, Camera):
                 "state_topic": {
                     "topic": self._config[CONF_TOPIC],
                     "msg_callback": message_received,
-                    "qos": self._qos,
+                    "qos": self._config[CONF_QOS],
                     "encoding": None,
                 }
             },
@@ -126,6 +138,8 @@ class MqttCamera(MqttDiscoveryUpdate, MqttEntityDeviceInfo, Camera):
         self._sub_state = await subscription.async_unsubscribe_topics(
             self.hass, self._sub_state
         )
+        await MqttAttributes.async_will_remove_from_hass(self)
+        await MqttAvailability.async_will_remove_from_hass(self)
         await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
 
     async def async_camera_image(self):

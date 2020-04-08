@@ -26,7 +26,7 @@ from homeassistant.const import __short_version__, __version__
 PROJECT_NAME = 'Home Assistant'
 PROJECT_PACKAGE_NAME = 'homeassistant'
 PROJECT_AUTHOR = 'The Home Assistant Authors'
-PROJECT_COPYRIGHT = ' 2013-2018, {}'.format(PROJECT_AUTHOR)
+PROJECT_COPYRIGHT = ' 2013-2020, {}'.format(PROJECT_AUTHOR)
 PROJECT_LONG_DESCRIPTION = ('Home Assistant is an open-source '
                             'home automation platform running on Python 3. '
                             'Track and control all devices at home and '

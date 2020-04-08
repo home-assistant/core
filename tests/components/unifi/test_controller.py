@@ -189,32 +189,6 @@ async def test_controller_mac(hass):
     assert controller.mac == "10:00:00:00:00:01"
 
 
-async def test_controller_import_config(hass):
-    """Test that import configuration.yaml instructions work."""
-    controllers = [
-        {
-            CONF_HOST: "1.2.3.4",
-            CONF_SITE_ID: "Site name",
-            unifi.CONF_BLOCK_CLIENT: ["random mac"],
-            unifi.CONF_DONT_TRACK_CLIENTS: True,
-            unifi.CONF_DONT_TRACK_DEVICES: True,
-            unifi.CONF_DONT_TRACK_WIRED_CLIENTS: True,
-            unifi.CONF_DETECTION_TIME: 150,
-            unifi.CONF_SSID_FILTER: ["SSID"],
-        }
-    ]
-
-    controller = await setup_unifi_integration(hass, controllers=controllers)
-
-    assert controller.option_allow_bandwidth_sensors is False
-    assert controller.option_block_clients == ["random mac"]
-    assert controller.option_track_clients is False
-    assert controller.option_track_devices is False
-    assert controller.option_track_wired_clients is False
-    assert controller.option_detection_time == timedelta(seconds=150)
-    assert controller.option_ssid_filter == ["SSID"]
-
-
 async def test_controller_not_accessible(hass):
     """Retry to login gets scheduled when connection fails."""
     with patch.object(

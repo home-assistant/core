@@ -5,7 +5,7 @@
             "client_secret": "Klient hemmeligheten fra konfigurasjonen er ugyldig.",
             "no_agreements": "Denne kontoen har ingen Toon skjermer.",
             "no_app": "Du m\u00e5 konfigurere Toon f\u00f8r du kan autentisere den. [Vennligst les instruksjonene](https://www.home-assistant.io/components/toon/).",
-            "unknown_auth_fail": "Uventet feil oppstod under autentisering."
+            "unknown_auth_fail": "Det oppstod en uventet feil under godkjenning."
         },
         "error": {
             "credentials": "Den oppgitte kontoinformasjonen er ugyldig.",
@@ -29,6 +29,6 @@
                 "title": "Velg skjerm"
             }
         },
-        "title": "Toon"
+        "title": ""
     }
 }

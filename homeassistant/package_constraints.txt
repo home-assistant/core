@@ -12,20 +12,20 @@ cryptography==2.8
 defusedxml==0.6.0
 distro==1.4.0
 hass-nabucasa==0.32.2
-home-assistant-frontend==20200318.1
+home-assistant-frontend==20200407.1
 importlib-metadata==1.5.0
-jinja2>=2.10.3
+jinja2>=2.11.1
 netdisco==2.6.0
 pip>=8.0.3
 python-slugify==4.0.0
 pytz>=2019.03
-pyyaml==5.3
+pyyaml==5.3.1
 requests==2.23.0
 ruamel.yaml==0.15.100
-sqlalchemy==1.3.13
+sqlalchemy==1.3.15
 voluptuous-serialize==2.3.0
 voluptuous==0.11.7
-zeroconf==0.24.5
+zeroconf==0.25.0
 
 pycryptodome>=3.6.6
 

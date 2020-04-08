@@ -54,7 +54,7 @@
             "device_shaken": "Appareil secou\u00e9",
             "device_slid": "Appareil gliss\u00e9 \"{subtype}\"",
             "device_tilted": "Dispositif inclin\u00e9",
-            "remote_button_double_press": "Bouton \"{subtype}\" double cliqu\u00e9",
+            "remote_button_double_press": "Double clic sur le bouton \" {subtype} \"",
             "remote_button_long_press": "Bouton \"{subtype}\" appuy\u00e9 continuellement",
             "remote_button_long_release": "Bouton \" {subtype} \" rel\u00e2ch\u00e9 apr\u00e8s un appui long",
             "remote_button_quadruple_press": "bouton \" {subtype} \" quadruple clics",

@@ -21,7 +21,13 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-from . import CONF_AUTO_BYPASS, DATA_AD, DOMAIN, SIGNAL_PANEL_MESSAGE
+from . import (
+    CONF_AUTO_BYPASS,
+    CONF_CODE_ARM_REQUIRED,
+    DATA_AD,
+    DOMAIN,
+    SIGNAL_PANEL_MESSAGE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +45,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     auto_bypass = discovery_info[CONF_AUTO_BYPASS]
-    entity = AlarmDecoderAlarmPanel(auto_bypass)
+    code_arm_required = discovery_info[CONF_CODE_ARM_REQUIRED]
+    entity = AlarmDecoderAlarmPanel(auto_bypass, code_arm_required)
     add_entities([entity])
 
     def alarm_toggle_chime_handler(service):
@@ -70,7 +77,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class AlarmDecoderAlarmPanel(AlarmControlPanel):
     """Representation of an AlarmDecoder-based alarm panel."""
 
-    def __init__(self, auto_bypass):
+    def __init__(self, auto_bypass, code_arm_required):
         """Initialize the alarm panel."""
         self._display = ""
         self._name = "Alarm Panel"
@@ -85,6 +92,7 @@ class AlarmDecoderAlarmPanel(AlarmControlPanel):
         self._ready = None
         self._zone_bypassed = None
         self._auto_bypass = auto_bypass
+        self._code_arm_required = code_arm_required
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -141,6 +149,11 @@ class AlarmDecoderAlarmPanel(AlarmControlPanel):
         return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
 
     @property
+    def code_arm_required(self):
+        """Whether the code is required for arm actions."""
+        return self._code_arm_required
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
@@ -153,6 +166,7 @@ class AlarmDecoderAlarmPanel(AlarmControlPanel):
             "programming_mode": self._programming_mode,
             "ready": self._ready,
             "zone_bypassed": self._zone_bypassed,
+            "code_arm_required": self._code_arm_required,
         }
 
     def alarm_disarm(self, code=None):
@@ -166,6 +180,8 @@ class AlarmDecoderAlarmPanel(AlarmControlPanel):
             if self._auto_bypass:
                 self.hass.data[DATA_AD].send(f"{code!s}6#")
             self.hass.data[DATA_AD].send(f"{code!s}2")
+        elif not self._code_arm_required:
+            self.hass.data[DATA_AD].send("#2")
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
@@ -173,11 +189,15 @@ class AlarmDecoderAlarmPanel(AlarmControlPanel):
             if self._auto_bypass:
                 self.hass.data[DATA_AD].send(f"{code!s}6#")
             self.hass.data[DATA_AD].send(f"{code!s}3")
+        elif not self._code_arm_required:
+            self.hass.data[DATA_AD].send("#3")
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
         if code:
             self.hass.data[DATA_AD].send(f"{code!s}7")
+        elif not self._code_arm_required:
+            self.hass.data[DATA_AD].send("#7")
 
     def alarm_toggle_chime(self, code=None):
         """Send toggle chime command."""

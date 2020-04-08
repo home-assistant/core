@@ -1,0 +1,20 @@
+{
+  "config": {
+    "title": "Tesla Powerwall",
+    "step": {
+      "user": {
+        "title": "Connect to the powerwall",
+        "data": {
+          "ip_address": "IP Address"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "The powerwall is already configured"
+    }
+  }
+}

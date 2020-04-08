@@ -10,6 +10,9 @@ from aiounifi.events import WIRELESS_CLIENT_CONNECTED, WIRELESS_GUEST_CONNECTED
 from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
 import async_timeout
 
+from homeassistant.components.device_tracker import DOMAIN as DT_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -21,9 +24,6 @@ from .const import (
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
-    CONF_DONT_TRACK_CLIENTS,
-    CONF_DONT_TRACK_DEVICES,
-    CONF_DONT_TRACK_WIRED_CLIENTS,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
@@ -37,13 +37,12 @@ from .const import (
     DEFAULT_TRACK_WIRED_CLIENTS,
     DOMAIN,
     LOGGER,
-    UNIFI_CONFIG,
     UNIFI_WIRELESS_CLIENTS,
 )
 from .errors import AuthenticationRequired, CannotConnect
 
 RETRY_TIMER = 15
-SUPPORTED_PLATFORMS = ["device_tracker", "sensor", "switch"]
+SUPPORTED_PLATFORMS = [DT_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
 
 
 class UniFiController:
@@ -225,8 +224,6 @@ class UniFiController:
         self.wireless_clients = wireless_clients.get_data(self.config_entry)
         self.update_wireless_clients()
 
-        self.import_configuration()
-
         for platform in SUPPORTED_PLATFORMS:
             self.hass.async_create_task(
                 self.hass.config_entries.async_forward_entry_setup(
@@ -250,46 +247,6 @@ class UniFiController:
         controller = hass.data[DOMAIN][controller_id]
 
         async_dispatcher_send(hass, controller.signal_options_update)
-
-    def import_configuration(self):
-        """Import configuration to config entry options."""
-        import_config = {}
-
-        for config in self.hass.data[UNIFI_CONFIG]:
-            if (
-                self.host == config[CONF_HOST]
-                and self.site_name == config[CONF_SITE_ID]
-            ):
-                import_config = config
-                break
-
-        old_options = dict(self.config_entry.options)
-        new_options = {}
-
-        for config, option in (
-            (CONF_BLOCK_CLIENT, CONF_BLOCK_CLIENT),
-            (CONF_DONT_TRACK_CLIENTS, CONF_TRACK_CLIENTS),
-            (CONF_DONT_TRACK_WIRED_CLIENTS, CONF_TRACK_WIRED_CLIENTS),
-            (CONF_DONT_TRACK_DEVICES, CONF_TRACK_DEVICES),
-            (CONF_DETECTION_TIME, CONF_DETECTION_TIME),
-            (CONF_SSID_FILTER, CONF_SSID_FILTER),
-        ):
-            if config in import_config:
-                if config == option and import_config[
-                    config
-                ] != self.config_entry.options.get(option):
-                    new_options[option] = import_config[config]
-                elif config != option and (
-                    option not in self.config_entry.options
-                    or import_config[config] == self.config_entry.options.get(option)
-                ):
-                    new_options[option] = not import_config[config]
-
-        if new_options:
-            options = {**old_options, **new_options}
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, options=options
-            )
 
     @callback
     def reconnect(self) -> None:

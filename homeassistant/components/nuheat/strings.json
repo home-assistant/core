@@ -1,0 +1,25 @@
+{
+   "config" : {
+      "error" : {
+         "unknown" : "Unexpected error",
+         "cannot_connect" : "Failed to connect, please try again",
+         "invalid_auth" : "Invalid authentication",
+         "invalid_thermostat" : "The thermostat serial number is invalid."
+      },
+      "title" : "NuHeat",
+      "abort" : {
+         "already_configured" : "The thermostat is already configured"
+      },
+      "step" : {
+         "user" : {
+            "title" : "Connect to the NuHeat",
+            "description": "You will need to obtain your thermostat’s numeric serial number or ID by logging into https://MyNuHeat.com and selecting your thermostat(s).",
+            "data" : {
+               "username" : "Username",
+               "password" : "Password",
+               "serial_number" : "Serial number of the thermostat."
+            }
+         }
+      }
+   }
+}

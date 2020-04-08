@@ -451,9 +451,16 @@ class RainMachineEntity(Entity):
     @callback
     def _update_state(self):
         """Update the state."""
-        self.async_schedule_update_ha_state(True)
+        self.update_from_latest_data()
+        self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self):
         """Disconnect dispatcher listener when removed."""
         for handler in self._dispatcher_handlers:
             handler()
+        self._dispatcher_handlers = []
+
+    @callback
+    def update_from_latest_data(self):
+        """Update the entity."""
+        raise NotImplementedError

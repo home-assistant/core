@@ -7,7 +7,7 @@ from .const import (
     ACCESS_TOKEN,
     APP_LIST,
     CH_TYPE,
-    CURRENT_APP,
+    CURRENT_APP_CONFIG,
     CURRENT_INPUT,
     INPUT_LIST,
     INPUT_LIST_WITH_APPS,
@@ -172,7 +172,7 @@ def vizio_update_with_apps_fixture(vizio_update: pytest.fixture):
         "homeassistant.components.vizio.media_player.VizioAsync.get_current_input",
         return_value="CAST",
     ), patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_current_app",
-        return_value=CURRENT_APP,
+        "homeassistant.components.vizio.media_player.VizioAsync.get_current_app_config",
+        return_value=CURRENT_APP_CONFIG,
     ):
         yield

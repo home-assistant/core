@@ -2,8 +2,7 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
-            "missing_configuration": "De Withings integratie is niet geconfigureerd. Gelieve de documentatie te volgen.",
-            "no_flows": "U moet Withings configureren voordat u zich ermee kunt verifi\u00ebren. [Gelieve de documentatie te lezen]"
+            "missing_configuration": "De Withings integratie is niet geconfigureerd. Gelieve de documentatie te volgen."
         },
         "create_entry": {
             "default": "Succesvol geverifieerd met Withings voor het geselecteerde profiel."
@@ -17,13 +16,6 @@
                     "profile": "Profiel"
                 },
                 "description": "Welk profiel hebt u op de website van Withings selecteren? Het is belangrijk dat de profielen overeenkomen, anders worden gegevens verkeerd gelabeld.",
-                "title": "Gebruikersprofiel."
-            },
-            "user": {
-                "data": {
-                    "profile": "Profiel"
-                },
-                "description": "Selecteer een gebruikersprofiel waaraan u Home Assistant wilt toewijzen met een Withings-profiel. Zorg ervoor dat u op de pagina Withings dezelfde gebruiker selecteert, anders worden de gegevens niet correct gelabeld.",
                 "title": "Gebruikersprofiel."
             }
         },
