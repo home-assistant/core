@@ -170,7 +170,7 @@ async def get_newest_version(hass, huuid, include_components):
     if post_cm.expired:
         _LOGGER.error(
             "Timed out while attempt to post update information. "
-            "Retrying with a get request. "
+            "Retrying with a get request"
         )
         get_fallback = True
     elif req.status != 200:
