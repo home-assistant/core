@@ -31,6 +31,7 @@ FLOWS = [
     "elkm1",
     "emulated_roku",
     "esphome",
+    "flume",
     "flunearyou",
     "freebox",
     "garmin_connect",
