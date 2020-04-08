@@ -1,6 +1,4 @@
 # Describes the format for available RainMachine services
-
----
 disable_program:
   description: Disable a program.
   fields:

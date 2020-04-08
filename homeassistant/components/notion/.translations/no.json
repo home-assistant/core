@@ -4,7 +4,6 @@
             "already_configured": "Dette brukernavnet er allerede i bruk."
         },
         "error": {
-            "identifier_exists": "Brukernavn er allerede registrert",
             "invalid_credentials": "Ugyldig brukernavn eller passord",
             "no_devices": "Ingen enheter funnet i kontoen"
         },

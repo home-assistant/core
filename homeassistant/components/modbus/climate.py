@@ -72,7 +72,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Modbus Thermostat Platform."""
     name = config[CONF_NAME]
     modbus_slave = config[CONF_SLAVE]
@@ -91,7 +91,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     hub_name = config[CONF_HUB]
     hub = hass.data[MODBUS_DOMAIN][hub_name]
 
-    add_entities(
+    async_add_entities(
         [
             ModbusThermostat(
                 hub,

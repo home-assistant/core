@@ -1,6 +1,8 @@
 """Support for myStrom switches."""
 import logging
 
+from pymystrom.exceptions import MyStromConnectionError
+from pymystrom.switch import MyStromPlug
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
@@ -22,14 +24,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Find and return myStrom switch."""
-    from pymystrom.switch import MyStromPlug, exceptions
-
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
 
     try:
         MyStromPlug(host).get_status()
-    except exceptions.MyStromConnectionError:
+    except MyStromConnectionError:
         _LOGGER.error("No route to device: %s", host)
         raise PlatformNotReady()
 
@@ -41,8 +41,6 @@ class MyStromSwitch(SwitchDevice):
 
     def __init__(self, name, resource):
         """Initialize the myStrom switch."""
-        from pymystrom.switch import MyStromPlug
-
         self._name = name
         self._resource = resource
         self.data = {}
@@ -71,30 +69,24 @@ class MyStromSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        from pymystrom import exceptions
-
         try:
             self.plug.set_relay_on()
-        except exceptions.MyStromConnectionError:
+        except MyStromConnectionError:
             _LOGGER.error("No route to device: %s", self._resource)
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        from pymystrom import exceptions
-
         try:
             self.plug.set_relay_off()
-        except exceptions.MyStromConnectionError:
+        except MyStromConnectionError:
             _LOGGER.error("No route to device: %s", self._resource)
 
     def update(self):
         """Get the latest data from the device and update the data."""
-        from pymystrom import exceptions
-
         try:
             self.data = self.plug.get_status()
             self._available = True
-        except exceptions.MyStromConnectionError:
+        except MyStromConnectionError:
             self.data = {"power": 0, "relay": False}
             self._available = False
             _LOGGER.error("No route to device: %s", self._resource)

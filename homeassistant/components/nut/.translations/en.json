@@ -1,37 +1,46 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Device is already configured"
-        },
-        "error": {
-            "cannot_connect": "Failed to connect, please try again",
-            "unknown": "Unexpected error"
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "alias": "Alias",
-                    "host": "Host",
-                    "name": "Name",
-                    "password": "Password",
-                    "port": "Port",
-                    "resources": "Resources",
-                    "username": "Username"
-                },
-                "description": "If there are multiple UPSs attached to the NUT server, enter the name UPS to query in the 'Alias' field.",
-                "title": "Connect to the NUT server"
-            }
-        },
-        "title": "Network UPS Tools (NUT)"
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "resources": "Resources"
-                },
-                "description": "Choose Sensor Resources"
-            }
+  "config": {
+    "title": "Network UPS Tools (NUT)",
+    "step": {
+      "user": {
+        "title": "Connect to the NUT server",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "username": "Username",
+          "password": "Password"
         }
+      },
+      "ups": {
+        "title": "Choose the UPS to Monitor",
+        "data": {
+          "alias": "Alias",
+          "resources": "Resources"
+        }
+      },
+      "resources": {
+        "title": "Choose the Resources to Monitor",
+        "data": {
+          "resources": "Resources"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please try again",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Choose Sensor Resources.",
+        "data": {
+          "resources": "Resources"
+        }
+      }
+    }
+  }
 }

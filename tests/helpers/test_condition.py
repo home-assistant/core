@@ -180,7 +180,7 @@ async def test_if_numeric_state_not_raise_on_unavailable(hass):
 
 async def test_extract_entities():
     """Test extracting entities."""
-    condition.async_extract_entities(
+    assert condition.async_extract_entities(
         {
             "condition": "and",
             "conditions": [
@@ -201,7 +201,7 @@ async def test_extract_entities():
 
 async def test_extract_devices():
     """Test extracting devices."""
-    condition.async_extract_devices(
+    assert condition.async_extract_devices(
         {
             "condition": "and",
             "conditions": [

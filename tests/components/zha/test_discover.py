@@ -115,13 +115,9 @@ async def test_devices(
     }
 
     entity_map = device["entity_map"]
-    assert zha_entity_ids == set(
-        [
-            e["entity_id"]
-            for e in entity_map.values()
-            if not e.get("default_match", False)
-        ]
-    )
+    assert zha_entity_ids == {
+        e["entity_id"] for e in entity_map.values() if not e.get("default_match", False)
+    }
     assert event_channels == set(device["event_channels"])
 
     for call in _dispatch.call_args_list:
@@ -133,7 +129,7 @@ async def test_devices(
         assert entity_id is not None
         no_tail_id = NO_TAIL_ID.sub("", entity_map[key]["entity_id"])
         assert entity_id.startswith(no_tail_id)
-        assert set([ch.name for ch in channels]) == set(entity_map[key]["channels"])
+        assert {ch.name for ch in channels} == set(entity_map[key]["channels"])
         assert entity_cls.__name__ == entity_map[key]["entity_class"]
 
 
@@ -281,7 +277,7 @@ async def test_discover_endpoint(device_info, channels_mock, hass):
         map_id = (comp, unique_id)
         assert map_id in device_info["entity_map"]
         entity_info = device_info["entity_map"][map_id]
-        assert set([ch.name for ch in channels]) == set(entity_info["channels"])
+        assert {ch.name for ch in channels} == set(entity_info["channels"])
         assert ent_cls.__name__ == entity_info["entity_class"]
 
 

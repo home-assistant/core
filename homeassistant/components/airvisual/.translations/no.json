@@ -11,8 +11,7 @@
                 "data": {
                     "api_key": "API-n\u00f8kkel",
                     "latitude": "Breddegrad",
-                    "longitude": "Lengdegrad",
-                    "show_on_map": "Vis overv\u00e5ket geografi p\u00e5 kartet"
+                    "longitude": "Lengdegrad"
                 },
                 "description": "Overv\u00e5k luftkvaliteten p\u00e5 et geografisk sted.",
                 "title": "Konfigurer AirVisual"

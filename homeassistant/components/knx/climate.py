@@ -66,7 +66,7 @@ OPERATION_MODES = {
     "Dry": HVAC_MODE_DRY,
 }
 
-OPERATION_MODES_INV = dict((reversed(item) for item in OPERATION_MODES.items()))
+OPERATION_MODES_INV = dict(reversed(item) for item in OPERATION_MODES.items())
 
 PRESET_MODES = {
     # Map DPT 201.100 HVAC operating modes to HA presets
@@ -76,7 +76,7 @@ PRESET_MODES = {
     "Comfort": PRESET_COMFORT,
 }
 
-PRESET_MODES_INV = dict((reversed(item) for item in PRESET_MODES.items()))
+PRESET_MODES_INV = dict(reversed(item) for item in PRESET_MODES.items())
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -139,7 +139,7 @@ def async_add_entities_config(hass, config, async_add_entities):
     """Set up climate for KNX platform configured within platform."""
     climate_mode = XknxClimateMode(
         hass.data[DATA_KNX].xknx,
-        name=config[CONF_NAME] + " Mode",
+        name=f"{config[CONF_NAME]} Mode",
         group_address_operation_mode=config.get(CONF_OPERATION_MODE_ADDRESS),
         group_address_operation_mode_state=config.get(
             CONF_OPERATION_MODE_STATE_ADDRESS

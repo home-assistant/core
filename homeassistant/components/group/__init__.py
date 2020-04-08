@@ -174,7 +174,7 @@ def get_entity_ids(
     if not domain_filter:
         return cast(List[str], entity_ids)
 
-    domain_filter = domain_filter.lower() + "."
+    domain_filter = f"{domain_filter.lower()}."
 
     return [ent_id for ent_id in entity_ids if ent_id.startswith(domain_filter)]
 
@@ -364,7 +364,7 @@ class Group(Entity):
         if entity_ids:
             self.tracking = tuple(ent_id.lower() for ent_id in entity_ids)
         else:
-            self.tracking = tuple()
+            self.tracking = ()
         self.group_on = None
         self.group_off = None
         self.user_defined = user_defined

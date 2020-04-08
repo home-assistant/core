@@ -4,7 +4,6 @@
             "already_configured": "This app key is already in use."
         },
         "error": {
-            "identifier_exists": "Application Key and/or API Key already registered",
             "invalid_key": "Invalid API Key and/or Application Key",
             "no_devices": "No devices found in account"
         },

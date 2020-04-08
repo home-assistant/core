@@ -12,7 +12,8 @@ import requests.exceptions
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 
 from .const import (
@@ -51,10 +52,10 @@ def debounce(func):
         """Handle call_later callback."""
         nonlocal unsub
         unsub = None
-        await self.hass.async_add_executor_job(func, self)
+        await func(self)
 
     @wraps(func)
-    def wrapper(self):
+    async def wrapper(self):
         """Schedule async callback."""
         nonlocal unsub
         if unsub:
@@ -159,6 +160,7 @@ class PlexServer:
             for account in self._plex_server.systemAccounts()
             if account.name
         ]
+        _LOGGER.debug("Linked accounts: %s", self.accounts)
 
         owner_account = [
             account.name
@@ -167,25 +169,31 @@ class PlexServer:
         ]
         if owner_account:
             self._owner_username = owner_account[0]
+            _LOGGER.debug("Server owner found: '%s'", self._owner_username)
 
         self._version = self._plex_server.version
 
         if config_entry_update_needed:
             raise ShouldUpdateConfigEntry
 
-    def refresh_entity(self, machine_identifier, device, session):
+    @callback
+    def async_refresh_entity(self, machine_identifier, device, session):
         """Forward refresh dispatch to media_player."""
         unique_id = f"{self.machine_identifier}:{machine_identifier}"
         _LOGGER.debug("Refreshing %s", unique_id)
-        dispatcher_send(
+        async_dispatcher_send(
             self.hass,
             PLEX_UPDATE_MEDIA_PLAYER_SIGNAL.format(unique_id),
             device,
             session,
         )
 
+    def _fetch_platform_data(self):
+        """Fetch all data from the Plex server in a single method."""
+        return (self._plex_server.clients(), self._plex_server.sessions())
+
     @debounce
-    def update_platforms(self):
+    async def async_update_platforms(self):
         """Update the platform entities."""
         _LOGGER.debug("Updating devices")
 
@@ -207,13 +215,14 @@ class PlexServer:
                 monitored_users.add(new_user)
 
         try:
-            devices = self._plex_server.clients()
-            sessions = self._plex_server.sessions()
-        except plexapi.exceptions.BadRequest:
-            _LOGGER.exception("Error requesting Plex client data from server")
-            return
-        except requests.exceptions.RequestException as ex:
-            _LOGGER.warning(
+            devices, sessions = await self.hass.async_add_executor_job(
+                self._fetch_platform_data
+            )
+        except (
+            plexapi.exceptions.BadRequest,
+            requests.exceptions.RequestException,
+        ) as ex:
+            _LOGGER.error(
                 "Could not connect to Plex server: %s (%s)", self.friendly_name, ex
             )
             return
@@ -234,7 +243,9 @@ class PlexServer:
             for player in session.players:
                 if session_username and session_username not in monitored_users:
                     ignored_clients.add(player.machineIdentifier)
-                    _LOGGER.debug("Ignoring Plex client owned by %s", session_username)
+                    _LOGGER.debug(
+                        "Ignoring Plex client owned by '%s'", session_username
+                    )
                     continue
                 self._known_idle.discard(player.machineIdentifier)
                 available_clients.setdefault(
@@ -253,7 +264,7 @@ class PlexServer:
             if client_id in new_clients:
                 new_entity_configs.append(client_data)
             else:
-                self.refresh_entity(
+                self.async_refresh_entity(
                     client_id, client_data["device"], client_data.get("session")
                 )
 
@@ -263,17 +274,17 @@ class PlexServer:
             self._known_clients - self._known_idle - ignored_clients
         ).difference(available_clients)
         for client_id in idle_clients:
-            self.refresh_entity(client_id, None, None)
+            self.async_refresh_entity(client_id, None, None)
             self._known_idle.add(client_id)
 
         if new_entity_configs:
-            dispatcher_send(
+            async_dispatcher_send(
                 self.hass,
                 PLEX_NEW_MP_SIGNAL.format(self.machine_identifier),
                 new_entity_configs,
             )
 
-        dispatcher_send(
+        async_dispatcher_send(
             self.hass,
             PLEX_UPDATE_SENSOR_SIGNAL.format(self.machine_identifier),
             sessions,

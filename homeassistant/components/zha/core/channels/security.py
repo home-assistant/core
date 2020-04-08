@@ -30,8 +30,6 @@ _LOGGER = logging.getLogger(__name__)
 class IasAce(ZigbeeChannel):
     """IAS Ancillary Control Equipment channel."""
 
-    pass
-
 
 @registries.CHANNEL_ONLY_CLUSTERS.register(security.IasWd.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(security.IasWd.cluster_id)

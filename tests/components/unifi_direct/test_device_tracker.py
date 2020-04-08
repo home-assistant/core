@@ -16,6 +16,7 @@ from homeassistant.components.unifi_direct.device_tracker import (
     CONF_PORT,
     DOMAIN,
     PLATFORM_SCHEMA,
+    UnifiDeviceScanner,
     _response_to_json,
     get_scanner,
 )
@@ -37,7 +38,7 @@ def setup_comp(hass):
         os.remove(yaml_devices)
 
 
-@patch(scanner_path, return_value=mock.MagicMock())
+@patch(scanner_path, return_value=mock.MagicMock(spec=UnifiDeviceScanner))
 async def test_get_scanner(unifi_mock, hass):
     """Test creating an Unifi direct scanner with a password."""
     conf_dict = {

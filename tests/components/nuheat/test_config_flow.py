@@ -1,5 +1,5 @@
 """Test the NuHeat config flow."""
-from asynctest import patch
+from asynctest import MagicMock, patch
 import requests
 
 from homeassistant import config_entries, setup
@@ -101,6 +101,24 @@ async def test_form_invalid_auth(hass):
         "homeassistant.components.nuheat.config_flow.nuheat.NuHeat.authenticate",
         side_effect=Exception,
     ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_SERIAL_NUMBER: "12345",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    response_mock = MagicMock()
+    type(response_mock).status_code = 401
+    with patch(
+        "homeassistant.components.nuheat.config_flow.nuheat.NuHeat.authenticate",
+        side_effect=requests.HTTPError(response=response_mock),
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -120,12 +138,15 @@ async def test_form_invalid_thermostat(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    response_mock = MagicMock()
+    type(response_mock).status_code = 500
+
     with patch(
         "homeassistant.components.nuheat.config_flow.nuheat.NuHeat.authenticate",
         return_value=True,
     ), patch(
         "homeassistant.components.nuheat.config_flow.nuheat.NuHeat.get_thermostat",
-        side_effect=requests.exceptions.HTTPError,
+        side_effect=requests.HTTPError(response=response_mock),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

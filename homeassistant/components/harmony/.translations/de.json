@@ -5,7 +5,6 @@
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
-            "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "unknown": "Unerwarteter Fehler"
         },
         "flow_title": "Logitech Harmony Hub {name}",

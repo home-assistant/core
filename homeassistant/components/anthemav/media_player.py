@@ -53,8 +53,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up our socket to the AVR."""
 
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
     name = config.get(CONF_NAME)
     device = None
 
@@ -142,9 +142,8 @@ class AnthemAVR(MediaPlayerDevice):
     def app_name(self):
         """Return details about current video and audio stream."""
         return (
-            self._lookup("video_input_resolution_text", "")
-            + " "
-            + self._lookup("audio_input_name", "")
+            f"{self._lookup('video_input_resolution_text', '')} "
+            f"{self._lookup('audio_input_name', '')}"
         )
 
     @property
@@ -186,4 +185,5 @@ class AnthemAVR(MediaPlayerDevice):
     def dump_avrdata(self):
         """Return state of avr object for debugging forensics."""
         attrs = vars(self)
-        return "dump_avrdata: " + ", ".join("%s: %s" % item for item in attrs.items())
+        items_string = ", ".join(f"{item}: {item}" for item in attrs.items())
+        return f"dump_avrdata: {items_string}"

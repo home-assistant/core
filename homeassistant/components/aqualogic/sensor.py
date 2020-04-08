@@ -52,7 +52,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     sensors = []
 
     processor = hass.data[DOMAIN]
-    for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
+    for sensor_type in config[CONF_MONITORED_CONDITIONS]:
         sensors.append(AquaLogicSensor(processor, sensor_type))
 
     async_add_entities(sensors)

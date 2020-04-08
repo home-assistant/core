@@ -23,6 +23,7 @@ from .const import (
     PYNUT_FIRMWARE,
     PYNUT_MANUFACTURER,
     PYNUT_MODEL,
+    PYNUT_NAME,
     PYNUT_STATUS,
     PYNUT_UNIQUE_ID,
 )
@@ -65,6 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         PYNUT_MANUFACTURER: _manufacturer_from_status(status),
         PYNUT_MODEL: _model_from_status(status),
         PYNUT_FIRMWARE: _firmware_from_status(status),
+        PYNUT_NAME: data.name,
     }
 
     entry.add_update_listener(_async_update_listener)
@@ -186,10 +188,19 @@ class PyNUTData:
         self.update()
         return self._status
 
+    @property
+    def name(self):
+        """Return the name of the ups."""
+        return self._alias
+
+    def list_ups(self):
+        """List UPSes connected to the NUT server."""
+        return self._client.list_ups()
+
     def _get_alias(self):
         """Get the ups alias from NUT."""
         try:
-            return next(iter(self._client.list_ups()))
+            return next(iter(self.list_ups()))
         except PyNUTError as err:
             _LOGGER.error("Failure getting NUT ups alias, %s", err)
             return None

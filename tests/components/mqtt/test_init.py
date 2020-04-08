@@ -53,12 +53,12 @@ def entity_reg(hass):
 
 
 @pytest.fixture
-def mock_MQTT():
+def mock_mqtt():
     """Make sure connection is established."""
-    with mock.patch("homeassistant.components.mqtt.MQTT") as mock_MQTT:
-        mock_MQTT.return_value.async_connect.return_value = mock_coro(True)
-        mock_MQTT.return_value.async_disconnect.return_value = mock_coro(True)
-        yield mock_MQTT
+    with mock.patch("homeassistant.components.mqtt.MQTT") as mock_mqtt:
+        mock_mqtt.return_value.async_connect.return_value = mock_coro(True)
+        mock_mqtt.return_value.async_disconnect.return_value = mock_coro(True)
+        yield mock_mqtt
 
 
 async def async_mock_mqtt_client(hass, config=None):
@@ -716,7 +716,7 @@ async def test_setup_raises_ConfigEntryNotReady_if_no_connect_broker(hass):
             await mqtt.async_setup_entry(hass, entry)
 
 
-async def test_setup_uses_certificate_on_certificate_set_to_auto(hass, mock_MQTT):
+async def test_setup_uses_certificate_on_certificate_set_to_auto(hass, mock_mqtt):
     """Test setup uses bundled certs when certificate is set to auto."""
     entry = MockConfigEntry(
         domain=mqtt.DOMAIN,
@@ -725,15 +725,15 @@ async def test_setup_uses_certificate_on_certificate_set_to_auto(hass, mock_MQTT
 
     assert await mqtt.async_setup_entry(hass, entry)
 
-    assert mock_MQTT.called
+    assert mock_mqtt.called
 
     import requests.certs
 
     expectedCertificate = requests.certs.where()
-    assert mock_MQTT.mock_calls[0][2]["certificate"] == expectedCertificate
+    assert mock_mqtt.mock_calls[0][2]["certificate"] == expectedCertificate
 
 
-async def test_setup_does_not_use_certificate_on_mqtts_port(hass, mock_MQTT):
+async def test_setup_does_not_use_certificate_on_mqtts_port(hass, mock_mqtt):
     """Test setup doesn't use bundled certs when ssl set."""
     entry = MockConfigEntry(
         domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker", "port": 8883}
@@ -741,22 +741,22 @@ async def test_setup_does_not_use_certificate_on_mqtts_port(hass, mock_MQTT):
 
     assert await mqtt.async_setup_entry(hass, entry)
 
-    assert mock_MQTT.called
-    assert mock_MQTT.mock_calls[0][2]["port"] == 8883
+    assert mock_mqtt.called
+    assert mock_mqtt.mock_calls[0][2]["port"] == 8883
 
     import requests.certs
 
     mqttsCertificateBundle = requests.certs.where()
-    assert mock_MQTT.mock_calls[0][2]["port"] != mqttsCertificateBundle
+    assert mock_mqtt.mock_calls[0][2]["port"] != mqttsCertificateBundle
 
 
-async def test_setup_without_tls_config_uses_tlsv1_under_python36(hass, mock_MQTT):
+async def test_setup_without_tls_config_uses_tlsv1_under_python36(hass, mock_mqtt):
     """Test setup defaults to TLSv1 under python3.6."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
 
     assert await mqtt.async_setup_entry(hass, entry)
 
-    assert mock_MQTT.called
+    assert mock_mqtt.called
 
     import sys
 
@@ -765,10 +765,10 @@ async def test_setup_without_tls_config_uses_tlsv1_under_python36(hass, mock_MQT
     else:
         expectedTlsVersion = ssl.PROTOCOL_TLSv1
 
-    assert mock_MQTT.mock_calls[0][2]["tls_version"] == expectedTlsVersion
+    assert mock_mqtt.mock_calls[0][2]["tls_version"] == expectedTlsVersion
 
 
-async def test_setup_with_tls_config_uses_tls_version1_2(hass, mock_MQTT):
+async def test_setup_with_tls_config_uses_tls_version1_2(hass, mock_mqtt):
     """Test setup uses specified TLS version."""
     entry = MockConfigEntry(
         domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker", "tls_version": "1.2"}
@@ -776,12 +776,12 @@ async def test_setup_with_tls_config_uses_tls_version1_2(hass, mock_MQTT):
 
     assert await mqtt.async_setup_entry(hass, entry)
 
-    assert mock_MQTT.called
+    assert mock_mqtt.called
 
-    assert mock_MQTT.mock_calls[0][2]["tls_version"] == ssl.PROTOCOL_TLSv1_2
+    assert mock_mqtt.mock_calls[0][2]["tls_version"] == ssl.PROTOCOL_TLSv1_2
 
 
-async def test_setup_with_tls_config_of_v1_under_python36_only_uses_v1(hass, mock_MQTT):
+async def test_setup_with_tls_config_of_v1_under_python36_only_uses_v1(hass, mock_mqtt):
     """Test setup uses TLSv1.0 if explicitly chosen."""
     entry = MockConfigEntry(
         domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker", "tls_version": "1.0"}
@@ -789,8 +789,8 @@ async def test_setup_with_tls_config_of_v1_under_python36_only_uses_v1(hass, moc
 
     assert await mqtt.async_setup_entry(hass, entry)
 
-    assert mock_MQTT.called
-    assert mock_MQTT.mock_calls[0][2]["tls_version"] == ssl.PROTOCOL_TLSv1
+    assert mock_mqtt.called
+    assert mock_mqtt.mock_calls[0][2]["tls_version"] == ssl.PROTOCOL_TLSv1
 
 
 async def test_birth_message(hass):
@@ -1030,7 +1030,7 @@ async def test_mqtt_ws_get_device_debug_info(
         "entities": [
             {
                 "entity_id": "sensor.mqtt_sensor",
-                "topics": [{"topic": "foobar/sensor", "messages": []}],
+                "subscriptions": [{"topic": "foobar/sensor", "messages": []}],
                 "discovery_data": {
                     "payload": config,
                     "topic": "homeassistant/sensor/bla/config",
@@ -1110,10 +1110,10 @@ async def test_debug_info_multiple_devices(hass, mqtt_mock):
             assert len(debug_info_data["entities"]) == 1
             assert len(debug_info_data["triggers"]) == 0
             discovery_data = debug_info_data["entities"][0]["discovery_data"]
-            assert len(debug_info_data["entities"][0]["topics"]) == 1
+            assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
             topic = d["config"]["state_topic"]
             assert {"topic": topic, "messages": []} in debug_info_data["entities"][0][
-                "topics"
+                "subscriptions"
             ]
         else:
             assert len(debug_info_data["entities"]) == 0
@@ -1199,7 +1199,7 @@ async def test_debug_info_multiple_entities_triggers(hass, mqtt_mock):
             discovery_data = [e["discovery_data"] for e in debug_info_data["entities"]]
             topic = c["config"]["state_topic"]
             assert {"topic": topic, "messages": []} in [
-                t for e in debug_info_data["entities"] for t in e["topics"]
+                t for e in debug_info_data["entities"] for t in e["subscriptions"]
             ]
         else:
             discovery_data = [e["discovery_data"] for e in debug_info_data["triggers"]]
@@ -1235,3 +1235,41 @@ async def test_debug_info_non_mqtt(hass, device_reg, entity_reg):
     debug_info_data = await debug_info.info_for_device(hass, device_entry.id)
     assert len(debug_info_data["entities"]) == 0
     assert len(debug_info_data["triggers"]) == 0
+
+
+async def test_debug_info_wildcard(hass, mqtt_mock):
+    """Test debug info."""
+    config = {
+        "device": {"identifiers": ["helloworld"]},
+        "platform": "mqtt",
+        "name": "test",
+        "state_topic": "sensor/#",
+        "unique_id": "veryunique",
+    }
+
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    assert device is not None
+
+    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
+    assert {"topic": "sensor/#", "messages": []} in debug_info_data["entities"][0][
+        "subscriptions"
+    ]
+
+    async_fire_mqtt_message(hass, "sensor/abc", "123")
+
+    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
+    assert {
+        "topic": "sensor/#",
+        "messages": [{"topic": "sensor/abc", "payload": "123"}],
+    } in debug_info_data["entities"][0]["subscriptions"]

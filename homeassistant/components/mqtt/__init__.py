@@ -7,7 +7,6 @@ import json
 import logging
 from operator import attrgetter
 import os
-import socket
 import ssl
 import sys
 import time
@@ -389,7 +388,7 @@ def wrap_msg_callback(msg_callback: MessageCallbackType) -> MessageCallbackType:
 
         @wraps(msg_callback)
         async def async_wrapper(msg: Any) -> None:
-            """Catch and log exception."""
+            """Call with deprecated signature."""
             await msg_callback(msg.topic, msg.payload, msg.qos)
 
         wrapper_func = async_wrapper
@@ -397,7 +396,7 @@ def wrap_msg_callback(msg_callback: MessageCallbackType) -> MessageCallbackType:
 
         @wraps(msg_callback)
         def wrapper(msg: Any) -> None:
-            """Catch and log exception."""
+            """Call with deprecated signature."""
             msg_callback(msg.topic, msg.payload, msg.qos)
 
         wrapper_func = wrapper
@@ -809,7 +808,10 @@ class MQTT:
 
         if will_message is not None:
             self._mqttc.will_set(  # pylint: disable=no-value-for-parameter
-                *attr.astuple(will_message)
+                *attr.astuple(
+                    will_message,
+                    filter=lambda attr, value: attr.name != "subscribed_topic",
+                )
             )
 
     async def async_publish(
@@ -941,7 +943,10 @@ class MQTT:
         if self.birth_message:
             self.hass.add_job(
                 self.async_publish(  # pylint: disable=no-value-for-parameter
-                    *attr.astuple(self.birth_message)
+                    *attr.astuple(
+                        self.birth_message,
+                        filter=lambda attr, value: attr.name != "subscribed_topic",
+                    )
                 )
             )
 
@@ -977,7 +982,8 @@ class MQTT:
                     continue
 
             self.hass.async_run_job(
-                subscription.callback, Message(msg.topic, payload, msg.qos, msg.retain)
+                subscription.callback,
+                Message(msg.topic, payload, msg.qos, msg.retain, subscription.topic),
             )
 
     def _mqtt_on_disconnect(self, _mqttc, _userdata, result_code: int) -> None:
@@ -996,7 +1002,7 @@ class MQTT:
                     self.connected = True
                     _LOGGER.info("Successfully reconnected to the MQTT server")
                     break
-            except socket.error:
+            except OSError:
                 pass
 
             wait_time = min(2 ** tries, MAX_RECONNECT_WAIT)
@@ -1164,6 +1170,7 @@ class MqttAvailability(Entity):
 async def cleanup_device_registry(hass, device_id):
     """Remove device registry entry if there are no remaining entities or triggers."""
     # Local import to avoid circular dependencies
+    # pylint: disable=import-outside-toplevel
     from . import device_trigger
 
     device_registry = await hass.helpers.device_registry.async_get_registry()

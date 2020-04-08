@@ -58,8 +58,8 @@ class WirelessTagSensor(WirelessTagBaseSensor):
         # sensor.wirelesstag_bedroom_temperature
         # and not as sensor.bedroom for temperature and
         # sensor.bedroom_2 for humidity
-        self._entity_id = "{}.{}_{}_{}".format(
-            "sensor", WIRELESSTAG_DOMAIN, self.underscored_name, self._sensor_type
+        self._entity_id = (
+            f"sensor.{WIRELESSTAG_DOMAIN}_{self.underscored_name}_{self._sensor_type}"
         )
 
     async def async_added_to_hass(self):

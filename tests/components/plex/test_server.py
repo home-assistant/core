@@ -94,7 +94,7 @@ async def test_new_ignored_users_available(hass, caplog):
     assert len(monitored_users) == 1
     assert len(ignored_users) == 2
     for ignored_user in ignored_users:
-        assert f"Ignoring Plex client owned by {ignored_user}" in caplog.text
+        assert f"Ignoring Plex client owned by '{ignored_user}'" in caplog.text
 
     sensor = hass.states.get("sensor.plex_plex_server_1")
     assert sensor.state == str(len(mock_plex_server.accounts))

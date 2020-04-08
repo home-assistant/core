@@ -2,17 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Ta kombinacja hosta i portu jest ju\u017c skonfigurowana",
-            "host_port_exists": "Ten host z tym portem jest ju\u017c skonfigurowany.",
             "import_failed": "Import z konfiguracji nie powi\u00f3d\u0142 si\u0119"
         },
         "error": {
-            "certificate_error": "Nie mo\u017cna zweryfikowa\u0107 certyfikatu",
-            "certificate_fetch_failed": "Nie mo\u017cna pobra\u0107 certyfikatu z tej kombinacji hosta i portu",
             "connection_refused": "Po\u0142\u0105czenie odrzucone podczas \u0142\u0105czenia z hostem",
             "connection_timeout": "Przekroczono limit czasu po\u0142\u0105czenia z hostem.",
-            "host_port_exists": "Ten host z tym portem jest ju\u017c skonfigurowany.",
-            "resolve_failed": "Tego hosta nie mo\u017cna rozwi\u0105za\u0107",
-            "wrong_host": "Certyfikat nie pasuje do nazwy hosta"
+            "resolve_failed": "Tego hosta nie mo\u017cna rozwi\u0105za\u0107"
         },
         "step": {
             "user": {

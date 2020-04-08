@@ -1109,7 +1109,7 @@ class SonosEntity(MediaPlayerDevice):
                 entity.restore()
 
         # Find all affected players
-        entities = set(e for e in entities if e._soco_snapshot)
+        entities = {e for e in entities if e._soco_snapshot}
         if with_group:
             for entity in [e for e in entities if e._snapshot_group]:
                 entities.update(entity._snapshot_group)

@@ -5,62 +5,62 @@ turn_on:
   fields:
     entity_id:
       description: Name(s) of entities to turn on.
-      example: 'remote.family_room'
+      example: "remote.family_room"
     activity:
       description: Activity ID or Activity Name to start.
-      example: 'BedroomTV'
+      example: "BedroomTV"
 
 toggle:
   description: Toggles a device.
   fields:
     entity_id:
       description: Name(s) of entities to toggle.
-      example: 'remote.family_room'
+      example: "remote.family_room"
 
 turn_off:
   description: Sends the Power Off Command.
   fields:
     entity_id:
       description: Name(s) of entities to turn off.
-      example: 'remote.family_room'
+      example: "remote.family_room"
 
 send_command:
   description: Sends a command or a list of commands to a device.
   fields:
     entity_id:
       description: Name(s) of entities to send command from.
-      example: 'remote.family_room'
+      example: "remote.family_room"
     device:
       description: Device ID to send command to.
-      example: '32756745'
+      example: "32756745"
     command:
       description: A single command or a list of commands to send.
-      example: 'Play'
+      example: "Play"
     num_repeats:
       description: An optional value that specifies the number of times you want to repeat the command(s). If not specified, the command(s) will not be repeated.
-      example: '5'
+      example: "5"
     delay_secs:
       description: An optional value that specifies that number of seconds you want to wait in between repeated commands. If not specified, the default of 0.4 seconds will be used.
-      example: '0.75'
+      example: "0.75"
     hold_secs:
       description: An optional value that specifies that number of seconds you want to have it held before the release is send. If not specified, the release will be send immediately after the press.
-      example: '2.5'
+      example: "2.5"
 
 learn_command:
   description: Learns a command or a list of commands from a device.
   fields:
     entity_id:
       description: Name(s) of entities to learn command from.
-      example: 'remote.bedroom'
+      example: "remote.bedroom"
     device:
       description: Device ID to learn command from.
-      example: 'television'
+      example: "television"
     command:
       description: A single command or a list of commands to learn.
-      example: 'Turn on'
+      example: "Turn on"
     alternative:
       description: If code must be stored as alternative (useful for discrete remotes).
-      example: 'True'
+      example: "True"
     timeout:
       description: Timeout, in seconds, for the command to be learned.
-      example: '30'
+      example: "30"

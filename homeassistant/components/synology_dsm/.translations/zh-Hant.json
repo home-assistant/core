@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u4e3b\u6a5f\u7aef\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "login": "\u767b\u5165\u932f\u8aa4\uff1a\u8acb\u78ba\u8a8d\u96fb\u5b50\u90f5\u4ef6\u8207\u5bc6\u78bc",
+            "unknown": "\u672a\u77e5\u932f\u8aa4\uff1a\u8acb\u7a0d\u5f8c\u518d\u8a66\u6216\u4f7f\u7528\u5176\u4ed6\u8a2d\u5b9a"
+        },
+        "flow_title": "\u7fa4\u6689 DSM {name} ({host})",
+        "step": {
+            "link": {
+                "data": {
+                    "api_version": "DSM \u7248\u672c",
+                    "password": "\u5bc6\u78bc",
+                    "port": "\u901a\u8a0a\u57e0\uff08\u9078\u9805\uff09",
+                    "ssl": "\u4f7f\u7528 SSL/TLS \u9023\u7dda\u81f3 NAS",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name} ({host})\uff1f",
+                "title": "\u7fa4\u6689 DSM"
+            },
+            "user": {
+                "data": {
+                    "api_version": "DSM \u7248\u672c",
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "name": "\u540d\u7a31",
+                    "password": "\u5bc6\u78bc",
+                    "port": "\u901a\u8a0a\u57e0\uff08\u9078\u9805\uff09",
+                    "ssl": "\u4f7f\u7528 SSL/TLS \u9023\u7dda\u81f3 NAS",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "title": "\u7fa4\u6689 DSM"
+            }
+        },
+        "title": "\u7fa4\u6689 DSM"
+    }
+}

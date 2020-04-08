@@ -78,6 +78,12 @@ SSDP = {
             "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:2"
         }
     ],
+    "synology_dsm": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:Basic:1",
+            "manufacturer": "Synology"
+        }
+    ],
     "wemo": [
         {
             "manufacturer": "Belkin International Inc."

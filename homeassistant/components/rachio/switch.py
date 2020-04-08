@@ -192,7 +192,7 @@ class RachioZone(RachioSwitch):
         self._person = person
         self._shade_type = data.get(KEY_CUSTOM_SHADE, {}).get(KEY_NAME)
         self._zone_type = data.get(KEY_CUSTOM_CROP, {}).get(KEY_NAME)
-        self._summary = str()
+        self._summary = ""
         self._current_schedule = current_schedule
         super().__init__(controller, poll=False)
         self._state = self.zone_id == self._current_schedule.get(KEY_ZONE_ID)
@@ -275,7 +275,7 @@ class RachioZone(RachioSwitch):
         if args[0][KEY_ZONE_ID] != self.zone_id:
             return
 
-        self._summary = kwargs.get(KEY_SUMMARY, str())
+        self._summary = kwargs.get(KEY_SUMMARY, "")
 
         if args[0][KEY_SUBTYPE] == SUBTYPE_ZONE_STARTED:
             self._state = True

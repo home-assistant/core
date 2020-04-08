@@ -86,27 +86,27 @@ async def configure_integration(
 
     with requests_mock.mock() as rqmck:
         rqmck.get(
-            re.compile(AbstractWithingsApi.URL + "/v2/user?.*action=getdevice(&.*|$)"),
+            re.compile(f"{AbstractWithingsApi.URL}/v2/user?.*action=getdevice(&.*|$)"),
             status_code=200,
             json=get_device_response,
         )
 
         rqmck.get(
-            re.compile(AbstractWithingsApi.URL + "/v2/sleep?.*action=get(&.*|$)"),
+            re.compile(f"{AbstractWithingsApi.URL}/v2/sleep?.*action=get(&.*|$)"),
             status_code=200,
             json=get_sleep_response,
         )
 
         rqmck.get(
             re.compile(
-                AbstractWithingsApi.URL + "/v2/sleep?.*action=getsummary(&.*|$)"
+                f"{AbstractWithingsApi.URL}/v2/sleep?.*action=getsummary(&.*|$)"
             ),
             status_code=200,
             json=get_sleep_summary_response,
         )
 
         rqmck.get(
-            re.compile(AbstractWithingsApi.URL + "/measure?.*action=getmeas(&.*|$)"),
+            re.compile(f"{AbstractWithingsApi.URL}/measure?.*action=getmeas(&.*|$)"),
             status_code=200,
             json=getmeasures_response,
         )
