@@ -10,7 +10,13 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorDevice,
 )
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_PIN, CONF_RESOURCE
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_NAME,
+    CONF_PIN,
+    CONF_RESOURCE,
+    HTTP_OK,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
@@ -74,7 +80,7 @@ class ArestBinarySensor(BinarySensorDevice):
 
         if self._pin is not None:
             request = requests.get(f"{self._resource}/mode/{self._pin}/i", timeout=10)
-            if request.status_code != 200:
+            if request.status_code != HTTP_OK:
                 _LOGGER.error("Can't set mode of %s", self._resource)
 
     @property

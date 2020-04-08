@@ -12,7 +12,7 @@ from homeassistant.components.http import (
     CONF_SSL_CERTIFICATE,
     DEFAULT_SERVER_HOST,
 )
-from homeassistant.const import SERVER_PORT
+from homeassistant.const import HTTP_OK, SERVER_PORT
 
 from .const import X_HASSIO
 
@@ -167,7 +167,7 @@ class HassIO:
                     headers={X_HASSIO: os.environ.get("HASSIO_TOKEN", "")},
                 )
 
-                if request.status not in (200, 400):
+                if request.status not in (HTTP_OK, 400):
                     _LOGGER.error("%s return code %d.", command, request.status)
                     raise HassioAPIError()
 

@@ -19,6 +19,7 @@ from homeassistant.components.google_assistant import helpers as google_helpers
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.websocket_api import const as ws_const
+from homeassistant.const import HTTP_OK
 from homeassistant.core import callback
 
 from .const import (
@@ -321,7 +322,7 @@ async def websocket_subscription(hass, connection, msg):
     with async_timeout.timeout(REQUEST_TIMEOUT):
         response = await cloud.fetch_subscription_info()
 
-    if response.status != 200:
+    if response.status != HTTP_OK:
         connection.send_message(
             websocket_api.error_message(
                 msg["id"], "request_failed", "Failed to request subscription"
