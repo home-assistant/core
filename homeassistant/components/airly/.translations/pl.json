@@ -5,7 +5,6 @@
         },
         "error": {
             "auth": "Klucz API jest nieprawid\u0142owy.",
-            "name_exists": "Nazwa ju\u017c istnieje.",
             "wrong_location": "Brak stacji pomiarowych Airly w tym rejonie."
         },
         "step": {

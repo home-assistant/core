@@ -2,8 +2,7 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "Tidsavbrudd ved generering av autoriseringsadresse.",
-            "missing_configuration": "Withings-integreringen er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen.",
-            "no_flows": "Du m\u00e5 konfigurere Withings f\u00f8r du kan godkjenne med den. Vennligst les dokumentasjonen."
+            "missing_configuration": "Withings-integreringen er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen."
         },
         "create_entry": {
             "default": "Vellykket godkjent med Withings."
@@ -17,13 +16,6 @@
                     "profile": "Profil"
                 },
                 "description": "Hvilken profil valgte du p\u00e5 Withings nettsted? Det er viktig at profilene samsvarer, ellers blir data feilmerket.",
-                "title": "Brukerprofil."
-            },
-            "user": {
-                "data": {
-                    "profile": "Profil"
-                },
-                "description": "Velg en brukerprofil som du vil at Home Assistant skal kartlegge med en Withings-profil. P\u00e5 Withings-siden m\u00e5 du passe p\u00e5 at du velger samme bruker ellers vil ikke dataen bli merket riktig.",
                 "title": "Brukerprofil."
             }
         },

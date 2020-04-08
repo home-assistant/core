@@ -11,8 +11,7 @@
                 "data": {
                     "api_key": "Cl\u00e9 API",
                     "latitude": "Latitude",
-                    "longitude": "Longitude",
-                    "show_on_map": "Afficher la g\u00e9ographie surveill\u00e9e sur la carte"
+                    "longitude": "Longitude"
                 },
                 "description": "Surveiller la qualit\u00e9 de l\u2019air dans un emplacement g\u00e9ographique.",
                 "title": "Configurer AirVisual"

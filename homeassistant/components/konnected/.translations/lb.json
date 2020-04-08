@@ -11,7 +11,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Modell: {model}\nHost: {host}\nPort: {port}\n\nDir k\u00ebnnt den I/O a Panel Verhaalen an de Konnected Alarm Panel Astellunge konfigur\u00e9ieren.",
+                "description": "Modell: {model}\nID: {id}\nHost: {host}\nPort: {port}\n\nDir k\u00ebnnt den I/O a Panel Verhaalen an de Konnected Alarm Panel Astellunge konfigur\u00e9ieren.",
                 "title": "Konnected Apparat parat"
             },
             "import_confirm": {

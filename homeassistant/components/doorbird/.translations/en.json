@@ -10,6 +10,7 @@
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
+        "flow_title": "DoorBird {name} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -21,8 +22,7 @@
                 "title": "Connect to the DoorBird"
             }
         },
-        "title": "DoorBird",
-        "flow_title" : "DoorBird {name} ({host})"
+        "title": "DoorBird"
     },
     "options": {
         "step": {

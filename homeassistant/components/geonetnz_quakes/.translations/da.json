@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "identifier_exists": "Placering allerede registreret"
-        },
         "step": {
             "user": {
                 "data": {

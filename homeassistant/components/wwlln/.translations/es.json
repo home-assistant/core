@@ -1,11 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Esta ubicaci\u00f3n ya est\u00e1 registrada.",
-            "window_too_small": "Una ventana demasiado peque\u00f1a provocar\u00e1 que Home Assistant se pierda eventos."
-        },
-        "error": {
-            "identifier_exists": "Ubicaci\u00f3n ya registrada"
+            "already_configured": "Esta ubicaci\u00f3n ya est\u00e1 registrada."
         },
         "step": {
             "user": {

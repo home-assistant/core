@@ -33,7 +33,7 @@
         "step": {
             "init": {
                 "data": {
-                    "name": "Numm vum Notifikatioun's Service",
+                    "name": "Numm vum Notifikatioun's Service (Restart n\u00e9ideg bei \u00c4nnerung)",
                     "recipient": "Empf\u00e4nger vun SMS Notifikatioune",
                     "track_new_devices": "Nei Apparater verfollegen"
                 }

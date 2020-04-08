@@ -1,11 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Questa posizione \u00e8 gi\u00e0 registrata.",
-            "window_too_small": "Una finestra troppo piccola far\u00e0 s\u00ec che Home Assistant perda gli eventi."
-        },
-        "error": {
-            "identifier_exists": "Localit\u00e0 gi\u00e0 registrata"
+            "already_configured": "Questa posizione \u00e8 gi\u00e0 registrata."
         },
         "step": {
             "user": {

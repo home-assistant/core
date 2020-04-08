@@ -32,7 +32,8 @@
             "client_control": {
                 "data": {
                     "block_client": "Clients controlats amb acc\u00e9s a la xarxa",
-                    "new_client": "Afegeix un client nou per al control d\u2019acc\u00e9s a la xarxa"
+                    "new_client": "Afegeix un client nou per al control d\u2019acc\u00e9s a la xarxa",
+                    "poe_clients": "Permet control POE dels clients"
                 },
                 "description": "Configura els controls del client \n\nConfigura interruptors per als n\u00fameros de s\u00e8rie als quals vulguis controlar l'acc\u00e9s a la xarxa.",
                 "title": "Opcions d'UniFi 2/3"
