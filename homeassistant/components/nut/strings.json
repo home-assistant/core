@@ -4,14 +4,23 @@
     "step": {
       "user": {
         "title": "Connect to the NUT server",
-        "description": "If there are multiple UPSs attached to the NUT server, enter the name UPS to query in the 'Alias' field.",
         "data": {
-          "name": "Name",
           "host": "Host",
           "port": "Port",
-          "alias": "Alias",
           "username": "Username",
-          "password": "Password",
+          "password": "Password"
+        }
+      },
+      "ups": {
+        "title": "Choose the UPS to Monitor",
+        "data": {
+          "alias": "Alias",
+          "resources": "Resources"
+        }
+      },
+      "resources": {
+        "title": "Choose the Resources to Monitor",
+        "data": {
           "resources": "Resources"
         }
       }
@@ -27,7 +36,7 @@
   "options": {
     "step": {
       "init": {
-        "description": "Choose Sensor Resources",
+        "description": "Choose Sensor Resources.",
         "data": {
           "resources": "Resources"
         }
