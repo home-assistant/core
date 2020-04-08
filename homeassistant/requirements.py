@@ -3,14 +3,15 @@ import asyncio
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Set, cast
+from typing import Any, Dict, Iterable, List, Optional, Set, Union, cast
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import (
     Integration,
+    IntegrationNotFound,
+    _async_mount_config_dir,
     async_get_integration,
-    async_get_integration_with_cache,
 )
 import homeassistant.util.package as pkg_util
 
@@ -37,59 +38,6 @@ class RequirementsNotFound(HomeAssistantError):
         self.requirements = requirements
 
 
-async def _async_get_integration_with_requirements(
-    hass: "HomeAssistant",
-    domain: str,
-    cache: Dict[str, Any],
-    event: asyncio.Event,
-    args: Optional[Dict[str, Any]],
-) -> Integration:
-    """Get an integration with all requirements installed, including the dependencies.
-
-    Update the passed in cache and resolve the load event.
-    """
-    done: Optional[Set] = cast(Set, args.get("done")) if args else None
-    if done is None:
-        done = {domain}
-    else:
-        done.add(domain)
-
-    integration = await async_get_integration(hass, domain)
-
-    if not hass.config.skip_pip:
-        if integration.requirements:
-            await async_process_requirements(
-                hass, integration.domain, integration.requirements
-            )
-
-        deps_to_check = [
-            dep
-            for dep in integration.dependencies + integration.after_dependencies
-            if dep not in done
-        ]
-
-        for check_domain, to_check in DISCOVERY_INTEGRATIONS.items():
-            if (
-                check_domain not in done
-                and check_domain not in deps_to_check
-                and any(check in integration.manifest for check in to_check)
-            ):
-                deps_to_check.append(check_domain)
-
-        if deps_to_check:
-            await asyncio.gather(
-                *[
-                    async_get_integration_with_requirements(hass, dep, done)
-                    for dep in deps_to_check
-                ]
-            )
-
-    cache[domain] = integration
-    event.set()
-
-    return integration
-
-
 async def async_get_integration_with_requirements(
     hass: HomeAssistant, domain: str, done: Optional[Set[str]] = None
 ) -> Integration:
@@ -99,13 +47,69 @@ async def async_get_integration_with_requirements(
     is invalid, RequirementNotFound if there was some type of
     failure to install requirements.
     """
-    return await async_get_integration_with_cache(
-        hass,
-        domain,
-        DATA_INTEGRATIONS_WITH_REQS,
-        _async_get_integration_with_requirements,
-        {"done": done},
-    )
+    if done is None:
+        done = {domain}
+    else:
+        done.add(domain)
+
+    integration = await async_get_integration(hass, domain)
+
+    if hass.config.skip_pip:
+        return integration
+
+    cache = hass.data.get(DATA_INTEGRATIONS_WITH_REQS)
+    if cache is None:
+        if not _async_mount_config_dir(hass):
+            raise IntegrationNotFound(domain)
+        cache = hass.data[DATA_INTEGRATIONS_WITH_REQS] = {}
+
+    int_or_evt: Union[Integration, asyncio.Event, None] = cache.get(domain, _UNDEF)
+
+    if isinstance(int_or_evt, asyncio.Event):
+        await int_or_evt.wait()
+        int_or_evt = cache.get(domain, _UNDEF)
+
+        # When we have waited and it's _UNDEF, it doesn't exist
+        # We don't cache that it doesn't exist, or else people can't fix it
+        # and then restart, because their config will never be valid.
+        if int_or_evt is _UNDEF:
+            raise IntegrationNotFound(domain)
+
+    if int_or_evt is not _UNDEF:
+        return cast(Integration, int_or_evt)
+
+    event = cache[domain] = asyncio.Event()
+
+    if integration.requirements:
+        await async_process_requirements(
+            hass, integration.domain, integration.requirements
+        )
+
+    deps_to_check = [
+        dep
+        for dep in integration.dependencies + integration.after_dependencies
+        if dep not in done
+    ]
+
+    for check_domain, to_check in DISCOVERY_INTEGRATIONS.items():
+        if (
+            check_domain not in done
+            and check_domain not in deps_to_check
+            and any(check in integration.manifest for check in to_check)
+        ):
+            deps_to_check.append(check_domain)
+
+    if deps_to_check:
+        await asyncio.gather(
+            *[
+                async_get_integration_with_requirements(hass, dep, done)
+                for dep in deps_to_check
+            ]
+        )
+
+    cache[domain] = integration
+    event.set()
+    return integration
 
 
 async def async_process_requirements(
