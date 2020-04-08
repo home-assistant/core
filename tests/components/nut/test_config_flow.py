@@ -86,7 +86,8 @@ async def test_form_user_multiple_ups(hass):
     assert result["errors"] == {}
 
     mock_pynut = _get_mock_pynutclient(
-        list_vars={"battery.voltage": "voltage"}, list_ups=["ups1", "ups2"]
+        list_vars={"battery.voltage": "voltage"},
+        list_ups={"ups1": "UPS 1", "ups2": "UPS2"},
     )
 
     with patch(
@@ -146,7 +147,8 @@ async def test_form_import(hass):
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     mock_pynut = _get_mock_pynutclient(
-        list_vars={"battery.voltage": "serial"}, list_ups=["ups1"]
+        list_vars={"battery.voltage": "serial"},
+        list_ups={"ups1": "UPS 1", "ups2": "UPS2"},
     )
 
     with patch(

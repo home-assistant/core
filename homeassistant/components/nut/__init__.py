@@ -193,7 +193,7 @@ class PyNUTData:
         # Establish client with persistent=False to open/close connection on
         # each update call.  This is more reliable with async.
         self._client = PyNUTClient(self._host, port, username, password, 5, False)
-        self._ups_list = {}
+        self.ups_list = None
         self._status = None
 
     @property
@@ -206,24 +206,20 @@ class PyNUTData:
         """Return the name of the ups."""
         return self._alias
 
-    @property
-    def ups_list(self):
-        """Return the list of upses."""
-        return self._ups_list
-
-    def _update_ups_list(self) -> dict:
-        """List UPSes connected to the NUT server."""
-        self._ups_list = self._client.list_ups()
-        return self._ups_list
-
     def _get_alias(self):
         """Get the ups alias from NUT."""
         try:
-            ups_list = self._update_ups_list()
-            return list(ups_list.keys())[0]
+            ups_list = self._client.list_ups()
         except PyNUTError as err:
             _LOGGER.error("Failure getting NUT ups alias, %s", err)
             return None
+
+        if not ups_list:
+            _LOGGER.error("Empty list while getting NUT ups aliases")
+            return None
+
+        self.ups_list = ups_list
+        return list(ups_list)[0]
 
     def _get_status(self):
         """Get the ups status from NUT."""
