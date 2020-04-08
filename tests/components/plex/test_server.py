@@ -1,8 +1,7 @@
 """Tests for Plex server."""
 import copy
-from datetime import timedelta
 
-from asynctest import patch
+from asynctest import ClockedTestCase, patch
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.plex.const import (
@@ -14,13 +13,11 @@ from homeassistant.components.plex.const import (
     SERVERS,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-import homeassistant.util.dt as dt_util
 
-from .common import trigger_plex_update
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS
 from .mock_classes import MockPlexServer
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_test_home_assistant
 
 
 async def test_new_users_available(hass):
@@ -48,7 +45,8 @@ async def test_new_users_available(hass):
 
     server_id = mock_plex_server.machineIdentifier
 
-    await trigger_plex_update(hass, server_id)
+    async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+    await hass.async_block_till_done()
 
     monitored_users = hass.data[DOMAIN][SERVERS][server_id].option_monitored_users
 
@@ -86,7 +84,8 @@ async def test_new_ignored_users_available(hass, caplog):
 
     server_id = mock_plex_server.machineIdentifier
 
-    await trigger_plex_update(hass, server_id)
+    async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+    await hass.async_block_till_done()
 
     monitored_users = hass.data[DOMAIN][SERVERS][server_id].option_monitored_users
 
@@ -100,98 +99,107 @@ async def test_new_ignored_users_available(hass, caplog):
     assert sensor.state == str(len(mock_plex_server.accounts))
 
 
-async def test_mark_sessions_idle(hass):
-    """Test marking media_players as idle when sessions end."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=DEFAULT_DATA,
-        options=DEFAULT_OPTIONS,
-        unique_id=DEFAULT_DATA["server_id"],
-    )
+class TestClockedPlex(ClockedTestCase):
+    """Create clock-controlled asynctest class."""
 
-    mock_plex_server = MockPlexServer(config_entry=entry)
+    async def setUp(self):
+        """Initialize this test class."""
+        self.hass = await async_test_home_assistant(self.loop)
 
-    with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
-        "homeassistant.components.plex.PlexWebsocket.listen"
-    ):
-        entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    async def tearDown(self):
+        """Clean up the HomeAssistant instance."""
+        await self.hass.async_stop()
 
-    server_id = mock_plex_server.machineIdentifier
+    async def test_mark_sessions_idle(self):
+        """Test marking media_players as idle when sessions end."""
+        hass = self.hass
 
-    await trigger_plex_update(hass, server_id)
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data=DEFAULT_DATA,
+            options=DEFAULT_OPTIONS,
+            unique_id=DEFAULT_DATA["server_id"],
+        )
 
-    sensor = hass.states.get("sensor.plex_plex_server_1")
-    assert sensor.state == str(len(mock_plex_server.accounts))
+        mock_plex_server = MockPlexServer(config_entry=entry)
 
-    mock_plex_server.clear_clients()
-    mock_plex_server.clear_sessions()
+        with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
+            "homeassistant.components.plex.PlexWebsocket.listen"
+        ):
+            entry.add_to_hass(hass)
+            assert await hass.config_entries.async_setup(entry.entry_id)
+            await hass.async_block_till_done()
 
-    await trigger_plex_update(hass, server_id)
+        server_id = mock_plex_server.machineIdentifier
 
-    sensor = hass.states.get("sensor.plex_plex_server_1")
-    assert sensor.state == "0"
-
-
-async def test_debouncer(hass, caplog):
-    """Test debouncer decorator logic."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=DEFAULT_DATA,
-        options=DEFAULT_OPTIONS,
-        unique_id=DEFAULT_DATA["server_id"],
-    )
-
-    mock_plex_server = MockPlexServer(config_entry=entry)
-
-    with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
-        "homeassistant.components.plex.PlexWebsocket.listen"
-    ):
-        entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    server_id = mock_plex_server.machineIdentifier
-
-    print(hass.data[DOMAIN][SERVERS][server_id])
-
-    with patch(
-        "homeassistant.components.plex.server.PlexServer._fetch_platform_data",
-        return_value=([], []),
-    ) as mock_update:
-        # Called immediately
         async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
         await hass.async_block_till_done()
-        assert mock_update.call_count == 1
 
-        # Throttled
+        sensor = hass.states.get("sensor.plex_plex_server_1")
+        assert sensor.state == str(len(mock_plex_server.accounts))
+
+        mock_plex_server.clear_clients()
+        mock_plex_server.clear_sessions()
+
+        await self.advance(DEBOUNCE_TIMEOUT)
         async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
         await hass.async_block_till_done()
-        assert mock_update.call_count == 1
 
-        # Throttled
-        async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
-        await hass.async_block_till_done()
-        assert mock_update.call_count == 1
+        sensor = hass.states.get("sensor.plex_plex_server_1")
+        assert sensor.state == "0"
 
-        # Called from scheduler
-        next_update = dt_util.utcnow() + timedelta(seconds=DEBOUNCE_TIMEOUT)
-        async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
-        assert mock_update.call_count == 2
+    async def test_debouncer(self):
+        """Test debouncer behavior."""
+        hass = self.hass
 
-        # Throttled
-        async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
-        await hass.async_block_till_done()
-        assert mock_update.call_count == 2
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data=DEFAULT_DATA,
+            options=DEFAULT_OPTIONS,
+            unique_id=DEFAULT_DATA["server_id"],
+        )
 
-        # Called from scheduler
-        next_update = dt_util.utcnow() + timedelta(seconds=DEBOUNCE_TIMEOUT)
-        async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
-        assert mock_update.call_count == 3
+        mock_plex_server = MockPlexServer(config_entry=entry)
 
-    assert (
-        caplog.text.count(f"Throttling update of {mock_plex_server.friendlyName}") == 3
-    )
+        with patch("plexapi.server.PlexServer", return_value=mock_plex_server), patch(
+            "homeassistant.components.plex.PlexWebsocket.listen"
+        ):
+            entry.add_to_hass(hass)
+            assert await hass.config_entries.async_setup(entry.entry_id)
+            await hass.async_block_till_done()
+
+        server_id = mock_plex_server.machineIdentifier
+
+        with patch(
+            "homeassistant.components.plex.server.PlexServer._fetch_platform_data",
+            return_value=([], []),
+        ) as mock_update:
+            # Called immediately
+            async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+            await hass.async_block_till_done()
+            assert mock_update.call_count == 1
+
+            # Throttled
+            async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+            await hass.async_block_till_done()
+            assert mock_update.call_count == 1
+
+            # Throttled
+            async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+            await hass.async_block_till_done()
+            assert mock_update.call_count == 1
+
+            # Called from scheduler
+            await self.advance(DEBOUNCE_TIMEOUT)
+            await hass.async_block_till_done()
+            assert mock_update.call_count == 2
+
+            # Throttled
+            async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+            await hass.async_block_till_done()
+            assert mock_update.call_count == 2
+
+            # Called from scheduler
+            await self.advance(DEBOUNCE_TIMEOUT)
+            await hass.async_block_till_done()
+            assert mock_update.call_count == 3

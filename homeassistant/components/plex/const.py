@@ -9,9 +9,7 @@ DEFAULT_PORT = 32400
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
-DEBOUNCE_LAST_FIRED = "debounce_last_fired"
 DEBOUNCE_TIMEOUT = 1
-DEBOUNCE_UNSUB = "debounce_unsub"
 DISPATCHERS = "dispatchers"
 PLATFORMS = frozenset(["media_player", "sensor"])
 PLATFORMS_COMPLETED = "platforms_completed"

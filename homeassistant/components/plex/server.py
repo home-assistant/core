@@ -1,5 +1,4 @@
 """Shared class to maintain Plex server instances."""
-from functools import partial, wraps
 import logging
 import ssl
 from urllib.parse import urlparse
@@ -13,9 +12,8 @@ import requests.exceptions
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import callback
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_call_later
-import homeassistant.util.dt as dt_util
 
 from .const import (
     CONF_CLIENT_IDENTIFIER,
@@ -23,11 +21,8 @@ from .const import (
     CONF_MONITORED_USERS,
     CONF_SERVER,
     CONF_USE_EPISODE_ART,
-    DEBOUNCE_LAST_FIRED,
     DEBOUNCE_TIMEOUT,
-    DEBOUNCE_UNSUB,
     DEFAULT_VERIFY_SSL,
-    DOMAIN as PLEX_DOMAIN,
     PLEX_NEW_MP_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
@@ -45,41 +40,6 @@ plexapi.X_PLEX_DEVICE_NAME = X_PLEX_DEVICE_NAME
 plexapi.X_PLEX_PLATFORM = X_PLEX_PLATFORM
 plexapi.X_PLEX_PRODUCT = X_PLEX_PRODUCT
 plexapi.X_PLEX_VERSION = X_PLEX_VERSION
-
-
-def debounce(func):
-    """Decorate function to debounce callbacks from Plex websocket."""
-
-    async def call_later_listener(self, _):
-        """Handle call_later callback."""
-        await func(self)
-        self.hass.data[PLEX_DOMAIN][DEBOUNCE_LAST_FIRED][
-            self.machine_identifier
-        ] = dt_util.utcnow()
-        self.hass.data[PLEX_DOMAIN][DEBOUNCE_UNSUB][self.machine_identifier] = None
-
-    @wraps(func)
-    async def wrapper(self):
-        """Schedule async callback."""
-        now = dt_util.utcnow()
-
-        last_fired = self.hass.data[PLEX_DOMAIN][DEBOUNCE_LAST_FIRED][
-            self.machine_identifier
-        ]
-        unsub = self.hass.data[PLEX_DOMAIN][DEBOUNCE_UNSUB][self.machine_identifier]
-        if unsub:
-            unsub()  # pylint: disable=not-callable
-
-        if last_fired and (now - last_fired).total_seconds() < DEBOUNCE_TIMEOUT:
-            _LOGGER.debug("Throttling update of %s", self.friendly_name)
-            unsub = async_call_later(
-                self.hass, DEBOUNCE_TIMEOUT, partial(call_later_listener, self),
-            )
-            self.hass.data[PLEX_DOMAIN][DEBOUNCE_UNSUB][self.machine_identifier] = unsub
-        else:
-            await call_later_listener(self, None)
-
-    return wrapper
 
 
 class PlexServer:
@@ -101,6 +61,13 @@ class PlexServer:
         self._accounts = []
         self._owner_username = None
         self._version = None
+        self._update_platforms_debouncer = Debouncer(
+            hass,
+            _LOGGER,
+            cooldown=DEBOUNCE_TIMEOUT,
+            immediate=True,
+            function=self._async_update_platforms,
+        )
 
         # Header conditionally added as it is not available in config entry v1
         if CONF_CLIENT_IDENTIFIER in server_config:
@@ -206,8 +173,11 @@ class PlexServer:
         """Fetch all data from the Plex server in a single method."""
         return (self._plex_server.clients(), self._plex_server.sessions())
 
-    @debounce
     async def async_update_platforms(self):
+        """Wrap the Debouncer call."""
+        await self._update_platforms_debouncer.async_call()
+
+    async def _async_update_platforms(self):
         """Update the platform entities."""
         _LOGGER.debug("Updating devices")
 
