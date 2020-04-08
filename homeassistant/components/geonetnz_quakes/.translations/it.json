@@ -3,9 +3,6 @@
         "abort": {
             "already_configured": "La posizione \u00e8 gi\u00e0 configurata."
         },
-        "error": {
-            "identifier_exists": "Localit\u00e0 gi\u00e0 registrata"
-        },
         "step": {
             "user": {
                 "data": {

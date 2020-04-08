@@ -5,7 +5,6 @@
         },
         "error": {
             "auth": "La chiave API non \u00e8 corretta.",
-            "name_exists": "Il nome \u00e8 gi\u00e0 esistente",
             "wrong_location": "Nessuna stazione di misurazione Airly in quest'area."
         },
         "step": {

@@ -10,10 +10,8 @@
             "init": {
                 "data": {
                     "device": "Chemin ou URL",
-                    "floor_temperature": "Temp\u00e9rature du sol",
                     "id": "ID",
-                    "name": "Nom",
-                    "precision": "Pr\u00e9cision de la temp\u00e9rature climatique"
+                    "name": "Nom"
                 },
                 "title": "Passerelle OpenTherm"
             }

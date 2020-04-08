@@ -4,7 +4,6 @@
             "all_configured": "Tutti i server collegati sono gi\u00e0 configurati",
             "already_configured": "Questo server Plex \u00e8 gi\u00e0 configurato",
             "already_in_progress": "Plex \u00e8 in fase di configurazione",
-            "discovery_no_file": "Non \u00e8 stato trovato nessun file di configurazione da sostituire",
             "invalid_import": "La configurazione importata non \u00e8 valida",
             "non-interactive": "Importazione non interattiva",
             "token_request_timeout": "Timeout per l'ottenimento del token",
@@ -13,20 +12,9 @@
         "error": {
             "faulty_credentials": "Autorizzazione non riuscita",
             "no_servers": "Nessun server collegato all'account",
-            "no_token": "Fornire un token o selezionare la configurazione manuale",
             "not_found": "Server Plex non trovato"
         },
         "step": {
-            "manual_setup": {
-                "data": {
-                    "host": "Host",
-                    "port": "Porta",
-                    "ssl": "Usa SSL",
-                    "token": "Token (se richiesto)",
-                    "verify_ssl": "Verificare il certificato SSL"
-                },
-                "title": "Server Plex"
-            },
             "select_server": {
                 "data": {
                     "server": "Server"
@@ -36,14 +24,6 @@
             },
             "start_website_auth": {
                 "description": "Continuare ad autorizzare su plex.tv.",
-                "title": "Collegare il server Plex"
-            },
-            "user": {
-                "data": {
-                    "manual_setup": "Configurazione manuale",
-                    "token": "Token Plex"
-                },
-                "description": "Continuare ad autorizzare plex.tv o configurare manualmente un server.",
                 "title": "Collegare il server Plex"
             }
         },
@@ -55,7 +35,6 @@
                 "data": {
                     "ignore_new_shared_users": "Ignora nuovi utenti gestiti/condivisi",
                     "monitored_users": "Utenti monitorati",
-                    "show_all_controls": "Mostra tutti i controlli",
                     "use_episode_art": "Usa la grafica dell'episodio"
                 },
                 "description": "Opzioni per i lettori multimediali Plex"
