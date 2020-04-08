@@ -1,11 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ta lokacija je \u017ee registrirana.",
-            "window_too_small": "Premajhno okno bo povzro\u010dilo, da bo Home Assistant zamudil dogodke."
-        },
-        "error": {
-            "identifier_exists": "Lokacija je \u017ee registrirana"
+            "already_configured": "Ta lokacija je \u017ee registrirana."
         },
         "step": {
             "user": {

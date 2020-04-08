@@ -27,5 +27,22 @@
             }
         },
         "title": "Philips Hue"
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "F\u00f8rste knap",
+            "button_2": "Anden knap",
+            "button_3": "Tredje knap",
+            "button_4": "Fjerde knap",
+            "dim_down": "D\u00e6mp ned",
+            "dim_up": "D\u00e6mp op",
+            "turn_off": "Sluk",
+            "turn_on": "T\u00e6nd"
+        },
+        "trigger_type": {
+            "remote_button_long_release": "\"{subtype}\"-knappen frigivet efter langt tryk",
+            "remote_button_short_press": "\"{subtype}\"-knappen trykket p\u00e5",
+            "remote_button_short_release": "\"{subtype}\"-knappen frigivet"
+        }
     }
 }

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\uc774 API \ud0a4\ub294 \uc774\ubbf8  \uc0ac\uc6a9 \uc911\uc785\ub2c8\ub2e4."
+            "already_configured": "\uc88c\ud45c\uac12\uc774 \uc774\ubbf8 \ub4f1\ub85d\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
         },
         "error": {
             "invalid_api_key": "\uc798\ubabb\ub41c API \ud0a4"
@@ -11,8 +11,7 @@
                 "data": {
                     "api_key": "API \ud0a4",
                     "latitude": "\uc704\ub3c4",
-                    "longitude": "\uacbd\ub3c4",
-                    "show_on_map": "\uc9c0\ub3c4\uc5d0 \ubaa8\ub2c8\ud130\ub9c1\ub41c \uc9c0\ub9ac \uc815\ubcf4 \ud45c\uc2dc"
+                    "longitude": "\uacbd\ub3c4"
                 },
                 "description": "\uc9c0\ub9ac\uc801 \uc704\uce58\uc5d0\uc11c \ub300\uae30\uc9c8\uc744 \ubaa8\ub2c8\ud130\ub9c1\ud569\ub2c8\ub2e4.",
                 "title": "AirVisual \uad6c\uc131"

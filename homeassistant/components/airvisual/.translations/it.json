@@ -11,8 +11,7 @@
                 "data": {
                     "api_key": "Chiave API",
                     "latitude": "Latitudine",
-                    "longitude": "Logitudine",
-                    "show_on_map": "Mostra l'area geografica monitorata sulla mappa"
+                    "longitude": "Logitudine"
                 },
                 "description": "Monitorare la qualit\u00e0 dell'aria in una posizione geografica.",
                 "title": "Configura AirVisual"

@@ -1,20 +1,11 @@
 {
     "config": {
-        "abort": {
-            "one_instance_allowed": "Csak egyetlen p\u00e9ld\u00e1nyra van sz\u00fcks\u00e9g."
-        },
         "error": {
             "cannot_connect": "Nem lehet csatlakozni az \u00e1llom\u00e1shoz",
             "name_exists": "A n\u00e9v m\u00e1r l\u00e9tezik",
             "wrong_credentials": "Rossz felhaszn\u00e1l\u00f3n\u00e9v vagy jelsz\u00f3"
         },
         "step": {
-            "options": {
-                "data": {
-                    "scan_interval": "Friss\u00edt\u00e9si gyakoris\u00e1g"
-                },
-                "title": "Be\u00e1ll\u00edt\u00e1sok konfigur\u00e1l\u00e1sa"
-            },
             "user": {
                 "data": {
                     "host": "Kiszolg\u00e1l\u00f3",

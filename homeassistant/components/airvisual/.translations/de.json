@@ -11,8 +11,7 @@
                 "data": {
                     "api_key": "API-Schl\u00fcssel",
                     "latitude": "Breitengrad",
-                    "longitude": "L\u00e4ngengrad",
-                    "show_on_map": "Zeigen Sie die \u00fcberwachte Geografie auf der Karte an"
+                    "longitude": "L\u00e4ngengrad"
                 },
                 "description": "\u00dcberwachen Sie die Luftqualit\u00e4t an einem geografischen Ort.",
                 "title": "Konfigurieren Sie AirVisual"

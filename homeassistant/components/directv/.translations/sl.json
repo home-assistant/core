@@ -5,8 +5,7 @@
             "unknown": "Nepri\u010dakovana napaka"
         },
         "error": {
-            "cannot_connect": "Povezava ni uspela, poskusite znova",
-            "unknown": "Nepri\u010dakovana napaka"
+            "cannot_connect": "Povezava ni uspela, poskusite znova"
         },
         "flow_title": "DirecTV: {name}",
         "step": {
