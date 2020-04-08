@@ -13,13 +13,6 @@
                 "data": {
                     "port": "C\u1ed5ng (gi\u00e1 tr\u1ecb m\u1eb7c \u0111\u1ecbnh: '80')"
                 }
-            },
-            "options": {
-                "data": {
-                    "allow_clip_sensor": "Cho ph\u00e9p nh\u1eadp c\u1ea3m bi\u1ebfn \u1ea3o",
-                    "allow_deconz_groups": "Cho ph\u00e9p nh\u1eadp c\u00e1c nh\u00f3m deCONZ"
-                },
-                "title": "T\u00f9y ch\u1ecdn c\u1ea5u h\u00ecnh b\u1ed5 sung cho deCONZ"
             }
         }
     }

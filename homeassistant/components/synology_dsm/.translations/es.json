@@ -18,9 +18,9 @@
                     "ssl": "Usar SSL/TLS para conectar con tu NAS",
                     "username": "Usuario"
                 },
-                "title": "DSM Synology"
+                "title": "Synology DSM"
             }
         },
-        "title": "DSM Synology"
+        "title": "Synology DSM"
     }
 }

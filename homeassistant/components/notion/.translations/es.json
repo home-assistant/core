@@ -4,7 +4,6 @@
             "already_configured": "Esta nombre de usuario ya est\u00e1 en uso."
         },
         "error": {
-            "identifier_exists": "Nombre de usuario ya registrado",
             "invalid_credentials": "Usuario o contrase\u00f1a no v\u00e1lido",
             "no_devices": "No se han encontrado dispositivos en la cuenta"
         },

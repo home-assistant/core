@@ -2,8 +2,7 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "Tiempo de espera agotado para la autorizaci\u00f3n de la url.",
-            "missing_configuration": "La integraci\u00f3n de Withings no est\u00e1 configurada. Por favor, siga la documentaci\u00f3n.",
-            "no_flows": "Debe configurar Withings antes de poder autenticarse con \u00e9l. Por favor, lea la documentaci\u00f3n."
+            "missing_configuration": "La integraci\u00f3n de Withings no est\u00e1 configurada. Por favor, siga la documentaci\u00f3n."
         },
         "create_entry": {
             "default": "Autenticado correctamente con Withings para el perfil seleccionado."
@@ -17,13 +16,6 @@
                     "profile": "Perfil"
                 },
                 "description": "\u00bfQu\u00e9 perfil seleccion\u00f3 en el sitio web de Withings? Es importante que los perfiles coincidan, de lo contrario los datos se etiquetar\u00e1n incorrectamente.",
-                "title": "Perfil de usuario."
-            },
-            "user": {
-                "data": {
-                    "profile": "Perfil"
-                },
-                "description": "Seleccione un perfil de usuario para el cual desea que Home Assistant se conecte con el perfil de Withings. En la p\u00e1gina de Withings, aseg\u00farese de seleccionar el mismo usuario o los datos no se identificar\u00e1n correctamente.",
                 "title": "Perfil de usuario."
             }
         },
