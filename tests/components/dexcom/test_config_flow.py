@@ -1,8 +1,8 @@
 """Test the Dexcom config flow."""
 from asynctest import patch
+from pydexcom import AccountError, SessionError
 
 from homeassistant import config_entries, setup
-from homeassistant.components.dexcom.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.dexcom.const import DOMAIN
 
 
@@ -16,7 +16,7 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.dexcom.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.dexcom.config_flow.async_step_user",
         return_value=True,
     ), patch(
         "homeassistant.components.dexcom.async_setup", return_value=True
@@ -25,17 +25,12 @@ async def test_form(hass):
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+            {"username": "test-username", "password": "test-password"},
         )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == "Dexcom"
     assert result2["data"] == {
-        "host": "1.1.1.1",
         "username": "test-username",
         "password": "test-password",
     }
@@ -44,47 +39,39 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass):
-    """Test we handle invalid auth."""
+async def test_form_account_error(hass):
+    """Test we handle account error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "homeassistant.components.dexcom.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidAuth,
+        "homeassistant.components.dexcom.config_flow.async_step_user",
+        side_effect=AccountError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+            {"username": "test-username", "password": "test-password"},
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result2["errors"] == {"base": "account"}
 
 
-async def test_form_cannot_connect(hass):
-    """Test we handle cannot connect error."""
+async def test_form_session_error(hass):
+    """Test we handle session error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "homeassistant.components.dexcom.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
+        "homeassistant.components.dexcom.config_flow.async_step_user",
+        side_effect=SessionError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+            {"username": "test-username", "password": "test-password"},
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": "session"}
