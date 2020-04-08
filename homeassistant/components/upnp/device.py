@@ -98,7 +98,7 @@ class Device:
 
     def __str__(self) -> str:
         """Get string representation."""
-        return "IGD Device: %s/%s" % (self.name, self.udn)
+        return f"IGD Device: {self.name}/{self.udn}"
 
     async def async_add_port_mappings(
         self, ports: Mapping[int, int], local_ip: str
