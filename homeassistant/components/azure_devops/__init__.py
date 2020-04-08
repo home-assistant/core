@@ -3,6 +3,7 @@ import logging
 from typing import Any, Dict
 
 from azure.devops.connection import Connection
+from azure.devops.exceptions import AzureDevOpsServiceError
 from msrest.authentication import BasicAuthentication
 from msrest.exceptions import ClientRequestError
 
@@ -39,6 +40,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     try:
         core_client = connection.clients.get_core_client()
         core_client.get_project(entry.data[CONF_PROJECT])
+    except AzureDevOpsServiceError as exception:
+        _LOGGER.warning(exception)
+        raise ConfigEntryNotReady from exception
     except ClientRequestError as exception:
         _LOGGER.warning(exception)
         raise ConfigEntryNotReady from exception

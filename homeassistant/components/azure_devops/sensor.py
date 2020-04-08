@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+from azure.devops.exceptions import AzureDevOpsServiceError
 from azure.devops.v5_1.build import Build
 from msrest.exceptions import ClientRequestError
 
@@ -43,6 +44,9 @@ async def async_setup_entry(
             sensors.append(
                 AzureDevOpsLatestBuildSensor(build_client, organization, project, build)
             )
+    except AzureDevOpsServiceError as exception:
+        _LOGGER.warning(exception)
+        raise PlatformNotReady from exception
     except ClientRequestError as exception:
         _LOGGER.warning(exception)
         raise PlatformNotReady from exception
@@ -67,6 +71,7 @@ class AzureDevOpsSensor(AzureDevOpsDeviceEntity):
         """Initialize Azure DevOps sensor."""
         self._state = None
         self._attributes = None
+        self._available = False
         self._unit_of_measurement = unit_of_measurement
         self.measurement = measurement
         self.client = client
@@ -114,21 +119,29 @@ class AzureDevOpsLatestBuildSensor(AzureDevOpsSensor):
 
     async def _azure_devops_update(self) -> bool:
         """Update Azure DevOps entity."""
-        build = self.client.get_build(self.build.project.id, self.build.id)
-        self._state = build.build_number
-        self._attributes = {
-            "definition_id": build.definition.id,
-            "definition_name": build.definition.name,
-            "finish_time": build.finish_time,
-            "id": build.id,
-            "queue_time": build.queue_time,
-            "reason": build.reason,
-            "result": build.result,
-            "source_branch": build.source_branch,
-            "source_version": build.source_version,
-            "start_time": build.start_time,
-            "status": build.status,
-            # pylint:disable=protected-access
-            "url": build._links.additional_properties["web"]["href"],
-        }
+        try:
+            build = self.client.get_build(self.build.project.id, self.build.id)
+            self._state = build.build_number
+            self._attributes = {
+                "definition_id": build.definition.id,
+                "definition_name": build.definition.name,
+                "finish_time": build.finish_time,
+                "id": build.id,
+                "queue_time": build.queue_time,
+                "reason": build.reason,
+                "result": build.result,
+                "source_branch": build.source_branch,
+                "source_version": build.source_version,
+                "start_time": build.start_time,
+                "status": build.status,
+                # pylint:disable=protected-access
+                "url": build._links.additional_properties["web"]["href"],
+            }
+            self._available = True
+        except AzureDevOpsServiceError as exception:
+            _LOGGER.warning(exception)
+            self._available = False
+        except ClientRequestError as exception:
+            _LOGGER.warning(exception)
+            self._available = False
         return True
