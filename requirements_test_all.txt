@@ -91,7 +91,7 @@ aiopvpc==1.0.2
 aiopylgtv==0.3.3
 
 # homeassistant.components.switcher_kis
-aioswitcher==2019.4.26
+aioswitcher==1.1.0
 
 # homeassistant.components.unifi
 aiounifi==15
