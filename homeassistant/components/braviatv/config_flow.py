@@ -98,7 +98,9 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if not host_valid(user_input[CONF_HOST]):
                     raise InvalidHost()
 
-                if not host_reachable(user_input[CONF_HOST]):
+                if not await self.hass.async_add_executor_job(
+                    host_reachable, user_input[CONF_HOST]
+                ):
                     raise HostUnreachable()
 
                 self.host = user_input[CONF_HOST]
