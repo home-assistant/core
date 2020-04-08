@@ -52,6 +52,8 @@ async def test_flow_works(hass, aioclient_mock, mock_discovery):
         CONF_VERIFY_SSL: False,
     }
 
+    aioclient_mock.get("https://1.2.3.4:1234", status=302)
+
     aioclient_mock.post(
         "https://1.2.3.4:1234/api/login",
         json={"data": "login successful", "meta": {"rc": "ok"}},
@@ -100,6 +102,8 @@ async def test_flow_works_multiple_sites(hass, aioclient_mock):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
+
+    aioclient_mock.get("https://1.2.3.4:1234", status=302)
 
     aioclient_mock.post(
         "https://1.2.3.4:1234/api/login",
@@ -150,6 +154,8 @@ async def test_flow_fails_site_already_configured(hass, aioclient_mock):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
+    aioclient_mock.get("https://1.2.3.4:1234", status=302)
+
     aioclient_mock.post(
         "https://1.2.3.4:1234/api/login",
         json={"data": "login successful", "meta": {"rc": "ok"}},
@@ -188,6 +194,8 @@ async def test_flow_fails_user_credentials_faulty(hass, aioclient_mock):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
+    aioclient_mock.get("https://1.2.3.4:1234", status=302)
+
     with patch("aiounifi.Controller.login", side_effect=aiounifi.errors.Unauthorized):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -213,6 +221,8 @@ async def test_flow_fails_controller_unavailable(hass, aioclient_mock):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
+    aioclient_mock.get("https://1.2.3.4:1234", status=302)
+
     with patch("aiounifi.Controller.login", side_effect=aiounifi.errors.RequestError):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -237,6 +247,8 @@ async def test_flow_fails_unknown_problem(hass, aioclient_mock):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
+
+    aioclient_mock.get("https://1.2.3.4:1234", status=302)
 
     with patch("aiounifi.Controller.login", side_effect=Exception):
         result = await hass.config_entries.flow.async_configure(
