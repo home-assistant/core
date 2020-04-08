@@ -123,7 +123,7 @@ async def test_get_newest_version_analytics_when_huuid(hass, aioclient_mock):
 
     with patch(
         "homeassistant.helpers.system_info.async_get_system_info",
-        Mock(return_value={"fake": "bla"}),
+        return_value={"fake": "bla"},
     ):
         res = await updater.get_newest_version(hass, MOCK_HUUID, False)
         assert res == (MOCK_RESPONSE["version"], MOCK_RESPONSE["release-notes"])
