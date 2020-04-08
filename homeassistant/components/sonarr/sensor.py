@@ -1,8 +1,10 @@
 """Support for Sonarr."""
-from datetime import timedelta
+from datetime import datetime
+from typing import Dict, Optional, Union
 import logging
 
-import requests
+from pytz import timezone
+from sonarr import Sonarr, SonarrError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -12,6 +14,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_PORT,
     CONF_SSL,
+    CONF_VERIFY_SSL,
     DATA_BYTES,
     DATA_EXABYTES,
     DATA_GIGABYTES,
@@ -21,7 +24,6 @@ from homeassistant.const import (
     DATA_TERABYTES,
     DATA_YOTTABYTES,
     DATA_ZETTABYTES,
-    HTTP_OK,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -72,7 +74,8 @@ BYTE_SIZES = [
     DATA_ZETTABYTES,
     DATA_YOTTABYTES,
 ]
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+
+PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_DAYS, default=DEFAULT_DAYS): cv.string,
@@ -83,31 +86,113 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_SSL, default=False): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=False): cv.boolean,
         vol.Optional(CONF_UNIT, default=DEFAULT_UNIT): vol.In(BYTE_SIZES),
         vol.Optional(CONF_URLBASE, default=DEFAULT_URLBASE): cv.string,
     }
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Sonarr platform."""
     conditions = config.get(CONF_MONITORED_CONDITIONS)
-    add_entities([SonarrSensor(config, sensor) for sensor in conditions], True)
+
+    sonarr = Sonarr(
+        host=config[CONF_HOST],
+        api_key=config[CONF_API_KEY],
+        base_path=config[CONF_URLBASE],
+        port=config[CONF_PORT],
+        tls=config[CONF_SSL],
+    )
+
+    entities = [
+        SonarrCommandsSensor(sonarr),
+        SonarrDiskspaceSensor(sonarr),
+        SonarrQueueSensor(sonarr),
+        SonarrSeriesSensor(sonarr),
+        SonarrUpcomingSensor(sonarr),
+        SonarrWantedSensor(sonarr),
+    ]
+
+    async_add_entities(entities, True)
 
 
-class SonarrSensor(Entity):
+class SonarrEntity(Entity):
+    """Defines a base Sonarr entity."""
+
+    def __init__(
+        self,
+        *,
+        sonarr: Sonarr,
+        name: str,
+        icon: str,
+        enabled_default: bool = True,
+    ) -> None:
+        """Initialize the Sonar entity."""
+        self._enabled_default = enabled_default
+        self._icon = icon
+        self._name = name
+        self.sonarr = sonarr
+
+    @property
+    def name(self) -> str:
+        """Return the name of the entity."""
+        return self._name
+
+    @property
+    def icon(self) -> str:
+        """Return the mdi icon of the entity."""
+        return self._icon
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._enabled_default
+
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        """Return device information about the application."""
+        if self.unique_id is None:
+            return None
+
+        return {
+            ATTR_IDENTIFIERS: {(DOMAIN, self.sonarr.app.info.uuid)},
+            ATTR_NAME: "Activity Sensor",
+            ATTR_MANUFACTURER: "Sonarr",
+            ATTR_SOFTWARE_VERSION: self.sonarr.app.info.version,
+        }
+
+
+class SonarrSensor(SonarrEntity):
     """Implementation of the Sonarr sensor."""
 
-    def __init__(self, conf, sensor_type):
-        """Create Sonarr entity."""
+    def __init__(
+        self,
+        *,
+        sonarr: Sonarr,
+        enabled_default: bool = True,
+        entry_id: str,
+        icon: str,
+        key: str,
+        name: str,
+        unit_of_measurement: Optional[str] = None,
+    ) -> None:
+        """Initialize Sonarr sensor."""
+        self._available = False
+        self._unit_of_measurement = unit_of_measurement
+        self._key = key
 
+        super().__init__(
+            entry_id=entry_id,
+            sonarr=sonarr,
+            name=name,
+            icon=icon,
+            enabled_default=enabled_default,
+        )
+
+    def old_init(self, hass, sonarr, conf, sensor_type):
+        """Create Sonarr entity."""
         self.conf = conf
-        self.host = conf.get(CONF_HOST)
-        self.port = conf.get(CONF_PORT)
-        self.urlbase = conf.get(CONF_URLBASE)
-        if self.urlbase:
-            self.urlbase = "{}/".format(self.urlbase.strip("/"))
-        self.apikey = conf.get(CONF_API_KEY)
         self.included = conf.get(CONF_INCLUDED)
         self.days = int(conf.get(CONF_DAYS))
         self.ssl = "https" if conf.get(CONF_SSL) else "http"
@@ -123,9 +208,9 @@ class SonarrSensor(Entity):
         self._available = False
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return "{} {}".format("Sonarr", self._name)
+    def unique_id(self) -> str:
+        """Return the unique ID for this sensor."""
+        return f"{self.sonarr.app.info.uuid}_{self._key}"
 
     @property
     def state(self):
@@ -138,9 +223,9 @@ class SonarrSensor(Entity):
         return self._available
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of the sensor."""
-        return self._unit
+    def unit_of_measurement(self) -> str:
+        """Return the unit this state is expressed in."""
+        return self._unit_of_measurement
 
     @property
     def device_state_attributes(self):
@@ -204,7 +289,7 @@ class SonarrSensor(Entity):
         """Return the icon of the sensor."""
         return self._icon
 
-    def update(self):
+    def old_update(self):
         """Update the data for the sensor."""
         local = dt_util.start_of_local_day().replace(microsecond=0)
         start = dt_util.as_utc(local)
@@ -246,24 +331,125 @@ class SonarrSensor(Entity):
                 )
                 self.data = res.json()["records"]
                 self._state = len(self.data)
-            elif self.type == "diskspace":
-                # If included paths are not provided, use all data
-                if self.included == []:
-                    self.data = res.json()
-                else:
-                    # Filter to only show lists that are included
-                    self.data = list(
-                        filter(lambda x: x["path"] in self.included, res.json())
-                    )
-                self._state = "{:.2f}".format(
-                    to_unit(sum([data["freeSpace"] for data in self.data]), self._unit)
-                )
             elif self.type == "status":
                 self.data = res.json()
                 self._state = self.data["version"]
             self._available = True
 
 
-def to_unit(value, unit):
-    """Convert bytes to give unit."""
-    return value / 1024 ** BYTE_SIZES.index(unit)
+class SonarrCommandsSensor(SonarrSensor):
+    """Defines a Sonarr Commands sensor."""
+
+    def __init__(self, entry_id: str, sonarr: Sonarr) -> None:
+        """Initialize Sonarr Commands sensor."""
+        self._commands = []
+
+        super().__init__(
+            sonarr=sonarr,
+            entry_id=entry_id,
+            icon="mdi:code-braces",
+            key="commands",
+            name=f"{sonarr.app.info.app_name} Commands",
+            unit_of_measurement=DATA_GIGABYTES,
+        )
+
+    def _to_unit(self, value):
+        """Return a value converted to unit of measurement."""
+        unit = self._unit_of_measurement
+        return value / 1024 ** BYTE_SIZES.index(unit)
+
+    async def async_update(self) -> None:
+        """Update entity."""
+        try:
+            commands = await self.sonarr.commands()
+            self._available = True
+            self._commands = commands
+        except SonarrError:
+            _LOGGER.exception("Error Updating Sonarr Data")
+            self._available = False
+
+    @property
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+        """Return the state attributes of the entity."""
+        attrs = {}
+
+        for disk in self._disks:
+            free = self._to_unit(disk.free)
+            total = self._to_unit(disk.total)
+
+            attrs[disk.path] = "{:.2f}/{:.2f}{} ({:.2f}%)".format(
+                free,
+                total,
+                self._unit_of_measurement,
+                (free / total * 100),
+            )
+
+        return attrs
+
+    @property
+    def state(self) -> Union[None, str, int, float]:
+        """Return the state of the sensor."""
+        diskspace = sum([disk.free for disk in self._disks])
+        return "{:.2f}".format(self._to_unit(diskspace))
+
+
+class SonarrDiskspaceSensor(SonarrSensor):
+    """Defines a Sonarr Disk Space sensor."""
+
+    def __init__(self, entry_id: str, sonarr: Sonarr) -> None:
+        """Initialize Sonarr Disk Space sensor."""
+        self._disks = []
+
+        super().__init__(
+            sonarr=sonarr,
+            entry_id=entry_id,
+            icon="mdi:harddisk",
+            key="diskspace",
+            name=f"{sonarr.app.info.app_name} Disk Space",
+            unit_of_measurement=DATA_GIGABYTES,
+        )
+
+    def _to_unit(self, value):
+        """Return a value converted to unit of measurement."""
+        unit = self._unit_of_measurement
+        return value / 1024 ** BYTE_SIZES.index(unit)
+
+    async def async_update(self) -> None:
+        """Update entity."""
+        try:
+            app = await self.sonarr.update()
+            self._available = True
+            self._disks = app.disks
+        except SonarrError:
+            _LOGGER.exception("Error Updating Sonarr Data")
+            self._available = False
+
+    @property
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+        """Return the state attributes of the entity."""
+        attrs = {}
+
+        for disk in self._disks:
+            free = self._to_unit(disk.free)
+            total = self._to_unit(disk.total)
+
+            attrs[disk.path] = "{:.2f}/{:.2f}{} ({:.2f}%)".format(
+                free,
+                total,
+                self._unit_of_measurement,
+                (free / total * 100),
+            )
+
+        return attrs
+
+    @property
+    def state(self) -> Union[None, str, int, float]:
+        """Return the state of the sensor."""
+        diskspace = sum([disk.free for disk in self._disks])
+        return "{:.2f}".format(self._to_unit(diskspace))
+
+
+def get_date(zone, offset=0):
+    """Get date based on timezone and offset of days."""
+    day = 60 * 60 * 24
+    return datetime.date(datetime.fromtimestamp(time.time() + day * offset, tz=zone))
