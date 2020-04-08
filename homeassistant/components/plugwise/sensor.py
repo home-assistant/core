@@ -37,7 +37,7 @@ SENSOR_MAP = {
     "thermostat": ATTR_TEMPERATURE,
     "temperature": ATTR_TEMPERATURE,
     "battery": ATTR_BATTERY_LEVEL,
-    "battery_charge": ATTR_BATTERY_LEVEL,
+    "valve_position": ["Valve Position", "%", "position", "mdi:valve"],
     "temperature_difference": ATTR_TEMPERATURE,
     "electricity_consumed": [
         "Current Consumed Power",
@@ -278,7 +278,9 @@ class PwThermostatSensor(Entity):
                 if data[self._sensor] is not None:
                     measurement = data[self._sensor]
                     if self._sensor == "battery":
-                        measurement = int(measurement * 100)
+                        measurement = measurement * 100
+                    if self._unit_of_measurement == "%":
+                        measurement = int(measurement)
                     self._state = measurement
 
 
