@@ -10,7 +10,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import (
     Integration,
     IntegrationNotFound,
-    _async_mount_config_dir,
     async_get_integration,
 )
 import homeassistant.util.package as pkg_util
