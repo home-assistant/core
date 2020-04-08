@@ -61,7 +61,6 @@ async def ban_middleware(request, handler):
 
     # Verify if IP is not banned
     ip_address_ = request[KEY_REAL_IP]
-
     is_banned = any(
         ip_ban.ip_address == ip_address_ for ip_ban in request.app[KEY_BANNED_IPS]
     )
