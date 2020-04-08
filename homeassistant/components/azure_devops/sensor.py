@@ -128,6 +128,7 @@ class AzureDevOpsLatestBuildSensor(AzureDevOpsSensor):
             "source_version": build.source_version,
             "start_time": build.start_time,
             "status": build.status,
+            # pylint:disable=protected-access
             "url": build._links.additional_properties["web"]["href"],
         }
         return True
