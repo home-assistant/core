@@ -12,8 +12,7 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "name": "Nazwa",
-                    "port": "Port"
+                    "name": "Nazwa"
                 },
                 "description": "Skonfiguruj instancj\u0119 serwera Minecraft, aby umo\u017cliwi\u0107 monitorowanie.",
                 "title": "Po\u0142\u0105cz sw\u00f3j serwer Minecraft"

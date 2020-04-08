@@ -1,7 +1,7 @@
 {
     "config": {
-        "error": {
-            "identifier_exists": "Localit\u00e0 gi\u00e0 registrata"
+        "abort": {
+            "already_configured": "La posizione \u00e8 gi\u00e0 configurata."
         },
         "step": {
             "user": {

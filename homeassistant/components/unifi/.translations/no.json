@@ -6,14 +6,15 @@
         },
         "error": {
             "faulty_credentials": "Ugyldig brukerlegitimasjon",
-            "service_unavailable": "Ingen tjeneste tilgjengelig"
+            "service_unavailable": "Ingen tjeneste tilgjengelig",
+            "unknown_client_mac": "Ingen klient tilgjengelig p\u00e5 den MAC-adressen"
         },
         "step": {
             "user": {
                 "data": {
                     "host": "Vert",
                     "password": "Passord",
-                    "port": "Port",
+                    "port": "",
                     "site": "Nettsted-ID",
                     "username": "Brukernavn",
                     "verify_ssl": "Kontroller bruker riktig sertifikat"
@@ -23,8 +24,19 @@
         },
         "title": "UniFi kontroller"
     },
+    "error": {
+        "unknown_client_mac": "Ingen klient tilgjengelig i UniFi p\u00e5 den MAC-adressen"
+    },
     "options": {
         "step": {
+            "client_control": {
+                "data": {
+                    "block_client": "Nettverkskontrollerte klienter",
+                    "new_client": "Legg til ny klient for nettverkstilgangskontroll"
+                },
+                "description": "Konfigurere klient-kontroller\n\nOpprette brytere for serienumre du \u00f8nsker \u00e5 kontrollere tilgang til nettverk for.",
+                "title": "UniFi-alternativ 2/3"
+            },
             "device_tracker": {
                 "data": {
                     "detection_time": "Tid i sekunder fra sist sett til den ble ansett borte",
@@ -34,14 +46,14 @@
                     "track_wired_clients": "Inkluder kablede nettverksklienter"
                 },
                 "description": "Konfigurere enhetssporing",
-                "title": "UniFi-alternativer"
+                "title": "UniFi-alternativ 1/3"
             },
             "statistics_sensors": {
                 "data": {
                     "allow_bandwidth_sensors": "B\u00e5ndbreddebrukssensorer for nettverksklienter"
                 },
                 "description": "Konfigurer statistikk sensorer",
-                "title": "UniFi-alternativer"
+                "title": "UniFi-alternativ 3/3"
             }
         }
     }

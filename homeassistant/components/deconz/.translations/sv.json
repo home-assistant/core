@@ -14,10 +14,6 @@
         "flow_title": "deCONZ Zigbee gateway ({host})",
         "step": {
             "hassio_confirm": {
-                "data": {
-                    "allow_clip_sensor": "Till\u00e5t import av virtuella sensorer",
-                    "allow_deconz_groups": "Till\u00e5t import av deCONZ-grupper"
-                },
                 "description": "Vill du konfigurera Home Assistant att ansluta till den deCONZ-gateway som tillhandah\u00e5lls av Hass.io-till\u00e4gget {addon}?",
                 "title": "deCONZ Zigbee gateway via Hass.io till\u00e4gg"
             },
@@ -31,13 +27,6 @@
             "link": {
                 "description": "L\u00e5s upp din deCONZ-gateway f\u00f6r att registrera dig med Home Assistant. \n\n 1. G\u00e5 till deCONZ-systeminst\u00e4llningarna \n 2. Tryck p\u00e5 \"L\u00e5s upp gateway\"-knappen",
                 "title": "L\u00e4nka med deCONZ"
-            },
-            "options": {
-                "data": {
-                    "allow_clip_sensor": "Till\u00e5t import av virtuella sensorer",
-                    "allow_deconz_groups": "Till\u00e5t import av deCONZ-grupper"
-                },
-                "title": "Extra konfigurationsalternativ f\u00f6r deCONZ"
             }
         },
         "title": "deCONZ Zigbee Gateway"
@@ -96,13 +85,6 @@
     },
     "options": {
         "step": {
-            "async_step_deconz_devices": {
-                "data": {
-                    "allow_clip_sensor": "Till\u00e5t deCONZ CLIP-sensorer",
-                    "allow_deconz_groups": "Till\u00e5t deCONZ ljusgrupper"
-                },
-                "description": "Konfigurera synlighet f\u00f6r deCONZ-enhetstyper"
-            },
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "Till\u00e5t deCONZ CLIP-sensorer",

@@ -12,13 +12,20 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
     EVENT_CORE_CONFIG_UPDATE,
+    LENGTH_FEET,
+    LENGTH_METERS,
+    LENGTH_MILES,
+    PRESSURE_HPA,
+    PRESSURE_INHG,
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_call_later
+from homeassistant.util.distance import convert as convert_distance
 import homeassistant.util.dt as dt_util
+from homeassistant.util.pressure import convert as convert_pressure
 
 from .const import CONF_TRACK_HOME
 
@@ -56,20 +63,21 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if config.get(CONF_LATITUDE) is None:
         config[CONF_TRACK_HOME] = True
 
-    async_add_entities([MetWeather(config)])
+    async_add_entities([MetWeather(config, hass.config.units.is_metric)])
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a weather entity from a config_entry."""
-    async_add_entities([MetWeather(config_entry.data)])
+    async_add_entities([MetWeather(config_entry.data, hass.config.units.is_metric)])
 
 
 class MetWeather(WeatherEntity):
     """Implementation of a Met.no weather condition."""
 
-    def __init__(self, config):
+    def __init__(self, config, is_metric):
         """Initialise the platform with a data instance and site."""
         self._config = config
+        self._is_metric = is_metric
         self._unsub_track_home = None
         self._unsub_fetch_data = None
         self._weather_data = None
@@ -99,6 +107,10 @@ class MetWeather(WeatherEntity):
             longitude = conf[CONF_LONGITUDE]
             elevation = conf[CONF_ELEVATION]
 
+        if not self._is_metric:
+            elevation = int(
+                round(convert_distance(elevation, LENGTH_FEET, LENGTH_METERS))
+            )
         coordinates = {
             "lat": str(latitude),
             "lon": str(longitude),
@@ -201,7 +213,11 @@ class MetWeather(WeatherEntity):
     @property
     def pressure(self):
         """Return the pressure."""
-        return self._current_weather_data.get("pressure")
+        pressure_hpa = self._current_weather_data.get("pressure")
+        if self._is_metric or pressure_hpa is None:
+            return pressure_hpa
+
+        return round(convert_pressure(pressure_hpa, PRESSURE_HPA, PRESSURE_INHG), 2)
 
     @property
     def humidity(self):
@@ -211,7 +227,13 @@ class MetWeather(WeatherEntity):
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        return self._current_weather_data.get("wind_speed")
+        speed_m_s = self._current_weather_data.get("wind_speed")
+        if self._is_metric or speed_m_s is None:
+            return speed_m_s
+
+        speed_mi_s = convert_distance(speed_m_s, LENGTH_METERS, LENGTH_MILES)
+        speed_mi_h = speed_mi_s / 3600.0
+        return int(round(speed_mi_h))
 
     @property
     def wind_bearing(self):

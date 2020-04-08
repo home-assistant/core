@@ -33,6 +33,9 @@
         "abort": {
             "not_konn_panel": "\u4e26\u975e\u53ef\u8b58\u5225 Konnected.io \u8a2d\u5099"
         },
+        "error": {
+            "bad_host": "\u7121\u6548\u7684\u8986\u5beb API \u4e3b\u6a5f\u7aef URL"
+        },
         "step": {
             "options_binary": {
                 "data": {
@@ -82,7 +85,9 @@
             },
             "options_misc": {
                 "data": {
-                    "blink": "\u7576\u50b3\u9001\u72c0\u614b\u8b8a\u66f4\u6642\u3001\u9583\u720d\u9762\u677f LED"
+                    "api_host": "\u8986\u5beb API \u4e3b\u6a5f\u7aef URL\uff08\u9078\u9805\uff09",
+                    "blink": "\u7576\u50b3\u9001\u72c0\u614b\u8b8a\u66f4\u6642\u3001\u9583\u720d\u9762\u677f LED",
+                    "override_api_host": "\u8986\u5beb\u9810\u8a2d Home Assistant API \u4e3b\u6a5f\u7aef\u9762\u677f URL"
                 },
                 "description": "\u8acb\u9078\u64c7\u9762\u677f\u671f\u671b\u884c\u70ba",
                 "title": "\u5176\u4ed6\u8a2d\u5b9a"
@@ -91,11 +96,12 @@
                 "data": {
                     "activation": "\u958b\u555f\u6642\u8f38\u51fa",
                     "momentary": "\u6301\u7e8c\u6642\u9593\uff08ms\uff09\uff08\u9078\u9805\uff09",
+                    "more_states": "\u8a2d\u5b9a\u6b64\u5340\u57df\u7684\u9644\u52a0\u72c0\u614b",
                     "name": "\u540d\u7a31\uff08\u9078\u9805\uff09",
                     "pause": "\u66ab\u505c\u9593\u8ddd\uff08ms\uff09\uff08\u9078\u9805\uff09",
                     "repeat": "\u91cd\u8907\u6642\u9593\uff08-1=\u7121\u9650\uff09\uff08\u9078\u9805\uff09"
                 },
-                "description": "\u8acb\u9078\u64c7 {zone}\u8f38\u51fa\u9078\u9805",
+                "description": "\u8acb\u9078\u64c7 {zone}\u8f38\u51fa\u9078\u9805\uff1a\u72c0\u614b {state}",
                 "title": "\u8a2d\u5b9a Switchable \u8f38\u51fa"
             }
         },

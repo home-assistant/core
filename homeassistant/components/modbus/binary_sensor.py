@@ -2,7 +2,7 @@
 import logging
 from typing import Optional
 
-from pymodbus.exceptions import ConnectionException, ModbusException
+from pymodbus.exceptions import ModbusException
 from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
@@ -14,27 +14,27 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_SLAVE
 from homeassistant.helpers import config_validation as cv
 
-from . import CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN
+from .const import (
+    CALL_TYPE_COIL,
+    CALL_TYPE_DISCRETE,
+    CONF_ADDRESS,
+    CONF_COILS,
+    CONF_HUB,
+    CONF_INPUT_TYPE,
+    CONF_INPUTS,
+    DEFAULT_HUB,
+    MODBUS_DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DEPRECATED_COIL = "coil"
-CONF_DEPRECATED_COILS = "coils"
-
-CONF_INPUTS = "inputs"
-CONF_INPUT_TYPE = "input_type"
-CONF_ADDRESS = "address"
-
-DEFAULT_INPUT_TYPE_COIL = "coil"
-DEFAULT_INPUT_TYPE_DISCRETE = "discrete_input"
-
 PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_DEPRECATED_COILS, CONF_INPUTS),
+    cv.deprecated(CONF_COILS, CONF_INPUTS),
     PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_INPUTS): [
                 vol.All(
-                    cv.deprecated(CONF_DEPRECATED_COIL, CONF_ADDRESS),
+                    cv.deprecated(CALL_TYPE_COIL, CONF_ADDRESS),
                     vol.Schema(
                         {
                             vol.Required(CONF_ADDRESS): cv.positive_int,
@@ -43,10 +43,8 @@ PLATFORM_SCHEMA = vol.All(
                             vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
                             vol.Optional(CONF_SLAVE): cv.positive_int,
                             vol.Optional(
-                                CONF_INPUT_TYPE, default=DEFAULT_INPUT_TYPE_COIL
-                            ): vol.In(
-                                [DEFAULT_INPUT_TYPE_COIL, DEFAULT_INPUT_TYPE_DISCRETE]
-                            ),
+                                CONF_INPUT_TYPE, default=CALL_TYPE_COIL
+                            ): vol.In([CALL_TYPE_COIL, CALL_TYPE_DISCRETE]),
                         }
                     ),
                 )
@@ -56,7 +54,7 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Modbus binary sensors."""
     sensors = []
     for entry in config[CONF_INPUTS]:
@@ -109,33 +107,18 @@ class ModbusBinarySensor(BinarySensorDevice):
         """Return True if entity is available."""
         return self._available
 
-    def update(self):
+    async def async_update(self):
         """Update the state of the sensor."""
-        try:
-            if self._input_type == DEFAULT_INPUT_TYPE_COIL:
-                result = self._hub.read_coils(self._slave, self._address, 1)
-            else:
-                result = self._hub.read_discrete_inputs(self._slave, self._address, 1)
-        except ConnectionException:
-            self._set_unavailable()
+        if self._input_type == CALL_TYPE_COIL:
+            result = await self._hub.read_coils(self._slave, self._address, 1)
+        else:
+            result = await self._hub.read_discrete_inputs(self._slave, self._address, 1)
+        if result is None:
+            self._available = False
             return
-
         if isinstance(result, (ModbusException, ExceptionResponse)):
-            self._set_unavailable()
+            self._available = False
             return
 
         self._value = result.bits[0]
         self._available = True
-
-    def _set_unavailable(self):
-        """Set unavailable state and log it as an error."""
-        if not self._available:
-            return
-
-        _LOGGER.error(
-            "No response from hub %s, slave %s, address %s",
-            self._hub.name,
-            self._slave,
-            self._address,
-        )
-        self._available = False

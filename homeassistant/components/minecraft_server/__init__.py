@@ -18,6 +18,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
+from . import helpers
 from .const import DOMAIN, MANUFACTURER, SCAN_INTERVAL, SIGNAL_NAME_PREFIX
 
 PLATFORMS = ["binary_sensor", "sensor"]
@@ -37,10 +38,9 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     # Create and store server instance.
     unique_id = config_entry.unique_id
     _LOGGER.debug(
-        "Creating server instance for '%s' (host='%s', port=%s)",
+        "Creating server instance for '%s' (%s)",
         config_entry.data[CONF_NAME],
         config_entry.data[CONF_HOST],
-        config_entry.data[CONF_PORT],
     )
     server = MinecraftServer(hass, unique_id, config_entry.data)
     domain_data[unique_id] = server
@@ -82,7 +82,6 @@ class MinecraftServer:
     """Representation of a Minecraft server."""
 
     # Private constants
-    _MAX_RETRIES_PING = 3
     _MAX_RETRIES_STATUS = 3
 
     def __init__(
@@ -98,6 +97,7 @@ class MinecraftServer:
         self.port = config_data[CONF_PORT]
         self.online = False
         self._last_status_request_failed = False
+        self.srv_record_checked = False
 
         # 3rd party library instance
         self._mc_status = MCStatus(self.host, self.port)
@@ -127,15 +127,36 @@ class MinecraftServer:
         self._stop_periodic_update()
 
     async def async_check_connection(self) -> None:
-        """Check server connection using a 'ping' request and store result."""
+        """Check server connection using a 'status' request and store connection status."""
+        # Check if host is a valid SRV record, if not already done.
+        if not self.srv_record_checked:
+            self.srv_record_checked = True
+            srv_record = await helpers.async_check_srv_record(self._hass, self.host)
+            if srv_record is not None:
+                _LOGGER.debug(
+                    "'%s' is a valid Minecraft SRV record ('%s:%s')",
+                    self.host,
+                    srv_record[CONF_HOST],
+                    srv_record[CONF_PORT],
+                )
+                # Overwrite host, port and 3rd party library instance
+                # with data extracted out of SRV record.
+                self.host = srv_record[CONF_HOST]
+                self.port = srv_record[CONF_PORT]
+                self._mc_status = MCStatus(self.host, self.port)
+
+        # Ping the server with a status request.
         try:
             await self._hass.async_add_executor_job(
-                self._mc_status.ping, self._MAX_RETRIES_PING
+                self._mc_status.status, self._MAX_RETRIES_STATUS
             )
             self.online = True
         except OSError as error:
             _LOGGER.debug(
-                "Error occurred while trying to ping the server - OSError: %s", error
+                "Error occurred while trying to check the connection to '%s:%s' - OSError: %s",
+                self.host,
+                self.port,
+                error,
             )
             self.online = False
 
@@ -148,9 +169,9 @@ class MinecraftServer:
 
         # Inform user once about connection state changes if necessary.
         if server_online_old and not server_online:
-            _LOGGER.warning("Connection to server lost")
+            _LOGGER.warning("Connection to '%s:%s' lost", self.host, self.port)
         elif not server_online_old and server_online:
-            _LOGGER.info("Connection to server (re-)established")
+            _LOGGER.info("Connection to '%s:%s' (re-)established", self.host, self.port)
 
         # Update the server properties if server is online.
         if server_online:
@@ -179,7 +200,11 @@ class MinecraftServer:
 
             # Inform user once about successful update if necessary.
             if self._last_status_request_failed:
-                _LOGGER.info("Updating the server properties succeeded again")
+                _LOGGER.info(
+                    "Updating the properties of '%s:%s' succeeded again",
+                    self.host,
+                    self.port,
+                )
             self._last_status_request_failed = False
         except OSError as error:
             # No answer to request, set all properties to unknown.
@@ -193,7 +218,10 @@ class MinecraftServer:
             # Inform user once about failed update if necessary.
             if not self._last_status_request_failed:
                 _LOGGER.warning(
-                    "Updating the server properties failed - OSError: %s", error,
+                    "Updating the properties of '%s:%s' failed - OSError: %s",
+                    self.host,
+                    self.port,
+                    error,
                 )
             self._last_status_request_failed = True
 

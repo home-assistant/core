@@ -2,7 +2,7 @@
   "domain": "modbus",
   "name": "Modbus",
   "documentation": "https://www.home-assistant.io/integrations/modbus",
-  "requirements": ["pymodbus==1.5.2"],
+  "requirements": ["pymodbus==2.3.0"],
   "dependencies": [],
-  "codeowners": ["@adamchengtkc"]
+  "codeowners": ["@adamchengtkc", "@janiversen"]
 }

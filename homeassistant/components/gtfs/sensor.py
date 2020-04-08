@@ -19,7 +19,11 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import (
+    ConfigType,
+    DiscoveryInfoType,
+    HomeAssistantType,
+)
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
@@ -332,7 +336,7 @@ def setup_platform(
     hass: HomeAssistantType,
     config: ConfigType,
     add_entities: Callable[[list], None],
-    discovery_info: Optional[dict] = None,
+    discovery_info: Optional[DiscoveryInfoType] = None,
 ) -> None:
     """Set up the GTFS sensor."""
     gtfs_dir = hass.config.path(DEFAULT_PATH)
