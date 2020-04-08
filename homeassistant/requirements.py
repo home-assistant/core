@@ -59,8 +59,6 @@ async def async_get_integration_with_requirements(
 
     cache = hass.data.get(DATA_INTEGRATIONS_WITH_REQS)
     if cache is None:
-        if not _async_mount_config_dir(hass):
-            raise IntegrationNotFound(domain)
         cache = hass.data[DATA_INTEGRATIONS_WITH_REQS] = {}
 
     int_or_evt: Union[Integration, asyncio.Event, None] = cache.get(domain, _UNDEF)
