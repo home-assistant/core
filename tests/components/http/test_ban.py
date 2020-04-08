@@ -29,9 +29,20 @@ BANNED_IPS = ["200.201.202.203", "100.64.0.2"]
 BANNED_IPS_WITH_SUPERVISOR = BANNED_IPS + [SUPERVISOR_IP]
 
 
+@pytest.fixture(name="hassio_env")
+def hassio_env_fixture():
+    """Fixture to inject hassio env."""
+    with patch.dict(os.environ, {"HASSIO": "127.0.0.1"}), patch(
+        "homeassistant.components.hassio.HassIO.is_connected",
+        return_value={"result": "ok", "data": {}},
+    ), patch.dict(os.environ, {"HASSIO_TOKEN": "123456"}):
+        yield
+
+
 async def test_access_from_banned_ip(hass, aiohttp_client):
     """Test accessing to server from banned IP. Both trusted and not."""
     app = web.Application()
+    app["hass"] = hass
     setup_bans(hass, app, 5)
     set_real_ip = mock_real_ip(app)
 
@@ -50,9 +61,12 @@ async def test_access_from_banned_ip(hass, aiohttp_client):
 @pytest.mark.parametrize(
     "remote_addr, status", list(zip(BANNED_IPS_WITH_SUPERVISOR, [403, 403, 404])),
 )
-async def test_access_from_supervisor_ip(remote_addr, status, hass, aiohttp_client):
+async def test_access_from_supervisor_ip(
+    remote_addr, status, hass, aiohttp_client, hassio_env
+):
     """Test accessing to server from supervisor IP."""
     app = web.Application()
+    app["hass"] = hass
     setup_bans(hass, app, 5)
     set_real_ip = mock_real_ip(app)
 
@@ -61,6 +75,8 @@ async def test_access_from_supervisor_ip(remote_addr, status, hass, aiohttp_clie
         return_value=[IpBan(banned_ip) for banned_ip in BANNED_IPS_WITH_SUPERVISOR],
     ):
         client = await aiohttp_client(app)
+
+    assert await async_setup_component(hass, "hassio", {"hassio": {}})
 
     with patch.dict(os.environ, {"SUPERVISOR": SUPERVISOR_IP}):
         set_real_ip(remote_addr)

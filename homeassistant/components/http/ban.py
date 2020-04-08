@@ -3,7 +3,6 @@ from collections import defaultdict
 from datetime import datetime
 from ipaddress import ip_address
 import logging
-import os
 from typing import List, Optional
 
 from aiohttp.web import middleware
@@ -60,16 +59,15 @@ async def ban_middleware(request, handler):
         _LOGGER.error("IP Ban middleware loaded but banned IPs not loaded")
         return await handler(request)
 
+    hass = request.app["hass"]
+
     # Verify if IP is not banned
     ip_address_ = request[KEY_REAL_IP]
 
     # Supervisor IP should never be banned
-    if "SUPERVISOR" in os.environ:
-        supervisor_ip = os.environ["SUPERVISOR"].split(":")[0]
-    else:
-        supervisor_ip = None
-
-    if supervisor_ip is not None and supervisor_ip == str(ip_address_):
+    if "hassio" in hass.config.components and hass.components.hassio.get_supervisor_ip() == str(
+        ip_address_
+    ):
         is_banned = False
     else:
         is_banned = any(

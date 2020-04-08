@@ -143,6 +143,17 @@ def is_hassio(hass):
     return DOMAIN in hass.config.components
 
 
+@callback
+def get_supervisor_ip():
+    """Return the supervisor ip address."""
+    if "SUPERVISOR" in os.environ:
+        supervisor_ip = os.environ["SUPERVISOR"].split(":")[0]
+    else:
+        supervisor_ip = None
+
+    return supervisor_ip
+
+
 async def async_setup(hass, config):
     """Set up the Hass.io component."""
     # Check local setup
